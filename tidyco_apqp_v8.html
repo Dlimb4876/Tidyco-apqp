@@ -326,6 +326,35 @@ input[type=number].cell-edit:hover::-webkit-inner-spin-button{opacity:1;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--line2);}
+
+/* PROJECTS HOME */
+.proj-home{padding:36px 40px;max-width:1100px;margin:0 auto;}
+.proj-home-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;}
+.proj-home-title{font-size:26px;font-weight:700;color:var(--ink);}
+.proj-home-sub{font-size:13px;color:var(--muted);margin-top:3px;}
+.proj-family-group{margin-bottom:36px;}
+.proj-family-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding-bottom:8px;border-bottom:2px solid var(--line);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.proj-family-label span{font-size:15px;}
+.proj-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.proj-card{background:var(--white);border:1.5px solid var(--line);border-radius:10px;padding:20px 22px;cursor:pointer;transition:box-shadow .15s,border-color .15s;position:relative;}
+.proj-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);border-color:var(--blue-mid);}
+.proj-card-name{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:5px;line-height:1.3;}
+.proj-card-meta{font-size:11px;color:var(--muted);margin-bottom:14px;display:flex;flex-wrap:wrap;gap:6px;}
+.proj-card-meta span{background:var(--bg);border-radius:4px;padding:2px 7px;}
+.proj-card-gate{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.proj-card-gate-label{font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--muted);letter-spacing:.4px;}
+.proj-gate-pip{width:28px;height:6px;border-radius:3px;background:var(--line);}
+.proj-gate-pip.done{background:var(--green);}
+.proj-gate-pip.active{background:var(--amber);}
+.proj-card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--line);font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.proj-rag{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;}
+.proj-rag-g{background:var(--green);}
+.proj-rag-a{background:var(--amber);}
+.proj-rag-r{background:var(--red);}
+.proj-rag-n{background:var(--line2);}
+.proj-add-card{background:transparent;border:2px dashed var(--line2);border-radius:10px;padding:20px 22px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;font-weight:500;transition:border-color .15s,color .15s;min-height:100px;}
+.proj-add-card:hover{border-color:var(--blue);color:var(--blue);}
+
 /* LOGIN SCREEN */
 .login-shell{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
 .login-box{background:var(--white);border-radius:12px;padding:40px 44px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4);}
@@ -380,12 +409,11 @@ td.w120{width:120px}td.w140{width:140px}td.ctr{text-align:center}
       <span class="brand-sep">|</span>
       <span class="brand-sub">APQP</span>
     </div>
-    <button class="back-btn" id="backBtn" style="display:none" onclick="goHome()">← Dashboard</button>
+    <button class="back-btn" id="backBtn" style="display:none" onclick="goProjects()">← Projects</button>
     <span class="section-crumb" id="sectionCrumb"></span>
   </div>
-  <div class="prog-selector">
-    <div class="prog-select-wrap"><select id="progSelect" onchange="switchProg(this.value)"></select></div>
-    <button class="tbtn tbtn-ghost" onclick="showModal('modalNewProg')" title="New Programme">＋</button>
+  <div class="prog-selector" id="progNameDisplay" style="display:none">
+    <span id="progNameLabel" style="font-size:13px;font-weight:600;color:var(--ink);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
   </div>
   <div class="topbar-actions">
     <span class="sync-badge" id="syncBadge">●  saved</span>
@@ -399,14 +427,18 @@ td.w120{width:120px}td.w140{width:140px}td.ctr{text-align:center}
 <div class="main" id="mainContent"></div>
 </div><!-- end appShell -->
 
-<!-- MODAL: New Programme -->
-<div class="modal-bg" id="modalNewProg" style="display:none">
+<!-- MODAL: New Project -->
+<div class="modal-bg" id="modalNewProj" style="display:none">
   <div class="modal modal-sm">
-    <div class="modal-title">New Programme</div>
-    <div class="field"><label>Programme Name *</label><input id="np_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
+    <div class="modal-title">New Project</div>
+    <div class="field"><label>Project Name *</label><input id="np_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
     <div class="field-row"><div class="field"><label>Customer</label><input id="np_customer"></div><div class="field"><label>Unit / Product</label><input id="np_unit"></div></div>
-    <div class="field-row"><div class="field"><label>ME Lead</label><input id="np_lead"></div><div class="field"><label>Date</label><input type="date" id="np_date"></div></div>
-    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modalNewProg')">Cancel</button><button class="btn btn-primary" onclick="createProg()">Create</button></div>
+    <div class="field-row">
+      <div class="field"><label>Product Family</label><select id="np_family"><option value="HVAC">HVAC</option><option value="Rotating Machines">Rotating Machines</option><option value="Pneumatics">Pneumatics</option><option value="Other" selected>Other</option></select></div>
+      <div class="field"><label>ME Lead</label><input id="np_lead"></div>
+    </div>
+    <div class="field"><label>Start Date</label><input type="date" id="np_date"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button><button class="btn btn-primary" onclick="createProg()">Create</button></div>
   </div>
 </div>
 
@@ -479,9 +511,9 @@ const GATE_DEFS=[
 
 function prog(){return db.programmes.find(p=>p.id===progId)||null;}
 
-function newProgTemplate(name,customer,unit,lead,date){
+function newProgTemplate(name,customer,unit,family,lead,date){
   const gates=GATE_DEFS.map(g=>({gateNum:g.num,checks:g.items.map(()=>false),sigs:g.signatories.map(role=>({role,name:'',date:'',signed:false}))}));
-  return{id:crypto.randomUUID(),name,customer,unit,lead,date,ctq:[],pfd:[],pfmea:[],cp:[],bom:{parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]},gates,actions:[],risks:[],timing:[]};
+  return{id:crypto.randomUUID(),name,customer,unit,family,lead,date,ctq:[],pfd:[],pfmea:[],cp:[],bom:{parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]},gates,actions:[],risks:[],timing:[]};
 }
 
 // ══════════════════════════════════════
@@ -542,27 +574,25 @@ async function saveRemote(){
   if(!currentUser)return;
   const email=currentUser.email;
   const now=new Date().toISOString();
-  for(const p of db.programmes){
-    // Check if row exists
-    const {data:existing}=await supa
-      .from('programmes')
-      .select('id')
-      .eq('prog_id',p.id)
-      .maybeSingle();
-    let error;
-    if(existing){
-      ({error}=await supa
+  try{
+    for(const p of db.programmes){
+      // Try update first
+      const {data:updated,error:updErr}=await supa
         .from('programmes')
         .update({name:p.name,updated_at:now,updated_by:email,data:p})
-        .eq('prog_id',p.id));
-    } else {
-      ({error}=await supa
-        .from('programmes')
-        .insert({prog_id:p.id,name:p.name,updated_at:now,updated_by:email,data:p}));
+        .eq('prog_id',p.id)
+        .select();
+      if(updErr){console.error('Update err',updErr);setSyncBadge('error','● save failed');return;}
+      // If no row was updated, insert
+      if(!updated||updated.length===0){
+        const {error:insErr}=await supa
+          .from('programmes')
+          .insert({prog_id:p.id,name:p.name,updated_at:now,updated_by:email,data:p});
+        if(insErr){console.error('Insert err',insErr);setSyncBadge('error','● save failed — check console');return;}
+      }
     }
-    if(error){setSyncBadge('error','● save failed');console.error(error);return;}
-  }
-  setSyncBadge('saved','● saved  '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' · '+email.split('@')[0]);
+    setSyncBadge('saved','● saved  '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' · '+email.split('@')[0]);
+  }catch(e){console.error('saveRemote exception',e);setSyncBadge('error','● save failed');}
 }
 
 async function loadRemote(){
@@ -592,7 +622,7 @@ function setSyncBadge(state,text){
 }
 
 function migrateprog(p){
-  if(!p)return newProgTemplate('Untitled','','','',new Date().toISOString().slice(0,10));
+  if(!p)return newProgTemplate('Untitled','','','Other','',new Date().toISOString().slice(0,10));
   if(!p.bom)p.bom={parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]};
   ['parts','tools','equip','mat','cons'].forEach(k=>{if(!p.bom[k])p.bom[k]=[];});
   if(!p.bom.kits)p.bom.kits=[];
@@ -634,35 +664,46 @@ function closeModal(id){document.getElementById(id).style.display='none';}
 function showModal(id){document.getElementById(id).style.display='flex';}
 function createProg(){
   const name=document.getElementById('np_name').value.trim();if(!name){alert('Name required');return;}
-  const p=newProgTemplate(name,document.getElementById('np_customer').value.trim(),document.getElementById('np_unit').value.trim(),document.getElementById('np_lead').value.trim(),document.getElementById('np_date').value);
-  db.programmes.push(p);progId=p.id;save();closeModal('modalNewProg');initProgSelect();navigate('home');
+  const p=newProgTemplate(name,document.getElementById('np_customer').value.trim(),document.getElementById('np_unit').value.trim(),document.getElementById('np_family').value,document.getElementById('np_lead').value.trim(),document.getElementById('np_date').value);
+  db.programmes.push(p);progId=p.id;save();closeModal('modalNewProj');navigate('project');
   ['np_name','np_customer','np_unit','np_lead','np_date'].forEach(id=>document.getElementById(id).value='');
 }
-function switchProg(id){progId=id;navigate('home');}
+function switchProg(id){progId=id;navigate('project');}
 function initProgSelect(){
-  const sel=document.getElementById('progSelect');
-  sel.innerHTML=db.programmes.length===0?'<option value="">— No programmes —</option>':db.programmes.map(p=>`<option value="${p.id}"${p.id===progId?' selected':''}>${esc(p.name)}${p.customer?' · '+esc(p.customer):''}</option>`).join('');
+  // Kept for compatibility — no dropdown anymore
   if(!progId&&db.programmes.length)progId=db.programmes[0].id;
 }
 
 // nav
-function goHome(){navigate('home');}
+function goHome(){navigate('project');}
 function navigate(sec){
   currentSection=sec;
   const bb=document.getElementById('backBtn'),cr=document.getElementById('sectionCrumb');
-  if(sec==='home'){bb.style.display='none';cr.textContent='';}
-  else{
+  const nd=document.getElementById('progNameDisplay'),nl=document.getElementById('progNameLabel');
+  if(sec==='projects'){
+    bb.style.display='none';cr.textContent='';
+    if(nd)nd.style.display='none';
+  } else if(sec==='project'||sec==='home'){
+    // project dashboard — show back to projects
+    bb.style.display='flex';cr.textContent='';
+    const p=prog();
+    if(nd&&nl&&p){nd.style.display='flex';nl.textContent=p.name;}
+    currentSection='project';
+  } else {
     bb.style.display='flex';
+    const p=prog();
+    if(nd&&nl&&p){nd.style.display='flex';nl.textContent=p.name;}
     const gm=sec.match(/^gate_(\d)$/);
     if(gm){const g=GATE_DEFS[+gm[1]];cr.innerHTML=`<strong>Gate ${g.num}: ${g.name}</strong>`;}
     else{const L={apqp:'APQP',actions:'Action Tracker',risks:'Risk Register',bom:'Bill of Materials',timing:'NPI Timing Plan'};cr.innerHTML=`<strong>${L[sec]||sec}</strong>`;}
   }
   render();
 }
+function goProjects(){navigate('projects');}
 function setApqpTab(t){apqpTab=t;render();}
 function render(){
   const mc=document.getElementById('mainContent');
-  if(!prog()){mc.innerHTML=`<div style="padding:60px;text-align:center;color:var(--muted)"><div style="font-size:44px;margin-bottom:12px">📋</div><div style="font-size:17px;font-weight:600;margin-bottom:16px;color:var(--mid)">No programme selected</div><button class="btn btn-primary" onclick="showModal('modalNewProg')">＋ New Programme</button></div>`;return;}
+  if(!prog()){mc.innerHTML=`<div style="padding:60px;text-align:center;color:var(--muted)"><div style="font-size:44px;margin-bottom:12px">📋</div><div style="font-size:17px;font-weight:600;margin-bottom:16px;color:var(--mid)">No project selected</div><button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button></div>`;return;}
   if(currentSection==='home')mc.innerHTML=renderDashboard();
   else if(currentSection.startsWith('gate_'))mc.innerHTML=renderGatePage(+currentSection.split('_')[1]);
   else{mc.innerHTML=`<div class="section-inner">${renderSection()}</div>`;}
@@ -674,6 +715,93 @@ function renderSection(){
   if(currentSection==='bom')return renderBOM();
   if(currentSection==='timing')return renderTimingPlan();
   return'';
+}
+
+
+// ══════════════════════════════════════
+// PROJECTS HOME
+// ══════════════════════════════════════
+const FAMILIES=[
+  {id:'HVAC',label:'HVAC',icon:'❄️'},
+  {id:'Rotating Machines',label:'Rotating Machines',icon:'⚙️'},
+  {id:'Pneumatics',label:'Pneumatics',icon:'💨'},
+  {id:'Other',label:'Other',icon:'📋'},
+];
+
+function renderProjects(){
+  const user=currentUser?currentUser.email.split('@')[0]:'';
+  let html=`<div class="proj-home">
+    <div class="proj-home-header">
+      <div>
+        <div class="proj-home-title">Projects</div>
+        <div class="proj-home-sub">Signed in as ${esc(user)}</div>
+      </div>
+      <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
+    </div>`;
+
+  if(db.programmes.length===0){
+    html+=`<div style="text-align:center;padding:80px 20px;color:var(--muted)">
+      <div style="font-size:48px;margin-bottom:16px">📋</div>
+      <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No projects yet</div>
+      <div style="font-size:13px;margin-bottom:24px">Create your first project to get started</div>
+      <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
+    </div>`;
+  } else {
+    FAMILIES.forEach(fam=>{
+      const projs=db.programmes.filter(p=>(p.family||'Other')===fam.id);
+      if(projs.length===0)return;
+      html+=`<div class="proj-family-group">
+        <div class="proj-family-label"><span>${fam.icon}</span>${fam.label}</div>
+        <div class="proj-cards">`;
+      projs.forEach(p=>{
+        const gates=p.gates||[];
+        const curGate=gates.findIndex(g=>!gateAllSigned(g));
+        const gatesDone=gates.filter(g=>gateAllSigned(g)).length;
+        const openAct=(p.actions||[]).filter(a=>a.status!=='Closed').length;
+        const overdueAct=(p.actions||[]).filter(a=>a.status!=='Closed'&&a.due&&new Date(a.due)<new Date()).length;
+        const highRPN=(p.pfmea||[]).filter(r=>calcRPN(r)>=100).length;
+        // RAG based on overdue actions or high RPN
+        const rag=overdueAct>0||highRPN>0?'r':openAct>0?'a':'g';
+        const ragLabel=rag==='r'?'Needs Attention':rag==='a'?'In Progress':'On Track';
+        const pips=GATE_DEFS.map((g,i)=>{
+          const gd=gates[i];
+          const cls=gd&&gateAllSigned(gd)?'done':i===curGate?'active':'';
+          return`<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`;
+        }).join('');
+        const lastSaved=p.updated_at?new Date(p.updated_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+        html+=`<div class="proj-card" onclick="openProject('${p.id}')">
+          <div class="proj-card-name">${esc(p.name)}</div>
+          <div class="proj-card-meta">
+            ${p.customer?`<span>👤 ${esc(p.customer)}</span>`:''}
+            ${p.unit?`<span>🚂 ${esc(p.unit)}</span>`:''}
+            ${p.lead?`<span>🧑‍💼 ${esc(p.lead)}</span>`:''}
+          </div>
+          <div class="proj-card-gate">
+            <span class="proj-card-gate-label">GATE ${curGate>=0?curGate:'✓'}</span>
+            ${pips}
+          </div>
+          <div class="proj-card-footer">
+            <span><span class="proj-rag proj-rag-${rag}"></span>${ragLabel}</span>
+            <span>${gatesDone}/6 gates · ${lastSaved}</span>
+          </div>
+        </div>`;
+      });
+      // Add new project card at end of each family
+      html+=`<div class="proj-add-card" onclick="newProjectInFamily('${fam.id}')">＋ Add ${fam.label} project</div>`;
+      html+=`</div></div>`;
+    });
+  }
+  html+=`</div>`;
+  return html;
+}
+
+function openProject(id){
+  progId=id;
+  navigate('project');
+}
+function newProjectInFamily(family){
+  showModal('modalNewProj');
+  setTimeout(()=>{const f=document.getElementById('np_family');if(f)f.value=family;},50);
 }
 
 // ══════════════════════════════════════
@@ -732,7 +860,8 @@ function renderDashboard(){
 
   const riskHTML=p.risks.filter(r=>r.status!=='Closed').sort((a,b)=>b.lik*b.imp-a.lik*a.imp).slice(0,4).map(r=>{const s=r.lik*r.imp;return`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)"><span class="rs ${s>=12?'rs-hi':s>=6?'rs-med':'rs-lo'}">${s}</span><span style="flex:1;font-size:12px">${esc(r.desc)}</span><span style="font-size:10px;color:var(--muted)">${esc(r.cat||'')}</span></div>`;}).join('')||`<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open risks</div>`;
 
-  return`<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta">${p.customer?`<span>👤 ${esc(p.customer)}</span>`:''} ${p.unit?`<span>🚂 ${esc(p.unit)}</span>`:''} ${p.lead?`<span>🧑‍💼 ${esc(p.lead)}</span>`:''} ${p.date?`<span>📅 ${p.date}</span>`:''} <span>📍 Gate ${curGate>=0?curGate:'✓ All complete'}</span></div></div>
+  const famIcon=FAMILIES.find(f=>f.id===(p.family||'Other'))?.icon||'📋';
+  return`<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family||'Other')}</span> ${p.customer?`<span>👤 ${esc(p.customer)}</span>`:''} ${p.unit?`<span>🚂 ${esc(p.unit)}</span>`:''} ${p.lead?`<span>🧑‍💼 ${esc(p.lead)}</span>`:''} ${p.date?`<span>📅 ${p.date}</span>`:''} <span>📍 Gate ${curGate>=0?curGate:'✓ All complete'}</span></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
       <div class="kpi-card" onclick="navigate('gate_${curGate>=0?curGate:5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
@@ -1488,13 +1617,12 @@ async function launchApp(){
   await loadRemote();
   if(db.programmes.length===0) load();
   if(db.programmes.length===0){
-    const p=newProgTemplate('New Programme','','','',new Date().toISOString().slice(0,10));
+    const p=newProgTemplate('New Project','','','Other','',new Date().toISOString().slice(0,10));
     db.programmes.push(p);
     save();
   }
-  progId=db.programmes[0].id;
   initProgSelect();
-  navigate('home');
+  navigate('projects');
 }
 
 (async()=>{
