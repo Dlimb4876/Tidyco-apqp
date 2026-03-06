@@ -356,6 +356,14 @@ input[type=number].cell-edit:hover::-webkit-inner-spin-button{opacity:1;}
 .proj-add-card:hover{border-color:var(--blue);color:var(--blue);}
 
 
+
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:4px;margin-left:4px;}
+.bc-sep{color:rgba(255,255,255,.3);font-size:14px;line-height:1;}
+.bc-item{background:none;border:none;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;cursor:pointer;padding:2px 4px;border-radius:4px;font-family:'IBM Plex Sans',sans-serif;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+.bc-item:hover{color:white;background:rgba(255,255,255,.1);}
+.bc-current{color:white;font-size:13px;font-weight:600;padding:2px 4px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+
 /* GANTT TIMING PLAN */
 .gantt-tbl{border-collapse:collapse;}
 .gantt-tbl th,.gantt-tbl td{border:1px solid var(--line);padding:0;}
@@ -456,17 +464,19 @@ td.w120{width:120px}td.w140{width:140px}td.ctr{text-align:center}
 
 <div class="topbar">
   <div class="topbar-left">
-    <div class="brand" onclick="goHome()">
+    <div class="brand" onclick="goProjects()" style="cursor:pointer">
       <div class="brand-hex"></div>
       <span class="brand-name">TIDYCO</span>
       <span class="brand-sep">|</span>
       <span class="brand-sub">APQP</span>
     </div>
-    <button class="back-btn" id="backBtn" style="display:none" onclick="goProjects()">← Projects</button>
-    <span class="section-crumb" id="sectionCrumb"></span>
-  </div>
-  <div class="prog-selector" id="progNameDisplay" style="display:none">
-    <span id="progNameLabel" style="font-size:13px;font-weight:600;color:var(--ink);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <nav class="breadcrumb" id="breadcrumb" style="display:none">
+      <span class="bc-sep">›</span>
+      <button class="bc-item" id="bc-project" onclick="navigate('project')" style="display:none"></button>
+      <span class="bc-sep" id="bc-sep2" style="display:none">›</span>
+      <span class="bc-current" id="bc-section" style="display:none"></span>
+    </nav>
+    <button class="back-btn" id="backBtn" style="display:none" onclick="navigate('project')">← Dashboard</button>
   </div>
   <div class="topbar-actions">
     <span class="sync-badge" id="syncBadge">●  saved</span>
@@ -755,30 +765,43 @@ function initProgSelect(){
 
 // nav
 function goHome(){navigate('project');}
+const SECTION_LABELS={apqp:'APQP',actions:'Action Tracker',risks:'Risk Register',bom:'Bill of Materials',timing:'NPI Timing Plan'};
+
 function navigate(sec){
+  if(sec==='home')sec='project';
   currentSection=sec;
-  const bb=document.getElementById('backBtn'),cr=document.getElementById('sectionCrumb');
-  const nd=document.getElementById('progNameDisplay'),nl=document.getElementById('progNameLabel');
+  const bb    = document.getElementById('backBtn');
+  const bc    = document.getElementById('breadcrumb');
+  const bcProj= document.getElementById('bc-project');
+  const bcSep2= document.getElementById('bc-sep2');
+  const bcSec = document.getElementById('bc-section');
+  const p     = prog();
+
   if(sec==='projects'){
-    bb.style.display='none';cr.textContent='';
-    if(nd)nd.style.display='none';
-  } else if(sec==='project'||sec==='home'){
-    // project dashboard — show back to projects
-    bb.style.display='flex';cr.textContent='';
-    const p=prog();
-    if(nd&&nl&&p){nd.style.display='flex';nl.textContent=p.name;}
-    currentSection='project';
+    // Projects home — no breadcrumb, no back button
+    bb.style.display='none';
+    bc.style.display='none';
+  } else if(sec==='project'){
+    // Project dashboard — breadcrumb shows project name, no section, back button hidden
+    bb.style.display='none';
+    bc.style.display='flex';
+    if(bcProj){bcProj.style.display='none';}  // project name IS the current page
+    if(bcSep2)bcSep2.style.display='none';
+    if(bcSec){bcSec.style.display='block';bcSec.textContent=p?p.name:'';}
   } else {
+    // Inside a section — breadcrumb: › ProjectName › SectionName, back button shows
     bb.style.display='flex';
-    const p=prog();
-    if(nd&&nl&&p){nd.style.display='flex';nl.textContent=p.name;}
+    bc.style.display='flex';
+    if(bcProj){bcProj.style.display='block';bcProj.textContent=p?p.name:'';}
+    if(bcSep2)bcSep2.style.display='block';
     const gm=sec.match(/^gate_(\d)$/);
-    if(gm){const g=GATE_DEFS[+gm[1]];cr.innerHTML=`<strong>Gate ${g.num}: ${g.name}</strong>`;}
-    else{const L={apqp:'APQP',actions:'Action Tracker',risks:'Risk Register',bom:'Bill of Materials',timing:'NPI Timing Plan'};cr.innerHTML=`<strong>${L[sec]||sec}</strong>`;}
+    const label=gm?`Gate ${GATE_DEFS[+gm[1]].num}: ${GATE_DEFS[+gm[1]].name}`:(SECTION_LABELS[sec]||sec);
+    if(bcSec){bcSec.style.display='block';bcSec.textContent=label;}
   }
   render();
 }
 function goProjects(){navigate('projects');}
+function goHome(){navigate('project');}
 function setApqpTab(t){apqpTab=t;render();}
 function render(){
   const mc=document.getElementById('mainContent');
