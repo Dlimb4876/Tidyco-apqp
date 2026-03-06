@@ -481,7 +481,7 @@ function prog(){return db.programmes.find(p=>p.id===progId)||null;}
 
 function newProgTemplate(name,customer,unit,lead,date){
   const gates=GATE_DEFS.map(g=>({gateNum:g.num,checks:g.items.map(()=>false),sigs:g.signatories.map(role=>({role,name:'',date:'',signed:false}))}));
-  return{id:'p_'+Date.now(),name,customer,unit,lead,date,ctq:[],pfd:[],pfmea:[],cp:[],bom:{parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]},gates,actions:[],risks:[],timing:[]};
+  return{id:crypto.randomUUID(),name,customer,unit,lead,date,ctq:[],pfd:[],pfmea:[],cp:[],bom:{parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]},gates,actions:[],risks:[],timing:[]};
 }
 
 // ══════════════════════════════════════
@@ -542,17 +542,24 @@ async function saveRemote(){
   if(!currentUser)return;
   const email=currentUser.email;
   const now=new Date().toISOString();
-  // Upsert each programme individually
   for(const p of db.programmes){
-    const {error}=await supa
+    // Check if row exists
+    const {data:existing}=await supa
       .from('programmes')
-      .upsert({
-        id: p.id,
-        name: p.name,
-        updated_at: now,
-        updated_by: email,
-        data: p
-      },{onConflict:'id'});
+      .select('id')
+      .eq('prog_id',p.id)
+      .maybeSingle();
+    let error;
+    if(existing){
+      ({error}=await supa
+        .from('programmes')
+        .update({name:p.name,updated_at:now,updated_by:email,data:p})
+        .eq('prog_id',p.id));
+    } else {
+      ({error}=await supa
+        .from('programmes')
+        .insert({prog_id:p.id,name:p.name,updated_at:now,updated_by:email,data:p}));
+    }
     if(error){setSyncBadge('error','● save failed');console.error(error);return;}
   }
   setSyncBadge('saved','● saved  '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' · '+email.split('@')[0]);
@@ -562,7 +569,7 @@ async function loadRemote(){
   if(!currentUser)return;
   const {data,error}=await supa
     .from('programmes')
-    .select('id,name,updated_at,updated_by,data')
+    .select('prog_id,name,updated_at,updated_by,data')
     .order('updated_at',{ascending:false});
   if(error){console.error('Load error',error);return;}
   if(data&&data.length>0){
