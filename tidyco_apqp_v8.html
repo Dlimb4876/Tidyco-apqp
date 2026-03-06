@@ -355,6 +355,27 @@ input[type=number].cell-edit:hover::-webkit-inner-spin-button{opacity:1;}
 .proj-add-card{background:transparent;border:2px dashed var(--line2);border-radius:10px;padding:20px 22px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;font-weight:500;transition:border-color .15s,color .15s;min-height:100px;}
 .proj-add-card:hover{border-color:var(--blue);color:var(--blue);}
 
+
+/* GANTT TIMING PLAN */
+.gantt-tbl{border-collapse:collapse;}
+.gantt-tbl th,.gantt-tbl td{border:1px solid var(--line);padding:0;}
+.gantt-month-row th{background:var(--ink);color:white;font-size:10px;font-weight:600;text-align:center;padding:4px 2px;letter-spacing:.3px;}
+.gantt-week-row th{background:var(--ink2);color:var(--muted);font-size:9px;font-weight:500;text-align:center;padding:3px 1px;font-family:'IBM Plex Mono',monospace;}
+.gantt-th-task{text-align:left!important;padding:4px 8px!important;color:white!important;}
+.gantt-th-sec{text-align:left!important;padding:4px 6px!important;color:white!important;}
+.gantt-th-notes{text-align:left!important;padding:4px 6px!important;color:white!important;}
+.gantt-mo{border-left:2px solid rgba(255,255,255,.15)!important;}
+.gantt-wk{border-left:1px solid rgba(255,255,255,.08)!important;}
+.gantt-row td{height:36px;vertical-align:middle;}
+.gantt-row:nth-child(even){background:var(--bg);}
+.gantt-task-cell{padding:2px 6px!important;}
+.gantt-sec-cell{padding:2px 4px!important;}
+.gantt-notes-cell{padding:2px 6px!important;}
+.gantt-cell{cursor:pointer;transition:background .1s;border-left:1px solid var(--line)!important;}
+.gantt-cell:hover{background:var(--blue-pale)!important;opacity:.8;}
+.gantt-filled{opacity:.85;}
+.gantt-add-row td{background:transparent;border:none!important;padding:2px 0!important;}
+
 /* TABLE FIXES */
 .tbl select{min-width:90px;max-width:100%;}
 .tbl input[type="text"]{min-width:60px;}
@@ -459,7 +480,10 @@ td.w120{width:120px}td.w140{width:140px}td.ctr{text-align:center}
     <div class="field-row"><div class="field"><label>Customer</label><input id="np_customer"></div><div class="field"><label>Unit / Product</label><input id="np_unit"></div></div>
     <div class="field-row">
       <div class="field"><label>Product Family</label><select id="np_family"><option value="HVAC">HVAC</option><option value="Rotating Machines">Rotating Machines</option><option value="Pneumatics">Pneumatics</option><option value="Other" selected>Other</option></select></div>
+    </div>
+    <div class="field-row">
       <div class="field"><label>ME Lead</label><input id="np_lead"></div>
+      <div class="field"><label>Project Manager</label><input id="np_pm"></div>
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="np_date"></div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button><button class="btn btn-primary" onclick="createProg()">Create</button></div>
@@ -474,7 +498,10 @@ td.w120{width:120px}td.w140{width:140px}td.ctr{text-align:center}
     <div class="field-row"><div class="field"><label>Customer</label><input id="ep_customer"></div><div class="field"><label>Unit / Product</label><input id="ep_unit"></div></div>
     <div class="field-row">
       <div class="field"><label>Product Family</label><select id="ep_family"><option value="HVAC">HVAC</option><option value="Rotating Machines">Rotating Machines</option><option value="Pneumatics">Pneumatics</option><option value="Other">Other</option></select></div>
+    </div>
+    <div class="field-row">
       <div class="field"><label>ME Lead</label><input id="ep_lead"></div>
+      <div class="field"><label>Project Manager</label><input id="ep_pm"></div>
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="ep_date"></div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
@@ -553,9 +580,9 @@ const GATE_DEFS=[
 
 function prog(){return db.programmes.find(p=>p.id===progId)||null;}
 
-function newProgTemplate(name,customer,unit,family,lead,date){
+function newProgTemplate(name,customer,unit,family,lead,pm,date){
   const gates=GATE_DEFS.map(g=>({gateNum:g.num,checks:g.items.map(()=>false),sigs:g.signatories.map(role=>({role,name:'',date:'',signed:false}))}));
-  return{id:crypto.randomUUID(),name,customer,unit,family,lead,date,ctq:[],pfd:[],pfmea:[],cp:[],bom:{parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]},gates,actions:[],risks:[],timing:[]};
+  return{id:crypto.randomUUID(),name,customer,unit,family,lead,pm,date,ctq:[],pfd:[],pfmea:[],cp:[],bom:{parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]},gates,actions:[],risks:[],timing:[]};
 }
 
 // ══════════════════════════════════════
@@ -664,13 +691,14 @@ function setSyncBadge(state,text){
 }
 
 function migrateprog(p){
-  if(!p)return newProgTemplate('Untitled','','','Other','',new Date().toISOString().slice(0,10));
+  if(!p)return newProgTemplate('Untitled','','','Other','','',new Date().toISOString().slice(0,10));
   if(!p.bom)p.bom={parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]};
   ['parts','tools','equip','mat','cons'].forEach(k=>{if(!p.bom[k])p.bom[k]=[];});
   if(!p.bom.kits)p.bom.kits=[];
   if(!p.actions)p.actions=[];
   if(!p.risks)p.risks=[];
   if(!p.timing)p.timing=[];
+  if(!p.gantt)p.gantt=[];
   if(!p.gates){p.gates=GATE_DEFS.map(g=>({gateNum:g.num,checks:g.items.map(()=>false),sigs:g.signatories.map(r=>({role:r,name:'',date:'',signed:false}))}));}
   p.gates.forEach((gd,gi)=>{
     if(gi>=GATE_DEFS.length)return;
@@ -706,9 +734,9 @@ function closeModal(id){document.getElementById(id).style.display='none';}
 function showModal(id){document.getElementById(id).style.display='flex';}
 function createProg(){
   const name=document.getElementById('np_name').value.trim();if(!name){alert('Name required');return;}
-  const p=newProgTemplate(name,document.getElementById('np_customer').value.trim(),document.getElementById('np_unit').value.trim(),document.getElementById('np_family').value,document.getElementById('np_lead').value.trim(),document.getElementById('np_date').value);
+  const p=newProgTemplate(name,document.getElementById('np_customer').value.trim(),document.getElementById('np_unit').value.trim(),document.getElementById('np_family').value,document.getElementById('np_lead').value.trim(),document.getElementById('np_pm').value.trim(),document.getElementById('np_date').value);
   db.programmes.push(p);progId=p.id;save();closeModal('modalNewProj');navigate('project');
-  ['np_name','np_customer','np_unit','np_lead','np_date'].forEach(id=>document.getElementById(id).value='');
+  ['np_name','np_customer','np_unit','np_lead','np_pm','np_date'].forEach(id=>document.getElementById(id).value='');
 }
 function switchProg(id){progId=id;navigate('project');}
 function initProgSelect(){
@@ -817,7 +845,7 @@ function renderProjects(){
           <div class="proj-card-meta">
             ${p.customer?`<span>👤 ${esc(p.customer)}</span>`:''}
             ${p.unit?`<span>🚂 ${esc(p.unit)}</span>`:''}
-            ${p.lead?`<span>🧑‍💼 ${esc(p.lead)}</span>`:''}
+            ${p.lead?`<span>🧑‍💼 ME: ${esc(p.lead)}</span>`:''} ${p.pm?`<span>📋 PM: ${esc(p.pm)}</span>`:''}
           </div>
           <div class="proj-card-gate">
             <span class="proj-card-gate-label">GATE ${curGate>=0?curGate:'✓'}</span>
@@ -845,6 +873,7 @@ function showEditProject(){
   document.getElementById('ep_unit').value=p.unit||'';
   document.getElementById('ep_family').value=p.family||'Other';
   document.getElementById('ep_lead').value=p.lead||'';
+  document.getElementById('ep_pm').value=p.pm||'';
   document.getElementById('ep_date').value=p.date||'';
   showModal('modalEditProj');
 }
@@ -857,6 +886,7 @@ function saveEditProject(){
   p.unit=document.getElementById('ep_unit').value.trim();
   p.family=document.getElementById('ep_family').value;
   p.lead=document.getElementById('ep_lead').value.trim();
+  p.pm=document.getElementById('ep_pm').value.trim();
   p.date=document.getElementById('ep_date').value;
   save();closeModal('modalEditProj');render();
 }
@@ -891,10 +921,12 @@ function renderDashboard(){
   const gatesDone=p.gates.filter(g=>gateAllSigned(g)).length;
   const curGate=p.gates.findIndex(g=>!gateAllSigned(g));
   const aaw=[...p.bom.parts,...p.bom.mat,...p.bom.cons].filter(x=>x.isAaw).length;
-  const timingTotal=p.timing.length;
-  const timingGreen=p.timing.filter(t=>t.rag==='G').length;
-  const timingRed=p.timing.filter(t=>t.rag==='R').length;
-  const timingAmber=p.timing.filter(t=>t.rag==='A').length;
+  const gantt=p.gantt||[];
+  const timingTotal=gantt.length;
+  const timingFilled=gantt.filter(r=>r.weeks&&r.weeks.some(w=>w>0)).length;
+  const timingRed=0;
+  const timingAmber=0;
+  const timingGreen=timingFilled;
 
   let alerts='';
   if(overdueAct>0)alerts+=`<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct!==1?'s':''}</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--red);color:white;border:none" onclick="navigate('actions')">View →</button></div>`;
@@ -922,7 +954,7 @@ function renderDashboard(){
 
   const totalBomItems=Object.keys(BOM_TYPES).reduce((n,k)=>n+p.bom[k].length,0);
   const sections=[
-    {id:'timing',icon:'📅',title:'NPI Timing Plan',desc:`${timingTotal} deliverables · ${timingGreen} green${timingRed>0?' · '+timingRed+' red':''}`,color:timingRed>0?'var(--red)':timingAmber>0?'var(--amber)':'var(--teal)',c:timingGreen,t:Math.max(timingTotal,1)},
+    {id:'timing',icon:'📅',title:'NPI Timing Plan',desc:`${timingTotal} rows · ${timingFilled} with activity`,color:'var(--teal)',c:timingFilled,t:Math.max(timingTotal,1)},
     {id:'apqp',icon:'📐',title:'APQP',desc:`CTQ · PFD · PFMEA · Control Plan`,color:'var(--purple)',c:p.ctq.length+p.pfd.length+p.pfmea.length,t:1},
     {id:'bom',icon:'📦',title:'Bill of Materials',desc:`${totalBomItems} items · ${p.bom.kits.length} kits · ${aaw} AAW`,color:'var(--navy)',c:totalBomItems,t:1},
     {id:'actions',icon:'✅',title:'Actions',desc:`${openAct} open${overdueAct>0?' · '+overdueAct+' overdue':''}`,color:overdueAct>0?'var(--red)':openAct>0?'var(--amber)':'var(--green)',c:p.actions.filter(a=>a.status==='Closed').length,t:Math.max(p.actions.length,1)},
@@ -936,7 +968,7 @@ function renderDashboard(){
   const riskHTML=p.risks.filter(r=>r.status!=='Closed').sort((a,b)=>b.lik*b.imp-a.lik*a.imp).slice(0,4).map(r=>{const s=r.lik*r.imp;return`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)"><span class="rs ${s>=12?'rs-hi':s>=6?'rs-med':'rs-lo'}">${s}</span><span style="flex:1;font-size:12px">${esc(r.desc)}</span><span style="font-size:10px;color:var(--muted)">${esc(r.cat||'')}</span></div>`;}).join('')||`<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open risks</div>`;
 
   const famIcon=FAMILIES.find(f=>f.id===(p.family||'Other'))?.icon||'📋';
-  return`<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family||'Other')}</span> ${p.customer?`<span>👤 ${esc(p.customer)}</span>`:''} ${p.unit?`<span>🚂 ${esc(p.unit)}</span>`:''} ${p.lead?`<span>🧑‍💼 ${esc(p.lead)}</span>`:''} ${p.date?`<span>📅 ${p.date}</span>`:''} <span>📍 Gate ${curGate>=0?curGate:'✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
+  return`<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family||'Other')}</span> ${p.customer?`<span>👤 ${esc(p.customer)}</span>`:''} ${p.unit?`<span>🚂 ${esc(p.unit)}</span>`:''} ${p.lead?`<span>🧑‍💼 ME: ${esc(p.lead)}</span>`:''} ${p.pm?`<span>📋 PM: ${esc(p.pm)}</span>`:''} ${p.date?`<span>📅 ${p.date}</span>`:''} <span>📍 Gate ${curGate>=0?curGate:'✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
       <div class="kpi-card" onclick="navigate('gate_${curGate>=0?curGate:5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
@@ -1068,16 +1100,16 @@ function renderAPQP(){
 function renderCTQ(){
   const p=prog();
   const rows=p.ctq.map((r,i)=>`<tr>
-    <td class="w36 ctr"><span class="tag tag-ctq">C${i+1}</span></td>
+    <td style="text-align:center"><span class="tag tag-ctq">C${i+1}</span></td>
     <td><textarea class="cell-edit" rows="2" onchange="updCTQ(${i},'req',this.value)" placeholder="CTQ requirement">${esc(r.req)}</textarea></td>
-    <td class="w140"><input class="cell-edit mono" value="${esc(r.spec)}" onchange="updCTQ(${i},'spec',this.value)" placeholder="e.g. 50±0.05mm"></td>
-    <td class="w110"><select class="cell-edit" onchange="updCTQ(${i},'source',this.value)">${['Customer Spec','OEM Data','Internal Standard','Regulatory','Drawing'].map(o=>`<option${r.source===o?' selected':''}>${o}</option>`).join('')}</select></td>
-    <td class="w100"><select class="cell-edit" onchange="updCTQ(${i},'oos_action',this.value)">${['Repair','Replace','Scrap','Review','TBD'].map(o=>`<option${r.oos_action===o?' selected':''}>${o}</option>`).join('')}</select></td>
-    <td class="w28 ctr"><button class="del-btn" onclick="delCTQ(${i})">×</button></td>
+    <td><input class="cell-edit mono" value="${esc(r.spec)}" onchange="updCTQ(${i},'spec',this.value)" placeholder="e.g. 50±0.05mm" style="width:100%"></td>
+    <td><select class="cell-edit" onchange="updCTQ(${i},'source',this.value)" style="width:100%">${['Customer Spec','OEM Data','Internal Standard','Regulatory','Drawing'].map(o=>`<option${r.source===o?' selected':''}>${o}</option>`).join('')}</select></td>
+    <td><select class="cell-edit" onchange="updCTQ(${i},'oos_action',this.value)" style="width:100%">${['Repair','Replace','Scrap','Review','TBD'].map(o=>`<option${r.oos_action===o?' selected':''}>${o}</option>`).join('')}</select></td>
+    <td style="text-align:center"><button class="del-btn" onclick="delCTQ(${i})">×</button></td>
   </tr>`).join('');
   return`<div class="sec-head"><div><div class="sec-eyebrow">Step 01</div><div class="sec-title">CTQ Matrix</div><div class="sec-desc">Critical-to-Quality requirements — source of truth for PFD, PFMEA and Control Plan.</div></div><div class="sec-actions"><button class="btn btn-primary btn-sm" onclick="addCTQ()">＋ Add CTQ</button></div></div>
   <div class="card"><div class="card-head"><span class="card-title">Requirements</span><span class="card-meta">${p.ctq.length} defined</span></div>
-  ${p.ctq.length===0?emptyState('🎯','No CTQs yet','Add critical requirements'): `<div style="overflow-x:auto"><table class="tbl ctq-tbl"><thead><tr><th>Ref</th><th>Requirement</th><th>Target / Tolerance</th><th>Source</th><th>Out-of-Spec Action</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
+  ${p.ctq.length===0?emptyState('🎯','No CTQs yet','Add critical requirements'): `<div style="overflow-x:auto"><table class="tbl ctq-tbl" style="min-width:780px;table-layout:fixed;width:100%"><colgroup><col style="width:44px"><col style="width:auto"><col style="width:160px"><col style="width:150px"><col style="width:130px"><col style="width:32px"></colgroup><thead><tr><th>Ref</th><th>Requirement</th><th>Target / Tolerance</th><th>Source</th><th>Out-of-Spec Action</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="addCTQ()">＋ Add CTQ</button></div>
   ${p.ctq.length>0?`<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" onclick="setApqpTab('pfd');return false" style="color:var(--blue)">Process Flow →</a></div>`:''}`;
 }
@@ -1278,13 +1310,13 @@ function renderActions(){
     return`<tr class="${overdue?'row-overdue':''}">
       <td class="w28 ctr" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${i+1}</td>
       <td><textarea class="cell-edit" rows="2" onchange="updAction(${i},'desc',this.value)" placeholder="Action description">${esc(a.desc)}</textarea></td>
-      <td class="w90"><input class="cell-edit" value="${esc(a.owner)}" onchange="updAction(${i},'owner',this.value)" placeholder="Owner"></td>
-      <td class="w100"><input type="date" class="cell-edit" value="${a.due||''}" onchange="updAction(${i},'due',this.value)" style="${overdue?'color:var(--red);font-weight:600':''}"></td>
-      <td class="w90"><select class="cell-edit" onchange="updAction(${i},'status',this.value)">${['Open','In Progress','Closed','Blocked'].map(s=>`<option${a.status===s?' selected':''}>${s}</option>`).join('')}</select></td>
-      <td class="w70"><select class="cell-edit" onchange="updAction(${i},'priority',this.value)">${['High','Medium','Low'].map(s=>`<option${a.priority===s?' selected':''}>${s}</option>`).join('')}</select></td>
-      <td class="w80"><select class="cell-edit" onchange="updAction(${i},'source',this.value)">${['Gate','PFMEA','Risk','General'].map(s=>`<option${a.source===s?' selected':''}>${s}</option>`).join('')}</select></td>
-      <td><input class="cell-edit" value="${esc(a.notes)}" onchange="updAction(${i},'notes',this.value)" placeholder="Notes"></td>
-      <td class="w28 ctr"><button class="del-btn" onclick="delAction(${i})">×</button></td>
+      <td><input class="cell-edit" value="${esc(a.owner)}" onchange="updAction(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
+      <td><input type="date" class="cell-edit" value="${a.due||''}" onchange="updAction(${i},'due',this.value)" style="width:100%;${overdue?'color:var(--red);font-weight:600':''}"></td>
+      <td><select class="cell-edit" onchange="updAction(${i},'status',this.value)" style="width:100%">${['Open','In Progress','Closed','Blocked'].map(s=>`<option${a.status===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><select class="cell-edit" onchange="updAction(${i},'priority',this.value)" style="width:100%">${['High','Medium','Low'].map(s=>`<option${a.priority===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><select class="cell-edit" onchange="updAction(${i},'source',this.value)" style="width:100%">${['Gate','PFMEA','Risk','General'].map(s=>`<option${a.source===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><input class="cell-edit" value="${esc(a.notes)}" onchange="updAction(${i},'notes',this.value)" placeholder="Notes" style="width:100%"></td>
+      <td style="text-align:center"><button class="del-btn" onclick="delAction(${i})">×</button></td>
     </tr>`;
   }).join('');
   return`<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Action Tracker</div><div class="sec-desc">Central log of all actions. Overdue items highlighted. Edit all fields inline.</div></div>
@@ -1296,7 +1328,7 @@ function renderActions(){
   </div>
   <div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">All Actions</span><span class="card-meta">${p.actions.length} total</span></div>
-  ${p.actions.length===0?emptyState('✅','No actions yet','Click ＋ Add Action to start tracking'):`<table class="tbl act-tbl" style="min-width:860px"><thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+  ${p.actions.length===0?emptyState('✅','No actions yet','Click ＋ Add Action to start tracking'):`<table class="tbl act-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:auto"><col style="width:100px"><col style="width:115px"><col style="width:110px"><col style="width:90px"><col style="width:90px"><col style="width:160px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
   <button class="add-row" onclick="addAction()">＋ Add Action</button></div>`;
 }
 function addAction(){prog().actions.push({id:'a_'+Date.now(),desc:'',owner:'',due:'',status:'Open',priority:'Medium',source:'General',notes:''});save();render();}
@@ -1315,16 +1347,16 @@ function renderRisks(){
   const rows=p.risks.map((r,i)=>{
     const score=r.lik*r.imp;const sc=score>=12?'rs-hi':score>=6?'rs-med':'rs-lo';
     return`<tr class="${score>=12&&r.status!=='Closed'?'row-hi':''}">
-      <td class="w28 ctr" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${i+1}</td>
+      <td style="text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${i+1}</td>
       <td><textarea class="cell-edit" rows="2" onchange="updRisk(${i},'desc',this.value)" placeholder="Risk description">${esc(r.desc)}</textarea></td>
-      <td class="w90"><select class="cell-edit" onchange="updRisk(${i},'cat',this.value)">${['Technical','Supply Chain','Schedule','Resource','Customer','Commercial'].map(s=>`<option${r.cat===s?' selected':''}>${s}</option>`).join('')}</select></td>
-      <td class="w80"><input class="cell-edit" value="${esc(r.owner)}" onchange="updRisk(${i},'owner',this.value)" placeholder="Owner"></td>
-      <td class="w44 ctr"><input type="number" class="cell-edit mono" min="1" max="5" value="${r.lik||1}" onchange="updRisk(${i},'lik',+this.value);refreshRS(${i})"></td>
-      <td class="w44 ctr"><input type="number" class="cell-edit mono" min="1" max="5" value="${r.imp||1}" onchange="updRisk(${i},'imp',+this.value);refreshRS(${i})"></td>
-      <td class="w50 ctr"><span class="rs ${sc}" id="rs_${i}">${score}</span></td>
+      <td><select class="cell-edit" onchange="updRisk(${i},'cat',this.value)" style="width:100%">${['Technical','Supply Chain','Schedule','Resource','Customer','Commercial'].map(s=>`<option${r.cat===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td><input class="cell-edit" value="${esc(r.owner)}" onchange="updRisk(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
+      <td style="text-align:center"><input type="number" class="cell-edit mono" min="1" max="5" value="${r.lik||1}" onchange="updRisk(${i},'lik',+this.value);refreshRS(${i})" style="width:100%;text-align:center"></td>
+      <td style="text-align:center"><input type="number" class="cell-edit mono" min="1" max="5" value="${r.imp||1}" onchange="updRisk(${i},'imp',+this.value);refreshRS(${i})" style="width:100%;text-align:center"></td>
+      <td style="text-align:center"><span class="rs ${sc}" id="rs_${i}">${score}</span></td>
       <td><textarea class="cell-edit" rows="2" onchange="updRisk(${i},'mit',this.value)" placeholder="Mitigation">${esc(r.mit)}</textarea></td>
-      <td class="w80"><select class="cell-edit" onchange="updRisk(${i},'status',this.value)">${['Open','Mitigated','Closed'].map(s=>`<option${r.status===s?' selected':''}>${s}</option>`).join('')}</select></td>
-      <td class="w28 ctr"><button class="del-btn" onclick="delRisk(${i})">×</button></td>
+      <td><select class="cell-edit" onchange="updRisk(${i},'status',this.value)" style="width:100%">${['Open','Mitigated','Closed'].map(s=>`<option${r.status===s?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td style="text-align:center"><button class="del-btn" onclick="delRisk(${i})">×</button></td>
     </tr>`;
   }).join('');
   return`<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Risk Register</div><div class="sec-desc">Project-level risks. Likelihood × Impact = Score. All fields editable inline. High risks ≥ 12.</div></div>
@@ -1337,7 +1369,7 @@ function renderRisks(){
   </div>
   <div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">Risk Register</span><span class="card-meta">${p.risks.length} risks · L × I = Score</span></div>
-  ${p.risks.length===0?emptyState('🛡','No risks yet','Click ＋ Add Risk to start — all fields edit inline'):`<table class="tbl risk-tbl" style="min-width:920px"><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+  ${p.risks.length===0?emptyState('🛡','No risks yet','Click ＋ Add Risk to start — all fields edit inline'):`<table class="tbl risk-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:auto"><col style="width:120px"><col style="width:90px"><col style="width:40px"><col style="width:40px"><col style="width:56px"><col style="width:200px"><col style="width:100px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
   <button class="add-row" onclick="addRisk()">＋ Add Risk</button></div>`;
 }
 function addRisk(){prog().risks.push({id:'r_'+Date.now(),desc:'',cat:'Technical',owner:'',lik:3,imp:3,mit:'',status:'Open'});save();render();}
@@ -1520,160 +1552,138 @@ function saveKitPick(){
 }
 
 // ══════════════════════════════════════
-// NPI TIMING PLAN
+// NPI TIMING PLAN — GANTT GRID
 // ══════════════════════════════════════
 
-const TP_PHASES=[
-  {id:'s0',label:'Section 0 — Pre-Planning',       short:'S0',color:'#6b7a99'},
-  {id:'s1',label:'Section 1 — Plan & Define',       short:'S1',color:'#0066cc'},
-  {id:'s2',label:'Section 2 — Product Design & Dev',short:'S2',color:'#6d3fa0'},
-  {id:'s3',label:'Section 3 — Process Design & Dev',short:'S3',color:'#0a7566'},
-  {id:'s4',label:'Section 4 — Validation',          short:'S4',color:'#b45309'},
-  {id:'s5',label:'Section 5 — Feedback & CI',       short:'S5',color:'#1a7a3c'},
+const GANTT_WEEKS = 24;
+const GANTT_SECTIONS = [
+  {id:'s0',label:'S0 — Pre-Planning',     color:'#6b7a99'},
+  {id:'s1',label:'S1 — Plan & Define',    color:'#0066cc'},
+  {id:'s2',label:'S2 — Product Design',   color:'#6d3fa0'},
+  {id:'s3',label:'S3 — Process Design',   color:'#0a7566'},
+  {id:'s4',label:'S4 — Validation',       color:'#b45309'},
+  {id:'s5',label:'S5 — Feedback & CI',    color:'#1a7a3c'},
 ];
 
-// Standard APQP deliverable list — no dates, just deliverable + owner
-const TP_DEFAULTS=[
-  {phase:'s0',deliverable:'Bid & Estimating Support',owner:'ME Manager'},
-  {phase:'s0',deliverable:'New Contract Introduction / Handover Meeting',owner:'ME Manager'},
-  {phase:'s1',deliverable:'Specification Review & Interpretation',owner:'ME Lead'},
-  {phase:'s1',deliverable:'CTQ Requirements Identified',owner:'ME Lead'},
-  {phase:'s1',deliverable:'Work Scope Agreed',owner:'ME Lead'},
-  {phase:'s1',deliverable:'Parts Obsolescence & Long-Lead Review',owner:'ME Lead'},
-  {phase:'s1',deliverable:'Project Timing Plan Issued',owner:'ME Manager'},
-  {phase:'s1',deliverable:'Gate 1 Sign-off',owner:'ME Manager'},
-  {phase:'s2',deliverable:'Strip Down & Inspection Complete',owner:'ME Lead'},
-  {phase:'s2',deliverable:'Repair Schemes Developed & Approved',owner:'ME Lead'},
-  {phase:'s2',deliverable:'Bill of Materials Complete',owner:'ME Lead'},
-  {phase:'s2',deliverable:'Accept / Reject Criteria Defined',owner:'ME Lead'},
-  {phase:'s2',deliverable:'Obsolescence Risks Resolved',owner:'ME Lead'},
-  {phase:'s2',deliverable:'Gate 2 Sign-off',owner:'ME Manager'},
-  {phase:'s3',deliverable:'Process Flow Diagram (PFD)',owner:'ME Lead'},
-  {phase:'s3',deliverable:'PFMEA Complete',owner:'ME Lead'},
-  {phase:'s3',deliverable:'Work Instructions Authored & Reviewed',owner:'ME Lead'},
-  {phase:'s3',deliverable:'Inspection Gates Defined',owner:'ME Lead'},
-  {phase:'s3',deliverable:'Test Procedure Drafted',owner:'ME Lead'},
-  {phase:'s3',deliverable:'Control Plan Complete',owner:'ME Lead'},
-  {phase:'s3',deliverable:'Tooling & Test Equipment Ordered',owner:'ME Lead'},
-  {phase:'s3',deliverable:'Test Rig Design & Build Started',owner:'ME Lead'},
-  {phase:'s3',deliverable:'Gate 3 Sign-off',owner:'ME Manager'},
-  {phase:'s4',deliverable:'Tooling & Equipment Qualified',owner:'ME Lead'},
-  {phase:'s4',deliverable:'Test Rig Commissioned & Validated',owner:'ME Lead'},
-  {phase:'s4',deliverable:'Trial Build Complete',owner:'ME Lead'},
-  {phase:'s4',deliverable:'First Article Inspection (FAIR)',owner:'ME Lead'},
-  {phase:'s4',deliverable:'Work Instructions Issued to Shop Floor',owner:'ME Lead'},
-  {phase:'s4',deliverable:'Gate 4 Sign-off',owner:'ME Manager'},
-  {phase:'s5',deliverable:'Production Monitoring & NCR Review Active',owner:'ME Lead'},
-  {phase:'s5',deliverable:'Root Cause Analysis on Significant Defects',owner:'ME Lead'},
-  {phase:'s5',deliverable:'Lessons Learned Captured',owner:'ME Lead'},
-  {phase:'s5',deliverable:'Family File & PFMEA Updated',owner:'ME Lead'},
-  {phase:'s5',deliverable:'Gate 5 Sign-off & Programme Close',owner:'ME Manager'},
-];
+function ganttNewRow(section){
+  return {id:'g_'+Date.now()+'_'+Math.random().toString(36).slice(2), task:'', section:section||'s1', weeks:Array(GANTT_WEEKS).fill(0), notes:''};
+}
 
 function renderTimingPlan(){
   const p=prog();
-  const tasks=p.timing;
-  const total=tasks.length;
-  const nG=tasks.filter(t=>t.rag==='G').length;
-  const nA=tasks.filter(t=>t.rag==='A').length;
-  const nR=tasks.filter(t=>t.rag==='R').length;
-  const pct=total>0?Math.round(nG/total*100):0;
+  if(!p.gantt)p.gantt=[];
 
-  // group by phase preserving original indices
-  const byPhase={};
-  TP_PHASES.forEach(ph=>{byPhase[ph.id]=[];});
-  tasks.forEach((t,i)=>{const ph=t.phase||'s1';if(!byPhase[ph])byPhase[ph]=[];byPhase[ph].push({t,i});});
+  // Group rows by section
+  const grouped={};
+  GANTT_SECTIONS.forEach(s=>{grouped[s.id]=p.gantt.filter(r=>r.section===s.id);});
+
+  // Week headers — group into months of 4
+  let weekHeaders='';
+  for(let w=0;w<GANTT_WEEKS;w++){
+    const mo=Math.floor(w/4)+1;
+    weekHeaders+=`<th class="gantt-wk" title="Week ${w+1}">W${w+1}</th>`;
+  }
+
+  // Month span headers
+  let monthHeaders='<th class="gantt-th-task">Task</th><th class="gantt-th-sec">Phase</th>';
+  for(let m=0;m<GANTT_WEEKS/4;m++){
+    monthHeaders+=`<th colspan="4" class="gantt-mo">Month ${m+1}</th>`;
+  }
+  monthHeaders+='<th class="gantt-th-notes">Notes</th><th style="width:28px"></th>';
 
   let body='';
-  TP_PHASES.forEach(ph=>{
-    const rows=byPhase[ph.id]||[];
-    if(!rows.length)return;
-    const phG=rows.filter(r=>r.t.rag==='G').length;
-    const phA=rows.filter(r=>r.t.rag==='A').length;
-    const phR=rows.filter(r=>r.t.rag==='R').length;
-    const phPct=Math.round(phG/rows.length*100);
-
-    const tblRows=rows.map(({t,i})=>{
-      const ragBtns=(['G','A','R']).map(r=>{
-        const active=t.rag===r;
-        const cls=active?`rag-btn rag-${r.toLowerCase()}`:'rag-btn';
-        return`<button class="${cls}" onclick="setRAG(${i},'${r}')" title="${{G:'Green — On Track',A:'Amber — At Risk',R:'Red — Off Track / Blocked'}[r]}">${r}</button>`;
+  GANTT_SECTIONS.forEach(sec=>{
+    const rows=grouped[sec.id]||[];
+    rows.forEach((row,ri)=>{
+      const gi=p.gantt.indexOf(row);
+      const RAG_COLORS={'G':'#16a34a','A':'#d97706','R':'#dc2626'};
+      const cells=row.weeks.map((v,wi)=>{
+        const color=v&&RAG_COLORS[v]?RAG_COLORS[v]:'';
+        const title=v?{G:'Green — On Track',A:'Amber — At Risk',R:'Red — Off Track'}[v]:'Click to set';
+        return`<td class="gantt-cell${v?' gantt-filled':''}" onclick="ganttToggle('${row.id}',${wi})" style="${color?'background:'+color+';opacity:.85':''}" title="${title}"></td>`;
       }).join('');
-      const needsRecovery=(t.rag==='A'||t.rag==='R')&&!t.notes;
-      return`<tr${t.rag==='R'?' class="row-overdue"':''}>
-        <td class="w28 ctr" style="color:var(--muted);font-size:11px;font-family:'IBM Plex Mono',monospace">${i+1}</td>
-        <td><input class="cell-edit" value="${esc(t.deliverable)}" onchange="updTiming(${i},'deliverable',this.value)" placeholder="Deliverable"></td>
-        <td class="w100"><input class="cell-edit" value="${esc(t.owner)}" onchange="updTiming(${i},'owner',this.value)" placeholder="Owner"></td>
-        <td class="w110"><input type="date" class="cell-edit" value="${t.planned||''}" onchange="updTiming(${i},'planned',this.value)" title="Planned completion date"></td>
-        <td class="w110"><input type="date" class="cell-edit" value="${t.actual||''}" onchange="updTiming(${i},'actual',this.value)" title="Actual completion date" style="${t.actual?'color:var(--green);font-weight:600':''}"></td>
-        <td class="w90" style="text-align:center">${ragBtns}</td>
-        <td><input class="cell-edit" value="${esc(t.notes)}" onchange="updTiming(${i},'notes',this.value)" placeholder="${needsRecovery?'⚠ Recovery plan required…':'Notes…'}" style="${needsRecovery?'border-color:var(--amber);background:var(--amber-pale)':''}"></td>
-        <td class="w28 ctr"><button class="del-btn" onclick="delTiming(${i})">×</button></td>
+      body+=`<tr class="gantt-row">
+        <td class="gantt-task-cell"><input class="cell-edit" value="${esc(row.task)}" onchange="ganttUpdTask('${row.id}',this.value)" placeholder="Task name" style="width:100%"></td>
+        <td class="gantt-sec-cell"><select class="cell-edit" onchange="ganttUpdSec('${row.id}',this.value)" style="width:100%;font-size:10px">${GANTT_SECTIONS.map(s=>`<option value="${s.id}"${row.section===s.id?' selected':''}>${s.label}</option>`).join('')}</select></td>
+        ${cells}
+        <td class="gantt-notes-cell"><input class="cell-edit" value="${esc(row.notes)}" onchange="ganttUpdNotes('${row.id}',this.value)" placeholder="Notes" style="width:100%"></td>
+        <td style="text-align:center"><button class="del-btn" onclick="ganttDelRow('${row.id}')">×</button></td>
       </tr>`;
-    }).join('');
-
-    body+=`<div class="card" style="margin-bottom:14px;overflow:hidden">
-      <div class="phase-band" style="border-top:3px solid ${ph.color}">
-        <span class="phase-pip" style="background:${ph.color}">${ph.short}</span>
-        <span style="font-size:13px;font-weight:600;color:var(--ink);flex:1">${ph.label}</span>
-        ${phR>0?`<span style="font-size:11px;font-weight:700;color:var(--red)">● ${phR} red</span>`:''}
-        ${phA>0?`<span style="font-size:11px;font-weight:700;color:var(--amber)">● ${phA} amber</span>`:''}
-        <span style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-left:4px">${phG}/${rows.length} green</span>
-        <div style="width:70px;height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-left:8px"><div style="height:100%;width:${phPct}%;background:${ph.color};transition:width .3s"></div></div>
-        <button class="btn btn-ghost btn-sm" onclick="addTimingPhase('${ph.id}')" style="font-size:11px;margin-left:6px">＋ Row</button>
-      </div>
-      <table class="tbl"><thead><tr>
-        <th class="w28">#</th><th>Deliverable</th><th class="w100">Owner</th>
-        <th class="w110">Planned Date</th><th class="w110">Actual Date</th>
-        <th class="w90" style="text-align:center">RAG</th><th>Notes / Recovery Plan</th><th class="w28"></th>
-      </tr></thead><tbody>${tblRows}</tbody></table>
-    </div>`;
+    });
+    // Add row button per section
+    body+=`<tr class="gantt-add-row">
+      <td colspan="${GANTT_WEEKS+4}" style="padding:2px 8px">
+        <button class="add-row" style="font-size:10px;padding:2px 10px" onclick="ganttAddRow('${sec.id}')">＋ Add ${sec.label} row</button>
+      </td>
+    </tr>`;
   });
 
-  const alertBar=(nR>0||nA>0)?`<div class="alert-item ${nR>0?'alert-red':'alert-amber'}" style="margin-bottom:16px">
-    ${nR>0?`🔴 <strong>${nR} red deliverable${nR!==1?'s':''}</strong> — recovery plan required in Notes column. `:''}
-    ${nA>0?`⚠ <strong>${nA} amber deliverable${nA!==1?'s':''}</strong> — at risk, monitor closely.`:''}
-  </div>`:'';
+  const totalRows=p.gantt.length;
+  const filledRows=p.gantt.filter(r=>r.weeks.some(w=>w>0)).length;
 
-  return`<div class="sec-head">
-    <div><div class="sec-eyebrow">Project</div><div class="sec-title">NPI Timing Plan</div>
-    <div class="sec-desc">Deliverable-based RAG tracker. Set Planned dates, record Actual dates, and rate each deliverable Green / Amber / Red. Red and amber items require a recovery plan.</div></div>
+  return`<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">NPI Timing Plan</div>
+    <div class="sec-desc">Click any cell to fill or clear. Rows group by APQP phase.</div></div>
     <div class="sec-actions">
-      <button class="btn btn-ghost btn-sm" onclick="loadDefaultTiming()">Load Template</button>
-      <button class="btn btn-primary btn-sm" onclick="addTiming()">＋ Add Row</button>
+      <button class="btn btn-ghost btn-sm" onclick="ganttClear()">Clear All</button>
+      <button class="btn btn-primary btn-sm" onclick="ganttAddRow('s1')">＋ Add Row</button>
     </div>
   </div>
-
-  ${total>0?`<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-    <div class="kpi-card" style="--kpi-color:var(--green);flex:1;min-width:90px;padding:12px 14px;cursor:default">
-      <div class="kpi-num" style="font-size:22px;color:var(--green)">${nG}<span style="font-size:13px;color:var(--muted)">/${total}</span></div>
-      <div class="kpi-label">Green</div>
-      <div style="height:3px;background:var(--line);border-radius:2px;margin-top:5px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--green)"></div></div>
-    </div>
-    <div class="kpi-card" style="--kpi-color:${nA>0?'var(--amber)':'var(--muted)'};flex:1;min-width:90px;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:${nA>0?'var(--amber)':'var(--muted)'}">${nA}</div><div class="kpi-label">Amber — At Risk</div></div>
-    <div class="kpi-card" style="--kpi-color:${nR>0?'var(--red)':'var(--muted)'};flex:1;min-width:90px;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:${nR>0?'var(--red)':'var(--muted)'}">${nR}</div><div class="kpi-label">Red — Off Track</div></div>
-    <div class="kpi-card" style="--kpi-color:var(--muted);flex:1;min-width:90px;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--muted)">${total-nG-nA-nR}</div><div class="kpi-label">Not Rated</div></div>
-  </div>${alertBar}${body}`
-  :emptyState('📅','No deliverables yet','Click <strong>Load Template</strong> to populate with the standard APQP deliverable set, or <strong>＋ Add Row</strong> to build manually.')}`;
+  <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.4px">CLICK TO CYCLE:</span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:#16a34a"></span>On Track</span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:#d97706"></span>At Risk</span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:#dc2626"></span>Off Track</span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:14px;border-radius:2px;border:1px solid var(--line2)"></span>Empty</span>
+  </div>
+  <div style="overflow-x:auto;border:1px solid var(--line);border-radius:8px">
+    <table class="tbl gantt-tbl" style="table-layout:fixed;width:max-content;min-width:100%;border-collapse:collapse">
+      <colgroup>
+        <col style="width:180px">
+        <col style="width:130px">
+        ${Array(GANTT_WEEKS).fill('<col style="width:28px">').join('')}
+        <col style="width:140px">
+        <col style="width:28px">
+      </colgroup>
+      <thead>
+        <tr class="gantt-month-row">${monthHeaders}</tr>
+        <tr class="gantt-week-row"><th class="gantt-th-task"></th><th class="gantt-th-sec"></th>${weekHeaders}<th class="gantt-th-notes"></th><th></th></tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>
+  </div>
+  ${totalRows===0?`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No rows yet — click <strong>＋ Add Row</strong> to start building your timing plan</div>`:''}`;
 }
 
-function addTiming(){
-  prog().timing.push({id:'tp_'+Date.now(),phase:'s1',deliverable:'',owner:'',planned:'',actual:'',rag:'',notes:''});
-  save();render();
-}
-function addTimingPhase(phaseId){
-  prog().timing.push({id:'tp_'+Date.now(),phase:phaseId,deliverable:'',owner:'',planned:'',actual:'',rag:'',notes:''});
-  save();render();
-}
-function updTiming(i,f,v){prog().timing[i][f]=v;save();}
-function setRAG(i,val){const t=prog().timing[i];t.rag=(t.rag===val?'':val);save();render();}
-function delTiming(i){prog().timing.splice(i,1);save();render();}
-function loadDefaultTiming(){
+function ganttToggle(id,wi){
   const p=prog();
-  if(p.timing.length>0&&!confirm('Replace existing plan with the standard APQP deliverable template?'))return;
-  p.timing=TP_DEFAULTS.map(d=>({id:'tp_'+Date.now()+'_'+Math.random().toString(36).slice(2),
-    phase:d.phase,deliverable:d.deliverable,owner:d.owner,planned:'',actual:'',rag:'',notes:''}));
+  const row=p.gantt.find(r=>r.id===id);
+  if(!row)return;
+  if(!row.weeks)row.weeks=Array(GANTT_WEEKS).fill(0);
+  const cycle={0:'G','G':'A','A':'R','R':0};
+  row.weeks[wi]=cycle[row.weeks[wi]]??0;
   save();render();
+}
+function ganttAddRow(section){
+  const p=prog();
+  if(!p.gantt)p.gantt=[];
+  p.gantt.push(ganttNewRow(section));
+  save();render();
+}
+function ganttUpdTask(id,val){
+  const p=prog();const row=p.gantt.find(r=>r.id===id);if(row){row.task=val;save();}
+}
+function ganttUpdSec(id,val){
+  const p=prog();const row=p.gantt.find(r=>r.id===id);if(row){row.section=val;save();render();}
+}
+function ganttUpdNotes(id,val){
+  const p=prog();const row=p.gantt.find(r=>r.id===id);if(row){row.notes=val;save();}
+}
+function ganttDelRow(id){
+  const p=prog();p.gantt=p.gantt.filter(r=>r.id!==id);save();render();
+}
+function ganttClear(){
+  if(!confirm('Clear all timing plan rows?'))return;
+  prog().gantt=[];save();render();
 }
 
 // ══════════════════════════════════════
@@ -1692,7 +1702,7 @@ async function launchApp(){
   await loadRemote();
   if(db.programmes.length===0) load();
   if(db.programmes.length===0){
-    const p=newProgTemplate('New Project','','','Other','',new Date().toISOString().slice(0,10));
+    const p=newProgTemplate('New Project','','','Other','','',new Date().toISOString().slice(0,10));
     db.programmes.push(p);
     save();
   }
