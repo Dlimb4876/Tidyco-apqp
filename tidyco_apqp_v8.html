@@ -355,6 +355,30 @@ input[type=number].cell-edit:hover::-webkit-inner-spin-button{opacity:1;}
 .proj-add-card{background:transparent;border:2px dashed var(--line2);border-radius:10px;padding:20px 22px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;font-weight:500;transition:border-color .15s,color .15s;min-height:100px;}
 .proj-add-card:hover{border-color:var(--blue);color:var(--blue);}
 
+/* TABLE FIXES */
+.tbl select{min-width:90px;max-width:100%;}
+.tbl input[type="text"]{min-width:60px;}
+.tbl input[type="date"]{min-width:110px;}
+td select{min-width:90px;}
+td input{box-sizing:border-box;}
+/* wider columns for key tables */
+.ctq-tbl td:nth-child(2){min-width:40px;}  /* ref badge */
+.ctq-tbl td:nth-child(3){min-width:180px;} /* requirement */
+.ctq-tbl td:nth-child(4){min-width:100px;} /* spec */
+.ctq-tbl td:nth-child(5){min-width:100px;} /* tol */
+.ctq-tbl td:nth-child(6){min-width:110px;} /* source */
+.ctq-tbl td:nth-child(7){min-width:130px;} /* oos action */
+.act-tbl td:nth-child(2){min-width:200px;} /* description */
+.act-tbl td:nth-child(3){min-width:90px;}  /* owner */
+.act-tbl td:nth-child(6){min-width:100px;} /* source */
+.act-tbl td:nth-child(7){min-width:120px;} /* notes */
+.pfmea-tbl td:nth-child(1){min-width:120px;} /* mode */
+.pfmea-tbl td:nth-child(2){min-width:140px;} /* effect */
+.pfmea-tbl td:nth-child(3){min-width:120px;} /* cause */
+.pfmea-tbl td:nth-child(9){min-width:160px;} /* controls */
+.pfmea-tbl td:nth-child(10){min-width:140px;} /* actions */
+
+/* PROJECT EDIT MODAL */
 /* LOGIN SCREEN */
 .login-shell{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
 .login-box{background:var(--white);border-radius:12px;padding:40px 44px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4);}
@@ -439,6 +463,24 @@ td.w120{width:120px}td.w140{width:140px}td.ctr{text-align:center}
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="np_date"></div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button><button class="btn btn-primary" onclick="createProg()">Create</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Project -->
+<div class="modal-bg" id="modalEditProj" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">Edit Project</div>
+    <div class="field"><label>Project Name *</label><input id="ep_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
+    <div class="field-row"><div class="field"><label>Customer</label><input id="ep_customer"></div><div class="field"><label>Unit / Product</label><input id="ep_unit"></div></div>
+    <div class="field-row">
+      <div class="field"><label>Product Family</label><select id="ep_family"><option value="HVAC">HVAC</option><option value="Rotating Machines">Rotating Machines</option><option value="Pneumatics">Pneumatics</option><option value="Other">Other</option></select></div>
+      <div class="field"><label>ME Lead</label><input id="ep_lead"></div>
+    </div>
+    <div class="field"><label>Start Date</label><input type="date" id="ep_date"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="deleteProject()">Delete Project</button>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost" onclick="closeModal('modalEditProj')">Cancel</button><button class="btn btn-primary" onclick="saveEditProject()">Save</button></div>
+    </div>
   </div>
 </div>
 
@@ -796,6 +838,38 @@ function renderProjects(){
   return html;
 }
 
+function showEditProject(){
+  const p=prog();if(!p)return;
+  document.getElementById('ep_name').value=p.name||'';
+  document.getElementById('ep_customer').value=p.customer||'';
+  document.getElementById('ep_unit').value=p.unit||'';
+  document.getElementById('ep_family').value=p.family||'Other';
+  document.getElementById('ep_lead').value=p.lead||'';
+  document.getElementById('ep_date').value=p.date||'';
+  showModal('modalEditProj');
+}
+function saveEditProject(){
+  const p=prog();if(!p)return;
+  const name=document.getElementById('ep_name').value.trim();
+  if(!name){alert('Name required');return;}
+  p.name=name;
+  p.customer=document.getElementById('ep_customer').value.trim();
+  p.unit=document.getElementById('ep_unit').value.trim();
+  p.family=document.getElementById('ep_family').value;
+  p.lead=document.getElementById('ep_lead').value.trim();
+  p.date=document.getElementById('ep_date').value;
+  save();closeModal('modalEditProj');render();
+}
+function deleteProject(){
+  const p=prog();if(!p)return;
+  if(!confirm('Delete project "'+p.name+'"? This cannot be undone.'))return;
+  // Delete from Supabase
+  supa.from('programmes').delete().eq('prog_id',p.id).then(()=>{});
+  db.programmes=db.programmes.filter(x=>x.id!==p.id);
+  progId=db.programmes.length?db.programmes[0].id:null;
+  closeModal('modalEditProj');
+  navigate('projects');
+}
 function openProject(id){
   progId=id;
   navigate('project');
@@ -862,7 +936,7 @@ function renderDashboard(){
   const riskHTML=p.risks.filter(r=>r.status!=='Closed').sort((a,b)=>b.lik*b.imp-a.lik*a.imp).slice(0,4).map(r=>{const s=r.lik*r.imp;return`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)"><span class="rs ${s>=12?'rs-hi':s>=6?'rs-med':'rs-lo'}">${s}</span><span style="flex:1;font-size:12px">${esc(r.desc)}</span><span style="font-size:10px;color:var(--muted)">${esc(r.cat||'')}</span></div>`;}).join('')||`<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open risks</div>`;
 
   const famIcon=FAMILIES.find(f=>f.id===(p.family||'Other'))?.icon||'📋';
-  return`<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family||'Other')}</span> ${p.customer?`<span>👤 ${esc(p.customer)}</span>`:''} ${p.unit?`<span>🚂 ${esc(p.unit)}</span>`:''} ${p.lead?`<span>🧑‍💼 ${esc(p.lead)}</span>`:''} ${p.date?`<span>📅 ${p.date}</span>`:''} <span>📍 Gate ${curGate>=0?curGate:'✓ All complete'}</span></div></div>
+  return`<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family||'Other')}</span> ${p.customer?`<span>👤 ${esc(p.customer)}</span>`:''} ${p.unit?`<span>🚂 ${esc(p.unit)}</span>`:''} ${p.lead?`<span>🧑‍💼 ${esc(p.lead)}</span>`:''} ${p.date?`<span>📅 ${p.date}</span>`:''} <span>📍 Gate ${curGate>=0?curGate:'✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
       <div class="kpi-card" onclick="navigate('gate_${curGate>=0?curGate:5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
@@ -982,7 +1056,7 @@ function renderAPQP(){
     tabs.map(t=>`<button style="padding:10px 20px;font-size:12px;font-weight:${apqpTab===t.id?'600':'500'};cursor:pointer;border:none;border-bottom:2px solid ${apqpTab===t.id?'var(--blue)':'transparent'};color:${apqpTab===t.id?'var(--blue)':'var(--muted)'};background:${apqpTab===t.id?'var(--blue-pale)':'transparent'};font-family:'IBM Plex Sans',sans-serif;transition:all .15s;white-space:nowrap" onclick="setApqpTab('${t.id}')">${t.label}${t.badge>0?` <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;opacity:.7">(${t.badge})</span>`:''}${t.warn?` <span style="color:var(--amber)">⚠</span>`:''}</button>`).join('')
   }</div>`;
   const inner=apqpTab==='ctq'?renderCTQ():apqpTab==='pfd'?renderPFD():apqpTab==='pfmea'?renderPFMEA():renderCP();
-  return`<div class="sec-head"><div><div class="sec-eyebrow">Programme</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div></div>
+  return`<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div></div>
   ${tabNav}
   <div style="background:var(--white);border:1px solid var(--line);border-top:none;border-radius:0 0 4px 4px;padding:20px 0 0"></div>
   <div style="padding-top:18px">${inner}</div>`;
@@ -1003,7 +1077,7 @@ function renderCTQ(){
   </tr>`).join('');
   return`<div class="sec-head"><div><div class="sec-eyebrow">Step 01</div><div class="sec-title">CTQ Matrix</div><div class="sec-desc">Critical-to-Quality requirements — source of truth for PFD, PFMEA and Control Plan.</div></div><div class="sec-actions"><button class="btn btn-primary btn-sm" onclick="addCTQ()">＋ Add CTQ</button></div></div>
   <div class="card"><div class="card-head"><span class="card-title">Requirements</span><span class="card-meta">${p.ctq.length} defined</span></div>
-  ${p.ctq.length===0?emptyState('🎯','No CTQs yet','Add critical requirements'): `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Ref</th><th>Requirement</th><th>Target / Tolerance</th><th>Source</th><th>Out-of-Spec Action</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
+  ${p.ctq.length===0?emptyState('🎯','No CTQs yet','Add critical requirements'): `<div style="overflow-x:auto"><table class="tbl ctq-tbl"><thead><tr><th>Ref</th><th>Requirement</th><th>Target / Tolerance</th><th>Source</th><th>Out-of-Spec Action</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="addCTQ()">＋ Add CTQ</button></div>
   ${p.ctq.length>0?`<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" onclick="setApqpTab('pfd');return false" style="color:var(--blue)">Process Flow →</a></div>`:''}`;
 }
@@ -1094,7 +1168,7 @@ function renderPFMEA(){
   const byStep={};sorted.forEach(s=>{byStep[s.id]=[];});byStep['__none']=[];
   p.pfmea.forEach(r=>{const key=(r.pfdId&&byStep[r.pfdId]!==undefined)?r.pfdId:'__none';byStep[key].push(r);});
 
-  let html='<div style="overflow-x:auto"><table class="tbl" style="min-width:1050px"><thead><tr><th>Failure Mode</th><th>Effect</th><th>Cause</th><th>SEV</th><th>OCC</th><th>DET</th><th>RPN</th><th>CTQs</th><th>Controls</th><th>Action</th><th></th></tr></thead><tbody>';
+  let html='<div style="overflow-x:auto"><table class="tbl pfmea-tbl" style="min-width:1050px"><thead><tr><th>Failure Mode</th><th>Effect</th><th>Cause</th><th>SEV</th><th>OCC</th><th>DET</th><th>RPN</th><th>CTQs</th><th>Controls</th><th>Action</th><th></th></tr></thead><tbody>';
 
   sorted.forEach(s=>{
     const rows=byStep[s.id]||[];
@@ -1213,7 +1287,7 @@ function renderActions(){
       <td class="w28 ctr"><button class="del-btn" onclick="delAction(${i})">×</button></td>
     </tr>`;
   }).join('');
-  return`<div class="sec-head"><div><div class="sec-eyebrow">Programme</div><div class="sec-title">Action Tracker</div><div class="sec-desc">Central log of all actions. Overdue items highlighted. Edit all fields inline.</div></div>
+  return`<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Action Tracker</div><div class="sec-desc">Central log of all actions. Overdue items highlighted. Edit all fields inline.</div></div>
   <div class="sec-actions"><button class="btn btn-primary btn-sm" onclick="addAction()">＋ Add Action</button></div></div>
   <div style="display:flex;gap:10px;margin-bottom:16px">
     <div class="kpi-card" style="--kpi-color:var(--amber);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px">${open}</div><div class="kpi-label">Open</div></div>
@@ -1222,7 +1296,7 @@ function renderActions(){
   </div>
   <div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">All Actions</span><span class="card-meta">${p.actions.length} total</span></div>
-  ${p.actions.length===0?emptyState('✅','No actions yet','Click ＋ Add Action to start tracking'):`<table class="tbl" style="min-width:860px"><thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+  ${p.actions.length===0?emptyState('✅','No actions yet','Click ＋ Add Action to start tracking'):`<table class="tbl act-tbl" style="min-width:860px"><thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
   <button class="add-row" onclick="addAction()">＋ Add Action</button></div>`;
 }
 function addAction(){prog().actions.push({id:'a_'+Date.now(),desc:'',owner:'',due:'',status:'Open',priority:'Medium',source:'General',notes:''});save();render();}
@@ -1253,7 +1327,7 @@ function renderRisks(){
       <td class="w28 ctr"><button class="del-btn" onclick="delRisk(${i})">×</button></td>
     </tr>`;
   }).join('');
-  return`<div class="sec-head"><div><div class="sec-eyebrow">Programme</div><div class="sec-title">Risk Register</div><div class="sec-desc">Programme-level risks. Likelihood × Impact = Score. All fields editable inline. High risks ≥ 12.</div></div>
+  return`<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Risk Register</div><div class="sec-desc">Project-level risks. Likelihood × Impact = Score. All fields editable inline. High risks ≥ 12.</div></div>
   <div class="sec-actions"><button class="btn btn-primary btn-sm" onclick="addRisk()">＋ Add Risk</button></div></div>
   <div style="display:flex;gap:10px;margin-bottom:16px">
     <div class="kpi-card" style="--kpi-color:var(--red);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--red)">${hi}</div><div class="kpi-label">High ≥12</div></div>
@@ -1263,7 +1337,7 @@ function renderRisks(){
   </div>
   <div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">Risk Register</span><span class="card-meta">${p.risks.length} risks · L × I = Score</span></div>
-  ${p.risks.length===0?emptyState('🛡','No risks yet','Click ＋ Add Risk to start — all fields edit inline'):`<table class="tbl" style="min-width:920px"><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+  ${p.risks.length===0?emptyState('🛡','No risks yet','Click ＋ Add Risk to start — all fields edit inline'):`<table class="tbl risk-tbl" style="min-width:920px"><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
   <button class="add-row" onclick="addRisk()">＋ Add Risk</button></div>`;
 }
 function addRisk(){prog().risks.push({id:'r_'+Date.now(),desc:'',cat:'Technical',owner:'',lik:3,imp:3,mit:'',status:'Open'});save();render();}
@@ -1562,7 +1636,7 @@ function renderTimingPlan(){
   </div>`:'';
 
   return`<div class="sec-head">
-    <div><div class="sec-eyebrow">Programme</div><div class="sec-title">NPI Timing Plan</div>
+    <div><div class="sec-eyebrow">Project</div><div class="sec-title">NPI Timing Plan</div>
     <div class="sec-desc">Deliverable-based RAG tracker. Set Planned dates, record Actual dates, and rate each deliverable Green / Amber / Red. Red and amber items require a recovery plan.</div></div>
     <div class="sec-actions">
       <button class="btn btn-ghost btn-sm" onclick="loadDefaultTiming()">Load Template</button>
