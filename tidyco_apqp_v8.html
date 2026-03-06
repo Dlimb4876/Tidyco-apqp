@@ -375,6 +375,14 @@ input[type=number].cell-edit:hover::-webkit-inner-spin-button{opacity:1;}
 .gantt-cell:hover{background:var(--blue-pale)!important;opacity:.8;}
 .gantt-filled{opacity:.85;}
 .gantt-add-row td{background:transparent;border:none!important;padding:2px 0!important;}
+.gantt-plan-row{background:var(--white);}
+.gantt-act-row{background:#f8fafc;}
+.gantt-rowlabel{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-align:center;padding:2px 3px!important;white-space:nowrap;background:var(--bg);border-right:2px solid var(--line)!important;}
+.gantt-rowlabel-act{color:#94a3b8;background:#f1f5f9;}
+.gantt-actual{background:#f8fafc;}
+.gantt-today-hdr{background:#1e40af!important;color:#93c5fd!important;font-weight:700!important;}
+.gantt-today-col{border-left:2px solid #3b82f6!important;border-right:2px solid #3b82f6!important;}
+.gantt-task-cell{vertical-align:top!important;padding:4px 6px!important;}
 
 /* TABLE FIXES */
 .tbl select{min-width:90px;max-width:100%;}
@@ -699,6 +707,7 @@ function migrateprog(p){
   if(!p.risks)p.risks=[];
   if(!p.timing)p.timing=[];
   if(!p.gantt)p.gantt=[];
+  if(!p.ganttStart&&p.date)p.ganttStart=p.date;
   if(!p.gates){p.gates=GATE_DEFS.map(g=>({gateNum:g.num,checks:g.items.map(()=>false),sigs:g.signatories.map(r=>({role:r,name:'',date:'',signed:false}))}));}
   p.gates.forEach((gd,gi)=>{
     if(gi>=GATE_DEFS.length)return;
@@ -1564,127 +1573,204 @@ const GANTT_SECTIONS = [
   {id:'s4',label:'S4 — Validation',       color:'#b45309'},
   {id:'s5',label:'S5 — Feedback & CI',    color:'#1a7a3c'},
 ];
+const RAG_COLORS={'G':'#16a34a','A':'#d97706','R':'#dc2626'};
+const RAG_CYCLE={0:'G','G':'A','A':'R','R':0};
 
 function ganttNewRow(section){
-  return {id:'g_'+Date.now()+'_'+Math.random().toString(36).slice(2), task:'', section:section||'s1', weeks:Array(GANTT_WEEKS).fill(0), notes:''};
+  return {
+    id:'g_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+    task:'', section:section||'s1',
+    planned:Array(GANTT_WEEKS).fill(0),
+    actual:Array(GANTT_WEEKS).fill(0),
+    notes:''
+  };
+}
+
+// Returns Monday date for week index given a start date string
+function ganttWeekDate(startStr, wi){
+  if(!startStr)return null;
+  const d=new Date(startStr);
+  // align to Monday
+  const day=d.getDay();
+  const diff=day===0?1:(day===1?0:8-day); // days until next Monday (or same if Monday)
+  d.setDate(d.getDate()+(day===1?0:diff));
+  d.setDate(d.getDate()+wi*7);
+  return d;
+}
+function fmtWeekDate(d){
+  if(!d)return'';
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
 }
 
 function renderTimingPlan(){
   const p=prog();
   if(!p.gantt)p.gantt=[];
+  if(!p.ganttStart&&p.date)p.ganttStart=p.date;
+  // migrate old format (weeks array) to planned/actual
+  p.gantt.forEach(r=>{
+    if(r.weeks&&!r.planned){r.planned=r.weeks;r.actual=Array(GANTT_WEEKS).fill(0);delete r.weeks;}
+    if(!r.planned)r.planned=Array(GANTT_WEEKS).fill(0);
+    if(!r.actual)r.actual=Array(GANTT_WEEKS).fill(0);
+  });
 
-  // Group rows by section
-  const grouped={};
-  GANTT_SECTIONS.forEach(s=>{grouped[s.id]=p.gantt.filter(r=>r.section===s.id);});
-
-  // Week headers — group into months of 4
-  let weekHeaders='';
-  for(let w=0;w<GANTT_WEEKS;w++){
-    const mo=Math.floor(w/4)+1;
-    weekHeaders+=`<th class="gantt-wk" title="Week ${w+1}">W${w+1}</th>`;
+  const startDate=p.ganttStart||p.date||'';
+  const today=new Date();
+  // find which week column "today" falls in
+  let todayCol=-1;
+  if(startDate){
+    const d=ganttWeekDate(startDate,0);
+    if(d){
+      const ms=today-d;
+      const wk=Math.floor(ms/(7*24*60*60*1000));
+      if(wk>=0&&wk<GANTT_WEEKS)todayCol=wk;
+    }
   }
 
-  // Month span headers
-  let monthHeaders='<th class="gantt-th-task">Task</th><th class="gantt-th-sec">Phase</th>';
-  for(let m=0;m<GANTT_WEEKS/4;m++){
-    monthHeaders+=`<th colspan="4" class="gantt-mo">Month ${m+1}</th>`;
+  // Build week date labels
+  const weekDates=[];
+  for(let w=0;w<GANTT_WEEKS;w++){
+    const d=ganttWeekDate(startDate,w);
+    weekDates.push(d?fmtWeekDate(d):`W${w+1}`);
+  }
+
+  // Month header — derive from actual dates or just Month 1..6
+  let monthHeaders='<th class="gantt-th-task" colspan="2">Task / Phase</th>';
+  if(startDate){
+    // Group weeks by calendar month
+    let groups=[];
+    let cur={label:'',count:0};
+    for(let w=0;w<GANTT_WEEKS;w++){
+      const d=ganttWeekDate(startDate,w);
+      const mo=d?d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}):`M${Math.floor(w/4)+1}`;
+      if(mo===cur.label){cur.count++;}
+      else{if(cur.count>0)groups.push({...cur});cur={label:mo,count:1};}
+    }
+    if(cur.count>0)groups.push(cur);
+    groups.forEach(g=>{monthHeaders+=`<th colspan="${g.count}" class="gantt-mo">${g.label}</th>`;});
+  } else {
+    for(let m=0;m<GANTT_WEEKS/4;m++){
+      monthHeaders+=`<th colspan="4" class="gantt-mo">Month ${m+1}</th>`;
+    }
   }
   monthHeaders+='<th class="gantt-th-notes">Notes</th><th style="width:28px"></th>';
+
+  // Week row
+  let weekHeaders='';
+  for(let w=0;w<GANTT_WEEKS;w++){
+    const isToday=w===todayCol;
+    weekHeaders+=`<th class="gantt-wk${isToday?' gantt-today-hdr':''}" title="Week ${w+1}${weekDates[w]!==`W${w+1}`?' · w/c '+weekDates[w]:''}">${weekDates[w]}</th>`;
+  }
+
+  // Grouped rows
+  const grouped={};
+  GANTT_SECTIONS.forEach(s=>{grouped[s.id]=p.gantt.filter(r=>r.section===s.id);});
 
   let body='';
   GANTT_SECTIONS.forEach(sec=>{
     const rows=grouped[sec.id]||[];
-    rows.forEach((row,ri)=>{
-      const gi=p.gantt.indexOf(row);
-      const RAG_COLORS={'G':'#16a34a','A':'#d97706','R':'#dc2626'};
-      const cells=row.weeks.map((v,wi)=>{
+    if(rows.length===0 && p.gantt.length>0) return; // hide empty sections when plan has rows
+    rows.forEach((row)=>{
+      // Planned row
+      const planCells=row.planned.map((v,wi)=>{
         const color=v&&RAG_COLORS[v]?RAG_COLORS[v]:'';
-        const title=v?{G:'Green — On Track',A:'Amber — At Risk',R:'Red — Off Track'}[v]:'Click to set';
-        return`<td class="gantt-cell${v?' gantt-filled':''}" onclick="ganttToggle('${row.id}',${wi})" style="${color?'background:'+color+';opacity:.85':''}" title="${title}"></td>`;
+        const isToday=wi===todayCol;
+        const title=v?{G:'Planned — On Track',A:'Planned — At Risk',R:'Planned — Off Track'}[v]:'Click to mark planned';
+        return`<td class="gantt-cell${v?' gantt-filled':''}${isToday?' gantt-today-col':''}" onclick="ganttTogglePlan('${row.id}',${wi})" style="${color?'background:'+color+';opacity:.85':''}" title="${title}"></td>`;
       }).join('');
-      body+=`<tr class="gantt-row">
-        <td class="gantt-task-cell"><input class="cell-edit" value="${esc(row.task)}" onchange="ganttUpdTask('${row.id}',this.value)" placeholder="Task name" style="width:100%"></td>
-        <td class="gantt-sec-cell"><select class="cell-edit" onchange="ganttUpdSec('${row.id}',this.value)" style="width:100%;font-size:10px">${GANTT_SECTIONS.map(s=>`<option value="${s.id}"${row.section===s.id?' selected':''}>${s.label}</option>`).join('')}</select></td>
-        ${cells}
-        <td class="gantt-notes-cell"><input class="cell-edit" value="${esc(row.notes)}" onchange="ganttUpdNotes('${row.id}',this.value)" placeholder="Notes" style="width:100%"></td>
-        <td style="text-align:center"><button class="del-btn" onclick="ganttDelRow('${row.id}')">×</button></td>
+      // Actual row
+      const actCells=row.actual.map((v,wi)=>{
+        const color=v&&RAG_COLORS[v]?RAG_COLORS[v]:'';
+        const isToday=wi===todayCol;
+        const title=v?{G:'Actual — On Track',A:'Actual — At Risk',R:'Actual — Off Track'}[v]:'Click to mark actual';
+        return`<td class="gantt-cell gantt-actual${v?' gantt-filled':''}${isToday?' gantt-today-col':''}" onclick="ganttToggleAct('${row.id}',${wi})" style="${color?'background:'+color+';opacity:.6;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.15) 0,rgba(255,255,255,.15) 2px,transparent 2px,transparent 6px)':''}" title="${title}"></td>`;
+      }).join('');
+
+      body+=`<tr class="gantt-row gantt-plan-row">
+        <td class="gantt-task-cell" rowspan="2">
+          <input class="cell-edit" value="${esc(row.task)}" onchange="ganttUpdTask('${row.id}',this.value)" placeholder="Task name" style="width:100%">
+          <select class="cell-edit" onchange="ganttUpdSec('${row.id}',this.value)" style="width:100%;font-size:10px;margin-top:2px">${GANTT_SECTIONS.map(s=>`<option value="${s.id}"${row.section===s.id?' selected':''}>${s.label}</option>`).join('')}</select>
+        </td>
+        <td class="gantt-rowlabel">Planned</td>
+        ${planCells}
+        <td class="gantt-notes-cell" rowspan="2"><input class="cell-edit" value="${esc(row.notes)}" onchange="ganttUpdNotes('${row.id}',this.value)" placeholder="Notes" style="width:100%"></td>
+        <td style="text-align:center" rowspan="2"><button class="del-btn" onclick="ganttDelRow('${row.id}')">×</button></td>
+      </tr>
+      <tr class="gantt-row gantt-act-row">
+        <td class="gantt-rowlabel gantt-rowlabel-act">Actual</td>
+        ${actCells}
       </tr>`;
     });
-    // Add row button per section
     body+=`<tr class="gantt-add-row">
       <td colspan="${GANTT_WEEKS+4}" style="padding:2px 8px">
-        <button class="add-row" style="font-size:10px;padding:2px 10px" onclick="ganttAddRow('${sec.id}')">＋ Add ${sec.label} row</button>
+        <button class="add-row" style="font-size:10px;padding:2px 10px" onclick="ganttAddRow('${sec.id}')">＋ Add ${sec.label} task</button>
       </td>
     </tr>`;
   });
 
   const totalRows=p.gantt.length;
-  const filledRows=p.gantt.filter(r=>r.weeks.some(w=>w>0)).length;
 
   return`<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">NPI Timing Plan</div>
-    <div class="sec-desc">Click any cell to fill or clear. Rows group by APQP phase.</div></div>
+    <div class="sec-desc">Each task has a Planned row and an Actual row. Click cells to cycle G→A→R→empty.</div></div>
     <div class="sec-actions">
       <button class="btn btn-ghost btn-sm" onclick="ganttClear()">Clear All</button>
-      <button class="btn btn-primary btn-sm" onclick="ganttAddRow('s1')">＋ Add Row</button>
+      <button class="btn btn-primary btn-sm" onclick="ganttAddRow('s1')">＋ Add Task</button>
     </div>
   </div>
-  <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-    <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.4px">CLICK TO CYCLE:</span>
-    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:#16a34a"></span>On Track</span>
-    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:#d97706"></span>At Risk</span>
-    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:14px;border-radius:2px;background:#dc2626"></span>Off Track</span>
-    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:14px;border-radius:2px;border:1px solid var(--line2)"></span>Empty</span>
+  <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.4px">CLICK TO CYCLE:</span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#16a34a"></span>On Track</span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#d97706"></span>At Risk</span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#dc2626"></span>Off Track</span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:repeating-linear-gradient(45deg,rgba(0,0,0,.1) 0,rgba(0,0,0,.1) 2px,transparent 2px,transparent 6px),#d97706"></span>Actual rows (hatched)</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap">Plan start:</label>
+      <input type="date" class="cell-edit" value="${startDate}" onchange="ganttSetStart(this.value)" style="font-size:12px;padding:3px 7px;border-radius:5px;border:1.5px solid var(--line2)">
+      ${todayCol>=0?`<span style="font-size:11px;color:var(--blue);font-family:'IBM Plex Mono',monospace">▼ Today = W${todayCol+1}</span>`:''}
+    </div>
   </div>
   <div style="overflow-x:auto;border:1px solid var(--line);border-radius:8px">
     <table class="tbl gantt-tbl" style="table-layout:fixed;width:max-content;min-width:100%;border-collapse:collapse">
       <colgroup>
-        <col style="width:180px">
-        <col style="width:130px">
-        ${Array(GANTT_WEEKS).fill('<col style="width:28px">').join('')}
+        <col style="width:190px">
+        <col style="width:58px">
+        ${Array(GANTT_WEEKS).fill('<col style="width:30px">').join('')}
         <col style="width:140px">
         <col style="width:28px">
       </colgroup>
       <thead>
         <tr class="gantt-month-row">${monthHeaders}</tr>
-        <tr class="gantt-week-row"><th class="gantt-th-task"></th><th class="gantt-th-sec"></th>${weekHeaders}<th class="gantt-th-notes"></th><th></th></tr>
+        <tr class="gantt-week-row"><th class="gantt-th-task" colspan="2"></th>${weekHeaders}<th class="gantt-th-notes"></th><th></th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
   </div>
-  ${totalRows===0?`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No rows yet — click <strong>＋ Add Row</strong> to start building your timing plan</div>`:''}`;
+  ${totalRows===0?`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No tasks yet — click <strong>＋ Add Task</strong> to start building your timing plan</div>`:''}`;
 }
 
-function ganttToggle(id,wi){
-  const p=prog();
-  const row=p.gantt.find(r=>r.id===id);
-  if(!row)return;
-  if(!row.weeks)row.weeks=Array(GANTT_WEEKS).fill(0);
-  const cycle={0:'G','G':'A','A':'R','R':0};
-  row.weeks[wi]=cycle[row.weeks[wi]]??0;
+function ganttTogglePlan(id,wi){
+  const p=prog();const row=p.gantt.find(r=>r.id===id);if(!row)return;
+  if(!row.planned)row.planned=Array(GANTT_WEEKS).fill(0);
+  row.planned[wi]=RAG_CYCLE[row.planned[wi]]??0;
+  save();render();
+}
+function ganttToggleAct(id,wi){
+  const p=prog();const row=p.gantt.find(r=>r.id===id);if(!row)return;
+  if(!row.actual)row.actual=Array(GANTT_WEEKS).fill(0);
+  row.actual[wi]=RAG_CYCLE[row.actual[wi]]??0;
   save();render();
 }
 function ganttAddRow(section){
-  const p=prog();
-  if(!p.gantt)p.gantt=[];
-  p.gantt.push(ganttNewRow(section));
-  save();render();
+  const p=prog();if(!p.gantt)p.gantt=[];
+  p.gantt.push(ganttNewRow(section));save();render();
 }
-function ganttUpdTask(id,val){
-  const p=prog();const row=p.gantt.find(r=>r.id===id);if(row){row.task=val;save();}
-}
-function ganttUpdSec(id,val){
-  const p=prog();const row=p.gantt.find(r=>r.id===id);if(row){row.section=val;save();render();}
-}
-function ganttUpdNotes(id,val){
-  const p=prog();const row=p.gantt.find(r=>r.id===id);if(row){row.notes=val;save();}
-}
-function ganttDelRow(id){
-  const p=prog();p.gantt=p.gantt.filter(r=>r.id!==id);save();render();
-}
-function ganttClear(){
-  if(!confirm('Clear all timing plan rows?'))return;
-  prog().gantt=[];save();render();
-}
+function ganttUpdTask(id,val){const p=prog();const r=p.gantt.find(x=>x.id===id);if(r){r.task=val;save();}}
+function ganttUpdSec(id,val){const p=prog();const r=p.gantt.find(x=>x.id===id);if(r){r.section=val;save();render();}}
+function ganttUpdNotes(id,val){const p=prog();const r=p.gantt.find(x=>x.id===id);if(r){r.notes=val;save();}}
+function ganttDelRow(id){const p=prog();p.gantt=p.gantt.filter(r=>r.id!==id);save();render();}
+function ganttSetStart(val){const p=prog();p.ganttStart=val;save();render();}
+function ganttClear(){if(!confirm('Clear all timing plan tasks?'))return;prog().gantt=[];save();render();}
 
 // ══════════════════════════════════════
 // UTILS
