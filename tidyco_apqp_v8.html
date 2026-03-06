@@ -703,8 +703,9 @@ function goProjects(){navigate('projects');}
 function setApqpTab(t){apqpTab=t;render();}
 function render(){
   const mc=document.getElementById('mainContent');
-  if(!prog()){mc.innerHTML=`<div style="padding:60px;text-align:center;color:var(--muted)"><div style="font-size:44px;margin-bottom:12px">📋</div><div style="font-size:17px;font-weight:600;margin-bottom:16px;color:var(--mid)">No project selected</div><button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button></div>`;return;}
-  if(currentSection==='home')mc.innerHTML=renderDashboard();
+  if(currentSection==='projects'){mc.innerHTML=renderProjects();return;}
+  if(!prog()){mc.innerHTML=renderProjects();return;}
+  if(currentSection==='project')mc.innerHTML=renderDashboard();
   else if(currentSection.startsWith('gate_'))mc.innerHTML=renderGatePage(+currentSection.split('_')[1]);
   else{mc.innerHTML=`<div class="section-inner">${renderSection()}</div>`;}
 }
