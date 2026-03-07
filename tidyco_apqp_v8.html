@@ -1387,7 +1387,7 @@ function renderPFMEA(){
             </td>
             <td rowspan="${efRowspan}" class="pfmea-effect-cell" style="text-align:center;vertical-align:middle">
               <div style="font-size:8px;color:var(--muted);margin-bottom:2px">SEV</div>
-              <input type="number" class="cell-edit mono" min="1" max="10" value="${sev}" onchange="pfUpdEffect(${mi},${ei},'sev',+this.value);pfRefreshRPN()" style="width:30px;text-align:center;font-weight:700;font-size:13px">
+              <input type="number" class="cell-edit mono" min="1" max="10" value="${sev}" onchange="pfUpdEffect(${mi},${ei},'sev',+this.value);pfLiveRPN(${mi},${ei},-1)" style="width:30px;text-align:center;font-weight:700;font-size:13px">
             </td>`;
           }
 
@@ -1399,7 +1399,7 @@ function renderPFMEA(){
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
               <div style="font-size:8px;color:var(--muted);margin-bottom:2px">OCC</div>
-              <input type="number" class="cell-edit mono" min="1" max="10" value="${occ}" onchange="pfUpdCause(${mi},${ei},${ci},'occ',+this.value);pfRefreshRPN()" style="width:30px;text-align:center;font-weight:700;font-size:13px">
+              <input type="number" class="cell-edit mono" min="1" max="10" value="${occ}" onchange="pfUpdCause(${mi},${ei},${ci},'occ',+this.value);pfLiveRPN(${mi},${ei},${ci})" style="width:30px;text-align:center;font-weight:700;font-size:13px">
             </td>
             <td class="pfmea-cause-cell" style="vertical-align:top">
               <textarea class="cell-edit" rows="2" onchange="pfUpdCause(${mi},${ei},${ci},'prevent',this.value)" placeholder="How do we prevent this cause?" style="width:100%;font-size:11px">${esc(ca.prevent||'')}</textarea>
@@ -1409,10 +1409,10 @@ function renderPFMEA(){
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
               <div style="font-size:8px;color:var(--muted);margin-bottom:2px">DET</div>
-              <input type="number" class="cell-edit mono" min="1" max="10" value="${det}" onchange="pfUpdCause(${mi},${ei},${ci},'det',+this.value);pfRefreshRPN()" style="width:30px;text-align:center;font-weight:700;font-size:13px">
+              <input type="number" class="cell-edit mono" min="1" max="10" value="${det}" onchange="pfUpdCause(${mi},${ei},${ci},'det',+this.value);pfLiveRPN(${mi},${ei},${ci})" style="width:30px;text-align:center;font-weight:700;font-size:13px">
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
-              <span class="rpn ${rpnCls}" style="font-size:12px;padding:3px 6px">${rpn}</span>
+              <span class="rpn ${rpnCls}" id="rpn_${mi}_${ei}_${ci}" style="font-size:12px;padding:3px 6px">${rpn}</span>
               ${hist.length?`<div style="margin-top:3px"><button onclick="pfToggleHist('${ca.id}')" style="font-size:9px;background:none;border:1px solid var(--line2);border-radius:3px;cursor:pointer;padding:1px 4px;color:var(--muted)">▶ ${hist.length}</button></div>`:''}
               <div id="hist_${ca.id}" style="display:none;margin-top:4px;text-align:left;min-width:160px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:4px 6px">${histRows}</div>
             </td>
@@ -1428,14 +1428,14 @@ function renderPFMEA(){
             </td>
             <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
               <div style="font-size:8px;color:#6b7280;margin-bottom:2px">OCC</div>
-              <input type="number" class="cell-edit mono" min="1" max="10" value="${act.newOcc||''}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'newOcc',this.value);pfRefreshRPN()" placeholder="—" style="width:30px;text-align:center;background:transparent;font-size:12px">
+              <input type="number" class="cell-edit mono" min="1" max="10" value="${act.newOcc||''}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'newOcc',this.value);pfLiveForecast(${mi},${ei},${ci})" placeholder="—" style="width:30px;text-align:center;background:transparent;font-size:12px">
             </td>
             <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
               <div style="font-size:8px;color:#6b7280;margin-bottom:2px">DET</div>
-              <input type="number" class="cell-edit mono" min="1" max="10" value="${act.newDet||''}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'newDet',this.value);pfRefreshRPN()" placeholder="—" style="width:30px;text-align:center;background:transparent;font-size:12px">
+              <input type="number" class="cell-edit mono" min="1" max="10" value="${act.newDet||''}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'newDet',this.value);pfLiveForecast(${mi},${ei},${ci})" placeholder="—" style="width:30px;text-align:center;background:transparent;font-size:12px">
             </td>
             <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
-              ${hasAction?`<span class="rpn ${fCls}" style="font-size:11px;padding:2px 5px">${forecast}</span>`:`<span style="color:var(--muted);font-size:11px">—</span>`}
+              <span id="forecast_${mi}_${ei}_${ci}" class="rpn ${fCls}" style="font-size:11px;padding:2px 5px;${hasAction?'':'opacity:0'}">${hasAction?forecast:'—'}</span>
             </td>
             <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
               ${hasAction?`<button onclick="pfImplementAction(${mi},${ei},${ci})" style="font-size:10px;font-weight:700;background:#1e40af;color:white;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;white-space:nowrap" title="Implement — write new scores to PFMEA">▶ Apply</button>`:`<span style="color:var(--muted);font-size:10px">—</span>`}
@@ -1555,6 +1555,46 @@ This will:
 }
 function pfDelCause(mi,ei,ci){prog().pfmea[mi].effects[ei].causes.splice(ci,1);save();render();}
 function pfRefreshRPN(){save();}
+
+function pfRpnClass(rpn){return rpn>=200?'rpn-hi':rpn>=100?'rpn-md':'rpn-lo';}
+
+// Live-update RPN span(s) for a cause row. If ci===-1, update all causes of this effect.
+function pfLiveRPN(mi,ei,ci){
+  const p=prog();
+  const mode=p.pfmea[mi];if(!mode)return;
+  const ef=mode.effects[ei];if(!ef)return;
+  const sev=ef.sev||1;
+  const targets=ci===-1?(ef.causes||[]).map((_,i)=>i):[ci];
+  targets.forEach(cIdx=>{
+    const ca=(ef.causes||[])[cIdx];if(!ca)return;
+    const rpn=sev*(ca.occ||1)*(ca.det||1);
+    const el=document.getElementById(`rpn_${mi}_${ei}_${cIdx}`);
+    if(el){el.textContent=rpn;el.className='rpn '+pfRpnClass(rpn);}
+    pfLiveForecast(mi,ei,cIdx);
+  });
+  save();
+}
+
+// Live-update forecast span for one cause
+function pfLiveForecast(mi,ei,ci){
+  const p=prog();
+  const mode=p.pfmea[mi];if(!mode)return;
+  const ef=mode.effects[ei];if(!ef)return;
+  const ca=(ef.causes||[])[ci];if(!ca)return;
+  const act=ca.action||{};
+  const sev=ef.sev||1;
+  const newOcc=act.newOcc?+act.newOcc:(ca.occ||1);
+  const newDet=act.newDet?+act.newDet:(ca.det||1);
+  const hasAction=act.newOcc||act.newDet;
+  const forecast=sev*newOcc*newDet;
+  const el=document.getElementById(`forecast_${mi}_${ei}_${ci}`);
+  if(el){
+    el.textContent=hasAction?forecast:'—';
+    el.className='rpn '+(hasAction?pfRpnClass(forecast):'rpn-lo');
+    el.style.opacity=hasAction?'1':'0';
+  }
+  save();
+}
 
 // Legacy compat
 function calcRPN(r){return(r.sev||1)*(r.occ||1)*(r.det||1);}
