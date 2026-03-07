@@ -74,14 +74,22 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--ink
 .alert-red{background:var(--red-pale);border:1px solid #f0b4ae;color:var(--red);}
 .alert-amber{background:var(--amber-pale);border:1px solid var(--amber-mid);color:var(--amber);}
 .alert-blue{background:var(--blue-pale);border:1px solid var(--blue-mid);color:var(--blue-dark);}
-.section-launcher{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
-.section-card{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px;}
-.section-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.1);border-color:var(--sc-color,var(--blue));transform:translateY(-1px);}
-.section-card-title{font-size:13px;font-weight:700;color:var(--ink);}
-.section-card-desc{font-size:11px;color:var(--muted);line-height:1.5;}
-.section-card-status{margin-top:auto;display:flex;align-items:center;gap:8px;}
-.sc-bar-wrap{flex:1;height:3px;background:var(--line);border-radius:2px;overflow:hidden;}
-.sc-bar{height:100%;border-radius:2px;transition:width .4s;}
+.section-launcher{display:flex;flex-wrap:nowrap;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;}
+.section-card{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:7px 13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;}
+.section-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.1);border-color:var(--sc-color,var(--blue));background:var(--bg);}
+.section-card-icon{font-size:14px;line-height:1;}
+.section-card-title{font-size:12px;font-weight:700;color:var(--ink);}
+.section-card-desc{font-size:10px;color:var(--muted);}
+.section-card-dot{width:6px;height:6px;border-radius:50%;background:var(--sc-color,var(--line));flex-shrink:0;}
+.sub-asm-panel{margin-bottom:16px;}
+.sub-asm-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;}
+.sub-asm-row:hover{background:var(--bg);}
+.sub-asm-name{font-size:12px;font-weight:600;color:var(--ink);flex:1;}
+.sub-asm-gate{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 6px;}
+.sub-asm-add{font-size:11px;color:var(--blue);cursor:pointer;padding:7px 12px;display:flex;align-items:center;gap:5px;}
+.sub-asm-add:hover{background:var(--blue-pale);}
+.sub-asm-unlink{font-size:10px;color:var(--muted);cursor:pointer;padding:2px 5px;border-radius:3px;}
+.sub-asm-unlink:hover{color:var(--red);background:var(--red-pale);}
 .sc-count{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--muted);}
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
 
@@ -366,11 +374,15 @@ td.w120{width:120px}td.w140{width:140px}td.ctr{text-align:center}
 
 /* ── Table column widths ── */
 .ctq-tbl td:nth-child(2){min-width:40px;}  /* ref badge */
-.ctq-tbl td:nth-child(3){min-width:180px;} /* requirement */
-.ctq-tbl td:nth-child(4){min-width:100px;} /* spec */
-.ctq-tbl td:nth-child(5){min-width:100px;} /* tol */
-.ctq-tbl td:nth-child(6){min-width:110px;} /* source */
-.ctq-tbl td:nth-child(7){min-width:130px;} /* oos action */
+.ctq-tbl td:nth-child(3){min-width:160px;} /* requirement */
+.ctq-tbl td:nth-child(4){min-width:90px;}  /* spec */
+.ctq-tbl td:nth-child(5){min-width:110px;} /* test method */
+.ctq-tbl td:nth-child(6){min-width:90px;}  /* source */
+.ctq-tbl td:nth-child(7){min-width:110px;} /* oos action */
+.ctq-tbl td:nth-child(8){min-width:68px;text-align:center;} /* agreed */
+.ctq-agreed{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.ctq-agreed input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--green);}
+.ctq-agreed-label{font-size:9px;font-weight:700;letter-spacing:.3px;}
 .act-tbl td:nth-child(2){min-width:200px;} /* description */
 .act-tbl td:nth-child(3){min-width:90px;}  /* owner */
 .act-tbl td:nth-child(6){min-width:100px;} /* source */
@@ -539,7 +551,7 @@ function prog(){return db.programmes.find(p=>p.id===progId)||null;}
 
 function newProgTemplate(name,customer,unit,family,lead,pm,date){
   const gates=GATE_DEFS.map(g=>({gateNum:g.num,checks:g.items.map(()=>false),sigs:g.signatories.map(role=>({role,name:'',date:'',signed:false}))}));
-  return{id:crypto.randomUUID(),name,customer,unit,family,lead,pm,date,ctq:[],pfd:[],pfmea:[],cp:[],bom:{parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]},gates,actions:[],risks:[],timing:[]};
+  return{id:crypto.randomUUID(),name,customer,unit,family,lead,pm,date,ctq:[],pfd:[],pfmea:[],cp:[],bom:{parts:[],tools:[],equip:[],mat:[],cons:[],kits:[]},gates,actions:[],risks:[],timing:[],subAssemblies:[]};
 }
 
 // ══════════════════════════════════════
@@ -873,6 +885,33 @@ function renderProjects(){
   return html;
 }
 
+// ── Sub-assembly link functions ──────────────────────────────
+function unlinkSubAsm(li){
+  const p=prog(); if(!p.subAssemblies)p.subAssemblies=[];
+  p.subAssemblies.splice(li,1); save(); render();
+}
+function openSubAsmModal(){
+  const p=prog(); if(!p.subAssemblies)p.subAssemblies=[];
+  const linked=new Set(p.subAssemblies.map(x=>x.id));
+  const others=db.programmes.filter(x=>x.id!==p.id&&!linked.has(x.id));
+  if(!others.length){alert('No other projects to link. Create the sub-assembly project first.');return;}
+  const opts=others.map((x,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="linkSubAsm('${x.id}')">
+    <span style="font-size:13px">🔩</span>
+    <span style="flex:1;font-size:12px;font-weight:600">${esc(x.name)}</span>
+    ${x.unit?`<span style="font-size:10px;color:var(--muted)">${esc(x.unit)}</span>`:''}
+  </div>`).join('');
+  const bg=document.createElement('div'); bg.className='modal-bg'; bg.id='subAsmModalBg';
+  bg.innerHTML=`<div class="modal" style="max-width:420px"><div class="modal-head"><span class="modal-title">Link Sub-assembly Project</span><button class="modal-close" onclick="closeSubAsmModal()">✕</button></div><div style="padding:8px 4px;max-height:320px;overflow-y:auto">${opts}</div></div>`;
+  bg.addEventListener('click',e=>{if(e.target===bg)closeSubAsmModal();});
+  document.body.appendChild(bg);
+}
+function linkSubAsm(id){
+  const p=prog(); if(!p.subAssemblies)p.subAssemblies=[];
+  if(!p.subAssemblies.find(x=>x.id===id))p.subAssemblies.push({id});
+  save(); closeSubAsmModal(); render();
+}
+function closeSubAsmModal(){const el=document.getElementById('subAsmModalBg');if(el)el.remove();}
+
 function showEditProject(){
   const p=prog();if(!p)return;
   document.getElementById('ep_name').value=p.name||'';
@@ -968,7 +1007,30 @@ function renderDashboard(){
     {id:'risks',icon:'🛡',title:'Risk Register',desc:`${p.risks.filter(r=>r.status!=='Closed').length} open · ${highRisks} high`,color:highRisks>0?'var(--red)':'var(--blue)',c:p.risks.filter(r=>r.status!=='Closed').length,t:Math.max(p.risks.length,1)},
   ];
 
-  const launcherHTML=sections.map(s=>`<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}"><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:20px">${s.icon}</span></div><div class="section-card-title">${s.title}</div><div class="section-card-desc">${s.desc}</div><div class="section-card-status"><div class="sc-bar-wrap"><div class="sc-bar" style="width:${Math.min(100,s.c>0?60:0)}%;background:${s.color}"></div></div></div></div>`).join('');
+  // Sub-assembly panel
+  if(!p.subAssemblies)p.subAssemblies=[];
+  const subAsmHTML=(()=>{
+    const rows=p.subAssemblies.map((link,li)=>{
+      const sp=db.programmes.find(x=>x.id===link.id);
+      if(!sp)return''; // linked prog deleted
+      const sg=sp.gates||[];
+      const sgDone=sg.filter(g=>g.signed).length;
+      const sgTotal=sg.length||6;
+      const curGateSA=sg.findIndex(g=>!g.signed);
+      const gLabel=curGateSA<0?'✓ Complete':`Gate ${curGateSA}`;
+      return`<div class="sub-asm-row" onclick="progId='${sp.id}';navigate('project')">
+        <span style="font-size:14px">🔩</span>
+        <span class="sub-asm-name">${esc(sp.name)}</span>
+        ${sp.unit?`<span style="font-size:10px;color:var(--muted)">${esc(sp.unit)}</span>`:''}
+        <span class="sub-asm-gate">${gLabel} · ${sgDone}/${sgTotal}</span>
+        <button class="sub-asm-unlink" onclick="event.stopPropagation();unlinkSubAsm(${li})" title="Unlink">✕</button>
+      </div>`;
+    }).filter(Boolean).join('');
+    const addBtn=`<div class="sub-asm-add" onclick="openSubAsmModal()">＋ Link sub-assembly project</div>`;
+    return rows+addBtn;
+  })();
+
+  const launcherHTML=sections.map(s=>`<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}"><div class="section-card-dot" style="background:${s.color}"></div><span class="section-card-icon">${s.icon}</span><div><div class="section-card-title">${s.title}</div><div class="section-card-desc">${s.desc}</div></div></div>`).join('');
 
   const actHTML=p.actions.filter(a=>a.status!=='Closed').slice(0,5).map(a=>{const od=a.due&&new Date(a.due)<new Date();return`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);${od?'background:#fff8f8':''}"><span class="sp sp-${a.status==='In Progress'?'inprog':'open'}">${a.status||'Open'}</span><span style="flex:1;font-size:12px">${esc(a.desc)}</span><span style="font-size:10px;color:${od?'var(--red)':'var(--muted)'}">${a.owner?esc(a.owner)+' ':''} ${a.due||''}</span></div>`;}).join('')||`<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open actions</div>`;
 
@@ -986,8 +1048,10 @@ function renderDashboard(){
     ${alerts?`<div class="alert-row">${alerts}</div>`:''}
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Gate Progress — click any gate to open</div>
     <div class="gate-strip">${gateStrip}</div>
-    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px">Sections</div>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Tools</div>
     <div class="section-launcher">${launcherHTML}</div>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:16px">Sub-assemblies</div>
+    <div class="card sub-asm-panel" style="margin-bottom:16px">${subAsmHTML}</div>
     <div class="dash-grid">
       <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Open Actions</span><button class="btn btn-ghost btn-sm" onclick="navigate('actions')">View all →</button></div>${actHTML}</div>
       <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Top Risks</span><button class="btn btn-ghost btn-sm" onclick="navigate('risks')">View all →</button></div>${riskHTML}</div>
@@ -1110,17 +1174,22 @@ function renderCTQ(){
     <td style="text-align:center"><span class="tag tag-ctq">C${i+1}</span></td>
     <td><textarea class="cell-edit" rows="2" onchange="updCTQ(${i},'req',this.value)" placeholder="CTQ requirement">${esc(r.req)}</textarea></td>
     <td><input class="cell-edit mono" value="${esc(r.spec)}" onchange="updCTQ(${i},'spec',this.value)" placeholder="e.g. 50±0.05mm" style="width:100%"></td>
+    <td><input class="cell-edit" value="${esc(r.testMethod||'')}" onchange="updCTQ(${i},'testMethod',this.value)" placeholder="e.g. CMM, Gauge, Visual" style="width:100%"></td>
     <td><select class="cell-edit" onchange="updCTQ(${i},'source',this.value)" style="width:100%">${['Customer Spec','OEM Data','Internal Standard','Regulatory','Drawing'].map(o=>`<option${r.source===o?' selected':''}>${o}</option>`).join('')}</select></td>
     <td><select class="cell-edit" onchange="updCTQ(${i},'oos_action',this.value)" style="width:100%">${['Repair','Replace','Scrap','Review','TBD'].map(o=>`<option${r.oos_action===o?' selected':''}>${o}</option>`).join('')}</select></td>
+    <td><div class="ctq-agreed">
+      <input type="checkbox" ${r.customerAgreed?'checked':''} onchange="updCTQ(${i},'customerAgreed',this.checked);render()" title="Customer has agreed this CTQ method and out-of-spec plan">
+      <span class="ctq-agreed-label" style="color:${r.customerAgreed?'var(--green)':'var(--muted)'}">${r.customerAgreed?'AGREED':'—'}</span>
+    </div></td>
     <td style="text-align:center"><button class="del-btn" onclick="delCTQ(${i})">×</button></td>
   </tr>`).join('');
   return`<div class="sec-head"><div><div class="sec-eyebrow">Step 01</div><div class="sec-title">CTQ Matrix</div><div class="sec-desc">Critical-to-Quality requirements — source of truth for PFD, PFMEA and Control Plan.</div></div><div class="sec-actions"><button class="btn btn-primary btn-sm" onclick="addCTQ()">＋ Add CTQ</button></div></div>
   <div class="card"><div class="card-head"><span class="card-title">Requirements</span><span class="card-meta">${p.ctq.length} defined</span></div>
-  ${p.ctq.length===0?emptyState('🎯','No CTQs yet','Add critical requirements'): `<div class="sticky-table-wrap"><table class="tbl ctq-tbl" style="min-width:780px;table-layout:fixed;width:100%"><colgroup><col style="width:44px"><col style="width:auto"><col style="width:160px"><col style="width:150px"><col style="width:130px"><col style="width:32px"></colgroup><thead><tr><th>Ref</th><th>Requirement</th><th>Target / Tolerance</th><th>Source</th><th>Out-of-Spec Action</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
+  ${p.ctq.length===0?emptyState('🎯','No CTQs yet','Add critical requirements'): `<div class="sticky-table-wrap"><table class="tbl ctq-tbl" style="min-width:900px;table-layout:fixed;width:100%"><colgroup><col style="width:40px"><col style="width:auto"><col style="width:130px"><col style="width:150px"><col style="width:110px"><col style="width:110px"><col style="width:68px"><col style="width:32px"></colgroup><thead><tr><th>Ref</th><th>Requirement</th><th>Target / Tolerance</th><th>Test Method</th><th>Source</th><th>Out-of-Spec Action</th><th style="text-align:center">Cust. Agreed</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="addCTQ()">＋ Add CTQ</button></div>
   ${p.ctq.length>0?`<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" onclick="setApqpTab('pfd');return false" style="color:var(--blue)">Process Flow →</a></div>`:''}`;
 }
-function addCTQ(){prog().ctq.push({id:'c_'+Date.now(),req:'',spec:'',source:'Customer Spec',oos_action:'TBD'});save();render();}
+function addCTQ(){prog().ctq.push({id:'c_'+Date.now(),req:'',spec:'',testMethod:'',source:'Customer Spec',oos_action:'TBD',customerAgreed:false});save();render();}
 function updCTQ(i,f,v){prog().ctq[i][f]=v;save();}
 function delCTQ(i){const cid=prog().ctq[i].id;prog().pfd.forEach(s=>s.ctqIds=(s.ctqIds||[]).filter(x=>x!==cid));prog().pfmea.forEach(r=>r.ctqIds=(r.ctqIds||[]).filter(x=>x!==cid));prog().ctq.splice(i,1);save();render();}
 
