@@ -1274,25 +1274,25 @@ function renderPFMEA(){
   p.pfmea.forEach(r=>{const key=(r.pfdId&&byStep[r.pfdId]!==undefined)?r.pfdId:'__none';byStep[key].push(r);});
 
   // Columns: Failure Mode | Effect | SEV | Cause | OCC | Prevent | Detect | DET | RPN | Action/Owner/Due | New OCC | New DET | Forecast | ▶ | del
-  let html=`<div style="overflow-x:auto"><table class="tbl pfmea-tbl" style="table-layout:fixed;width:100%;min-width:1400px">
+  let html=`<div style="overflow-x:scroll;-webkit-overflow-scrolling:touch"><table class="tbl pfmea-tbl" style="table-layout:fixed;width:1692px">
   <colgroup>
-    <col style="width:150px"><!-- failure mode -->
-    <col style="width:130px"><!-- effect -->
-    <col style="width:38px"><!-- SEV -->
-    <col style="width:130px"><!-- cause -->
-    <col style="width:38px"><!-- OCC -->
-    <col style="width:130px"><!-- prevent -->
-    <col style="width:130px"><!-- detect -->
-    <col style="width:38px"><!-- DET -->
-    <col style="width:48px"><!-- RPN -->
-    <col style="width:110px"><!-- action -->
-    <col style="width:80px"> <!-- owner -->
-    <col style="width:95px"> <!-- due -->
-    <col style="width:38px"><!-- new OCC -->
-    <col style="width:38px"><!-- new DET -->
-    <col style="width:48px"><!-- forecast -->
-    <col style="width:44px"><!-- implement -->
-    <col style="width:28px"><!-- del -->
+    <col style="width:180px"><!-- failure mode -->
+    <col style="width:180px"><!-- effect -->
+    <col style="width:44px"> <!-- SEV -->
+    <col style="width:180px"><!-- cause -->
+    <col style="width:44px"> <!-- OCC -->
+    <col style="width:180px"><!-- prevent -->
+    <col style="width:180px"><!-- detect -->
+    <col style="width:44px"> <!-- DET -->
+    <col style="width:60px"> <!-- RPN -->
+    <col style="width:160px"><!-- action -->
+    <col style="width:90px"> <!-- owner -->
+    <col style="width:110px"><!-- due -->
+    <col style="width:44px"> <!-- new OCC -->
+    <col style="width:44px"> <!-- new DET -->
+    <col style="width:60px"> <!-- forecast -->
+    <col style="width:60px"> <!-- implement -->
+    <col style="width:28px"> <!-- del -->
   </colgroup>
   <thead>
     <tr style="background:var(--ink2)">
@@ -1351,9 +1351,17 @@ function renderPFMEA(){
           const hist=ca.history||[];
 
           // History row (hidden by default)
-          const histRows=hist.length?hist.map(h=>`<span style="font-size:10px;color:var(--muted);display:block;padding:1px 0">
-            <span class="rpn rpn-lo" style="font-size:9px;padding:1px 4px">${h.rpn}</span> → implemented ${h.date} · ${esc(h.desc)}
-          </span>`).join(''):'<span style="font-size:10px;color:var(--muted);font-style:italic">No history yet</span>';
+          const histRows=hist.length?[...hist].reverse().map(h=>{
+            const rc=h.newRpn>=200?'rpn-hi':h.newRpn>=100?'rpn-md':'rpn-lo';
+            return`<div style="font-size:10px;border-bottom:1px solid var(--line);padding:4px 0;line-height:1.5">
+              <div><span class="rpn rpn-md" style="font-size:9px;padding:1px 4px">${h.rpn}</span>
+              <span style="color:var(--muted)"> → </span>
+              <span class="rpn ${rc}" style="font-size:9px;padding:1px 4px">${h.newRpn||'?'}</span>
+              <span style="color:var(--muted);margin-left:4px">${h.date}</span></div>
+              <div style="color:var(--mid);margin-top:1px">${esc(h.desc)}</div>
+              <div style="color:var(--muted);font-size:9px">OCC ${h.oldOcc}→${h.newOcc} · DET ${h.oldDet}→${h.newDet}</div>
+            </div>`;
+          }).join(''):'<span style="font-size:10px;color:var(--muted);font-style:italic">No history yet</span>';
 
           let rowHtml=`<tr class="pfmea-row-sub">`;
 
