@@ -71,18 +71,34 @@ tr.pfmea-row-sub td {
 }
 td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
 
-/* ── Sticky header rows ──────────────────────────────────────── */
+/* ── Sticky header rows ──────────────────────────────────────────
+   sticky only works when NO ancestor has overflow:auto/hidden/scroll
+   on the axis being stuck. The .sticky-table-wrap needs overflow-x
+   only so that thead th sticks relative to the viewport, not the
+   scroll container. That override lives here, scoped to the PFMEA
+   table wrapper via the parent selector.
+   ──────────────────────────────────────────────────────────────── */
 .pfmea-tbl thead tr:first-child th {
   position: sticky;
-  top: 52px;
+  top: 52px;   /* navbar height */
   z-index: 22;
   background: #f4f6fa;
 }
 .pfmea-thead-row2 th {
   position: sticky;
-  top: 80px; /* 52px navbar + 28px row 1 */
+  top: 79px;   /* 52px navbar + 27px row 1 */
   z-index: 21;
   background: #dbeafe;
+}
+/* Allow horizontal scroll but NOT vertical on the PFMEA wrapper
+   so that position:sticky on thead ths works against the viewport */
+.pfmea-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+.pfmea-wrap .sticky-table-wrap {
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 /* ── History popup ───────────────────────────────────────────── */
