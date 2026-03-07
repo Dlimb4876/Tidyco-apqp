@@ -415,8 +415,9 @@ td input{box-sizing:border-box;}
 .act-tbl td:nth-child(3){min-width:90px;}  /* owner */
 .act-tbl td:nth-child(6){min-width:100px;} /* source */
 .act-tbl td:nth-child(7){min-width:120px;} /* notes */
-.pfmea-mode-cell{background:#f0f4ff;}
-.pfmea-effect-cell{background:#fafbff;}
+.pfmea-mode-cell{background:#e8eeff;border-right:3px solid #6b7280!important;}
+.pfmea-effect-cell{background:#f5f7ff;border-bottom:2px solid #cbd5e1!important;border-right:2px solid #cbd5e1!important;}
+.pfmea-cause-cell{background:#fffdf5;border-bottom:1px solid #e2e8f0;}
 
 /* PROJECT EDIT MODAL */
 /* LOGIN SCREEN */
@@ -1301,7 +1302,7 @@ function renderPFMEA(){
 
           // Failure mode cell — only on first effect, first cause
           if(ei===0&&ci===0){
-            rowHtml+=`<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top;border-right:3px solid var(--line2)">
+            rowHtml+=`<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top;border-right:3px solid #94a3b8">
               <textarea class="cell-edit" rows="3" onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">
                 <button class="add-row" style="font-size:9px;padding:1px 7px" onclick="pfAddEffect(${mi})">＋ Effect</button>
@@ -1312,27 +1313,27 @@ function renderPFMEA(){
 
           // Effect cell — only on first cause of each effect
           if(ci===0){
-            rowHtml+=`<td rowspan="${efRowspan}" class="pfmea-effect-cell" style="vertical-align:top;background:#fafbff">
+            rowHtml+=`<td rowspan="${efRowspan}" class="pfmea-effect-cell" style="vertical-align:top">
               <textarea class="cell-edit" rows="2" onchange="pfUpdEffect(${mi},${ei},'effect',this.value)" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               <div style="margin-top:2px;display:flex;gap:4px;flex-wrap:wrap">
                 <button class="add-row" style="font-size:9px;padding:1px 7px" onclick="pfAddCause(${mi},${ei})">＋ Cause</button>
                 ${effects.length>1?`<button class="del-btn" onclick="pfDelEffect(${mi},${ei})" style="font-size:9px">× Effect</button>`:''}
               </div>
             </td>
-            <td rowspan="${efRowspan}" style="text-align:center;vertical-align:top;background:#fafbff;padding-top:6px">
+            <td rowspan="${efRowspan}" class="pfmea-effect-cell" style="text-align:center;vertical-align:top;padding-top:6px">
               <input type="number" class="cell-edit mono" min="1" max="10" value="${ef.sev||1}" onchange="pfUpdEffect(${mi},${ei},'sev',+this.value);pfRefreshRPN()" style="width:36px;text-align:center">
             </td>`;
           }
 
           // Cause cells — always
           rowHtml+=`
-            <td style="vertical-align:top;background:#fffdf8">
+            <td class="pfmea-cause-cell" style="vertical-align:top">
               <textarea class="cell-edit" rows="2" onchange="pfUpdCause(${mi},${ei},${ci},'cause',this.value)" placeholder="Cause" style="width:100%">${esc(ca.cause)}</textarea>
               ${causes.length>1?`<button class="del-btn" onclick="pfDelCause(${mi},${ei},${ci})" style="font-size:9px">× Cause</button>`:''}
             </td>
-            <td style="text-align:center;vertical-align:top;padding-top:6px;background:#fffdf8"><input type="number" class="cell-edit mono" min="1" max="10" value="${ca.occ||1}" onchange="pfUpdCause(${mi},${ei},${ci},'occ',+this.value);pfRefreshRPN()" style="width:36px;text-align:center"></td>
-            <td style="text-align:center;vertical-align:top;padding-top:6px;background:#fffdf8"><input type="number" class="cell-edit mono" min="1" max="10" value="${ca.det||1}" onchange="pfUpdCause(${mi},${ei},${ci},'det',+this.value);pfRefreshRPN()" style="width:36px;text-align:center"></td>
-            <td style="text-align:center;vertical-align:middle;background:#fffdf8"><span class="rpn ${rpnCls}">${rpn}</span></td>
+            <td class="pfmea-cause-cell" style="text-align:center;vertical-align:top;padding-top:6px"><input type="number" class="cell-edit mono" min="1" max="10" value="${ca.occ||1}" onchange="pfUpdCause(${mi},${ei},${ci},'occ',+this.value);pfRefreshRPN()" style="width:36px;text-align:center"></td>
+            <td class="pfmea-cause-cell" style="text-align:center;vertical-align:top;padding-top:6px"><input type="number" class="cell-edit mono" min="1" max="10" value="${ca.det||1}" onchange="pfUpdCause(${mi},${ei},${ci},'det',+this.value);pfRefreshRPN()" style="width:36px;text-align:center"></td>
+            <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle"><span class="rpn ${rpnCls}">${rpn}</span></td>
             <td style="vertical-align:top"><textarea class="cell-edit" rows="2" onchange="pfUpdEffect(${mi},${ei},'controls',this.value)" placeholder="Controls" style="width:100%">${esc(ef.controls||'')}</textarea></td>
             <td style="vertical-align:top"><textarea class="cell-edit" rows="2" onchange="pfUpdEffect(${mi},${ei},'action',this.value)" placeholder="Action" style="width:100%">${esc(ef.action||'')}</textarea></td>
             <td></td>
@@ -1344,7 +1345,7 @@ function renderPFMEA(){
         if(causes.length===0){
           let rowHtml=`<tr class="pfmea-row-sub">`;
           if(ei===0){
-            rowHtml+=`<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top;border-right:3px solid var(--line2)">
+            rowHtml+=`<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top;border-right:3px solid #94a3b8">
               <textarea class="cell-edit" rows="3" onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               <div style="margin-top:4px;display:flex;gap:4px">
                 <button class="add-row" style="font-size:9px;padding:1px 7px" onclick="pfAddEffect(${mi})">＋ Effect</button>
@@ -1352,7 +1353,7 @@ function renderPFMEA(){
               </div>
             </td>`;
           }
-          rowHtml+=`<td class="pfmea-effect-cell" style="vertical-align:top;background:#fafbff">
+          rowHtml+=`<td class="pfmea-effect-cell" style="vertical-align:top">
               <textarea class="cell-edit" rows="2" onchange="pfUpdEffect(${mi},${ei},'effect',this.value)" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               <div style="margin-top:2px;display:flex;gap:4px">
                 <button class="add-row" style="font-size:9px;padding:1px 7px" onclick="pfAddCause(${mi},${ei})">＋ Cause</button>
@@ -1370,7 +1371,7 @@ function renderPFMEA(){
       // Mode with no effects
       if(effects.length===0){
         html+=`<tr class="pfmea-row-sub">
-          <td class="pfmea-mode-cell" style="vertical-align:top;border-right:3px solid var(--line2)">
+          <td class="pfmea-mode-cell" style="vertical-align:top;border-right:3px solid #94a3b8">
             <textarea class="cell-edit" rows="3" onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
             <div style="margin-top:4px;display:flex;gap:4px">
               <button class="add-row" style="font-size:9px;padding:1px 7px" onclick="pfAddEffect(${mi})">＋ Effect</button>
@@ -1382,7 +1383,7 @@ function renderPFMEA(){
       }
     });
 
-    html+=`<tr><td colspan="10" style="padding:0"><div class="pfmea-add-row" onclick="pfAddMode('${s.id}')">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`;
+    html+=`<tr><td colspan="10" style="padding:0;border-top:3px solid #6b7280"><div class="pfmea-add-row" onclick="pfAddMode('${s.id}')">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`;
   });
 
   html+='</tbody></table></div>';
@@ -1428,14 +1429,27 @@ function refreshRPN(i){pfRefreshRPN();}
 // CONTROL PLAN
 // ══════════════════════════════════════
 function renderCP(){
-  const p=prog();const miss=p.pfmea.filter(r=>!p.cp.find(c=>c.pfmeaId===r.id));
+  const p=prog();
+  // Count effects not yet in CP
+  const cpEffectKeys=new Set(p.cp.map(r=>r.pfmeaEffectId||r.pfmeaId));
+  const miss=[];
+  p.pfmea.forEach(mode=>{
+    (mode.effects||[{id:mode.id}]).forEach(ef=>{
+      if(!cpEffectKeys.has(ef.id||mode.id))miss.push({mode,ef});
+    });
+  });
   const rows=p.cp.map((r,i)=>{
-    const fr=p.pfmea.find(f=>f.id===r.pfmeaId);const step=fr?p.pfd.find(s=>s.id===fr.pfdId):null;
+    const fr=p.pfmea.find(f=>f.id===r.pfmeaId);
+    const ef=fr&&r.pfmeaEffectId?(fr.effects||[]).find(e=>e.id===r.pfmeaEffectId):null;
+    const step=fr?p.pfd.find(s=>s.id===fr.pfdId):null;
     const sl=step?`${step.stepNum} – ${esc(step.op||'')}`:'—';
     const ctqs=(step?step.ctqIds||[]:[]).map(cid=>{const ci=p.ctq.findIndex(c=>c.id===cid);return ci>=0?`<span class="tag tag-ctq" style="font-size:9px">C${ci+1}</span>`:''}).join('');
-    const rpn=fr?calcRPN(fr):0;const rc=rpn>=200?'rpn-hi':rpn>=100?'rpn-md':'rpn-lo';
+    const maxRpn=ef?(ef.causes||[]).reduce((mx,ca)=>Math.max(mx,(ef.sev||1)*(ca.occ||1)*(ca.det||1)),0):fr?(fr.effects||[]).reduce((mx,e)=>Math.max(mx,...(e.causes||[]).map(ca=>(e.sev||1)*(ca.occ||1)*(ca.det||1))),0):0;
+    const rc=maxRpn>=200?'rpn-hi':maxRpn>=100?'rpn-md':'rpn-lo';
+    const modeLabel=fr?esc(fr.mode||'—'):'—';
+    const effectLabel=ef?`<div style="font-size:10px;color:var(--muted);margin-top:1px">→ ${esc(ef.effect)}</div>`:'';
     return`<tr><td class="w100"><span class="tag tag-step" style="font-size:10px">${sl}</span></td>
-      <td class="w100" style="font-size:11px;color:var(--mid)">${fr?esc(fr.mode||'—'):'—'}${fr?` <span class="rpn ${rc}" style="font-size:10px;padding:1px 5px">${rpn}</span>`:''}</td>
+      <td class="w120" style="font-size:11px;color:var(--mid)">${modeLabel}${effectLabel}${maxRpn?` <span class="rpn ${rc}" style="font-size:10px;padding:1px 5px">${maxRpn}</span>`:''}</td>
       <td><input class="cell-edit" value="${esc(r.char)}" onchange="updCP(${i},'char',this.value)" placeholder="Characteristic"></td>
       <td class="w80"><select class="cell-edit" onchange="updCP(${i},'type',this.value)">${['Product','Process','Dimensional','Functional','Visual'].map(o=>`<option${r.type===o?' selected':''}>${o}</option>`).join('')}</select></td>
       <td class="w110"><input class="cell-edit mono" value="${esc(r.spec)}" onchange="updCP(${i},'spec',this.value)" placeholder="Spec"></td>
@@ -1446,7 +1460,7 @@ function renderCP(){
       <td class="w50"><div style="display:flex;flex-wrap:wrap;gap:2px">${ctqs||'—'}</div></td>
       <td class="w28 ctr"><button class="del-btn" onclick="delCP(${i})">×</button></td></tr>`;
   }).join('');
-  const syncBanner=miss.length>0?`<div style="background:var(--amber-pale);border:1px solid var(--amber-mid);border-radius:6px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:13px;color:var(--amber)">⚠ ${miss.length} PFMEA row${miss.length!==1?'s':''} not in control plan.</span><button class="btn btn-sm" style="background:var(--amber);color:white;border:none" onclick="syncFromPFMEA()">Auto-populate from PFMEA</button></div>`:'';
+  const syncBanner=miss.length>0?`<div style="background:var(--amber-pale);border:1px solid var(--amber-mid);border-radius:6px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:13px;color:var(--amber)">⚠ ${miss.length} PFMEA effect${miss.length!==1?'s':''} not in control plan.</span><button class="btn btn-sm" style="background:var(--amber);color:white;border:none" onclick="syncFromPFMEA()">Auto-populate from PFMEA</button></div>`:'';
   return`<div class="sec-head"><div><div class="sec-eyebrow">Step 04</div><div class="sec-title">Control Plan</div><div class="sec-desc">Linked to PFMEA and PFD. Step numbers and CTQs carry through automatically.</div></div>
   <div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="syncFromPFMEA()">Sync from PFMEA</button><button class="btn btn-primary btn-sm" onclick="addCP()">＋ Add Row</button></div></div>
   ${syncBanner}
@@ -1455,7 +1469,42 @@ function renderCP(){
   ${p.cp.length===0?emptyState('📊','No entries yet',miss.length>0?'Use "Sync from PFMEA" to auto-populate':'Complete PFMEA first'):`<table class="tbl" style="min-width:1100px"><thead><tr><th>Step</th><th>FMEA/RPN</th><th>Characteristic</th><th>Type</th><th>Spec</th><th>Method</th><th>Freq</th><th>Resp</th><th>Reaction Plan</th><th>CTQs</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
   <button class="add-row" onclick="addCP()">＋ Add Row</button></div>`;
 }
-function syncFromPFMEA(){const p=prog();const ex=new Set(p.cp.map(r=>r.pfmeaId));let n=0;p.pfmea.forEach(fr=>{if(ex.has(fr.id))return;const step=p.pfd.find(s=>s.id===fr.pfdId);const cids=step?(step.ctqIds||[]):[];const fc=cids.length>0?p.ctq.find(c=>c.id===cids[0]):null;p.cp.push({id:'cp_'+Date.now()+'_'+n,pfmeaId:fr.id,pfdId:fr.pfdId,char:fr.mode||'',type:'Process',spec:fc?fc.spec:'',method:'',freq:'100%',resp:'',reaction:fc?fc.oos_action:'',ctqIds:[...cids]});n++;});if(n===0)return alert('All PFMEA rows already in control plan.');save();render();}
+function syncFromPFMEA(){
+  const p=prog();
+  // Key is now mode_id + effect_id so each effect gets its own CP row
+  const ex=new Set(p.cp.map(r=>r.pfmeaEffectId||r.pfmeaId));
+  let n=0;
+  p.pfmea.forEach(mode=>{
+    const step=p.pfd.find(s=>s.id===mode.pfdId);
+    const cids=step?(step.ctqIds||[]):[];
+    const fc=cids.length>0?p.ctq.find(c=>c.id===cids[0]):null;
+    (mode.effects||[]).forEach(ef=>{
+      const key=ef.id||mode.id;
+      if(ex.has(key))return;
+      // Compute max RPN for this effect across its causes
+      const maxRpn=(ef.causes||[]).reduce((mx,ca)=>Math.max(mx,ef.sev*ca.occ*ca.det),0);
+      p.cp.push({
+        id:'cp_'+Date.now()+'_'+(n++),
+        pfmeaId:mode.id,
+        pfmeaEffectId:ef.id,
+        pfdId:mode.pfdId,
+        char:mode.mode+(ef.effect?' → '+ef.effect:''),
+        type:'Process',
+        spec:fc?fc.spec:'',
+        method:'',freq:'100%',resp:'',
+        reaction:ef.action||fc?.oos_action||'',
+        ctqIds:[...cids]
+      });
+    });
+    // Handle modes with no effects (legacy / empty)
+    if(!mode.effects||mode.effects.length===0){
+      if(ex.has(mode.id))return;
+      p.cp.push({id:'cp_'+Date.now()+'_'+(n++),pfmeaId:mode.id,pfmeaEffectId:'',pfdId:mode.pfdId,char:mode.mode||'',type:'Process',spec:fc?fc.spec:'',method:'',freq:'100%',resp:'',reaction:'',ctqIds:[...cids]});
+    }
+  });
+  if(n===0)return alert('All PFMEA effects already in control plan.');
+  save();render();
+}
 function addCP(){prog().cp.push({id:'cp_'+Date.now(),pfmeaId:'',pfdId:'',char:'',type:'Process',spec:'',method:'',freq:'',resp:'',reaction:'',ctqIds:[]});save();render();}
 function updCP(i,f,v){prog().cp[i][f]=v;save();}
 function delCP(i){prog().cp.splice(i,1);save();render();}
