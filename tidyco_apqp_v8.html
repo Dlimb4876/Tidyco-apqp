@@ -418,6 +418,7 @@ td input{box-sizing:border-box;}
 .pfmea-mode-cell{background:#e8eeff;border-right:3px solid #6b7280!important;}
 .pfmea-effect-cell{background:#f5f7ff;border-bottom:2px solid #cbd5e1!important;border-right:2px solid #cbd5e1!important;}
 .pfmea-cause-cell{background:#fffdf5;border-bottom:2px solid #94a3b8!important;border-top:1px solid #e2e8f0;}
+.cell-edit[data-autoresize]{overflow:hidden;resize:none;min-height:32px;}
 
 /* PROJECT EDIT MODAL */
 /* LOGIN SCREEN */
@@ -652,6 +653,18 @@ async function doLogout(){
 // ══════════════════════════════════════
 let saveTimer=null;
 
+function autoResizeAll(){
+  document.querySelectorAll('textarea[data-autoresize]').forEach(el=>{
+    el.style.height='auto';
+    el.style.height=el.scrollHeight+'px';
+  });
+}
+document.addEventListener('input',e=>{
+  if(e.target.tagName==='TEXTAREA'&&e.target.dataset.autoresize!==undefined){
+    e.target.style.height='auto';
+    e.target.style.height=e.target.scrollHeight+'px';
+  }
+});
 function save(){
   // Still write to localStorage as instant local backup
   try{localStorage.setItem('tidyco_v7',JSON.stringify(db));}catch(e){}
@@ -1371,7 +1384,7 @@ function renderPFMEA(){
           // Mode cell — first effect, first cause only
           if(ei===0&&ci===0){
             rowHtml+=`<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="3" onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               <div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="pfAddEffect(${mi})">＋ Effect</button>
                 <button class="del-btn" onclick="pfDelMode(${mi})" style="font-size:9px">× Mode</button>
@@ -1382,7 +1395,7 @@ function renderPFMEA(){
           // Effect + SEV — first cause of each effect only
           if(ci===0){
             rowHtml+=`<td rowspan="${efRowspan}" class="pfmea-effect-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="2" onchange="pfUpdEffect(${mi},${ei},'effect',this.value)" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdEffect(${mi},${ei},'effect',this.value)" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               <div style="margin-top:2px;display:flex;gap:3px;flex-wrap:wrap">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="pfAddCause(${mi},${ei})">＋ Cause</button>
                 ${effects.length>1?`<button class="del-btn" onclick="pfDelEffect(${mi},${ei})" style="font-size:9px">× Effect</button>`:''}
@@ -1397,7 +1410,7 @@ function renderPFMEA(){
           // Cause row — always rendered
           rowHtml+=`
             <td class="pfmea-cause-cell" style="vertical-align:top;border-left:3px solid #94a3b8!important">
-              <textarea class="cell-edit" rows="2" onchange="pfUpdCause(${mi},${ei},${ci},'cause',this.value)" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdCause(${mi},${ei},${ci},'cause',this.value)" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
               ${causes.length>1?`<button class="del-btn" onclick="pfDelCause(${mi},${ei},${ci})" style="font-size:9px">× Cause</button>`:''}
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
@@ -1405,10 +1418,10 @@ function renderPFMEA(){
               <input type="number" class="cell-edit mono" min="1" max="10" value="${occ}" onchange="pfUpdCause(${mi},${ei},${ci},'occ',+this.value);pfLiveRPN(${mi},${ei},${ci})" style="width:30px;text-align:center;font-weight:700;font-size:13px">
             </td>
             <td class="pfmea-cause-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="2" onchange="pfUpdCause(${mi},${ei},${ci},'prevent',this.value)" placeholder="How do we prevent this cause?" style="width:100%;font-size:11px">${esc(ca.prevent||'')}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdCause(${mi},${ei},${ci},'prevent',this.value)" placeholder="How do we prevent this cause?" style="width:100%;font-size:11px">${esc(ca.prevent||'')}</textarea>
             </td>
             <td class="pfmea-cause-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="2" onchange="pfUpdCause(${mi},${ei},${ci},'detect',this.value)" placeholder="How do we detect this cause?" style="width:100%;font-size:11px">${esc(ca.detect||'')}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdCause(${mi},${ei},${ci},'detect',this.value)" placeholder="How do we detect this cause?" style="width:100%;font-size:11px">${esc(ca.detect||'')}</textarea>
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
               <div style="font-size:8px;color:var(--muted);margin-bottom:2px">DET</div>
@@ -1420,16 +1433,16 @@ function renderPFMEA(){
               <div id="hist_${ca.id}" style="display:none;margin-top:4px;text-align:left;min-width:160px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:4px 6px">${histRows}</div>
             </td>
             <!-- Action zone -->
-            <td style="vertical-align:top;background:#f0f5ff">
-              <textarea class="cell-edit" rows="2" onchange="pfUpdCauseAction(${mi},${ei},${ci},'desc',this.value)" placeholder="Recommended action…" style="width:100%;font-size:11px;background:transparent">${esc(act.desc||'')}</textarea>
+            <td class="pfmea-cause-cell" style="vertical-align:top;background:#f0f5ff;border-left:none!important">
+              <textarea class="cell-edit" onchange="pfUpdCauseAction(${mi},${ei},${ci},'desc',this.value)" placeholder="Recommended action…" style="width:100%;font-size:11px;background:transparent">${esc(act.desc||'')}</textarea>
             </td>
-            <td style="vertical-align:top;background:#f0f5ff">
-              <textarea class="cell-edit" rows="2" onchange="pfUpdCauseAction(${mi},${ei},${ci},'taken',this.value)" placeholder="What was done…" style="width:100%;font-size:11px;background:transparent;color:#1e40af">${esc(act.taken||'')}</textarea>
+            <td class="pfmea-cause-cell" style="vertical-align:top;background:#f0f5ff;border-left:none!important">
+              <textarea class="cell-edit" onchange="pfUpdCauseAction(${mi},${ei},${ci},'taken',this.value)" placeholder="What was done…" style="width:100%;font-size:11px;background:transparent;color:#1e40af">${esc(act.taken||'')}</textarea>
             </td>
-            <td style="vertical-align:top;background:#f0f5ff">
+            <td class="pfmea-cause-cell" style="vertical-align:top;background:#f0f5ff;border-left:none!important">
               <input class="cell-edit" value="${esc(act.owner||'')}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'owner',this.value)" placeholder="Owner" style="width:100%;font-size:11px;background:transparent">
             </td>
-            <td style="vertical-align:top;background:#f0f5ff">
+            <td class="pfmea-cause-cell" style="vertical-align:top;background:#f0f5ff;border-left:none!important">
               <input type="date" class="cell-edit" value="${act.due||''}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'due',this.value)" style="width:100%;font-size:10px;background:transparent">
             </td>
             <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
@@ -1440,10 +1453,10 @@ function renderPFMEA(){
               <div style="font-size:8px;color:#6b7280;margin-bottom:2px">DET</div>
               <input type="number" class="cell-edit mono" min="1" max="10" value="${act.newDet||''}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'newDet',this.value);pfLiveForecast(${mi},${ei},${ci})" placeholder="—" style="width:30px;text-align:center;background:transparent;font-size:12px">
             </td>
-            <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
+            <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle;background:#f0f5ff;border-left:none!important">
               <span id="forecast_${mi}_${ei}_${ci}" style="display:inline-block;min-width:36px;text-align:center;font-size:11px;font-weight:700;padding:2px 5px;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:${hasAction?rpnColor(forecast).bg:'transparent'};color:${hasAction?rpnColor(forecast).fg:'var(--muted)'};opacity:${hasAction?1:0}">${hasAction?forecast:'—'}</span>
             </td>
-            <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
+            <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle;background:#f0f5ff;border-left:none!important">
               ${hasAction?`<button onclick="pfImplementAction(${mi},${ei},${ci})" style="font-size:10px;font-weight:700;background:#1e40af;color:white;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;white-space:nowrap" title="Implement — write new scores to PFMEA">▶ Apply</button>`:`<span style="color:var(--muted);font-size:10px">—</span>`}
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:6px"></td>
@@ -1456,7 +1469,7 @@ function renderPFMEA(){
           let rowHtml=`<tr class="pfmea-row-sub">`;
           if(ei===0){
             rowHtml+=`<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="3" onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               <div style="margin-top:4px;display:flex;gap:3px">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="pfAddEffect(${mi})">＋ Effect</button>
                 <button class="del-btn" onclick="pfDelMode(${mi})" style="font-size:9px">× Mode</button>
@@ -1464,7 +1477,7 @@ function renderPFMEA(){
             </td>`;
           }
           rowHtml+=`<td class="pfmea-effect-cell" style="vertical-align:top">
-            <textarea class="cell-edit" rows="2" onchange="pfUpdEffect(${mi},${ei},'effect',this.value)" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
+            <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdEffect(${mi},${ei},'effect',this.value)" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
             <button class="add-row" style="font-size:9px;padding:1px 6px;margin-top:2px" onclick="pfAddCause(${mi},${ei})">＋ Cause</button>
           </td>
           <td class="pfmea-effect-cell" style="text-align:center;vertical-align:middle">
@@ -1481,7 +1494,7 @@ function renderPFMEA(){
       if(effects.length===0){
         html+=`<tr class="pfmea-row-sub">
           <td class="pfmea-mode-cell" style="vertical-align:top">
-            <textarea class="cell-edit" rows="3" onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+            <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
             <div style="margin-top:4px;display:flex;gap:3px">
               <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="pfAddEffect(${mi})">＋ Effect</button>
               <button class="del-btn" onclick="pfDelMode(${mi})" style="font-size:9px">× Mode</button>
