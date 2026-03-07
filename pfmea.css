@@ -80,7 +80,7 @@ td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
 }
 .pfmea-thead-row2 th {
   position: sticky;
-  top: 90px !important;
+  top: 80px; /* 52px navbar + 28px row 1 */
   z-index: 21;
   background: #dbeafe;
 }
