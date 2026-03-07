@@ -417,7 +417,7 @@ td input{box-sizing:border-box;}
 .act-tbl td:nth-child(7){min-width:120px;} /* notes */
 .pfmea-mode-cell{background:#e8eeff;border-right:3px solid #6b7280!important;}
 .pfmea-effect-cell{background:#f5f7ff;border-bottom:2px solid #cbd5e1!important;border-right:2px solid #cbd5e1!important;}
-.pfmea-cause-cell{background:#fffdf5;border-bottom:1px solid #e2e8f0;}
+.pfmea-cause-cell{background:#fffdf5;border-bottom:2px solid #94a3b8!important;border-top:1px solid #e2e8f0;}
 
 /* PROJECT EDIT MODAL */
 /* LOGIN SCREEN */
@@ -1253,7 +1253,8 @@ function renderPFMEA(){
       (ef.causes||[]).forEach(ca=>{
         if(!ca.prevent)ca.prevent='';
         if(!ca.detect)ca.detect='';
-        if(!ca.action)ca.action={desc:'',owner:'',due:'',newOcc:'',newDet:''};
+        if(!ca.action)ca.action={desc:'',taken:'',owner:'',due:'',newOcc:'',newDet:''};
+        if(!('taken' in ca.action))ca.action.taken='';
         if(!ca.history)ca.history=[];
       });
       // migrate old effect-level controls/action to first cause
@@ -1274,7 +1275,7 @@ function renderPFMEA(){
   p.pfmea.forEach(r=>{const key=(r.pfdId&&byStep[r.pfdId]!==undefined)?r.pfdId:'__none';byStep[key].push(r);});
 
   // Columns: Failure Mode | Effect | SEV | Cause | OCC | Prevent | Detect | DET | RPN | Action/Owner/Due | New OCC | New DET | Forecast | ▶ | del
-  let html=`<div style="overflow-x:scroll;-webkit-overflow-scrolling:touch"><table class="tbl pfmea-tbl" style="table-layout:fixed;width:1692px">
+  let html=`<div style="overflow-x:scroll;-webkit-overflow-scrolling:touch"><table class="tbl pfmea-tbl" style="table-layout:fixed;width:1808px">
   <colgroup>
     <col style="width:180px"><!-- failure mode -->
     <col style="width:180px"><!-- effect -->
@@ -1285,9 +1286,10 @@ function renderPFMEA(){
     <col style="width:180px"><!-- detect -->
     <col style="width:44px"> <!-- DET -->
     <col style="width:60px"> <!-- RPN -->
-    <col style="width:160px"><!-- action -->
-    <col style="width:90px"> <!-- owner -->
-    <col style="width:110px"><!-- due -->
+    <col style="width:150px"><!-- recommended action -->
+    <col style="width:150px"><!-- action taken -->
+    <col style="width:80px"> <!-- owner -->
+    <col style="width:100px"><!-- due -->
     <col style="width:44px"> <!-- new OCC -->
     <col style="width:44px"> <!-- new DET -->
     <col style="width:60px"> <!-- forecast -->
@@ -1305,27 +1307,28 @@ function renderPFMEA(){
       <th rowspan="2">Controls — Detect</th>
       <th rowspan="2" title="Detection rating">DET</th>
       <th rowspan="2">RPN</th>
-      <th colspan="7" style="background:#1e3a5f;color:#93c5fd;font-size:10px;letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>
+      <th colspan="8" style="background:#1e3a5f;color:#93c5fd;font-size:10px;letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>
       <th rowspan="2"></th>
     </tr>
     <tr style="background:#1e3a5f">
-      <th style="color:#93c5fd;font-size:10px">Action</th>
-      <th style="color:#93c5fd;font-size:10px">Owner</th>
-      <th style="color:#93c5fd;font-size:10px">Due</th>
-      <th style="color:#93c5fd;font-size:10px">New OCC</th>
-      <th style="color:#93c5fd;font-size:10px">New DET</th>
-      <th style="color:#93c5fd;font-size:10px">Forecast</th>
-      <th style="color:#93c5fd;font-size:10px">Implement</th>
+      <th style="color:#93c5fd;font-size:10px;white-space:normal;line-height:1.3;padding:3px 4px">Recommended<br>Action</th>
+      <th style="color:#93c5fd;font-size:10px;white-space:normal;line-height:1.3;padding:3px 4px">Action<br>Taken</th>
+      <th style="color:#93c5fd;font-size:10px;white-space:normal;line-height:1.3;padding:3px 4px">Owner</th>
+      <th style="color:#93c5fd;font-size:10px;white-space:normal;line-height:1.3;padding:3px 4px">Due</th>
+      <th style="color:#93c5fd;font-size:10px;white-space:normal;line-height:1.3;padding:3px 4px">New<br>OCC</th>
+      <th style="color:#93c5fd;font-size:10px;white-space:normal;line-height:1.3;padding:3px 4px">New<br>DET</th>
+      <th style="color:#93c5fd;font-size:10px;white-space:normal;line-height:1.3;padding:3px 4px">Forecast<br>RPN</th>
+      <th style="color:#93c5fd;font-size:10px;white-space:normal;line-height:1.3;padding:3px 4px">Implement</th>
     </tr>
   </thead><tbody>`;
 
   sorted.forEach(s=>{
     const modes=byStep[s.id]||[];
     const ctqBadges=(s.ctqIds||[]).map(cid=>{const ci=p.ctq.findIndex(c=>c.id===cid);return ci>=0?`<span class="tag tag-ctq" style="font-size:9px">C${ci+1}</span>`:''}).join(' ');
-    html+=`<tr><td colspan="17" style="padding:0;border-top:3px solid #6b7280"><div class="pfmea-step-header"><span class="pfmea-step-label">Step ${s.stepNum} — ${esc(s.op||'(unnamed)')}</span><div class="pfmea-step-ctqs">${ctqBadges}</div></div></td></tr>`;
+    html+=`<tr><td colspan="18" style="padding:0;border-top:3px solid #6b7280"><div class="pfmea-step-header"><span class="pfmea-step-label">Step ${s.stepNum} — ${esc(s.op||'(unnamed)')}</span><div class="pfmea-step-ctqs">${ctqBadges}</div></div></td></tr>`;
 
     if(modes.length===0){
-      html+=`<tr class="pfmea-row-sub"><td colspan="16" style="padding:8px 14px;color:var(--muted);font-size:12px;font-style:italic">No failure modes yet</td><td></td></tr>`;
+      html+=`<tr class="pfmea-row-sub"><td colspan="17" style="padding:8px 14px;color:var(--muted);font-size:12px;font-style:italic">No failure modes yet</td><td></td></tr>`;
     }
 
     modes.forEach(mode=>{
@@ -1393,7 +1396,7 @@ function renderPFMEA(){
 
           // Cause row — always rendered
           rowHtml+=`
-            <td class="pfmea-cause-cell" style="vertical-align:top">
+            <td class="pfmea-cause-cell" style="vertical-align:top;border-left:3px solid #94a3b8!important">
               <textarea class="cell-edit" rows="2" onchange="pfUpdCause(${mi},${ei},${ci},'cause',this.value)" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
               ${causes.length>1?`<button class="del-btn" onclick="pfDelCause(${mi},${ei},${ci})" style="font-size:9px">× Cause</button>`:''}
             </td>
@@ -1412,13 +1415,16 @@ function renderPFMEA(){
               <input type="number" class="cell-edit mono" min="1" max="10" value="${det}" onchange="pfUpdCause(${mi},${ei},${ci},'det',+this.value);pfLiveRPN(${mi},${ei},${ci})" style="width:30px;text-align:center;font-weight:700;font-size:13px">
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
-              <span class="rpn ${rpnCls}" id="rpn_${mi}_${ei}_${ci}" style="font-size:12px;padding:3px 6px">${rpn}</span>
+              <span id="rpn_${mi}_${ei}_${ci}" style="display:inline-block;min-width:36px;text-align:center;font-size:12px;font-weight:700;padding:3px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:${rpnColor(rpn).bg};color:${rpnColor(rpn).fg}">${rpn}</span>
               ${hist.length?`<div style="margin-top:3px"><button onclick="pfToggleHist('${ca.id}')" style="font-size:9px;background:none;border:1px solid var(--line2);border-radius:3px;cursor:pointer;padding:1px 4px;color:var(--muted)">▶ ${hist.length}</button></div>`:''}
               <div id="hist_${ca.id}" style="display:none;margin-top:4px;text-align:left;min-width:160px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:4px 6px">${histRows}</div>
             </td>
             <!-- Action zone -->
             <td style="vertical-align:top;background:#f0f5ff">
               <textarea class="cell-edit" rows="2" onchange="pfUpdCauseAction(${mi},${ei},${ci},'desc',this.value)" placeholder="Recommended action…" style="width:100%;font-size:11px;background:transparent">${esc(act.desc||'')}</textarea>
+            </td>
+            <td style="vertical-align:top;background:#f0f5ff">
+              <textarea class="cell-edit" rows="2" onchange="pfUpdCauseAction(${mi},${ei},${ci},'taken',this.value)" placeholder="What was done…" style="width:100%;font-size:11px;background:transparent;color:#1e40af">${esc(act.taken||'')}</textarea>
             </td>
             <td style="vertical-align:top;background:#f0f5ff">
               <input class="cell-edit" value="${esc(act.owner||'')}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'owner',this.value)" placeholder="Owner" style="width:100%;font-size:11px;background:transparent">
@@ -1435,7 +1441,7 @@ function renderPFMEA(){
               <input type="number" class="cell-edit mono" min="1" max="10" value="${act.newDet||''}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'newDet',this.value);pfLiveForecast(${mi},${ei},${ci})" placeholder="—" style="width:30px;text-align:center;background:transparent;font-size:12px">
             </td>
             <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
-              <span id="forecast_${mi}_${ei}_${ci}" class="rpn ${fCls}" style="font-size:11px;padding:2px 5px;${hasAction?'':'opacity:0'}">${hasAction?forecast:'—'}</span>
+              <span id="forecast_${mi}_${ei}_${ci}" style="display:inline-block;min-width:36px;text-align:center;font-size:11px;font-weight:700;padding:2px 5px;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:${hasAction?rpnColor(forecast).bg:'transparent'};color:${hasAction?rpnColor(forecast).fg:'var(--muted)'};opacity:${hasAction?1:0}">${hasAction?forecast:'—'}</span>
             </td>
             <td style="text-align:center;vertical-align:middle;background:#f0f5ff">
               ${hasAction?`<button onclick="pfImplementAction(${mi},${ei},${ci})" style="font-size:10px;font-weight:700;background:#1e40af;color:white;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;white-space:nowrap" title="Implement — write new scores to PFMEA">▶ Apply</button>`:`<span style="color:var(--muted);font-size:10px">—</span>`}
@@ -1465,7 +1471,7 @@ function renderPFMEA(){
             <div style="font-size:8px;color:var(--muted);margin-bottom:2px">SEV</div>
             <input type="number" class="cell-edit mono" min="1" max="10" value="${ef.sev||1}" onchange="pfUpdEffect(${mi},${ei},'sev',+this.value)" style="width:30px;text-align:center;font-weight:700;font-size:13px">
           </td>
-          <td colspan="14" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No causes yet — click ＋ Cause</td>
+          <td colspan="15" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No causes yet — click ＋ Cause</td>
           </tr>`;
           html+=rowHtml;
         }
@@ -1481,12 +1487,12 @@ function renderPFMEA(){
               <button class="del-btn" onclick="pfDelMode(${mi})" style="font-size:9px">× Mode</button>
             </div>
           </td>
-          <td colspan="16" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No effects yet — click ＋ Effect</td>
+          <td colspan="17" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No effects yet — click ＋ Effect</td>
         </tr>`;
       }
     });
 
-    html+=`<tr><td colspan="17" style="padding:0"><div class="pfmea-add-row" onclick="pfAddMode('${s.id}')">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`;
+    html+=`<tr><td colspan="18" style="padding:0"><div class="pfmea-add-row" onclick="pfAddMode('${s.id}')">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`;
   });
 
   html+='</tbody></table></div>';
@@ -1522,7 +1528,8 @@ function pfAddCause(mi,ei){
 function pfUpdCause(mi,ei,ci,f,v){prog().pfmea[mi].effects[ei].causes[ci][f]=v;save();}
 function pfUpdCauseAction(mi,ei,ci,f,v){
   const ca=prog().pfmea[mi].effects[ei].causes[ci];
-  if(!ca.action)ca.action={desc:'',owner:'',due:'',newOcc:'',newDet:''};
+  if(!ca.action)ca.action={desc:'',taken:'',owner:'',due:'',newOcc:'',newDet:''};
+        if(!('taken' in ca.action))ca.action.taken='';
   ca.action[f]=v;save();
 }
 function pfImplementAction(mi,ei,ci){
@@ -1557,6 +1564,17 @@ function pfDelCause(mi,ei,ci){prog().pfmea[mi].effects[ei].causes.splice(ci,1);s
 function pfRefreshRPN(){save();}
 
 function pfRpnClass(rpn){return rpn>=200?'rpn-hi':rpn>=100?'rpn-md':'rpn-lo';}
+function rpnColor(rpn){
+  // 1-49: green range, 50-99: amber range, 100-199: orange-red, 200+: deep red
+  if(rpn<=1)  return{bg:'#dcfce7',fg:'#166534'};
+  if(rpn<25)  return{bg:'#bbf7d0',fg:'#166534'};
+  if(rpn<50)  return{bg:'#fef9c3',fg:'#854d0e'};
+  if(rpn<100) return{bg:'#fed7aa',fg:'#9a3412'};
+  if(rpn<150) return{bg:'#fca5a5',fg:'#7f1d1d'};
+  if(rpn<200) return{bg:'#f87171',fg:'#fff'};
+  if(rpn<300) return{bg:'#ef4444',fg:'#fff'};
+  return{bg:'#991b1b',fg:'#fff'};
+}
 
 // Live-update RPN span(s) for a cause row. If ci===-1, update all causes of this effect.
 function pfLiveRPN(mi,ei,ci){
@@ -1569,7 +1587,7 @@ function pfLiveRPN(mi,ei,ci){
     const ca=(ef.causes||[])[cIdx];if(!ca)return;
     const rpn=sev*(ca.occ||1)*(ca.det||1);
     const el=document.getElementById(`rpn_${mi}_${ei}_${cIdx}`);
-    if(el){el.textContent=rpn;el.className='rpn '+pfRpnClass(rpn);}
+    if(el){const c=rpnColor(rpn);el.textContent=rpn;el.style.background=c.bg;el.style.color=c.fg;}
     pfLiveForecast(mi,ei,cIdx);
   });
   save();
