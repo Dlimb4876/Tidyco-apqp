@@ -291,6 +291,18 @@ function renderPFMEA(){
   ${p.pfmea.length>0?`<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" onclick="setApqpTab('cp');return false" style="color:var(--blue)">Control Plan →</a></div>`:''}`;
 }
 
+// ── Sync row 2 top to sit exactly under row 1 ────────────────────
+// Called after render via rAF so DOM is painted and heights are real
+function pfmeaSyncRow2(){
+  const row0 = document.querySelector('.pfmea-tbl thead tr:first-child');
+  const row2ths = document.querySelectorAll('.pfmea-thead-row2 th');
+  if(!row0 || !row2ths.length) return;
+  const navH = 52;
+  const row0H = Math.ceil(row0.getBoundingClientRect().height);
+  const top = (navH + row0H) + 'px';
+  row2ths.forEach(th => th.style.top = top);
+}
+
 function pfShowHist(evt,cid){
   // Hide any open popups
   document.querySelectorAll('.hist-popup').forEach(p=>{if(p.id!=='hist_'+cid)p.style.display='none';});

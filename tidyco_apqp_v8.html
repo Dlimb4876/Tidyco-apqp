@@ -784,7 +784,7 @@ function render(){
   if(currentSection==='project')mc.innerHTML=renderDashboard();
   else if(currentSection.startsWith('gate_'))mc.innerHTML=renderGatePage(+currentSection.split('_')[1]);
   else{mc.innerHTML=`<div class="section-inner">${renderSection()}</div>`;}
-  requestAnimationFrame(()=>requestAnimationFrame(autoResizeAll));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{autoResizeAll();if(typeof pfmeaSyncRow2==='function')pfmeaSyncRow2();}));
 }
 function renderSection(){
   if(currentSection==='apqp')return renderAPQP();
