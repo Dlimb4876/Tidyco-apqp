@@ -428,26 +428,26 @@ td.pfmea-cause-text{border-left:3px solid #94a3b8 !important;}
 .sticky-table-wrap{overflow-x:auto;max-width:100%;}
 .sticky-table-wrap thead th {
   position:sticky;
-  top:52px;
+  top:0;
   z-index:20;
-  background:inherit;
+  background:#f4f6fa;
 }
 /* PFMEA — two sticky header rows */
 .pfmea-tbl thead tr:first-child th {
   position:sticky;
-  top:52px;
+  top:0;
   z-index:22;
   background:#1e3a5f;
 }
 .pfmea-thead-row2 th {
   position:sticky;
-  top:90px !important;
+  top:38px !important;
   z-index:21;
   background:#1e3a5f;
 }
 /* Actions/Risk card scroll: self-contained with sticky inside */
 .sticky-card-scroll{overflow-y:auto;max-height:65vh;overflow-x:auto;}
-.sticky-card-scroll thead th{position:sticky;top:0 !important;z-index:10;}
+.sticky-card-scroll thead th{position:sticky;top:0 !important;z-index:10;background:#f4f6fa;}
 .apqp-tab-content{padding-bottom:40px;}
 
 
@@ -1415,14 +1415,14 @@ function renderPFMEA(){
 
           // History row (hidden by default)
           const histRows=hist.length?[...hist].reverse().map(h=>{
-            const oc=rpnColor(h.rpn||1);
-            const nc=rpnColor(h.newRpn||h.rpn||1);
+            const oc=h.rpn>=200?'rpn-hi':h.rpn>=100?'rpn-md':'rpn-lo';
+            const nc=(h.newRpn||0)>=200?'rpn-hi':(h.newRpn||0)>=100?'rpn-md':'rpn-lo';
             const occDown=h.newOcc<h.oldOcc, detDown=h.newDet<h.oldDet;
             return`<div style="font-size:10px;border-bottom:1px solid var(--line);padding:6px 0;line-height:1.6">
               <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:${oc.bg};color:${oc.fg};font-weight:700;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace">${h.rpn}</span>
+                <span class="rpn ${oc}" style="font-size:11px;padding:2px 7px">${h.rpn}</span>
                 <span style="color:var(--muted)">→</span>
-                <span style="background:${nc.bg};color:${nc.fg};font-weight:700;font-size:11px;padding:2px 7px;border-radius:4px;font-family:monospace">${h.newRpn??'—'}</span>
+                <span class="rpn ${nc}" style="font-size:11px;padding:2px 7px">${h.newRpn??'—'}</span>
                 <span style="color:var(--muted);font-size:9px;margin-left:auto">${h.date}</span>
               </div>
               ${(h.oldOcc||h.oldDet)?`<div style="color:var(--muted);font-size:9px;margin-top:2px">
@@ -1483,7 +1483,7 @@ function renderPFMEA(){
               <input type="number" class="cell-edit mono" min="1" max="10" value="${det}" onchange="pfUpdCause(${mi},${ei},${ci},'det',+this.value);pfLiveRPN(${mi},${ei},${ci})" style="width:30px;text-align:center;font-weight:700;font-size:13px">
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
-              <span id="rpn_${mi}_${ei}_${ci}" style="display:inline-block;min-width:36px;text-align:center;font-size:12px;font-weight:700;padding:3px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:${rpnColor(rpn).bg};color:${rpnColor(rpn).fg}">${rpn}</span>
+              <span id="rpn_${mi}_${ei}_${ci}" class="rpn ${rpnCls}">${rpn}</span>
               ${hist.length?`<div style="margin-top:3px"><button onclick="pfShowHist(event,'${ca.id}')" style="font-size:9px;background:none;border:1px solid var(--line2);border-radius:3px;cursor:pointer;padding:1px 4px;color:var(--muted)">▶ ${hist.length}</button></div>`:''}              <div id="hist_${ca.id}" class="hist-popup" style="display:none">                <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:4px">Action History</div>                ${histRows}                <div style="text-align:center;padding-top:6px;font-size:9px;color:var(--muted)">${hist.length} action${hist.length!==1?'s':''} logged</div>              </div>
             </td>
             <!-- Action zone -->
@@ -1508,7 +1508,7 @@ function renderPFMEA(){
               <input type="number" class="cell-edit mono" min="1" max="10" value="${act.newDet||''}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'newDet',this.value);pfLiveForecast(${mi},${ei},${ci})" placeholder="—" style="width:30px;text-align:center;background:transparent;font-size:12px">
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle;background:#f0f5ff">
-              <span id="forecast_${mi}_${ei}_${ci}" style="display:inline-block;min-width:36px;text-align:center;font-size:11px;font-weight:700;padding:2px 5px;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:${hasAction?rpnColor(forecast).bg:'transparent'};color:${hasAction?rpnColor(forecast).fg:'var(--muted)'};opacity:${hasAction?1:0}">${hasAction?forecast:'—'}</span>
+              <span id="forecast_${mi}_${ei}_${ci}" class="rpn ${fCls}" style="opacity:${hasAction?1:0}">${hasAction?forecast:'—'}</span>
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle;background:#f0f5ff">
               ${hasAction?`<button onclick="pfImplementAction(${mi},${ei},${ci})" style="font-size:10px;font-weight:700;background:#1e40af;color:white;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;white-space:nowrap" title="Implement — write new scores to PFMEA">▶ Apply</button>`:`<span style="color:var(--muted);font-size:10px">—</span>`}
@@ -1676,7 +1676,7 @@ function pfLiveRPN(mi,ei,ci){
     const ca=(ef.causes||[])[cIdx];if(!ca)return;
     const rpn=sev*(ca.occ||1)*(ca.det||1);
     const el=document.getElementById(`rpn_${mi}_${ei}_${cIdx}`);
-    if(el){const c=rpnColor(rpn);el.textContent=rpn;el.style.background=c.bg;el.style.color=c.fg;}
+    if(el){el.textContent=rpn;el.className='rpn '+pfRpnClass(rpn);}
     pfLiveForecast(mi,ei,cIdx);
   });
   save();
@@ -1699,6 +1699,7 @@ function pfLiveForecast(mi,ei,ci){
     el.textContent=hasAction?forecast:'—';
     el.className='rpn '+(hasAction?pfRpnClass(forecast):'rpn-lo');
     el.style.opacity=hasAction?'1':'0';
+    el.style.background='';el.style.color='';
   }
   save();
 }
