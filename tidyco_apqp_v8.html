@@ -424,23 +424,48 @@ td.pfmea-cause-text{border-left:3px solid #94a3b8 !important;}
 .cell-edit[data-autoresize]{overflow:hidden;resize:none;min-height:32px;}
 
 /* Sticky headers for all APQP tables */
-/* Sticky table headers — scroll container is .main (the page scroll div) */
 /* Nav bar is 52px fixed, so headers stick at top:52px */
-.sticky-table-wrap{overflow-x:auto;}
-.sticky-table-wrap thead th,
-.sticky-card-scroll thead th {
+.sticky-table-wrap{overflow-x:auto;max-width:100%;}
+.sticky-table-wrap thead th {
   position:sticky;
   top:52px;
   z-index:20;
+  background:inherit;
 }
-/* PFMEA two-row header — row 2 sticks just below row 1 (~29px tall) */
-.pfmea-thead-row2 th{top:81px !important;z-index:19;}
+/* PFMEA — two sticky header rows */
+.pfmea-tbl thead tr:first-child th {
+  position:sticky;
+  top:52px;
+  z-index:22;
+  background:#1e3a5f;
+}
+.pfmea-thead-row2 th {
+  position:sticky;
+  top:90px !important;
+  z-index:21;
+  background:#1e3a5f;
+}
 /* Actions/Risk card scroll: self-contained with sticky inside */
 .sticky-card-scroll{overflow-y:auto;max-height:65vh;overflow-x:auto;}
-.sticky-card-scroll thead th{top:0 !important;z-index:10;}
-/* Remove apqp-tab-content scroll restriction — .main handles it */
+.sticky-card-scroll thead th{position:sticky;top:0 !important;z-index:10;}
 .apqp-tab-content{padding-bottom:40px;}
 
+
+
+/* History popup — fixed position, escapes table clipping */
+.hist-popup{
+  display:none;
+  position:fixed;
+  z-index:9999;
+  width:300px;
+  background:var(--bg);
+  border:1px solid var(--line2);
+  border-radius:8px;
+  padding:10px 14px;
+  box-shadow:0 8px 32px rgba(0,0,0,.22);
+  text-align:left;
+  font-size:10px;
+}
 
 /* PROJECT EDIT MODAL */
 /* LOGIN SCREEN */
@@ -1310,7 +1335,7 @@ function renderPFMEA(){
   p.pfmea.forEach(r=>{const key=(r.pfdId&&byStep[r.pfdId]!==undefined)?r.pfdId:'__none';byStep[key].push(r);});
 
   // Columns: Failure Mode | Effect | SEV | Cause | OCC | Prevent | Detect | DET | RPN | Action/Owner/Due | New OCC | New DET | Forecast | ▶ | del
-  let html=`<div class="sticky-table-wrap" style="-webkit-overflow-scrolling:touch"><table class="tbl pfmea-tbl" style="table-layout:fixed;width:1808px">
+  let html=`<div class="sticky-table-wrap" style="-webkit-overflow-scrolling:touch"><table class="tbl pfmea-tbl" style="table-layout:fixed;min-width:1808px;width:100%">
   <colgroup>
     <col style="width:180px"><!-- failure mode -->
     <col style="width:180px"><!-- effect -->
@@ -1459,12 +1484,7 @@ function renderPFMEA(){
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
               <span id="rpn_${mi}_${ei}_${ci}" style="display:inline-block;min-width:36px;text-align:center;font-size:12px;font-weight:700;padding:3px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;background:${rpnColor(rpn).bg};color:${rpnColor(rpn).fg}">${rpn}</span>
-              ${hist.length?`<div style="margin-top:3px"><button onclick="pfToggleHist('${ca.id}')" style="font-size:9px;background:none;border:1px solid var(--line2);border-radius:3px;cursor:pointer;padding:1px 4px;color:var(--muted)">▶ ${hist.length}</button></div>`:''}
-              <div id="hist_${ca.id}" style="display:none;position:absolute;z-index:200;right:0;top:100%;margin-top:2px;width:300px;background:var(--bg);border:1px solid var(--line2);border-radius:6px;padding:8px 12px;box-shadow:0 4px 20px rgba(0,0,0,.18);text-align:left">
-                <div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase">Action History</div>
-                ${histRows}
-                <div style="text-align:center;padding-top:4px;font-size:9px;color:var(--muted)">${hist.length} action${hist.length!==1?'s':''} logged</div>
-              </div>
+              ${hist.length?`<div style="margin-top:3px"><button onclick="pfShowHist(event,'${ca.id}')" style="font-size:9px;background:none;border:1px solid var(--line2);border-radius:3px;cursor:pointer;padding:1px 4px;color:var(--muted)">▶ ${hist.length}</button></div>`:''}              <div id="hist_${ca.id}" class="hist-popup" style="display:none">                <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:4px">Action History</div>                ${histRows}                <div style="text-align:center;padding-top:6px;font-size:9px;color:var(--muted)">${hist.length} action${hist.length!==1?'s':''} logged</div>              </div>
             </td>
             <!-- Action zone -->
             <td class="pfmea-cause-cell" style="vertical-align:top;background:#f0f5ff">
@@ -1551,7 +1571,26 @@ function renderPFMEA(){
   ${p.pfmea.length>0?`<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" onclick="setApqpTab('cp');return false" style="color:var(--blue)">Control Plan →</a></div>`:''}`;
 }
 
-function pfToggleHist(cid){const el=document.getElementById('hist_'+cid);if(el)el.style.display=el.style.display==='none'?'block':'none';}
+function pfShowHist(evt,cid){
+  // Hide any open popups
+  document.querySelectorAll('.hist-popup').forEach(p=>{if(p.id!=='hist_'+cid)p.style.display='none';});
+  const el=document.getElementById('hist_'+cid);
+  if(!el)return;
+  if(el.style.display==='block'){el.style.display='none';return;}
+  // Position near button, fixed coords
+  const btn=evt.currentTarget;
+  const r=btn.getBoundingClientRect();
+  el.style.display='block';
+  // Position below button, adjust if would go off screen
+  let top=r.bottom+6;
+  let left=r.left;
+  if(left+304>window.innerWidth) left=window.innerWidth-310;
+  if(top+400>window.innerHeight) top=r.top-Math.min(400,top+400-window.innerHeight+10);
+  el.style.top=top+'px';
+  el.style.left=left+'px';
+  evt.stopPropagation();
+}
+document.addEventListener('click',()=>document.querySelectorAll('.hist-popup').forEach(p=>p.style.display='none'));
 
 // ── PFMEA data functions ──
 function pfAddMode(pfdId){
