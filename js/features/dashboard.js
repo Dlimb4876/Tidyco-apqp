@@ -1,0 +1,307 @@
+// ═══════════════════════════════════
+// dashboard.js — Project home and KPI dashboard rendering
+// Depends on: state.js, helpers.js, navigation.js, gates.js (gateAllSigned, calcRPN)
+// ═══════════════════════════════════
+
+// ── Projects list ─────────────────────────────────────────────
+function renderProjects() {
+  const user = currentUser ? currentUser.email.split('@')[0] : '';
+  let html = `<div class="proj-home">
+    <div class="proj-home-header">
+      <div>
+        <div class="proj-home-title">Projects</div>
+        <div class="proj-home-sub">Signed in as ${esc(user)}</div>
+      </div>
+      <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
+    </div>`;
+
+  if (db.programmes.length === 0) {
+    html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
+      <div style="font-size:48px;margin-bottom:16px">📋</div>
+      <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No projects yet</div>
+      <div style="font-size:13px;margin-bottom:24px">Create your first project to get started</div>
+      <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
+    </div>`;
+  } else {
+    FAMILIES.forEach(fam => {
+      const projs = db.programmes.filter(p => (p.family || 'Other') === fam.id);
+      if (projs.length === 0) return;
+      html += `<div class="proj-family-group">
+        <div class="proj-family-label"><span>${fam.icon}</span>${fam.label}</div>
+        <div class="proj-cards">`;
+      projs.forEach(p => {
+        const gates      = p.gates || [];
+        const curGate    = gates.findIndex(g => !gateAllSigned(g));
+        const gatesDone  = gates.filter(g => gateAllSigned(g)).length;
+        const openAct    = (p.actions || []).filter(a => a.status !== 'Closed').length;
+        const overdueAct = (p.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
+        const highRPN    = (p.pfmea || []).filter(r => calcRPN(r) >= 100).length;
+        const rag        = overdueAct > 0 || highRPN > 0 ? 'r' : openAct > 0 ? 'a' : 'g';
+        const ragLabel   = rag === 'r' ? 'Needs Attention' : rag === 'a' ? 'In Progress' : 'On Track';
+        const pips       = GATE_DEFS.map((g, i) => {
+          const gd  = gates[i];
+          const cls = gd && gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : '';
+          return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`;
+        }).join('');
+        const lastSaved = p.updated_at
+          ? new Date(p.updated_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+          : '—';
+        html += `<div class="proj-card" onclick="openProject('${p.id}')">
+          <div class="proj-card-name">${esc(p.name)}</div>
+          <div class="proj-card-meta">
+            ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''}
+            ${p.unit     ? `<span>🚂 ${esc(p.unit)}</span>`     : ''}
+            ${p.lead     ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''}
+            ${p.pm       ? `<span>📋 PM: ${esc(p.pm)}</span>`   : ''}
+          </div>
+          <div class="proj-card-gate">
+            <span class="proj-card-gate-label">GATE ${curGate >= 0 ? curGate : '✓'}</span>
+            ${pips}
+          </div>
+          <div class="proj-card-footer">
+            <span><span class="proj-rag proj-rag-${rag}"></span>${ragLabel}</span>
+            <span>${gatesDone}/6 gates · ${lastSaved}</span>
+          </div>
+        </div>`;
+      });
+      html += `<div class="proj-add-card" onclick="newProjectInFamily('${fam.id}')">＋ Add ${fam.label} project</div>`;
+      html += `</div></div>`;
+    });
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+function renderDashboard() {
+  const p          = prog();
+  const openAct    = p.actions.filter(a => a.status !== 'Closed').length;
+  const overdueAct = p.actions.filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
+  const highRisks  = p.risks.filter(r => r.lik * r.imp >= 12 && r.status !== 'Closed').length;
+  const highRPN    = p.pfmea.filter(r => calcRPN(r) >= 100).length;
+  const gatesDone  = p.gates.filter(g => gateAllSigned(g)).length;
+  const curGate    = p.gates.findIndex(g => !gateAllSigned(g));
+  const aaw        = [...p.bom.parts, ...p.bom.mat, ...p.bom.cons].filter(x => x.isAaw).length;
+  const gantt      = p.gantt || [];
+  const timingTotal  = gantt.length;
+  const timingFilled = gantt.filter(r => r.weeks && r.weeks.some(w => w > 0)).length;
+  const timingRed    = 0;
+  const timingAmber  = 0;
+  const timingGreen  = timingFilled;
+
+  let alerts = '';
+  if (overdueAct > 0)    alerts += `<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--red);color:white;border:none" onclick="navigate('actions')">View →</button></div>`;
+  if (timingRed > 0)     alerts += `<div class="alert-item alert-red">🔴 <strong>${timingRed} red item${timingRed !== 1 ? 's' : ''} in timing plan</strong> — recovery plan required<button class="btn btn-sm" style="margin-left:auto;background:var(--red);color:white;border:none" onclick="navigate('timing')">View →</button></div>`;
+  if (timingAmber > 0 && timingRed === 0) alerts += `<div class="alert-item alert-amber">⚠ <strong>${timingAmber} amber item${timingAmber !== 1 ? 's' : ''} in timing plan</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:white;border:none" onclick="navigate('timing')">View →</button></div>`;
+  if (highRisks > 0)     alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRisks} high-severity risk${highRisks !== 1 ? 's' : ''}</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:white;border:none" onclick="navigate('risks')">View →</button></div>`;
+  if (highRPN > 0)       alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRPN} PFMEA row${highRPN !== 1 ? 's' : ''} RPN ≥ 100</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:white;border:none" onclick="navigate('apqp')">View →</button></div>`;
+
+  const gateStrip = GATE_DEFS.map(g => {
+    const gd         = p.gates[g.num];
+    const pct        = Math.round(gd.checks.filter(Boolean).length / g.items.length * 100);
+    const signed     = gateAllSigned(gd);
+    const hasActivity = gd.checks.some(Boolean) || gd.sigs.some(s => s.signed);
+    const dotCls     = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending';
+    const labelCol   = signed ? 'var(--green)' : hasActivity ? 'var(--amber)' : 'var(--muted)';
+    const nodeBg     = signed ? 'background:var(--green-pale)' : hasActivity ? 'background:var(--amber-pale)' : '';
+    return `<div class="gate-node" style="${nodeBg}" onclick="navigate('gate_${g.num}')" title="Open Gate ${g.num}: ${g.name}">
+      <div class="gate-node-num" style="color:${labelCol}">Gate ${g.num}</div>
+      <div class="gate-node-name">${g.name}</div>
+      <div style="display:flex;align-items:center;gap:5px;margin-top:5px">
+        <div class="gate-status-dot ${dotCls}"></div>
+        <span style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace">${pct}%</span>
+        ${signed ? '<span style="font-size:9px;font-weight:700;color:var(--green);margin-left:auto;font-family:\'IBM Plex Mono\',monospace">✓</span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const totalBomItems = Object.keys(BOM_TYPES).reduce((n, k) => n + p.bom[k].length, 0);
+  const sections = [
+    { id: 'timing',  icon: '📅', title: 'NPI Timing Plan',    desc: `${timingTotal} rows · ${timingFilled} with activity`, color: 'var(--teal)'   },
+    { id: 'apqp',    icon: '📐', title: 'APQP',               desc: 'CTQ · PFD · PFMEA · Control Plan',                   color: 'var(--purple)' },
+    { id: 'bom',     icon: '📦', title: 'Bill of Materials',   desc: `${totalBomItems} items · ${p.bom.kits.length} kits · ${aaw} AAW`, color: 'var(--navy)' },
+    { id: 'actions', icon: '✅', title: 'Actions',             desc: `${openAct} open${overdueAct > 0 ? ' · ' + overdueAct + ' overdue' : ''}`, color: overdueAct > 0 ? 'var(--red)' : openAct > 0 ? 'var(--amber)' : 'var(--green)' },
+    { id: 'risks',   icon: '🛡', title: 'Risk Register',       desc: `${p.risks.filter(r => r.status !== 'Closed').length} open · ${highRisks} high`, color: highRisks > 0 ? 'var(--red)' : 'var(--blue)' },
+  ];
+
+  if (!p.subAssemblies) p.subAssemblies = [];
+  const subAsmHTML = (() => {
+    const cards = p.subAssemblies.map((link, li) => {
+      const sp = db.programmes.find(x => x.id === link.id);
+      if (!sp) return '';
+      const sg       = sp.gates || [];
+      const sgDone   = sg.filter(g => g.signed).length;
+      const sgTotal  = sg.length || 6;
+      const curGateSA = sg.findIndex(g => !g.signed);
+      const gLabel   = curGateSA < 0 ? 'Complete' : `Gate ${curGateSA}`;
+      const gatePct  = Math.round((sgDone / sgTotal) * 100);
+      const saOpen   = (sp.actions || []).filter(a => a.status !== 'Closed').length;
+      const saOverdue = (sp.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
+      const saRisks  = (sp.risks || []).filter(r => r.status !== 'Closed').length;
+      const saHighR  = (sp.risks || []).filter(r => r.status !== 'Closed' && r.lik * r.imp >= 12).length;
+      const saHighRPN = (sp.pfmea || []).reduce((n, m) => n + (m.effects || []).reduce((en, e) => en + (e.causes || []).filter(c => (e.sev || 1) * (c.occ || 1) * (c.det || 1) >= 100).length, 0), 0);
+      return `<div class="sub-asm-card" onclick="progId='${sp.id}';navigate('project')">
+        <button class="sub-asm-unlink" onclick="event.stopPropagation();unlinkSubAsm(${li})" title="Unlink sub-assembly">✕</button>
+        <div class="sub-asm-card-head">
+          <div>
+            <div class="sub-asm-card-name">🔩 ${esc(sp.name)}</div>
+            ${sp.unit ? `<div class="sub-asm-card-unit">🚂 ${esc(sp.unit)}</div>` : ''}
+          </div>
+        </div>
+        <div class="sub-asm-stats">
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:var(--green)">${sgDone}<span style="font-size:10px;color:var(--muted)">/${sgTotal}</span></span><span class="sub-asm-stat-lbl">Gates</span></div>
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saOverdue > 0 ? 'var(--red)' : saOpen > 0 ? 'var(--amber)' : 'var(--green)'}">${saOpen}</span><span class="sub-asm-stat-lbl">Actions${saOverdue > 0 ? ` (${saOverdue} OD)` : ''}</span></div>
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saHighR > 0 ? 'var(--red)' : 'var(--ink)'}">${saRisks}</span><span class="sub-asm-stat-lbl">Risks${saHighR > 0 ? ` (${saHighR} hi)` : ''}</span></div>
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saHighRPN > 0 ? 'var(--amber)' : 'var(--ink)'}">${saHighRPN}</span><span class="sub-asm-stat-lbl">High RPN</span></div>
+        </div>
+        <div>
+          <div class="sub-asm-gate-bar"><div class="sub-asm-gate-fill" style="width:${gatePct}%"></div></div>
+          <div class="sub-asm-gate-label">${gLabel} · ${gatePct}%</div>
+        </div>
+      </div>`;
+    }).filter(Boolean).join('');
+    const addCard = `<div class="sub-asm-add-card" onclick="openSubAsmModal()"><span style="font-size:16px">＋</span> Link sub-assembly project</div>`;
+    return `<div class="sub-asm-grid">${cards}${addCard}</div>`;
+  })();
+
+  const launcherHTML = sections.map(s =>
+    `<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${s.color};margin-bottom:1px">${s.icon} ${s.title}</div><div class="section-card-desc">${s.desc}</div></div>`
+  ).join('');
+
+  const actHTML = p.actions.filter(a => a.status !== 'Closed').slice(0, 5).map(a => {
+    const od = a.due && new Date(a.due) < new Date();
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);${od ? 'background:#fff8f8' : ''}"><span class="sp sp-${a.status === 'In Progress' ? 'inprog' : 'open'}">${a.status || 'Open'}</span><span style="flex:1;font-size:12px">${esc(a.desc)}</span><span style="font-size:10px;color:${od ? 'var(--red)' : 'var(--muted)'}">${a.owner ? esc(a.owner) + ' ' : ''} ${a.due || ''}</span></div>`;
+  }).join('') || `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open actions</div>`;
+
+  const riskHTML = p.risks.filter(r => r.status !== 'Closed').sort((a, b) => b.lik * b.imp - a.lik * a.imp).slice(0, 4).map(r => {
+    const s = r.lik * r.imp;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)"><span class="rs ${s >= 12 ? 'rs-hi' : s >= 6 ? 'rs-med' : 'rs-lo'}">${s}</span><span style="flex:1;font-size:12px">${esc(r.desc)}</span><span style="font-size:10px;color:var(--muted)">${esc(r.cat || '')}</span></div>`;
+  }).join('') || `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open risks</div>`;
+
+  const famIcon   = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
+  const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
+
+  return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 PM: ${esc(p.pm)}</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
+  <div class="dash-body">
+    <div class="kpi-grid">
+      <div class="kpi-card" onclick="navigate('gate_${curGate >= 0 ? curGate : 5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
+      <div class="kpi-card" onclick="navigate('actions')" style="--kpi-color:${overdueAct > 0 ? 'var(--red)' : openAct > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${openAct}</div><div class="kpi-label">Open Actions</div><div class="kpi-sub">${overdueAct > 0 ? `<span style="color:var(--red)">${overdueAct} overdue</span>` : '—'}</div></div>
+      <div class="kpi-card" onclick="navigate('risks')" style="--kpi-color:${highRisks > 0 ? 'var(--red)' : 'var(--blue)'}"><div class="kpi-num">${p.risks.filter(r => r.status !== 'Closed').length}</div><div class="kpi-label">Open Risks</div><div class="kpi-sub">${highRisks > 0 ? `<span style="color:var(--red)">${highRisks} high</span>` : '—'}</div></div>
+      <div class="kpi-card" onclick="navigate('apqp')" style="--kpi-color:${highRPN > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${highRPN}</div><div class="kpi-label">High RPN</div><div class="kpi-sub">${p.pfmea.length} total rows</div></div>
+    </div>
+    ${alerts ? `<div class="alert-row">${alerts}</div>` : ''}
+    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Gate Progress — click any gate to open</div>
+    <div class="gate-strip">${gateStrip}</div>
+    ${parentProg ? `<div class="parent-prog-card" onclick="progId='${parentProg.id}';navigate('project')">
+      <div class="parent-prog-label">↑ PARENT PROGRAMME</div>
+      <div class="parent-prog-name">${esc(parentProg.name)}</div>
+      ${parentProg.unit ? `<div class="parent-prog-meta">🚂 ${esc(parentProg.unit)}</div>` : ''}
+    </div>` : ''}
+    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Tools</div>
+    <div class="section-launcher">${launcherHTML}</div>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:16px">Sub-assemblies</div>
+    ${subAsmHTML}
+    <div class="dash-grid">
+      <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Open Actions</span><button class="btn btn-ghost btn-sm" onclick="navigate('actions')">View all →</button></div>${actHTML}</div>
+      <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Top Risks</span><button class="btn btn-ghost btn-sm" onclick="navigate('risks')">View all →</button></div>${riskHTML}</div>
+    </div>
+  </div>`;
+}
+
+// ── Project CRUD ──────────────────────────────────────────────
+function openProject(id) { progId = id; navigate('project'); }
+
+function newProjectInFamily(family) {
+  showModal('modalNewProj');
+  setTimeout(() => { const f = document.getElementById('np_family'); if (f) f.value = family; }, 50);
+}
+
+function createProg() {
+  const name = document.getElementById('np_name').value.trim();
+  if (!name) { alert('Name required'); return; }
+  const p = newProgTemplate(
+    name,
+    document.getElementById('np_customer').value.trim(),
+    document.getElementById('np_unit').value.trim(),
+    document.getElementById('np_family').value,
+    document.getElementById('np_lead').value.trim(),
+    document.getElementById('np_pm').value.trim(),
+    document.getElementById('np_date').value
+  );
+  db.programmes.push(p); progId = p.id; save(); closeModal('modalNewProj'); navigate('project');
+  ['np_name', 'np_customer', 'np_unit', 'np_lead', 'np_pm', 'np_date'].forEach(id => document.getElementById(id).value = '');
+}
+
+function switchProg(id) { progId = id; navigate('project'); }
+
+function showEditProject() {
+  const p = prog(); if (!p) return;
+  document.getElementById('ep_name').value     = p.name     || '';
+  document.getElementById('ep_customer').value = p.customer || '';
+  document.getElementById('ep_unit').value     = p.unit     || '';
+  document.getElementById('ep_family').value   = p.family   || 'Other';
+  document.getElementById('ep_lead').value     = p.lead     || '';
+  document.getElementById('ep_pm').value       = p.pm       || '';
+  document.getElementById('ep_date').value     = p.date     || '';
+  showModal('modalEditProj');
+}
+
+function saveEditProject() {
+  const p = prog(); if (!p) return;
+  const name = document.getElementById('ep_name').value.trim();
+  if (!name) { alert('Name required'); return; }
+  p.name     = name;
+  p.customer = document.getElementById('ep_customer').value.trim();
+  p.unit     = document.getElementById('ep_unit').value.trim();
+  p.family   = document.getElementById('ep_family').value;
+  p.lead     = document.getElementById('ep_lead').value.trim();
+  p.pm       = document.getElementById('ep_pm').value.trim();
+  p.date     = document.getElementById('ep_date').value;
+  save(); closeModal('modalEditProj'); render();
+}
+
+function deleteProject() {
+  const p = prog(); if (!p) return;
+  if (!confirm('Delete project "' + p.name + '"? This cannot be undone.')) return;
+  supa.from('programmes').delete().eq('prog_id', p.id).then(() => {});
+  db.programmes = db.programmes.filter(x => x.id !== p.id);
+  progId = db.programmes.length ? db.programmes[0].id : null;
+  closeModal('modalEditProj');
+  navigate('projects');
+}
+
+// ── Sub-assembly linking ──────────────────────────────────────
+function unlinkSubAsm(li) {
+  const p = prog(); if (!p.subAssemblies) p.subAssemblies = [];
+  const removed = p.subAssemblies.splice(li, 1)[0];
+  if (removed) { const child = db.programmes.find(x => x.id === removed.id); if (child && child.parentId === progId) delete child.parentId; }
+  save(); render();
+}
+
+function openSubAsmModal() {
+  const p = prog(); if (!p.subAssemblies) p.subAssemblies = [];
+  const linked = new Set(p.subAssemblies.map(x => x.id));
+  const others = db.programmes.filter(x => x.id !== p.id && !linked.has(x.id));
+  if (!others.length) { alert('No other projects to link. Create the sub-assembly project first.'); return; }
+  const opts = others.map((x, i) =>
+    `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="linkSubAsm('${x.id}')">
+      <span style="font-size:13px">🔩</span>
+      <span style="flex:1;font-size:12px;font-weight:600">${esc(x.name)}</span>
+      ${x.unit ? `<span style="font-size:10px;color:var(--muted)">${esc(x.unit)}</span>` : ''}
+    </div>`
+  ).join('');
+  const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.id = 'subAsmModalBg';
+  bg.innerHTML = `<div class="modal" style="max-width:420px"><div class="modal-head"><span class="modal-title">Link Sub-assembly Project</span><button class="modal-close" onclick="closeSubAsmModal()">✕</button></div><div style="padding:8px 4px;max-height:320px;overflow-y:auto">${opts}</div></div>`;
+  bg.addEventListener('click', e => { if (e.target === bg) closeSubAsmModal(); });
+  document.body.appendChild(bg);
+}
+
+function linkSubAsm(id) {
+  const p = prog(); if (!p.subAssemblies) p.subAssemblies = [];
+  if (!p.subAssemblies.find(x => x.id === id)) p.subAssemblies.push({ id });
+  const child = db.programmes.find(x => x.id === id);
+  if (child && !child.parentId) child.parentId = progId;
+  save(); closeSubAsmModal(); render();
+}
+
+function closeSubAsmModal() { const el = document.getElementById('subAsmModalBg'); if (el) el.remove(); }

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tidyco — APQP Quality Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/pfmea.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     LOGIN SCREEN
+     ═══════════════════════════════════ -->
+<div id="loginScreen" class="login-shell">
+  <div class="login-box">
+    <div class="login-logo">
+      <div>
+        <div class="login-logo-name">TIDYCO</div>
+        <div class="login-logo-sub">APQP Quality Tool</div>
+      </div>
+    </div>
+    <div class="login-title">Sign in</div>
+    <div class="login-sub">Manufacturing Engineering — Rail Overhaul</div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     APP SHELL
+     ═══════════════════════════════════ -->
+<div class="shell" id="appShell" style="display:none">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="brand" onclick="goProjects()" style="cursor:pointer">
+        <div class="brand-hex"></div>
+        <span class="brand-name">TIDYCO</span>
+        <span class="brand-sep">|</span>
+        <span class="brand-sub">APQP</span>
+      </div>
+      <nav class="breadcrumb" id="breadcrumb" style="display:none">
+        <span class="bc-sep">›</span>
+        <button class="bc-item" id="bc-project" onclick="navigate('project')" style="display:none"></button>
+        <span class="bc-sep" id="bc-sep2" style="display:none">›</span>
+        <span class="bc-current" id="bc-section" style="display:none"></span>
+      </nav>
+      <button class="back-btn" id="backBtn" style="display:none" onclick="navigate('project')">← Dashboard</button>
+    </div>
+    <div class="topbar-actions">
+      <span class="sync-badge" id="syncBadge">● saved</span>
+      <button class="tbtn tbtn-ghost" onclick="exportJSON()">⬇ Export</button>
+      <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()">⬆ Import</button>
+      <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
+      <button class="tbtn tbtn-ghost" onclick="doLogout()" title="Sign out" style="margin-left:4px">⏻</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="mainContent"></div>
+
+</div><!-- end appShell -->
+
+<!-- ═══════════════════════════════════
+     MODALS
+     ═══════════════════════════════════ -->
+
+<!-- New Project -->
+<div class="modal-bg" id="modalNewProj" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">New Project</div>
+    <div class="field"><label>Project Name *</label><input id="np_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
+    <div class="field-row">
+      <div class="field"><label>Customer</label><input id="np_customer"></div>
+      <div class="field"><label>Unit / Product</label><input id="np_unit"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Product Family</label>
+        <select id="np_family">
+          <option value="HVAC">HVAC</option>
+          <option value="Rotating Machines">Rotating Machines</option>
+          <option value="Pneumatics">Pneumatics</option>
+          <option value="Other" selected>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>ME Lead</label><input id="np_lead"></div>
+      <div class="field"><label>Project Manager</label><input id="np_pm"></div>
+    </div>
+    <div class="field"><label>Start Date</label><input type="date" id="np_date"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button>
+      <button class="btn btn-primary" onclick="createProg()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Project -->
+<div class="modal-bg" id="modalEditProj" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">Edit Project</div>
+    <div class="field"><label>Project Name *</label><input id="ep_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
+    <div class="field-row">
+      <div class="field"><label>Customer</label><input id="ep_customer"></div>
+      <div class="field"><label>Unit / Product</label><input id="ep_unit"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Product Family</label>
+        <select id="ep_family">
+          <option value="HVAC">HVAC</option>
+          <option value="Rotating Machines">Rotating Machines</option>
+          <option value="Pneumatics">Pneumatics</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>ME Lead</label><input id="ep_lead"></div>
+      <div class="field"><label>Project Manager</label><input id="ep_pm"></div>
+    </div>
+    <div class="field"><label>Start Date</label><input type="date" id="ep_date"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="deleteProject()">Delete Project</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('modalEditProj')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditProject()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Insert PFD Step -->
+<div class="modal-bg" id="modalInsert" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">Insert Step</div>
+    <div class="field">
+      <label>Step Number</label>
+      <input type="number" id="insertNum" min="1" step="1">
+      <div style="font-size:11px;color:var(--muted);margin-top:3px" id="insertNumHint"></div>
+    </div>
+    <div class="field">
+      <label>Step Type</label>
+      <select id="insertType">
+        <option value="step">Normal Step</option>
+        <option value="group">Sub-assembly Group Header</option>
+        <option value="sub">Sub-assembly Step</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalInsert')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmInsert()">Insert</button>
+    </div>
+  </div>
+</div>
+
+<!-- CTQ Picker -->
+<div class="modal-bg" id="modalCtqPick" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Link CTQ Requirements</div>
+    <div id="ctqPickList" style="display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalCtqPick')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCtqPick()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BoM Picker for PFD step resources -->
+<div class="modal-bg" id="modalBomPick" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-title" id="bomPickTitle">Link Resources</div>
+    <div class="bom-filter-row" id="bomPickFilter"></div>
+    <div class="bom-pick-list" id="bomPickList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalBomPick')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBomPick()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BoM Picker for Kit item add -->
+<div class="modal-bg" id="modalKitPick" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-title">Add Items to Kit</div>
+    <div class="bom-filter-row" id="kitPickFilter"></div>
+    <div class="bom-pick-list" id="kitPickList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalKitPick')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveKitPick()">Add Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SCRIPTS — load order matters
+     ═══════════════════════════════════ -->
+
+<!-- Core -->
+<script src="js/core/state.js"></script>
+<script src="js/core/auth.js"></script>
+<script src="js/core/db.js"></script>
+
+<!-- Utils -->
+<script src="js/utils/helpers.js"></script>
+<script src="js/utils/navigation.js"></script>
+
+<!-- Features -->
+<script src="js/features/dashboard.js"></script>
+<script src="js/features/gates.js"></script>
+<script src="js/features/pfmea.js"></script>
+<script src="js/features/apqp.js"></script>
+<script src="js/features/bom.js"></script>
+<script src="js/features/timing.js"></script>
+<script src="js/features/trackers.js"></script>
+
+<!-- Entry point -->
+<script src="js/app.js"></script>
+
+</body>
+</html>
