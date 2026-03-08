@@ -26,7 +26,7 @@ function navigate(sec, { pushHash = true } = {}) {
 
   if (pushHash) {
     const parts = [];
-    if (progId)           parts.push('p=' + encodeURIComponent(progId));
+    if (progId)             parts.push('p=' + encodeURIComponent(progId));
     if (sec !== 'projects') parts.push('s=' + encodeURIComponent(sec));
     if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
     const hash = parts.length ? '#' + parts.join('&') : '#';
@@ -82,13 +82,22 @@ function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
   if (!prog()) { mc.innerHTML = renderProjects(); return; }
+
   if (currentSection === 'project') mc.innerHTML = renderDashboard();
   else if (currentSection.startsWith('gate_')) mc.innerHTML = renderGatePage(+currentSection.split('_')[1]);
   else { mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`; }
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    autoResizeAll();
-    if (typeof pfmeaSyncRow2 === 'function') pfmeaSyncRow2();
-  }));
+
+  // Double rAF: first frame commits the new HTML to the DOM;
+  // second frame ensures layout (heights, positions) is fully calculated
+  // so pfmeaSyncRow2() gets accurate getBoundingClientRect values.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      autoResizeAll();
+      if (currentSection === 'apqp' && apqpTab === 'pfmea') {
+        if (typeof pfmeaSyncRow2 === 'function') pfmeaSyncRow2();
+      }
+    });
+  });
 }
 
 function renderSection() {

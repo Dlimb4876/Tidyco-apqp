@@ -11,7 +11,6 @@ function renderRpnBurndown(compact) {
     return compact ? '' : `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No PFMEA rows yet — add failure modes to see RPN chart.</div>`;
   }
 
-  // Sum totals across all causes
   let totalOriginal = 0;
   let totalCurrent  = 0;
   let rowCount      = 0;
@@ -43,42 +42,28 @@ function renderRpnBurndown(compact) {
   const reduction = totalOriginal > 0 ? Math.round((1 - totalCurrent / totalOriginal) * 100) : 0;
   const maxRPN    = Math.max(totalOriginal, totalCurrent, 1);
 
-  // ── Build full-width SVG with two bars ──────────────────────
-  // viewBox is 1000 wide so it scales to 100% container width naturally.
-  const vbW      = 1000;
-  const labelW   = compact ? 0 : 130;   // left label column width (non-compact only)
-  const chartX   = compact ? 0 : labelW;
-  const chartW   = vbW - chartX - 60;   // 60px right padding for value labels
-  const barH     = compact ? 32 : 40;
-  const gap      = compact ? 16 : 20;
-  const svgH     = barH * 2 + gap + (compact ? 0 : 28); // 28 for x-axis labels
-
-  function rpnFill(rpn) {
-    // Colour the current bar by improvement state; original always slate
-    return rpn < totalOriginal ? '#22c55e' : '#94a3b8';
-  }
+  const vbW    = 1000;
+  const labelW = compact ? 0 : 130;
+  const chartX = compact ? 0 : labelW;
+  const chartW = vbW - chartX - 60;
+  const barH   = compact ? 32 : 40;
+  const gap    = compact ? 16 : 20;
+  const svgH   = barH * 2 + gap + (compact ? 0 : 28);
 
   const origBarW = Math.round((totalOriginal / maxRPN) * chartW);
   const currBarW = Math.round((totalCurrent  / maxRPN) * chartW);
 
   let bars = '';
-
   if (!compact) {
-    // Row labels on left
     bars += `<text x="${labelW - 8}" y="${barH / 2 + 5}" text-anchor="end" font-size="12" font-weight="600" fill="var(--mid)" font-family="IBM Plex Sans,sans-serif">Original</text>`;
     bars += `<text x="${labelW - 8}" y="${barH + gap + barH / 2 + 5}" text-anchor="end" font-size="12" font-weight="600" fill="var(--mid)" font-family="IBM Plex Sans,sans-serif">Current</text>`;
   }
-
-  // Original bar (slate)
   bars += `<rect x="${chartX}" y="0" width="${origBarW}" height="${barH}" rx="4" fill="#94a3b8" opacity="0.5"/>`;
   bars += `<text x="${chartX + origBarW + 8}" y="${barH / 2 + 5}" font-size="${compact ? 14 : 16}" font-weight="700" fill="var(--mid)" font-family="IBM Plex Mono,monospace">${totalOriginal}</text>`;
-
-  // Current bar (green if improved, amber if same/worse)
   const currFill = totalCurrent < totalOriginal ? '#22c55e' : totalCurrent === totalOriginal ? '#94a3b8' : '#f59e0b';
   bars += `<rect x="${chartX}" y="${barH + gap}" width="${currBarW}" height="${barH}" rx="4" fill="${currFill}" opacity="0.85"/>`;
   bars += `<text x="${chartX + currBarW + 8}" y="${barH + gap + barH / 2 + 5}" font-size="${compact ? 14 : 16}" font-weight="700" fill="${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--mid)'}" font-family="IBM Plex Mono,monospace">${totalCurrent}</text>`;
 
-  // X-axis ticks (non-compact only)
   let ticks = '';
   if (!compact) {
     [0, 0.25, 0.5, 0.75, 1].forEach(t => {
@@ -89,12 +74,8 @@ function renderRpnBurndown(compact) {
     });
   }
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 ${vbW} ${svgH}" style="display:block">
-    ${ticks}
-    ${bars}
-  </svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 ${vbW} ${svgH}" style="display:block">${ticks}${bars}</svg>`;
 
-  // ── Stats strip ──────────────────────────────────────────────
   const statsStrip = `
     <div style="display:flex;gap:10px;margin-bottom:${compact ? 10 : 14}px;flex-wrap:wrap">
       <div style="flex:1;min-width:80px;background:var(--bg);border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
@@ -116,20 +97,12 @@ function renderRpnBurndown(compact) {
     </div>`;
 
   if (compact) {
-    return `<div style="padding:0 14px 14px">
-      ${statsStrip}
-      ${svg}
-    </div>`;
+    return `<div style="padding:0 14px 14px">${statsStrip}${svg}</div>`;
   }
-
-  // Full view (PFMEA page)
-  return `<div>
-    ${statsStrip}
-    ${svg}
-  </div>`;
+  return `<div>${statsStrip}${svg}</div>`;
 }
 
-// SVG-safe escape (no quotes/tags in SVG text)
+// SVG-safe escape
 function escSvg(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -228,13 +201,13 @@ function renderDashboard() {
   if (highRPN > 0)       alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRPN} PFMEA row${highRPN !== 1 ? 's' : ''} RPN ≥ 100</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:white;border:none" onclick="navigate('apqp')">View →</button></div>`;
 
   const gateStrip = GATE_DEFS.map(g => {
-    const gd         = p.gates[g.num];
-    const pct        = Math.round(gd.checks.filter(Boolean).length / g.items.length * 100);
-    const signed     = gateAllSigned(gd);
+    const gd          = p.gates[g.num];
+    const pct         = Math.round(gd.checks.filter(Boolean).length / g.items.length * 100);
+    const signed      = gateAllSigned(gd);
     const hasActivity = gd.checks.some(Boolean) || gd.sigs.some(s => s.signed);
-    const dotCls     = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending';
-    const labelCol   = signed ? 'var(--green)' : hasActivity ? 'var(--amber)' : 'var(--muted)';
-    const nodeBg     = signed ? 'background:var(--green-pale)' : hasActivity ? 'background:var(--amber-pale)' : '';
+    const dotCls      = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending';
+    const labelCol    = signed ? 'var(--green)' : hasActivity ? 'var(--amber)' : 'var(--muted)';
+    const nodeBg      = signed ? 'background:var(--green-pale)' : hasActivity ? 'background:var(--amber-pale)' : '';
     return `<div class="gate-node" style="${nodeBg}" onclick="navigate('gate_${g.num}')" title="Open Gate ${g.num}: ${g.name}">
       <div class="gate-node-num" style="color:${labelCol}">Gate ${g.num}</div>
       <div class="gate-node-name">${g.name}</div>
@@ -260,16 +233,16 @@ function renderDashboard() {
     const cards = p.subAssemblies.map((link, li) => {
       const sp = db.programmes.find(x => x.id === link.id);
       if (!sp) return '';
-      const sg       = sp.gates || [];
-      const sgDone   = sg.filter(g => g.signed).length;
-      const sgTotal  = sg.length || 6;
+      const sg        = sp.gates || [];
+      const sgDone    = sg.filter(g => g.signed).length;
+      const sgTotal   = sg.length || 6;
       const curGateSA = sg.findIndex(g => !g.signed);
-      const gLabel   = curGateSA < 0 ? '✓ Complete' : `Gate ${curGateSA}`;
-      const gatePct  = Math.round(sgDone / sgTotal * 100);
-      const saOpen   = (sp.actions || []).filter(a => a.status !== 'Closed').length;
+      const gLabel    = curGateSA < 0 ? '✓ Complete' : `Gate ${curGateSA}`;
+      const gatePct   = Math.round(sgDone / sgTotal * 100);
+      const saOpen    = (sp.actions || []).filter(a => a.status !== 'Closed').length;
       const saOverdue = (sp.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
-      const saRisks  = (sp.risks || []).filter(r => r.status !== 'Closed').length;
-      const saHighR  = (sp.risks || []).filter(r => r.lik * r.imp >= 12 && r.status !== 'Closed').length;
+      const saRisks   = (sp.risks || []).filter(r => r.status !== 'Closed').length;
+      const saHighR   = (sp.risks || []).filter(r => r.lik * r.imp >= 12 && r.status !== 'Closed').length;
       const saHighRPN = (sp.pfmea || []).filter(r => calcRPN(r) >= 100).length;
       return `<div class="sub-asm-card" onclick="progId='${sp.id}';navigate('project')">
         <div class="sub-asm-card-head">
@@ -306,10 +279,10 @@ function renderDashboard() {
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)"><span class="rs ${s >= 12 ? 'rs-hi' : s >= 6 ? 'rs-med' : 'rs-lo'}">${s}</span><span style="flex:1;font-size:12px">${esc(r.desc)}</span><span style="font-size:10px;color:var(--muted)">${esc(r.cat || '')}</span></div>`;
   }).join('') || `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open risks</div>`;
 
-  const famIcon   = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
+  const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
 
-  // RPN burndown chart for dashboard
+  // RPN burndown card — only shown when there is PFMEA data
   const rpnBurndownHTML = p.pfmea && p.pfmea.length > 0 ? `
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:4px">PFMEA RPN Burndown</div>
     <div class="card" style="margin-bottom:20px;padding:0;overflow:hidden">
@@ -320,6 +293,7 @@ function renderDashboard() {
       ${renderRpnBurndown(true)}
     </div>` : '';
 
+  // ── Layout order: KPIs → Alerts → Gate Strip → Tools → RPN Burndown → Parent → Sub-assemblies → Actions/Risks
   return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 PM: ${esc(p.pm)}</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
@@ -331,14 +305,14 @@ function renderDashboard() {
     ${alerts ? `<div class="alert-row">${alerts}</div>` : ''}
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Gate Progress — click any gate to open</div>
     <div class="gate-strip">${gateStrip}</div>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:4px">Tools</div>
+    <div class="section-launcher" style="margin-bottom:20px">${launcherHTML}</div>
     ${rpnBurndownHTML}
     ${parentProg ? `<div class="parent-prog-card" onclick="progId='${parentProg.id}';navigate('project')">
       <div class="parent-prog-label">↑ PARENT PROGRAMME</div>
       <div class="parent-prog-name">${esc(parentProg.name)}</div>
       ${parentProg.unit ? `<div class="parent-prog-meta">🚂 ${esc(parentProg.unit)}</div>` : ''}
     </div>` : ''}
-    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Tools</div>
-    <div class="section-launcher">${launcherHTML}</div>
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:16px">Sub-assemblies</div>
     ${subAsmHTML}
     <div class="dash-grid">
@@ -351,74 +325,16 @@ function renderDashboard() {
 // ── Project CRUD ──────────────────────────────────────────────
 function openProject(id) { progId = id; navigate('project'); }
 
-function newProjectInFamily(family) {
+function newProjectInFamily(famId) {
+  document.getElementById('newProjFamily').value = famId;
   showModal('modalNewProj');
-  setTimeout(() => { const f = document.getElementById('np_family'); if (f) f.value = family; }, 50);
-}
-
-function createProg() {
-  const name = document.getElementById('np_name').value.trim();
-  if (!name) { alert('Name required'); return; }
-  const p = newProgTemplate(
-    name,
-    document.getElementById('np_customer').value.trim(),
-    document.getElementById('np_unit').value.trim(),
-    document.getElementById('np_family').value,
-    document.getElementById('np_lead').value.trim(),
-    document.getElementById('np_pm').value.trim(),
-    document.getElementById('np_date').value
-  );
-  db.programmes.push(p); progId = p.id; save(); closeModal('modalNewProj'); navigate('project');
-  ['np_name', 'np_customer', 'np_unit', 'np_lead', 'np_pm', 'np_date'].forEach(id => document.getElementById(id).value = '');
-}
-
-function switchProg(id) { progId = id; navigate('project'); }
-
-function showEditProject() {
-  const p = prog(); if (!p) return;
-  document.getElementById('ep_name').value     = p.name     || '';
-  document.getElementById('ep_customer').value = p.customer || '';
-  document.getElementById('ep_unit').value     = p.unit     || '';
-  document.getElementById('ep_family').value   = p.family   || 'Other';
-  document.getElementById('ep_lead').value     = p.lead     || '';
-  document.getElementById('ep_pm').value       = p.pm       || '';
-  document.getElementById('ep_date').value     = p.date     || '';
-  showModal('modalEditProj');
-}
-
-function saveEditProject() {
-  const p = prog(); if (!p) return;
-  p.name     = document.getElementById('ep_name').value.trim();
-  p.customer = document.getElementById('ep_customer').value.trim();
-  p.unit     = document.getElementById('ep_unit').value.trim();
-  p.family   = document.getElementById('ep_family').value;
-  p.lead     = document.getElementById('ep_lead').value.trim();
-  p.pm       = document.getElementById('ep_pm').value.trim();
-  p.date     = document.getElementById('ep_date').value;
-  save(); closeModal('modalEditProj'); render();
-}
-
-function deleteProject() {
-  const p = prog(); if (!p) return;
-  if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
-  db.programmes = db.programmes.filter(x => x.id !== progId);
-  progId = db.programmes[0]?.id || null;
-  save(); closeModal('modalEditProj'); navigate(progId ? 'project' : 'projects');
-}
-
-function unlinkSubAsm(li) {
-  const p = prog(); if (!p.subAssemblies) return;
-  const child = db.programmes.find(x => x.id === p.subAssemblies[li]?.id);
-  if (child && child.parentId === progId) delete child.parentId;
-  p.subAssemblies.splice(li, 1);
-  save(); render();
 }
 
 function openSubAsmModal() {
-  const p = prog();
+  const p      = prog();
   const linked = (p.subAssemblies || []).map(x => x.id);
-  const others = db.programmes.filter(x => x.id !== progId && !linked.includes(x.id) && !x.parentId);
-  if (others.length === 0) { alert('No available projects to link. Create the sub-assembly project first.'); return; }
+  const others = db.programmes.filter(x => x.id !== progId && !linked.includes(x.id));
+  if (others.length === 0) { alert('No other projects available to link.\nCreate the sub-assembly project first.'); return; }
   const opts = others.map((x, i) =>
     `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="linkSubAsm('${x.id}')">
       <span style="font-size:13px">🔩</span>
@@ -438,6 +354,17 @@ function linkSubAsm(id) {
   const child = db.programmes.find(x => x.id === id);
   if (child && !child.parentId) child.parentId = progId;
   save(); closeSubAsmModal(); render();
+}
+
+function unlinkSubAsm(li) {
+  const p = prog();
+  const linked = p.subAssemblies[li];
+  if (linked) {
+    const child = db.programmes.find(x => x.id === linked.id);
+    if (child && child.parentId === progId) child.parentId = null;
+  }
+  p.subAssemblies.splice(li, 1);
+  save(); render();
 }
 
 function closeSubAsmModal() { const el = document.getElementById('subAsmModalBg'); if (el) el.remove(); }

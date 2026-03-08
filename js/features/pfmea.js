@@ -86,9 +86,10 @@ function renderPFMEA(){
       effects.forEach((ef,ei)=>{
         const causes=ef.causes||[];
         const efRowspan=Math.max(1,causes.length);
+        const sev=ef.sev||1;
 
         causes.forEach((ca,ci)=>{
-          const sev=ef.sev||1,occ=ca.occ||1,det=ca.det||1;
+          const occ=ca.occ||1,det=ca.det||1;
           const rpn=sev*occ*det;
           const rpnCls=rpn>=200?'rpn-hi':rpn>=100?'rpn-md':'rpn-lo';
           const act=ca.action||{};
@@ -198,7 +199,7 @@ function renderPFMEA(){
 
         // Effect with no causes
         if(causes.length===0){
-          rowHtml=`<tr class="pfmea-row-sub">`;
+          let rowHtml=`<tr class="pfmea-row-sub">`;
           if(ei===0){
             rowHtml+=`<td rowspan="1" class="pfmea-mode-cell" style="vertical-align:top">
               <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
@@ -265,15 +266,20 @@ function renderPFMEA(){
 }
 
 // ── Sync row 2 top to sit exactly under row 1 ────────────────────
-// Called after render via rAF so DOM is painted and heights are real
-function pfmeaSyncRow2(){
-  const row0 = document.querySelector('.pfmea-tbl thead tr:first-child');
+// Called after render via double rAF (navigation.js) so the DOM is
+// fully painted and getBoundingClientRect returns accurate heights.
+function pfmeaSyncRow2() {
+  const row0    = document.querySelector('.pfmea-tbl thead tr:first-child');
   const row2ths = document.querySelectorAll('.pfmea-thead-row2 th');
-  if(!row0 || !row2ths.length) return;
-  const navH = 52;
-  const row0H = Math.ceil(row0.getBoundingClientRect().height);
-  const top = (navH + row0H) + 'px';
-  row2ths.forEach(th => th.style.top = top);
+  if (!row0 || !row2ths.length) return;
+
+  const navH     = 52; // Must match .topbar height in main.css
+  const row0H    = Math.ceil(row0.getBoundingClientRect().height);
+  const topValue = (navH + row0H) + 'px';
+
+  row2ths.forEach(th => {
+    th.style.top = topValue;
+  });
 }
 
 function pfShowHist(evt,cid){
@@ -294,7 +300,7 @@ function pfShowHist(evt,cid){
 }
 document.addEventListener('click',()=>document.querySelectorAll('.hist-popup').forEach(p=>p.style.display='none'));
 
-// ── PFMEA data functions ──
+// ── PFMEA data functions ──────────────────────────────────────
 function pfAddMode(pfdId){
   prog().pfmea.push({id:'f_'+Date.now(),_type:'mode',pfdId,mode:'',ctqIds:[],
     effects:[{id:'e_'+Date.now(),effect:'',sev:1,controls:'',action:'',
