@@ -92,23 +92,20 @@ function renderPFMEA(){
           const rpn=sev*occ*det;
           const rpnCls=rpn>=200?'rpn-hi':rpn>=100?'rpn-md':'rpn-lo';
           const act=ca.action||{};
-          const newOcc=+act.newOcc||occ;
-          const newDet=+act.newDet||det;
+          const hist=ca.history||[];
+          const hasAction=!!(act.newOcc||act.newDet);
+          const newOcc=act.newOcc?+act.newOcc:occ;
+          const newDet=act.newDet?+act.newDet:det;
           const forecast=sev*newOcc*newDet;
           const fCls=forecast>=200?'rpn-hi':forecast>=100?'rpn-md':'rpn-lo';
-          const hasAction=act.desc||act.newOcc||act.newDet;
-          const hist=ca.history||[];
 
-          // History popup content
-          const histRows=hist.length?[...hist].reverse().map(h=>{
-            const oc=h.rpn>=200?'rpn-hi':h.rpn>=100?'rpn-md':'rpn-lo';
-            const nc=(h.newRpn||0)>=200?'rpn-hi':(h.newRpn||0)>=100?'rpn-md':'rpn-lo';
-            const occDown=h.newOcc<h.oldOcc, detDown=h.newDet<h.oldDet;
-            return`<div style="font-size:10px;border-bottom:1px solid var(--line);padding:6px 0;line-height:1.6">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span class="rpn ${oc}" style="font-size:11px;padding:2px 7px">${h.rpn}</span>
-                <span style="color:var(--muted)">→</span>
-                <span class="rpn ${nc}" style="font-size:11px;padding:2px 7px">${h.newRpn??'—'}</span>
+          const histRows=hist.length>0?hist.map(h=>{
+            const rpnDown=h.newRpn<h.rpn;
+            const occDown=(h.newOcc??h.oldOcc)<(h.oldOcc??h.newOcc);
+            const detDown=(h.newDet??h.oldDet)<(h.oldDet??h.newDet);
+            return `<div style="border-bottom:1px solid var(--line);padding:5px 0;margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:${rpnDown?'#16a34a':'#dc2626'}">${h.rpn}→${h.newRpn}</span>
                 <span style="color:var(--muted);font-size:9px;margin-left:auto">${h.date}</span>
               </div>
               ${(h.oldOcc||h.oldDet)?`<div style="color:var(--muted);font-size:9px;margin-top:2px">
@@ -249,12 +246,12 @@ function renderPFMEA(){
 
   html+='</tbody></table></div>';
 
-  // ── RPN Burndown Chart — inserted above the table card ───────
+  // ── RPN Burndown Chart — full width, totals only ───────────
   const burndownCard = p.pfmea.length > 0 ? `
     <div class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
       <div class="card-head" style="padding:10px 14px">
-        <span class="card-title">📉 RPN Burndown — Original vs Current</span>
-        <span class="card-meta" style="margin-left:auto">Sorted by original RPN · colour = severity band</span>
+        <span class="card-title">📉 RPN Burndown — Total Original vs Total Current</span>
+        <span class="card-meta" style="margin-left:auto">Sum across all failure modes · green = improved</span>
       </div>
       <div style="padding:14px 16px 16px">${renderRpnBurndown(false)}</div>
     </div>` : '';

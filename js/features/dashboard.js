@@ -4,190 +4,128 @@
 // ═══════════════════════════════════
 
 // ── Shared: RPN Burndown Chart (used on Dashboard and PFMEA page) ─────────────
+// Shows only TOTAL Original RPN vs TOTAL Current RPN — no per-failure-mode breakdown.
 function renderRpnBurndown(compact) {
   const p = prog();
   if (!p.pfmea || p.pfmea.length === 0) {
     return compact ? '' : `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No PFMEA rows yet — add failure modes to see RPN chart.</div>`;
   }
 
-  // Collect all cause rows with original and current RPN
-  const rows = [];
-  p.pfmea.forEach((mode, mi) => {
-    (mode.effects || []).forEach((ef, ei) => {
-      const sev = ef.sev || 1;
-      (ef.causes || []).forEach((ca, ci) => {
-        const curOcc = ca.occ || 1;
-        const curDet = ca.det || 1;
-        const currentRPN = sev * curOcc * curDet;
+  // Sum totals across all causes
+  let totalOriginal = 0;
+  let totalCurrent  = 0;
+  let rowCount      = 0;
+  let rowsImproved  = 0;
 
-        // Original RPN = earliest history entry's RPN, else current if no history
-        let originalRPN = currentRPN;
+  p.pfmea.forEach(mode => {
+    (mode.effects || []).forEach(ef => {
+      const sev = ef.sev || 1;
+      (ef.causes || []).forEach(ca => {
+        const curOcc     = ca.occ || 1;
+        const curDet     = ca.det || 1;
+        const currentRPN = sev * curOcc * curDet;
+        let   originalRPN = currentRPN;
         if (ca.history && ca.history.length > 0) {
           originalRPN = ca.history[0].rpn || currentRPN;
         }
-
-        const label = (mode.mode || 'Mode').slice(0, 24) + (ci > 0 ? ` (C${ci+1})` : '');
-        rows.push({ label, originalRPN, currentRPN, mi, ei, ci });
+        totalOriginal += originalRPN;
+        totalCurrent  += currentRPN;
+        rowCount++;
+        if (currentRPN < originalRPN) rowsImproved++;
       });
     });
   });
 
-  if (rows.length === 0) {
+  if (rowCount === 0) {
     return compact ? '' : `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No cause rows found.</div>`;
   }
 
-  // Totals for summary
-  const totalOriginal = rows.reduce((n, r) => n + r.originalRPN, 0);
-  const totalCurrent  = rows.reduce((n, r) => n + r.currentRPN, 0);
-  const reduction     = totalOriginal > 0 ? Math.round((1 - totalCurrent / totalOriginal) * 100) : 0;
-  const rowsImproved  = rows.filter(r => r.currentRPN < r.originalRPN).length;
+  const reduction = totalOriginal > 0 ? Math.round((1 - totalCurrent / totalOriginal) * 100) : 0;
+  const maxRPN    = Math.max(totalOriginal, totalCurrent, 1);
 
-  // Colour helpers
+  // ── Build full-width SVG with two bars ──────────────────────
+  // viewBox is 1000 wide so it scales to 100% container width naturally.
+  const vbW      = 1000;
+  const labelW   = compact ? 0 : 130;   // left label column width (non-compact only)
+  const chartX   = compact ? 0 : labelW;
+  const chartW   = vbW - chartX - 60;   // 60px right padding for value labels
+  const barH     = compact ? 32 : 40;
+  const gap      = compact ? 16 : 20;
+  const svgH     = barH * 2 + gap + (compact ? 0 : 28); // 28 for x-axis labels
+
   function rpnFill(rpn) {
-    if (rpn >= 200) return '#ef4444';
-    if (rpn >= 100) return '#f59e0b';
-    if (rpn >= 50)  return '#fcd34d';
-    return '#4ade80';
+    // Colour the current bar by improvement state; original always slate
+    return rpn < totalOriginal ? '#22c55e' : '#94a3b8';
   }
 
-  // Sort rows by originalRPN descending for visibility
-  const sorted = [...rows].sort((a, b) => b.originalRPN - a.originalRPN);
-
-  // Determine bar chart scale
-  const maxRPN = Math.max(...sorted.map(r => Math.max(r.originalRPN, r.currentRPN)), 1);
-
-  // Build the SVG bar chart
-  const barH    = compact ? 20 : 22;
-  const gap     = compact ? 4  : 6;
-  const labelW  = compact ? 0  : 180;
-  const chartW  = compact ? 320 : 480;
-  const totalH  = sorted.length * (barH + gap);
-  const svgH    = totalH + 32; // room for x-axis labels
-
-  // In compact mode (dashboard widget) show top 8 only
-  const visible = compact ? sorted.slice(0, 8) : sorted;
-  const visH    = visible.length * (barH + gap) + 32;
+  const origBarW = Math.round((totalOriginal / maxRPN) * chartW);
+  const currBarW = Math.round((totalCurrent  / maxRPN) * chartW);
 
   let bars = '';
-  visible.forEach((r, idx) => {
-    const y       = idx * (barH + gap);
-    const origW   = Math.round((r.originalRPN / maxRPN) * chartW);
-    const currW   = Math.round((r.currentRPN  / maxRPN) * chartW);
-    const origCol = rpnFill(r.originalRPN);
-    const currCol = rpnFill(r.currentRPN);
-    const improved = r.currentRPN < r.originalRPN;
 
-    // Original bar (full width, semi-transparent)
-    bars += `<rect x="0" y="${y}" width="${origW}" height="${barH}" rx="3" fill="${origCol}" opacity="0.28"/>`;
-    // Current bar (solid)
-    bars += `<rect x="0" y="${y}" width="${currW}" height="${barH}" rx="3" fill="${currCol}" opacity="0.9"/>`;
+  if (!compact) {
+    // Row labels on left
+    bars += `<text x="${labelW - 8}" y="${barH / 2 + 5}" text-anchor="end" font-size="12" font-weight="600" fill="var(--mid)" font-family="IBM Plex Sans,sans-serif">Original</text>`;
+    bars += `<text x="${labelW - 8}" y="${barH + gap + barH / 2 + 5}" text-anchor="end" font-size="12" font-weight="600" fill="var(--mid)" font-family="IBM Plex Sans,sans-serif">Current</text>`;
+  }
 
-    // RPN labels inside/outside bars
-    const origLabel = r.originalRPN;
-    const currLabel = r.currentRPN;
+  // Original bar (slate)
+  bars += `<rect x="${chartX}" y="0" width="${origBarW}" height="${barH}" rx="4" fill="#94a3b8" opacity="0.5"/>`;
+  bars += `<text x="${chartX + origBarW + 8}" y="${barH / 2 + 5}" font-size="${compact ? 14 : 16}" font-weight="700" fill="var(--mid)" font-family="IBM Plex Mono,monospace">${totalOriginal}</text>`;
 
-    if (!compact) {
-      // Label: failure mode name on left side
-      bars += `<text x="-6" y="${y + barH/2 + 4}" text-anchor="end" font-size="10" fill="var(--mid)" font-family="IBM Plex Sans,sans-serif" style="white-space:nowrap">${escSvg(r.label)}</text>`;
-    }
+  // Current bar (green if improved, amber if same/worse)
+  const currFill = totalCurrent < totalOriginal ? '#22c55e' : totalCurrent === totalOriginal ? '#94a3b8' : '#f59e0b';
+  bars += `<rect x="${chartX}" y="${barH + gap}" width="${currBarW}" height="${barH}" rx="4" fill="${currFill}" opacity="0.85"/>`;
+  bars += `<text x="${chartX + currBarW + 8}" y="${barH + gap + barH / 2 + 5}" font-size="${compact ? 14 : 16}" font-weight="700" fill="${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--mid)'}" font-family="IBM Plex Mono,monospace">${totalCurrent}</text>`;
 
-    // Original RPN (ghost number at end of original bar)
-    if (origW > 24) {
-      bars += `<text x="${origW - 4}" y="${y + barH/2 + 4}" text-anchor="end" font-size="9" fill="${origCol}" opacity="0.8" font-family="IBM Plex Mono,monospace" font-weight="600">${origLabel}</text>`;
-    }
+  // X-axis ticks (non-compact only)
+  let ticks = '';
+  if (!compact) {
+    [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+      const tx  = chartX + Math.round(t * chartW);
+      const val = Math.round(t * maxRPN);
+      ticks += `<line x1="${tx}" y1="0" x2="${tx}" y2="${barH * 2 + gap}" stroke="var(--line)" stroke-width="1"/>`;
+      ticks += `<text x="${tx}" y="${barH * 2 + gap + 16}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${val}</text>`;
+    });
+  }
 
-    // Current RPN (solid number)
-    if (currW > 20) {
-      bars += `<text x="${currW - 4}" y="${y + barH/2 + 4}" text-anchor="end" font-size="10" fill="white" font-family="IBM Plex Mono,monospace" font-weight="700">${currLabel}</text>`;
-    } else {
-      bars += `<text x="${currW + 5}" y="${y + barH/2 + 4}" text-anchor="start" font-size="10" fill="${currCol}" font-family="IBM Plex Mono,monospace" font-weight="700">${currLabel}</text>`;
-    }
-
-    // Arrow / delta indicator
-    if (improved) {
-      const arrow_x = Math.max(currW + 5, 8);
-      bars += `<text x="${chartW + 6}" y="${y + barH/2 + 4}" font-size="9" fill="var(--green)" font-family="IBM Plex Mono,monospace">↓${origLabel - currLabel}</text>`;
-    }
-  });
-
-  // X-axis tick marks
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map(t => {
-    const tx = Math.round(t * chartW);
-    const val = Math.round(t * maxRPN);
-    return `<line x1="${tx}" y1="0" x2="${tx}" y2="${visible.length * (barH + gap)}" stroke="var(--line)" stroke-width="1"/>
-            <text x="${tx}" y="${visible.length * (barH + gap) + 14}" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${val}</text>`;
-  }).join('');
-
-  const svgWidth  = compact ? (chartW + 50) : (labelW + chartW + 70);
-  const svgHeight = visible.length * (barH + gap) + 28;
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" style="max-width:${svgWidth}px;display:block">
-    <g transform="translate(${compact ? 0 : labelW},0)">
-      ${ticks}
-      ${bars}
-    </g>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 ${vbW} ${svgH}" style="display:block">
+    ${ticks}
+    ${bars}
   </svg>`;
 
-  // Legend
-  const legend = `<div style="display:flex;align-items:center;gap:16px;font-size:10px;color:var(--muted);margin-top:10px;flex-wrap:wrap">
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:24px;height:10px;background:#6b7280;opacity:.3;border-radius:2px;display:inline-block"></span> Original RPN (ghost)</span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:24px;height:10px;background:#6b7280;border-radius:2px;display:inline-block"></span> Current RPN</span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#4ade80;border-radius:2px;display:inline-block"></span>&lt;50</span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#fcd34d;border-radius:2px;display:inline-block"></span>50–99</span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#f59e0b;border-radius:2px;display:inline-block"></span>100–199</span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#ef4444;border-radius:2px;display:inline-block"></span>≥200</span>
-  </div>`;
+  // ── Stats strip ──────────────────────────────────────────────
+  const statsStrip = `
+    <div style="display:flex;gap:10px;margin-bottom:${compact ? 10 : 14}px;flex-wrap:wrap">
+      <div style="flex:1;min-width:80px;background:var(--bg);border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:${compact ? 16 : 20}px;font-weight:700;color:var(--ink)">${totalOriginal}</div>
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Original Total</div>
+      </div>
+      <div style="flex:1;min-width:80px;background:${totalCurrent < totalOriginal ? 'var(--green-pale)' : 'var(--bg)'};border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:${compact ? 16 : 20}px;font-weight:700;color:${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--ink)'}">${totalCurrent}</div>
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Current Total</div>
+      </div>
+      <div style="flex:1;min-width:80px;background:${reduction > 0 ? 'var(--green-pale)' : 'var(--bg)'};border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:${compact ? 16 : 20}px;font-weight:700;color:${reduction > 0 ? 'var(--green)' : 'var(--muted)'}">${reduction > 0 ? '↓' : ''}${reduction}%</div>
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Reduction</div>
+      </div>
+      <div style="flex:1;min-width:80px;background:var(--bg);border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:${compact ? 16 : 20}px;font-weight:700;color:var(--blue)">${rowsImproved}<span style="font-size:11px;color:var(--muted)">/${rowCount}</span></div>
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Rows Improved</div>
+      </div>
+    </div>`;
 
   if (compact) {
-    // Dashboard compact view — summary stats + small chart
-    const moreRows = sorted.length > 8 ? `<div style="text-align:center;font-size:10px;color:var(--muted);margin-top:4px">+ ${sorted.length - 8} more rows — view PFMEA for full chart</div>` : '';
     return `<div style="padding:0 14px 14px">
-      <div style="display:flex;gap:12px;margin-bottom:12px">
-        <div style="flex:1;background:var(--bg);border-radius:7px;padding:10px 12px;text-align:center">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--ink)">${totalOriginal}</div>
-          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Original Total</div>
-        </div>
-        <div style="flex:1;background:var(--bg);border-radius:7px;padding:10px 12px;text-align:center">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--ink)'}">${totalCurrent}</div>
-          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Current Total</div>
-        </div>
-        <div style="flex:1;background:${reduction > 0 ? 'var(--green-pale)' : 'var(--bg)'};border-radius:7px;padding:10px 12px;text-align:center">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:${reduction > 0 ? 'var(--green)' : 'var(--muted)'}">${reduction > 0 ? '↓' : ''}${reduction}%</div>
-          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Reduction</div>
-        </div>
-        <div style="flex:1;background:var(--bg);border-radius:7px;padding:10px 12px;text-align:center">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--blue)">${rowsImproved}</div>
-          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Rows Improved</div>
-        </div>
-      </div>
-      <div style="overflow-x:auto">${svg}</div>
-      ${moreRows}
+      ${statsStrip}
+      ${svg}
     </div>`;
   }
 
   // Full view (PFMEA page)
   return `<div>
-    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <div class="kpi-card" style="--kpi-color:var(--ink);flex:1;min-width:100px;cursor:default">
-        <div class="kpi-num" style="font-size:22px">${totalOriginal}</div>
-        <div class="kpi-label">Original Total RPN</div>
-      </div>
-      <div class="kpi-card" style="--kpi-color:${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--amber)'};flex:1;min-width:100px;cursor:default">
-        <div class="kpi-num" style="font-size:22px;color:${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--amber)'}">${totalCurrent}</div>
-        <div class="kpi-label">Current Total RPN</div>
-      </div>
-      <div class="kpi-card" style="--kpi-color:${reduction > 0 ? 'var(--green)' : 'var(--muted)'};flex:1;min-width:100px;cursor:default">
-        <div class="kpi-num" style="font-size:22px;color:${reduction > 0 ? 'var(--green)' : 'var(--muted)'}">${reduction > 0 ? '↓' : ''}${reduction}%</div>
-        <div class="kpi-label">Total Reduction</div>
-      </div>
-      <div class="kpi-card" style="--kpi-color:var(--blue);flex:1;min-width:100px;cursor:default">
-        <div class="kpi-num" style="font-size:22px">${rowsImproved}<span style="font-size:13px;color:var(--muted)">/${rows.length}</span></div>
-        <div class="kpi-label">Rows Improved</div>
-      </div>
-    </div>
-    <div style="overflow-x:auto;padding-bottom:4px">${svg}</div>
-    ${legend}
-    ${sorted.length > 12 ? `<div style="font-size:10px;color:var(--muted);margin-top:8px">Showing all ${sorted.length} cause rows, sorted by original RPN descending.</div>` : ''}
+    ${statsStrip}
+    ${svg}
   </div>`;
 }
 
@@ -326,24 +264,21 @@ function renderDashboard() {
       const sgDone   = sg.filter(g => g.signed).length;
       const sgTotal  = sg.length || 6;
       const curGateSA = sg.findIndex(g => !g.signed);
-      const gLabel   = curGateSA < 0 ? 'Complete' : `Gate ${curGateSA}`;
-      const gatePct  = Math.round((sgDone / sgTotal) * 100);
+      const gLabel   = curGateSA < 0 ? '✓ Complete' : `Gate ${curGateSA}`;
+      const gatePct  = Math.round(sgDone / sgTotal * 100);
       const saOpen   = (sp.actions || []).filter(a => a.status !== 'Closed').length;
       const saOverdue = (sp.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
       const saRisks  = (sp.risks || []).filter(r => r.status !== 'Closed').length;
-      const saHighR  = (sp.risks || []).filter(r => r.status !== 'Closed' && r.lik * r.imp >= 12).length;
-      const saHighRPN = (sp.pfmea || []).reduce((n, m) => n + (m.effects || []).reduce((en, e) => en + (e.causes || []).filter(c => (e.sev || 1) * (c.occ || 1) * (c.det || 1) >= 100).length, 0), 0);
+      const saHighR  = (sp.risks || []).filter(r => r.lik * r.imp >= 12 && r.status !== 'Closed').length;
+      const saHighRPN = (sp.pfmea || []).filter(r => calcRPN(r) >= 100).length;
       return `<div class="sub-asm-card" onclick="progId='${sp.id}';navigate('project')">
-        <button class="sub-asm-unlink" onclick="event.stopPropagation();unlinkSubAsm(${li})" title="Unlink sub-assembly">✕</button>
         <div class="sub-asm-card-head">
-          <div>
-            <div class="sub-asm-card-name">🔩 ${esc(sp.name)}</div>
-            ${sp.unit ? `<div class="sub-asm-card-unit">🚂 ${esc(sp.unit)}</div>` : ''}
-          </div>
+          <span class="sub-asm-name">${esc(sp.name)}</span>
+          <button class="del-btn" style="font-size:10px" onclick="event.stopPropagation();unlinkSubAsm(${li})">× Unlink</button>
         </div>
+        ${sp.unit ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px">🚂 ${esc(sp.unit)}</div>` : ''}
         <div class="sub-asm-stats">
-          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:var(--green)">${sgDone}<span style="font-size:10px;color:var(--muted)">/${sgTotal}</span></span><span class="sub-asm-stat-lbl">Gates</span></div>
-          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saOverdue > 0 ? 'var(--red)' : saOpen > 0 ? 'var(--amber)' : 'var(--green)'}">${saOpen}</span><span class="sub-asm-stat-lbl">Actions${saOverdue > 0 ? ` (${saOverdue} OD)` : ''}</span></div>
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saOpen > 0 ? 'var(--red)' : saOpen > 0 ? 'var(--amber)' : 'var(--green)'}">${saOpen}</span><span class="sub-asm-stat-lbl">Actions${saOverdue > 0 ? ` (${saOverdue} OD)` : ''}</span></div>
           <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saHighR > 0 ? 'var(--red)' : 'var(--ink)'}">${saRisks}</span><span class="sub-asm-stat-lbl">Risks${saHighR > 0 ? ` (${saHighR} hi)` : ''}</span></div>
           <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saHighRPN > 0 ? 'var(--amber)' : 'var(--ink)'}">${saHighRPN}</span><span class="sub-asm-stat-lbl">High RPN</span></div>
         </div>
