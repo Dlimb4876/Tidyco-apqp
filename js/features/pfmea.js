@@ -11,43 +11,8 @@ function renderPFMEA(){
   const sorted=sortedPfd(p.pfd).filter(s=>s.type!=='group');
   if(sorted.length===0)return emptyState('⚠️','No process steps','Add steps in Process Flow first.');
 
-  // Migrate old flat/previous structure
-  p.pfmea.forEach(r=>{
-    if(!r._type){
-      r._type='mode';
-      r.effects=[{
-        id:'e_'+Math.random().toString(36).slice(2),
-        effect:r.effect||'',sev:r.sev||1,
-        causes:[{
-          id:'c_'+Math.random().toString(36).slice(2),
-          cause:r.cause||'',occ:r.occ||1,det:r.det||1,
-          prevent:r.controls||'',detect:'',
-          action:{desc:'',owner:'',due:'',newOcc:'',newDet:''},
-          history:[]
-        }]
-      }];
-      delete r.effect;delete r.cause;delete r.sev;delete r.occ;delete r.det;delete r.controls;delete r.action;
-    }
-    // Migrate causes missing new fields
-    (r.effects||[]).forEach(ef=>{
-      (ef.causes||[]).forEach(ca=>{
-        if(!ca.prevent)ca.prevent='';
-        if(!ca.detect)ca.detect='';
-        if(!ca.action)ca.action={desc:'',taken:'',owner:'',due:'',newOcc:'',newDet:''};
-        if(!('taken' in ca.action))ca.action.taken='';
-        if(!ca.history)ca.history=[];
-      });
-      // migrate old effect-level controls/action to first cause
-      if(ef.controls!==undefined){
-        if(ef.causes&&ef.causes[0]&&!ef.causes[0].prevent)ef.causes[0].prevent=ef.controls||'';
-        delete ef.controls;
-      }
-      if(ef.action!==undefined){
-        if(ef.causes&&ef.causes[0])ef.causes[0].action={desc:ef.action||'',owner:'',due:'',newOcc:'',newDet:''};
-        delete ef.action;
-      }
-    });
-  });
+  // NOTE: PFMEA structure migration has been moved to migrateprog() in db.js
+  // and now runs once per load rather than on every render.
 
   const highRPN=p.pfmea.reduce((n,m)=>n+(m.effects||[]).reduce((en,ef)=>en+(ef.causes||[]).filter(ca=>(ef.sev||1)*(ca.occ||1)*(ca.det||1)>=100).length,0),0);
 
@@ -133,7 +98,7 @@ function renderPFMEA(){
           const hasAction=act.desc||act.newOcc||act.newDet;
           const hist=ca.history||[];
 
-          // History row (hidden by default)
+          // History popup content
           const histRows=hist.length?[...hist].reverse().map(h=>{
             const oc=h.rpn>=200?'rpn-hi':h.rpn>=100?'rpn-md':'rpn-lo';
             const nc=(h.newRpn||0)>=200?'rpn-hi':(h.newRpn||0)>=100?'rpn-md':'rpn-lo';
@@ -182,7 +147,7 @@ function renderPFMEA(){
             </td>`;
           }
 
-          // Cause row — always rendered
+          // Cause row
           rowHtml+=`
             <td class="pfmea-cause-cell pfmea-cause-text" style="vertical-align:top">
               <textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdCause(${mi},${ei},${ci},'cause',this.value)" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
@@ -204,7 +169,12 @@ function renderPFMEA(){
             </td>
             <td class="pfmea-cause-cell" style="text-align:center;vertical-align:middle">
               <span id="rpn_${mi}_${ei}_${ci}" class="rpn ${rpnCls}">${rpn}</span>
-              ${hist.length?`<div style="margin-top:3px"><button onclick="pfShowHist(event,'${ca.id}')" style="font-size:9px;background:none;border:1px solid var(--line2);border-radius:3px;cursor:pointer;padding:1px 4px;color:var(--muted)">▶ ${hist.length}</button></div>`:''}              <div id="hist_${ca.id}" class="hist-popup" style="display:none">                <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:4px">Action History</div>                ${histRows}                <div style="text-align:center;padding-top:6px;font-size:9px;color:var(--muted)">${hist.length} action${hist.length!==1?'s':''} logged</div>              </div>
+              ${hist.length?`<div style="margin-top:3px"><button onclick="pfShowHist(event,'${ca.id}')" style="font-size:9px;background:none;border:1px solid var(--line2);border-radius:3px;cursor:pointer;padding:1px 4px;color:var(--muted)">▶ ${hist.length}</button></div>`:''}
+              <div id="hist_${ca.id}" class="hist-popup" style="display:none">
+                <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase;border-bottom:1px solid var(--line);padding-bottom:4px">Action History</div>
+                ${histRows}
+                <div style="text-align:center;padding-top:6px;font-size:9px;color:var(--muted)">${hist.length} action${hist.length!==1?'s':''} logged</div>
+              </div>
             </td>
             <!-- Action zone -->
             <td class="pfmea-cause-cell" style="vertical-align:top;background:#f0f5ff">
@@ -304,16 +274,13 @@ function pfmeaSyncRow2(){
 }
 
 function pfShowHist(evt,cid){
-  // Hide any open popups
   document.querySelectorAll('.hist-popup').forEach(p=>{if(p.id!=='hist_'+cid)p.style.display='none';});
   const el=document.getElementById('hist_'+cid);
   if(!el)return;
   if(el.style.display==='block'){el.style.display='none';return;}
-  // Position near button, fixed coords
   const btn=evt.currentTarget;
   const r=btn.getBoundingClientRect();
   el.style.display='block';
-  // Position below button, adjust if would go off screen
   let top=r.bottom+6;
   let left=r.left;
   if(left+304>window.innerWidth) left=window.innerWidth-310;
@@ -347,7 +314,7 @@ function pfUpdCause(mi,ei,ci,f,v){prog().pfmea[mi].effects[ei].causes[ci][f]=v;s
 function pfUpdCauseAction(mi,ei,ci,f,v){
   const ca=prog().pfmea[mi].effects[ei].causes[ci];
   if(!ca.action)ca.action={desc:'',taken:'',owner:'',due:'',newOcc:'',newDet:''};
-        if(!('taken' in ca.action))ca.action.taken='';
+  if(!('taken' in ca.action))ca.action.taken='';
   ca.action[f]=v;save();
 }
 function pfImplementAction(mi,ei,ci){
@@ -386,7 +353,6 @@ function pfRefreshRPN(){save();}
 
 function pfRpnClass(rpn){return rpn>=200?'rpn-hi':rpn>=100?'rpn-md':'rpn-lo';}
 function rpnColor(rpn){
-  // 1-49: green range, 50-99: amber range, 100-199: orange-red, 200+: deep red
   if(rpn<=1)  return{bg:'#dcfce7',fg:'#166534'};
   if(rpn<25)  return{bg:'#bbf7d0',fg:'#166534'};
   if(rpn<50)  return{bg:'#fef9c3',fg:'#854d0e'};

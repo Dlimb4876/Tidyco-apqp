@@ -78,6 +78,10 @@ function setSyncBadge(state, text) {
 // ── Migration ─────────────────────────────────────────────────
 function migrateprog(p) {
   if (!p) return newProgTemplate('Untitled', '', '', 'Other', '', '', new Date().toISOString().slice(0, 10));
+  if (!p.ctq)     p.ctq     = [];
+  if (!p.pfd)     p.pfd     = [];
+  if (!p.pfmea)   p.pfmea   = [];
+  if (!p.cp)      p.cp      = [];
   if (!p.bom) p.bom = { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] };
   ['parts', 'tools', 'equip', 'mat', 'cons'].forEach(k => { if (!p.bom[k]) p.bom[k] = []; });
   if (!p.bom.kits)    p.bom.kits    = [];
@@ -109,7 +113,36 @@ function migrateprog(p) {
     if (!s.bomRefs) s.bomRefs = [];
     if (s.resources) { delete s.resources; }
   });
-  p.pfmea.forEach(r => { if (!r.id) r.id = 'f_' + Math.random().toString(36).slice(2); });
+
+  // ── PFMEA structure migration (moved from renderPFMEA) ────────
+  p.pfmea.forEach(r => {
+    if (!r.id) r.id = 'f_' + Math.random().toString(36).slice(2);
+    if (!r._type) {
+      r._type = 'mode';
+      r.effects = [{
+        id: 'e_' + Math.random().toString(36).slice(2),
+        effect: r.effect || '', sev: r.sev || 1,
+        causes: [{
+          id: 'c_' + Math.random().toString(36).slice(2),
+          cause: r.cause || '', occ: r.occ || 1, det: r.det || 1,
+          prevent: r.controls || '', detect: '',
+          action: { desc: '', owner: '', due: '', newOcc: '', newDet: '' },
+          history: []
+        }]
+      }];
+      delete r.effect; delete r.cause; delete r.sev; delete r.occ; delete r.det; delete r.controls; delete r.action;
+    }
+    // Migrate causes missing new fields
+    (r.effects || []).forEach(ef => {
+      (ef.causes || []).forEach(ca => {
+        if (!ca.prevent) ca.prevent = '';
+        if (!ca.detect)  ca.detect  = '';
+        if (!ca.action)  ca.action  = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' };
+        if (!ca.history) ca.history = [];
+      });
+    });
+  });
+
   p.risks.forEach(r =>   { if (!r.id) r.id = 'r_' + Math.random().toString(36).slice(2); });
   p.actions.forEach(a => { if (!a.id) a.id = 'a_' + Math.random().toString(36).slice(2); });
   return p;

@@ -15,5 +15,21 @@ function emptyState(icon, title, desc) {
   return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
 }
 
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+  // Clear picker state to prevent carry-over between opens
+  if (id === 'modalCtqPick') {
+    ctqPickTarget = null;
+    ctqPickSelected = [];
+  } else if (id === 'modalBomPick') {
+    bomPickTarget = null;
+    bomPickSelected = [];
+    bomPickFilter = 'all';
+  } else if (id === 'modalKitPick') {
+    kitPickTarget = null;
+    kitPickSelected = [];
+    kitPickFilter = 'all';
+  }
+}
+
 function showModal(id)  { document.getElementById(id).style.display = 'flex'; }
