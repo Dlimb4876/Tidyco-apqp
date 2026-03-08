@@ -3,6 +3,199 @@
 // Depends on: state.js, helpers.js, navigation.js, gates.js (gateAllSigned, calcRPN)
 // ═══════════════════════════════════
 
+// ── Shared: RPN Burndown Chart (used on Dashboard and PFMEA page) ─────────────
+function renderRpnBurndown(compact) {
+  const p = prog();
+  if (!p.pfmea || p.pfmea.length === 0) {
+    return compact ? '' : `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No PFMEA rows yet — add failure modes to see RPN chart.</div>`;
+  }
+
+  // Collect all cause rows with original and current RPN
+  const rows = [];
+  p.pfmea.forEach((mode, mi) => {
+    (mode.effects || []).forEach((ef, ei) => {
+      const sev = ef.sev || 1;
+      (ef.causes || []).forEach((ca, ci) => {
+        const curOcc = ca.occ || 1;
+        const curDet = ca.det || 1;
+        const currentRPN = sev * curOcc * curDet;
+
+        // Original RPN = earliest history entry's RPN, else current if no history
+        let originalRPN = currentRPN;
+        if (ca.history && ca.history.length > 0) {
+          originalRPN = ca.history[0].rpn || currentRPN;
+        }
+
+        const label = (mode.mode || 'Mode').slice(0, 24) + (ci > 0 ? ` (C${ci+1})` : '');
+        rows.push({ label, originalRPN, currentRPN, mi, ei, ci });
+      });
+    });
+  });
+
+  if (rows.length === 0) {
+    return compact ? '' : `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No cause rows found.</div>`;
+  }
+
+  // Totals for summary
+  const totalOriginal = rows.reduce((n, r) => n + r.originalRPN, 0);
+  const totalCurrent  = rows.reduce((n, r) => n + r.currentRPN, 0);
+  const reduction     = totalOriginal > 0 ? Math.round((1 - totalCurrent / totalOriginal) * 100) : 0;
+  const rowsImproved  = rows.filter(r => r.currentRPN < r.originalRPN).length;
+
+  // Colour helpers
+  function rpnFill(rpn) {
+    if (rpn >= 200) return '#ef4444';
+    if (rpn >= 100) return '#f59e0b';
+    if (rpn >= 50)  return '#fcd34d';
+    return '#4ade80';
+  }
+
+  // Sort rows by originalRPN descending for visibility
+  const sorted = [...rows].sort((a, b) => b.originalRPN - a.originalRPN);
+
+  // Determine bar chart scale
+  const maxRPN = Math.max(...sorted.map(r => Math.max(r.originalRPN, r.currentRPN)), 1);
+
+  // Build the SVG bar chart
+  const barH    = compact ? 20 : 22;
+  const gap     = compact ? 4  : 6;
+  const labelW  = compact ? 0  : 180;
+  const chartW  = compact ? 320 : 480;
+  const totalH  = sorted.length * (barH + gap);
+  const svgH    = totalH + 32; // room for x-axis labels
+
+  // In compact mode (dashboard widget) show top 8 only
+  const visible = compact ? sorted.slice(0, 8) : sorted;
+  const visH    = visible.length * (barH + gap) + 32;
+
+  let bars = '';
+  visible.forEach((r, idx) => {
+    const y       = idx * (barH + gap);
+    const origW   = Math.round((r.originalRPN / maxRPN) * chartW);
+    const currW   = Math.round((r.currentRPN  / maxRPN) * chartW);
+    const origCol = rpnFill(r.originalRPN);
+    const currCol = rpnFill(r.currentRPN);
+    const improved = r.currentRPN < r.originalRPN;
+
+    // Original bar (full width, semi-transparent)
+    bars += `<rect x="0" y="${y}" width="${origW}" height="${barH}" rx="3" fill="${origCol}" opacity="0.28"/>`;
+    // Current bar (solid)
+    bars += `<rect x="0" y="${y}" width="${currW}" height="${barH}" rx="3" fill="${currCol}" opacity="0.9"/>`;
+
+    // RPN labels inside/outside bars
+    const origLabel = r.originalRPN;
+    const currLabel = r.currentRPN;
+
+    if (!compact) {
+      // Label: failure mode name on left side
+      bars += `<text x="-6" y="${y + barH/2 + 4}" text-anchor="end" font-size="10" fill="var(--mid)" font-family="IBM Plex Sans,sans-serif" style="white-space:nowrap">${escSvg(r.label)}</text>`;
+    }
+
+    // Original RPN (ghost number at end of original bar)
+    if (origW > 24) {
+      bars += `<text x="${origW - 4}" y="${y + barH/2 + 4}" text-anchor="end" font-size="9" fill="${origCol}" opacity="0.8" font-family="IBM Plex Mono,monospace" font-weight="600">${origLabel}</text>`;
+    }
+
+    // Current RPN (solid number)
+    if (currW > 20) {
+      bars += `<text x="${currW - 4}" y="${y + barH/2 + 4}" text-anchor="end" font-size="10" fill="white" font-family="IBM Plex Mono,monospace" font-weight="700">${currLabel}</text>`;
+    } else {
+      bars += `<text x="${currW + 5}" y="${y + barH/2 + 4}" text-anchor="start" font-size="10" fill="${currCol}" font-family="IBM Plex Mono,monospace" font-weight="700">${currLabel}</text>`;
+    }
+
+    // Arrow / delta indicator
+    if (improved) {
+      const arrow_x = Math.max(currW + 5, 8);
+      bars += `<text x="${chartW + 6}" y="${y + barH/2 + 4}" font-size="9" fill="var(--green)" font-family="IBM Plex Mono,monospace">↓${origLabel - currLabel}</text>`;
+    }
+  });
+
+  // X-axis tick marks
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map(t => {
+    const tx = Math.round(t * chartW);
+    const val = Math.round(t * maxRPN);
+    return `<line x1="${tx}" y1="0" x2="${tx}" y2="${visible.length * (barH + gap)}" stroke="var(--line)" stroke-width="1"/>
+            <text x="${tx}" y="${visible.length * (barH + gap) + 14}" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${val}</text>`;
+  }).join('');
+
+  const svgWidth  = compact ? (chartW + 50) : (labelW + chartW + 70);
+  const svgHeight = visible.length * (barH + gap) + 28;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" style="max-width:${svgWidth}px;display:block">
+    <g transform="translate(${compact ? 0 : labelW},0)">
+      ${ticks}
+      ${bars}
+    </g>
+  </svg>`;
+
+  // Legend
+  const legend = `<div style="display:flex;align-items:center;gap:16px;font-size:10px;color:var(--muted);margin-top:10px;flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:24px;height:10px;background:#6b7280;opacity:.3;border-radius:2px;display:inline-block"></span> Original RPN (ghost)</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:24px;height:10px;background:#6b7280;border-radius:2px;display:inline-block"></span> Current RPN</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#4ade80;border-radius:2px;display:inline-block"></span>&lt;50</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#fcd34d;border-radius:2px;display:inline-block"></span>50–99</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#f59e0b;border-radius:2px;display:inline-block"></span>100–199</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#ef4444;border-radius:2px;display:inline-block"></span>≥200</span>
+  </div>`;
+
+  if (compact) {
+    // Dashboard compact view — summary stats + small chart
+    const moreRows = sorted.length > 8 ? `<div style="text-align:center;font-size:10px;color:var(--muted);margin-top:4px">+ ${sorted.length - 8} more rows — view PFMEA for full chart</div>` : '';
+    return `<div style="padding:0 14px 14px">
+      <div style="display:flex;gap:12px;margin-bottom:12px">
+        <div style="flex:1;background:var(--bg);border-radius:7px;padding:10px 12px;text-align:center">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--ink)">${totalOriginal}</div>
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Original Total</div>
+        </div>
+        <div style="flex:1;background:var(--bg);border-radius:7px;padding:10px 12px;text-align:center">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--ink)'}">${totalCurrent}</div>
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Current Total</div>
+        </div>
+        <div style="flex:1;background:${reduction > 0 ? 'var(--green-pale)' : 'var(--bg)'};border-radius:7px;padding:10px 12px;text-align:center">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:${reduction > 0 ? 'var(--green)' : 'var(--muted)'}">${reduction > 0 ? '↓' : ''}${reduction}%</div>
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Reduction</div>
+        </div>
+        <div style="flex:1;background:var(--bg);border-radius:7px;padding:10px 12px;text-align:center">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--blue)">${rowsImproved}</div>
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Rows Improved</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto">${svg}</div>
+      ${moreRows}
+    </div>`;
+  }
+
+  // Full view (PFMEA page)
+  return `<div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div class="kpi-card" style="--kpi-color:var(--ink);flex:1;min-width:100px;cursor:default">
+        <div class="kpi-num" style="font-size:22px">${totalOriginal}</div>
+        <div class="kpi-label">Original Total RPN</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color:${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--amber)'};flex:1;min-width:100px;cursor:default">
+        <div class="kpi-num" style="font-size:22px;color:${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--amber)'}">${totalCurrent}</div>
+        <div class="kpi-label">Current Total RPN</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color:${reduction > 0 ? 'var(--green)' : 'var(--muted)'};flex:1;min-width:100px;cursor:default">
+        <div class="kpi-num" style="font-size:22px;color:${reduction > 0 ? 'var(--green)' : 'var(--muted)'}">${reduction > 0 ? '↓' : ''}${reduction}%</div>
+        <div class="kpi-label">Total Reduction</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color:var(--blue);flex:1;min-width:100px;cursor:default">
+        <div class="kpi-num" style="font-size:22px">${rowsImproved}<span style="font-size:13px;color:var(--muted)">/${rows.length}</span></div>
+        <div class="kpi-label">Rows Improved</div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;padding-bottom:4px">${svg}</div>
+    ${legend}
+    ${sorted.length > 12 ? `<div style="font-size:10px;color:var(--muted);margin-top:8px">Showing all ${sorted.length} cause rows, sorted by original RPN descending.</div>` : ''}
+  </div>`;
+}
+
+// SVG-safe escape (no quotes/tags in SVG text)
+function escSvg(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 // ── Projects list ─────────────────────────────────────────────
 function renderProjects() {
   const user = currentUser ? currentUser.email.split('@')[0] : '';
@@ -181,6 +374,17 @@ function renderDashboard() {
   const famIcon   = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
 
+  // RPN burndown chart for dashboard
+  const rpnBurndownHTML = p.pfmea && p.pfmea.length > 0 ? `
+    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:4px">PFMEA RPN Burndown</div>
+    <div class="card" style="margin-bottom:20px;padding:0;overflow:hidden">
+      <div class="card-head" style="padding:10px 14px">
+        <span class="card-title">RPN Burndown — Original vs Current</span>
+        <button class="btn btn-ghost btn-sm" onclick="setApqpTab('pfmea')">Full PFMEA →</button>
+      </div>
+      ${renderRpnBurndown(true)}
+    </div>` : '';
+
   return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 PM: ${esc(p.pm)}</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
@@ -192,6 +396,7 @@ function renderDashboard() {
     ${alerts ? `<div class="alert-row">${alerts}</div>` : ''}
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Gate Progress — click any gate to open</div>
     <div class="gate-strip">${gateStrip}</div>
+    ${rpnBurndownHTML}
     ${parentProg ? `<div class="parent-prog-card" onclick="progId='${parentProg.id}';navigate('project')">
       <div class="parent-prog-label">↑ PARENT PROGRAMME</div>
       <div class="parent-prog-name">${esc(parentProg.name)}</div>
@@ -248,9 +453,7 @@ function showEditProject() {
 
 function saveEditProject() {
   const p = prog(); if (!p) return;
-  const name = document.getElementById('ep_name').value.trim();
-  if (!name) { alert('Name required'); return; }
-  p.name     = name;
+  p.name     = document.getElementById('ep_name').value.trim();
   p.customer = document.getElementById('ep_customer').value.trim();
   p.unit     = document.getElementById('ep_unit').value.trim();
   p.family   = document.getElementById('ep_family').value;
@@ -262,27 +465,25 @@ function saveEditProject() {
 
 function deleteProject() {
   const p = prog(); if (!p) return;
-  if (!confirm('Delete project "' + p.name + '"? This cannot be undone.')) return;
-  supa.from('programmes').delete().eq('prog_id', p.id).then(() => {});
-  db.programmes = db.programmes.filter(x => x.id !== p.id);
-  progId = db.programmes.length ? db.programmes[0].id : null;
-  closeModal('modalEditProj');
-  navigate('projects');
+  if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+  db.programmes = db.programmes.filter(x => x.id !== progId);
+  progId = db.programmes[0]?.id || null;
+  save(); closeModal('modalEditProj'); navigate(progId ? 'project' : 'projects');
 }
 
-// ── Sub-assembly linking ──────────────────────────────────────
 function unlinkSubAsm(li) {
-  const p = prog(); if (!p.subAssemblies) p.subAssemblies = [];
-  const removed = p.subAssemblies.splice(li, 1)[0];
-  if (removed) { const child = db.programmes.find(x => x.id === removed.id); if (child && child.parentId === progId) delete child.parentId; }
+  const p = prog(); if (!p.subAssemblies) return;
+  const child = db.programmes.find(x => x.id === p.subAssemblies[li]?.id);
+  if (child && child.parentId === progId) delete child.parentId;
+  p.subAssemblies.splice(li, 1);
   save(); render();
 }
 
 function openSubAsmModal() {
-  const p = prog(); if (!p.subAssemblies) p.subAssemblies = [];
-  const linked = new Set(p.subAssemblies.map(x => x.id));
-  const others = db.programmes.filter(x => x.id !== p.id && !linked.has(x.id));
-  if (!others.length) { alert('No other projects to link. Create the sub-assembly project first.'); return; }
+  const p = prog();
+  const linked = (p.subAssemblies || []).map(x => x.id);
+  const others = db.programmes.filter(x => x.id !== progId && !linked.includes(x.id) && !x.parentId);
+  if (others.length === 0) { alert('No available projects to link. Create the sub-assembly project first.'); return; }
   const opts = others.map((x, i) =>
     `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="linkSubAsm('${x.id}')">
       <span style="font-size:13px">🔩</span>
