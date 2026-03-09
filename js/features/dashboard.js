@@ -167,9 +167,12 @@ function renderDashboard() {
   const gateStrip = GATE_DEFS.map((g, i) => {
     const gd         = p.gates[i] || {};
     const signed     = gateAllSigned(gd);
-    const items      = gd.items || [];
-    const done       = items.filter(it => it.done).length;
-    const total      = items.length || g.items.length;
+    
+    // FIX: Reference gd.checks (the actual data array) instead of gd.items
+    const checks     = gd.checks || [];
+    const done       = checks.filter(Boolean).length; // Counts 'true' entries
+    const total      = g.items.length; // Use length from the gate definition
+    
     const pct        = total > 0 ? Math.round(done / total * 100) : 0;
     const hasActivity = done > 0;
     const dotCls     = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending';
