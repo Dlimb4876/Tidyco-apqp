@@ -1,0 +1,48 @@
+/* css/hub.css */
+
+/* Doubled height for the Hub buttons */
+.hub-card {
+    min-height: 320px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px !important;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hub-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* Container scaling */
+.hub-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 24px !important;
+}
+
+/* Internal content scaling */
+.hub-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.hub-icon {
+    font-size: 64px; 
+    margin-bottom: 16px;
+}
+
+.hub-card .proj-card-name {
+    font-size: 18px; 
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.hub-card .proj-card-meta {
+    font-size: 14px; 
+    color: var(--muted);
+    margin-top: 8px;
+}
