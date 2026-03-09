@@ -9,7 +9,7 @@ function renderHub() {
         </div>
       </div>
       <div class="proj-cards hub-grid">
-        <div class="proj-card hub-card" onclick="alert('Capacity module coming soon')">
+        <div class="proj-card hub-card" onclick="navigate('capacity')">
           <div class="hub-card-content">
             <div class="hub-icon">📊</div>
             <div class="proj-card-name">CAPACITY</div>
