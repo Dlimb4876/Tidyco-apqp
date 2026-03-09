@@ -70,7 +70,8 @@ function renderRpnBurndown(compact) {
     bars += `<text x="${chartX}" y="${barH * 2 + gap + 22}" font-size="11" font-weight="600" fill="${reductionCol}" font-family="IBM Plex Sans,sans-serif">${reductionText} · ${rowsImproved}/${rowCount} causes improved</text>`;
   }
 
-return `<svg viewBox="0 0 ${vbW} ${svgH}" style="width:100%; height:auto; max-height:${compact ? 72 : 100}px; display:block;">${bars}</svg>`;}
+  return `<svg viewBox="0 0 ${vbW} ${svgH}" style="width:100%; height:auto; max-height:${compact ? 72 : 100}px; display:block;">${bars}</svg>`;
+}
 
 // ── Projects list ─────────────────────────────────────────────
 function renderProjects() {
@@ -159,20 +160,21 @@ function renderDashboard() {
   const timingGreen  = timingFilled;
 
   let alerts = '';
-  if (overdueAct > 0)    alerts += `<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--red);color:white;border:none" onclick="navigate('actions')">View →</button></div>`;
-  if (timingRed > 0)     alerts += `<div class="alert-item alert-red">🔴 <strong>${timingRed} red item${timingRed !== 1 ? 's' : ''} in timing plan</strong> — recovery plan required<button class="btn btn-sm" style="margin-left:auto;background:var(--red);color:white;border:none" onclick="navigate('timing')">View →</button></div>`;
-  if (timingAmber > 0 && timingRed === 0) alerts += `<div class="alert-item alert-amber">⚠ <strong>${timingAmber} amber item${timingAmber !== 1 ? 's' : ''} in timing plan</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:white;border:none" onclick="navigate('timing')">View →</button></div>`;
-  if (highRisks > 0)     alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRisks} high-severity risk${highRisks !== 1 ? 's' : ''}</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:white;border:none" onclick="navigate('risks')">View →</button></div>`;
-  if (highRPN > 0)       alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRPN} PFMEA row${highRPN !== 1 ? 's' : ''} RPN ≥ 100</strong><button class="btn btn-sm" style="margin-left:auto;background:var(--amber);color:white;border:none" onclick="navigate('apqp')">View →</button></div>`;
+  if (overdueAct > 0)    alerts += `<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}</strong> — <a href="#" onclick="navigate('actions');return false" style="color:inherit;text-decoration:underline">View Actions →</a></div>`;
+  if (highRisks > 0)     alerts += `<div class="alert-item alert-amber">🟡 <strong>${highRisks} high-severity risk${highRisks !== 1 ? 's' : ''}</strong> open — <a href="#" onclick="navigate('risks');return false" style="color:inherit;text-decoration:underline">View Risks →</a></div>`;
+  if (highRPN > 0)       alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRPN} failure cause${highRPN !== 1 ? 's' : ''} with RPN ≥ 100</strong> — <a href="#" onclick="apqpTab='pfmea';navigate('apqp');return false" style="color:inherit;text-decoration:underline">View PFMEA →</a></div>`;
 
-  const gateStrip = GATE_DEFS.map(g => {
-    const gd          = p.gates[g.num];
-    const pct         = Math.round(gd.checks.filter(Boolean).length / g.items.length * 100);
-    const signed      = gateAllSigned(gd);
-    const hasActivity = gd.checks.some(Boolean) || gd.sigs.some(s => s.signed);
-    const dotCls      = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending';
-    const labelCol    = signed ? 'var(--green)' : hasActivity ? 'var(--amber)' : 'var(--muted)';
-    const nodeBg      = signed ? 'background:var(--green-pale)' : hasActivity ? 'background:var(--amber-pale)' : '';
+  const gateStrip = GATE_DEFS.map((g, i) => {
+    const gd         = p.gates[i] || {};
+    const signed     = gateAllSigned(gd);
+    const items      = gd.items || [];
+    const done       = items.filter(it => it.done).length;
+    const total      = items.length || g.items.length;
+    const pct        = total > 0 ? Math.round(done / total * 100) : 0;
+    const hasActivity = done > 0;
+    const dotCls     = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending';
+    const labelCol   = signed ? 'var(--green)' : i === (curGate < 0 ? 5 : curGate) ? 'var(--blue)' : 'var(--muted)';
+    const nodeBg     = signed ? 'background:var(--green-pale)' : hasActivity ? 'background:var(--amber-pale)' : '';
     return `<div class="gate-node" style="${nodeBg}" onclick="navigate('gate_${g.num}')" title="Open Gate ${g.num}: ${g.name}">
       <div class="gate-node-num" style="color:${labelCol}">Gate ${g.num}</div>
       <div class="gate-node-name">${g.name}</div>
@@ -193,6 +195,7 @@ function renderDashboard() {
     { id: 'risks',   icon: '🛡', title: 'Risk Register',       desc: `${p.risks.filter(r => r.status !== 'Closed').length} open · ${highRisks} high`, color: highRisks > 0 ? 'var(--red)' : 'var(--blue)' },
   ];
 
+  // ── Sub-assemblies (left column of split) ────────────────────
   if (!p.subAssemblies) p.subAssemblies = [];
   const subAsmHTML = (() => {
     const cards = p.subAssemblies.map((link, li) => {
@@ -230,6 +233,18 @@ function renderDashboard() {
     return `<div class="sub-asm-grid">${cards}${addCard}</div>`;
   })();
 
+  // ── RPN Burndown (right column of split) — only shown when PFMEA data exists ──
+  const rpnBurndownHTML = p.pfmea && p.pfmea.length > 0 ? `
+    <div class="card" style="margin-bottom:0;padding:0;overflow:hidden;height:100%;box-sizing:border-box">
+      <div class="card-head" style="padding:10px 14px">
+        <span class="card-title">RPN Burndown — Original vs Current</span>
+        <button class="btn btn-ghost btn-sm" onclick="apqpTab='pfmea';navigate('apqp')">Full PFMEA →</button>
+      </div>
+      <div style="padding:14px 16px 16px">${renderRpnBurndown(true)}</div>
+    </div>` : `<div class="card" style="margin-bottom:0;display:flex;align-items:center;justify-content:center;min-height:80px">
+      <span style="font-size:12px;color:var(--muted)">No PFMEA data yet</span>
+    </div>`;
+
   const launcherHTML = sections.map(s =>
     `<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${s.color};margin-bottom:1px">${s.icon} ${s.title}</div><div class="section-card-desc">${s.desc}</div></div>`
   ).join('');
@@ -247,19 +262,7 @@ function renderDashboard() {
   const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
 
-  // RPN burndown card — only shown when there is PFMEA data
-  // FIX: "Full PFMEA →" button now calls navigate('apqp') AND setApqpTab('pfmea')
-  const rpnBurndownHTML = p.pfmea && p.pfmea.length > 0 ? `
-    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:4px">PFMEA RPN Burndown</div>
-    <div class="card" style="margin-bottom:20px;padding:0;overflow:hidden">
-      <div class="card-head" style="padding:10px 14px">
-        <span class="card-title">RPN Burndown — Original vs Current</span>
-        <button class="btn btn-ghost btn-sm" onclick="apqpTab='pfmea';navigate('apqp')">Full PFMEA →</button>
-      </div>
-      ${renderRpnBurndown(true)}
-    </div>` : '';
-
-  // ── Layout order: KPIs → Alerts → Gate Strip → Tools → RPN Burndown → Parent → Sub-assemblies → Actions/Risks
+  // ── Layout order: KPIs → Alerts → Gate Strip → Tools → Parent → Split(Sub-assemblies | RPN Burndown) → Actions/Risks
   return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 PM: ${esc(p.pm)}</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
@@ -273,14 +276,21 @@ function renderDashboard() {
     <div class="gate-strip">${gateStrip}</div>
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:4px">Tools</div>
     <div class="section-launcher" style="margin-bottom:20px">${launcherHTML}</div>
-    ${rpnBurndownHTML}
     ${parentProg ? `<div class="parent-prog-card" onclick="progId='${parentProg.id}';navigate('project')">
       <div class="parent-prog-label">↑ PARENT PROGRAMME</div>
       <div class="parent-prog-name">${esc(parentProg.name)}</div>
       ${parentProg.unit ? `<div class="parent-prog-meta">🚂 ${esc(parentProg.unit)}</div>` : ''}
     </div>` : ''}
-    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:16px">Sub-assemblies</div>
-    ${subAsmHTML}
+    <div class="dash-split-row">
+      <div class="dash-split-col">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Sub-assemblies</div>
+        ${subAsmHTML}
+      </div>
+      <div class="dash-split-col">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">PFMEA RPN Burndown</div>
+        ${rpnBurndownHTML}
+      </div>
+    </div>
     <div class="dash-grid">
       <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Open Actions</span><button class="btn btn-ghost btn-sm" onclick="navigate('actions')">View all →</button></div>${actHTML}</div>
       <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Top Risks</span><button class="btn btn-ghost btn-sm" onclick="navigate('risks')">View all →</button></div>${riskHTML}</div>
@@ -301,86 +311,75 @@ function newProjectInFamily(famId) {
 function createProg() {
   const name = document.getElementById('np_name').value.trim();
   if (!name) { alert('Project name is required.'); return; }
-  const p = newProgTemplate(
-    name,
-    document.getElementById('np_customer').value.trim(),
-    document.getElementById('np_unit').value.trim(),
-    document.getElementById('np_family').value,
-    document.getElementById('np_lead').value.trim(),
-    document.getElementById('np_pm').value.trim(),
-    document.getElementById('np_date').value
-  );
-  db.programmes.push(p);
-  progId = p.id;
-  save();
-  closeModal('modalNewProj');
-  // Clear form
-  ['np_name','np_customer','np_unit','np_lead','np_pm','np_date'].forEach(id => {
-    document.getElementById(id).value = '';
+  const id = 'p_' + Math.random().toString(36).slice(2);
+  const family   = document.getElementById('np_family')?.value   || 'Other';
+  const customer = document.getElementById('np_customer')?.value || '';
+  const unit     = document.getElementById('np_unit')?.value     || '';
+  const lead     = document.getElementById('np_lead')?.value     || '';
+  const pm       = document.getElementById('np_pm')?.value       || '';
+  const date     = document.getElementById('np_date')?.value     || '';
+  const parentId = document.getElementById('np_parent')?.value   || null;
+  const newProg  = migrateprog({
+    id, name, family, customer, unit, lead, pm, date,
+    parentId: parentId || null,
+    gates: [], ctq: [], pfd: [], pfmea: [], bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
+    actions: [], risks: [], gantt: [], subAssemblies: []
   });
-  document.getElementById('np_family').value = 'Other';
+  db.programmes.push(newProg);
+  if (parentId) {
+    const parent = db.programmes.find(x => x.id === parentId);
+    if (parent) {
+      if (!parent.subAssemblies) parent.subAssemblies = [];
+      if (!parent.subAssemblies.find(x => x.id === id)) parent.subAssemblies.push({ id });
+    }
+  }
+  progId = id;
+  save();
+  hideModal('modalNewProj');
   navigate('project');
 }
 
-/**
- * Opens the Edit Project modal and populates fields with current programme data.
- */
 function showEditProject() {
-  const p = prog();
-  if (!p) return;
+  const p = prog(); if (!p) return;
   document.getElementById('ep_name').value     = p.name     || '';
+  document.getElementById('ep_family').value   = p.family   || 'Other';
   document.getElementById('ep_customer').value = p.customer || '';
   document.getElementById('ep_unit').value     = p.unit     || '';
-  document.getElementById('ep_family').value   = p.family   || 'Other';
   document.getElementById('ep_lead').value     = p.lead     || '';
   document.getElementById('ep_pm').value       = p.pm       || '';
   document.getElementById('ep_date').value     = p.date     || '';
-  showModal('modalEditProj');
+  showModal('modalEditProject');
 }
 
-/**
- * Saves edited project details from the modal back to the global state and triggers a save.
- */
 function saveEditProject() {
-  const p = prog();
-  if (!p) return;
-  p.name     = document.getElementById('ep_name').value.trim();
-  p.customer = document.getElementById('ep_customer').value.trim();
-  p.unit     = document.getElementById('ep_unit').value.trim();
-  p.family   = document.getElementById('ep_family').value;
-  p.lead     = document.getElementById('ep_lead').value.trim();
-  p.pm       = document.getElementById('ep_pm').value.trim();
-  p.date     = document.getElementById('ep_date').value;
+  const p = prog(); if (!p) return;
+  p.name     = document.getElementById('ep_name').value.trim()     || p.name;
+  p.family   = document.getElementById('ep_family').value          || 'Other';
+  p.customer = document.getElementById('ep_customer').value.trim() || '';
+  p.unit     = document.getElementById('ep_unit').value.trim()     || '';
+  p.lead     = document.getElementById('ep_lead').value.trim()     || '';
+  p.pm       = document.getElementById('ep_pm').value.trim()       || '';
+  p.date     = document.getElementById('ep_date').value            || '';
   save();
-  closeModal('modalEditProj');
+  hideModal('modalEditProject');
   render();
 }
 
-/**
- * Deletes the current project after confirmation.
- */
 function deleteProject() {
-  const p = prog();
-  if (!p) return;
-  if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
-  // Unlink from any parent
-  db.programmes.forEach(pr => {
-    if (pr.subAssemblies) {
-      pr.subAssemblies = pr.subAssemblies.filter(x => x.id !== progId);
-    }
-  });
+  const p = prog(); if (!p) return;
+  if (!confirm(`Permanently delete "${p.name}"? This cannot be undone.`)) return;
   db.programmes = db.programmes.filter(x => x.id !== progId);
-  progId = null;
+  progId = db.programmes.length ? db.programmes[0].id : null;
   save();
-  closeModal('modalEditProj');
+  hideModal('modalEditProject');
   navigate('projects');
 }
 
+// ── Sub-assembly management ───────────────────────────────────
 function openSubAsmModal() {
-  const p      = prog();
-  const linked = (p.subAssemblies || []).map(x => x.id);
-  const others = db.programmes.filter(x => x.id !== progId && !linked.includes(x.id));
-  if (others.length === 0) { alert('No other projects available to link.\nCreate the sub-assembly project first.'); return; }
+  const p = prog(); if (!p) return;
+  const others = db.programmes.filter(x => x.id !== progId && !(p.subAssemblies || []).find(s => s.id === x.id));
+  if (others.length === 0) { alert('No other projects to link.'); return; }
   const opts = others.map((x) =>
     `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="linkSubAsm('${x.id}')">
       <span style="font-size:13px">🔩</span>
