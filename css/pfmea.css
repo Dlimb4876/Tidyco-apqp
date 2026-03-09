@@ -1,6 +1,6 @@
 /* ============================================================
    pfmea.css — PFMEA table styles
-   Loaded by tidyco_apqp_v8.html
+   Loaded by index.html
    ============================================================ */
 
 /* ── RPN badges ──────────────────────────────────────────────── */
@@ -17,6 +17,27 @@
 .rpn-lo { background: var(--green-pale);  color: var(--green);  }
 .rpn-md { background: var(--amber-pale);  color: var(--amber);  }
 .rpn-hi { background: var(--red-pale);    color: var(--red);    }
+
+/* ── RPN History trigger button ──────────────────────────────── */
+.rpn-hist-btn {
+  display: block;
+  margin: 3px auto 0;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  color: var(--blue);
+  background: var(--blue-pale);
+  border: 1px solid var(--blue-mid);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.rpn-hist-btn:hover {
+  background: var(--blue);
+  color: white;
+}
 
 /* ── Step group headers ──────────────────────────────────────── */
 .pfmea-step-group  { margin-bottom: 0; }
