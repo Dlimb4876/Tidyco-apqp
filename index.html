@@ -11,9 +11,6 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════
-     LOGIN SCREEN
-     ═══════════════════════════════════ -->
 <div id="loginScreen" class="login-shell">
   <div class="login-box">
     <div class="login-logo">
@@ -37,12 +34,8 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
-     APP SHELL
-     ═══════════════════════════════════ -->
 <div class="shell" id="appShell" style="display:none">
 
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
       <div class="brand" onclick="goProjects()" style="cursor:pointer">
@@ -68,17 +61,9 @@
     </div>
   </div>
 
-  <!-- MAIN CONTENT -->
   <div class="main" id="mainContent"></div>
 
-</div><!-- end appShell -->
-
-<!-- ═══════════════════════════════════
-     MODALS
-     ═══════════════════════════════════ -->
-
-<!-- New Project -->
-<div class="modal-bg" id="modalNewProj" style="display:none">
+</div><div class="modal-bg" id="modalNewProj" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">New Project</div>
     <div class="field"><label>Project Name *</label><input id="np_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
@@ -112,7 +97,6 @@
   </div>
 </div>
 
-<!-- Edit Project -->
 <div class="modal-bg" id="modalEditProj" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">Edit Project</div>
@@ -150,7 +134,6 @@
   </div>
 </div>
 
-<!-- Insert PFD Step -->
 <div class="modal-bg" id="modalInsert" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">Insert Step</div>
@@ -174,7 +157,6 @@
   </div>
 </div>
 
-<!-- CTQ Picker -->
 <div class="modal-bg" id="modalCtqPick" style="display:none">
   <div class="modal">
     <div class="modal-title">Link CTQ Requirements</div>
@@ -186,7 +168,6 @@
   </div>
 </div>
 
-<!-- BoM Picker for PFD step resources -->
 <div class="modal-bg" id="modalBomPick" style="display:none">
   <div class="modal modal-lg">
     <div class="modal-title" id="bomPickTitle">Link Resources</div>
@@ -199,7 +180,6 @@
   </div>
 </div>
 
-<!-- BoM Picker for Kit item add -->
 <div class="modal-bg" id="modalKitPick" style="display:none">
   <div class="modal modal-lg">
     <div class="modal-title">Add Items to Kit</div>
@@ -212,20 +192,13 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
-     SCRIPTS — load order matters
-     ═══════════════════════════════════ -->
-
-<!-- Core -->
 <script src="js/core/state.js"></script>
 <script src="js/core/auth.js"></script>
 <script src="js/core/db.js"></script>
 
-<!-- Utils -->
 <script src="js/utils/helpers.js"></script>
 <script src="js/utils/navigation.js"></script>
 
-<!-- Features -->
 <script src="js/features/dashboard.js"></script>
 <script src="js/features/gates.js"></script>
 <script src="js/features/pfmea.js"></script>
@@ -234,7 +207,6 @@
 <script src="js/features/timing.js"></script>
 <script src="js/features/trackers.js"></script>
 
-<!-- Entry point -->
 <script src="js/app.js"></script>
 
 </body>
