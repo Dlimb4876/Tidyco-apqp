@@ -13,17 +13,21 @@ The CSS architecture is modularised to separate global shell styles from feature
 /tidyco-apqp
 ├── /css
 │   ├── main.css            # Global variables, reset, typography, and shell layout
-│   ├── components.css      # Shared UI: Modals, buttons, cards, tables, and form inputs
+│   ├── components.css      # Shared UI: Modals, buttons, cards, tables, and forms
 │   ├── dashboard.css       # KPI cards, project grid, gate strip, and status badges
+│   ├── hub.css             # Operations Portal grid and large card styling
+│   ├── capacity.css        # Capacity portal layout and specialized grid
 │   ├── pfmea.css           # PFMEA logic: RPN badges and nested row styles
-│   ├── gantt.css           # Timing plan: Timeline bars, milestone markers, and kit styles
-│   └── apqp.css            # Shared styles for PFD, CTQ, BOM picker, and Control Plans
+│   ├── gantt.css           # Timing plan: Timeline bars, markers, and kit styles
+│   └── apqp.css            # Styles for PFD, CTQ, BOM picker, and Control Plans
 ├── /js
 │   ├── /core
 │   │   ├── auth.js         # Supabase authentication logic
 │   │   ├── db.js           # Supabase persistence and data migration
-│   │   └── state.js        # Global state (db, progId, currentSection)
+│   │   └── state.js        # Global state (db, progId, currentSection, tabs)
 │   ├── /features
+│   │   ├── hub.js          # Operations Portal main menu rendering
+│   │   ├── capacity.js     # Capacity portal (Overhaul, ME, and Projects)
 │   │   ├── dashboard.js    # Project home and KPI dashboard rendering
 │   │   ├── gates.js        # Gate checklist and sign-off logic
 │   │   ├── apqp.js         # Unified APQP tab management (CTQ, PFD, CP)
@@ -32,11 +36,12 @@ The CSS architecture is modularised to separate global shell styles from feature
 │   │   ├── timing.js       # Gantt chart and NPI timing plan
 │   │   └── trackers.js     # Action Tracker and Risk Register
 │   ├── /utils
-│   │   ├── helpers.js      # Escaping, date formatting, and UI utils
-│   │   └── navigation.js   # Hash-based routing and breadcrumbs
-│   └── app.js              # Entry point (launchApp) and event listeners
-├── index.html              # Clean shell with modal containers
-└── README.md               # System architecture documentation
+│   │   ├── helpers.js      # Escaping, modal management, and UI utils
+│   │   └── navigation.js   # Hash-based routing, breadcrumbs, and render switch
+│   └── app.js              # Entry point, session init, and app launch
+├── index.html              # Shell with navigation, main content, and modal containers
+├── README.md               # System architecture and documentation
+└── Tidyco APQP System Architecture.md # Core data model and technical overview
 ```
 
 ---
