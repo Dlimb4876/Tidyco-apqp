@@ -18,7 +18,7 @@ function renderCapacity() {
           </div>
         </div>
         
-        <div class="proj-card capacity-card" onclick="alert('ME Capacity coming soon')">
+        <div class="proj-card capacity-card" onclick="document.getElementById('mainContent').innerHTML = renderMeCapacity()">
           <div class="hub-card-content">
             <div class="hub-icon">🧑‍🔧</div>
             <div class="proj-card-name">ME CAPACITY</div>
