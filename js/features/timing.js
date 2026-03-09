@@ -53,7 +53,9 @@ function buildMonthGroups(startStr) {
   let cur = { label: '', mo: 0, weeks: [] };
   for (let w = 0; w < GANTT_WEEKS; w++) {
     const d     = ganttWeekDate(startStr, w);
-    const label = d ? d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }) : `M${Math.floor(w / 4) + 1}`;
+    const label = d
+      ? d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })
+      : `M${Math.floor(w / 4) + 1}`;
     if (label !== cur.label) {
       if (cur.weeks.length) groups.push({ ...cur });
       cur = { label, mo: groups.length, weeks: [w] };
@@ -165,12 +167,18 @@ function renderTimingPlan() {
   });
 
   const totalRows = p.gantt.length;
+  // colgroup: task(220) | role(70) | plan/act-label(42) | ...week cols... | notes(140) | del(28)
   let colgroup = `<col style="width:220px"><col style="width:70px"><col style="width:42px">`;
   months.forEach(mo => {
     if (isMonthCollapsed(p, mo.mo)) { colgroup += `<col style="width:20px">`; }
     else { mo.weeks.forEach(() => { colgroup += `<col style="width:26px">`; }); }
   });
   colgroup += `<col style="width:140px"><col style="width:28px">`;
+
+  // Month header row: must span task+role+label cols (3 cols) before week cols
+  // Week header row: must have 3 separate <th> cells to match colgroup exactly
+  const monthRowLeader = `<th colspan="3" class="gantt-th-left"></th>`;
+  const weekRowLeader  = `<th class="gantt-th-left" style="text-align:left;padding:4px 8px;color:white">Task</th><th class="gantt-th-left" style="text-align:left;padding:4px 6px;color:white">Role</th><th class="gantt-th-left" style="text-align:center;padding:4px 2px;color:white;font-size:9px">P/A</th>`;
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">NPI Timing Plan</div>
     <div class="sec-desc">Planned (green) and Actual (orange). Click month headers to collapse. Click cells to toggle.</div></div>
@@ -195,8 +203,8 @@ function renderTimingPlan() {
     <table class="tbl gantt-tbl" style="table-layout:fixed;width:max-content;min-width:100%;border-collapse:collapse">
       <colgroup>${colgroup}</colgroup>
       <thead>
-        <tr class="gantt-month-row">${monthHeaders}</tr>
-        <tr class="gantt-week-row"><th class="gantt-th-left" colspan="3"></th>${weekHeaders}<th class="gantt-th-notes"></th><th></th></tr>
+        <tr class="gantt-month-row">${monthRowLeader}${monthHeaders}<th class="gantt-th-notes"></th><th></th></tr>
+        <tr class="gantt-week-row">${weekRowLeader}${weekHeaders}<th class="gantt-th-notes"></th><th></th></tr>
       </thead>
       <tbody>${body}</tbody>
     </table>

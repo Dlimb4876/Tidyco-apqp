@@ -121,6 +121,7 @@ function renderProjects() {
           <div class="proj-card-meta">
             ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''}
             ${p.unit     ? `<span>🚂 ${esc(p.unit)}</span>`     : ''}
+            ${p.qnumber  ? `<span>🔢 ${esc(p.qnumber)}</span>`  : ''}
             ${p.lead     ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''}
             ${p.pm       ? `<span>📋 PM: ${esc(p.pm)}</span>`   : ''}
           </div>
@@ -217,7 +218,7 @@ function renderDashboard() {
         </div>
         ${sp.unit ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px">🚂 ${esc(sp.unit)}</div>` : ''}
         <div class="sub-asm-stats">
-          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saOpen > 0 ? 'var(--red)' : saOpen > 0 ? 'var(--amber)' : 'var(--green)'}">${saOpen}</span><span class="sub-asm-stat-lbl">Actions${saOverdue > 0 ? ` (${saOverdue} OD)` : ''}</span></div>
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saOpen > 0 ? 'var(--red)' : 'var(--green)'}">${saOpen}</span><span class="sub-asm-stat-lbl">Actions${saOverdue > 0 ? ` (${saOverdue} OD)` : ''}</span></div>
           <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saHighR > 0 ? 'var(--red)' : 'var(--ink)'}">${saRisks}</span><span class="sub-asm-stat-lbl">Risks${saHighR > 0 ? ` (${saHighR} hi)` : ''}</span></div>
           <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saHighRPN > 0 ? 'var(--amber)' : 'var(--ink)'}">${saHighRPN}</span><span class="sub-asm-stat-lbl">High RPN</span></div>
         </div>
@@ -248,8 +249,6 @@ function renderDashboard() {
   const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
 
-  // RPN burndown card — only shown when there is PFMEA data
-  // FIX: "Full PFMEA →" button now calls navigate('apqp') AND setApqpTab('pfmea')
   const rpnBurndownHTML = p.pfmea && p.pfmea.length > 0 ? `
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:4px">PFMEA RPN Burndown</div>
     <div class="card" style="margin-bottom:20px;padding:0;overflow:hidden">
@@ -260,8 +259,7 @@ function renderDashboard() {
       ${renderRpnBurndown(true)}
     </div>` : '';
 
-  // ── Layout order: KPIs → Alerts → Gate Strip → Tools → RPN Burndown → Parent → Sub-assemblies → Actions/Risks
-  return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 PM: ${esc(p.pm)}</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
+  return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.qnumber ? `<span>🔢 Q: ${esc(p.qnumber)}</span>` : ''} ${p.assembly ? `<span>🔩 ${esc(p.assembly)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 PM: ${esc(p.pm)}</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
       <div class="kpi-card" onclick="navigate('gate_${curGate >= 0 ? curGate : 5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
@@ -293,7 +291,6 @@ function renderDashboard() {
 function openProject(id) { progId = id; navigate('project'); }
 
 function newProjectInFamily(famId) {
-  // Use the correct select id from index.html's New Project modal
   const sel = document.getElementById('np_family');
   if (sel) sel.value = famId;
   showModal('modalNewProj');
@@ -309,14 +306,16 @@ function createProg() {
     document.getElementById('np_family').value,
     document.getElementById('np_lead').value.trim(),
     document.getElementById('np_pm').value.trim(),
-    document.getElementById('np_date').value
+    document.getElementById('np_date').value,
+    document.getElementById('np_qnumber').value.trim(),
+    document.getElementById('np_assembly').value.trim()
   );
   db.programmes.push(p);
   progId = p.id;
   save();
   closeModal('modalNewProj');
   // Clear form
-  ['np_name','np_customer','np_unit','np_lead','np_pm','np_date'].forEach(id => {
+  ['np_name','np_customer','np_unit','np_lead','np_pm','np_date','np_qnumber','np_assembly'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('np_family').value = 'Other';
@@ -336,6 +335,8 @@ function showEditProject() {
   document.getElementById('ep_lead').value     = p.lead     || '';
   document.getElementById('ep_pm').value       = p.pm       || '';
   document.getElementById('ep_date').value     = p.date     || '';
+  document.getElementById('ep_qnumber').value  = p.qnumber  || '';
+  document.getElementById('ep_assembly').value = p.assembly || '';
   showModal('modalEditProj');
 }
 
@@ -352,6 +353,8 @@ function saveEditProject() {
   p.lead     = document.getElementById('ep_lead').value.trim();
   p.pm       = document.getElementById('ep_pm').value.trim();
   p.date     = document.getElementById('ep_date').value;
+  p.qnumber  = document.getElementById('ep_qnumber').value.trim();
+  p.assembly = document.getElementById('ep_assembly').value.trim();
   save();
   closeModal('modalEditProj');
   render();
