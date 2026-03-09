@@ -7,11 +7,19 @@ Built as a Single Page Application (SPA) using vanilla JavaScript and Supabase f
 
 ## Project Structure
 
+The CSS architecture is modularized to separate global shell styles from feature-specific component logic, preventing `main.css` from becoming over-encumbered.
+
+
 ```
+
 /tidyco-apqp
 ├── /css
-│   ├── main.css            # Global styles, variables, and shell layout
-│   └── pfmea.css           # Specific styles for the PFMEA table
+│   ├── main.css            # Global variables, reset, typography, and shell layout
+│   ├── components.css      # Shared UI: Modals, buttons, and form inputs
+│   ├── dashboard.css       # KPI cards, project grid, and status badges
+│   ├── pfmea.css           # PFMEA logic: RPN badges and nested row styles
+│   ├── gantt.css           # Timing plan: Timeline bars and milestone markers
+│   └── apqp.css            # Shared styles for PFD, CTQ, and Control Plans
 ├── /js
 │   ├── /core
 │   │   ├── auth.js         # Supabase authentication logic
@@ -31,6 +39,7 @@ Built as a Single Page Application (SPA) using vanilla JavaScript and Supabase f
 │   └── app.js              # Entry point (launchApp) and event listeners
 ├── index.html              # Clean shell with modal containers
 └── README.md               # System architecture documentation
+
 ```
 
 ---
@@ -49,8 +58,8 @@ Built as a Single Page Application (SPA) using vanilla JavaScript and Supabase f
 
 | Variable         | Description                                          |
 |-----------------|------------------------------------------------------|
-| `db`            | Global object containing all programmes              |
-| `progId`        | UUID of the currently active project                 |
+| `db`            | Global object containing all programmes             |
+| `progId`        | UUID of the currently active project                |
 | `currentSection`| Current UI route (e.g. `project`, `apqp`, `gate_1`) |
 | `apqpTab`       | Active sub-tab within APQP (`ctq` / `pfd` / `pfmea` / `cp`) |
 | `bomSubTab`     | Active sub-tab within BOM (`parts` / `tools` / etc.) |
@@ -61,9 +70,9 @@ Built as a Single Page Application (SPA) using vanilla JavaScript and Supabase f
 
 | Function          | Module          | Description                                    |
 |------------------|-----------------|------------------------------------------------|
-| `prog()`          | state.js        | Returns the active programme object            |
+| `prog()`          | state.js        | Returns the active programme object           |
 | `save()`          | db.js           | Local backup + debounced Supabase `saveRemote()` |
-| `navigate(sec)`   | navigation.js   | Updates `currentSection` and URL hash, calls `render()` |
+| `Maps(sec)`   | navigation.js   | Updates `currentSection` and URL hash, calls `render()` |
 | `render()`        | navigation.js   | Main UI switchboard, clears and repaints `#mainContent` |
 | `launchApp()`     | app.js          | Loads remote data and restores navigation from URL hash |
 
@@ -73,24 +82,29 @@ Built as a Single Page Application (SPA) using vanilla JavaScript and Supabase f
 
 Scripts must be loaded in dependency order (all use the global scope):
 
+
 ```
+
 state.js → auth.js → db.js → helpers.js → navigation.js →
 dashboard.js → gates.js → pfmea.js → apqp.js → bom.js → timing.js → trackers.js →
 app.js
+
 ```
 
 ---
 
 ## RPN Logic
 
-- **Calculation**: `RPN = SEV × OCC × DET`
-- **Thresholds**: High RPN ≥ 100 triggers amber/red badges
-- **Forecast RPN**: `SEV × New OCC × New DET`
+- **Calculation**: $RPN = SEV \times OCC \times DET$
+- **Thresholds**: High $RPN \ge 100$ triggers amber/red badges
+- **Forecast RPN**: $SEV \times New OCC \times New DET$
 
 ---
 
 ## CSS Strategy
 
-- Custom variables (`--blue`, `--ink`, etc.) defined in `:root` in `main.css`
-- Tabular data uses `.sticky-table-wrap` for fixed headers
-- PFMEA-specific classes (`pfmea-row-sub`, `pfmea-mode-cell`, etc.) live in `pfmea.css`
+- **Global Shell**: `main.css` defines custom variables (`--blue`, `--ink`, etc.) and the primary SPA layout.
+- **Feature Isolation**: Styles for complex components like the Gantt chart (`gantt.css`) or the Dashboard grid (`dashboard.css`) are kept in standalone files to ensure `main.css` remains lightweight.
+- **Common UI**: Shared elements such as modals and standardized buttons reside in `components.css`.
+
+```
