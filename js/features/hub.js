@@ -1,7 +1,3 @@
-/**
- * js/features/hub.js
- * High-level landing page for Tidyco Operations Portal
- */
 function renderHub() {
   return `
     <div class="proj-home">
@@ -11,23 +7,29 @@ function renderHub() {
           <div class="proj-home-sub">Select a department to continue</div>
         </div>
       </div>
-      <div class="proj-cards" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
-        <div class="proj-card" onclick="alert('Capacity module coming soon')">
-          <div style="font-size: 32px; margin-bottom: 12px;">📊</div>
-          <div class="proj-card-name">CAPACITY</div>
-          <div class="proj-card-meta">Resource planning & load balancing</div>
+      <div class="proj-cards hub-grid">
+        <div class="proj-card hub-card" onclick="alert('Capacity module coming soon')">
+          <div class="hub-card-content">
+            <div class="hub-icon">📊</div>
+            <div class="proj-card-name">CAPACITY</div>
+            <div class="proj-card-meta">Load capacity planning</div>
+          </div>
         </div>
         
-        <div class="proj-card" onclick="navigate('projects')">
-          <div style="font-size: 32px; margin-bottom: 12px;">🚀</div>
-          <div class="proj-card-name">NEW PRODUCT INTRODUCTION</div>
-          <div class="proj-card-meta">APQP Gates, PFMEA & NPI Timing</div>
+        <div class="proj-card hub-card" onclick="navigate('projects')">
+          <div class="hub-card-content">
+            <div class="hub-icon">🚀</div>
+            <div class="proj-card-name">NEW PRODUCT INTRODUCTION</div>
+            <div class="proj-card-meta">APQP Gates, PFMEA & BoM</div>
+          </div>
         </div>
         
-        <div class="proj-card" onclick="alert('Production module coming soon')">
-          <div style="font-size: 32px; margin-bottom: 12px;">🏭</div>
-          <div class="proj-card-name">PRODUCTION</div>
-          <div class="proj-card-meta">Live shop floor tracking & OEE</div>
+        <div class="proj-card hub-card" onclick="alert('Production module coming soon')">
+          <div class="hub-card-content">
+            <div class="hub-icon">🏭</div>
+            <div class="proj-card-name">PRODUCTION</div>
+            <div class="proj-card-meta">Production Scheduling</div>
+          </div>
         </div>
       </div>
     </div>`;
