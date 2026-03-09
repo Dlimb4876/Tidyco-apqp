@@ -341,7 +341,7 @@ function createProg() {
   hideModal('modalNewProj');
   navigate('project');
 }
-
+// -- Edit Project Information -------------------------------
 function showEditProject() {
   const p = prog(); if (!p) return;
   document.getElementById('ep_name').value     = p.name     || '';
@@ -351,7 +351,7 @@ function showEditProject() {
   document.getElementById('ep_lead').value     = p.lead     || '';
   document.getElementById('ep_pm').value       = p.pm       || '';
   document.getElementById('ep_date').value     = p.date     || '';
-  showModal('modalEditProj');
+  showModal('modalEditProj'); // Updated ID
 }
 
 function saveEditProject() {
@@ -364,7 +364,7 @@ function saveEditProject() {
   p.pm       = document.getElementById('ep_pm').value.trim()       || '';
   p.date     = document.getElementById('ep_date').value            || '';
   save();
-  hideModal('modalEditProj');
+  closeModal('modalEditProj'); // Use closeModal and updated ID
   render();
 }
 
@@ -374,7 +374,7 @@ function deleteProject() {
   db.programmes = db.programmes.filter(x => x.id !== progId);
   progId = db.programmes.length ? db.programmes[0].id : null;
   save();
-  hideModal('modalEditProject');
+  closeModal('modalEditProj'); // Use closeModal and updated ID
   navigate('projects');
 }
 
