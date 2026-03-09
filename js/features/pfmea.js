@@ -1,10 +1,14 @@
 /* ============================================================
    pfmea.js — PFMEA render, mutations, and RPN logic
-   Fixed version: Addresses header overlap via dynamic measurement.
+   Fixed version: 
+   - Restored RPN History button and popup logic
+   - Enabled real-time DOM updates for RPN Forecast calculation
+   - Maintained dynamic header alignment to prevent overlap
    ============================================================ */
 
 /**
  * Synchronizes sticky positions of headers to prevent overlap.
+ * Measures heights of the topbar and thead rows to set correct 'top' offsets.
  */
 function pfmeaSyncRow2() {
   const row0 = document.querySelector('.pfmea-tbl thead tr:first-child');
@@ -96,8 +100,19 @@ function renderPFMEA() {
           const rpn = sev * occ * det;
           const rpnCls = rpn >= 200 ? 'rpn-hi' : rpn >= 100 ? 'rpn-md' : 'rpn-lo';
           const act = ca.action || {};
+          const hist = ca.history || [];
           const hasAction = !!(act.newOcc || act.newDet);
           const forecast = sev * (act.newOcc ? +act.newOcc : occ) * (act.newDet ? +act.newDet : det);
+
+          // Build History Rows for Popup
+          const histRows = hist.length > 0 ? hist.map(h => `
+            <div style="border-bottom:1px solid var(--line);padding:5px 0;margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:${h.newRpn < h.rpn ? '#16a34a' : '#dc2626'}">${h.rpn}→${h.newRpn}</span>
+                <span style="color:var(--muted);font-size:9px;margin-left:auto">${h.date}</span>
+              </div>
+              <div style="color:var(--mid);font-size:10px;margin-top:3px;font-style:italic">"${esc(h.desc)}"</div>
+            </div>`).join('') : '<span style="font-size:10px;color:var(--muted);font-style:italic">No history yet</span>';
 
           let rowHtml = `<tr class="pfmea-row-sub">`;
           if (ei === 0 && ci === 0) {
@@ -125,13 +140,20 @@ function renderPFMEA() {
             <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdCause(${mi},${ei},${ci},'prevent',this.value)" placeholder="Prevention">${esc(ca.prevent || '')}</textarea></td>
             <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdCause(${mi},${ei},${ci},'detect',this.value)" placeholder="Detection">${esc(ca.detect || '')}</textarea></td>
             <td style="text-align:center;vertical-align:top;padding-top:6px"><input type="number" class="cell-edit mono" min="1" max="10" value="${det}" oninput="pfUpdCause(${mi},${ei},${ci},'det',+this.value);pfLiveRPN(${mi},${ei},${ci})" style="width:30px;text-align:center"></td>
-            <td style="text-align:center;vertical-align:top;padding-top:6px"><span id="rpn_${mi}_${ei}_${ci}" class="rpn ${rpnCls}">${rpn}</span></td>
+            <td style="text-align:center;vertical-align:top;padding-top:6px">
+              <span id="rpn_${mi}_${ei}_${ci}" class="rpn ${rpnCls}">${rpn}</span>
+              ${hist.length > 0 ? `<button class="rpn-hist-btn" onclick="pfShowHist(event,'${ca.id}')">⏱${hist.length}</button>` : ''}
+              <div class="hist-popup" id="hist_${ca.id}" style="display:none;position:fixed;z-index:9999;background:white;border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.15);max-height:400px;overflow-y:auto">
+                <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">RPN History</div>
+                ${histRows}
+              </div>
+            </td>
             <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdCauseAction(${mi},${ei},${ci},'desc',this.value)" placeholder="Action" style="background:${act.desc ? '#eff6ff' : ''}">${esc(act.desc || '')}</textarea></td>
             <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize onchange="pfUpdCauseAction(${mi},${ei},${ci},'taken',this.value)" placeholder="Taken">${esc(act.taken || '')}</textarea></td>
             <td><input class="cell-edit" value="${esc(act.owner || '')}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'owner',this.value)" placeholder="Owner"></td>
             <td><input type="date" class="cell-edit mono" value="${esc(act.due || '')}" onchange="pfUpdCauseAction(${mi},${ei},${ci},'due',this.value)" style="font-size:11px"></td>
-            <td style="text-align:center;vertical-align:top;padding-top:6px"><input type="number" class="cell-edit mono" min="1" max="10" value="${act.newOcc || ''}" oninput="pfUpdCauseAction(${mi},${ei},${ci},'newOcc',this.value);pfLiveForecast(${mi},${ei},${ci})" style="width:30px;text-align:center"></td>
-            <td style="text-align:center;vertical-align:top;padding-top:6px"><input type="number" class="cell-edit mono" min="1" max="10" value="${act.newDet || ''}" oninput="pfUpdCauseAction(${mi},${ei},${ci},'newDet',this.value);pfLiveForecast(${mi},${ei},${ci})" style="width:30px;text-align:center"></td>
+            <td style="text-align:center;vertical-align:top;padding-top:6px"><input type="number" class="cell-edit mono" min="1" max="10" value="${act.newOcc || ''}" oninput="pfUpdCauseAction(${mi},${ei},${ci},'newOcc',this.value);pfLiveForecast(${mi},${ei},${ci})" style="width:30px;text-align:center;background:#eff6ff"></td>
+            <td style="text-align:center;vertical-align:top;padding-top:6px"><input type="number" class="cell-edit mono" min="1" max="10" value="${act.newDet || ''}" oninput="pfUpdCauseAction(${mi},${ei},${ci},'newDet',this.value);pfLiveForecast(${mi},${ei},${ci})" style="width:30px;text-align:center;background:#eff6ff"></td>
             <td style="text-align:center;vertical-align:top;padding-top:6px"><span id="forecast_${mi}_${ei}_${ci}" class="rpn ${hasAction ? rpnCls : 'rpn-lo'}" style="opacity:${hasAction ? '1' : '0'}">${hasAction ? forecast : '—'}</span></td>
             <td style="text-align:center;vertical-align:top;padding-top:4px"><button class="btn btn-sm btn-green" onclick="pfImplementAction(${mi},${ei},${ci})">Apply</button></td>
             <td style="text-align:center"><button class="del-btn" onclick="pfDelCause(${mi},${ei},${ci})">×</button></td>
@@ -157,39 +179,102 @@ function renderPFMEA() {
 }
 
 // ── PFMEA Mutators ──
-function pfAddMode(pfdId) { prog().pfmea.push({ id: 'f_' + Date.now(), pfdId, mode: '', effects: [{ id: 'e_' + Date.now(), effect: '', sev: 1, causes: [{ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 }] }] }); save(); render(); }
+function pfAddMode(pfdId) { prog().pfmea.push({ id: 'f_' + Date.now(), pfdId, mode: '', effects: [{ id: 'e_' + Date.now(), effect: '', sev: 1, causes: [{ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1, action: {}, history: [] }] }] }); save(); render(); }
 function pfUpdMode(mi, f, v) { prog().pfmea[mi][f] = v; save(); }
 function pfDelMode(mi) { prog().pfmea.splice(mi, 1); save(); render(); }
-function pfAddEffect(mi) { prog().pfmea[mi].effects.push({ id: 'e_' + Date.now(), effect: '', sev: 1, causes: [{ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 }] }); save(); render(); }
+function pfAddEffect(mi) { prog().pfmea[mi].effects.push({ id: 'e_' + Date.now(), effect: '', sev: 1, causes: [{ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1, action: {}, history: [] }] }); save(); render(); }
 function pfUpdEffect(mi, ei, f, v) { prog().pfmea[mi].effects[ei][f] = v; save(); }
 function pfDelEffect(mi, ei) { prog().pfmea[mi].effects.splice(ei, 1); save(); render(); }
-function pfAddCause(mi, ei) { prog().pfmea[mi].effects[ei].causes.push({ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 }); save(); render(); }
+function pfAddCause(mi, ei) { prog().pfmea[mi].effects[ei].causes.push({ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1, action: {}, history: [] }); save(); render(); }
 function pfUpdCause(mi, ei, ci, f, v) { prog().pfmea[mi].effects[ei].causes[ci][f] = v; save(); }
 function pfDelCause(mi, ei, ci) { prog().pfmea[mi].effects[ei].causes.splice(ci, 1); save(); render(); }
-function pfUpdCauseAction(mi, ei, ci, f, v) { const ca = prog().pfmea[mi].effects[ei].causes[ci]; if (!ca.action) ca.action = {}; ca.action[f] = v; save(); }
+
+function pfUpdCauseAction(mi, ei, ci, f, v) { 
+  const ca = prog().pfmea[mi].effects[ei].causes[ci]; 
+  if (!ca.action) ca.action = {}; 
+  ca.action[f] = v; 
+  save(); 
+}
+
+// ── UI Helpers & Live Updates ──
+function pfShowHist(evt, cid) {
+  document.querySelectorAll('.hist-popup').forEach(p => { if (p.id !== 'hist_' + cid) p.style.display = 'none'; });
+  const el = document.getElementById('hist_' + cid);
+  if (!el) return;
+  if (el.style.display === 'block') { el.style.display = 'none'; return; }
+  const btn = evt.currentTarget;
+  const r = btn.getBoundingClientRect();
+  el.style.display = 'block';
+  el.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  el.style.left = Math.min(r.left, window.innerWidth - 310) + 'px';
+  evt.stopPropagation();
+}
+
+// Global click listener to close history popups
+document.addEventListener('click', () => document.querySelectorAll('.hist-popup').forEach(p => p.style.display = 'none'));
 
 function pfLiveRPN(mi, ei, ci) {
   const ef = prog().pfmea[mi].effects[ei];
   const targets = ci === -1 ? ef.causes : [ef.causes[ci]];
   targets.forEach((ca, idx) => {
     const rpn = (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1);
-    const el = document.getElementById(`rpn_${mi}_${ei}_${ci === -1 ? idx : ci}`);
-    if (el) { el.textContent = rpn; el.className = 'rpn ' + (rpn >= 200 ? 'rpn-hi' : rpn >= 100 ? 'rpn-md' : 'rpn-lo'); }
+    const cIdx = ci === -1 ? idx : ci;
+    const el = document.getElementById(`rpn_${mi}_${ei}_${cIdx}`);
+    if (el) { 
+      el.textContent = rpn; 
+      el.className = 'rpn ' + (rpn >= 200 ? 'rpn-hi' : rpn >= 100 ? 'rpn-md' : 'rpn-lo'); 
+    }
+    pfLiveForecast(mi, ei, cIdx);
   });
+  save();
 }
 
 function pfLiveForecast(mi, ei, ci) {
-  const ef = prog().pfmea[mi].effects[ei]; const ca = ef.causes[ci]; const act = ca.action || {};
+  const ef = prog().pfmea[mi].effects[ei]; 
+  const ca = ef.causes[ci]; 
+  const act = ca.action || {};
+  const hasAction = !!(act.newOcc || act.newDet);
   const forecast = (ef.sev || 1) * (act.newOcc ? +act.newOcc : ca.occ) * (act.newDet ? +act.newDet : ca.det);
+  
   const el = document.getElementById(`forecast_${mi}_${ei}_${ci}`);
-  if (el) { el.textContent = forecast; el.className = 'rpn ' + (forecast >= 200 ? 'rpn-hi' : forecast >= 100 ? 'rpn-md' : 'rpn-lo'); }
+  if (el) { 
+    el.textContent = hasAction ? forecast : '—'; 
+    el.className = 'rpn ' + (hasAction ? (forecast >= 200 ? 'rpn-hi' : forecast >= 100 ? 'rpn-md' : 'rpn-lo') : 'rpn-lo'); 
+    el.style.opacity = hasAction ? '1' : '0';
+  }
 }
 
 function pfImplementAction(mi, ei, ci) {
-  const ca = prog().pfmea[mi].effects[ei].causes[ci]; const act = ca.action || {};
-  if (act.newOcc) ca.occ = +act.newOcc;
-  if (act.newDet) ca.det = +act.newDet;
-  ca.action = {}; save(); render();
+  const p = prog();
+  const ef = p.pfmea[mi].effects[ei]; 
+  const ca = ef.causes[ci]; 
+  const act = ca.action || {};
+  
+  if (!act.newOcc && !act.newDet && !act.desc) {
+    alert('Enter recommended actions or new scores before applying.');
+    return;
+  }
+
+  const oldRpn = (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1);
+  const newOcc = act.newOcc ? +act.newOcc : ca.occ;
+  const newDet = act.newDet ? +act.newDet : ca.det;
+  const newRpn = (ef.sev || 1) * newOcc * newDet;
+
+  if (!confirm(`Apply action and update scores? (RPN ${oldRpn} → ${newRpn})`)) return;
+
+  if (!ca.history) ca.history = [];
+  ca.history.push({
+    rpn: oldRpn,
+    newRpn: newRpn,
+    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
+    desc: act.taken || act.desc || 'Action implemented'
+  });
+
+  ca.occ = newOcc;
+  ca.det = newDet;
+  ca.action = {}; // Clear action fields
+  save(); 
+  render();
 }
 
 // Legacy compat
