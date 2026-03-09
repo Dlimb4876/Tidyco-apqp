@@ -5,7 +5,7 @@ function renderHub() {
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Operations Portal</div>
-          <div class="proj-home-sub">Select a department to continue</div>
+          <div class="proj-home-sub">Select an area to continue</div>
         </div>
       </div>
       <div class="proj-cards hub-grid">
@@ -13,7 +13,7 @@ function renderHub() {
           <div class="hub-card-content">
             <div class="hub-icon">📊</div>
             <div class="proj-card-name">CAPACITY</div>
-            <div class="proj-card-meta">Load capacity planning</div>
+            <div class="proj-card-meta">Load Capacity Planning</div>
           </div>
         </div>
         
