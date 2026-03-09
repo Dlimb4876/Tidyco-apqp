@@ -9,6 +9,7 @@ const SECTION_LABELS = {
   risks:   'Risk Register',
   bom:     'Bill of Materials',
   timing:  'NPI Timing Plan'
+  capacity: 'Capacity Management'
 };
 
 function parseHash() {
@@ -103,12 +104,10 @@ function setApqpTab(t) {
 function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
+  if (currentSection === 'capacity') { mc.innerHTML = renderCapacity(); return; }
   if (!prog()) { mc.innerHTML = renderProjects(); return; }
 
-  if (currentSection === 'hub') { 
-    mc.innerHTML = renderHub(); 
-    return; 
-  }
+  if (currentSection === 'hub') { mc.innerHTML = renderHub(); return; }
   
   if (currentSection === 'project') mc.innerHTML = renderDashboard();
   else if (currentSection.startsWith('gate_')) mc.innerHTML = renderGatePage(+currentSection.split('_')[1]);
