@@ -11,37 +11,27 @@ The CSS architecture is modularised to separate global shell styles from feature
 
 ```
 /tidyco-apqp
-├── /css
-│   ├── main.css            # Global variables, reset, typography, and shell layout
-│   ├── components.css      # Shared UI: Modals, buttons, cards, tables, and forms
-│   ├── dashboard.css       # KPI cards, project grid, gate strip, and status badges
-│   ├── hub.css             # Operations Portal grid and large card styling
-│   ├── capacity.css        # Capacity portal layout and specialized grid
-│   ├── pfmea.css           # PFMEA logic: RPN badges and nested row styles
-│   ├── gantt.css           # Timing plan: Timeline bars, markers, and kit styles
-│   └── apqp.css            # Styles for PFD, CTQ, BOM picker, and Control Plans
-├── /js
-│   ├── /core
-│   │   ├── auth.js         # Supabase authentication logic
-│   │   ├── db.js           # Supabase persistence and data migration
-│   │   └── state.js        # Global state (db, progId, currentSection, tabs)
-│   ├── /features
-│   │   ├── hub.js          # Operations Portal main menu rendering
-│   │   ├── capacity.js     # Capacity portal (Overhaul, ME, and Projects)
-│   │   ├── dashboard.js    # Project home and KPI dashboard rendering
-│   │   ├── gates.js        # Gate checklist and sign-off logic
-│   │   ├── apqp.js         # Unified APQP tab management (CTQ, PFD, CP)
-│   │   ├── pfmea.js        # PFMEA specific logic and RPN calculations
-│   │   ├── bom.js          # Bill of Materials and Kit builder
-│   │   ├── timing.js       # Gantt chart and NPI timing plan
-│   │   └── trackers.js     # Action Tracker and Risk Register
-│   ├── /utils
-│   │   ├── helpers.js      # Escaping, modal management, and UI utils
-│   │   └── navigation.js   # Hash-based routing, breadcrumbs, and render switch
-│   └── app.js              # Entry point, session init, and app launch
-├── index.html              # Shell with navigation, main content, and modal containers
-├── README.md               # System architecture and documentation
-└── Tidyco APQP System Architecture.md # Core data model and technical overview
+├── /core                   # System engine and global styling
+│   ├── /css
+│   │   ├── main.css        # Global variables, typography, and SPA shell layout
+│   │   └── components.css  # Shared UI: Modals, buttons, cards, and tables
+│   └── /js
+│       ├── app.js          # Entry point and session initialization
+│       ├── auth.js         # Supabase authentication
+│       ├── db.js           # Persistence and data migration
+│       └── state.js        # Global state and constant definitions
+├── /portals                # Feature-specific modules
+│   ├── /hub                # Central Operations Portal
+│   ├── /capacity           # Capacity Management stream
+│   └── /npi                # New Product Introduction (APQP Core)
+│       ├── /css            # Feature-specific styles (apqp, gantt, pfmea)
+│       └── /js             # Feature-specific logic (gates, bom, timing)
+├── /utils                  # Shared utilities
+│   └── /js
+│       ├── helpers.js      # Escaping, modal management, and UI utils
+│       └── navigation.js   # Hash-based routing and breadcrumbs
+├── index.html              # Main application entry point
+└── README.md               # System documentation
 ```
 
 ---
