@@ -4,7 +4,7 @@
 
 let db = { programmes: [] };
 let progId = null;
-let currentSection = 'home';
+let currentSection = 'hub';
 let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
 let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
 
