@@ -17,7 +17,7 @@ function getMeWeeklyData() {
     // ... rest of calculation logic remains same
   }
   return weeks;
-}
+
 
   // Calculate Base Gross Capacity per week
   const grossCap = db.me.team.reduce((sum, t) => sum + (t.hours * (t.utilisation / 100)), 0);
