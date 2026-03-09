@@ -44,20 +44,37 @@ function navigate(sec, { pushHash = true } = {}) {
   const bcSec  = document.getElementById('bc-section');
   const p      = prog();
 
-  if (sec === 'projects' || sec === 'hub') {
+if (sec === 'projects' || sec === 'hub') {
     bb.style.display = 'none';
     bc.style.display = 'none';
   } else if (sec === 'project') {
     bb.style.display = 'none';
     bc.style.display = 'flex';
-    if (bcProj) { bcProj.style.display = 'none'; }
-    if (bcSep2) bcSep2.style.display = 'none';
-    if (bcSec)  { bcSec.style.display = 'block'; bcSec.textContent = p ? p.name : ''; }
+    
+    // CHANGE: Show the "Projects" level instead of hiding it
+    if (bcProj) { 
+      bcProj.style.display = 'block'; 
+      bcProj.textContent = 'Projects'; // Label for the collection of projects
+      bcProj.onclick = () => navigate('projects'); // Ensure it navigates to the list
+    }
+    if (bcSep2) bcSep2.style.display = 'block'; // Show the separator ( › )
+    
+    // The current section is the Project Name
+    if (bcSec) { 
+      bcSec.style.display = 'block'; 
+      bcSec.textContent = p ? p.name : ''; 
+    }
   } else {
+    // This block handles sub-sections like APQP, Risks, or Gates
     bb.style.display = 'flex';
     bc.style.display = 'flex';
-    if (bcProj) { bcProj.style.display = 'block'; bcProj.textContent = p ? p.name : ''; }
+    if (bcProj) { 
+      bcProj.style.display = 'block'; 
+      bcProj.textContent = p ? p.name : ''; // Here the middle crumb is the Project Name
+      bcProj.onclick = () => navigate('project');
+    }
     if (bcSep2) bcSep2.style.display = 'block';
+    
     const gm    = sec.match(/^gate_(\d)$/);
     const label = gm
       ? `Gate ${GATE_DEFS[+gm[1]].num}: ${GATE_DEFS[+gm[1]].name}`
