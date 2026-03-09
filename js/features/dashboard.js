@@ -321,6 +321,8 @@ function createProg() {
   const lead     = document.getElementById('np_lead')?.value     || '';
   const pm       = document.getElementById('np_pm')?.value       || '';
   const date     = document.getElementById('np_date')?.value     || '';
+  const qNumber = document.getElementById('np_qNumber').value.trim();
+  const partNumber = document.getElementById('np_partNumber').value.trim();
   const parentId = document.getElementById('np_parent')?.value   || null;
   const newProg  = migrateprog({
     id, name, family, customer, unit, lead, pm, date,
@@ -351,6 +353,8 @@ function showEditProject() {
   document.getElementById('ep_lead').value     = p.lead     || '';
   document.getElementById('ep_pm').value       = p.pm       || '';
   document.getElementById('ep_date').value     = p.date     || '';
+  document.getElementById('ep_qNumber').value = p.qNumber || '';
+  document.getElementById('ep_partNumber').value = p.partNumber || '';
   showModal('modalEditProj'); // Updated ID
 }
 
@@ -363,6 +367,8 @@ function saveEditProject() {
   p.lead     = document.getElementById('ep_lead').value.trim()     || '';
   p.pm       = document.getElementById('ep_pm').value.trim()       || '';
   p.date     = document.getElementById('ep_date').value            || '';
+  p.qNumber = document.getElementById('ep_qNumber').value.trim() || '';
+  p.partNumber = document.getElementById('ep_partNumber').value.trim() || '';
   save();
   closeModal('modalEditProj'); // Use closeModal and updated ID
   render();
