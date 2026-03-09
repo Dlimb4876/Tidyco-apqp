@@ -4,7 +4,6 @@
 // ═══════════════════════════════════
 
 // ── Shared: RPN Burndown Chart (used on Dashboard and PFMEA page) ─────────────
-// Shows only TOTAL Original RPN vs TOTAL Current RPN — no per-failure-mode breakdown.
 function renderRpnBurndown(compact) {
   const p = prog();
   if (!p.pfmea || p.pfmea.length === 0) {
@@ -155,9 +154,6 @@ function renderDashboard() {
   const gantt      = p.gantt || [];
   const timingTotal  = gantt.length;
   const timingFilled = gantt.filter(r => r.weeks && r.weeks.some(w => w > 0)).length;
-  const timingRed    = 0;
-  const timingAmber  = 0;
-  const timingGreen  = timingFilled;
 
   let alerts = '';
   if (overdueAct > 0)    alerts += `<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}</strong> — <a href="#" onclick="navigate('actions');return false" style="color:inherit;text-decoration:underline">View Actions →</a></div>`;
@@ -167,11 +163,12 @@ function renderDashboard() {
   const gateStrip = GATE_DEFS.map((g, i) => {
     const gd         = p.gates[i] || {};
     const signed     = gateAllSigned(gd);
-    const items      = gd.items || [];
-    const done       = items.filter(it => it.done).length;
-    const total      = items.length || g.items.length;
+    // FIX: checklists are boolean arrays in .checks, not .items
+    const checks     = gd.checks || [];
+    const done       = checks.filter(c => c === true).length;
+    const total      = g.items.length;
     const pct        = total > 0 ? Math.round(done / total * 100) : 0;
-    const hasActivity = done > 0;
+    const hasActivity = done > 0 || (gd.sigs && gd.sigs.some(s => s.signed));
     const dotCls     = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending';
     const labelCol   = signed ? 'var(--green)' : i === (curGate < 0 ? 5 : curGate) ? 'var(--blue)' : 'var(--muted)';
     const nodeBg     = signed ? 'background:var(--green-pale)' : hasActivity ? 'background:var(--amber-pale)' : '';
@@ -195,16 +192,15 @@ function renderDashboard() {
     { id: 'risks',   icon: '🛡', title: 'Risk Register',       desc: `${p.risks.filter(r => r.status !== 'Closed').length} open · ${highRisks} high`, color: highRisks > 0 ? 'var(--red)' : 'var(--blue)' },
   ];
 
-  // ── Sub-assemblies (left column of split) ────────────────────
   if (!p.subAssemblies) p.subAssemblies = [];
   const subAsmHTML = (() => {
     const cards = p.subAssemblies.map((link, li) => {
       const sp = db.programmes.find(x => x.id === link.id);
       if (!sp) return '';
       const sg        = sp.gates || [];
-      const sgDone    = sg.filter(g => g.signed).length;
+      const sgDone    = sg.filter(g => gateAllSigned(g)).length;
       const sgTotal   = sg.length || 6;
-      const curGateSA = sg.findIndex(g => !g.signed);
+      const curGateSA = sg.findIndex(g => !gateAllSigned(g));
       const gLabel    = curGateSA < 0 ? '✓ Complete' : `Gate ${curGateSA}`;
       const gatePct   = Math.round(sgDone / sgTotal * 100);
       const saOpen    = (sp.actions || []).filter(a => a.status !== 'Closed').length;
@@ -233,7 +229,6 @@ function renderDashboard() {
     return `<div class="sub-asm-grid">${cards}${addCard}</div>`;
   })();
 
-  // ── RPN Burndown (right column of split) — only shown when PFMEA data exists ──
   const rpnBurndownHTML = p.pfmea && p.pfmea.length > 0 ? `
     <div class="card" style="margin-bottom:0;padding:0;overflow:hidden;height:100%;box-sizing:border-box">
       <div class="card-head" style="padding:10px 14px">
@@ -262,7 +257,6 @@ function renderDashboard() {
   const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
 
-  // ── Layout order: KPIs → Alerts → Gate Strip → Tools → Parent → Split(Sub-assemblies | RPN Burndown) → Actions/Risks
   return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 PM: ${esc(p.pm)}</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
@@ -302,7 +296,6 @@ function renderDashboard() {
 function openProject(id) { progId = id; navigate('project'); }
 
 function newProjectInFamily(famId) {
-  // Use the correct select id from index.html's New Project modal
   const sel = document.getElementById('np_family');
   if (sel) sel.value = famId;
   showModal('modalNewProj');
@@ -348,7 +341,7 @@ function showEditProject() {
   document.getElementById('ep_lead').value     = p.lead     || '';
   document.getElementById('ep_pm').value       = p.pm       || '';
   document.getElementById('ep_date').value     = p.date     || '';
-  showModal('modalEditProject');
+  showModal('modalEditProj');
 }
 
 function saveEditProject() {
@@ -361,7 +354,7 @@ function saveEditProject() {
   p.pm       = document.getElementById('ep_pm').value.trim()       || '';
   p.date     = document.getElementById('ep_date').value            || '';
   save();
-  hideModal('modalEditProject');
+  hideModal('modalEditProj');
   render();
 }
 
@@ -371,7 +364,7 @@ function deleteProject() {
   db.programmes = db.programmes.filter(x => x.id !== progId);
   progId = db.programmes.length ? db.programmes[0].id : null;
   save();
-  hideModal('modalEditProject');
+  hideModal('modalEditProj');
   navigate('projects');
 }
 
