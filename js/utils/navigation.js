@@ -44,7 +44,7 @@ function navigate(sec, { pushHash = true } = {}) {
   const bcSec  = document.getElementById('bc-section');
   const p      = prog();
 
-  if (sec === 'projects') {
+  if (sec === 'projects' || sec === 'hub') {
     bb.style.display = 'none';
     bc.style.display = 'none';
   } else if (sec === 'project') {
@@ -83,6 +83,11 @@ function render() {
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
   if (!prog()) { mc.innerHTML = renderProjects(); return; }
 
+  if (currentSection === 'hub') { 
+    mc.innerHTML = renderHub(); 
+    return; 
+  }
+  
   if (currentSection === 'project') mc.innerHTML = renderDashboard();
   else if (currentSection.startsWith('gate_')) mc.innerHTML = renderGatePage(+currentSection.split('_')[1]);
   else { mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`; }
