@@ -8,7 +8,7 @@ const SECTION_LABELS = {
   actions: 'Action Tracker',
   risks:   'Risk Register',
   bom:     'Bill of Materials',
-  timing:  'NPI Timing Plan'
+  timing:  'NPI Timing Plan',
   capacity: 'Capacity Management'
 };
 
