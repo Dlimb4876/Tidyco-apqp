@@ -33,3 +33,7 @@ function closeModal(id) {
 }
 
 function showModal(id)  { document.getElementById(id).style.display = 'flex'; }
+// Helper to sort Process Flow steps by their step number
+function sortedPfd(pfd) {
+  return [...pfd].sort((a, b) => a.stepNum - b.stepNum);
+}
