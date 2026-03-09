@@ -60,51 +60,17 @@ function renderRpnBurndown(compact) {
   }
   bars += `<rect x="${chartX}" y="0" width="${origBarW}" height="${barH}" rx="4" fill="#94a3b8" opacity="0.5"/>`;
   bars += `<text x="${chartX + origBarW + 8}" y="${barH / 2 + 5}" font-size="${compact ? 14 : 16}" font-weight="700" fill="var(--mid)" font-family="IBM Plex Mono,monospace">${totalOriginal}</text>`;
-  const currFill = totalCurrent < totalOriginal ? '#22c55e' : totalCurrent === totalOriginal ? '#94a3b8' : '#f59e0b';
-  bars += `<rect x="${chartX}" y="${barH + gap}" width="${currBarW}" height="${barH}" rx="4" fill="${currFill}" opacity="0.85"/>`;
-  bars += `<text x="${chartX + currBarW + 8}" y="${barH + gap + barH / 2 + 5}" font-size="${compact ? 14 : 16}" font-weight="700" fill="${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--mid)'}" font-family="IBM Plex Mono,monospace">${totalCurrent}</text>`;
+  const currFill = totalCurrent < totalOriginal ? '#22c55e' : totalCurrent === totalOriginal ? '#94a3b8' : '#ef4444';
+  bars += `<rect x="${chartX}" y="${barH + gap}" width="${currBarW}" height="${barH}" rx="4" fill="${currFill}" opacity="0.7"/>`;
+  bars += `<text x="${chartX + currBarW + 8}" y="${barH + gap + barH / 2 + 5}" font-size="${compact ? 14 : 16}" font-weight="700" fill="${currFill}" font-family="IBM Plex Mono,monospace">${totalCurrent}</text>`;
 
-  let ticks = '';
-  if (!compact) {
-    [0, 0.25, 0.5, 0.75, 1].forEach(t => {
-      const tx  = chartX + Math.round(t * chartW);
-      const val = Math.round(t * maxRPN);
-      ticks += `<line x1="${tx}" y1="0" x2="${tx}" y2="${barH * 2 + gap}" stroke="var(--line)" stroke-width="1"/>`;
-      ticks += `<text x="${tx}" y="${barH * 2 + gap + 16}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${val}</text>`;
-    });
+  if (!compact && reduction !== 0) {
+    const reductionText = reduction > 0 ? `▼ ${reduction}% reduction` : `▲ ${Math.abs(reduction)}% increase`;
+    const reductionCol  = reduction > 0 ? '#22c55e' : '#ef4444';
+    bars += `<text x="${chartX}" y="${barH * 2 + gap + 22}" font-size="11" font-weight="600" fill="${reductionCol}" font-family="IBM Plex Sans,sans-serif">${reductionText} · ${rowsImproved}/${rowCount} causes improved</text>`;
   }
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 ${vbW} ${svgH}" style="display:block">${ticks}${bars}</svg>`;
-
-  const statsStrip = `
-    <div style="display:flex;gap:10px;margin-bottom:${compact ? 10 : 14}px;flex-wrap:wrap">
-      <div style="flex:1;min-width:80px;background:var(--bg);border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:${compact ? 16 : 20}px;font-weight:700;color:var(--ink)">${totalOriginal}</div>
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Original Total</div>
-      </div>
-      <div style="flex:1;min-width:80px;background:${totalCurrent < totalOriginal ? 'var(--green-pale)' : 'var(--bg)'};border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:${compact ? 16 : 20}px;font-weight:700;color:${totalCurrent < totalOriginal ? 'var(--green)' : 'var(--ink)'}">${totalCurrent}</div>
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Current Total</div>
-      </div>
-      <div style="flex:1;min-width:80px;background:${reduction > 0 ? 'var(--green-pale)' : 'var(--bg)'};border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:${compact ? 16 : 20}px;font-weight:700;color:${reduction > 0 ? 'var(--green)' : 'var(--muted)'}">${reduction > 0 ? '↓' : ''}${reduction}%</div>
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Reduction</div>
-      </div>
-      <div style="flex:1;min-width:80px;background:var(--bg);border-radius:7px;padding:${compact ? '8px 10px' : '10px 14px'};text-align:center">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:${compact ? 16 : 20}px;font-weight:700;color:var(--blue)">${rowsImproved}<span style="font-size:11px;color:var(--muted)">/${rowCount}</span></div>
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Rows Improved</div>
-      </div>
-    </div>`;
-
-  if (compact) {
-    return `<div style="padding:0 14px 14px">${statsStrip}${svg}</div>`;
-  }
-  return `<div>${statsStrip}${svg}</div>`;
-}
-
-// SVG-safe escape
-function escSvg(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<svg viewBox="0 0 ${vbW} ${svgH}" style="width:100%;height:${compact ? 72 : 100}px;display:block" preserveAspectRatio="none">${bars}</svg>`;
 }
 
 // ── Projects list ─────────────────────────────────────────────
@@ -283,12 +249,13 @@ function renderDashboard() {
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
 
   // RPN burndown card — only shown when there is PFMEA data
+  // FIX: "Full PFMEA →" button now calls navigate('apqp') AND setApqpTab('pfmea')
   const rpnBurndownHTML = p.pfmea && p.pfmea.length > 0 ? `
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:4px">PFMEA RPN Burndown</div>
     <div class="card" style="margin-bottom:20px;padding:0;overflow:hidden">
       <div class="card-head" style="padding:10px 14px">
         <span class="card-title">RPN Burndown — Original vs Current</span>
-        <button class="btn btn-ghost btn-sm" onclick="setApqpTab('pfmea')">Full PFMEA →</button>
+        <button class="btn btn-ghost btn-sm" onclick="apqpTab='pfmea';navigate('apqp')">Full PFMEA →</button>
       </div>
       ${renderRpnBurndown(true)}
     </div>` : '';
@@ -300,7 +267,7 @@ function renderDashboard() {
       <div class="kpi-card" onclick="navigate('gate_${curGate >= 0 ? curGate : 5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
       <div class="kpi-card" onclick="navigate('actions')" style="--kpi-color:${overdueAct > 0 ? 'var(--red)' : openAct > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${openAct}</div><div class="kpi-label">Open Actions</div><div class="kpi-sub">${overdueAct > 0 ? `<span style="color:var(--red)">${overdueAct} overdue</span>` : '—'}</div></div>
       <div class="kpi-card" onclick="navigate('risks')" style="--kpi-color:${highRisks > 0 ? 'var(--red)' : 'var(--blue)'}"><div class="kpi-num">${p.risks.filter(r => r.status !== 'Closed').length}</div><div class="kpi-label">Open Risks</div><div class="kpi-sub">${highRisks > 0 ? `<span style="color:var(--red)">${highRisks} high</span>` : '—'}</div></div>
-      <div class="kpi-card" onclick="navigate('apqp')" style="--kpi-color:${highRPN > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${highRPN}</div><div class="kpi-label">High RPN</div><div class="kpi-sub">${p.pfmea.length} total rows</div></div>
+      <div class="kpi-card" onclick="apqpTab='pfmea';navigate('apqp')" style="--kpi-color:${highRPN > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${highRPN}</div><div class="kpi-label">High RPN</div><div class="kpi-sub">${p.pfmea.length} total rows</div></div>
     </div>
     ${alerts ? `<div class="alert-row">${alerts}</div>` : ''}
     <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Gate Progress — click any gate to open</div>
@@ -326,8 +293,88 @@ function renderDashboard() {
 function openProject(id) { progId = id; navigate('project'); }
 
 function newProjectInFamily(famId) {
-  document.getElementById('newProjFamily').value = famId;
+  // Use the correct select id from index.html's New Project modal
+  const sel = document.getElementById('np_family');
+  if (sel) sel.value = famId;
   showModal('modalNewProj');
+}
+
+function createProg() {
+  const name = document.getElementById('np_name').value.trim();
+  if (!name) { alert('Project name is required.'); return; }
+  const p = newProgTemplate(
+    name,
+    document.getElementById('np_customer').value.trim(),
+    document.getElementById('np_unit').value.trim(),
+    document.getElementById('np_family').value,
+    document.getElementById('np_lead').value.trim(),
+    document.getElementById('np_pm').value.trim(),
+    document.getElementById('np_date').value
+  );
+  db.programmes.push(p);
+  progId = p.id;
+  save();
+  closeModal('modalNewProj');
+  // Clear form
+  ['np_name','np_customer','np_unit','np_lead','np_pm','np_date'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('np_family').value = 'Other';
+  navigate('project');
+}
+
+/**
+ * Opens the Edit Project modal and populates fields with current programme data.
+ */
+function showEditProject() {
+  const p = prog();
+  if (!p) return;
+  document.getElementById('ep_name').value     = p.name     || '';
+  document.getElementById('ep_customer').value = p.customer || '';
+  document.getElementById('ep_unit').value     = p.unit     || '';
+  document.getElementById('ep_family').value   = p.family   || 'Other';
+  document.getElementById('ep_lead').value     = p.lead     || '';
+  document.getElementById('ep_pm').value       = p.pm       || '';
+  document.getElementById('ep_date').value     = p.date     || '';
+  showModal('modalEditProj');
+}
+
+/**
+ * Saves edited project details from the modal back to the global state and triggers a save.
+ */
+function saveEditProject() {
+  const p = prog();
+  if (!p) return;
+  p.name     = document.getElementById('ep_name').value.trim();
+  p.customer = document.getElementById('ep_customer').value.trim();
+  p.unit     = document.getElementById('ep_unit').value.trim();
+  p.family   = document.getElementById('ep_family').value;
+  p.lead     = document.getElementById('ep_lead').value.trim();
+  p.pm       = document.getElementById('ep_pm').value.trim();
+  p.date     = document.getElementById('ep_date').value;
+  save();
+  closeModal('modalEditProj');
+  render();
+}
+
+/**
+ * Deletes the current project after confirmation.
+ */
+function deleteProject() {
+  const p = prog();
+  if (!p) return;
+  if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+  // Unlink from any parent
+  db.programmes.forEach(pr => {
+    if (pr.subAssemblies) {
+      pr.subAssemblies = pr.subAssemblies.filter(x => x.id !== progId);
+    }
+  });
+  db.programmes = db.programmes.filter(x => x.id !== progId);
+  progId = null;
+  save();
+  closeModal('modalEditProj');
+  navigate('projects');
 }
 
 function openSubAsmModal() {
@@ -335,7 +382,7 @@ function openSubAsmModal() {
   const linked = (p.subAssemblies || []).map(x => x.id);
   const others = db.programmes.filter(x => x.id !== progId && !linked.includes(x.id));
   if (others.length === 0) { alert('No other projects available to link.\nCreate the sub-assembly project first.'); return; }
-  const opts = others.map((x, i) =>
+  const opts = others.map((x) =>
     `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="linkSubAsm('${x.id}')">
       <span style="font-size:13px">🔩</span>
       <span style="flex:1;font-size:12px;font-weight:600">${esc(x.name)}</span>
