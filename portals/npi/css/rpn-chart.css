@@ -1,0 +1,21 @@
+/* portals/npi/css/rpn-chart.css */
+/* Specialized styles for RPN Burndown SVG Chart */
+
+.rpn-chart-container {
+    padding: 14px 16px 16px;
+}
+
+.rpn-chart-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Ensure chart text matches the system typography */
+.rpn-chart-svg text {
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.rpn-chart-svg text.mono {
+    font-family: 'IBM Plex Mono', monospace;
+}
