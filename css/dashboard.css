@@ -44,6 +44,7 @@
 .gate-node { 
   flex: 1; 
   padding: 18px 16px; /* Increased vertical padding to 18px */
+   min-height: 90px;
   border-right: 1px solid var(--line); 
   cursor: pointer; 
   transition: background .12s; 
@@ -69,7 +70,8 @@
 }
 .section-card {
   flex: 1 1 0%; 
-  padding: 16px 16px; 
+  padding: 16px 16px;
+   min-height: 90px;
   border-right: 1px solid var(--line); 
   cursor: pointer;
   transition: background .12s; 
