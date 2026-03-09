@@ -4,9 +4,20 @@ function getMeWeeklyData() {
 
   let weeks = [];
   let currentStart = new Date();
+  // Adjust for start month offset
+  currentStart.setMonth(currentStart.getMonth() + meStartOffset);
   // Adjust to nearest previous Monday
   currentStart.setDate(currentStart.getDate() - (currentStart.getDay() === 0 ? 6 : currentStart.getDay() - 1));
   currentStart.setHours(0,0,0,0);
+
+  const grossCap = db.me.team.reduce((sum, t) => sum + (t.hours * (t.utilisation / 100)), 0);
+
+  // Change loop to 78 weeks (approx 18 months)
+  for (let i = 0; i < 78; i++) { 
+    // ... rest of calculation logic remains same
+  }
+  return weeks;
+}
 
   // Calculate Base Gross Capacity per week
   const grossCap = db.me.team.reduce((sum, t) => sum + (t.hours * (t.utilisation / 100)), 0);
