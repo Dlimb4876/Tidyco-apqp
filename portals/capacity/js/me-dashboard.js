@@ -44,11 +44,19 @@ function getMeTabContent() {
 
 function renderMeDashboardView() {
   const data = getMeWeeklyData();
-  // ... maxVal calculation
+  
+  // 1. ADD THIS: Calculate the maximum value for chart scaling
+  const maxVal = Math.max(...data.map(w => Math.max(w.cap, w.npi + w.imp + w.tend + w.other + w.prod)), 10);
 
   let chartCols = data.map(w => {
-    // ... percentage calculations
-    const pCap = (w.cap / maxVal) * 100;
+    // 2. ADD THIS: Calculate percentages for the stacked bars
+    const totalLoad = w.npi + w.imp + w.tend + w.other + w.prod;
+    const pCap   = (w.cap / maxVal) * 100;
+    const pNpi   = (w.npi / maxVal) * 100;
+    const pImp   = (w.imp / maxVal) * 100;
+    const pTend  = (w.tend / maxVal) * 100;
+    const pOther = (w.other / maxVal) * 100;
+    const pProd  = (w.prod / maxVal) * 100;
 
     return `
       <div class="me-chart-col">
@@ -74,12 +82,12 @@ function renderMeDashboardView() {
         <h3>18-Month Load Capacity</h3>
         <div style="display:flex; gap:10px; align-items:center;">
           <label style="font-size:12px">Start Month Offset:</label>
-          <input type="number" value="${meStartOffset}" onchange="meStartOffset=parseInt(this.value);render()" style="width:50px">
+          <input type="number" value="${meStartOffset}" onchange="meStartOffset=parseInt(this.value);renderMeCapacity();" style="width:50px">
         </div>
-        </div>
+      </div>
       <div class="me-chart-container" style="padding-left: 40px; padding-bottom: 40px;">
         <div class="me-chart-y-axis" style="position: absolute; left: 10px;">
-          <span>${maxVal}h</span>
+          <span>${Math.round(maxVal)}h</span>
           <span>0h</span>
         </div>
         <div class="me-chart-grid" style="overflow-x: auto;">
