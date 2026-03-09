@@ -37,3 +37,12 @@ function showModal(id)  { document.getElementById(id).style.display = 'flex'; }
 function sortedPfd(pfd) {
   return [...pfd].sort((a, b) => a.stepNum - b.stepNum);
 }
+// js/utils/helpers.js
+
+/**
+ * Shared utility to calculate RPN (Risk Priority Number).
+ * Required by dashboard.js, apqp.js, and pfmea.js.
+ */
+function calcRPN(r) {
+  return (r.sev || 1) * (r.occ || 1) * (r.det || 1);
+}
