@@ -87,9 +87,15 @@ function render() {
   else if (currentSection.startsWith('gate_')) mc.innerHTML = renderGatePage(+currentSection.split('_')[1]);
   else { mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`; }
 
+  // Double rAF: first frame commits the new HTML to the DOM;
+  // second frame ensures layout (heights, positions) is fully calculated
+  // so pfmeaSyncRow2() gets accurate getBoundingClientRect values.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       autoResizeAll();
+      if (currentSection === 'apqp' && apqpTab === 'pfmea') {
+        if (typeof pfmeaSyncRow2 === 'function') pfmeaSyncRow2();
+      }
     });
   });
 }

@@ -11,6 +11,9 @@
 </head>
 <body>
 
+<!-- ═══════════════════════════════════
+     LOGIN SCREEN
+     ═══════════════════════════════════ -->
 <div id="loginScreen" class="login-shell">
   <div class="login-box">
     <div class="login-logo">
@@ -34,8 +37,12 @@
   </div>
 </div>
 
+<!-- ═══════════════════════════════════
+     APP SHELL
+     ═══════════════════════════════════ -->
 <div class="shell" id="appShell" style="display:none">
 
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
       <div class="brand" onclick="goProjects()" style="cursor:pointer">
@@ -61,9 +68,17 @@
     </div>
   </div>
 
+  <!-- MAIN CONTENT -->
   <div class="main" id="mainContent"></div>
 
-</div><div class="modal-bg" id="modalNewProj" style="display:none">
+</div><!-- end appShell -->
+
+<!-- ═══════════════════════════════════
+     MODALS
+     ═══════════════════════════════════ -->
+
+<!-- New Project -->
+<div class="modal-bg" id="modalNewProj" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">New Project</div>
     <div class="field"><label>Project Name *</label><input id="np_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
@@ -86,10 +101,6 @@
       <div class="field"><label>Project Manager</label><input id="np_pm"></div>
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="np_date"></div>
-    <div class="field-row">
-      <div class="field"><label>Q Number</label><input id="np_qnumber" maxlength="7" placeholder="e.g. Q123456" style="font-family:'IBM Plex Mono',monospace"></div>
-      <div class="field"><label>Assembly</label><input id="np_assembly" maxlength="32" placeholder="Assembly description"></div>
-    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button>
       <button class="btn btn-primary" onclick="createProg()">Create</button>
@@ -97,6 +108,7 @@
   </div>
 </div>
 
+<!-- Edit Project -->
 <div class="modal-bg" id="modalEditProj" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">Edit Project</div>
@@ -120,10 +132,6 @@
       <div class="field"><label>Project Manager</label><input id="ep_pm"></div>
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="ep_date"></div>
-    <div class="field-row">
-      <div class="field"><label>Q Number</label><input id="ep_qnumber" maxlength="7" placeholder="e.g. Q123456" style="font-family:'IBM Plex Mono',monospace"></div>
-      <div class="field"><label>Assembly</label><input id="ep_assembly" maxlength="32" placeholder="Assembly description"></div>
-    </div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
       <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="deleteProject()">Delete Project</button>
       <div style="display:flex;gap:8px">
@@ -134,6 +142,7 @@
   </div>
 </div>
 
+<!-- Insert PFD Step -->
 <div class="modal-bg" id="modalInsert" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">Insert Step</div>
@@ -157,6 +166,7 @@
   </div>
 </div>
 
+<!-- CTQ Picker -->
 <div class="modal-bg" id="modalCtqPick" style="display:none">
   <div class="modal">
     <div class="modal-title">Link CTQ Requirements</div>
@@ -168,6 +178,7 @@
   </div>
 </div>
 
+<!-- BoM Picker for PFD step resources -->
 <div class="modal-bg" id="modalBomPick" style="display:none">
   <div class="modal modal-lg">
     <div class="modal-title" id="bomPickTitle">Link Resources</div>
@@ -180,6 +191,7 @@
   </div>
 </div>
 
+<!-- BoM Picker for Kit item add -->
 <div class="modal-bg" id="modalKitPick" style="display:none">
   <div class="modal modal-lg">
     <div class="modal-title">Add Items to Kit</div>
@@ -192,13 +204,20 @@
   </div>
 </div>
 
+<!-- ═══════════════════════════════════
+     SCRIPTS — load order matters
+     ═══════════════════════════════════ -->
+
+<!-- Core -->
 <script src="js/core/state.js"></script>
 <script src="js/core/auth.js"></script>
 <script src="js/core/db.js"></script>
 
+<!-- Utils -->
 <script src="js/utils/helpers.js"></script>
 <script src="js/utils/navigation.js"></script>
 
+<!-- Features -->
 <script src="js/features/dashboard.js"></script>
 <script src="js/features/gates.js"></script>
 <script src="js/features/pfmea.js"></script>
@@ -207,6 +226,7 @@
 <script src="js/features/timing.js"></script>
 <script src="js/features/trackers.js"></script>
 
+<!-- Entry point -->
 <script src="js/app.js"></script>
 
 </body>
