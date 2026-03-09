@@ -49,12 +49,6 @@
   background: #f4f6fa;
   border-bottom: 1px solid var(--line);
   border-top: 1px solid var(--line);
-  /* Step headers (Step 10, 20, etc.) must sit below both thead rows.
-     52px topbar + ~28px row1 + ~28px row2 = 108px.
-     JS does not adjust this; pure CSS sticky offset. */
-  position: sticky;
-  top: 108px;
-  z-index: 20;
 }
 .pfmea-step-header:first-child { border-top: none; }
 .pfmea-step-label {
@@ -98,28 +92,9 @@ tr.pfmea-row-sub td {
 }
 td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
 
-/* ── Sticky header rows ──────────────────────────────────────────
-   Row 1 sticks at 52px — directly under .topbar (main.css).
-   Row 2 top is refined at runtime by pfmeaSyncRow2() in pfmea.js;
-   80px is a safe CSS fallback (52px topbar + ~28px row1).
-   ──────────────────────────────────────────────────────────────── */
-.pfmea-tbl thead tr:first-child th {
-  position: sticky;
-  top: 52px;   /* matches .topbar height in main.css */
-  z-index: 22;
-  background: #f4f6fa;
-  border-bottom: 1px solid var(--line);
-}
-.pfmea-thead-row2 th {
-  position: sticky;
-  top: 80px;   /* safe CSS fallback; refined at runtime by pfmeaSyncRow2() */
-  z-index: 21;
-  background: #dbeafe;
-  border-bottom: 2px solid #1e40af;
-}
+/* ── Horizontal scroll wrapper ───────────────────────────────── */
 .pfmea-wrap {
   overflow-x: auto;
-  overflow-y: visible;
 }
 
 /* ── History popup ───────────────────────────────────────────── */

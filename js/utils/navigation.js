@@ -88,14 +88,11 @@ function render() {
   else { mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`; }
 
   // Double rAF: first frame commits the new HTML to the DOM;
-  // second frame ensures layout (heights, positions) is fully calculated
-  // so pfmeaSyncRow2() gets accurate getBoundingClientRect values.
+  // second frame ensures layout is fully calculated before
+  // running any post-render hooks (e.g. textarea auto-resize).
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       autoResizeAll();
-      if (currentSection === 'apqp' && apqpTab === 'pfmea') {
-        if (typeof pfmeaSyncRow2 === 'function') pfmeaSyncRow2();
-      }
     });
   });
 }
