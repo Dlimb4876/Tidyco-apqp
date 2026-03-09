@@ -6,14 +6,14 @@
 <title>Tidyco — APQP Quality Tool</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- CSS load order: global shell → shared components → feature modules -->
-<link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/dashboard.css">
-<link rel="stylesheet" href="css/hub.css">
-<link rel="stylesheet" href="css/capacity.css">
-<link rel="stylesheet" href="css/pfmea.css">
-<link rel="stylesheet" href="css/gantt.css">
-<link rel="stylesheet" href="css/apqp.css">
+<link rel="stylesheet" href="core/css/main.css">
+<link rel="stylesheet" href="core/css/components.css">
+<link rel="stylesheet" href="portals/npi/css/dashboard.css">
+<link rel="stylesheet" href="portals/hub/css/hub.css">
+<link rel="stylesheet" href="portals/capacity/css/capacity.css">
+<link rel="stylesheet" href="portals/npi/css/pfmea.css">
+<link rel="stylesheet" href="portals/npi/css/gantt.css">
+<link rel="stylesheet" href="portals/npi/css/apqp.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -225,28 +225,24 @@
      dashboard → gates → pfmea → apqp → bom → timing → trackers → app
      ═══════════════════════════════════ -->
 
-<!-- Core -->
-<script src="js/core/state.js"></script>
-<script src="js/core/auth.js"></script>
-<script src="js/core/db.js"></script>
-
-<!-- Utils -->
-<script src="js/utils/helpers.js"></script>
-<script src="js/utils/navigation.js"></script>
-
-<!-- Features -->
-<script src="js/features/hub.js"></script>
-<script src="js/features/dashboard.js"></script>
-<script src="js/features/capacity.js"></script>
-<script src="js/features/gates.js"></script>
-<script src="js/features/pfmea.js"></script>
-<script src="js/features/apqp.js"></script>
-<script src="js/features/bom.js"></script>
-<script src="js/features/timing.js"></script>
-<script src="js/features/trackers.js"></script>
-
-<!-- Entry point -->
-<script src="js/app.js"></script>
+<script src="core/js/state.js"></script>
+<script src="core/js/auth.js"></script>
+<script src="core/js/db.js"></script>
+     
+<script src="utils/js/helpers.js"></script>
+<script src="utils/js/navigation.js"></script>
+     
+<script src="portals/hub/js/hub.js"></script>
+<script src="portals/npi/js/dashboard.js"></script>
+<script src="portals/capacity/js/capacity.js"></script>
+<script src="portals/npi/js/gates.js"></script>
+<script src="portals/npi/js/pfmea.js"></script>
+<script src="portals/npi/js/apqp.js"></script>
+<script src="portals/npi/js/bom.js"></script>
+<script src="portals/npi/js/timing.js"></script>
+<script src="portals/npi/js/trackers.js"></script>
+     
+<script src="core/js/app.js"></script>
 
 </body>
 </html>
