@@ -123,6 +123,8 @@ function renderProjects() {
             ${p.unit     ? `<span>🚂 ${esc(p.unit)}</span>`     : ''}
             ${p.lead     ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''}
             ${p.pm       ? `<span>📋 PM: ${esc(p.pm)}</span>`   : ''}
+            ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''}
+            ${p.partNumber ? `<span>🆔 PN: ${esc(p.partNumber)}</span>` : ''}
           </div>
           <div class="proj-card-gate">
             <span class="proj-card-gate-label">GATE ${curGate >= 0 ? curGate : '✓'}</span>
