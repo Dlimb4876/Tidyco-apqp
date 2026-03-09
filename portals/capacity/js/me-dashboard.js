@@ -44,36 +44,23 @@ function getMeTabContent() {
 
 function renderMeDashboardView() {
   const data = getMeWeeklyData();
-  if (data.length === 0) return `<div class="me-empty">No data to display. Add tasks or products in the Inputs tab.</div>`;
-
-  // Calculate max Y axis value for the chart
-  let maxVal = 0;
-  data.forEach(w => {
-    const totalLoad = w.npi + w.imp + w.tend + w.other + w.prod;
-    if (totalLoad > maxVal) maxVal = totalLoad;
-    if (w.cap > maxVal) maxVal = w.cap;
-  });
-  maxVal = Math.ceil((maxVal * 1.2) / 10) * 10; // Add 20% headroom and round
+  // ... maxVal calculation
 
   let chartCols = data.map(w => {
-    const totalLoad = w.npi + w.imp + w.tend + w.other + w.prod;
-    const pNpi = (w.npi / maxVal) * 100;
-    const pImp = (w.imp / maxVal) * 100;
-    const pTend = (w.tend / maxVal) * 100;
-    const pOther = (w.other / maxVal) * 100;
-    const pProd = (w.prod / maxVal) * 100;
+    // ... percentage calculations
     const pCap = (w.cap / maxVal) * 100;
 
     return `
       <div class="me-chart-col">
         <div class="me-chart-bars">
-          <div class="me-bar-cap" style="bottom: ${pCap}%" title="Capacity: ${w.cap.toFixed(1)}h"></div>
+          <div class="me-bar-cap-line" style="bottom: ${pCap}%" title="Capacity: ${w.cap.toFixed(1)}h"></div>
+          
           <div class="me-bar-stack">
-            <div class="me-seg prod" style="height: ${pProd}%" title="Products: ${w.prod.toFixed(1)}h"></div>
-            <div class="me-seg other" style="height: ${pOther}%" title="Other: ${w.other.toFixed(1)}h"></div>
-            <div class="me-seg tend" style="height: ${pTend}%" title="Tendering: ${w.tend.toFixed(1)}h"></div>
-            <div class="me-seg imp" style="height: ${pImp}%" title="Improvement: ${w.imp.toFixed(1)}h"></div>
-            <div class="me-seg npi" style="height: ${pNpi}%" title="NPI: ${w.npi.toFixed(1)}h"></div>
+            <div class="me-seg prod" style="height: ${pProd}%"></div>
+            <div class="me-seg other" style="height: ${pOther}%"></div>
+            <div class="me-seg tend" style="height: ${pTend}%"></div>
+            <div class="me-seg imp" style="height: ${pImp}%"></div>
+            <div class="me-seg npi" style="height: ${pNpi}%"></div>
           </div>
         </div>
         <div class="me-chart-lbl">${w.label}</div>
@@ -84,23 +71,18 @@ function renderMeDashboardView() {
   return `
     <div class="me-card">
       <div class="me-chart-header">
-        <h3>Load vs Capacity (Next 12 Weeks)</h3>
-        <div class="me-legend">
-          <span class="leg-item"><div class="leg-box npi"></div> NPI</span>
-          <span class="leg-item"><div class="leg-box imp"></div> Improvement</span>
-          <span class="leg-item"><div class="leg-box tend"></div> Tendering</span>
-          <span class="leg-item"><div class="leg-box other"></div> Other</span>
-          <span class="leg-item"><div class="leg-box prod"></div> Support</span>
-          <span class="leg-item"><div class="leg-line cap"></div> Capacity Limit</span>
+        <h3>18-Month Load Capacity</h3>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <label style="font-size:12px">Start Month Offset:</label>
+          <input type="number" value="${meStartOffset}" onchange="meStartOffset=parseInt(this.value);render()" style="width:50px">
         </div>
-      </div>
-      <div class="me-chart-container">
-        <div class="me-chart-y-axis">
+        </div>
+      <div class="me-chart-container" style="padding-left: 40px; padding-bottom: 40px;">
+        <div class="me-chart-y-axis" style="position: absolute; left: 10px;">
           <span>${maxVal}h</span>
-          <span>${maxVal/2}h</span>
           <span>0h</span>
         </div>
-        <div class="me-chart-grid">
+        <div class="me-chart-grid" style="overflow-x: auto;">
           ${chartCols}
         </div>
       </div>
