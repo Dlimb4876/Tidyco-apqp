@@ -23,7 +23,7 @@ async function launchApp() {
     if (h.t) apqpTab = h.t;
     navigate(h.s || 'project', { pushHash: false });
   } else {
-    navigate('projects', { pushHash: false });
+    navigate('hub', { pushHash: false }); // CHANGE 'projects' TO 'hub'
   }
 }
 
