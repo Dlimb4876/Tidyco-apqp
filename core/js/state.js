@@ -7,6 +7,7 @@ let progId = null;
 let currentSection = 'hub';
 let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
 let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
+let meStartOffset = 0; // Months from today
 
 // Modal picker state
 let ctqPickTarget = null, ctqPickSelected = [];
