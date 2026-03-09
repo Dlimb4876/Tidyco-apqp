@@ -41,7 +41,16 @@
   background: var(--white); border: 1px solid var(--line);
   border-radius: 10px; overflow: hidden; margin-bottom: 15px;
 }
-.gate-node { flex: 1; padding: 14px 16px; border-right: 1px solid var(--line); cursor: pointer; transition: background .12s; } /* was 12 14 padding */
+.gate-node { 
+  flex: 1; 
+  padding: 18px 16px; /* Increased vertical padding to 18px */
+  border-right: 1px solid var(--line); 
+  cursor: pointer; 
+  transition: background .12s; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centers content to match tool alignment */
+} /* was 12 14 padding */
 .gate-node:last-child { border-right: none; }
 .gate-node:hover { background: var(--bg); }
 .gate-node-num  { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
@@ -59,9 +68,15 @@
   border-radius: 10px; overflow: hidden; margin-bottom: 15px;
 }
 .section-card {
-  flex: 1 1 0%; padding: 14px 16px;
-  border-right: 1px solid var(--line); cursor: pointer;
-  transition: background .12s; display: flex; flex-direction: column; gap: 4px;
+  flex: 1 1 0%; 
+  padding: 16px 16px; 
+  border-right: 1px solid var(--line); 
+  cursor: pointer;
+  transition: background .12s; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 4px;
+  justify-content: center;
 }
 .section-card:last-child { border-right: none; }
 .section-card:hover { background: var(--bg); }
