@@ -70,8 +70,7 @@ function renderRpnBurndown(compact) {
     bars += `<text x="${chartX}" y="${barH * 2 + gap + 22}" font-size="11" font-weight="600" fill="${reductionCol}" font-family="IBM Plex Sans,sans-serif">${reductionText} · ${rowsImproved}/${rowCount} causes improved</text>`;
   }
 
-  return `<svg viewBox="0 0 ${vbW} ${svgH}" style="width:100%;height:${compact ? 72 : 100}px;display:block" preserveAspectRatio="none">${bars}</svg>`;
-}
+return `<svg viewBox="0 0 ${vbW} ${svgH}" style="width:100%; height:auto; max-height:${compact ? 72 : 100}px; display:block;">${bars}</svg>`;}
 
 // ── Projects list ─────────────────────────────────────────────
 function renderProjects() {
