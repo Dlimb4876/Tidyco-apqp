@@ -137,12 +137,12 @@ function renderDashboard() {
     </div>`;
   }).join('');
 
-  const sections = [
-    { id: 'timing',  icon: '📅', title: 'Timing Plan', color: 'var(--teal)' },
-    { id: 'apqp',    icon: '📐', title: 'APQP Hub',    color: 'var(--purple)' },
-    { id: 'bom',     icon: '📦', title: 'BOM',         color: 'var(--navy)' },
-    { id: 'actions', icon: '✅', title: 'Actions',     color: overdueAct > 0 ? 'var(--red)' : 'var(--amber)' },
-  ];
+const sections = [
+  { id: 'timing',  icon: '📅', title: 'NPI Timing Plan',    desc: 'Planned vs Actual Timeline', color: 'var(--teal)'   },
+  { id: 'apqp',    icon: '📐', title: 'APQP Hub',           desc: 'CTQ · PFD · PFMEA · Control Plan', color: 'var(--purple)' },
+  { id: 'bom',     icon: '📦', title: 'Bill of Materials',   desc: 'Parts · Tools · Equipment · Kits', color: 'var(--navy)' },
+  { id: 'actions', icon: '✅', title: 'Action Tracker',     desc: 'Project Task List', color: overdueAct > 0 ? 'var(--red)' : 'var(--amber)' },
+];
 
   const launcherHTML = sections.map(s =>
     `<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}">
