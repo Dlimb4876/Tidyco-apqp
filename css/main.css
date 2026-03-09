@@ -149,3 +149,14 @@ body {
 .sync-badge.syncing { color: #93c5fd; }
 .sync-badge.saved   { color: #86efac; }
 .sync-badge.error   { color: #fca5a5; }
+
+/* MANUAL ADD
+/* Force everything to use the main font, overriding specific features */
+* {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+}
+
+/* Maintain font-family for icons/emojis if needed */
+.login-logo, .empty-icon, .section-card-icon {
+    font-family: sans-serif !important;
+}
