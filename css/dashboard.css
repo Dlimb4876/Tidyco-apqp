@@ -39,12 +39,12 @@
 .gate-strip {
   display: flex; align-items: stretch;
   background: var(--white); border: 1px solid var(--line);
-  border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+  border-radius: 10px; overflow: hidden; margin-bottom: 15px;
 }
-.gate-node { flex: 1; padding: 12px 14px; border-right: 1px solid var(--line); cursor: pointer; transition: background .12s; }
+.gate-node { flex: 1; padding: 14px 16px; border-right: 1px solid var(--line); cursor: pointer; transition: background .12s; } /* was 12 14 padding */
 .gate-node:last-child { border-right: none; }
 .gate-node:hover { background: var(--bg); }
-.gate-node-num  { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+.gate-node-num  { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
 .gate-node-name { font-size: 11px; font-weight: 600; color: var(--ink); }
 .gate-status-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; display: inline-block; }
 .gs-signed  { background: var(--green); }
@@ -56,17 +56,17 @@
 .section-launcher {
   display: flex; align-items: stretch;
   background: var(--white); border: 1px solid var(--line);
-  border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+  border-radius: 10px; overflow: hidden; margin-bottom: 15px;
 }
 .section-card {
-  flex: 1 1 0%; padding: 12px 14px;
+  flex: 1 1 0%; padding: 14px 16px;
   border-right: 1px solid var(--line); cursor: pointer;
   transition: background .12s; display: flex; flex-direction: column; gap: 4px;
 }
 .section-card:last-child { border-right: none; }
 .section-card:hover { background: var(--bg); }
 .section-card-icon  { font-size: 16px; line-height: 1; margin-bottom: 2px; }
-.section-card-title { font-size: 11px; font-weight: 700; color: var(--ink); }
+.section-card-title { font-size: 12px; font-weight: 700; color: var(--ink); }
 .section-card-desc  { font-size: 10px; color: var(--muted); }
 
 /* ── Dashboard split row ────────────────────────────────────── */
