@@ -255,22 +255,20 @@ function renderPFMEA() {
   html += '</tbody></table></div>';
 
   // ── RPN Burndown Chart ───────────────────────────────────────
-  const burndownCard = p.pfmea.length > 0 ? `
-    <div class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
-      <div class="card-head" style="padding:10px 14px">
-        <span class="card-title">📉 RPN Burndown — Total Original vs Total Current</span>
-        <span class="card-meta" style="margin-left:auto">Sum across all failure modes · green = improved</span>
-      </div>
-      <div style="padding:14px 16px 16px">${renderRpnBurndown(false)}</div>
-    </div>` : '';
 
-  return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div class="sec-title">PFMEA</div>
-    <div class="sec-desc">Failure Mode → Effect (SEV) → Cause (OCC) → Controls Prevent / Detect (DET) → RPN. Actions and rescoring per cause.</div></div>
-    <div class="sec-actions">${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high RPN ≥100</span>` : ''}</div></div>
-  ${burndownCard}
-  <div class="card">${html}</div>
-  ${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" onclick="setApqpTab('cp');return false" style="color:var(--blue)">Control Plan →</a></div>` : ''}`;
-}
+ // UPDATED RETURN IN pfmea.js
+return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div class="sec-title">PFMEA</div>
+  <div class="sec-desc">Failure Mode → Effect (SEV) → Cause (OCC) → Controls Prevent / Detect (DET) → RPN. Actions and rescoring per cause.</div></div>
+  <div class="sec-actions">${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high RPN ≥100</span>` : ''}</div></div>
+<div class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
+    <div class="card-head" style="padding:10px 14px">
+      <span class="card-title">📉 RPN Burndown — Total Original vs Total Current</span>
+      <span class="card-meta" style="margin-left:auto">Sum across all failure modes · green = improved</span>
+    </div>
+    <div style="padding:14px 16px 16px">${renderRpnBurndown(false)}</div>
+</div>
+<div class="card">${html}</div>
+${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" onclick="setApqpTab('cp');return false" style="color:var(--blue)">Control Plan →</a></div>` : ''}`;
 
 // ── History popup ─────────────────────────────────────────────
 function pfShowHist(evt, cid) {
