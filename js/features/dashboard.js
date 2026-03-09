@@ -351,7 +351,7 @@ function showEditProject() {
   document.getElementById('ep_lead').value     = p.lead     || '';
   document.getElementById('ep_pm').value       = p.pm       || '';
   document.getElementById('ep_date').value     = p.date     || '';
-  showModal('modalEditProject');
+  showModal('modalEditProj');
 }
 
 function saveEditProject() {
@@ -364,7 +364,7 @@ function saveEditProject() {
   p.pm       = document.getElementById('ep_pm').value.trim()       || '';
   p.date     = document.getElementById('ep_date').value            || '';
   save();
-  hideModal('modalEditProject');
+  hideModal('modalEditProj');
   render();
 }
 
