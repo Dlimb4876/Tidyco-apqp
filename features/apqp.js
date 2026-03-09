@@ -54,7 +54,6 @@ function delCTQ(i) { const cid = prog().ctq[i].id; prog().pfd.forEach(s => s.ctq
 // ══════════════════════════════════════
 // PFD
 // ══════════════════════════════════════
-function sortedPfd(pfd) { return [...pfd].sort((a, b) => a.stepNum - b.stepNum); }
 function nextMainStepNum(pfd) { const t = pfd.filter(s => s.stepNum % 10 === 0).map(s => s.stepNum); return t.length ? Math.max(...t) + 10 : 10; }
 function stepNumConflict(pfd, num, xid) { return pfd.some(s => s.stepNum === num && s.id !== xid); }
 
