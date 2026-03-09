@@ -1,38 +1,27 @@
 // ═══════════════════════════════════
-// state.js — Global state and constants
+// state.js — Global state, gate definitions, and programme factory
 // ═══════════════════════════════════
 
-let db = { programmes: [] };
-let progId = null;
-let currentSection = 'home';
-let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
-let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
-
-// Modal picker state
-let ctqPickTarget = null, ctqPickSelected = [];
-let bomPickTarget = null, bomPickSelected = [], bomPickFilter = 'all';
-let kitPickTarget = null, kitPickSelected = [], kitPickFilter = 'all';
-let insertOriginIdx = null;
+// ── Runtime state ─────────────────────────────────────────────
+let db              = { programmes: [] };
+let progId          = null;
+let currentSection  = 'projects';
+let apqpTab         = 'ctq';
+let bomSubTab       = 'parts';
+let ctqPickTarget   = null;
+let ctqPickSelected = [];
+let bomPickTarget   = null;
+let bomPickSelected = [];
+let bomPickFilter   = 'all';
 let collapsedGroups = new Set();
-
-// ── Accessor ─────────────────────────────────────────────────
-function prog() { return db.programmes.find(p => p.id === progId) || null; }
-
-// ── BOM type registry ─────────────────────────────────────────
-const BOM_TYPES = {
-  parts:  { label: 'Parts',       icon: '🔩', pc: 'res-pill-part'  },
-  tools:  { label: 'Tools',       icon: '🔧', pc: 'res-pill-tool'  },
-  equip:  { label: 'Equipment',   icon: '⚙️', pc: 'res-pill-equip' },
-  mat:    { label: 'Materials',   icon: '📦', pc: 'res-pill-mat'   },
-  cons:   { label: 'Consumables', icon: '🧴', pc: 'res-pill-cons'  }
-};
+let currentUser     = null;
 
 // ── Gate definitions ──────────────────────────────────────────
 const GATE_DEFS = [
-  { num: 0, name: 'Pre-Planning',              phase: 'Section 0', signatories: ['ME Manager', 'Operations Director', 'Sales Director'],
-    items: ['Tender / ITT received and reviewed','ME resource confirmed available','Bid submitted with ME input','Contract awarded and signed','Programme file opened','ME formally assigned'] },
-  { num: 1, name: 'Plan and Define',           phase: 'Section 1', signatories: ['ME Manager', 'Operations Director'],
-    items: ['All specification information reviewed','Critical-to-Quality requirements identified','Internal CTQ metrics agreed with customer','All tolerances confirmed measurable','Product family lessons learned reviewed','Historic product information reviewed','Obsolescence issues discussed with customer','Long lead items / parts ordered','Lifting and mounting requirements confirmed','NPI team identified and confirmed','Suitable area allocated for NPI','Workshop / tooling / manpower capacity reviewed','Project timing plan produced','Project risk assessment completed','Development unit(s) received'] },
+  { num: 0, name: 'Pre-Planning',           phase: 'Section 0', signatories: ['ME Manager'],
+    items: ['Customer requirements received and reviewed','Product family lessons learned reviewed','Historic product information reviewed','Obsolescence issues discussed with customer','Long lead items / parts ordered','Lifting and mounting requirements confirmed','NPI team identified and confirmed','Suitable area allocated for NPI','Workshop / tooling / manpower capacity reviewed','Project timing plan produced','Project risk assessment completed','Development unit(s) received'] },
+  { num: 1, name: 'Plan & Define',           phase: 'Section 1', signatories: ['ME Manager'],
+    items: ['Customer requirements received and reviewed','Product family lessons learned reviewed','Historic product information reviewed','Obsolescence issues discussed with customer','Long lead items / parts ordered','Lifting and mounting requirements confirmed','NPI team identified and confirmed','Suitable area allocated for NPI','Workshop / tooling / manpower capacity reviewed','Project timing plan produced','Project risk assessment completed','Development unit(s) received'] },
   { num: 2, name: 'Product Design & Dev',      phase: 'Section 2', signatories: ['ME Manager'],
     items: ['All OEM information reviewed','Additional inspection requirements added to CTQ','All CTQ out-of-spec action plans defined','Product family PFD and PFMEA reviewed','CTQ requirements validated against physical product','Cleaning methods defined','Test rig specification defined','Repair specifications defined for all out-of-spec repairs','Unit fully stripped and documented','Obsolete part replacements finalised','Packaging specification defined','AAW parts assessed and on order','Unit wiring identified and captured','Full BoM documented'] },
   { num: 3, name: 'Process Design & Dev',      phase: 'Section 3', signatories: ['ME Manager', 'Operations Director'],
@@ -52,7 +41,7 @@ const FAMILIES = [
 ];
 
 // ── New programme factory ─────────────────────────────────────
-function newProgTemplate(name, customer, unit, family, lead, pm, date) {
+function newProgTemplate(name, customer, unit, family, lead, pm, date, qnumber, assembly) {
   const gates = GATE_DEFS.map(g => ({
     gateNum: g.num,
     checks: g.items.map(() => false),
@@ -60,8 +49,14 @@ function newProgTemplate(name, customer, unit, family, lead, pm, date) {
   }));
   return {
     id: crypto.randomUUID(), name, customer, unit, family, lead, pm, date,
+    qnumber: qnumber || '', assembly: assembly || '',
     ctq: [], pfd: [], pfmea: [], cp: [],
     bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
     gates, actions: [], risks: [], timing: [], gantt: [], subAssemblies: []
   };
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function prog() {
+  return db.programmes.find(p => p.id === progId) || null;
 }

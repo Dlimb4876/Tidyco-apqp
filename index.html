@@ -101,6 +101,10 @@
       <div class="field"><label>Project Manager</label><input id="np_pm"></div>
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="np_date"></div>
+    <div class="field-row">
+      <div class="field"><label>Q Number</label><input id="np_qnumber" maxlength="7" placeholder="e.g. Q123456" style="font-family:'IBM Plex Mono',monospace"></div>
+      <div class="field"><label>Assembly</label><input id="np_assembly" maxlength="32" placeholder="Assembly description"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button>
       <button class="btn btn-primary" onclick="createProg()">Create</button>
@@ -132,6 +136,10 @@
       <div class="field"><label>Project Manager</label><input id="ep_pm"></div>
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="ep_date"></div>
+    <div class="field-row">
+      <div class="field"><label>Q Number</label><input id="ep_qnumber" maxlength="7" placeholder="e.g. Q123456" style="font-family:'IBM Plex Mono',monospace"></div>
+      <div class="field"><label>Assembly</label><input id="ep_assembly" maxlength="32" placeholder="Assembly description"></div>
+    </div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
       <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="deleteProject()">Delete Project</button>
       <div style="display:flex;gap:8px">
