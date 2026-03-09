@@ -44,43 +44,48 @@ function navigate(sec, { pushHash = true } = {}) {
   const bcSec  = document.getElementById('bc-section');
   const p      = prog();
 
-if (sec === 'projects' || sec === 'hub') {
-    bb.style.display = 'none';
-    bc.style.display = 'none';
+  // Always show the breadcrumb container now
+  bc.style.display = 'flex';
+
+  // 1. Hub Level (Root)
+  // The "brand" logo in index.html already acts as a Hub link, 
+  // but we ensure the back button is only for deep navigation.
+  bb.style.display = (sec === 'projects' || sec === 'hub' || sec === 'project') ? 'none' : 'flex';
+
+  if (sec === 'hub') {
+    // On the Hub, we only show the "Hub" label or hide the crumb
+    bc.style.display = 'none'; 
+  } else if (sec === 'projects') {
+    // Path: Hub > Projects
+    bcProj.style.display = 'none'; // We use bcSec for the current level
+    bcSep2.style.display = 'none';
+    bcSec.style.display = 'block';
+    bcSec.textContent = 'Projects';
   } else if (sec === 'project') {
-    bb.style.display = 'none';
-    bc.style.display = 'flex';
-    
-    // CHANGE: Show the "Projects" level instead of hiding it
-    if (bcProj) { 
-      bcProj.style.display = 'block'; 
-      bcProj.textContent = 'Projects'; // Label for the collection of projects
-      bcProj.onclick = () => navigate('projects'); // Ensure it navigates to the list
-    }
-    if (bcSep2) bcSep2.style.display = 'block'; // Show the separator ( › )
-    
-    // The current section is the Project Name
-    if (bcSec) { 
-      bcSec.style.display = 'block'; 
-      bcSec.textContent = p ? p.name : ''; 
-    }
+    // Path: Hub > Projects > [Project Name]
+    bcProj.style.display = 'block';
+    bcProj.textContent = 'Projects';
+    bcProj.onclick = () => navigate('projects');
+    bcSep2.style.display = 'block';
+    bcSec.style.display = 'block';
+    bcSec.textContent = p ? p.name : 'Unknown Project';
   } else {
-    // This block handles sub-sections like APQP, Risks, or Gates
-    bb.style.display = 'flex';
-    bc.style.display = 'flex';
-    if (bcProj) { 
-      bcProj.style.display = 'block'; 
-      bcProj.textContent = p ? p.name : ''; // Here the middle crumb is the Project Name
-      bcProj.onclick = () => navigate('project');
-    }
-    if (bcSep2) bcSep2.style.display = 'block';
+    // Path: Hub > Projects > [Project Name] > [Section Name]
+    // Note: To show 4 levels, we'd need another crumb element. 
+    // This setup shows the two most relevant parent levels: [Project Name] > [Section]
+    bcProj.style.display = 'block';
+    bcProj.textContent = p ? p.name : '';
+    bcProj.onclick = () => navigate('project');
+    bcSep2.style.display = 'block';
     
     const gm    = sec.match(/^gate_(\d)$/);
     const label = gm
       ? `Gate ${GATE_DEFS[+gm[1]].num}: ${GATE_DEFS[+gm[1]].name}`
       : (SECTION_LABELS[sec] || sec);
-    if (bcSec) { bcSec.style.display = 'block'; bcSec.textContent = label; }
+    bcSec.style.display = 'block';
+    bcSec.textContent = label;
   }
+
   render();
 }
 
