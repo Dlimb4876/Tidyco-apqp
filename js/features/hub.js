@@ -1,3 +1,4 @@
+// js/features/hub.js
 function renderHub() {
   return `
     <div class="proj-home">
