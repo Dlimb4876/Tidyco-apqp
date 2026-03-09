@@ -5,77 +5,14 @@
    ============================================================ */
 
 /* ── Dashboard hero ─────────────────────────────────────────── */
-/* Refined Dashboard Hero */
 .dash-hero {
-  background: var(--white);
-  padding: 32px 40px;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  background: linear-gradient(135deg, var(--ink) 0%, #1a2a4a 100%);
+  padding: 28px 32px 24px;
+  border-bottom: 1px solid #1c2c48;
 }
-
-.dash-hero-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.dash-prog-name {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: -0.5px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Project Info Pills */
-.dash-prog-meta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.meta-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--mid);
-  white-space: nowrap;
-}
-
-.meta-pill strong {
-  color: var(--ink);
-}
-
-.meta-pill i {
-  opacity: 0.7;
-}
-
-/* Update the Action button to look sharper against white */
-.dash-hero .btn-edit-project {
-  background: var(--white);
-  border: 1px solid var(--line2);
-  color: var(--mid);
-  padding: 8px 16px;
-  font-weight: 600;
-}
-
-.dash-hero .btn-edit-project:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-  background: var(--blue-pale);
-}
+.dash-prog-name { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.dash-prog-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #8899bb; }
+.dash-body      { padding: 22px 28px 60px; }
 
 /* ── KPI grid ───────────────────────────────────────────────── */
 .kpi-grid {
@@ -254,38 +191,3 @@
 .proj-rag-n { background: var(--line2); }
 
 .sc-count { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
-
-/* --- Layout & Spacing Fixes --- */
-
-/* This matches the 'page-container' padding used in other views */
-.dashboard-wrapper {
-    padding: 20px; 
-    max-width: 1600px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-/* Ensure the hero section doesn't bleed to the very top */
-.dash-hero {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 10px;
-}
-
-/* Container for the RPN chart to prevent overflow */
-.rpn-chart-container {
-    background: var(--bg-card);
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-}
-
-/* Adjust the split row for better spacing on large screens */
-.dash-split-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    align-items: start;
-}

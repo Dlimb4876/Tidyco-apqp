@@ -123,8 +123,6 @@ function renderProjects() {
             ${p.unit     ? `<span>🚂 ${esc(p.unit)}</span>`     : ''}
             ${p.lead     ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''}
             ${p.pm       ? `<span>📋 PM: ${esc(p.pm)}</span>`   : ''}
-            ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''}
-            ${p.partNumber ? `<span>🆔 PN: ${esc(p.partNumber)}</span>` : ''}
           </div>
           <div class="proj-card-gate">
             <span class="proj-card-gate-label">GATE ${curGate >= 0 ? curGate : '✓'}</span>
@@ -169,12 +167,9 @@ function renderDashboard() {
   const gateStrip = GATE_DEFS.map((g, i) => {
     const gd         = p.gates[i] || {};
     const signed     = gateAllSigned(gd);
-    
-    // FIX: Reference gd.checks (the actual data array) instead of gd.items
-    const checks     = gd.checks || [];
-    const done       = checks.filter(Boolean).length; // Counts 'true' entries
-    const total      = g.items.length; // Use length from the gate definition
-    
+    const items      = gd.items || [];
+    const done       = items.filter(it => it.done).length;
+    const total      = items.length || g.items.length;
     const pct        = total > 0 ? Math.round(done / total * 100) : 0;
     const hasActivity = done > 0;
     const dotCls     = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending';
@@ -323,8 +318,6 @@ function createProg() {
   const lead     = document.getElementById('np_lead')?.value     || '';
   const pm       = document.getElementById('np_pm')?.value       || '';
   const date     = document.getElementById('np_date')?.value     || '';
-  const qNumber = document.getElementById('np_qNumber').value.trim();
-  const partNumber = document.getElementById('np_partNumber').value.trim();
   const parentId = document.getElementById('np_parent')?.value   || null;
   const newProg  = migrateprog({
     id, name, family, customer, unit, lead, pm, date,
@@ -345,7 +338,7 @@ function createProg() {
   hideModal('modalNewProj');
   navigate('project');
 }
-// -- Edit Project Information -------------------------------
+
 function showEditProject() {
   const p = prog(); if (!p) return;
   document.getElementById('ep_name').value     = p.name     || '';
@@ -355,9 +348,7 @@ function showEditProject() {
   document.getElementById('ep_lead').value     = p.lead     || '';
   document.getElementById('ep_pm').value       = p.pm       || '';
   document.getElementById('ep_date').value     = p.date     || '';
-  document.getElementById('ep_qNumber').value = p.qNumber || '';
-  document.getElementById('ep_partNumber').value = p.partNumber || '';
-  showModal('modalEditProj'); // Updated ID
+  showModal('modalEditProject');
 }
 
 function saveEditProject() {
@@ -369,10 +360,8 @@ function saveEditProject() {
   p.lead     = document.getElementById('ep_lead').value.trim()     || '';
   p.pm       = document.getElementById('ep_pm').value.trim()       || '';
   p.date     = document.getElementById('ep_date').value            || '';
-  p.qNumber = document.getElementById('ep_qNumber').value.trim() || '';
-  p.partNumber = document.getElementById('ep_partNumber').value.trim() || '';
   save();
-  closeModal('modalEditProj'); // Use closeModal and updated ID
+  hideModal('modalEditProject');
   render();
 }
 
@@ -382,7 +371,7 @@ function deleteProject() {
   db.programmes = db.programmes.filter(x => x.id !== progId);
   progId = db.programmes.length ? db.programmes[0].id : null;
   save();
-  closeModal('modalEditProj'); // Use closeModal and updated ID
+  hideModal('modalEditProject');
   navigate('projects');
 }
 
