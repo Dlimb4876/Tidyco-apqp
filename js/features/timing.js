@@ -53,7 +53,9 @@ function buildMonthGroups(startStr) {
   let cur = { label: '', mo: 0, weeks: [] };
   for (let w = 0; w < GANTT_WEEKS; w++) {
     const d     = ganttWeekDate(startStr, w);
-    const label = d ? d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }) : `M${Math.floor(w / 4) + 1}`;
+    const label = d
+      ? d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })
+      : `M${Math.floor(w / 4) + 1}`;
     if (label !== cur.label) {
       if (cur.weeks.length) groups.push({ ...cur });
       cur = { label, mo: groups.length, weeks: [w] };
@@ -90,17 +92,19 @@ function renderTimingPlan() {
     if (d && d <= today && (w === GANTT_WEEKS - 1 || ganttWeekDate(startDate, w + 1) > today)) { todayCol = w; break; }
   }
 
+  // ── Build header rows ────────────────────────────────────────
+  // The week row has a leading colspan="3" blank cell (task + role + plan/actual label)
+  // and trailing cells for Notes and Delete.
+  // The month row MUST mirror this exactly so columns stay aligned.
   let monthHeaders = '', weekHeaders = '';
+
   months.forEach(mo => {
     const collapsed = isMonthCollapsed(p, mo.mo);
     if (collapsed) {
       monthHeaders += `<th colspan="1" style="cursor:pointer;min-width:20px" onclick="toggleMonth(${mo.mo})" title="Expand ${mo.label}">▶</th>`;
+      weekHeaders  += `<th class="gantt-wk gantt-collapsed-wk" title="Expand ${mo.label}" onclick="toggleMonth(${mo.mo})" style="cursor:pointer">…</th>`;
     } else {
       monthHeaders += `<th colspan="${mo.weeks.length}" onclick="toggleMonth(${mo.mo})" title="Collapse ${mo.label}" style="cursor:pointer">${mo.label}</th>`;
-    }
-    if (collapsed) {
-      weekHeaders += `<th class="gantt-wk gantt-collapsed-wk" title="Expand ${mo.label}" onclick="toggleMonth(${mo.mo})" style="cursor:pointer">…</th>`;
-    } else {
       mo.weeks.forEach(w => {
         const isToday = w === todayCol;
         const d   = ganttWeekDate(startDate, w);
@@ -165,6 +169,8 @@ function renderTimingPlan() {
   });
 
   const totalRows = p.gantt.length;
+
+  // colgroup: task(220) + role(70) + plan/actual label(42) + week cols + notes(140) + del(28)
   let colgroup = `<col style="width:220px"><col style="width:70px"><col style="width:42px">`;
   months.forEach(mo => {
     if (isMonthCollapsed(p, mo.mo)) { colgroup += `<col style="width:20px">`; }
@@ -195,8 +201,18 @@ function renderTimingPlan() {
     <table class="tbl gantt-tbl" style="table-layout:fixed;width:max-content;min-width:100%;border-collapse:collapse">
       <colgroup>${colgroup}</colgroup>
       <thead>
-        <tr class="gantt-month-row">${monthHeaders}</tr>
-        <tr class="gantt-week-row"><th class="gantt-th-left" colspan="3"></th>${weekHeaders}<th class="gantt-th-notes"></th><th></th></tr>
+        <tr class="gantt-month-row">
+          <th colspan="3" class="gantt-th-left"></th>
+          ${monthHeaders}
+          <th class="gantt-th-notes"></th>
+          <th></th>
+        </tr>
+        <tr class="gantt-week-row">
+          <th class="gantt-th-left" colspan="3"></th>
+          ${weekHeaders}
+          <th class="gantt-th-notes"></th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>${body}</tbody>
     </table>
