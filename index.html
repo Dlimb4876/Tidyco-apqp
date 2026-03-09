@@ -5,8 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tidyco — APQP Quality Tool</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- CSS load order: global shell → shared components → feature modules -->
 <link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/dashboard.css">
 <link rel="stylesheet" href="css/pfmea.css">
+<link rel="stylesheet" href="css/gantt.css">
+<link rel="stylesheet" href="css/apqp.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -206,6 +211,8 @@
 
 <!-- ═══════════════════════════════════
      SCRIPTS — load order matters
+     state → auth → db → helpers → navigation →
+     dashboard → gates → pfmea → apqp → bom → timing → trackers → app
      ═══════════════════════════════════ -->
 
 <!-- Core -->

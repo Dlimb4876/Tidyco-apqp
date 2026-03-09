@@ -7,19 +7,17 @@ Built as a Single Page Application (SPA) using vanilla JavaScript and Supabase f
 
 ## Project Structure
 
-The CSS architecture is modularized to separate global shell styles from feature-specific component logic, preventing `main.css` from becoming over-encumbered.
-
+The CSS architecture is modularised to separate global shell styles from feature-specific component logic, preventing `main.css` from becoming over-encumbered.
 
 ```
-
 /tidyco-apqp
 ├── /css
 │   ├── main.css            # Global variables, reset, typography, and shell layout
-│   ├── components.css      # Shared UI: Modals, buttons, and form inputs
-│   ├── dashboard.css       # KPI cards, project grid, and status badges
+│   ├── components.css      # Shared UI: Modals, buttons, cards, tables, and form inputs
+│   ├── dashboard.css       # KPI cards, project grid, gate strip, and status badges
 │   ├── pfmea.css           # PFMEA logic: RPN badges and nested row styles
-│   ├── gantt.css           # Timing plan: Timeline bars and milestone markers
-│   └── apqp.css            # Shared styles for PFD, CTQ, and Control Plans
+│   ├── gantt.css           # Timing plan: Timeline bars, milestone markers, and kit styles
+│   └── apqp.css            # Shared styles for PFD, CTQ, BOM picker, and Control Plans
 ├── /js
 │   ├── /core
 │   │   ├── auth.js         # Supabase authentication logic
@@ -39,7 +37,6 @@ The CSS architecture is modularized to separate global shell styles from feature
 │   └── app.js              # Entry point (launchApp) and event listeners
 ├── index.html              # Clean shell with modal containers
 └── README.md               # System architecture documentation
-
 ```
 
 ---
@@ -56,25 +53,25 @@ The CSS architecture is modularized to separate global shell styles from feature
 
 ## State Management
 
-| Variable         | Description                                          |
-|-----------------|------------------------------------------------------|
-| `db`            | Global object containing all programmes             |
-| `progId`        | UUID of the currently active project                |
-| `currentSection`| Current UI route (e.g. `project`, `apqp`, `gate_1`) |
-| `apqpTab`       | Active sub-tab within APQP (`ctq` / `pfd` / `pfmea` / `cp`) |
-| `bomSubTab`     | Active sub-tab within BOM (`parts` / `tools` / etc.) |
+| Variable          | Description                                           |
+|-------------------|-------------------------------------------------------|
+| `db`              | Global object containing all programmes              |
+| `progId`          | UUID of the currently active project                 |
+| `currentSection`  | Current UI route (e.g. `project`, `apqp`, `gate_1`)  |
+| `apqpTab`         | Active sub-tab within APQP (`ctq` / `pfd` / `pfmea` / `cp`) |
+| `bomSubTab`       | Active sub-tab within BOM (`parts` / `tools` / etc.) |
 
 ---
 
 ## Key Functions
 
-| Function          | Module          | Description                                    |
-|------------------|-----------------|------------------------------------------------|
-| `prog()`          | state.js        | Returns the active programme object           |
-| `save()`          | db.js           | Local backup + debounced Supabase `saveRemote()` |
-| `Maps(sec)`   | navigation.js   | Updates `currentSection` and URL hash, calls `render()` |
-| `render()`        | navigation.js   | Main UI switchboard, clears and repaints `#mainContent` |
-| `launchApp()`     | app.js          | Loads remote data and restores navigation from URL hash |
+| Function          | Module         | Description                                        |
+|-------------------|----------------|----------------------------------------------------|
+| `prog()`          | state.js       | Returns the active programme object                |
+| `save()`          | db.js          | Local backup + debounced Supabase `saveRemote()`   |
+| `navigate(sec)`   | navigation.js  | Updates `currentSection` and URL hash, calls `render()` |
+| `render()`        | navigation.js  | Main UI switchboard, clears and repaints `#mainContent` |
+| `launchApp()`     | app.js         | Loads remote data and restores navigation from URL hash |
 
 ---
 
@@ -82,29 +79,38 @@ The CSS architecture is modularized to separate global shell styles from feature
 
 Scripts must be loaded in dependency order (all use the global scope):
 
-
 ```
-
 state.js → auth.js → db.js → helpers.js → navigation.js →
 dashboard.js → gates.js → pfmea.js → apqp.js → bom.js → timing.js → trackers.js →
 app.js
+```
 
+---
+
+## CSS Load Order
+
+CSS files must be loaded in cascade order so feature overrides work correctly:
+
+```
+main.css → components.css → dashboard.css → pfmea.css → gantt.css → apqp.css
 ```
 
 ---
 
 ## RPN Logic
 
-- **Calculation**: $RPN = SEV \times OCC \times DET$
-- **Thresholds**: High $RPN \ge 100$ triggers amber/red badges
-- **Forecast RPN**: $SEV \times New OCC \times New DET$
+- **Calculation**: `RPN = SEV × OCC × DET`
+- **Thresholds**: High RPN ≥ 100 triggers amber/red badges
+- **Forecast RPN**: `SEV × New OCC × New DET`
 
 ---
 
 ## CSS Strategy
 
 - **Global Shell**: `main.css` defines custom variables (`--blue`, `--ink`, etc.) and the primary SPA layout.
-- **Feature Isolation**: Styles for complex components like the Gantt chart (`gantt.css`) or the Dashboard grid (`dashboard.css`) are kept in standalone files to ensure `main.css` remains lightweight.
-- **Common UI**: Shared elements such as modals and standardized buttons reside in `components.css`.
-
-```
+- **Common UI**: Shared elements such as modals, buttons, cards, tables, and form inputs reside in `components.css`.
+- **Feature Isolation**: Styles for complex features are kept in standalone files to ensure `main.css` and `components.css` remain lightweight:
+  - `dashboard.css` — KPI grid, gate strip, sub-assembly cards, project list
+  - `pfmea.css` — PFMEA table, RPN badges, sticky headers
+  - `gantt.css` — Gantt timeline, kit builder
+  - `apqp.css` — PFD steps, CTQ table, BOM picker, resource pills

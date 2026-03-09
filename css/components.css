@@ -1,0 +1,194 @@
+/* ============================================================
+   components.css — Shared UI: Modals, buttons, cards, tables,
+   tags, status pills, forms, and utility classes
+   Tidyco APQP Quality Tool
+   ============================================================ */
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn {
+  padding: 7px 14px; border-radius: 5px; font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; font-family: 'IBM Plex Sans', sans-serif; transition: all .12s;
+}
+.btn-primary { background: var(--blue); color: white; }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-ghost { background: transparent; color: var(--mid); border: 1px solid var(--line2); }
+.btn-ghost:hover { background: var(--bg); border-color: var(--muted); }
+.btn-green { background: var(--green); color: white; }
+.btn-green:hover { background: #155c2c; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { opacity: .88; }
+
+/* ── Card ───────────────────────────────────────────────────── */
+.card { background: var(--white); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 18px; }
+.card-head {
+  padding: 11px 16px; border-bottom: 1px solid var(--line); background: #fafbfd;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.card-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.card-meta  { font-size: 12px; color: var(--muted); }
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th {
+  padding: 6px 10px; background: #f4f6fa;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
+  color: var(--muted); letter-spacing: 1.2px; text-transform: uppercase;
+  border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap;
+}
+.tbl td { padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 13px; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(0,102,204,.02); }
+
+/* Sticky table headers */
+.sticky-table-wrap { overflow-x: auto; max-width: 100%; }
+.sticky-table-wrap thead th { position: sticky; top: 0; z-index: 20; background: #f4f6fa; }
+.sticky-card-scroll { overflow-y: auto; max-height: 65vh; overflow-x: auto; }
+.sticky-card-scroll thead th { position: sticky; top: 0 !important; z-index: 10; background: #f4f6fa; }
+
+/* Table column width helpers */
+td.w28  { width: 28px; }  td.w36  { width: 36px; }  td.w44  { width: 44px; }
+td.w50  { width: 50px; }  td.w60  { width: 60px; }  td.w70  { width: 70px; }
+td.w80  { width: 80px; }  td.w90  { width: 90px; }  td.w100 { width: 100px; }
+td.w110 { width: 110px; } td.w120 { width: 120px; } td.w140 { width: 140px; }
+td.ctr  { text-align: center; }
+
+/* ── Cell edit ──────────────────────────────────────────────── */
+.cell-edit {
+  border: none; outline: none; background: transparent;
+  font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--ink);
+  width: 100%; resize: vertical; padding: 2px 4px; border-radius: 3px; transition: background .1s;
+}
+.cell-edit:hover  { background: var(--blue-pale); }
+.cell-edit:focus  { background: var(--blue-pale); outline: 1px solid var(--blue-mid); }
+.cell-edit.mono   { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+
+/* ── Tags ───────────────────────────────────────────────────── */
+.tag {
+  display: inline-flex; align-items: center; padding: 2px 7px;
+  border-radius: 4px; font-size: 10px; font-weight: 500;
+  white-space: nowrap; font-family: 'IBM Plex Mono', monospace;
+}
+.tag-ctq    { background: var(--teal-pale);   color: var(--teal);   border: 1px solid #9ed6cf; }
+.tag-amber  { background: var(--amber-pale);  color: var(--amber); }
+.tag-step   { background: var(--navy-pale);   color: var(--navy);   border: 1px solid #b3c8e0; font-weight: 600; }
+.tag-sub    { background: var(--purple-pale); color: var(--purple); border: 1px solid #c4a8e6; }
+
+/* ── Status pills ───────────────────────────────────────────── */
+.sp {
+  display: inline-flex; align-items: center; padding: 2px 7px;
+  border-radius: 20px; font-size: 10px; font-weight: 600;
+  white-space: nowrap; font-family: 'IBM Plex Mono', monospace;
+}
+.sp-open   { background: var(--blue-pale);  color: var(--blue);  }
+.sp-inprog { background: var(--amber-pale); color: var(--amber); }
+.sp-closed { background: var(--green-pale); color: var(--green); }
+
+/* ── Risk score badges ──────────────────────────────────────── */
+.rs {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 22px; border-radius: 4px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700;
+}
+.rs-hi  { background: var(--red-pale);   color: var(--red);   }
+.rs-med { background: var(--amber-pale); color: var(--amber); }
+.rs-lo  { background: var(--green-pale); color: var(--green); }
+.row-hi td { background: #fffaf9; }
+
+/* ── Flag pills ─────────────────────────────────────────────── */
+.flag-pill {
+  display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px;
+  border-radius: 3px; font-size: 10px; font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.flag-aaw    { background: #fce8f1;          color: var(--rose);  border: 1px solid #f0b4d0; }
+.flag-repair { background: var(--amber-pale); color: var(--amber); border: 1px solid var(--amber-mid); }
+.flag-obs    { background: var(--red-pale);   color: var(--red);   border: 1px solid #f0b4ae; }
+
+/* ── Modals ─────────────────────────────────────────────────── */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(13,17,23,.65);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500; backdrop-filter: blur(3px);
+}
+.modal {
+  background: var(--white); border-radius: 10px; padding: 26px;
+  width: 540px; max-width: 96vw; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,.25);
+}
+.modal-sm { width: 400px; }
+.modal-lg { width: 700px; }
+.modal-title   { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.modal-head    { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-close   { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--muted); padding: 2px 6px; border-radius: 4px; }
+.modal-close:hover { background: var(--bg); color: var(--ink); }
+
+/* ── Forms ──────────────────────────────────────────────────── */
+.field { margin-bottom: 12px; }
+.field label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--mid);
+  margin-bottom: 4px; letter-spacing: .3px;
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%; padding: 8px 10px; border: 1.5px solid var(--line2);
+  border-radius: 5px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif;
+  outline: none; transition: border-color .15s;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus { border-color: var(--blue); }
+.field-row { display: flex; gap: 10px; }
+
+/* ── Section header ─────────────────────────────────────────── */
+.sec-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap: 16px; }
+.sec-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: var(--blue); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
+.sec-title   { font-size: 20px; font-weight: 700; color: var(--ink); }
+.sec-desc    { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.sec-actions { display: flex; gap: 8px; align-items: flex-start; flex-shrink: 0; }
+
+/* ── Add row / delete button ────────────────────────────────── */
+.add-row {
+  display: flex; align-items: center; gap: 6px; padding: 8px 14px;
+  border: none; border-top: 1px dashed var(--line);
+  background: transparent; color: var(--muted); font-size: 12px;
+  cursor: pointer; width: 100%; text-align: left;
+  font-family: 'IBM Plex Sans', sans-serif; transition: all .12s;
+}
+.add-row:hover { color: var(--blue); background: var(--blue-pale); }
+
+.del-btn {
+  width: 22px; height: 22px; border: none; background: transparent;
+  color: var(--line2); font-size: 15px; cursor: pointer;
+  border-radius: 3px; display: flex; align-items: center; justify-content: center; transition: all .1s;
+}
+.del-btn:hover { color: var(--red); background: var(--red-pale); }
+
+.mini-btn {
+  width: 20px; height: 18px; border: none; background: transparent;
+  color: var(--line2); font-size: 11px; cursor: pointer;
+  border-radius: 2px; display: flex; align-items: center; justify-content: center; transition: all .1s;
+}
+.mini-btn:hover       { color: var(--blue); background: var(--blue-pale); }
+.mini-btn.danger:hover { color: var(--red);  background: var(--red-pale);  }
+
+/* ── Info banner / empty state ──────────────────────────────── */
+.info-banner {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--blue-pale); border: 1px solid var(--blue-mid);
+  border-radius: 6px; padding: 10px 13px; margin-bottom: 16px;
+  font-size: 13px; color: var(--blue-dark);
+}
+.empty        { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty-icon   { font-size: 32px; margin-bottom: 8px; }
+.empty-title  { font-size: 14px; font-weight: 600; color: var(--mid); }
+.empty-desc   { font-size: 12px; margin-top: 3px; }
+
+/* ── Alert items ────────────────────────────────────────────── */
+.alert-row  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.alert-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 6px; font-size: 13px; }
+.alert-red   { background: var(--red-pale);   border: 1px solid #f0b4ae;         color: var(--red);        }
+.alert-amber { background: var(--amber-pale); border: 1px solid var(--amber-mid); color: var(--amber);      }
+.alert-blue  { background: var(--blue-pale);  border: 1px solid var(--blue-mid);  color: var(--blue-dark);  }
