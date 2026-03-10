@@ -26,7 +26,7 @@ function renderProduction() {
         <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Portal</button>
       </div>
 
-      <div class="proj-cards prod-grid">
+      <div class="prod-grid">
         <div class="proj-card prod-card" onclick="setProductionTab('products')">
           <div class="hub-card-content">
             <div class="hub-icon">📦</div>

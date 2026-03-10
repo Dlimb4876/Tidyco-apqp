@@ -21,24 +21,24 @@ function renderCapacity() {
         <div class="proj-card capacity-card" onclick="setCapacityTab('overhaul')">
           <div class="hub-card-content">
             <div class="hub-icon">🚂</div>
-            <div class="proj-card-name">OVERHAUL CAPACITY</div>
-            <div class="proj-card-meta">Workshop bay loading</div>
+            <div class="proj-card-name">Production</div>
+            <div class="proj-card-meta">Production load capacity plan</div>
           </div>
         </div>
 
         <div class="proj-card capacity-card" onclick="setCapacityTab('me')">
           <div class="hub-card-content">
             <div class="hub-icon">🧑‍🔧</div>
-            <div class="proj-card-name">ME CAPACITY</div>
-            <div class="proj-card-meta">Engineering man-hours</div>
+            <div class="proj-card-name">Manufacturing Engineering</div>
+            <div class="proj-card-meta">Manufacturing Engineering load capacity plan</div>
           </div>
         </div>
 
         <div class="proj-card capacity-card" onclick="setCapacityTab('projects')">
           <div class="hub-card-content">
             <div class="hub-icon">📅</div>
-            <div class="proj-card-name">PROJECTS CAPACITY</div>
-            <div class="proj-card-meta">NPI Pipeline loading</div>
+            <div class="proj-card-name">Project Management</div>
+            <div class="proj-card-meta">Project Management load capacity plan</div>
           </div>
         </div>
       </div>

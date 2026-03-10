@@ -52,7 +52,7 @@ function navigate(sec, { pushHash = true } = {}) {
     }
   }
 
-  // Show Return to Hub button only when not at hub, projects, or project level
+  // Show Return to Portal button on all feature pages (not hub, projects, or project home)
   const returnBtn = document.getElementById('returnHubBtn');
   returnBtn.style.display = (sec === 'hub' || sec === 'projects' || sec === 'project') ? 'none' : 'flex';
 

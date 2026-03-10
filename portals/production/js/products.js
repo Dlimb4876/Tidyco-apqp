@@ -5,30 +5,58 @@ function renderProductMaster() {
   const activeCount = products.filter(p => p.status === 'active').length;
 
   let rows = '';
+
+  // Quick-add empty row at the top
+  rows += `
+    <tr class="row-new" id="prod-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+      <td class="w28 ctr">+</td>
+      <td><input class="cell-edit" id="prod-new-name" placeholder="Product name" onkeydown="handleProdRowKey(event, 'name')"></td>
+      <td><input class="cell-edit" id="prod-new-code" placeholder="Code" onkeydown="handleProdRowKey(event, 'code')"></td>
+      <td><input class="cell-edit" id="prod-new-family" placeholder="Family" onkeydown="handleProdRowKey(event, 'family')"></td>
+      <td><input class="cell-edit" id="prod-new-lead" type="number" placeholder="Lead time (days)" onkeydown="handleProdRowKey(event, 'lead')"></td>
+      <td>
+        <select class="cell-edit" id="prod-new-status" onkeydown="handleProdRowKey(event, 'status')">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </td>
+      <td>
+        <select class="cell-edit" id="prod-new-unit" onkeydown="handleProdRowKey(event, 'unit')">
+          <option value="">—</option>
+          <option value="Unit 2">Unit 2</option>
+          <option value="Unit 3">Unit 3</option>
+          <option value="Unit 6">Unit 6</option>
+        </select>
+      </td>
+      <td><textarea class="cell-edit" id="prod-new-notes" placeholder="Notes" onkeydown="handleProdRowKey(event, 'notes')" style="resize:none;height:28px"></textarea></td>
+      <td class="w28 ctr"><button class="btn-del" onclick="addNewProductRow()" title="Save (Ctrl+Enter)">✓</button></td>
+    </tr>
+  `;
+
   products.forEach((prod, idx) => {
     const isInactive = prod.status === 'inactive';
     rows += `
       <tr class="${isInactive ? 'row-inactive' : ''}">
         <td class="w28 ctr">${idx + 1}</td>
-        <td><input class="cell-edit" value="${esc(prod.name || '')}" onchange="prodDataUpdateProduct(${idx}, 'name', this.value)"></td>
-        <td><input class="cell-edit" value="${esc(prod.code || '')}" onchange="prodDataUpdateProduct(${idx}, 'code', this.value)"></td>
-        <td><input class="cell-edit" value="${esc(prod.family || '')}" onchange="prodDataUpdateProduct(${idx}, 'family', this.value)"></td>
-        <td><input class="cell-edit" type="number" value="${prod.lead_time_days || ''}" onchange="prodDataUpdateProduct(${idx}, 'lead_time_days', this.value)"></td>
+        <td><input class="cell-edit" value="${esc(prod.name || '')}" onchange="prodDataUpdateProduct(${idx}, 'name', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td><input class="cell-edit" value="${esc(prod.code || '')}" onchange="prodDataUpdateProduct(${idx}, 'code', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td><input class="cell-edit" value="${esc(prod.family || '')}" onchange="prodDataUpdateProduct(${idx}, 'family', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td><input class="cell-edit" type="number" value="${prod.lead_time_days || ''}" onchange="prodDataUpdateProduct(${idx}, 'lead_time_days', this.value)" onkeydown="handleCellKey(event)"></td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'status', this.value)">
+          <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'status', this.value)" onkeydown="handleCellKey(event)">
             <option value="active" ${prod.status === 'active' ? 'selected' : ''}>Active</option>
             <option value="inactive" ${prod.status === 'inactive' ? 'selected' : ''}>Inactive</option>
           </select>
         </td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'assigned_unit', this.value)">
+          <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'assigned_unit', this.value)" onkeydown="handleCellKey(event)">
             <option value="">—</option>
             <option value="Unit 2" ${prod.assigned_unit === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
             <option value="Unit 3" ${prod.assigned_unit === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
             <option value="Unit 6" ${prod.assigned_unit === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
           </select>
         </td>
-        <td><textarea class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'notes', this.value)">${esc(prod.notes || '')}</textarea></td>
+        <td><textarea class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'notes', this.value)" onkeydown="handleCellKey(event)" style="resize:none;height:28px">${esc(prod.notes || '')}</textarea></td>
         <td class="w28 ctr"><button class="btn-del" onclick="if(confirm('Delete product?')) prodDataDeleteProduct(${idx})">✕</button></td>
       </tr>
     `;
@@ -40,10 +68,10 @@ function renderProductMaster() {
         <div>
           <div class="sec-eyebrow">PRODUCT MASTER LIST</div>
           <div class="sec-title">Products</div>
-          <div class="sec-desc">${activeCount} active products</div>
+          <div class="sec-desc">${activeCount} active products — Click cells to edit, Tab/Enter to navigate</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="document.getElementById('prodAddModal').style.display='flex'">➕ Add Product</button>
+          <button class="btn btn-primary" onclick="focusProdNewRow()">➕ Add Product</button>
           <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
         </div>
       </div>
@@ -78,56 +106,56 @@ function renderProductMaster() {
         </tbody>
       </table>
     </div>
-
-    <!-- Add Product Modal -->
-    <div class="modal-bg" id="prodAddModal" style="display:none">
-      <div class="modal modal-md">
-        <div class="modal-title">Add Product</div>
-        <div class="field"><label>Product Name *</label><input id="prod_name" placeholder="e.g., Rail Assembly"></div>
-        <div class="field-row">
-          <div class="field" style="flex:1"><label>Code</label><input id="prod_code" placeholder="e.g., RA-001"></div>
-          <div class="field" style="flex:1"><label>Family</label><input id="prod_family" placeholder="e.g., Rails"></div>
-        </div>
-        <div class="field-row">
-          <div class="field" style="flex:1"><label>Lead Time (days)</label><input id="prod_lead" type="number" placeholder="30"></div>
-          <div class="field" style="flex:1"><label>Assigned Unit</label>
-            <select id="prod_unit">
-              <option value="">— Flexible</option>
-              <option value="Unit 2">Unit 2</option>
-              <option value="Unit 3">Unit 3</option>
-              <option value="Unit 6">Unit 6</option>
-            </select>
-          </div>
-        </div>
-        <div class="field"><label>Notes</label><textarea id="prod_notes" placeholder="Additional notes" style="min-height:60px"></textarea></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="document.getElementById('prodAddModal').style.display='none'">Cancel</button>
-          <button class="btn btn-primary" onclick="prodAddProduct()">Add Product</button>
-        </div>
-      </div>
-    </div>
   `;
 }
 
-function prodAddProduct() {
-  const name = document.getElementById('prod_name').value;
-  const code = document.getElementById('prod_code').value;
-  const family = document.getElementById('prod_family').value;
-  const lead = document.getElementById('prod_lead').value;
-  const unit = document.getElementById('prod_unit').value;
-  const notes = document.getElementById('prod_notes').value;
+// Keyboard handlers for product row
+function handleProdRowKey(event, field) {
+  if (event.key === 'Tab') {
+    event.preventDefault();
+    const fields = ['name', 'code', 'family', 'lead', 'status', 'unit', 'notes'];
+    const currentIdx = fields.indexOf(field);
+    if (event.shiftKey) {
+      if (currentIdx > 0) document.getElementById(`prod-new-${fields[currentIdx - 1]}`).focus();
+    } else {
+      if (currentIdx < fields.length - 1) {
+        document.getElementById(`prod-new-${fields[currentIdx + 1]}`).focus();
+      }
+    }
+  } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    addNewProductRow();
+  }
+}
 
-  if (!name.trim()) {
+function focusProdNewRow() {
+  setTimeout(() => document.getElementById('prod-new-name')?.focus(), 50);
+}
+
+async function addNewProductRow() {
+  const name = document.getElementById('prod-new-name')?.value;
+  const code = document.getElementById('prod-new-code')?.value;
+  const family = document.getElementById('prod-new-family')?.value;
+  const lead = document.getElementById('prod-new-lead')?.value;
+  const status = document.getElementById('prod-new-status')?.value || 'active';
+  const unit = document.getElementById('prod-new-unit')?.value;
+  const notes = document.getElementById('prod-new-notes')?.value;
+
+  if (!name || !name.trim()) {
     alert('Product name is required');
     return;
   }
 
-  prodDataAddProduct(name, code, family, lead, notes, 'active', unit);
-  document.getElementById('prodAddModal').style.display = 'none';
-  document.getElementById('prod_name').value = '';
-  document.getElementById('prod_code').value = '';
-  document.getElementById('prod_family').value = '';
-  document.getElementById('prod_lead').value = '';
-  document.getElementById('prod_unit').value = '';
-  document.getElementById('prod_notes').value = '';
+  await prodDataAddProduct(name, code, family, lead, notes, status, unit);
+
+  // Reset new row fields
+  document.getElementById('prod-new-name').value = '';
+  document.getElementById('prod-new-code').value = '';
+  document.getElementById('prod-new-family').value = '';
+  document.getElementById('prod-new-lead').value = '';
+  document.getElementById('prod-new-status').value = 'active';
+  document.getElementById('prod-new-unit').value = '';
+  document.getElementById('prod-new-notes').value = '';
+
+  setTimeout(() => document.getElementById('prod-new-name')?.focus(), 50);
 }

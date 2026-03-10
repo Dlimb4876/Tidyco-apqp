@@ -2,44 +2,79 @@
 
 let prodSchedulingSort = { field: 'start_date', ascending: true };
 let prodSchedulingFilters = { product: '', unit: '', dateFrom: '', dateTo: '' };
+let prodSchedulingNewRow = false;
 
 function renderScheduling() {
   const batches = prodState.batches;
   const activeBatches = getFilteredBatches();
 
   let rows = '';
+
+  // Quick-add empty row at the top
+  rows += `
+    <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+      <td class="w28 ctr">+</td>
+      <td>
+        <select class="cell-edit" id="batch-new-product" onkeydown="handleBatchRowKey(event, 'product')">
+          <option value="">— Select Product</option>
+          ${prodState.products.filter(p => p.status === 'active').map(p => `<option value="${p.id}">${p.name} (${p.code || 'N/A'})</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select class="cell-edit" id="batch-new-unit" onkeydown="handleBatchRowKey(event, 'unit')">
+          <option value="">—</option>
+          <option value="Unit 2">Unit 2</option>
+          <option value="Unit 3">Unit 3</option>
+          <option value="Unit 6">Unit 6</option>
+        </select>
+      </td>
+      <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
+      <td><input class="cell-edit" id="batch-new-start" type="date" onkeydown="handleBatchRowKey(event, 'start')"></td>
+      <td><input class="cell-edit" id="batch-new-due" type="date" onkeydown="handleBatchRowKey(event, 'due')"></td>
+      <td>
+        <select class="cell-edit" id="batch-new-status" onkeydown="handleBatchRowKey(event, 'status')">
+          <option value="Planned">Planned</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Complete">Complete</option>
+        </select>
+      </td>
+      <td><textarea class="cell-edit" id="batch-new-notes" placeholder="Notes" onkeydown="handleBatchRowKey(event, 'notes')" style="resize:none;height:28px"></textarea></td>
+      <td class="w28 ctr"><button class="btn-del" onclick="addNewBatchRow()" title="Save (Ctrl+Enter)">✓</button></td>
+    </tr>
+  `;
+
   activeBatches.forEach((batch, idx) => {
     const product = prodDataGetProductById(batch.product_id);
-    const productName = product ? `${product.name} (${product.code || ''})` : 'Unknown';
+    const batchIdx = prodState.batches.indexOf(batch);
 
     rows += `
       <tr>
         <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateBatch(${prodState.batches.indexOf(batch)}, 'product_id', this.value)">
+          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'product_id', this.value)" onkeydown="handleCellKey(event)">
             ${prodState.products.map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.code || 'N/A'})</option>`).join('')}
           </select>
         </td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateBatch(${prodState.batches.indexOf(batch)}, 'unit', this.value)">
+          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'unit', this.value)" onkeydown="handleCellKey(event)">
             <option value="">—</option>
             <option value="Unit 2" ${batch.unit === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
             <option value="Unit 3" ${batch.unit === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
             <option value="Unit 6" ${batch.unit === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
           </select>
         </td>
-        <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${prodState.batches.indexOf(batch)}, 'quantity', this.value)"></td>
-        <td><input class="cell-edit" type="date" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${prodState.batches.indexOf(batch)}, 'start_date', this.value)"></td>
-        <td><input class="cell-edit" type="date" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${prodState.batches.indexOf(batch)}, 'due_date', this.value)"></td>
+        <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td><input class="cell-edit" type="date" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td><input class="cell-edit" type="date" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', this.value)" onkeydown="handleCellKey(event)"></td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateBatch(${prodState.batches.indexOf(batch)}, 'status', this.value)">
+          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'status', this.value)" onkeydown="handleCellKey(event)">
             <option value="Planned" ${batch.status === 'Planned' ? 'selected' : ''}>Planned</option>
             <option value="In Progress" ${batch.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
             <option value="Complete" ${batch.status === 'Complete' ? 'selected' : ''}>Complete</option>
           </select>
         </td>
-        <td><textarea class="cell-edit" onchange="prodDataUpdateBatch(${prodState.batches.indexOf(batch)}, 'notes', this.value)">${esc(batch.notes || '')}</textarea></td>
-        <td class="w28 ctr"><button class="btn-del" onclick="if(confirm('Delete batch?')) prodDataDeleteBatch(${prodState.batches.indexOf(batch)})">✕</button></td>
+        <td><textarea class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'notes', this.value)" onkeydown="handleCellKey(event)" style="resize:none;height:28px">${esc(batch.notes || '')}</textarea></td>
+        <td class="w28 ctr"><button class="btn-del" onclick="if(confirm('Delete batch?')) prodDataDeleteBatch(${batchIdx})">✕</button></td>
       </tr>
     `;
   });
@@ -50,10 +85,10 @@ function renderScheduling() {
         <div>
           <div class="sec-eyebrow">BATCH SCHEDULING</div>
           <div class="sec-title">Production Batches</div>
-          <div class="sec-desc">${activeBatches.length} of ${batches.length} batches</div>
+          <div class="sec-desc">${activeBatches.length} of ${batches.length} batches — Click cells to edit, Tab/Enter to navigate</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="document.getElementById('batchAddModal').style.display='flex'">➕ Add Batch</button>
+          <button class="btn btn-primary" onclick="focusBatchNewRow()">➕ Add Batch</button>
           <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
         </div>
       </div>
@@ -117,61 +152,6 @@ function renderScheduling() {
         </tbody>
       </table>
     </div>
-
-    <!-- Add Batch Modal -->
-    <div class="modal-bg" id="batchAddModal" style="display:none">
-      <div class="modal modal-md">
-        <div class="modal-title">Add Production Batch</div>
-        <div class="field">
-          <label>Product *</label>
-          <select id="batch_product">
-            <option value="">— Select Product</option>
-            ${prodState.products.filter(p => p.status === 'active').map(p => `<option value="${p.id}">${p.name} (${p.code || 'N/A'})</option>`).join('')}
-          </select>
-        </div>
-        <div class="field-row">
-          <div class="field" style="flex:1">
-            <label>Unit *</label>
-            <select id="batch_unit">
-              <option value="">— Select Unit</option>
-              <option value="Unit 2">Unit 2</option>
-              <option value="Unit 3">Unit 3</option>
-              <option value="Unit 6">Unit 6</option>
-            </select>
-          </div>
-          <div class="field" style="flex:1">
-            <label>Quantity</label>
-            <input id="batch_qty" type="number" placeholder="e.g., 500">
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field" style="flex:1">
-            <label>Start Date</label>
-            <input id="batch_start" type="date">
-          </div>
-          <div class="field" style="flex:1">
-            <label>Due Date</label>
-            <input id="batch_due" type="date">
-          </div>
-        </div>
-        <div class="field">
-          <label>Status</label>
-          <select id="batch_status">
-            <option value="Planned">Planned</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Complete">Complete</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Notes</label>
-          <textarea id="batch_notes" placeholder="Additional notes" style="min-height:60px"></textarea>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="document.getElementById('batchAddModal').style.display='none'">Cancel</button>
-          <button class="btn btn-primary" onclick="batchAddBatch()">Add Batch</button>
-        </div>
-      </div>
-    </div>
   `;
 }
 
@@ -222,27 +202,68 @@ function toggleSort(field) {
   render();
 }
 
-function batchAddBatch() {
-  const productId = document.getElementById('batch_product').value;
-  const unit = document.getElementById('batch_unit').value;
-  const qty = document.getElementById('batch_qty').value;
-  const start = document.getElementById('batch_start').value;
-  const due = document.getElementById('batch_due').value;
-  const status = document.getElementById('batch_status').value;
-  const notes = document.getElementById('batch_notes').value;
+// Keyboard handlers for inline editing
+function handleCellKey(event) {
+  if (event.key === 'Tab') {
+    event.preventDefault();
+    const cell = event.target.closest('td');
+    const row = cell.closest('tr');
+    const cells = row.querySelectorAll('input, select, textarea');
+    const currentIdx = Array.from(cells).indexOf(event.target);
+    if (event.shiftKey) {
+      if (currentIdx > 0) cells[currentIdx - 1].focus();
+    } else {
+      if (currentIdx < cells.length - 1) cells[currentIdx + 1].focus();
+    }
+  }
+}
+
+function handleBatchRowKey(event, field) {
+  if (event.key === 'Tab') {
+    event.preventDefault();
+    const fields = ['product', 'unit', 'qty', 'start', 'due', 'status', 'notes'];
+    const currentIdx = fields.indexOf(field);
+    if (event.shiftKey) {
+      if (currentIdx > 0) document.getElementById(`batch-new-${fields[currentIdx - 1]}`).focus();
+    } else {
+      if (currentIdx < fields.length - 1) {
+        document.getElementById(`batch-new-${fields[currentIdx + 1]}`).focus();
+      }
+    }
+  } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    addNewBatchRow();
+  }
+}
+
+function focusBatchNewRow() {
+  setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50);
+}
+
+async function addNewBatchRow() {
+  const productId = document.getElementById('batch-new-product')?.value;
+  const unit = document.getElementById('batch-new-unit')?.value;
+  const qty = document.getElementById('batch-new-qty')?.value;
+  const start = document.getElementById('batch-new-start')?.value;
+  const due = document.getElementById('batch-new-due')?.value;
+  const status = document.getElementById('batch-new-status')?.value || 'Planned';
+  const notes = document.getElementById('batch-new-notes')?.value;
 
   if (!productId || !unit) {
     alert('Product and Unit are required');
     return;
   }
 
-  prodDataAddBatch(productId, unit, qty, start, due, status, notes);
-  document.getElementById('batchAddModal').style.display = 'none';
-  document.getElementById('batch_product').value = '';
-  document.getElementById('batch_unit').value = '';
-  document.getElementById('batch_qty').value = '';
-  document.getElementById('batch_start').value = '';
-  document.getElementById('batch_due').value = '';
-  document.getElementById('batch_status').value = 'Planned';
-  document.getElementById('batch_notes').value = '';
+  await prodDataAddBatch(productId, unit, qty, start, due, status, notes);
+
+  // Reset new row fields
+  document.getElementById('batch-new-product').value = '';
+  document.getElementById('batch-new-unit').value = '';
+  document.getElementById('batch-new-qty').value = '';
+  document.getElementById('batch-new-start').value = '';
+  document.getElementById('batch-new-due').value = '';
+  document.getElementById('batch-new-status').value = 'Planned';
+  document.getElementById('batch-new-notes').value = '';
+
+  setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50);
 }

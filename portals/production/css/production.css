@@ -141,6 +141,18 @@
   background: var(--bg);
 }
 
+.prod-tbl .row-new {
+  font-weight: 500;
+}
+
+.prod-tbl .row-new td {
+  padding: 8px 10px;
+}
+
+.prod-tbl .row-new:hover {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
 .prod-tbl .cell-edit {
   width: 100%;
   padding: 6px 8px;
