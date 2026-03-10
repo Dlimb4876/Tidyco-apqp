@@ -255,7 +255,7 @@ function meRenderDetailPanel(personId, weekStart, weekEnd, tasksArray, holidaysA
 }
 
 // ── Calculations ────────────────────────────────────────────
-function meCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray, holidaysArray) {
+window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray, holidaysArray) {
   const person = meDataGetTeam().find(p => p.id === personId);
   if (!person || !person.startDate) return { capacity: 0, demand: 0, utilisation: 0 };
 
@@ -316,7 +316,7 @@ function meCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray, holiday
 }
 
 // ── Week range generation ───────────────────────────────────
-function meGetWeekRange(monthKey, weekCount) {
+window.meGetWeekRange = function(monthKey, weekCount) {
   const [year, month] = monthKey.split('-').map(Number);
   const monthStart = new Date(year, month - 1, 1);
 

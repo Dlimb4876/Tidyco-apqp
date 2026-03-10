@@ -22,7 +22,10 @@
       "Bash(git add -A)",
       "Bash(where node http-server python python3)",
       "Bash(grep -n \"prodSetActiveUnit\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/production/js/*.js)",
-      "Bash(node -c /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/me-heatmap.js)"
+      "Bash(node -c /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/me-heatmap.js)",
+      "Bash(node -c portals/capacity/js/me-chart.js)",
+      "Bash(node -c portals/capacity/js/me-heatmap.js)",
+      "Bash(node -c \"portals/product-development/js/product-management.js\")"
     ]
   }
 }

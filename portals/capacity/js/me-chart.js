@@ -138,21 +138,21 @@ window.meDrawChartNow = function() {
 
 // ── Utility Functions ──────────────────────────────────────
 
-function meFormatDate(date) {
+window.meFormatDate = function(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-function meGetMonthLabel(monthKey) {
+window.meGetMonthLabel = function(monthKey) {
   const date = new Date(monthKey + '-01');
   const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const year = date.getFullYear();
   return [month, year.toString()];
 }
 
-function meGetMonthRange(startMonth, count) {
+window.meGetMonthRange = function(startMonth, count) {
   const months = [];
   let [year, month] = startMonth.split('-').map(Number);
 
@@ -170,7 +170,7 @@ function meGetMonthRange(startMonth, count) {
   return months;
 }
 
-function meGetBankHolidaysForYear(year) {
+window.meGetBankHolidaysForYear = function(year) {
   const holidays = {};
   holidays[`${year}-01-01`] = 'New Year';
   holidays[`${year}-12-25`] = 'Christmas';
@@ -210,7 +210,7 @@ function meGetBankHolidaysForYear(year) {
   return holidays;
 }
 
-function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
+window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const [year, month] = monthKey.split('-').map(Number);
   const monthStart = new Date(year, month - 1, 1);
   const monthEnd = new Date(year, month, 0);
@@ -352,7 +352,7 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
   };
 }
 
-function meCountWorkDaysInMonth(year, month) {
+window.meCountWorkDaysInMonth = function(year, month) {
   const date = new Date(year, month - 1, 1);
   let workDays = 0;
   while (date.getMonth() === month - 1) {
@@ -363,7 +363,7 @@ function meCountWorkDaysInMonth(year, month) {
   return workDays;
 }
 
-function meCountWorkDaysBetween(startDate, endDate) {
+window.meCountWorkDaysBetween = function(startDate, endDate) {
   let workDays = 0;
   const current = new Date(startDate);
   current.setHours(0, 0, 0, 0);
