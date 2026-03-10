@@ -39,6 +39,9 @@ async function launchApp() {
   if (h.p && db.programmes.find(p => p.id === h.p)) {
     progId = h.p;
     if (h.t) apqpTab = h.t;
+    if (h.ct) capacityTab = h.ct;
+    if (h.pt) productionTab = h.pt;
+    if (h.pdt) productDevelopmentTab = h.pdt;
     navigate(h.s || 'project', { pushHash: false });
   } else {
     navigate('hub', { pushHash: false });

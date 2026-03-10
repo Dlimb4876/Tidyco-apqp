@@ -1,5 +1,40 @@
 /* Production Planning Portal Styles */
 
+/* Top Navigation Bar */
+.prod-nav-bar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--white);
+  border-bottom: 2px solid var(--line);
+  align-items: center;
+}
+
+.prod-nav-item {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mid);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prod-nav-item:hover {
+  background: var(--bg);
+  border-color: var(--line2);
+}
+
+.prod-nav-item.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--white);
+}
+
 .prod-home {
   padding: 24px;
 }
@@ -208,6 +243,28 @@
 .btn-del:hover {
   border-color: var(--red);
   background: var(--red-pale);
+}
+
+/* Quick date buttons */
+.btn-date-quick {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--white);
+  color: var(--mid);
+  font-weight: 600;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 32px;
+}
+
+.btn-date-quick:hover {
+  background: var(--blue-pale);
+  border-color: var(--blue);
+  color: var(--blue);
 }
 
 /* Plan by Product View */

@@ -30,8 +30,14 @@ function renderScheduling() {
         </select>
       </td>
       <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
-      <td><input class="cell-edit" id="batch-new-start" type="date" onchange="calcBatchDueDate()" onkeydown="handleBatchRowKey(event, 'start')"></td>
-      <td><input class="cell-edit" id="batch-new-due" type="date" onkeydown="handleBatchRowKey(event, 'due')"></td>
+      <td style="display:flex;gap:4px;align-items:center">
+        <input class="cell-edit" id="batch-new-start" type="date" onchange="calcBatchDueDate()" onkeydown="handleDateInput(event, 'batch-new-start', 'start')" style="flex:1">
+        <button class="btn-date-quick" onclick="setDateToday('batch-new-start'); calcBatchDueDate()" title="Set to today">T</button>
+      </td>
+      <td style="display:flex;gap:4px;align-items:center">
+        <input class="cell-edit" id="batch-new-due" type="date" onkeydown="handleDateInput(event, 'batch-new-due', 'due')" style="flex:1">
+        <button class="btn-date-quick" onclick="setDateToday('batch-new-due')" title="Set to today">T</button>
+      </td>
       <td>
         <select class="cell-edit" id="batch-new-status" onkeydown="handleBatchRowKey(event, 'status')">
           <option value="Planned">Planned</option>
@@ -65,8 +71,14 @@ function renderScheduling() {
           </select>
         </td>
         <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
-        <td><input class="cell-edit" type="date" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', this.value)" onkeydown="handleCellKey(event)"></td>
-        <td><input class="cell-edit" type="date" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td style="display:flex;gap:4px;align-items:center">
+          <input class="cell-edit" type="date" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', this.value)" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}" style="flex:1">
+          <button class="btn-date-quick" onclick="setDateToday('batch-start-${batchIdx}'); prodDataUpdateBatch(${batchIdx}, 'start_date', document.getElementById('batch-start-${batchIdx}').value)" title="Set to today">T</button>
+        </td>
+        <td style="display:flex;gap:4px;align-items:center">
+          <input class="cell-edit" type="date" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', this.value)" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}" style="flex:1">
+          <button class="btn-date-quick" onclick="setDateToday('batch-due-${batchIdx}'); prodDataUpdateBatch(${batchIdx}, 'due_date', document.getElementById('batch-due-${batchIdx}').value)" title="Set to today">T</button>
+        </td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'status', this.value)" onkeydown="handleCellKey(event)">
             <option value="Planned" ${batch.status === 'Planned' ? 'selected' : ''}>Planned</option>
@@ -317,4 +329,64 @@ function toggleHideCompleteBatches() {
   prodSchedulingHideComplete = !prodSchedulingHideComplete;
   localStorage.setItem('prodSchedulingHideComplete', prodSchedulingHideComplete);
   render();
+}
+
+// ── Smart date input helpers ─────────────────────────────
+function handleDateInput(event, fieldId, fieldType, batchIdx) {
+  if (event.key === 'Tab') {
+    // Handle relative date input on blur/tab
+    const input = event.target;
+    const val = input.value.trim().toLowerCase();
+
+    if (val && !val.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const parsed = parseDateInput(val);
+      if (parsed) {
+        input.value = parsed;
+        event.preventDefault();
+        // Trigger change event
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    // Then handle normal tab navigation
+    handleCellKey(event);
+  }
+}
+
+function setDateToday(fieldId) {
+  const today = new Date().toISOString().split('T')[0];
+  const field = document.getElementById(fieldId);
+  if (field) {
+    field.value = today;
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+
+function parseDateInput(input) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Handle "t" or "today"
+  if (input === 't' || input === 'today') {
+    return formatDate(today);
+  }
+
+  // Handle relative dates: +7, -3, etc.
+  const relMatch = input.match(/^([+-])(\d+)$/);
+  if (relMatch) {
+    const offset = parseInt(relMatch[1] + relMatch[2]);
+    const date = new Date(today);
+    date.setDate(date.getDate() + offset);
+    return formatDate(date);
+  }
+
+  // Handle "next Friday" style (optional enhancement)
+  return null;
+}
+
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }

@@ -9,11 +9,23 @@ function setProductionTab(tab) {
   render();
 }
 
+function prodNavBar() {
+  return `
+    <div class="prod-nav-bar">
+      <button class="prod-nav-item ${productionTab === 'products' ? 'active' : ''}" onclick="setProductionTab('products')">📦 Products</button>
+      <button class="prod-nav-item ${productionTab === 'scheduling' ? 'active' : ''}" onclick="setProductionTab('scheduling')">📅 Schedule</button>
+      <button class="prod-nav-item ${productionTab === 'by-product' ? 'active' : ''}" onclick="setProductionTab('by-product')">📋 Plan by Product</button>
+      <button class="prod-nav-item ${productionTab === 'by-unit' ? 'active' : ''}" onclick="setProductionTab('by-unit')">🏭 Plan by Unit</button>
+    </div>
+  `;
+}
+
 function renderProduction() {
-  if (productionTab === 'products') return renderProductMaster();
-  if (productionTab === 'scheduling') return renderScheduling();
-  if (productionTab === 'by-product') return renderPlanByProduct();
-  if (productionTab === 'by-unit') return renderPlanByUnit();
+  const nav = prodNavBar();
+  if (productionTab === 'products') return nav + renderProductMaster();
+  if (productionTab === 'scheduling') return nav + renderScheduling();
+  if (productionTab === 'by-product') return nav + renderPlanByProduct();
+  if (productionTab === 'by-unit') return nav + renderPlanByUnit();
 
   // Root hub view
   return `
