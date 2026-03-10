@@ -128,32 +128,29 @@ function renderFamilyGroup(fam, projs, hideHeader) {
     const overdueAct = (p.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
     const highRPN    = (p.pfmea || []).filter(r => calcRPN(r) >= 100).length;
     const rag        = overdueAct > 0 || highRPN > 0 ? 'r' : openAct > 0 ? 'a' : 'g';
-    const ragLabel   = rag === 'r' ? 'Needs Attention' : rag === 'a' ? 'In Progress' : 'On Track';
+    const ragShort   = rag === 'r' ? '⚠' : rag === 'a' ? '→' : '✓';
     const pips       = GATE_DEFS.map((g, i) => {
       const gd  = gates[i];
       const cls = gd && gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : '';
       return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`;
     }).join('');
     const lastSaved = p.updated_at
-      ? new Date(p.updated_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      ? new Date(p.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
       : '—';
     html += `<div class="proj-card" onclick="openProject('${p.id}')">
       <div class="proj-card-name">${esc(p.name)}</div>
       <div class="proj-card-meta">
         ${p.customer   ? `<span>👤 ${esc(p.customer)}</span>`   : ''}
         ${p.unit       ? `<span>🚂 ${esc(p.unit)}</span>`       : ''}
-        ${p.lead       ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>`  : ''}
-        ${p.pm         ? `<span>📋 PM: ${esc(p.pm)}</span>`     : ''}
-        ${p.qNumber    ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''}
-        ${p.partNumber ? `<span>🆔 PN: ${esc(p.partNumber)}</span>` : ''}
+        ${p.lead       ? `<span>ME: ${esc(p.lead)}</span>`  : ''}
       </div>
       <div class="proj-card-gate">
-        <span class="proj-card-gate-label">GATE ${curGate >= 0 ? curGate : '✓'}</span>
+        <span class="proj-card-gate-label">G${curGate >= 0 ? curGate : '✓'}</span>
         ${pips}
       </div>
       <div class="proj-card-footer">
-        <span><span class="proj-rag proj-rag-${rag}"></span>${ragLabel}</span>
-        <span>${gatesDone}/6 gates · ${lastSaved}</span>
+        <span><span class="proj-rag proj-rag-${rag}"></span>${ragShort}</span>
+        <span>${lastSaved}</span>
       </div>
     </div>`;
   });
@@ -309,10 +306,10 @@ function renderDashboard() {
       <div class="kpi-card" onclick="apqpTab='pfmea';navigate('apqp')" style="--kpi-color:${highRPN > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${highRPN}</div><div class="kpi-label">High RPN</div><div class="kpi-sub">${p.pfmea.length} total rows</div></div>
     </div>
     ${alerts ? `<div class="alert-row">${alerts}</div>` : ''}
-    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Gate Progress — click any gate to open</div>
+    <div class="dash-section-label">Gate Progress</div>
     <div class="gate-strip">${gateStrip}</div>
-    <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;margin-top:4px">Tools</div>
-    <div class="section-launcher" style="margin-bottom:20px">${launcherHTML}</div>
+    <div class="dash-section-label" style="margin-top:8px">Tools</div>
+    <div class="section-launcher" style="margin-bottom:16px">${launcherHTML}</div>
     ${parentProg ? `<div class="parent-prog-card" onclick="progId='${parentProg.id}';navigate('project')">
       <div class="parent-prog-label">↑ PARENT PROGRAMME</div>
       <div class="parent-prog-name">${esc(parentProg.name)}</div>
@@ -320,11 +317,11 @@ function renderDashboard() {
     </div>` : ''}
     <div class="dash-split-row">
       <div class="dash-split-col">
-        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Sub-assemblies</div>
+        <div class="dash-section-label">Sub-assemblies</div>
         ${subAsmHTML}
       </div>
       <div class="dash-split-col">
-        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">PFMEA RPN Burndown</div>
+        <div class="dash-section-label">PFMEA RPN Burndown</div>
         ${rpnBurndownHTML}
       </div>
     </div>

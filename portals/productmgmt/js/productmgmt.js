@@ -58,6 +58,11 @@ function renderProductMgmt() {
                 <input id="pmNewLabel" type="text" placeholder="e.g. Rotating Machines"
                        onkeydown="if(event.key==='Enter')pmSaveNew()">
               </div>
+              <div class="field" style="flex:1;margin:0">
+                <label>Description</label>
+                <input id="pmNewDescription" type="text" placeholder="e.g. Fans & pumps"
+                       onkeydown="if(event.key==='Enter')pmSaveNew()">
+              </div>
               <div class="pm-add-form-btns">
                 <button class="btn btn-primary" onclick="pmSaveNew()">Add</button>
                 <button class="btn btn-ghost" onclick="document.getElementById('pmAddForm').style.display='none'">Cancel</button>
@@ -97,6 +102,10 @@ function renderProductMgmt() {
           <label>Family Name</label>
           <input id="pmEditLabel" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
         </div>
+        <div class="field">
+          <label>Description</label>
+          <input id="pmEditDescription" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
+        </div>
         <input type="hidden" id="pmEditIdx">
         <div class="modal-actions">
           <button class="btn btn-ghost" onclick="pmCloseEditModal()">Cancel</button>
@@ -133,6 +142,11 @@ function renderFamiliesTabContent() {
           <input id="pmNewLabel" type="text" placeholder="e.g. Rotating Machines"
                  onkeydown="if(event.key==='Enter')pmSaveNew()">
         </div>
+        <div class="field" style="flex:1;margin:0">
+          <label>Description</label>
+          <input id="pmNewDescription" type="text" placeholder="e.g. Fans & pumps"
+                 onkeydown="if(event.key==='Enter')pmSaveNew()">
+        </div>
         <div class="pm-add-form-btns">
           <button class="btn btn-primary" onclick="pmSaveNew()">Add</button>
           <button class="btn btn-ghost" onclick="document.getElementById('pmAddForm').style.display='none'">Cancel</button>
@@ -161,6 +175,10 @@ function renderFamiliesTabContent() {
         <div class="field">
           <label>Family Name</label>
           <input id="pmEditLabel" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <input id="pmEditDescription" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
         </div>
         <input type="hidden" id="pmEditIdx">
         <div class="modal-actions">
@@ -203,6 +221,7 @@ function pmRefresh() {
 function pmShowAddForm() {
   document.getElementById('pmNewIcon').value  = '';
   document.getElementById('pmNewLabel').value = '';
+  document.getElementById('pmNewDescription').value = '';
   document.getElementById('pmAddForm').style.display = 'block';
   document.getElementById('pmNewIcon').focus();
 }
@@ -210,6 +229,7 @@ function pmShowAddForm() {
 function pmSaveNew() {
   const icon  = document.getElementById('pmNewIcon').value.trim()  || '📋';
   const label = document.getElementById('pmNewLabel').value.trim();
+  const description = document.getElementById('pmNewDescription').value.trim() || '';
   if (!label) { alert('Please enter a family name.'); return; }
 
   pmEnsureCustomFamilies();
@@ -218,7 +238,7 @@ function pmSaveNew() {
     alert('A family with this name already exists.'); return;
   }
 
-  db.families.push({ id: label, label, icon });
+  db.families.push({ id: label, label, icon, description });
   save();
   populateFamilySelects();
   pmRefresh();
@@ -229,6 +249,7 @@ function pmEditFamily(idx) {
   if (!f) return;
   document.getElementById('pmEditIcon').value  = f.icon;
   document.getElementById('pmEditLabel').value = f.label;
+  document.getElementById('pmEditDescription').value = f.description || '';
   document.getElementById('pmEditIdx').value   = idx;
   document.getElementById('pmEditModal').style.display = 'flex';
   document.getElementById('pmEditLabel').focus();
@@ -242,6 +263,7 @@ function pmSaveEdit() {
   const idx   = parseInt(document.getElementById('pmEditIdx').value, 10);
   const icon  = document.getElementById('pmEditIcon').value.trim()  || '📋';
   const label = document.getElementById('pmEditLabel').value.trim();
+  const description = document.getElementById('pmEditDescription').value.trim() || '';
   if (!label) { alert('Please enter a family name.'); return; }
 
   pmEnsureCustomFamilies();
@@ -253,7 +275,7 @@ function pmSaveEdit() {
     alert('A family with this name already exists.'); return;
   }
 
-  db.families[idx] = { id: newId, label, icon };
+  db.families[idx] = { id: newId, label, icon, description };
 
   // Update any projects that used the old family id
   if (oldId && oldId !== newId) {

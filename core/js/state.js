@@ -51,10 +51,10 @@ const GATE_DEFS = [
 
 // ── Product family registry ───────────────────────────────────
 const FAMILIES = [
-  { id: 'HVAC',             label: 'HVAC',             icon: '❄️' },
-  { id: 'Rotating Machines',label: 'Rotating Machines', icon: '⚙️' },
-  { id: 'Pneumatics',       label: 'Pneumatics',        icon: '💨' },
-  { id: 'Other',            label: 'Other',             icon: '📋' },
+  { id: 'HVAC',             label: 'HVAC',             icon: '❄️', description: 'Heating, ventilation, and air conditioning systems' },
+  { id: 'Rotating Machines',label: 'Rotating Machines', icon: '⚙️', description: 'Fans & pumps' },
+  { id: 'Pneumatics',       label: 'Pneumatics',        icon: '💨', description: 'Pneumatic components and systems' },
+  { id: 'Other',            label: 'Other',             icon: '📋', description: 'Miscellaneous products' },
 ];
 
 // Returns user-defined families if any exist, otherwise falls back to defaults
