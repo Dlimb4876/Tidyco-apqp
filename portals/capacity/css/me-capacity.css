@@ -839,3 +839,241 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ── Advanced Estimation Modal ───────────────────────────────── */
+#me-advanced-estimation-modal {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; background: rgba(0,0,0,0.5);
+  animation: fadeIn .15s ease-out;
+}
+
+.me-modal-content {
+  position: relative; background: var(--white); border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15); width: 90%; max-width: 700px;
+  max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column;
+  z-index: 1001;
+}
+
+.me-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px; border-bottom: 1px solid var(--line); flex-shrink: 0;
+}
+
+.me-modal-header h2 {
+  font-size: 16px; font-weight: 600; color: var(--ink); margin: 0;
+}
+
+.me-modal-close {
+  width: 28px; height: 28px; border: none; background: transparent;
+  cursor: pointer; font-size: 18px; color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; transition: all .12s;
+}
+
+.me-modal-close:hover {
+  background: var(--line-light); color: var(--ink);
+}
+
+.me-modal-body {
+  padding: 16px; flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+.me-estimation-section {
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.me-estimation-section h3 {
+  font-size: 14px; font-weight: 600; color: var(--ink);
+  margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+}
+
+/* Activity list */
+.me-activities-list {
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.me-activity-item {
+  border: 1px solid var(--line); border-radius: 6px; padding: 12px;
+  background: #fafbfd; display: flex; flex-direction: column; gap: 8px;
+}
+
+.me-activity-row {
+  display: flex; gap: 8px; align-items: flex-start;
+}
+
+.me-input-small {
+  flex: 1; padding: 6px 8px; border: 1px solid var(--line2);
+  border-radius: 4px; font-size: 12px; color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif; background: var(--white);
+  transition: border-color .12s;
+}
+
+.me-input-small:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0,102,204,.08);
+}
+
+.me-input-hours {
+  width: 90px; padding: 6px 8px; border: 1px solid var(--line2);
+  border-radius: 4px; font-size: 12px; color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace; background: var(--white);
+  text-align: right; transition: border-color .12s;
+}
+
+.me-input-hours:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0,102,204,.08);
+}
+
+.me-input-full {
+  width: 100%; padding: 6px 8px; border: 1px solid var(--line2);
+  border-radius: 4px; font-size: 12px; color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif; background: var(--white);
+  resize: vertical; min-height: 50px; transition: border-color .12s;
+}
+
+.me-input-full:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0,102,204,.08);
+}
+
+.me-btn-delete {
+  width: 28px; height: 28px; border: none; background: transparent;
+  cursor: pointer; color: var(--muted); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; transition: all .12s; flex-shrink: 0;
+}
+
+.me-btn-delete:hover {
+  background: var(--red-pale); color: var(--red);
+}
+
+/* Complexity factors */
+.me-complexity-factors {
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.me-factor-item {
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.me-factor-item label {
+  font-size: 12px; font-weight: 500; color: var(--ink);
+}
+
+.me-slider {
+  width: 100%; height: 6px; border-radius: 3px;
+  background: var(--line2); outline: none; -webkit-appearance: none;
+  appearance: none;
+}
+
+.me-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blue); cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.me-slider::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blue); cursor: pointer;
+  border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.me-factor-value {
+  font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-complexity-note {
+  margin: 0; padding: 8px 0; font-size: 12px; color: var(--muted);
+  border-top: 1px solid var(--line); padding-top: 12px;
+}
+
+/* Summary section */
+.me-summary-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; font-size: 13px;
+}
+
+.me-summary-item label {
+  color: var(--muted); font-weight: 500;
+}
+
+.me-summary-value {
+  color: var(--ink); font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-summary-highlight {
+  padding: 12px; background: #f0f7ff; border: 1px solid var(--blue-pale);
+  border-radius: 6px; display: flex; justify-content: space-between;
+  align-items: center; margin: 8px 0;
+}
+
+.me-summary-highlight label {
+  color: var(--ink); font-weight: 600; font-size: 13px;
+}
+
+.me-summary-total {
+  font-size: 18px; font-weight: 700; color: var(--blue);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Modal footer */
+.me-modal-footer {
+  display: flex; gap: 8px; padding: 12px 16px;
+  border-top: 1px solid var(--line); flex-shrink: 0;
+  justify-content: flex-end; flex-wrap: wrap;
+}
+
+.me-btn-primary,
+.me-btn-secondary,
+.me-btn-danger {
+  padding: 6px 14px; border: none; border-radius: 4px;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: all .12s; font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.me-btn-primary {
+  background: var(--blue); color: white;
+}
+
+.me-btn-primary:hover {
+  background: #0066cc; box-shadow: 0 2px 8px rgba(0,102,204,.2);
+}
+
+.me-btn-secondary {
+  background: var(--line); color: var(--ink);
+}
+
+.me-btn-secondary:hover {
+  background: var(--line2);
+}
+
+.me-btn-danger {
+  background: transparent; color: var(--red); border: 1px solid var(--red-pale);
+}
+
+.me-btn-danger:hover {
+  background: var(--red-pale);
+}
+
+/* Add Activity button */
+.me-btn-primary {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* Advanced Estimate button in table */
+.me-adv-btn {
+  width: 24px; height: 24px; border-radius: 4px; border: none;
+  background: transparent; cursor: pointer; color: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: all .12s; flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.me-adv-btn:hover {
+  background: var(--blue-pale); color: var(--blue);
+}
