@@ -74,19 +74,22 @@ function renderPlanByUnit() {
     return `
       <button
         class="unit-tab ${isActive ? 'active' : ''}"
-        onclick="prodSetActiveUnit('${unit}'); navigate('production?pt=by-unit')"
+        onclick="prodSetActiveUnit('${unit}'); setProductionTab('by-unit')"
       >
         ${unit} <span class="tab-count">${count}</span>
       </button>
     `;
   }).join('');
 
-  // Render timeline for active unit
+  // Render Gantt timeline for active unit
   const batches = prodDataGetBatchesByUnit(activeUnit);
   const sortedBatches = batches.sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
 
-  // Calculate date range
+  // Calculate date range (add 7 days padding to end)
   let minDate = null, maxDate = null;
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
   sortedBatches.forEach(batch => {
     if (batch.start_date) {
       minDate = !minDate || batch.start_date < minDate ? batch.start_date : minDate;
@@ -96,44 +99,29 @@ function renderPlanByUnit() {
     }
   });
 
-  // Generate week headers and batch timeline
+  // Ensure at least 4 weeks of view
+  if (minDate && maxDate) {
+    const startD = new Date(minDate);
+    const endD = new Date(maxDate);
+    const diff = (endD - startD) / (1000 * 60 * 60 * 24);
+    if (diff < 28) {
+      const endD2 = new Date(endD);
+      endD2.setDate(endD2.getDate() + (28 - diff));
+      maxDate = endD2.toISOString().split('T')[0];
+    }
+  } else if (sortedBatches.length === 0) {
+    const start = new Date();
+    minDate = start.toISOString().split('T')[0];
+    const end = new Date(start);
+    end.setDate(end.getDate() + 28);
+    maxDate = end.toISOString().split('T')[0];
+  }
+
   let timelineHtml = '';
   if (sortedBatches.length === 0) {
     timelineHtml = '<div style="padding:32px;text-align:center;color:var(--muted);font-style:italic">No batches scheduled for this unit</div>';
   } else {
-    // Build timeline with weeks
-    const weeks = getWeeksInRange(minDate, maxDate);
-    const weekHeadersHtml = weeks.map(week => {
-      return `<div class="week-header">${formatWeekRange(week.start, week.end)}</div>`;
-    }).join('');
-
-    const batchesHtml = sortedBatches.map(batch => {
-      const product = prodDataGetProductById(batch.product_id);
-      const productName = product ? `${product.code || 'Unknown'}` : 'Unknown';
-      const statusBadge = getStatusBadge(batch.status);
-
-      return `
-        <div class="timeline-batch">
-          <div class="tb-meta">
-            <div class="tb-product">${esc(productName)}</div>
-            <div class="tb-info">
-              <span>${batch.quantity || '—'} qty</span>
-              <span>${batch.start_date || '—'} to ${batch.due_date || '—'}</span>
-            </div>
-          </div>
-          <div class="tb-status">${statusBadge}</div>
-        </div>
-      `;
-    }).join('');
-
-    timelineHtml = `
-      <div class="timeline-weeks">
-        ${weekHeadersHtml}
-      </div>
-      <div class="timeline-batches">
-        ${batchesHtml}
-      </div>
-    `;
+    timelineHtml = buildGanttTimeline(sortedBatches, minDate, maxDate, todayStr);
   }
 
   return `
@@ -142,7 +130,7 @@ function renderPlanByUnit() {
         <div>
           <div class="sec-eyebrow">PRODUCTION PLAN</div>
           <div class="sec-title">By Unit</div>
-          <div class="sec-desc">Weekly production schedule</div>
+          <div class="sec-desc">Gantt timeline showing due dates</div>
         </div>
         <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
       </div>
@@ -156,6 +144,129 @@ function renderPlanByUnit() {
       </div>
     </div>
   `;
+}
+
+function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
+  const startDate = new Date(minDate);
+  const endDate = new Date(maxDate);
+  const dayDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+  // Generate day headers (show dates for each week start + end labels)
+  let dayHeadersHtml = '';
+  let prevWeekNum = -1;
+  for (let i = 0; i < dayDiff; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const dStr = d.toISOString().split('T')[0];
+    const weekNum = Math.floor(i / 7);
+    const dayOfWeek = d.getDay();
+
+    if (dayOfWeek === 1 || i === 0) {
+      // Monday or first day: show week header
+      dayHeadersHtml += `<div class="gantt-week-col" style="grid-column: span 1;" data-date="${dStr}">
+        <div class="gantt-date">${formatDateShort(d)}</div>
+      </div>`;
+    } else if (dayOfWeek === 0 || i === dayDiff - 1) {
+      // Sunday or last day: show week end
+      dayHeadersHtml += `<div class="gantt-week-col" style="grid-column: span 1;" data-date="${dStr}">
+        <div class="gantt-date">${formatDateShort(d)}</div>
+      </div>`;
+    } else {
+      dayHeadersHtml += `<div class="gantt-week-col" style="grid-column: span 1;" data-date="${dStr}"></div>`;
+    }
+  }
+
+  // Generate batch rows with bars spanning their duration
+  let batchRowsHtml = '';
+  batches.forEach((batch, idx) => {
+    const product = prodDataGetProductById(batch.product_id);
+    const productName = product ? `${product.code || 'Unknown'}` : 'Unknown';
+    const startD = batch.start_date ? new Date(batch.start_date) : null;
+    const endD = batch.due_date ? new Date(batch.due_date) : null;
+
+    // Calculate bar position
+    let startOffset = 0, duration = 1;
+    if (startD && endD) {
+      startOffset = Math.max(0, Math.ceil((startD - startDate) / (1000 * 60 * 60 * 24)));
+      duration = Math.ceil((endD - startD) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    // Determine bar color based on status and due date
+    let barColor = 'var(--blue)';
+    if (batch.status === 'Complete') {
+      barColor = 'var(--green)';
+    } else if (batch.status === 'In Progress') {
+      barColor = 'var(--amber)';
+    } else if (endD && endD < new Date(todayStr)) {
+      barColor = 'var(--red)'; // Overdue
+    }
+
+    const statusBadge = getStatusBadge(batch.status);
+    const isOverdue = endD && endD < new Date(todayStr) && batch.status !== 'Complete';
+
+    batchRowsHtml += `
+      <div class="gantt-batch-row" data-batch-id="${batch.id}">
+        <div class="gantt-batch-label">
+          <div class="gantt-product-code">${esc(productName)}</div>
+          <div class="gantt-batch-meta">${batch.quantity || 0} units • ${batch.start_date || '?'} to ${batch.due_date || '?'}</div>
+        </div>
+        <div class="gantt-batch-chart">
+          <div class="gantt-bar-container">
+            <div class="gantt-spacer" style="grid-column: ${startOffset + 1} / span 1;"></div>
+            <div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
+                 style="grid-column: ${startOffset + 1} / span ${Math.max(1, duration)}; background-color: ${barColor};"
+                 title="${esc(productName)} - ${batch.start_date} to ${batch.due_date}">
+              <div class="gantt-bar-label">${esc(productName)}</div>
+            </div>
+          </div>
+        </div>
+        <div class="gantt-batch-status">
+          ${statusBadge}
+        </div>
+      </div>
+    `;
+  });
+
+  return `
+    <div class="gantt-container">
+      <div class="gantt-header">
+        <div class="gantt-header-label">Product</div>
+        <div class="gantt-header-chart">
+          <div class="gantt-week-grid" style="display: grid; grid-template-columns: repeat(${dayDiff}, 1fr); gap: 1px;">
+            ${dayHeadersHtml}
+          </div>
+        </div>
+        <div class="gantt-header-status">Status</div>
+      </div>
+      <div class="gantt-rows">
+        ${batchRowsHtml}
+      </div>
+      <div class="gantt-legend">
+        <div class="gantt-legend-item">
+          <div class="gantt-legend-color" style="background: var(--blue);"></div>
+          <span>Planned</span>
+        </div>
+        <div class="gantt-legend-item">
+          <div class="gantt-legend-color" style="background: var(--amber);"></div>
+          <span>In Progress</span>
+        </div>
+        <div class="gantt-legend-item">
+          <div class="gantt-legend-color" style="background: var(--green);"></div>
+          <span>Complete</span>
+        </div>
+        <div class="gantt-legend-item">
+          <div class="gantt-legend-color" style="background: var(--red);"></div>
+          <span>Overdue</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function formatDateShort(d) {
+  const m = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${day}/${m}`;
 }
 
 function getWeeksInRange(startStr, endStr) {

@@ -12,7 +12,12 @@ function renderProductMaster() {
       <td class="w28 ctr">+</td>
       <td><input class="cell-edit" id="prod-new-name" placeholder="Product name" onkeydown="handleProdRowKey(event, 'name')"></td>
       <td><input class="cell-edit" id="prod-new-code" placeholder="Code" onkeydown="handleProdRowKey(event, 'code')"></td>
-      <td><input class="cell-edit" id="prod-new-family" placeholder="Family" onkeydown="handleProdRowKey(event, 'family')"></td>
+      <td>
+        <select class="cell-edit" id="prod-new-family" onkeydown="handleProdRowKey(event, 'family')">
+          <option value="">—</option>
+          ${FAMILIES.map(f => `<option value="${f.id}">${f.label}</option>`).join('')}
+        </select>
+      </td>
       <td><input class="cell-edit" id="prod-new-lead" type="number" placeholder="Turnaround time (days)" onkeydown="handleProdRowKey(event, 'lead')" title="Time between receipt and delivery (in days)"></td>
       <td>
         <select class="cell-edit" id="prod-new-status" onkeydown="handleProdRowKey(event, 'status')">
@@ -40,7 +45,12 @@ function renderProductMaster() {
         <td class="w28 ctr">${idx + 1}</td>
         <td><input class="cell-edit" value="${esc(prod.name || '')}" onchange="prodDataUpdateProduct(${idx}, 'name', this.value)" onkeydown="handleCellKey(event)"></td>
         <td><input class="cell-edit" value="${esc(prod.code || '')}" onchange="prodDataUpdateProduct(${idx}, 'code', this.value)" onkeydown="handleCellKey(event)"></td>
-        <td><input class="cell-edit" value="${esc(prod.family || '')}" onchange="prodDataUpdateProduct(${idx}, 'family', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td>
+          <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'family', this.value)" onkeydown="handleCellKey(event)">
+            <option value="">—</option>
+            ${FAMILIES.map(f => `<option value="${f.id}" ${prod.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
+          </select>
+        </td>
         <td><input class="cell-edit" type="number" value="${prod.lead_time_days || ''}" onchange="prodDataUpdateProduct(${idx}, 'lead_time_days', this.value)" onkeydown="handleCellKey(event)"></td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'status', this.value)" onkeydown="handleCellKey(event)">

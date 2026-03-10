@@ -3,10 +3,22 @@
 // Depends on: all other modules
 // ═══════════════════════════════════
 
+// ── Populate family dropdown from global FAMILIES list ────────────
+function populateFamilySelects() {
+  const familySelects = ['np_family'];
+  familySelects.forEach(id => {
+    const select = document.getElementById(id);
+    if (select) {
+      select.innerHTML = FAMILIES.map(f => `<option value="${f.id}"${f.id === 'Other' ? ' selected' : ''}>${f.label}</option>`).join('');
+    }
+  });
+}
+
 async function launchApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display   = 'flex';
   setSyncBadge('syncing', '● loading…');
+  populateFamilySelects();
   await loadRemote();
   if (db.programmes.length === 0) load();
   if (db.programmes.length === 0) {
