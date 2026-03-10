@@ -36,7 +36,7 @@ function renderActions() {
   <div class="card-head"><span class="card-title">All Actions</span><span class="card-meta">${p.actions.length} total</span></div>
   ${p.actions.length === 0
     ? emptyState('✅', 'No actions yet', 'Click ＋ Add Action to start tracking')
-    : `<div class="sticky-card-scroll"><table class="tbl act-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:auto"><col style="width:100px"><col style="width:115px"><col style="width:110px"><col style="width:90px"><col style="width:90px"><col style="width:160px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
+    : `<div class="sticky-card-scroll"><table class="tbl act-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:120px"><col style="width:100px"><col style="width:100px"><col style="width:220px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="addAction()">＋ Add Action</button></div>`;
 }
 function addAction()       { prog().actions.push({ id: 'a_' + Date.now(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }); save(); render(); }

@@ -197,9 +197,11 @@ function renderDashboard() {
 
   const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
+  const totalBomItems = [p.bom.parts, p.bom.tools, p.bom.equip, p.bom.mat, p.bom.cons, p.bom.kits]
+    .reduce((sum, arr) => sum + (arr?.length || 0), 0);
 
   // ── Layout order: KPIs → Alerts → Gate Strip → Tools → Parent → Split(Sub-assemblies | RPN Burndown) → Actions/Risks
-  return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 PM: ${esc(p.pm)}</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
+  return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME Lead: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 Project Manager: ${esc(p.pm)}</span>` : ''} ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''} ${totalBomItems > 0 ? `<span>📦 BOM: ${totalBomItems} items</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
       <div class="kpi-card" onclick="navigate('gate_${curGate >= 0 ? curGate : 5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
@@ -258,7 +260,7 @@ function createProg() {
   const partNumber = document.getElementById('np_partNumber').value.trim();
   const parentId = document.getElementById('np_parent')?.value   || null;
   const newProg  = migrateprog({
-    id, name, family, customer, unit, lead, pm, date,
+    id, name, family, customer, unit, lead, pm, date, qNumber, partNumber,
     parentId: parentId || null,
     gates: [], ctq: [], pfd: [], pfmea: [], bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
     actions: [], risks: [], gantt: [], subAssemblies: []
