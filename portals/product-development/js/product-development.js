@@ -83,7 +83,7 @@ function renderProductFamilyDatabase() {
         <div class="hub-card-content">
           <div class="hub-icon">${fam.icon}</div>
           <div class="proj-card-name">${esc(fam.label)}</div>
-          <div class="proj-card-meta">ID: ${fam.id}</div>
+          <div class="proj-card-meta">${fam.description ? esc(fam.description) : 'No description'}</div>
         </div>
       </div>
     `;
