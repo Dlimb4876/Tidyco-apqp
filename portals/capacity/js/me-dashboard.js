@@ -107,12 +107,6 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
       </div>
     </div>
   `;
-
-  // Initialize charts after render
-  setTimeout(() => {
-    meDashboardDrawMiniChart(teamArray, tasksArray, productsArray, holidaysArray);
-    meDashboardDrawMiniHeatmap(teamArray, tasksArray, holidaysArray);
-  }, 100);
 };
 
 /**
