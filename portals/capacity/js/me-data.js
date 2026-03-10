@@ -1,0 +1,330 @@
+/* ============================================================
+   me-data.js — ME Capacity Data Layer (Global Namespace)
+   Combines all data/me-data/*.js modules into one file
+   ============================================================ */
+
+// ─────────────────────────────────────────────────────────────
+// Global data object
+// ─────────────────────────────────────────────────────────────
+window.meDataState = {
+  team: [],
+  tasks: [],
+  products: [],
+  holidays: []
+};
+
+// ─────────────────────────────────────────────────────────────
+// TEAM CRUD
+// ─────────────────────────────────────────────────────────────
+
+window.meDataAddTeam = function(name, hoursPerWeek, utilisation) {
+  if (!name || name.trim().length === 0) return false;
+  const member = {
+    id: meUUID(),
+    name: name.trim(),
+    hoursPerWeek: parseFloat(hoursPerWeek) || 37.5,
+    utilisation: parseFloat(utilisation) || 80,
+    jobTitle: ''
+  };
+  meDataState.team.push(member);
+  return true;
+};
+
+window.meDataUpdateTeam = function(idx, field, value) {
+  if (idx < 0 || idx >= meDataState.team.length) return false;
+  const member = meDataState.team[idx];
+  switch (field) {
+    case 'name':
+      member.name = value.trim();
+      break;
+    case 'hoursPerWeek':
+      member.hoursPerWeek = parseFloat(value) || 37.5;
+      break;
+    case 'utilisation':
+      member.utilisation = parseFloat(value) || 80;
+      break;
+    case 'jobTitle':
+      member.jobTitle = value ? value.trim() : '';
+      break;
+    default:
+      return false;
+  }
+  return true;
+};
+
+window.meDataDeleteTeam = function(idx) {
+  if (idx < 0 || idx >= meDataState.team.length) return false;
+  meDataState.team.splice(idx, 1);
+  return true;
+};
+
+window.meDataGetTeam = function() {
+  return meDataState.team;
+};
+
+// ─────────────────────────────────────────────────────────────
+// TASK CRUD
+// ─────────────────────────────────────────────────────────────
+
+window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours) {
+  if (!name || name.trim().length === 0) return false;
+  const task = {
+    id: meUUID(),
+    name: name.trim(),
+    category: category || 'NPI',
+    assigneeId: assigneeId || '',
+    startDate: startDate,
+    endDate: endDate,
+    totalHours: parseFloat(totalHours) || 0,
+    createdAt: new Date().toISOString()
+  };
+  meDataState.tasks.push(task);
+  return true;
+};
+
+window.meDataUpdateTask = function(idx, field, value) {
+  if (idx < 0 || idx >= meDataState.tasks.length) return false;
+  const task = meDataState.tasks[idx];
+  switch (field) {
+    case 'name':
+      task.name = value.trim();
+      break;
+    case 'category':
+      task.category = value || 'NPI';
+      break;
+    case 'assigneeId':
+      task.assigneeId = value || '';
+      break;
+    case 'startDate':
+      task.startDate = value;
+      break;
+    case 'endDate':
+      task.endDate = value;
+      break;
+    case 'totalHours':
+      task.totalHours = parseFloat(value) || 0;
+      break;
+    default:
+      return false;
+  }
+  return true;
+};
+
+window.meDataDeleteTask = function(idx) {
+  if (idx < 0 || idx >= meDataState.tasks.length) return false;
+  meDataState.tasks.splice(idx, 1);
+  return true;
+};
+
+window.meDataGetTasks = function() {
+  return meDataState.tasks;
+};
+
+// ─────────────────────────────────────────────────────────────
+// PRODUCT CRUD
+// ─────────────────────────────────────────────────────────────
+
+window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek, notes) {
+  if (!name || name.trim().length === 0) return false;
+  const product = {
+    id: meUUID(),
+    name: name.trim(),
+    supportFrom: supportFrom,
+    supportUntil: supportUntil,
+    hoursPerWeek: parseFloat(hoursPerWeek) || 5,
+    notes: notes ? notes.trim() : '',
+    createdAt: new Date().toISOString()
+  };
+  meDataState.products.push(product);
+  return true;
+};
+
+window.meDataUpdateProduct = function(idx, field, value) {
+  if (idx < 0 || idx >= meDataState.products.length) return false;
+  const product = meDataState.products[idx];
+  switch (field) {
+    case 'name':
+      product.name = value.trim();
+      break;
+    case 'supportFrom':
+      product.supportFrom = value;
+      break;
+    case 'supportUntil':
+      product.supportUntil = value;
+      break;
+    case 'hoursPerWeek':
+      product.hoursPerWeek = parseFloat(value) || 0;
+      break;
+    case 'notes':
+      product.notes = value ? value.trim() : '';
+      break;
+    default:
+      return false;
+  }
+  return true;
+};
+
+window.meDataDeleteProduct = function(idx) {
+  if (idx < 0 || idx >= meDataState.products.length) return false;
+  meDataState.products.splice(idx, 1);
+  return true;
+};
+
+window.meDataGetProducts = function() {
+  return meDataState.products;
+};
+
+// ─────────────────────────────────────────────────────────────
+// HOLIDAY CRUD
+// ─────────────────────────────────────────────────────────────
+
+window.meDataAddHoliday = function(personId, date, type) {
+  if (!personId || !date || !['full', 'half'].includes(type)) return false;
+  const existing = meDataState.holidays.find(h => h.personId === personId && h.date === date);
+  if (existing) {
+    existing.type = type;
+    return true;
+  }
+  const holiday = {
+    id: meUUID(),
+    personId: personId,
+    date: date,
+    type: type,
+    createdAt: new Date().toISOString()
+  };
+  meDataState.holidays.push(holiday);
+  return true;
+};
+
+window.meDataUpdateHoliday = function(personId, date, newType) {
+  const holiday = meDataState.holidays.find(h => h.personId === personId && h.date === date);
+  if (!holiday) {
+    if (newType) {
+      return meDataAddHoliday(personId, date, newType);
+    }
+    return false;
+  }
+  if (!newType) {
+    return meDataDeleteHoliday(personId, date);
+  }
+  if (!['full', 'half'].includes(newType)) {
+    return false;
+  }
+  holiday.type = newType;
+  return true;
+};
+
+window.meDataDeleteHoliday = function(personId, date) {
+  const idx = meDataState.holidays.findIndex(h => h.personId === personId && h.date === date);
+  if (idx === -1) return false;
+  meDataState.holidays.splice(idx, 1);
+  return true;
+};
+
+window.meDataGetHolidays = function() {
+  return meDataState.holidays;
+};
+
+// ─────────────────────────────────────────────────────────────
+// PERSISTENCE
+// ─────────────────────────────────────────────────────────────
+
+window.meDataInit = async function() {
+  try {
+    if (typeof supa !== 'undefined' && typeof currentUser !== 'undefined' && currentUser) {
+      const { data, error } = await supa
+        .from('me_capacity')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (data) {
+        meDataState = {
+          team: data.team || [],
+          tasks: data.tasks || [],
+          products: data.products || [],
+          holidays: data.holidays || []
+        };
+        window.meDataState = meDataState;
+      }
+    }
+  } catch (err) {
+    console.warn('Supabase load failed, using defaults:', err);
+  }
+  meEnsureStructure();
+};
+
+window.meDataSave = async function(showAlert) {
+  try {
+    if (typeof supa === 'undefined' || typeof currentUser === 'undefined' || !currentUser) {
+      console.warn('Supabase not available');
+      return;
+    }
+
+    if (typeof setSyncBadge === 'function') {
+      setSyncBadge('syncing', 'Saving...');
+    }
+
+    const { error } = await supa
+      .from('me_capacity')
+      .upsert(
+        {
+          user_id: currentUser.id,
+          team: meDataState.team,
+          tasks: meDataState.tasks,
+          products: meDataState.products,
+          holidays: meDataState.holidays,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'user_id' }
+      );
+
+    if (error) throw error;
+
+    if (typeof setSyncBadge === 'function') {
+      setSyncBadge('saved', 'Saved');
+    }
+    if (showAlert) console.log('Saved to Supabase');
+  } catch (err) {
+    console.error('Save error:', err);
+    if (typeof setSyncBadge === 'function') {
+      setSyncBadge('error', 'Save failed');
+    }
+  }
+};
+
+window.meDataGetState = function() {
+  return { ...meDataState };
+};
+
+window.meDataReset = function() {
+  meDataState = {
+    team: [],
+    tasks: [],
+    products: [],
+    holidays: []
+  };
+  window.meDataState = meDataState;
+};
+
+// ─────────────────────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────────────────────
+
+function meEnsureStructure() {
+  if (!meDataState.team) meDataState.team = [];
+  if (!meDataState.tasks) meDataState.tasks = [];
+  if (!meDataState.products) meDataState.products = [];
+  if (!meDataState.holidays) meDataState.holidays = [];
+}
+
+function meUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
