@@ -53,7 +53,13 @@ function renderProductsPortalHTML() {
             </div>
             <div class="form-group">
               <label>Product Family</label>
-              <input type="text" id="productFamily">
+              <select id="productFamily">
+                <option value="">Select a family...</option>
+                <option value="HVAC">HVAC</option>
+                <option value="Rotating Machines">Rotating Machines</option>
+                <option value="Pneumatics">Pneumatics</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Customer *</label>
@@ -66,9 +72,10 @@ function renderProductsPortalHTML() {
             <div class="form-group">
               <label>Status</label>
               <select id="productStatus">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="archived">Archived</option>
+                <option value="Tender">Tender</option>
+                <option value="NPI">NPI</option>
+                <option value="Production">Production</option>
+                <option value="Closed">Closed</option>
               </select>
             </div>
             <div class="form-group">
@@ -245,7 +252,7 @@ function showProductModal(productId = null, product = null) {
     form.reset();
     delete form.dataset.productId;
     document.getElementById('productOverhaulHours').value = 0;
-    document.getElementById('productStatus').value = 'active';
+    document.getElementById('productStatus').value = 'Tender';
   }
 
   modal.classList.add('active');
