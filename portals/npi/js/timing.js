@@ -180,7 +180,8 @@ function renderTimingPlan() {
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">NPI Timing Plan</div>
     <div class="sec-desc">Planned (green) and Actual (orange). Click month headers to collapse. Click cells to toggle.</div></div>
-    <div class="sec-actions">
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button class="btn btn-ghost btn-sm" onclick="goHome()">← Dashboard</button>
       <button class="btn btn-ghost btn-sm" onclick="ganttClear()">Clear All</button>
       <button class="btn btn-primary btn-sm" onclick="ganttAddRow('s1')">＋ Add Task</button>
     </div>

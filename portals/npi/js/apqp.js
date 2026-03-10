@@ -17,7 +17,7 @@ function renderAPQP() {
     tabs.map(t => `<button style="padding:10px 20px;font-size:12px;font-weight:${apqpTab === t.id ? '600' : '500'};cursor:pointer;border:none;border-bottom:2px solid ${apqpTab === t.id ? 'var(--blue)' : 'transparent'};color:${apqpTab === t.id ? 'var(--blue)' : 'var(--muted)'};background:${apqpTab === t.id ? 'var(--blue-pale)' : 'transparent'};font-family:'IBM Plex Sans',sans-serif;transition:all .15s;white-space:nowrap" onclick="setApqpTab('${t.id}')">${t.label}${t.badge > 0 ? ` <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;opacity:.7">(${t.badge})</span>` : ''}${t.warn ? ` <span style="color:var(--amber)">⚠</span>` : ''}</button>`).join('')
   }</div>`;
   const inner = apqpTab === 'ctq' ? renderCTQ() : apqpTab === 'pfd' ? renderPFD() : apqpTab === 'pfmea' ? renderPFMEA() : renderCP();
-  return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div></div>
+  return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="goHome()">← Dashboard</button></div></div>
   ${tabNav}
   <div style="background:var(--white);border:1px solid var(--line);border-top:none;border-radius:0 0 4px 4px;padding:20px 0 0"></div>
   <div class="apqp-tab-content" style="padding-top:18px">${inner}</div>`;

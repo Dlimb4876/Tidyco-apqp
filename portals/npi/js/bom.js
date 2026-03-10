@@ -18,7 +18,7 @@ function renderBOM() {
   }</div>`;
 
   const content = bomSubTab === 'kits' ? renderKits(p) : renderBomTable(bomSubTab, p);
-  return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div></div>${tabHTML}${content}`;
+  return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="goHome()">← Dashboard</button></div></div>${tabHTML}${content}`;
 }
 
 function setBomTab(t) { bomSubTab = t; render(); }

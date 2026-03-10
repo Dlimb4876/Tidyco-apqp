@@ -13,7 +13,10 @@ function renderProjects() {
         <div class="proj-home-title">Projects</div>
         <div class="proj-home-sub">Signed in as ${esc(user)}</div>
       </div>
-      <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Hub</button>
+        <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
+      </div>
     </div>`;
 
   if (db.programmes.length === 0) {
