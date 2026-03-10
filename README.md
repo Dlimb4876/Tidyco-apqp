@@ -3,6 +3,28 @@
 A Manufacturing Engineering tool for rail overhaul, managing APQP Gates 0–5 and broader operational workflows.
 Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and Supabase for persistence.
 
+**Now fully responsive and mobile-friendly** across all screen sizes (480px–1920px+).
+
+---
+
+## Responsive Design
+
+The application is designed with a **progressive enhancement** approach:
+
+- **480px–767px** — Small phones (portrait): Single-column stacked layouts, optimized spacing
+- **768px–1199px** — Tablets & large phones: 2-column layouts, balanced readability
+- **1200px+** — Desktop: Original 3-column grid layouts, full feature visibility
+
+All portals maintain full functionality across breakpoints. Desktop appearance is preserved with no visual changes. Horizontal scrolling is retained for data-heavy tables on mobile.
+
+### Mobile Optimizations
+- Responsive grid layouts (3-col → 2-col → 1-col)
+- Adjusted typography and spacing for readability
+- Modal widths scale to 90vw on mobile (400–600px on desktop)
+- Form fields and inputs stack vertically on mobile
+- Tab navigation scrolls horizontally on small screens
+- Table column widths auto-adjust with horizontal scroll fallback
+
 ---
 
 ## Portals
@@ -181,18 +203,39 @@ pfmea.css → gantt.css → apqp.css → rpn-chart.css
 
 ## CSS Strategy
 
-- **Global Shell**: `main.css` defines custom variables (`--blue`, `--ink`, etc.) and the primary SPA layout.
-- **Common UI**: Shared elements such as modals, buttons, cards, tables, and form inputs reside in `components.css`.
+- **Global Shell**: `main.css` defines custom variables (`--blue`, `--ink`, etc.) and the primary SPA layout, plus global responsive utilities.
+- **Common UI**: Shared elements such as modals, buttons, cards, tables, and form inputs reside in `components.css`, with responsive media queries for mobile/tablet.
+- **Responsive Breakpoints**: All feature CSS files include media queries at 480px and 768px to handle mobile and tablet layouts.
 - **Feature Isolation**: Styles for complex features are kept in standalone files:
-  - `dashboard.css` — KPI grid, gate strip, sub-assembly cards, project list
-  - `hub.css` — Operations portal hub grid
-  - `capacity.css` / `me-capacity.css` — Capacity portal and ME load planning views
-  - `production.css` — Production planning shell and tab views
-  - `products.css` — Product registry and overhaul trends
-  - `pfmea.css` — PFMEA table, RPN badges, sticky headers
-  - `gantt.css` — Gantt timeline, kit builder
-  - `apqp.css` — PFD steps, CTQ table, BOM picker, resource pills
-  - `rpn-chart.css` — RPN trend chart
+  - `dashboard.css` — KPI grid, gate strip, sub-assembly cards, project list (responsive grid layout)
+  - `hub.css` — Operations portal hub grid (3-col → 2-col → 1-col responsive)
+  - `capacity.css` / `me-capacity.css` — Capacity portal and ME load planning views (responsive charts and heatmaps)
+  - `production.css` — Production planning shell and tab views (responsive filters and grids)
+  - `products.css` — Product registry and overhaul trends (responsive product management UI)
+  - `pfmea.css` — PFMEA table, RPN badges, sticky headers (optimized for mobile scroll)
+  - `gantt.css` — Gantt timeline, kit builder (responsive timeline cells and kit cards)
+  - `apqp.css` — PFD steps, CTQ table, BOM picker, resource pills (flexible column widths)
+  - `rpn-chart.css` — RPN trend chart (responsive SVG scaling)
+  - `productmgmt.css` — Central product management (responsive family and usage lists)
+
+### CSS Media Queries
+
+Standard responsive breakpoints applied consistently:
+
+```css
+/* Mobile (max-width: 767px) */
+@media (max-width: 767px) {
+  /* Single-column layouts, reduced padding, smaller fonts */
+}
+
+/* Tablet (min-width: 768px, max-width: 1199px) */
+@media (min-width: 768px) and (max-width: 1199px) {
+  /* 2-column layouts, balanced spacing */
+}
+
+/* Desktop (min-width: 1200px) */
+/* Default styles, no media query needed */
+```
 
 ---
 
@@ -211,10 +254,45 @@ Six gates (0–5) are defined in `state.js` as `GATE_DEFS`, each with a name, ph
 
 ---
 
+## Recent Updates (2026-03-10)
+
+### Mobile-Friendly Responsive Design
+
+**New responsive CSS has been implemented across all portals** to provide a seamless experience on mobile devices, tablets, and desktops without changing the desktop design.
+
+#### Changes Made:
+- **13 CSS files updated** with comprehensive media queries
+- **Three-tier responsive strategy**: 480px (mobile), 768px (tablet), 1200px (desktop)
+- **No JavaScript changes** — purely CSS-based solution
+- **Progressive enhancement** — layouts scale from single-column (mobile) to multi-column (desktop)
+
+#### Files Modified:
+- **Core**: `main.css`, `components.css`
+- **Portals**: `hub.css`, `capacity.css`, `me-capacity.css`, `production.css`
+- **Product Development**: `dashboard.css`, `apqp.css`, `pfmea.css`, `gantt.css`, `rpn-chart.css`
+- **Product Management**: `products.css`, `productmgmt.css`
+
+#### Key Features:
+✅ Desktop design **unchanged** — no visual differences on large screens
+✅ Mobile **single-column layouts** with optimized spacing and font sizes
+✅ Tablet **2-column layouts** where applicable for balanced readability
+✅ **Horizontal scroll preserved** for data-intensive tables on mobile
+✅ **Touch-friendly adjustments** — reduced padding, scalable components
+✅ **Chart responsiveness** — Chart.js maintains responsive: true configuration
+
+#### Testing Breakpoints:
+- **375px** (iPhone SE)
+- **768px** (iPad)
+- **1920px** (Desktop)
+
+All portals have been tested at these breakpoints for functional consistency.
+
+---
+
 ## External Dependencies
 
 | Library | Source | Purpose |
 |---------|--------|---------|
 | Supabase JS v2 | CDN | Authentication and remote persistence |
-| Chart.js v4.4.0 | CDN | Capacity charts and RPN trend charts |
-| IBM Plex Sans / Mono | Google Fonts | Typography |
+| Chart.js v4.4.0 | CDN | Capacity charts and RPN trend charts (responsive: true) |
+| IBM Plex Sans / Mono | Google Fonts | Typography (scales responsively) |
