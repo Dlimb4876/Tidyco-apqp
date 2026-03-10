@@ -16,6 +16,9 @@ async function launchApp() {
   }
   initProgSelect();
 
+  // Load ME Capacity data (separate Supabase table, silent if table absent)
+  await meLoadRemote();
+
   // Restore position from URL hash
   const h = parseHash();
   if (h.p && db.programmes.find(p => p.id === h.p)) {
@@ -23,7 +26,7 @@ async function launchApp() {
     if (h.t) apqpTab = h.t;
     navigate(h.s || 'project', { pushHash: false });
   } else {
-    navigate('hub', { pushHash: false }); // CHANGE 'projects' TO 'hub'
+    navigate('hub', { pushHash: false });
   }
 }
 

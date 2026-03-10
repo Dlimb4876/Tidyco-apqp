@@ -11,15 +11,13 @@
 <link rel="stylesheet" href="portals/npi/css/dashboard.css">
 <link rel="stylesheet" href="portals/hub/css/hub.css">
 <link rel="stylesheet" href="portals/capacity/css/capacity.css">
-<link rel="stylesheet" href="portals/capacity/css/me-dashboard.css">
-<link rel="stylesheet" href="portals/capacity/css/me-inputs.css">
-<link rel="stylesheet" href="portals/capacity/css/me-holidays.css">
-<link rel="stylesheet" href="portals/capacity/css/me-sheet.css">
+<link rel="stylesheet" href="portals/capacity/css/me-capacity.css">
 <link rel="stylesheet" href="portals/npi/css/pfmea.css">
 <link rel="stylesheet" href="portals/npi/css/gantt.css">
 <link rel="stylesheet" href="portals/npi/css/apqp.css">
 <link rel="stylesheet" href="portals/npi/css/rpn-chart.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -113,10 +111,10 @@
       <div class="field"><label>Project Manager</label><input id="np_pm"></div>
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="np_date"></div>
-     <div class="field-row">
-       <div class="field"><label>Q Number</label><input id="np_qNumber"></div>
-       <div class="field"><label>Part Number</label><input id="np_partNumber"></div>
-     </div>
+    <div class="field-row">
+      <div class="field"><label>Q Number</label><input id="np_qNumber"></div>
+      <div class="field"><label>Part Number</label><input id="np_partNumber"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button>
       <button class="btn btn-primary" onclick="createProg()">Create</button>
@@ -148,10 +146,10 @@
       <div class="field"><label>Project Manager</label><input id="ep_pm"></div>
     </div>
     <div class="field"><label>Start Date</label><input type="date" id="ep_date"></div>
-       <div class="field-row">
-  <div class="field"><label>Q Number</label><input id="ep_qNumber"></div>
-  <div class="field"><label>Part Number</label><input id="ep_partNumber"></div>
-</div>
+    <div class="field-row">
+      <div class="field"><label>Q Number</label><input id="ep_qNumber"></div>
+      <div class="field"><label>Part Number</label><input id="ep_partNumber"></div>
+    </div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
       <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="deleteProject()">Delete Project</button>
       <div style="display:flex;gap:8px">
@@ -227,24 +225,23 @@
 <!-- ═══════════════════════════════════
      SCRIPTS — load order matters
      state → auth → db → helpers → navigation →
-     dashboard → gates → pfmea → apqp → bom → timing → trackers → app
+     hub → rpn-chart → dashboard →
+     capacity → me-capacity →
+     gates → pfmea → apqp → bom → timing → trackers → app
      ═══════════════════════════════════ -->
 
 <script src="core/js/state.js"></script>
 <script src="core/js/auth.js"></script>
 <script src="core/js/db.js"></script>
-     
+
 <script src="utils/js/helpers.js"></script>
 <script src="utils/js/navigation.js"></script>
-     
+
 <script src="portals/hub/js/hub.js"></script>
 <script src="portals/npi/js/rpn-chart.js"></script>
 <script src="portals/npi/js/dashboard.js"></script>
 <script src="portals/capacity/js/capacity.js"></script>
-<script src="portals/capacity/js/me-sheet.js"></script>
-<script src="portals/capacity/js/me-dashboard.js"></script>
-<script src="portals/capacity/js/me-inputs.js"></script>
-<script src="portals/capacity/js/me-holidays.js"></script>
+<script src="portals/capacity/js/me-capacity.js"></script>
 
 <script src="portals/npi/js/gates.js"></script>
 <script src="portals/npi/js/pfmea.js"></script>
@@ -252,7 +249,7 @@
 <script src="portals/npi/js/bom.js"></script>
 <script src="portals/npi/js/timing.js"></script>
 <script src="portals/npi/js/trackers.js"></script>
-     
+
 <script src="core/js/app.js"></script>
 
 </body>

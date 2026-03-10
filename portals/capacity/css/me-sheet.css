@@ -1,8 +1,0 @@
-.me-sheet-table th { background: var(--bg); font-size: 11px; white-space: nowrap; border-right: 1px solid var(--line); text-align: center;}
-.me-sheet-table td { border-right: 1px solid var(--line); min-width: 120px; vertical-align: top; }
-.me-sh-cap { color: var(--text); margin-bottom: 4px; }
-.me-sh-load { color: var(--text-light); margin-bottom: 4px; }
-.me-sh-net { font-weight: bold; padding-top: 4px; border-top: 1px dashed var(--line); }
-.me-err { color: #dc2626; } /* Red for overcapacity */
-.me-ok { color: #16a34a; }  /* Green for healthy */
-.me-empty { padding: 40px; text-align: center; color: var(--text-light); }
