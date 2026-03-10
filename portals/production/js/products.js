@@ -13,7 +13,7 @@ function renderProductMaster() {
       <td><input class="cell-edit" id="prod-new-name" placeholder="Product name" onkeydown="handleProdRowKey(event, 'name')"></td>
       <td><input class="cell-edit" id="prod-new-code" placeholder="Code" onkeydown="handleProdRowKey(event, 'code')"></td>
       <td><input class="cell-edit" id="prod-new-family" placeholder="Family" onkeydown="handleProdRowKey(event, 'family')"></td>
-      <td><input class="cell-edit" id="prod-new-lead" type="number" placeholder="Lead time (days)" onkeydown="handleProdRowKey(event, 'lead')"></td>
+      <td><input class="cell-edit" id="prod-new-lead" type="number" placeholder="Turnaround time (days)" onkeydown="handleProdRowKey(event, 'lead')" title="Time between receipt and delivery (in days)"></td>
       <td>
         <select class="cell-edit" id="prod-new-status" onkeydown="handleProdRowKey(event, 'status')">
           <option value="active">Active</option>
@@ -94,7 +94,7 @@ function renderProductMaster() {
             <th>Name</th>
             <th>Code</th>
             <th>Family</th>
-            <th>Lead Time</th>
+            <th title="Time between receipt and delivery (in days)">Turnaround Time</th>
             <th>Status</th>
             <th>Unit</th>
             <th>Notes</th>

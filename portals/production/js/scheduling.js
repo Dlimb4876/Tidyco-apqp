@@ -1,8 +1,9 @@
 // Production Batch Scheduling
 
 let prodSchedulingSort = { field: 'start_date', ascending: true };
-let prodSchedulingFilters = { product: '', unit: '', dateFrom: '', dateTo: '' };
+let prodSchedulingFilters = { family: '', product: '', unit: '', dateFrom: '', dateTo: '' };
 let prodSchedulingNewRow = false;
+let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
 
 function renderScheduling() {
   const batches = prodState.batches;
@@ -15,7 +16,7 @@ function renderScheduling() {
     <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
       <td>
-        <select class="cell-edit" id="batch-new-product" onkeydown="handleBatchRowKey(event, 'product')">
+        <select class="cell-edit" id="batch-new-product" onchange="calcBatchDueDate()" onkeydown="handleBatchRowKey(event, 'product')">
           <option value="">— Select Product</option>
           ${prodState.products.filter(p => p.status === 'active').map(p => `<option value="${p.id}">${p.name} (${p.code || 'N/A'})</option>`).join('')}
         </select>
@@ -29,7 +30,7 @@ function renderScheduling() {
         </select>
       </td>
       <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
-      <td><input class="cell-edit" id="batch-new-start" type="date" onkeydown="handleBatchRowKey(event, 'start')"></td>
+      <td><input class="cell-edit" id="batch-new-start" type="date" onchange="calcBatchDueDate()" onkeydown="handleBatchRowKey(event, 'start')"></td>
       <td><input class="cell-edit" id="batch-new-due" type="date" onkeydown="handleBatchRowKey(event, 'due')"></td>
       <td>
         <select class="cell-edit" id="batch-new-status" onkeydown="handleBatchRowKey(event, 'status')">
@@ -88,6 +89,7 @@ function renderScheduling() {
           <div class="sec-desc">${activeBatches.length} of ${batches.length} batches — Click cells to edit, Tab/Enter to navigate</div>
         </div>
         <div style="display:flex;gap:8px">
+          <button class="btn ${prodSchedulingHideComplete ? 'btn-primary' : 'btn-ghost'}" onclick="toggleHideCompleteBatches()" title="Hide completed batches">${prodSchedulingHideComplete ? '✓ Hide Complete' : '○ Show All'}</button>
           <button class="btn btn-primary" onclick="focusBatchNewRow()">➕ Add Batch</button>
           <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
         </div>
@@ -96,10 +98,17 @@ function renderScheduling() {
       <!-- Filter Toolbar -->
       <div class="prod-filters">
         <div class="filter-group">
+          <label>Family:</label>
+          <select onchange="prodSchedulingFilters.family = this.value; prodSchedulingFilters.product = ''; render()">
+            <option value="">— All Families</option>
+            ${FAMILIES.map(f => `<option value="${f.id}" ${prodSchedulingFilters.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="filter-group">
           <label>Product:</label>
           <select onchange="prodSchedulingFilters.product = this.value; render()">
             <option value="">— All Products</option>
-            ${prodState.products.map(p => `<option value="${p.id}" ${prodSchedulingFilters.product === p.id ? 'selected' : ''}>${p.name} (${p.code || ''})</option>`).join('')}
+            ${prodState.products.filter(p => !prodSchedulingFilters.family || p.family === prodSchedulingFilters.family).map(p => `<option value="${p.id}" ${prodSchedulingFilters.product === p.id ? 'selected' : ''}>${p.name} (${p.code || ''})</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">
@@ -158,6 +167,11 @@ function renderScheduling() {
 function getFilteredBatches() {
   let filtered = prodState.batches;
 
+  if (prodSchedulingFilters.family) {
+    const familyProducts = prodState.products.filter(p => p.family === prodSchedulingFilters.family).map(p => p.id);
+    filtered = filtered.filter(b => familyProducts.includes(b.product_id));
+  }
+
   if (prodSchedulingFilters.product) {
     filtered = filtered.filter(b => b.product_id === prodSchedulingFilters.product);
   }
@@ -172,6 +186,10 @@ function getFilteredBatches() {
 
   if (prodSchedulingFilters.dateTo) {
     filtered = filtered.filter(b => !b.start_date || b.start_date <= prodSchedulingFilters.dateTo);
+  }
+
+  if (prodSchedulingHideComplete) {
+    filtered = filtered.filter(b => b.status !== 'Complete');
   }
 
   // Apply sorting
@@ -266,4 +284,37 @@ async function addNewBatchRow() {
   document.getElementById('batch-new-notes').value = '';
 
   setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50);
+}
+
+function calcBatchDueDate() {
+  const productSelect = document.getElementById('batch-new-product');
+  const startInput = document.getElementById('batch-new-start');
+  const dueInput = document.getElementById('batch-new-due');
+
+  if (!productSelect || !startInput || !dueInput) return;
+
+  const productId = productSelect.value;
+  const startDate = startInput.value;
+
+  if (!productId || !startDate) return;
+
+  const product = prodState.products.find(p => p.id === productId);
+  if (!product || !product.lead_time_days) return;
+
+  // Calculate due date: start date + lead time days
+  const start = new Date(startDate);
+  const due = new Date(start);
+  due.setDate(due.getDate() + parseInt(product.lead_time_days));
+
+  // Format as YYYY-MM-DD
+  const year = due.getFullYear();
+  const month = String(due.getMonth() + 1).padStart(2, '0');
+  const day = String(due.getDate()).padStart(2, '0');
+  dueInput.value = `${year}-${month}-${day}`;
+}
+
+function toggleHideCompleteBatches() {
+  prodSchedulingHideComplete = !prodSchedulingHideComplete;
+  localStorage.setItem('prodSchedulingHideComplete', prodSchedulingHideComplete);
+  render();
 }
