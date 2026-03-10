@@ -9,16 +9,25 @@ function renderProjects() {
   const user    = currentUser ? currentUser.email.split('@')[0] : '';
   const families = getFamilies();
 
-  // Build one tab per family plus an "All" tab
+  // Count projects by type
+  const activeProjects = db.programmes.filter(p => (p.status || 'Active') === 'Active');
+  const tenderCount = db.programmes.filter(p => p.status === 'Tender').length;
+  const archiveCount = db.programmes.filter(p => p.status === 'Archive').length;
   const allCount = db.programmes.length;
+
+  // Build tabs: All + Tenders + Archive + one per family
   let tabsHTML = `<button class="npi-tab${npiTab === 'all' ? ' npi-tab-active' : ''}" onclick="setNpiTab('all')">All<span class="npi-tab-badge">${allCount}</span></button>`;
+
+  tabsHTML += `<button class="npi-tab${npiTab === 'tenders' ? ' npi-tab-active' : ''}" onclick="setNpiTab('tenders')">📋 Tenders<span class="npi-tab-badge">${tenderCount}</span></button>`;
+  tabsHTML += `<button class="npi-tab${npiTab === 'archive' ? ' npi-tab-active' : ''}" onclick="setNpiTab('archive')">📦 Archive<span class="npi-tab-badge">${archiveCount}</span></button>`;
+
   families.forEach(fam => {
-    const count = db.programmes.filter(p => (p.family || 'Other') === fam.id).length;
+    const count = activeProjects.filter(p => (p.family || 'Other') === fam.id).length;
     tabsHTML += `<button class="npi-tab${npiTab === fam.id ? ' npi-tab-active' : ''}" onclick="setNpiTab(${JSON.stringify(fam.id)})">${fam.icon} ${esc(fam.label)}<span class="npi-tab-badge">${count}</span></button>`;
   });
 
-  // "New Project" button pre-selects the active family tab when not "All"
-  const newProjOnclick = npiTab !== 'all'
+  // "New Project" button behavior
+  const newProjOnclick = (npiTab !== 'all' && npiTab !== 'tenders' && npiTab !== 'archive')
     ? `newProjectInFamily(${JSON.stringify(npiTab)})`
     : `showModal('modalNewProj')`;
 
@@ -43,21 +52,47 @@ function renderProjects() {
       <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
     </div>`;
   } else if (npiTab === 'all') {
-    // Show every family group that has at least one project
+    // Show every family group that has at least one active project
     let hasAny = false;
     families.forEach(fam => {
-      const projs = db.programmes.filter(p => (p.family || 'Other') === fam.id);
+      const projs = activeProjects.filter(p => (p.family || 'Other') === fam.id);
       if (projs.length === 0) return;
       hasAny = true;
       html += renderFamilyGroup(fam, projs, false);
     });
     if (!hasAny) {
-      html += `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px">No projects match any known family.</div>`;
+      html += `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px">No active projects match any known family.</div>`;
+    }
+  } else if (npiTab === 'tenders') {
+    // Show all tender projects
+    const tenderProjs = db.programmes.filter(p => p.status === 'Tender');
+    if (tenderProjs.length === 0) {
+      html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
+        <div style="font-size:48px;margin-bottom:16px">📋</div>
+        <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No tender projects</div>
+        <div style="font-size:13px;margin-bottom:24px">Tender projects will appear here</div>
+      </div>`;
+    } else {
+      const tenderFam = { id: 'tenders', label: 'Tenders', icon: '📋' };
+      html += renderFamilyGroup(tenderFam, tenderProjs, true);
+    }
+  } else if (npiTab === 'archive') {
+    // Show all archived projects
+    const archiveProjs = db.programmes.filter(p => p.status === 'Archive');
+    if (archiveProjs.length === 0) {
+      html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
+        <div style="font-size:48px;margin-bottom:16px">📦</div>
+        <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No archived projects</div>
+        <div style="font-size:13px;margin-bottom:24px">Archived projects will appear here</div>
+      </div>`;
+    } else {
+      const archiveFam = { id: 'archive', label: 'Archive', icon: '📦' };
+      html += renderFamilyGroup(archiveFam, archiveProjs, true);
     }
   } else {
-    // Single-family tab view
+    // Single-family tab view (only shows active projects)
     const fam   = families.find(f => f.id === npiTab);
-    const projs = fam ? db.programmes.filter(p => (p.family || 'Other') === fam.id) : [];
+    const projs = fam ? activeProjects.filter(p => (p.family || 'Other') === fam.id) : [];
     if (!fam || projs.length === 0) {
       const famLabel = fam ? esc(fam.label) : esc(npiTab);
       const famIcon  = fam ? fam.icon : '📋';
@@ -326,6 +361,7 @@ function createProg() {
   const newProg  = migrateprog({
     id, name, family, customer, unit, lead, pm, date, qNumber, partNumber,
     parentId: parentId || null,
+    status: 'Active',
     gates: [], ctq: [], pfd: [], pfmea: [], bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
     actions: [], risks: [], gantt: [], subAssemblies: []
   });
@@ -348,6 +384,7 @@ function showEditProject() {
   populateFamilySelects();
   document.getElementById('ep_name').value     = p.name     || '';
   document.getElementById('ep_family').value   = p.family   || getFamilies()[0]?.id || 'Other';
+  document.getElementById('ep_status').value   = p.status   || 'Active';
   document.getElementById('ep_customer').value = p.customer || '';
   document.getElementById('ep_unit').value     = p.unit     || '';
   document.getElementById('ep_lead').value     = p.lead     || '';
@@ -362,6 +399,7 @@ function saveEditProject() {
   const p = prog(); if (!p) return;
   p.name     = document.getElementById('ep_name').value.trim()     || p.name;
   p.family   = document.getElementById('ep_family').value          || 'Other';
+  p.status   = document.getElementById('ep_status').value          || 'Active';
   p.customer = document.getElementById('ep_customer').value.trim() || '';
   p.unit     = document.getElementById('ep_unit').value.trim()     || '';
   p.lead     = document.getElementById('ep_lead').value.trim()     || '';
