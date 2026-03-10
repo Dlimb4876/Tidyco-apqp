@@ -263,4 +263,5 @@ window.prodDataGetBatchesByUnit = function(unit) {
 
 window.prodSetActiveUnit = function(unit) {
   prodState.activeUnit = unit;
+  prodPlanWeekOffset = 0; // Reset week offset when switching units
 };

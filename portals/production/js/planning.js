@@ -85,7 +85,7 @@ function renderPlanByUnit() {
   const batches = prodDataGetBatchesByUnit(activeUnit);
   const sortedBatches = batches.sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
 
-  // Calculate date range (add 7 days padding to end)
+  // Calculate date range
   let minDate = null, maxDate = null;
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -99,20 +99,10 @@ function renderPlanByUnit() {
     }
   });
 
-  // Ensure at least 4 weeks of view
-  if (minDate && maxDate) {
-    const startD = new Date(minDate);
-    const endD = new Date(maxDate);
-    const diff = (endD - startD) / (1000 * 60 * 60 * 24);
-    if (diff < 28) {
-      const endD2 = new Date(endD);
-      endD2.setDate(endD2.getDate() + (28 - diff));
-      maxDate = endD2.toISOString().split('T')[0];
-    }
-  } else if (sortedBatches.length === 0) {
-    const start = new Date();
-    minDate = start.toISOString().split('T')[0];
-    const end = new Date(start);
+  // Ensure we have a range
+  if (!minDate || !maxDate) {
+    minDate = todayStr;
+    const end = new Date();
     end.setDate(end.getDate() + 28);
     maxDate = end.toISOString().split('T')[0];
   }
@@ -149,53 +139,81 @@ function renderPlanByUnit() {
 function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
   const startDate = new Date(minDate);
   const endDate = new Date(maxDate);
-  const dayDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+  const totalDayDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+  const totalWeeks = Math.ceil(totalDayDiff / 7);
 
-  // Determine current week and day
+  // Calculate visible 4-week window based on offset
+  const viewStartWeek = Math.max(0, Math.min(prodPlanWeekOffset, Math.max(0, totalWeeks - 4)));
+  const viewEndWeek = Math.min(viewStartWeek + 4, totalWeeks);
+  const viewStartDay = viewStartWeek * 7;
+  const viewEndDay = viewEndWeek * 7;
+  const viewDayDiff = viewEndDay - viewStartDay;
+
+  // Today tracking
   const today = new Date(todayStr);
-  let currentWeekNum = -1;
-  let todayDayIndex = -1;
+  const daysBetweenStart = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24));
+  const todayDayIndex = (daysBetweenStart >= 0 && daysBetweenStart < totalDayDiff) ? daysBetweenStart : -1;
 
-  // Find which day index today is (if in range)
-  const daysBetween = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24));
-  if (daysBetween >= 0 && daysBetween < dayDiff) {
-    todayDayIndex = daysBetween;
-    currentWeekNum = Math.floor(todayDayIndex / 7);
+  // Check if today is in visible range
+  const todayInView = todayDayIndex >= viewStartDay && todayDayIndex < viewEndDay;
+
+  // Calculate month header
+  const windowStartDate = new Date(startDate);
+  windowStartDate.setDate(windowStartDate.getDate() + viewStartDay);
+  const windowEndDate = new Date(startDate);
+  windowEndDate.setDate(windowEndDate.getDate() + viewEndDay - 1);
+
+  let monthHeader = '';
+  if (windowStartDate.getMonth() === windowEndDate.getMonth()) {
+    const monthName = windowStartDate.toLocaleDateString('en-US', { month: 'long' });
+    const year = windowStartDate.getFullYear();
+    monthHeader = `${monthName} ${year}`;
+  } else {
+    const startMonth = windowStartDate.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = windowEndDate.toLocaleDateString('en-US', { month: 'short' });
+    monthHeader = `${startMonth} – ${endMonth} ${windowEndDate.getFullYear()}`;
   }
 
-  // Generate week headers with labels
+  // Navigation controls
+  const canPrev = viewStartWeek > 0;
+  const canNext = viewEndWeek < totalWeeks;
+  const navHtml = `
+    <div class="gantt-nav-controls">
+      <button class="btn btn-sm btn-ghost" onclick="prodSetWeekOffset(${viewStartWeek - 1}); render()" ${canPrev ? '' : 'disabled'}>← Previous</button>
+      <div class="gantt-month-header">${monthHeader}</div>
+      <button class="btn btn-sm btn-ghost" onclick="prodSetWeekOffset(${viewStartWeek + 1}); render()" ${canNext ? '' : 'disabled'}>Next →</button>
+    </div>
+  `;
+
+  // Generate week headers for visible weeks only
   let weekHeadersHtml = '';
   let dayHeadersHtml = '';
-  let prevWeekNum = -1;
-  for (let i = 0; i < dayDiff; i++) {
+  for (let i = viewStartDay; i < viewEndDay; i++) {
     const d = new Date(startDate);
     d.setDate(d.getDate() + i);
     const dStr = d.toISOString().split('T')[0];
     const weekNum = Math.floor(i / 7);
     const dayOfWeek = d.getDay();
-    const isCurrentWeek = weekNum === currentWeekNum;
 
-    if (weekNum !== prevWeekNum) {
-      // New week: calculate week end
-      const weekEnd = new Date(startDate);
-      weekEnd.setDate(startDate.getDate() + (weekNum + 1) * 7 - 1);
-      const daysInWeek = Math.min(7, dayDiff - weekNum * 7);
-
-      weekHeadersHtml += `<div class="gantt-week-header ${isCurrentWeek ? 'current-week' : ''}" style="grid-column: span ${daysInWeek};">
+    // Week header (one per week)
+    if (i === viewStartDay || dayOfWeek === 1) {
+      const weekEnd = new Date(d);
+      weekEnd.setDate(weekEnd.getDate() + (6 - dayOfWeek));
+      const daysInWeek = Math.min(7, viewEndDay - i);
+      weekHeadersHtml += `<div class="gantt-week-header" style="grid-column: span ${daysInWeek};">
         <div class="gantt-week-label">Week ${weekNum + 1}</div>
         <div class="gantt-week-dates">${formatDateShort(d)} – ${formatDateShort(weekEnd)}</div>
       </div>`;
-      prevWeekNum = weekNum;
     }
 
-    // Day headers - show all dates
+    // Day headers
     const isToday = i === todayDayIndex;
-    dayHeadersHtml += `<div class="gantt-week-col ${isCurrentWeek ? 'current-week-col' : ''} ${isToday ? 'today-col' : ''}" data-date="${dStr}" data-week="${weekNum}">
+    dayHeadersHtml += `<div class="gantt-week-col ${isToday ? 'today-col' : ''}" data-date="${dStr}">
       <div class="gantt-date">${formatDateShort(d)}</div>
     </div>`;
   }
 
-  // Generate batch rows with bars spanning their duration
+  // Generate batch rows for visible range only
   let batchRowsHtml = '';
   batches.forEach((batch, idx) => {
     const product = prodDataGetProductById(batch.product_id);
@@ -203,14 +221,14 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     const startD = batch.start_date ? new Date(batch.start_date) : null;
     const endD = batch.due_date ? new Date(batch.due_date) : null;
 
-    // Calculate bar position
+    // Calculate bar position relative to total timeline
     let startOffset = 0, duration = 1;
     if (startD && endD) {
       startOffset = Math.max(0, Math.ceil((startD - startDate) / (1000 * 60 * 60 * 24)));
       duration = Math.ceil((endD - startD) / (1000 * 60 * 60 * 24)) + 1;
     }
 
-    // Determine bar color based on status and due date
+    // Determine bar color
     let barColor = 'var(--blue)';
     if (batch.status === 'Complete') {
       barColor = 'var(--green)';
@@ -224,36 +242,51 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     const isOverdue = endD && endD < new Date(todayStr) && batch.status !== 'Complete';
     const displayLabel = product ? esc(product.code) : `${batch.quantity || 0}u`;
 
-    // Build grid cells for each day (including background cells and bar)
+    // Format batch meta with IN/OUT
+    const inDate = batch.start_date || '—';
+    const outDate = batch.due_date || '—';
+    const batchMetaText = `${batch.quantity || 0} units • IN: ${inDate} OUT: ${outDate}`;
+
+    // Build grid cells for visible range only
     let gridCellsHtml = '';
     let barPlaced = false;
 
-    for (let i = 0; i < dayDiff; i++) {
-      const weekNum = Math.floor(i / 7);
-      const isCurrentWeek = weekNum === currentWeekNum;
-      const isToday = i === todayDayIndex;
-      const barStartsHere = i === startOffset && !barPlaced;
+    for (let i = viewStartDay; i < viewEndDay; i++) {
+      const barStartsHere = i === startOffset && !barPlaced && i >= viewStartDay && i < viewEndDay;
 
       if (barStartsHere) {
-        // Place the bar
+        // Calculate span within visible range
+        const barEndInView = Math.min(startOffset + duration, viewEndDay);
+        const visibleDuration = barEndInView - startOffset;
         gridCellsHtml += `<div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
-             style="grid-column: span ${Math.max(1, duration)}; background-color: ${barColor};"
-             title="${esc(productName)} - ${batch.start_date} to ${batch.due_date}">
+             style="grid-column: span ${Math.max(1, visibleDuration)}; background-color: ${barColor};"
+             title="${esc(productName)} - ${inDate} to ${outDate}">
             <div class="gantt-bar-label">${displayLabel}</div>
           </div>`;
         barPlaced = true;
-        i += Math.max(1, duration) - 1;
+      } else if (i >= startOffset && i < startOffset + duration && !barPlaced) {
+        // Bar continues from before visible range
+        if (i === viewStartDay) {
+          const barEndInView = Math.min(startOffset + duration, viewEndDay);
+          const visibleDuration = barEndInView - viewStartDay;
+          gridCellsHtml += `<div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
+               style="grid-column: span ${Math.max(1, visibleDuration)}; background-color: ${barColor};"
+               title="${esc(productName)} - ${inDate} to ${outDate}">
+              <div class="gantt-bar-label">${displayLabel}</div>
+            </div>`;
+          barPlaced = true;
+        }
       } else {
-        // Place background cell
-        gridCellsHtml += `<div class="gantt-day-cell ${isCurrentWeek ? 'current-week-cell' : ''} ${isToday ? 'today-cell' : ''}"></div>`;
+        // Empty cell
+        gridCellsHtml += `<div class="gantt-day-cell"></div>`;
       }
     }
 
-    // Add today indicator line if today is in range
+    // Today indicator line
     let todayLineHtml = '';
-    if (todayDayIndex >= 0) {
-      const todayCol = todayDayIndex + 1;
-      todayLineHtml = `<div class="gantt-today-line" style="grid-column: ${todayCol} / span 1; position: absolute; pointer-events: none;">
+    if (todayInView) {
+      const todayColInView = todayDayIndex - viewStartDay + 1;
+      todayLineHtml = `<div class="gantt-today-line" style="grid-column: ${todayColInView} / span 1; position: absolute; pointer-events: none;">
         <div style="position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--red); opacity: 0.6; transform: translateX(-50%);"></div>
       </div>`;
     }
@@ -262,9 +295,9 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
       <div class="gantt-batch-row" data-batch-id="${batch.id}">
         <div class="gantt-batch-label">
           <div class="gantt-product-code">${esc(productName)}</div>
-          <div class="gantt-batch-meta">${batch.quantity || 0} units • ${batch.start_date || '—'} to ${batch.due_date || '—'}</div>
+          <div class="gantt-batch-meta">${batchMetaText}</div>
         </div>
-        <div class="gantt-batch-chart" style="display: grid; grid-template-columns: repeat(${dayDiff}, 1fr); gap: 1px; position: relative;">
+        <div class="gantt-batch-chart" style="display: grid; grid-template-columns: repeat(${viewDayDiff}, 1fr); gap: 1px; position: relative;">
           ${gridCellsHtml}
           ${todayLineHtml}
         </div>
@@ -277,13 +310,14 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
 
   return `
     <div class="gantt-container">
+      ${navHtml}
       <div class="gantt-header">
         <div class="gantt-header-label">Product</div>
         <div class="gantt-header-chart">
-          <div class="gantt-week-row" style="display: grid; grid-template-columns: repeat(${dayDiff}, 1fr); gap: 1px;">
+          <div class="gantt-week-row" style="display: grid; grid-template-columns: repeat(${viewDayDiff}, 1fr); gap: 1px;">
             ${weekHeadersHtml}
           </div>
-          <div class="gantt-week-grid" style="display: grid; grid-template-columns: repeat(${dayDiff}, 1fr); gap: 1px;">
+          <div class="gantt-week-grid" style="display: grid; grid-template-columns: repeat(${viewDayDiff}, 1fr); gap: 1px;">
             ${dayHeadersHtml}
           </div>
         </div>
@@ -364,4 +398,8 @@ function getStatusBadge(status) {
   }
 
   return `<span style="color:${color};font-size:12px;font-weight:600">${emoji} ${status}</span>`;
+}
+
+function prodSetWeekOffset(offset) {
+  prodPlanWeekOffset = Math.max(0, offset);
 }

@@ -147,3 +147,31 @@ body {
 .login-logo, .empty-icon, .section-card-icon {
     font-family: sans-serif !important;
 }
+
+/* Coming Soon Container */
+.coming-soon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+}
+
+.coming-soon-content {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.coming-soon-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.coming-soon-content p {
+  color: var(--muted);
+  margin: 0;
+}

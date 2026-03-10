@@ -9,7 +9,8 @@ let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
 let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
 let capacityTab = 'root'; // root|me|overhaul|projects
 let productionTab = 'root'; // root|products|scheduling|by-product|by-unit
-let productDevelopmentTab = 'root'; // root|npi
+let productDevelopmentTab = 'root'; // root|npi|product-management
+let prodPlanWeekOffset = 0; // Week offset for 4-week rolling view
 let meStartOffset = 0; // Months from today
 
 // Modal picker state

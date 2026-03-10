@@ -20,7 +20,8 @@
       "Bash(fi)",
       "mcp__Claude_Preview__preview_start",
       "Bash(git add -A)",
-      "Bash(where node http-server python python3)"
+      "Bash(where node http-server python python3)",
+      "Bash(grep -n \"prodSetActiveUnit\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/production/js/*.js)"
     ]
   }
 }

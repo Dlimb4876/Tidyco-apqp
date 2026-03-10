@@ -11,6 +11,7 @@ function setProductDevelopmentTab(tab) {
 
 function renderProductDevelopment() {
   if (productDevelopmentTab === 'npi') return renderProjects();
+  if (productDevelopmentTab === 'product-management') return renderProductManagement();
 
   // Root hub view
   return `
@@ -29,6 +30,14 @@ function renderProductDevelopment() {
             <div class="hub-icon">📋</div>
             <div class="proj-card-name">NPI Projects</div>
             <div class="proj-card-meta">APQP Gates, PFMEA & BoM</div>
+          </div>
+        </div>
+
+        <div class="proj-card hub-card" onclick="setProductDevelopmentTab('product-management')">
+          <div class="hub-card-content">
+            <div class="hub-icon">📦</div>
+            <div class="proj-card-name">Product Management</div>
+            <div class="proj-card-meta">Product Catalog & Lifecycle</div>
           </div>
         </div>
       </div>
