@@ -89,10 +89,12 @@ function meRenderTeamTab(teamArray) {
   let rows = '';
   teamArray.forEach((member, idx) => {
     const effective = ((member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100)).toFixed(1);
+    const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option><option value="NPI / Production" ' + ((member.group || '') === 'NPI / Production' ? 'selected' : '') + '>NPI / Production</option>';
     rows += `
       <tr>
         <td><input value="${esc(member.name)}" onchange="meDataUpdateTeam(${idx}, 'name', this.value); meDebouncedSave();"></td>
         <td><input value="${esc(member.jobTitle || '')}" onchange="meDataUpdateTeam(${idx}, 'jobTitle', this.value); meDebouncedSave();"></td>
+        <td><select onchange="meDataUpdateTeam(${idx}, 'group', this.value); meDebouncedSave();">${groupOpts}</select></td>
         <td><input type="number" value="${member.hoursPerWeek || 37.5}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" onchange="meDataUpdateTeam(${idx}, 'utilisation', this.value); meDebouncedSave();"></td>
         <td style="font-weight: bold;">${effective}</td>
@@ -112,13 +114,14 @@ function meRenderTeamTab(teamArray) {
             <thead><tr>
               <th style="min-width:180px">Name</th>
               <th style="width:140px">Job Title</th>
+              <th style="width:140px">Group</th>
               <th style="width:130px">Hours / Week</th>
               <th style="width:120px">Utilisation %</th>
               <th style="width:120px">Effective h/wk</th>
               <th style="width:36px"></th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="6"><div style="text-align:center;padding:40px;color:var(--muted)">No team members added</div></td></tr>'}
+              ${rows || '<tr><td colspan="7"><div style="text-align:center;padding:40px;color:var(--muted)">No team members added</div></td></tr>'}
             </tbody>
           </table>
         </div>
@@ -257,14 +260,19 @@ function meRenderHolidaysTab(holidaysArray, teamArray) {
 
   const dates = [];
   for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
-    dates.push(meFormatDate(new Date(d)));
+    const dateStr = meFormatDate(new Date(d));
+    const dayOfWeek = new Date(dateStr).getDay();
+    // Only include weekdays (Mon=1 to Fri=5)
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      dates.push(dateStr);
+    }
   }
 
   let html = `
     <div class="me-card" style="overflow: auto;">
       <div class="me-card-head">
         <span class="me-card-title">HOLIDAY PLANNER</span>
-        <span style="font-size:11px;color:var(--muted)">Click cells: working → full day → half day → remove · Blue = bank holidays (read-only)</span>
+        <span style="font-size:11px;color:var(--muted)">5-day work week · Click cells: working → full day → half day → remove · Blue = bank holidays (read-only)</span>
       </div>
       <div class="me-card-body" style="overflow-x: auto;">
         <table class="holiday-matrix">
@@ -272,12 +280,13 @@ function meRenderHolidaysTab(holidaysArray, teamArray) {
             <tr>
               <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left;">Team Member</th>`;
 
-  dates.forEach(date => {
+  dates.forEach((date, idx) => {
     const d = new Date(date);
     const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
     const dayNum = d.getDate();
     const isBank = !!bankHols[date];
-    html += `<th class="holiday-date-header ${isBank ? 'bank-holiday' : ''}" title="${date}"><div>${dayName}</div><div>${dayNum}</div></th>`;
+    const isMonday = d.getDay() === 1 ? ' week-start' : '';
+    html += `<th class="holiday-date-header ${isBank ? 'bank-holiday' : ''}${isMonday}" title="${date}"><div>${dayName}</div><div>${dayNum}</div></th>`;
   });
 
   html += `</tr></thead><tbody>`;
@@ -289,8 +298,10 @@ function meRenderHolidaysTab(holidaysArray, teamArray) {
       const isBank = !!bankHols[date];
       const holiday = holidaysArray.find(h => h.personId === member.id && h.date === date);
       const state = holiday ? holiday.type : null;
+      const d = new Date(date);
+      const isMonday = d.getDay() === 1 ? ' week-start' : '';
 
-      let cellClass = 'holiday-cell';
+      let cellClass = `holiday-cell${isMonday}`;
       let cellContent = '—';
 
       if (isBank) {

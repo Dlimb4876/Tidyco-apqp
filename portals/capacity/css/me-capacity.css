@@ -303,3 +303,9 @@
   background: #e0f2fe; color: #0284c7; font-weight: 600;
   border-bottom-color: #0284c7;
 }
+.holiday-date-header.week-start {
+  border-left: 3px solid var(--line);
+}
+.holiday-cell.week-start {
+  border-left: 3px solid var(--line);
+}

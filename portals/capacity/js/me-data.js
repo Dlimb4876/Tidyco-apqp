@@ -7,7 +7,7 @@
    {
      user_id: string,
      data: {
-       team: [{id, name, hoursPerWeek, utilisation, jobTitle}],
+       team: [{id, name, hoursPerWeek, utilisation, jobTitle, group}],
        tasks: [{id, name, category, assigneeId, startDate, endDate, totalHours}],
        products: [{id, name, supportFrom, supportUntil, hoursPerWeek, notes}],
        holidays: [{id, personId, date, type ('full'|'half')}]
@@ -37,7 +37,8 @@ window.meDataAddTeam = function(name, hoursPerWeek, utilisation) {
     name: name.trim(),
     hoursPerWeek: parseFloat(hoursPerWeek) || 37.5,
     utilisation: parseFloat(utilisation) || 80,
-    jobTitle: ''
+    jobTitle: '',
+    group: ''
   };
   meDataState.team.push(member);
   return true;
@@ -58,6 +59,9 @@ window.meDataUpdateTeam = function(idx, field, value) {
       break;
     case 'jobTitle':
       member.jobTitle = value ? value.trim() : '';
+      break;
+    case 'group':
+      member.group = value ? value.trim() : '';
       break;
     default:
       return false;
@@ -280,6 +284,15 @@ window.meDataInit = async function() {
             holidays: Array.isArray(data.holidays) ? data.holidays : []
           };
         }
+        // Ensure all team members have jobTitle field (migration for old records)
+        meDataState.team.forEach(member => {
+          if (!('jobTitle' in member)) {
+            member.jobTitle = '';
+          }
+          if (!('group' in member)) {
+            member.group = '';
+          }
+        });
         window.meDataState = meDataState;
       } else {
         console.log('No existing ME capacity data found - will create new record on first save');
