@@ -32,6 +32,7 @@ window.renderMeCapacity = function() {
 
       <div class="me-nav">
         <button class="me-nav-btn ${meTab === 'chart' ? 'active' : ''}" onclick="meSetTab('chart')">📊 Capacity Chart</button>
+        <button class="me-nav-btn ${meTab === 'heatmap' ? 'active' : ''}" onclick="meSetTab('heatmap')">🔥 Heat Map</button>
         <button class="me-nav-btn ${meTab === 'team' ? 'active' : ''}" onclick="meSetTab('team')">👷 Team</button>
         <button class="me-nav-btn ${meTab === 'tasks' ? 'active' : ''}" onclick="meSetTab('tasks')">📋 Tasks</button>
         <button class="me-nav-btn ${meTab === 'products' ? 'active' : ''}" onclick="meSetTab('products')">🚂 Products</button>
@@ -54,7 +55,7 @@ window.meSetTab = function(tab) {
     btn.classList.remove('active');
   });
   const activeBtn = document.querySelector(`.me-nav-btn:nth-child(${
-    tab === 'chart' ? 1 : tab === 'team' ? 2 : tab === 'tasks' ? 3 : tab === 'products' ? 4 : 5
+    tab === 'chart' ? 1 : tab === 'heatmap' ? 2 : tab === 'team' ? 3 : tab === 'tasks' ? 4 : tab === 'products' ? 5 : 6
   })`);
   if (activeBtn) activeBtn.classList.add('active');
 
@@ -64,6 +65,7 @@ window.meSetTab = function(tab) {
     body.innerHTML = meGetTabContent();
     setTimeout(() => {
       if (tab === 'chart') meDrawChartNow();
+      else if (tab === 'heatmap') meDrawHeatmapNow();
     }, 100);
   }
 };
@@ -83,6 +85,8 @@ function meGetTabContent() {
       return meRenderProductsTab(products);
     case 'holidays':
       return meRenderHolidaysTab(holidays, team);
+    case 'heatmap':
+      return meRenderHeatmapTab(meChartStart, team, tasks, products, holidays);
     case 'chart':
     default:
       return meRenderChartTab(meChartStart, team, tasks, products, holidays);
