@@ -601,9 +601,14 @@ function meDrawChartNow() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: {
+          bottom: 15
+        }
+      },
       plugins: { legend: { display: false } },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 0, minRotation: 0, font: { size: 11 } } },
+        x: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, maxRotation: 0, minRotation: 0, font: { size: 10 }, padding: 5 } },
         y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
       },
       bar: { barPercentage: 0.75, categoryPercentage: 0.8 }
@@ -679,9 +684,10 @@ function meFormatDate(date) {
 
 function meGetMonthLabel(monthKey) {
   const date = new Date(monthKey + '-01');
-  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const year = date.getFullYear();
-  return `${month}\n${year}`;
+  // Returning an array forces Chart.js to stack the strings vertically
+  return [month, year.toString()];
 }
 
 function meGetMonthRange(startMonth, count) {
