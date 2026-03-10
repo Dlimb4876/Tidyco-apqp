@@ -6,7 +6,22 @@
 
 // ── Projects list ─────────────────────────────────────────────
 function renderProjects() {
-  const user = currentUser ? currentUser.email.split('@')[0] : '';
+  const user    = currentUser ? currentUser.email.split('@')[0] : '';
+  const families = getFamilies();
+
+  // Build one tab per family plus an "All" tab
+  const allCount = db.programmes.length;
+  let tabsHTML = `<button class="npi-tab${npiTab === 'all' ? ' npi-tab-active' : ''}" onclick="setNpiTab('all')">All<span class="npi-tab-badge">${allCount}</span></button>`;
+  families.forEach(fam => {
+    const count = db.programmes.filter(p => (p.family || 'Other') === fam.id).length;
+    tabsHTML += `<button class="npi-tab${npiTab === fam.id ? ' npi-tab-active' : ''}" onclick="setNpiTab(${JSON.stringify(fam.id)})">${fam.icon} ${esc(fam.label)}<span class="npi-tab-badge">${count}</span></button>`;
+  });
+
+  // "New Project" button pre-selects the active family tab when not "All"
+  const newProjOnclick = npiTab !== 'all'
+    ? `newProjectInFamily(${JSON.stringify(npiTab)})`
+    : `showModal('modalNewProj')`;
+
   let html = `<div class="proj-home">
     <div class="proj-home-header">
       <div>
@@ -15,9 +30,10 @@ function renderProjects() {
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Hub</button>
-        <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
+        <button class="btn btn-primary" onclick="${newProjOnclick}">＋ New Project</button>
       </div>
-    </div>`;
+    </div>
+    <div class="npi-tabs">${tabsHTML}</div>`;
 
   if (db.programmes.length === 0) {
     html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
@@ -26,56 +42,98 @@ function renderProjects() {
       <div style="font-size:13px;margin-bottom:24px">Create your first project to get started</div>
       <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
     </div>`;
-  } else {
-    getFamilies().forEach(fam => {
+  } else if (npiTab === 'all') {
+    // Show every family group that has at least one project
+    let hasAny = false;
+    families.forEach(fam => {
       const projs = db.programmes.filter(p => (p.family || 'Other') === fam.id);
       if (projs.length === 0) return;
-      html += `<div class="proj-family-group">
-        <div class="proj-family-label"><span>${fam.icon}</span>${fam.label}</div>
-        <div class="proj-cards">`;
-      projs.forEach(p => {
-        const gates      = p.gates || [];
-        const curGate    = gates.findIndex(g => !gateAllSigned(g));
-        const gatesDone  = gates.filter(g => gateAllSigned(g)).length;
-        const openAct    = (p.actions || []).filter(a => a.status !== 'Closed').length;
-        const overdueAct = (p.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
-        const highRPN    = (p.pfmea || []).filter(r => calcRPN(r) >= 100).length;
-        const rag        = overdueAct > 0 || highRPN > 0 ? 'r' : openAct > 0 ? 'a' : 'g';
-        const ragLabel   = rag === 'r' ? 'Needs Attention' : rag === 'a' ? 'In Progress' : 'On Track';
-        const pips       = GATE_DEFS.map((g, i) => {
-          const gd  = gates[i];
-          const cls = gd && gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : '';
-          return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`;
-        }).join('');
-        const lastSaved = p.updated_at
-          ? new Date(p.updated_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-          : '—';
-        html += `<div class="proj-card" onclick="openProject('${p.id}')">
-          <div class="proj-card-name">${esc(p.name)}</div>
-          <div class="proj-card-meta">
-            ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''}
-            ${p.unit     ? `<span>🚂 ${esc(p.unit)}</span>`     : ''}
-            ${p.lead     ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>` : ''}
-            ${p.pm       ? `<span>📋 PM: ${esc(p.pm)}</span>`   : ''}
-            ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''}
-            ${p.partNumber ? `<span>🆔 PN: ${esc(p.partNumber)}</span>` : ''}
-          </div>
-          <div class="proj-card-gate">
-            <span class="proj-card-gate-label">GATE ${curGate >= 0 ? curGate : '✓'}</span>
-            ${pips}
-          </div>
-          <div class="proj-card-footer">
-            <span><span class="proj-rag proj-rag-${rag}"></span>${ragLabel}</span>
-            <span>${gatesDone}/6 gates · ${lastSaved}</span>
-          </div>
-        </div>`;
-      });
-      html += `<div class="proj-add-card" onclick="newProjectInFamily('${fam.id}')">＋ Add ${fam.label} project</div>`;
-      html += `</div></div>`;
+      hasAny = true;
+      html += renderFamilyGroup(fam, projs, false);
     });
+    if (!hasAny) {
+      html += `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px">No projects match any known family.</div>`;
+    }
+  } else {
+    // Single-family tab view
+    const fam   = families.find(f => f.id === npiTab);
+    const projs = fam ? db.programmes.filter(p => (p.family || 'Other') === fam.id) : [];
+    if (!fam || projs.length === 0) {
+      const famLabel = fam ? esc(fam.label) : esc(npiTab);
+      const famIcon  = fam ? fam.icon : '📋';
+      html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
+        <div style="font-size:48px;margin-bottom:16px">${famIcon}</div>
+        <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No ${famLabel} projects yet</div>
+        <div style="font-size:13px;margin-bottom:24px">Create the first ${famLabel} project to get started</div>
+        <button class="btn btn-primary" onclick="newProjectInFamily(${JSON.stringify(npiTab)})">＋ New ${famLabel} Project</button>
+      </div>`;
+    } else {
+      // Hide the family header — the active tab already labels it
+      html += renderFamilyGroup(fam, projs, true);
+    }
   }
+
   html += `</div>`;
   return html;
+}
+
+// Renders one family section (cards grid + "Add" card).
+// Pass hideHeader=true when the active tab already labels the family.
+function renderFamilyGroup(fam, projs, hideHeader) {
+  let html = `<div class="proj-family-group">`;
+  if (!hideHeader) {
+    html += `<div class="proj-family-label"><span>${fam.icon}</span>${esc(fam.label)}</div>`;
+  }
+  html += `<div class="proj-cards">`;
+  projs.forEach(p => {
+    const gates      = p.gates || [];
+    const curGate    = gates.findIndex(g => !gateAllSigned(g));
+    const gatesDone  = gates.filter(g => gateAllSigned(g)).length;
+    const openAct    = (p.actions || []).filter(a => a.status !== 'Closed').length;
+    const overdueAct = (p.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
+    const highRPN    = (p.pfmea || []).filter(r => calcRPN(r) >= 100).length;
+    const rag        = overdueAct > 0 || highRPN > 0 ? 'r' : openAct > 0 ? 'a' : 'g';
+    const ragLabel   = rag === 'r' ? 'Needs Attention' : rag === 'a' ? 'In Progress' : 'On Track';
+    const pips       = GATE_DEFS.map((g, i) => {
+      const gd  = gates[i];
+      const cls = gd && gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : '';
+      return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`;
+    }).join('');
+    const lastSaved = p.updated_at
+      ? new Date(p.updated_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    html += `<div class="proj-card" onclick="openProject('${p.id}')">
+      <div class="proj-card-name">${esc(p.name)}</div>
+      <div class="proj-card-meta">
+        ${p.customer   ? `<span>👤 ${esc(p.customer)}</span>`   : ''}
+        ${p.unit       ? `<span>🚂 ${esc(p.unit)}</span>`       : ''}
+        ${p.lead       ? `<span>🧑‍💼 ME: ${esc(p.lead)}</span>`  : ''}
+        ${p.pm         ? `<span>📋 PM: ${esc(p.pm)}</span>`     : ''}
+        ${p.qNumber    ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''}
+        ${p.partNumber ? `<span>🆔 PN: ${esc(p.partNumber)}</span>` : ''}
+      </div>
+      <div class="proj-card-gate">
+        <span class="proj-card-gate-label">GATE ${curGate >= 0 ? curGate : '✓'}</span>
+        ${pips}
+      </div>
+      <div class="proj-card-footer">
+        <span><span class="proj-rag proj-rag-${rag}"></span>${ragLabel}</span>
+        <span>${gatesDone}/6 gates · ${lastSaved}</span>
+      </div>
+    </div>`;
+  });
+  html += `<div class="proj-add-card" onclick="newProjectInFamily(${JSON.stringify(fam.id)})">＋ Add ${esc(fam.label)} project</div>`;
+  html += `</div></div>`;
+  return html;
+}
+
+// Switch the active family tab and re-render
+function setNpiTab(tab) {
+  npiTab = tab;
+  const parts = [];
+  if (tab !== 'all') parts.push('nft=' + encodeURIComponent(tab));
+  history.replaceState(null, '', parts.length ? '#' + parts.join('&') : '#');
+  render();
 }
 
 // ── Dashboard ─────────────────────────────────────────────────
