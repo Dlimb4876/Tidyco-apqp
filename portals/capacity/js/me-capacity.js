@@ -66,7 +66,14 @@ window.meSetTab = function(tab) {
   if (body) {
     body.innerHTML = meGetTabContent();
     setTimeout(() => {
-      if (tab === 'chart') meDrawChartNow();
+      if (tab === 'dashboard') {
+        const team = meDataGetTeam();
+        const tasks = meDataGetTasks();
+        const products = meDataGetProducts();
+        const holidays = meDataGetHolidays();
+        meDashboardDrawMiniChart(team, tasks, products, holidays);
+        meDashboardDrawMiniHeatmap(team, tasks, holidays);
+      } else if (tab === 'chart') meDrawChartNow();
       else if (tab === 'heatmap') meDrawHeatmapNow();
     }, 100);
   }
@@ -78,7 +85,14 @@ window.meRefreshCurrentTab = function() {
   if (body) {
     body.innerHTML = meGetTabContent();
     setTimeout(() => {
-      if (meTab === 'chart') meDrawChartNow();
+      if (meTab === 'dashboard') {
+        const team = meDataGetTeam();
+        const tasks = meDataGetTasks();
+        const products = meDataGetProducts();
+        const holidays = meDataGetHolidays();
+        meDashboardDrawMiniChart(team, tasks, products, holidays);
+        meDashboardDrawMiniHeatmap(team, tasks, holidays);
+      } else if (meTab === 'chart') meDrawChartNow();
       else if (meTab === 'heatmap') meDrawHeatmapNow();
     }, 100);
   }
