@@ -9,7 +9,7 @@ window.meRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsAr
   const monthLabel = meGetMonthLabel(monthKey);
 
   // Calculate overall stats
-  const weeks = meGetWeekRange(monthKey, 12);
+  const weeks = meGetWeekRange(monthKey, 20);
   let totalCapacity = 0, totalDemand = 0;
 
   teamArray.forEach(person => {
@@ -91,7 +91,7 @@ window.meDrawHeatmapNow = function() {
   const holidays = meDataGetHolidays();
   const monthKey = meChartStart;
 
-  const weeks = meGetWeekRange(monthKey, 12);
+  const weeks = meGetWeekRange(monthKey, 20);
   const container = document.getElementById('meHeatmapGrid');
 
   if (!container) return;

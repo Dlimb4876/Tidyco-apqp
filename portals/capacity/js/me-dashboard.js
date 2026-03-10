@@ -67,21 +67,39 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
         <div class="me-dashboard-card">
           <div class="me-dashboard-card-title">Team Health</div>
           <div class="me-dashboard-health">
-            <div class="me-health-item">
-              <div class="me-health-dot" style="background: var(--green);"></div>
-              <span>Healthy (<80%)</span>
-              <span class="me-health-count">${healthAnalysis.healthy}</span>
-            </div>
-            <div class="me-health-item">
-              <div class="me-health-dot" style="background: var(--amber);"></div>
-              <span>Tight (80–100%)</span>
-              <span class="me-health-count">${healthAnalysis.tight}</span>
-            </div>
-            <div class="me-health-item">
-              <div class="me-health-dot" style="background: var(--red);"></div>
-              <span>Overloaded (>100%)</span>
-              <span class="me-health-count">${healthAnalysis.overloaded}</span>
-            </div>
+            ${healthAnalysis.healthy.length > 0 ? `
+              <div class="me-health-category">
+                <div class="me-health-category-title">
+                  <div class="me-health-dot" style="background: var(--green);"></div>
+                  <span>Healthy</span>
+                </div>
+                <div class="me-health-members">
+                  ${healthAnalysis.healthy.map(m => `<div class="me-health-member"><span>${esc(m.name)}</span><span class="me-health-util">${m.util}%</span></div>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+            ${healthAnalysis.tight.length > 0 ? `
+              <div class="me-health-category">
+                <div class="me-health-category-title">
+                  <div class="me-health-dot" style="background: var(--amber);"></div>
+                  <span>Tight</span>
+                </div>
+                <div class="me-health-members">
+                  ${healthAnalysis.tight.map(m => `<div class="me-health-member"><span>${esc(m.name)}</span><span class="me-health-util">${m.util}%</span></div>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+            ${healthAnalysis.overloaded.length > 0 ? `
+              <div class="me-health-category">
+                <div class="me-health-category-title">
+                  <div class="me-health-dot" style="background: var(--red);"></div>
+                  <span>Overloaded</span>
+                </div>
+                <div class="me-health-members">
+                  ${healthAnalysis.overloaded.map(m => `<div class="me-health-member"><span>${esc(m.name)}</span><span class="me-health-util">${m.util}%</span></div>`).join('')}
+                </div>
+              </div>
+            ` : ''}
           </div>
         </div>
 
@@ -122,14 +140,6 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
           <div class="me-dashboard-empty">No upcoming tasks</div>
         `}
       </div>
-
-      <!-- Quick Navigation -->
-      <div class="me-dashboard-nav">
-        <button class="btn btn-secondary" onclick="meSetTab('chart')">📊 View Chart</button>
-        <button class="btn btn-secondary" onclick="meSetTab('heatmap')">🔥 Team Heatmap</button>
-        <button class="btn btn-secondary" onclick="meSetTab('team')">👷 Manage Team</button>
-        <button class="btn btn-secondary" onclick="meSetTab('tasks')">📋 All Tasks</button>
-      </div>
     </div>
   `;
 };
@@ -138,7 +148,7 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
  * Analyze team health by calculating utilisation per person for a given month
  */
 function meAnalyzeTeamHealth(teamArray, tasksArray, holidaysArray, monthKey) {
-  let healthy = 0, tight = 0, overloaded = 0;
+  const healthy = [], tight = [], overloaded = [];
 
   teamArray.forEach(member => {
     if (!member.startDate) return;
@@ -201,11 +211,11 @@ function meAnalyzeTeamHealth(teamArray, tasksArray, holidaysArray, monthKey) {
 
     // Categorize health
     if (adjustedCapacity === 0) return;
-    const personUtil = (personDemand / adjustedCapacity) * 100;
+    const personUtil = Math.round((personDemand / adjustedCapacity) * 100);
 
-    if (personUtil < 80) healthy++;
-    else if (personUtil < 100) tight++;
-    else overloaded++;
+    if (personUtil < 80) healthy.push({ name: member.name, util: personUtil });
+    else if (personUtil < 100) tight.push({ name: member.name, util: personUtil });
+    else overloaded.push({ name: member.name, util: personUtil });
   });
 
   return { healthy, tight, overloaded };
