@@ -941,3 +941,112 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 1199px) {
+  .prod-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  .prod-nav-bar {
+    padding: 12px 12px;
+    overflow-x: auto;
+    gap: 6px;
+  }
+
+  .prod-nav-item {
+    padding: 6px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .prod-home {
+    padding: 12px;
+  }
+
+  .prod-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .prod-card {
+    min-height: 200px;
+    padding: 24px !important;
+  }
+
+  .prod-card .proj-card-name {
+    font-size: 16px;
+  }
+
+  .prod-card .proj-card-meta {
+    font-size: 12px;
+  }
+
+  .prod-section {
+    padding: 12px;
+  }
+
+  .prod-filters {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-group input[type="date"] {
+    width: 100%;
+  }
+
+  .prod-tbl {
+    font-size: 12px;
+  }
+
+  .prod-tbl th {
+    padding: 6px 6px;
+    font-size: 10px;
+  }
+
+  .prod-tbl td {
+    padding: 4px 6px;
+  }
+
+  .unit-tabs-container {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  .gantt-nav-controls {
+    flex-wrap: wrap;
+  }
+
+  .gantt-month-header {
+    font-size: 14px;
+  }
+
+  .gantt-nav-controls .btn-sm {
+    min-width: 80px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .prod-filters {
+    gap: 12px;
+  }
+
+  .filter-group input[type="date"] {
+    width: 160px;
+  }
+}

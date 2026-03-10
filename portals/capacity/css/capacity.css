@@ -34,3 +34,31 @@
     color: var(--muted);
     margin-top: 8px;
 }
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 1199px) {
+  .capacity-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .capacity-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .capacity-card {
+    min-height: 200px;
+    padding: 24px !important;
+  }
+
+  .capacity-card .proj-card-name {
+    font-size: 16px;
+  }
+
+  .capacity-card .proj-card-meta {
+    font-size: 12px;
+  }
+}

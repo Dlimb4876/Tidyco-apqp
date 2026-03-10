@@ -111,3 +111,119 @@
   font-family: 'IBM Plex Sans', sans-serif; text-align: center;
 }
 .new-kit-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-pale); }
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Gantt table adjustments */
+  .gantt-month-row th {
+    padding: 3px 4px;
+    font-size: 9px;
+  }
+
+  .gantt-week-row th {
+    padding: 1px;
+    font-size: 8px;
+  }
+
+  .gantt-task-cell {
+    padding: 3px 6px !important;
+    min-width: 140px;
+    font-size: 12px;
+  }
+
+  .gantt-role-cell {
+    padding: 3px 4px !important;
+    min-width: 50px;
+    font-size: 11px;
+  }
+
+  .gantt-notes-cell {
+    padding: 2px 4px !important;
+    min-width: 100px;
+    font-size: 11px;
+  }
+
+  .gantt-rowlabel {
+    padding: 2px 4px !important;
+    font-size: 8px;
+  }
+
+  .gantt-cell,
+  .gantt-actual-cell {
+    min-width: 20px;
+    height: 16px;
+  }
+
+  /* Kit styles adjustments */
+  .kit-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .kit-header {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .kit-name-input {
+    font-size: 12px;
+  }
+
+  .kit-body {
+    padding: 6px 10px;
+    gap: 3px;
+  }
+
+  .kit-item-row {
+    padding: 3px 0;
+    gap: 6px;
+  }
+
+  .kit-item-type {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+
+  .kit-item-name {
+    font-size: 11px;
+  }
+
+  .kit-item-pn {
+    font-size: 10px;
+  }
+
+  .kit-qty-input {
+    width: 45px;
+    font-size: 11px;
+  }
+
+  .kit-unit {
+    font-size: 10px;
+  }
+
+  .kit-summary {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .kit-add-btn {
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .new-kit-btn {
+    padding: 16px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .kit-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gantt-task-cell {
+    min-width: 160px;
+  }
+}

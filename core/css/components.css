@@ -192,3 +192,69 @@ td.ctr  { text-align: center; }
 .alert-red   { background: var(--red-pale);   border: 1px solid #f0b4ae;         color: var(--red);        }
 .alert-amber { background: var(--amber-pale); border: 1px solid var(--amber-mid); color: var(--amber);      }
 .alert-blue  { background: var(--blue-pale);  border: 1px solid var(--blue-mid);  color: var(--blue-dark);  }
+
+/* ── Responsive Component Adjustments ──────────────────────────── */
+@media (max-width: 767px) {
+  /* Modal adjustments */
+  .modal {
+    width: 90vw;
+    max-width: 90vw;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  .modal-sm {
+    width: 90vw;
+  }
+  .modal-lg {
+    width: 90vw;
+  }
+
+  /* Card adjustments */
+  .card {
+    margin-bottom: 12px;
+  }
+
+  /* Form adjustments */
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Section header adjustments */
+  .sec-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sec-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  /* Button adjustments */
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+
+  /* Table adjustments */
+  .tbl th {
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+  .tbl td {
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  /* Sticky table wrapper adjustments */
+  .sticky-card-scroll {
+    max-height: 50vh;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  /* Tablet optimizations */
+  .modal {
+    width: 70vw;
+    max-width: 600px;
+  }
+}
