@@ -181,6 +181,18 @@ function meRenderTeamTab(teamArray) {
 function meRenderTasksTab(tasksArray, teamArray) {
   const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other'];
   const totalHours = tasksArray.reduce((sum, t) => sum + (t.totalHours || 0), 0).toFixed(1);
+  const taskCount = tasksArray.length;
+  const unassignedCount = tasksArray.filter(t => !t.assigneeId).length;
+  const avgHours = taskCount > 0 ? (totalHours / taskCount).toFixed(1) : '0';
+
+  // Hours by category
+  const hoursByCategory = {};
+  ME_CATS.forEach(cat => {
+    hoursByCategory[cat] = tasksArray.filter(t => t.category === cat).reduce((sum, t) => sum + (t.totalHours || 0), 0).toFixed(1);
+  });
+  const topCategory = ME_CATS.reduce((top, cat) =>
+    parseFloat(hoursByCategory[cat]) > parseFloat(hoursByCategory[top]) ? cat : top
+  );
 
   let rows = '';
   tasksArray.forEach((task, idx) => {
@@ -200,12 +212,41 @@ function meRenderTasksTab(tasksArray, teamArray) {
   });
 
   return `
-    <div class="me-card">
-      <div class="me-card-head">
-        <span class="me-card-title">TASKS</span>
-        <span style="font-size:12px;color:var(--muted)">${totalHours} total hours</span>
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="me-kpi-strip">
+        <div class="me-kpi" style="border-left: 4px solid var(--green);">
+          <div class="me-kpi-value">${totalHours}</div>
+          <div class="me-kpi-label">Total Hours</div>
+          <div class="me-kpi-month">all tasks</div>
+        </div>
+        <div class="me-kpi" style="border-left: 4px solid var(--blue);">
+          <div class="me-kpi-value">${taskCount}</div>
+          <div class="me-kpi-label">Tasks</div>
+          <div class="me-kpi-month">in pipeline</div>
+        </div>
+        <div class="me-kpi" style="border-left: 4px solid var(--amber);">
+          <div class="me-kpi-value">${avgHours}</div>
+          <div class="me-kpi-label">Average Hours</div>
+          <div class="me-kpi-month">per task</div>
+        </div>
+        <div class="me-kpi" style="border-left: 4px solid var(--navy);">
+          <div class="me-kpi-value">${hoursByCategory[topCategory]}</div>
+          <div class="me-kpi-label">Top Category</div>
+          <div class="me-kpi-month">${topCategory}</div>
+        </div>
+        <div class="me-kpi" style="border-left: 4px solid var(--red);">
+          <div class="me-kpi-value">${unassignedCount}</div>
+          <div class="me-kpi-label">Unassigned</div>
+          <div class="me-kpi-month">tasks</div>
+        </div>
       </div>
-      <div class="me-card-body">
+
+      <div class="me-card">
+        <div class="me-card-head">
+          <span class="me-card-title">TASKS</span>
+          <span style="font-size:12px;color:var(--muted)">${totalHours} total hours</span>
+        </div>
+        <div class="me-card-body">
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
@@ -226,6 +267,7 @@ function meRenderTasksTab(tasksArray, teamArray) {
           <button class="btn btn-primary btn-sm" onclick="meAddDefaultTask();">＋ Add Task</button>
         </div>
       </div>
+    </div>
     </div>`;
 }
 
@@ -350,6 +392,33 @@ function meRenderHolidaysTab(holidaysArray, teamArray) {
       <div class="me-card-body" style="overflow-x: auto;">
         <table class="holiday-matrix">
           <thead>
+            <tr>
+              <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left;"></th>`;
+
+  // Month header row - groups consecutive dates by month
+  let currentMonth = null;
+  let monthStart = 0;
+  dates.forEach((date, idx) => {
+    const d = new Date(date);
+    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (monthKey !== currentMonth) {
+      if (currentMonth !== null) {
+        const monthLabel = meGetMonthLabel(currentMonth);
+        const colspan = idx - monthStart;
+        html += `<th colspan="${colspan}" style="text-align: center; font-weight: bold; font-size: 13px; background: rgba(0,0,0,0.02);">${monthLabel}</th>`;
+      }
+      currentMonth = monthKey;
+      monthStart = idx;
+    }
+  });
+  // Close final month cell
+  if (currentMonth !== null) {
+    const monthLabel = meGetMonthLabel(currentMonth);
+    const colspan = dates.length - monthStart;
+    html += `<th colspan="${colspan}" style="text-align: center; font-weight: bold; font-size: 13px; background: rgba(0,0,0,0.02);">${monthLabel}</th>`;
+  }
+
+  html += `</tr>
             <tr>
               <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left;">Team Member</th>`;
 
@@ -520,11 +589,11 @@ function meDrawChartNow() {
     data: {
       labels: monthLabels,
       datasets: [
-        { label: 'NPI', data: npiData, backgroundColor: '#3b82f6', order: 2 },
-        { label: 'Improvement', data: improvementData, backgroundColor: '#10b981', order: 2 },
-        { label: 'Tendering', data: tenderingData, backgroundColor: '#f59e0b', order: 2 },
-        { label: 'Support', data: supportData, backgroundColor: '#14b8a6', order: 2 },
-        { label: 'Other', data: otherData, backgroundColor: '#8b5cf6', order: 2 },
+        { label: 'NPI', data: npiData, backgroundColor: '#3b82f6', stack: 'bars', order: 2 },
+        { label: 'Improvement', data: improvementData, backgroundColor: '#10b981', stack: 'bars', order: 2 },
+        { label: 'Tendering', data: tenderingData, backgroundColor: '#f59e0b', stack: 'bars', order: 2 },
+        { label: 'Support', data: supportData, backgroundColor: '#14b8a6', stack: 'bars', order: 2 },
+        { label: 'Other', data: otherData, backgroundColor: '#8b5cf6', stack: 'bars', order: 2 },
         { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 2, type: 'line', fill: false, pointRadius: 3, pointBackgroundColor: '#ef4444', order: 1 },
         { label: '100% Max Capacity', data: capacityMaxData, borderColor: '#9ca3af', borderWidth: 2, borderDash: [4, 4], type: 'line', fill: false, pointRadius: 2, pointBackgroundColor: '#9ca3af', order: 1 }
       ]
