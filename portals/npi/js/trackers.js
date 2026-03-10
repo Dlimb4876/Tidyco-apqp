@@ -80,7 +80,7 @@ function renderRisks() {
   <div class="card-head"><span class="card-title">Risk Register</span><span class="card-meta">${p.risks.length} risks · L × I = Score</span></div>
   ${p.risks.length === 0
     ? emptyState('🛡', 'No risks yet', 'Click ＋ Add Risk to start — all fields edit inline')
-    : `<div class="sticky-card-scroll"><table class="tbl risk-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:auto"><col style="width:120px"><col style="width:90px"><col style="width:40px"><col style="width:40px"><col style="width:56px"><col style="width:200px"><col style="width:100px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
+    : `<div class="sticky-card-scroll"><table class="tbl risk-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:40px"><col style="width:40px"><col style="width:56px"><col style="width:280px"><col style="width:100px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="addRisk()">＋ Add Risk</button></div>`;
 }
 function addRisk()       { prog().risks.push({ id: 'r_' + Date.now(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }); save(); render(); }
