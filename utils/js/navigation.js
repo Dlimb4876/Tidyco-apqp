@@ -10,7 +10,8 @@ const SECTION_LABELS = {
   bom:     'Bill of Materials',
   timing:  'NPI Timing Plan',
   capacity: 'Capacity Management',
-  production: 'Production Planning'
+  production: 'Production Planning',
+  productmgmt: 'Product Management'
 };
 
 function parseHash() {
@@ -75,6 +76,10 @@ function render() {
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
   if (currentSection === 'production') {
     mc.innerHTML = `<div class="section-inner">${renderProduction()}</div>`;
+    return;
+  }
+  if (currentSection === 'productmgmt') {
+    mc.innerHTML = `<div class="section-inner">${renderProductMgmt()}</div>`;
     return;
   }
   if (currentSection === 'capacity') {

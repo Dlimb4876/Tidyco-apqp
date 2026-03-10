@@ -42,7 +42,110 @@
 }
 
 .hub-card .proj-card-meta {
-    font-size: 14px; 
+    font-size: 14px;
     color: var(--muted);
     margin-top: 8px;
+}
+
+/* Product Development Menu Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-dialog {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 420px;
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: var(--text);
+}
+
+.modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.proddev-menu-item {
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.proddev-menu-item:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent);
+    transform: translateX(4px);
+}
+
+.proddev-menu-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.proddev-menu-text {
+    flex: 1;
+    text-align: left;
+}
+
+.proddev-menu-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.proddev-menu-meta {
+    font-size: 12px;
+    color: var(--muted);
 }
