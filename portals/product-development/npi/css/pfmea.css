@@ -8,70 +8,117 @@
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   font-weight: 700;
-  min-width: 34px;
+  min-width: 36px;
   text-align: center;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
   display: inline-block;
+  border: 1px solid;
+  transition: all 0.15s;
 }
-.rpn-lo { background: var(--green-pale);  color: var(--green);  }
-.rpn-md { background: var(--amber-pale);  color: var(--amber);  }
-.rpn-hi { background: var(--red-pale);    color: var(--red);    }
 
-/* ── RPN History trigger button ──────────────────────────────── */
+.rpn-lo {
+  background: var(--green-pale);
+  color: var(--green);
+  border-color: #9ad6b2;
+}
+
+.rpn-md {
+  background: var(--amber-pale);
+  color: var(--amber);
+  border-color: #f6c87a;
+}
+
+.rpn-hi {
+  background: var(--red-pale);
+  color: var(--red);
+  border-color: #f0b4ae;
+}
+
+/* ── RPN History Trigger Button ──────────────────────────────── */
 .rpn-hist-btn {
   display: block;
   margin: 3px auto 0;
-  padding: 1px 5px;
-  font-size: 9px;
+  padding: 3px 8px;
+  font-size: 10px;
   font-family: 'IBM Plex Mono', monospace;
   font-weight: 600;
   color: var(--blue);
   background: var(--blue-pale);
-  border: 1px solid var(--blue-mid);
+  border: 1.5px solid var(--blue-mid);
   border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
   line-height: 1.4;
+  transition: all 0.15s;
 }
+
 .rpn-hist-btn:hover {
   background: var(--blue);
   color: white;
+  border-color: var(--blue);
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.15);
 }
 
-/* ── Step group headers ──────────────────────────────────────── */
-.pfmea-step-group  { margin-bottom: 0; }
+/* ── Step Group Headers ────────────────────────────────────── */
+.pfmea-step-group {
+  margin-bottom: 0;
+}
+
 .pfmea-step-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   background: #f4f6fa;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 2px solid var(--line);
   border-top: 1px solid var(--line);
+  transition: all 0.15s;
+  font-weight: 600;
 }
+
 .pfmea-step-header:first-child { border-top: none; }
+
+.pfmea-step-header:hover {
+  background: rgba(0, 102, 204, 0.05);
+  border-bottom-color: var(--line2);
+}
+
 .pfmea-step-label {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--navy);
+  letter-spacing: 0.3px;
 }
-.pfmea-step-ctqs  { display: flex; gap: 4px; flex-wrap: wrap; }
 
-/* ── Add-row affordance ──────────────────────────────────────── */
+.pfmea-step-ctqs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* ── Add-Row Affordance ────────────────────────────────────── */
 .pfmea-add-row {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 12px;
-  background: #fafbfe;
+  padding: 8px 12px;
+  background: rgba(0, 102, 204, 0.02);
   border-top: 1px dashed var(--line);
   font-size: 11px;
   color: var(--muted);
   cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
 }
-.pfmea-add-row:hover { color: var(--blue); background: var(--blue-pale); }
+
+.pfmea-add-row:hover {
+  color: var(--blue);
+  background: var(--blue-pale);
+  border-top-color: var(--blue);
+  border-top-style: solid;
+}
 
 /* ── Table cell types ────────────────────────────────────────── */
 .pfmea-mode-cell {
