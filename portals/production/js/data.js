@@ -3,7 +3,8 @@
 
 let prodState = {
   products: [],
-  batches: []
+  batches: [],
+  activeUnit: 'Unit 2'
 };
 
 let prodDebouncedSave = null;
@@ -258,4 +259,8 @@ window.prodDataGetBatchesByProduct = function(productId) {
 
 window.prodDataGetBatchesByUnit = function(unit) {
   return prodState.batches.filter(b => b.unit === unit);
+};
+
+window.prodSetActiveUnit = function(unit) {
+  prodState.activeUnit = unit;
 };

@@ -17,7 +17,7 @@ function renderProduction() {
 
   // Root hub view
   return `
-    <div class="prod-home">
+    <div class="proj-home">
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Production Planning</div>
@@ -26,8 +26,8 @@ function renderProduction() {
         <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Portal</button>
       </div>
 
-      <div class="prod-grid">
-        <div class="proj-card prod-card" onclick="setProductionTab('products')">
+      <div class="proj-cards hub-grid">
+        <div class="proj-card hub-card" onclick="setProductionTab('products')">
           <div class="hub-card-content">
             <div class="hub-icon">📦</div>
             <div class="proj-card-name">Products</div>
@@ -35,7 +35,7 @@ function renderProduction() {
           </div>
         </div>
 
-        <div class="proj-card prod-card" onclick="setProductionTab('scheduling')">
+        <div class="proj-card hub-card" onclick="setProductionTab('scheduling')">
           <div class="hub-card-content">
             <div class="hub-icon">📅</div>
             <div class="proj-card-name">Schedule</div>
@@ -43,7 +43,7 @@ function renderProduction() {
           </div>
         </div>
 
-        <div class="proj-card prod-card" onclick="setProductionTab('by-product')">
+        <div class="proj-card hub-card" onclick="setProductionTab('by-product')">
           <div class="hub-card-content">
             <div class="hub-icon">🎯</div>
             <div class="proj-card-name">Plan by Product</div>
@@ -51,7 +51,7 @@ function renderProduction() {
           </div>
         </div>
 
-        <div class="proj-card prod-card" onclick="setProductionTab('by-unit')">
+        <div class="proj-card hub-card" onclick="setProductionTab('by-unit')">
           <div class="hub-card-content">
             <div class="hub-icon">🏭</div>
             <div class="proj-card-name">Plan by Unit</div>
