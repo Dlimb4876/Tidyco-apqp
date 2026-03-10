@@ -29,7 +29,6 @@ window.renderMeCapacity = function() {
             <div class="me-topbar-sub">Manufacturing Engineering · Man-hours planning</div>
           </div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="meOnSave(true)">↑ Save to Cloud</button>
       </div>
 
       <div class="me-nav">
@@ -387,6 +386,7 @@ function meRenderChartTab(monthKey, teamArray, tasksArray, productsArray, holida
         <div class="legend-item"><div class="legend-color" style="background: #14b8a6;"></div><span>Support</span></div>
         <div class="legend-item"><div class="legend-color" style="background: #8b5cf6;"></div><span>Other</span></div>
         <div class="legend-item" style="margin-left: 30px;"><div class="legend-line" style="background: #ef4444;"></div><span>Team Capacity</span></div>
+        <div class="legend-item"><div class="legend-line" style="background: #9ca3af; border-top: 2px dashed #9ca3af;"></div><span>100% Max Capacity</span></div>
       </div>
     </div>
   `;
@@ -412,6 +412,7 @@ function meDrawChartNow() {
   const monthLabels = monthKeys.map(m => meGetMonthLabel(m));
 
   const capacityData = [];
+  const capacityMaxData = [];
   const npiData = [];
   const improvementData = [];
   const tenderingData = [];
@@ -421,6 +422,7 @@ function meDrawChartNow() {
   monthKeys.forEach(monthKey => {
     const data = meCalculateMonthData(monthKey, team, tasks, products, holidays);
     capacityData.push(data.capacity);
+    capacityMaxData.push(data.capacityMax);
     npiData.push(data.npi);
     improvementData.push(data.improvement);
     tenderingData.push(data.tendering);
@@ -439,7 +441,8 @@ function meDrawChartNow() {
         { label: 'Tendering', data: tenderingData, backgroundColor: '#f59e0b', order: 2 },
         { label: 'Support', data: supportData, backgroundColor: '#14b8a6', order: 2 },
         { label: 'Other', data: otherData, backgroundColor: '#8b5cf6', order: 2 },
-        { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 2, type: 'line', fill: false, pointRadius: 3, pointBackgroundColor: '#ef4444', order: 1 }
+        { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 2, type: 'line', fill: false, pointRadius: 3, pointBackgroundColor: '#ef4444', order: 1 },
+        { label: '100% Max Capacity', data: capacityMaxData, borderColor: '#9ca3af', borderWidth: 2, borderDash: [4, 4], type: 'line', fill: false, pointRadius: 2, pointBackgroundColor: '#9ca3af', order: 1 }
       ]
     },
     options: {
@@ -574,11 +577,15 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
 
   // Calculate capacity
   let capacity = 0;
+  let capacityMax = 0;  // 100% theoretical max
   teamArray.forEach(member => {
-    const hours = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100);
+    const hoursAdjusted = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100);
+    const hoursMax = (member.hoursPerWeek || 37.5);  // 100% without utilization
     const workDays = meCountWorkDaysInMonth(year, month);
-    const monthCapacity = hours * (workDays / 5);
+    const monthCapacity = hoursAdjusted * (workDays / 5);
+    const monthCapacityMax = hoursMax * (workDays / 5);
     capacity += monthCapacity;
+    capacityMax += monthCapacityMax;
   });
 
   // 🔴 FIX #1 & #5: Calculate and subtract holiday deductions
@@ -662,8 +669,10 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
   });
 
   const totalDemand = npi + improvement + tendering + support + other;
+  const adjustedCapacityMax = Math.max(0, capacityMax - holidayDeduction);
   return {
     capacity: adjustedCapacity,
+    capacityMax: adjustedCapacityMax,
     npi,
     improvement,
     tendering,
