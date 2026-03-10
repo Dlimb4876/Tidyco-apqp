@@ -70,6 +70,10 @@ function renderProductsPortalHTML() {
               <input type="number" id="productOverhaulHours" min="0" step="0.5">
             </div>
             <div class="form-group">
+              <label>Turnaround Time (days)</label>
+              <input type="number" id="productTurnaroundTime" min="0" step="0.5">
+            </div>
+            <div class="form-group">
               <label>Status</label>
               <select id="productStatus">
                 <option value="Tender">Tender</option>
@@ -186,7 +190,9 @@ function renderProductsList() {
           <th>Product Name</th>
           <th>Family</th>
           <th>Customer</th>
-          <th>Current Overhaul (hrs)</th>
+          <th>Overhaul (hrs)</th>
+          <th>Turnaround (days)</th>
+          <th>Notes</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -199,6 +205,8 @@ function renderProductsList() {
             <td>${esc(p.family || '—')}</td>
             <td>${esc(p.customer)}</td>
             <td class="numeric">${p.current_overhaul_hours.toFixed(1)}</td>
+            <td class="numeric">${p.turnaround_days ? p.turnaround_days.toFixed(1) : '—'}</td>
+            <td class="notes-cell" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '...' : '') : '—'}</td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td class="actions">
               <button class="btn-icon" title="View History" data-action="history" data-id="${p.id}">📊</button>
@@ -257,6 +265,7 @@ function showProductModal(productId = null, product = null) {
     document.getElementById('productFamily').value = product.family || '';
     document.getElementById('productCustomer').value = product.customer;
     document.getElementById('productOverhaulHours').value = product.current_overhaul_hours;
+    document.getElementById('productTurnaroundTime').value = product.turnaround_days || '';
     document.getElementById('productStatus').value = product.status;
     document.getElementById('productNotes').value = product.notes || '';
     form.dataset.productId = productId;
@@ -265,6 +274,7 @@ function showProductModal(productId = null, product = null) {
     form.reset();
     delete form.dataset.productId;
     document.getElementById('productOverhaulHours').value = 0;
+    document.getElementById('productTurnaroundTime').value = '';
     document.getElementById('productStatus').value = 'Tender';
   }
 
@@ -510,6 +520,7 @@ function setupProductsEventListeners() {
       family: document.getElementById('productFamily').value,
       customer: document.getElementById('productCustomer').value,
       current_overhaul_hours: parseFloat(document.getElementById('productOverhaulHours').value) || 0,
+      turnaround_days: parseFloat(document.getElementById('productTurnaroundTime').value) || null,
       status: document.getElementById('productStatus').value,
       notes: document.getElementById('productNotes').value
     };

@@ -119,6 +119,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+.data-table td.notes-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #666;
+  font-size: 0.95em;
+}
+
 .data-table .actions {
   white-space: nowrap;
   text-align: center;
@@ -159,6 +168,26 @@
 }
 
 .badge-archived {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.badge-Tender {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.badge-NPI {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.badge-Production {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-Closed {
   background: #f5f5f5;
   color: #666;
 }
