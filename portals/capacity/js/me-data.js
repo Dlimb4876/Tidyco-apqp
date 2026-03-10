@@ -26,11 +26,19 @@ window.meDataState = {
   holidays: []
 };
 
+// Initialize missing date fields on backward compatibility
+function meInitTeamDates() {
+  meDataState.team.forEach(member => {
+    if (!member.startDate) member.startDate = '';
+    if (!member.endDate) member.endDate = '';
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 // TEAM CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddTeam = function(name, hoursPerWeek, utilisation) {
+window.meDataAddTeam = function(name, hoursPerWeek, utilisation, startDate, endDate) {
   if (!name || name.trim().length === 0) return false;
   const member = {
     id: meUUID(),
@@ -38,7 +46,9 @@ window.meDataAddTeam = function(name, hoursPerWeek, utilisation) {
     hoursPerWeek: parseFloat(hoursPerWeek) || 37.5,
     utilisation: parseFloat(utilisation) || 80,
     jobTitle: '',
-    group: ''
+    group: '',
+    startDate: startDate || '',
+    endDate: endDate || ''
   };
   meDataState.team.push(member);
   return true;
@@ -62,6 +72,12 @@ window.meDataUpdateTeam = function(idx, field, value) {
       break;
     case 'group':
       member.group = value ? value.trim() : '';
+      break;
+    case 'startDate':
+      member.startDate = value || '';
+      break;
+    case 'endDate':
+      member.endDate = value || '';
       break;
     default:
       return false;
@@ -284,13 +300,19 @@ window.meDataInit = async function() {
             holidays: Array.isArray(data.holidays) ? data.holidays : []
           };
         }
-        // Ensure all team members have jobTitle field (migration for old records)
+        // Ensure all team members have jobTitle, group, startDate, endDate fields (migration for old records)
         meDataState.team.forEach(member => {
           if (!('jobTitle' in member)) {
             member.jobTitle = '';
           }
           if (!('group' in member)) {
             member.group = '';
+          }
+          if (!('startDate' in member)) {
+            member.startDate = '';
+          }
+          if (!('endDate' in member)) {
+            member.endDate = '';
           }
         });
         window.meDataState = meDataState;

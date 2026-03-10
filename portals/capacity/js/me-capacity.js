@@ -108,6 +108,8 @@ function meRenderTeamTab(teamArray) {
         <td><input value="${esc(member.name)}" onchange="meDataUpdateTeam(${idx}, 'name', this.value); meDebouncedSave();"></td>
         <td><input value="${esc(member.jobTitle || '')}" onchange="meDataUpdateTeam(${idx}, 'jobTitle', this.value); meDebouncedSave();"></td>
         <td><select onchange="meDataUpdateTeam(${idx}, 'group', this.value); meDebouncedSave();">${groupOpts}</select></td>
+        <td><input type="date" value="${member.startDate || ''}" onchange="meDataUpdateTeam(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${member.endDate || ''}" onchange="meDataUpdateTeam(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${member.hoursPerWeek || 37.5}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" onchange="meDataUpdateTeam(${idx}, 'utilisation', this.value); meDebouncedSave();"></td>
         <td style="font-weight: bold;">${effective}</td>
@@ -159,6 +161,8 @@ function meRenderTeamTab(teamArray) {
                 <th style="min-width:180px">Name</th>
                 <th style="width:140px">Job Title</th>
                 <th style="width:140px">Group</th>
+                <th style="width:110px">Start Date</th>
+                <th style="width:110px">End Date</th>
                 <th style="width:130px">Hours / Week</th>
                 <th style="width:120px">Utilisation %</th>
                 <th style="width:120px">Effective h/wk</th>
