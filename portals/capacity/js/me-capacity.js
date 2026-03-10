@@ -75,6 +75,7 @@ function meRenderTeam() {
   const rows = db.me.team.map((m, i) => `
     <tr>
       <td><input value="${esc(m.name)}" onchange="meUpdTeam(${i},'name',this.value)" placeholder="Engineer name"></td>
+      <td><input value="${esc(m.jobTitle||'')}" onchange="meUpdTeam(${i},'jobTitle',this.value)" placeholder="Job title"></td>
       <td><input type="number" value="${m.hoursPerWeek||37.5}" min="1" max="80" step="0.5"
            onchange="meUpdTeam(${i},'hoursPerWeek',parseFloat(this.value)||37.5)"></td>
       <td><input type="number" value="${m.utilisation||80}" min="0" max="100" step="5"
@@ -96,13 +97,14 @@ function meRenderTeam() {
       <table class="me-tbl">
         <thead><tr>
           <th style="min-width:180px">Name</th>
+          <th style="width:140px">Job Title</th>
           <th style="width:130px">Hours / Week</th>
           <th style="width:120px">Utilisation %</th>
           <th style="width:120px">Effective h/wk</th>
           <th style="width:36px"></th>
         </tr></thead>
         <tbody id="meTeamTbody">
-          ${rows || '<tr><td colspan="5"><div class="me-empty"><div class="me-empty-icon">👷</div><div class="me-empty-title">No team members yet</div><div class="me-empty-sub">Add your first engineer below</div></div></td></tr>'}
+          ${rows || '<tr><td colspan="6"><div class="me-empty"><div class="me-empty-icon">👷</div><div class="me-empty-title">No team members yet</div><div class="me-empty-sub">Add your first engineer below</div></div></td></tr>'}
         </tbody>
       </table>
     </div>
@@ -115,7 +117,7 @@ function meRenderTeam() {
 
 function meAddTeam() {
   meEnsure();
-  db.me.team.push({ id: meUUID(), name: 'New Engineer', hoursPerWeek: 37.5, utilisation: 80 });
+  db.me.team.push({ id: meUUID(), name: 'New Engineer', jobTitle: '', hoursPerWeek: 37.5, utilisation: 80 });
   meSave(); meSetTab('team');
 }
 
@@ -381,7 +383,8 @@ function meRenderHolidayPlanner() {
         cellDisplay = 'F';
       }
 
-      return `<td class="${cellClass}" onclick="meToggleHoliday('${member.id}', '${date}')" title="Click to toggle: working → half day → full day → remove">${cellDisplay}</td>`;
+      const clickable = !isBankHoliday ? `onclick="meToggleHoliday('${member.id}', '${date}')" title="Click to toggle: working → full day → half day → remove"` : 'title="UK Bank Holiday (always non-working)"';
+      return `<td class="${cellClass}" ${clickable}>${cellDisplay}</td>`;
     }).join('');
 
     return `<tr><td class="holiday-person-name">${esc(member.name)}</td>${cells}</tr>`;
@@ -418,8 +421,8 @@ function meRenderHolidayPlanner() {
       </table>
     </div>
     <div style="padding: 12px 16px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted);">
-      <div>Click a cell: <strong>—</strong> (working) → <strong>H</strong> (half day) → <strong>F</strong> (full day) → remove</div>
-      <div style="margin-top: 6px;">⬚ = UK Bank Holiday (highlights automatically but must click to mark as time off)</div>
+      <div>Click a cell: <strong>—</strong> (working) → <strong>F</strong> (full day) → <strong>H</strong> (half day) → remove</div>
+      <div style="margin-top: 6px;">⬚ = UK Bank Holiday (always non-working, cannot be toggled)</div>
     </div>
   </div>
 </div>`;
@@ -430,13 +433,13 @@ function meToggleHoliday(personId, date) {
   const existingIdx = db.me.holidays.findIndex(h => h.personId === personId && h.date === date);
 
   if (existingIdx === -1) {
-    // Add as half day
-    db.me.holidays.push({ id: meUUID(), personId, date, type: 'half' });
+    // Add as full day
+    db.me.holidays.push({ id: meUUID(), personId, date, type: 'full' });
   } else {
     const current = db.me.holidays[existingIdx];
-    if (current.type === 'half') {
-      // Change to full day
-      current.type = 'full';
+    if (current.type === 'full') {
+      // Change to half day
+      current.type = 'half';
     } else {
       // Remove
       db.me.holidays.splice(existingIdx, 1);
