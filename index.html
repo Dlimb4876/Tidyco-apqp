@@ -235,6 +235,10 @@
 <script src="portals/hub/js/hub.js"></script>
 <script src="portals/product-development/npi/js/rpn-chart.js"></script>
 <script src="portals/product-development/npi/js/dashboard.js"></script>
+
+<!-- Load product management database first as it's used by production and capacity modules -->
+<script src="portals/product-development/product-management/js/products-data.js"></script>
+
 <script src="portals/capacity/js/capacity.js"></script>
 <script src="portals/capacity/js/me-data.js"></script>
 <script src="portals/capacity/js/me-team.js"></script>
@@ -248,11 +252,11 @@
 
 <script src="portals/production/js/data.js"></script>
 <script src="portals/production/js/production.js"></script>
-<script src="portals/production/js/products.js"></script>
 <script src="portals/production/js/scheduling.js"></script>
 <script src="portals/production/js/planning.js"></script>
 
-<script src="portals/product-development/product-management/js/products-data.js"></script>
+<!-- products-data.js is already loaded above -->
+<script src="portals/product-development/product-management/js/products.js"></script>
 <script src="portals/product-development/product-management/js/products.js"></script>
 
 <script src="portals/product-development/js/product-development.js"></script>

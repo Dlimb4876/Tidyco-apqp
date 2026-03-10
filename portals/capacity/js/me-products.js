@@ -2,7 +2,8 @@
    me-products.js — Products Tab Rendering
    ============================================================ */
 
-window.meRenderProductsTab = function(productsArray) {
+window.meRenderProductsTab = function(productsArray, availableProducts) {
+  availableProducts = availableProducts || [];
   const weeksPerMonth = 4.33;
   const totalLoadWeekly = productsArray.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
   const totalLoadMonthly = (totalLoadWeekly * weeksPerMonth).toFixed(1);
@@ -68,6 +69,9 @@ window.meRenderProductsTab = function(productsArray) {
           </table>
         </div>
         <div class="me-add-row">
+          ${availableProducts && availableProducts.length > 0 ? `
+            <button class="btn btn-ghost btn-sm" onclick="meDataSyncFromProductManagement(); meDebouncedSave(); meRefreshCurrentTab();" title="Pre-populate with non-closed products from Product Management">📥 Load from Product Management</button>
+          ` : ''}
           <button class="btn btn-primary btn-sm" onclick="meAddDefaultProduct();">＋ Add Product</button>
         </div>
       </div>
