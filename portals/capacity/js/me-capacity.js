@@ -603,7 +603,7 @@ function meDrawChartNow() {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { stacked: true, grid: { display: false } },
+        x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45 } },
         y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
       }
     }
