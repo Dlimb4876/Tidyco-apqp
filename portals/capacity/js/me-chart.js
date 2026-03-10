@@ -125,7 +125,7 @@ window.meDrawChartNow = function() {
       },
       plugins: { legend: { display: false } },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, maxRotation: 0, minRotation: 0, font: { size: 10 }, padding: 5 } },
+        x: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 10 }, padding: 5 } },
         y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
       },
       bar: { barPercentage: 0.75, categoryPercentage: 0.8 }
@@ -151,13 +151,18 @@ function meGetMonthLabel(monthKey) {
 
 function meGetMonthRange(startMonth, count) {
   const months = [];
-  let current = startMonth;
+  let [year, month] = startMonth.split('-').map(Number);
+
+  // Use the 15th of the month to avoid month-end/DST boundary issues
+  let current = new Date(year, month - 1, 15);
+
   for (let i = 0; i < count; i++) {
-    months.push(current);
-    const [year, month] = current.split('-').map(Number);
-    const date = new Date(year, month, 1);
-    date.setMonth(date.getMonth() + 1);
-    current = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const y = current.getFullYear();
+    const m = String(current.getMonth() + 1).padStart(2, '0');
+    months.push(`${y}-${m}`);
+
+    // Increment by exactly one month
+    current.setMonth(current.getMonth() + 1);
   }
   return months;
 }

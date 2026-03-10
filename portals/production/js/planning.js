@@ -224,11 +224,36 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     const isOverdue = endD && endD < new Date(todayStr) && batch.status !== 'Complete';
     const displayLabel = product ? esc(product.code) : `${batch.quantity || 0}u`;
 
+    // Build grid cells for each day (including background cells and bar)
+    let gridCellsHtml = '';
+    let barPlaced = false;
+
+    for (let i = 0; i < dayDiff; i++) {
+      const weekNum = Math.floor(i / 7);
+      const isCurrentWeek = weekNum === currentWeekNum;
+      const isToday = i === todayDayIndex;
+      const barStartsHere = i === startOffset && !barPlaced;
+
+      if (barStartsHere) {
+        // Place the bar
+        gridCellsHtml += `<div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
+             style="grid-column: span ${Math.max(1, duration)}; background-color: ${barColor};"
+             title="${esc(productName)} - ${batch.start_date} to ${batch.due_date}">
+            <div class="gantt-bar-label">${displayLabel}</div>
+          </div>`;
+        barPlaced = true;
+        i += Math.max(1, duration) - 1;
+      } else {
+        // Place background cell
+        gridCellsHtml += `<div class="gantt-day-cell ${isCurrentWeek ? 'current-week-cell' : ''} ${isToday ? 'today-cell' : ''}"></div>`;
+      }
+    }
+
     // Add today indicator line if today is in range
     let todayLineHtml = '';
     if (todayDayIndex >= 0) {
       const todayCol = todayDayIndex + 1;
-      todayLineHtml = `<div class="gantt-today-line" style="grid-column: ${todayCol} / span 1; position: relative;">
+      todayLineHtml = `<div class="gantt-today-line" style="grid-column: ${todayCol} / span 1; position: absolute; pointer-events: none;">
         <div style="position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--red); opacity: 0.6; transform: translateX(-50%);"></div>
       </div>`;
     }
@@ -239,15 +264,8 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
           <div class="gantt-product-code">${esc(productName)}</div>
           <div class="gantt-batch-meta">${batch.quantity || 0} units • ${batch.start_date || '—'} to ${batch.due_date || '—'}</div>
         </div>
-        <div class="gantt-batch-chart" style="position: relative;">
-          <div class="gantt-bar-container">
-            <div class="gantt-spacer" style="grid-column: ${startOffset + 1} / span 1;"></div>
-            <div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
-                 style="grid-column: ${startOffset + 1} / span ${Math.max(1, duration)}; background-color: ${barColor};"
-                 title="${esc(productName)} - ${batch.start_date} to ${batch.due_date}">
-              <div class="gantt-bar-label">${displayLabel}</div>
-            </div>
-          </div>
+        <div class="gantt-batch-chart" style="display: grid; grid-template-columns: repeat(${dayDiff}, 1fr); gap: 1px; position: relative;">
+          ${gridCellsHtml}
           ${todayLineHtml}
         </div>
         <div class="gantt-batch-status">
