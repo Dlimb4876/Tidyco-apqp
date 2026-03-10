@@ -48,6 +48,7 @@ function navigate(sec, { pushHash = true } = {}) {
     const parts = [];
     if (progId)             parts.push('p=' + encodeURIComponent(progId));
     if (sec !== 'projects') parts.push('s=' + encodeURIComponent(sec));
+    if (sec === 'projects' && npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab));
     if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
     if (sec === 'capacity' && capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(capacityTab));
     if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
@@ -145,11 +146,12 @@ function renderSection() {
 window.addEventListener('popstate', () => {
   if (!currentUser) return;
   const h = parseHash();
+  npiTab = h.nft || 'all';
   if (h.p && db.programmes.find(p => p.id === h.p)) {
     progId = h.p;
-    if (h.t) apqpTab = h.t;
-    if (h.ct) capacityTab = h.ct;
-    if (h.pt) productionTab = h.pt;
+    if (h.t)   apqpTab              = h.t;
+    if (h.ct)  capacityTab          = h.ct;
+    if (h.pt)  productionTab        = h.pt;
     if (h.pdt) productDevelopmentTab = h.pdt;
     navigate(h.s || 'project', { pushHash: false });
   } else {

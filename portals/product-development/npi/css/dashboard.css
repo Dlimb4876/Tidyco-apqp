@@ -191,3 +191,49 @@
 .proj-rag-n { background: var(--line2); }
 
 .sc-count { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
+
+/* ── NPI family tabs ─────────────────────────────────────────── */
+.npi-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.npi-tabs::-webkit-scrollbar { display: none; }
+.npi-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s;
+  font-family: inherit;
+}
+.npi-tab:hover { color: var(--ink); }
+.npi-tab-active { color: var(--blue); border-bottom-color: var(--blue); }
+.npi-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  background: var(--line);
+  color: var(--muted);
+  transition: background .15s, color .15s;
+}
+.npi-tab-active .npi-tab-badge { background: var(--blue-pale, #e8f0fe); color: var(--blue); }
