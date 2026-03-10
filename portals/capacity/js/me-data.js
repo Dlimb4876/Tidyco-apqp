@@ -245,18 +245,22 @@ window.meDataGetHolidays = function() {
 window.meDataInit = async function() {
   try {
     if (typeof supa !== 'undefined' && typeof currentUser !== 'undefined' && currentUser) {
+      console.log('Loading ME capacity data for user:', currentUser.id);
+
       const { data, error } = await supa
         .from('me_capacity')
         .select('*')
         .eq('user_id', currentUser.id)
         .single();
 
+      // PGRST116 = no rows found (expected for new users)
       if (error && error.code !== 'PGRST116') {
-        console.warn('Supabase load error:', error);
+        console.warn('Supabase load error (code ' + error.code + '):', error.message);
       }
 
       // 🔴 FIX #3: Robust data validation to prevent data loss
       if (data) {
+        console.log('Loaded existing ME capacity record');
         // Handle nested structure (current format)
         if (data.data && typeof data.data === 'object') {
           meDataState = {
@@ -268,6 +272,7 @@ window.meDataInit = async function() {
         }
         // Handle flat structure (fallback for migration)
         else if (data.team || data.tasks || data.products || data.holidays) {
+          console.log('Loaded ME capacity in flat format (migration fallback)');
           meDataState = {
             team: Array.isArray(data.team) ? data.team : [],
             tasks: Array.isArray(data.tasks) ? data.tasks : [],
@@ -276,10 +281,14 @@ window.meDataInit = async function() {
           };
         }
         window.meDataState = meDataState;
+      } else {
+        console.log('No existing ME capacity data found - will create new record on first save');
       }
+    } else {
+      console.warn('ME init skipped: supa or currentUser not available');
     }
   } catch (err) {
-    console.warn('Supabase load failed, using defaults:', err);
+    console.warn('Supabase load exception, using defaults:', err);
   }
   meEnsureStructure();
 };
@@ -287,7 +296,7 @@ window.meDataInit = async function() {
 window.meDataSave = async function(showAlert) {
   try {
     if (typeof supa === 'undefined' || typeof currentUser === 'undefined' || !currentUser) {
-      console.warn('Supabase not available');
+      console.warn('ME save: Supabase not available');
       return;
     }
 
@@ -295,27 +304,55 @@ window.meDataSave = async function(showAlert) {
       setSyncBadge('syncing', 'Saving...');
     }
 
-    const { error } = await supa
-      .from('me_capacity')
-      .upsert({
-        user_id: currentUser.id,
-        data: {
-          team: meDataState.team,
-          tasks: meDataState.tasks,
-          products: meDataState.products,
-          holidays: meDataState.holidays
-        },
-        updated_at: new Date().toISOString()
-      });
+    const payload = {
+      user_id: currentUser.id,
+      data: {
+        team: meDataState.team,
+        tasks: meDataState.tasks,
+        products: meDataState.products,
+        holidays: meDataState.holidays
+      },
+      updated_at: new Date().toISOString()
+    };
 
-    if (error) throw error;
+    console.log('ME save: user=' + currentUser.id + ' team=' + payload.data.team.length + ' tasks=' + payload.data.tasks.length + ' products=' + payload.data.products.length + ' holidays=' + payload.data.holidays.length);
+
+    // Try to fetch existing record for this user
+    const { data: existing } = await supa
+      .from('me_capacity')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .single();
+
+    let error;
+    if (existing) {
+      // Update existing record
+      const { error: updateError } = await supa
+        .from('me_capacity')
+        .update(payload)
+        .eq('user_id', currentUser.id);
+      error = updateError;
+      if (!error) console.log('ME save: updated existing record');
+    } else {
+      // Insert new record
+      const { error: insertError } = await supa
+        .from('me_capacity')
+        .insert([payload]);
+      error = insertError;
+      if (!error) console.log('ME save: inserted new record');
+    }
+
+    if (error) {
+      console.error('ME save database error:', error);
+      throw new Error(error.message || 'Save failed');
+    }
 
     if (typeof setSyncBadge === 'function') {
       setSyncBadge('saved', 'Saved');
     }
-    if (showAlert) console.log('Saved to Supabase');
+    if (showAlert) console.log('ME capacity saved');
   } catch (err) {
-    console.error('Save error:', err);
+    console.error('ME save exception:', err.message || err);
     if (typeof setSyncBadge === 'function') {
       setSyncBadge('error', 'Save failed');
     }

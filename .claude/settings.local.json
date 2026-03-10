@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep -l \"risk-tbl\\\\|.rs \")"
+      "Bash(xargs grep -l \"risk-tbl\\\\|.rs \")",
+      "Bash(node -c portals/npi/js/dashboard.js)",
+      "Bash(git add portals/npi/js/dashboard.js)",
+      "Bash(git commit:*)",
+      "mcp__851e21dd-a426-4fc4-b8d6-37382aebc968__list_projects",
+      "mcp__851e21dd-a426-4fc4-b8d6-37382aebc968__apply_migration",
+      "mcp__851e21dd-a426-4fc4-b8d6-37382aebc968__list_tables",
+      "mcp__851e21dd-a426-4fc4-b8d6-37382aebc968__get_advisors",
+      "mcp__851e21dd-a426-4fc4-b8d6-37382aebc968__execute_sql",
+      "Bash(node -c /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/me-capacity.js)",
+      "Bash(ls -lh ME_CAPACITY*.md)",
+      "Bash(ls -lh portals/capacity/js/*.js)",
+      "Bash(ls -d portals/capacity/js/me-*)",
+      "Bash(/c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/README_ME_CAPACITY_FIXES.md:*)",
+      "Bash(ls -lh ME_CAPACITY*.* README_ME_CAPACITY*.*)"
     ]
   }
 }
