@@ -15,8 +15,8 @@ let meSaveTimer = null;  // Debounce timer
  */
 window.renderMeCapacity = function() {
   if (!meChartStart) {
-    const now = new Date();
-    meChartStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    // Load from localStorage, or default to January 2026
+    meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';
   }
 
   return `
@@ -81,15 +81,17 @@ function meGetTabContent() {
 
 // ── TEAM TAB ───────────────────────────────────────────────
 function meRenderTeamTab(teamArray) {
+  // Calculate monthly capacity (4.33 weeks per month average)
+  const weeksPerMonth = 4.33;
   const totalCapacity = teamArray.reduce((sum, member) => {
-    const hours = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100);
+    const hours = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100) * weeksPerMonth;
     return sum + hours;
   }, 0).toFixed(1);
 
   // Calculate group availability
-  const npiCapacity = teamArray.filter(m => (m.group || '') === 'NPI').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100)), 0).toFixed(1);
-  const prodCapacity = teamArray.filter(m => (m.group || '') === 'Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100)), 0).toFixed(1);
-  const bothCapacity = teamArray.filter(m => (m.group || '') === 'NPI / Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100)), 0).toFixed(1);
+  const npiCapacity = teamArray.filter(m => (m.group || '') === 'NPI').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
+  const prodCapacity = teamArray.filter(m => (m.group || '') === 'Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
+  const bothCapacity = teamArray.filter(m => (m.group || '') === 'NPI / Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
 
   // Calculate holidays this month
   const today = new Date();
@@ -121,24 +123,24 @@ function meRenderTeamTab(teamArray) {
         <div class="me-kpi" style="border-left: 4px solid var(--green);">
           <div class="me-kpi-value">${totalCapacity}</div>
           <div class="me-kpi-label">Total Availability</div>
-          <div class="me-kpi-month">h/wk</div>
+          <div class="me-kpi-month">h/month</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--blue);">
           <div class="me-kpi-value">${npiCapacity}</div>
           <div class="me-kpi-label">NPI Group</div>
-          <div class="me-kpi-month">h/wk</div>
+          <div class="me-kpi-month">h/month</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--amber);">
           <div class="me-kpi-value">${prodCapacity}</div>
           <div class="me-kpi-label">Production Group</div>
-          <div class="me-kpi-month">h/wk</div>
+          <div class="me-kpi-month">h/month</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--navy);">
           <div class="me-kpi-value">${bothCapacity}</div>
           <div class="me-kpi-label">NPI / Production</div>
-          <div class="me-kpi-month">h/wk</div>
+          <div class="me-kpi-month">h/month</div>
         </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--teal);">
+        <div class="me-kpi" style="border-left: 4px solid var(--teal); cursor: pointer;" onclick="meSetTab('holidays')">
           <div class="me-kpi-value">${holidaysThisMonth.length}</div>
           <div class="me-kpi-label">Holidays This Month</div>
           <div class="me-kpi-month">${monthLabel}</div>
@@ -239,7 +241,15 @@ function meAddDefaultTask() {
 
 // ── PRODUCTS TAB ───────────────────────────────────────────
 function meRenderProductsTab(productsArray) {
-  const totalLoad = productsArray.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
+  const weeksPerMonth = 4.33;
+  const totalLoadWeekly = productsArray.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
+  const totalLoadMonthly = (totalLoadWeekly * weeksPerMonth).toFixed(1);
+  const today = new Date();
+  const activeProducts = productsArray.filter(p => {
+    const from = new Date(p.supportFrom);
+    const until = new Date(p.supportUntil);
+    return from <= today && today <= until;
+  }).length;
 
   let rows = '';
   productsArray.forEach((product, idx) => {
@@ -255,11 +265,30 @@ function meRenderProductsTab(productsArray) {
   });
 
   return `
-    <div class="me-card">
-      <div class="me-card-head">
-        <span class="me-card-title">PRODUCTS / ONGOING SUPPORT</span>
-        <span style="font-size:12px;color:var(--muted)">${totalLoad} h/wk support load</span>
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="me-kpi-strip">
+        <div class="me-kpi" style="border-left: 4px solid var(--green);">
+          <div class="me-kpi-value">${totalLoadMonthly}</div>
+          <div class="me-kpi-label">Support Load</div>
+          <div class="me-kpi-month">h/month</div>
+        </div>
+        <div class="me-kpi" style="border-left: 4px solid var(--blue);">
+          <div class="me-kpi-value">${activeProducts}</div>
+          <div class="me-kpi-label">Active Products</div>
+          <div class="me-kpi-month">in support</div>
+        </div>
+        <div class="me-kpi" style="border-left: 4px solid var(--amber);">
+          <div class="me-kpi-value">${productsArray.length}</div>
+          <div class="me-kpi-label">Total Products</div>
+          <div class="me-kpi-month">tracked</div>
+        </div>
       </div>
+
+      <div class="me-card">
+        <div class="me-card-head">
+          <span class="me-card-title">PRODUCTS / ONGOING SUPPORT</span>
+          <span style="font-size:12px;color:var(--muted)">${totalLoadWeekly} h/wk</span>
+        </div>
       <div class="me-card-body">
         <div class="me-tbl-wrap">
           <table class="me-tbl">
@@ -280,6 +309,7 @@ function meRenderProductsTab(productsArray) {
           <button class="btn btn-primary btn-sm" onclick="meAddDefaultProduct();">＋ Add Product</button>
         </div>
       </div>
+    </div>
     </div>`;
 }
 
@@ -514,6 +544,7 @@ function meDrawChartNow() {
 // ── Chart event handlers ───────────────────────────────────
 window.meOnMonthChange = function(newMonth) {
   meChartStart = newMonth;
+  localStorage.setItem('meChartStartMonth', newMonth);
   meSetTab('chart');
 };
 
@@ -522,6 +553,7 @@ window.meOnNextMonth = function() {
   const date = new Date(year, month, 1);
   date.setMonth(date.getMonth() + 1);
   meChartStart = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  localStorage.setItem('meChartStartMonth', meChartStart);
   meSetTab('chart');
 };
 
@@ -529,6 +561,7 @@ window.meOnPrevMonth = function() {
   const [year, month] = meChartStart.split('-').map(Number);
   const date = new Date(year, month - 2, 1);
   meChartStart = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  localStorage.setItem('meChartStartMonth', meChartStart);
   meSetTab('chart');
 };
 
@@ -539,15 +572,23 @@ window.meOnSave = async function(showAlert) {
 
 function meDebouncedSave() {
   clearTimeout(meSaveTimer);
-  meSaveTimer = setTimeout(() => meDataSave(false), 900);
+  meSaveTimer = setTimeout(async () => {
+    await meDataSave(false);
+    // Re-render current tab to update KPIs and sums
+    const body = document.getElementById('meBody');
+    if (body) {
+      body.innerHTML = meGetTabContent();
+      if (meTab === 'chart') meDrawChartNow();
+    }
+  }, 900);
 }
 
 // ── Initialization ─────────────────────────────────────────
 window.meInit = async function() {
   await meDataInit();
   if (!meChartStart) {
-    const now = new Date();
-    meChartStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    // Load from localStorage, or default to January 2026
+    meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';
   }
 };
 

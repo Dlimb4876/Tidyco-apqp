@@ -56,9 +56,9 @@ function navigate(sec, { pushHash = true } = {}) {
   bc.style.display = 'flex';
 
   // 1. Hub Level (Root)
-  // The "brand" logo in index.html already acts as a Hub link, 
+  // The "brand" logo in index.html already acts as a Hub link,
   // but we ensure the back button is only for deep navigation.
-  bb.style.display = (sec === 'projects' || sec === 'hub' || sec === 'project') ? 'none' : 'flex';
+  bb.style.display = (sec === 'projects' || sec === 'hub' || sec === 'project' || sec === 'capacity') ? 'none' : 'flex';
 
   if (sec === 'hub') {
     // On the Hub, we only show the "Hub" label or hide the crumb
