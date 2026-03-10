@@ -45,7 +45,120 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  margin: 0 0 12px 0;
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Section header row with title + action button */
+.pm-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* Inline add-family form */
+.pm-add-form {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.pm-add-form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.pm-add-form-btns {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pm-icon-input {
+  text-align: center;
+  font-size: 18px;
+}
+
+/* Family list */
+.pm-family-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pm-family-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.pm-family-row:hover {
+  background: var(--bg-hover, var(--bg-secondary));
+}
+
+.pm-family-icon {
+  font-size: 18px;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.pm-family-name {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.pm-family-actions {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.pm-family-row:hover .pm-family-actions {
+  opacity: 1;
+}
+
+.pm-btn-danger {
+  color: var(--red) !important;
+  border-color: var(--red) !important;
+}
+
+/* Usage summary list */
+.pm-usage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pm-usage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.pm-usage-count {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pm-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 24px 0;
+  margin: 0;
 }
