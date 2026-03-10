@@ -256,8 +256,8 @@ function createProg() {
   const lead     = document.getElementById('np_lead')?.value     || '';
   const pm       = document.getElementById('np_pm')?.value       || '';
   const date     = document.getElementById('np_date')?.value     || '';
-  const qNumber = document.getElementById('np_qNumber').value.trim();
-  const partNumber = document.getElementById('np_partNumber').value.trim();
+  const qNumber  = document.getElementById('np_qNumber')?.value?.trim() || '';
+  const partNumber = document.getElementById('np_partNumber')?.value?.trim() || '';
   const parentId = document.getElementById('np_parent')?.value   || null;
   const newProg  = migrateprog({
     id, name, family, customer, unit, lead, pm, date, qNumber, partNumber,
