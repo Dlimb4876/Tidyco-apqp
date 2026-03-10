@@ -7,7 +7,7 @@
  * Render products portal
  */
 function renderProductsPortal() {
-  const main = document.querySelector('main');
+  const main = document.getElementById('mainContent');
   main.innerHTML = `
     <div class="products-portal">
       <div class="products-header">
