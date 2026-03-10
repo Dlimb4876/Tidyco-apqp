@@ -19,6 +19,9 @@ async function launchApp() {
   // Load ME Capacity data (separate Supabase table, silent if table absent)
   await meDataInit();
 
+  // Load Production Planning data (separate Supabase tables, silent if tables absent)
+  await prodDataInit();
+
   // Restore position from URL hash
   const h = parseHash();
   if (h.p && db.programmes.find(p => p.id === h.p)) {

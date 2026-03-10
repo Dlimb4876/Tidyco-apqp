@@ -9,7 +9,8 @@ const SECTION_LABELS = {
   risks:   'Risk Register',
   bom:     'Bill of Materials',
   timing:  'NPI Timing Plan',
-  capacity: 'Capacity Management'
+  capacity: 'Capacity Management',
+  production: 'Production Planning'
 };
 
 function parseHash() {
@@ -29,6 +30,11 @@ function navigate(sec, { pushHash = true } = {}) {
     capacityTab = 'root';
   }
 
+  // Reset productionTab to 'root' when navigating TO production from outside
+  if (sec === 'production' && currentSection !== 'production') {
+    productionTab = 'root';
+  }
+
   currentSection = sec;
 
   if (pushHash) {
@@ -37,8 +43,9 @@ function navigate(sec, { pushHash = true } = {}) {
     if (sec !== 'projects') parts.push('s=' + encodeURIComponent(sec));
     if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
     if (sec === 'capacity' && capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(capacityTab));
+    if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
     const hash = parts.length ? '#' + parts.join('&') : '#';
-    if (sec === currentSection || sec === 'apqp' || sec === 'capacity') {
+    if (sec === currentSection || sec === 'apqp' || sec === 'capacity' || sec === 'production') {
       history.replaceState(null, '', hash);
     } else {
       history.pushState(null, '', hash);
@@ -111,6 +118,10 @@ function setApqpTab(t) {
 function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
+  if (currentSection === 'production') {
+    mc.innerHTML = `<div class="section-inner">${renderProduction()}</div>`;
+    return;
+  }
   if (currentSection === 'capacity') {
     if (capacityTab === 'root') mc.innerHTML = renderCapacity();
     else if (capacityTab === 'me') mc.innerHTML = `<div class="section-inner">${renderMeCapacity()}</div>`;
@@ -162,6 +173,7 @@ window.addEventListener('popstate', () => {
     progId = h.p;
     if (h.t) apqpTab = h.t;
     if (h.ct) capacityTab = h.ct;
+    if (h.pt) productionTab = h.pt;
     navigate(h.s || 'project', { pushHash: false });
   } else {
     navigate('projects', { pushHash: false });

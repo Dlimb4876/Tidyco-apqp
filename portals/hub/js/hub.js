@@ -25,11 +25,11 @@ function renderHub() {
           </div>
         </div>
         
-        <div class="proj-card hub-card" onclick="alert('Production module coming soon')">
+        <div class="proj-card hub-card" onclick="navigate('production')">
           <div class="hub-card-content">
             <div class="hub-icon">🏭</div>
             <div class="proj-card-name">PRODUCTION</div>
-            <div class="proj-card-meta">Production Scheduling</div>
+            <div class="proj-card-meta">Batch Scheduling & Planning</div>
           </div>
         </div>
       </div>

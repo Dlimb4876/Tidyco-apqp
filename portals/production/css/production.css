@@ -1,0 +1,420 @@
+/* Production Planning Portal Styles */
+
+.prod-home {
+  padding: 24px;
+}
+
+.prod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.prod-card {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.prod-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.1);
+}
+
+/* Section Container */
+.prod-section {
+  padding: 24px;
+  max-width: 100%;
+}
+
+/* Filter Toolbar */
+.prod-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 8px 10px;
+  border: 1.5px solid var(--line2);
+  border-radius: 5px;
+  font-size: 13px;
+  background: var(--white);
+  cursor: pointer;
+}
+
+.filter-group input[type="date"] {
+  width: 140px;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  border-color: var(--blue);
+  outline: none;
+}
+
+/* Product Tables */
+.prod-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.prod-tbl thead {
+  background: var(--bg);
+  border-bottom: 2px solid var(--line);
+}
+
+.prod-tbl th {
+  padding: 12px 10px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+.prod-tbl th[onclick] {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.prod-tbl th[onclick]:hover {
+  background: var(--blue-pale);
+}
+
+.prod-tbl td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.prod-tbl tr:hover {
+  background: var(--bg);
+}
+
+.prod-tbl .row-inactive {
+  opacity: 0.6;
+  background: var(--bg);
+}
+
+.prod-tbl .cell-edit {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 13px;
+  background: transparent;
+  transition: all 0.15s;
+}
+
+.prod-tbl .cell-edit:focus {
+  border-color: var(--blue);
+  background: var(--white);
+  outline: none;
+}
+
+.prod-tbl .cell-edit:hover {
+  background: var(--bg);
+}
+
+.prod-tbl textarea.cell-edit {
+  resize: vertical;
+  min-height: 32px;
+  font-family: inherit;
+}
+
+.prod-tbl .w28 {
+  width: 28px;
+}
+
+.prod-tbl .ctr {
+  text-align: center;
+}
+
+.btn-del {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--white);
+  color: var(--red);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-del:hover {
+  border-color: var(--red);
+  background: var(--red-pale);
+}
+
+/* Plan by Product View */
+.prod-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.product-card {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.product-header {
+  padding: 14px;
+  background: var(--blue-pale);
+  border-bottom: 1.5px solid var(--line);
+}
+
+.product-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.product-code {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+  font-family: 'IBM Plex Mono';
+}
+
+.product-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.product-meta span {
+  font-size: 11px;
+  color: var(--mid);
+  background: var(--white);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.batches-list {
+  padding: 12px;
+}
+
+.batch-item {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: var(--bg);
+  border-radius: 5px;
+  border-left: 3px solid var(--blue);
+  font-size: 12px;
+}
+
+.batch-num {
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.batch-unit {
+  font-size: 11px;
+  color: var(--mid);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.batch-qty {
+  font-size: 12px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.batch-dates {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono';
+  margin-top: 2px;
+}
+
+.batch-status {
+  margin-top: 6px;
+  display: inline-block;
+}
+
+/* Plan by Unit View */
+.prod-plan-units {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.unit-column {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.unit-header {
+  padding: 12px 14px;
+  background: var(--amber-pale);
+  border-bottom: 1.5px solid var(--line);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.unit-batches {
+  padding: 12px;
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.unit-batch-item {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: var(--bg);
+  border-radius: 5px;
+  border-left: 3px solid var(--amber);
+  font-size: 12px;
+}
+
+.ub-product {
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+  font-family: 'IBM Plex Mono';
+  font-size: 12px;
+}
+
+.ub-qty {
+  font-size: 12px;
+  color: var(--mid);
+  margin-bottom: 2px;
+}
+
+.ub-dates {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono';
+  margin-bottom: 6px;
+}
+
+.ub-status {
+  display: inline-block;
+}
+
+/* Modal Styles */
+.modal-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.modal-md {
+  max-width: 500px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .prod-plan-units {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .prod-filters {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-group input[type="date"] {
+    width: 100%;
+  }
+
+  .prod-plan-units {
+    grid-template-columns: 1fr;
+  }
+
+  .prod-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prod-tbl {
+    font-size: 12px;
+  }
+
+  .prod-tbl td,
+  .prod-tbl th {
+    padding: 8px 6px;
+  }
+}
