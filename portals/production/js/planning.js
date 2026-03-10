@@ -151,7 +151,8 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
   const endDate = new Date(maxDate);
   const dayDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
-  // Generate day headers (show dates for each week start + end labels)
+  // Generate week headers with labels
+  let weekHeadersHtml = '';
   let dayHeadersHtml = '';
   let prevWeekNum = -1;
   for (let i = 0; i < dayDiff; i++) {
@@ -161,26 +162,30 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     const weekNum = Math.floor(i / 7);
     const dayOfWeek = d.getDay();
 
-    if (dayOfWeek === 1 || i === 0) {
-      // Monday or first day: show week header
-      dayHeadersHtml += `<div class="gantt-week-col" style="grid-column: span 1;" data-date="${dStr}">
-        <div class="gantt-date">${formatDateShort(d)}</div>
+    if (weekNum !== prevWeekNum) {
+      // New week: calculate week end
+      const weekEnd = new Date(startDate);
+      weekEnd.setDate(startDate.getDate() + (weekNum + 1) * 7 - 1);
+      const daysInWeek = Math.min(7, dayDiff - weekNum * 7);
+
+      weekHeadersHtml += `<div class="gantt-week-header" style="grid-column: span ${daysInWeek};">
+        <div class="gantt-week-label">Week ${weekNum + 1}</div>
+        <div class="gantt-week-dates">${formatDateShort(d)} – ${formatDateShort(weekEnd)}</div>
       </div>`;
-    } else if (dayOfWeek === 0 || i === dayDiff - 1) {
-      // Sunday or last day: show week end
-      dayHeadersHtml += `<div class="gantt-week-col" style="grid-column: span 1;" data-date="${dStr}">
-        <div class="gantt-date">${formatDateShort(d)}</div>
-      </div>`;
-    } else {
-      dayHeadersHtml += `<div class="gantt-week-col" style="grid-column: span 1;" data-date="${dStr}"></div>`;
+      prevWeekNum = weekNum;
     }
+
+    // Day headers - show all dates
+    dayHeadersHtml += `<div class="gantt-week-col" data-date="${dStr}" data-week="${weekNum}">
+      <div class="gantt-date">${formatDateShort(d)}</div>
+    </div>`;
   }
 
   // Generate batch rows with bars spanning their duration
   let batchRowsHtml = '';
   batches.forEach((batch, idx) => {
     const product = prodDataGetProductById(batch.product_id);
-    const productName = product ? `${product.code || 'Unknown'}` : 'Unknown';
+    const productName = product ? product.code : `Batch ${idx + 1}`;
     const startD = batch.start_date ? new Date(batch.start_date) : null;
     const endD = batch.due_date ? new Date(batch.due_date) : null;
 
@@ -203,12 +208,13 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
 
     const statusBadge = getStatusBadge(batch.status);
     const isOverdue = endD && endD < new Date(todayStr) && batch.status !== 'Complete';
+    const displayLabel = product ? esc(product.code) : `${batch.quantity || 0}u`;
 
     batchRowsHtml += `
       <div class="gantt-batch-row" data-batch-id="${batch.id}">
         <div class="gantt-batch-label">
           <div class="gantt-product-code">${esc(productName)}</div>
-          <div class="gantt-batch-meta">${batch.quantity || 0} units • ${batch.start_date || '?'} to ${batch.due_date || '?'}</div>
+          <div class="gantt-batch-meta">${batch.quantity || 0} units • ${batch.start_date || '—'} to ${batch.due_date || '—'}</div>
         </div>
         <div class="gantt-batch-chart">
           <div class="gantt-bar-container">
@@ -216,7 +222,7 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
             <div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
                  style="grid-column: ${startOffset + 1} / span ${Math.max(1, duration)}; background-color: ${barColor};"
                  title="${esc(productName)} - ${batch.start_date} to ${batch.due_date}">
-              <div class="gantt-bar-label">${esc(productName)}</div>
+              <div class="gantt-bar-label">${displayLabel}</div>
             </div>
           </div>
         </div>
@@ -232,6 +238,9 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
       <div class="gantt-header">
         <div class="gantt-header-label">Product</div>
         <div class="gantt-header-chart">
+          <div class="gantt-week-row" style="display: grid; grid-template-columns: repeat(${dayDiff}, 1fr); gap: 1px;">
+            ${weekHeadersHtml}
+          </div>
           <div class="gantt-week-grid" style="display: grid; grid-template-columns: repeat(${dayDiff}, 1fr); gap: 1px;">
             ${dayHeadersHtml}
           </div>
