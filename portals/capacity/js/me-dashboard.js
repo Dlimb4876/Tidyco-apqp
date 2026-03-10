@@ -3,8 +3,12 @@
    ============================================================ */
 
 window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
-  const monthData = meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, holidaysArray);
-  const monthLabel = meGetMonthLabel(monthKey);
+  // Always use current month for dashboard data
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+  const monthData = meCalculateMonthData(currentMonthKey, teamArray, tasksArray, productsArray, holidaysArray);
+  const monthLabel = meGetMonthLabel(currentMonthKey);
 
   // KPI calculations
   const capacity = monthData.capacity.toFixed(1);
@@ -13,7 +17,7 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
   const headroom = Math.max(0, monthData.capacity - monthData.totalDemand).toFixed(1);
 
   // Team health analysis
-  const healthAnalysis = meAnalyzeTeamHealth(teamArray, tasksArray, holidaysArray, monthKey);
+  const healthAnalysis = meAnalyzeTeamHealth(teamArray, tasksArray, holidaysArray, currentMonthKey);
 
   // Task summary
   const tasksSorted = tasksArray

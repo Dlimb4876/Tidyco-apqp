@@ -3,16 +3,19 @@
    ============================================================ */
 
 window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
-  const monthData = meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, holidaysArray);
-  const capacity = monthData.capacity.toFixed(1);
-  const demand = monthData.totalDemand.toFixed(1);
-  const utilisation = monthData.utilisation;
-  const headroom = Math.max(0, monthData.capacity - monthData.totalDemand).toFixed(1);
+  // Always show KPIs for current month, not the chart start month
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthData = meCalculateMonthData(currentMonthKey, teamArray, tasksArray, productsArray, holidaysArray);
+  const capacity = currentMonthData.capacity.toFixed(1);
+  const demand = currentMonthData.totalDemand.toFixed(1);
+  const utilisation = currentMonthData.utilisation;
+  const headroom = Math.max(0, currentMonthData.capacity - currentMonthData.totalDemand).toFixed(1);
 
   const utilisationColor = utilisation < 85 ? 'var(--green)' :
                            utilisation < 100 ? 'var(--amber)' : 'var(--red)';
 
-  const monthLabel = meGetMonthLabel(monthKey);
+  const currentMonthLabel = meGetMonthLabel(currentMonthKey);
 
   return `
     <div class="me-chart-container">
@@ -20,12 +23,12 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
         <div class="me-kpi" style="border-left: 4px solid var(--green);">
           <div class="me-kpi-value">${capacity}</div>
           <div class="me-kpi-label">Team Capacity (hours)</div>
-          <div class="me-kpi-month">${monthLabel}</div>
+          <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--blue);">
           <div class="me-kpi-value">${demand}</div>
           <div class="me-kpi-label">Total Demand (hours)</div>
-          <div class="me-kpi-month">${monthLabel}</div>
+          <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid ${utilisationColor};">
           <div class="me-kpi-value">${utilisation}%</div>
@@ -35,7 +38,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
         <div class="me-kpi" style="border-left: 4px solid var(--navy);">
           <div class="me-kpi-value">${headroom}</div>
           <div class="me-kpi-label">Available Headroom (hours)</div>
-          <div class="me-kpi-month">${monthLabel}</div>
+          <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
       </div>
 
@@ -50,11 +53,11 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
       </div>
 
       <div class="me-chart-legend">
-        <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div><span>NPI</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Improvement</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>Tendering</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #14b8a6;"></div><span>Support</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #8b5cf6;"></div><span>Other</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #1e40af;"></div><span>NPI</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #15803d;"></div><span>Improvement</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #ea580c;"></div><span>Tendering</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #be185d;"></div><span>Support</span></div>
+        <div class="legend-item"><div class="legend-color" style="background: #7c3aed;"></div><span>Other</span></div>
         <div class="legend-item" style="margin-left: 30px;"><div class="legend-line" style="background: #ef4444;"></div><span>Team Capacity</span></div>
         <div class="legend-item"><div class="legend-line" style="background: #9ca3af; border-top: 2px dashed #9ca3af;"></div><span>100% Max Capacity</span></div>
       </div>
@@ -106,11 +109,11 @@ window.meDrawChartNow = function() {
     data: {
       labels: monthLabels,
       datasets: [
-        { label: 'NPI', data: npiData, backgroundColor: '#3b82f6', stack: 'bars', order: 2 },
-        { label: 'Improvement', data: improvementData, backgroundColor: '#10b981', stack: 'bars', order: 2 },
-        { label: 'Tendering', data: tenderingData, backgroundColor: '#f59e0b', stack: 'bars', order: 2 },
-        { label: 'Support', data: supportData, backgroundColor: '#14b8a6', stack: 'bars', order: 2 },
-        { label: 'Other', data: otherData, backgroundColor: '#8b5cf6', stack: 'bars', order: 2 },
+        { label: 'NPI', data: npiData, backgroundColor: '#1e40af', stack: 'bars', order: 2 },
+        { label: 'Improvement', data: improvementData, backgroundColor: '#15803d', stack: 'bars', order: 2 },
+        { label: 'Tendering', data: tenderingData, backgroundColor: '#ea580c', stack: 'bars', order: 2 },
+        { label: 'Support', data: supportData, backgroundColor: '#be185d', stack: 'bars', order: 2 },
+        { label: 'Other', data: otherData, backgroundColor: '#7c3aed', stack: 'bars', order: 2 },
         { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 2, type: 'line', fill: false, pointRadius: 3, pointBackgroundColor: '#ef4444', order: 1 },
         { label: '100% Max Capacity', data: capacityMaxData, borderColor: '#9ca3af', borderWidth: 2, borderDash: [4, 4], type: 'line', fill: false, pointRadius: 2, pointBackgroundColor: '#9ca3af', order: 1 }
       ]

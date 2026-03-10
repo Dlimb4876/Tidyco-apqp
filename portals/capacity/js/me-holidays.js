@@ -2,15 +2,21 @@
    me-holidays.js — Holiday Planner Tab Rendering
    ============================================================ */
 
-window.meRenderHolidaysTab = function(holidaysArray, teamArray) {
-  const today = new Date();
-  const endDate = new Date(today);
-  endDate.setDate(endDate.getDate() + 90);
+window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
+  // Use selected month or default to current month
+  if (!selectedMonth) {
+    const today = new Date();
+    selectedMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  }
 
-  const bankHols = meGetBankHolidaysForYear(today.getFullYear());
+  const [year, month] = selectedMonth.split('-').map(Number);
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  const bankHols = meGetBankHolidaysForYear(year);
 
   const dates = [];
-  for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     const dateStr = meFormatDate(new Date(d));
     const dayOfWeek = new Date(dateStr).getDay();
     // Only include weekdays (Mon=1 to Fri=5)
@@ -24,6 +30,11 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray) {
       <div class="me-card-head">
         <span class="me-card-title">HOLIDAY PLANNER</span>
         <span style="font-size:11px;color:var(--muted)">5-day work week · Click cells: working → full day → half day → remove · Blue = bank holidays (read-only)</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border);">
+        <button class="btn btn-ghost btn-sm" onclick="meOnPrevMonth()">← Prev</button>
+        <input type="month" value="${selectedMonth}" onchange="meOnMonthChange(this.value)" style="padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;">
+        <button class="btn btn-ghost btn-sm" onclick="meOnNextMonth()">Next →</button>
       </div>
       <div class="me-card-body" style="overflow-x: auto;">
         <table class="holiday-matrix">

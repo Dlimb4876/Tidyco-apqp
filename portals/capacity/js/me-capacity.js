@@ -5,6 +5,7 @@
 // ── Module state ───────────────────────────────────────────
 let meTab = 'dashboard';
 let meChartStart = null; // ISO month string (e.g., '2025-03')
+let meHolidayMonth = null; // Holiday planner month (independent from chart)
 let meChartInst = null;  // Chart.js instance
 let meSaveTimer = null;  // Debounce timer
 
@@ -89,6 +90,12 @@ function meGetTabContent() {
   const products = meDataGetProducts();
   const holidays = meDataGetHolidays();
 
+  // Initialize holiday month on first view
+  if (!meHolidayMonth) {
+    const today = new Date();
+    meHolidayMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  }
+
   switch (meTab) {
     case 'dashboard':
       return meRenderDashboardTab(meChartStart, team, tasks, products, holidays);
@@ -99,7 +106,7 @@ function meGetTabContent() {
     case 'products':
       return meRenderProductsTab(products);
     case 'holidays':
-      return meRenderHolidaysTab(holidays, team);
+      return meRenderHolidaysTab(holidays, team, meHolidayMonth);
     case 'heatmap':
       return meRenderHeatmapTab(meChartStart, team, tasks, products, holidays);
     case 'chart':
@@ -108,28 +115,46 @@ function meGetTabContent() {
   }
 }
 
-// ── Chart event handlers ───────────────────────────────────
+// ── Month navigation handlers ──────────────────────────────
 window.meOnMonthChange = function(newMonth) {
-  meChartStart = newMonth;
-  localStorage.setItem('meChartStartMonth', newMonth);
+  if (meTab === 'holidays') {
+    meHolidayMonth = newMonth;
+  } else {
+    meChartStart = newMonth;
+    localStorage.setItem('meChartStartMonth', newMonth);
+  }
   meRefreshCurrentTab();
 };
 
 window.meOnNextMonth = function() {
-  const [year, month] = meChartStart.split('-').map(Number);
+  const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart;
+  const [year, month] = currentMonth.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() + 1);
-  meChartStart = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  localStorage.setItem('meChartStartMonth', meChartStart);
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+  if (meTab === 'holidays') {
+    meHolidayMonth = newMonth;
+  } else {
+    meChartStart = newMonth;
+    localStorage.setItem('meChartStartMonth', newMonth);
+  }
   meRefreshCurrentTab();
 };
 
 window.meOnPrevMonth = function() {
-  const [year, month] = meChartStart.split('-').map(Number);
+  const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart;
+  const [year, month] = currentMonth.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() - 1);
-  meChartStart = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  localStorage.setItem('meChartStartMonth', meChartStart);
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+  if (meTab === 'holidays') {
+    meHolidayMonth = newMonth;
+  } else {
+    meChartStart = newMonth;
+    localStorage.setItem('meChartStartMonth', newMonth);
+  }
   meRefreshCurrentTab();
 };
 
