@@ -581,6 +581,43 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
     capacity += monthCapacity;
   });
 
+  // 🔴 FIX #1 & #5: Calculate and subtract holiday deductions
+  let holidayDeduction = 0;
+  const bankHols = meGetBankHolidaysForYear(year);
+  const hoursPerDay = 7.5;  // Standard 37.5 hours / 5 days
+
+  // Subtract user-marked holidays
+  holidaysArray.forEach(holiday => {
+    const holidayMonth = holiday.date.substring(0, 7);  // Extract 'YYYY-MM'
+    if (holidayMonth === monthKey) {
+      if (holiday.type === 'full') {
+        holidayDeduction += hoursPerDay;
+      } else if (holiday.type === 'half') {
+        holidayDeduction += hoursPerDay / 2;
+      }
+    }
+  });
+
+  // Subtract bank holidays (Mon-Fri only, avoiding double-deduction)
+  const markedHolidayDates = new Set(
+    holidaysArray
+      .filter(h => h.date.substring(0, 7) === monthKey)
+      .map(h => h.date)
+  );
+
+  Object.entries(bankHols).forEach(([dateStr, name]) => {
+    const bankMonth = dateStr.substring(0, 7);
+    if (bankMonth === monthKey && !markedHolidayDates.has(dateStr)) {
+      const d = new Date(dateStr);
+      const dayOfWeek = d.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {  // Not weekend
+        holidayDeduction += hoursPerDay;
+      }
+    }
+  });
+
+  const adjustedCapacity = Math.max(0, capacity - holidayDeduction);
+
   // Calculate demand from tasks
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
 
@@ -604,27 +641,36 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
     }
   });
 
-  // Calculate product support
+  // 🔴 FIX #8: Calculate product support with proper date range overlap
   productsArray.forEach(product => {
     const prodStart = new Date(product.supportFrom);
     const prodEnd = new Date(product.supportUntil);
 
+    // Check if product active in this month
     if (prodStart <= monthEnd && prodEnd >= monthStart) {
-      const weeks = (monthEnd - monthStart) / (1000 * 60 * 60 * 24 * 7);
-      support += (product.hoursPerWeek || 0) * weeks;
+      // Find overlap between product date range and month
+      const overlapStart = new Date(Math.max(prodStart.getTime(), monthStart.getTime()));
+      const overlapEnd = new Date(Math.min(prodEnd.getTime(), monthEnd.getTime()));
+
+      // Calculate working days in overlap period
+      const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
+      const workingDaysInOverlap = overlapDays * (5 / 7);  // Approximate working days
+      const weeksInOverlap = workingDaysInOverlap / 5;
+
+      support += (product.hoursPerWeek || 0) * weeksInOverlap;
     }
   });
 
   const totalDemand = npi + improvement + tendering + support + other;
   return {
-    capacity,
+    capacity: adjustedCapacity,
     npi,
     improvement,
     tendering,
     support,
     other,
     totalDemand,
-    utilisation: capacity > 0 ? Math.round((totalDemand / capacity) * 100) : 0
+    utilisation: adjustedCapacity > 0 ? Math.round((totalDemand / adjustedCapacity) * 100) : 0
   };
 }
 
@@ -641,3 +687,12 @@ function meCountWorkDaysInMonth(year, month) {
 
 // Auto-init
 meInit().catch(err => console.error('ME init failed:', err));
+
+// 🔴 FIX #4: Prevent data loss on page close by flushing debounce timer
+window.addEventListener('beforeunload', (event) => {
+  clearTimeout(meSaveTimer);  // Cancel pending debounced save
+  // Attempt immediate save (fallback for async failures)
+  if (typeof meDataSave === 'function') {
+    meDataSave(false);  // Don't show alert on unload
+  }
+});

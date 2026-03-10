@@ -1,6 +1,19 @@
 /* ============================================================
    me-data.js — ME Capacity Data Layer (Global Namespace)
    Combines all data/me-data/*.js modules into one file
+
+   Supabase Table: me_capacity
+   Data Structure:
+   {
+     user_id: string,
+     data: {
+       team: [{id, name, hoursPerWeek, utilisation, jobTitle}],
+       tasks: [{id, name, category, assigneeId, startDate, endDate, totalHours}],
+       products: [{id, name, supportFrom, supportUntil, hoursPerWeek, notes}],
+       holidays: [{id, personId, date, type ('full'|'half')}]
+     },
+     updated_at: ISO string
+   }
    ============================================================ */
 
 // ─────────────────────────────────────────────────────────────
@@ -238,13 +251,30 @@ window.meDataInit = async function() {
         .eq('user_id', currentUser.id)
         .single();
 
-      if (data && data.data) {
-        meDataState = {
-          team: data.data.team || [],
-          tasks: data.data.tasks || [],
-          products: data.data.products || [],
-          holidays: data.data.holidays || []
-        };
+      if (error && error.code !== 'PGRST116') {
+        console.warn('Supabase load error:', error);
+      }
+
+      // 🔴 FIX #3: Robust data validation to prevent data loss
+      if (data) {
+        // Handle nested structure (current format)
+        if (data.data && typeof data.data === 'object') {
+          meDataState = {
+            team: Array.isArray(data.data.team) ? data.data.team : [],
+            tasks: Array.isArray(data.data.tasks) ? data.data.tasks : [],
+            products: Array.isArray(data.data.products) ? data.data.products : [],
+            holidays: Array.isArray(data.data.holidays) ? data.data.holidays : []
+          };
+        }
+        // Handle flat structure (fallback for migration)
+        else if (data.team || data.tasks || data.products || data.holidays) {
+          meDataState = {
+            team: Array.isArray(data.team) ? data.team : [],
+            tasks: Array.isArray(data.tasks) ? data.tasks : [],
+            products: Array.isArray(data.products) ? data.products : [],
+            holidays: Array.isArray(data.holidays) ? data.holidays : []
+          };
+        }
         window.meDataState = meDataState;
       }
     }
