@@ -16,9 +16,6 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
   const utilisation = monthData.utilisation;
   const headroom = Math.max(0, monthData.capacity - monthData.totalDemand).toFixed(1);
 
-  // Team health analysis
-  const healthAnalysis = meAnalyzeTeamHealth(teamArray, tasksArray, holidaysArray, currentMonthKey);
-
   // Task summary
   const tasksSorted = tasksArray
     .filter(t => t.startDate && t.endDate)
@@ -65,57 +62,21 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
         </div>
       </div>
 
-      <!-- Health & Tasks Row -->
+      <!-- 6-Month Capacity Chart & Current Month Heat Map -->
       <div class="me-dashboard-grid">
-        <!-- Team Health -->
+        <!-- Mini 6-Month Capacity Chart -->
         <div class="me-dashboard-card">
-          <div class="me-dashboard-card-title">Team Health</div>
-          <div class="me-dashboard-health">
-            ${healthAnalysis.healthy.length > 0 ? `
-              <div class="me-health-category">
-                <div class="me-health-category-title">
-                  <div class="me-health-dot" style="background: var(--green);"></div>
-                  <span>Healthy</span>
-                </div>
-                <div class="me-health-members">
-                  ${healthAnalysis.healthy.map(m => `<div class="me-health-member"><span>${esc(m.name)}</span><span class="me-health-util">${m.util}%</span></div>`).join('')}
-                </div>
-              </div>
-            ` : ''}
-            ${healthAnalysis.tight.length > 0 ? `
-              <div class="me-health-category">
-                <div class="me-health-category-title">
-                  <div class="me-health-dot" style="background: var(--amber);"></div>
-                  <span>Tight</span>
-                </div>
-                <div class="me-health-members">
-                  ${healthAnalysis.tight.map(m => `<div class="me-health-member"><span>${esc(m.name)}</span><span class="me-health-util">${m.util}%</span></div>`).join('')}
-                </div>
-              </div>
-            ` : ''}
-            ${healthAnalysis.overloaded.length > 0 ? `
-              <div class="me-health-category">
-                <div class="me-health-category-title">
-                  <div class="me-health-dot" style="background: var(--red);"></div>
-                  <span>Overloaded</span>
-                </div>
-                <div class="me-health-members">
-                  ${healthAnalysis.overloaded.map(m => `<div class="me-health-member"><span>${esc(m.name)}</span><span class="me-health-util">${m.util}%</span></div>`).join('')}
-                </div>
-              </div>
-            ` : ''}
+          <div class="me-dashboard-card-title">6-Month Load Forecast</div>
+          <div class="me-dashboard-mini-chart">
+            <canvas id="meMiniChart" height="200"></canvas>
           </div>
         </div>
 
-        <!-- Task Load by Category -->
+        <!-- Current Month Heat Map -->
         <div class="me-dashboard-card">
-          <div class="me-dashboard-card-title">Demand by Category</div>
-          <div class="me-dashboard-categories">
-            ${monthData.npi > 0 ? `<div class="me-cat-item"><div class="me-cat-bar" style="background: #3b82f6; width: ${(monthData.npi / monthData.totalDemand * 100)}%"></div><span>NPI</span><span>${monthData.npi.toFixed(0)}h</span></div>` : ''}
-            ${monthData.improvement > 0 ? `<div class="me-cat-item"><div class="me-cat-bar" style="background: #10b981; width: ${(monthData.improvement / monthData.totalDemand * 100)}%"></div><span>Improvement</span><span>${monthData.improvement.toFixed(0)}h</span></div>` : ''}
-            ${monthData.tendering > 0 ? `<div class="me-cat-item"><div class="me-cat-bar" style="background: #f59e0b; width: ${(monthData.tendering / monthData.totalDemand * 100)}%"></div><span>Tendering</span><span>${monthData.tendering.toFixed(0)}h</span></div>` : ''}
-            ${monthData.support > 0 ? `<div class="me-cat-item"><div class="me-cat-bar" style="background: #14b8a6; width: ${(monthData.support / monthData.totalDemand * 100)}%"></div><span>Support</span><span>${monthData.support.toFixed(0)}h</span></div>` : ''}
-            ${monthData.other > 0 ? `<div class="me-cat-item"><div class="me-cat-bar" style="background: #8b5cf6; width: ${(monthData.other / monthData.totalDemand * 100)}%"></div><span>Other</span><span>${monthData.other.toFixed(0)}h</span></div>` : ''}
+          <div class="me-dashboard-card-title">Current Month Utilisation</div>
+          <div class="me-dashboard-mini-heatmap">
+            <div id="meMiniHeatmapGrid" class="me-mini-heatmap-grid"></div>
           </div>
         </div>
       </div>
@@ -146,81 +107,136 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
       </div>
     </div>
   `;
+
+  // Initialize charts after render
+  setTimeout(() => {
+    meDashboardDrawMiniChart(teamArray, tasksArray, productsArray, holidaysArray);
+    meDashboardDrawMiniHeatmap(teamArray, tasksArray, holidaysArray);
+  }, 100);
 };
 
 /**
- * Analyze team health by calculating utilisation per person for a given month
+ * Draw mini 6-month capacity chart on dashboard
  */
-function meAnalyzeTeamHealth(teamArray, tasksArray, holidaysArray, monthKey) {
-  const healthy = [], tight = [], overloaded = [];
+window.meDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray, holidaysArray) {
+  if (!window.Chart) {
+    console.warn('Chart.js not loaded');
+    return;
+  }
 
-  teamArray.forEach(member => {
-    if (!member.startDate) return;
+  const canvas = document.getElementById('meMiniChart');
+  if (!canvas) return;
 
-    const [year, month] = monthKey.split('-').map(Number);
-    const monthStart = new Date(year, month - 1, 1);
-    const monthEnd = new Date(year, month, 0);
+  // Destroy existing instance
+  if (window.meMiniChartInst) window.meMiniChartInst.destroy();
 
-    // Calculate individual capacity
-    const hoursAdjusted = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100);
-    const startDate = new Date(member.startDate);
-    let activeStart = monthStart;
-    let activeEnd = monthEnd;
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 
-    if (startDate > monthStart) activeStart = startDate;
-    if (member.endDate) {
-      const endDate = new Date(member.endDate);
-      if (endDate < monthEnd) activeEnd = endDate;
-    }
+  // 6-month range from current month
+  const monthKeys = meGetMonthRange(currentMonthKey, 6);
+  const monthLabels = monthKeys.map(m => meGetMonthLabel(m).join(' '));
 
-    if (activeStart > activeEnd) return;
+  const capacityData = [];
+  const demandData = [];
 
-    const workDays = meCountWorkDaysBetween(activeStart, activeEnd);
-    const capacity = hoursAdjusted * (workDays / 5);
-
-    // Calculate holidays for this person
-    let holidayDeduction = 0;
-    const hoursPerDay = 7.5;
-    holidaysArray.forEach(holiday => {
-      const holidayMonth = holiday.date.substring(0, 7);
-      if (holidayMonth === monthKey && holiday.personId === member.id) {
-        if (holiday.type === 'full') {
-          holidayDeduction += hoursPerDay;
-        } else if (holiday.type === 'half') {
-          holidayDeduction += hoursPerDay / 2;
-        }
-      }
-    });
-
-    const adjustedCapacity = Math.max(0, capacity - holidayDeduction);
-
-    // Calculate demand for this person
-    let personDemand = 0;
-    tasksArray.forEach(task => {
-      if (!task.startDate || !task.endDate) return;
-      if (task.assigneeId !== member.id) return;
-
-      const taskStart = new Date(task.startDate);
-      const taskEnd = new Date(task.endDate);
-      const overlapStart = new Date(Math.max(taskStart.getTime(), monthStart.getTime()));
-      const overlapEnd = new Date(Math.min(taskEnd.getTime(), monthEnd.getTime()));
-
-      if (overlapStart <= overlapEnd) {
-        const totalDays = (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1;
-        const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
-        const hoursThisMonth = (task.totalHours || 0) * (overlapDays / totalDays);
-        personDemand += hoursThisMonth;
-      }
-    });
-
-    // Categorize health
-    if (adjustedCapacity === 0) return;
-    const personUtil = Math.round((personDemand / adjustedCapacity) * 100);
-
-    if (personUtil < 80) healthy.push({ name: member.name, util: personUtil });
-    else if (personUtil < 100) tight.push({ name: member.name, util: personUtil });
-    else overloaded.push({ name: member.name, util: personUtil });
+  monthKeys.forEach(monthKey => {
+    const data = meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, holidaysArray);
+    capacityData.push(data.capacity);
+    demandData.push(data.totalDemand);
   });
 
-  return { healthy, tight, overloaded };
-}
+  const ctx = canvas.getContext('2d');
+  window.meMiniChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: monthLabels,
+      datasets: [
+        {
+          label: 'Capacity',
+          data: capacityData,
+          backgroundColor: '#3b82f6',
+          borderColor: '#1e40af',
+          borderWidth: 1,
+          borderRadius: 3,
+          barPercentage: 0.7
+        },
+        {
+          label: 'Demand',
+          data: demandData,
+          backgroundColor: '#ef4444',
+          borderColor: '#dc2626',
+          borderWidth: 1,
+          borderRadius: 3,
+          barPercentage: 0.7
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'x',
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { font: { size: 11 }, padding: 8 }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { font: { size: 10 } }
+        },
+        x: {
+          ticks: { font: { size: 10 } }
+        }
+      }
+    }
+  });
+};
+
+/**
+ * Draw mini current month heat map on dashboard
+ */
+window.meDashboardDrawMiniHeatmap = function(teamArray, tasksArray, holidaysArray) {
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+  const weeks = meGetWeekRange(currentMonthKey, 5);
+  const container = document.getElementById('meMiniHeatmapGrid');
+
+  if (!container) return;
+
+  // Build compact grid
+  let html = `<div class="me-mini-heatmap-header"></div>`;
+
+  // Week headers
+  weeks.forEach(({ start, end }) => {
+    const startDate = new Date(start);
+    const monthLabel = meGetMonthLabel(start.substring(0, 7));
+    const weekLabel = `${startDate.getDate()}`;
+    html += `<div class="me-mini-heatmap-week-header">${weekLabel}</div>`;
+  });
+
+  // Person rows
+  teamArray.forEach(person => {
+    if (!person.startDate) return;
+
+    html += `<div class="me-mini-heatmap-person-name">${esc(person.name)}</div>`;
+
+    weeks.forEach(({ start, end }) => {
+      const data = meCalcWeekUtilisation(person.id, start, end, tasksArray, holidaysArray);
+      const util = data.capacity > 0 ? Math.round((data.demand / data.capacity) * 100) : 0;
+
+      let bgColor = '#e5e7eb';
+      if (data.capacity > 0) {
+        bgColor = util < 80 ? '#10b981' : util < 100 ? '#f59e0b' : '#ef4444';
+      }
+
+      html += `<div class="me-mini-heatmap-cell" style="background: ${bgColor}; title="${util}%">${util}%</div>`;
+    });
+  });
+
+  container.innerHTML = `<div class="me-mini-heatmap-grid-content">${html}</div>`;
+};
+

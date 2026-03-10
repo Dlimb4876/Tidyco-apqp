@@ -655,3 +655,64 @@
 .me-dashboard-nav {
   display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;
 }
+
+/* ── Mini Chart & Heatmap on Dashboard ─────────────── */
+.me-dashboard-mini-chart {
+  position: relative; width: 100%; height: 240px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--white);
+  padding: 12px;
+}
+
+#meMiniChart {
+  width: 100% !important; height: 100% !important;
+}
+
+.me-dashboard-mini-heatmap {
+  display: flex; flex-direction: column; height: 240px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--white);
+  overflow: hidden;
+}
+
+.me-mini-heatmap-grid {
+  flex: 1; overflow: auto; display: grid;
+  grid-template-columns: 100px repeat(auto-fit, 40px);
+  gap: 0; padding: 8px;
+  background: var(--white);
+}
+
+.me-mini-heatmap-grid-content {
+  display: contents;
+}
+
+.me-mini-heatmap-header {
+  grid-column: 1; position: sticky; top: 0; left: 0;
+  background: #f4f6fa; border-bottom: 1px solid var(--line);
+  border-right: 2px solid var(--line); z-index: 3; height: 40px;
+}
+
+.me-mini-heatmap-person-name {
+  grid-column: 1; position: sticky; left: 0;
+  background: #fafbfd; border-bottom: 1px solid var(--line);
+  border-right: 2px solid var(--line); z-index: 2;
+  padding: 6px 8px; font-weight: 500; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 11px; display: flex; align-items: center;
+  min-height: 32px;
+}
+
+.me-mini-heatmap-week-header {
+  position: sticky; top: 0; background: #f4f6fa;
+  border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2; min-height: 40px; font-size: 10px;
+  text-align: center; color: var(--muted);
+  font-weight: 600; padding: 4px 2px;
+}
+
+.me-mini-heatmap-cell {
+  height: 32px; width: 40px; display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;
+  font-weight: 600; font-size: 11px; cursor: pointer; user-select: none;
+  color: var(--white); text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  transition: all .1s;
+}
