@@ -11,6 +11,7 @@ const SECTION_LABELS = {
   timing:  'NPI Timing Plan',
   capacity: 'Capacity Management',
   production: 'Production Planning',
+  products: 'Products',
   productmgmt: 'Product Management'
 };
 
@@ -86,6 +87,10 @@ function render() {
   }
   if (currentSection === 'production') {
     mc.innerHTML = `<div class="section-inner">${renderProduction()}</div>`;
+    return;
+  }
+  if (currentSection === 'products') {
+    renderProductsPortal();
     return;
   }
   if (currentSection === 'productmgmt') {
