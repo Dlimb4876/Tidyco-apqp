@@ -23,7 +23,7 @@ window.renderMeCapacity = function() {
     <div class="me-shell">
       <div class="me-topbar">
         <div class="me-topbar-left">
-          <button class="btn btn-ghost btn-sm" onclick="navigate('capacity')">← Back</button>
+          <button class="btn btn-ghost btn-sm" onclick="setCapacityTab('root')">← Back</button>
           <div>
             <div class="me-topbar-title">ME Load Capacity</div>
             <div class="me-topbar-sub">Manufacturing Engineering · Man-hours planning</div>
@@ -329,7 +329,7 @@ function meRenderHolidaysTab(holidaysArray, teamArray) {
     const dayNum = d.getDate();
     const isBank = !!bankHols[date];
     const isMonday = d.getDay() === 1 ? ' week-start' : '';
-    html += `<th class="holiday-date-header ${isBank ? 'bank-holiday' : ''}${isMonday}" title="${date}"><div>${dayName}</div><div>${dayNum}</div></th>`;
+    html += `<th class="holiday-date-header ${isBank ? 'bank-holiday-header' : ''}${isMonday}" title="${date}"><div>${dayName}</div><div>${dayNum}</div></th>`;
   });
 
   html += `</tr></thead><tbody>`;
@@ -349,7 +349,7 @@ function meRenderHolidaysTab(holidaysArray, teamArray) {
 
       if (isBank) {
         cellClass += ' bank-holiday';
-        cellContent = '⬚';
+        cellContent = 'BH';
       } else if (state === 'full') {
         cellClass += ' holiday-full';
         cellContent = 'F';
