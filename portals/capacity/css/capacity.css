@@ -5,12 +5,12 @@
 }
 
 .capacity-card {
-    min-height: 280px;
+    min-height: 320px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 30px !important;
+    padding: 40px !important;
     transition: transform 0.2s, box-shadow 0.2s;
     background: var(--white);
     border: 1px solid var(--line);
@@ -21,4 +21,16 @@
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.15);
     border-color: var(--blue);
+}
+
+.capacity-card .proj-card-name {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.capacity-card .proj-card-meta {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 8px;
 }

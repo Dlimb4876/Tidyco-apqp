@@ -84,19 +84,6 @@ body {
 .tbtn-ghost { background: transparent; color: #8899bb; border: 1px solid #2d3f5e; }
 .tbtn-ghost:hover { background: #1a2236; color: #c8d4e8; }
 
-/* ── Breadcrumb ─────────────────────────────────────────────── */
-.breadcrumb { display: flex; align-items: center; gap: 4px; margin-left: 4px; }
-.bc-item {
-  background: none; border: none; color: rgba(255,255,255,.6);
-  font-size: 13px; font-weight: 500; cursor: pointer; padding: 2px 4px;
-  border-radius: 4px; font-family: 'IBM Plex Sans', sans-serif;
-  white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis;
-}
-.bc-sep     { color: rgba(255,255,255,.3); font-size: 14px; line-height: 1; }
-.bc-current {
-  color: white; font-size: 13px; font-weight: 600; padding: 2px 4px;
-  white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis;
-}
 
 /* ── Main content area ──────────────────────────────────────── */
 .main { flex: 1; overflow-y: auto; padding: 0; }
