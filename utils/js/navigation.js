@@ -36,6 +36,11 @@ function navigate(sec, { pushHash = true } = {}) {
     productionTab = 'root';
   }
 
+  // Reset productDevelopmentTab to 'root' when navigating TO product-development from outside
+  if (sec === 'product-development' && currentSection !== 'product-development') {
+    productDevelopmentTab = 'root';
+  }
+
   currentSection = sec;
 
   if (pushHash) {
@@ -45,8 +50,9 @@ function navigate(sec, { pushHash = true } = {}) {
     if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
     if (sec === 'capacity' && capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(capacityTab));
     if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
+    if (sec === 'product-development' && productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(productDevelopmentTab));
     const hash = parts.length ? '#' + parts.join('&') : '#';
-    if (sec === currentSection || sec === 'apqp' || sec === 'capacity' || sec === 'production') {
+    if (sec === currentSection || sec === 'apqp' || sec === 'capacity' || sec === 'production' || sec === 'product-development') {
       history.replaceState(null, '', hash);
     } else {
       history.pushState(null, '', hash);
@@ -74,6 +80,10 @@ function setApqpTab(t) {
 function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
+  if (currentSection === 'product-development') {
+    mc.innerHTML = `<div class="section-inner">${renderProductDevelopment()}</div>`;
+    return;
+  }
   if (currentSection === 'production') {
     mc.innerHTML = `<div class="section-inner">${renderProduction()}</div>`;
     return;
@@ -134,6 +144,7 @@ window.addEventListener('popstate', () => {
     if (h.t) apqpTab = h.t;
     if (h.ct) capacityTab = h.ct;
     if (h.pt) productionTab = h.pt;
+    if (h.pdt) productDevelopmentTab = h.pdt;
     navigate(h.s || 'project', { pushHash: false });
   } else {
     navigate('projects', { pushHash: false });

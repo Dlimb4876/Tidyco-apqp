@@ -17,7 +17,7 @@ function renderHub() {
           </div>
         </div>
 
-        <div class="proj-card hub-card" onclick="showProductDevMenu()">
+        <div class="proj-card hub-card" onclick="navigate('product-development')">
           <div class="hub-card-content">
             <div class="hub-icon">🚀</div>
             <div class="proj-card-name">PRODUCT DEVELOPMENT</div>
@@ -34,35 +34,4 @@ function renderHub() {
         </div>
       </div>
     </div>`;
-}
-
-function showProductDevMenu() {
-  const modal = document.createElement('div');
-  modal.id = 'prodDevMenu';
-  modal.className = 'modal-overlay';
-  modal.innerHTML = `
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <div class="modal-title">Product Development</div>
-        <button class="modal-close" onclick="document.getElementById('prodDevMenu').remove()">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="proddev-menu-item" onclick="navigate('projects'); document.getElementById('prodDevMenu').remove();">
-          <div class="proddev-menu-icon">📋</div>
-          <div class="proddev-menu-text">
-            <div class="proddev-menu-name">New Product Introduction</div>
-            <div class="proddev-menu-meta">APQP Gates, PFMEA & BoM</div>
-          </div>
-        </div>
-        <div class="proddev-menu-item" onclick="navigate('productmgmt'); document.getElementById('prodDevMenu').remove();">
-          <div class="proddev-menu-icon">📦</div>
-          <div class="proddev-menu-text">
-            <div class="proddev-menu-name">Product Management</div>
-            <div class="proddev-menu-meta">Product Definitions & Attributes</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
 }

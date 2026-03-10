@@ -9,6 +9,7 @@ let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
 let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
 let capacityTab = 'root'; // root|me|overhaul|projects
 let productionTab = 'root'; // root|products|scheduling|by-product|by-unit
+let productDevelopmentTab = 'root'; // root|npi
 let meStartOffset = 0; // Months from today
 
 // Modal picker state
