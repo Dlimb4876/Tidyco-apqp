@@ -17,7 +17,7 @@ async function launchApp() {
   initProgSelect();
 
   // Load ME Capacity data (separate Supabase table, silent if table absent)
-  await meLoadRemote();
+  await meDataInit();
 
   // Restore position from URL hash
   const h = parseHash();

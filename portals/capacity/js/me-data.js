@@ -267,17 +267,14 @@ window.meDataSave = async function(showAlert) {
 
     const { error } = await supa
       .from('me_capacity')
-      .upsert(
-        {
-          user_id: currentUser.id,
-          team: meDataState.team,
-          tasks: meDataState.tasks,
-          products: meDataState.products,
-          holidays: meDataState.holidays,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: 'user_id' }
-      );
+      .upsert({
+        user_id: currentUser.id,
+        team: meDataState.team,
+        tasks: meDataState.tasks,
+        products: meDataState.products,
+        holidays: meDataState.holidays,
+        updated_at: new Date().toISOString()
+      });
 
     if (error) throw error;
 
