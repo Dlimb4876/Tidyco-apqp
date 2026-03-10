@@ -110,15 +110,18 @@ function meGetTabContent() {
     meHolidayMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   }
 
+  // Get available products from product management database (non-closed only)
+  const availableProducts = productsState?.products?.filter(p => p.status !== 'closed') || [];
+
   switch (meTab) {
     case 'dashboard':
       return meRenderDashboardTab(meChartStart, team, tasks, products, holidays);
     case 'team':
       return meRenderTeamTab(team);
     case 'tasks':
-      return meRenderTasksTab(tasks, team);
+      return meRenderTasksTab(tasks, team, availableProducts);
     case 'products':
-      return meRenderProductsTab(products);
+      return meRenderProductsTab(products, availableProducts);
     case 'holidays':
       return meRenderHolidaysTab(holidays, team, meHolidayMonth);
     case 'heatmap':

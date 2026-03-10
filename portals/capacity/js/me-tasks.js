@@ -2,7 +2,8 @@
    me-tasks.js — Tasks Tab Rendering
    ============================================================ */
 
-window.meRenderTasksTab = function(tasksArray, teamArray) {
+window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
+  availableProducts = availableProducts || [];
   const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other'];
   const totalHours = tasksArray.reduce((sum, t) => sum + (t.totalHours || 0), 0).toFixed(1);
   const taskCount = tasksArray.length;
@@ -22,12 +23,14 @@ window.meRenderTasksTab = function(tasksArray, teamArray) {
   tasksArray.forEach((task, idx) => {
     const catOpts = ME_CATS.map(c => `<option value="${c}" ${task.category === c ? 'selected' : ''}>${c}</option>`).join('');
     const memOpts = '<option value="">Unassigned</option>' + teamArray.map(m => `<option value="${m.id}" ${task.assigneeId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
+    const prodOpts = '<option value="">— No Product</option>' + availableProducts.map(p => `<option value="${p.id}" ${task.productId === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
 
     rows += `
       <tr>
         <td><input value="${esc(task.name)}" onchange="meDataUpdateTask(${idx}, 'name', this.value); meDebouncedSave();"></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'category', this.value); meDebouncedSave();">${catOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'assigneeId', this.value); meDebouncedSave();">${memOpts}</select></td>
+        <td><select onchange="meDataUpdateTask(${idx}, 'productId', this.value); meDebouncedSave();">${prodOpts}</select></td>
         <td><input type="date" value="${task.startDate}" onchange="meDataUpdateTask(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
         <td><input type="date" value="${task.endDate}" onchange="meDataUpdateTask(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${task.totalHours || 0}" step="0.1" onchange="meDataUpdateTask(${idx}, 'totalHours', this.value); meDebouncedSave();"></td>
@@ -74,16 +77,17 @@ window.meRenderTasksTab = function(tasksArray, teamArray) {
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
-              <th style="width:200px">Task Name</th>
-              <th style="width:120px">Category</th>
-              <th style="width:150px">Assignee</th>
+              <th style="width:180px">Task Name</th>
+              <th style="width:110px">Category</th>
+              <th style="width:130px">Assignee</th>
+              <th style="width:130px">Product</th>
               <th style="width:110px">Start Date</th>
               <th style="width:110px">End Date</th>
-              <th style="width:100px">Hours</th>
+              <th style="width:80px">Hours</th>
               <th style="width:36px"></th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="7"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks added</div></td></tr>'}
+              ${rows || '<tr><td colspan="8"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks added</div></td></tr>'}
             </tbody>
           </table>
         </div>

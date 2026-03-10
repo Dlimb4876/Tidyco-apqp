@@ -99,13 +99,14 @@ window.meDataGetTeam = function() {
 // TASK CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours) {
+window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours, productId) {
   if (!name || name.trim().length === 0) return false;
   const task = {
     id: meUUID(),
     name: name.trim(),
     category: category || 'NPI',
     assigneeId: assigneeId || '',
+    productId: productId || '',
     startDate: startDate,
     endDate: endDate,
     totalHours: parseFloat(totalHours) || 0,
@@ -127,6 +128,9 @@ window.meDataUpdateTask = function(idx, field, value) {
       break;
     case 'assigneeId':
       task.assigneeId = value || '';
+      break;
+    case 'productId':
+      task.productId = value || '';
       break;
     case 'startDate':
       task.startDate = value;
@@ -205,6 +209,30 @@ window.meDataDeleteProduct = function(idx) {
 
 window.meDataGetProducts = function() {
   return meDataState.products;
+};
+
+/**
+ * Pre-populate products from product management database (non-closed products)
+ * Call this to sync products from the product management database into ME capacity
+ */
+window.meDataSyncFromProductManagement = function() {
+  if (!productsState || !productsState.products) {
+    console.warn('Product management database not loaded');
+    return false;
+  }
+
+  // Get non-closed products from product management database
+  const pmProducts = productsState.products.filter(p => p.status !== 'closed');
+
+  // For each product that doesn't exist in ME products yet, create it
+  pmProducts.forEach(pmProd => {
+    const exists = meDataState.products.find(meP => meP.name === pmProd.name);
+    if (!exists) {
+      meDataAddProduct(pmProd.name, '', '', 0, pmProd.notes || '');
+    }
+  });
+
+  return true;
 };
 
 // ─────────────────────────────────────────────────────────────

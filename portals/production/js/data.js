@@ -12,9 +12,10 @@ let prodDebouncedSave = null;
 // Initialize production data from Supabase
 async function prodDataInit() {
   try {
-    const products = await supa.from('production_products')
+    // Load products from product management database (not production_products table)
+    const products = await supa.from('products')
       .select('*')
-      .order('created_at', { ascending: true });
+      .order('name', { ascending: true });
 
     const batches = await supa.from('production_batches')
       .select('*')
@@ -45,104 +46,9 @@ async function prodDataSave() {
   }
 }
 
-// ===== PRODUCT CRUD =====
-
-window.prodDataAddProduct = async function(name, code, family, leadTime, notes, status, assignedUnit) {
-  if (!name || name.trim().length === 0) return false;
-
-  const product = {
-    user_id: currentUser.id,
-    name: name.trim(),
-    code: code ? code.trim() : null,
-    family: family ? family.trim() : null,
-    lead_time_days: leadTime ? parseInt(leadTime) : null,
-    notes: notes ? notes.trim() : null,
-    status: status || 'active',
-    assigned_unit: assignedUnit || null
-  };
-
-  try {
-    const { data, error } = await supa.from('production_products').insert([product]).select();
-    if (error) throw error;
-
-    if (data && data[0]) {
-      prodState.products.push(data[0]);
-      return true;
-    }
-  } catch (err) {
-    console.error('Error adding product:', err);
-  }
-  return false;
-};
-
-window.prodDataUpdateProduct = async function(idx, field, value) {
-  if (idx < 0 || idx >= prodState.products.length) return false;
-
-  const product = prodState.products[idx];
-  const updates = { updated_at: new Date().toISOString() };
-
-  // Map field names and validate
-  switch(field) {
-    case 'name':
-      if (!value || value.trim().length === 0) return false;
-      updates.name = value.trim();
-      break;
-    case 'code':
-      updates.code = value ? value.trim() : null;
-      break;
-    case 'family':
-      updates.family = value ? value.trim() : null;
-      break;
-    case 'lead_time_days':
-      updates.lead_time_days = value ? parseInt(value) : null;
-      break;
-    case 'notes':
-      updates.notes = value ? value.trim() : null;
-      break;
-    case 'status':
-      updates.status = value || 'active';
-      break;
-    case 'assigned_unit':
-      updates.assigned_unit = value ? value : null;
-      break;
-    default:
-      return false;
-  }
-
-  try {
-    const { error } = await supa.from('production_products')
-      .update(updates)
-      .eq('id', product.id);
-
-    if (error) throw error;
-
-    Object.assign(product, updates);
-    render();
-    prodDebouncedSaveNow();
-    return true;
-  } catch (err) {
-    console.error('Error updating product:', err);
-  }
-  return false;
-};
-
-window.prodDataDeleteProduct = async function(idx) {
-  if (idx < 0 || idx >= prodState.products.length) return false;
-
-  const product = prodState.products[idx];
-
-  try {
-    const { error } = await supa.from('production_products').delete().eq('id', product.id);
-    if (error) throw error;
-
-    prodState.products.splice(idx, 1);
-    render();
-    return true;
-  } catch (err) {
-    console.error('Error deleting product:', err);
-  }
-  return false;
-};
+// ===== PRODUCT MANAGEMENT =====
+// Products are now managed from the product management database
+// This module only provides read access to products for batch scheduling
 
 // ===== BATCH CRUD =====
 
