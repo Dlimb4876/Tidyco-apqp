@@ -185,7 +185,7 @@ function renderDashboard() {
     </div>`;
 
   const launcherHTML = sections.map(s =>
-    `<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${s.color};margin-bottom:1px">${s.icon} ${s.title}</div><div class="section-card-desc">${s.desc}</div></div>`
+    `<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${s.color};margin-bottom:1px">${s.icon} ${s.title}</div><div class="section-card-desc">${s.desc}</div></div>`
   ).join('');
 
   const actHTML = p.actions.filter(a => a.status !== 'Closed').slice(0, 5).map(a => {

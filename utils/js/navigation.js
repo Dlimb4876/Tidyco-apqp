@@ -30,8 +30,9 @@ function navigate(sec, { pushHash = true } = {}) {
     if (progId)             parts.push('p=' + encodeURIComponent(progId));
     if (sec !== 'projects') parts.push('s=' + encodeURIComponent(sec));
     if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
+    if (sec === 'capacity' && capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(capacityTab));
     const hash = parts.length ? '#' + parts.join('&') : '#';
-    if (sec === currentSection || sec === 'apqp') {
+    if (sec === currentSection || sec === 'apqp' || sec === 'capacity') {
       history.replaceState(null, '', hash);
     } else {
       history.pushState(null, '', hash);
@@ -104,11 +105,18 @@ function setApqpTab(t) {
 function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
-  if (currentSection === 'capacity') { mc.innerHTML = renderCapacity(); return; }
+  if (currentSection === 'capacity') {
+    if (capacityTab === 'root') mc.innerHTML = renderCapacity();
+    else if (capacityTab === 'me') mc.innerHTML = `<div class="section-inner">${renderMeCapacity()}</div>`;
+    else if (capacityTab === 'overhaul') mc.innerHTML = `<div class="section-inner"><div style="padding: 20px; text-align: center; color: var(--muted);">Overhaul Capacity coming soon</div></div>`;
+    else if (capacityTab === 'projects') mc.innerHTML = `<div class="section-inner"><div style="padding: 20px; text-align: center; color: var(--muted);">Projects Capacity coming soon</div></div>`;
+    else mc.innerHTML = renderCapacity();
+    return;
+  }
   if (!prog()) { mc.innerHTML = renderProjects(); return; }
 
   if (currentSection === 'hub') { mc.innerHTML = renderHub(); return; }
-  
+
   if (currentSection === 'project') mc.innerHTML = renderDashboard();
   else if (currentSection.startsWith('gate_')) mc.innerHTML = renderGatePage(+currentSection.split('_')[1]);
   else { mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`; }
@@ -139,6 +147,7 @@ window.addEventListener('popstate', () => {
   if (h.p && db.programmes.find(p => p.id === h.p)) {
     progId = h.p;
     if (h.t) apqpTab = h.t;
+    if (h.ct) capacityTab = h.ct;
     navigate(h.s || 'project', { pushHash: false });
   } else {
     navigate('projects', { pushHash: false });
