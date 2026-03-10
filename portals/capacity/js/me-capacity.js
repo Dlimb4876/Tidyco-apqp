@@ -11,10 +11,11 @@ let meChartInst  = null;   // Chart.js instance
 
 // ── Data scaffold ─────────────────────────────────────────────
 function meEnsure() {
-  if (!db.me) db.me = { team: [], tasks: [], products: [] };
+  if (!db.me) db.me = { team: [], tasks: [], products: [], holidays: [] };
   if (!db.me.team)     db.me.team     = [];
   if (!db.me.tasks)    db.me.tasks    = [];
   if (!db.me.products) db.me.products = [];
+  if (!db.me.holidays) db.me.holidays = [];
 }
 
 // ── Entry point ───────────────────────────────────────────────
@@ -41,6 +42,7 @@ function renderMeCapacity() {
     <button class="me-nav-btn ${meTab==='team'?'active':''}"     onclick="meSetTab('team')">👷 Team</button>
     <button class="me-nav-btn ${meTab==='tasks'?'active':''}"    onclick="meSetTab('tasks')">📋 Tasks</button>
     <button class="me-nav-btn ${meTab==='products'?'active':''}" onclick="meSetTab('products')">🚂 Products</button>
+    <button class="me-nav-btn ${meTab==='holidays'?'active':''}" onclick="meSetTab('holidays')">🏖️ Holiday Planner</button>
   </div>
   <div class="me-body" id="meBody">
     ${meGetTabContent()}
@@ -62,6 +64,7 @@ function meGetTabContent() {
   if (meTab === 'tasks')    return meRenderTasks();
   if (meTab === 'products') return meRenderProducts();
   if (meTab === 'chart')    return meRenderChart();
+  if (meTab === 'holidays') return meRenderHolidayPlanner();
   return '';
 }
 
@@ -275,6 +278,175 @@ function meDelItem(collection, idx) {
 }
 
 // ════════════════════════════════════
+// UK BANK HOLIDAYS
+// ════════════════════════════════════
+function getUKBankHolidays(year) {
+  const holidays = [
+    { date: `${year}-01-01`, name: 'New Year\'s Day' },
+    { date: `${year}-12-25`, name: 'Christmas Day' },
+    { date: `${year}-12-26`, name: 'Boxing Day' }
+  ];
+
+  // Easter-based holidays (Good Friday, Easter Monday)
+  const easterDate = computeEasterDate(year);
+  const goodFriday = new Date(easterDate);
+  goodFriday.setDate(goodFriday.getDate() - 2);
+  holidays.push({ date: goodFriday.toISOString().slice(0,10), name: 'Good Friday' });
+
+  const easterMonday = new Date(easterDate);
+  easterMonday.setDate(easterMonday.getDate() + 1);
+  holidays.push({ date: easterMonday.toISOString().slice(0,10), name: 'Easter Monday' });
+
+  // First Monday of May (Early May Bank Holiday)
+  const mayFirst = new Date(year, 4, 1);
+  const daysUntilMonday = (1 - mayFirst.getDay() + 7) % 7 || 7;
+  const firstMayMonday = new Date(year, 4, 1 + daysUntilMonday);
+  holidays.push({ date: firstMayMonday.toISOString().slice(0,10), name: 'Early May Bank Holiday' });
+
+  // Last Monday of May (Spring Bank Holiday)
+  const mayLast = new Date(year, 5, 0);
+  const daysBack = (mayLast.getDay() === 1 ? 0 : (mayLast.getDay() + 6) % 7) || 0;
+  const lastMayMonday = new Date(year, 4, 31 - daysBack);
+  holidays.push({ date: lastMayMonday.toISOString().slice(0,10), name: 'Spring Bank Holiday' });
+
+  // Last Monday of August (Summer Bank Holiday)
+  const augLast = new Date(year, 8, 31);
+  const augDaysBack = (augLast.getDay() === 1 ? 0 : (augLast.getDay() + 6) % 7) || 0;
+  const lastAugMonday = new Date(year, 7, 31 - augDaysBack);
+  holidays.push({ date: lastAugMonday.toISOString().slice(0,10), name: 'Summer Bank Holiday' });
+
+  return holidays;
+}
+
+function computeEasterDate(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+// ════════════════════════════════════
+// HOLIDAY PLANNER TAB
+// ════════════════════════════════════
+function meRenderHolidayPlanner() {
+  meEnsure();
+
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 90);
+
+  // Get bank holidays for this year and next
+  const bankHolidaysThisYear = getUKBankHolidays(startDate.getFullYear());
+  const bankHolidaysNextYear = getUKBankHolidays(endDate.getFullYear());
+  const allBankHolidays = [...bankHolidaysThisYear, ...bankHolidaysNextYear];
+  const bankHolidayDates = new Set(allBankHolidays.map(h => h.date));
+
+  // Generate date range
+  const dates = [];
+  const curDate = new Date(startDate);
+  while (curDate <= endDate) {
+    dates.push(curDate.toISOString().slice(0,10));
+    curDate.setDate(curDate.getDate() + 1);
+  }
+
+  // Build matrix rows (team members)
+  const rows = db.me.team.map((member, memberIdx) => {
+    const cells = dates.map((date, dateIdx) => {
+      const holiday = db.me.holidays.find(h => h.personId === member.id && h.date === date);
+      const isBankHoliday = bankHolidayDates.has(date);
+      const holidayType = holiday ? holiday.type : null;
+
+      let cellDisplay = '—';
+      let cellClass = 'holiday-cell';
+      if (isBankHoliday) {
+        cellClass += ' bank-holiday';
+        cellDisplay = '⬚'; // Show bank holiday marker
+      } else if (holidayType === 'half') {
+        cellClass += ' holiday-half';
+        cellDisplay = 'H';
+      } else if (holidayType === 'full') {
+        cellClass += ' holiday-full';
+        cellDisplay = 'F';
+      }
+
+      return `<td class="${cellClass}" onclick="meToggleHoliday('${member.id}', '${date}')" title="Click to toggle: working → half day → full day → remove">${cellDisplay}</td>`;
+    }).join('');
+
+    return `<tr><td class="holiday-person-name">${esc(member.name)}</td>${cells}</tr>`;
+  }).join('');
+
+  // Header row with dates
+  const dateHeaders = dates.map((date, idx) => {
+    const d = new Date(date);
+    const dayStr = d.toLocaleDateString('en-GB', { weekday: 'short' }).slice(0, 1);
+    const dateStr = d.getDate();
+    const isBankHoliday = bankHolidayDates.has(date);
+    const headerClass = isBankHoliday ? 'holiday-date-header bank-holiday-header' : 'holiday-date-header';
+    return `<th class="${headerClass}"><div class="holiday-date-label">${dayStr}<br>${dateStr}</div></th>`;
+  }).join('');
+
+  return `
+<div class="me-card">
+  <div class="me-card-head">
+    <span class="me-card-title">HOLIDAY PLANNER</span>
+    <span style="font-size:12px;color:var(--muted)">${db.me.team.length} team members · Next 90 days</span>
+  </div>
+  <div class="me-card-body">
+    <div class="holiday-matrix-wrap">
+      <table class="holiday-matrix">
+        <thead>
+          <tr>
+            <th class="holiday-person-header">Person</th>
+            ${dateHeaders}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || '<tr><td colspan="100"><div class="me-empty"><div class="me-empty-icon">👷</div><div class="me-empty-title">No team members yet</div><div class="me-empty-sub">Add team members first to plan holidays</div></div></td></tr>'}
+        </tbody>
+      </table>
+    </div>
+    <div style="padding: 12px 16px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted);">
+      <div>Click a cell: <strong>—</strong> (working) → <strong>H</strong> (half day) → <strong>F</strong> (full day) → remove</div>
+      <div style="margin-top: 6px;">⬚ = UK Bank Holiday (highlights automatically but must click to mark as time off)</div>
+    </div>
+  </div>
+</div>`;
+}
+
+function meToggleHoliday(personId, date) {
+  meEnsure();
+  const existingIdx = db.me.holidays.findIndex(h => h.personId === personId && h.date === date);
+
+  if (existingIdx === -1) {
+    // Add as half day
+    db.me.holidays.push({ id: meUUID(), personId, date, type: 'half' });
+  } else {
+    const current = db.me.holidays[existingIdx];
+    if (current.type === 'half') {
+      // Change to full day
+      current.type = 'full';
+    } else {
+      // Remove
+      db.me.holidays.splice(existingIdx, 1);
+    }
+  }
+  meSave();
+  meSetTab('holidays');
+}
+
+// ════════════════════════════════════
 // CAPACITY CHART TAB
 // ════════════════════════════════════
 function meRenderChart() {
@@ -459,9 +631,45 @@ function meGetMonthData(monthKey) {
   const monthEnd   = new Date(yr, mo, 0);                  // last day of month
   const weeksInMonth = meWeeksOverlap(monthStart, monthEnd);
 
+  // Get UK bank holidays for this year (and next if spanning year boundary)
+  const bankHolidaysThisYear = getUKBankHolidays(yr);
+  const bankHolidaysNextYear = yr < new Date().getFullYear() + 10 ? getUKBankHolidays(yr + 1) : [];
+  const allBankHolidays = [...bankHolidaysThisYear, ...bankHolidaysNextYear];
+  const bankHolidayDates = new Set(allBankHolidays.map(h => h.date));
+
   // Capacity: sum of (hoursPerWeek * utilisation%) * weeks in month
+  // Subtract holidays (both marked by user and bank holidays)
   const capacity = db.me.team.reduce((s, m) => {
-    return s + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100)) * weeksInMonth;
+    let baseCapacity = ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100)) * weeksInMonth;
+
+    // Subtract marked holidays
+    db.me.holidays.forEach(h => {
+      if (h.personId === m.id) {
+        const hDate = new Date(h.date);
+        if (hDate >= monthStart && hDate <= monthEnd) {
+          const dailyHours = (m.hoursPerWeek || 37.5) / 5;
+          if (h.type === 'full') {
+            baseCapacity -= dailyHours;
+          } else if (h.type === 'half') {
+            baseCapacity -= dailyHours / 2;
+          }
+        }
+      }
+    });
+
+    // Subtract bank holidays
+    bankHolidayDates.forEach(bankHolDate => {
+      const hDate = new Date(bankHolDate);
+      if (hDate >= monthStart && hDate <= monthEnd) {
+        // Only subtract if it's a working day (Mon-Fri)
+        if (hDate.getDay() !== 0 && hDate.getDay() !== 6) {
+          const dailyHours = (m.hoursPerWeek || 37.5) / 5;
+          baseCapacity -= dailyHours;
+        }
+      }
+    });
+
+    return s + baseCapacity;
   }, 0);
 
   // Demand from tasks — distribute total hours linearly across task duration
