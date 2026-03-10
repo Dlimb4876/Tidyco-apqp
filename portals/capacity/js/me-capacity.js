@@ -603,9 +603,10 @@ function meDrawChartNow() {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45 } },
-        y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
-      }
+        x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 0, minRotation: 0, font: { size: 11 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
+      },
+      bar: { barPercentage: 0.75, categoryPercentage: 0.8 }
     }
   });
 }
@@ -678,7 +679,9 @@ function meFormatDate(date) {
 
 function meGetMonthLabel(monthKey) {
   const date = new Date(monthKey + '-01');
-  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const year = date.getFullYear();
+  return `${month}\n${year}`;
 }
 
 function meGetMonthRange(startMonth, count) {
