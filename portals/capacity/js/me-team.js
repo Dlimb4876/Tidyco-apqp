@@ -80,14 +80,14 @@ window.meRenderTeamTab = function(teamArray) {
           <div class="me-tbl-wrap">
             <table class="me-tbl">
               <thead><tr>
-                <th style="min-width:180px">Name</th>
-                <th style="width:140px">Job Title</th>
-                <th style="width:140px">Group</th>
-                <th style="width:110px">Start Date</th>
-                <th style="width:110px">End Date</th>
-                <th style="width:130px">Hours / Week</th>
-                <th style="width:120px">Utilisation %</th>
-                <th style="width:120px">Effective h/wk</th>
+                <th style="width:120px">Name</th>
+                <th style="width:110px">Job Title</th>
+                <th style="width:100px">Group</th>
+                <th style="width:100px">Start Date</th>
+                <th style="width:100px">End Date</th>
+                <th style="width:100px">Hours / Week</th>
+                <th style="width:100px">Utilisation %</th>
+                <th style="width:110px">Effective h/wk</th>
                 <th style="width:36px"></th>
               </tr></thead>
               <tbody>

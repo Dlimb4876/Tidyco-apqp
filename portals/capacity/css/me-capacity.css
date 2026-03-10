@@ -328,16 +328,18 @@
 }
 
 .me-heatmap-wrapper {
-  flex: 1; overflow: auto; border: 1px solid var(--line);
+  flex: 1; overflow: hidden; border: 1px solid var(--line);
   border-radius: 8px; background: var(--white);
   margin: 16px 0;
 }
 
 .me-heatmap-grid {
   display: grid;
-  grid-template-columns: 140px repeat(auto-fit, minmax(52px, 1fr));
+  grid-template-columns: 140px repeat(auto-fit, 40px);
   gap: 0; background: var(--white);
   padding: 0;
+  overflow: auto;
+  height: 100%;
 }
 
 .me-heatmap-person-header {
@@ -372,7 +374,7 @@
 }
 
 .me-heatmap-cell {
-  min-height: 44px; display: flex; align-items: center; justify-content: center;
+  height: 40px; width: 40px; display: flex; align-items: center; justify-content: center;
   border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
   cursor: pointer; user-select: none; font-weight: 600; font-size: 12px;
   transition: all .12s; position: relative;
@@ -506,4 +508,134 @@
 
 .me-detail-holiday::before {
   content: '🏖️ '; margin-right: 4px;
+}
+
+/* ── Dashboard ───────────────────────────────────────────── */
+.me-dashboard {
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.me-dashboard-kpis {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.me-dashboard-kpi {
+  background: var(--white); border: 1px solid var(--line); border-radius: 8px;
+  padding: 16px;
+}
+
+.me-dashboard-kpi-value {
+  font-size: 28px; font-weight: 700; color: var(--ink); line-height: 1;
+  margin-bottom: 6px;
+}
+
+.me-dashboard-kpi-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace; margin-bottom: 4px;
+}
+
+.me-dashboard-kpi-sub {
+  font-size: 12px; color: var(--muted); margin-top: 4px;
+}
+
+.me-dashboard-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.me-dashboard-card {
+  background: var(--white); border: 1px solid var(--line); border-radius: 8px;
+  padding: 16px;
+}
+
+.me-dashboard-card-title {
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.3px;
+  margin-bottom: 12px; text-transform: uppercase;
+}
+
+.me-dashboard-health {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.me-health-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--ink);
+}
+
+.me-health-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+
+.me-health-count {
+  margin-left: auto; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+  background: #f4f6fa; padding: 2px 8px; border-radius: 4px;
+}
+
+.me-dashboard-categories {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.me-cat-item {
+  display: flex; align-items: center; gap: 10px; font-size: 12px;
+}
+
+.me-cat-bar {
+  height: 8px; border-radius: 4px; min-width: 40px; flex-shrink: 0;
+}
+
+.me-dashboard-tasks {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.me-task-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px;
+  background: #fafbfd;
+  border-left: 4px solid transparent;
+  transition: all .12s;
+}
+
+.me-task-item:hover {
+  background: var(--white); border-color: var(--blue-pale);
+}
+
+.me-task-item.urgent {
+  border-left-color: var(--red); background: rgba(239, 68, 68, 0.05);
+}
+
+.me-task-item.warning {
+  border-left-color: var(--amber); background: rgba(245, 158, 11, 0.05);
+}
+
+.me-task-item.normal {
+  border-left-color: var(--green); background: rgba(16, 185, 129, 0.05);
+}
+
+.me-task-details {
+  flex: 1;
+}
+
+.me-task-name {
+  font-weight: 500; color: var(--ink); font-size: 13px; margin-bottom: 4px;
+}
+
+.me-task-meta {
+  font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-task-date {
+  font-size: 12px; color: var(--muted); white-space: nowrap; margin-left: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-dashboard-empty {
+  text-align: center; color: var(--muted); padding: 24px 0; font-size: 13px;
+  font-style: italic;
+}
+
+.me-dashboard-nav {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;
 }

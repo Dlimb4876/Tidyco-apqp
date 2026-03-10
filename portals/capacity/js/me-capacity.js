@@ -3,7 +3,7 @@
    ============================================================ */
 
 // ── Module state ───────────────────────────────────────────
-let meTab = 'chart';
+let meTab = 'dashboard';
 let meChartStart = null; // ISO month string (e.g., '2025-03')
 let meChartInst = null;  // Chart.js instance
 let meSaveTimer = null;  // Debounce timer
@@ -31,6 +31,7 @@ window.renderMeCapacity = function() {
       </div>
 
       <div class="me-nav">
+        <button class="me-nav-btn ${meTab === 'dashboard' ? 'active' : ''}" onclick="meSetTab('dashboard')">📈 Dashboard</button>
         <button class="me-nav-btn ${meTab === 'chart' ? 'active' : ''}" onclick="meSetTab('chart')">📊 Capacity Chart</button>
         <button class="me-nav-btn ${meTab === 'heatmap' ? 'active' : ''}" onclick="meSetTab('heatmap')">🔥 Heat Map</button>
         <button class="me-nav-btn ${meTab === 'team' ? 'active' : ''}" onclick="meSetTab('team')">👷 Team</button>
@@ -55,7 +56,7 @@ window.meSetTab = function(tab) {
     btn.classList.remove('active');
   });
   const activeBtn = document.querySelector(`.me-nav-btn:nth-child(${
-    tab === 'chart' ? 1 : tab === 'heatmap' ? 2 : tab === 'team' ? 3 : tab === 'tasks' ? 4 : tab === 'products' ? 5 : 6
+    tab === 'dashboard' ? 1 : tab === 'chart' ? 2 : tab === 'heatmap' ? 3 : tab === 'team' ? 4 : tab === 'tasks' ? 5 : tab === 'products' ? 6 : 7
   })`);
   if (activeBtn) activeBtn.classList.add('active');
 
@@ -70,6 +71,18 @@ window.meSetTab = function(tab) {
   }
 };
 
+// Refresh current tab without switching tabs
+window.meRefreshCurrentTab = function() {
+  const body = document.getElementById('meBody');
+  if (body) {
+    body.innerHTML = meGetTabContent();
+    setTimeout(() => {
+      if (meTab === 'chart') meDrawChartNow();
+      else if (meTab === 'heatmap') meDrawHeatmapNow();
+    }, 100);
+  }
+};
+
 function meGetTabContent() {
   const team = meDataGetTeam();
   const tasks = meDataGetTasks();
@@ -77,6 +90,8 @@ function meGetTabContent() {
   const holidays = meDataGetHolidays();
 
   switch (meTab) {
+    case 'dashboard':
+      return meRenderDashboardTab(meChartStart, team, tasks, products, holidays);
     case 'team':
       return meRenderTeamTab(team);
     case 'tasks':
@@ -97,24 +112,25 @@ function meGetTabContent() {
 window.meOnMonthChange = function(newMonth) {
   meChartStart = newMonth;
   localStorage.setItem('meChartStartMonth', newMonth);
-  meSetTab('chart');
+  meRefreshCurrentTab();
 };
 
 window.meOnNextMonth = function() {
   const [year, month] = meChartStart.split('-').map(Number);
-  const date = new Date(year, month, 1);
+  const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() + 1);
   meChartStart = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   localStorage.setItem('meChartStartMonth', meChartStart);
-  meSetTab('chart');
+  meRefreshCurrentTab();
 };
 
 window.meOnPrevMonth = function() {
   const [year, month] = meChartStart.split('-').map(Number);
-  const date = new Date(year, month - 2, 1);
+  const date = new Date(year, month - 1, 1);
+  date.setMonth(date.getMonth() - 1);
   meChartStart = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   localStorage.setItem('meChartStartMonth', meChartStart);
-  meSetTab('chart');
+  meRefreshCurrentTab();
 };
 
 // ── Persistence ────────────────────────────────────────────

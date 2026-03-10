@@ -117,15 +117,15 @@ window.meToggleHoliday = function(personId, date) {
   }
 
   // Save scroll position before re-render
-  const scrollContainer = document.querySelector('.me-card[style*="overflow"]');
+  const scrollContainer = document.querySelector('.me-card-body');
   const scrollPos = scrollContainer ? scrollContainer.scrollLeft : 0;
 
   meDebouncedSave();
   meSetTab('holidays');
 
-  // Restore scroll position after re-render
+  // Restore scroll position immediately after re-render
   setTimeout(() => {
-    const container = document.querySelector('.me-card[style*="overflow"]');
+    const container = document.querySelector('.me-card-body');
     if (container) {
       container.scrollLeft = scrollPos;
     }
