@@ -238,12 +238,12 @@ window.meDataInit = async function() {
         .eq('user_id', currentUser.id)
         .single();
 
-      if (data) {
+      if (data && data.data) {
         meDataState = {
-          team: data.team || [],
-          tasks: data.tasks || [],
-          products: data.products || [],
-          holidays: data.holidays || []
+          team: data.data.team || [],
+          tasks: data.data.tasks || [],
+          products: data.data.products || [],
+          holidays: data.data.holidays || []
         };
         window.meDataState = meDataState;
       }
@@ -269,10 +269,12 @@ window.meDataSave = async function(showAlert) {
       .from('me_capacity')
       .upsert({
         user_id: currentUser.id,
-        team: meDataState.team,
-        tasks: meDataState.tasks,
-        products: meDataState.products,
-        holidays: meDataState.holidays,
+        data: {
+          team: meDataState.team,
+          tasks: meDataState.tasks,
+          products: meDataState.products,
+          holidays: meDataState.holidays
+        },
         updated_at: new Date().toISOString()
       });
 
