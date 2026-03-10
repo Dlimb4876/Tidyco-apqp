@@ -90,7 +90,8 @@ function render() {
     return;
   }
   if (currentSection === 'products') {
-    renderProductsPortal();
+    mc.innerHTML = renderProductsPortalHTML();
+    renderProductsPortalSetup();
     return;
   }
   if (currentSection === 'productmgmt') {

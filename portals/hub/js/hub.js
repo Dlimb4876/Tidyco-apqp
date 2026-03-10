@@ -9,14 +9,6 @@ function renderHub() {
         </div>
       </div>
       <div class="proj-cards hub-grid">
-        <div class="proj-card hub-card" onclick="navigate('products')">
-          <div class="hub-card-content">
-            <div class="hub-icon">📦</div>
-            <div class="proj-card-name">PRODUCTS</div>
-            <div class="proj-card-meta">Overhaul Time & History</div>
-          </div>
-        </div>
-
         <div class="proj-card hub-card" onclick="navigate('capacity')">
           <div class="hub-card-content">
             <div class="hub-icon">📊</div>

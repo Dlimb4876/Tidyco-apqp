@@ -4,11 +4,10 @@
  */
 
 /**
- * Render products portal
+ * Get products portal HTML
  */
-function renderProductsPortal() {
-  const main = document.getElementById('mainContent');
-  main.innerHTML = `
+function renderProductsPortalHTML() {
+  return `
     <div class="products-portal">
       <div class="products-header">
         <h1>Product Management</h1>
@@ -136,7 +135,12 @@ function renderProductsPortal() {
       </div>
     </div>
   `;
+}
 
+/**
+ * Setup products portal after rendering
+ */
+function renderProductsPortalSetup() {
   setupProductsEventListeners();
   renderProductsList();
 }
