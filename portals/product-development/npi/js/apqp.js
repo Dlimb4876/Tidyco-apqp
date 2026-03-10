@@ -13,14 +13,14 @@ function renderAPQP() {
     { id: 'pfmea', label: 'PFMEA',         badge: p.pfmea.length, warn: highRPN > 0 },
     { id: 'cp',    label: 'Control Plan',  badge: p.cp.length }
   ];
-  const tabNav = `<div style="display:flex;background:var(--white);border:1px solid var(--line);border-radius:8px 8px 0 0;overflow:hidden;border-bottom:none">${
-    tabs.map(t => `<button style="padding:10px 20px;font-size:12px;font-weight:${apqpTab === t.id ? '600' : '500'};cursor:pointer;border:none;border-bottom:2px solid ${apqpTab === t.id ? 'var(--blue)' : 'transparent'};color:${apqpTab === t.id ? 'var(--blue)' : 'var(--muted)'};background:${apqpTab === t.id ? 'var(--blue-pale)' : 'transparent'};font-family:'IBM Plex Sans',sans-serif;transition:all .15s;white-space:nowrap" onclick="setApqpTab('${t.id}')">${t.label}${t.badge > 0 ? ` <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;opacity:.7">(${t.badge})</span>` : ''}${t.warn ? ` <span style="color:var(--amber)">⚠</span>` : ''}</button>`).join('')
+  const tabNav = `<div class="apqp-tabs-shell">${
+    tabs.map(t => `<button class="apqp-tab-btn ${apqpTab === t.id ? 'active' : ''}" onclick="setApqpTab('${t.id}')">${t.label}${t.badge > 0 ? `<span class="apqp-tab-badge">(${t.badge})</span>` : ''}${t.warn ? `<span class="apqp-tab-warning">⚠</span>` : ''}</button>`).join('')
   }</div>`;
   const inner = apqpTab === 'ctq' ? renderCTQ() : apqpTab === 'pfd' ? renderPFD() : apqpTab === 'pfmea' ? renderPFMEA() : renderCP();
-  return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="goHome()">← Dashboard</button></div></div>
+  return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div><div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="goHome()">← Dashboard</button></div></div>
   ${tabNav}
-  <div style="background:var(--white);border:1px solid var(--line);border-top:none;border-radius:0 0 4px 4px;padding:20px 0 0"></div>
-  <div class="apqp-tab-content" style="padding-top:18px">${inner}</div>`;
+  <div style="background:var(--white);border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;padding:24px 0 0"></div>
+  <div class="apqp-tab-content" style="padding:24px">${inner}</div>`;
 }
 
 // ══════════════════════════════════════
