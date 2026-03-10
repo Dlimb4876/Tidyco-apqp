@@ -15,7 +15,8 @@
       "Bash(ls -lh portals/capacity/js/*.js)",
       "Bash(ls -d portals/capacity/js/me-*)",
       "Bash(/c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/README_ME_CAPACITY_FIXES.md:*)",
-      "Bash(ls -lh ME_CAPACITY*.* README_ME_CAPACITY*.*)"
+      "Bash(ls -lh ME_CAPACITY*.* README_ME_CAPACITY*.*)",
+      "Bash(wc -l \"C:\\\\Users\\\\Tidyco\\\\Documents\\\\GitHub\\\\Tidyco-apqp\\\\portals\\\\capacity\\\\js\"/*.js)"
     ]
   }
 }
