@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["http-server", "-p", "8000"],
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "python3 -m http.server 8000"],
       "port": 8000
     }
   ]

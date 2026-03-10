@@ -19,7 +19,8 @@
       "Bash(wc -l \"C:\\\\Users\\\\Tidyco\\\\Documents\\\\GitHub\\\\Tidyco-apqp\\\\portals\\\\capacity\\\\js\"/*.js)",
       "Bash(fi)",
       "mcp__Claude_Preview__preview_start",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(where node http-server python python3)"
     ]
   }
 }
