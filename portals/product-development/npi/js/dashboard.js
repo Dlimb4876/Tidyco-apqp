@@ -27,7 +27,7 @@ function renderProjects() {
       <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
     </div>`;
   } else {
-    FAMILIES.forEach(fam => {
+    getFamilies().forEach(fam => {
       const projs = db.programmes.filter(p => (p.family || 'Other') === fam.id);
       if (projs.length === 0) return;
       html += `<div class="proj-family-group">
@@ -287,8 +287,9 @@ function createProg() {
 // -- Edit Project Information -------------------------------
 function showEditProject() {
   const p = prog(); if (!p) return;
+  populateFamilySelects();
   document.getElementById('ep_name').value     = p.name     || '';
-  document.getElementById('ep_family').value   = p.family   || 'Other';
+  document.getElementById('ep_family').value   = p.family   || getFamilies()[0]?.id || 'Other';
   document.getElementById('ep_customer').value = p.customer || '';
   document.getElementById('ep_unit').value     = p.unit     || '';
   document.getElementById('ep_lead').value     = p.lead     || '';

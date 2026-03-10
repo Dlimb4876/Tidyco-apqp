@@ -32,6 +32,8 @@ function renderHub() {
             <div class="proj-card-meta">Batch Scheduling & Planning</div>
           </div>
         </div>
+
+
       </div>
     </div>`;
 }

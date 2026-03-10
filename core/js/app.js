@@ -3,14 +3,16 @@
 // Depends on: all other modules
 // ═══════════════════════════════════
 
-// ── Populate family dropdown from global FAMILIES list ────────────
+// ── Populate family dropdowns ─────────────────────────────────
 function populateFamilySelects() {
-  const familySelects = ['np_family'];
-  familySelects.forEach(id => {
+  const families = getFamilies();
+  ['np_family', 'ep_family'].forEach(id => {
     const select = document.getElementById(id);
-    if (select) {
-      select.innerHTML = FAMILIES.map(f => `<option value="${f.id}"${f.id === 'Other' ? ' selected' : ''}>${f.label}</option>`).join('');
-    }
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = families.map(f => `<option value="${esc(f.id)}">${esc(f.icon)} ${esc(f.label)}</option>`).join('');
+    // Restore previous selection if still valid
+    if (current && [...select.options].some(o => o.value === current)) select.value = current;
   });
 }
 

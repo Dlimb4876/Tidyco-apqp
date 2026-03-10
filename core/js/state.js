@@ -56,6 +56,11 @@ const FAMILIES = [
   { id: 'Other',            label: 'Other',             icon: '📋' },
 ];
 
+// Returns user-defined families if any exist, otherwise falls back to defaults
+function getFamilies() {
+  return (db.families && db.families.length > 0) ? db.families : FAMILIES;
+}
+
 // ── New programme factory ─────────────────────────────────────
 function newProgTemplate(name, customer, unit, family, lead, pm, date) {
   const gates = GATE_DEFS.map(g => ({

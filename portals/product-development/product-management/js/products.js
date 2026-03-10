@@ -25,6 +25,7 @@ function renderProductsPortalHTML() {
       <div class="products-tabs">
         <button class="products-tab-btn active" data-tab="list">Product List</button>
         <button class="products-tab-btn" data-tab="trends">Overhaul Trends</button>
+        <button class="products-tab-btn" data-tab="families">Product Families</button>
       </div>
 
       <div id="productsListTab" class="products-tab-content active">
@@ -33,6 +34,9 @@ function renderProductsPortalHTML() {
 
       <div id="productsTrendsTab" class="products-tab-content">
         <div id="productsTrends"></div>
+      </div>
+
+      <div id="productsFamiliesTab" class="products-tab-content">
       </div>
 
       <!-- Add/Edit Product Modal -->
@@ -55,10 +59,6 @@ function renderProductsPortalHTML() {
               <label>Product Family</label>
               <select id="productFamily">
                 <option value="">Select a family...</option>
-                <option value="HVAC">HVAC</option>
-                <option value="Rotating Machines">Rotating Machines</option>
-                <option value="Pneumatics">Pneumatics</option>
-                <option value="Other">Other</option>
               </select>
             </div>
             <div class="form-group">
@@ -148,6 +148,12 @@ function renderProductsPortalHTML() {
  * Setup products portal after rendering
  */
 function renderProductsPortalSetup() {
+  // Populate family select with dynamic families
+  const famSel = document.getElementById('productFamily');
+  if (famSel) {
+    famSel.innerHTML = '<option value="">Select a family...</option>' +
+      getFamilies().map(f => `<option value="${esc(f.id)}">${esc(f.icon)} ${esc(f.label)}</option>`).join('');
+  }
   setupProductsEventListeners();
   renderProductsList();
 }
@@ -236,6 +242,13 @@ function showProductModal(productId = null, product = null) {
   const modal = document.getElementById('productModal');
   const form = document.getElementById('productForm');
   const title = document.getElementById('modalTitle');
+
+  // Refresh family options in case families were edited
+  const famSel = document.getElementById('productFamily');
+  if (famSel) {
+    famSel.innerHTML = '<option value="">Select a family...</option>' +
+      getFamilies().map(f => `<option value="${esc(f.id)}">${esc(f.icon)} ${esc(f.label)}</option>`).join('');
+  }
 
   if (productId && product) {
     title.textContent = `Edit Product: ${product.name}`;
@@ -475,6 +488,8 @@ function setupProductsEventListeners() {
 
       if (tab === 'trends') {
         renderProductsTrends();
+      } else if (tab === 'families') {
+        document.getElementById('productsFamiliesTab').innerHTML = renderFamiliesTabContent();
       } else {
         renderProductsList();
       }
