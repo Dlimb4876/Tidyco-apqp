@@ -21,7 +21,7 @@ function renderProduction() {
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Production Planning</div>
-          <div class="proj-home-sub">Manage product master list and production schedules</div>
+          <div class="proj-home-sub">Product management and production schedules</div>
         </div>
         <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Portal</button>
       </div>
@@ -29,9 +29,9 @@ function renderProduction() {
       <div class="proj-cards hub-grid">
         <div class="proj-card hub-card" onclick="setProductionTab('products')">
           <div class="hub-card-content">
-            <div class="hub-icon">📦</div>
-            <div class="proj-card-name">Products</div>
-            <div class="proj-card-meta">Product Master List</div>
+            <div class="hub-icon">🎯</div>
+            <div class="proj-card-name">Product Management</div>
+            <div class="proj-card-meta">Master List & Details</div>
           </div>
         </div>
 

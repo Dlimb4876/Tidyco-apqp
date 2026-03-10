@@ -151,6 +151,18 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
   const endDate = new Date(maxDate);
   const dayDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
+  // Determine current week and day
+  const today = new Date(todayStr);
+  let currentWeekNum = -1;
+  let todayDayIndex = -1;
+
+  // Find which day index today is (if in range)
+  const daysBetween = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24));
+  if (daysBetween >= 0 && daysBetween < dayDiff) {
+    todayDayIndex = daysBetween;
+    currentWeekNum = Math.floor(todayDayIndex / 7);
+  }
+
   // Generate week headers with labels
   let weekHeadersHtml = '';
   let dayHeadersHtml = '';
@@ -161,6 +173,7 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     const dStr = d.toISOString().split('T')[0];
     const weekNum = Math.floor(i / 7);
     const dayOfWeek = d.getDay();
+    const isCurrentWeek = weekNum === currentWeekNum;
 
     if (weekNum !== prevWeekNum) {
       // New week: calculate week end
@@ -168,7 +181,7 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
       weekEnd.setDate(startDate.getDate() + (weekNum + 1) * 7 - 1);
       const daysInWeek = Math.min(7, dayDiff - weekNum * 7);
 
-      weekHeadersHtml += `<div class="gantt-week-header" style="grid-column: span ${daysInWeek};">
+      weekHeadersHtml += `<div class="gantt-week-header ${isCurrentWeek ? 'current-week' : ''}" style="grid-column: span ${daysInWeek};">
         <div class="gantt-week-label">Week ${weekNum + 1}</div>
         <div class="gantt-week-dates">${formatDateShort(d)} – ${formatDateShort(weekEnd)}</div>
       </div>`;
@@ -176,7 +189,8 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     }
 
     // Day headers - show all dates
-    dayHeadersHtml += `<div class="gantt-week-col" data-date="${dStr}" data-week="${weekNum}">
+    const isToday = i === todayDayIndex;
+    dayHeadersHtml += `<div class="gantt-week-col ${isCurrentWeek ? 'current-week-col' : ''} ${isToday ? 'today-col' : ''}" data-date="${dStr}" data-week="${weekNum}">
       <div class="gantt-date">${formatDateShort(d)}</div>
     </div>`;
   }
@@ -210,13 +224,22 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     const isOverdue = endD && endD < new Date(todayStr) && batch.status !== 'Complete';
     const displayLabel = product ? esc(product.code) : `${batch.quantity || 0}u`;
 
+    // Add today indicator line if today is in range
+    let todayLineHtml = '';
+    if (todayDayIndex >= 0) {
+      const todayCol = todayDayIndex + 1;
+      todayLineHtml = `<div class="gantt-today-line" style="grid-column: ${todayCol} / span 1; position: relative;">
+        <div style="position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--red); opacity: 0.6; transform: translateX(-50%);"></div>
+      </div>`;
+    }
+
     batchRowsHtml += `
       <div class="gantt-batch-row" data-batch-id="${batch.id}">
         <div class="gantt-batch-label">
           <div class="gantt-product-code">${esc(productName)}</div>
           <div class="gantt-batch-meta">${batch.quantity || 0} units • ${batch.start_date || '—'} to ${batch.due_date || '—'}</div>
         </div>
-        <div class="gantt-batch-chart">
+        <div class="gantt-batch-chart" style="position: relative;">
           <div class="gantt-bar-container">
             <div class="gantt-spacer" style="grid-column: ${startOffset + 1} / span 1;"></div>
             <div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
@@ -225,6 +248,7 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
               <div class="gantt-bar-label">${displayLabel}</div>
             </div>
           </div>
+          ${todayLineHtml}
         </div>
         <div class="gantt-batch-status">
           ${statusBadge}

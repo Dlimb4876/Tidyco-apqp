@@ -86,7 +86,7 @@
 }
 
 .filter-group input[type="date"] {
-  width: 140px;
+  width: 180px;
 }
 
 .filter-group select:focus,
@@ -164,7 +164,7 @@
   font-size: 13px;
   background: transparent;
   transition: all 0.15s;
-  height: 20px;
+  min-height: 32px;
 }
 
 .prod-tbl .cell-edit:focus {
@@ -178,10 +178,12 @@
 }
 
 .prod-tbl textarea.cell-edit {
-  resize: none;
-  height: 20px;
+  resize: vertical;
+  min-height: 80px;
+  max-height: 200px;
   font-family: inherit;
-  line-height: 1.2;
+  line-height: 1.4;
+  overflow-y: auto;
 }
 
 .prod-tbl .w28 {
@@ -541,6 +543,25 @@
 
 .gantt-week-col[data-week="3"] {
   background: rgba(255, 255, 255, 0.5);
+}
+
+/* Current week highlighting */
+.current-week-col {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.current-week-col.today-col {
+  background: rgba(239, 68, 68, 0.15) !important;
+}
+
+.gantt-week-header.current-week {
+  background: rgba(239, 68, 68, 0.1);
+  font-weight: 700;
+  border-bottom: 2px solid var(--red);
+}
+
+.gantt-today-line {
+  pointer-events: none;
 }
 
 .gantt-date {

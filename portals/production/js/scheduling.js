@@ -39,7 +39,7 @@ function renderScheduling() {
           <option value="Complete">Complete</option>
         </select>
       </td>
-      <td><textarea class="cell-edit" id="batch-new-notes" placeholder="Notes" onkeydown="handleBatchRowKey(event, 'notes')" style="resize:none;height:28px"></textarea></td>
+      <td><textarea class="cell-edit" id="batch-new-notes" placeholder="Notes" onkeydown="handleBatchRowKey(event, 'notes')"></textarea></td>
       <td class="w28 ctr"><button class="btn-del" onclick="addNewBatchRow()" title="Save (Ctrl+Enter)">✓</button></td>
     </tr>
   `;
@@ -74,7 +74,7 @@ function renderScheduling() {
             <option value="Complete" ${batch.status === 'Complete' ? 'selected' : ''}>Complete</option>
           </select>
         </td>
-        <td><textarea class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'notes', this.value)" onkeydown="handleCellKey(event)" style="resize:none;height:28px">${esc(batch.notes || '')}</textarea></td>
+        <td><textarea class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'notes', this.value)" onkeydown="handleCellKey(event)">${esc(batch.notes || '')}</textarea></td>
         <td class="w28 ctr"><button class="btn-del" onclick="if(confirm('Delete batch?')) prodDataDeleteBatch(${batchIdx})">✕</button></td>
       </tr>
     `;
@@ -131,16 +131,16 @@ function renderScheduling() {
       </div>
 
       <!-- Batch Table -->
-      <table class="tbl prod-tbl" style="table-layout:fixed;width:100%">
+      <table class="tbl prod-tbl" style="table-layout:auto;width:100%">
         <colgroup>
           <col style="width:36px">
-          <col style="width:200px">
-          <col style="width:80px">
-          <col style="width:70px">
-          <col style="width:110px">
-          <col style="width:110px">
-          <col style="width:100px">
-          <col style="width:140px">
+          <col style="min-width:220px">
+          <col style="min-width:100px">
+          <col style="min-width:80px">
+          <col style="min-width:130px">
+          <col style="min-width:130px">
+          <col style="min-width:120px">
+          <col style="min-width:220px">
           <col style="width:36px">
         </colgroup>
         <thead>

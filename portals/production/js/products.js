@@ -33,7 +33,7 @@ function renderProductMaster() {
           <option value="Unit 6">Unit 6</option>
         </select>
       </td>
-      <td><textarea class="cell-edit" id="prod-new-notes" placeholder="Notes" onkeydown="handleProdRowKey(event, 'notes')" style="resize:none;height:28px"></textarea></td>
+      <td><textarea class="cell-edit" id="prod-new-notes" placeholder="Notes" onkeydown="handleProdRowKey(event, 'notes')"></textarea></td>
       <td class="w28 ctr"><button class="btn-del" onclick="addNewProductRow()" title="Save (Ctrl+Enter)">✓</button></td>
     </tr>
   `;
@@ -66,7 +66,7 @@ function renderProductMaster() {
             <option value="Unit 6" ${prod.assigned_unit === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
           </select>
         </td>
-        <td><textarea class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'notes', this.value)" onkeydown="handleCellKey(event)" style="resize:none;height:28px">${esc(prod.notes || '')}</textarea></td>
+        <td><textarea class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'notes', this.value)" onkeydown="handleCellKey(event)">${esc(prod.notes || '')}</textarea></td>
         <td class="w28 ctr"><button class="btn-del" onclick="if(confirm('Delete product?')) prodDataDeleteProduct(${idx})">✕</button></td>
       </tr>
     `;
@@ -86,16 +86,16 @@ function renderProductMaster() {
         </div>
       </div>
 
-      <table class="tbl prod-tbl" style="table-layout:fixed;width:100%">
+      <table class="tbl prod-tbl" style="table-layout:auto;width:100%">
         <colgroup>
           <col style="width:36px">
-          <col style="width:150px">
-          <col style="width:100px">
-          <col style="width:100px">
-          <col style="width:90px">
-          <col style="width:80px">
-          <col style="width:100px">
-          <col style="width:150px">
+          <col style="min-width:200px">
+          <col style="min-width:120px">
+          <col style="min-width:120px">
+          <col style="min-width:120px">
+          <col style="min-width:90px">
+          <col style="min-width:120px">
+          <col style="min-width:220px">
           <col style="width:36px">
         </colgroup>
         <thead>
