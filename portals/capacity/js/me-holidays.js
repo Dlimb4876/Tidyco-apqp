@@ -116,6 +116,18 @@ window.meToggleHoliday = function(personId, date) {
     meDataDeleteHoliday(personId, date);
   }
 
+  // Save scroll position before re-render
+  const scrollContainer = document.querySelector('.me-card[style*="overflow"]');
+  const scrollPos = scrollContainer ? scrollContainer.scrollLeft : 0;
+
   meDebouncedSave();
   meSetTab('holidays');
+
+  // Restore scroll position after re-render
+  setTimeout(() => {
+    const container = document.querySelector('.me-card[style*="overflow"]');
+    if (container) {
+      container.scrollLeft = scrollPos;
+    }
+  }, 0);
 };

@@ -213,11 +213,33 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
   teamArray.forEach(member => {
     const hoursAdjusted = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100);
     const hoursMax = (member.hoursPerWeek || 37.5);  // 100% without utilization
-    const workDays = meCountWorkDaysInMonth(year, month);
-    const monthCapacity = hoursAdjusted * (workDays / 5);
-    const monthCapacityMax = hoursMax * (workDays / 5);
-    capacity += monthCapacity;
-    capacityMax += monthCapacityMax;
+
+    // Check if member is active during this month
+    let activeStart = monthStart;
+    let activeEnd = monthEnd;
+
+    if (member.startDate) {
+      const startDate = new Date(member.startDate);
+      if (startDate > monthStart) {
+        activeStart = startDate;
+      }
+    }
+
+    if (member.endDate) {
+      const endDate = new Date(member.endDate);
+      if (endDate < monthEnd) {
+        activeEnd = endDate;
+      }
+    }
+
+    // Only count capacity if member is active during the month
+    if (activeStart <= activeEnd) {
+      const workDays = meCountWorkDaysBetween(activeStart, activeEnd);
+      const monthCapacity = hoursAdjusted * (workDays / 5);
+      const monthCapacityMax = hoursMax * (workDays / 5);
+      capacity += monthCapacity;
+      capacityMax += monthCapacityMax;
+    }
   });
 
   // Calculate and subtract holiday deductions
@@ -322,6 +344,21 @@ function meCountWorkDaysInMonth(year, month) {
     const day = date.getDay();
     if (day !== 0 && day !== 6) workDays++;
     date.setDate(date.getDate() + 1);
+  }
+  return workDays;
+}
+
+function meCountWorkDaysBetween(startDate, endDate) {
+  let workDays = 0;
+  const current = new Date(startDate);
+  current.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  while (current <= end) {
+    const day = current.getDay();
+    if (day !== 0 && day !== 6) workDays++;
+    current.setDate(current.getDate() + 1);
   }
   return workDays;
 }

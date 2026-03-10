@@ -130,6 +130,7 @@ function renderDashboard() {
     { id: 'timing',  icon: '📅', title: 'NPI Timing Plan',    desc: `${timingTotal} rows · ${timingFilled} with activity`, color: 'var(--teal)'   },
     { id: 'apqp',    icon: '📐', title: 'APQP',               desc: 'CTQ · PFD · PFMEA · Control Plan',                   color: 'var(--purple)' },
     { id: 'bom',     icon: '📦', title: 'Bill of Materials',   desc: `${totalBomItems} items · ${p.bom.kits.length} kits · ${aaw} AAW`, color: 'var(--navy)' },
+    { id: 'products', icon: '📦', title: 'Products',           desc: 'Product Master & Production', color: 'var(--teal)', isExternal: true },
     { id: 'actions', icon: '✅', title: 'Actions',             desc: `${openAct} open${overdueAct > 0 ? ' · ' + overdueAct + ' overdue' : ''}`, color: overdueAct > 0 ? 'var(--red)' : openAct > 0 ? 'var(--amber)' : 'var(--green)' },
     { id: 'risks',   icon: '🛡', title: 'Risk Register',       desc: `${p.risks.filter(r => r.status !== 'Closed').length} open · ${highRisks} high`, color: highRisks > 0 ? 'var(--red)' : 'var(--blue)' },
   ];
@@ -184,9 +185,13 @@ function renderDashboard() {
       <span style="font-size:12px;color:var(--muted)">No PFMEA data yet</span>
     </div>`;
 
-  const launcherHTML = sections.map(s =>
-    `<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${s.color};margin-bottom:1px">${s.icon} ${s.title}</div><div class="section-card-desc">${s.desc}</div></div>`
-  ).join('');
+  const launcherHTML = sections.map(s => {
+    let onclick = `navigate('${s.id}')`;
+    if (s.isExternal && s.id === 'products') {
+      onclick = `navigate('production', { pushHash: true }); productionTab = 'products'; render()`;
+    }
+    return `<div class="section-card" onclick="${onclick}" style="--sc-color:${s.color}"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${s.color};margin-bottom:1px">${s.icon} ${s.title}</div><div class="section-card-desc">${s.desc}</div></div>`;
+  }).join('');
 
   const actHTML = p.actions.filter(a => a.status !== 'Closed').slice(0, 5).map(a => {
     const od = a.due && new Date(a.due) < new Date();

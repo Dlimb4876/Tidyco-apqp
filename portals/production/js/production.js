@@ -30,7 +30,7 @@ function renderProduction() {
         <div class="proj-card hub-card" onclick="setProductionTab('products')">
           <div class="hub-card-content">
             <div class="hub-icon">🎯</div>
-            <div class="proj-card-name">Product Management</div>
+            <div class="proj-card-name">Products</div>
             <div class="proj-card-meta">Master List & Details</div>
           </div>
         </div>
