@@ -34,7 +34,10 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
         <td><input type="date" value="${task.startDate}" onchange="meDataUpdateTask(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
         <td><input type="date" value="${task.endDate}" onchange="meDataUpdateTask(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${task.totalHours || 0}" step="0.1" onchange="meDataUpdateTask(${idx}, 'totalHours', this.value); meDebouncedSave();"></td>
-        <td style="text-align: center;"><button class="me-del-btn" onclick="if(confirm('Delete task?')) { meDataDeleteTask(${idx}); meOnSave(); meSetTab('tasks'); }">✕</button></td>
+        <td style="text-align: center; white-space: nowrap;">
+          ${task.category === 'NPI' ? `<button class="me-adv-btn" title="Advanced Estimation" onclick="meOpenAdvancedEstimationModal(${idx})">⚙️</button>` : ''}
+          <button class="me-del-btn" onclick="if(confirm('Delete task?')) { meDataDeleteTask(${idx}); meOnSave(); meSetTab('tasks'); }">✕</button>
+        </td>
       </tr>`;
   });
 
@@ -84,7 +87,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
               <th style="width:110px">Start Date</th>
               <th style="width:110px">End Date</th>
               <th style="width:80px">Hours</th>
-              <th style="width:36px"></th>
+              <th style="width:60px"></th>
             </tr></thead>
             <tbody>
               ${rows || '<tr><td colspan="8"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks added</div></td></tr>'}

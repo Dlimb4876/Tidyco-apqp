@@ -8,7 +8,7 @@
      user_id: string,
      data: {
        team: [{id, name, hoursPerWeek, utilisation, jobTitle, group}],
-       tasks: [{id, name, category, assigneeId, startDate, endDate, totalHours}],
+       tasks: [{id, name, category, assigneeId, startDate, endDate, totalHours, advancedEstimation}],
        products: [{id, name, supportFrom, supportUntil, hoursPerWeek, notes}],
        holidays: [{id, personId, date, type ('full'|'half')}]
      },
@@ -110,7 +110,8 @@ window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, 
     startDate: startDate,
     endDate: endDate,
     totalHours: parseFloat(totalHours) || 0,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    advancedEstimation: null
   };
   meDataState.tasks.push(task);
   return true;
@@ -140,6 +141,9 @@ window.meDataUpdateTask = function(idx, field, value) {
       break;
     case 'totalHours':
       task.totalHours = parseFloat(value) || 0;
+      break;
+    case 'advancedEstimation':
+      task.advancedEstimation = value || null;
       break;
     default:
       return false;
@@ -341,6 +345,12 @@ window.meDataInit = async function() {
           }
           if (!('endDate' in member)) {
             member.endDate = '';
+          }
+        });
+        // Ensure all tasks have advancedEstimation field (migration for old records)
+        meDataState.tasks.forEach(task => {
+          if (!('advancedEstimation' in task)) {
+            task.advancedEstimation = null;
           }
         });
         window.meDataState = meDataState;
