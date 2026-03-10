@@ -23,6 +23,12 @@ function parseHash() {
 
 function navigate(sec, { pushHash = true } = {}) {
   if (sec === 'home') sec = 'project';
+
+  // Reset capacityTab to 'root' when navigating TO capacity from outside (e.g., from hub)
+  if (sec === 'capacity' && currentSection !== 'capacity') {
+    capacityTab = 'root';
+  }
+
   currentSection = sec;
 
   if (pushHash) {
