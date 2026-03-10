@@ -216,6 +216,9 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
   let capacity = 0;
   let capacityMax = 0;  // 100% theoretical max
   teamArray.forEach(member => {
+    // Skip team members without a start date
+    if (!member.startDate) return;
+
     const hoursAdjusted = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100);
     const hoursMax = (member.hoursPerWeek || 37.5);  // 100% without utilization
 
@@ -223,11 +226,9 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
     let activeStart = monthStart;
     let activeEnd = monthEnd;
 
-    if (member.startDate) {
-      const startDate = new Date(member.startDate);
-      if (startDate > monthStart) {
-        activeStart = startDate;
-      }
+    const startDate = new Date(member.startDate);
+    if (startDate > monthStart) {
+      activeStart = startDate;
     }
 
     if (member.endDate) {
@@ -288,6 +289,9 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
 
   tasksArray.forEach(task => {
+    // Skip tasks without dates
+    if (!task.startDate || !task.endDate) return;
+
     const taskStart = new Date(task.startDate);
     const taskEnd = new Date(task.endDate);
     const overlapStart = new Date(Math.max(taskStart.getTime(), monthStart.getTime()));
@@ -309,6 +313,9 @@ function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, ho
 
   // Calculate product support with proper date range overlap
   productsArray.forEach(product => {
+    // Skip products without dates
+    if (!product.supportFrom || !product.supportUntil) return;
+
     const prodStart = new Date(product.supportFrom);
     const prodEnd = new Date(product.supportUntil);
 

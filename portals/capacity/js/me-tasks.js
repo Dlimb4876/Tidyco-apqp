@@ -96,11 +96,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray) {
 };
 
 window.meAddDefaultTask = function() {
-  const today = new Date();
-  const endDate = new Date(today);
-  endDate.setDate(endDate.getDate() + 30);
-  const formatDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  meDataAddTask('New Task', 'NPI', '', formatDate(today), formatDate(endDate), 40);
+  meDataAddTask('New Task', 'NPI', '', '', '', 0);
   meOnSave();
   meSetTab('tasks');
 };

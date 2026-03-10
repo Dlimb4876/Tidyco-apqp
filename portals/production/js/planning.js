@@ -200,8 +200,9 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
       const weekEnd = new Date(d);
       weekEnd.setDate(weekEnd.getDate() + (6 - dayOfWeek));
       const daysInWeek = Math.min(7, viewEndDay - i);
+      const weekOfYear = getWeekOfYear(d);
       weekHeadersHtml += `<div class="gantt-week-header" style="grid-column: span ${daysInWeek};">
-        <div class="gantt-week-label">Week ${weekNum + 1}</div>
+        <div class="gantt-week-label">Week ${weekOfYear}</div>
         <div class="gantt-week-dates">${formatDateShort(d)} – ${formatDateShort(weekEnd)}</div>
       </div>`;
     }
@@ -352,6 +353,14 @@ function formatDateShort(d) {
   const m = (d.getMonth() + 1).toString().padStart(2, '0');
   const day = d.getDate().toString().padStart(2, '0');
   return `${day}/${m}`;
+}
+
+function getWeekOfYear(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
 function getWeeksInRange(startStr, endStr) {

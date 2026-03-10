@@ -76,11 +76,7 @@ window.meRenderProductsTab = function(productsArray) {
 };
 
 window.meAddDefaultProduct = function() {
-  const today = new Date();
-  const nextYear = new Date(today);
-  nextYear.setFullYear(nextYear.getFullYear() + 1);
-  const formatDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  meDataAddProduct('New Product', formatDate(today), formatDate(nextYear), 5, '');
+  meDataAddProduct('New Product', '', '', 0, '');
   meOnSave();
   meSetTab('products');
 };

@@ -48,6 +48,17 @@ window.renderMeCapacity = function() {
 // ── Tab management ─────────────────────────────────────────
 window.meSetTab = function(tab) {
   meTab = tab;
+
+  // Update nav button active states
+  document.querySelectorAll('.me-nav-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  const activeBtn = document.querySelector(`.me-nav-btn:nth-child(${
+    tab === 'chart' ? 1 : tab === 'team' ? 2 : tab === 'tasks' ? 3 : tab === 'products' ? 4 : 5
+  })`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // Update body content
   const body = document.getElementById('meBody');
   if (body) {
     body.innerHTML = meGetTabContent();
