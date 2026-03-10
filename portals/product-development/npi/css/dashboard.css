@@ -246,3 +246,164 @@
   text-transform: uppercase; color: var(--muted);
   font-family: 'IBM Plex Mono', monospace; margin-bottom: 8px;
 }
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .dash-hero {
+    padding: 16px 16px 14px;
+  }
+
+  .dash-prog-name {
+    font-size: 20px;
+    margin-bottom: 3px;
+  }
+
+  .dash-prog-meta {
+    gap: 8px;
+    font-size: 10px;
+  }
+
+  .dash-body {
+    padding: 12px 12px 40px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .kpi-card {
+    padding: 10px 12px;
+  }
+
+  .kpi-num {
+    font-size: 18px;
+  }
+
+  .kpi-label {
+    font-size: 9px;
+  }
+
+  .kpi-sub {
+    font-size: 10px;
+  }
+
+  .gate-strip {
+    overflow-x: auto;
+    margin-bottom: 10px;
+  }
+
+  .gate-node {
+    min-width: 80px;
+    padding: 10px 8px;
+    min-height: 70px;
+  }
+
+  .gate-node-num {
+    font-size: 11px;
+  }
+
+  .gate-node-name {
+    font-size: 9px;
+  }
+
+  .section-launcher {
+    overflow-x: auto;
+    margin-bottom: 10px;
+  }
+
+  .section-card {
+    min-width: 80px;
+    padding: 10px 8px;
+    min-height: 70px;
+  }
+
+  .section-card-icon {
+    font-size: 14px;
+  }
+
+  .section-card-title {
+    font-size: 11px;
+  }
+
+  .section-card-desc {
+    font-size: 9px;
+  }
+
+  .dash-split-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .dash-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .sub-asm-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .sub-asm-card {
+    min-height: auto;
+    padding: 10px 12px;
+  }
+
+  .risk-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-item {
+    padding: 8px 10px;
+  }
+
+  .npi-tabs {
+    overflow-x: auto;
+    gap: 2px;
+  }
+
+  .npi-tab {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .npi-tab-badge {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 9px;
+  }
+
+  .dash-section-label {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .sub-asm-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-split-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .dash-split-row {
+    grid-template-columns: 1fr;
+  }
+}

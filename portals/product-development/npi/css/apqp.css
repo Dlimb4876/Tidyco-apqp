@@ -143,3 +143,127 @@
 .bom-pick-item.selected { background: var(--blue-pale); border-color: var(--blue-mid); }
 .bom-pick-name   { font-size: 13px; font-weight: 600; color: var(--ink); }
 .bom-pick-meta   { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Step field adjustments */
+  .step-num-cell {
+    width: 48px;
+    min-width: 48px;
+  }
+
+  .step-fields {
+    flex-wrap: wrap;
+  }
+
+  .step-field {
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .step-field.f-op {
+    width: auto;
+    min-width: 100px;
+  }
+
+  .step-field.f-ctq {
+    width: auto;
+    min-width: 80px;
+  }
+
+  .step-field.f-pfmea {
+    width: auto;
+    min-width: 60px;
+  }
+
+  .step-resources {
+    padding: 6px 8px 6px 50px;
+    gap: 3px;
+  }
+
+  /* Flow ribbon adjustments */
+  .flow-ribbon {
+    margin-bottom: 12px;
+    overflow-x: auto;
+  }
+
+  .flow-node {
+    min-width: 60px;
+    max-width: 100px;
+    padding: 6px 8px;
+  }
+
+  .flow-node-name {
+    font-size: 9px;
+  }
+
+  .flow-node-num {
+    font-size: 9px;
+  }
+
+  /* CTQ table column widths */
+  .ctq-tbl td:nth-child(2) { min-width: 30px; }
+  .ctq-tbl td:nth-child(3) { min-width: 120px; }
+  .ctq-tbl td:nth-child(4) { min-width: 70px; }
+  .ctq-tbl td:nth-child(5) { min-width: 80px; }
+  .ctq-tbl td:nth-child(6) { min-width: 70px; }
+  .ctq-tbl td:nth-child(7) { min-width: 80px; }
+  .ctq-tbl td:nth-child(8) { min-width: 50px; }
+
+  /* Action tracker table column widths */
+  .act-tbl td:nth-child(2) { min-width: 150px; }
+  .act-tbl td:nth-child(3) { min-width: 70px; }
+  .act-tbl td:nth-child(6) { min-width: 80px; }
+  .act-tbl td:nth-child(7) { min-width: 100px; }
+
+  /* BOM subnav */
+  .bom-subnav {
+    overflow-x: auto;
+  }
+
+  .bom-tab {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  /* BOM filter row */
+  .bom-filter-row {
+    gap: 4px;
+  }
+
+  .bom-filter-btn {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .bom-pick-list {
+    max-height: 280px;
+  }
+
+  .bom-pick-item {
+    gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .bom-pick-name {
+    font-size: 12px;
+  }
+
+  .bom-pick-meta {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .step-field.f-op {
+    width: 160px;
+  }
+
+  .step-field.f-ctq {
+    width: 130px;
+  }
+
+  .flow-node {
+    max-width: 100px;
+  }
+}

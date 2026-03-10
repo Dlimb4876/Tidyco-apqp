@@ -19,3 +19,14 @@
 .rpn-chart-svg text.mono {
     font-family: 'IBM Plex Mono', monospace;
 }
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .rpn-chart-container {
+    padding: 10px 12px 12px;
+  }
+
+  .rpn-chart-svg {
+    height: auto;
+  }
+}

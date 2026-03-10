@@ -421,3 +421,107 @@
     gap: 10px;
   }
 }
+
+/* ── Additional Responsive Enhancements ──────────────────────── */
+@media (max-width: 767px) {
+  .products-portal {
+    padding: 12px;
+  }
+
+  .products-header {
+    margin-bottom: 20px;
+  }
+
+  .products-header h1 {
+    font-size: 1.5em;
+    margin-bottom: 14px;
+  }
+
+  .products-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-input {
+    min-width: 100%;
+    padding: 8px 12px;
+    font-size: 0.95em;
+  }
+
+  .products-tabs {
+    gap: 2px;
+    overflow-x: auto;
+    margin-bottom: 14px;
+  }
+
+  .products-tab-btn {
+    padding: 10px 12px;
+    font-size: 0.9em;
+    white-space: nowrap;
+  }
+
+  .data-table {
+    font-size: 0.85em;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 6px;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    margin: 20px auto;
+  }
+
+  .modal-large {
+    max-width: 95%;
+  }
+
+  .action-buttons {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 6px 10px;
+    font-size: 0.9em;
+  }
+
+  .form-field {
+    margin-bottom: 10px;
+  }
+
+  .form-field label {
+    font-size: 0.9em;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    font-size: 0.95em;
+    padding: 6px 8px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .products-portal {
+    padding: 16px;
+  }
+
+  .products-header h1 {
+    font-size: 1.7em;
+  }
+
+  .products-controls {
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    min-width: 200px;
+  }
+
+  .data-table {
+    font-size: 0.95em;
+  }
+}

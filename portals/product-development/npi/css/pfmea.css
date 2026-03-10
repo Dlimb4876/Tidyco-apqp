@@ -118,3 +118,50 @@ td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
   resize: none;
   min-height: 32px;
 }
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .rpn {
+    font-size: 11px;
+    min-width: 30px;
+    padding: 2px 4px;
+  }
+
+  .rpn-hist-btn {
+    padding: 1px 4px;
+    font-size: 8px;
+  }
+
+  .pfmea-step-header {
+    gap: 8px;
+    padding: 6px 10px;
+  }
+
+  .pfmea-step-label {
+    font-size: 10px;
+  }
+
+  .pfmea-step-ctqs {
+    gap: 3px;
+  }
+
+  .pfmea-add-row {
+    gap: 4px;
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .pfmea-wrap {
+    overflow-x: auto;
+  }
+
+  .hist-popup {
+    width: 280px;
+    padding: 8px 12px;
+    font-size: 9px;
+  }
+
+  .cell-edit[data-autoresize] {
+    min-height: 28px;
+  }
+}
