@@ -107,12 +107,96 @@ function renderProductMgmt() {
   `;
 }
 
+// ── Families tab content (used inside the Product Management portal) ──
+function renderFamiliesTabContent() {
+  const families = getFamilies();
+
+  const rows = families.map((f, i) => `
+    <div class="pm-family-row">
+      <span class="pm-family-icon">${esc(f.icon)}</span>
+      <span class="pm-family-name">${esc(f.label)}</span>
+      <div class="pm-family-actions">
+        <button class="btn btn-ghost btn-sm" onclick="pmEditFamily(${i})">Edit</button>
+        <button class="btn btn-ghost btn-sm pm-btn-danger" onclick="pmDeleteFamily(${i})">Delete</button>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div id="pmAddForm" class="pm-add-form" style="display:none">
+      <div class="pm-add-form-row">
+        <div class="field" style="flex:0 0 72px;margin:0">
+          <label>Icon</label>
+          <input id="pmNewIcon" type="text" placeholder="📋" maxlength="4" class="pm-icon-input">
+        </div>
+        <div class="field" style="flex:1;margin:0">
+          <label>Family Name</label>
+          <input id="pmNewLabel" type="text" placeholder="e.g. Rotating Machines"
+                 onkeydown="if(event.key==='Enter')pmSaveNew()">
+        </div>
+        <div class="pm-add-form-btns">
+          <button class="btn btn-primary" onclick="pmSaveNew()">Add</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('pmAddForm').style.display='none'">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pm-section-head" style="margin-bottom:12px">
+      <span style="font-size:13px;color:var(--muted)">${families.length} famil${families.length !== 1 ? 'ies' : 'y'} defined</span>
+      <button class="btn btn-primary btn-sm" onclick="pmShowAddForm()">＋ Add Family</button>
+    </div>
+
+    ${families.length === 0
+      ? `<p class="pm-empty">No families defined — add one above.</p>`
+      : `<div class="pm-family-list">${rows}</div>`
+    }
+
+    <!-- Edit Family Modal -->
+    <div class="modal-bg" id="pmEditModal" style="display:none" onclick="if(event.target===this)pmCloseEditModal()">
+      <div class="modal modal-sm">
+        <div class="modal-title">Edit Family</div>
+        <div class="field">
+          <label>Icon</label>
+          <input id="pmEditIcon" type="text" maxlength="4" class="pm-icon-input">
+        </div>
+        <div class="field">
+          <label>Family Name</label>
+          <input id="pmEditLabel" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
+        </div>
+        <input type="hidden" id="pmEditIdx">
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="pmCloseEditModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="pmSaveEdit()">Save</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // ── Helpers ────────────────────────────────────────────────────
 
 function pmEnsureCustomFamilies() {
   // Copy defaults into db.families so edits don't mutate the const
   if (!db.families || db.families.length === 0) {
     db.families = FAMILIES.map(f => ({ ...f }));
+  }
+}
+
+// Re-render whichever surface the families UI is displayed on
+function pmRefresh() {
+  if (currentSection === 'productmgmt') {
+    pmRefresh();
+  } else {
+    // Inside the Product Management portal families tab
+    const tab = document.getElementById('productsFamiliesTab');
+    if (tab) tab.innerHTML = renderFamiliesTabContent();
+    // Update the product family select if it exists
+    const sel = document.getElementById('productFamily');
+    if (sel) {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">Select a family...</option>' +
+        getFamilies().map(f => `<option value="${esc(f.id)}">${esc(f.icon)} ${esc(f.label)}</option>`).join('');
+      if (cur) sel.value = cur;
+    }
   }
 }
 
@@ -137,7 +221,7 @@ function pmSaveNew() {
   db.families.push({ id: label, label, icon });
   save();
   populateFamilySelects();
-  navigate('productmgmt');
+  pmRefresh();
 }
 
 function pmEditFamily(idx) {
@@ -179,7 +263,7 @@ function pmSaveEdit() {
   save();
   populateFamilySelects();
   pmCloseEditModal();
-  navigate('productmgmt');
+  pmRefresh();
 }
 
 function pmDeleteFamily(idx) {
@@ -203,5 +287,5 @@ function pmDeleteFamily(idx) {
   db.families.splice(idx, 1);
   save();
   populateFamilySelects();
-  navigate('productmgmt');
+  pmRefresh();
 }

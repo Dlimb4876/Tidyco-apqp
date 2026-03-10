@@ -33,13 +33,7 @@ function renderHub() {
           </div>
         </div>
 
-        <div class="proj-card hub-card" onclick="navigate('productmgmt')">
-          <div class="hub-card-content">
-            <div class="hub-icon">⚙️</div>
-            <div class="proj-card-name">PRODUCT SETUP</div>
-            <div class="proj-card-meta">Manage Product Families</div>
-          </div>
-        </div>
+
       </div>
     </div>`;
 }
