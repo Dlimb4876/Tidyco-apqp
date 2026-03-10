@@ -197,8 +197,6 @@ function renderDashboard() {
 
   const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋';
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null;
-  const totalBomItems = [p.bom.parts, p.bom.tools, p.bom.equip, p.bom.mat, p.bom.cons, p.bom.kits]
-    .reduce((sum, arr) => sum + (arr?.length || 0), 0);
 
   // ── Layout order: KPIs → Alerts → Gate Strip → Tools → Parent → Split(Sub-assemblies | RPN Burndown) → Actions/Risks
   return `<div class="dash-hero"><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME Lead: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 Project Manager: ${esc(p.pm)}</span>` : ''} ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''} ${totalBomItems > 0 ? `<span>📦 BOM: ${totalBomItems} items</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="showEditProject()">✎ Edit Project</button></div></div>

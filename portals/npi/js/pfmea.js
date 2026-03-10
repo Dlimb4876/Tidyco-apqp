@@ -269,6 +269,7 @@ return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div cl
 </div>
 <div class="card">${html}</div>
 ${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" onclick="setApqpTab('cp');return false" style="color:var(--blue)">Control Plan →</a></div>` : ''}`;
+}
 
 // ── History popup ─────────────────────────────────────────────
 function pfShowHist(evt, cid) {
