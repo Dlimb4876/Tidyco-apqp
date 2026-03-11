@@ -81,9 +81,15 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
         const assigneeName = st.assigneeId ? (assigneeNames[st.assigneeId] || 'Unassigned') : 'Unassigned';
         return `
           <div class="me-subtask-item">
-            <div class="me-subtask-name">${escapeHtml(st.name)}</div>
-            <div class="me-subtask-assignee">${escapeHtml(assigneeName)}</div>
-            <div class="me-subtask-hours">${(parseFloat(st.hours) || 0).toFixed(1)} h</div>
+            <div style="flex: 0 0 30px;"></div>
+            <div style="flex: 0 0 150px;" class="me-subtask-name">${esc(st.name)}</div>
+            <div style="flex: 0 0 110px;"></div>
+            <div style="flex: 0 0 130px;" class="me-subtask-assignee">${esc(assigneeName)}</div>
+            <div style="flex: 0 0 130px;"></div>
+            <div style="flex: 0 0 110px;"></div>
+            <div style="flex: 0 0 110px;"></div>
+            <div style="flex: 0 0 80px; text-align: right;" class="me-subtask-hours">${(parseFloat(st.hours) || 0).toFixed(1)} h</div>
+            <div style="flex: 0 0 60px;"></div>
           </div>
         `;
       }).join('');

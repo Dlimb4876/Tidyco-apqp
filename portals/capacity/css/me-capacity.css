@@ -1166,26 +1166,36 @@
 }
 
 .me-subtask-list {
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; flex-direction: column; gap: 0; padding: 8px 0;
 }
 
 .me-subtask-item {
-  display: grid; grid-template-columns: 2fr 1.5fr 1fr;
-  gap: 12px; padding: 10px 12px; background: #f9fafb;
-  border: 1px solid #e5e7eb; border-radius: 6px; align-items: center;
+  display: flex; align-items: center; gap: 0;
+  background: #f4f7fb; border: 1px solid #d1d5db;
+  margin: 0 0 8px 50px; height: 37px; border-radius: 4px;
+  overflow: hidden;
+}
+
+.me-subtask-item > div {
+  padding: 4px 6px; border-right: 1px solid #e5e7eb;
+  display: flex; align-items: center;
+}
+
+.me-subtask-item > div:last-child {
+  border-right: none;
 }
 
 .me-subtask-name {
   font-size: 12px; font-weight: 500; color: var(--ink);
-  word-break: break-word; overflow-wrap: break-word;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .me-subtask-assignee {
   font-size: 11px; color: var(--muted);
-  word-break: break-word; overflow-wrap: break-word;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .me-subtask-hours {
   font-size: 12px; font-weight: 600; color: var(--blue);
-  font-family: 'IBM Plex Mono', monospace; text-align: right;
+  font-family: 'IBM Plex Mono', monospace; justify-content: flex-end;
 }

@@ -126,8 +126,8 @@ function meGetTabContent() {
     meHolidayMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   }
 
-  // Get available products from product management database (non-closed only)
-  const availableProducts = productsState?.products?.filter(p => p.status !== 'closed') || [];
+  // Get available products from ME capacity database
+  const availableProducts = products || [];
 
   switch (meTab) {
     case 'dashboard':
