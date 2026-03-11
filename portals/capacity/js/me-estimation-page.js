@@ -48,7 +48,6 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
     tableRowsHtml += `
       <tr data-est-idx="${idx}">
         <td><input type="text" class="me-input-small me-est-name" placeholder="Task name" value="${escapeHtml(est.name)}" data-idx="${idx}"></td>
-        <td><input type="number" class="me-input-hours me-est-current" placeholder="0" value="${est.estimate || ''}" step="0.1" data-idx="${idx}"></td>
         <td>
           <select class="me-input-assign me-est-assign" data-idx="${idx}">
             ${assigneeOptions}
@@ -57,17 +56,16 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
         <td><input type="number" class="me-input-hours me-est-optimistic" placeholder="0" value="${est.optimistic || ''}" step="0.1" data-idx="${idx}" title="Best-case scenario"></td>
         <td><input type="number" class="me-input-hours me-est-mostlikely" placeholder="0" value="${est.mostLikely || ''}" step="0.1" data-idx="${idx}" title="Most probable outcome"></td>
         <td><input type="number" class="me-input-hours me-est-pessimistic" placeholder="0" value="${est.pessimistic || ''}" step="0.1" data-idx="${idx}" title="Worst-case scenario"></td>
-        <td class="me-est-result">${(O + 4*ML + P) / 6 > 0 ? ((O + 4*ML + P) / 6).toFixed(1) : '-'}</td>
-        <td class="me-est-final">${finalEst > 0 ? finalEst.toFixed(1) : '-'}</td>
-        <td><button class="me-btn-delete" onclick="meEstimationDeleteRow(${taskIdx}, ${idx})">🗑️</button></td>
+        <td class="me-est-result" style="text-align: center; padding: 8px 4px;">${(O + 4*ML + P) / 6 > 0 ? ((O + 4*ML + P) / 6).toFixed(1) : '-'}</td>
+        <td class="me-est-final" style="text-align: center; padding: 8px 4px; font-weight: bold;">${finalEst > 0 ? finalEst.toFixed(1) : '-'}</td>
+        <td style="text-align: center; padding: 4px;"><button class="me-btn-delete" onclick="meEstimationDeleteRow(${taskIdx}, ${idx})">🗑️</button></td>
       </tr>
     `;
   });
 
-  // Calculate totals
-  let totalCurrent = 0, totalFinal = 0;
+  // Calculate total final estimate
+  let totalFinal = 0;
   estimates.forEach(est => {
-    totalCurrent += parseFloat(est.estimate) || 0;
     const O = parseFloat(est.optimistic) || 0;
     const ML = parseFloat(est.mostLikely) || 0;
     const P = parseFloat(est.pessimistic) || 0;
@@ -104,19 +102,18 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
         <!-- PERT Table -->
         <div class="me-estimation-section">
           <h3>📊 Three-Point Estimation</h3>
-          <div class="me-tbl-wrap">
-            <table class="me-tbl me-pert-table">
+          <div class="me-tbl-wrap" style="max-width: 800px;">
+            <table class="me-tbl me-pert-table" style="width: 100%;">
               <thead>
                 <tr>
-                  <th>Task</th>
-                  <th>Current Est</th>
-                  <th>Assignee</th>
-                  <th title="Optimistic (best case)">Optimistic</th>
-                  <th title="Most Likely (probable)">Most Likely</th>
-                  <th title="Pessimistic (worst case)">Pessimistic</th>
-                  <th title="PERT Formula: (O + 4*ML + P) / 6">PERT Est</th>
-                  <th title="Confidence-adjusted final estimate">Final Est</th>
-                  <th>Del</th>
+                  <th style="width: 130px;">Task</th>
+                  <th style="width: 100px;">Assignee</th>
+                  <th style="width: 65px;" title="Optimistic (best case)">Optimistic</th>
+                  <th style="width: 65px;" title="Most Likely (probable)">Most Likely</th>
+                  <th style="width: 65px;" title="Pessimistic (worst case)">Pessimistic</th>
+                  <th style="width: 60px;" title="PERT Formula: (O + 4*ML + P) / 6">PERT Est</th>
+                  <th style="width: 60px;" title="Confidence-adjusted final estimate">Final Est</th>
+                  <th style="width: 40px;">Del</th>
                 </tr>
               </thead>
               <tbody id="me-pert-tbody">
@@ -130,10 +127,6 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
         <!-- Summary -->
         <div class="me-estimation-section">
           <h3>📈 Summary</h3>
-          <div class="me-summary-item">
-            <label>Total Current Estimate:</label>
-            <span class="me-summary-value">${totalCurrent.toFixed(1)} h</span>
-          </div>
           <div class="me-summary-highlight">
             <label>Total Final Estimate:</label>
             <span class="me-summary-total" id="me-total-final">${totalFinal.toFixed(1)} h</span>
