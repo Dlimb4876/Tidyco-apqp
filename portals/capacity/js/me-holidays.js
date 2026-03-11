@@ -2,6 +2,34 @@
    me-holidays.js — Holiday Planner Tab Rendering
    ============================================================ */
 
+// ── Utility Functions ───────────────────────────────────────
+window.meFormatDate = function(date) {
+  if (!date || !(date instanceof Date)) return '';
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+window.meGetBankHolidaysForYear = function(year) {
+  // Returns UK bank holidays as a map { dateStr: true }
+  const holidays = getBankHolidaysForYear(year);
+  const map = {};
+  holidays.forEach(h => {
+    map[h.date] = true;
+  });
+  return map;
+};
+
+window.meGetMonthLabel = function(monthKey) {
+  const label = getMonthLabel(monthKey);
+  if (Array.isArray(label)) {
+    return `${label[0]} ${label[1]}`;
+  }
+  return monthKey;
+};
+
+// ── Main Renderer ───────────────────────────────────────────
 window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
   // Use selected month or default to current month
   if (!selectedMonth) {
