@@ -75,6 +75,26 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
     totalFinal += finalEst;
   });
 
+  // Build summary breakdown (per-estimate details)
+  let summaryBreakdownHtml = '';
+  estimates.forEach((est, idx) => {
+    const O = parseFloat(est.optimistic) || 0;
+    const ML = parseFloat(est.mostLikely) || 0;
+    const P = parseFloat(est.pessimistic) || 0;
+    const pertEst = (O + 4*ML + P) / 6;
+    const stdDev = (P - O) / 6;
+    const finalEst = pertEst + (stdDev * (confidenceLevel - 1.0));
+    if (pertEst > 0) {
+      summaryBreakdownHtml += `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #e5e7eb; font-size: 12px;">
+          <span style="color: var(--ink); flex: 1;">${escapeHtml(est.name || 'Estimate')}</span>
+          <span style="color: var(--muted); width: 60px; text-align: right; font-family: 'IBM Plex Mono', monospace;">${pertEst.toFixed(1)}h</span>
+          <span style="color: var(--blue); width: 60px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 600;">${finalEst.toFixed(1)}h</span>
+        </div>
+      `;
+    }
+  });
+
   const html = `
     <style>
       .me-est-optimistic::-webkit-outer-spin-button,
@@ -104,20 +124,47 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
 
       <!-- Main Content -->
       <div class="me-estimation-body">
-        <!-- Confidence Level Slider -->
-        <div class="me-estimation-section" style="max-width: 810px;">
-          <h3>🎯 Confidence Level</h3>
-          <div class="me-factor-item">
-            <label>Adjustment (0.5 = Pessimistic, 1.0 = Most Likely, 2.0 = Optimistic)</label>
-            <input type="range" min="0.5" max="2.0" value="${confidenceLevel}" step="0.1" onchange="meEstimationUpdateConfidence(${taskIdx}, this.value)" class="me-slider" id="me-confidence-slider">
-            <span class="me-factor-value" id="me-confidence-display">${confidenceLevel.toFixed(1)}</span>
+        <!-- Summary & Confidence (50/50 Top Section) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+          <!-- Left: Estimate Summary -->
+          <div class="me-estimation-section">
+            <h3 style="margin-top: 0;">📊 Estimate Summary</h3>
+            <div class="me-summary-highlight">
+              <label>Total Final Estimate:</label>
+              <span class="me-summary-total" id="me-total-final">${totalFinal.toFixed(1)} h</span>
+            </div>
+            <div style="background: #fafbfd; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; font-size: 12px; max-height: 240px; overflow-y: auto;">
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; margin-bottom: 8px; font-weight: 600; color: var(--muted); border-bottom: 2px solid #d1d5db; font-family: 'IBM Plex Mono', monospace;">
+                <span>Task</span>
+                <span style="width: 60px; text-align: right;">PERT</span>
+                <span style="width: 60px; text-align: right;">Final</span>
+              </div>
+              ${summaryBreakdownHtml || '<div style="padding: 8px 0; color: var(--muted); text-align: center;">No estimates yet</div>'}
+            </div>
           </div>
-          <p class="me-complexity-note" style="margin-top: 8px;">Adjusts final estimate based on risk tolerance. Lower = conservative, higher = optimistic.</p>
+
+          <!-- Right: Confidence Level -->
+          <div class="me-estimation-section">
+            <h3 style="margin-top: 0;">🎯 Confidence Level</h3>
+            <div class="me-factor-item">
+              <label style="font-size: 12px; margin-bottom: 8px; display: block;">Risk Adjustment</label>
+              <input type="range" min="0.5" max="2.0" value="${confidenceLevel}" step="0.1" onchange="meEstimationUpdateConfidence(${taskIdx}, this.value)" class="me-slider" id="me-confidence-slider">
+              <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted);">
+                <span>Pessimistic (0.5)</span>
+                <span id="me-confidence-display" style="color: var(--ink); font-weight: 600; font-family: 'IBM Plex Mono', monospace;">${confidenceLevel.toFixed(1)}</span>
+                <span>Optimistic (2.0)</span>
+              </div>
+            </div>
+            <div style="background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px; margin-top: 12px; font-size: 11px; color: #1e40af; line-height: 1.4;">
+              <strong>Current:</strong> ${confidenceLevel < 1 ? 'Conservative (lower estimate)' : confidenceLevel > 1 ? 'Optimistic (higher estimate)' : 'Most Likely'}<br/>
+              Adjusts all final estimates based on risk tolerance.
+            </div>
+          </div>
         </div>
 
         <!-- PERT Table -->
         <div class="me-estimation-section">
-          <h3>📊 Three-Point Estimation</h3>
+          <h3>📋 Three-Point Estimation</h3>
           <div class="me-tbl-wrap">
             <table class="me-tbl me-pert-table" style="width: 100%;">
               <thead>
@@ -140,13 +187,9 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
           <button class="me-btn-primary" onclick="meEstimationAddRow(${taskIdx})" style="width: 100%; max-width: 810px;">＋ Add Task</button>
         </div>
 
-        <!-- Summary -->
+        <!-- Notes -->
         <div class="me-estimation-section">
-          <h3>📈 Summary</h3>
-          <div class="me-summary-highlight">
-            <label>Total Final Estimate:</label>
-            <span class="me-summary-total" id="me-total-final">${totalFinal.toFixed(1)} h</span>
-          </div>
+          <h3>📝 Notes</h3>
           <textarea id="me-notes" class="me-input-full" placeholder="Estimation notes...">${escapeHtml(notes)}</textarea>
         </div>
       </div>

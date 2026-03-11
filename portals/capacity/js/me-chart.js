@@ -16,6 +16,45 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
 
   const currentMonthLabel = meGetMonthLabel(currentMonthKey);
 
+  // Build breakdown table HTML
+  const percentOrZero = (value) => {
+    if (currentMonthData.totalDemand === 0) return '0%';
+    return ((value / currentMonthData.totalDemand) * 100).toFixed(0) + '%';
+  };
+
+  const breakdownRows = `
+    <tr>
+      <td style="width: 120px;">NPI</td>
+      <td style="text-align: right; width: 100px;">${currentMonthData.npi.toFixed(1)} h</td>
+      <td style="text-align: right; width: 60px;">${percentOrZero(currentMonthData.npi)}</td>
+    </tr>
+    <tr>
+      <td>Improvement</td>
+      <td style="text-align: right;">${currentMonthData.improvement.toFixed(1)} h</td>
+      <td style="text-align: right;">${percentOrZero(currentMonthData.improvement)}</td>
+    </tr>
+    <tr>
+      <td>Tendering</td>
+      <td style="text-align: right;">${currentMonthData.tendering.toFixed(1)} h</td>
+      <td style="text-align: right;">${percentOrZero(currentMonthData.tendering)}</td>
+    </tr>
+    <tr>
+      <td>Support</td>
+      <td style="text-align: right;">${currentMonthData.support.toFixed(1)} h</td>
+      <td style="text-align: right;">${percentOrZero(currentMonthData.support)}</td>
+    </tr>
+    <tr>
+      <td>Other</td>
+      <td style="text-align: right;">${currentMonthData.other.toFixed(1)} h</td>
+      <td style="text-align: right;">${percentOrZero(currentMonthData.other)}</td>
+    </tr>
+    <tr style="border-top: 2px solid var(--line); font-weight: 600;">
+      <td>Total Demand</td>
+      <td style="text-align: right;">${currentMonthData.totalDemand.toFixed(1)} h</td>
+      <td style="text-align: right;">100%</td>
+    </tr>
+  `;
+
   return `
     <div class="me-chart-container">
       <div class="me-kpi-strip">
@@ -60,6 +99,27 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
         <div class="legend-item" style="margin-left: 30px;"><div class="legend-line" style="background: #ef4444;"></div><span>Team Capacity</span></div>
         <div class="legend-item"><div class="legend-line" style="background: #9ca3af; border-top: 2px dashed #9ca3af;"></div><span>100% Max Capacity</span></div>
       </div>
+
+      <div class="me-card" style="margin-top: 24px;">
+        <div class="me-card-head">
+          <span class="me-card-title">DEMAND BREAKDOWN</span>
+          <span style="font-size:12px;color:var(--muted)">${currentMonthLabel}</span>
+        </div>
+        <div class="me-card-body">
+          <div class="me-tbl-wrap">
+            <table class="me-tbl">
+              <thead><tr>
+                <th style="width: 120px;">Category</th>
+                <th style="width: 100px; text-align: right;">Hours</th>
+                <th style="width: 60px; text-align: right;">Share</th>
+              </tr></thead>
+              <tbody>
+                ${breakdownRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 };
@@ -83,15 +143,23 @@ window.meDrawChartNow = function() {
   const monthKeys = meGetMonthRange(meChartStart, 18);
   const monthLabels = monthKeys.map(m => meGetMonthLabel(m));
 
+  const npiData = [];
+  const improvementData = [];
+  const tenderingData = [];
+  const supportData = [];
+  const otherData = [];
   const capacityData = [];
   const capacityMaxData = [];
-  const demandData = [];
 
   monthKeys.forEach(monthKey => {
     const data = meCalculateMonthData(monthKey, team, tasks, products, holidays);
+    npiData.push(data.npi);
+    improvementData.push(data.improvement);
+    tenderingData.push(data.tendering);
+    supportData.push(data.support);
+    otherData.push(data.other);
     capacityData.push(data.capacity);
     capacityMaxData.push(data.capacityMax);
-    demandData.push(data.totalDemand);
   });
 
   const ctx = canvas.getContext('2d');
@@ -100,7 +168,11 @@ window.meDrawChartNow = function() {
     data: {
       labels: monthLabels,
       datasets: [
-        { label: 'Total Demand', data: demandData, backgroundColor: '#3b82f6', type: 'bar', order: 2 },
+        { label: 'NPI', data: npiData, backgroundColor: '#1e40af', type: 'bar', order: 2, stack: 'demand' },
+        { label: 'Improvement', data: improvementData, backgroundColor: '#15803d', type: 'bar', order: 2, stack: 'demand' },
+        { label: 'Tendering', data: tenderingData, backgroundColor: '#ea580c', type: 'bar', order: 2, stack: 'demand' },
+        { label: 'Support', data: supportData, backgroundColor: '#be185d', type: 'bar', order: 2, stack: 'demand' },
+        { label: 'Other', data: otherData, backgroundColor: '#7c3aed', type: 'bar', order: 2, stack: 'demand' },
         { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 3, type: 'line', fill: false, pointRadius: 4, pointBackgroundColor: '#ef4444', tension: 0.3, order: 1 },
         { label: '100% Max Capacity', data: capacityMaxData, borderColor: '#9ca3af', borderWidth: 2, borderDash: [4, 4], type: 'line', fill: false, pointRadius: 3, pointBackgroundColor: '#9ca3af', tension: 0.3, order: 1 }
       ]
@@ -115,8 +187,8 @@ window.meDrawChartNow = function() {
       },
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 10 }, padding: 5, color: '#000000' } },
-        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#000000' } }
+        x: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 10 }, padding: 5, color: '#000000' } },
+        y: { stacked: false, beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#000000' } }
       }
     }
   });

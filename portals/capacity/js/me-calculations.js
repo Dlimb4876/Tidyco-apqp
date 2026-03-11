@@ -104,9 +104,16 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
 
       // Check if task has advanced estimation with activities
       if (task.advancedEstimation && task.advancedEstimation.activities && task.advancedEstimation.activities.length > 0) {
-        // For tasks with activities: only count activities that have assignedTo
-        // Activities without assignedTo are ignored
-        // (Per-assignee capacity mapping happens in heat map and other views)
+        // For tasks with activities: sum all activity hours (with or without assignedTo)
+        task.advancedEstimation.activities.forEach(activity => {
+          const activityHours = (parseFloat(activity.baseHours) || 0) * (overlapDays / totalDays);
+
+          if (category === 'npi') npi += activityHours;
+          else if (category === 'improvement') improvement += activityHours;
+          else if (category === 'tendering') tendering += activityHours;
+          else if (category === 'support') support += activityHours;
+          else other += activityHours;
+        });
       } else {
         // Simple task without activities: apply totalHours to team demand as before
         const hoursThisMonth = (task.totalHours || 0) * (overlapDays / totalDays);
@@ -192,10 +199,9 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
 
   const capacity = Math.max(0, capacityBefore - holidayDeduction);
 
-  // Calculate demand from assigned tasks
+  // Calculate demand from assigned tasks and activities
   let demand = 0;
   tasksArray.forEach(task => {
-    if (task.assigneeId !== personId) return;
     if (!task.startDate || !task.endDate) return;
 
     const taskStart = new Date(task.startDate);
@@ -208,9 +214,23 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
 
       const taskDays = (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1;
       const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
-      const proratedHours = (task.totalHours || 0) * (overlapDays / taskDays);
 
-      demand += proratedHours;
+      // Check if task has advanced estimation with activities
+      if (task.advancedEstimation && task.advancedEstimation.activities && task.advancedEstimation.activities.length > 0) {
+        // For tasks with activities: sum hours for activities assigned to this person
+        task.advancedEstimation.activities.forEach(activity => {
+          if (activity.assignedTo === personId) {
+            const activityHours = (parseFloat(activity.baseHours) || 0) * (overlapDays / taskDays);
+            demand += activityHours;
+          }
+        });
+      } else {
+        // Simple task: check if assigned to this person
+        if (task.assigneeId === personId) {
+          const proratedHours = (task.totalHours || 0) * (overlapDays / taskDays);
+          demand += proratedHours;
+        }
+      }
     }
   });
 

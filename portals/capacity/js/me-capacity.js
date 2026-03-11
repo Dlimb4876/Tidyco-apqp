@@ -38,7 +38,7 @@ window.renderMeCapacity = function() {
         <button class="me-nav-btn ${meTab === 'heatmap' ? 'active' : ''}" onclick="meSetTab('heatmap')">🔥 Heat Map</button>
         <button class="me-nav-btn ${meTab === 'team' ? 'active' : ''}" onclick="meSetTab('team')">👷 Team</button>
         <button class="me-nav-btn ${meTab === 'tasks' ? 'active' : ''}" onclick="meSetTab('tasks')">📋 Tasks</button>
-        <button class="me-nav-btn ${meTab === 'products' ? 'active' : ''}" onclick="meSetTab('products')">🚂 Products</button>
+        <button class="me-nav-btn ${meTab === 'products' ? 'active' : ''}" onclick="meSetTab('products')">🚂 Product Support</button>
         <button class="me-nav-btn ${meTab === 'product-taskload' ? 'active' : ''}" onclick="meSetTab('product-taskload')">📦 Product Load</button>
         <button class="me-nav-btn ${meTab === 'holidays' ? 'active' : ''}" onclick="meSetTab('holidays')">🏖️ Holiday Planner</button>
       </div>
