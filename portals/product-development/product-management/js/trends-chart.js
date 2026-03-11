@@ -139,11 +139,6 @@ function renderPortfolioKpiGridHtml(kpis, year) {
 
   return `
     <div class="kpi-card">
-      <div class="kpi-label">Total Estimations</div>
-      <div class="kpi-value">${kpis.totalEstimations}</div>
-      <div class="kpi-unit">${year === 'all' ? 'all time' : year}</div>
-    </div>
-    <div class="kpi-card">
       <div class="kpi-label">Products Updated</div>
       <div class="kpi-value">${kpis.productsUpdated}</div>
       <div class="kpi-unit">of ${kpis.productsWithHistory} with history</div>

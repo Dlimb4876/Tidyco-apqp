@@ -98,22 +98,18 @@ function renderProductFamilyDatabase() {
     `;
   }
 
-  const familyCards = families.map(fam => {
+  const familyRows = families.map(fam => {
     const stats = familyTemplatesGetStats(fam.id);
     return `
-      <div class="proj-card hub-card" style="position:relative">
-        <div class="hub-card-content">
-          <div class="hub-icon">${fam.icon || '📋'}</div>
-          <div class="proj-card-name">${esc(fam.label)}</div>
-          <div class="proj-card-meta">${fam.description ? esc(fam.description) : 'No description'}</div>
-          ${stats.templateCount > 0 ? `<div style="margin-top:8px;font-size:11px;color:var(--blue);font-weight:600">📋 ${stats.templateCount} PFMEA template(s)</div>` : ''}
-        </div>
-        <div style="position:absolute;top:12px;right:12px;display:flex;gap:4px">
-          <button class="btn-sm" onclick="showTemplateManager('${fam.id}')" title="Manage PFMEA Templates" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:4px;background:transparent;border:1px solid var(--line);cursor:pointer;color:var(--blue)">📋</button>
-          <button class="btn-sm" onclick="showFamilyModal('${fam.id}')" title="Edit" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:4px;background:transparent;border:1px solid var(--line);cursor:pointer;color:var(--mid)">✎</button>
-          <button class="btn-sm" onclick="if(confirm('Delete ${esc(fam.label)}?')) familiesDataDeleteFamily('${fam.id}')" title="Delete" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:4px;background:transparent;border:1px solid var(--line);cursor:pointer;color:var(--red)">✕</button>
-        </div>
-      </div>
+      <tr style="border-bottom:1px solid var(--line)">
+        <td style="padding:12px 16px;font-size:13px;font-weight:500;color:var(--ink);width:25%;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" id="fam-label-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'label')" title="Click to edit">${esc(fam.label)}</td>
+        <td style="padding:12px 16px;font-size:13px;color:var(--text);width:50%;max-width:400px;cursor:pointer" id="fam-desc-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'description')" title="Click to edit">${fam.description ? esc(fam.description) : '<span style="color:var(--muted)">No description</span>'}</td>
+        <td style="padding:12px 16px;font-size:24px;text-align:center;width:80px;cursor:pointer" id="fam-icon-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'icon')" title="Click to edit">${fam.icon || '📋'}</td>
+        <td style="padding:12px 16px;display:flex;gap:6px;justify-content:flex-end;width:150px">
+          <button class="btn btn-sm" onclick="showTemplateManager('${fam.id}')" title="Manage PFMEA Templates" style="font-size:11px;padding:4px 8px;flex:1">📋 Templates</button>
+          <button class="btn btn-sm" onclick="if(confirm('Delete ${esc(fam.label)}?')) familiesDataDeleteFamily('${fam.id}')" title="Delete" style="font-size:11px;padding:4px 8px;color:var(--red);border-color:var(--red);background:transparent;flex:0 0 auto;min-width:auto">Delete</button>
+        </td>
+      </tr>
     `;
   }).join('');
 
@@ -130,8 +126,24 @@ function renderProductFamilyDatabase() {
         </div>
       </div>
 
-      <div class="proj-cards hub-grid">
-        ${familyCards}
+      <div style="overflow-x:auto;margin:20px;border:1px solid var(--line);border-radius:6px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead style="background:var(--bg);border-bottom:2px solid var(--line)">
+            <tr>
+              <th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--mid);text-transform:uppercase;font-size:11px;letter-spacing:0.3px;width:25%">Family</th>
+              <th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--mid);text-transform:uppercase;font-size:11px;letter-spacing:0.3px;width:50%">Description</th>
+              <th style="padding:12px 16px;text-align:center;font-weight:600;color:var(--mid);text-transform:uppercase;font-size:11px;letter-spacing:0.3px;width:80px">Icon</th>
+              <th style="padding:12px 16px;text-align:right;font-weight:600;color:var(--mid);text-transform:uppercase;font-size:11px;letter-spacing:0.3px;width:150px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${familyRows}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="padding:0 20px 20px;color:var(--muted);font-size:12px">
+        💡 Click any cell to edit inline
       </div>
     </div>
   `;
@@ -321,8 +333,70 @@ function showCreateTemplateModal(familyId) {
   alert('Template creation for "' + templateName + '" - UI coming soon');
 }
 
-function deleteTemplate(familyId, templateName) {
-  familyTemplatesDeleteFamily(familyId, templateName).then(() => {
-    render();
-  });
+// ═══════════════════════════════════
+// INLINE FAMILY EDITING
+// ═══════════════════════════════════
+
+let familyInlineEdit = { familyId: null, field: null };
+
+function startFamilyEdit(familyId, field) {
+  const family = familiesState.families.find(f => f.id === familyId);
+  if (!family) return;
+
+  familyInlineEdit = { familyId, field };
+
+  let cellId = `fam-${field}-${familyId}`;
+  let currentValue = field === 'label' ? family.label : (field === 'description' ? family.description : family.icon);
+
+  let input;
+  if (field === 'description') {
+    input = `<textarea id="family-edit-input" style="width:100%;padding:6px 8px;border:1px solid var(--blue);border-radius:4px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px">${esc(currentValue || '')}</textarea>`;
+  } else {
+    input = `<input type="text" id="family-edit-input" value="${esc(currentValue || '')}" style="width:100%;padding:6px 8px;border:1px solid var(--blue);border-radius:4px;font-size:13px" autofocus>`;
+  }
+
+  const cell = document.getElementById(cellId);
+  if (!cell) return;
+
+  cell.innerHTML = input;
+  cell.style.padding = '8px';
+
+  const inputEl = cell.querySelector('#family-edit-input');
+  if (inputEl) {
+    inputEl.focus();
+    inputEl.select?.();
+
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && field !== 'description') {
+        saveFamilyInlineEdit(familyId, field);
+      } else if (e.key === 'Escape') {
+        cancelFamilyInlineEdit(familyId, field);
+      }
+    });
+
+    inputEl.addEventListener('blur', () => {
+      setTimeout(() => saveFamilyInlineEdit(familyId, field), 100);
+    });
+  }
+}
+
+function saveFamilyInlineEdit(familyId, field) {
+  const inputEl = document.getElementById('family-edit-input');
+  if (!inputEl) return;
+
+  const newValue = inputEl.value.trim();
+  const family = familiesState.families.find(f => f.id === familyId);
+  if (!family) return;
+
+  const updates = {};
+  if (field === 'label') updates.label = newValue || family.label;
+  else if (field === 'description') updates.description = newValue || null;
+  else if (field === 'icon') updates.icon = newValue || '📋';
+
+  familiesDataUpdateFamily(familyId, updates);
+}
+
+function cancelFamilyInlineEdit(familyId, field) {
+  familyInlineEdit = { familyId: null, field: null };
+  render();
 }

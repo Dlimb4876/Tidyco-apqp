@@ -1170,19 +1170,19 @@
 }
 
 .me-subtask-item {
-  display: grid; grid-template-columns: 1fr 140px 60px;
+  display: grid; grid-template-columns: 2fr 1.5fr 1fr;
   gap: 12px; padding: 10px 12px; background: #f9fafb;
   border: 1px solid #e5e7eb; border-radius: 6px; align-items: center;
 }
 
 .me-subtask-name {
   font-size: 12px; font-weight: 500; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  word-break: break-word; overflow-wrap: break-word;
 }
 
 .me-subtask-assignee {
   font-size: 11px; color: var(--muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  word-break: break-word; overflow-wrap: break-word;
 }
 
 .me-subtask-hours {

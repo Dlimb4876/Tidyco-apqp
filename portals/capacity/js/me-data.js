@@ -574,7 +574,18 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // 4. Save holidays
+        // 4. Save holidays (delete all first, then insert current ones to handle deletions)
+        try {
+          const { error: deleteErr } = await supa.from('me_holidays').delete().eq('user_id', currentUser.id);
+          if (deleteErr) {
+            console.warn('Failed to clear old holidays:', deleteErr.message);
+            relationalSuccess = false;
+          }
+        } catch (err) {
+          console.warn('Holiday clear error:', err.message);
+          relationalSuccess = false;
+        }
+
         for (let i = 0; i < meDataState.holidays.length; i++) {
           const success = await meSaveHolidayRelational(currentUser.id, meDataState.holidays[i]);
           if (!success) {
