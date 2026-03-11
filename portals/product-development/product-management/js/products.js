@@ -1,12 +1,3 @@
-import { getFamilies } from '../../../../core/js/state.js';
-import { esc } from '../../../../utils/js/helpers.js';
-import { 
-  productsDataGetAll, productsDataGetHistory, productsDataAddProduct, 
-  productsDataUpdateProduct, productsDataDeleteProduct, productsDataAddHistory, 
-  productsDataDeleteHistory 
-} from './products-data.js';
-import { renderFamiliesTabContent } from '../../../productmgmt/js/productmgmt.js';
-
 /**
  * Products Management Portal
  * Main orchestrator for product list, CRUD, and overhaul history tracking
@@ -15,7 +6,7 @@ import { renderFamiliesTabContent } from '../../../productmgmt/js/productmgmt.js
 /**
  * Get products portal HTML
  */
-export function renderProductsPortalHTML() {
+function renderProductsPortalHTML() {
   return `
     <div class="products-portal">
       <div class="products-header">
@@ -160,7 +151,7 @@ export function renderProductsPortalHTML() {
 /**
  * Setup products portal after rendering
  */
-export function renderProductsPortalSetup() {
+function renderProductsPortalSetup() {
   // Populate family select with dynamic families
   const famSel = document.getElementById('productFamily');
   if (famSel) {
@@ -174,7 +165,7 @@ export function renderProductsPortalSetup() {
 /**
  * Render products list table
  */
-export function renderProductsList() {
+function renderProductsList() {
   const container = document.getElementById('productsTable');
   const products = productsDataGetAll();
   const searchTerm = document.getElementById('productSearch')?.value?.toLowerCase() || '';
@@ -255,7 +246,7 @@ export function renderProductsList() {
 /**
  * Show product add/edit modal
  */
-export function showProductModal(productId = null, product = null) {
+function showProductModal(productId = null, product = null) {
   const modal = document.getElementById('productModal');
   const form = document.getElementById('productForm');
   const title = document.getElementById('modalTitle');
@@ -293,7 +284,7 @@ export function showProductModal(productId = null, product = null) {
 /**
  * Show overhaul history modal
  */
-export function showHistoryModal(productId, product) {
+function showHistoryModal(productId, product) {
   const modal = document.getElementById('historyModal');
   const title = document.getElementById('historyTitle');
   const content = document.getElementById('historyContent');
@@ -377,7 +368,7 @@ export function showHistoryModal(productId, product) {
 /**
  * Show add history modal
  */
-export function showAddHistoryModal(productId) {
+function showAddHistoryModal(productId) {
   const modal = document.getElementById('addHistoryModal');
   const form = document.getElementById('historyForm');
 
@@ -394,7 +385,7 @@ export function showAddHistoryModal(productId) {
 /**
  * Render overhaul trends visualization
  */
-export function renderProductsTrends() {
+function renderProductsTrends() {
   const container = document.getElementById('productsTrends');
   const products = productsDataGetAll();
 
@@ -430,7 +421,7 @@ export function renderProductsTrends() {
 /**
  * Render trend chart for a specific product
  */
-export function renderTrendChart(productId) {
+function renderTrendChart(productId) {
   const history = productsDataGetHistory(productId);
   const chartContainer = document.getElementById('trendChart');
 
@@ -489,7 +480,7 @@ export function renderTrendChart(productId) {
 /**
  * Setup event listeners
  */
-export function setupProductsEventListeners() {
+function setupProductsEventListeners() {
   // Search
   document.getElementById('productSearch')?.addEventListener('input', () => renderProductsList());
 

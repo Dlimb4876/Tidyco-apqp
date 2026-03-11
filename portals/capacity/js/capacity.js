@@ -1,15 +1,13 @@
-import { setCapacityTab as setCapTab } from '../../../core/js/state.js';
-import { navigate } from '../../../utils/js/helpers.js';
-
-export function setCapacityTab(tab) {
-  setCapTab(tab);
+// js/features/capacity.js
+function setCapacityTab(tab) {
+  capacityTab = tab;
   const parts = ['s=capacity'];
   if (tab !== 'root') parts.push('ct=' + encodeURIComponent(tab));
   history.replaceState(null, '', '#' + parts.join('&'));
   render();
 }
 
-export function renderCapacity() {
+function renderCapacity() {
   return `
     <div class="proj-home">
       <div class="proj-home-header">

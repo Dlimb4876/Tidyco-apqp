@@ -1,8 +1,15 @@
-import { meDataState, meDataUpdateTask, meUUID } from './me-data.js';
-import { meOnSave } from './me-capacity.js';
+/* ============================================================
+   me-advanced-estimation.js — Advanced Task Estimation Modal
 
-// ── Advanced Task Estimation Modal ─────────────────────────
-export let meAdvancedEstimationState = {
+   Provides detailed estimation interface for complex projects
+   with activity breakdowns and complexity factors
+   ============================================================ */
+
+// ─────────────────────────────────────────────────────────────
+// Global state for the modal
+// ─────────────────────────────────────────────────────────────
+
+window.meAdvancedEstimationState = {
   isOpen: false,
   taskIdx: null,
   activities: [],
@@ -18,7 +25,7 @@ export let meAdvancedEstimationState = {
 // Open/Close Modal
 // ─────────────────────────────────────────────────────────────
 
-export function meOpenAdvancedEstimationModal(taskIdx) {
+window.meOpenAdvancedEstimationModal = function(taskIdx) {
   if (taskIdx < 0 || taskIdx >= meDataState.tasks.length) {
     console.error('Invalid task index:', taskIdx);
     return;
@@ -50,7 +57,7 @@ export function meOpenAdvancedEstimationModal(taskIdx) {
   meRenderAdvancedEstimationModal();
 };
 
-export function meCloseAdvancedEstimationModal() {
+window.meCloseAdvancedEstimationModal = function() {
   meAdvancedEstimationState.isOpen = false;
   const modal = document.getElementById('me-advanced-estimation-modal');
   if (modal) {
@@ -62,7 +69,7 @@ export function meCloseAdvancedEstimationModal() {
 // Activity Management
 // ─────────────────────────────────────────────────────────────
 
-export function meAddActivity() {
+window.meAddActivity = function() {
   const activity = {
     id: meUUID(),
     name: 'New Activity',
@@ -75,7 +82,7 @@ export function meAddActivity() {
   meRenderAdvancedEstimationModal();
 };
 
-export function meUpdateActivity(activityId, field, value) {
+window.meUpdateActivity = function(activityId, field, value) {
   const activity = meAdvancedEstimationState.activities.find(a => a.id === activityId);
   if (!activity) return;
 
@@ -99,7 +106,7 @@ export function meUpdateActivity(activityId, field, value) {
   meRenderAdvancedEstimationModal();
 };
 
-export function meDeleteActivity(activityId) {
+window.meDeleteActivity = function(activityId) {
   const idx = meAdvancedEstimationState.activities.findIndex(a => a.id === activityId);
   if (idx !== -1) {
     meAdvancedEstimationState.activities.splice(idx, 1);
@@ -111,13 +118,13 @@ export function meDeleteActivity(activityId) {
 // Complexity Factor Management
 // ─────────────────────────────────────────────────────────────
 
-export function meUpdateComplexityFactor(factor, value) {
+window.meUpdateComplexityFactor = function(factor, value) {
   const numValue = parseInt(value) || 3;
   meAdvancedEstimationState.globalComplexityFactors[factor] = Math.max(1, Math.min(5, numValue));
   meRenderAdvancedEstimationModal();
 };
 
-export function meUpdateEstimationNotes(value) {
+window.meUpdateEstimationNotes = function(value) {
   meAdvancedEstimationState.notes = value.trim();
 };
 
@@ -125,7 +132,7 @@ export function meUpdateEstimationNotes(value) {
 // Calculation Functions
 // ─────────────────────────────────────────────────────────────
 
-export function meCalculateComplexityMultiplier(factors) {
+window.meCalculateComplexityMultiplier = function(factors) {
   // Average the three factors (each 1-5)
   const avgFactor = (factors.riskLevel + factors.teamExperience + factors.technologyNovelty) / 3;
 
@@ -136,13 +143,13 @@ export function meCalculateComplexityMultiplier(factors) {
   return Math.round(multiplier * 100) / 100;
 };
 
-export function meCalculateActivitySum() {
+window.meCalculateActivitySum = function() {
   return meAdvancedEstimationState.activities.reduce((sum, activity) => {
     return sum + (parseFloat(activity.baseHours) || 0);
   }, 0);
 };
 
-export function meCalculateTotalHours() {
+window.meCalculateTotalHours = function() {
   const activitySum = meCalculateActivitySum();
   const multiplier = meCalculateComplexityMultiplier(meAdvancedEstimationState.globalComplexityFactors);
   return Math.round((activitySum * multiplier) * 10) / 10; // Round to 1 decimal
@@ -152,7 +159,7 @@ export function meCalculateTotalHours() {
 // Save & Submit
 // ─────────────────────────────────────────────────────────────
 
-export function meSaveAdvancedEstimation() {
+window.meSaveAdvancedEstimation = function() {
   // Validation
   if (meAdvancedEstimationState.activities.length === 0) {
     alert('Please add at least one activity before saving');
@@ -188,7 +195,7 @@ export function meSaveAdvancedEstimation() {
   meCloseAdvancedEstimationModal();
 };
 
-export function meClearAdvancedEstimation() {
+window.meClearAdvancedEstimation = function() {
   if (confirm('Are you sure you want to clear all advanced estimation data? The task will revert to simple mode.')) {
     const taskIdx = meAdvancedEstimationState.taskIdx;
     meDataUpdateTask(taskIdx, 'advancedEstimation', null);
@@ -201,7 +208,7 @@ export function meClearAdvancedEstimation() {
 // Modal Rendering
 // ─────────────────────────────────────────────────────────────
 
-export function meRenderAdvancedEstimationModal() {
+window.meRenderAdvancedEstimationModal = function() {
   if (!meAdvancedEstimationState.isOpen) return;
 
   const taskIdx = meAdvancedEstimationState.taskIdx;
@@ -225,14 +232,14 @@ export function meRenderAdvancedEstimationModal() {
         </div>
 
         <div class="me-modal-body">
-          <!-- Section 1: Task Breakdown -->
+          <!-- Section 1: Activity Breakdown -->
           <div class="me-estimation-section">
-            <h3>📋 Task Breakdown</h3>
+            <h3>📋 Activity Breakdown</h3>
             <div id="me-activities-list" class="me-activities-list">
               ${meAdvancedEstimationState.activities.map((activity, idx) => `
                 <div class="me-activity-item" data-activity-id="${activity.id}">
                   <div class="me-activity-row">
-                    <input type="text" class="me-input-small" placeholder="task description" value="${escapeHtml(activity.name)}" onchange="meUpdateActivity('${activity.id}', 'name', this.value)">
+                    <input type="text" class="me-input-small" placeholder="Task" value="${escapeHtml(activity.name)}" onchange="meUpdateActivity('${activity.id}', 'name', this.value)">
                     <input type="number" class="me-input-hours" placeholder="Est. hours" value="${activity.baseHours}" step="0.1" onchange="meUpdateActivity('${activity.id}', 'baseHours', this.value)">
                     <select class="me-input-assign" onchange="meUpdateActivity('${activity.id}', 'assignedTo', this.value)">
                       <option value="">Assign to...</option>

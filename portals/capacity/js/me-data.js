@@ -1,10 +1,25 @@
-import { supa, currentUser } from '../../../core/js/auth.js';
-import { setSyncBadge } from '../../../core/js/state.js';
+/* ============================================================
+   me-data.js — ME Capacity Data Layer (Global Namespace)
+   Combines all data/me-data/*.js modules into one file
+
+   Supabase Table: me_capacity
+   Data Structure:
+   {
+     user_id: string,
+     data: {
+       team: [{id, name, hoursPerWeek, utilisation, jobTitle, group}],
+       tasks: [{id, name, category, assigneeId, startDate, endDate, totalHours, advancedEstimation}],
+       products: [{id, name, supportFrom, supportUntil, hoursPerWeek, notes}],
+       holidays: [{id, personId, date, type ('full'|'half')}]
+     },
+     updated_at: ISO string
+   }
+   ============================================================ */
 
 // ─────────────────────────────────────────────────────────────
 // Global data object
 // ─────────────────────────────────────────────────────────────
-export let meDataState = {
+window.meDataState = {
   team: [],
   tasks: [],
   products: [],
@@ -23,7 +38,7 @@ function meInitTeamDates() {
 // TEAM CRUD
 // ─────────────────────────────────────────────────────────────
 
-export function meDataAddTeam(name, hoursPerWeek, utilisation, startDate, endDate) {
+window.meDataAddTeam = function(name, hoursPerWeek, utilisation, startDate, endDate) {
   if (!name || name.trim().length === 0) return false;
   const member = {
     id: meUUID(),
@@ -39,7 +54,7 @@ export function meDataAddTeam(name, hoursPerWeek, utilisation, startDate, endDat
   return true;
 };
 
-export function meDataUpdateTeam(idx, field, value) {
+window.meDataUpdateTeam = function(idx, field, value) {
   if (idx < 0 || idx >= meDataState.team.length) return false;
   const member = meDataState.team[idx];
   switch (field) {
@@ -70,13 +85,13 @@ export function meDataUpdateTeam(idx, field, value) {
   return true;
 };
 
-export function meDataDeleteTeam(idx) {
+window.meDataDeleteTeam = function(idx) {
   if (idx < 0 || idx >= meDataState.team.length) return false;
   meDataState.team.splice(idx, 1);
   return true;
 };
 
-export function meDataGetTeam() {
+window.meDataGetTeam = function() {
   return meDataState.team;
 };
 
@@ -84,7 +99,7 @@ export function meDataGetTeam() {
 // TASK CRUD
 // ─────────────────────────────────────────────────────────────
 
-export function meDataAddTask(name, category, assigneeId, startDate, endDate, totalHours, productId) {
+window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours, productId) {
   if (!name || name.trim().length === 0) return false;
   const task = {
     id: meUUID(),
@@ -102,7 +117,7 @@ export function meDataAddTask(name, category, assigneeId, startDate, endDate, to
   return true;
 };
 
-export function meDataUpdateTask(idx, field, value) {
+window.meDataUpdateTask = function(idx, field, value) {
   if (idx < 0 || idx >= meDataState.tasks.length) return false;
   const task = meDataState.tasks[idx];
   switch (field) {
@@ -136,13 +151,13 @@ export function meDataUpdateTask(idx, field, value) {
   return true;
 };
 
-export function meDataDeleteTask(idx) {
+window.meDataDeleteTask = function(idx) {
   if (idx < 0 || idx >= meDataState.tasks.length) return false;
   meDataState.tasks.splice(idx, 1);
   return true;
 };
 
-export function meDataGetTasks() {
+window.meDataGetTasks = function() {
   return meDataState.tasks;
 };
 
@@ -150,7 +165,7 @@ export function meDataGetTasks() {
 // PRODUCT CRUD
 // ─────────────────────────────────────────────────────────────
 
-export function meDataAddProduct(name, supportFrom, supportUntil, hoursPerWeek, notes) {
+window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek, notes) {
   if (!name || name.trim().length === 0) return false;
   const product = {
     id: meUUID(),
@@ -165,7 +180,7 @@ export function meDataAddProduct(name, supportFrom, supportUntil, hoursPerWeek, 
   return true;
 };
 
-export function meDataUpdateProduct(idx, field, value) {
+window.meDataUpdateProduct = function(idx, field, value) {
   if (idx < 0 || idx >= meDataState.products.length) return false;
   const product = meDataState.products[idx];
   switch (field) {
@@ -190,13 +205,13 @@ export function meDataUpdateProduct(idx, field, value) {
   return true;
 };
 
-export function meDataDeleteProduct(idx) {
+window.meDataDeleteProduct = function(idx) {
   if (idx < 0 || idx >= meDataState.products.length) return false;
   meDataState.products.splice(idx, 1);
   return true;
 };
 
-export function meDataGetProducts() {
+window.meDataGetProducts = function() {
   return meDataState.products;
 };
 
@@ -204,7 +219,7 @@ export function meDataGetProducts() {
  * Pre-populate products from product management database (non-closed products)
  * Call this to sync products from the product management database into ME capacity
  */
-export function meDataSyncFromProductManagement() {
+window.meDataSyncFromProductManagement = function() {
   if (!productsState || !productsState.products) {
     console.warn('Product management database not loaded');
     return false;
@@ -228,7 +243,7 @@ export function meDataSyncFromProductManagement() {
 // HOLIDAY CRUD
 // ─────────────────────────────────────────────────────────────
 
-export function meDataAddHoliday(personId, date, type) {
+window.meDataAddHoliday = function(personId, date, type) {
   if (!personId || !date || !['full', 'half'].includes(type)) return false;
   const existing = meDataState.holidays.find(h => h.personId === personId && h.date === date);
   if (existing) {
@@ -246,7 +261,7 @@ export function meDataAddHoliday(personId, date, type) {
   return true;
 };
 
-export function meDataUpdateHoliday(personId, date, newType) {
+window.meDataUpdateHoliday = function(personId, date, newType) {
   const holiday = meDataState.holidays.find(h => h.personId === personId && h.date === date);
   if (!holiday) {
     if (newType) {
@@ -264,14 +279,14 @@ export function meDataUpdateHoliday(personId, date, newType) {
   return true;
 };
 
-export function meDataDeleteHoliday(personId, date) {
+window.meDataDeleteHoliday = function(personId, date) {
   const idx = meDataState.holidays.findIndex(h => h.personId === personId && h.date === date);
   if (idx === -1) return false;
   meDataState.holidays.splice(idx, 1);
   return true;
 };
 
-export function meDataGetHolidays() {
+window.meDataGetHolidays = function() {
   return meDataState.holidays;
 };
 
@@ -279,7 +294,7 @@ export function meDataGetHolidays() {
 // PERSISTENCE
 // ─────────────────────────────────────────────────────────────
 
-export async function meDataInit() {
+window.meDataInit = async function() {
   try {
     if (typeof supa !== 'undefined' && typeof currentUser !== 'undefined' && currentUser) {
       console.log('Loading ME capacity data for user:', currentUser.id);
@@ -351,7 +366,7 @@ export async function meDataInit() {
   meEnsureStructure();
 };
 
-export async function meDataSave(showAlert) {
+window.meDataSave = async function(showAlert) {
   try {
     if (typeof supa === 'undefined' || typeof currentUser === 'undefined' || !currentUser) {
       console.warn('ME save: Supabase not available');
@@ -417,11 +432,11 @@ export async function meDataSave(showAlert) {
   }
 };
 
-export function meDataGetState() {
+window.meDataGetState = function() {
   return { ...meDataState };
 };
 
-export function meDataReset() {
+window.meDataReset = function() {
   meDataState = {
     team: [],
     tasks: [],

@@ -1,8 +1,10 @@
-import { db, FAMILIES, getFamilies, save, currentSection, esc } from '../../../core/js/state.js';
-import { populateFamilySelects } from '../../../core/js/app.js';
+// ═══════════════════════════════════
+// productmgmt.js — Product Management Portal
+// Manages product families (add / edit / delete)
+// Depends on: state.js (db, FAMILIES, getFamilies, save, esc), app.js (populateFamilySelects)
+// ═══════════════════════════════════
 
-// ── Product Management Portal ──────────────────────────────
-export function renderProductMgmt() {
+function renderProductMgmt() {
   const families = getFamilies();
 
   const rows = families.map((f, i) => `
@@ -115,7 +117,7 @@ export function renderProductMgmt() {
 }
 
 // ── Families tab content (used inside the Product Management portal) ──
-export function renderFamiliesTabContent() {
+function renderFamiliesTabContent() {
   const families = getFamilies();
 
   const rows = families.map((f, i) => `
@@ -190,7 +192,7 @@ export function renderFamiliesTabContent() {
 
 // ── Helpers ────────────────────────────────────────────────────
 
-export function pmEnsureCustomFamilies() {
+function pmEnsureCustomFamilies() {
   // Copy defaults into db.families so edits don't mutate the const
   if (!db.families || db.families.length === 0) {
     db.families = FAMILIES.map(f => ({ ...f }));
@@ -198,10 +200,9 @@ export function pmEnsureCustomFamilies() {
 }
 
 // Re-render whichever surface the families UI is displayed on
-export function pmRefresh() {
+function pmRefresh() {
   if (currentSection === 'productmgmt') {
-    const main = document.getElementById('mainContent');
-    if (main) main.innerHTML = renderProductMgmt();
+    pmRefresh();
   } else {
     // Inside the Product Management portal families tab
     const tab = document.getElementById('productsFamiliesTab');
@@ -217,7 +218,7 @@ export function pmRefresh() {
   }
 }
 
-export function pmShowAddForm() {
+function pmShowAddForm() {
   document.getElementById('pmNewIcon').value  = '';
   document.getElementById('pmNewLabel').value = '';
   document.getElementById('pmNewDescription').value = '';
@@ -225,7 +226,7 @@ export function pmShowAddForm() {
   document.getElementById('pmNewIcon').focus();
 }
 
-export function pmSaveNew() {
+function pmSaveNew() {
   const icon  = document.getElementById('pmNewIcon').value.trim()  || '📋';
   const label = document.getElementById('pmNewLabel').value.trim();
   const description = document.getElementById('pmNewDescription').value.trim() || '';
@@ -243,7 +244,7 @@ export function pmSaveNew() {
   pmRefresh();
 }
 
-export function pmEditFamily(idx) {
+function pmEditFamily(idx) {
   const f = getFamilies()[idx];
   if (!f) return;
   document.getElementById('pmEditIcon').value  = f.icon;
@@ -254,11 +255,11 @@ export function pmEditFamily(idx) {
   document.getElementById('pmEditLabel').focus();
 }
 
-export function pmCloseEditModal() {
+function pmCloseEditModal() {
   document.getElementById('pmEditModal').style.display = 'none';
 }
 
-export function pmSaveEdit() {
+function pmSaveEdit() {
   const idx   = parseInt(document.getElementById('pmEditIdx').value, 10);
   const icon  = document.getElementById('pmEditIcon').value.trim()  || '📋';
   const label = document.getElementById('pmEditLabel').value.trim();
@@ -287,7 +288,7 @@ export function pmSaveEdit() {
   pmRefresh();
 }
 
-export function pmDeleteFamily(idx) {
+function pmDeleteFamily(idx) {
   const families = getFamilies();
   const f = families[idx];
   if (!f) return;

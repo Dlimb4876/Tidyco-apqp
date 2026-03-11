@@ -1,9 +1,8 @@
-import { meGetBankHolidaysForYear, meFormatDate, meGetMonthLabel } from './me-chart.js';
-import { meOnPrevMonth, meOnNextMonth, meOnMonthChange, meSetTab } from './me-capacity.js';
-import { meDataGetHolidays, meDataAddHoliday, meDataUpdateHoliday, meDataDeleteHoliday } from './me-data.js';
-import { esc } from '../../../utils/js/helpers.js';
+/* ============================================================
+   me-holidays.js — Holiday Planner Tab Rendering
+   ============================================================ */
 
-export function meRenderHolidaysTab(holidaysArray, teamArray, selectedMonth) {
+window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
   // Use selected month or default to current month
   if (!selectedMonth) {
     const today = new Date();
@@ -116,7 +115,7 @@ export function meRenderHolidaysTab(holidaysArray, teamArray, selectedMonth) {
   return html;
 };
 
-export function meToggleHoliday(personId, date) {
+window.meToggleHoliday = function(personId, date) {
   const holidays = meDataGetHolidays();
   const holiday = holidays.find(h => h.personId === personId && h.date === date);
 

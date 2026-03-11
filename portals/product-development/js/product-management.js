@@ -1,7 +1,5 @@
-import { renderProductsPortalHTML, renderProductsPortalSetup } from './product-management/js/products.js';
-
-// ── Product Management Portal Bridge ───────────────────────
-export function renderProductManagement() {
+// Product Management Page
+function renderProductManagement() {
   const html = renderProductsPortalHTML();
 
   // Schedule setup after render

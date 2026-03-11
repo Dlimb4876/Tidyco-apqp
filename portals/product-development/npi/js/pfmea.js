@@ -1,12 +1,13 @@
-import { prog, save } from '../../../core/js/state.js';
-import { esc, emptyState } from '../../../utils/js/helpers.js';
-import { sortedPfd } from './apqp.js';
-import { renderRpnBurndown } from './dashboard.js';
+/* ============================================================
+   pfmea.js — PFMEA render, mutations, and RPN logic
+   Depends on: state.js (prog), db.js (save), navigation.js (render), helpers.js (esc)
+   renderRpnBurndown() is defined in dashboard.js (loaded before this file)
+   ============================================================ */
 
 // ══════════════════════════════════════
 // PFMEA — grouped by PFD step, multi-row per step
 // ══════════════════════════════════════
-export function renderPFMEA() {
+function renderPFMEA() {
   const p = prog();
   const sorted = sortedPfd(p.pfd).filter(s => s.type !== 'group');
   if (sorted.length === 0) return emptyState('⚠️', 'No process steps', 'Add steps in Process Flow first.');
@@ -271,7 +272,7 @@ ${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. �
 }
 
 // ── History popup ─────────────────────────────────────────────
-export function pfShowHist(evt, cid) {
+function pfShowHist(evt, cid) {
   document.querySelectorAll('.hist-popup').forEach(p => { if (p.id !== 'hist_' + cid) p.style.display = 'none'; });
   const el = document.getElementById('hist_' + cid);
   if (!el) return;
@@ -290,38 +291,38 @@ export function pfShowHist(evt, cid) {
 document.addEventListener('click', () => document.querySelectorAll('.hist-popup').forEach(p => p.style.display = 'none'));
 
 // ── PFMEA data mutators ───────────────────────────────────────
-export function pfAddMode(pfdId) {
+function pfAddMode(pfdId) {
   prog().pfmea.push({ id: 'f_' + Date.now(), _type: 'mode', pfdId, mode: '', ctqIds: [],
     effects: [{ id: 'e_' + Date.now(), effect: '', sev: 1, controls: '', action: '',
       causes: [{ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 }] }] });
   save(); render();
 }
-export function pfUpdMode(mi, f, v) { prog().pfmea[mi][f] = v; save(); }
-export function pfDelMode(mi) {
+function pfUpdMode(mi, f, v) { prog().pfmea[mi][f] = v; save(); }
+function pfDelMode(mi) {
   const fid = prog().pfmea[mi].id;
   prog().cp.forEach(r => { if (r.pfmeaId === fid) r.pfmeaId = ''; });
   prog().pfmea.splice(mi, 1);
   save(); render();
 }
-export function pfAddEffect(mi) {
+function pfAddEffect(mi) {
   prog().pfmea[mi].effects.push({ id: 'e_' + Date.now(), effect: '', sev: 1, controls: '', action: '',
     causes: [{ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 }] });
   save(); render();
 }
-export function pfUpdEffect(mi, ei, f, v) { prog().pfmea[mi].effects[ei][f] = v; save(); }
-export function pfDelEffect(mi, ei) { prog().pfmea[mi].effects.splice(ei, 1); save(); render(); }
-export function pfAddCause(mi, ei) {
+function pfUpdEffect(mi, ei, f, v) { prog().pfmea[mi].effects[ei][f] = v; save(); }
+function pfDelEffect(mi, ei) { prog().pfmea[mi].effects.splice(ei, 1); save(); render(); }
+function pfAddCause(mi, ei) {
   prog().pfmea[mi].effects[ei].causes.push({ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 });
   save(); render();
 }
-export function pfUpdCause(mi, ei, ci, f, v) { prog().pfmea[mi].effects[ei].causes[ci][f] = v; save(); }
-export function pfUpdCauseAction(mi, ei, ci, f, v) {
+function pfUpdCause(mi, ei, ci, f, v) { prog().pfmea[mi].effects[ei].causes[ci][f] = v; save(); }
+function pfUpdCauseAction(mi, ei, ci, f, v) {
   const ca = prog().pfmea[mi].effects[ei].causes[ci];
   if (!ca.action) ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' };
   if (!('taken' in ca.action)) ca.action.taken = '';
   ca.action[f] = v; save();
 }
-export function pfImplementAction(mi, ei, ci) {
+function pfImplementAction(mi, ei, ci) {
   const p = prog();
   const mode = p.pfmea[mi]; const ef = mode.effects[ei]; const ca = ef.causes[ci];
   const act = ca.action || {};
@@ -345,13 +346,13 @@ export function pfImplementAction(mi, ei, ci) {
   ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' };
   save(); render();
 }
-export function pfDelCause(mi, ei, ci) { prog().pfmea[mi].effects[ei].causes.splice(ci, 1); save(); render(); }
-export function pfRefreshRPN() { save(); }
+function pfDelCause(mi, ei, ci) { prog().pfmea[mi].effects[ei].causes.splice(ci, 1); save(); render(); }
+function pfRefreshRPN() { save(); }
 
 // ── Live DOM RPN / Forecast updates ──────────────────────────
-export function pfRpnClass(rpn) { return rpn >= 200 ? 'rpn-hi' : rpn >= 100 ? 'rpn-md' : 'rpn-lo'; }
+function pfRpnClass(rpn) { return rpn >= 200 ? 'rpn-hi' : rpn >= 100 ? 'rpn-md' : 'rpn-lo'; }
 
-export function rpnColor(rpn) {
+function rpnColor(rpn) {
   if (rpn <= 1)   return { bg: '#dcfce7', fg: '#166534' };
   if (rpn < 25)   return { bg: '#bbf7d0', fg: '#166534' };
   if (rpn < 50)   return { bg: '#fef9c3', fg: '#854d0e' };
@@ -362,7 +363,7 @@ export function rpnColor(rpn) {
   return { bg: '#991b1b', fg: '#fff' };
 }
 
-export function pfLiveRPN(mi, ei, ci) {
+function pfLiveRPN(mi, ei, ci) {
   const p = prog();
   const mode = p.pfmea[mi]; if (!mode) return;
   const ef = mode.effects[ei]; if (!ef) return;
@@ -377,7 +378,7 @@ export function pfLiveRPN(mi, ei, ci) {
   });
 }
 
-export function pfLiveForecast(mi, ei, ci) {
+function pfLiveForecast(mi, ei, ci) {
   const p = prog();
   const ef = p.pfmea[mi].effects[ei];
   const ca = ef.causes[ci];

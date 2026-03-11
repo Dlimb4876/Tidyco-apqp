@@ -1,12 +1,11 @@
-import { meDataGetTeam, meDataGetTasks, meDataGetHolidays } from './me-data.js';
-import { meGetMonthLabel, meFormatDate, meCountWorkDaysBetween } from './me-chart.js';
-import { meChartStart, meOnPrevMonth, meOnNextMonth, meOnMonthChange } from './me-capacity.js';
-import { esc } from '../../../utils/js/helpers.js';
+/* ============================================================
+   me-heatmap.js — Team Capacity Heat Map & Detail View
+   ============================================================ */
 
-export let meHeatmapDetailOpen = null; // { personId, weekStart, weekEnd } when modal is open
+let meHeatmapDetailOpen = null; // { personId, weekStart, weekEnd } when modal is open
 
 // ── Main render function ────────────────────────────────────
-export function meRenderHeatmapTab(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
+window.meRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const monthLabel = meGetMonthLabel(monthKey);
 
   // Calculate overall stats
@@ -86,7 +85,7 @@ export function meRenderHeatmapTab(monthKey, teamArray, tasksArray, productsArra
 };
 
 // ── Heat map rendering ──────────────────────────────────────
-export function meDrawHeatmapNow() {
+window.meDrawHeatmapNow = function() {
   const team = meDataGetTeam();
   const tasks = meDataGetTasks();
   const holidays = meDataGetHolidays();
@@ -145,7 +144,7 @@ export function meDrawHeatmapNow() {
 };
 
 // ── Drill-down modal ────────────────────────────────────────
-export function meOpenHeatmapDetail(personId, weekStart, weekEnd) {
+window.meOpenHeatmapDetail = function(personId, weekStart, weekEnd) {
   const team = meDataGetTeam();
   const tasks = meDataGetTasks();
   const holidays = meDataGetHolidays();
@@ -176,7 +175,7 @@ export function meOpenHeatmapDetail(personId, weekStart, weekEnd) {
   document.getElementById('meDetailModal').style.display = 'flex';
 };
 
-export function meCloseHeatmapDetail() {
+window.meCloseHeatmapDetail = function() {
   meHeatmapDetailOpen = null;
   document.getElementById('meDetailModal').style.display = 'none';
 };
@@ -256,7 +255,7 @@ function meRenderDetailPanel(personId, weekStart, weekEnd, tasksArray, holidaysA
 }
 
 // ── Calculations ────────────────────────────────────────────
-export function meCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray, holidaysArray) {
+window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray, holidaysArray) {
   const person = meDataGetTeam().find(p => p.id === personId);
   if (!person || !person.startDate) return { capacity: 0, demand: 0, utilisation: 0 };
 
@@ -317,7 +316,7 @@ export function meCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray, 
 }
 
 // ── Week range generation ───────────────────────────────────
-export function meGetWeekRange(monthKey, weekCount) {
+window.meGetWeekRange = function(monthKey, weekCount) {
   const [year, month] = monthKey.split('-').map(Number);
   const monthStart = new Date(year, month - 1, 1);
 

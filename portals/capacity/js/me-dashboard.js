@@ -1,8 +1,8 @@
-import { meCalculateMonthData, meGetMonthLabel, meGetMonthRange } from './me-chart.js';
-import { meGetWeekRange, meCalcWeekUtilisation } from './me-heatmap.js';
-import { esc } from '../../../utils/js/helpers.js';
+/* ============================================================
+   me-dashboard.js — ME Capacity Dashboard
+   ============================================================ */
 
-export function meRenderDashboardTab(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
+window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   // Always use current month for dashboard data
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -112,7 +112,7 @@ export function meRenderDashboardTab(monthKey, teamArray, tasksArray, productsAr
 /**
  * Draw mini 6-month capacity chart on dashboard
  */
-export function meDashboardDrawMiniChart(teamArray, tasksArray, productsArray, holidaysArray) {
+window.meDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray, holidaysArray) {
   if (!window.Chart) {
     console.warn('Chart.js not loaded');
     return;
@@ -192,7 +192,7 @@ export function meDashboardDrawMiniChart(teamArray, tasksArray, productsArray, h
 /**
  * Draw mini current month heat map on dashboard
  */
-export function meDashboardDrawMiniHeatmap(teamArray, tasksArray, holidaysArray) {
+window.meDashboardDrawMiniHeatmap = function(teamArray, tasksArray, holidaysArray) {
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 

@@ -1,6 +1,5 @@
-import { navigate } from '../../../utils/js/helpers.js';
-
-export function renderHub() {
+// js/features/hub.js
+function renderHub() {
   return `
     <div class="proj-home">
       <div class="proj-home-header">

@@ -218,9 +218,61 @@
 </div>
 
 <!-- ═══════════════════════════════════
-     MAIN ENTRY POINT
+     SCRIPTS — load order matters
+     state → auth → db → helpers → navigation →
+     hub → rpn-chart → dashboard →
+     capacity → me-capacity →
+     gates → pfmea → apqp → bom → timing → trackers → app
      ═══════════════════════════════════ -->
-<script type="module" src="core/js/app.js"></script>
+
+<script src="core/js/state.js"></script>
+<script src="core/js/auth.js"></script>
+<script src="core/js/db.js"></script>
+
+<script src="utils/js/helpers.js"></script>
+<script src="utils/js/navigation.js"></script>
+
+<script src="portals/hub/js/hub.js"></script>
+<script src="portals/product-development/npi/js/rpn-chart.js"></script>
+<script src="portals/product-development/npi/js/dashboard.js"></script>
+
+<!-- Load product management database first as it's used by production and capacity modules -->
+<script src="portals/product-development/product-management/js/products-data.js"></script>
+
+<script src="portals/capacity/js/capacity.js"></script>
+<script src="portals/capacity/js/me-data.js"></script>
+<script src="portals/capacity/js/me-team.js"></script>
+<script src="portals/capacity/js/me-tasks.js"></script>
+<script src="portals/capacity/js/me-products.js"></script>
+<script src="portals/capacity/js/me-holidays.js"></script>
+<script src="portals/capacity/js/me-chart.js"></script>
+<script src="portals/capacity/js/me-heatmap.js"></script>
+<script src="portals/capacity/js/me-dashboard.js"></script>
+<script src="portals/capacity/js/me-capacity.js"></script>
+<script src="portals/capacity/js/me-advanced-estimation.js"></script>
+
+<script src="portals/production/js/data.js"></script>
+<script src="portals/production/js/production.js"></script>
+<script src="portals/production/js/scheduling.js"></script>
+<script src="portals/production/js/planning.js"></script>
+
+<!-- products-data.js is already loaded above -->
+<script src="portals/product-development/product-management/js/products.js"></script>
+<script src="portals/product-development/product-management/js/products.js"></script>
+
+<script src="portals/product-development/js/product-development.js"></script>
+<script src="portals/product-development/js/product-management.js"></script>
+
+<script src="portals/productmgmt/js/productmgmt.js"></script>
+
+<script src="portals/product-development/npi/js/gates.js"></script>
+<script src="portals/product-development/npi/js/pfmea.js"></script>
+<script src="portals/product-development/npi/js/apqp.js"></script>
+<script src="portals/product-development/npi/js/bom.js"></script>
+<script src="portals/product-development/npi/js/timing.js"></script>
+<script src="portals/product-development/npi/js/trackers.js"></script>
+
+<script src="core/js/app.js"></script>
 
 </body>
 </html>

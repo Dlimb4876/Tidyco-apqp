@@ -1,28 +1,19 @@
-import { meDataInit, meDataSave, meDataGetTeam, meDataGetTasks, meDataGetProducts, meDataGetHolidays } from './me-data.js';
-import { meRenderDashboardTab } from './me-dashboard.js';
-import { meRenderTeamTab } from './me-team.js';
-import { meRenderTasksTab } from './me-tasks.js';
-import { meRenderProductsTab } from './me-products.js';
-import { meRenderHolidaysTab } from './me-holidays.js';
-import { meRenderHeatmapTab, meDrawHeatmapNow } from './me-heatmap.js';
-import { meRenderChartTab, meDrawChartNow } from './me-chart.js';
-import { meDashboardDrawMiniChart, meDashboardDrawMiniHeatmap } from './me-dashboard.js';
-import { setCapacityTab as setCapTab } from '../../../core/js/state.js';
+/* ============================================================
+   me-capacity.js — ME Load Capacity Orchestrator
+   ============================================================ */
 
 // ── Module state ───────────────────────────────────────────
-export let meTab = 'dashboard';
-export let meChartStart = null; // ISO month string (e.g., '2025-03')
-export let meHolidayMonth = null; // Holiday planner month (independent from chart)
-export let meChartInst = null;  // Chart.js instance
-export let meSaveTimer = null;  // Debounce timer
-
-export function setMeChartInst(val) { meChartInst = val; }
+let meTab = 'dashboard';
+let meChartStart = null; // ISO month string (e.g., '2025-03')
+let meHolidayMonth = null; // Holiday planner month (independent from chart)
+let meChartInst = null;  // Chart.js instance
+let meSaveTimer = null;  // Debounce timer
 
 // ── Entry point ────────────────────────────────────────────
 /**
  * Main render function for ME Capacity Portal
  */
-export function renderMeCapacity() {
+window.renderMeCapacity = function() {
   if (!meChartStart) {
     // Load from localStorage, or default to January 2026
     meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';
@@ -72,7 +63,7 @@ export function renderMeCapacity() {
 };
 
 // ── Tab management ─────────────────────────────────────────
-export function meSetTab(tab) {
+window.meSetTab = function(tab) {
   meTab = tab;
 
   // Update nav button active states
@@ -103,7 +94,7 @@ export function meSetTab(tab) {
 };
 
 // Refresh current tab without switching tabs
-export function meRefreshCurrentTab() {
+window.meRefreshCurrentTab = function() {
   const body = document.getElementById('meBody');
   if (body) {
     body.innerHTML = meGetTabContent();
@@ -156,7 +147,7 @@ function meGetTabContent() {
 }
 
 // ── Month navigation handlers ──────────────────────────────
-export function meOnMonthChange(newMonth) {
+window.meOnMonthChange = function(newMonth) {
   if (meTab === 'holidays') {
     meHolidayMonth = newMonth;
   } else {
@@ -166,7 +157,7 @@ export function meOnMonthChange(newMonth) {
   meRefreshCurrentTab();
 };
 
-export function meOnNextMonth() {
+window.meOnNextMonth = function() {
   const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart;
   const [year, month] = currentMonth.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
@@ -182,7 +173,7 @@ export function meOnNextMonth() {
   meRefreshCurrentTab();
 };
 
-export function meOnPrevMonth() {
+window.meOnPrevMonth = function() {
   const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart;
   const [year, month] = currentMonth.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
@@ -199,7 +190,7 @@ export function meOnPrevMonth() {
 };
 
 // ── Persistence ────────────────────────────────────────────
-export async function meOnSave(showAlert) {
+window.meOnSave = async function(showAlert) {
   await meDataSave(showAlert);
 };
 
@@ -217,7 +208,7 @@ function meDebouncedSave() {
 }
 
 // ── Initialization ─────────────────────────────────────────
-export async function meInit() {
+window.meInit = async function() {
   await meDataInit();
   if (!meChartStart) {
     // Load from localStorage, or default to January 2026

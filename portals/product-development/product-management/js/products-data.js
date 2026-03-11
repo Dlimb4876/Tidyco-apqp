@@ -1,7 +1,10 @@
-import { supa, currentUser } from '../../../../core/js/auth.js';
+/**
+ * Products Data Layer
+ * Manages product master list and overhaul history
+ * Syncs with Supabase tables: products, overhaul_history
+ */
 
-// ── Products Data Layer ────────────────────────────────────
-export let productsState = {
+let productsState = {
   products: [],
   history: {},  // product_id -> array of history records
   loaded: false
@@ -10,7 +13,7 @@ export let productsState = {
 /**
  * Initialize products data from Supabase
  */
-export async function productsDataInit() {
+async function productsDataInit() {
   if (!currentUser) return;
   try {
     // Load products
@@ -48,14 +51,14 @@ export async function productsDataInit() {
 /**
  * Get all products
  */
-export function productsDataGetAll() {
+function productsDataGetAll() {
   return productsState.products;
 }
 
 /**
  * Get single product with history
  */
-export function productsDataGetProduct(productId) {
+function productsDataGetProduct(productId) {
   const product = productsState.products.find(p => p.id === productId);
   const history = productsState.history[productId] || [];
   return { product, history };
@@ -64,14 +67,14 @@ export function productsDataGetProduct(productId) {
 /**
  * Get history for a product
  */
-export function productsDataGetHistory(productId) {
+function productsDataGetHistory(productId) {
   return productsState.history[productId] || [];
 }
 
 /**
  * Add new product
  */
-export async function productsDataAddProduct(product) {
+async function productsDataAddProduct(product) {
   if (!currentUser) return;
   try {
     const newProduct = {
@@ -104,7 +107,7 @@ export async function productsDataAddProduct(product) {
 /**
  * Update product
  */
-export async function productsDataUpdateProduct(productId, updates) {
+async function productsDataUpdateProduct(productId, updates) {
   try {
     const result = await supa.from('products')
       .update({
@@ -135,7 +138,7 @@ export async function productsDataUpdateProduct(productId, updates) {
 /**
  * Delete product (and its history)
  */
-export async function productsDataDeleteProduct(productId) {
+async function productsDataDeleteProduct(productId) {
   try {
     // RLS cascade will delete history records
     const result = await supa.from('products').delete().eq('id', productId);
@@ -154,7 +157,7 @@ export async function productsDataDeleteProduct(productId) {
 /**
  * Add overhaul history record (new estimation)
  */
-export async function productsDataAddHistory(productId, historyRecord) {
+async function productsDataAddHistory(productId, historyRecord) {
   if (!currentUser) return;
   try {
     const newRecord = {
@@ -193,7 +196,7 @@ export async function productsDataAddHistory(productId, historyRecord) {
 /**
  * Delete history record
  */
-export async function productsDataDeleteHistory(productId, historyId) {
+async function productsDataDeleteHistory(productId, historyId) {
   try {
     const result = await supa.from('overhaul_history').delete().eq('id', historyId);
     if (result.error) throw result.error;
@@ -213,7 +216,7 @@ export async function productsDataDeleteHistory(productId, historyId) {
 /**
  * Get current overhaul time for a product
  */
-export function productsDataGetCurrentOverhaulTime(productId) {
+function productsDataGetCurrentOverhaulTime(productId) {
   const product = productsState.products.find(p => p.id === productId);
   return product ? product.current_overhaul_hours : 0;
 }
@@ -221,7 +224,7 @@ export function productsDataGetCurrentOverhaulTime(productId) {
 /**
  * Get overhaul time effective on a specific date
  */
-export function productsDataGetOverhaulTimeOnDate(productId, targetDate) {
+function productsDataGetOverhaulTimeOnDate(productId, targetDate) {
   const history = productsState.history[productId] || [];
 
   // Find the most recent record on or before targetDate
@@ -235,7 +238,7 @@ export function productsDataGetOverhaulTimeOnDate(productId, targetDate) {
 /**
  * Force save to ensure Supabase is synced
  */
-export async function productsDataSave() {
+async function productsDataSave() {
   // Data is auto-saved on each operation, but this can be called for explicit sync
   console.log('✓ Products data synced');
 }

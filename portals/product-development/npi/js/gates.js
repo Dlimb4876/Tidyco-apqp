@@ -1,18 +1,13 @@
-import { prog, save, GATE_DEFS } from '../../../core/js/state.js';
-import { esc, navigate } from '../../../utils/js/helpers.js';
-
-function goHome() { navigate('project'); }
-
 // ═══════════════════════════════════
 // gates.js — Gate checklist and sign-off logic
 // Depends on: state.js, helpers.js
 // ═══════════════════════════════════
 
-export function gateAllSigned(gd) {
+function gateAllSigned(gd) {
   return gd.sigs && gd.sigs.length > 0 && gd.sigs.every(s => s.signed);
 }
 
-export function renderGatePage(gateNum) {
+function renderGatePage(gateNum) {
   const p   = prog();
   const g   = GATE_DEFS[gateNum];
   const gd  = p.gates[gateNum];
@@ -91,7 +86,7 @@ export function renderGatePage(gateNum) {
   </div>`;
 }
 
-export function toggleCheck(gi, ii, v) { prog().gates[gi].checks[ii] = v; save(); render(); }
-export function updSig(gi, si, f, v)   { prog().gates[gi].sigs[si][f] = v; save(); }
-export function signOff(gi, si) { const sig = prog().gates[gi].sigs[si]; sig.signed = true; if (!sig.date) sig.date = new Date().toISOString().slice(0, 10); save(); render(); }
-export function unsign(gi, si)  { prog().gates[gi].sigs[si].signed = false; save(); render(); }
+function toggleCheck(gi, ii, v) { prog().gates[gi].checks[ii] = v; save(); render(); }
+function updSig(gi, si, f, v)   { prog().gates[gi].sigs[si][f] = v; save(); }
+function signOff(gi, si) { const sig = prog().gates[gi].sigs[si]; sig.signed = true; if (!sig.date) sig.date = new Date().toISOString().slice(0, 10); save(); render(); }
+function unsign(gi, si)  { prog().gates[gi].sigs[si].signed = false; save(); render(); }

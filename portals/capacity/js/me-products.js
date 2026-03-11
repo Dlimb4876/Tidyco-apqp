@@ -1,8 +1,8 @@
-import { meDataUpdateProduct, meDataAddProduct, meDataDeleteProduct, meDataSyncFromProductManagement } from './me-data.js';
-import { meOnSave, meSetTab, meRefreshCurrentTab } from './me-capacity.js';
-import { esc } from '../../../utils/js/helpers.js';
+/* ============================================================
+   me-products.js — Products Tab Rendering
+   ============================================================ */
 
-export function meRenderProductsTab(productsArray, availableProducts) {
+window.meRenderProductsTab = function(productsArray, availableProducts) {
   availableProducts = availableProducts || [];
   const weeksPerMonth = 4.33;
   const totalLoadWeekly = productsArray.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
@@ -79,7 +79,7 @@ export function meRenderProductsTab(productsArray, availableProducts) {
     </div>`;
 };
 
-export function meAddDefaultProduct() {
+window.meAddDefaultProduct = function() {
   meDataAddProduct('New Product', '', '', 0, '');
   meOnSave();
   meSetTab('products');

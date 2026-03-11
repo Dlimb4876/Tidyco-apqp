@@ -1,9 +1,8 @@
-import { meDataGetTeam, meDataGetTasks, meDataGetProducts, meDataGetHolidays } from './me-data.js';
-import { meOnPrevMonth, meOnNextMonth, meOnMonthChange } from './me-capacity.js';
-import { meChartStart, meChartInst, setMeChartInst } from './me-capacity.js';
+/* ============================================================
+   me-chart.js — Chart Tab & Utilities
+   ============================================================ */
 
-// ── Chart Tab & Utilities ───────────────────────────────────
-export function meRenderChartTab(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
+window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   // Always show KPIs for current month, not the chart start month
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -66,7 +65,7 @@ export function meRenderChartTab(monthKey, teamArray, tasksArray, productsArray,
   `;
 };
 
-export function meDrawChartNow() {
+window.meDrawChartNow = function() {
   const team = meDataGetTeam();
   const tasks = meDataGetTasks();
   const products = meDataGetProducts();
@@ -126,21 +125,21 @@ export function meDrawChartNow() {
 
 // ── Utility Functions ──────────────────────────────────────
 
-export function meFormatDate(date) {
+window.meFormatDate = function(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-export function meGetMonthLabel(monthKey) {
+window.meGetMonthLabel = function(monthKey) {
   const date = new Date(monthKey + '-01');
   const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const year = date.getFullYear();
   return [month, year.toString()];
 }
 
-export function meGetMonthRange(startMonth, count) {
+window.meGetMonthRange = function(startMonth, count) {
   const months = [];
   let [year, month] = startMonth.split('-').map(Number);
 
@@ -158,7 +157,7 @@ export function meGetMonthRange(startMonth, count) {
   return months;
 }
 
-export function meGetBankHolidaysForYear(year) {
+window.meGetBankHolidaysForYear = function(year) {
   const holidays = {};
   holidays[`${year}-01-01`] = 'New Year';
   holidays[`${year}-12-25`] = 'Christmas';
@@ -198,7 +197,7 @@ export function meGetBankHolidaysForYear(year) {
   return holidays;
 }
 
-export function meCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
+window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const [year, month] = monthKey.split('-').map(Number);
   const monthStart = new Date(year, month - 1, 1);
   const monthEnd = new Date(year, month, 0);
@@ -340,7 +339,7 @@ export function meCalculateMonthData(monthKey, teamArray, tasksArray, productsAr
   };
 }
 
-export function meCountWorkDaysInMonth(year, month) {
+window.meCountWorkDaysInMonth = function(year, month) {
   const date = new Date(year, month - 1, 1);
   let workDays = 0;
   while (date.getMonth() === month - 1) {
@@ -351,7 +350,7 @@ export function meCountWorkDaysInMonth(year, month) {
   return workDays;
 }
 
-export function meCountWorkDaysBetween(startDate, endDate) {
+window.meCountWorkDaysBetween = function(startDate, endDate) {
   let workDays = 0;
   const current = new Date(startDate);
   current.setHours(0, 0, 0, 0);

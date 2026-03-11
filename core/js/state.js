@@ -2,54 +2,30 @@
 // state.js — Global state and constants
 // ═══════════════════════════════════
 
-export let db = { programmes: [] };
-export let progId = null;
-export let currentSection = 'hub';
-export let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
-export let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
-export let capacityTab = 'root'; // root|me|overhaul|projects
-export let productionTab = 'root'; // root|products|scheduling|by-product|by-unit
-export let productDevelopmentTab = 'root'; // root|npi|product-management
-export let npiTab = 'all'; // 'all' | family id — active tab on the NPI project selection screen
-export let prodPlanWeekOffset = 0; // Week offset for 4-week rolling view
-export let meStartOffset = 0; // Months from today
+let db = { programmes: [] };
+let progId = null;
+let currentSection = 'hub';
+let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
+let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
+let capacityTab = 'root'; // root|me|overhaul|projects
+let productionTab = 'root'; // root|products|scheduling|by-product|by-unit
+let productDevelopmentTab = 'root'; // root|npi|product-management
+let npiTab = 'all'; // 'all' | family id — active tab on the NPI project selection screen
+let prodPlanWeekOffset = 0; // Week offset for 4-week rolling view
+let meStartOffset = 0; // Months from today
 
 // Modal picker state
-export let ctqPickTarget = null, ctqPickSelected = [];
-export let bomPickTarget = null, bomPickSelected = [], bomPickFilter = 'all';
-export let kitPickTarget = null, kitPickSelected = [], kitPickFilter = 'all';
-export let insertOriginIdx = null;
-export let collapsedGroups = new Set();
+let ctqPickTarget = null, ctqPickSelected = [];
+let bomPickTarget = null, bomPickSelected = [], bomPickFilter = 'all';
+let kitPickTarget = null, kitPickSelected = [], kitPickFilter = 'all';
+let insertOriginIdx = null;
+let collapsedGroups = new Set();
 
 // ── Accessor ─────────────────────────────────────────────────
-export function prog() { return db.programmes.find(p => p.id === progId) || null; }
-export function setDb(val) { db = val; }
-export function setProgId(val) { progId = val; }
-export function setCurrentSection(val) { currentSection = val; }
-export function setApqpTab(val) { apqpTab = val; }
-export function setBomSubTab(val) { bomSubTab = val; }
-export function setCtqPickTarget(val) { ctqPickTarget = val; }
-export function setCtqPickSelected(val) { ctqPickSelected = val; }
-export function setBomPickTarget(val) { bomPickTarget = val; }
-export function setBomPickSelected(val) { bomPickSelected = val; }
-export function setBomPickFilter(val) { bomPickFilter = val; }
-export function setKitPickTarget(val) { kitPickTarget = val; }
-export function setKitPickSelected(val) { kitPickSelected = val; }
-export function setKitPickFilter(val) { kitPickFilter = val; }
-export function setInsertOriginIdx(val) { insertOriginIdx = val; }
-export function setProductDevelopmentTab(val) { productDevelopmentTab = val; }
-export function setNpiTab(val) { npiTab = val; }
-export function setProdPlanWeekOffset(val) { prodPlanWeekOffset = val; }
-export function setMeStartOffset(val) { meStartOffset = val; }
-
-export function resetGlobalState() {
-  db = { programmes: [] };
-  progId = null;
-  currentSection = 'hub';
-}
+function prog() { return db.programmes.find(p => p.id === progId) || null; }
 
 // ── BOM type registry ─────────────────────────────────────────
-export const BOM_TYPES = {
+const BOM_TYPES = {
   parts:  { label: 'Parts',       icon: '🔩', pc: 'res-pill-part'  },
   tools:  { label: 'Tools',       icon: '🔧', pc: 'res-pill-tool'  },
   equip:  { label: 'Equipment',   icon: '⚙️', pc: 'res-pill-equip' },
@@ -58,7 +34,7 @@ export const BOM_TYPES = {
 };
 
 // ── Gate definitions ──────────────────────────────────────────
-export const GATE_DEFS = [
+const GATE_DEFS = [
   { num: 0, name: 'Pre-Planning',              phase: 'Section 0', signatories: ['ME Manager', 'Operations Director', 'Sales Director'],
     items: ['Tender / ITT received and reviewed','ME resource confirmed available','Bid submitted with ME input','Contract awarded and signed','Programme file opened','ME formally assigned'] },
   { num: 1, name: 'Plan and Define',           phase: 'Section 1', signatories: ['ME Manager', 'Operations Director'],
@@ -74,7 +50,7 @@ export const GATE_DEFS = [
 ];
 
 // ── Product family registry ───────────────────────────────────
-export const FAMILIES = [
+const FAMILIES = [
   { id: 'HVAC',             label: 'HVAC',             icon: '❄️', description: 'Heating, ventilation, and air conditioning systems' },
   { id: 'Rotating Machines',label: 'Rotating Machines', icon: '⚙️', description: 'Fans & pumps' },
   { id: 'Pneumatics',       label: 'Pneumatics',        icon: '💨', description: 'Pneumatic components and systems' },
@@ -82,12 +58,12 @@ export const FAMILIES = [
 ];
 
 // Returns user-defined families if any exist, otherwise falls back to defaults
-export function getFamilies() {
+function getFamilies() {
   return (db.families && db.families.length > 0) ? db.families : FAMILIES;
 }
 
 // ── New programme factory ─────────────────────────────────────
-export function newProgTemplate(name, customer, unit, family, lead, pm, date) {
+function newProgTemplate(name, customer, unit, family, lead, pm, date) {
   const gates = GATE_DEFS.map(g => ({
     gateNum: g.num,
     checks: g.items.map(() => false),
@@ -99,11 +75,4 @@ export function newProgTemplate(name, customer, unit, family, lead, pm, date) {
     bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
     gates, actions: [], risks: [], timing: [], gantt: [], subAssemblies: []
   };
-}
-
-export function setSyncBadge(state, text) {
-  const b = document.getElementById('syncBadge');
-  if (!b) return;
-  b.className   = 'sync-badge ' + state;
-  b.textContent = text;
 }

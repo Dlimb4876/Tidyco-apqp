@@ -1,18 +1,15 @@
-import { productionTab, setProductionTab as setProdTab } from '../../../core/js/state.js';
-import { navigate, render } from '../../../utils/js/navigation.js';
-import { renderScheduling } from './scheduling.js';
-import { renderPlanByProduct, renderPlanByUnit } from './planning.js';
+// Production Planning Portal Hub
+// Entry point for production planning module
 
-// ── Production Planning Portal ──────────────────────────────
-export function setProductionTab(tab) {
-  setProdTab(tab);
+function setProductionTab(tab) {
+  productionTab = tab;
   const parts = ['s=production'];
   if (tab !== 'root') parts.push('pt=' + encodeURIComponent(tab));
   history.replaceState(null, '', '#' + parts.join('&'));
   render();
 }
 
-export function prodNavBar() {
+function prodNavBar() {
   return `
     <div class="prod-nav-bar">
       <button class="prod-nav-item ${productionTab === 'scheduling' ? 'active' : ''}" onclick="setProductionTab('scheduling')">📅 Schedule</button>
@@ -22,7 +19,7 @@ export function prodNavBar() {
   `;
 }
 
-export function renderProduction() {
+function renderProduction() {
   const nav = prodNavBar();
   // Products are now managed in Product Management — redirect if accessed
   if (productionTab === 'products') {
