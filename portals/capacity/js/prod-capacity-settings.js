@@ -12,13 +12,6 @@ function renderProdCapSettings() {
   const monthKeys = prodCapGet24MonthKeys();
   const workAreas = prodCapGetWorkAreas();
 
-  // Allow adding custom work areas
-  const customAreaInput = `
-    <div class="pc-settings-add-area">
-      <input id="pcNewAreaInput" class="pc-input" type="text" placeholder="New work area name…" style="width:220px">
-      <button class="btn btn-ghost btn-sm" onclick="prodCapAddWorkArea()">+ Add Area</button>
-    </div>`;
-
   if (workAreas.length === 0) {
     return `
       <div class="pc-settings">
@@ -27,9 +20,8 @@ function renderProdCapSettings() {
           <div class="pc-card-sub">Set the number of staff available per work area per month. 1 person = working days × 8h available.</div>
         </div>
         <div class="pc-alert pc-alert-info">
-          No work areas found. Add work locations to products in Product Management, or create a new area below.
+          No work areas found. Add work areas in the Work Areas section of Capacity Settings.
         </div>
-        ${customAreaInput}
       </div>`;
   }
 
@@ -131,9 +123,6 @@ function renderProdCapSettings() {
         </div>
       </div>
 
-      <!-- Add custom work area -->
-      ${customAreaInput}
-
       <!-- Settings Grid -->
       <div class="pc-settings-grid-wrap">
         <table class="pc-settings-tbl">
@@ -220,20 +209,6 @@ function prodCapSettingsNavKey(event, workArea, key) {
       document.getElementById(`pcStaff_${safeArea}_${key}`)?.focus();
     }
   }
-}
-
-// ── Add a custom work area ────────────────────────────────────
-async function prodCapAddWorkArea() {
-  const input = document.getElementById('pcNewAreaInput');
-  if (!input) return;
-  const name = input.value.trim();
-  if (!name) return;
-
-  // Create a placeholder record so the area appears
-  const today = new Date();
-  await prodCapDataSetStaff(name, today.getFullYear(), today.getMonth() + 1, 0);
-  input.value = '';
-  render();
 }
 
 // ── Fill forward: copy each cell's value to all subsequent months ─
