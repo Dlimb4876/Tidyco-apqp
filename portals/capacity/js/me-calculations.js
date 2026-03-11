@@ -83,7 +83,7 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   });
 
   const adjustedCapacity = Math.max(0, capacity - holidayDeduction);
-  const adjustedCapacityMax = capacityMax;
+  const adjustedCapacityMax = Math.max(0, capacityMax - holidayDeduction);
 
   // Calculate demand using network days proration (equivalent to NETWORKDAYS in Excel)
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
