@@ -1,0 +1,585 @@
+/* ============================================================
+   me-data-relational.js — ME Capacity Relational DB Operations
+
+   Handles all Supabase table operations for:
+   - me_teams, me_tasks, me_task_subtasks, me_task_pert_history
+   - me_products, me_holidays
+
+   Called by me-data.js during meDataInit() and meDataSave()
+   ============================================================ */
+
+// ─────────────────────────────────────────────────────────────
+// LOAD OPERATIONS — Fetch data from relational tables
+// ─────────────────────────────────────────────────────────────
+
+window.meLoadRelationalTeams = async function(userId) {
+  try {
+    const { data, error } = await supa
+      .from('me_teams')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.warn('meLoadRelationalTeams error:', error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.warn('meLoadRelationalTeams exception:', err.message);
+    return [];
+  }
+};
+
+window.meLoadRelationalProducts = async function(userId) {
+  try {
+    const { data, error } = await supa
+      .from('me_products')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.warn('meLoadRelationalProducts error:', error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.warn('meLoadRelationalProducts exception:', err.message);
+    return [];
+  }
+};
+
+window.meLoadRelationalHolidays = async function(userId) {
+  try {
+    const { data, error } = await supa
+      .from('me_holidays')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.warn('meLoadRelationalHolidays error:', error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.warn('meLoadRelationalHolidays exception:', err.message);
+    return [];
+  }
+};
+
+window.meLoadRelationalTasks = async function(userId) {
+  try {
+    // Load all tasks for this user
+    const { data: tasksData, error: tasksError } = await supa
+      .from('me_tasks')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (tasksError) {
+      console.warn('meLoadRelationalTasks error:', tasksError.message);
+      return [];
+    }
+
+    const tasks = tasksData || [];
+
+    // Load subtasks and PERT history for root tasks
+    const taskIds = tasks.filter(t => t.type === 'root').map(t => t.id);
+
+    if (taskIds.length > 0) {
+      const { data: subtasksData, error: subtasksError } = await supa
+        .from('me_task_subtasks')
+        .select('*')
+        .in('task_id', taskIds);
+
+      if (subtasksError) {
+        console.warn('meLoadRelationalTasks subtasks error:', subtasksError.message);
+      } else {
+        const subtasks = subtasksData || [];
+
+        // Attach subtasks to their parent tasks
+        tasks.forEach(task => {
+          if (task.type === 'root') {
+            task.subtasks = subtasks.filter(st => st.task_id === task.id);
+          }
+        });
+      }
+
+      // Load PERT history for reference
+      const { data: historyData, error: historyError } = await supa
+        .from('me_task_pert_history')
+        .select('*')
+        .in('task_id', taskIds);
+
+      if (historyError) {
+        console.warn('meLoadRelationalTasks history error:', historyError.message);
+      } else {
+        const history = historyData || [];
+
+        // Attach history to tasks
+        tasks.forEach(task => {
+          if (task.type === 'root') {
+            task.pertHistory = history.filter(h => h.task_id === task.id);
+          }
+        });
+      }
+    }
+
+    return tasks;
+  } catch (err) {
+    console.warn('meLoadRelationalTasks exception:', err.message);
+    return [];
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// SAVE OPERATIONS — Insert or update individual records
+// ─────────────────────────────────────────────────────────────
+
+window.meSaveTeamRelational = async function(userId, teamMember) {
+  try {
+    if (!teamMember.id) {
+      // Insert new team member
+      const { error } = await supa
+        .from('me_teams')
+        .insert([{
+          user_id: userId,
+          name: teamMember.name,
+          hours_per_week: teamMember.hoursPerWeek,
+          utilisation: teamMember.utilisation,
+          job_title: teamMember.jobTitle,
+          team_group: teamMember.group,
+          start_date: teamMember.startDate || null,
+          end_date: teamMember.endDate || null
+        }]);
+
+      if (error) {
+        console.warn('meSaveTeamRelational insert error:', error.message);
+        return false;
+      }
+    } else {
+      // Update existing team member
+      const { error } = await supa
+        .from('me_teams')
+        .update({
+          name: teamMember.name,
+          hours_per_week: teamMember.hoursPerWeek,
+          utilisation: teamMember.utilisation,
+          job_title: teamMember.jobTitle,
+          team_group: teamMember.group,
+          start_date: teamMember.startDate || null,
+          end_date: teamMember.endDate || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', teamMember.id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.warn('meSaveTeamRelational update error:', error.message);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meSaveTeamRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meSaveProductRelational = async function(userId, product) {
+  try {
+    if (!product.id) {
+      // Insert new product
+      const { error } = await supa
+        .from('me_products')
+        .insert([{
+          user_id: userId,
+          name: product.name,
+          support_from: product.supportFrom,
+          support_until: product.supportUntil,
+          hours_per_week: product.hoursPerWeek,
+          notes: product.notes,
+          product_database_id: product.productDatabaseId
+        }]);
+
+      if (error) {
+        console.warn('meSaveProductRelational insert error:', error.message);
+        return false;
+      }
+    } else {
+      // Update existing product
+      const { error } = await supa
+        .from('me_products')
+        .update({
+          name: product.name,
+          support_from: product.supportFrom,
+          support_until: product.supportUntil,
+          hours_per_week: product.hoursPerWeek,
+          notes: product.notes,
+          product_database_id: product.productDatabaseId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', product.id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.warn('meSaveProductRelational update error:', error.message);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meSaveProductRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meSaveTaskRelational = async function(userId, task) {
+  try {
+    if (!task.id) {
+      // Insert new task
+      const { error } = await supa
+        .from('me_tasks')
+        .insert([{
+          user_id: userId,
+          name: task.name,
+          category: task.category,
+          type: task.type,
+          assignee_id: task.assigneeId || null,
+          product_id: task.productId || null,
+          start_date: task.startDate,
+          end_date: task.endDate,
+          total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0)
+        }]);
+
+      if (error) {
+        console.warn('meSaveTaskRelational insert error:', error.message);
+        return false;
+      }
+    } else {
+      // Update existing task
+      const { error } = await supa
+        .from('me_tasks')
+        .update({
+          name: task.name,
+          category: task.category,
+          type: task.type,
+          assignee_id: task.assigneeId || null,
+          product_id: task.productId || null,
+          start_date: task.startDate,
+          end_date: task.endDate,
+          total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', task.id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.warn('meSaveTaskRelational update error:', error.message);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meSaveTaskRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meSaveTaskSubtasksRelational = async function(taskId, subtasks) {
+  try {
+    // Delete old subtasks for this task
+    const { error: deleteError } = await supa
+      .from('me_task_subtasks')
+      .delete()
+      .eq('task_id', taskId);
+
+    if (deleteError) {
+      console.warn('meSaveTaskSubtasksRelational delete error:', deleteError.message);
+      return false;
+    }
+
+    // Insert new subtasks
+    if (subtasks && subtasks.length > 0) {
+      const subtasksData = subtasks.map(st => ({
+        task_id: taskId,
+        name: st.name,
+        assignee_id: st.assigneeId || null,
+        hours: st.hours,
+        start_date: st.startDate || null,
+        end_date: st.endDate || null,
+        source: st.source || 'pert'
+      }));
+
+      const { error: insertError } = await supa
+        .from('me_task_subtasks')
+        .insert(subtasksData);
+
+      if (insertError) {
+        console.warn('meSaveTaskSubtasksRelational insert error:', insertError.message);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meSaveTaskSubtasksRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meSaveTaskPertHistoryRelational = async function(taskId, estimates, confidenceLevel) {
+  try {
+    // Delete old history
+    const { error: deleteError } = await supa
+      .from('me_task_pert_history')
+      .delete()
+      .eq('task_id', taskId);
+
+    if (deleteError) {
+      console.warn('meSaveTaskPertHistoryRelational delete error:', deleteError.message);
+      return false;
+    }
+
+    // Insert new history records
+    if (estimates && estimates.length > 0) {
+      const historyData = estimates.map(est => {
+        const O = parseFloat(est.optimistic) || 0;
+        const ML = parseFloat(est.mostLikely) || 0;
+        const P = parseFloat(est.pessimistic) || 0;
+        const pertEst = (O + 4*ML + P) / 6;
+        const stdDev = (P - O) / 6;
+        const finalEst = pertEst + (stdDev * (confidenceLevel - 1.0));
+
+        return {
+          task_id: taskId,
+          estimate_id: est.id,
+          name: est.name,
+          optimistic: O,
+          most_likely: ML,
+          pessimistic: P,
+          confidence_level: confidenceLevel,
+          final_hours: finalEst,
+          assignee_id: est.assignedTo || null
+        };
+      });
+
+      const { error: insertError } = await supa
+        .from('me_task_pert_history')
+        .insert(historyData);
+
+      if (insertError) {
+        console.warn('meSaveTaskPertHistoryRelational insert error:', insertError.message);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meSaveTaskPertHistoryRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meSaveHolidayRelational = async function(userId, holiday) {
+  try {
+    if (!holiday.id) {
+      // Insert new holiday
+      const { error } = await supa
+        .from('me_holidays')
+        .insert([{
+          user_id: userId,
+          person_id: holiday.personId,
+          date: holiday.date,
+          type: holiday.type
+        }]);
+
+      if (error) {
+        console.warn('meSaveHolidayRelational insert error:', error.message);
+        return false;
+      }
+    } else {
+      // Update existing holiday (upsert by unique constraint)
+      const { error } = await supa
+        .from('me_holidays')
+        .update({
+          type: holiday.type
+        })
+        .eq('id', holiday.id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.warn('meSaveHolidayRelational update error:', error.message);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meSaveHolidayRelational exception:', err.message);
+    return false;
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// DELETE OPERATIONS — Remove records (cascade via FK)
+// ─────────────────────────────────────────────────────────────
+
+window.meDeleteTeamRelational = async function(teamId) {
+  try {
+    const { error } = await supa
+      .from('me_teams')
+      .delete()
+      .eq('id', teamId);
+
+    if (error) {
+      console.warn('meDeleteTeamRelational error:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meDeleteTeamRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meDeleteTaskRelational = async function(taskId) {
+  try {
+    const { error } = await supa
+      .from('me_tasks')
+      .delete()
+      .eq('id', taskId);
+
+    if (error) {
+      console.warn('meDeleteTaskRelational error:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meDeleteTaskRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meDeleteProductRelational = async function(productId) {
+  try {
+    const { error } = await supa
+      .from('me_products')
+      .delete()
+      .eq('id', productId);
+
+    if (error) {
+      console.warn('meDeleteProductRelational error:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meDeleteProductRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meDeleteHolidayRelational = async function(holidayId) {
+  try {
+    const { error } = await supa
+      .from('me_holidays')
+      .delete()
+      .eq('id', holidayId);
+
+    if (error) {
+      console.warn('meDeleteHolidayRelational error:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meDeleteHolidayRelational exception:', err.message);
+    return false;
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// MIGRATION — Convert JSON blob to relational format
+// ─────────────────────────────────────────────────────────────
+
+window.meMigrateJsonToRelational = async function(userId, jsonData) {
+  try {
+    const results = {
+      teams: 0,
+      tasks: 0,
+      subtasks: 0,
+      products: 0,
+      holidays: 0,
+      errors: []
+    };
+
+    // Migrate team members
+    if (jsonData.team && Array.isArray(jsonData.team)) {
+      for (const member of jsonData.team) {
+        const success = await meSaveTeamRelational(userId, member);
+        if (success) results.teams++;
+        else results.errors.push(`Failed to migrate team member: ${member.name}`);
+      }
+    }
+
+    // Migrate products
+    if (jsonData.products && Array.isArray(jsonData.products)) {
+      for (const product of jsonData.products) {
+        const success = await meSaveProductRelational(userId, product);
+        if (success) results.products++;
+        else results.errors.push(`Failed to migrate product: ${product.name}`);
+      }
+    }
+
+    // Migrate tasks and subtasks
+    if (jsonData.tasks && Array.isArray(jsonData.tasks)) {
+      for (const task of jsonData.tasks) {
+        const success = await meSaveTaskRelational(userId, task);
+        if (success) {
+          results.tasks++;
+
+          // Save subtasks if root task
+          if (task.type === 'root' && task.subtasks && Array.isArray(task.subtasks)) {
+            const subtasksSuccess = await meSaveTaskSubtasksRelational(task.id, task.subtasks);
+            if (subtasksSuccess) {
+              results.subtasks += task.subtasks.length;
+            }
+
+            // Save PERT history
+            if (task.advancedEstimation && task.advancedEstimation.pertData) {
+              await meSaveTaskPertHistoryRelational(
+                task.id,
+                task.advancedEstimation.pertData.estimates,
+                task.advancedEstimation.pertData.confidenceLevel || 1.0
+              );
+            }
+          }
+        } else {
+          results.errors.push(`Failed to migrate task: ${task.name}`);
+        }
+      }
+    }
+
+    // Migrate holidays
+    if (jsonData.holidays && Array.isArray(jsonData.holidays)) {
+      for (const holiday of jsonData.holidays) {
+        const success = await meSaveHolidayRelational(userId, holiday);
+        if (success) results.holidays++;
+        else results.errors.push(`Failed to migrate holiday for ${holiday.personId}`);
+      }
+    }
+
+    console.log('Migration complete:', results);
+    return results;
+  } catch (err) {
+    console.warn('meMigrateJsonToRelational exception:', err.message);
+    return { error: err.message };
+  }
+};
