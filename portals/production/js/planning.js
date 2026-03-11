@@ -16,7 +16,7 @@ function renderPlanByProduct() {
         batchesHtml += `
           <div class="batch-item">
             <div class="batch-num">Batch ${idx + 1}</div>
-            <div class="batch-unit">${batch.unit}</div>
+            <div class="batch-location">${batch.work_location || '—'}</div>
             <div class="batch-qty">${batch.quantity || '—'} units</div>
             <div class="batch-dates">${batch.start_date || '—'} to ${batch.due_date || '—'}</div>
             <div class="batch-status">${statusBadge}</div>
@@ -68,7 +68,7 @@ function renderPlanByUnit() {
 
   // Generate tabs
   let tabsHtml = units.map(unit => {
-    const batches = prodDataGetBatchesByUnit(unit);
+    const batches = prodDataGetBatchesByWorkLocation(unit);
     const count = batches.length;
     const isActive = unit === activeUnit;
     return `
@@ -82,7 +82,7 @@ function renderPlanByUnit() {
   }).join('');
 
   // Render Gantt timeline for active unit
-  const batches = prodDataGetBatchesByUnit(activeUnit);
+  const batches = prodDataGetBatchesByWorkLocation(activeUnit);
   const sortedBatches = batches.sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
 
   // Calculate date range

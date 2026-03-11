@@ -59,13 +59,13 @@ async function prodDataSave() {
 
 // ===== BATCH CRUD =====
 
-window.prodDataAddBatch = async function(productId, unit, quantity, startDate, dueDate, status, notes) {
-  if (!productId || !unit) return false;
+window.prodDataAddBatch = async function(productId, workLocation, quantity, startDate, dueDate, status, notes) {
+  if (!productId || !workLocation) return false;
 
   const batch = {
     user_id: currentUser.id,
     product_id: productId,
-    unit: unit,
+    work_location: workLocation,
     quantity: quantity ? parseInt(quantity) : null,
     start_date: startDate || null,
     due_date: dueDate || null,
@@ -98,8 +98,8 @@ window.prodDataUpdateBatch = async function(idx, field, value) {
     case 'product_id':
       updates.product_id = value;
       break;
-    case 'unit':
-      updates.unit = value || '';
+    case 'work_location':
+      updates.work_location = value || '';
       break;
     case 'quantity':
       updates.quantity = value ? parseInt(value) : null;
@@ -170,8 +170,8 @@ window.prodDataGetBatchesByProduct = function(productId) {
   return prodState.batches.filter(b => b.product_id === productId);
 };
 
-window.prodDataGetBatchesByUnit = function(unit) {
-  return prodState.batches.filter(b => b.unit === unit);
+window.prodDataGetBatchesByWorkLocation = function(workLocation) {
+  return prodState.batches.filter(b => b.work_location === workLocation);
 };
 
 window.prodSetActiveUnit = function(unit) {

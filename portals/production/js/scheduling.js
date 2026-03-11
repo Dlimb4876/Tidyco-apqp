@@ -1,7 +1,7 @@
 // Production Batch Scheduling
 
 let prodSchedulingSort = { field: 'start_date', ascending: true };
-let prodSchedulingFilters = { family: '', product: '', unit: '', dateFrom: '', dateTo: '' };
+let prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFrom: '', dateTo: '' };
 let prodSchedulingNewRow = false;
 let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
 
@@ -16,7 +16,7 @@ function renderScheduling() {
     <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
       <td>
-        <select class="cell-edit" id="batch-new-product" onchange="calcBatchDueDate(); updateFamilyDisplay('new')" onkeydown="handleBatchRowKey(event, 'product')">
+        <select class="cell-edit" id="batch-new-product" onchange="calcBatchDueDate(); updateFamilyDisplay('new'); autoPopulateWorkLocation()" onkeydown="handleBatchRowKey(event, 'product')">
           <option value="">— Select Product</option>
           ${prodState.products.filter(p => p.status !== 'closed').map(p => `<option value="${p.id}">${p.name} (${p.code || 'N/A'})</option>`).join('')}
         </select>
@@ -25,7 +25,7 @@ function renderScheduling() {
         <div class="cell-display" id="batch-new-family">—</div>
       </td>
       <td>
-        <select class="cell-edit" id="batch-new-unit" onkeydown="handleBatchRowKey(event, 'unit')">
+        <select class="cell-edit" id="batch-new-work-location" onkeydown="handleBatchRowKey(event, 'work-location')">
           <option value="">—</option>
           <option value="Unit 2">Unit 2</option>
           <option value="Unit 3">Unit 3</option>
@@ -67,11 +67,11 @@ function renderScheduling() {
           <div class="cell-display">${product && product.family_id ? (prodState.families.find(f => f.id === product.family_id)?.label || '—') : '—'}</div>
         </td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'unit', this.value)" onkeydown="handleCellKey(event)">
+          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'work_location', this.value)" onkeydown="handleCellKey(event)">
             <option value="">—</option>
-            <option value="Unit 2" ${batch.unit === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
-            <option value="Unit 3" ${batch.unit === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
-            <option value="Unit 6" ${batch.unit === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
+            <option value="Unit 2" ${batch.work_location === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
+            <option value="Unit 3" ${batch.work_location === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
+            <option value="Unit 6" ${batch.work_location === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
           </select>
         </td>
         <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
@@ -126,12 +126,12 @@ function renderScheduling() {
           </select>
         </div>
         <div class="filter-group">
-          <label>Unit:</label>
-          <select onchange="prodSchedulingFilters.unit = this.value; render()">
-            <option value="">— All Units</option>
-            <option value="Unit 2" ${prodSchedulingFilters.unit === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
-            <option value="Unit 3" ${prodSchedulingFilters.unit === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
-            <option value="Unit 6" ${prodSchedulingFilters.unit === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
+          <label>Work Location:</label>
+          <select onchange="prodSchedulingFilters.workLocation = this.value; render()">
+            <option value="">— All Locations</option>
+            <option value="Unit 2" ${prodSchedulingFilters.workLocation === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
+            <option value="Unit 3" ${prodSchedulingFilters.workLocation === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
+            <option value="Unit 6" ${prodSchedulingFilters.workLocation === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
           </select>
         </div>
         <div class="filter-group">
@@ -163,7 +163,7 @@ function renderScheduling() {
             <th>#</th>
             <th onclick="toggleSort('product_id')" style="cursor:pointer">Product ${prodSchedulingSort.field === 'product_id' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('family')" style="cursor:pointer">Family ${prodSchedulingSort.field === 'family' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
-            <th onclick="toggleSort('unit')" style="cursor:pointer">Unit ${prodSchedulingSort.field === 'unit' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th onclick="toggleSort('work_location')" style="cursor:pointer">Work Location ${prodSchedulingSort.field === 'work_location' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('quantity')" style="cursor:pointer">Qty ${prodSchedulingSort.field === 'quantity' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('start_date')" style="cursor:pointer">Start Date ${prodSchedulingSort.field === 'start_date' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('due_date')" style="cursor:pointer">Due Date ${prodSchedulingSort.field === 'due_date' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
@@ -193,8 +193,8 @@ function getFilteredBatches() {
     filtered = filtered.filter(b => b.product_id === prodSchedulingFilters.product);
   }
 
-  if (prodSchedulingFilters.unit) {
-    filtered = filtered.filter(b => b.unit === prodSchedulingFilters.unit);
+  if (prodSchedulingFilters.workLocation) {
+    filtered = filtered.filter(b => b.work_location === prodSchedulingFilters.workLocation);
   }
 
   if (prodSchedulingFilters.dateFrom) {
@@ -268,7 +268,7 @@ function handleCellKey(event) {
 function handleBatchRowKey(event, field) {
   if (event.key === 'Tab') {
     event.preventDefault();
-    const fields = ['product', 'unit', 'qty', 'start', 'due', 'status', 'notes'];
+    const fields = ['product', 'work-location', 'qty', 'start', 'due', 'status', 'notes'];
     const currentIdx = fields.indexOf(field);
     if (event.shiftKey) {
       if (currentIdx > 0) document.getElementById(`batch-new-${fields[currentIdx - 1]}`).focus();
@@ -289,23 +289,23 @@ function focusBatchNewRow() {
 
 async function addNewBatchRow() {
   const productId = document.getElementById('batch-new-product')?.value;
-  const unit = document.getElementById('batch-new-unit')?.value;
+  const workLocation = document.getElementById('batch-new-work-location')?.value;
   const qty = document.getElementById('batch-new-qty')?.value;
   const start = document.getElementById('batch-new-start')?.value;
   const due = document.getElementById('batch-new-due')?.value;
   const status = document.getElementById('batch-new-status')?.value || 'Planned';
   const notes = document.getElementById('batch-new-notes')?.value;
 
-  if (!productId || !unit) {
-    alert('Product and Unit are required');
+  if (!productId || !workLocation) {
+    alert('Product and Work Location are required');
     return;
   }
 
-  await prodDataAddBatch(productId, unit, qty, start, due, status, notes);
+  await prodDataAddBatch(productId, workLocation, qty, start, due, status, notes);
 
   // Reset new row fields
   document.getElementById('batch-new-product').value = '';
-  document.getElementById('batch-new-unit').value = '';
+  document.getElementById('batch-new-work-location').value = '';
   document.getElementById('batch-new-qty').value = '';
   document.getElementById('batch-new-start').value = '';
   document.getElementById('batch-new-due').value = '';
@@ -454,4 +454,21 @@ function updateFamilyDisplay(scope) {
   const productId = productSelect.value;
   const product = prodState.products.find(p => p.id === productId);
   familyDisplay.textContent = product && product.family ? product.family : '—';
+}
+
+// Auto-populate work location from selected product
+function autoPopulateWorkLocation() {
+  const productSelect = document.getElementById('batch-new-product');
+  const workLocationSelect = document.getElementById('batch-new-work-location');
+
+  if (!productSelect || !workLocationSelect) return;
+
+  const productId = productSelect.value;
+  const product = prodState.products.find(p => p.id === productId);
+
+  if (product && product.work_location) {
+    workLocationSelect.value = product.work_location;
+  } else {
+    workLocationSelect.value = '';
+  }
 }
