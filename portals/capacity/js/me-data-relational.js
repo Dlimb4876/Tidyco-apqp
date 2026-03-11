@@ -43,10 +43,9 @@ window.meLoadRelationalTeams = async function(userId) {
 
 window.meLoadRelationalProducts = async function(userId) {
   try {
-    // JOIN with products table to get product details (normalized schema)
     const { data, error } = await supa
       .from('me_products')
-      .select('id, user_id, product_database_id, support_from, support_until, hours_per_week, notes, created_at, updated_at, products:product_database_id(id, name, code, family)')
+      .select('*')
       .eq('user_id', userId);
 
     if (error) {
@@ -54,14 +53,10 @@ window.meLoadRelationalProducts = async function(userId) {
       return [];
     }
 
-    // Transform joined data into format expected by UI
-    // (flatten product details into product object)
     return (data || []).map(mp => ({
       id: mp.id,
-      name: mp.products?.name || '(Unknown Product)',  // Get from products table
-      code: mp.products?.code || '',
-      family: mp.products?.family || '',
-      productId: mp.product_database_id,  // Store FK for reference
+      name: mp.name || '(Unknown Product)',
+      productId: mp.product_database_id,
       supportFrom: mp.support_from,
       supportUntil: mp.support_until,
       hoursPerWeek: mp.hours_per_week,
@@ -199,7 +194,8 @@ window.meSaveProductRelational = async function(userId, product) {
       .upsert({
         id: product.id,
         user_id: userId,
-        product_database_id: productId,
+        name: product.name || '',
+        product_database_id: productId || null,
         support_from: product.supportFrom || product.support_from,
         support_until: product.supportUntil || product.support_until,
         hours_per_week: product.hoursPerWeek || product.hours_per_week,
@@ -388,8 +384,7 @@ window.meSaveHolidayRelational = async function(userId, holiday) {
         user_id: userId,
         person_id: holiday.personId,
         date: holiday.date,
-        type: holiday.type,
-        updated_at: new Date().toISOString()
+        type: holiday.type
       }, { onConflict: 'id' });
 
     if (error) {

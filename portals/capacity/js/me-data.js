@@ -503,14 +503,8 @@ window.meDataSave = async function(showAlert) {
                 ' holidays=' + meDataState.holidays.length);
 
     let relationalSuccess = true;
-    let jsonSuccess = true;
 
-    // ─────────────────────────────────────────────────────────────
-    // PHASE 1: Dual-write to both relational and JSON blob
-    // This maintains backward compatibility while enabling relational
-    // ─────────────────────────────────────────────────────────────
-
-    // Step 1: Save to relational tables (if functions available)
+    // Save to relational tables (if functions available)
     if (typeof meSaveTeamRelational === 'function' &&
         typeof meSaveTaskRelational === 'function' &&
         typeof meSaveProductRelational === 'function' &&
@@ -587,77 +581,25 @@ window.meDataSave = async function(showAlert) {
         if (relationalSuccess) {
           console.log('✓ Relational save complete');
         } else {
-          console.warn('⚠ Relational save had issues, continuing with JSON backup...');
+          console.warn('⚠ Relational save had issues');
         }
       } catch (relErr) {
-        console.warn('Relational save error:', relErr.message, '- continuing with JSON backup...');
+        console.warn('Relational save error:', relErr.message);
         relationalSuccess = false;
       }
     } else {
-      console.log('Relational functions not available, skipping relational save');
-    }
-
-    // Step 2: Always save to JSON blob as backup (Phase 1 dual-write)
-    try {
-      console.log('Saving to JSON blob...');
-      const payload = {
-        user_id: currentUser.id,
-        data: {
-          team: meDataState.team,
-          tasks: meDataState.tasks,
-          products: meDataState.products,
-          holidays: meDataState.holidays
-        },
-        updated_at: new Date().toISOString()
-      };
-
-      // Try to fetch existing record for this user
-      const { data: existing } = await supa
-        .from('me_capacity')
-        .select('id')
-        .eq('user_id', currentUser.id)
-        .single();
-
-      let error;
-      if (existing) {
-        // Update existing record
-        const { error: updateError } = await supa
-          .from('me_capacity')
-          .update(payload)
-          .eq('user_id', currentUser.id);
-        error = updateError;
-        if (!error) console.log('✓ JSON blob updated');
-      } else {
-        // Insert new record
-        const { error: insertError } = await supa
-          .from('me_capacity')
-          .insert([payload]);
-        error = insertError;
-        if (!error) console.log('✓ JSON blob inserted');
-      }
-
-      if (error) {
-        console.error('JSON save error:', error);
-        jsonSuccess = false;
-      }
-    } catch (jsonErr) {
-      console.error('JSON save exception:', jsonErr.message);
-      jsonSuccess = false;
+      console.warn('Relational functions not available');
+      relationalSuccess = false;
     }
 
     // Final status
-    if (relationalSuccess && jsonSuccess) {
+    if (relationalSuccess) {
       if (typeof setSyncBadge === 'function') {
         setSyncBadge('saved', 'Saved');
       }
-      if (showAlert) console.log('ME capacity saved (relational + JSON backup)');
-    } else if (jsonSuccess) {
-      if (typeof setSyncBadge === 'function') {
-        setSyncBadge('saved', 'Saved (backup mode)');
-      }
-      console.warn('ME capacity saved to JSON blob only (relational had issues)');
+      if (showAlert) console.log('ME capacity saved');
     } else {
-      throw new Error('Save failed on both relational and JSON');
+      throw new Error('Relational save failed');
     }
   } catch (err) {
     console.error('ME save exception:', err.message || err);
