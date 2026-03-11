@@ -307,7 +307,7 @@ window.meSaveTaskRelational = async function(userId, task) {
   }
 };
 
-window.meSaveTaskSubtasksRelational = async function(taskId, subtasks) {
+window.meSaveTaskSubtasksRelational = async function(taskId, subtasks, userId) {
   try {
     // Delete old subtasks for this task
     const { error: deleteError } = await supa
@@ -320,10 +320,11 @@ window.meSaveTaskSubtasksRelational = async function(taskId, subtasks) {
       return false;
     }
 
-    // Insert new subtasks
+    // Insert new subtasks (MUST include user_id for RLS)
     if (subtasks && subtasks.length > 0) {
       const subtasksData = subtasks.map(st => ({
         task_id: taskId,
+        user_id: userId,  // REQUIRED for RLS policy
         name: st.name,
         assignee_id: st.assigneeId || null,
         hours: st.hours,
@@ -349,7 +350,7 @@ window.meSaveTaskSubtasksRelational = async function(taskId, subtasks) {
   }
 };
 
-window.meSaveTaskPertHistoryRelational = async function(taskId, estimates, confidenceLevel) {
+window.meSaveTaskPertHistoryRelational = async function(taskId, estimates, confidenceLevel, userId) {
   try {
     // Delete old history
     const { error: deleteError } = await supa
@@ -362,7 +363,7 @@ window.meSaveTaskPertHistoryRelational = async function(taskId, estimates, confi
       return false;
     }
 
-    // Insert new history records
+    // Insert new history records (MUST include user_id for RLS)
     if (estimates && estimates.length > 0) {
       const historyData = estimates.map(est => {
         const O = parseFloat(est.optimistic) || 0;
@@ -374,6 +375,7 @@ window.meSaveTaskPertHistoryRelational = async function(taskId, estimates, confi
 
         return {
           task_id: taskId,
+          user_id: userId,  // REQUIRED for RLS policy
           estimate_id: est.id,
           name: est.name,
           optimistic: O,
@@ -564,7 +566,7 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
 
           // Save subtasks if root task
           if (task.type === 'root' && task.subtasks && Array.isArray(task.subtasks)) {
-            const subtasksSuccess = await meSaveTaskSubtasksRelational(task.id, task.subtasks);
+            const subtasksSuccess = await meSaveTaskSubtasksRelational(task.id, task.subtasks, userId);
             if (subtasksSuccess) {
               results.subtasks += task.subtasks.length;
             }
@@ -574,7 +576,8 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
               await meSaveTaskPertHistoryRelational(
                 task.id,
                 task.advancedEstimation.pertData.estimates,
-                task.advancedEstimation.pertData.confidenceLevel || 1.0
+                task.advancedEstimation.pertData.confidenceLevel || 1.0,
+                userId
               );
             }
           }

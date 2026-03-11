@@ -535,7 +535,7 @@ window.meDataSave = async function(showAlert) {
           } else {
             // Save subtasks if task has them
             if (task.subtasks && task.subtasks.length > 0) {
-              const subtaskSuccess = await meSaveTaskSubtasksRelational(task.id, task.subtasks);
+              const subtaskSuccess = await meSaveTaskSubtasksRelational(task.id, task.subtasks, currentUser.id);
               if (!subtaskSuccess) {
                 console.warn('Failed to save subtasks for task', i);
                 relationalSuccess = false;
@@ -546,7 +546,8 @@ window.meDataSave = async function(showAlert) {
               const histSuccess = await meSaveTaskPertHistoryRelational(
                 task.id,
                 task.advancedEstimation.pertEstimates || [],
-                task.advancedEstimation.confidenceLevel || 0
+                task.advancedEstimation.confidenceLevel || 0,
+                currentUser.id
               );
               if (!histSuccess) {
                 console.warn('Failed to save PERT history for task', i);
