@@ -305,6 +305,18 @@ async function addNewBatchRow() {
   const start = startInput ? parseDisplayDate(startInput) : null;
   const due = dueInput ? parseDisplayDate(dueInput) : null;
 
+  // Validate dates if provided
+  if (startInput && !start) {
+    alert(`Invalid start date format: "${startInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`);
+    document.getElementById('batch-new-start').focus();
+    return;
+  }
+  if (dueInput && !due) {
+    alert(`Invalid due date format: "${dueInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`);
+    document.getElementById('batch-new-due').focus();
+    return;
+  }
+
   await prodDataAddBatch(productId, workLocation, qty, start, due, status, notes);
 
   // Reset new row fields
@@ -454,10 +466,13 @@ function smartDateFormat(fieldId, callback) {
     return;
   }
 
-  // Invalid format - prompt user
-  alert(`Invalid date format: "${val}"\n\nUse DD/MM/YYYY or shorthand:\n• t or today\n• +7 or -3 for relative dates`);
-  input.focus();
-  input.select();
+  // Invalid format - just clear and show inline hint (no blocking alert)
+  input.style.borderColor = 'var(--red)';
+  input.title = `Invalid format. Use DD/MM/YYYY, t/today, or +7/-3 for relative dates`;
+  setTimeout(() => {
+    input.style.borderColor = '';
+    input.title = '';
+  }, 2000);
 }
 
 // Update family display when product changes
