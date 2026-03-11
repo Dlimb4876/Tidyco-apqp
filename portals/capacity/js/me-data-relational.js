@@ -33,9 +33,10 @@ window.meLoadRelationalTeams = async function(userId) {
 
 window.meLoadRelationalProducts = async function(userId) {
   try {
+    // JOIN with products table to get product details (normalized schema)
     const { data, error } = await supa
       .from('me_products')
-      .select('*')
+      .select('id, user_id, product_id, support_from, support_until, hours_per_week, notes, created_at, updated_at, products(id, name, code, family)')
       .eq('user_id', userId);
 
     if (error) {
@@ -43,7 +44,21 @@ window.meLoadRelationalProducts = async function(userId) {
       return [];
     }
 
-    return data || [];
+    // Transform joined data into format expected by UI
+    // (flatten product details into product object)
+    return (data || []).map(mp => ({
+      id: mp.id,
+      name: mp.products?.name || '(Unknown Product)',  // Get from products table
+      code: mp.products?.code || '',
+      family: mp.products?.family || '',
+      productId: mp.product_id,  // Store FK for reference
+      supportFrom: mp.support_from,
+      supportUntil: mp.support_until,
+      hoursPerWeek: mp.hours_per_week,
+      notes: mp.notes,
+      createdAt: mp.created_at,
+      updatedAt: mp.updated_at
+    }));
   } catch (err) {
     console.warn('meLoadRelationalProducts exception:', err.message);
     return [];
@@ -190,18 +205,21 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
 
 window.meSaveProductRelational = async function(userId, product) {
   try {
+    // Normalized schema: store product_id (FK to products table), not product name
+    // Product name comes from products table via JOIN, ensuring single source of truth
+    const productId = product.productId || product.id;  // Use productId if available (normalized)
+
     if (!product.id) {
-      // Insert new product
+      // Insert new product support record
       const { error } = await supa
         .from('me_products')
         .insert([{
           user_id: userId,
-          name: product.name,
-          support_from: product.supportFrom,
-          support_until: product.supportUntil,
-          hours_per_week: product.hoursPerWeek,
-          notes: product.notes,
-          product_database_id: product.productDatabaseId
+          product_id: productId,  // Foreign key to products table
+          support_from: product.supportFrom || product.support_from,
+          support_until: product.supportUntil || product.support_until,
+          hours_per_week: product.hoursPerWeek || product.hours_per_week,
+          notes: product.notes
         }]);
 
       if (error) {
@@ -209,16 +227,15 @@ window.meSaveProductRelational = async function(userId, product) {
         return false;
       }
     } else {
-      // Update existing product
+      // Update existing product support record
       const { error } = await supa
         .from('me_products')
         .update({
-          name: product.name,
-          support_from: product.supportFrom,
-          support_until: product.supportUntil,
-          hours_per_week: product.hoursPerWeek,
+          product_id: productId,  // Can change product if needed
+          support_from: product.supportFrom || product.support_from,
+          support_until: product.supportUntil || product.support_until,
+          hours_per_week: product.hoursPerWeek || product.hours_per_week,
           notes: product.notes,
-          product_database_id: product.productDatabaseId,
           updated_at: new Date().toISOString()
         })
         .eq('id', product.id)
