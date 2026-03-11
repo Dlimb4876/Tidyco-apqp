@@ -343,16 +343,72 @@
   color: #2e7d32;
 }
 
-/* Trends */
-.trends-container {
+/* ─────────────────────────────────────────────────────────────────────
+   Enhanced Trends & KPI Visualization
+   ───────────────────────────────────────────────────────────────────── */
+
+#productsTrends {
   background: white;
   padding: 20px;
   border-radius: 4px;
 }
 
-.trends-subtitle {
-  color: #999;
-  margin: 0 0 15px 0;
+.trends-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.trends-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.5em;
+}
+
+/* Trend Tab Navigation */
+.trend-tabs {
+  display: flex;
+  gap: 5px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.trend-tab-btn {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #666;
+  font-size: 0.95em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.trend-tab-btn:hover {
+  color: #4CAF50;
+}
+
+.trend-tab-btn.active {
+  color: #4CAF50;
+  border-bottom-color: #4CAF50;
+}
+
+/* View Content */
+.trend-view-content {
+  display: none;
+}
+
+.trend-view-content.active {
+  display: block;
+  animation: fadeIn 0.3s;
+}
+
+/* Trend Controls */
+.trend-controls {
+  margin-bottom: 25px;
 }
 
 .trend-select {
@@ -371,18 +427,148 @@
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
-.trend-chart {
-  margin-top: 20px;
+/* ─── KPI Cards Grid ─────────────────────────────────────────────── */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
 }
 
-.trend-table {
-  width: 100%;
-  border-collapse: collapse;
+.kpi-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
 }
 
-.trend-table td {
+.kpi-card:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.1);
+  transform: translateY(-2px);
+}
+
+.kpi-label {
+  font-size: 0.85em;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.kpi-unit {
+  font-size: 0.8em;
+  color: #999;
+}
+
+/* ─── Comparison Grid ─────────────────────────────────────────────── */
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.comparison-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+}
+
+.comparison-card:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.15);
+  transform: translateY(-4px);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header h4 {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.card-code {
+  font-size: 0.9em;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.card-kpis {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.mini-kpi {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 8px 0;
-  border: none;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.mini-kpi:last-child {
+  border-bottom: none;
+}
+
+.mini-label {
+  font-size: 0.85em;
+  color: #666;
+  font-weight: 500;
+}
+
+.mini-value {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Chart Container */
+#trendChart {
+  position: relative;
+  height: 400px;
+  margin-top: 30px;
+}
+
+#chartCanvas {
+  max-height: 400px;
+}
+
+/* History Badge */
+.history-badge {
+  display: inline-block;
+  background: #4CAF50;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 0.85em;
+  margin-left: 5px;
+  font-weight: 600;
 }
 
 /* Responsive */

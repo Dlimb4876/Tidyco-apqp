@@ -383,98 +383,10 @@ function showAddHistoryModal(productId) {
 }
 
 /**
- * Render overhaul trends visualization
+ * Render overhaul trends visualization with KPIs and charts
  */
 function renderProductsTrends() {
-  const container = document.getElementById('productsTrends');
-  const products = productsDataGetAll();
-
-  if (products.length === 0) {
-    container.innerHTML = '<div class="empty-state">No products to display trends. Add products first.</div>';
-    return;
-  }
-
-  const html = `
-    <div class="trends-container">
-      <h3>Overhaul Time Trends</h3>
-      <p class="trends-subtitle">Select a product to view overhaul time changes over time</p>
-      <select id="trendProductSelect" class="trend-select">
-        <option value="">Choose a product...</option>
-        ${products.map(p => `<option value="${p.id}">${p.name} (${p.code})</option>`).join('')}
-      </select>
-      <div id="trendChart" style="margin-top: 20px;"></div>
-    </div>
-  `;
-
-  container.innerHTML = html;
-
-  document.getElementById('trendProductSelect').addEventListener('change', (e) => {
-    const productId = e.target.value;
-    if (productId) {
-      renderTrendChart(productId);
-    } else {
-      document.getElementById('trendChart').innerHTML = '';
-    }
-  });
-}
-
-/**
- * Render trend chart for a specific product
- */
-function renderTrendChart(productId) {
-  const history = productsDataGetHistory(productId);
-  const chartContainer = document.getElementById('trendChart');
-
-  if (history.length === 0) {
-    chartContainer.innerHTML = '<div class="empty-state">No history data for this product.</div>';
-    return;
-  }
-
-  // Sort by effective date (oldest first)
-  const sorted = [...history].sort((a, b) => new Date(a.effective_date) - new Date(b.effective_date));
-
-  // Build simple chart HTML
-  const maxHours = Math.max(...sorted.map(h => h.overhaul_hours));
-  const minHours = Math.min(...sorted.map(h => h.overhaul_hours));
-  const range = maxHours - minHours || 1;
-
-  let html = `
-    <div class="trend-chart">
-      <table class="trend-table">
-        <tr>
-          <td style="text-align: right; padding-right: 10px; white-space: nowrap;"><strong>${maxHours.toFixed(1)}h</strong></td>
-          <td colspan="2" style="height: 1px; background: #ddd;"></td>
-        </tr>
-  `;
-
-  sorted.forEach((h, idx) => {
-    const normalized = (h.overhaul_hours - minHours) / range * 100;
-    html += `
-      <tr>
-        <td style="text-align: right; padding-right: 10px; white-space: nowrap; font-size: 0.9em;">${h.overhaul_hours.toFixed(1)}h</td>
-        <td style="padding: 0;">
-          <div style="display: flex; align-items: center; height: 30px;">
-            <div style="width: ${normalized}%; height: 24px; background: #4CAF50; border-radius: 4px;" title="${h.effective_date}"></div>
-          </div>
-        </td>
-        <td style="padding-left: 10px; font-size: 0.85em; color: #666;">
-          <strong>${h.effective_date}</strong><br>
-          ${esc(h.change_reason || '—')}
-        </td>
-      </tr>
-    `;
-  });
-
-  html += `
-      <tr>
-        <td style="text-align: right; padding-right: 10px; white-space: nowrap;"><strong>${minHours.toFixed(1)}h</strong></td>
-        <td colspan="2" style="height: 1px; background: #ddd;"></td>
-      </tr>
-    </table>
-  </div>
-  `;
-
-  chartContainer.innerHTML = html;
+  renderAllProductsTrends();
 }
 
 /**
