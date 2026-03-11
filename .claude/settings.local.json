@@ -28,7 +28,8 @@
       "Bash(node -c \"portals/product-development/js/product-management.js\")",
       "Bash(ls -la \"C:\\\\Users\\\\Tidyco\\\\Documents\\\\GitHub\\\\Tidyco-apqp\\\\portals\\\\product-development\"\" | grep -E \".js)",
       "Bash(.html \")",
-      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/css/*.css)"
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/css/*.css)",
+      "Bash(git add portals/capacity/js/me-product-taskload.js)"
     ]
   }
 }
