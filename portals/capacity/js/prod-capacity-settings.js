@@ -106,8 +106,39 @@ function renderProdCapSettings() {
     </td>`;
   }).join('');
 
+  const utilPercent = Math.round(prodCapUtilizationFactor * 100);
+
   return `
     <div class="pc-settings">
+
+      <!-- Utilization Factor Slider -->
+      <div class="pc-card" style="margin-bottom:16px">
+        <div class="pc-card-header">
+          <div>
+            <div class="pc-card-title">Capacity Utilization Factor</div>
+            <div class="pc-card-sub">Adjust the percentage of available capacity that can be scheduled. Reduces total load capacity across all areas.</div>
+          </div>
+        </div>
+        <div style="padding:0 16px 16px">
+          <div style="display:flex;align-items:center;gap:16px">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value="${utilPercent}"
+              onchange="prodCapSettingsSetUtilization(this.value)"
+              style="flex:1;cursor:pointer"
+            >
+            <div style="min-width:60px;text-align:center;font-weight:700;color:var(--blue);font-size:16px">
+              ${utilPercent}%
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--mid);margin-top:8px">
+            At ${utilPercent}% utilization, scheduled workload can be up to ${utilPercent}% of total staff capacity.
+          </div>
+        </div>
+      </div>
 
       <div class="pc-card-header" style="margin-bottom:16px">
         <div>
@@ -249,4 +280,10 @@ async function prodCapSettingsClearAll() {
     console.error('Error clearing capacity:', err);
     alert('Failed to clear: ' + err.message);
   }
+}
+
+// ── Set utilization factor from slider ────────────────────────
+function prodCapSettingsSetUtilization(percent) {
+  prodCapUtilizationFactor = Math.max(0, Math.min(100, parseInt(percent))) / 100;
+  render();
 }
