@@ -48,6 +48,9 @@ async function launchApp() {
   // Load Products Management data (separate Supabase tables, silent if tables absent)
   await productsDataInit();
 
+  // Load Production Capacity settings (production_capacity table)
+  await prodCapDataInit();
+
   // Restore position from URL hash
   const h = parseHash();
   if (h.p && db.programmes.find(p => p.id === h.p)) {
