@@ -36,7 +36,7 @@ window.meLoadRelationalProducts = async function(userId) {
     // JOIN with products table to get product details (normalized schema)
     const { data, error } = await supa
       .from('me_products')
-      .select('id, user_id, product_id, support_from, support_until, hours_per_week, notes, created_at, updated_at, products(id, name, code, family)')
+      .select('id, user_id, product_database_id, support_from, support_until, hours_per_week, notes, created_at, updated_at, products:product_database_id(id, name, code, family)')
       .eq('user_id', userId);
 
     if (error) {
@@ -51,7 +51,7 @@ window.meLoadRelationalProducts = async function(userId) {
       name: mp.products?.name || '(Unknown Product)',  // Get from products table
       code: mp.products?.code || '',
       family: mp.products?.family || '',
-      productId: mp.product_id,  // Store FK for reference
+      productId: mp.product_database_id,  // Store FK for reference
       supportFrom: mp.support_from,
       supportUntil: mp.support_until,
       hoursPerWeek: mp.hours_per_week,
@@ -215,7 +215,7 @@ window.meSaveProductRelational = async function(userId, product) {
         .from('me_products')
         .insert([{
           user_id: userId,
-          product_id: productId,  // Foreign key to products table
+          product_database_id: productId,  // Foreign key to products table
           support_from: product.supportFrom || product.support_from,
           support_until: product.supportUntil || product.support_until,
           hours_per_week: product.hoursPerWeek || product.hours_per_week,
@@ -231,7 +231,7 @@ window.meSaveProductRelational = async function(userId, product) {
       const { error } = await supa
         .from('me_products')
         .update({
-          product_id: productId,  // Can change product if needed
+          product_database_id: productId,  // Can change product if needed
           support_from: product.supportFrom || product.support_from,
           support_until: product.supportUntil || product.support_until,
           hours_per_week: product.hoursPerWeek || product.hours_per_week,
@@ -257,8 +257,8 @@ window.meSaveProductRelational = async function(userId, product) {
 window.meSaveTaskRelational = async function(userId, task) {
   try {
     if (!task.id) {
-      // Insert new task
-      const { error } = await supa
+      // Insert new task and capture the returned ID
+      const { data, error } = await supa
         .from('me_tasks')
         .insert([{
           user_id: userId,
@@ -270,12 +270,17 @@ window.meSaveTaskRelational = async function(userId, task) {
           start_date: task.startDate,
           end_date: task.endDate,
           total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0)
-        }]);
+        }])
+        .select('id');
 
       if (error) {
         console.warn('meSaveTaskRelational insert error:', error.message);
-        return false;
+        return { success: false, taskId: null };
       }
+
+      // Return the newly created task ID
+      const newId = data && data.length > 0 ? data[0].id : null;
+      return { success: true, taskId: newId };
     } else {
       // Update existing task
       const { error } = await supa
@@ -296,14 +301,14 @@ window.meSaveTaskRelational = async function(userId, task) {
 
       if (error) {
         console.warn('meSaveTaskRelational update error:', error.message);
-        return false;
+        return { success: false, taskId: null };
       }
-    }
 
-    return true;
+      return { success: true, taskId: task.id };
+    }
   } catch (err) {
     console.warn('meSaveTaskRelational exception:', err.message);
-    return false;
+    return { success: false, taskId: null };
   }
 };
 
@@ -560,13 +565,16 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
     // Migrate tasks and subtasks
     if (jsonData.tasks && Array.isArray(jsonData.tasks)) {
       for (const task of jsonData.tasks) {
-        const success = await meSaveTaskRelational(userId, task);
-        if (success) {
+        const taskResult = await meSaveTaskRelational(userId, task);
+        if (taskResult.success) {
           results.tasks++;
 
+          // Use the returned task ID (important for newly created tasks)
+          const taskId = taskResult.taskId || task.id;
+
           // Save subtasks if root task
-          if (task.type === 'root' && task.subtasks && Array.isArray(task.subtasks)) {
-            const subtasksSuccess = await meSaveTaskSubtasksRelational(task.id, task.subtasks, userId);
+          if (taskId && task.type === 'root' && task.subtasks && Array.isArray(task.subtasks)) {
+            const subtasksSuccess = await meSaveTaskSubtasksRelational(taskId, task.subtasks, userId);
             if (subtasksSuccess) {
               results.subtasks += task.subtasks.length;
             }
@@ -574,7 +582,7 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
             // Save PERT history
             if (task.advancedEstimation && task.advancedEstimation.pertData) {
               await meSaveTaskPertHistoryRelational(
-                task.id,
+                taskId,
                 task.advancedEstimation.pertData.estimates,
                 task.advancedEstimation.pertData.confidenceLevel || 1.0,
                 userId

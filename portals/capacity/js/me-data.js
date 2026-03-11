@@ -528,23 +528,31 @@ window.meDataSave = async function(showAlert) {
         // Save all tasks with subtasks
         for (let i = 0; i < meDataState.tasks.length; i++) {
           const task = meDataState.tasks[i];
-          const taskSuccess = await meSaveTaskRelational(currentUser.id, task);
-          if (!taskSuccess) {
+          const taskResult = await meSaveTaskRelational(currentUser.id, task);
+          if (!taskResult.success) {
             console.warn('Failed to save task', i);
             relationalSuccess = false;
           } else {
+            // Use the returned task ID (important for new tasks)
+            const taskId = taskResult.taskId || task.id;
+
+            // Update the task object with the ID if it was newly created
+            if (!task.id && taskId) {
+              task.id = taskId;
+            }
+
             // Save subtasks if task has them
-            if (task.subtasks && task.subtasks.length > 0) {
-              const subtaskSuccess = await meSaveTaskSubtasksRelational(task.id, task.subtasks, currentUser.id);
+            if (taskId && task.subtasks && task.subtasks.length > 0) {
+              const subtaskSuccess = await meSaveTaskSubtasksRelational(taskId, task.subtasks, currentUser.id);
               if (!subtaskSuccess) {
                 console.warn('Failed to save subtasks for task', i);
                 relationalSuccess = false;
               }
             }
             // Save PERT history if task is root type
-            if (task.type === 'root' && task.advancedEstimation) {
+            if (taskId && task.type === 'root' && task.advancedEstimation) {
               const histSuccess = await meSaveTaskPertHistoryRelational(
-                task.id,
+                taskId,
                 task.advancedEstimation.pertEstimates || [],
                 task.advancedEstimation.confidenceLevel || 0,
                 currentUser.id
