@@ -13,7 +13,6 @@ window.meRenderTeamTab = function(teamArray) {
   // Calculate group availability
   const npiCapacity = teamArray.filter(m => (m.group || '') === 'NPI').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
   const prodCapacity = teamArray.filter(m => (m.group || '') === 'Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
-  const bothCapacity = teamArray.filter(m => (m.group || '') === 'NPI / Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
 
   // Calculate holidays this month
   const today = new Date();
@@ -24,7 +23,7 @@ window.meRenderTeamTab = function(teamArray) {
   let rows = '';
   teamArray.forEach((member, idx) => {
     const effective = ((member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100)).toFixed(1);
-    const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option><option value="NPI / Production" ' + ((member.group || '') === 'NPI / Production' ? 'selected' : '') + '>NPI / Production</option>';
+    const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option>';
     rows += `
       <tr>
         <td><input value="${esc(member.name)}" onchange="meDataUpdateTeam(${idx}, 'name', this.value); meDebouncedSave();"></td>
@@ -57,11 +56,6 @@ window.meRenderTeamTab = function(teamArray) {
         <div class="me-kpi" style="border-left: 4px solid var(--amber);">
           <div class="me-kpi-value">${prodCapacity}</div>
           <div class="me-kpi-label">Production Group</div>
-          <div class="me-kpi-month">h/month</div>
-        </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--navy);">
-          <div class="me-kpi-value">${bothCapacity}</div>
-          <div class="me-kpi-label">NPI / Production</div>
           <div class="me-kpi-month">h/month</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--teal); cursor: pointer;" onclick="meSetTab('holidays')">
