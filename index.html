@@ -217,6 +217,30 @@
   </div>
 </div>
 
+<!-- Edit Product Family (productmgmt portal) -->
+<div class="modal-bg" id="pmEditModal" style="display:none" onclick="if(event.target===this)closeModal('pmEditModal')">
+  <div class="modal modal-sm">
+    <div class="modal-title">Edit Family</div>
+    <div class="field">
+      <label>Icon</label>
+      <input id="pmEditIcon" type="text" maxlength="4" class="pm-icon-input">
+    </div>
+    <div class="field">
+      <label>Family Name</label>
+      <input id="pmEditLabel" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <input id="pmEditDescription" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
+    </div>
+    <input type="hidden" id="pmEditIdx">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('pmEditModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="pmSaveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════
      SCRIPTS — load order matters
      state → auth → db → helpers → navigation →
