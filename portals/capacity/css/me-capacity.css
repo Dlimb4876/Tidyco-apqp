@@ -1093,3 +1093,53 @@
 .me-tbl td:last-child {
   display: flex; align-items: center; justify-content: center; gap: 4px;
 }
+
+/* ── PERT Table ──────────────────────────────────────────────── */
+.me-pert-table {
+  font-size: 12px;
+}
+
+.me-pert-table th {
+  white-space: normal;
+  padding: 10px 6px;
+}
+
+.me-pert-table .me-input-hours {
+  width: 80px;
+}
+
+.me-pert-table .me-est-result,
+.me-pert-table .me-est-final {
+  text-align: right; padding: 4px 6px;
+  font-weight: 600; color: var(--blue);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-estimation-subsystem {
+  display: flex; flex-direction: column; height: 100%;
+}
+
+.me-subsystem-topbar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 20px; background: var(--white);
+  border-bottom: 1px solid var(--line); flex-shrink: 0;
+}
+
+.me-subsystem-topbar button {
+  flex-shrink: 0;
+}
+
+.me-subsystem-topbar > div {
+  flex: 1;
+}
+
+.me-estimation-body {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+.me-estimation-footer {
+  display: flex; gap: 8px; padding: 12px 20px;
+  border-top: 1px solid var(--line); flex-shrink: 0;
+  justify-content: flex-end; flex-wrap: wrap;
+}
