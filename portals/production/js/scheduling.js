@@ -291,8 +291,8 @@ async function addNewBatchRow() {
   const workLocationDiv = document.getElementById('batch-new-work-location');
   const workLocation = workLocationDiv?.textContent?.trim();
   const qty = document.getElementById('batch-new-qty')?.value;
-  const start = document.getElementById('batch-new-start')?.value;
-  const due = document.getElementById('batch-new-due')?.value;
+  const startInput = document.getElementById('batch-new-start')?.value;
+  const dueInput = document.getElementById('batch-new-due')?.value;
   const status = document.getElementById('batch-new-status')?.value || 'Planned';
   const notes = document.getElementById('batch-new-notes')?.value;
 
@@ -300,6 +300,10 @@ async function addNewBatchRow() {
     alert('Product and Work Location are required');
     return;
   }
+
+  // Parse dates from DD/MM/YYYY to YYYY-MM-DD format
+  const start = startInput ? parseDisplayDate(startInput) : null;
+  const due = dueInput ? parseDisplayDate(dueInput) : null;
 
   await prodDataAddBatch(productId, workLocation, qty, start, due, status, notes);
 
