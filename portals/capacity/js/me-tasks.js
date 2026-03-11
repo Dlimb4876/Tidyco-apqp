@@ -164,7 +164,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
 };
 
 window.meAddDefaultTask = function() {
-  meDataAddTask('', 'NPI', '', '', '', 0);
+  meDataAddTask('New Task', 'NPI', '', '', '', 0);
   meOnSave();
   meSetTab('tasks');
 };
