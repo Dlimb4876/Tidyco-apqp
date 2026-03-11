@@ -88,8 +88,14 @@ function prodCapAvailableHours(workArea, year, month) {
   return staff * prodCapWorkingDays(year, month) * PROD_CAP_HOURS_PER_DAY;
 }
 
-// ── Work area discovery ───────────────────────────────────────
+// ── Work area accessors ───────────────────────────────────────
 function prodCapGetWorkAreas() {
+  // Get work areas from database (if loaded)
+  if (workAreasState?.workAreas && workAreasState.workAreas.length > 0) {
+    return workAreasState.workAreas.map(w => w.name).sort();
+  }
+
+  // Fallback: discover from production data if work_areas table not available
   const areas = new Set();
   // From products
   const prods = prodState?.products || [];
