@@ -512,7 +512,19 @@ window.meDataSave = async function(showAlert) {
       try {
         console.log('Saving to relational tables...');
 
-        // Save all team members
+        // 1. Save products FIRST (tasks FK-reference products)
+        for (let i = 0; i < meDataState.products.length; i++) {
+          const success = await meSaveProductRelational(currentUser.id, meDataState.products[i]);
+          if (!success) {
+            console.warn('Failed to save product', i);
+            relationalSuccess = false;
+          }
+        }
+
+        // Build set of valid product IDs now in DB
+        const validProductIds = new Set(meDataState.products.map(p => p.id).filter(Boolean));
+
+        // 2. Save team members
         for (let i = 0; i < meDataState.team.length; i++) {
           const success = await meSaveTeamRelational(currentUser.id, meDataState.team[i]);
           if (!success) {
@@ -521,23 +533,26 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // Save all tasks with subtasks
+        // 3. Save tasks (products must already be saved above)
         for (let i = 0; i < meDataState.tasks.length; i++) {
           const task = meDataState.tasks[i];
+
+          // Null out productId if it doesn't exist in me_products (prevents FK violation)
+          if (task.productId && !validProductIds.has(task.productId)) {
+            task.productId = '';
+          }
+
           const taskResult = await meSaveTaskRelational(currentUser.id, task);
           if (!taskResult.success) {
             console.warn('Failed to save task', i);
             relationalSuccess = false;
           } else {
-            // Use the returned task ID (important for new tasks)
             const taskId = taskResult.taskId || task.id;
 
-            // Update the task object with the ID if it was newly created
             if (!task.id && taskId) {
               task.id = taskId;
             }
 
-            // Save subtasks if task has them
             if (taskId && task.subtasks && task.subtasks.length > 0) {
               const subtaskSuccess = await meSaveTaskSubtasksRelational(taskId, task.subtasks, currentUser.id);
               if (!subtaskSuccess) {
@@ -545,7 +560,6 @@ window.meDataSave = async function(showAlert) {
                 relationalSuccess = false;
               }
             }
-            // Save PERT history if task is root type
             if (taskId && task.type === 'root' && task.advancedEstimation) {
               const histSuccess = await meSaveTaskPertHistoryRelational(
                 taskId,
@@ -560,16 +574,7 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // Save all products
-        for (let i = 0; i < meDataState.products.length; i++) {
-          const success = await meSaveProductRelational(currentUser.id, meDataState.products[i]);
-          if (!success) {
-            console.warn('Failed to save product', i);
-            relationalSuccess = false;
-          }
-        }
-
-        // Save all holidays
+        // 4. Save holidays
         for (let i = 0; i < meDataState.holidays.length; i++) {
           const success = await meSaveHolidayRelational(currentUser.id, meDataState.holidays[i]);
           if (!success) {

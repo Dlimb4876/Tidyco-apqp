@@ -34,7 +34,17 @@ window.meLoadRelationalTeams = async function(userId) {
       return [];
     }
 
-    return data || [];
+    return (data || []).map(t => ({
+      id: t.id,
+      name: t.name,
+      hoursPerWeek: t.hours_per_week,
+      utilisation: t.utilisation,
+      jobTitle: t.job_title || '',
+      group: t.team_group || '',
+      startDate: t.start_date || '',
+      endDate: t.end_date || '',
+      createdAt: t.created_at
+    }));
   } catch (err) {
     console.warn('meLoadRelationalTeams exception:', err.message);
     return [];
@@ -102,7 +112,21 @@ window.meLoadRelationalTasks = async function(userId) {
       return [];
     }
 
-    const tasks = tasksData || [];
+    // Transform to camelCase
+    const tasks = (tasksData || []).map(t => ({
+      id: t.id,
+      name: t.name,
+      category: t.category,
+      type: t.type || 'standard',
+      assigneeId: t.assignee_id || '',
+      productId: t.product_id || '',
+      startDate: t.start_date || '',
+      endDate: t.end_date || '',
+      totalHours: t.total_hours || 0,
+      advancedEstimation: null,
+      subtasks: [],
+      createdAt: t.created_at
+    }));
 
     // Load subtasks and PERT history for root tasks
     const taskIds = tasks.filter(t => t.type === 'root').map(t => t.id);
@@ -116,9 +140,18 @@ window.meLoadRelationalTasks = async function(userId) {
       if (subtasksError) {
         console.warn('meLoadRelationalTasks subtasks error:', subtasksError.message);
       } else {
-        const subtasks = subtasksData || [];
+        // Transform subtasks to camelCase
+        const subtasks = (subtasksData || []).map(st => ({
+          id: st.id,
+          task_id: st.task_id,
+          name: st.name,
+          assigneeId: st.assignee_id || '',
+          hours: st.hours || 0,
+          startDate: st.start_date || '',
+          endDate: st.end_date || '',
+          source: st.source || 'pert'
+        }));
 
-        // Attach subtasks to their parent tasks
         tasks.forEach(task => {
           if (task.type === 'root') {
             task.subtasks = subtasks.filter(st => st.task_id === task.id);
@@ -126,7 +159,6 @@ window.meLoadRelationalTasks = async function(userId) {
         });
       }
 
-      // Load PERT history for reference
       const { data: historyData, error: historyError } = await supa
         .from('me_task_pert_history')
         .select('*')
@@ -136,8 +168,6 @@ window.meLoadRelationalTasks = async function(userId) {
         console.warn('meLoadRelationalTasks history error:', historyError.message);
       } else {
         const history = historyData || [];
-
-        // Attach history to tasks
         tasks.forEach(task => {
           if (task.type === 'root') {
             task.pertHistory = history.filter(h => h.task_id === task.id);
@@ -189,6 +219,9 @@ window.meSaveProductRelational = async function(userId, product) {
   try {
     const productId = product.productId || product.id;
 
+    const supportFrom = product.supportFrom || product.support_from || null;
+    const supportUntil = product.supportUntil || product.support_until || null;
+
     const { error } = await supa
       .from('me_products')
       .upsert({
@@ -196,10 +229,10 @@ window.meSaveProductRelational = async function(userId, product) {
         user_id: userId,
         name: product.name || '',
         product_database_id: productId || null,
-        support_from: product.supportFrom || product.support_from,
-        support_until: product.supportUntil || product.support_until,
-        hours_per_week: product.hoursPerWeek || product.hours_per_week,
-        notes: product.notes,
+        support_from: supportFrom || null,
+        support_until: supportUntil || null,
+        hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
+        notes: product.notes || null,
         updated_at: new Date().toISOString()
       }, { onConflict: 'id' });
 
