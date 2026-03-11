@@ -83,7 +83,11 @@ function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
   if (currentSection === 'product-development') {
-    mc.innerHTML = `<div class="section-inner">${renderProductDevelopment()}</div>`;
+    let html = `<div class="section-inner">${renderProductDevelopment()}</div>`;
+    if (familyModalState?.isOpen && typeof renderFamilyModal === 'function') {
+      html += renderFamilyModal();
+    }
+    mc.innerHTML = html;
     return;
   }
   if (currentSection === 'production') {

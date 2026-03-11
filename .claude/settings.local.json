@@ -25,7 +25,9 @@
       "Bash(node -c /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/me-heatmap.js)",
       "Bash(node -c portals/capacity/js/me-chart.js)",
       "Bash(node -c portals/capacity/js/me-heatmap.js)",
-      "Bash(node -c \"portals/product-development/js/product-management.js\")"
+      "Bash(node -c \"portals/product-development/js/product-management.js\")",
+      "Bash(ls -la \"C:\\\\Users\\\\Tidyco\\\\Documents\\\\GitHub\\\\Tidyco-apqp\\\\portals\\\\product-development\"\" | grep -E \".js)",
+      "Bash(.html \")"
     ]
   }
 }

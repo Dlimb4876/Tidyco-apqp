@@ -16,10 +16,13 @@ function renderScheduling() {
     <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
       <td>
-        <select class="cell-edit" id="batch-new-product" onchange="calcBatchDueDate()" onkeydown="handleBatchRowKey(event, 'product')">
+        <select class="cell-edit" id="batch-new-product" onchange="calcBatchDueDate(); updateFamilyDisplay('new')" onkeydown="handleBatchRowKey(event, 'product')">
           <option value="">— Select Product</option>
           ${prodState.products.filter(p => p.status !== 'closed').map(p => `<option value="${p.id}">${p.name} (${p.code || 'N/A'})</option>`).join('')}
         </select>
+      </td>
+      <td>
+        <div class="cell-display" id="batch-new-family">—</div>
       </td>
       <td>
         <select class="cell-edit" id="batch-new-unit" onkeydown="handleBatchRowKey(event, 'unit')">
@@ -30,13 +33,11 @@ function renderScheduling() {
         </select>
       </td>
       <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
-      <td style="display:flex;gap:4px;align-items:center">
-        <input class="cell-edit" id="batch-new-start" type="date" onchange="calcBatchDueDate()" onkeydown="handleDateInput(event, 'batch-new-start', 'start')" style="flex:1">
-        <button class="btn-date-quick" onclick="setDateToday('batch-new-start'); calcBatchDueDate()" title="Set to today">T</button>
+      <td>
+        <input class="cell-edit" id="batch-new-start" placeholder="YYYY-MM-DD or +7, t" onchange="calcBatchDueDate()" onblur="smartDateFormat('batch-new-start', calcBatchDueDate)" onkeydown="handleDateInput(event, 'batch-new-start', 'start')">
       </td>
-      <td style="display:flex;gap:4px;align-items:center">
-        <input class="cell-edit" id="batch-new-due" type="date" onkeydown="handleDateInput(event, 'batch-new-due', 'due')" style="flex:1">
-        <button class="btn-date-quick" onclick="setDateToday('batch-new-due')" title="Set to today">T</button>
+      <td>
+        <input class="cell-edit" id="batch-new-due" placeholder="YYYY-MM-DD or +7, t" onblur="smartDateFormat('batch-new-due')" onkeydown="handleDateInput(event, 'batch-new-due', 'due')">
       </td>
       <td>
         <select class="cell-edit" id="batch-new-status" onkeydown="handleBatchRowKey(event, 'status')">
@@ -63,6 +64,9 @@ function renderScheduling() {
           </select>
         </td>
         <td>
+          <div class="cell-display">${product && product.family_id ? (prodState.families.find(f => f.id === product.family_id)?.label || '—') : '—'}</div>
+        </td>
+        <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'unit', this.value)" onkeydown="handleCellKey(event)">
             <option value="">—</option>
             <option value="Unit 2" ${batch.unit === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
@@ -71,13 +75,11 @@ function renderScheduling() {
           </select>
         </td>
         <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
-        <td style="display:flex;gap:4px;align-items:center">
-          <input class="cell-edit" type="date" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', this.value)" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}" style="flex:1">
-          <button class="btn-date-quick" onclick="setDateToday('batch-start-${batchIdx}'); prodDataUpdateBatch(${batchIdx}, 'start_date', document.getElementById('batch-start-${batchIdx}').value)" title="Set to today">T</button>
+        <td>
+          <input class="cell-edit" placeholder="YYYY-MM-DD or +7, t" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', this.value)" onblur="smartDateFormat('batch-start-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'start_date', document.getElementById('batch-start-${batchIdx}').value))" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}">
         </td>
-        <td style="display:flex;gap:4px;align-items:center">
-          <input class="cell-edit" type="date" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', this.value)" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}" style="flex:1">
-          <button class="btn-date-quick" onclick="setDateToday('batch-due-${batchIdx}'); prodDataUpdateBatch(${batchIdx}, 'due_date', document.getElementById('batch-due-${batchIdx}').value)" title="Set to today">T</button>
+        <td>
+          <input class="cell-edit" placeholder="YYYY-MM-DD or +7, t" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', this.value)" onblur="smartDateFormat('batch-due-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'due_date', document.getElementById('batch-due-${batchIdx}').value))" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}">
         </td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'status', this.value)" onkeydown="handleCellKey(event)">
@@ -113,7 +115,7 @@ function renderScheduling() {
           <label>Family:</label>
           <select onchange="prodSchedulingFilters.family = this.value; prodSchedulingFilters.product = ''; render()">
             <option value="">— All Families</option>
-            ${FAMILIES.map(f => `<option value="${f.id}" ${prodSchedulingFilters.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
+            ${prodState.families.map(f => `<option value="${f.id}" ${prodSchedulingFilters.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">
@@ -148,6 +150,7 @@ function renderScheduling() {
           <col style="width:36px">
           <col style="min-width:220px">
           <col style="min-width:100px">
+          <col style="min-width:100px">
           <col style="min-width:80px">
           <col style="min-width:130px">
           <col style="min-width:130px">
@@ -159,6 +162,7 @@ function renderScheduling() {
           <tr>
             <th>#</th>
             <th onclick="toggleSort('product_id')" style="cursor:pointer">Product ${prodSchedulingSort.field === 'product_id' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th onclick="toggleSort('family')" style="cursor:pointer">Family ${prodSchedulingSort.field === 'family' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('unit')" style="cursor:pointer">Unit ${prodSchedulingSort.field === 'unit' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('quantity')" style="cursor:pointer">Qty ${prodSchedulingSort.field === 'quantity' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('start_date')" style="cursor:pointer">Start Date ${prodSchedulingSort.field === 'start_date' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
@@ -180,7 +184,8 @@ function getFilteredBatches() {
   let filtered = prodState.batches;
 
   if (prodSchedulingFilters.family) {
-    const familyProducts = prodState.products.filter(p => p.family === prodSchedulingFilters.family).map(p => p.id);
+    // Filter by family ID
+    const familyProducts = prodState.products.filter(p => p.family_id === prodSchedulingFilters.family).map(p => p.id);
     filtered = filtered.filter(b => familyProducts.includes(b.product_id));
   }
 
@@ -206,8 +211,20 @@ function getFilteredBatches() {
 
   // Apply sorting
   filtered.sort((a, b) => {
-    let aVal = a[prodSchedulingSort.field];
-    let bVal = b[prodSchedulingSort.field];
+    let aVal, bVal;
+
+    // Special handling for family (pulled from product and family database)
+    if (prodSchedulingSort.field === 'family') {
+      const productA = prodState.products.find(p => p.id === a.product_id);
+      const productB = prodState.products.find(p => p.id === b.product_id);
+      const familyA = productA ? prodState.families.find(f => f.id === productA.family_id) : null;
+      const familyB = productB ? prodState.families.find(f => f.id === productB.family_id) : null;
+      aVal = familyA?.label || '';
+      bVal = familyB?.label || '';
+    } else {
+      aVal = a[prodSchedulingSort.field];
+      bVal = b[prodSchedulingSort.field];
+    }
 
     if (aVal === null || aVal === undefined) aVal = '';
     if (bVal === null || bVal === undefined) bVal = '';
@@ -389,4 +406,52 @@ function formatDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+// Smart date format: auto-correct or prompt invalid format
+function smartDateFormat(fieldId, callback) {
+  const input = document.getElementById(fieldId);
+  if (!input) return;
+
+  const val = input.value.trim().toLowerCase();
+  if (!val) return; // Empty is OK
+
+  // Already in correct format
+  if (val.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    if (callback) callback();
+    return;
+  }
+
+  // Try to parse shorthand
+  const parsed = parseDateInput(val);
+  if (parsed) {
+    input.value = parsed;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    if (callback) callback();
+    return;
+  }
+
+  // Invalid format - prompt user
+  alert(`Invalid date format: "${val}"\n\nUse YYYY-MM-DD or shorthand:\n• t or today\n• +7 or -3 for relative dates`);
+  input.focus();
+  input.select();
+}
+
+// Update family display when product changes
+function updateFamilyDisplay(scope) {
+  let productSelect, familyDisplay;
+
+  if (scope === 'new') {
+    productSelect = document.getElementById('batch-new-product');
+    familyDisplay = document.getElementById('batch-new-family');
+  } else {
+    // For existing rows, called from product change
+    return; // Handled in render
+  }
+
+  if (!productSelect || !familyDisplay) return;
+
+  const productId = productSelect.value;
+  const product = prodState.products.find(p => p.id === productId);
+  familyDisplay.textContent = product && product.family ? product.family : '—';
 }

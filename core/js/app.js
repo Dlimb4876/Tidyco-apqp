@@ -5,7 +5,11 @@
 
 // ── Populate family dropdowns ─────────────────────────────────
 function populateFamilySelects() {
-  const families = getFamilies();
+  // Use dynamic families from database if available, fallback to state.js constants
+  const families = (familiesState?.families && familiesState.families.length > 0)
+    ? familiesState.families
+    : getFamilies();
+
   ['np_family', 'ep_family'].forEach(id => {
     const select = document.getElementById(id);
     if (!select) return;
@@ -29,6 +33,10 @@ async function launchApp() {
     save();
   }
   initProgSelect();
+
+  // Load Families data from database (dynamic family definitions)
+  await familiesDataInit();
+  populateFamilySelects(); // Refresh with dynamic families
 
   // Load ME Capacity data (separate Supabase table, silent if table absent)
   await meDataInit();
