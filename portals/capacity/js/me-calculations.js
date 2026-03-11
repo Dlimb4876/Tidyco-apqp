@@ -34,84 +34,61 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   const monthStart = new Date(year, month - 1, 1);
   const monthEnd = new Date(year, month, 0);
 
-  // Calculate capacity
+  // Build bank holiday Set for all years covered by this month and any tasks
+  const relevantYears = new Set([year]);
+  tasksArray.forEach(task => {
+    if (task.startDate) relevantYears.add(new Date(task.startDate).getFullYear());
+    if (task.endDate) relevantYears.add(new Date(task.endDate).getFullYear());
+  });
+  const bankHolSet = new Set();
+  relevantYears.forEach(y => getBankHolidaysForYear(y).forEach(h => bankHolSet.add(h.date)));
+
+  // Calculate capacity using network days (Mon-Fri, excluding bank holidays)
   let capacity = 0;
-  let capacityMax = 0;  // 100% theoretical max
+  let capacityMax = 0;
   teamArray.forEach(member => {
-    // Skip team members without a start date
     if (!member.startDate) return;
 
     const hoursAdjusted = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100);
-    const hoursMax = (member.hoursPerWeek || 37.5);  // 100% without utilization
+    const hoursMax = (member.hoursPerWeek || 37.5);
 
-    // Check if member is active during this month
     let activeStart = monthStart;
     let activeEnd = monthEnd;
 
     const startDate = new Date(member.startDate);
-    if (startDate > monthStart) {
-      activeStart = startDate;
-    }
+    if (startDate > monthStart) activeStart = startDate;
 
     if (member.endDate) {
       const endDate = new Date(member.endDate);
-      if (endDate < monthEnd) {
-        activeEnd = endDate;
-      }
+      if (endDate < monthEnd) activeEnd = endDate;
     }
 
-    // Only count capacity if member is active during the month
     if (activeStart <= activeEnd) {
-      const workDays = countWorkDaysBetween(activeStart, activeEnd);
-      const monthCapacity = hoursAdjusted * (workDays / 5);
-      const monthCapacityMax = hoursMax * (workDays / 5);
-      capacity += monthCapacity;
-      capacityMax += monthCapacityMax;
+      const netDays = countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
+      capacity += hoursAdjusted * (netDays / 5);
+      capacityMax += hoursMax * (netDays / 5);
     }
   });
 
-  // Calculate and subtract holiday deductions
+  // Subtract user-marked personal holidays (bank holidays already excluded via network days)
   let holidayDeduction = 0;
-  const bankHols = getBankHolidaysForYear(year);
-  const hoursPerDay = 7.5;  // Standard 37.5 hours / 5 days
+  const hoursPerDay = 7.5;
 
-  // Subtract user-marked holidays
   holidaysArray.forEach(holiday => {
-    const holidayMonth = holiday.date.substring(0, 7);  // Extract 'YYYY-MM'
+    const holidayMonth = holiday.date.substring(0, 7);
     if (holidayMonth === monthKey) {
-      if (holiday.type === 'full') {
-        holidayDeduction += hoursPerDay;
-      } else if (holiday.type === 'half') {
-        holidayDeduction += hoursPerDay / 2;
-      }
-    }
-  });
-
-  // Subtract bank holidays (Mon-Fri only, avoiding double-deduction)
-  const markedHolidayDates = new Set(
-    holidaysArray
-      .filter(h => h.date.substring(0, 7) === monthKey)
-      .map(h => h.date)
-  );
-
-  Object.entries(bankHols).forEach(([dateStr, name]) => {
-    const bankMonth = dateStr.substring(0, 7);
-    if (bankMonth === monthKey && !markedHolidayDates.has(dateStr)) {
-      const d = new Date(dateStr);
-      const dayOfWeek = d.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {  // Not weekend
-        holidayDeduction += hoursPerDay;
-      }
+      if (holiday.type === 'full') holidayDeduction += hoursPerDay;
+      else if (holiday.type === 'half') holidayDeduction += hoursPerDay / 2;
     }
   });
 
   const adjustedCapacity = Math.max(0, capacity - holidayDeduction);
+  const adjustedCapacityMax = Math.max(0, capacityMax - holidayDeduction);
 
-  // Calculate demand from tasks
+  // Calculate demand using network days proration (equivalent to NETWORKDAYS in Excel)
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
 
   tasksArray.forEach(task => {
-    // Skip tasks without dates
     if (!task.startDate || !task.endDate) return;
 
     const taskStart = new Date(task.startDate);
@@ -120,20 +97,16 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     const overlapEnd = new Date(Math.min(taskEnd.getTime(), monthEnd.getTime()));
 
     if (overlapStart <= overlapEnd) {
-      const totalDays = (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1;
-      const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
+      const taskNetDays = countNetworkDaysBetween(taskStart, taskEnd, bankHolSet);
+      if (taskNetDays === 0) return;
+
+      const overlapNetDays = countNetworkDaysBetween(overlapStart, overlapEnd, bankHolSet);
       const category = (task.category || 'other').toLowerCase();
-
-      // Get effective subtasks (from PERT root or implicit standard task)
       const effectiveSubtasks = getEffectiveSubtasks(task);
-
-      // Skip if no effective subtasks
       if (effectiveSubtasks.length === 0) return;
 
-      // Add hours from each subtask to the category
       effectiveSubtasks.forEach(subtask => {
-        const subtaskHours = (subtask.hours || 0) * (overlapDays / totalDays);
-
+        const subtaskHours = (subtask.hours || 0) * (overlapNetDays / taskNetDays);
         if (category === 'npi') npi += subtaskHours;
         else if (category === 'improvement') improvement += subtaskHours;
         else if (category === 'tendering') tendering += subtaskHours;
@@ -143,31 +116,22 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     }
   });
 
-  // Calculate product support with proper date range overlap
+  // Product support using network days
   productsArray.forEach(product => {
-    // Skip products without dates
     if (!product.supportFrom || !product.supportUntil) return;
 
     const prodStart = new Date(product.supportFrom);
     const prodEnd = new Date(product.supportUntil);
 
-    // Check if product active in this month
     if (prodStart <= monthEnd && prodEnd >= monthStart) {
-      // Find overlap between product date range and month
       const overlapStart = new Date(Math.max(prodStart.getTime(), monthStart.getTime()));
       const overlapEnd = new Date(Math.min(prodEnd.getTime(), monthEnd.getTime()));
-
-      // Calculate working days in overlap period
-      const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
-      const workingDaysInOverlap = overlapDays * (5 / 7);  // Approximate working days
-      const weeksInOverlap = workingDaysInOverlap / 5;
-
-      support += (product.hoursPerWeek || 0) * weeksInOverlap;
+      const netDays = countNetworkDaysBetween(overlapStart, overlapEnd, bankHolSet);
+      support += (product.hoursPerWeek || 0) * (netDays / 5);
     }
   });
 
   const totalDemand = npi + improvement + tendering + support + other;
-  const adjustedCapacityMax = Math.max(0, capacityMax - holidayDeduction);
   return {
     capacity: adjustedCapacity,
     capacityMax: adjustedCapacityMax,
@@ -189,33 +153,38 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
   const weekStart_d = new Date(weekStart);
   const weekEnd_d = new Date(weekEnd);
 
-  // Calculate capacity (37.5h/week adjusted by utilisation %)
+  // Build bank holiday Set for all years covered by this week and tasks
+  const relevantYears = new Set([weekStart_d.getFullYear(), weekEnd_d.getFullYear()]);
+  tasksArray.forEach(task => {
+    if (task.startDate) relevantYears.add(new Date(task.startDate).getFullYear());
+    if (task.endDate) relevantYears.add(new Date(task.endDate).getFullYear());
+  });
+  const bankHolSet = new Set();
+  relevantYears.forEach(y => getBankHolidaysForYear(y).forEach(h => bankHolSet.add(h.date)));
+
   const baseHours = (person.hoursPerWeek || 37.5);
   const adjustedHours = baseHours * ((person.utilisation || 80) / 100);
 
-  // Count working days in this week
-  const workDays = countWorkDaysBetween(weekStart_d, weekEnd_d);
-  const capacityBefore = adjustedHours * (workDays / 5);
+  // Capacity: network days in week (Mon-Fri, excluding bank holidays)
+  const netDays = countNetworkDaysBetween(weekStart_d, weekEnd_d, bankHolSet);
+  const capacityBefore = adjustedHours * (netDays / 5);
 
-  // Subtract holidays for this person in this week
+  // Subtract user-marked personal holidays for this person (bank hols already excluded)
   let holidayDeduction = 0;
-  const hoursPerDay = 7.5;  // 37.5 / 5
+  const hoursPerDay = 7.5;
 
   holidaysArray.forEach(holiday => {
     if (holiday.personId !== personId) return;
     const hDate = new Date(holiday.date);
     if (hDate >= weekStart_d && hDate <= weekEnd_d) {
-      if (holiday.type === 'full') {
-        holidayDeduction += hoursPerDay;
-      } else if (holiday.type === 'half') {
-        holidayDeduction += hoursPerDay / 2;
-      }
+      if (holiday.type === 'full') holidayDeduction += hoursPerDay;
+      else if (holiday.type === 'half') holidayDeduction += hoursPerDay / 2;
     }
   });
 
   const capacity = Math.max(0, capacityBefore - holidayDeduction);
 
-  // Calculate demand from assigned tasks and activities
+  // Demand: network days proration (NETWORKDAYS equivalent)
   let demand = 0;
   tasksArray.forEach(task => {
     if (!task.startDate || !task.endDate) return;
@@ -223,29 +192,25 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
     const taskStart = new Date(task.startDate);
     const taskEnd = new Date(task.endDate);
 
-    // Check overlap with week
     if (taskStart <= weekEnd_d && taskEnd >= weekStart_d) {
       const overlapStart = new Date(Math.max(taskStart.getTime(), weekStart_d.getTime()));
       const overlapEnd = new Date(Math.min(taskEnd.getTime(), weekEnd_d.getTime()));
 
-      const taskDays = (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1;
-      const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
+      const taskNetDays = countNetworkDaysBetween(taskStart, taskEnd, bankHolSet);
+      if (taskNetDays === 0) return;
 
-      // Get effective subtasks (from PERT root or implicit standard task)
+      const overlapNetDays = countNetworkDaysBetween(overlapStart, overlapEnd, bankHolSet);
       const effectiveSubtasks = getEffectiveSubtasks(task);
 
-      // Sum hours for subtasks assigned to this person
       effectiveSubtasks.forEach(subtask => {
         if (subtask.assigneeId === personId) {
-          const proratedHours = (subtask.hours || 0) * (overlapDays / taskDays);
-          demand += proratedHours;
+          demand += (subtask.hours || 0) * (overlapNetDays / taskNetDays);
         }
       });
     }
   });
 
   const utilisation = capacity > 0 ? Math.round((demand / capacity) * 100) : 0;
-
   return { capacity, demand, utilisation };
 };
 
@@ -271,6 +236,25 @@ window.countWorkDaysBetween = function(startDate, endDate) {
   while (current <= end) {
     const day = current.getDay();
     if (day !== 0 && day !== 6) workDays++;
+    current.setDate(current.getDate() + 1);
+  }
+  return workDays;
+};
+
+// Like Excel NETWORKDAYS: Mon-Fri only, excluding dates in bankHolSet
+window.countNetworkDaysBetween = function(startDate, endDate, bankHolSet) {
+  let workDays = 0;
+  const current = new Date(startDate);
+  current.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  while (current <= end) {
+    const day = current.getDay();
+    if (day !== 0 && day !== 6) {
+      const dateStr = formatDateForHolidays(current);
+      if (!bankHolSet || !bankHolSet.has(dateStr)) workDays++;
+    }
     current.setDate(current.getDate() + 1);
   }
   return workDays;
