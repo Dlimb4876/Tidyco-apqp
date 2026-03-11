@@ -139,7 +139,6 @@ window.meDataGetTeam = function() {
 window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours, productId) {
   if (!name || name.trim().length === 0) return false;
   const task = {
-    id: meUUID(),
     name: name.trim(),
     category: category || 'NPI',
     type: 'standard',

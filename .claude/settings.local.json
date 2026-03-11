@@ -38,7 +38,9 @@
       "Bash(git add NORMALIZE_ME_PRODUCTS_SCHEMA.sql portals/capacity/js/me-data-relational.js)",
       "Bash(git add PHASE_2_COMPLETION_SUMMARY.md)",
       "Bash(git add portals/capacity/js/me-data.js portals/capacity/js/me-data-relational.js)",
-      "mcp__851e21dd-a426-4fc4-b8d6-37382aebc968__list_migrations"
+      "mcp__851e21dd-a426-4fc4-b8d6-37382aebc968__list_migrations",
+      "Bash(grep -n \"type: ''root''\" C:/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js)",
+      "Bash(grep -n \"const task = {\" C:/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js)"
     ]
   }
 }
