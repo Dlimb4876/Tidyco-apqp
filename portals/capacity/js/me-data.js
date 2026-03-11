@@ -46,7 +46,7 @@ function meConvertPertDataToSubtasks(tasks) {
     const subtasks = task.advancedEstimation.pertData.estimates.map(est => ({
       id: est.id,
       name: est.name,
-      assigneeId: est.assigneeId || '',
+      assigneeId: est.assigneeId || est.assignedTo || '',
       hours: est.finalHours || 0,
       startDate: task.startDate,  // Subtask inherits root task's date range
       endDate: task.endDate,
@@ -55,7 +55,8 @@ function meConvertPertDataToSubtasks(tasks) {
 
     // Find primary assignee (first with assigneeId)
     const primaryAssignee = task.advancedEstimation.pertData.estimates
-      .find(e => e.assigneeId)?.assigneeId || '';
+      .find(e => e.assigneeId || e.assignedTo)?.assigneeId || 
+      task.advancedEstimation.pertData.estimates.find(e => e.assigneeId || e.assignedTo)?.assignedTo || '';
 
     return {
       ...task,
@@ -65,6 +66,7 @@ function meConvertPertDataToSubtasks(tasks) {
       advancedEstimation: {
         ...task.advancedEstimation,
         pertEstimates: task.advancedEstimation.pertData.estimates,
+        confidenceLevel: task.advancedEstimation.pertData.confidenceLevel,
         totalFinalHours: subtasks.reduce((sum, s) => sum + (s.hours || 0), 0)
       }
     };
@@ -290,8 +292,8 @@ window.meDataAutoSyncProductionProducts = function() {
   // (old manually-added products without a DB link are removed to prevent duplicates)
   meDataState.products = meDataState.products.filter(meP => {
     if (!meP.productDatabaseId) {
-      // Remove products without a database ID (old manual entries - no longer needed)
-      return false;
+      // Preserve products without a database ID (old manual entries)
+      return true;
     }
     // Keep only those still in PM with Production status
     return pmMap[meP.productDatabaseId] !== undefined;
@@ -554,7 +556,7 @@ window.meDataSave = async function(showAlert) {
               const histSuccess = await meSaveTaskPertHistoryRelational(
                 taskId,
                 task.advancedEstimation.pertEstimates || [],
-                task.advancedEstimation.confidenceLevel || 0,
+                task.advancedEstimation.confidenceLevel || task.advancedEstimation.pertData?.confidenceLevel || 1.0,
                 currentUser.id
               );
               if (!histSuccess) {

@@ -493,6 +493,7 @@ window.meEstimationSave = function(taskIdx) {
   task.advancedEstimation.pertData.lastUpdated = new Date().toISOString();
   task.advancedEstimation.pertEstimates = task.advancedEstimation.pertData.estimates;
   task.advancedEstimation.totalFinalHours = roundedTotal;
+  task.advancedEstimation.confidenceLevel = confidenceLevel;
 
   // Save to database
   meOnSave();
@@ -505,6 +506,8 @@ window.meEstimationClearData = function(taskIdx) {
   if (confirm('Are you sure you want to clear all advanced estimation data? The task will revert to simple mode.')) {
     const task = meDataState.tasks[taskIdx];
     task.advancedEstimation = null;
+    task.type = 'standard';
+    task.subtasks = [];
     meOnSave();
     meCloseEstimationSubsystem();
   }
