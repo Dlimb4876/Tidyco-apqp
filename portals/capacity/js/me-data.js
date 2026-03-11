@@ -165,7 +165,7 @@ window.meDataGetTasks = function() {
 // PRODUCT CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek, notes) {
+window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek, notes, productDatabaseId) {
   if (!name || name.trim().length === 0) return false;
   const product = {
     id: meUUID(),
@@ -174,6 +174,7 @@ window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek
     supportUntil: supportUntil,
     hoursPerWeek: parseFloat(hoursPerWeek) || 5,
     notes: notes ? notes.trim() : '',
+    productDatabaseId: productDatabaseId || '',
     createdAt: new Date().toISOString()
   };
   meDataState.products.push(product);
@@ -216,24 +217,44 @@ window.meDataGetProducts = function() {
 };
 
 /**
- * Pre-populate products from product management database (non-closed products)
- * Call this to sync products from the product management database into ME capacity
+ * Auto-sync production products from product management database
+ * Syncs products with status = "Production", removes those that are no longer production
  */
-window.meDataSyncFromProductManagement = function() {
+window.meDataAutoSyncProductionProducts = function() {
   if (!productsState || !productsState.products) {
-    console.warn('Product management database not loaded');
     return false;
   }
 
-  // Get non-closed products from product management database
-  const pmProducts = productsState.products.filter(p => p.status !== 'closed');
+  // Get only "Production" status products from product management database
+  const pmProducts = productsState.products.filter(p => p.status === 'Production');
 
-  // For each product that doesn't exist in ME products yet, create it
+  // Build a map of productDatabaseId to PM product for quick lookup
+  const pmMap = {};
+  pmProducts.forEach(p => {
+    pmMap[p.id] = p;
+  });
+
+  // Update or create products that exist in PM with Production status
   pmProducts.forEach(pmProd => {
-    const exists = meDataState.products.find(meP => meP.name === pmProd.name);
-    if (!exists) {
-      meDataAddProduct(pmProd.name, '', '', 0, pmProd.notes || '');
+    const existing = meDataState.products.find(meP => meP.productDatabaseId === pmProd.id);
+    if (existing) {
+      // Update existing product with latest info from PM (name, notes)
+      existing.name = pmProd.name;
+      existing.notes = pmProd.notes || '';
+    } else {
+      // Create new product if not found
+      meDataAddProduct(pmProd.name, '', '', 0, pmProd.notes || '', pmProd.id);
     }
+  });
+
+  // Remove products that no longer have Production status (they've been closed or changed)
+  meDataState.products = meDataState.products.filter(meP => {
+    if (!meP.productDatabaseId) {
+      // Keep products without a database ID (manually added)
+      return true;
+    }
+    // Remove if no longer in PM or not Production status
+    return pmMap[meP.productDatabaseId] !== undefined;
   });
 
   return true;
@@ -351,6 +372,12 @@ window.meDataInit = async function() {
         meDataState.tasks.forEach(task => {
           if (!('advancedEstimation' in task)) {
             task.advancedEstimation = null;
+          }
+        });
+        // Ensure all products have productDatabaseId field (migration for old records)
+        meDataState.products.forEach(product => {
+          if (!('productDatabaseId' in product)) {
+            product.productDatabaseId = '';
           }
         });
         window.meDataState = meDataState;

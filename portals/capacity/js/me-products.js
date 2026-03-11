@@ -3,27 +3,29 @@
    ============================================================ */
 
 window.meRenderProductsTab = function(productsArray, availableProducts) {
-  availableProducts = availableProducts || [];
+  // Auto-sync products from product management (status = "Production")
+  meDataAutoSyncProductionProducts();
+  const updated = meDataGetProducts();
+
   const weeksPerMonth = 4.33;
-  const totalLoadWeekly = productsArray.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
+  const totalLoadWeekly = updated.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
   const totalLoadMonthly = (totalLoadWeekly * weeksPerMonth).toFixed(1);
   const today = new Date();
-  const activeProducts = productsArray.filter(p => {
+  const activeProducts = updated.filter(p => {
     const from = new Date(p.supportFrom);
     const until = new Date(p.supportUntil);
     return from <= today && today <= until;
   }).length;
 
   let rows = '';
-  productsArray.forEach((product, idx) => {
+  updated.forEach((product, idx) => {
     rows += `
       <tr>
-        <td><input value="${esc(product.name)}" onchange="meDataUpdateProduct(${idx}, 'name', this.value); meDebouncedSave();"></td>
+        <td>${esc(product.name)}</td>
         <td><input type="date" value="${product.supportFrom}" onchange="meDataUpdateProduct(${idx}, 'supportFrom', this.value); meDebouncedSave();"></td>
         <td><input type="date" value="${product.supportUntil}" onchange="meDataUpdateProduct(${idx}, 'supportUntil', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
         <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${idx}, 'notes', this.value); meDebouncedSave();"></td>
-        <td style="text-align: center;"><button class="me-del-btn" onclick="if(confirm('Delete product?')) { meDataDeleteProduct(${idx}); meOnSave(); meSetTab('products'); }">✕</button></td>
       </tr>`;
   });
 
@@ -41,46 +43,36 @@ window.meRenderProductsTab = function(productsArray, availableProducts) {
           <div class="me-kpi-month">in support</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--amber);">
-          <div class="me-kpi-value">${productsArray.length}</div>
+          <div class="me-kpi-value">${updated.length}</div>
           <div class="me-kpi-label">Total Products</div>
-          <div class="me-kpi-month">tracked</div>
+          <div class="me-kpi-month">in production</div>
         </div>
       </div>
 
       <div class="me-card">
         <div class="me-card-head">
           <span class="me-card-title">PRODUCTS / ONGOING SUPPORT</span>
-          <span style="font-size:12px;color:var(--muted)">${totalLoadWeekly} h/wk</span>
+          <span style="font-size:12px;color:var(--muted)">${totalLoadWeekly} h/wk · Auto-synced from Product Management</span>
         </div>
       <div class="me-card-body">
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
-              <th style="width:180px">Product/Fleet Name</th>
-              <th style="width:110px">Support From</th>
-              <th style="width:110px">Support Until</th>
-              <th style="width:110px">Hours/Week</th>
+              <th style="width:200px">Product Name</th>
+              <th style="width:120px">Support From</th>
+              <th style="width:120px">Support Until</th>
+              <th style="width:120px">Hours/Week</th>
               <th style="width:250px">Notes</th>
-              <th style="width:36px"></th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="6"><div style="text-align:center;padding:40px;color:var(--muted)">No products added</div></td></tr>'}
+              ${rows || '<tr><td colspan="5"><div style="text-align:center;padding:40px;color:var(--muted)">No production products found</div></td></tr>'}
             </tbody>
           </table>
         </div>
-        <div class="me-add-row">
-          ${availableProducts && availableProducts.length > 0 ? `
-            <button class="btn btn-ghost btn-sm" onclick="meDataSyncFromProductManagement(); meDebouncedSave(); meRefreshCurrentTab();" title="Pre-populate with non-closed products from Product Management">📥 Load from Product Management</button>
-          ` : ''}
-          <button class="btn btn-primary btn-sm" onclick="meAddDefaultProduct();">＋ Add Product</button>
+        <div style="font-size: 12px; color: var(--muted); padding: 12px 0;">
+          💡 Products are automatically loaded from Product Management (status: Production). Edit support dates and hours as needed.
         </div>
       </div>
     </div>
     </div>`;
-};
-
-window.meAddDefaultProduct = function() {
-  meDataAddProduct('New Product', '', '', 0, '');
-  meOnSave();
-  meSetTab('products');
 };

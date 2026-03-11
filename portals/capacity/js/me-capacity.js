@@ -39,6 +39,7 @@ window.renderMeCapacity = function() {
         <button class="me-nav-btn ${meTab === 'team' ? 'active' : ''}" onclick="meSetTab('team')">👷 Team</button>
         <button class="me-nav-btn ${meTab === 'tasks' ? 'active' : ''}" onclick="meSetTab('tasks')">📋 Tasks</button>
         <button class="me-nav-btn ${meTab === 'products' ? 'active' : ''}" onclick="meSetTab('products')">🚂 Products</button>
+        <button class="me-nav-btn ${meTab === 'product-taskload' ? 'active' : ''}" onclick="meSetTab('product-taskload')">📦 Product Load</button>
         <button class="me-nav-btn ${meTab === 'holidays' ? 'active' : ''}" onclick="meSetTab('holidays')">🏖️ Holiday Planner</button>
       </div>
 
@@ -72,7 +73,7 @@ window.meSetTab = function(tab) {
     btn.classList.remove('active');
   });
   const activeBtn = document.querySelector(`.me-nav-btn:nth-child(${
-    tab === 'dashboard' ? 1 : tab === 'chart' ? 2 : tab === 'heatmap' ? 3 : tab === 'team' ? 4 : tab === 'tasks' ? 5 : tab === 'products' ? 6 : 7
+    tab === 'dashboard' ? 1 : tab === 'chart' ? 2 : tab === 'heatmap' ? 3 : tab === 'team' ? 4 : tab === 'tasks' ? 5 : tab === 'products' ? 6 : tab === 'product-taskload' ? 7 : 8
   })`);
   if (activeBtn) activeBtn.classList.add('active');
 
@@ -137,6 +138,8 @@ function meGetTabContent() {
       return meRenderTasksTab(tasks, team, availableProducts);
     case 'products':
       return meRenderProductsTab(products, availableProducts);
+    case 'product-taskload':
+      return meRenderProductTaskLoadTab(tasks, products);
     case 'holidays':
       return meRenderHolidaysTab(holidays, team, meHolidayMonth);
     case 'heatmap':
