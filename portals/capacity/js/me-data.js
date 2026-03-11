@@ -34,6 +34,41 @@ function meInitTeamDates() {
   });
 }
 
+// Convert old PERT data (pertData.estimates[]) to new subtasks[] structure
+function meConvertPertDataToSubtasks(tasks) {
+  return tasks.map(task => {
+    // Skip if already has subtasks array or no advanced estimation
+    if (task.subtasks || !task.advancedEstimation?.pertData?.estimates) {
+      return task;
+    }
+
+    // Convert pertData.estimates → subtasks[]
+    const subtasks = task.advancedEstimation.pertData.estimates.map(est => ({
+      id: est.id,
+      name: est.name,
+      assigneeId: est.assigneeId || '',
+      hours: est.finalHours || 0,
+      source: 'pert'
+    }));
+
+    // Find primary assignee (first with assigneeId)
+    const primaryAssignee = task.advancedEstimation.pertData.estimates
+      .find(e => e.assigneeId)?.assigneeId || '';
+
+    return {
+      ...task,
+      type: 'root',
+      assigneeId: primaryAssignee,
+      subtasks,
+      advancedEstimation: {
+        ...task.advancedEstimation,
+        pertEstimates: task.advancedEstimation.pertData.estimates,
+        totalFinalHours: subtasks.reduce((sum, s) => sum + (s.hours || 0), 0)
+      }
+    };
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 // TEAM CRUD
 // ─────────────────────────────────────────────────────────────
@@ -105,13 +140,15 @@ window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, 
     id: meUUID(),
     name: name.trim(),
     category: category || 'NPI',
+    type: 'standard',
     assigneeId: assigneeId || '',
     productId: productId || '',
     startDate: startDate,
     endDate: endDate,
     totalHours: parseFloat(totalHours) || 0,
     createdAt: new Date().toISOString(),
-    advancedEstimation: null
+    advancedEstimation: null,
+    subtasks: []
   };
   meDataState.tasks.push(task);
   return true;
@@ -374,7 +411,14 @@ window.meDataInit = async function() {
           if (!('advancedEstimation' in task)) {
             task.advancedEstimation = null;
           }
+          // Initialize type field: root | standard
+          if (!('type' in task)) {
+            task.type = task.advancedEstimation && task.advancedEstimation.pertData ? 'root' : 'standard';
+          }
         });
+
+        // Convert old pertData.estimates[] to new subtasks[] structure
+        meDataState.tasks = meConvertPertDataToSubtasks(meDataState.tasks);
         // Ensure all products have productDatabaseId field (migration for old records)
         meDataState.products.forEach(product => {
           if (!('productDatabaseId' in product)) {

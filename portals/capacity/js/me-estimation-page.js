@@ -452,9 +452,10 @@ window.meEstimationSave = function(taskIdx) {
     task.advancedEstimation.pertData.notes = notesEl.value.trim();
   }
 
-  // Calculate total final hours (using PERT + confidence)
+  // Calculate total final hours (using PERT + confidence) and generate subtasks
   let totalFinalHours = 0;
   const confidenceLevel = task.advancedEstimation.pertData.confidenceLevel || 1.0;
+  const subtasks = [];
 
   task.advancedEstimation.pertData.estimates.forEach(est => {
     const O = parseFloat(est.optimistic) || 0;
@@ -464,15 +465,32 @@ window.meEstimationSave = function(taskIdx) {
     const stdDev = (P - O) / 6;
     const finalEst = pertEst + (stdDev * (confidenceLevel - 1.0));
     totalFinalHours += finalEst;
+
+    // Generate subtask from estimate
+    subtasks.push({
+      id: est.id,
+      name: est.name,
+      assigneeId: est.assignedTo || '',
+      hours: finalEst,
+      source: 'pert'
+    });
   });
 
   // Round to 0.1
   const roundedTotal = Math.round(totalFinalHours * 10) / 10;
 
-  // Update task with final estimate
+  // Find primary assignee (first with assigneeId)
+  const primaryAssignee = task.advancedEstimation.pertData.estimates
+    .find(e => e.assignedTo)?.assignedTo || '';
+
+  // Update task with final estimate and subtasks
+  task.type = 'root';
+  task.assigneeId = primaryAssignee;
+  task.subtasks = subtasks;
   task.advancedEstimation.pertData.totalCalculatedHours = roundedTotal;
   task.advancedEstimation.pertData.lastUpdated = new Date().toISOString();
-  task.totalHours = roundedTotal;
+  task.advancedEstimation.pertEstimates = task.advancedEstimation.pertData.estimates;
+  task.advancedEstimation.totalFinalHours = roundedTotal;
 
   // Save to database
   meOnSave();

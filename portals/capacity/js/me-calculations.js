@@ -6,6 +6,28 @@
    single source of truth and easier testing.
    ============================================================ */
 
+// ── Helper: Get Effective Subtasks ──────────────────────────
+// Returns the actual work items to be calculated for a task.
+// ROOT tasks have subtasks[] (from PERT estimation).
+// STANDARD tasks have implicit subtask if they have an assignee.
+window.getEffectiveSubtasks = function(task) {
+  if (task.type === 'root') {
+    // Root task: return actual subtasks array
+    return task.subtasks || [];
+  } else if (task.type === 'standard' || !task.type) {
+    // Standard task: create implicit subtask for assignee
+    if (task.assigneeId) {
+      return [{
+        assigneeId: task.assigneeId,
+        hours: task.totalHours || 0,
+        name: task.name
+      }];
+    }
+    return [];
+  }
+  return [];
+};
+
 // ── Month Capacity & Demand Calculation ─────────────────────
 window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const [year, month] = monthKey.split('-').map(Number);
@@ -102,28 +124,22 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
       const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
       const category = (task.category || 'other').toLowerCase();
 
-      // Check if task has advanced estimation with activities
-      if (task.advancedEstimation && task.advancedEstimation.activities && task.advancedEstimation.activities.length > 0) {
-        // For tasks with activities: sum all activity hours (with or without assignedTo)
-        task.advancedEstimation.activities.forEach(activity => {
-          const activityHours = (parseFloat(activity.baseHours) || 0) * (overlapDays / totalDays);
+      // Get effective subtasks (from PERT root or implicit standard task)
+      const effectiveSubtasks = getEffectiveSubtasks(task);
 
-          if (category === 'npi') npi += activityHours;
-          else if (category === 'improvement') improvement += activityHours;
-          else if (category === 'tendering') tendering += activityHours;
-          else if (category === 'support') support += activityHours;
-          else other += activityHours;
-        });
-      } else {
-        // Simple task without activities: apply totalHours to team demand as before
-        const hoursThisMonth = (task.totalHours || 0) * (overlapDays / totalDays);
+      // Skip if no effective subtasks
+      if (effectiveSubtasks.length === 0) return;
 
-        if (category === 'npi') npi += hoursThisMonth;
-        else if (category === 'improvement') improvement += hoursThisMonth;
-        else if (category === 'tendering') tendering += hoursThisMonth;
-        else if (category === 'support') support += hoursThisMonth;
-        else other += hoursThisMonth;
-      }
+      // Add hours from each subtask to the category
+      effectiveSubtasks.forEach(subtask => {
+        const subtaskHours = (subtask.hours || 0) * (overlapDays / totalDays);
+
+        if (category === 'npi') npi += subtaskHours;
+        else if (category === 'improvement') improvement += subtaskHours;
+        else if (category === 'tendering') tendering += subtaskHours;
+        else if (category === 'support') support += subtaskHours;
+        else other += subtaskHours;
+      });
     }
   });
 
@@ -215,22 +231,16 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
       const taskDays = (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1;
       const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
 
-      // Check if task has advanced estimation with activities
-      if (task.advancedEstimation && task.advancedEstimation.activities && task.advancedEstimation.activities.length > 0) {
-        // For tasks with activities: sum hours for activities assigned to this person
-        task.advancedEstimation.activities.forEach(activity => {
-          if (activity.assignedTo === personId) {
-            const activityHours = (parseFloat(activity.baseHours) || 0) * (overlapDays / taskDays);
-            demand += activityHours;
-          }
-        });
-      } else {
-        // Simple task: check if assigned to this person
-        if (task.assigneeId === personId) {
-          const proratedHours = (task.totalHours || 0) * (overlapDays / taskDays);
+      // Get effective subtasks (from PERT root or implicit standard task)
+      const effectiveSubtasks = getEffectiveSubtasks(task);
+
+      // Sum hours for subtasks assigned to this person
+      effectiveSubtasks.forEach(subtask => {
+        if (subtask.assigneeId === personId) {
+          const proratedHours = (subtask.hours || 0) * (overlapDays / taskDays);
           demand += proratedHours;
         }
-      }
+      });
     }
   });
 

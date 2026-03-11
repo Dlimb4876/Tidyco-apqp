@@ -31,7 +31,10 @@
       "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/css/*.css)",
       "Bash(git add portals/capacity/js/me-product-taskload.js)",
       "Bash(grep -r \"meGetMonthLabel\\\\|getMonthLabel\" portals/capacity/js/*.js)",
-      "Bash(grep -r \"function getMonthLabel\\\\|window.getMonthLabel\" portals/capacity/js/*.js)"
+      "Bash(grep -r \"function getMonthLabel\\\\|window.getMonthLabel\" portals/capacity/js/*.js)",
+      "Bash(grep -r \"advancedEstimation\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js)",
+      "Bash(grep -r \"activities\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js)",
+      "Bash(grep -n \"baseHours\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js)"
     ]
   }
 }
