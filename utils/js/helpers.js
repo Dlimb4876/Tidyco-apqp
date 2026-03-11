@@ -16,7 +16,9 @@ function emptyState(icon, title, desc) {
 }
 
 function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'none';
   // Clear picker state to prevent carry-over between opens
   if (id === 'modalCtqPick') {
     ctqPickTarget = null;
@@ -32,7 +34,10 @@ function closeModal(id) {
   }
 }
 
-function showModal(id)  { document.getElementById(id).style.display = 'flex'; }
+function showModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'flex';
+}
 // Helper to sort Process Flow steps by their step number
 function sortedPfd(pfd) {
   return [...pfd].sort((a, b) => a.stepNum - b.stepNum);
