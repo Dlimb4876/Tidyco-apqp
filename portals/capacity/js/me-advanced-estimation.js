@@ -239,17 +239,13 @@ window.meRenderAdvancedEstimationModal = function() {
               ${meAdvancedEstimationState.activities.map((activity, idx) => `
                 <div class="me-activity-item" data-activity-id="${activity.id}">
                   <div class="me-activity-row">
-                    <input type="text" class="me-input-small" placeholder="Activity name" value="${escapeHtml(activity.name)}" onchange="meUpdateActivity('${activity.id}', 'name', this.value)">
-                    <input type="number" class="me-input-hours" placeholder="Hours" value="${activity.baseHours}" step="0.1" onchange="meUpdateActivity('${activity.id}', 'baseHours', this.value)">
-                    <button class="me-btn-delete" onclick="meDeleteActivity('${activity.id}')">🗑️</button>
-                  </div>
-                  <textarea class="me-input-full" placeholder="Description" onchange="meUpdateActivity('${activity.id}', 'description', this.value)">${escapeHtml(activity.description)}</textarea>
-                  <div class="me-activity-row">
-                    <select class="me-input-small" onchange="meUpdateActivity('${activity.id}', 'assignedTo', this.value)">
+                    <input type="text" class="me-input-small" placeholder="Task" value="${escapeHtml(activity.name)}" onchange="meUpdateActivity('${activity.id}', 'name', this.value)">
+                    <input type="number" class="me-input-hours" placeholder="Est. hours" value="${activity.baseHours}" step="0.1" onchange="meUpdateActivity('${activity.id}', 'baseHours', this.value)">
+                    <select class="me-input-assign" onchange="meUpdateActivity('${activity.id}', 'assignedTo', this.value)">
                       <option value="">Assign to...</option>
                       ${meDataState.team.map(member => `<option value="${member.id}" ${activity.assignedTo === member.id ? 'selected' : ''}>${escapeHtml(member.name)}</option>`).join('')}
                     </select>
-                    <textarea class="me-input-full" placeholder="Notes" onchange="meUpdateActivity('${activity.id}', 'notes', this.value)">${escapeHtml(activity.notes)}</textarea>
+                    <button class="me-btn-delete" onclick="meDeleteActivity('${activity.id}')">🗑️</button>
                   </div>
                 </div>
               `).join('')}

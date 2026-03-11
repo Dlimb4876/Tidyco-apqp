@@ -86,21 +86,13 @@ window.meDrawChartNow = function() {
 
   const capacityData = [];
   const capacityMaxData = [];
-  const npiData = [];
-  const improvementData = [];
-  const tenderingData = [];
-  const supportData = [];
-  const otherData = [];
+  const demandData = [];
 
   monthKeys.forEach(monthKey => {
     const data = meCalculateMonthData(monthKey, team, tasks, products, holidays);
     capacityData.push(data.capacity);
     capacityMaxData.push(data.capacityMax);
-    npiData.push(data.npi);
-    improvementData.push(data.improvement);
-    tenderingData.push(data.tendering);
-    supportData.push(data.support);
-    otherData.push(data.other);
+    demandData.push(data.totalDemand);
   });
 
   const ctx = canvas.getContext('2d');
@@ -109,13 +101,9 @@ window.meDrawChartNow = function() {
     data: {
       labels: monthLabels,
       datasets: [
-        { label: 'NPI', data: npiData, backgroundColor: '#1e40af', stack: 'bars', order: 2 },
-        { label: 'Improvement', data: improvementData, backgroundColor: '#15803d', stack: 'bars', order: 2 },
-        { label: 'Tendering', data: tenderingData, backgroundColor: '#ea580c', stack: 'bars', order: 2 },
-        { label: 'Support', data: supportData, backgroundColor: '#be185d', stack: 'bars', order: 2 },
-        { label: 'Other', data: otherData, backgroundColor: '#7c3aed', stack: 'bars', order: 2 },
-        { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 2, type: 'line', fill: false, pointRadius: 3, pointBackgroundColor: '#ef4444', order: 1 },
-        { label: '100% Max Capacity', data: capacityMaxData, borderColor: '#9ca3af', borderWidth: 2, borderDash: [4, 4], type: 'line', fill: false, pointRadius: 2, pointBackgroundColor: '#9ca3af', order: 1 }
+        { label: 'Total Demand', data: demandData, backgroundColor: '#3b82f6', type: 'bar', order: 2 },
+        { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 3, type: 'line', fill: false, pointRadius: 4, pointBackgroundColor: '#ef4444', tension: 0.3, order: 1 },
+        { label: '100% Max Capacity', data: capacityMaxData, borderColor: '#9ca3af', borderWidth: 2, borderDash: [4, 4], type: 'line', fill: false, pointRadius: 3, pointBackgroundColor: '#9ca3af', tension: 0.3, order: 1 }
       ]
     },
     options: {
@@ -128,10 +116,9 @@ window.meDrawChartNow = function() {
       },
       plugins: { legend: { display: false } },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 10 }, padding: 5, color: '#000000' } },
+        x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 10 }, padding: 5, color: '#000000' } },
         y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#000000' } }
-      },
-      bar: { barPercentage: 0.75, categoryPercentage: 0.8 }
+      }
     }
   });
 };

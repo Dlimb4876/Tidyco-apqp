@@ -850,7 +850,7 @@
 
 .me-modal-content {
   position: relative; background: var(--white); border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15); width: 90%; max-width: 700px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15); width: 90%; max-width: 800px;
   max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column;
   z-index: 1001;
 }
@@ -923,6 +923,18 @@
 }
 
 .me-input-hours:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0,102,204,.08);
+}
+
+.me-input-assign {
+  flex: 1; padding: 6px 8px; border: 1px solid var(--line2);
+  border-radius: 4px; font-size: 12px; color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif; background: var(--white);
+  transition: border-color .12s; min-width: 140px;
+}
+
+.me-input-assign:focus {
   outline: none; border-color: var(--blue);
   box-shadow: 0 0 0 2px rgba(0,102,204,.08);
 }
@@ -1069,11 +1081,15 @@
 .me-adv-btn {
   width: 24px; height: 24px; border-radius: 4px; border: none;
   background: transparent; cursor: pointer; color: var(--muted);
-  display: inline-flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   font-size: 14px; transition: all .12s; flex-shrink: 0;
-  margin-right: 4px;
 }
 
 .me-adv-btn:hover {
   background: var(--blue-pale); color: var(--blue);
+}
+
+/* Button container alignment */
+.me-tbl td:last-child {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
 }
