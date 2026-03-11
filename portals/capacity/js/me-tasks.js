@@ -37,7 +37,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
         <td style="width: 30px; text-align: center;">
           ${hasActivities ? `<button class="me-dropdown-toggle" onclick="meToggleTaskDropdown(${idx})" style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px;">▶</button>` : ''}
         </td>
-        <td><span style="display: inline-flex; align-items: center; gap: 8px; width: 100%;">${hasActivities ? '<span style="width: 8px; height: 8px; background: #7c3aed; border-radius: 50%; flex-shrink: 0;" title="Advanced estimation in use"></span>' : ''}<input value="${esc(task.name)}" onchange="meDataUpdateTask(${idx}, 'name', this.value); meDebouncedSave();" style="flex: 1;"></span></td>
+        <td><span style="display: inline-flex; align-items: center; gap: 8px; width: 100%;">${hasActivities ? '<span style="width: 8px; height: 8px; background: #7c3aed; border-radius: 50%; flex-shrink: 0;" title="Advanced estimation in use"></span>' : ''}<input value="${esc(task.name)}" placeholder="new task" onchange="meDataUpdateTask(${idx}, 'name', this.value); meDebouncedSave();" style="flex: 1;"></span></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'category', this.value); meDebouncedSave();">${catOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'assigneeId', this.value); meDebouncedSave();">${memOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'productId', this.value); meDebouncedSave();">${prodOpts}</select></td>
@@ -139,7 +139,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
 };
 
 window.meAddDefaultTask = function() {
-  meDataAddTask('New Task', 'NPI', '', '', '', 0);
+  meDataAddTask('', 'NPI', '', '', '', 0);
   meOnSave();
   meSetTab('tasks');
 };

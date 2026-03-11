@@ -53,9 +53,9 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
             ${assigneeOptions}
           </select>
         </td>
-        <td><input type="number" class="me-input-hours me-est-optimistic" placeholder="0" value="${est.optimistic || ''}" step="0.1" data-idx="${idx}" title="Best-case scenario"></td>
-        <td><input type="number" class="me-input-hours me-est-mostlikely" placeholder="0" value="${est.mostLikely || ''}" step="0.1" data-idx="${idx}" title="Most probable outcome"></td>
-        <td><input type="number" class="me-input-hours me-est-pessimistic" placeholder="0" value="${est.pessimistic || ''}" step="0.1" data-idx="${idx}" title="Worst-case scenario"></td>
+        <td><input type="number" class="me-input-hours me-est-optimistic" placeholder="0" value="${est.optimistic || ''}" step="0.1" data-idx="${idx}" title="Best-case scenario" style="text-align: center;"></td>
+        <td><input type="number" class="me-input-hours me-est-mostlikely" placeholder="0" value="${est.mostLikely || ''}" step="0.1" data-idx="${idx}" title="Most probable outcome" style="text-align: center;"></td>
+        <td><input type="number" class="me-input-hours me-est-pessimistic" placeholder="0" value="${est.pessimistic || ''}" step="0.1" data-idx="${idx}" title="Worst-case scenario" style="text-align: center;"></td>
         <td class="me-est-result" style="text-align: center; padding: 8px 4px;">${(O + 4*ML + P) / 6 > 0 ? ((O + 4*ML + P) / 6).toFixed(1) : '-'}</td>
         <td class="me-est-final" style="text-align: center; padding: 8px 4px; font-weight: bold;">${finalEst > 0 ? finalEst.toFixed(1) : '-'}</td>
         <td style="text-align: center; padding: 4px;"><button class="me-btn-delete" onclick="meEstimationDeleteRow(${taskIdx}, ${idx})">🗑️</button></td>
@@ -76,6 +76,22 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
   });
 
   const html = `
+    <style>
+      .me-est-optimistic::-webkit-outer-spin-button,
+      .me-est-optimistic::-webkit-inner-spin-button,
+      .me-est-mostlikely::-webkit-outer-spin-button,
+      .me-est-mostlikely::-webkit-inner-spin-button,
+      .me-est-pessimistic::-webkit-outer-spin-button,
+      .me-est-pessimistic::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .me-est-optimistic[type=number],
+      .me-est-mostlikely[type=number],
+      .me-est-pessimistic[type=number] {
+        -moz-appearance: textfield;
+      }
+    </style>
     <div class="me-estimation-subsystem">
       <!-- Top Bar -->
       <div class="me-subsystem-topbar">
@@ -89,7 +105,7 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
       <!-- Main Content -->
       <div class="me-estimation-body">
         <!-- Confidence Level Slider -->
-        <div class="me-estimation-section">
+        <div class="me-estimation-section" style="max-width: 810px;">
           <h3>🎯 Confidence Level</h3>
           <div class="me-factor-item">
             <label>Adjustment (0.5 = Pessimistic, 1.0 = Most Likely, 2.0 = Optimistic)</label>
@@ -102,18 +118,18 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
         <!-- PERT Table -->
         <div class="me-estimation-section">
           <h3>📊 Three-Point Estimation</h3>
-          <div class="me-tbl-wrap" style="max-width: 800px;">
+          <div class="me-tbl-wrap">
             <table class="me-tbl me-pert-table" style="width: 100%;">
               <thead>
                 <tr>
-                  <th style="width: 130px;">Task</th>
+                  <th style="width: 390px;">Task</th>
                   <th style="width: 100px;">Assignee</th>
-                  <th style="width: 65px;" title="Optimistic (best case)">Optimistic</th>
-                  <th style="width: 65px;" title="Most Likely (probable)">Most Likely</th>
-                  <th style="width: 65px;" title="Pessimistic (worst case)">Pessimistic</th>
-                  <th style="width: 60px;" title="PERT Formula: (O + 4*ML + P) / 6">PERT Est</th>
-                  <th style="width: 60px;" title="Confidence-adjusted final estimate">Final Est</th>
-                  <th style="width: 40px;">Del</th>
+                  <th style="width: 70px; text-align: center;" title="Optimistic (best case)">Optimistic</th>
+                  <th style="width: 70px; text-align: center;" title="Most Likely (probable)">Most Likely</th>
+                  <th style="width: 70px; text-align: center;" title="Pessimistic (worst case)">Pessimistic</th>
+                  <th style="width: 70px; text-align: center;" title="PERT Formula: (O + 4*ML + P) / 6">PERT Est</th>
+                  <th style="width: 70px; text-align: center;" title="Confidence-adjusted final estimate">Final Est</th>
+                  <th style="width: 40px; text-align: center;">Del</th>
                 </tr>
               </thead>
               <tbody id="me-pert-tbody">
@@ -121,7 +137,7 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
               </tbody>
             </table>
           </div>
-          <button class="me-btn-primary" onclick="meEstimationAddRow(${taskIdx})">＋ Add Estimate</button>
+          <button class="me-btn-primary" onclick="meEstimationAddRow(${taskIdx})" style="width: 100%; max-width: 810px;">＋ Add Task</button>
         </div>
 
         <!-- Summary -->
@@ -136,7 +152,7 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
       </div>
 
       <!-- Footer -->
-      <div class="me-estimation-footer">
+      <div class="me-estimation-footer" style="max-width: 810px; margin: 16px auto 0; padding: 12px; display: flex; gap: 8px; justify-content: flex-end;">
         <button class="me-btn-secondary" onclick="meCloseEstimationSubsystem()">Cancel</button>
         <button class="me-btn-danger" onclick="meEstimationClearData(${taskIdx})" title="Revert to simple estimation mode">Clear Advanced Data</button>
         <button class="me-btn-primary" onclick="meEstimationSave(${taskIdx})">💾 Save Estimate</button>
