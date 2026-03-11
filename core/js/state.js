@@ -59,6 +59,10 @@ const FAMILIES = [
 
 // Returns user-defined families if any exist, otherwise falls back to defaults
 function getFamilies() {
+  // Check new familiesState first, then old db.families, then defaults
+  if (typeof familiesState !== 'undefined' && familiesState.families && familiesState.families.length > 0) {
+    return familiesState.families;
+  }
   return (db.families && db.families.length > 0) ? db.families : FAMILIES;
 }
 

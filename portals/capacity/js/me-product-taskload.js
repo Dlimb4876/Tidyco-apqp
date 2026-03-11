@@ -26,7 +26,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
 
   // Build product load summary
   const productLoads = productsArray.map(product => {
-    const tasks = tasksByProduct[product.productDatabaseId] || [];
+    const tasks = tasksByProduct[product.id] || [];
     const totalHours = tasks.reduce((sum, t) => sum + (t.totalHours || 0), 0);
     const taskCount = tasks.length;
 
@@ -42,7 +42,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
     });
 
     return {
-      productId: product.productDatabaseId || product.id,
+      productId: product.id,
       productName: product.name,
       totalHours,
       taskCount,
@@ -71,7 +71,6 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
       <tr>
         <td><strong>${esc(load.productName)}</strong></td>
         <td style="text-align: center;">${load.taskCount}</td>
-        <td style="text-align: right;"><strong>${load.totalHours.toFixed(1)}h</strong></td>
         <td style="text-align: right;">${(load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
         <td style="text-align: right;">${(parseFloat(load.totalHours) + load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
         <td style="text-align: right; font-weight: 600; color: var(--blue);">${load.totalHours.toFixed(1)}h</td>
@@ -84,7 +83,6 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
       <tr style="background: var(--surface-low);">
         <td><em>Unassigned Tasks</em></td>
         <td style="text-align: center;">${unassignedTasks.length}</td>
-        <td style="text-align: right;">${unassignedHours}h</td>
         <td style="text-align: right;">—</td>
         <td style="text-align: right;">${unassignedHours}h</td>
         <td style="text-align: right; font-weight: 600; color: var(--blue);">${unassignedHours}h</td>
@@ -127,7 +125,6 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
               <thead><tr>
                 <th style="width:200px">Product</th>
                 <th style="width:80px">Tasks</th>
-                <th style="width:120px">Total Demand</th>
                 <th style="width:120px">Support/Month</th>
                 <th style="width:120px">Total Load</th>
                 <th style="width:120px">Task Demand</th>
@@ -138,7 +135,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
             </table>
           </div>
           <div style="font-size: 12px; color: var(--muted); padding: 12px 0; margin-top: 12px;">
-            💡 Total Demand = sum of task hours | Support/Month = support hours per week × 4.33 | Total Load = Demand + Support/Month | Task Demand = demand from ME capacity tasks
+            💡 Support/Month = support hours per week × 4.33 | Total Load = Task Demand + Support/Month | Task Demand = sum of ME capacity task hours
           </div>
         </div>
       </div>
