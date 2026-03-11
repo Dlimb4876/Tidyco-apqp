@@ -247,13 +247,14 @@ window.meDataAutoSyncProductionProducts = function() {
     }
   });
 
-  // Remove products that no longer have Production status (they've been closed or changed)
+  // Remove products that no longer have Production status or don't have a productDatabaseId
+  // (old manually-added products without a DB link are removed to prevent duplicates)
   meDataState.products = meDataState.products.filter(meP => {
     if (!meP.productDatabaseId) {
-      // Keep products without a database ID (manually added)
-      return true;
+      // Remove products without a database ID (old manual entries - no longer needed)
+      return false;
     }
-    // Remove if no longer in PM or not Production status
+    // Keep only those still in PM with Production status
     return pmMap[meP.productDatabaseId] !== undefined;
   });
 
