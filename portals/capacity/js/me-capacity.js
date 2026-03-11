@@ -19,7 +19,7 @@ window.renderMeCapacity = function() {
     meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';
   }
 
-  return `
+  const html = `
     <div class="me-shell">
       <div class="me-topbar">
         <div class="me-topbar-left">
@@ -46,6 +46,20 @@ window.renderMeCapacity = function() {
       </div>
     </div>
   `;
+
+  // Draw dashboard charts on initial render
+  setTimeout(() => {
+    if (meTab === 'dashboard') {
+      const team = meDataGetTeam();
+      const tasks = meDataGetTasks();
+      const products = meDataGetProducts();
+      const holidays = meDataGetHolidays();
+      meDashboardDrawMiniChart(team, tasks, products, holidays);
+      meDashboardDrawMiniHeatmap(team, tasks, holidays);
+    }
+  }, 100);
+
+  return html;
 };
 
 // ── Tab management ─────────────────────────────────────────
