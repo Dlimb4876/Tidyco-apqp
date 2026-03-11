@@ -47,7 +47,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
     // Determine if task has subtasks (from PERT estimation)
     const isRootTask = task.type === 'root';
     const hasSubtasks = isRootTask && task.subtasks && task.subtasks.length > 0;
-    const effectiveHours = isRootTask ? (task.advancedEstimation?.totalFinalHours || 0) : (task.totalHours || 0);
+    const effectiveHours = isRootTask ? (task.advancedEstimation?.totalFinalHours || task.totalHours || 0) : (task.totalHours || 0);
 
     const assigneeNames = {};
     teamArray.forEach(m => {
@@ -81,6 +81,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
         const assigneeName = st.assigneeId ? (assigneeNames[st.assigneeId] || 'Unassigned') : 'Unassigned';
         return `
           <div class="me-subtask-item">
+<<<<<<< HEAD
             <div style="flex: 0 0 30px;"></div>
             <div style="flex: 0 0 150px;" class="me-subtask-name">${esc(st.name)}</div>
             <div style="flex: 0 0 110px;"></div>
@@ -90,6 +91,12 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
             <div style="flex: 0 0 110px;"></div>
             <div style="flex: 0 0 80px; text-align: right;" class="me-subtask-hours">${(parseFloat(st.hours) || 0).toFixed(1)} h</div>
             <div style="flex: 0 0 60px;"></div>
+=======
+            <div class="me-subtask-indent">↳</div>
+            <div class="me-subtask-name">${escapeHtml(st.name)}</div>
+            <div class="me-subtask-assignee">${escapeHtml(assigneeName)}</div>
+            <div class="me-subtask-hours">${(parseFloat(st.hours) || 0).toFixed(1)} h</div>
+>>>>>>> 77123da44fe83e60205951ea7f74bce48fbb54b5
           </div>
         `;
       }).join('');
