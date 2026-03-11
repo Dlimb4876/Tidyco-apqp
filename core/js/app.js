@@ -5,7 +5,7 @@ import {
 import { loadRemote, load } from './db.js';
 import { supa, currentUser, setCurrentUser } from './auth.js';
 import { meDataInit } from '../../portals/capacity/js/me-data.js';
-import { prodDataInit } from '../../portals/production/js/prod-data.js';
+import { prodDataInit } from '../../portals/production/js/data.js';
 import { productsDataInit } from '../../portals/product-development/product-management/js/products-data.js';
 import { parseHash, navigate, goHome, goProjects, setApqpTab as navSetApqpTab } from '../../utils/js/navigation.js';
 import { doLogin, doLogout } from './auth.js';
