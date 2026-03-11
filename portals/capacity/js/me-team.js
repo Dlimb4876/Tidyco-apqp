@@ -10,10 +10,6 @@ window.meRenderTeamTab = function(teamArray) {
     return sum + hours;
   }, 0).toFixed(1);
 
-  // Calculate group availability
-  const npiCapacity = teamArray.filter(m => (m.group || '') === 'NPI').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
-  const prodCapacity = teamArray.filter(m => (m.group || '') === 'Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
-  const bothCapacity = teamArray.filter(m => (m.group || '') === 'NPI / Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
 
   // Calculate holidays this month
   const today = new Date();
@@ -24,12 +20,10 @@ window.meRenderTeamTab = function(teamArray) {
   let rows = '';
   teamArray.forEach((member, idx) => {
     const effective = ((member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100)).toFixed(1);
-    const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option><option value="NPI / Production" ' + ((member.group || '') === 'NPI / Production' ? 'selected' : '') + '>NPI / Production</option>';
     rows += `
       <tr>
         <td><input value="${esc(member.name)}" onchange="meDataUpdateTeam(${idx}, 'name', this.value); meDebouncedSave();"></td>
         <td><input value="${esc(member.jobTitle || '')}" onchange="meDataUpdateTeam(${idx}, 'jobTitle', this.value); meDebouncedSave();"></td>
-        <td><select onchange="meDataUpdateTeam(${idx}, 'group', this.value); meDebouncedSave();">${groupOpts}</select></td>
         <td><input type="date" value="${member.startDate || ''}" onchange="meDataUpdateTeam(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
         <td><input type="date" value="${member.endDate || ''}" onchange="meDataUpdateTeam(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${member.hoursPerWeek || 37.5}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
@@ -47,21 +41,6 @@ window.meRenderTeamTab = function(teamArray) {
         <div class="me-kpi" style="border-left: 4px solid var(--green);">
           <div class="me-kpi-value">${totalCapacity}</div>
           <div class="me-kpi-label">Total Availability</div>
-          <div class="me-kpi-month">h/month</div>
-        </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--blue);">
-          <div class="me-kpi-value">${npiCapacity}</div>
-          <div class="me-kpi-label">NPI Group</div>
-          <div class="me-kpi-month">h/month</div>
-        </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--amber);">
-          <div class="me-kpi-value">${prodCapacity}</div>
-          <div class="me-kpi-label">Production Group</div>
-          <div class="me-kpi-month">h/month</div>
-        </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--navy);">
-          <div class="me-kpi-value">${bothCapacity}</div>
-          <div class="me-kpi-label">NPI / Production</div>
           <div class="me-kpi-month">h/month</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--teal); cursor: pointer;" onclick="meSetTab('holidays')">
@@ -82,7 +61,6 @@ window.meRenderTeamTab = function(teamArray) {
               <thead><tr>
                 <th style="width:120px">Name</th>
                 <th style="width:110px">Job Title</th>
-                <th style="width:100px">Group</th>
                 <th style="width:100px">Start Date</th>
                 <th style="width:100px">End Date</th>
                 <th style="width:100px">Hours / Week</th>
@@ -91,7 +69,7 @@ window.meRenderTeamTab = function(teamArray) {
                 <th style="width:36px"></th>
               </tr></thead>
               <tbody>
-                ${rows || '<tr><td colspan="9"><div style="text-align:center;padding:40px;color:var(--muted)">No team members added</div></td></tr>'}
+                ${rows || '<tr><td colspan="8"><div style="text-align:center;padding:40px;color:var(--muted)">No team members added</div></td></tr>'}
               </tbody>
             </table>
           </div>
