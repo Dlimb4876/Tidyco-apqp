@@ -37,6 +37,8 @@ export function setKitPickTarget(val) { kitPickTarget = val; }
 export function setKitPickSelected(val) { kitPickSelected = val; }
 export function setKitPickFilter(val) { kitPickFilter = val; }
 export function setInsertOriginIdx(val) { insertOriginIdx = val; }
+export function setProductDevelopmentTab(val) { productDevelopmentTab = val; }
+export function setNpiTab(val) { npiTab = val; }
 export function setProdPlanWeekOffset(val) { prodPlanWeekOffset = val; }
 export function setMeStartOffset(val) { meStartOffset = val; }
 

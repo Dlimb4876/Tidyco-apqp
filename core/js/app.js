@@ -20,7 +20,7 @@ import { meAddDefaultTask } from '../../portals/capacity/js/me-tasks.js';
 import { meOpenAdvancedEstimationModal } from '../../portals/capacity/js/me-advanced-estimation.js';
 import { meAddDefaultProduct } from '../../portals/capacity/js/me-products.js';
 import { meToggleHoliday } from '../../portals/capacity/js/me-holidays.js';
-import { setProductionTab, prodSetActiveUnit } from '../../portals/production/js/production.js';
+import { prodSetActiveUnit } from '../../portals/production/js/production.js';
 import { prodSetWeekOffset } from '../../portals/production/js/planning.js';
 import { 
   addNewBatchRow, focusBatchNewRow, calcBatchDueDate, toggleHideCompleteBatches, 

@@ -1,4 +1,4 @@
-import { supa, currentUser, doLogout } from './auth.js';
+import { resetGlobalState } from './state.js';
 import { launchApp } from './app.js';
 import { db, progId } from './state.js';
 
@@ -6,6 +6,7 @@ export const SUPA_URL = 'https://eihxvmzsfnpdaizggsvs.supabase.co';
 export const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpaHh2bXpzZm5wZGFpemdnc3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3OTc2OTMsImV4cCI6MjA4ODM3MzY5M30.edpoNia_4nGRwUBwVAFrKXgyB3SnhH_umU2mcNTBIco';
 export const supa     = supabase.createClient(SUPA_URL, SUPA_KEY);
 export let   currentUser = null;
+export function setCurrentUser(val) { currentUser = val; }
 
 export async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
