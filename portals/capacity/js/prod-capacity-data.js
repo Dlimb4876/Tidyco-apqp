@@ -90,21 +90,26 @@ function prodCapAvailableHours(workArea, year, month) {
 
 // ── Work area accessors ───────────────────────────────────────
 function prodCapGetWorkAreas() {
+  const areas = new Set();
+
+  // Always include Unit 2, Unit 3, Unit 6 as default work areas
+  ['Unit 2', 'Unit 3', 'Unit 6'].forEach(u => areas.add(u));
+
   // Get work areas from database (if loaded)
   if (workAreasState?.workAreas && workAreasState.workAreas.length > 0) {
-    return workAreasState.workAreas.map(w => w.name).sort();
+    workAreasState.workAreas.forEach(w => areas.add(w.name));
+  } else {
+    // Fallback: discover from production data if work_areas table not available
+    // From products
+    const prods = prodState?.products || [];
+    prods.forEach(p => { if (p.work_location) areas.add(p.work_location); });
+    // From batches (may have a location not on any current product)
+    const batches = prodState?.batches || [];
+    batches.forEach(b => { if (b.work_location) areas.add(b.work_location); });
+    // From capacity records already set
+    prodCapState.capacityRecords.forEach(r => areas.add(r.work_area));
   }
 
-  // Fallback: discover from production data if work_areas table not available
-  const areas = new Set();
-  // From products
-  const prods = prodState?.products || [];
-  prods.forEach(p => { if (p.work_location) areas.add(p.work_location); });
-  // From batches (may have a location not on any current product)
-  const batches = prodState?.batches || [];
-  batches.forEach(b => { if (b.work_location) areas.add(b.work_location); });
-  // From capacity records already set
-  prodCapState.capacityRecords.forEach(r => areas.add(r.work_area));
   return Array.from(areas).sort();
 }
 
