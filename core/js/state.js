@@ -11,7 +11,7 @@ let capacityTab = 'root'; // root|me|overhaul|projects
 let productionTab = 'root'; // root|products|scheduling|by-product|by-unit
 let productDevelopmentTab = 'root'; // root|npi|product-management
 let npiTab = 'all'; // 'all' | family id — active tab on the NPI project selection screen
-let prodPlanWeekOffset = 0; // Week offset for 4-week rolling view
+let prodPlanMonthOffset = 0; // Month offset from current month
 let meStartOffset = 0; // Months from today
 
 // Modal picker state

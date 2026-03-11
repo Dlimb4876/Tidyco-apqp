@@ -141,7 +141,7 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | `capacityTab` | Active capacity stream (`root` / `me` / `overhaul`) |
 | `productionTab` | Active production view (`root` / `products` / `scheduling` / `by-product` / `by-unit`) |
 | `productDevelopmentTab` | Active product development sub-tab (`root` / `npi` / `product-management`) |
-| `prodPlanWeekOffset` | Week offset for the 4-week rolling production plan |
+| `prodPlanMonthOffset` | Month offset from current month for the production plan Gantt view |
 | `meStartOffset` | Month offset for the ME capacity chart |
 
 ---

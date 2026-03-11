@@ -25,12 +25,7 @@ function renderScheduling() {
         <div class="cell-display" id="batch-new-family">—</div>
       </td>
       <td>
-        <select class="cell-edit" id="batch-new-work-location" onkeydown="handleBatchRowKey(event, 'work-location')">
-          <option value="">—</option>
-          <option value="Unit 2">Unit 2</option>
-          <option value="Unit 3">Unit 3</option>
-          <option value="Unit 6">Unit 6</option>
-        </select>
+        <div class="cell-display" id="batch-new-work-location">—</div>
       </td>
       <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
       <td>
@@ -73,12 +68,7 @@ function renderScheduling() {
           <div class="cell-display">${product && product.family_id ? (prodState.families.find(f => f.id === product.family_id)?.label || '—') : '—'}</div>
         </td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'work_location', this.value)" onkeydown="handleCellKey(event)">
-            <option value="">—</option>
-            <option value="Unit 2" ${workLocation === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
-            <option value="Unit 3" ${workLocation === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
-            <option value="Unit 6" ${workLocation === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
-          </select>
+          <div class="cell-display">${workLocation || '—'}</div>
         </td>
         <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
         <td>
@@ -298,14 +288,15 @@ function focusBatchNewRow() {
 
 async function addNewBatchRow() {
   const productId = document.getElementById('batch-new-product')?.value;
-  const workLocation = document.getElementById('batch-new-work-location')?.value;
+  const workLocationDiv = document.getElementById('batch-new-work-location');
+  const workLocation = workLocationDiv?.textContent?.trim();
   const qty = document.getElementById('batch-new-qty')?.value;
   const start = document.getElementById('batch-new-start')?.value;
   const due = document.getElementById('batch-new-due')?.value;
   const status = document.getElementById('batch-new-status')?.value || 'Planned';
   const notes = document.getElementById('batch-new-notes')?.value;
 
-  if (!productId || !workLocation) {
+  if (!productId || !workLocation || workLocation === '—') {
     alert('Product and Work Location are required');
     return;
   }
@@ -314,7 +305,7 @@ async function addNewBatchRow() {
 
   // Reset new row fields
   document.getElementById('batch-new-product').value = '';
-  document.getElementById('batch-new-work-location').value = '';
+  document.getElementById('batch-new-work-location').textContent = '—';
   document.getElementById('batch-new-qty').value = '';
   document.getElementById('batch-new-start').value = '';
   document.getElementById('batch-new-due').value = '';
@@ -487,17 +478,17 @@ function updateFamilyDisplay(scope) {
 // Auto-populate work location from selected product (new row)
 function autoPopulateWorkLocation() {
   const productSelect = document.getElementById('batch-new-product');
-  const workLocationSelect = document.getElementById('batch-new-work-location');
+  const workLocationDiv = document.getElementById('batch-new-work-location');
 
-  if (!productSelect || !workLocationSelect) return;
+  if (!productSelect || !workLocationDiv) return;
 
   const productId = productSelect.value;
   const product = prodState.products.find(p => p.id === productId);
 
   if (product && product.work_location) {
-    workLocationSelect.value = product.work_location;
+    workLocationDiv.textContent = product.work_location;
   } else {
-    workLocationSelect.value = '';
+    workLocationDiv.textContent = '—';
   }
 }
 

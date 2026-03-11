@@ -197,7 +197,7 @@ window.prodDataGetBatchesByWorkLocation = function(workLocation) {
 
 window.prodSetActiveUnit = function(unit) {
   prodState.activeUnit = unit;
-  prodPlanWeekOffset = 0; // Reset week offset when switching units
+  prodPlanMonthOffset = 0; // Reset month offset when switching units
 };
 
 // ===== FAMILY MANAGEMENT =====
