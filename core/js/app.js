@@ -51,6 +51,9 @@ async function launchApp() {
   // Load Production Capacity settings (production_capacity table)
   await prodCapDataInit();
 
+  // Load Work Areas (work_areas table)
+  await workAreasDataInit();
+
   // Restore position from URL hash
   const h = parseHash();
   if (h.p && db.programmes.find(p => p.id === h.p)) {
