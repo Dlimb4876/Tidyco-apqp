@@ -109,7 +109,7 @@ function render() {
   if (currentSection === 'capacity') {
     if (capacityTab === 'root') mc.innerHTML = renderCapacity();
     else if (capacityTab === 'me') mc.innerHTML = `<div class="section-inner">${renderMeCapacity()}</div>`;
-    else if (capacityTab === 'overhaul') mc.innerHTML = `<div class="section-inner"><div style="padding: 20px; text-align: center; color: var(--muted);">Overhaul Capacity coming soon</div></div>`;
+    else if (capacityTab === 'overhaul') mc.innerHTML = `<div class="section-inner">${renderProdCapacity()}</div>`;
     else if (capacityTab === 'projects') mc.innerHTML = `<div class="section-inner"><div style="padding: 20px; text-align: center; color: var(--muted);">Projects Capacity coming soon</div></div>`;
     else mc.innerHTML = renderCapacity();
     // Draw chart after ME Capacity is rendered
