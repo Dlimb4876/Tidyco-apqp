@@ -92,7 +92,13 @@ window.meLoadRelationalHolidays = async function(userId) {
       return [];
     }
 
-    return data || [];
+    return (data || []).map(h => ({
+      id: h.id,
+      personId: h.person_id,
+      date: h.date,
+      type: h.type,
+      createdAt: h.created_at
+    }));
   } catch (err) {
     console.warn('meLoadRelationalHolidays exception:', err.message);
     return [];
@@ -410,6 +416,11 @@ window.meSaveTaskPertHistoryRelational = async function(taskId, estimates, confi
 
 window.meSaveHolidayRelational = async function(userId, holiday) {
   try {
+    if (!holiday.personId) {
+      // Bank holidays or legacy entries without a person — skip silently
+      return true;
+    }
+
     const { error } = await supa
       .from('me_holidays')
       .upsert({
@@ -418,7 +429,7 @@ window.meSaveHolidayRelational = async function(userId, holiday) {
         person_id: holiday.personId,
         date: holiday.date,
         type: holiday.type
-      }, { onConflict: 'id' });
+      }, { onConflict: 'user_id,person_id,date' });
 
     if (error) {
       console.warn('meSaveHolidayRelational upsert error:', error.message);
