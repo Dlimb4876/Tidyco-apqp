@@ -138,14 +138,15 @@ window.meDataGetTeam = function() {
 
 window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours, productId) {
   if (!name || name.trim().length === 0) return false;
+  const todayStr = new Date().toISOString().split('T')[0];
   const task = {
     name: name.trim(),
     category: category || 'NPI',
     type: 'standard',
     assigneeId: assigneeId || '',
     productId: productId || '',
-    startDate: startDate,
-    endDate: endDate,
+    startDate: startDate || todayStr,
+    endDate: endDate || todayStr,
     totalHours: parseFloat(totalHours) || 0,
     createdAt: new Date().toISOString(),
     advancedEstimation: null,

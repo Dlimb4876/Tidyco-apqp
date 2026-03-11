@@ -9,6 +9,16 @@
    ============================================================ */
 
 // ─────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────
+
+// Get today's date in YYYY-MM-DD format
+function getTodayDateString() {
+  const now = new Date();
+  return now.toISOString().split('T')[0];
+}
+
+// ─────────────────────────────────────────────────────────────
 // LOAD OPERATIONS — Fetch data from relational tables
 // ─────────────────────────────────────────────────────────────
 
@@ -256,6 +266,10 @@ window.meSaveProductRelational = async function(userId, product) {
 
 window.meSaveTaskRelational = async function(userId, task) {
   try {
+    const todayStr = getTodayDateString();
+    const startDate = task.startDate || todayStr;
+    const endDate = task.endDate || todayStr;
+
     if (!task.id) {
       // Insert new task and capture the returned ID
       const { data, error } = await supa
@@ -267,8 +281,8 @@ window.meSaveTaskRelational = async function(userId, task) {
           type: task.type,
           assignee_id: task.assigneeId || null,
           product_id: task.productId || null,
-          start_date: task.startDate || null,
-          end_date: task.endDate || null,
+          start_date: startDate,
+          end_date: endDate,
           total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0)
         }])
         .select('id');
@@ -291,8 +305,8 @@ window.meSaveTaskRelational = async function(userId, task) {
           type: task.type,
           assignee_id: task.assigneeId || null,
           product_id: task.productId || null,
-          start_date: task.startDate || null,
-          end_date: task.endDate || null,
+          start_date: startDate,
+          end_date: endDate,
           total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0),
           updated_at: new Date().toISOString()
         })
@@ -327,14 +341,15 @@ window.meSaveTaskSubtasksRelational = async function(taskId, subtasks, userId) {
 
     // Insert new subtasks (MUST include user_id for RLS)
     if (subtasks && subtasks.length > 0) {
+      const todayStr = getTodayDateString();
       const subtasksData = subtasks.map(st => ({
         task_id: taskId,
         user_id: userId,  // REQUIRED for RLS policy
         name: st.name,
         assignee_id: st.assigneeId || null,
         hours: st.hours,
-        start_date: st.startDate || null,
-        end_date: st.endDate || null,
+        start_date: st.startDate || todayStr,
+        end_date: st.endDate || todayStr,
         source: st.source || 'pert'
       }));
 
