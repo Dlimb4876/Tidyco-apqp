@@ -65,7 +65,7 @@ function renderScheduling() {
           </select>
         </td>
         <td>
-          <div class="cell-display">${product && product.family_id ? (prodState.families.find(f => f.id === product.family_id)?.label || '—') : '—'}</div>
+          <div class="cell-display">${product && product.family ? (prodState.families.find(f => f.id === product.family)?.label || '—') : '—'}</div>
         </td>
         <td>
           <div class="cell-display">${workLocation || '—'}</div>
@@ -184,7 +184,7 @@ function getFilteredBatches() {
 
   if (prodSchedulingFilters.family) {
     // Filter by family ID
-    const familyProducts = prodState.products.filter(p => p.family_id === prodSchedulingFilters.family).map(p => p.id);
+    const familyProducts = prodState.products.filter(p => p.family === prodSchedulingFilters.family).map(p => p.id);
     filtered = filtered.filter(b => familyProducts.includes(b.product_id));
   }
 
@@ -216,8 +216,8 @@ function getFilteredBatches() {
     if (prodSchedulingSort.field === 'family') {
       const productA = prodState.products.find(p => p.id === a.product_id);
       const productB = prodState.products.find(p => p.id === b.product_id);
-      const familyA = productA ? prodState.families.find(f => f.id === productA.family_id) : null;
-      const familyB = productB ? prodState.families.find(f => f.id === productB.family_id) : null;
+      const familyA = productA ? prodState.families.find(f => f.id === productA.family) : null;
+      const familyB = productB ? prodState.families.find(f => f.id === productB.family) : null;
       aVal = familyA?.label || '';
       bVal = familyB?.label || '';
     } else {
@@ -494,8 +494,8 @@ function updateFamilyDisplay(scope) {
   const productId = productSelect.value;
   const product = prodState.products.find(p => p.id === productId);
 
-  if (product && product.family_id) {
-    const family = prodState.families.find(f => f.id === product.family_id);
+  if (product && product.family) {
+    const family = prodState.families.find(f => f.id === product.family);
     familyDisplay.textContent = family ? family.label : '—';
   } else {
     familyDisplay.textContent = '—';

@@ -112,10 +112,21 @@
   flex-shrink: 0;
 }
 
-.pm-family-name {
+.pm-family-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pm-family-name {
   font-size: 14px;
   color: var(--text);
+}
+
+.pm-family-desc {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .pm-family-actions {
@@ -238,8 +249,16 @@
     width: 24px;
   }
 
+  .pm-family-info {
+    gap: 3px;
+  }
+
   .pm-family-name {
     font-size: 13px;
+  }
+
+  .pm-family-desc {
+    font-size: 11px;
   }
 
   .pm-family-actions {

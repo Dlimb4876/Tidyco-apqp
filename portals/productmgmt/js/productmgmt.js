@@ -10,7 +10,10 @@ function renderProductMgmt() {
   const rows = families.map((f, i) => `
     <div class="pm-family-row">
       <span class="pm-family-icon">${esc(f.icon)}</span>
-      <span class="pm-family-name">${esc(f.label)}</span>
+      <div class="pm-family-info">
+        <span class="pm-family-name">${esc(f.label)}</span>
+        ${f.description ? `<span class="pm-family-desc">${esc(f.description)}</span>` : ''}
+      </div>
       <div class="pm-family-actions">
         <button class="btn btn-ghost btn-sm" onclick="pmEditFamily(${i})">Edit</button>
         <button class="btn btn-ghost btn-sm pm-btn-danger" onclick="pmDeleteFamily(${i})">Delete</button>
@@ -99,7 +102,10 @@ function renderFamiliesTabContent() {
   const rows = families.map((f, i) => `
     <div class="pm-family-row">
       <span class="pm-family-icon">${esc(f.icon)}</span>
-      <span class="pm-family-name">${esc(f.label)}</span>
+      <div class="pm-family-info">
+        <span class="pm-family-name">${esc(f.label)}</span>
+        ${f.description ? `<span class="pm-family-desc">${esc(f.description)}</span>` : ''}
+      </div>
       <div class="pm-family-actions">
         <button class="btn btn-ghost btn-sm" onclick="pmEditFamily(${i})">Edit</button>
         <button class="btn btn-ghost btn-sm pm-btn-danger" onclick="pmDeleteFamily(${i})">Delete</button>
