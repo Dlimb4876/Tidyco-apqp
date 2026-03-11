@@ -29,10 +29,10 @@ function renderScheduling() {
       </td>
       <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
       <td>
-        <input class="cell-edit" id="batch-new-start" placeholder="DD/MM/YYYY or +7, t" onchange="calcBatchDueDate()" onblur="smartDateFormat('batch-new-start', calcBatchDueDate)" onkeydown="handleDateInput(event, 'batch-new-start', 'start')">
+        <input class="cell-edit" id="batch-new-start" placeholder="DD/MM/YYYY" onchange="calcBatchDueDate()" onblur="smartDateFormat('batch-new-start', calcBatchDueDate)" onkeydown="handleDateInput(event, 'batch-new-start', 'start')">
       </td>
       <td>
-        <input class="cell-edit" id="batch-new-due" placeholder="DD/MM/YYYY or +7, t" onblur="smartDateFormat('batch-new-due')" onkeydown="handleDateInput(event, 'batch-new-due', 'due')">
+        <input class="cell-edit" id="batch-new-due" placeholder="DD/MM/YYYY" onblur="smartDateFormat('batch-new-due')" onkeydown="handleDateInput(event, 'batch-new-due', 'due')">
       </td>
       <td>
         <select class="cell-edit" id="batch-new-status" onkeydown="handleBatchRowKey(event, 'status')">
@@ -72,10 +72,10 @@ function renderScheduling() {
         </td>
         <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
         <td>
-          <input class="cell-edit" placeholder="DD/MM/YYYY or +7, t" value="${formatDisplayDate(batch.start_date || '')}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', parseDisplayDate(this.value))" onblur="smartDateFormat('batch-start-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'start_date', parseDisplayDate(document.getElementById('batch-start-${batchIdx}').value)))" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}">
+          <input class="cell-edit" placeholder="DD/MM/YYYY" value="${formatDisplayDate(batch.start_date || '')}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', parseDisplayDate(this.value))" onblur="smartDateFormat('batch-start-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'start_date', parseDisplayDate(document.getElementById('batch-start-${batchIdx}').value)))" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}">
         </td>
         <td>
-          <input class="cell-edit" placeholder="DD/MM/YYYY or +7, t" value="${formatDisplayDate(batch.due_date || '')}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', parseDisplayDate(this.value))" onblur="smartDateFormat('batch-due-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'due_date', parseDisplayDate(document.getElementById('batch-due-${batchIdx}').value)))" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}">
+          <input class="cell-edit" placeholder="DD/MM/YYYY" value="${formatDisplayDate(batch.due_date || '')}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', parseDisplayDate(this.value))" onblur="smartDateFormat('batch-due-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'due_date', parseDisplayDate(document.getElementById('batch-due-${batchIdx}').value)))" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}">
         </td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'status', this.value)" onkeydown="handleCellKey(event)">
@@ -151,8 +151,8 @@ function renderScheduling() {
           <col style="min-width:100px">
           <col style="min-width:100px">
           <col style="min-width:80px">
-          <col style="min-width:130px">
-          <col style="min-width:130px">
+          <col style="min-width:100px">
+          <col style="min-width:100px">
           <col style="min-width:120px">
           <col style="min-width:220px">
           <col style="width:36px">
@@ -348,12 +348,14 @@ function calcBatchDueDate() {
   if (!startIso) return;
 
   const product = prodState.products.find(p => p.id === productId);
-  if (!product || !product.lead_time_days) return;
+  if (!product) return;
 
-  // Calculate due date: start date + lead time days
+  // Calculate due date: start date + lead time days (or just start date if no lead time)
   const start = new Date(startIso);
   const due = new Date(start);
-  due.setDate(due.getDate() + parseInt(product.lead_time_days));
+  if (product.lead_time_days && parseInt(product.lead_time_days) > 0) {
+    due.setDate(due.getDate() + parseInt(product.lead_time_days));
+  }
 
   // Format as DD/MM/YYYY for display
   const year = due.getFullYear();
@@ -491,7 +493,13 @@ function updateFamilyDisplay(scope) {
 
   const productId = productSelect.value;
   const product = prodState.products.find(p => p.id === productId);
-  familyDisplay.textContent = product && product.family ? product.family : '—';
+
+  if (product && product.family_id) {
+    const family = prodState.families.find(f => f.id === product.family_id);
+    familyDisplay.textContent = family ? family.label : '—';
+  } else {
+    familyDisplay.textContent = '—';
+  }
 }
 
 // Auto-populate work location from selected product (new row)
