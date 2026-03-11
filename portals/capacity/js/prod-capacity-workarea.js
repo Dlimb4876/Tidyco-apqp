@@ -27,19 +27,12 @@ function renderProdCapWorkArea() {
   const demandMx  = prodCapCalcDemandMatrix(monthKeys);
   const supplyMx  = prodCapCalcSupplyMatrix(monthKeys, workAreas);
 
-  // ── Area tab pills ────────────────────────────────────────
+  // ── Area tabs ─────────────────────────────────────────────
   const tabPills = workAreas.map(wa => {
-    const totalDemand = monthKeys.slice(0, 3).reduce((s, k) => s + (demandMx[k]?.[wa] || 0), 0);
-    const totalSupply = monthKeys.slice(0, 3).reduce((s, k) => s + (supplyMx[k]?.[wa] || 0), 0);
-    const util   = prodCapUtil(totalDemand, totalSupply);
-    const badge  = totalSupply === 0 && totalDemand > 0 ? 'pc-badge-amber' :
-                   util > 100 ? 'pc-badge-red' :
-                   util > 80  ? 'pc-badge-amber' : 'pc-badge-green';
     const active = wa === prodCapWorkAreaSelected;
     return `
-      <button class="pc-area-tab ${active ? 'active' : ''}" onclick="prodCapWorkAreaSelected='${esc(wa)}'; render()">
+      <button class="pc-nav-btn ${active ? 'active' : ''}" onclick="prodCapWorkAreaSelected='${esc(wa)}'; render()">
         ${esc(wa)}
-        <span class="pc-area-badge ${badge}">${totalSupply > 0 ? util + '%' : totalDemand > 0 ? '?' : '—'}</span>
       </button>`;
   }).join('');
 
@@ -111,7 +104,7 @@ function renderProdCapWorkArea() {
     <div class="pc-workarea">
 
       <!-- Work Area Tabs -->
-      <div class="pc-area-tabs">${tabPills}</div>
+      <div class="pc-nav" style="margin-bottom:20px">${tabPills}</div>
 
       <!-- Chart -->
       <div class="pc-card">
