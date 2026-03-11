@@ -58,9 +58,8 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
   // Calculate totals
   const totalTaskHours = productLoads.reduce((sum, p) => sum + p.totalHours, 0).toFixed(1);
   const totalTasks = tasksArray.length;
-  const totalMonthlyDemand = (totalTaskHours * weeksPerMonth).toFixed(1);
   const totalMonthlySupport = (productsArray.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0) * weeksPerMonth).toFixed(1);
-  const totalMonthlyLoad = (parseFloat(totalMonthlyDemand) + parseFloat(totalMonthlySupport)).toFixed(1);
+  const totalMonthlyLoad = (parseFloat(totalTaskHours) + parseFloat(totalMonthlySupport)).toFixed(1);
 
   // Unassigned tasks
   const unassignedTasks = tasksByProduct['unassigned'] || [];
@@ -77,9 +76,8 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
         <td><strong>${esc(load.productName)}</strong></td>
         <td style="text-align: center;">${load.taskCount}</td>
         <td style="text-align: right;"><strong>${load.totalHours.toFixed(1)}h</strong></td>
-        <td style="text-align: right;">${(load.totalHours * weeksPerMonth).toFixed(1)}h</td>
-        <td style="text-align: right;">${(load.hoursPerWeek).toFixed(1)}h</td>
-        <td style="text-align: right;">${((load.hoursPerWeek + load.totalHours / 4.33) * weeksPerMonth).toFixed(1)}h</td>
+        <td style="text-align: right;">${(load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
+        <td style="text-align: right;">${(parseFloat(load.totalHours) + load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
         <td style="font-size: 12px; padding: 8px;">${categoryBreakdown}</td>
       </tr>`;
   });
@@ -91,9 +89,8 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
         <td><em>Unassigned Tasks</em></td>
         <td style="text-align: center;">${unassignedTasks.length}</td>
         <td style="text-align: right;">${unassignedHours}h</td>
-        <td style="text-align: right;">${(unassignedHours * weeksPerMonth).toFixed(1)}h</td>
         <td style="text-align: right;">—</td>
-        <td style="text-align: right;">—</td>
+        <td style="text-align: right;">${unassignedHours}h</td>
         <td></td>
       </tr>`;
   }
@@ -107,8 +104,8 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
           <div class="me-kpi-month">total hours</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--blue);">
-          <div class="me-kpi-value">${totalMonthlyDemand}</div>
-          <div class="me-kpi-label">Task Demand</div>
+          <div class="me-kpi-value">${totalMonthlySupport}</div>
+          <div class="me-kpi-label">Support Load</div>
           <div class="me-kpi-month">h/month</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--amber);">
@@ -134,10 +131,9 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
               <thead><tr>
                 <th style="width:200px">Product</th>
                 <th style="width:80px">Tasks</th>
-                <th style="width:100px">Demand/Week</th>
-                <th style="width:100px">Demand/Month</th>
+                <th style="width:120px">Total Demand</th>
                 <th style="width:120px">Support/Month</th>
-                <th style="width:120px">Total Load/Month</th>
+                <th style="width:120px">Total Load</th>
                 <th style="width:280px">Breakdown</th>
               </tr></thead>
               <tbody>
@@ -146,7 +142,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
             </table>
           </div>
           <div style="font-size: 12px; color: var(--muted); padding: 12px 0; margin-top: 12px;">
-            💡 This shows demand from tasks assigned to each production product. Support load is taken from the Products tab. Total Load = Demand + Support.
+            💡 Total Demand = sum of task hours | Support/Month = support hours per week × 4.33 | Total Load = Demand + Support/Month
           </div>
         </div>
       </div>
