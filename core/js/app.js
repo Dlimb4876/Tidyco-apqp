@@ -36,6 +36,7 @@ async function launchApp() {
 
   // Load Families data from database (dynamic family definitions)
   await familiesDataInit();
+  await familyTemplatesDataInit(); // Load family PFMEA templates
   populateFamilySelects(); // Refresh with dynamic families
 
   // Load ME Capacity data (separate Supabase table, silent if table absent)

@@ -87,6 +87,9 @@ function render() {
     if (familyModalState?.isOpen && typeof renderFamilyModal === 'function') {
       html += renderFamilyModal();
     }
+    if (templateManagerState?.isOpen && typeof renderTemplateManager === 'function') {
+      html += renderTemplateManager();
+    }
     mc.innerHTML = html;
     return;
   }
