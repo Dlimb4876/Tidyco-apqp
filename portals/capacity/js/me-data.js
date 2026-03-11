@@ -42,12 +42,14 @@ function meConvertPertDataToSubtasks(tasks) {
       return task;
     }
 
-    // Convert pertData.estimates → subtasks[]
+    // Convert pertData.estimates → subtasks[] (inheriting root task's date range)
     const subtasks = task.advancedEstimation.pertData.estimates.map(est => ({
       id: est.id,
       name: est.name,
       assigneeId: est.assigneeId || '',
       hours: est.finalHours || 0,
+      startDate: task.startDate,  // Subtask inherits root task's date range
+      endDate: task.endDate,
       source: 'pert'
     }));
 
