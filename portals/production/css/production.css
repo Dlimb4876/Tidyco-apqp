@@ -214,7 +214,7 @@
 
 .prod-tbl textarea.cell-edit {
   resize: vertical;
-  min-height: 80px;
+  min-height: 40px;
   max-height: 200px;
   font-family: inherit;
   line-height: 1.4;

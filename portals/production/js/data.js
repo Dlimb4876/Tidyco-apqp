@@ -10,6 +10,27 @@ let prodState = {
 
 let prodDebouncedSave = null;
 
+// ── Date formatting helpers ─────────────────────────────
+function formatDisplayDate(isoDate) {
+  if (!isoDate) return '';
+  // Convert YYYY-MM-DD to DD/MM/YYYY
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+function parseDisplayDate(displayDate) {
+  if (!displayDate) return '';
+  // Convert DD/MM/YYYY to YYYY-MM-DD (also handle YYYY-MM-DD as-is)
+  if (displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return displayDate; // Already in ISO format
+  }
+  if (displayDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+    const [day, month, year] = displayDate.split('/');
+    return `${year}-${month}-${day}`;
+  }
+  return null;
+}
+
 // Initialize production data from Supabase
 async function prodDataInit() {
   try {

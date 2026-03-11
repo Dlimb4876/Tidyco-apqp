@@ -34,10 +34,10 @@ function renderScheduling() {
       </td>
       <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
       <td>
-        <input class="cell-edit" id="batch-new-start" placeholder="YYYY-MM-DD or +7, t" onchange="calcBatchDueDate()" onblur="smartDateFormat('batch-new-start', calcBatchDueDate)" onkeydown="handleDateInput(event, 'batch-new-start', 'start')">
+        <input class="cell-edit" id="batch-new-start" placeholder="DD/MM/YYYY or +7, t" onchange="calcBatchDueDate()" onblur="smartDateFormat('batch-new-start', calcBatchDueDate)" onkeydown="handleDateInput(event, 'batch-new-start', 'start')">
       </td>
       <td>
-        <input class="cell-edit" id="batch-new-due" placeholder="YYYY-MM-DD or +7, t" onblur="smartDateFormat('batch-new-due')" onkeydown="handleDateInput(event, 'batch-new-due', 'due')">
+        <input class="cell-edit" id="batch-new-due" placeholder="DD/MM/YYYY or +7, t" onblur="smartDateFormat('batch-new-due')" onkeydown="handleDateInput(event, 'batch-new-due', 'due')">
       </td>
       <td>
         <select class="cell-edit" id="batch-new-status" onkeydown="handleBatchRowKey(event, 'status')">
@@ -55,11 +55,17 @@ function renderScheduling() {
     const product = prodDataGetProductById(batch.product_id);
     const batchIdx = prodState.batches.indexOf(batch);
 
+    // Auto-populate work location if empty
+    let workLocation = batch.work_location;
+    if (!workLocation && product && product.work_location) {
+      workLocation = product.work_location;
+    }
+
     rows += `
       <tr>
         <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'product_id', this.value)" onkeydown="handleCellKey(event)">
+          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'product_id', this.value); autoPopulateWorkLocationForBatch(${batchIdx}, this.value)" onkeydown="handleCellKey(event)">
             ${prodState.products.filter(p => p.status !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.code || 'N/A'})</option>`).join('')}
           </select>
         </td>
@@ -69,17 +75,17 @@ function renderScheduling() {
         <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'work_location', this.value)" onkeydown="handleCellKey(event)">
             <option value="">—</option>
-            <option value="Unit 2" ${batch.work_location === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
-            <option value="Unit 3" ${batch.work_location === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
-            <option value="Unit 6" ${batch.work_location === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
+            <option value="Unit 2" ${workLocation === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
+            <option value="Unit 3" ${workLocation === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
+            <option value="Unit 6" ${workLocation === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
           </select>
         </td>
         <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
         <td>
-          <input class="cell-edit" placeholder="YYYY-MM-DD or +7, t" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', this.value)" onblur="smartDateFormat('batch-start-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'start_date', document.getElementById('batch-start-${batchIdx}').value))" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}">
+          <input class="cell-edit" placeholder="DD/MM/YYYY or +7, t" value="${formatDisplayDate(batch.start_date || '')}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', parseDisplayDate(this.value))" onblur="smartDateFormat('batch-start-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'start_date', parseDisplayDate(document.getElementById('batch-start-${batchIdx}').value)))" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}">
         </td>
         <td>
-          <input class="cell-edit" placeholder="YYYY-MM-DD or +7, t" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', this.value)" onblur="smartDateFormat('batch-due-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'due_date', document.getElementById('batch-due-${batchIdx}').value))" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}">
+          <input class="cell-edit" placeholder="DD/MM/YYYY or +7, t" value="${formatDisplayDate(batch.due_date || '')}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', parseDisplayDate(this.value))" onblur="smartDateFormat('batch-due-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'due_date', parseDisplayDate(document.getElementById('batch-due-${batchIdx}').value)))" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}">
         </td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'status', this.value)" onkeydown="handleCellKey(event)">
@@ -89,7 +95,10 @@ function renderScheduling() {
           </select>
         </td>
         <td><textarea class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'notes', this.value)" onkeydown="handleCellKey(event)">${esc(batch.notes || '')}</textarea></td>
-        <td class="w28 ctr"><button class="btn-del" onclick="if(confirm('Delete batch?')) prodDataDeleteBatch(${batchIdx})">✕</button></td>
+        <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
+          <button class="btn-del" onclick="duplicateBatchRow(${batchIdx})" title="Duplicate batch">⧉</button>
+          <button class="btn-del" onclick="if(confirm('Delete batch?')) prodDataDeleteBatch(${batchIdx})">✕</button>
+        </td>
       </tr>
     `;
   });
@@ -323,29 +332,48 @@ function calcBatchDueDate() {
   if (!productSelect || !startInput || !dueInput) return;
 
   const productId = productSelect.value;
-  const startDate = startInput.value;
+  const startDisplayDate = startInput.value;
 
-  if (!productId || !startDate) return;
+  if (!productId || !startDisplayDate) return;
+
+  // Parse display date to ISO format
+  const startIso = parseDisplayDate(startDisplayDate);
+  if (!startIso) return;
 
   const product = prodState.products.find(p => p.id === productId);
   if (!product || !product.lead_time_days) return;
 
   // Calculate due date: start date + lead time days
-  const start = new Date(startDate);
+  const start = new Date(startIso);
   const due = new Date(start);
   due.setDate(due.getDate() + parseInt(product.lead_time_days));
 
-  // Format as YYYY-MM-DD
+  // Format as DD/MM/YYYY for display
   const year = due.getFullYear();
   const month = String(due.getMonth() + 1).padStart(2, '0');
   const day = String(due.getDate()).padStart(2, '0');
-  dueInput.value = `${year}-${month}-${day}`;
+  dueInput.value = `${day}/${month}/${year}`;
 }
 
 function toggleHideCompleteBatches() {
   prodSchedulingHideComplete = !prodSchedulingHideComplete;
   localStorage.setItem('prodSchedulingHideComplete', prodSchedulingHideComplete);
   render();
+}
+
+async function duplicateBatchRow(batchIdx) {
+  if (batchIdx < 0 || batchIdx >= prodState.batches.length) return;
+
+  const source = prodState.batches[batchIdx];
+  await prodDataAddBatch(
+    source.product_id,
+    source.work_location,
+    source.quantity,
+    source.start_date,
+    source.due_date,
+    source.status,
+    source.notes
+  );
 }
 
 // ── Smart date input helpers ─────────────────────────────
@@ -355,10 +383,10 @@ function handleDateInput(event, fieldId, fieldType, batchIdx) {
     const input = event.target;
     const val = input.value.trim().toLowerCase();
 
-    if (val && !val.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    if (val && !val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
       const parsed = parseDateInput(val);
       if (parsed) {
-        input.value = parsed;
+        input.value = formatDisplayDate(parsed);
         event.preventDefault();
         // Trigger change event
         input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -374,7 +402,7 @@ function setDateToday(fieldId) {
   const today = new Date().toISOString().split('T')[0];
   const field = document.getElementById(fieldId);
   if (field) {
-    field.value = today;
+    field.value = formatDisplayDate(today);
     field.dispatchEvent(new Event('change', { bubbles: true }));
   }
 }
@@ -416,8 +444,8 @@ function smartDateFormat(fieldId, callback) {
   const val = input.value.trim().toLowerCase();
   if (!val) return; // Empty is OK
 
-  // Already in correct format
-  if (val.match(/^\d{4}-\d{2}-\d{2}$/)) {
+  // Already in correct display format
+  if (val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
     if (callback) callback();
     return;
   }
@@ -425,14 +453,14 @@ function smartDateFormat(fieldId, callback) {
   // Try to parse shorthand
   const parsed = parseDateInput(val);
   if (parsed) {
-    input.value = parsed;
+    input.value = formatDisplayDate(parsed);
     input.dispatchEvent(new Event('change', { bubbles: true }));
     if (callback) callback();
     return;
   }
 
   // Invalid format - prompt user
-  alert(`Invalid date format: "${val}"\n\nUse YYYY-MM-DD or shorthand:\n• t or today\n• +7 or -3 for relative dates`);
+  alert(`Invalid date format: "${val}"\n\nUse DD/MM/YYYY or shorthand:\n• t or today\n• +7 or -3 for relative dates`);
   input.focus();
   input.select();
 }
@@ -456,7 +484,7 @@ function updateFamilyDisplay(scope) {
   familyDisplay.textContent = product && product.family ? product.family : '—';
 }
 
-// Auto-populate work location from selected product
+// Auto-populate work location from selected product (new row)
 function autoPopulateWorkLocation() {
   const productSelect = document.getElementById('batch-new-product');
   const workLocationSelect = document.getElementById('batch-new-work-location');
@@ -470,5 +498,14 @@ function autoPopulateWorkLocation() {
     workLocationSelect.value = product.work_location;
   } else {
     workLocationSelect.value = '';
+  }
+}
+
+// Auto-populate work location from selected product (existing batch row)
+function autoPopulateWorkLocationForBatch(batchIdx, productId) {
+  const product = prodState.products.find(p => p.id === productId);
+
+  if (product && product.work_location) {
+    prodDataUpdateBatch(batchIdx, 'work_location', product.work_location);
   }
 }

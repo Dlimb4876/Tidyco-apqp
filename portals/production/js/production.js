@@ -14,7 +14,7 @@ function prodNavBar() {
     <div class="prod-nav-bar">
       <button class="prod-nav-item ${productionTab === 'scheduling' ? 'active' : ''}" onclick="setProductionTab('scheduling')">📅 Schedule</button>
       <button class="prod-nav-item ${productionTab === 'by-product' ? 'active' : ''}" onclick="setProductionTab('by-product')">📋 Plan by Product</button>
-      <button class="prod-nav-item ${productionTab === 'by-unit' ? 'active' : ''}" onclick="setProductionTab('by-unit')">🏭 Plan by Unit</button>
+      <button class="prod-nav-item ${productionTab === 'by-unit' ? 'active' : ''}" onclick="setProductionTab('by-unit')">🏭 Plan by Work Area</button>
     </div>
   `;
 }
@@ -61,8 +61,8 @@ function renderProduction() {
         <div class="proj-card hub-card" onclick="setProductionTab('by-unit')">
           <div class="hub-card-content">
             <div class="hub-icon">🏭</div>
-            <div class="proj-card-name">Plan by Unit</div>
-            <div class="proj-card-meta">View by Unit 2/3/6</div>
+            <div class="proj-card-name">Plan by Work Area</div>
+            <div class="proj-card-meta">Units 2, 3 & 6</div>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ function renderPlanByProduct() {
             <div class="batch-num">Batch ${idx + 1}</div>
             <div class="batch-location">${batch.work_location || '—'}</div>
             <div class="batch-qty">${batch.quantity || '—'} units</div>
-            <div class="batch-dates">${batch.start_date || '—'} to ${batch.due_date || '—'}</div>
+            <div class="batch-dates">${formatDisplayDate(batch.start_date) || '—'} to ${formatDisplayDate(batch.due_date) || '—'}</div>
             <div class="batch-status">${statusBadge}</div>
           </div>
         `;
@@ -119,7 +119,7 @@ function renderPlanByUnit() {
       <div class="sec-head">
         <div>
           <div class="sec-eyebrow">PRODUCTION PLAN</div>
-          <div class="sec-title">By Unit</div>
+          <div class="sec-title">By Work Area</div>
           <div class="sec-desc">Gantt timeline showing due dates</div>
         </div>
         <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
@@ -244,8 +244,8 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     const displayLabel = product ? esc(product.code) : `${batch.quantity || 0}u`;
 
     // Format batch meta with IN/OUT
-    const inDate = batch.start_date || '—';
-    const outDate = batch.due_date || '—';
+    const inDate = formatDisplayDate(batch.start_date) || '—';
+    const outDate = formatDisplayDate(batch.due_date) || '—';
     const batchMetaText = `${batch.quantity || 0} units • IN: ${inDate} OUT: ${outDate}`;
 
     // Build grid cells for visible range only
