@@ -203,7 +203,11 @@ function pmEditFamily(idx) {
   document.getElementById('pmEditLabel').value = f.label;
   document.getElementById('pmEditDescription').value = f.description || '';
   document.getElementById('pmEditIdx').value   = idx;
-  showModal('pmEditModal');
+  const modal = document.getElementById('pmEditModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+  }
   document.getElementById('pmEditLabel').focus();
 }
 

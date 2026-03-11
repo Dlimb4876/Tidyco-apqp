@@ -4,7 +4,7 @@
  */
 
 let trendsChartInstance = null;
-let trendsSelectedYear = 'all';
+let trendsSelectedYear = null; // Will be set to first year on render
 let trendsPreSelectProductId = null; // Set externally (e.g. from 📊 button) before calling renderAllProductsTrends
 
 // ── Per-Product KPI Calculations ──────────────────────────────────────────
@@ -182,7 +182,6 @@ function renderPortfolioKPIsSection(year) {
         <div class="year-selector-wrap">
           <label for="portfolioYearSelect">Year:</label>
           <select id="portfolioYearSelect" class="trend-select" style="width:auto;min-width:130px;">
-            <option value="all"${year === 'all' ? ' selected' : ''}>All Time</option>
             ${years.map(y => `<option value="${y}"${year == y ? ' selected' : ''}>${y}</option>`).join('')}
           </select>
         </div>
@@ -443,6 +442,12 @@ function renderAllProductsTrends() {
     return;
   }
 
+  // Initialize trendsSelectedYear to first year if not set
+  const years = getAvailableYears();
+  if (!trendsSelectedYear && years.length > 0) {
+    trendsSelectedYear = years[0];
+  }
+
   const productTrends = products.map(p => {
     const history = productsDataGetHistory(p.id);
     return { product: p, kpis: calculateOverhaulKPIs(history), history };
@@ -538,6 +543,16 @@ function renderAllProductsTrends() {
   });
 
   container.addEventListener('click', async (e) => {
+    // Check for tab switching first
+    if (e.target.classList.contains('trend-tab-btn')) {
+      const view = e.target.dataset.view;
+      container.querySelectorAll('.trend-tab-btn').forEach(b => b.classList.remove('active'));
+      container.querySelectorAll('.trend-view-content').forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+      document.getElementById(view === 'single' ? 'singleProductView' : 'compareProductsView').classList.add('active');
+      return;
+    }
+
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
 
@@ -601,8 +616,7 @@ function renderAllProductsTrends() {
         const yearSel = document.getElementById('portfolioYearSelect');
         if (yearSel) {
           const years = getAvailableYears();
-          yearSel.innerHTML = `<option value="all"${trendsSelectedYear === 'all' ? ' selected' : ''}>All Time</option>` +
-            years.map(y => `<option value="${y}"${trendsSelectedYear == y ? ' selected' : ''}>${y}</option>`).join('');
+          yearSel.innerHTML = years.map(y => `<option value="${y}"${trendsSelectedYear == y ? ' selected' : ''}>${y}</option>`).join('');
         }
       } catch (err) {
         alert('Error saving estimation: ' + err.message);
@@ -610,15 +624,6 @@ function renderAllProductsTrends() {
         btn.textContent = 'Save Estimation';
       }
       return;
-    }
-
-    // View tab switching
-    if (btn.classList.contains('trend-tab-btn')) {
-      const view = btn.dataset.view;
-      container.querySelectorAll('.trend-tab-btn').forEach(b => b.classList.remove('active'));
-      container.querySelectorAll('.trend-view-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(view === 'single' ? 'singleProductView' : 'compareProductsView').classList.add('active');
     }
   });
 }

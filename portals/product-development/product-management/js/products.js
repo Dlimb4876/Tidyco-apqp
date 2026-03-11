@@ -166,11 +166,10 @@ function renderProductsList() {
             <td>${esc(p.work_location || '—')}</td>
             <td>${esc(p.customer)}</td>
             <td class="numeric">${p.current_overhaul_hours.toFixed(1)}</td>
-            <td class="numeric">${p.turnaround_days ? p.turnaround_days.toFixed(1) : '—'}</td>
+            <td class="numeric">${p.turnaround_days ? p.turnaround_days.toFixed(0) : '—'}</td>
             <td class="notes-cell" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '...' : '') : '—'}</td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td class="actions">
-              <button class="btn-icon" title="View History" data-action="history" data-id="${p.id}">📊</button>
               <button class="btn-icon" title="Edit" data-action="edit" data-id="${p.id}">✏️</button>
               <button class="btn-icon" title="Delete" data-action="delete" data-id="${p.id}">🗑️</button>
             </td>
@@ -190,15 +189,7 @@ function renderProductsList() {
       const productId = btn.dataset.id;
       const product = productsDataGetAll().find(p => p.id === productId);
 
-      if (action === 'history') {
-        // Switch to Trends tab with this product pre-selected
-        trendsPreSelectProductId = productId;
-        document.querySelectorAll('.products-tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.products-tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelector('.products-tab-btn[data-tab="trends"]').classList.add('active');
-        document.getElementById('productsTrendsTab').classList.add('active');
-        renderProductsTrends();
-      } else if (action === 'edit') {
+      if (action === 'edit') {
         showProductModal(productId, product);
       } else if (action === 'delete') {
         if (confirm(`Delete product "${product.name}"? This cannot be undone.`)) {
