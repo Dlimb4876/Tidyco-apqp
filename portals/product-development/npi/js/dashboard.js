@@ -424,6 +424,7 @@ function openSubAsmModal() {
   const p = prog(); if (!p) return;
   const others = db.programmes.filter(x => x.id !== progId && !(p.subAssemblies || []).find(s => s.id === x.id));
   if (others.length === 0) { alert('No other projects to link.'); return; }
+  const existing = document.getElementById('subAsmModalBg'); if (existing) existing.remove();
   const opts = others.map((x) =>
     `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="linkSubAsm('${x.id}')">
       <span style="font-size:13px">🔩</span>

@@ -89,30 +89,6 @@ function renderProductMgmt() {
 
       </div>
     </div>
-
-    <!-- Edit Family Modal -->
-    <div class="modal-bg" id="pmEditModal" style="display:none" onclick="if(event.target===this)pmCloseEditModal()">
-      <div class="modal modal-sm">
-        <div class="modal-title">Edit Family</div>
-        <div class="field">
-          <label>Icon</label>
-          <input id="pmEditIcon" type="text" maxlength="4" class="pm-icon-input">
-        </div>
-        <div class="field">
-          <label>Family Name</label>
-          <input id="pmEditLabel" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
-        </div>
-        <div class="field">
-          <label>Description</label>
-          <input id="pmEditDescription" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
-        </div>
-        <input type="hidden" id="pmEditIdx">
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="pmCloseEditModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="pmSaveEdit()">Save</button>
-        </div>
-      </div>
-    </div>
   `;
 }
 
@@ -163,30 +139,6 @@ function renderFamiliesTabContent() {
       ? `<p class="pm-empty">No families defined — add one above.</p>`
       : `<div class="pm-family-list">${rows}</div>`
     }
-
-    <!-- Edit Family Modal -->
-    <div class="modal-bg" id="pmEditModal" style="display:none" onclick="if(event.target===this)pmCloseEditModal()">
-      <div class="modal modal-sm">
-        <div class="modal-title">Edit Family</div>
-        <div class="field">
-          <label>Icon</label>
-          <input id="pmEditIcon" type="text" maxlength="4" class="pm-icon-input">
-        </div>
-        <div class="field">
-          <label>Family Name</label>
-          <input id="pmEditLabel" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
-        </div>
-        <div class="field">
-          <label>Description</label>
-          <input id="pmEditDescription" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
-        </div>
-        <input type="hidden" id="pmEditIdx">
-        <div class="modal-actions">
-          <button class="btn btn-ghost" onclick="pmCloseEditModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="pmSaveEdit()">Save</button>
-        </div>
-      </div>
-    </div>
   `;
 }
 
@@ -202,7 +154,7 @@ function pmEnsureCustomFamilies() {
 // Re-render whichever surface the families UI is displayed on
 function pmRefresh() {
   if (currentSection === 'productmgmt') {
-    pmRefresh();
+    render();
   } else {
     // Inside the Product Management portal families tab
     const tab = document.getElementById('productsFamiliesTab');
@@ -251,12 +203,12 @@ function pmEditFamily(idx) {
   document.getElementById('pmEditLabel').value = f.label;
   document.getElementById('pmEditDescription').value = f.description || '';
   document.getElementById('pmEditIdx').value   = idx;
-  document.getElementById('pmEditModal').style.display = 'flex';
+  showModal('pmEditModal');
   document.getElementById('pmEditLabel').focus();
 }
 
 function pmCloseEditModal() {
-  document.getElementById('pmEditModal').style.display = 'none';
+  closeModal('pmEditModal');
 }
 
 function pmSaveEdit() {
