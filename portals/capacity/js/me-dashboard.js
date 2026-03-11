@@ -147,22 +147,26 @@ window.meDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray,
       labels: monthLabels,
       datasets: [
         {
-          label: 'Capacity',
-          data: capacityData,
-          backgroundColor: '#3b82f6',
-          borderColor: '#1e40af',
-          borderWidth: 1,
-          borderRadius: 3,
-          barPercentage: 0.7
-        },
-        {
           label: 'Demand',
           data: demandData,
           backgroundColor: '#ef4444',
           borderColor: '#dc2626',
           borderWidth: 1,
           borderRadius: 3,
-          barPercentage: 0.7
+          barPercentage: 0.7,
+          order: 2
+        },
+        {
+          label: 'Capacity',
+          data: capacityData,
+          type: 'line',
+          borderColor: '#1e40af',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#1e40af',
+          fill: false,
+          tension: 0.3,
+          order: 1
         }
       ]
     },

@@ -94,56 +94,6 @@ function renderProductsPortalHTML() {
         </div>
       </div>
 
-      <!-- Overhaul History Modal -->
-      <div id="historyModal" class="modal">
-        <div class="modal-content modal-large">
-          <div class="modal-header">
-            <h2 id="historyTitle">Overhaul History</h2>
-            <button class="modal-close">&times;</button>
-          </div>
-          <div id="historyContent"></div>
-        </div>
-      </div>
-
-      <!-- Add History Record Modal -->
-      <div id="addHistoryModal" class="modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2>Add Overhaul Estimation</h2>
-            <button class="modal-close">&times;</button>
-          </div>
-          <form id="historyForm">
-            <div class="form-group">
-              <label>Effective Date *</label>
-              <input type="date" id="historyDate" required>
-            </div>
-            <div class="form-group">
-              <label>Overhaul Time (hours) *</label>
-              <input type="number" id="historyHours" min="0" step="0.5" required>
-            </div>
-            <div class="form-group">
-              <label>Change Reason</label>
-              <select id="historyReason">
-                <option value="">Select a reason...</option>
-                <option value="Process Improvement">Process Improvement</option>
-                <option value="Equipment Upgrade">Equipment Upgrade</option>
-                <option value="Scope Change">Scope Change</option>
-                <option value="Efficiency Gain">Efficiency Gain</option>
-                <option value="Design Change">Design Change</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Notes</label>
-              <textarea id="historyNotes" rows="3"></textarea>
-            </div>
-            <div class="modal-actions">
-              <button type="submit" class="btn btn-primary">Save Estimation</button>
-              <button type="button" class="btn btn-secondary" id="btnHistoryCancel">Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
   `;
 }
@@ -230,7 +180,13 @@ function renderProductsList() {
       const product = productsDataGetAll().find(p => p.id === productId);
 
       if (action === 'history') {
-        showHistoryModal(productId, product);
+        // Switch to Trends tab with this product pre-selected
+        trendsPreSelectProductId = productId;
+        document.querySelectorAll('.products-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.products-tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelector('.products-tab-btn[data-tab="trends"]').classList.add('active');
+        document.getElementById('productsTrendsTab').classList.add('active');
+        renderProductsTrends();
       } else if (action === 'edit') {
         showProductModal(productId, product);
       } else if (action === 'delete') {
@@ -277,107 +233,6 @@ function showProductModal(productId = null, product = null) {
     document.getElementById('productTurnaroundTime').value = '';
     document.getElementById('productStatus').value = 'Tender';
   }
-
-  modal.classList.add('active');
-}
-
-/**
- * Show overhaul history modal
- */
-function showHistoryModal(productId, product) {
-  const modal = document.getElementById('historyModal');
-  const title = document.getElementById('historyTitle');
-  const content = document.getElementById('historyContent');
-
-  title.textContent = `Overhaul History: ${product.name} (${product.code})`;
-
-  const history = productsDataGetHistory(productId);
-
-  let html = `
-    <div class="history-view">
-      <div class="history-summary">
-        <div class="summary-item">
-          <div class="summary-label">Current Overhaul Time</div>
-          <div class="summary-value">${product.current_overhaul_hours.toFixed(1)} hours</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Total Records</div>
-          <div class="summary-value">${history.length}</div>
-        </div>
-      </div>
-      <button class="btn btn-primary" id="btnAddHistoryFromModal">+ Add Estimation</button>
-  `;
-
-  if (history.length === 0) {
-    html += '<div class="empty-state">No history records. Add one to start tracking.</div>';
-  } else {
-    html += `
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Effective Date</th>
-            <th>Overhaul (hrs)</th>
-            <th>Change Reason</th>
-            <th>Notes</th>
-            <th>Created By</th>
-            <th>Created</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${history.map((h, idx) => `
-            <tr>
-              <td><strong>${h.effective_date}</strong></td>
-              <td class="numeric">${h.overhaul_hours.toFixed(1)}</td>
-              <td>${esc(h.change_reason || '—')}</td>
-              <td>${esc(h.notes || '—')}</td>
-              <td>${esc(h.created_by_name || 'Unknown')}</td>
-              <td>${new Date(h.created_at).toLocaleDateString()}</td>
-              <td>
-                <button class="btn-icon delete-history" data-history-id="${h.id}" title="Delete">🗑️</button>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
-  }
-
-  html += '</div>';
-  content.innerHTML = html;
-
-  // Add event listeners for this modal
-  document.getElementById('btnAddHistoryFromModal').addEventListener('click', () => {
-    modal.classList.remove('active');
-    showAddHistoryModal(productId);
-  });
-
-  content.querySelectorAll('.delete-history').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const historyId = btn.dataset.historyId;
-      if (confirm('Delete this history record?')) {
-        await productsDataDeleteHistory(productId, historyId);
-        showHistoryModal(productId, product);
-      }
-    });
-  });
-
-  modal.classList.add('active');
-}
-
-/**
- * Show add history modal
- */
-function showAddHistoryModal(productId) {
-  const modal = document.getElementById('addHistoryModal');
-  const form = document.getElementById('historyForm');
-
-  form.reset();
-  form.dataset.productId = productId;
-
-  // Set default date to today
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('historyDate').value = today;
 
   modal.classList.add('active');
 }
@@ -450,30 +305,6 @@ function setupProductsEventListeners() {
     }
   });
 
-  // History form
-  document.getElementById('historyForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const productId = document.getElementById('historyForm').dataset.productId;
-    const historyData = {
-      overhaul_hours: parseFloat(document.getElementById('historyHours').value),
-      effective_date: document.getElementById('historyDate').value,
-      change_reason: document.getElementById('historyReason').value,
-      notes: document.getElementById('historyNotes').value
-    };
-
-    try {
-      await productsDataAddHistory(productId, historyData);
-      document.getElementById('addHistoryModal').classList.remove('active');
-
-      // Show updated history modal
-      const product = productsDataGetAll().find(p => p.id === productId);
-      showHistoryModal(productId, product);
-    } catch (err) {
-      alert('Error saving estimation: ' + err.message);
-    }
-  });
-
   // Modal close buttons
   document.querySelectorAll('.modal-close').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -484,10 +315,6 @@ function setupProductsEventListeners() {
   // Modal cancel buttons
   document.getElementById('btnModalCancel').addEventListener('click', () => {
     document.getElementById('productModal').classList.remove('active');
-  });
-
-  document.getElementById('btnHistoryCancel').addEventListener('click', () => {
-    document.getElementById('addHistoryModal').classList.remove('active');
   });
 
   // Click outside modal to close

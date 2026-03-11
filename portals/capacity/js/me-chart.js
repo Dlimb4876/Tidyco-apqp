@@ -97,7 +97,6 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
         <div class="legend-item"><div class="legend-color" style="background: #be185d;"></div><span>Support</span></div>
         <div class="legend-item"><div class="legend-color" style="background: #7c3aed;"></div><span>Other</span></div>
         <div class="legend-item" style="margin-left: 30px;"><div class="legend-line" style="background: #ef4444;"></div><span>Team Capacity</span></div>
-        <div class="legend-item"><div class="legend-line" style="background: #9ca3af; border-top: 2px dashed #9ca3af;"></div><span>100% Max Capacity</span></div>
       </div>
 
       <div class="me-card" style="margin-top: 24px;">
@@ -173,8 +172,7 @@ window.meDrawChartNow = function() {
         { label: 'Tendering', data: tenderingData, backgroundColor: '#ea580c', type: 'bar', order: 2, stack: 'demand' },
         { label: 'Support', data: supportData, backgroundColor: '#be185d', type: 'bar', order: 2, stack: 'demand' },
         { label: 'Other', data: otherData, backgroundColor: '#7c3aed', type: 'bar', order: 2, stack: 'demand' },
-        { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 3, type: 'line', fill: false, pointRadius: 4, pointBackgroundColor: '#ef4444', tension: 0.3, order: 1 },
-        { label: '100% Max Capacity', data: capacityMaxData, borderColor: '#9ca3af', borderWidth: 2, borderDash: [4, 4], type: 'line', fill: false, pointRadius: 3, pointBackgroundColor: '#9ca3af', tension: 0.3, order: 1 }
+        { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 3, type: 'line', fill: false, pointRadius: 4, pointBackgroundColor: '#ef4444', tension: 0.3, order: 1 }
       ]
     },
     options: {

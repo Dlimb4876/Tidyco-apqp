@@ -548,15 +548,116 @@
   color: #2c3e50;
 }
 
-/* Chart Container */
+/* Chart Container — height driven by content now */
 #trendChart {
-  position: relative;
-  height: 400px;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
-#chartCanvas {
-  max-height: 400px;
+.product-chart-wrap {
+  position: relative;
+  height: 300px;
+  margin: 20px 0 32px;
+}
+
+.product-chart-wrap canvas {
+  max-height: 300px;
+}
+
+/* ── Portfolio KPI Section ───────────────────────────────────────── */
+
+.portfolio-kpis-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.portfolio-kpis-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.portfolio-kpis-header h3 {
+  margin: 0;
+  font-size: 1.1em;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.year-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.year-selector-wrap label {
+  font-size: 0.9em;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Trends Detail Section ───────────────────────────────────────── */
+
+.trends-detail-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+/* ── Inline History Section ──────────────────────────────────────── */
+
+.history-inline-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.history-inline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.history-inline-header h4 {
+  margin: 0;
+  font-size: 1em;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+/* ── Inline Add Estimation Form ──────────────────────────────────── */
+
+.inline-add-form {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.inline-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.inline-form-grid .form-group {
+  margin-bottom: 0;
+}
+
+.inline-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 /* History Badge */
