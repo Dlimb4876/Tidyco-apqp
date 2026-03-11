@@ -30,14 +30,12 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
 
   let rows = '';
   updated.forEach((product, idx) => {
-    const totalDemand = (demandByProduct[product.id] || 0).toFixed(1);
     rows += `
       <tr>
         <td>${esc(product.name)}</td>
         <td><input type="date" value="${product.supportFrom}" onchange="meDataUpdateProduct(${idx}, 'supportFrom', this.value); meDebouncedSave();"></td>
         <td><input type="date" value="${product.supportUntil}" onchange="meDataUpdateProduct(${idx}, 'supportUntil', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
-        <td style="text-align: right; font-weight: 600; color: var(--blue);">${totalDemand}</td>
         <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${idx}, 'notes', this.value); meDebouncedSave();"></td>
       </tr>`;
   });
@@ -75,7 +73,6 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
               <th style="width:120px">Support From</th>
               <th style="width:120px">Support Until</th>
               <th style="width:120px">Hours/Week</th>
-              <th style="width:100px">Task Demand</th>
               <th style="width:200px">Notes</th>
             </tr></thead>
             <tbody>

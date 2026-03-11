@@ -58,32 +58,40 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   return `
     <div class="me-chart-container">
       <div class="me-kpi-strip">
-        <div class="me-kpi" style="border-left: 4px solid var(--green);">
-          <div class="me-kpi-value">${capacity}</div>
+        <div class="me-kpi me-kpi-capacity" style="border-bottom: 4px solid var(--green);">
           <div class="me-kpi-label">Team Capacity (hours)</div>
+          <div class="me-kpi-value">${capacity}</div>
           <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--blue);">
-          <div class="me-kpi-value">${demand}</div>
+        <div class="me-kpi me-kpi-demand" style="border-bottom: 4px solid var(--blue);">
           <div class="me-kpi-label">Total Demand (hours)</div>
+          <div class="me-kpi-value">${demand}</div>
           <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
-        <div class="me-kpi" style="border-left: 4px solid ${utilisationColor};">
-          <div class="me-kpi-value">${utilisation}%</div>
+        <div class="me-kpi me-kpi-util" style="border-bottom: 4px solid ${utilisationColor};">
           <div class="me-kpi-label">Utilisation</div>
+          <div class="me-kpi-value">${utilisation}%</div>
           <div class="me-kpi-month">${utilisation < 85 ? '✓ Healthy' : utilisation < 100 ? '⚠ Tight' : '✗ Over'}</div>
         </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--navy);">
-          <div class="me-kpi-value">${headroom}</div>
+        <div class="me-kpi me-kpi-headroom" style="border-bottom: 4px solid var(--navy);">
           <div class="me-kpi-label">Available Headroom (hours)</div>
+          <div class="me-kpi-value">${headroom}</div>
           <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
       </div>
 
+      <div class="me-chart-title-section">
+        <div class="me-chart-title">📈 Team Capacity Forecast</div>
+        <div class="me-chart-subtitle">18-Month Outlook | Stacked Demand (NPI, Improvement, Tendering, Support, Other)</div>
+      </div>
+
       <div class="me-chart-controls">
-        <button class="btn btn-secondary" onclick="meOnPrevMonth()">← Previous</button>
-        <input type="month" id="meChartMonthInput" value="${monthKey}" onchange="meOnMonthChange(this.value)" />
-        <button class="btn btn-secondary" onclick="meOnNextMonth()">Next →</button>
+        <div class="me-chart-ctrl-left">
+          <button class="btn btn-secondary" onclick="meOnPrevMonth()">← Previous</button>
+          <input type="month" id="meChartMonthInput" value="${monthKey}" onchange="meOnMonthChange(this.value)" />
+          <button class="btn btn-secondary" onclick="meOnNextMonth()">Next →</button>
+        </div>
+        <a href="javascript:void(0)" class="me-chart-today-link" onclick="meOnTodayClick()">Today</a>
       </div>
 
       <div class="me-chart-wrapper">
@@ -162,17 +170,95 @@ window.meDrawChartNow = function() {
   });
 
   const ctx = canvas.getContext('2d');
+
+  // Create gradient colors for bars
+  const gradientNPI = ctx.createLinearGradient(0, 0, 0, 200);
+  gradientNPI.addColorStop(0, '#1e40af');
+  gradientNPI.addColorStop(1, '#3b82f6');
+
+  const gradientImprovement = ctx.createLinearGradient(0, 0, 0, 200);
+  gradientImprovement.addColorStop(0, '#15803d');
+  gradientImprovement.addColorStop(1, '#4ade80');
+
+  const gradientTendering = ctx.createLinearGradient(0, 0, 0, 200);
+  gradientTendering.addColorStop(0, '#ea580c');
+  gradientTendering.addColorStop(1, '#fb923c');
+
+  const gradientSupport = ctx.createLinearGradient(0, 0, 0, 200);
+  gradientSupport.addColorStop(0, '#be185d');
+  gradientSupport.addColorStop(1, '#ec4899');
+
+  const gradientOther = ctx.createLinearGradient(0, 0, 0, 200);
+  gradientOther.addColorStop(0, '#7c3aed');
+  gradientOther.addColorStop(1, '#a78bfa');
+
+  // Calculate total demand for each month (for tooltip percentages)
+  const totalDemandByMonth = monthKeys.map((_, idx) =>
+    npiData[idx] + improvementData[idx] + tenderingData[idx] + supportData[idx] + otherData[idx]
+  );
+
+  // Calculate max capacity for threshold zone shading
+  const maxCapacity = Math.max(...capacityData);
+
+  // Plugin to draw threshold zone shading (green, amber, red zones)
+  const thresholdZonePlugin = {
+    id: 'thresholdZones',
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      const yScale = chart.scales.y;
+      const xScale = chart.scales.x;
+
+      if (!yScale || !xScale) return;
+
+      // Get pixel positions for threshold zones
+      const healthyEnd = yScale.getPixelForValue(maxCapacity * 0.8);   // 80%
+      const tightEnd = yScale.getPixelForValue(maxCapacity);           // 100%
+      const chartTop = yScale.getPixelForValue(maxCapacity * 1.2);     // Top of chart
+      const chartBottom = yScale.getPixelForValue(0);
+
+      // Draw zone backgrounds
+      ctx.save();
+      ctx.globalAlpha = 0.04;
+
+      // Green zone (0-80%)
+      ctx.fillStyle = '#1a7a3c';
+      ctx.fillRect(xScale.left, healthyEnd, xScale.right - xScale.left, chartBottom - healthyEnd);
+
+      // Amber zone (80-100%)
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(xScale.left, tightEnd, xScale.right - xScale.left, healthyEnd - tightEnd);
+
+      // Red zone (100%+)
+      ctx.fillStyle = '#c0392b';
+      ctx.fillRect(xScale.left, chartTop, xScale.right - xScale.left, tightEnd - chartTop);
+
+      ctx.restore();
+
+      // Draw threshold line at 100% capacity
+      const capacityLineY = yScale.getPixelForValue(maxCapacity);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(xScale.left, capacityLineY);
+      ctx.lineTo(xScale.right, capacityLineY);
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+
   meChartInst = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: monthLabels,
       datasets: [
-        { label: 'NPI', data: npiData, backgroundColor: '#1e40af', type: 'bar', order: 2, stack: 'demand' },
-        { label: 'Improvement', data: improvementData, backgroundColor: '#15803d', type: 'bar', order: 2, stack: 'demand' },
-        { label: 'Tendering', data: tenderingData, backgroundColor: '#ea580c', type: 'bar', order: 2, stack: 'demand' },
-        { label: 'Support', data: supportData, backgroundColor: '#be185d', type: 'bar', order: 2, stack: 'demand' },
-        { label: 'Other', data: otherData, backgroundColor: '#7c3aed', type: 'bar', order: 2, stack: 'demand' },
-        { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 3, type: 'line', fill: false, pointRadius: 4, pointBackgroundColor: '#ef4444', tension: 0.3, order: 1 }
+        { label: 'NPI', data: npiData, backgroundColor: gradientNPI, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Improvement', data: improvementData, backgroundColor: gradientImprovement, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Tendering', data: tenderingData, backgroundColor: gradientTendering, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Support', data: supportData, backgroundColor: gradientSupport, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Other', data: otherData, backgroundColor: gradientOther, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 3, type: 'line', fill: false, pointRadius: 5, pointBackgroundColor: '#fff', pointBorderColor: '#ef4444', pointBorderWidth: 2, tension: 0.3, order: 1, pointHoverRadius: 6 }
       ]
     },
     options: {
@@ -180,16 +266,85 @@ window.meDrawChartNow = function() {
       maintainAspectRatio: false,
       layout: {
         padding: {
-          bottom: 15
+          bottom: 15,
+          top: 5
         }
       },
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        thresholdZones: {},
+        tooltip: {
+          enabled: true,
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1,
+          padding: 12,
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 12 },
+          displayColors: true,
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return '';
+              const monthIdx = items[0].dataIndex;
+              return monthLabels[monthIdx];
+            },
+            label: (context) => {
+              const value = context.parsed.y || context.parsed;
+              if (context.dataset.type === 'line') {
+                const monthIdx = context.dataIndex;
+                const util = totalDemandByMonth[monthIdx] > 0
+                  ? ((totalDemandByMonth[monthIdx] / value) * 100).toFixed(0)
+                  : 0;
+                return `Team Capacity: ${value.toFixed(1)}h (${util}% util)`;
+              }
+              const monthIdx = context.dataIndex;
+              const totalDemand = totalDemandByMonth[monthIdx] || 1;
+              const percentage = ((value / totalDemand) * 100).toFixed(0);
+              return `${context.dataset.label}: ${value.toFixed(1)}h (${percentage}%)`;
+            }
+          }
+        }
+      },
       scales: {
-        x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 10 }, padding: 5, color: '#000000' } },
-        y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#000000' } }
+        x: {
+          grid: { display: true, color: 'rgba(0,0,0,0.02)', drawBorder: false },
+          ticks: {
+            autoSkip: true,
+            maxRotation: 0,
+            minRotation: 0,
+            font: { size: 11, weight: '500' },
+            padding: 8,
+            color: '#666',
+            maxTicksLimit: 10
+          }
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.08)', drawBorder: false },
+          ticks: {
+            color: '#666',
+            font: { size: 11 },
+            callback: (value) => value + 'h'
+          }
+        }
       }
-    }
+    },
+    plugins: [thresholdZonePlugin]
   });
+};
+
+// ── Control Handlers ──────────────────────────────────────
+window.meOnTodayClick = function() {
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const input = document.getElementById('meChartMonthInput');
+  if (input) {
+    input.value = currentMonthKey;
+    meOnMonthChange(currentMonthKey);
+  }
 };
 
 // ── Utility Functions ──────────────────────────────────────
