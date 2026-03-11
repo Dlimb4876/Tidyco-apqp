@@ -85,7 +85,9 @@ function prodCapWorkingDays(year, month) {
 function prodCapAvailableHours(workArea, year, month) {
   const staff = prodCapDataGetStaff(workArea, year, month);
   if (staff === 0) return 0;
-  return staff * prodCapWorkingDays(year, month) * PROD_CAP_HOURS_PER_DAY;
+  const baseHours = staff * prodCapWorkingDays(year, month) * PROD_CAP_HOURS_PER_DAY;
+  // Apply global utilization factor
+  return baseHours * prodCapUtilizationFactor;
 }
 
 // ── Work area accessors ───────────────────────────────────────

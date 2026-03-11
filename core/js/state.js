@@ -14,6 +14,7 @@ let productDevelopmentTab = 'root'; // root|npi|product-management
 let npiTab = 'all'; // 'all' | family id — active tab on the NPI project selection screen
 let prodPlanMonthOffset = 0; // Month offset from current month
 let meStartOffset = 0; // Months from today
+let prodCapUtilizationFactor = 1.0; // Global utilization factor (0.0–1.0) affects available capacity
 
 // Modal picker state
 let ctqPickTarget = null, ctqPickSelected = [];
