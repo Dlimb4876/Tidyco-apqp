@@ -74,6 +74,15 @@ function renderProductsPortalHTML() {
               <input type="number" id="productTurnaroundTime" min="0" step="0.5">
             </div>
             <div class="form-group">
+              <label>Work Location</label>
+              <select id="productWorkLocation">
+                <option value="">Select location...</option>
+                <option value="Unit 2">Unit 2</option>
+                <option value="Unit 3">Unit 3</option>
+                <option value="Unit 6">Unit 6</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label>Status</label>
               <select id="productStatus">
                 <option value="Tender">Tender</option>
@@ -139,6 +148,7 @@ function renderProductsList() {
           <th>Code</th>
           <th>Product Name</th>
           <th>Family</th>
+          <th>Work Location</th>
           <th>Customer</th>
           <th>Overhaul (hrs)</th>
           <th>Turnaround (days)</th>
@@ -153,6 +163,7 @@ function renderProductsList() {
             <td><strong>${esc(p.code)}</strong></td>
             <td>${esc(p.name)}</td>
             <td>${esc(p.family || '—')}</td>
+            <td>${esc(p.work_location || '—')}</td>
             <td>${esc(p.customer)}</td>
             <td class="numeric">${p.current_overhaul_hours.toFixed(1)}</td>
             <td class="numeric">${p.turnaround_days ? p.turnaround_days.toFixed(1) : '—'}</td>
@@ -222,6 +233,7 @@ function showProductModal(productId = null, product = null) {
     document.getElementById('productCustomer').value = product.customer;
     document.getElementById('productOverhaulHours').value = product.current_overhaul_hours;
     document.getElementById('productTurnaroundTime').value = product.turnaround_days || '';
+    document.getElementById('productWorkLocation').value = product.work_location || '';
     document.getElementById('productStatus').value = product.status;
     document.getElementById('productNotes').value = product.notes || '';
     form.dataset.productId = productId;
@@ -288,6 +300,7 @@ function setupProductsEventListeners() {
       customer: document.getElementById('productCustomer').value,
       current_overhaul_hours: parseFloat(document.getElementById('productOverhaulHours').value) || 0,
       turnaround_days: parseFloat(document.getElementById('productTurnaroundTime').value) || null,
+      work_location: document.getElementById('productWorkLocation').value || null,
       status: document.getElementById('productStatus').value,
       notes: document.getElementById('productNotes').value
     };

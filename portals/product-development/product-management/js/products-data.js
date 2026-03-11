@@ -85,6 +85,7 @@ async function productsDataAddProduct(product) {
       customer: product.customer,
       current_overhaul_hours: product.current_overhaul_hours || 0,
       turnaround_days: product.turnaround_days || null,
+      work_location: product.work_location || null,
       status: product.status || 'active',
       notes: product.notes || ''
     };
