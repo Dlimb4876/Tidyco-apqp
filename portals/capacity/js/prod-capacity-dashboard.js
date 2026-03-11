@@ -22,8 +22,6 @@ function renderProdCapDashboard() {
   const totalSupply3  = next3.reduce((s, k) => s + (supplyMx[k]?._total || 0), 0);
   const util3         = prodCapUtil(totalDemand3, totalSupply3);
   const headroom3     = Math.max(0, totalSupply3 - totalDemand3);
-  const totalBatches  = (prodState?.batches || []).filter(b => b.status !== 'Complete').length;
-  const totalProducts = (prodState?.products || []).filter(p => p.status === 'active').length;
 
   // ── Over-capacity alert months ───────────────────────────────
   const alertMonths = monthKeys.filter(k => {
@@ -69,14 +67,6 @@ function renderProdCapDashboard() {
 
       <!-- KPI Row -->
       <div class="pc-kpi-row">
-        <div class="pc-kpi" style="border-left:4px solid var(--blue)">
-          <div class="pc-kpi-val">${totalProducts}</div>
-          <div class="pc-kpi-label">Active Products</div>
-        </div>
-        <div class="pc-kpi" style="border-left:4px solid var(--ink)">
-          <div class="pc-kpi-val">${totalBatches}</div>
-          <div class="pc-kpi-label">Open Batches</div>
-        </div>
         <div class="pc-kpi" style="border-left:4px solid var(--amber)">
           <div class="pc-kpi-val">${Math.round(totalDemand3).toLocaleString()}h</div>
           <div class="pc-kpi-label">Demand (next 3 months)</div>
