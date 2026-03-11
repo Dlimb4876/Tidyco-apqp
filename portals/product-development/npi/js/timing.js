@@ -1,3 +1,8 @@
+import { prog, save } from '../../../core/js/state.js';
+import { esc, navigate } from '../../../utils/js/helpers.js';
+
+function goHome() { navigate('project'); }
+
 // ═══════════════════════════════════
 // timing.js — Gantt chart and NPI timing plan
 // Depends on: state.js, helpers.js, navigation.js
@@ -16,7 +21,7 @@ const GANTT_SECTIONS = [
 const PLAN_COLOR = '#16a34a'; // green — planned
 const ACT_COLOR  = '#d97706'; // orange — actual
 
-function ganttNewRow(section) {
+export function ganttNewRow(section) {
   return {
     id: 'g_' + Date.now() + '_' + Math.random().toString(36).slice(2),
     task: '', section: section || 's1', role: 'ME',
@@ -26,7 +31,7 @@ function ganttNewRow(section) {
   };
 }
 
-function ganttWeekDate(startStr, wi) {
+export function ganttWeekDate(startStr, wi) {
   if (!startStr) return null;
   const d   = new Date(startStr);
   const day = d.getDay();
@@ -34,13 +39,13 @@ function ganttWeekDate(startStr, wi) {
   d.setDate(d.getDate() + wi * 7);
   return d;
 }
-function fmtWeekDate(d) {
+export function fmtWeekDate(d) {
   if (!d) return '';
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 }
 
-function isMonthCollapsed(p, mi) { return (p.ganttCollapsed || []).includes(mi); }
-function toggleMonth(mi) {
+export function isMonthCollapsed(p, mi) { return (p.ganttCollapsed || []).includes(mi); }
+export function toggleMonth(mi) {
   const p = prog();
   if (!p.ganttCollapsed) p.ganttCollapsed = [];
   const i = p.ganttCollapsed.indexOf(mi);
@@ -48,7 +53,7 @@ function toggleMonth(mi) {
   save(); render();
 }
 
-function buildMonthGroups(startStr) {
+export function buildMonthGroups(startStr) {
   const groups = [];
   let cur = { label: '', mo: 0, weeks: [] };
   for (let w = 0; w < GANTT_WEEKS; w++) {
@@ -65,7 +70,7 @@ function buildMonthGroups(startStr) {
   return groups;
 }
 
-function renderTimingPlan() {
+export function renderTimingPlan() {
   const p = prog();
   if (!p.gantt) p.gantt = [];
   if (!p.ganttStart && p.date) p.ganttStart = p.date;
@@ -221,13 +226,13 @@ function renderTimingPlan() {
   ${totalRows === 0 ? `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No tasks yet — click <strong>＋ Add Task</strong> to start</div>` : ''}`;
 }
 
-function ganttTogglePlan(id, wi) { const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return; if (!row.planned || row.planned.length < GANTT_WEEKS) row.planned = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.planned || [])[i] || 0); row.planned[wi] = row.planned[wi] ? 0 : 1; save(); render(); }
-function ganttToggleAct(id, wi)  { const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return; if (!row.actual  || row.actual.length  < GANTT_WEEKS) row.actual  = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.actual  || [])[i] || 0); row.actual[wi]  = row.actual[wi]  ? 0 : 1; save(); render(); }
-function ganttAddRow(section)    { const p = prog(); if (!p.gantt) p.gantt = []; p.gantt.push(ganttNewRow(section)); save(); render(); }
-function ganttUpdTask(id, val)   { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.task    = val; save(); } }
-function ganttUpdSec(id, val)    { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.section = val; save(); render(); } }
-function ganttUpdRole(id, val)   { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.role    = val; save(); render(); } }
-function ganttUpdNotes(id, val)  { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.notes   = val; save(); } }
-function ganttDelRow(id)         { const p = prog(); p.gantt = p.gantt.filter(r => r.id !== id); save(); render(); }
-function ganttSetStart(val)      { const p = prog(); p.ganttStart = val; save(); render(); }
-function ganttClear()            { if (!confirm('Clear all timing plan tasks?')) return; prog().gantt = []; save(); render(); }
+export function ganttTogglePlan(id, wi) { const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return; if (!row.planned || row.planned.length < GANTT_WEEKS) row.planned = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.planned || [])[i] || 0); row.planned[wi] = row.planned[wi] ? 0 : 1; save(); render(); }
+export function ganttToggleAct(id, wi)  { const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return; if (!row.actual  || row.actual.length  < GANTT_WEEKS) row.actual  = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.actual  || [])[i] || 0); row.actual[wi]  = row.actual[wi]  ? 0 : 1; save(); render(); }
+export function ganttAddRow(section)    { const p = prog(); if (!p.gantt) p.gantt = []; p.gantt.push(ganttNewRow(section)); save(); render(); }
+export function ganttUpdTask(id, val)   { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.task    = val; save(); } }
+export function ganttUpdSec(id, val)    { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.section = val; save(); render(); } }
+export function ganttUpdRole(id, val)   { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.role    = val; save(); render(); } }
+export function ganttUpdNotes(id, val)  { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.notes   = val; save(); } }
+export function ganttDelRow(id)         { const p = prog(); p.gantt = p.gantt.filter(r => r.id !== id); save(); render(); }
+export function ganttSetStart(val)      { const p = prog(); p.ganttStart = val; save(); render(); }
+export function ganttClear()            { if (!confirm('Clear all timing plan tasks?')) return; prog().gantt = []; save(); render(); }

@@ -267,6 +267,41 @@
   color: var(--blue);
 }
 
+/* Bulk Actions Toolbar */
+.prod-bulk-actions {
+  display: none; /* Shown via JS when items selected */
+  background: var(--blue-pale);
+  border: 1.5px solid var(--blue);
+  border-radius: 6px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  align-items: center;
+  gap: 12px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.bulk-count {
+  font-weight: 700;
+  color: var(--blue);
+  font-size: 14px;
+}
+
+.prod-tbl .chk-col {
+  width: 32px;
+  text-align: center;
+}
+
+.prod-tbl input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
 /* Plan by Product View */
 .prod-plan-grid {
   display: grid;

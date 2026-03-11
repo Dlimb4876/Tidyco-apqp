@@ -1,9 +1,15 @@
+import { prog, save, BOM_TYPES, bomSubTab, setBomSubTab, kitPickTarget, setKitPickTarget, kitPickSelected, setKitPickSelected, kitPickFilter, setKitPickFilter, bomPickSelected, setBomPickSelected, bomPickFilter, setBomPickFilter } from '../../../core/js/state.js';
+import { esc, emptyState, showModal, closeModal } from '../../../utils/js/helpers.js';
+import { refreshBomPickModal } from './apqp.js';
+
+function goHome() { navigate('project'); }
+
 // ═══════════════════════════════════
 // bom.js — Bill of Materials and Kit builder
 // Depends on: state.js, helpers.js, navigation.js, apqp.js (refreshBomPickModal, setBomFilter, toggleBomPick)
 // ═══════════════════════════════════
 
-function renderBOM() {
+export function renderBOM() {
   const p    = prog();
   const tabs = [
     { id: 'parts', label: '🔩 Parts',        count: p.bom.parts.length },
@@ -21,9 +27,9 @@ function renderBOM() {
   return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="goHome()">← Dashboard</button></div></div>${tabHTML}${content}`;
 }
 
-function setBomTab(t) { bomSubTab = t; render(); }
+export function setBomTab(t) { setBomSubTab(t); render(); }
 
-function renderBomTable(type, p) {
+export function renderBomTable(type, p) {
   const items   = p.bom[type];
   const t       = BOM_TYPES[type];
   const aaw     = items.filter(x => x.isAaw).length;
@@ -86,7 +92,7 @@ function renderBomTable(type, p) {
   <button class="add-row" onclick="addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div>`;
 }
 
-function addBomRow(type) {
+export function addBomRow(type) {
   const p = prog();
   let item = { id: 'bom_' + Date.now() };
   if (type === 'parts') item = { ...item, pn: '', desc: '', qty: 1, unit: 'ea', isStd: false, isAaw: false, isRepair: false, notes: '' };
@@ -96,13 +102,13 @@ function addBomRow(type) {
   p.bom[type].push(item); save(); render();
   setTimeout(() => { const tbl = document.querySelector('.card table'); if (tbl) { const rows = tbl.querySelectorAll('tbody tr'); if (rows.length > 0) rows[rows.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 50);
 }
-function updBom(type, i, f, v) { prog().bom[type][i][f] = v; save(); }
-function delBom(type, i) { const item = prog().bom[type][i]; prog().pfd.forEach(s => s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === type && r.itemId === item.id))); prog().bom[type].splice(i, 1); save(); render(); }
+export function updBom(type, i, f, v) { prog().bom[type][i][f] = v; save(); }
+export function delBom(type, i) { const item = prog().bom[type][i]; prog().pfd.forEach(s => s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === type && r.itemId === item.id))); prog().bom[type].splice(i, 1); save(); render(); }
 
 // ══════════════════════════════════════
 // KITS
 // ══════════════════════════════════════
-function renderKits(p) {
+export function renderKits(p) {
   const kits     = p.bom.kits;
   const allItems = [];
   Object.entries(BOM_TYPES).forEach(([k, t]) => { p.bom[k].forEach(item => { allItems.push({ bomType: k, item, t }); }); });
@@ -156,24 +162,25 @@ function renderKits(p) {
     : `<div class="kit-list">${kitCards}</div>`}`;
 }
 
-function addKit()                    { prog().bom.kits.push({ id: 'kit_' + Date.now(), name: '', items: [] }); save(); render(); }
-function updKit(ki, f, v)            { prog().bom.kits[ki][f] = v; save(); }
-function delKit(ki)                  { prog().bom.kits.splice(ki, 1); save(); render(); }
-function updKitItem(ki, ri, f, v)    { prog().bom.kits[ki].items[ri][f] = v; save(); }
-function delKitItem(ki, ri)          { prog().bom.kits[ki].items.splice(ri, 1); save(); render(); }
+export function addKit()                    { prog().bom.kits.push({ id: 'kit_' + Date.now(), name: '', items: [] }); save(); render(); }
+export function updKit(ki, f, v)            { prog().bom.kits[ki][f] = v; save(); }
+export function delKit(ki)                  { prog().bom.kits.splice(ki, 1); save(); render(); }
+export function updKitItem(ki, ri, f, v)    { prog().bom.kits[ki].items[ri][f] = v; save(); }
+export function delKitItem(ki, ri)          { prog().bom.kits[ki].items.splice(ri, 1); save(); render(); }
 
-function openKitPick(ki) {
-  kitPickTarget = ki;
+export function openKitPick(ki) {
+  setKitPickTarget(ki);
   const p   = prog();
   const kit = p.bom.kits[ki];
-  kitPickSelected   = kit.items.map(r => r.bomType + '|' + r.itemId);
-  kitPickFilter     = 'all';
-  bomPickSelected   = [...kitPickSelected];
-  bomPickFilter     = kitPickFilter;
+  const selected = kit.items.map(r => r.bomType + '|' + r.itemId);
+  setKitPickSelected(selected);
+  setKitPickFilter('all');
+  setBomPickSelected([...selected]);
+  setBomPickFilter('all');
   refreshBomPickModal(p, 'kitPickFilter', 'kitPickList', 'all');
   showModal('modalKitPick');
 }
-function saveKitPick() {
+export function saveKitPick() {
   const p   = prog();
   const kit = p.bom.kits[kitPickTarget];
   const existing = {};

@@ -1,11 +1,16 @@
-// Production Batch Scheduling
+import { prodState, prodDataUpdateBatch, prodDataDeleteBatch, prodDataAddBatch, prodDataShiftBatchDates, prodDataGetProductById } from './data.js';
+import { FAMILIES } from '../../../core/js/state.js';
+import { esc } from '../../../utils/js/helpers.js';
+import { render, navigate } from '../../../utils/js/navigation.js';
 
-let prodSchedulingSort = { field: 'start_date', ascending: true };
-let prodSchedulingFilters = { family: '', product: '', unit: '', dateFrom: '', dateTo: '' };
-let prodSchedulingNewRow = false;
-let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
+// ── Production Batch Scheduling ──────────────────────────────
+export let prodSchedulingSort = { field: 'start_date', ascending: true };
+export let prodSchedulingFilters = { family: '', product: '', unit: '', dateFrom: '', dateTo: '' };
+export let prodSchedulingNewRow = false;
+export let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
+export let prodSchedulingSelected = []; // Array of batch IDs
 
-function renderScheduling() {
+export function renderScheduling() {
   const batches = prodState.batches;
   const activeBatches = getFilteredBatches();
 
@@ -15,6 +20,7 @@ function renderScheduling() {
   rows += `
     <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
+      <td></td>
       <td>
         <select class="cell-edit" id="batch-new-product" onchange="calcBatchDueDate()" onkeydown="handleBatchRowKey(event, 'product')">
           <option value="">— Select Product</option>
@@ -30,13 +36,11 @@ function renderScheduling() {
         </select>
       </td>
       <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
-      <td style="display:flex;gap:4px;align-items:center">
-        <input class="cell-edit" id="batch-new-start" type="date" onchange="calcBatchDueDate()" onkeydown="handleDateInput(event, 'batch-new-start', 'start')" style="flex:1">
-        <button class="btn-date-quick" onclick="setDateToday('batch-new-start'); calcBatchDueDate()" title="Set to today">T</button>
+      <td>
+        <input class="cell-edit" id="batch-new-start" type="date" onchange="calcBatchDueDate()" onkeydown="handleBatchRowKey(event, 'start')">
       </td>
-      <td style="display:flex;gap:4px;align-items:center">
-        <input class="cell-edit" id="batch-new-due" type="date" onkeydown="handleDateInput(event, 'batch-new-due', 'due')" style="flex:1">
-        <button class="btn-date-quick" onclick="setDateToday('batch-new-due')" title="Set to today">T</button>
+      <td>
+        <input class="cell-edit" id="batch-new-due" type="date" onkeydown="handleBatchRowKey(event, 'due')">
       </td>
       <td>
         <select class="cell-edit" id="batch-new-status" onkeydown="handleBatchRowKey(event, 'status')">
@@ -54,9 +58,12 @@ function renderScheduling() {
     const product = prodDataGetProductById(batch.product_id);
     const batchIdx = prodState.batches.indexOf(batch);
 
+    const isSelected = prodSchedulingSelected.includes(batch.id);
+
     rows += `
-      <tr>
+      <tr class="${isSelected ? 'row-selected' : ''}">
         <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
+        <td class="chk-col"><input type="checkbox" ${isSelected ? 'checked' : ''} onclick="toggleBatchSelection('${batch.id}')"></td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'product_id', this.value)" onkeydown="handleCellKey(event)">
             ${prodState.products.filter(p => p.status !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.code || 'N/A'})</option>`).join('')}
@@ -71,13 +78,11 @@ function renderScheduling() {
           </select>
         </td>
         <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
-        <td style="display:flex;gap:4px;align-items:center">
-          <input class="cell-edit" type="date" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', this.value)" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}" style="flex:1">
-          <button class="btn-date-quick" onclick="setDateToday('batch-start-${batchIdx}'); prodDataUpdateBatch(${batchIdx}, 'start_date', document.getElementById('batch-start-${batchIdx}').value)" title="Set to today">T</button>
+        <td>
+          <input class="cell-edit" type="date" value="${batch.start_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', this.value)" onkeydown="handleCellKey(event)" id="batch-start-${batchIdx}">
         </td>
-        <td style="display:flex;gap:4px;align-items:center">
-          <input class="cell-edit" type="date" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', this.value)" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}" style="flex:1">
-          <button class="btn-date-quick" onclick="setDateToday('batch-due-${batchIdx}'); prodDataUpdateBatch(${batchIdx}, 'due_date', document.getElementById('batch-due-${batchIdx}').value)" title="Set to today">T</button>
+        <td>
+          <input class="cell-edit" type="date" value="${batch.due_date || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', this.value)" onkeydown="handleCellKey(event)" id="batch-due-${batchIdx}">
         </td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'status', this.value)" onkeydown="handleCellKey(event)">
@@ -105,6 +110,13 @@ function renderScheduling() {
           <button class="btn btn-primary" onclick="focusBatchNewRow()">➕ Add Batch</button>
           <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
         </div>
+      </div>
+
+      <!-- Bulk Actions Toolbar -->
+      <div id="bulk-toolbar" class="prod-bulk-actions" style="display: ${prodSchedulingSelected.length > 0 ? 'flex' : 'none'}">
+        <span class="bulk-count">${prodSchedulingSelected.length} batches selected</span>
+        <button class="btn btn-sm btn-primary" onclick="promptShiftDates()">📅 Shift Dates...</button>
+        <button class="btn btn-sm btn-ghost" onclick="prodSchedulingSelected = []; render()">Deselect All</button>
       </div>
 
       <!-- Filter Toolbar -->
@@ -146,6 +158,7 @@ function renderScheduling() {
       <table class="tbl prod-tbl" style="table-layout:auto;width:100%">
         <colgroup>
           <col style="width:36px">
+          <col style="width:32px">
           <col style="min-width:220px">
           <col style="min-width:100px">
           <col style="min-width:80px">
@@ -158,6 +171,7 @@ function renderScheduling() {
         <thead>
           <tr>
             <th>#</th>
+            <th class="chk-col"><input type="checkbox" onclick="toggleAllBatchesSelection(this.checked)"></th>
             <th onclick="toggleSort('product_id')" style="cursor:pointer">Product ${prodSchedulingSort.field === 'product_id' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('unit')" style="cursor:pointer">Unit ${prodSchedulingSort.field === 'unit' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th onclick="toggleSort('quantity')" style="cursor:pointer">Qty ${prodSchedulingSort.field === 'quantity' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
@@ -169,14 +183,14 @@ function renderScheduling() {
           </tr>
         </thead>
         <tbody>
-          ${rows || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">No batches scheduled. Click "Add Batch" to get started.</td></tr>'}
+          ${rows || '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted)">No batches scheduled. Click "Add Batch" to get started.</td></tr>'}
         </tbody>
       </table>
     </div>
   `;
 }
 
-function getFilteredBatches() {
+export function getFilteredBatches() {
   let filtered = prodState.batches;
 
   if (prodSchedulingFilters.family) {
@@ -222,7 +236,7 @@ function getFilteredBatches() {
   return filtered;
 }
 
-function toggleSort(field) {
+export function toggleSort(field) {
   if (prodSchedulingSort.field === field) {
     prodSchedulingSort.ascending = !prodSchedulingSort.ascending;
   } else {
@@ -233,7 +247,7 @@ function toggleSort(field) {
 }
 
 // Keyboard handlers for inline editing
-function handleCellKey(event) {
+export function handleCellKey(event) {
   if (event.key === 'Tab') {
     event.preventDefault();
     const cell = event.target.closest('td');
@@ -248,7 +262,7 @@ function handleCellKey(event) {
   }
 }
 
-function handleBatchRowKey(event, field) {
+export function handleBatchRowKey(event, field) {
   if (event.key === 'Tab') {
     event.preventDefault();
     const fields = ['product', 'unit', 'qty', 'start', 'due', 'status', 'notes'];
@@ -266,11 +280,11 @@ function handleBatchRowKey(event, field) {
   }
 }
 
-function focusBatchNewRow() {
+export function focusBatchNewRow() {
   setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50);
 }
 
-async function addNewBatchRow() {
+export async function addNewBatchRow() {
   const productId = document.getElementById('batch-new-product')?.value;
   const unit = document.getElementById('batch-new-unit')?.value;
   const qty = document.getElementById('batch-new-qty')?.value;
@@ -298,7 +312,7 @@ async function addNewBatchRow() {
   setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50);
 }
 
-function calcBatchDueDate() {
+export function calcBatchDueDate() {
   const productSelect = document.getElementById('batch-new-product');
   const startInput = document.getElementById('batch-new-start');
   const dueInput = document.getElementById('batch-new-due');
@@ -325,35 +339,57 @@ function calcBatchDueDate() {
   dueInput.value = `${year}-${month}-${day}`;
 }
 
-function toggleHideCompleteBatches() {
+export function toggleHideCompleteBatches() {
   prodSchedulingHideComplete = !prodSchedulingHideComplete;
   localStorage.setItem('prodSchedulingHideComplete', prodSchedulingHideComplete);
   render();
 }
 
-// ── Smart date input helpers ─────────────────────────────
-function handleDateInput(event, fieldId, fieldType, batchIdx) {
-  if (event.key === 'Tab') {
-    // Handle relative date input on blur/tab
-    const input = event.target;
-    const val = input.value.trim().toLowerCase();
+// ── Batch Selection ─────────────────────────────
+export function toggleBatchSelection(id) {
+  const idx = prodSchedulingSelected.indexOf(id);
+  if (idx === -1) {
+    prodSchedulingSelected.push(id);
+  } else {
+    prodSchedulingSelected.splice(idx, 1);
+  }
+  render();
+}
 
-    if (val && !val.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const parsed = parseDateInput(val);
-      if (parsed) {
-        input.value = parsed;
-        event.preventDefault();
-        // Trigger change event
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      }
+export function toggleAllBatchesSelection(checked) {
+  if (checked) {
+    prodSchedulingSelected = getFilteredBatches().map(b => b.id);
+  } else {
+    prodSchedulingSelected = [];
+  }
+  render();
+}
+
+export async function promptShiftDates() {
+  const days = prompt(`Shift ${prodSchedulingSelected.length} batches by how many days? (Use negative for past)`, '7');
+  if (days === null || days === '' || isNaN(days)) return;
+
+  const numDays = parseInt(days);
+  if (numDays === 0) return;
+
+  if (confirm(`Shift start and due dates for ${prodSchedulingSelected.length} batches by ${numDays} days?`)) {
+    const success = await prodDataShiftBatchDates(prodSchedulingSelected, numDays);
+    if (success) {
+      prodSchedulingSelected = [];
+      render();
     }
+  }
+}
 
-    // Then handle normal tab navigation
+// ── Smart date input helpers ─────────────────────────────
+export function handleDateInput(event, fieldId, fieldType, batchIdx) {
+  // Logic removed as per user request to use standard browser date pickers
+  if (event.key === 'Tab') {
     handleCellKey(event);
   }
 }
 
-function setDateToday(fieldId) {
+export function setDateToday(fieldId) {
   const today = new Date().toISOString().split('T')[0];
   const field = document.getElementById(fieldId);
   if (field) {
@@ -362,7 +398,7 @@ function setDateToday(fieldId) {
   }
 }
 
-function parseDateInput(input) {
+export function parseDateInput(input) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -384,7 +420,7 @@ function parseDateInput(input) {
   return null;
 }
 
-function formatDate(date) {
+export function formatDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');

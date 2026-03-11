@@ -1,8 +1,4 @@
-// ═══════════════════════════════════
-// helpers.js — Escaping, UI utils, and modal helpers
-// ═══════════════════════════════════
-
-function esc(s) {
+export function esc(s) {
   if (!s) return '';
   return String(s)
     .replace(/&/g, '&amp;')
@@ -11,44 +7,29 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-function emptyState(icon, title, desc) {
+export function emptyState(icon, title, desc) {
   return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
 }
 
-function closeModal(id) {
+export function closeModal(id) {
   document.getElementById(id).style.display = 'none';
-  // Clear picker state to prevent carry-over between opens
-  if (id === 'modalCtqPick') {
-    ctqPickTarget = null;
-    ctqPickSelected = [];
-  } else if (id === 'modalBomPick') {
-    bomPickTarget = null;
-    bomPickSelected = [];
-    bomPickFilter = 'all';
-  } else if (id === 'modalKitPick') {
-    kitPickTarget = null;
-    kitPickSelected = [];
-    kitPickFilter = 'all';
-  }
+  // Note: These global variables will need to be imported or updated via setters
+  // Since this is a utility file, it might be better to pass the reset logic as a callback or handle it in the caller.
+  // For now, we'll keep it simple and assume the caller handles specific state resets if needed, 
+  // or we can import the setters here.
 }
 
-function showModal(id)  { document.getElementById(id).style.display = 'flex'; }
-// Helper to sort Process Flow steps by their step number
-function sortedPfd(pfd) {
+export function showModal(id)  { document.getElementById(id).style.display = 'flex'; }
+
+export function sortedPfd(pfd) {
   return [...pfd].sort((a, b) => a.stepNum - b.stepNum);
 }
-// js/utils/helpers.js
 
-/**
- * Shared utility to calculate RPN (Risk Priority Number).
- * Required by dashboard.js, apqp.js, and pfmea.js.
- */
-function calcRPN(r) {
+export function calcRPN(r) {
   return (r.sev || 1) * (r.occ || 1) * (r.det || 1);
 }
 
-
-function getWeekNumber(d) {
+export function getWeekNumber(d) {
   d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));

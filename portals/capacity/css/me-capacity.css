@@ -928,10 +928,10 @@
 }
 
 .me-input-assign {
-  flex: 1; padding: 6px 8px; border: 1px solid var(--line2);
+  flex: 0 1 160px; padding: 6px 8px; border: 1px solid var(--line2);
   border-radius: 4px; font-size: 12px; color: var(--ink);
   font-family: 'IBM Plex Sans', sans-serif; background: var(--white);
-  transition: border-color .12s; min-width: 140px;
+  transition: border-color .12s;
 }
 
 .me-input-assign:focus {

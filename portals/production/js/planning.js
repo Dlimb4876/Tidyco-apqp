@@ -1,6 +1,9 @@
-// Production Planning Views
+import { prodState, prodDataGetBatchesByProduct, prodDataGetBatchesByUnit, prodSetActiveUnit } from './data.js';
+import { prodPlanWeekOffset, setProdPlanWeekOffset, FAMILIES, esc } from '../../../core/js/state.js';
+import { setProductionTab, render } from '../../../utils/js/navigation.js';
 
-function renderPlanByProduct() {
+// ── Production Planning Views ──────────────────────────────
+export function renderPlanByProduct() {
   const activeProducts = prodState.products.filter(p => p.status === 'active');
 
   let content = '';
@@ -62,7 +65,7 @@ function renderPlanByProduct() {
   `;
 }
 
-function renderPlanByUnit() {
+export function renderPlanByUnit() {
   const units = ['Unit 2', 'Unit 3', 'Unit 6'];
   const activeUnit = prodState.activeUnit || 'Unit 2';
 
@@ -136,7 +139,7 @@ function renderPlanByUnit() {
   `;
 }
 
-function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
+export function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
   const startDate = new Date(minDate);
   const endDate = new Date(maxDate);
   const totalDayDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
@@ -349,13 +352,13 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
   `;
 }
 
-function formatDateShort(d) {
+export function formatDateShort(d) {
   const m = (d.getMonth() + 1).toString().padStart(2, '0');
   const day = d.getDate().toString().padStart(2, '0');
   return `${day}/${m}`;
 }
 
-function getWeekOfYear(date) {
+export function getWeekOfYear(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
@@ -363,7 +366,7 @@ function getWeekOfYear(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
-function getWeeksInRange(startStr, endStr) {
+export function getWeeksInRange(startStr, endStr) {
   if (!startStr || !endStr) return [];
 
   const start = new Date(startStr);
@@ -385,7 +388,7 @@ function getWeeksInRange(startStr, endStr) {
   return weeks;
 }
 
-function formatWeekRange(startDate, endDate) {
+export function formatWeekRange(startDate, endDate) {
   const fmt = (d) => {
     const m = (d.getMonth() + 1).toString().padStart(2, '0');
     const day = d.getDate().toString().padStart(2, '0');
@@ -394,7 +397,7 @@ function formatWeekRange(startDate, endDate) {
   return `${fmt(startDate)} – ${fmt(endDate)}`;
 }
 
-function getStatusBadge(status) {
+export function getStatusBadge(status) {
   let color = 'var(--muted)';
   let emoji = '⚪';
 
@@ -409,6 +412,6 @@ function getStatusBadge(status) {
   return `<span style="color:${color};font-size:12px;font-weight:600">${emoji} ${status}</span>`;
 }
 
-function prodSetWeekOffset(offset) {
-  prodPlanWeekOffset = Math.max(0, offset);
+export function prodSetWeekOffset(offset) {
+  setProdPlanWeekOffset(Math.max(0, offset));
 }

@@ -1,8 +1,25 @@
-// ═══════════════════════════════════
-// navigation.js — Hash-based routing
-// Depends on: state.js, helpers.js, all feature renderers
-// ═══════════════════════════════════
+import { 
+  progId, apqpTab, capacityTab, productionTab, productDevelopmentTab, 
+  currentSection, npiTab, prog, db 
+} from '../../core/js/state.js';
+import { currentUser } from '../../core/js/auth.js';
+import { autoResizeAll } from './helpers.js';
+import { renderProjects, renderDashboard } from '../../portals/product-development/npi/js/dashboard.js';
+import { renderHub } from '../../portals/product-development/npi/js/hub.js';
+import { renderAPQP } from '../../portals/product-development/npi/js/apqp.js';
+import { renderActions, renderRisks } from '../../portals/product-development/npi/js/trackers.js';
+import { renderBOM } from '../../portals/product-development/npi/js/bom.js';
+import { renderTimingPlan } from '../../portals/product-development/npi/js/timing.js';
+import { renderGatePage } from '../../portals/product-development/npi/js/gates.js';
+import { renderCapacity } from '../../portals/capacity/js/capacity.js';
+import { renderMeCapacity } from '../../portals/capacity/js/me-capacity.js';
+import { meDrawChartNow } from '../../portals/capacity/js/me-chart.js';
+import { renderProduction } from '../../portals/production/js/production.js';
+import { renderProductMgmt } from '../../portals/productmgmt/js/productmgmt.js';
+import { renderProductsPortalHTML, renderProductsPortalSetup } from '../../portals/product-development/product-management/js/products.js';
+import { renderProductDevelopment } from '../../portals/product-development/js/product-development.js';
 
+// ── Navigation & Routing ───────────────────────────────────
 const SECTION_LABELS = {
   apqp:    'APQP',
   actions: 'Action Tracker',
@@ -15,7 +32,7 @@ const SECTION_LABELS = {
   productmgmt: 'Product Management'
 };
 
-function parseHash() {
+export function parseHash() {
   const hash = window.location.hash.slice(1);
   if (!hash) return {};
   return Object.fromEntries(hash.split('&').map(p => {
@@ -24,7 +41,7 @@ function parseHash() {
   }));
 }
 
-function navigate(sec, { pushHash = true } = {}) {
+export function navigate(sec, { pushHash = true } = {}) {
   if (sec === 'home') sec = 'project';
 
   // Reset capacityTab to 'root' when navigating TO capacity from outside (e.g., from hub)
@@ -68,10 +85,10 @@ function navigate(sec, { pushHash = true } = {}) {
   render();
 }
 
-function goProjects() { navigate('projects'); }
-function goHome()     { navigate('project'); }
+export function goProjects() { navigate('projects'); }
+export function goHome()     { navigate('project'); }
 
-function setApqpTab(t) {
+export function setApqpTab(t) {
   apqpTab = t;
   const parts = ['p=' + encodeURIComponent(progId), 's=apqp'];
   if (t !== 'ctq') parts.push('t=' + encodeURIComponent(t));
@@ -79,7 +96,7 @@ function setApqpTab(t) {
   render();
 }
 
-function render() {
+export function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
   if (currentSection === 'product-development') {
@@ -133,7 +150,7 @@ function render() {
   });
 }
 
-function renderSection() {
+export function renderSection() {
   if (currentSection === 'apqp')    return renderAPQP();
   if (currentSection === 'actions') return renderActions();
   if (currentSection === 'risks')   return renderRisks();

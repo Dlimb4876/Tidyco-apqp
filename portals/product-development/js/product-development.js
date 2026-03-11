@@ -1,7 +1,11 @@
-// Product Development Portal Hub
-// Entry point for NPI and product development
+import { productDevelopmentTab, setProductDevelopmentTab as setPDTab, getFamilies, esc } from '../../../core/js/state.js';
+import { renderProjects } from './npi/js/dashboard.js';
+import { renderProductManagement } from './product-management.js';
+import { renderProductMgmt } from '../../productmgmt/js/productmgmt.js';
+import { navigate, render } from '../../../utils/js/navigation.js';
 
-function setProductDevelopmentTab(tab) {
+// ── Product Development Portal Hub ──────────────────────────
+export function setProductDevelopmentTab(tab) {
   productDevelopmentTab = tab;
   const parts = ['s=product-development'];
   if (tab !== 'root') parts.push('pdt=' + encodeURIComponent(tab));
@@ -9,10 +13,10 @@ function setProductDevelopmentTab(tab) {
   render();
 }
 
-function renderProductDevelopment() {
+export function renderProductDevelopment() {
   if (productDevelopmentTab === 'npi') return renderProjects();
   if (productDevelopmentTab === 'product-management') return renderProductManagement();
-  if (productDevelopmentTab === 'product-family-db') return renderProductFamilyDatabase();
+  if (productDevelopmentTab === 'product-family-db') return renderProductMgmt();
 
   // Root hub view
   return `
@@ -54,7 +58,8 @@ function renderProductDevelopment() {
   `;
 }
 
-function renderProductFamilyDatabase() {
+// Rename this internal one or export as needed
+export function renderProductFamilyDatabase() {
   const families = getFamilies();
 
   if (!families || families.length === 0) {

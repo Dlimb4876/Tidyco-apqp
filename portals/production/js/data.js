@@ -1,7 +1,8 @@
-// Production Planning Data Layer
-// Handles CRUD for products and batches with Supabase persistence
+import { supa, currentUser } from '../../../core/js/auth.js';
+import { render } from '../../../utils/js/navigation.js';
 
-let prodState = {
+// ── Production Planning Data Layer ─────────────────────────
+export let prodState = {
   products: [],
   batches: [],
   activeUnit: 'Unit 2'
@@ -10,7 +11,7 @@ let prodState = {
 let prodDebouncedSave = null;
 
 // Initialize production data from Supabase
-async function prodDataInit() {
+export async function prodDataInit() {
   try {
     // Load products from product management database (not production_products table)
     const products = await supa.from('products')
@@ -30,13 +31,13 @@ async function prodDataInit() {
 }
 
 // Debounced save function
-function prodDebouncedSaveNow() {
+export function prodDebouncedSaveNow() {
   if (prodDebouncedSave) clearTimeout(prodDebouncedSave);
   prodDebouncedSave = setTimeout(() => prodDataSave(), 800);
 }
 
 // Main save function - persists to Supabase
-async function prodDataSave() {
+export async function prodDataSave() {
   try {
     // Products are synced back to Supabase via individual insert/update operations
     // Batches are synced back to Supabase via individual insert/update operations
@@ -52,7 +53,7 @@ async function prodDataSave() {
 
 // ===== BATCH CRUD =====
 
-window.prodDataAddBatch = async function(productId, unit, quantity, startDate, dueDate, status, notes) {
+export async function prodDataAddBatch(productId, unit, quantity, startDate, dueDate, status, notes) {
   if (!productId || !unit) return false;
 
   const batch = {
@@ -81,7 +82,7 @@ window.prodDataAddBatch = async function(productId, unit, quantity, startDate, d
   return false;
 };
 
-window.prodDataUpdateBatch = async function(idx, field, value) {
+export async function prodDataUpdateBatch(idx, field, value) {
   if (idx < 0 || idx >= prodState.batches.length) return false;
 
   const batch = prodState.batches[idx];
@@ -130,7 +131,7 @@ window.prodDataUpdateBatch = async function(idx, field, value) {
   return false;
 };
 
-window.prodDataDeleteBatch = async function(idx) {
+export async function prodDataDeleteBatch(idx) {
   if (idx < 0 || idx >= prodState.batches.length) return false;
 
   const batch = prodState.batches[idx];
@@ -148,26 +149,76 @@ window.prodDataDeleteBatch = async function(idx) {
   return false;
 };
 
+export async function prodDataShiftBatchDates(batchIds, days) {
+  if (!batchIds || batchIds.length === 0 || !days) return false;
+
+  const updates = [];
+  const now = new Date().toISOString();
+
+  batchIds.forEach(id => {
+    const batch = prodState.batches.find(b => b.id === id);
+    if (!batch) return;
+
+    const newStart = batch.start_date ? shiftDateString(batch.start_date, days) : null;
+    const newDue = batch.due_date ? shiftDateString(batch.due_date, days) : null;
+
+    updates.push({
+      id: id,
+      start_date: newStart,
+      due_date: newDue,
+      updated_at: now
+    });
+  });
+
+  try {
+    // Supabase individual updates (upsert pattern for bulk update by ID)
+    const { error } = await supa.from('production_batches').upsert(updates);
+    if (error) throw error;
+
+    // Update local state
+    updates.forEach(u => {
+      const batch = prodState.batches.find(b => b.id === u.id);
+      if (batch) {
+        batch.start_date = u.start_date;
+        batch.due_date = u.due_date;
+        batch.updated_at = u.updated_at;
+      }
+    });
+
+    return true;
+  } catch (err) {
+    console.error('Error shifting batch dates:', err);
+    alert('Error shifting dates: ' + err.message);
+    return false;
+  }
+};
+
+function shiftDateString(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
 // ===== HELPERS =====
 
-window.prodDataGetProductName = function(productId) {
+export function prodDataGetProductName(productId) {
   const product = prodState.products.find(p => p.id === productId);
   return product ? `${product.name} (${product.code || 'N/A'})` : 'Unknown Product';
 };
 
-window.prodDataGetProductById = function(productId) {
+export function prodDataGetProductById(productId) {
   return prodState.products.find(p => p.id === productId);
 };
 
-window.prodDataGetBatchesByProduct = function(productId) {
+export function prodDataGetBatchesByProduct(productId) {
   return prodState.batches.filter(b => b.product_id === productId);
 };
 
-window.prodDataGetBatchesByUnit = function(unit) {
+export function prodDataGetBatchesByUnit(unit) {
   return prodState.batches.filter(b => b.unit === unit);
 };
 
-window.prodSetActiveUnit = function(unit) {
+export function prodSetActiveUnit(unit) {
   prodState.activeUnit = unit;
   prodPlanWeekOffset = 0; // Reset week offset when switching units
 };

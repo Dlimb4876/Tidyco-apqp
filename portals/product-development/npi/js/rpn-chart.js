@@ -1,8 +1,7 @@
-// portals/npi/js/rpn-chart.js
-// ── Shared: RPN Burndown Chart ─────────────────────────────────────────────
-// Logic extracted to standalone file for use in Dashboard and PFMEA
+import { prog } from '../../../core/js/state.js';
 
-function renderRpnBurndown(compact) {
+// ── Shared: RPN Burndown Chart ──────────────────────────────────────
+export function renderRpnBurndown(compact) {
   const p = prog();
   if (!p.pfmea || p.pfmea.length === 0) {
     return compact ? '' : `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No PFMEA rows yet — add failure modes to see RPN chart.</div>`;

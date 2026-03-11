@@ -1,12 +1,12 @@
-// ═══════════════════════════════════
-// trackers.js — Action Tracker and Risk Register
-// Depends on: state.js, helpers.js, navigation.js
-// ═══════════════════════════════════
+import { prog, save } from '../../../core/js/state.js';
+import { esc, emptyState, navigate } from '../../../utils/js/helpers.js';
+
+function goHome() { navigate('project'); }
 
 // ══════════════════════════════════════
 // ACTION TRACKER
 // ══════════════════════════════════════
-function renderActions() {
+export function renderActions() {
   const p     = prog();
   const today = new Date();
   const open  = p.actions.filter(a => a.status !== 'Closed').length;
@@ -39,14 +39,14 @@ function renderActions() {
     : `<div class="sticky-card-scroll"><table class="tbl act-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:120px"><col style="width:100px"><col style="width:100px"><col style="width:220px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="addAction()">＋ Add Action</button></div>`;
 }
-function addAction()       { prog().actions.push({ id: 'a_' + Date.now(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }); save(); render(); }
-function updAction(i, f, v){ prog().actions[i][f] = v; save(); }
-function delAction(i)      { prog().actions.splice(i, 1); save(); render(); }
+export function addAction()       { prog().actions.push({ id: 'a_' + Date.now(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }); save(); render(); }
+export function updAction(i, f, v){ prog().actions[i][f] = v; save(); }
+export function delAction(i)      { prog().actions.splice(i, 1); save(); render(); }
 
 // ══════════════════════════════════════
 // RISK REGISTER
 // ══════════════════════════════════════
-function renderRisks() {
+export function renderRisks() {
   const p    = prog();
   const open = p.risks.filter(r => r.status !== 'Closed');
   const hi   = open.filter(r => r.lik * r.imp >= 12).length;
@@ -83,10 +83,10 @@ function renderRisks() {
     : `<div class="sticky-card-scroll"><table class="tbl risk-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:40px"><col style="width:40px"><col style="width:56px"><col style="width:280px"><col style="width:100px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="addRisk()">＋ Add Risk</button></div>`;
 }
-function addRisk()       { prog().risks.push({ id: 'r_' + Date.now(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }); save(); render(); }
-function updRisk(i, f, v){ prog().risks[i][f] = v; save(); }
-function delRisk(i)      { prog().risks.splice(i, 1); save(); render(); }
-function refreshRS(i) {
+export function addRisk()       { prog().risks.push({ id: 'r_' + Date.now(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }); save(); render(); }
+export function updRisk(i, f, v){ prog().risks[i][f] = v; save(); }
+export function delRisk(i)      { prog().risks.splice(i, 1); save(); render(); }
+export function refreshRS(i) {
   const r     = prog().risks[i];
   const score = r.lik * r.imp;
   const el    = document.getElementById('rs_' + i);

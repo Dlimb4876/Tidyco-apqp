@@ -1,8 +1,9 @@
-/* ============================================================
-   me-team.js — Team Tab Rendering
-   ============================================================ */
+import { meDataGetHolidays, meDataUpdateTeam, meDataAddTeam, meDataDeleteTeam } from './me-data.js';
+import { meGetMonthLabel } from './me-chart.js';
+import { meOnSave, meSetTab } from './me-capacity.js';
+import { esc } from '../../../utils/js/helpers.js';
 
-window.meRenderTeamTab = function(teamArray) {
+export function meRenderTeamTab(teamArray) {
   // Calculate monthly capacity (4.33 weeks per month average)
   const weeksPerMonth = 4.33;
   const totalCapacity = teamArray.reduce((sum, member) => {

@@ -1,11 +1,11 @@
-// ═══════════════════════════════════
-// dashboard.js — Project home and KPI dashboard rendering
-// Depends on: state.js, helpers.js, navigation.js, gates.js (gateAllSigned, calcRPN)
-// ═══════════════════════════════════
-
+import { db, prog, progId, npiTab, FAMILIES, getFamilies, BOM_TYPES, GATE_DEFS, setNpiTab, setProgId } from '../../../core/js/state.js';
+import { currentUser } from '../../../core/js/auth.js';
+import { esc, calcRPN, showModal, closeModal, navigate } from '../../../utils/js/helpers.js';
+import { gateAllSigned } from './gates.js';
+import { renderRpnBurndown } from './apqp.js';
 
 // ── Projects list ─────────────────────────────────────────────
-function renderProjects() {
+export function renderProjects() {
   const user    = currentUser ? currentUser.email.split('@')[0] : '';
   const families = getFamilies();
 
@@ -114,7 +114,7 @@ function renderProjects() {
 
 // Renders one family section (cards grid + "Add" card).
 // Pass hideHeader=true when the active tab already labels the family.
-function renderFamilyGroup(fam, projs, hideHeader) {
+export function renderFamilyGroup(fam, projs, hideHeader) {
   let html = `<div class="proj-family-group">`;
   if (!hideHeader) {
     html += `<div class="proj-family-label"><span>${fam.icon}</span>${esc(fam.label)}</div>`;
@@ -169,7 +169,7 @@ function setNpiTab(tab) {
 }
 
 // ── Dashboard ─────────────────────────────────────────────────
-function renderDashboard() {
+export function renderDashboard() {
   const p          = prog();
   const openAct    = p.actions.filter(a => a.status !== 'Closed').length;
   const overdueAct = p.actions.filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
@@ -333,16 +333,16 @@ function renderDashboard() {
 }
 
 // ── Project CRUD ──────────────────────────────────────────────
-function openProject(id) { progId = id; navigate('project'); }
+export function openProject(id) { setProgId(id); navigate('project'); }
 
-function newProjectInFamily(famId) {
+export function newProjectInFamily(famId) {
   // Use the correct select id from index.html's New Project modal
   const sel = document.getElementById('np_family');
   if (sel) sel.value = famId;
   showModal('modalNewProj');
 }
 
-function createProg() {
+export function createProg() {
   const name = document.getElementById('np_name').value.trim();
   if (!name) { alert('Project name is required.'); return; }
   const id = 'p_' + Math.random().toString(36).slice(2);
@@ -376,7 +376,7 @@ function createProg() {
   navigate('project');
 }
 // -- Edit Project Information -------------------------------
-function showEditProject() {
+export function showEditProject() {
   const p = prog(); if (!p) return;
   populateFamilySelects();
   document.getElementById('ep_name').value     = p.name     || '';
@@ -392,7 +392,7 @@ function showEditProject() {
   showModal('modalEditProj'); // Updated ID
 }
 
-function saveEditProject() {
+export function saveEditProject() {
   const p = prog(); if (!p) return;
   p.name     = document.getElementById('ep_name').value.trim()     || p.name;
   p.family   = document.getElementById('ep_family').value          || 'Other';
@@ -409,7 +409,7 @@ function saveEditProject() {
   render();
 }
 
-function deleteProject() {
+export function deleteProject() {
   const p = prog(); if (!p) return;
   if (!confirm(`Permanently delete "${p.name}"? This cannot be undone.`)) return;
   db.programmes = db.programmes.filter(x => x.id !== progId);
@@ -420,7 +420,7 @@ function deleteProject() {
 }
 
 // ── Sub-assembly management ───────────────────────────────────
-function openSubAsmModal() {
+export function openSubAsmModal() {
   const p = prog(); if (!p) return;
   const others = db.programmes.filter(x => x.id !== progId && !(p.subAssemblies || []).find(s => s.id === x.id));
   if (others.length === 0) { alert('No other projects to link.'); return; }
@@ -437,7 +437,7 @@ function openSubAsmModal() {
   document.body.appendChild(bg);
 }
 
-function linkSubAsm(id) {
+export function linkSubAsm(id) {
   const p = prog(); if (!p.subAssemblies) p.subAssemblies = [];
   if (!p.subAssemblies.find(x => x.id === id)) p.subAssemblies.push({ id });
   const child = db.programmes.find(x => x.id === id);
@@ -445,7 +445,7 @@ function linkSubAsm(id) {
   save(); closeSubAsmModal(); render();
 }
 
-function unlinkSubAsm(li) {
+export function unlinkSubAsm(li) {
   const p = prog();
   const linked = p.subAssemblies[li];
   if (linked) {
@@ -456,4 +456,4 @@ function unlinkSubAsm(li) {
   save(); render();
 }
 
-function closeSubAsmModal() { const el = document.getElementById('subAsmModalBg'); if (el) el.remove(); }
+export function closeSubAsmModal() { const el = document.getElementById('subAsmModalBg'); if (el) el.remove(); }

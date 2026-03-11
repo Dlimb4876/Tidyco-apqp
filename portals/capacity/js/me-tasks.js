@@ -1,8 +1,9 @@
-/* ============================================================
-   me-tasks.js — Tasks Tab Rendering
-   ============================================================ */
+import { meDataUpdateTask, meDataAddTask, meDataDeleteTask } from './me-data.js';
+import { meOnSave, meSetTab } from './me-capacity.js';
+import { meOpenAdvancedEstimationModal } from './me-advanced-estimation.js';
+import { esc } from '../../../utils/js/helpers.js';
 
-window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
+export function meRenderTasksTab(tasksArray, teamArray, availableProducts) {
   availableProducts = availableProducts || [];
   const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other'];
   const totalHours = tasksArray.reduce((sum, t) => sum + (t.totalHours || 0), 0).toFixed(1);
@@ -102,7 +103,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
     </div>`;
 };
 
-window.meAddDefaultTask = function() {
+export function meAddDefaultTask() {
   meDataAddTask('New Task', 'NPI', '', '', '', 0);
   meOnSave();
   meSetTab('tasks');

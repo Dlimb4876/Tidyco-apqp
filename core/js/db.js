@@ -1,12 +1,9 @@
-// ═══════════════════════════════════
-// db.js — Supabase persistence and data migration
-// Depends on: state.js, auth.js (supa, currentUser)
-// ═══════════════════════════════════
+import { db, prog, setSyncBadge, newProgTemplate, GATE_DEFS } from './state.js';
+import { currentUser, supa } from './auth.js';
 
 let saveTimer = null;
 
-// ── Auto-resize textareas ─────────────────────────────────────
-function autoResizeAll() {
+export function autoResizeAll() {
   document.querySelectorAll('textarea[data-autoresize]').forEach(el => {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
@@ -19,15 +16,14 @@ document.addEventListener('input', e => {
   }
 });
 
-// ── Save ──────────────────────────────────────────────────────
-function save() {
+export function save() {
   try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveRemote, 800);
   setSyncBadge('syncing', '● saving…');
 }
 
-async function saveRemote() {
+export async function saveRemote() {
   if (!currentUser) return;
   const email = currentUser.email;
   const now   = new Date().toISOString();
@@ -50,7 +46,7 @@ async function saveRemote() {
   } catch (e) { console.error('saveRemote exception', e); setSyncBadge('error', '● save failed'); }
 }
 
-async function loadRemote() {
+export async function loadRemote() {
   if (!currentUser) return;
   const { data, error } = await supa
     .from('programmes')
@@ -68,15 +64,8 @@ async function loadRemote() {
   }
 }
 
-function setSyncBadge(state, text) {
-  const b = document.getElementById('syncBadge');
-  if (!b) return;
-  b.className   = 'sync-badge ' + state;
-  b.textContent = text;
-}
-
-// ── Migration ─────────────────────────────────────────────────
-function migrateprog(p) {
+// migrateprog is used internally but could be exported if needed
+export function migrateprog(p) {
   if (!p) return newProgTemplate('Untitled', '', '', 'Other', '', '', new Date().toISOString().slice(0, 10));
   if (!p.ctq)     p.ctq     = [];
   if (!p.pfd)     p.pfd     = [];
@@ -114,7 +103,6 @@ function migrateprog(p) {
     if (s.resources) { delete s.resources; }
   });
 
-  // ── PFMEA structure migration (moved from renderPFMEA) ────────
   p.pfmea.forEach(r => {
     if (!r.id) r.id = 'f_' + Math.random().toString(36).slice(2);
     if (!r._type) {
@@ -132,7 +120,6 @@ function migrateprog(p) {
       }];
       delete r.effect; delete r.cause; delete r.sev; delete r.occ; delete r.det; delete r.controls; delete r.action;
     }
-    // Migrate causes missing new fields
     (r.effects || []).forEach(ef => {
       (ef.causes || []).forEach(ca => {
         if (!ca.prevent) ca.prevent = '';
@@ -148,20 +135,18 @@ function migrateprog(p) {
   return p;
 }
 
-// ── Legacy local load (fallback) ─────────────────────────────
-function load() {
+export function load() {
   ['tidyco_v7', 'tidyco_v6', 'tidyco_v5'].forEach(key => {
     if (db.programmes && db.programmes.length > 0) return;
     try {
       const s = localStorage.getItem(key);
-      if (s) { const d = JSON.parse(s); if (d.programmes && d.programmes.length > 0) db = d; }
+      if (s) { const d = JSON.parse(s); if (d.programmes && d.programmes.length > 0) setDb(d); }
     } catch (e) {}
   });
   db.programmes = db.programmes.map(p => migrateprog(p));
 }
 
-// ── Import / Export ───────────────────────────────────────────
-function exportJSON() {
+export function exportJSON() {
   const b = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(b);
@@ -169,14 +154,14 @@ function exportJSON() {
   a.click();
 }
 
-function importJSON(e) {
+export function importJSON(e) {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = async ev => {
     try {
       const d = JSON.parse(ev.target.result);
       if (d.programmes) {
-        db = d;
+        setDb(d);
         db.programmes = db.programmes.map(p => migrateprog(p));
         save(); initProgSelect(); navigate('home');
       } else { alert('Invalid file'); }
@@ -186,7 +171,6 @@ function importJSON(e) {
   e.target.value = '';
 }
 
-// ── Programme selector ────────────────────────────────────────
-function initProgSelect() {
-  if (!progId && db.programmes.length) progId = db.programmes[0].id;
+export function initProgSelect() {
+  if (!progId && db.programmes.length) setProgId(db.programmes[0].id);
 }

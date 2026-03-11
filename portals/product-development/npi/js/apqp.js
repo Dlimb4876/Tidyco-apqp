@@ -1,10 +1,16 @@
+import { prog, save, apqpTab, setApqpTab, ctqPickTarget, setCtqPickTarget, ctqPickSelected, setCtqPickSelected, bomPickTarget, setBomPickTarget, bomPickSelected, setBomPickSelected, bomPickFilter, setBomPickFilter, insertOriginIdx, setInsertOriginIdx, collapsedGroups, BOM_TYPES } from '../../../core/js/state.js';
+import { esc, emptyState, showModal, closeModal, navigate } from '../../../utils/js/helpers.js';
+import { renderPFMEA, calcRPN } from './pfmea.js';
+
+function goHome() { navigate('project'); }
+
 // ═══════════════════════════════════
 // apqp.js — Unified APQP tab management (CTQ, PFD, CP)
 // Depends on: state.js, helpers.js, navigation.js, pfmea.js (renderPFMEA, calcRPN)
 // ═══════════════════════════════════
 
 // ── Tab shell ─────────────────────────────────────────────────
-function renderAPQP() {
+export function renderAPQP() {
   const p      = prog();
   const highRPN = p.pfmea.filter(r => calcRPN(r) >= 100).length;
   const tabs = [
@@ -26,7 +32,7 @@ function renderAPQP() {
 // ══════════════════════════════════════
 // CTQ
 // ══════════════════════════════════════
-function renderCTQ() {
+export function renderCTQ() {
   const p = prog();
   const rows = p.ctq.map((r, i) => `<tr>
     <td style="text-align:center"><span class="tag tag-ctq">C${i + 1}</span></td>
@@ -47,18 +53,18 @@ function renderCTQ() {
   <button class="add-row" onclick="addCTQ()">＋ Add CTQ</button></div>
   ${p.ctq.length > 0 ? `<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" onclick="setApqpTab('pfd');return false" style="color:var(--blue)">Process Flow →</a></div>` : ''}`;
 }
-function addCTQ() { prog().ctq.push({ id: 'c_' + Date.now(), req: '', spec: '', testMethod: '', source: 'Customer Spec', oos_action: 'TBD', customerAgreed: false }); save(); render(); }
-function updCTQ(i, f, v) { prog().ctq[i][f] = v; save(); }
-function delCTQ(i) { const cid = prog().ctq[i].id; prog().pfd.forEach(s => s.ctqIds = (s.ctqIds || []).filter(x => x !== cid)); prog().pfmea.forEach(r => r.ctqIds = (r.ctqIds || []).filter(x => x !== cid)); prog().ctq.splice(i, 1); save(); render(); }
+export function addCTQ() { prog().ctq.push({ id: 'c_' + Date.now(), req: '', spec: '', testMethod: '', source: 'Customer Spec', oos_action: 'TBD', customerAgreed: false }); save(); render(); }
+export function updCTQ(i, f, v) { prog().ctq[i][f] = v; save(); }
+export function delCTQ(i) { const cid = prog().ctq[i].id; prog().pfd.forEach(s => s.ctqIds = (s.ctqIds || []).filter(x => x !== cid)); prog().pfmea.forEach(r => r.ctqIds = (r.ctqIds || []).filter(x => x !== cid)); prog().ctq.splice(i, 1); save(); render(); }
 
 // ══════════════════════════════════════
 // PFD
 // ══════════════════════════════════════
-function sortedPfd(pfd) { return [...pfd].sort((a, b) => a.stepNum - b.stepNum); }
-function nextMainStepNum(pfd) { const t = pfd.filter(s => s.stepNum % 10 === 0).map(s => s.stepNum); return t.length ? Math.max(...t) + 10 : 10; }
-function stepNumConflict(pfd, num, xid) { return pfd.some(s => s.stepNum === num && s.id !== xid); }
+export function sortedPfd(pfd) { return [...pfd].sort((a, b) => a.stepNum - b.stepNum); }
+export function nextMainStepNum(pfd) { const t = pfd.filter(s => s.stepNum % 10 === 0).map(s => s.stepNum); return t.length ? Math.max(...t) + 10 : 10; }
+export function stepNumConflict(pfd, num, xid) { return pfd.some(s => s.stepNum === num && s.id !== xid); }
 
-function renderPFD() {
+export function renderPFD() {
   const p      = prog();
   const sorted = sortedPfd(p.pfd);
   const ribbon = sorted.filter(s => s.type !== 'group').map((s, i, arr) =>
@@ -89,50 +95,50 @@ function renderPFD() {
   ${p.pfd.length > 0 ? `<div class="info-banner">💡 Next: <a href="#" onclick="setApqpTab('pfmea');return false" style="color:var(--blue)">PFMEA →</a></div>` : ''}`;
 }
 
-function stepRowHTML(s, oi, p) {
+export function stepRowHTML(s, oi, p) {
   const ctqBadges = (s.ctqIds || []).map(cid => { const ci = p.ctq.findIndex(c => c.id === cid); return ci >= 0 ? `<span class="ctq-pick-item" onclick="openCtqPick(${oi})">C${ci + 1}</span>` : ''; }).join('');
   const pfCnt  = p.pfmea.filter(r => r.pfdId === s.id).length;
   const pills  = (s.bomRefs || []).map(ref => { const bt = p.bom[ref.bomType]; if (!bt) return ''; const item = bt.find(x => x.id === ref.itemId); if (!item) return ''; const t = BOM_TYPES[ref.bomType]; const name = item.desc || (item.pn || item.toolId || item.equipId || '?'); return `<span class="res-pill ${t.pc}" onclick="delBomRef('${s.id}','${ref.bomType}','${ref.itemId}')" title="Click to remove">${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}</span>`; }).join('');
   return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div><div style="display:flex;flex-direction:column;gap:2px"><button class="mini-btn" onclick="openInsert(${oi})">＋</button><button class="mini-btn danger" onclick="delPFD('${s.id}')">×</button></div></div><div class="step-body"><div class="step-fields"><div class="step-field f-op"><input class="cell-edit" value="${esc(s.op)}" onchange="updPFD('${s.id}','op',this.value)" placeholder="Operation" style="font-weight:600"></div><div class="step-field f-detail"><textarea class="cell-edit" rows="2" onchange="updPFD('${s.id}','detail',this.value)" placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${p.ctq.length > 0 ? `<span class="ctq-pick-add" onclick="openCtqPick(${oi})">＋ CTQ</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div></div></div></div><div class="step-resources">${pills}<button class="res-add-btn" onclick="openBomPick('${s.id}')">＋ Resource</button></div></div>`;
 }
 
-function addMainStep()   { const p = prog(); p.pfd.push({ id: 's_' + Date.now(), stepNum: nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }); save(); render(); }
-function openInsert(afterOi, ft) {
-  insertOriginIdx = afterOi; const p = prog(); const sorted = sortedPfd(p.pfd);
+export function addMainStep()   { const p = prog(); p.pfd.push({ id: 's_' + Date.now(), stepNum: nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }); save(); render(); }
+export function openInsert(afterOi, ft) {
+  setInsertOriginIdx(afterOi); const p = prog(); const sorted = sortedPfd(p.pfd);
   if (ft) document.getElementById('insertType').value = ft;
   const ni = document.getElementById('insertNum'), hi = document.getElementById('insertNumHint');
   if (afterOi != null) { const as = p.pfd[afterOi]; const asi = sorted.findIndex(s => s.id === as.id); const ns = asi < sorted.length - 1 ? sorted[asi + 1] : null; const base = as.stepNum, ceil = ns ? ns.stepNum : base + 10; ni.value = base + 1 <= ceil - 1 ? base + 1 : ''; hi.textContent = `Available: ${base + 1}–${ceil - 1}`; }
   else { const n = nextMainStepNum(p.pfd); ni.value = n; hi.textContent = `Next: ${n}`; }
   showModal('modalInsert');
 }
-function confirmInsert() { const p = prog(); const num = parseInt(document.getElementById('insertNum').value); const type = document.getElementById('insertType').value; if (!num || num < 1) return alert('Enter valid number'); if (stepNumConflict(p.pfd, num)) return alert(`Step ${num} exists`); p.pfd.push({ id: 's_' + Date.now(), stepNum: num, type, op: '', detail: '', ctqIds: [], bomRefs: [] }); save(); closeModal('modalInsert'); render(); }
-function delPFD(sid)     { const p = prog(); const i = p.pfd.findIndex(s => s.id === sid); if (i < 0) return; p.pfmea.forEach(r => { if (r.pfdId === sid) r.pfdId = ''; }); p.pfd.splice(i, 1); save(); render(); }
-function updPFD(sid, f, v) { const s = prog().pfd.find(x => x.id === sid); if (s) { s[f] = v; save(); } }
-function scrollToPfd(sid) { const el = document.getElementById('pfd-row-' + sid); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-function toggleGroup(key) { if (collapsedGroups.has(key)) collapsedGroups.delete(key); else collapsedGroups.add(key); render(); }
-function delBomRef(sid, bt, iid) { const s = prog().pfd.find(x => x.id === sid); if (!s) return; s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === bt && r.itemId === iid)); save(); render(); }
+export function confirmInsert() { const p = prog(); const num = parseInt(document.getElementById('insertNum').value); const type = document.getElementById('insertType').value; if (!num || num < 1) return alert('Enter valid number'); if (stepNumConflict(p.pfd, num)) return alert(`Step ${num} exists`); p.pfd.push({ id: 's_' + Date.now(), stepNum: num, type, op: '', detail: '', ctqIds: [], bomRefs: [] }); save(); closeModal('modalInsert'); render(); }
+export function delPFD(sid)     { const p = prog(); const i = p.pfd.findIndex(s => s.id === sid); if (i < 0) return; p.pfmea.forEach(r => { if (r.pfdId === sid) r.pfdId = ''; }); p.pfd.splice(i, 1); save(); render(); }
+export function updPFD(sid, f, v) { const s = prog().pfd.find(x => x.id === sid); if (s) { s[f] = v; save(); } }
+export function scrollToPfd(sid) { const el = document.getElementById('pfd-row-' + sid); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+export function toggleGroup(key) { if (collapsedGroups.has(key)) collapsedGroups.delete(key); else collapsedGroups.add(key); render(); }
+export function delBomRef(sid, bt, iid) { const s = prog().pfd.find(x => x.id === sid); if (!s) return; s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === bt && r.itemId === iid)); save(); render(); }
 
 // ── CTQ picker modal ──────────────────────────────────────────
-function openCtqPick(oi) {
-  const p = prog(); ctqPickTarget = oi; ctqPickSelected = [...(p.pfd[oi].ctqIds || [])];
+export function openCtqPick(oi) {
+  const p = prog(); setCtqPickTarget(oi); setCtqPickSelected([...(p.pfd[oi].ctqIds || [])]);
   document.getElementById('ctqPickList').innerHTML = p.ctq.length === 0
     ? '<p style="color:var(--muted);font-size:13px">No CTQs defined.</p>'
     : p.ctq.map((c, i) => `<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:7px;border-radius:5px;border:1px solid var(--line);background:var(--white)" onmouseover="this.style.background='var(--blue-pale)'" onmouseout="this.style.background='var(--white)'"><input type="checkbox" ${ctqPickSelected.includes(c.id) ? 'checked' : ''} onchange="tCP('${c.id}',this.checked)" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag tag-ctq">C${i + 1}</span><span style="font-size:12px;font-weight:600">${esc(c.req || 'Unnamed')}</span></div><div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px">${esc(c.spec)}</div></div></label>`).join('');
   showModal('modalCtqPick');
 }
-function tCP(cid, checked) { if (checked) { if (!ctqPickSelected.includes(cid)) ctqPickSelected.push(cid); } else ctqPickSelected = ctqPickSelected.filter(x => x !== cid); }
-function saveCtqPick() { prog().pfd[ctqPickTarget].ctqIds = [...ctqPickSelected]; save(); closeModal('modalCtqPick'); render(); }
+export function tCP(cid, checked) { if (checked) { if (!ctqPickSelected.includes(cid)) ctqPickSelected.push(cid); } else setCtqPickSelected(ctqPickSelected.filter(x => x !== cid)); }
+export function saveCtqPick() { prog().pfd[ctqPickTarget].ctqIds = [...ctqPickSelected]; save(); closeModal('modalCtqPick'); render(); }
 
 // ── BOM picker modal ──────────────────────────────────────────
-function openBomPick(sid) {
-  bomPickTarget = sid; const p = prog(); const s = p.pfd.find(x => x.id === sid);
-  bomPickSelected = [...(s.bomRefs || []).map(r => r.bomType + '|' + r.itemId)];
-  bomPickFilter = 'all';
+export function openBomPick(sid) {
+  setBomPickTarget(sid); const p = prog(); const s = p.pfd.find(x => x.id === sid);
+  setBomPickSelected([...(s.bomRefs || []).map(r => r.bomType + '|' + r.itemId)]);
+  setBomPickFilter('all');
   document.getElementById('bomPickTitle').textContent = `Resources — Step ${s.stepNum}: ${s.op || '(unnamed)'}`;
   refreshBomPickModal(p, 'bomPickFilter', 'bomPickList', bomPickFilter);
   showModal('modalBomPick');
 }
-function refreshBomPickModal(p, filterId, listId, activeFilter) {
+export function refreshBomPickModal(p, filterId, listId, activeFilter) {
   const types = Object.entries(BOM_TYPES);
   const total = types.reduce((n, [k]) => n + p.bom[k].length, 0);
   document.getElementById(filterId).innerHTML = `<button class="bom-filter-btn${activeFilter === 'all' ? ' active' : ''}" onclick="setBomFilter('all','${filterId}','${listId}')">All (${total})</button>` + types.map(([k, t]) => `<button class="bom-filter-btn${activeFilter === k ? ' active' : ''}" onclick="setBomFilter('${k}','${filterId}','${listId}')">${t.icon} ${t.label} (${p.bom[k].length})</button>`).join('');
@@ -151,14 +157,14 @@ function refreshBomPickModal(p, filterId, listId, activeFilter) {
   });
   document.getElementById(listId).innerHTML = items.length ? items.join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No items in BoM yet.</div>';
 }
-function setBomFilter(f, fid, lid) { bomPickFilter = f; refreshBomPickModal(prog(), fid, lid, f); }
-function toggleBomPick(key, el, lid) { const chk = el.querySelector('input'); if (bomPickSelected.includes(key)) { bomPickSelected = bomPickSelected.filter(x => x !== key); el.classList.remove('selected'); if (chk) chk.checked = false; } else { bomPickSelected.push(key); el.classList.add('selected'); if (chk) chk.checked = true; } }
-function saveBomPick() { const s = prog().pfd.find(x => x.id === bomPickTarget); if (!s) return; s.bomRefs = bomPickSelected.map(k => { const [bt, id] = k.split('|'); return { bomType: bt, itemId: id }; }); save(); closeModal('modalBomPick'); render(); }
+export function setBomFilter(f, fid, lid) { setBomPickFilter(f); refreshBomPickModal(prog(), fid, lid, f); }
+export function toggleBomPick(key, el, lid) { const chk = el.querySelector('input'); if (bomPickSelected.includes(key)) { setBomPickSelected(bomPickSelected.filter(x => x !== key)); el.classList.remove('selected'); if (chk) chk.checked = false; } else { setBomPickSelected([...bomPickSelected, key]); el.classList.add('selected'); if (chk) chk.checked = true; } }
+export function saveBomPick() { const s = prog().pfd.find(x => x.id === bomPickTarget); if (!s) return; s.bomRefs = bomPickSelected.map(k => { const [bt, id] = k.split('|'); return { bomType: bt, itemId: id }; }); save(); closeModal('modalBomPick'); render(); }
 
 // ══════════════════════════════════════
 // CONTROL PLAN
 // ══════════════════════════════════════
-function renderCP() {
+export function renderCP() {
   const p = prog();
   const cpCauseKeys = new Set(p.cp.map(r => r.pfmeaCauseId || r.pfmeaEffectId || r.pfmeaId));
   const miss = [];
@@ -203,7 +209,7 @@ function renderCP() {
   <button class="add-row" onclick="addCP()">＋ Add Row</button></div>`;
 }
 
-function syncFromPFMEA() {
+export function syncFromPFMEA() {
   const p  = prog();
   const ex = new Set(p.cp.map(r => r.pfmeaCauseId || r.pfmeaEffectId || r.pfmeaId));
   let n    = 0;
@@ -227,6 +233,6 @@ function syncFromPFMEA() {
   if (n === 0) return alert('All PFMEA causes already in control plan.');
   save(); render();
 }
-function addCP()         { prog().cp.push({ id: 'cp_' + Date.now(), pfmeaId: '', pfdId: '', char: '', type: 'Process', spec: '', method: '', freq: '', resp: '', reaction: '', ctqIds: [] }); save(); render(); }
-function updCP(i, f, v)  { prog().cp[i][f] = v; save(); }
-function delCP(i)        { prog().cp.splice(i, 1); save(); render(); }
+export function addCP()         { prog().cp.push({ id: 'cp_' + Date.now(), pfmeaId: '', pfdId: '', char: '', type: 'Process', spec: '', method: '', freq: '', resp: '', reaction: '', ctqIds: [] }); save(); render(); }
+export function updCP(i, f, v)  { prog().cp[i][f] = v; save(); }
+export function delCP(i)        { prog().cp.splice(i, 1); save(); render(); }
