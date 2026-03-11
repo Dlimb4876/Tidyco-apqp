@@ -137,7 +137,7 @@ function meGetTabContent() {
     case 'tasks':
       return meRenderTasksTab(tasks, team, availableProducts);
     case 'products':
-      return meRenderProductsTab(products, availableProducts);
+      return meRenderProductsTab(products, availableProducts, tasks);
     case 'product-taskload':
       return meRenderProductTaskLoadTab(tasks, products);
     case 'holidays':

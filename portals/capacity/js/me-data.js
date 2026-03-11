@@ -288,13 +288,18 @@ window.meDataAutoSyncProductionProducts = function() {
     }
   });
 
-  // Remove products that no longer have Production status or don't have a productDatabaseId
-  // (old manually-added products without a DB link are removed to prevent duplicates)
+  // Remove duplicates by keeping only the first instance of each productDatabaseId
+  const seenDbIds = new Set();
   meDataState.products = meDataState.products.filter(meP => {
     if (!meP.productDatabaseId) {
-      // Preserve products without a database ID (old manual entries)
+      // Preserve products without a database ID (old manual entries), but avoid duplicates
       return true;
     }
+    // For DB-linked products, keep only the first instance
+    if (seenDbIds.has(meP.productDatabaseId)) {
+      return false;
+    }
+    seenDbIds.add(meP.productDatabaseId);
     // Keep only those still in PM with Production status
     return pmMap[meP.productDatabaseId] !== undefined;
   });

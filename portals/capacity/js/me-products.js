@@ -2,10 +2,11 @@
    me-products.js — Products Tab Rendering
    ============================================================ */
 
-window.meRenderProductsTab = function(productsArray, availableProducts) {
+window.meRenderProductsTab = function(productsArray, availableProducts, tasksArray) {
   // Auto-sync products from product management (status = "Production")
   meDataAutoSyncProductionProducts();
   const updated = meDataGetProducts();
+  const tasks = tasksArray || meDataGetTasks();
 
   const weeksPerMonth = 4.33;
   const totalLoadWeekly = updated.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
@@ -17,14 +18,26 @@ window.meRenderProductsTab = function(productsArray, availableProducts) {
     return from <= today && today <= until;
   }).length;
 
+  // Calculate total demand (hours from tasks) for each product
+  const demandByProduct = {};
+  tasks.forEach(task => {
+    if (task.productId) {
+      if (!demandByProduct[task.productId]) demandByProduct[task.productId] = 0;
+      const hours = task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : (task.totalHours || 0);
+      demandByProduct[task.productId] += hours;
+    }
+  });
+
   let rows = '';
   updated.forEach((product, idx) => {
+    const totalDemand = (demandByProduct[product.id] || 0).toFixed(1);
     rows += `
       <tr>
         <td>${esc(product.name)}</td>
         <td><input type="date" value="${product.supportFrom}" onchange="meDataUpdateProduct(${idx}, 'supportFrom', this.value); meDebouncedSave();"></td>
         <td><input type="date" value="${product.supportUntil}" onchange="meDataUpdateProduct(${idx}, 'supportUntil', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
+        <td style="text-align: right; font-weight: 600; color: var(--blue);">${totalDemand}</td>
         <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${idx}, 'notes', this.value); meDebouncedSave();"></td>
       </tr>`;
   });
@@ -62,10 +75,11 @@ window.meRenderProductsTab = function(productsArray, availableProducts) {
               <th style="width:120px">Support From</th>
               <th style="width:120px">Support Until</th>
               <th style="width:120px">Hours/Week</th>
-              <th style="width:250px">Notes</th>
+              <th style="width:100px">Task Demand</th>
+              <th style="width:200px">Notes</th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="5"><div style="text-align:center;padding:40px;color:var(--muted)">No production products found</div></td></tr>'}
+              ${rows || '<tr><td colspan="6"><div style="text-align:center;padding:40px;color:var(--muted)">No production products found</div></td></tr>'}
             </tbody>
           </table>
         </div>
