@@ -66,7 +66,7 @@ window.meLoadRelationalProducts = async function(userId) {
     return (data || []).map(mp => ({
       id: mp.id,
       name: mp.name || '(Unknown Product)',
-      productId: mp.product_database_id,
+      productDatabaseId: mp.product_database_id,
       supportFrom: mp.support_from,
       supportUntil: mp.support_until,
       hoursPerWeek: mp.hours_per_week,
@@ -223,8 +223,6 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
 
 window.meSaveProductRelational = async function(userId, product) {
   try {
-    const productId = product.productId || product.id;
-
     const supportFrom = product.supportFrom || product.support_from || null;
     const supportUntil = product.supportUntil || product.support_until || null;
 
@@ -234,7 +232,7 @@ window.meSaveProductRelational = async function(userId, product) {
         id: product.id,
         user_id: userId,
         name: product.name || '',
-        product_database_id: productId || null,
+        product_database_id: product.productDatabaseId || null,
         support_from: supportFrom || null,
         support_until: supportUntil || null,
         hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
