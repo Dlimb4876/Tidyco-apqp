@@ -267,8 +267,8 @@ window.meSaveTaskRelational = async function(userId, task) {
           type: task.type,
           assignee_id: task.assigneeId || null,
           product_id: task.productId || null,
-          start_date: task.startDate,
-          end_date: task.endDate,
+          start_date: task.startDate || null,
+          end_date: task.endDate || null,
           total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0)
         }])
         .select('id');
@@ -291,8 +291,8 @@ window.meSaveTaskRelational = async function(userId, task) {
           type: task.type,
           assignee_id: task.assigneeId || null,
           product_id: task.productId || null,
-          start_date: task.startDate,
-          end_date: task.endDate,
+          start_date: task.startDate || null,
+          end_date: task.endDate || null,
           total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0),
           updated_at: new Date().toISOString()
         })
