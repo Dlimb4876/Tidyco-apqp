@@ -290,14 +290,23 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     if (overlapStart <= overlapEnd) {
       const totalDays = (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1;
       const overlapDays = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24) + 1;
-      const hoursThisMonth = (task.totalHours || 0) * (overlapDays / totalDays);
-
       const category = (task.category || 'other').toLowerCase();
-      if (category === 'npi') npi += hoursThisMonth;
-      else if (category === 'improvement') improvement += hoursThisMonth;
-      else if (category === 'tendering') tendering += hoursThisMonth;
-      else if (category === 'support') support += hoursThisMonth;
-      else other += hoursThisMonth;
+
+      // Check if task has advanced estimation with activities
+      if (task.advancedEstimation && task.advancedEstimation.activities && task.advancedEstimation.activities.length > 0) {
+        // For tasks with activities: only count activities that have assignedTo
+        // Activities without assignedTo are ignored
+        // (Per-assignee capacity mapping happens in heat map and other views)
+      } else {
+        // Simple task without activities: apply totalHours to team demand as before
+        const hoursThisMonth = (task.totalHours || 0) * (overlapDays / totalDays);
+
+        if (category === 'npi') npi += hoursThisMonth;
+        else if (category === 'improvement') improvement += hoursThisMonth;
+        else if (category === 'tendering') tendering += hoursThisMonth;
+        else if (category === 'support') support += hoursThisMonth;
+        else other += hoursThisMonth;
+      }
     }
   });
 

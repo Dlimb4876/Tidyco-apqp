@@ -25,8 +25,18 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
     const memOpts = '<option value="">Unassigned</option>' + teamArray.map(m => `<option value="${m.id}" ${task.assigneeId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
     const prodOpts = '<option value="">— No Product</option>' + availableProducts.map(p => `<option value="${p.id}" ${task.productId === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
 
+    // Check if task has activities
+    const hasActivities = task.advancedEstimation && task.advancedEstimation.activities && task.advancedEstimation.activities.length > 0;
+    const assigneeNames = {};
+    teamArray.forEach(m => {
+      assigneeNames[m.id] = m.name;
+    });
+
     rows += `
-      <tr>
+      <tr class="me-task-row" data-task-idx="${idx}">
+        <td style="width: 30px; text-align: center;">
+          ${hasActivities ? `<button class="me-dropdown-toggle" onclick="meToggleTaskDropdown(${idx})" style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px;">▶</button>` : ''}
+        </td>
         <td><input value="${esc(task.name)}" onchange="meDataUpdateTask(${idx}, 'name', this.value); meDebouncedSave();"></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'category', this.value); meDebouncedSave();">${catOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'assigneeId', this.value); meDebouncedSave();">${memOpts}</select></td>
@@ -35,10 +45,35 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
         <td><input type="date" value="${task.endDate}" onchange="meDataUpdateTask(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${task.totalHours || 0}" step="0.1" onchange="meDataUpdateTask(${idx}, 'totalHours', this.value); meDebouncedSave();"></td>
         <td style="text-align: center; white-space: nowrap;">
-          ${task.category === 'NPI' ? `<button class="me-adv-btn" title="Advanced Estimation" onclick="meOpenAdvancedEstimationModal(${idx})">⚙️</button>` : ''}
+          ${task.category === 'NPI' ? `<button class="me-adv-btn" title="Advanced Estimation" onclick="meOpenEstimationSubsystem(${idx})">⚙️</button>` : ''}
           <button class="me-del-btn" onclick="if(confirm('Delete task?')) { meDataDeleteTask(${idx}); meOnSave(); meSetTab('tasks'); }">✕</button>
         </td>
       </tr>`;
+
+    // Add dropdown row if has activities
+    if (hasActivities) {
+      const activitiesHtml = task.advancedEstimation.activities.map(act => {
+        const assigneeName = act.assignedTo ? (assigneeNames[act.assignedTo] || 'Unassigned') : 'Unassigned';
+        return `
+          <div class="me-subtask-item">
+            <div class="me-subtask-name">${escapeHtml(act.name)}</div>
+            <div class="me-subtask-assignee">${escapeHtml(assigneeName)}</div>
+            <div class="me-subtask-hours">${(parseFloat(act.baseHours) || 0).toFixed(1)} h</div>
+          </div>
+        `;
+      }).join('');
+
+      rows += `
+        <tr class="me-task-dropdown-row" data-task-idx="${idx}">
+          <td colspan="9" style="padding: 0;">
+            <div class="me-task-dropdown-content">
+              <div class="me-subtask-list">
+                ${activitiesHtml}
+              </div>
+            </div>
+          </td>
+        </tr>`;
+    }
   });
 
   return `
@@ -80,7 +115,8 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
-              <th style="width:180px">Task Name</th>
+              <th style="width:30px"></th>
+              <th style="width:150px">Task Name</th>
               <th style="width:110px">Category</th>
               <th style="width:130px">Assignee</th>
               <th style="width:130px">Product</th>
@@ -90,7 +126,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
               <th style="width:60px"></th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="8"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks added</div></td></tr>'}
+              ${rows || '<tr><td colspan="9"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks added</div></td></tr>'}
             </tbody>
           </table>
         </div>
@@ -107,3 +143,29 @@ window.meAddDefaultTask = function() {
   meOnSave();
   meSetTab('tasks');
 };
+
+// ── Dropdown Toggle ────────────────────────────────────────
+window.meToggleTaskDropdown = function(taskIdx) {
+  const dropdownRow = document.querySelector(`.me-task-dropdown-row[data-task-idx="${taskIdx}"]`);
+  const toggleBtn = document.querySelector(`.me-task-row[data-task-idx="${taskIdx}"] .me-dropdown-toggle`);
+
+  if (dropdownRow) {
+    dropdownRow.classList.toggle('expanded');
+    if (toggleBtn) {
+      toggleBtn.textContent = dropdownRow.classList.contains('expanded') ? '▼' : '▶';
+    }
+  }
+};
+
+// ── HTML Escape ────────────────────────────────────────────
+function escapeHtml(text) {
+  if (!text) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
