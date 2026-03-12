@@ -29,11 +29,34 @@ function ensureProductProgrammes() {
   if (created > 0) save();
 }
 
-// ── Projects list (Kanban by product status) ──────────────────
+// ── Lane collapse state (persisted to localStorage) ──────────
+let npiCollapsedLanes = new Set(
+  JSON.parse(localStorage.getItem('npi_collapsed_lanes') || '[]')
+);
+
+function toggleNpiLane(familyId) {
+  if (npiCollapsedLanes.has(familyId)) {
+    npiCollapsedLanes.delete(familyId);
+  } else {
+    npiCollapsedLanes.add(familyId);
+  }
+  localStorage.setItem('npi_collapsed_lanes', JSON.stringify([...npiCollapsedLanes]));
+  const elemId = 'npi-lane-' + familyId.replace(/[^a-zA-Z0-9]/g, '_');
+  const lane = document.getElementById(elemId);
+  if (lane) {
+    const collapsed = npiCollapsedLanes.has(familyId);
+    lane.classList.toggle('npi-lane-collapsed', collapsed);
+    const tog = lane.querySelector('.npi-lane-toggle');
+    if (tog) tog.textContent = collapsed ? '▸' : '▾';
+  }
+}
+
+// ── Projects list (Kanban with family swim lanes) ─────────────
 function renderProjects() {
   ensureProductProgrammes();
   const user = currentUser ? currentUser.email.split('@')[0] : '';
   const products = productsDataGetAll();
+  const families = getFamilies();
   const STATUSES = [
     { key: 'Tender',     icon: '📋', color: 'var(--amber)' },
     { key: 'NPI',        icon: '🔧', color: 'var(--blue)'  },
@@ -58,6 +81,30 @@ function renderProjects() {
     </div>`;
   }
 
+  // Group active products by family
+  const activeProducts = products.filter(p => p.status !== 'Closed');
+  const familyMap = {};
+  families.forEach(fam => { familyMap[fam.id] = []; });
+  familyMap['__other__'] = [];
+  activeProducts.forEach(product => {
+    const famId = product.family && familyMap[product.family] !== undefined
+      ? product.family : '__other__';
+    familyMap[famId].push(product);
+  });
+
+  // Global counts per status column
+  const totalByStatus = {};
+  STATUSES.forEach(s => {
+    totalByStatus[s.key] = activeProducts.filter(p => p.status === s.key).length;
+  });
+
+  const colHeadersHTML = STATUSES.map(s =>
+    `<div class="npi-col-header-label" style="border-top-color:${s.color}">
+      <span>${s.icon} ${s.key}</span>
+      <span class="npi-tab-badge">${totalByStatus[s.key]}</span>
+    </div>`
+  ).join('');
+
   let html = `<div class="proj-home">
     <div class="proj-home-header">
       <div>
@@ -66,24 +113,47 @@ function renderProjects() {
       </div>
       <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Hub</button>
     </div>
-    <div class="npi-kanban">`;
+    <div class="npi-swimlane-wrap">
+      <div class="npi-col-headers">${colHeadersHTML}</div>`;
 
-  STATUSES.forEach(({ key, icon, color }) => {
-    const col = products.filter(p => p.status === key);
-    html += `<div class="npi-kanban-col">
-      <div class="npi-kanban-col-header" style="border-top-color:${color}">
-        <span>${icon} ${key}</span>
-        <span class="npi-tab-badge">${col.length}</span>
+  const renderLane = (famId, famLabel, famIcon, prods) => {
+    if (prods.length === 0) return '';
+    const elemId   = 'npi-lane-' + famId.replace(/[^a-zA-Z0-9]/g, '_');
+    const collapsed = npiCollapsedLanes.has(famId);
+    const countBits = STATUSES.map(s => {
+      const n = prods.filter(p => p.status === s.key).length;
+      return n > 0 ? `<span style="color:${s.color}">${n}</span>` : null;
+    }).filter(Boolean).join('<span style="color:var(--line2)"> · </span>');
+
+    const colsHTML = STATUSES.map(s => {
+      const col = prods.filter(p => p.status === s.key);
+      return `<div class="npi-lane-col">
+        ${col.length === 0
+          ? `<div class="npi-lane-empty">—</div>`
+          : col.map(product => {
+              const programme = db.programmes.find(p => p.product_id === product.id);
+              return renderNpiSlimCard(product, programme);
+            }).join('')
+        }
       </div>`;
-    if (col.length === 0) {
-      html += `<div class="npi-kanban-empty">No ${key} products</div>`;
-    }
-    col.forEach(product => {
-      const programme = db.programmes.find(p => p.product_id === product.id);
-      html += renderNpiSlimCard(product, programme);
-    });
-    html += `</div>`;
+    }).join('');
+
+    return `<div class="npi-lane${collapsed ? ' npi-lane-collapsed' : ''}" id="${elemId}">
+      <div class="npi-lane-header" onclick="toggleNpiLane(${JSON.stringify(famId)})">
+        <span class="npi-lane-toggle">${collapsed ? '▸' : '▾'}</span>
+        <span class="npi-lane-label">${famIcon} ${esc(famLabel)}</span>
+        <span class="npi-lane-counts">${countBits}</span>
+      </div>
+      <div class="npi-lane-body">${colsHTML}</div>
+    </div>`;
+  };
+
+  families.forEach(fam => {
+    html += renderLane(fam.id, fam.label, fam.icon, familyMap[fam.id] || []);
   });
+  if ((familyMap['__other__'] || []).length > 0) {
+    html += renderLane('__other__', 'Unassigned', '📋', familyMap['__other__']);
+  }
 
   html += `</div></div>`;
   return html;
