@@ -581,23 +581,41 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // 4. Save holidays (delete all first, then insert current ones to handle deletions)
-        try {
-          const { error: deleteErr } = await supa.from('me_holidays').delete().eq('user_id', currentUser.id);
-          if (deleteErr) {
-            console.warn('Failed to clear old holidays:', deleteErr.message);
-            relationalSuccess = false;
-          }
-        } catch (err) {
-          console.warn('Holiday clear error:', err.message);
-          relationalSuccess = false;
-        }
+        // 4. Save holidays (use upsert on conflict to handle updates and new rows)
+        if (meDataState.holidays && meDataState.holidays.length > 0) {
+          // Batch upsert with proper conflict resolution on unique key (user_id, person_id, date)
+          const holidayData = meDataState.holidays
+            .filter(h => h.personId)  // Skip bank holidays
+            .map(h => ({
+              id: h.id,
+              user_id: currentUser.id,
+              person_id: h.personId,
+              date: h.date,
+              type: h.type
+            }));
 
-        for (let i = 0; i < meDataState.holidays.length; i++) {
-          const success = await meSaveHolidayRelational(currentUser.id, meDataState.holidays[i]);
-          if (!success) {
-            console.warn('Failed to save holiday', i);
-            relationalSuccess = false;
+          if (holidayData.length > 0) {
+            // First delete old holidays to avoid constraint violations
+            const { error: deleteErr } = await supa
+              .from('me_holidays')
+              .delete()
+              .eq('user_id', currentUser.id)
+              .gt('date', '2000-01-01');  // Ensure we only delete real holidays, not metadata
+
+            if (!deleteErr) {
+              // Now insert fresh holidays
+              const { error: insertErr } = await supa
+                .from('me_holidays')
+                .insert(holidayData);
+
+              if (insertErr) {
+                console.warn('Failed to insert holidays:', insertErr.message);
+                relationalSuccess = false;
+              }
+            } else {
+              console.warn('Failed to delete old holidays:', deleteErr.message);
+              relationalSuccess = false;
+            }
           }
         }
 

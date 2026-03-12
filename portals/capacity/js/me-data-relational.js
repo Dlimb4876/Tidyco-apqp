@@ -191,26 +191,52 @@ window.meLoadRelationalTasks = async function(userId) {
 
 window.meSaveTeamRelational = async function(userId, teamMember) {
   try {
-    const { error } = await supa
-      .from('me_teams')
-      .upsert({
-        id: teamMember.id,
-        user_id: userId,
-        name: teamMember.name,
-        hours_per_week: teamMember.hoursPerWeek,
-        utilisation: teamMember.utilisation,
-        job_title: teamMember.jobTitle,
-        team_group: teamMember.group,
-        start_date: teamMember.startDate || null,
-        end_date: teamMember.endDate || null,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
+    if (!teamMember.id) {
+      // Insert new team member
+      const { data, error } = await supa
+        .from('me_teams')
+        .insert([{
+          user_id: userId,
+          name: teamMember.name,
+          hours_per_week: teamMember.hoursPerWeek,
+          utilisation: teamMember.utilisation,
+          job_title: teamMember.jobTitle,
+          team_group: teamMember.group,
+          start_date: teamMember.startDate || null,
+          end_date: teamMember.endDate || null
+        }])
+        .select('id');
 
-    if (error) {
-      console.warn('meSaveTeamRelational upsert error:', error.message);
-      return false;
+      if (error) {
+        console.warn('meSaveTeamRelational insert error:', error.message);
+        return false;
+      }
+
+      const newId = data && data.length > 0 ? data[0].id : null;
+      teamMember.id = newId;
+      return true;
+    } else {
+      // Update existing team member
+      const { error } = await supa
+        .from('me_teams')
+        .update({
+          name: teamMember.name,
+          hours_per_week: teamMember.hoursPerWeek,
+          utilisation: teamMember.utilisation,
+          job_title: teamMember.jobTitle,
+          team_group: teamMember.group,
+          start_date: teamMember.startDate || null,
+          end_date: teamMember.endDate || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', teamMember.id);
+
+      if (error) {
+        console.warn('meSaveTeamRelational update error:', error.message);
+        return false;
+      }
+      return true;
     }
-    return true;
   } catch (err) {
     console.warn('meSaveTeamRelational exception:', err.message);
     return false;
@@ -222,26 +248,50 @@ window.meSaveProductRelational = async function(userId, product) {
     const supportFrom = product.supportFrom || product.support_from || null;
     const supportUntil = product.supportUntil || product.support_until || null;
 
-    const { error } = await supa
-      .from('me_products')
-      .upsert({
-        id: product.id,
-        user_id: userId,
-        name: product.name || '',
-        product_database_id: product.productDatabaseId || null,
-        support_from: supportFrom || null,
-        support_until: supportUntil || null,
-        hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
-        notes: product.notes || null,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
+    if (!product.id) {
+      // Insert new product
+      const { data, error } = await supa
+        .from('me_products')
+        .insert([{
+          user_id: userId,
+          name: product.name || '',
+          product_database_id: product.productDatabaseId || null,
+          support_from: supportFrom || null,
+          support_until: supportUntil || null,
+          hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
+          notes: product.notes || null
+        }])
+        .select('id');
 
-    if (error) {
-      console.warn('meSaveProductRelational upsert error:', error.message);
-      return false;
+      if (error) {
+        console.warn('meSaveProductRelational insert error:', error.message);
+        return false;
+      }
+
+      const newId = data && data.length > 0 ? data[0].id : null;
+      product.id = newId;
+      return true;
+    } else {
+      // Update existing product
+      const { error } = await supa
+        .from('me_products')
+        .update({
+          name: product.name || '',
+          product_database_id: product.productDatabaseId || null,
+          support_from: supportFrom || null,
+          support_until: supportUntil || null,
+          hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
+          notes: product.notes || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', product.id);
+
+      if (error) {
+        console.warn('meSaveProductRelational update error:', error.message);
+        return false;
+      }
+      return true;
     }
-
-    return true;
   } catch (err) {
     console.warn('meSaveProductRelational exception:', err.message);
     return false;
@@ -403,36 +453,6 @@ window.meSaveTaskPertHistoryRelational = async function(taskId, estimates, confi
     return true;
   } catch (err) {
     console.warn('meSaveTaskPertHistoryRelational exception:', err.message);
-    return false;
-  }
-};
-
-window.meSaveHolidayRelational = async function(userId, holiday) {
-  try {
-    if (!holiday.personId) {
-      // Bank holidays or legacy entries without a person — skip silently
-      return true;
-    }
-
-    // Since we delete all holidays first, just INSERT new ones (no upsert needed)
-    const { error } = await supa
-      .from('me_holidays')
-      .insert({
-        id: holiday.id,
-        user_id: userId,
-        person_id: holiday.personId,
-        date: holiday.date,
-        type: holiday.type
-      });
-
-    if (error) {
-      console.warn('meSaveHolidayRelational insert error:', error.message);
-      return false;
-    }
-
-    return true;
-  } catch (err) {
-    console.warn('meSaveHolidayRelational exception:', err.message);
     return false;
   }
 };
