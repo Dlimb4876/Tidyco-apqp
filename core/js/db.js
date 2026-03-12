@@ -72,7 +72,6 @@ async function loadRemote() {
   const { data, error } = await supa
     .from('programmes')
     .select('prog_id,name,updated_at,updated_by,data')
-    .eq('user_id', currentUser.id)
     .order('updated_at', { ascending: false });
   if (error) { console.error('Load error', error); return; }
   if (data && data.length > 0) {

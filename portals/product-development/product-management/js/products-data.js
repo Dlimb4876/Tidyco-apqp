@@ -17,7 +17,7 @@ async function productsDataInit() {
   if (!currentUser) return;
   try {
     // Load products
-    const prods = await supa.from('products').select('*').eq('user_id', currentUser.id).order('name', { ascending: true });
+    const prods = await supa.from('products').select('*').order('name', { ascending: true });
     if (prods.error) throw prods.error;
     productsState.products = prods.data || [];
 
@@ -26,7 +26,6 @@ async function productsDataInit() {
       const productIds = productsState.products.map(p => p.id);
       const hist = await supa.from('overhaul_history')
         .select('*')
-        .eq('user_id', currentUser.id)
         .in('product_id', productIds)
         .order('effective_date', { ascending: false });
 
@@ -117,7 +116,6 @@ async function productsDataUpdateProduct(productId, updates) {
         updated_at: new Date().toISOString()
       })
       .eq('id', productId)
-      .eq('user_id', currentUser.id)
       .select()
       .single();
 
@@ -144,7 +142,7 @@ async function productsDataUpdateProduct(productId, updates) {
 async function productsDataDeleteProduct(productId) {
   try {
     // RLS cascade will delete history records
-    const result = await supa.from('products').delete().eq('id', productId).eq('user_id', currentUser.id);
+    const result = await supa.from('products').delete().eq('id', productId);
     if (result.error) throw result.error;
 
     productsState.products = productsState.products.filter(p => p.id !== productId);
@@ -201,7 +199,7 @@ async function productsDataAddHistory(productId, historyRecord) {
  */
 async function productsDataDeleteHistory(productId, historyId) {
   try {
-    const result = await supa.from('overhaul_history').delete().eq('id', historyId).eq('user_id', currentUser.id);
+    const result = await supa.from('overhaul_history').delete().eq('id', historyId);
     if (result.error) throw result.error;
 
     if (productsState.history[productId]) {
