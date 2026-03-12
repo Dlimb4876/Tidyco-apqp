@@ -11,6 +11,8 @@ let prodCapState = {
   loaded: false
 };
 
+let prodCapUtilizationSubscription = null;
+
 // ── Initialise from Supabase ──────────────────────────────────
 async function prodCapDataInit() {
   if (!currentUser) return;
@@ -45,6 +47,7 @@ async function prodCapLoadUtilization() {
       if (!isNaN(value) && value >= 0 && value <= 1) {
         prodCapUtilizationFactor = value;
         console.log('✓ Loaded utilization factor from global settings:', Math.round(value * 100) + '%');
+        prodCapSubscribeUtilization();
         return;
       }
     }
@@ -61,6 +64,38 @@ async function prodCapLoadUtilization() {
       prodCapUtilizationFactor = value;
       console.log('✓ Loaded utilization factor from localStorage:', Math.round(value * 100) + '%');
     }
+  }
+}
+
+// ── Subscribe to utilization factor changes (real-time sync) ────────────
+function prodCapSubscribeUtilization() {
+  if (prodCapUtilizationSubscription) return;
+
+  try {
+    prodCapUtilizationSubscription = supa
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'global_settings',
+        filter: 'setting_key=eq.prod_cap_utilization'
+      }, (payload) => {
+        const newValue = parseFloat(payload.new.setting_value);
+        if (!isNaN(newValue) && newValue >= 0 && newValue <= 1) {
+          prodCapUtilizationFactor = newValue;
+          console.log('✓ Utilization factor updated by another user:', Math.round(newValue * 100) + '%');
+          render();
+        }
+      })
+      .subscribe();
+  } catch (err) {
+    console.debug('Could not set up real-time utilization sync:', err);
+  }
+}
+
+function prodCapUnsubscribeUtilization() {
+  if (prodCapUtilizationSubscription) {
+    prodCapUtilizationSubscription.unsubscribe();
+    prodCapUtilizationSubscription = null;
   }
 }
 

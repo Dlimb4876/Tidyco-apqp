@@ -108,11 +108,11 @@ function bugRowHTML(r, i) {
   const statusCell = isEditing
     ? `<select id="bugStatusSelect_${i}" class="bug-inline-select" onchange="bugUpdateInlineStatus('${esc(r.id)}', ${i})">
         <option value="open" ${r.status === 'open' ? 'selected' : ''}>OPEN</option>
-        <option value="closed" ${r.status === 'closed' ? 'selected' : ''}>CLOSED</option>
+        <option value="closed" ${r.status === 'closed' ? 'selected' : ''}>FIXED</option>
       </select>`
     : (isOpen
       ? `<span class="bug-badge bug-badge-open">OPEN</span>`
-      : `<span class="bug-badge bug-badge-closed">CLOSED</span>`);
+      : `<span class="bug-badge bug-badge-closed">FIXED</span>`);
 
   let responseCell;
   if (isEditing) {

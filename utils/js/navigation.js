@@ -28,6 +28,16 @@ function parseHash() {
 function navigate(sec, { pushHash = true } = {}) {
   if (sec === 'home') sec = 'project';
 
+  // Clean up subscriptions when leaving bugreports
+  if (currentSection === 'bugreports' && sec !== 'bugreports' && typeof bugDataUnsubscribe === 'function') {
+    bugDataUnsubscribe();
+  }
+
+  // Clean up subscriptions when leaving capacity
+  if (currentSection === 'capacity' && sec !== 'capacity' && typeof prodCapUnsubscribeUtilization === 'function') {
+    prodCapUnsubscribeUtilization();
+  }
+
   // Reset capacityTab to 'root' when navigating TO capacity from outside (e.g., from hub)
   if (sec === 'capacity' && currentSection !== 'capacity') {
     capacityTab = 'root';
