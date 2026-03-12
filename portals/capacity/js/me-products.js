@@ -28,18 +28,13 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
 
   let rows = '';
   updated.forEach((product, idx) => {
-    const taskCount = tasks.filter(t => t.productId === product.id).length;
-    const taskDemand = demandByProduct[product.id] || 0;
-    const supportPerMonth = ((product.hoursPerWeek || 0) * weeksPerMonth).toFixed(1);
-    const totalLoad = (taskDemand + parseFloat(supportPerMonth)).toFixed(1);
-
     rows += `
       <tr>
         <td>${esc(product.name)}</td>
-        <td style="text-align:center">${taskCount}</td>
-        <td style="text-align:right">${taskDemand.toFixed(1)} h</td>
-        <td style="text-align:right">${supportPerMonth} h</td>
-        <td style="text-align:right; font-weight:bold">${totalLoad} h</td>
+        <td><input type="date" value="${product.supportFrom || ''}" onchange="meDataUpdateProduct(${idx}, 'supportFrom', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${product.supportUntil || ''}" onchange="meDataUpdateProduct(${idx}, 'supportUntil', this.value); meDebouncedSave();"></td>
+        <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
+        <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${idx}, 'notes', this.value); meDebouncedSave();"></td>
       </tr>`;
   });
 
@@ -72,11 +67,11 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
-              <th style="width:200px">PRODUCT</th>
-              <th style="width:80px;text-align:center">TASKS</th>
-              <th style="width:120px;text-align:right">TASK DEMAND</th>
-              <th style="width:120px;text-align:right">SUPPORT/MONTH</th>
-              <th style="width:120px;text-align:right">TOTAL LOAD</th>
+              <th style="width:200px">Product Name</th>
+              <th style="width:120px">Support From</th>
+              <th style="width:120px">Support Until</th>
+              <th style="width:120px">Hours/Week</th>
+              <th style="width:200px">Notes</th>
             </tr></thead>
             <tbody>
               ${rows || '<tr><td colspan="5"><div style="text-align:center;padding:40px;color:var(--muted)">No production products found</div></td></tr>'}
@@ -84,7 +79,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
           </table>
         </div>
         <div style="font-size: 12px; color: var(--muted); padding: 12px 0;">
-          💡 Products are synced from the Product Management database. Task Demand is calculated from assigned tasks. Support/Month and Total Load are shown for capacity planning.
+          💡 Products are synced from the Product Management database. Edit support dates and hours per week as needed for capacity planning.
         </div>
       </div>
     </div>
