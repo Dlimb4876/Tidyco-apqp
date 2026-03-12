@@ -27,11 +27,6 @@ async function launchApp() {
   populateFamilySelects();
   await loadRemote();
   if (db.programmes.length === 0) load();
-  if (db.programmes.length === 0) {
-    const p = newProgTemplate('New Project', '', '', 'Other', '', '', new Date().toISOString().slice(0, 10));
-    db.programmes.push(p);
-    save();
-  }
   initProgSelect();
 
   // Load Families data from database (dynamic family definitions)
@@ -47,6 +42,7 @@ async function launchApp() {
 
   // Load Products Management data (separate Supabase tables, silent if tables absent)
   await productsDataInit();
+  ensureProductProgrammes();
 
   // Load Production Capacity settings (production_capacity table)
   await prodCapDataInit();

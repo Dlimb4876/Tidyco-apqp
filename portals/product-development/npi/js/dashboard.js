@@ -4,168 +4,111 @@
 // ═══════════════════════════════════
 
 
-// ── Projects list ─────────────────────────────────────────────
-function renderProjects() {
-  const user    = currentUser ? currentUser.email.split('@')[0] : '';
-  const families = getFamilies();
-
-  // Count projects by type
-  const activeProjects = db.programmes.filter(p => (p.status || 'Active') === 'Active');
-  const tenderCount = db.programmes.filter(p => p.status === 'Tender').length;
-  const archiveCount = db.programmes.filter(p => p.status === 'Archive').length;
-  const allCount = db.programmes.length;
-
-  // Build tabs: All + Tenders + Archive + one per family
-  let tabsHTML = `<button class="npi-tab${npiTab === 'all' ? ' npi-tab-active' : ''}" onclick="setNpiTab('all')">All<span class="npi-tab-badge">${allCount}</span></button>`;
-
-  tabsHTML += `<button class="npi-tab${npiTab === 'tenders' ? ' npi-tab-active' : ''}" onclick="setNpiTab('tenders')">📋 Tenders<span class="npi-tab-badge">${tenderCount}</span></button>`;
-  tabsHTML += `<button class="npi-tab${npiTab === 'archive' ? ' npi-tab-active' : ''}" onclick="setNpiTab('archive')">📦 Archive<span class="npi-tab-badge">${archiveCount}</span></button>`;
-
-  families.forEach(fam => {
-    const count = activeProjects.filter(p => (p.family || 'Other') === fam.id).length;
-    tabsHTML += `<button class="npi-tab${npiTab === fam.id ? ' npi-tab-active' : ''}" onclick="setNpiTab(${JSON.stringify(fam.id)})">${fam.icon} ${esc(fam.label)}<span class="npi-tab-badge">${count}</span></button>`;
+// ── Auto-create programmes for all products ───────────────────
+function ensureProductProgrammes() {
+  const products = productsDataGetAll();
+  if (!products || products.length === 0) return;
+  let created = 0;
+  products.forEach(product => {
+    const existing = db.programmes.find(p => p.product_id === product.id);
+    if (!existing) {
+      const np = migrateprog({
+        id: 'p_' + Math.random().toString(36).substr(2, 9),
+        name: product.name,
+        customer: product.customer || '',
+        family: product.family || '',
+        unit: product.code || '',
+        product_id: product.id,
+        date: new Date().toISOString().slice(0, 10),
+        status: 'Active',
+      });
+      db.programmes.push(np);
+      created++;
+    }
   });
+  if (created > 0) save();
+}
 
-  // "New Project" button behavior
-  const newProjOnclick = (npiTab !== 'all' && npiTab !== 'tenders' && npiTab !== 'archive')
-    ? `newProjectInFamily(${JSON.stringify(npiTab)})`
-    : `showModal('modalNewProj')`;
+// ── Projects list (Kanban by product status) ──────────────────
+function renderProjects() {
+  ensureProductProgrammes();
+  const user = currentUser ? currentUser.email.split('@')[0] : '';
+  const products = productsDataGetAll();
+  const STATUSES = [
+    { key: 'Tender',     icon: '📋', color: 'var(--amber)' },
+    { key: 'NPI',        icon: '🔧', color: 'var(--blue)'  },
+    { key: 'Production', icon: '🏭', color: 'var(--green)' },
+  ];
+
+  if (!products || products.length === 0) {
+    return `<div class="proj-home">
+      <div class="proj-home-header">
+        <div>
+          <div class="proj-home-title">NPI Projects</div>
+          <div class="proj-home-sub">Signed in as ${esc(user)}</div>
+        </div>
+        <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Hub</button>
+      </div>
+      <div style="text-align:center;padding:80px 20px;color:var(--muted)">
+        <div style="font-size:48px;margin-bottom:16px">📦</div>
+        <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No products yet</div>
+        <div style="font-size:13px;margin-bottom:24px">Add products in Product Management to get started</div>
+        <button class="btn btn-primary" onclick="setProductDevelopmentTab('product-management')">Go to Product Management</button>
+      </div>
+    </div>`;
+  }
 
   let html = `<div class="proj-home">
     <div class="proj-home-header">
       <div>
-        <div class="proj-home-title">Projects</div>
+        <div class="proj-home-title">NPI Projects</div>
         <div class="proj-home-sub">Signed in as ${esc(user)}</div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Hub</button>
-        <button class="btn btn-primary" onclick="${newProjOnclick}">＋ New Project</button>
-      </div>
+      <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Hub</button>
     </div>
-    <div class="npi-tabs">${tabsHTML}</div>`;
+    <div class="npi-kanban">`;
 
-  if (db.programmes.length === 0) {
-    html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
-      <div style="font-size:48px;margin-bottom:16px">📋</div>
-      <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No projects yet</div>
-      <div style="font-size:13px;margin-bottom:24px">Create your first project to get started</div>
-      <button class="btn btn-primary" onclick="showModal('modalNewProj')">＋ New Project</button>
-    </div>`;
-  } else if (npiTab === 'all') {
-    // Show every family group that has at least one active project
-    let hasAny = false;
-    families.forEach(fam => {
-      const projs = activeProjects.filter(p => (p.family || 'Other') === fam.id);
-      if (projs.length === 0) return;
-      hasAny = true;
-      html += renderFamilyGroup(fam, projs, false);
+  STATUSES.forEach(({ key, icon, color }) => {
+    const col = products.filter(p => p.status === key);
+    html += `<div class="npi-kanban-col">
+      <div class="npi-kanban-col-header" style="border-top-color:${color}">
+        <span>${icon} ${key}</span>
+        <span class="npi-tab-badge">${col.length}</span>
+      </div>`;
+    if (col.length === 0) {
+      html += `<div class="npi-kanban-empty">No ${key} products</div>`;
+    }
+    col.forEach(product => {
+      const programme = db.programmes.find(p => p.product_id === product.id);
+      html += renderNpiSlimCard(product, programme);
     });
-    if (!hasAny) {
-      html += `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px">No active projects match any known family.</div>`;
-    }
-  } else if (npiTab === 'tenders') {
-    // Show all tender projects
-    const tenderProjs = db.programmes.filter(p => p.status === 'Tender');
-    if (tenderProjs.length === 0) {
-      html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
-        <div style="font-size:48px;margin-bottom:16px">📋</div>
-        <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No tender projects</div>
-        <div style="font-size:13px;margin-bottom:24px">Tender projects will appear here</div>
-      </div>`;
-    } else {
-      const tenderFam = { id: 'tenders', label: 'Tenders', icon: '📋' };
-      html += renderFamilyGroup(tenderFam, tenderProjs, true);
-    }
-  } else if (npiTab === 'archive') {
-    // Show all archived projects
-    const archiveProjs = db.programmes.filter(p => p.status === 'Archive');
-    if (archiveProjs.length === 0) {
-      html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
-        <div style="font-size:48px;margin-bottom:16px">📦</div>
-        <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No archived projects</div>
-        <div style="font-size:13px;margin-bottom:24px">Archived projects will appear here</div>
-      </div>`;
-    } else {
-      const archiveFam = { id: 'archive', label: 'Archive', icon: '📦' };
-      html += renderFamilyGroup(archiveFam, archiveProjs, true);
-    }
-  } else {
-    // Single-family tab view (only shows active projects)
-    const fam   = families.find(f => f.id === npiTab);
-    const projs = fam ? activeProjects.filter(p => (p.family || 'Other') === fam.id) : [];
-    if (!fam || projs.length === 0) {
-      const famLabel = fam ? esc(fam.label) : esc(npiTab);
-      const famIcon  = fam ? fam.icon : '📋';
-      html += `<div style="text-align:center;padding:80px 20px;color:var(--muted)">
-        <div style="font-size:48px;margin-bottom:16px">${famIcon}</div>
-        <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No ${famLabel} projects yet</div>
-        <div style="font-size:13px;margin-bottom:24px">Create the first ${famLabel} project to get started</div>
-        <button class="btn btn-primary" onclick="newProjectInFamily(${JSON.stringify(npiTab)})">＋ New ${famLabel} Project</button>
-      </div>`;
-    } else {
-      // Hide the family header — the active tab already labels it
-      html += renderFamilyGroup(fam, projs, true);
-    }
-  }
-
-  html += `</div>`;
-  return html;
-}
-
-// Renders one family section (cards grid + "Add" card).
-// Pass hideHeader=true when the active tab already labels the family.
-function renderFamilyGroup(fam, projs, hideHeader) {
-  let html = `<div class="proj-family-group">`;
-  if (!hideHeader) {
-    html += `<div class="proj-family-label"><span>${fam.icon}</span>${esc(fam.label)}</div>`;
-  }
-  html += `<div class="proj-cards">`;
-  projs.forEach(p => {
-    const gates      = p.gates || [];
-    const curGate    = gates.findIndex(g => !gateAllSigned(g));
-    const gatesDone  = gates.filter(g => gateAllSigned(g)).length;
-    const openAct    = (p.actions || []).filter(a => a.status !== 'Closed').length;
-    const overdueAct = (p.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length;
-    const highRPN    = (p.pfmea || []).filter(r => calcRPN(r) >= 100).length;
-    const rag        = overdueAct > 0 || highRPN > 0 ? 'r' : openAct > 0 ? 'a' : 'g';
-    const ragShort   = rag === 'r' ? '⚠' : rag === 'a' ? '→' : '✓';
-    const pips       = GATE_DEFS.map((g, i) => {
-      const gd  = gates[i];
-      const cls = gd && gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : '';
-      return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`;
-    }).join('');
-    const lastSaved = p.updated_at
-      ? new Date(p.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-      : '—';
-    html += `<div class="proj-card" onclick="openProject('${p.id}')">
-      <div class="proj-card-name">${esc(p.name)}</div>
-      <div class="proj-card-meta">
-        ${p.customer   ? `<span>👤 ${esc(p.customer)}</span>`   : ''}
-        ${p.unit       ? `<span>🚂 ${esc(p.unit)}</span>`       : ''}
-        ${p.lead       ? `<span>ME: ${esc(p.lead)}</span>`  : ''}
-      </div>
-      <div class="proj-card-gate">
-        <span class="proj-card-gate-label">G${curGate >= 0 ? curGate : '✓'}</span>
-        ${pips}
-      </div>
-      <div class="proj-card-footer">
-        <span><span class="proj-rag proj-rag-${rag}"></span>${ragShort}</span>
-        <span>${lastSaved}</span>
-      </div>
-    </div>`;
+    html += `</div>`;
   });
-  html += `<div class="proj-add-card" onclick="newProjectInFamily(${JSON.stringify(fam.id)})">＋ Add ${esc(fam.label)} project</div>`;
+
   html += `</div></div>`;
   return html;
 }
 
-// Switch the active family tab and re-render
-function setNpiTab(tab) {
-  npiTab = tab;
-  const parts = [];
-  if (tab !== 'all') parts.push('nft=' + encodeURIComponent(tab));
-  history.replaceState(null, '', parts.length ? '#' + parts.join('&') : '#');
-  render();
+// ── Slim card for a product + its linked programme ────────────
+function renderNpiSlimCard(product, programme) {
+  let pipsHtml = '';
+  if (programme) {
+    const gates = programme.gates || [];
+    const curGate = gates.findIndex(g => !gateAllSigned(g));
+    pipsHtml = `<div class="proj-card-gate" style="margin-top:6px">` +
+      GATE_DEFS.map((g, i) => {
+        const gd  = gates[i];
+        const cls = gd && gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : '';
+        return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`;
+      }).join('') + `</div>`;
+  }
+  const onclick = programme ? `openProject('${programme.id}')` : `render()`;
+  return `<div class="npi-slim-card" onclick="${onclick}">
+    <div class="npi-slim-card-name">${esc(product.name)}</div>
+    ${product.code     ? `<div class="npi-slim-card-code">${esc(product.code)}</div>` : ''}
+    ${product.customer ? `<div class="npi-slim-card-meta">👤 ${esc(product.customer)}</div>` : ''}
+    ${pipsHtml}
+  </div>`;
 }
 
 // ── Dashboard ─────────────────────────────────────────────────

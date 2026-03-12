@@ -35,14 +35,14 @@ async function saveRemote() {
     for (const p of db.programmes) {
       const { data: updated, error: updErr } = await supa
         .from('programmes')
-        .update({ name: p.name, updated_at: now, updated_by: email, data: p })
+        .update({ name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p })
         .eq('prog_id', p.id)
         .select();
       if (updErr) { console.error('Update err', updErr); setSyncBadge('error', '● save failed'); return; }
       if (!updated || updated.length === 0) {
         const { error: insErr } = await supa
           .from('programmes')
-          .insert({ prog_id: p.id, name: p.name, updated_at: now, updated_by: email, data: p });
+          .insert({ prog_id: p.id, name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p });
         if (insErr) { console.error('Insert err', insErr); setSyncBadge('error', '● save failed — check console'); return; }
       }
     }
@@ -78,6 +78,7 @@ function setSyncBadge(state, text) {
 // ── Migration ─────────────────────────────────────────────────
 function migrateprog(p) {
   if (!p) return newProgTemplate('Untitled', '', '', 'Other', '', '', new Date().toISOString().slice(0, 10));
+  if (!p.product_id) p.product_id = null;
   if (!p.ctq)     p.ctq     = [];
   if (!p.pfd)     p.pfd     = [];
   if (!p.pfmea)   p.pfmea   = [];
