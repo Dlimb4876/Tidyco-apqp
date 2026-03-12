@@ -110,7 +110,7 @@ body {
   background: var(--white); border-radius: 12px; padding: 40px 44px;
   width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
 }
-.login-logo { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 28px; }
+.login-logo { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 28px; }
 .login-logo-img {
   width: 224px !important;
   height: 224px !important;
@@ -120,7 +120,7 @@ body {
   max-width: 224px;
   max-height: 224px;
 }
-.login-logo-sub   { font-size: 13px; color: var(--muted); margin-top: 4px; text-align: center; }
+.login-logo-sub   { font-size: 15px; font-weight: 500; color: var(--mid); margin-top: 4px; text-align: center; }
 .login-title      { font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
 .login-sub        { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
 .login-field      { margin-bottom: 16px; }
