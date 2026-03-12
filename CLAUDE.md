@@ -112,26 +112,21 @@ When navigating programmatically, use helper functions (e.g., `goTo(section, tab
 
 ## Data Persistence
 
-### Dual-Layer Architecture
+### Architecture
 
-1. **Supabase (primary):** Relational tables per feature area (see Database section)
-2. **localStorage (fallback):** Keys `tidyco_v7`, `tidyco_v6`, `tidyco_v5`
+**Supabase is the sole persistence layer.** All data is stored in relational Supabase tables. There is no secondary storage target.
 
 ### Save Flow
 
-- Data changes update in-memory `db` object immediately
-- Debounced Supabase sync fires 800ms after last change
-- On load: Supabase data takes precedence; localStorage used if Supabase unavailable
-
-### Data Migration
-
-`db.js::migrateprog()` runs on every load to normalize legacy data structures. When changing data schemas, add migration logic here rather than expecting clean data.
+- Data changes update in-memory state immediately
+- Debounced Supabase sync fires 800ms after last change (900ms for ME capacity)
+- On load: data is fetched from Supabase; if unavailable the app starts empty
 
 ---
 
 ## Database Tables (Supabase)
 
-All tables enforce Row-Level Security (RLS) on `user_id = auth.uid()`.
+RLS enforces authentication — users must be logged in to access any data. All authenticated users share access to all data. The `user_id` column on rows is metadata (who created it) and is **not** used as a client-side query filter.
 
 | Table | Purpose |
 |---|---|
@@ -146,7 +141,7 @@ All tables enforce Row-Level Security (RLS) on `user_id = auth.uid()`.
 | `production_batches` | Production scheduling batches |
 | `products` | Overhaul product registry |
 | `product_overhaul_history` | Historical overhaul records |
-| `me_capacity` | Legacy JSON blob (backward compatibility) |
+| `me_capacity` | Legacy JSON blob (no longer written to; may be removed) |
 
 ---
 
@@ -297,9 +292,9 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 5. Add case to NPI tab render dispatcher
 
 ### New Database Table
-1. Create table in Supabase with `user_id` column
-2. Add RLS policy: `CREATE POLICY "..." ON table FOR ALL USING (auth.uid() = user_id)`
-3. Add load/save functions in appropriate data module
+1. Create table in Supabase with a `user_id` column (for record metadata — who created it)
+2. Add RLS policy requiring authentication: `CREATE POLICY "authenticated access" ON table FOR ALL USING (auth.role() = 'authenticated')`
+3. Add load/save functions in the appropriate data module — **do not filter queries by `user_id`**; RLS handles access control
 4. Call load function from `db.js::loadRemote()` or feature init
 
 ---
@@ -329,13 +324,8 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 
 ### Supabase Credentials
 - Anon key is public (safe to expose — security enforced via RLS)
-- All users share the same Supabase project; data isolation via `user_id` RLS
+- All users share the same Supabase project and see the same data; RLS enforces authentication only
 - Requires HTTPS for Supabase auth to work (use localhost or https-enabled server)
-
-### Backward Compatibility
-- Never remove fields from data structures without adding migration in `db.js::migrateprog()`
-- Fallback to localStorage if Supabase is unreachable
-- Legacy data keys: `tidyco_v7` (current), `tidyco_v6`, `tidyco_v5`
 
 ### Performance
 - All data loaded once at session start — avoid additional queries during normal operation
@@ -346,4 +336,4 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 - **Missing `prog()`:** Always check `if (!prog()) return;` before accessing project data in render functions
 - **HTML injection:** Use `esc()` (from `helpers.js`) when interpolating user data into HTML strings
 - **Load order errors:** If a function is undefined at runtime, check that its file is loaded before the caller in `index.html`
-- **RLS errors:** New Supabase tables need RLS policies — inserts/selects silently fail without them
+- **RLS errors:** New Supabase tables need an RLS policy — inserts/selects silently fail without one. Policy must allow authenticated users; do not filter by `user_id` in queries
