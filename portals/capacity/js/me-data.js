@@ -290,9 +290,14 @@ window.meDataAutoSyncProductionProducts = function() {
 
   // Remove duplicates by keeping only the first instance of each productDatabaseId
   const seenDbIds = new Set();
+  const seenNames = new Set();
   meDataState.products = meDataState.products.filter(meP => {
     if (!meP.productDatabaseId) {
-      // Preserve products without a database ID (old manual entries), but avoid duplicates
+      // For manual entries (no database ID), de-dup by name
+      if (seenNames.has(meP.name)) {
+        return false;
+      }
+      seenNames.add(meP.name);
       return true;
     }
     // For DB-linked products, keep only the first instance

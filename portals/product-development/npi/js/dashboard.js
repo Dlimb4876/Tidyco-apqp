@@ -139,7 +139,7 @@ function renderProjects() {
     }).join('');
 
     return `<div class="npi-lane${collapsed ? ' npi-lane-collapsed' : ''}" id="${elemId}">
-      <div class="npi-lane-header" onclick="toggleNpiLane(${JSON.stringify(famId)})">
+      <div class="npi-lane-header" data-fam-id="${esc(famId)}" onclick="toggleNpiLane(this.getAttribute('data-fam-id'))">
         <span class="npi-lane-toggle">${collapsed ? '▸' : '▾'}</span>
         <span class="npi-lane-label">${famIcon} ${esc(famLabel)}</span>
         <span class="npi-lane-counts">${countBits}</span>

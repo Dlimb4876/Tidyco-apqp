@@ -292,6 +292,9 @@ window.meDrawChartNow = function() {
             },
             label: (context) => {
               const value = context.parsed.y || context.parsed;
+              if (typeof value !== 'number' || isNaN(value)) {
+                return context.dataset.label;
+              }
               if (context.dataset.type === 'line') {
                 const monthIdx = context.dataIndex;
                 const util = totalDemandByMonth[monthIdx] > 0
