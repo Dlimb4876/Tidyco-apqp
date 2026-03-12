@@ -15,6 +15,7 @@ async function familiesDataInit() {
   try {
     const { data, error } = await supa.from('families')
       .select('*')
+      .eq('user_id', currentUser.id)
       .order('label', { ascending: true });
 
     if (error) throw error;
@@ -70,7 +71,8 @@ window.familiesDataUpdateFamily = async function(familyId, updates) {
   try {
     const { error } = await supa.from('families')
       .update(updates)
-      .eq('id', familyId);
+      .eq('id', familyId)
+      .eq('user_id', currentUser.id);
 
     if (error) throw error;
 
@@ -93,7 +95,8 @@ window.familiesDataDeleteFamily = async function(familyId) {
   try {
     const { error } = await supa.from('families')
       .delete()
-      .eq('id', familyId);
+      .eq('id', familyId)
+      .eq('user_id', currentUser.id);
 
     if (error) throw error;
 

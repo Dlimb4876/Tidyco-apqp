@@ -580,31 +580,32 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // 4. Save holidays using upsert to handle both new and existing rows
-        if (meDataState.holidays && meDataState.holidays.length > 0) {
-          const holidayData = meDataState.holidays
-            .filter(h => h.personId)  // Skip bank holidays
-            .map(h => ({
-              user_id: currentUser.id,
-              person_id: h.personId,
-              date: h.date,
-              type: h.type
-            }));
+        // 4. Save holidays: delete all for this user then re-insert current state
+        // Uses delete+insert (same as subtasks/PERT) — avoids dependency on a unique constraint
+        const holidayData = (meDataState.holidays || [])
+          .filter(h => h.personId)
+          .map(h => ({
+            user_id: currentUser.id,
+            person_id: h.personId,
+            date: h.date,
+            type: h.type
+          }));
 
-          if (holidayData.length > 0) {
-            // Use upsert on the natural key (user_id, person_id, date)
-            // This creates new rows or updates existing ones
-            const { error: upsertErr } = await supa
-              .from('me_holidays')
-              .upsert(holidayData, {
-                onConflict: 'user_id,person_id,date',
-                ignoreDuplicates: false
-              });
+        const { error: delHolErr } = await supa
+          .from('me_holidays')
+          .delete()
+          .eq('user_id', currentUser.id);
 
-            if (upsertErr) {
-              console.warn('Failed to upsert holidays:', upsertErr.message);
-              relationalSuccess = false;
-            }
+        if (delHolErr) {
+          console.warn('Failed to clear holidays:', delHolErr.message);
+          relationalSuccess = false;
+        } else if (holidayData.length > 0) {
+          const { error: insHolErr } = await supa
+            .from('me_holidays')
+            .insert(holidayData);
+          if (insHolErr) {
+            console.warn('Failed to insert holidays:', insHolErr.message);
+            relationalSuccess = false;
           }
         }
 
