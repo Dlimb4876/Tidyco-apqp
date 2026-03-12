@@ -66,8 +66,8 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
         <td><select onchange="meDataUpdateTask(${idx}, 'category', this.value); meDebouncedSave();">${catOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'assigneeId', this.value); meDebouncedSave();">${memOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${idx}, 'productId', this.value); meDebouncedSave();">${prodOpts}</select></td>
-        <td><input type="date" value="${task.startDate}" onchange="meDataUpdateTask(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${task.endDate}" onchange="meDataUpdateTask(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${task.startDate || ''}" onchange="meDataUpdateTask(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${task.endDate || ''}" onchange="meDataUpdateTask(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${effectiveHours}" step="0.1" ${isRootTask ? 'disabled title="Edit hours via PERT estimation"' : ''} onchange="meDataUpdateTask(${idx}, 'totalHours', this.value); meDebouncedSave();"></td>
         <td style="text-align: center; white-space: nowrap;">
           <button class="me-adv-btn" title="Advanced Estimation" onclick="meOpenEstimationSubsystem(${idx})">⚙️</button>
