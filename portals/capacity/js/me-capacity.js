@@ -30,6 +30,9 @@ window.renderMeCapacity = function() {
             <div class="me-topbar-sub">Manufacturing Engineering · Man-hours planning</div>
           </div>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="window.renderMeCapacityReact()" title="Try React version (experimental)">
+          ⟳ Try React
+        </button>
       </div>
 
       <div class="me-nav" style="${meTab === 'estimation' ? 'display: none;' : ''}">
