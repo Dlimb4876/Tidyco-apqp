@@ -603,12 +603,32 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
       }
     }
 
-    // Migrate holidays
+    // Migrate holidays (batch insert after deleting old ones)
     if (jsonData.holidays && Array.isArray(jsonData.holidays)) {
-      for (const holiday of jsonData.holidays) {
-        const success = await meSaveHolidayRelational(userId, holiday);
-        if (success) results.holidays++;
-        else results.errors.push(`Failed to migrate holiday for ${holiday.personId}`);
+      const holidayData = jsonData.holidays
+        .filter(h => h.personId)
+        .map(h => ({
+          id: h.id,
+          user_id: userId,
+          person_id: h.personId,
+          date: h.date,
+          type: h.type
+        }));
+
+      if (holidayData.length > 0) {
+        // Delete old holidays first
+        await supa.from('me_holidays').delete().eq('user_id', userId);
+
+        // Then insert new ones
+        const { error: insertErr } = await supa
+          .from('me_holidays')
+          .insert(holidayData);
+
+        if (!insertErr) {
+          results.holidays = holidayData.length;
+        } else {
+          results.errors.push(`Failed to migrate holidays: ${insertErr.message}`);
+        }
       }
     }
 
