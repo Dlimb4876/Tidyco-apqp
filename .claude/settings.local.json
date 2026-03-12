@@ -49,7 +49,14 @@
       "Bash(node -c portals/capacity/js/prod-capacity-data.js)",
       "Bash(grep -n \"FAMILIES\" portals/production/js/*.js)",
       "Bash(grep -r \"tidyco_settings\\\\|appSettings\\\\|userSettings\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp --include=*.js --include=*.md)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/core/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/core/css/*.css /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/index.html /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/utils/js/*.js)",
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/hub/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/hub/css/*.css)",
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/product-development/npi/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/product-development/npi/css/*.css)",
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/product-development/js/*.js)",
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/product-development/product-management/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/product-development/product-management/css/*.css)",
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/production/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/production/css/*.css)",
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/bugs/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/bugs/css/*.css /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/productmgmt/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/productmgmt/css/*.css)"
     ]
   }
 }

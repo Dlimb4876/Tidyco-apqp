@@ -56,18 +56,8 @@ async function launchApp() {
   // Load Bug Reports (bug_reports table, shared across all users)
   await bugDataInit();
 
-  // Restore position from URL hash
-  const h = parseHash();
-  if (h.p && db.programmes.find(p => p.id === h.p)) {
-    progId = h.p;
-    if (h.t) apqpTab = h.t;
-    if (h.ct) capacityTab = h.ct;
-    if (h.pt) productionTab = h.pt;
-    if (h.pdt) productDevelopmentTab = h.pdt;
-    navigate(h.s || 'project', { pushHash: false });
-  } else {
-    navigate('hub', { pushHash: false });
-  }
+  // Always start at hub after login
+  navigate('hub', { pushHash: false });
 }
 
 // ── Kick off on page load if session exists ───────────────────

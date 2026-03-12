@@ -407,8 +407,7 @@ window.meDataInit = async function() {
         const { data, error } = await supa
           .from('me_capacity')
           .select('*')
-          .eq('user_id', currentUser.id)
-          .single();
+          .limit(1);
 
         // PGRST116 = no rows found (expected for new users)
         if (error && error.code !== 'PGRST116') {
