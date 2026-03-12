@@ -414,18 +414,19 @@ window.meSaveHolidayRelational = async function(userId, holiday) {
       return true;
     }
 
+    // Since we delete all holidays first, just INSERT new ones (no upsert needed)
     const { error } = await supa
       .from('me_holidays')
-      .upsert({
+      .insert({
         id: holiday.id,
         user_id: userId,
         person_id: holiday.personId,
         date: holiday.date,
         type: holiday.type
-      }, { onConflict: 'user_id,person_id,date' });
+      });
 
     if (error) {
-      console.warn('meSaveHolidayRelational upsert error:', error.message);
+      console.warn('meSaveHolidayRelational insert error:', error.message);
       return false;
     }
 
