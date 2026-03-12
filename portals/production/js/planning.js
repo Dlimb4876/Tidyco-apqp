@@ -176,40 +176,16 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     </div>
   `;
 
-  // Generate day headers for the entire month grid
-  let weekHeadersHtml = '';
-  let dayHeadersHtml = '';
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  // Week row with day names
-  for (let i = 0; i < 7; i++) {
-    weekHeadersHtml += `<div class="gantt-week-header gantt-day-name">
-      <div class="gantt-week-label">${dayNames[i]}</div>
-    </div>`;
-  }
-
-  // Day headers
-  let dayCounter = 0;
-  for (let i = 0; i < totalGridDays; i++) {
-    if (i < firstDayOfWeek) {
-      // Empty cell before month starts
-      dayHeadersHtml += `<div class="gantt-week-col gantt-empty-cell"></div>`;
-    } else {
-      const dayNum = dayCounter + 1;
-      const isToday = isCurrentMonth && dayNum === todayDate;
-      const cellClass = isToday ? 'today-col gantt-today-header' : '';
-      dayHeadersHtml += `<div class="gantt-week-col ${cellClass}" data-date="${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}">
-        <div class="gantt-date ${isToday ? 'gantt-today-date' : ''}">${dayNum}</div>
-      </div>`;
-      dayCounter++;
-    }
-  }
+  // Simple date range header
+  const monthEndStr = `${String(viewMonth + 1).padStart(2, '0')}/${String(monthEnd.getDate()).padStart(2, '0')}/${viewYear}`;
+  const monthStartStr = `${String(viewMonth + 1).padStart(2, '0')}/01/${viewYear}`;
+  const dateRangeHtml = `<div style="padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--mid); white-space: nowrap;">${monthStartStr} — ${monthEndStr}</div>`;
 
   // Generate batch rows for the month view
   let batchRowsHtml = '';
   batches.forEach((batch, idx) => {
     const product = prodDataGetProductById(batch.product_id);
-    const productName = product ? product.part_number : `Batch ${idx + 1}`;
+    const productName = product ? product.name : `Batch ${idx + 1}`;
     const startD = batch.start_date ? new Date(batch.start_date) : null;
     const endD = batch.due_date ? new Date(batch.due_date) : null;
 
@@ -232,63 +208,29 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     const outDate = formatDisplayDate(batch.due_date) || '—';
     const batchMetaText = `${batch.quantity || 0} units • IN: ${inDate} OUT: ${outDate}`;
 
-    // Build grid cells for the entire month
-    let gridCellsHtml = '';
-    let barStartDay = null;
-    let barSpanDays = 0;
+    // Calculate batch position as percentage of the month
+    let barLeftPercent = 0;
+    let barWidthPercent = 100;
 
-    // Calculate batch start and end within the month
-    let batchStartDay = null;
-    let batchEndDay = null;
-    if (startD && startD.getMonth() === viewMonth && startD.getFullYear() === viewYear) {
-      batchStartDay = startD.getDate();
-    } else if (startD && startD < monthStart) {
-      batchStartDay = 1; // Batch starts before month
-    }
-    if (endD && endD.getMonth() === viewMonth && endD.getFullYear() === viewYear) {
-      batchEndDay = endD.getDate();
-    } else if (endD && endD > monthEnd) {
-      batchEndDay = daysInMonth; // Batch ends after month
-    }
+    if (startD && endD) {
+      const monthLength = daysInMonth;
+      let daysFromStart = 1;
+      let daySpan = 1;
 
-    let dayCounter = 0;
-    for (let i = 0; i < totalGridDays; i++) {
-      if (i < firstDayOfWeek) {
-        // Empty cell before month starts
-        gridCellsHtml += `<div class="gantt-day-cell"></div>`;
-      } else {
-        const dayNum = dayCounter + 1;
-
-        // Check if batch should be rendered on this day
-        let shouldRenderBar = false;
-        let isBarStart = false;
-
-        if (batchStartDay && batchEndDay) {
-          if (dayNum >= batchStartDay && dayNum <= batchEndDay) {
-            shouldRenderBar = true;
-            isBarStart = (dayNum === batchStartDay);
-          }
-        } else if (batchStartDay && dayNum >= batchStartDay) {
-          shouldRenderBar = true;
-          isBarStart = (dayNum === batchStartDay);
-        }
-
-        if (isBarStart) {
-          // Calculate span length
-          const endDay = batchEndDay || daysInMonth;
-          const span = endDay - batchStartDay + 1;
-          gridCellsHtml += `<div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
-               style="grid-column: span ${Math.max(1, span)}; background-color: ${barColor};"
-               title="${esc(productName)} - ${inDate} to ${outDate}">
-              <div class="gantt-bar-label">${displayLabel}</div>
-            </div>`;
-        } else if (!shouldRenderBar) {
-          gridCellsHtml += `<div class="gantt-day-cell"></div>`;
-        }
-        // else: continuation of bar (skip, grid-column span already covers it)
-
-        dayCounter++;
+      if (startD.getMonth() === viewMonth && startD.getFullYear() === viewYear) {
+        daysFromStart = startD.getDate();
+      } else if (startD < monthStart) {
+        daysFromStart = 1;
       }
+
+      if (endD.getMonth() === viewMonth && endD.getFullYear() === viewYear) {
+        daySpan = endD.getDate() - daysFromStart + 1;
+      } else if (endD > monthEnd) {
+        daySpan = daysInMonth - daysFromStart + 1;
+      }
+
+      barLeftPercent = ((daysFromStart - 1) / monthLength) * 100;
+      barWidthPercent = (daySpan / monthLength) * 100;
     }
 
     batchRowsHtml += `
@@ -297,8 +239,12 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
           <div class="gantt-product-code">${esc(productName)}</div>
           <div class="gantt-batch-meta">${batchMetaText}</div>
         </div>
-        <div class="gantt-batch-chart" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; position: relative;">
-          ${gridCellsHtml}
+        <div class="gantt-batch-chart" style="position: relative; height: 40px;">
+          <div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
+               style="position: absolute; left: ${barLeftPercent}%; width: ${barWidthPercent}%; height: 28px; top: 6px; background-color: ${barColor};"
+               title="${esc(productName)} - ${inDate} to ${outDate}">
+              <div class="gantt-bar-label">${displayLabel}</div>
+            </div>
         </div>
         <div class="gantt-batch-status">
           ${statusBadge}
@@ -313,12 +259,7 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
       <div class="gantt-header">
         <div class="gantt-header-label">Product</div>
         <div class="gantt-header-chart">
-          <div class="gantt-week-row" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;">
-            ${weekHeadersHtml}
-          </div>
-          <div class="gantt-week-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;">
-            ${dayHeadersHtml}
-          </div>
+          ${dateRangeHtml}
         </div>
         <div class="gantt-header-status">Status</div>
       </div>

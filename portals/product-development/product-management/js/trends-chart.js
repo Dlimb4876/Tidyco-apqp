@@ -91,7 +91,7 @@ function calculatePortfolioKPIs(year) {
       if (reduction > biggestReduction) {
         biggestReduction = reduction;
         mostImproved = {
-          code: hist[0]._pcode,
+          name: hist[0]._pname,
           reduction,
           percent: Math.round((reduction / first) * 100 * 10) / 10
         };
@@ -132,7 +132,7 @@ function renderPortfolioKpiGridHtml(kpis, year) {
     ? `<span style="color:${kpis.avgChange < 0 ? '#2e7d32' : kpis.avgChange > 0 ? '#c62828' : '#666'}">${kpis.avgChange > 0 ? '+' : ''}${kpis.avgChange}%</span>`
     : '<span style="color:#888">—</span>';
 
-  const mostImprovedVal = kpis.mostImproved ? esc(kpis.mostImproved.code) : '—';
+  const mostImprovedVal = kpis.mostImproved ? esc(kpis.mostImproved.name) : '—';
   const mostImprovedUnit = kpis.mostImproved
     ? `−${kpis.mostImproved.reduction.toFixed(1)}h (${kpis.mostImproved.percent}%)`
     : 'no data in period';

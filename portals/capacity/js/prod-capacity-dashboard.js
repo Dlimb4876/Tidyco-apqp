@@ -145,9 +145,9 @@ function _prodCapDashSummaryTable(monthKeys, demandMx, supplyMx) {
     return `
       <tr style="${rowStyle}">
         <td class="pc-tbl-month">${prodCapMonthLabel(key)}</td>
-        <td class="pc-tbl-num">${demand > 0 ? Math.round(demand).toLocaleString() + 'h' : '—'}</td>
-        <td class="pc-tbl-num">${supply > 0 ? Math.round(supply).toLocaleString() + 'h' : '—'}</td>
-        <td class="pc-tbl-num">
+        <td class="pc-tbl-center">${demand > 0 ? Math.round(demand).toLocaleString() + 'h' : '—'}</td>
+        <td class="pc-tbl-center">${supply > 0 ? Math.round(supply).toLocaleString() + 'h' : '—'}</td>
+        <td class="pc-tbl-center">
           ${headrm >= 0 ? `<span style="color:var(--green)">+${Math.round(headrm).toLocaleString()}h</span>`
                         : `<span style="color:var(--red)">${Math.round(headrm).toLocaleString()}h</span>`}
         </td>
@@ -166,9 +166,9 @@ function _prodCapDashSummaryTable(monthKeys, demandMx, supplyMx) {
       <thead>
         <tr>
           <th>Month</th>
-          <th>Demand (h)</th>
-          <th>Capacity (h)</th>
-          <th>Headroom</th>
+          <th class="pc-tbl-center">Demand (h)</th>
+          <th class="pc-tbl-center">Capacity (h)</th>
+          <th class="pc-tbl-center">Headroom</th>
           <th>Utilisation</th>
         </tr>
       </thead>

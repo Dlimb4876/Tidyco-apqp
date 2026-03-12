@@ -141,6 +141,14 @@
   text-align: center;
 }
 
+/* Centered columns with fixed width */
+.data-table th.col-center,
+.data-table td.col-center {
+  text-align: center;
+  width: 90px;
+  padding: 12px 8px;
+}
+
 .btn-icon {
   background: none;
   border: none;

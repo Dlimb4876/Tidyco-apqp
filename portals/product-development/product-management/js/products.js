@@ -22,7 +22,7 @@ function renderProductsPortalHTML() {
             <button class="btn btn-primary" id="btnAddProduct">+ Add Product</button>
           </div>
         </div>
-        <button class="btn btn-ghost" onclick="navigate('product-development')">← Back to Product Development</button>
+        <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root');render()">← Back to Product Development</button>
       </div>
 
       <div class="products-tabs">
@@ -153,11 +153,11 @@ function renderProductsList() {
           <th>Family</th>
           <th>Work Location</th>
           <th>Customer</th>
-          <th>Overhaul (hrs)</th>
-          <th>Turnaround (days)</th>
+          <th class="col-center">Overhaul (hrs)</th>
+          <th class="col-center">Turnaround (days)</th>
           <th>Notes</th>
-          <th>Status</th>
-          <th>Actions</th>
+          <th class="col-center">Status</th>
+          <th class="col-center">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -170,11 +170,11 @@ function renderProductsList() {
             <td>${esc(familyLabel)}</td>
             <td>${esc(p.work_location || '—')}</td>
             <td>${esc(p.customer)}</td>
-            <td class="numeric">${p.current_overhaul_hours.toFixed(1)}</td>
-            <td class="numeric">${p.turnaround_days ? p.turnaround_days.toFixed(0) : '—'}</td>
+            <td class="col-center">${p.current_overhaul_hours.toFixed(1)}</td>
+            <td class="col-center">${p.turnaround_days ? p.turnaround_days.toFixed(0) : '—'}</td>
             <td class="notes-cell" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '...' : '') : '—'}</td>
-            <td><span class="badge badge-${p.status}">${p.status}</span></td>
-            <td class="actions">
+            <td class="col-center"><span class="badge badge-${p.status}">${p.status}</span></td>
+            <td class="col-center">
               <button class="btn-icon" title="Edit" data-action="edit" data-id="${p.id}">✏️</button>
               <button class="btn-icon" title="Delete" data-action="delete" data-id="${p.id}">🗑️</button>
             </td>

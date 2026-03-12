@@ -114,6 +114,10 @@ function renderProdCapDetail() {
     return b + (Number(prod?.current_overhaul_hours) || 0) * (batch.quantity || 0);
   }, 0);
 
+  // Average hours per unit and per batch
+  const avgHourPerUnit = totalUnits > 0 ? totalH / totalUnits : 0;
+  const avgHourPerBatch = filtered.length > 0 ? totalH / filtered.length : 0;
+
   return `
     <div class="pc-detail">
 
@@ -142,10 +146,25 @@ function renderProdCapDetail() {
             ${workAreas.map(w => `<option value="${esc(w)}" ${prodCapDetailFilter.workArea===w?'selected':''}>${esc(w)}</option>`).join('')}
           </select>
         </div>
-        <div style="display:flex;align-items:flex-end;gap:8px">
-          <div style="font-size:12px;color:var(--mid)">
-            ${filtered.length} batch${filtered.length!==1?'es':''} · ${totalUnits.toLocaleString()} units · ${Math.round(totalH).toLocaleString()}h total
-          </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="pc-kpi-row">
+        <div class="pc-kpi" style="border-left:4px solid var(--blue)">
+          <div class="pc-kpi-val">${filtered.length}</div>
+          <div class="pc-kpi-label">Batches</div>
+        </div>
+        <div class="pc-kpi" style="border-left:4px solid var(--green)">
+          <div class="pc-kpi-val">${totalUnits.toLocaleString()}</div>
+          <div class="pc-kpi-label">Units</div>
+        </div>
+        <div class="pc-kpi" style="border-left:4px solid var(--amber)">
+          <div class="pc-kpi-val">${Math.round(totalH).toLocaleString()}h</div>
+          <div class="pc-kpi-label">Total Hours</div>
+        </div>
+        <div class="pc-kpi" style="border-left:4px solid var(--navy)">
+          <div class="pc-kpi-val">${Math.round(avgHourPerUnit)}</div>
+          <div class="pc-kpi-label">Avg Hours/Unit</div>
         </div>
       </div>
 
