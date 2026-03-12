@@ -202,22 +202,27 @@ window.bugUpdateInlineStatus = function(id, idx) {
   if (!select) return;
   const newStatus = select.value;
   const report = bugState.reports.find(r => r.id === id);
-  if (report) report.status = newStatus;
+  if (report) {
+    report.status = newStatus;
+    render();
+  }
 };
 
 window.bugSaveInlineResponse = async function(id, idx) {
   const textarea = document.getElementById(`bugResponseText_${idx}`);
-  const select = document.getElementById(`bugStatusSelect_${idx}`);
   if (!textarea) return;
   const response = textarea.value.trim();
-  const status = select ? select.value : 'closed';
   if (!response) {
     alert('Please enter a response.');
     return;
   }
+  // Get the current status from bugState (which was updated by bugUpdateInlineStatus)
+  const report = bugState.reports.find(r => r.id === id);
+  const status = report ? report.status : 'closed';
   const ok = await bugDataRespond(id, response, status);
   if (ok) {
     bugEditingId = null;
+    render();
   }
 };
 
@@ -254,6 +259,6 @@ window.bugOpenRespondModal = function(id, idx) {
 window.bugSubmitRespond = async function() {
   const response = document.getElementById('bugRespondText').value.trim();
   if (!response) { alert('Please enter a response before closing.'); return; }
-  const ok = await bugDataRespond(_bugRespondId, response);
+  const ok = await bugDataRespond(_bugRespondId, response, 'closed');
   if (ok) { _bugRespondId = null; closeModal('modalRespondBug'); }
 };
