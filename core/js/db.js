@@ -38,7 +38,6 @@ async function saveRemote(attempt) {
         .from('programmes')
         .update({ name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p })
         .eq('prog_id', p.id)
-        .eq('user_id', currentUser.id)
         .select();
       if (updErr) { console.error('Update err', p.name, updErr); errors.push(p.name); continue; }
       if (!updated || updated.length === 0) {
