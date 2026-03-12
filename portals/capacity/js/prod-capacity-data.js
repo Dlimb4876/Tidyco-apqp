@@ -31,29 +31,26 @@ async function prodCapDataInit() {
   prodCapLoadMonthOffset();
 }
 
-// ── Load utilization factor from Supabase or localStorage ────────
+// ── Load utilization factor from Supabase (global) or localStorage ────────
 async function prodCapLoadUtilization() {
-  if (!currentUser) return;
-
   try {
-    // Try to load from Supabase user_settings
-    const { data, error } = await supa.from('user_settings')
+    // Try to load from global_settings table (no user_id, system-wide setting)
+    const { data, error } = await supa.from('global_settings')
       .select('setting_value')
-      .eq('user_id', currentUser.id)
       .eq('setting_key', 'prod_cap_utilization')
-      .single();
+      .maybeSingle();
 
     if (!error && data && data.setting_value) {
       const value = parseFloat(data.setting_value);
       if (!isNaN(value) && value >= 0 && value <= 1) {
         prodCapUtilizationFactor = value;
-        console.log('✓ Loaded utilization factor from Supabase:', Math.round(value * 100) + '%');
+        console.log('✓ Loaded utilization factor from global settings:', Math.round(value * 100) + '%');
         return;
       }
     }
   } catch (err) {
     // Table might not exist yet, fall through to localStorage
-    console.debug('Supabase user_settings not available, checking localStorage');
+    console.debug('Supabase global_settings not available, checking localStorage');
   }
 
   // Fall back to localStorage
@@ -67,41 +64,37 @@ async function prodCapLoadUtilization() {
   }
 }
 
-// ── Save utilization factor to Supabase and localStorage ────────
+// ── Save utilization factor to Supabase (global) and localStorage ────────
 async function prodCapSaveUtilization(percent) {
-  if (!currentUser) return;
-
   const value = Math.max(0, Math.min(1, parseInt(percent) / 100));
 
   // Always save to localStorage as fallback
   localStorage.setItem('prodCapUtilization', value.toString());
 
   try {
-    // Try to save to Supabase user_settings table
-    const { data: existing, error: getError } = await supa.from('user_settings')
+    // Try to save to global_settings table (system-wide, no user_id)
+    const { data: existing, error: getError } = await supa.from('global_settings')
       .select('id')
-      .eq('user_id', currentUser.id)
       .eq('setting_key', 'prod_cap_utilization')
-      .single();
+      .maybeSingle();
 
     if (!getError && existing) {
       // Update existing
-      await supa.from('user_settings')
+      await supa.from('global_settings')
         .update({ setting_value: value.toString(), updated_at: new Date().toISOString() })
         .eq('id', existing.id);
     } else {
       // Insert new
-      await supa.from('user_settings')
+      await supa.from('global_settings')
         .insert([{
-          user_id: currentUser.id,
           setting_key: 'prod_cap_utilization',
           setting_value: value.toString()
         }]);
     }
-    console.log('✓ Saved utilization factor:', Math.round(value * 100) + '%');
+    console.log('✓ Saved utilization factor to global settings:', Math.round(value * 100) + '%');
   } catch (err) {
     // Supabase unavailable, but localStorage is already saved
-    console.debug('Could not save to Supabase, localStorage fallback active');
+    console.debug('Could not save to global_settings, localStorage fallback active');
   }
 }
 

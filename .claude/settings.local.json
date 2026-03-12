@@ -47,7 +47,9 @@
       "Bash(grep -n display.*!important /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/**/*.css)",
       "Bash(grep -n \"prodCapUtilizationFactor\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js)",
       "Bash(node -c portals/capacity/js/prod-capacity-data.js)",
-      "Bash(grep -n \"FAMILIES\" portals/production/js/*.js)"
+      "Bash(grep -n \"FAMILIES\" portals/production/js/*.js)",
+      "Bash(grep -r \"tidyco_settings\\\\|appSettings\\\\|userSettings\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp --include=*.js --include=*.md)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

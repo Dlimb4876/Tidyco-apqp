@@ -33,9 +33,9 @@ body {
 .topbar {
   height: 52px;
   background: var(--ink);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
   padding: 0 20px;
   flex-shrink: 0;
   border-bottom: 2px solid var(--blue);
@@ -43,7 +43,7 @@ body {
   position: relative;
   z-index: 100;
 }
-.topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.topbar-left { display: flex; align-items: center; gap: 10px; min-width: 240px; }
 .brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; cursor: pointer; }
 .brand:hover .brand-name { color: #93c5fd; }
 .brand-hex {
@@ -77,14 +77,16 @@ body {
 }
 .prog-select-wrap select:focus { border-color: var(--blue); }
 
-.topbar-center { flex: 1; display: flex; justify-content: center; align-items: center; }
+.topbar-center { display: flex; justify-content: center; align-items: center; min-width: 200px; }
 .bug-report-btn {
   background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
   color: #c8d4e8; font-size: 13px; font-weight: 500; padding: 6px 16px;
   border-radius: 6px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
   transition: all .12s; white-space: nowrap;
+  position: relative; z-index: 10;
 }
 .bug-report-btn:hover { background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.25); }
+.bug-report-btn:active { transform: scale(0.98); }
 
 .topbar-actions { display: flex; gap: 5px; flex-shrink: 0; }
 .tbtn {
