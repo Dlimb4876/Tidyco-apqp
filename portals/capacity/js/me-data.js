@@ -514,8 +514,7 @@ window.meDataSave = async function(showAlert) {
     // Save to relational tables (if functions available)
     if (typeof meSaveTeamRelational === 'function' &&
         typeof meSaveTaskRelational === 'function' &&
-        typeof meSaveProductRelational === 'function' &&
-        typeof meSaveHolidayRelational === 'function') {
+        typeof meSaveProductRelational === 'function') {
       try {
         console.log('Saving to relational tables...');
 
