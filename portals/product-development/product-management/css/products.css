@@ -8,6 +8,14 @@
 
 .products-header {
   margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.products-header > div:first-child {
+  flex: 1;
 }
 
 .products-header h1 {
@@ -717,6 +725,8 @@
 
   .products-header {
     margin-bottom: 20px;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .products-header h1 {

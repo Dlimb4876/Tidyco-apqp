@@ -10,16 +10,19 @@ function renderProductsPortalHTML() {
   return `
     <div class="products-portal">
       <div class="products-header">
-        <h1>Product Management</h1>
-        <div class="products-controls">
-          <input
-            type="text"
-            id="productSearch"
-            class="search-input"
-            placeholder="Search by name, part number, or customer..."
-          >
-          <button class="btn btn-primary" id="btnAddProduct">+ Add Product</button>
+        <div>
+          <h1>Product Management</h1>
+          <div class="products-controls">
+            <input
+              type="text"
+              id="productSearch"
+              class="search-input"
+              placeholder="Search by name, part number, or customer..."
+            >
+            <button class="btn btn-primary" id="btnAddProduct">+ Add Product</button>
+          </div>
         </div>
+        <button class="btn btn-ghost" onclick="navigate('product-development')">← Back to Product Development</button>
       </div>
 
       <div class="products-tabs">
