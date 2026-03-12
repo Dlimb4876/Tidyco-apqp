@@ -207,13 +207,15 @@ window.bugUpdateInlineStatus = function(id, idx) {
 
 window.bugSaveInlineResponse = async function(id, idx) {
   const textarea = document.getElementById(`bugResponseText_${idx}`);
+  const select = document.getElementById(`bugStatusSelect_${idx}`);
   if (!textarea) return;
   const response = textarea.value.trim();
+  const status = select ? select.value : 'closed';
   if (!response) {
     alert('Please enter a response.');
     return;
   }
-  const ok = await bugDataRespond(id, response);
+  const ok = await bugDataRespond(id, response, status);
   if (ok) {
     bugEditingId = null;
   }
