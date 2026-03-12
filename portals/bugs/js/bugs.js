@@ -103,17 +103,34 @@ function bugRenderViewTab(reports) {
 function bugRowHTML(r, i) {
   const date = r.date_raised ? new Date(r.date_raised).toLocaleDateString('en-GB') : '—';
   const isOpen = r.status === 'open';
-  const statusBadge = isOpen
-    ? `<span class="bug-badge bug-badge-open">OPEN</span>`
-    : `<span class="bug-badge bug-badge-closed">CLOSED</span>`;
+  const isEditing = bugEditingId === r.id;
 
-  const responseCell = r.response
-    ? `<div class="bug-response-text">${esc(r.response)}</div><div class="bug-response-meta">— ${esc(r.responded_by || '')}${r.responded_at ? ', ' + new Date(r.responded_at).toLocaleDateString('en-GB') : ''}</div>`
-    : `<span class="bugs-muted">—</span>`;
+  const statusCell = isEditing
+    ? `<select id="bugStatusSelect_${i}" class="bug-inline-select" onchange="bugUpdateInlineStatus('${esc(r.id)}', ${i})">
+        <option value="open" ${r.status === 'open' ? 'selected' : ''}>OPEN</option>
+        <option value="closed" ${r.status === 'closed' ? 'selected' : ''}>CLOSED</option>
+      </select>`
+    : (isOpen
+      ? `<span class="bug-badge bug-badge-open">OPEN</span>`
+      : `<span class="bug-badge bug-badge-closed">CLOSED</span>`);
 
-  const actionBtn = isOpen
-    ? `<button class="btn btn-sm btn-ghost" onclick="bugOpenRespondModal('${esc(r.id)}', ${i})">Respond &amp; Close</button>`
-    : `<button class="btn btn-sm btn-ghost bugs-reopen-btn" onclick="bugDataReopen('${esc(r.id)}')">Re-open</button>`;
+  let responseCell;
+  if (isEditing) {
+    responseCell = `<textarea id="bugResponseText_${i}" class="bug-inline-textarea" placeholder="Enter response...">${esc(r.response || '')}</textarea>`;
+  } else {
+    responseCell = r.response
+      ? `<div class="bug-response-text">${esc(r.response)}</div><div class="bug-response-meta">— ${esc(r.responded_by || '')}${r.responded_at ? ', ' + new Date(r.responded_at).toLocaleDateString('en-GB') : ''}</div>`
+      : `<span class="bugs-muted">—</span>`;
+  }
+
+  const actionBtn = isEditing
+    ? `<div class="bug-inline-actions">
+        <button class="btn btn-xs btn-primary" onclick="bugSaveInlineResponse('${esc(r.id)}', ${i})">Save</button>
+        <button class="btn btn-xs btn-ghost" onclick="bugCancelInlineEdit()">Cancel</button>
+      </div>`
+    : (isOpen
+      ? `<button class="btn btn-sm btn-ghost" onclick="bugStartInlineEdit('${esc(r.id)}')">Edit</button>`
+      : `<button class="btn btn-sm btn-ghost bugs-reopen-btn" onclick="bugDataReopen('${esc(r.id)}')">Re-open</button>`);
 
   return `
     <tr class="${isOpen ? '' : 'bug-row-closed'}">
@@ -122,7 +139,7 @@ function bugRowHTML(r, i) {
       <td class="bugs-col-date bugs-muted">${date}</td>
       <td class="bugs-col-page">${r.page ? esc(r.page) : '<span class="bugs-muted">—</span>'}</td>
       <td class="bugs-col-desc">${esc(r.description)}</td>
-      <td class="bugs-col-status">${statusBadge}</td>
+      <td class="bugs-col-status">${statusCell}</td>
       <td class="bugs-col-response">${responseCell}</td>
       <td class="bugs-col-action">${actionBtn}</td>
     </tr>
@@ -165,6 +182,42 @@ window.bugSubmitInline = async function() {
     feedback.textContent = 'Failed to submit bug report. Please try again.';
     feedback.className = 'bugs-form-feedback bugs-form-feedback-error';
     feedback.style.display = 'block';
+  }
+};
+
+// ── Inline editing ────────────────────────────────────────────
+
+let bugEditingId = null;
+
+window.bugStartInlineEdit = function(id) {
+  bugEditingId = id;
+  render();
+};
+
+window.bugCancelInlineEdit = function() {
+  bugEditingId = null;
+  render();
+};
+
+window.bugUpdateInlineStatus = function(id, idx) {
+  const select = document.getElementById(`bugStatusSelect_${idx}`);
+  if (!select) return;
+  const newStatus = select.value;
+  const report = bugState.reports.find(r => r.id === id);
+  if (report) report.status = newStatus;
+};
+
+window.bugSaveInlineResponse = async function(id, idx) {
+  const textarea = document.getElementById(`bugResponseText_${idx}`);
+  if (!textarea) return;
+  const response = textarea.value.trim();
+  if (!response) {
+    alert('Please enter a response.');
+    return;
+  }
+  const ok = await bugDataRespond(id, response);
+  if (ok) {
+    bugEditingId = null;
   }
 };
 

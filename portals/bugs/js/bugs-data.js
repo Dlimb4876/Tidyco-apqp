@@ -5,6 +5,7 @@
 
 let bugState = { reports: [] };
 let bugTab = 'add';
+let bugEditingId = null;
 
 async function bugDataInit() {
   if (!currentUser) return;

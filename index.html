@@ -72,8 +72,8 @@
     </div>
     <div class="topbar-actions">
       <span class="sync-badge" id="syncBadge">● saved</span>
-      <button class="tbtn tbtn-ghost" onclick="exportJSON()">⬇ Export</button>
-      <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()">⬆ Import</button>
+      <button class="tbtn tbtn-ghost" onclick="exportJSON()" style="display:none">⬇ Export</button>
+      <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()" style="display:none">⬆ Import</button>
       <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
       <button class="tbtn tbtn-ghost" onclick="doLogout()" title="Sign out" style="margin-left:4px">⏻</button>
     </div>
