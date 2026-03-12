@@ -34,17 +34,32 @@ async function saveRemote(attempt) {
   const errors = [];
   try {
     for (const p of db.programmes) {
+      // Check if serialized data exceeds safe limit (~1MB)
+      const serialized = JSON.stringify(p);
+      if (serialized.length > 1000000) {
+        console.error('Programme too large to save:', p.name, 'size:', serialized.length);
+        errors.push(p.name + ' (too large)');
+        continue;
+      }
+
       const { data: updated, error: updErr } = await supa
         .from('programmes')
         .update({ name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p })
         .eq('prog_id', p.id)
         .select();
-      if (updErr) { console.error('Update err', p.name, updErr); errors.push(p.name); continue; }
+      if (updErr) {
+        console.error('Update err', p.name, updErr);
+        errors.push(p.name + ' (' + (updErr.message || 'unknown error') + ')');
+        continue;
+      }
       if (!updated || updated.length === 0) {
         const { error: insErr } = await supa
           .from('programmes')
           .insert({ prog_id: p.id, user_id: currentUser.id, name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p });
-        if (insErr) { console.error('Insert err', p.name, insErr); errors.push(p.name); }
+        if (insErr) {
+          console.error('Insert err', p.name, insErr);
+          errors.push(p.name + ' (' + (insErr.message || 'unknown error') + ')');
+        }
       }
     }
     if (errors.length === 0) {
@@ -53,7 +68,7 @@ async function saveRemote(attempt) {
       setSyncBadge('syncing', '● retrying…');
       setTimeout(() => saveRemote(true), 1500);
     } else {
-      setSyncBadge('error', '● save failed (' + errors.length + ')');
+      setSyncBadge('error', '● save failed: ' + errors.join(', '));
     }
   } catch (e) {
     console.error('saveRemote exception', e);
@@ -61,7 +76,7 @@ async function saveRemote(attempt) {
       setSyncBadge('syncing', '● retrying…');
       setTimeout(() => saveRemote(true), 1500);
     } else {
-      setSyncBadge('error', '● save failed');
+      setSyncBadge('error', '● save failed: ' + (e.message || 'unknown error'));
     }
   }
 }
@@ -89,6 +104,7 @@ function setSyncBadge(state, text) {
   if (!b) return;
   b.className   = 'sync-badge ' + state;
   b.textContent = text;
+  b.title       = text; // Tooltip for long error messages
 }
 
 // ── Migration ─────────────────────────────────────────────────
