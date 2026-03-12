@@ -616,8 +616,8 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
         }));
 
       if (holidayData.length > 0) {
-        // Delete old holidays first
-        await supa.from('me_holidays').delete().eq('user_id', userId);
+        // Delete ALL holidays first (shared-data model)
+        await supa.from('me_holidays').delete().not('person_id', 'is', null);
 
         // Then insert new ones
         const { error: insertErr } = await supa

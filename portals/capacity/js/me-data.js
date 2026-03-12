@@ -580,10 +580,19 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // 4. Save holidays: delete all for this user then re-insert current state
-        // Uses delete+insert (same as subtasks/PERT) — avoids dependency on a unique constraint
+        // 4. Save holidays: delete ALL rows then re-insert current state
+        // Shared-data model: all users share one dataset, so delete globally to avoid
+        // stale rows from other user_ids causing duplicate key violations on insert.
+        // Deduplicate by (person_id, date) in case load returned multi-user duplicates.
+        const _holSeen = new Set();
         const holidayData = (meDataState.holidays || [])
           .filter(h => h.personId)
+          .filter(h => {
+            const key = h.personId + '_' + h.date;
+            if (_holSeen.has(key)) return false;
+            _holSeen.add(key);
+            return true;
+          })
           .map(h => ({
             user_id: currentUser.id,
             person_id: h.personId,
@@ -594,7 +603,7 @@ window.meDataSave = async function(showAlert) {
         const { error: delHolErr } = await supa
           .from('me_holidays')
           .delete()
-          .eq('user_id', currentUser.id);
+          .not('person_id', 'is', null);
 
         if (delHolErr) {
           console.warn('Failed to clear holidays:', delHolErr.message);
