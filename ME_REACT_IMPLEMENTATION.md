@@ -111,25 +111,46 @@ Supabase upsert to me_teams, me_tasks, me_holidays, me_products
 
 ## Features Implemented
 
-### Fully Functional
+### Fully Functional (Complete CRUD Support)
 - ✅ **Dashboard** - KPI cards, upcoming deadlines
 - ✅ **Capacity Chart** - 6-month forecast (Chart.js)
-- ✅ **Team Tab** - View team members
-- ✅ **Tasks Tab** - View tasks
-- ✅ **Products Tab** - View products
-- ✅ **Holidays Tab** - View holidays
+- ✅ **Team Tab** - **Full CRUD**: Add members, inline edit (name/dates/hours), delete with confirmation
+- ✅ **Tasks Tab** - **Full CRUD**: Add tasks, inline edit (name/category/dates/hours), delete with confirmation
+- ✅ **Products Tab** - **Full CRUD**: Add products, inline edit (name/hours), delete with confirmation
+- ✅ **Holidays Tab** - **Full CRUD**: Add holidays for team members, delete with confirmation
 - ✅ **Heatmap Tab** - Placeholder with team grid (full version in vanilla)
 - ✅ **Product Taskload Tab** - Placeholder summary
-- ✅ **Data Persistence** - Reads/writes to same Supabase database
+- ✅ **Data Persistence** - Reads/writes to same Supabase database with 900ms debounce
 - ✅ **Version Toggle** - Switch between vanilla ↔ React instantly
 
-### Read-Only in React (Use Vanilla for Editing)
-- Team members (add/edit/delete)
-- Tasks (add/edit/delete)
-- Products (add/edit/delete)
-- Holidays (add/edit/delete)
+### CRUD Operations
 
-The React version intentionally displays read-only views to avoid duplicating complex CRUD logic. Users can switch to vanilla version to edit data, and React will immediately reflect the changes.
+**Team Management:**
+- Click "+ Add Member" to create new team member
+- Click "✎" (edit) to modify name, start date, hours/week, end date
+- Click "🗑" (delete) to remove with confirmation
+- Changes auto-save to Supabase
+
+**Task Management:**
+- Click "+ Add Task" to create new task
+- Click "✎" to inline edit: name, category, dates, hours
+- Click "🗑" to delete with confirmation
+- Full-featured task tracking with category support
+
+**Product Support:**
+- Click "+ Add Product" to register new product
+- Click "✎" to edit product name and support hours
+- Click "🗑" to remove from support plan
+- Track multi-product support requirements
+
+**Holiday Planning:**
+- Click "+ Add Holiday" to schedule team time-off
+- Select team member and date
+- Click "🗑" to remove holiday
+- Impacts capacity calculations automatically
+
+### Data Sync
+All changes automatically persist to Supabase with no manual save required. Changes in React immediately reflect in vanilla version and vice versa.
 
 ## Technical Implementation Details
 
@@ -245,21 +266,22 @@ Example:
 
 ## Known Limitations
 
-1. **Read-Only Data Entry** - CRUD operations (add/edit/delete) only available in vanilla version
-2. **Heatmap Placeholder** - Full utilisation calculations in vanilla version only
-3. **Estimation Subsystem** - Not implemented in React (use vanilla version)
-4. **Modal Interactions** - Vanilla version handles all modal dialogs
+1. **Heatmap Placeholder** - Simplified grid view; full utilisation calculations available in vanilla version
+2. **Estimation Subsystem** - Not implemented in React (use vanilla version for PERT 3-point estimation)
+3. **Advanced Modals** - Vanilla version handles some advanced modal dialogs (gate reviews, PFMEA editing)
 
-These intentional limitations ensure data integrity while the React implementation is experimental.
+These limitations are minimal—the core capacity planning workflow (team, tasks, products, holidays) is fully functional in React.
 
 ## Future Enhancements
 
-1. **Full CRUD Support** - Implement add/edit/delete for team, tasks, holidays
-2. **Interactive Heatmap** - Full week-by-week utilisation calculations
-3. **Estimation Subsystem** - React version of PERT estimation
+1. **Interactive Heatmap** - Full week-by-week utilisation calculations with color-coded cells
+2. **Estimation Subsystem** - React version of PERT 3-point estimation subsystem
+3. **Dashboard Charts** - Render 6-month forecast and mini-charts natively in React (vs. Chart.js bridge)
 4. **TypeScript** - Convert to TypeScript when/if build pipeline added
-5. **State Management** - Consider Zustand or Redux for complex state
-6. **Code Splitting** - Lazy-load React components on-demand
+5. **State Management** - Consider Zustand or Redux for more complex state patterns
+6. **Code Splitting** - Lazy-load React components on-demand when needed
+7. **Offline Support** - Cache data locally for offline capacity planning
+8. **Export/Import** - Add CSV export for team/task/product data
 
 ## Troubleshooting
 
@@ -277,6 +299,29 @@ These intentional limitations ensure data integrity while the React implementati
 - Ensure Canvas element has explicit height (not just CSS)
 - Verify Chart.js loaded from CDN (`window.Chart` exists)
 - Check for chart instance cleanup on unmount
+
+## Inline Editing Experience
+
+The React version uses a powerful inline editing pattern:
+
+1. **View Mode** - Click row to see data
+2. **Click "✎" Button** - Activates edit mode for that row
+   - Input fields appear inline (highlighted with light blue background)
+   - Dates, numbers, text fields are editable
+   - Dropdown for categories/types
+3. **Edit in Place** - Changes sync immediately as you type
+4. **Click "Done"** - Saves changes and exits edit mode
+5. **Automatic Save** - Debounced 900ms save to Supabase
+
+Example: Team member editing
+```
+[View] John Doe | 2024-01-15 | 37.5 | ✓ Active | [✎ Edit] [🗑 Delete]
+     ↓ click ✎
+[Edit] John Doe | 2024-01-15 | 37.5 | [Done] [🗑 Delete]
+       (input fields now editable inline)
+```
+
+This pattern is consistent across all tabs, providing a fast, intuitive UI for data management.
 
 ## File Manifest
 
