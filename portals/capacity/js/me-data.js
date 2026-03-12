@@ -583,7 +583,7 @@ window.meDataSave = async function(showAlert) {
 
         // 4. Save holidays (delete all first, then insert current ones to handle deletions)
         try {
-          const { error: deleteErr } = await supa.from('me_holidays').delete().neq('id', 'null');
+          const { error: deleteErr } = await supa.from('me_holidays').delete().eq('user_id', currentUser.id);
           if (deleteErr) {
             console.warn('Failed to clear old holidays:', deleteErr.message);
             relationalSuccess = false;

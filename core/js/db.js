@@ -27,27 +27,44 @@ function save() {
   setSyncBadge('syncing', '● saving…');
 }
 
-async function saveRemote() {
+async function saveRemote(attempt) {
   if (!currentUser) return;
-  const email = currentUser.email;
-  const now   = new Date().toISOString();
+  const email  = currentUser.email;
+  const now    = new Date().toISOString();
+  const errors = [];
   try {
     for (const p of db.programmes) {
       const { data: updated, error: updErr } = await supa
         .from('programmes')
         .update({ name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p })
         .eq('prog_id', p.id)
+        .eq('user_id', currentUser.id)
         .select();
-      if (updErr) { console.error('Update err', updErr); setSyncBadge('error', '● save failed'); return; }
+      if (updErr) { console.error('Update err', p.name, updErr); errors.push(p.name); continue; }
       if (!updated || updated.length === 0) {
         const { error: insErr } = await supa
           .from('programmes')
-          .insert({ prog_id: p.id, name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p });
-        if (insErr) { console.error('Insert err', insErr); setSyncBadge('error', '● save failed — check console'); return; }
+          .insert({ prog_id: p.id, user_id: currentUser.id, name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p });
+        if (insErr) { console.error('Insert err', p.name, insErr); errors.push(p.name); }
       }
     }
-    setSyncBadge('saved', '● saved  ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' · ' + email.split('@')[0]);
-  } catch (e) { console.error('saveRemote exception', e); setSyncBadge('error', '● save failed'); }
+    if (errors.length === 0) {
+      setSyncBadge('saved', '● saved  ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' · ' + email.split('@')[0]);
+    } else if (!attempt) {
+      setSyncBadge('syncing', '● retrying…');
+      setTimeout(() => saveRemote(true), 1500);
+    } else {
+      setSyncBadge('error', '● save failed (' + errors.length + ')');
+    }
+  } catch (e) {
+    console.error('saveRemote exception', e);
+    if (!attempt) {
+      setSyncBadge('syncing', '● retrying…');
+      setTimeout(() => saveRemote(true), 1500);
+    } else {
+      setSyncBadge('error', '● save failed');
+    }
+  }
 }
 
 async function loadRemote() {
