@@ -33,7 +33,7 @@ function renderPlanByProduct() {
             <div class="product-code">${esc(product.code || 'N/A')}</div>
           </div>
           <div class="product-meta">
-            ${product.family ? `<span>${esc(product.family)}</span>` : ''}
+            ${product.family ? `<span>${esc(prodState.families.find(f => f.id === product.family)?.label || product.family)}</span>` : ''}
             ${product.lead_time_days ? `<span>${product.lead_time_days}d lead time</span>` : ''}
           </div>
         </div>

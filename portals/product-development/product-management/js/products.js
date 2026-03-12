@@ -158,11 +158,13 @@ function renderProductsList() {
         </tr>
       </thead>
       <tbody>
-        ${filtered.map(p => `
+        ${filtered.map(p => {
+          const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || p.family) : '—';
+          return `
           <tr>
             <td><strong>${esc(p.code)}</strong></td>
             <td>${esc(p.name)}</td>
-            <td>${esc(p.family || '—')}</td>
+            <td>${esc(familyLabel)}</td>
             <td>${esc(p.work_location || '—')}</td>
             <td>${esc(p.customer)}</td>
             <td class="numeric">${p.current_overhaul_hours.toFixed(1)}</td>
@@ -174,7 +176,7 @@ function renderProductsList() {
               <button class="btn-icon" title="Delete" data-action="delete" data-id="${p.id}">🗑️</button>
             </td>
           </tr>
-        `).join('')}
+        `;}).join('')}
       </tbody>
     </table>
   `;
@@ -195,6 +197,10 @@ function renderProductsList() {
         if (confirm(`Delete product "${product.name}"? This cannot be undone.`)) {
           await productsDataDeleteProduct(productId);
           renderProductsList();
+          // Sync changes to production portal
+          if (typeof prodDataReloadProducts === 'function') {
+            await prodDataReloadProducts();
+          }
         }
       }
     });
@@ -304,6 +310,10 @@ function setupProductsEventListeners() {
       }
       document.getElementById('productModal').classList.remove('active');
       renderProductsList();
+      // Sync changes to production portal
+      if (typeof prodDataReloadProducts === 'function') {
+        await prodDataReloadProducts();
+      }
     } catch (err) {
       alert('Error saving product: ' + err.message);
     }

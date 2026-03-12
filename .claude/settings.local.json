@@ -46,7 +46,8 @@
       "Bash(git add portals/capacity/js/me-data*.js)",
       "Bash(grep -n display.*!important /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/**/*.css)",
       "Bash(grep -n \"prodCapUtilizationFactor\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js)",
-      "Bash(node -c portals/capacity/js/prod-capacity-data.js)"
+      "Bash(node -c portals/capacity/js/prod-capacity-data.js)",
+      "Bash(grep -n \"FAMILIES\" portals/production/js/*.js)"
     ]
   }
 }

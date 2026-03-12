@@ -57,6 +57,20 @@ async function prodDataInit() {
   }
 }
 
+// Reload products (called when products are added/updated elsewhere)
+async function prodDataReloadProducts() {
+  try {
+    const { data, error } = await supa.from('products')
+      .select('*')
+      .order('name', { ascending: true });
+    if (error) throw error;
+    prodState.products = data || [];
+    console.log('✓ Production portal products reloaded');
+  } catch (err) {
+    console.error('Error reloading products:', err);
+  }
+}
+
 // Debounced save function
 function prodDebouncedSaveNow() {
   if (prodDebouncedSave) clearTimeout(prodDebouncedSave);

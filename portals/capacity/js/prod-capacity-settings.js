@@ -219,6 +219,11 @@ async function prodCapSettingsUpdate(workArea, year, month, value) {
       hoursEl.remove();
     }
   }
+  // Debounce full re-render to update totals row
+  clearTimeout(prodCapSettingsSaveTimer);
+  prodCapSettingsSaveTimer = setTimeout(() => {
+    render();
+  }, 300);
 }
 
 // ── Keyboard navigation between cells ────────────────────────
