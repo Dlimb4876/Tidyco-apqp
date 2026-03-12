@@ -148,8 +148,8 @@ function renderProductsList() {
     <table class="data-table">
       <thead>
         <tr>
-          <th>Part Number</th>
           <th>Product Name</th>
+          <th>Part Number</th>
           <th>Family</th>
           <th>Work Location</th>
           <th>Customer</th>
@@ -165,8 +165,8 @@ function renderProductsList() {
           const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || p.family) : '—';
           return `
           <tr>
-            <td><strong>${esc(p.part_number)}</strong></td>
             <td>${esc(p.name)}</td>
+            <td><strong>${esc(p.part_number)}</strong></td>
             <td>${esc(familyLabel)}</td>
             <td>${esc(p.work_location || '—')}</td>
             <td>${esc(p.customer)}</td>

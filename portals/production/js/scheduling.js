@@ -143,6 +143,12 @@ function renderScheduling() {
         </div>
       </div>
 
+      <!-- Legend -->
+      <div style="background:var(--bg-secondary);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted);display:flex;gap:24px;flex-wrap:wrap">
+        <div><strong>⧉</strong> Duplicate batch — copies all fields (product, location, qty, dates, notes) to create a new batch</div>
+        <div><strong>✕</strong> Delete batch</div>
+      </div>
+
       <!-- Batch Table -->
       <table class="tbl prod-tbl" style="table-layout:auto;width:100%">
         <colgroup>
