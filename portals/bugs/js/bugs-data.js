@@ -28,36 +28,41 @@ function bugDataSubscribe() {
   if (!currentUser) return;
   if (bugSubscription) return;
 
-  bugSubscription = supa
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'bug_reports'
-    }, (payload) => {
-      if (payload.eventType === 'INSERT') {
-        const newReport = payload.new;
-        if (!bugState.reports.some(r => r.id === newReport.id)) {
-          bugState.reports.unshift(newReport);
+  try {
+    bugSubscription = supa
+      .channel('bug_reports_channel')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'bug_reports'
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const newReport = payload.new;
+          if (!bugState.reports.some(r => r.id === newReport.id)) {
+            bugState.reports.unshift(newReport);
+            render();
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          const updated = payload.new;
+          const idx = bugState.reports.findIndex(r => r.id === updated.id);
+          if (idx >= 0) {
+            bugState.reports[idx] = updated;
+            render();
+          }
+        } else if (payload.eventType === 'DELETE') {
+          bugState.reports = bugState.reports.filter(r => r.id !== payload.old.id);
           render();
         }
-      } else if (payload.eventType === 'UPDATE') {
-        const updated = payload.new;
-        const idx = bugState.reports.findIndex(r => r.id === updated.id);
-        if (idx >= 0) {
-          bugState.reports[idx] = updated;
-          render();
-        }
-      } else if (payload.eventType === 'DELETE') {
-        bugState.reports = bugState.reports.filter(r => r.id !== payload.old.id);
-        render();
-      }
-    })
-    .subscribe();
+      })
+      .subscribe();
+  } catch (err) {
+    console.debug('Could not set up real-time subscription for bug reports:', err);
+  }
 }
 
 function bugDataUnsubscribe() {
   if (bugSubscription) {
-    bugSubscription.unsubscribe();
+    supa.removeChannel(bugSubscription);
     bugSubscription = null;
   }
 }

@@ -73,6 +73,7 @@ function prodCapSubscribeUtilization() {
 
   try {
     prodCapUtilizationSubscription = supa
+      .channel('prod_cap_util_channel')
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
@@ -94,7 +95,7 @@ function prodCapSubscribeUtilization() {
 
 function prodCapUnsubscribeUtilization() {
   if (prodCapUtilizationSubscription) {
-    prodCapUtilizationSubscription.unsubscribe();
+    supa.removeChannel(prodCapUtilizationSubscription);
     prodCapUtilizationSubscription = null;
   }
 }
