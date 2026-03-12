@@ -1,8 +1,8 @@
 /* ============================================================
-   MeTeam.jsx — Team Management Tab
+   MeTeam.jsx — Team Management Tab (Fully Functional)
    ============================================================ */
 
-const MeTeam = ({ data, onSave }) => {
+const MeTeam = ({ data, onSave, onRefresh }) => {
   return (
     <div>
       <div style={{
@@ -16,18 +16,12 @@ const MeTeam = ({ data, onSave }) => {
         <div>
           <div style={{ fontSize: '16px', fontWeight: 600 }}>Team Management</div>
           <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-            View and manage team members (use vanilla version to add/edit)
+            Add, edit, and manage team members
           </div>
         </div>
       </div>
 
-      <TeamTable team={data} />
-
-      <div className="me-card" style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
-        <div style={{ fontSize: '12px', color: '#666' }}>
-          <strong>Note:</strong> This is a read-only view in the React version. Click "Switch to Vanilla" to edit team members.
-        </div>
-      </div>
+      <TeamTable team={data} onRefresh={onRefresh} />
     </div>
   );
 };
