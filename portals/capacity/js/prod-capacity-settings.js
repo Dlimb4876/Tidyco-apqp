@@ -283,7 +283,8 @@ async function prodCapSettingsClearAll() {
 }
 
 // ── Set utilization factor from slider ────────────────────────
-function prodCapSettingsSetUtilization(percent) {
+async function prodCapSettingsSetUtilization(percent) {
   prodCapUtilizationFactor = Math.max(0, Math.min(100, parseInt(percent))) / 100;
+  await prodCapSaveUtilization(percent);
   render();
 }

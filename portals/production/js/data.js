@@ -75,8 +75,106 @@ async function prodDataSave() {
 }
 
 // ===== PRODUCT MANAGEMENT =====
-// Products are now managed from the product management database
-// This module only provides read access to products for batch scheduling
+
+window.prodDataAddProduct = async function(name, code, family, lead_time_days, notes, status, assigned_unit) {
+  if (!name || !name.trim()) return false;
+
+  const product = {
+    user_id: currentUser.id,
+    name: name.trim(),
+    code: code ? code.trim() : null,
+    family: family || null,
+    lead_time_days: lead_time_days ? parseInt(lead_time_days) : null,
+    notes: notes ? notes.trim() : null,
+    status: status || 'active',
+    assigned_unit: assigned_unit || null
+  };
+
+  try {
+    const { data, error } = await supa.from('products').insert([product]).select();
+    if (error) throw error;
+
+    if (data && data[0]) {
+      prodState.products.push(data[0]);
+      prodState.products.sort((a, b) => a.name.localeCompare(b.name));
+      render();
+      return true;
+    }
+  } catch (err) {
+    console.error('Error adding product:', err);
+    alert('Failed to add product: ' + err.message);
+  }
+  return false;
+};
+
+window.prodDataUpdateProduct = async function(idx, field, value) {
+  if (idx < 0 || idx >= prodState.products.length) return false;
+
+  const product = prodState.products[idx];
+  const updates = { updated_at: new Date().toISOString() };
+
+  switch(field) {
+    case 'name':
+      updates.name = value || '';
+      break;
+    case 'code':
+      updates.code = value ? value.trim() : null;
+      break;
+    case 'family':
+      updates.family = value || null;
+      break;
+    case 'lead_time_days':
+      updates.lead_time_days = value ? parseInt(value) : null;
+      break;
+    case 'notes':
+      updates.notes = value ? value.trim() : null;
+      break;
+    case 'status':
+      updates.status = value || 'active';
+      break;
+    case 'assigned_unit':
+      updates.assigned_unit = value || null;
+      break;
+    default:
+      return false;
+  }
+
+  try {
+    const { error } = await supa.from('products')
+      .update(updates)
+      .eq('id', product.id);
+
+    if (error) throw error;
+
+    Object.assign(product, updates);
+    prodState.products.sort((a, b) => a.name.localeCompare(b.name));
+    render();
+    return true;
+  } catch (err) {
+    console.error('Error updating product:', err);
+    alert('Failed to update product: ' + err.message);
+  }
+  return false;
+};
+
+window.prodDataDeleteProduct = async function(idx) {
+  if (idx < 0 || idx >= prodState.products.length) return false;
+
+  const product = prodState.products[idx];
+
+  try {
+    const { error } = await supa.from('products').delete().eq('id', product.id);
+    if (error) throw error;
+
+    prodState.products.splice(idx, 1);
+    render();
+    return true;
+  } catch (err) {
+    console.error('Error deleting product:', err);
+    alert('Failed to delete product: ' + err.message);
+  }
+  return false;
+};
 
 // ===== BATCH CRUD =====
 

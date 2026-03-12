@@ -51,6 +51,9 @@ async function launchApp() {
   // Load Production Capacity settings (production_capacity table)
   await prodCapDataInit();
 
+  // Load utilization factor (from user_settings or localStorage)
+  await prodCapLoadUtilization();
+
   // Load Work Areas (work_areas table)
   await workAreasDataInit();
 

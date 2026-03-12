@@ -44,7 +44,8 @@
       "Bash(git add portals/capacity/js/me-data-relational.js)",
       "Bash(grep -r \"meSaveTask\\\\|addTask\\\\|new.*task\" portals/capacity/js/*.js --include=\"*.js\" -n)",
       "Bash(git add portals/capacity/js/me-data*.js)",
-      "Bash(grep -n display.*!important /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/**/*.css)"
+      "Bash(grep -n display.*!important /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/**/*.css)",
+      "Bash(grep -n \"prodCapUtilizationFactor\" /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/capacity/js/*.js)"
     ]
   }
 }

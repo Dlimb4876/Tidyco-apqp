@@ -29,6 +29,80 @@ async function prodCapDataInit() {
   }
 }
 
+// ── Load utilization factor from Supabase or localStorage ────────
+async function prodCapLoadUtilization() {
+  if (!currentUser) return;
+
+  try {
+    // Try to load from Supabase user_settings
+    const { data, error } = await supa.from('user_settings')
+      .select('setting_value')
+      .eq('user_id', currentUser.id)
+      .eq('setting_key', 'prod_cap_utilization')
+      .single();
+
+    if (!error && data && data.setting_value) {
+      const value = parseFloat(data.setting_value);
+      if (!isNaN(value) && value >= 0 && value <= 1) {
+        prodCapUtilizationFactor = value;
+        console.log('✓ Loaded utilization factor from Supabase:', Math.round(value * 100) + '%');
+        return;
+      }
+    }
+  } catch (err) {
+    // Table might not exist yet, fall through to localStorage
+    console.debug('Supabase user_settings not available, checking localStorage');
+  }
+
+  // Fall back to localStorage
+  const stored = localStorage.getItem('prodCapUtilization');
+  if (stored) {
+    const value = parseFloat(stored);
+    if (!isNaN(value) && value >= 0 && value <= 1) {
+      prodCapUtilizationFactor = value;
+      console.log('✓ Loaded utilization factor from localStorage:', Math.round(value * 100) + '%');
+    }
+  }
+}
+
+// ── Save utilization factor to Supabase and localStorage ────────
+async function prodCapSaveUtilization(percent) {
+  if (!currentUser) return;
+
+  const value = Math.max(0, Math.min(1, parseInt(percent) / 100));
+
+  // Always save to localStorage as fallback
+  localStorage.setItem('prodCapUtilization', value.toString());
+
+  try {
+    // Try to save to Supabase user_settings table
+    const { data: existing, error: getError } = await supa.from('user_settings')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .eq('setting_key', 'prod_cap_utilization')
+      .single();
+
+    if (!getError && existing) {
+      // Update existing
+      await supa.from('user_settings')
+        .update({ setting_value: value.toString(), updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+    } else {
+      // Insert new
+      await supa.from('user_settings')
+        .insert([{
+          user_id: currentUser.id,
+          setting_key: 'prod_cap_utilization',
+          setting_value: value.toString()
+        }]);
+    }
+    console.log('✓ Saved utilization factor:', Math.round(value * 100) + '%');
+  } catch (err) {
+    // Supabase unavailable, but localStorage is already saved
+    console.debug('Could not save to Supabase, localStorage fallback active');
+  }
+}
+
 // ── Capacity record accessors ─────────────────────────────────
 
 function prodCapDataGetStaff(workArea, year, month) {
