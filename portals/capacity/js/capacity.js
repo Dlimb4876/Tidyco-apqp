@@ -34,6 +34,14 @@ function renderCapacity() {
           </div>
         </div>
 
+        <div class="proj-card capacity-card" onclick="meInit().then(() => { window.renderMeCapacityReact(); capacityTab = 'me-react'; history.replaceState(null, '', '#s=capacity&ct=me-react'); })">
+          <div class="hub-card-content">
+            <div class="hub-icon">⚛️</div>
+            <div class="proj-card-name">ME-React</div>
+            <div class="proj-card-meta">Manufacturing Engineering (React version - experimental)</div>
+          </div>
+        </div>
+
         <div class="proj-card capacity-card" onclick="setCapacityTab('projects')">
           <div class="hub-card-content">
             <div class="hub-icon">📅</div>
