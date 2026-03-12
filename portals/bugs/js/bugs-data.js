@@ -4,6 +4,7 @@
 // ═══════════════════════════════════
 
 let bugState = { reports: [] };
+let bugTab = 'add';
 
 async function bugDataInit() {
   if (!currentUser) return;

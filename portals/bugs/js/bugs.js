@@ -6,6 +6,7 @@
 function renderBugReports() {
   const reports = bugState.reports;
   const openCount = reports.filter(r => r.status === 'open').length;
+  const tab = bugTab || 'add';
 
   return `
     <div class="bugs-header">
@@ -13,14 +14,67 @@ function renderBugReports() {
         <div class="bugs-title">🪳 Bug Reports</div>
         <div class="bugs-sub">${reports.length} report${reports.length !== 1 ? 's' : ''} · ${openCount} open</div>
       </div>
-      <button class="btn btn-primary" onclick="bugOpenNewModal()">+ New Report</button>
     </div>
 
+    <div class="bugs-tabs">
+      <button class="bugs-tab ${tab === 'add' ? 'bugs-tab-active' : ''}" onclick="bugSwitchTab('add')">
+        + Add Bug
+      </button>
+      <button class="bugs-tab ${tab === 'view' ? 'bugs-tab-active' : ''}" onclick="bugSwitchTab('view')">
+        View &amp; Update
+      </button>
+    </div>
+
+    ${tab === 'add' ? bugRenderAddTab() : bugRenderViewTab(reports)}
+  `;
+}
+
+function bugRenderAddTab() {
+  const today = new Date().toLocaleDateString('en-GB');
+  const email = currentUser ? currentUser.email : '';
+
+  return `
+    <div class="bugs-form-container">
+      <div class="bugs-form-box">
+        <div class="bugs-form-title">Report a New Bug</div>
+        <div class="bugs-form-sub">Help us improve by describing any issues you encounter</div>
+
+        <div class="field">
+          <label>Raised By</label>
+          <input type="text" id="bugInlineRaisedBy" value="${esc(email)}" readonly class="bug-readonly-field">
+        </div>
+
+        <div class="field">
+          <label>Date</label>
+          <input type="text" id="bugInlineDate" value="${today}" readonly class="bug-readonly-field">
+        </div>
+
+        <div class="field">
+          <label>Page / Area</label>
+          <input type="text" id="bugInlinePage" placeholder="e.g. PFMEA, Production Scheduling, Capacity Planning…">
+        </div>
+
+        <div class="field">
+          <label>Bug Report *</label>
+          <textarea id="bugInlineDesc" placeholder="Describe what happened and what you expected to happen…" rows="6" style="resize:vertical"></textarea>
+        </div>
+
+        <div class="bugs-form-actions">
+          <button class="btn btn-primary" onclick="bugSubmitInline()">Submit Report</button>
+          <div class="bugs-form-feedback" id="bugInlineFeedback" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bugRenderViewTab(reports) {
+  return `
     ${reports.length === 0 ? `
       <div class="bugs-empty">
-        <div class="bugs-empty-icon">🎉</div>
+        <div class="bugs-empty-icon">📋</div>
         <div class="bugs-empty-text">No bug reports yet</div>
-        <div class="bugs-empty-sub">Use the button above to submit the first one</div>
+        <div class="bugs-empty-sub">Switch to the "Add Bug" tab to submit one</div>
       </div>
     ` : `
       <div class="bugs-table-wrap">
@@ -75,7 +129,46 @@ function bugRowHTML(r, i) {
   `;
 }
 
-// ── Modal helpers ─────────────────────────────────────────────
+// ── Tab switching ─────────────────────────────────────────────
+
+window.bugSwitchTab = function(tab) {
+  bugTab = tab;
+  render();
+};
+
+// ── Inline form submission ────────────────────────────────────
+
+window.bugSubmitInline = async function() {
+  const page = document.getElementById('bugInlinePage').value.trim();
+  const desc = document.getElementById('bugInlineDesc').value.trim();
+  const feedback = document.getElementById('bugInlineFeedback');
+
+  if (!desc) {
+    feedback.textContent = 'Please describe the bug.';
+    feedback.className = 'bugs-form-feedback bugs-form-feedback-error';
+    feedback.style.display = 'block';
+    return;
+  }
+
+  const ok = await bugDataAdd(page, desc);
+  if (ok) {
+    // Clear form
+    document.getElementById('bugInlinePage').value = '';
+    document.getElementById('bugInlineDesc').value = '';
+    feedback.textContent = '✓ Bug report submitted successfully!';
+    feedback.className = 'bugs-form-feedback bugs-form-feedback-success';
+    feedback.style.display = 'block';
+    setTimeout(() => {
+      feedback.style.display = 'none';
+    }, 3000);
+  } else {
+    feedback.textContent = 'Failed to submit bug report. Please try again.';
+    feedback.className = 'bugs-form-feedback bugs-form-feedback-error';
+    feedback.style.display = 'block';
+  }
+};
+
+// ── Modal helpers (deprecated but kept for compatibility) ────
 
 let _bugRespondId = null;
 
