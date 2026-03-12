@@ -95,7 +95,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
 
   html += `</tr>
             <tr>
-              <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left;">Team Member</th>`;
+              <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left; width: 130px; max-width: 130px;">Team Member</th>`;
 
   dates.forEach((date, idx) => {
     const d = new Date(date);
@@ -109,7 +109,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
   html += `</tr></thead><tbody>`;
 
   teamArray.forEach(member => {
-    html += `<tr><th style="position: sticky; left: 0; background: var(--white); z-index: 9; text-align: left; padding: 8px;">${esc(member.name)}</th>`;
+    html += `<tr><th style="position: sticky; left: 0; background: var(--white); z-index: 9; text-align: left; padding: 8px; width: 130px; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${esc(member.name)}">${esc(member.name)}</th>`;
 
     dates.forEach(date => {
       const isBank = !!bankHols[date];

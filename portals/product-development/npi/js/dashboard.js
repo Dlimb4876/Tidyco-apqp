@@ -233,7 +233,6 @@ function renderDashboard() {
     { id: 'timing',  icon: '📅', title: 'NPI Timing Plan',    desc: `${timingTotal} rows · ${timingFilled} with activity`, color: 'var(--teal)'   },
     { id: 'apqp',    icon: '📐', title: 'APQP',               desc: 'CTQ · PFD · PFMEA · Control Plan',                   color: 'var(--purple)' },
     { id: 'bom',     icon: '📦', title: 'Bill of Materials',   desc: `${totalBomItems} items · ${p.bom.kits.length} kits · ${aaw} AAW`, color: 'var(--navy)' },
-    { id: 'products', icon: '📦', title: 'Products',           desc: 'Product Master & Production', color: 'var(--teal)', isExternal: true },
     { id: 'actions', icon: '✅', title: 'Actions',             desc: `${openAct} open${overdueAct > 0 ? ' · ' + overdueAct + ' overdue' : ''}`, color: overdueAct > 0 ? 'var(--red)' : openAct > 0 ? 'var(--amber)' : 'var(--green)' },
     { id: 'risks',   icon: '🛡', title: 'Risk Register',       desc: `${p.risks.filter(r => r.status !== 'Closed').length} open · ${highRisks} high`, color: highRisks > 0 ? 'var(--red)' : 'var(--blue)' },
   ];
