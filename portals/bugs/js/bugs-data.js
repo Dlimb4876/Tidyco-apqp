@@ -75,13 +75,13 @@ window.bugDataAdd = async function(page, description) {
   }
 };
 
-window.bugDataRespond = async function(id, response) {
+window.bugDataRespond = async function(id, response, status) {
   if (!currentUser) return false;
   const updates = {
     response: response.trim(),
     responded_by: currentUser.email,
     responded_at: new Date().toISOString(),
-    status: 'closed'
+    status: status || 'closed'
   };
   try {
     const { error } = await supa.from('bug_reports').update(updates).eq('id', id);
