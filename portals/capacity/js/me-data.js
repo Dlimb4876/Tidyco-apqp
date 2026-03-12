@@ -693,6 +693,8 @@ window.meDataSubscribe = function() {
   if (!currentUser) return;
 
   // Subscribe to teams changes
+  // onUpdate: no render() — state is already current from the local edit that triggered the save.
+  // Calling render() on our own write-echo would clobber any in-progress user input.
   createRealtimeSubscription('me_teams', 'me_teams_channel', {
     onInsert: (newTeam) => {
       if (!meDataState.team.some(t => t.id === newTeam.id)) {
@@ -700,13 +702,7 @@ window.meDataSubscribe = function() {
         render();
       }
     },
-    onUpdate: (updated) => {
-      const idx = meDataState.team.findIndex(t => t.id === updated.id);
-      if (idx >= 0) {
-        meDataState.team[idx] = updated;
-        render();
-      }
-    },
+    onUpdate: () => { /* no-op — local state already up to date */ },
     onDelete: (deleted) => {
       meDataState.team = meDataState.team.filter(t => t.id !== deleted.id);
       render();
@@ -723,13 +719,7 @@ window.meDataSubscribe = function() {
         render();
       }
     },
-    onUpdate: (updated) => {
-      const idx = meDataState.tasks.findIndex(t => t.id === updated.id);
-      if (idx >= 0) {
-        meDataState.tasks[idx] = updated;
-        render();
-      }
-    },
+    onUpdate: () => { /* no-op — local state already up to date */ },
     onDelete: (deleted) => {
       meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
       render();
@@ -746,13 +736,7 @@ window.meDataSubscribe = function() {
         render();
       }
     },
-    onUpdate: (updated) => {
-      const idx = meDataState.products.findIndex(p => p.id === updated.id);
-      if (idx >= 0) {
-        meDataState.products[idx] = updated;
-        render();
-      }
-    },
+    onUpdate: () => { /* no-op — local state already up to date */ },
     onDelete: (deleted) => {
       meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
       render();
@@ -769,13 +753,7 @@ window.meDataSubscribe = function() {
         render();
       }
     },
-    onUpdate: (updated) => {
-      const idx = meDataState.holidays.findIndex(h => h.id === updated.id);
-      if (idx >= 0) {
-        meDataState.holidays[idx] = updated;
-        render();
-      }
-    },
+    onUpdate: () => { /* no-op — local state already up to date */ },
     onDelete: (deleted) => {
       meDataState.holidays = meDataState.holidays.filter(h => h.id !== deleted.id);
       render();
