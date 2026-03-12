@@ -67,10 +67,10 @@
         <span class="brand-sep">|</span>
         <span class="brand-sub">APQP</span>
       </div>
-      <button class="back-btn" id="returnHubBtn" style="display:none" onclick="navigate('hub')">← Return to Portal</button>
+      <button class="back-btn" id="returnHubBtn" style="display:none" onclick="navigateBack()">← Return to Portal</button>
     </div>
     <div class="topbar-center">
-      <button class="bug-report-btn" onclick="navigate('bugreports')">🐛 Report a Bug</button>
+      <button class="bug-report-btn" onclick="navigate('bugreports')">🪳 Report a Bug</button>
     </div>
     <div class="topbar-actions">
       <span class="sync-badge" id="syncBadge">● saved</span>
@@ -249,7 +249,7 @@
 <!-- New Bug Report -->
 <div class="modal-bg" id="modalNewBug" style="display:none">
   <div class="modal">
-    <div class="modal-title">🐛 Report a Bug</div>
+    <div class="modal-title">🪳 Report a Bug</div>
     <div class="field-row">
       <div class="field">
         <label>Raised By</label>

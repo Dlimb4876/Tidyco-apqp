@@ -10,7 +10,7 @@ function renderBugReports() {
   return `
     <div class="bugs-header">
       <div>
-        <div class="bugs-title">🐛 Bug Reports</div>
+        <div class="bugs-title">🪳 Bug Reports</div>
         <div class="bugs-sub">${reports.length} report${reports.length !== 1 ? 's' : ''} · ${openCount} open</div>
       </div>
       <button class="btn btn-primary" onclick="bugOpenNewModal()">+ New Report</button>
@@ -77,7 +77,9 @@ function bugRowHTML(r, i) {
 
 // ── Modal helpers ─────────────────────────────────────────────
 
-function bugOpenNewModal() {
+let _bugRespondId = null;
+
+window.bugOpenNewModal = function() {
   const today = new Date().toLocaleDateString('en-GB');
   const email = currentUser ? currentUser.email : '';
   document.getElementById('bugNewRaisedBy').value = email;
@@ -85,29 +87,27 @@ function bugOpenNewModal() {
   document.getElementById('bugNewPage').value = '';
   document.getElementById('bugNewDesc').value = '';
   showModal('modalNewBug');
-}
+};
 
-async function bugSubmitNew() {
+window.bugSubmitNew = async function() {
   const page = document.getElementById('bugNewPage').value.trim();
   const desc = document.getElementById('bugNewDesc').value.trim();
   if (!desc) { alert('Please describe the bug.'); return; }
   const ok = await bugDataAdd(page, desc);
   if (ok) closeModal('modalNewBug');
-}
+};
 
-let _bugRespondId = null;
-
-function bugOpenRespondModal(id, idx) {
+window.bugOpenRespondModal = function(id, idx) {
   _bugRespondId = id;
   const r = bugState.reports[idx];
   document.getElementById('bugRespondDesc').textContent = r ? r.description : '';
   document.getElementById('bugRespondText').value = '';
   showModal('modalRespondBug');
-}
+};
 
-async function bugSubmitRespond() {
+window.bugSubmitRespond = async function() {
   const response = document.getElementById('bugRespondText').value.trim();
   if (!response) { alert('Please enter a response before closing.'); return; }
   const ok = await bugDataRespond(_bugRespondId, response);
   if (ok) { _bugRespondId = null; closeModal('modalRespondBug'); }
-}
+};

@@ -72,6 +72,16 @@ function navigate(sec, { pushHash = true } = {}) {
 function goProjects() { navigate('projects'); }
 function goHome()     { navigate('project'); }
 
+// NPI sub-sections sit one level inside product-development; all others go to hub
+function navigateBack() {
+  const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing'];
+  if (npiSections.includes(currentSection) || currentSection.startsWith('gate_')) {
+    navigate('product-development');
+  } else {
+    navigate('hub');
+  }
+}
+
 function setApqpTab(t) {
   apqpTab = t;
   const parts = ['p=' + encodeURIComponent(progId), 's=apqp'];
