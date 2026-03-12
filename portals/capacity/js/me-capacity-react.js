@@ -171,3 +171,67 @@ window.meCalculateMonthDataReact = function(monthKey, teamArray, tasksArray, pro
     utilisation: Math.min(999, utilisation)
   };
 };
+
+// Calculate week utilization for a person
+window.meCalcWeekUtilisationReact = function(personId, weekStartIso, weekEndIso, tasksArray, holidaysArray) {
+  const weekStart = new Date(weekStartIso);
+  const weekEnd = new Date(weekEndIso);
+
+  const person = typeof meDataGetTeam === 'function'
+    ? meDataGetTeam().find(t => t.id === personId)
+    : null;
+
+  if (!person || !person.startDate || !person.hoursPerWeek) {
+    return { capacity: 0, demand: 0, utilisation: 0 };
+  }
+
+  const personStart = new Date(person.startDate);
+  const personEnd = person.endDate ? new Date(person.endDate) : new Date(2099, 11, 31);
+
+  // Check if person is active this week
+  if (personStart > weekEnd || personEnd < weekStart) {
+    return { capacity: 0, demand: 0, utilisation: 0 };
+  }
+
+  // 5 days per week capacity
+  const capacity = person.hoursPerWeek * 5 / 7;
+
+  // Calculate demand from tasks
+  let demand = 0;
+  if (Array.isArray(tasksArray)) {
+    tasksArray.forEach(task => {
+      if (!task.startDate || !task.endDate || !task.totalHours) return;
+
+      // Simple check: does task overlap this week?
+      const taskStart = new Date(task.startDate);
+      const taskEnd = new Date(task.endDate);
+
+      if (taskStart <= weekEnd && taskEnd >= weekStart) {
+        const daysInWeek = Math.min(weekEnd, taskEnd) - Math.max(weekStart, taskStart);
+        const totalDays = taskEnd - taskStart || 1;
+        const proportion = daysInWeek / totalDays;
+        demand += task.totalHours * Math.max(0, Math.min(1, proportion)) / 5;
+      }
+    });
+  }
+
+  // Subtract holidays
+  let holidayHours = 0;
+  if (Array.isArray(holidaysArray)) {
+    holidaysArray.forEach(holiday => {
+      const hDate = new Date(holiday.date);
+      if (hDate >= weekStart && hDate <= weekEnd && holiday.personId === personId) {
+        holidayHours += person.hoursPerWeek / 5;
+      }
+    });
+  }
+
+  const adjustedCapacity = Math.max(0, capacity - holidayHours);
+  const utilisation = adjustedCapacity > 0 ? Math.round((demand / adjustedCapacity) * 100) : 0;
+
+  return {
+    capacity: Math.round(adjustedCapacity * 10) / 10,
+    demand: Math.round(demand * 10) / 10,
+    utilisation: Math.min(999, utilisation)
+  };
+};

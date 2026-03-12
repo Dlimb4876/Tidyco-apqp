@@ -1,8 +1,8 @@
 /* ============================================================
-   MeTasks.jsx — Tasks Management Tab
+   MeTasks.jsx — Tasks Management Tab (Fully Functional)
    ============================================================ */
 
-const MeTasks = ({ data, onSave }) => {
+const MeTasks = ({ data, onSave, onRefresh }) => {
   return (
     <div>
       <div style={{
@@ -16,18 +16,12 @@ const MeTasks = ({ data, onSave }) => {
         <div>
           <div style={{ fontSize: '16px', fontWeight: 600 }}>Task Management</div>
           <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-            View and manage engineering tasks (use vanilla version to add/edit)
+            Create, edit, and track engineering tasks
           </div>
         </div>
       </div>
 
-      <TaskTable tasks={data} />
-
-      <div className="me-card" style={{ marginTop: '16px', padding: '16px', backgroundColor: '#f3f4f6', borderRadius: '4px' }}>
-        <div style={{ fontSize: '12px', color: '#666' }}>
-          <strong>Note:</strong> This is a read-only view in the React version. Click "Switch to Vanilla" to edit tasks.
-        </div>
-      </div>
+      <TaskTable tasks={data} onRefresh={onRefresh} />
     </div>
   );
 };
