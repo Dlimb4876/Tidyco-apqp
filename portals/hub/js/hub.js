@@ -33,6 +33,13 @@ function renderHub() {
           </div>
         </div>
 
+        <div class="proj-card hub-card" onclick="navigate('bugreports')">
+          <div class="hub-card-content">
+            <div class="hub-icon">🐛</div>
+            <div class="proj-card-name">BUG REPORTS</div>
+            <div class="proj-card-meta">Team Feedback & Issue Tracking</div>
+          </div>
+        </div>
 
       </div>
     </div>`;

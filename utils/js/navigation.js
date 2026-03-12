@@ -12,7 +12,8 @@ const SECTION_LABELS = {
   capacity: 'Capacity Management',
   production: 'Production Planning',
   products: 'Products',
-  productmgmt: 'Product Management'
+  productmgmt: 'Product Management',
+  bugreports: 'Bug Reports'
 };
 
 function parseHash() {
@@ -104,6 +105,10 @@ function render() {
   }
   if (currentSection === 'productmgmt') {
     mc.innerHTML = `<div class="section-inner">${renderProductMgmt()}</div>`;
+    return;
+  }
+  if (currentSection === 'bugreports') {
+    mc.innerHTML = `<div class="section-inner">${renderBugReports()}</div>`;
     return;
   }
   if (currentSection === 'capacity') {

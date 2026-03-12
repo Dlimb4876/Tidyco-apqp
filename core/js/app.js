@@ -53,6 +53,9 @@ async function launchApp() {
   // Load Work Areas (work_areas table)
   await workAreasDataInit();
 
+  // Load Bug Reports (bug_reports table, shared across all users)
+  await bugDataInit();
+
   // Restore position from URL hash
   const h = parseHash();
   if (h.p && db.programmes.find(p => p.id === h.p)) {

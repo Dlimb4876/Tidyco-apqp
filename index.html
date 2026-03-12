@@ -9,6 +9,7 @@
 <!-- CSS load order: global shell → shared components → feature modules -->
 <link rel="stylesheet" href="core/css/main.css">
 <link rel="stylesheet" href="core/css/components.css">
+<link rel="stylesheet" href="portals/bugs/css/bugs.css">
 <link rel="stylesheet" href="portals/product-development/npi/css/dashboard.css">
 <link rel="stylesheet" href="portals/hub/css/hub.css">
 <link rel="stylesheet" href="portals/capacity/css/capacity.css">
@@ -67,6 +68,9 @@
         <span class="brand-sub">APQP</span>
       </div>
       <button class="back-btn" id="returnHubBtn" style="display:none" onclick="navigate('hub')">← Return to Portal</button>
+    </div>
+    <div class="topbar-center">
+      <button class="bug-report-btn" onclick="navigate('bugreports')">🐛 Report a Bug</button>
     </div>
     <div class="topbar-actions">
       <span class="sync-badge" id="syncBadge">● saved</span>
@@ -242,6 +246,54 @@
   </div>
 </div>
 
+<!-- New Bug Report -->
+<div class="modal-bg" id="modalNewBug" style="display:none">
+  <div class="modal">
+    <div class="modal-title">🐛 Report a Bug</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Raised By</label>
+        <input id="bugNewRaisedBy" class="bug-readonly-field" readonly>
+      </div>
+      <div class="field">
+        <label>Date Raised</label>
+        <input id="bugNewDate" class="bug-readonly-field" readonly>
+      </div>
+    </div>
+    <div class="field">
+      <label>Page / Area</label>
+      <input id="bugNewPage" placeholder="e.g. PFMEA, Production Scheduling, Hub…">
+    </div>
+    <div class="field">
+      <label>Bug Report *</label>
+      <textarea id="bugNewDesc" placeholder="Describe what happened and what you expected to happen…" rows="5" style="resize:vertical"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewBug')">Cancel</button>
+      <button class="btn btn-primary" onclick="bugSubmitNew()">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- Respond & Close Bug -->
+<div class="modal-bg" id="modalRespondBug" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Respond &amp; Close Bug</div>
+    <div class="field">
+      <label>Original Report</label>
+      <div class="bug-original-desc" id="bugRespondDesc"></div>
+    </div>
+    <div class="field">
+      <label>Response / Resolution *</label>
+      <textarea id="bugRespondText" placeholder="Describe what was done to resolve this…" rows="4" style="resize:vertical"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalRespondBug')">Cancel</button>
+      <button class="btn btn-primary" onclick="bugSubmitRespond()">Close Bug</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════
      SCRIPTS — load order matters
      state → auth → db → helpers → navigation →
@@ -314,6 +366,9 @@
 <script src="portals/product-development/npi/js/bom.js"></script>
 <script src="portals/product-development/npi/js/timing.js"></script>
 <script src="portals/product-development/npi/js/trackers.js"></script>
+
+<script src="portals/bugs/js/bugs-data.js"></script>
+<script src="portals/bugs/js/bugs.js"></script>
 
 <script src="core/js/app.js"></script>
 
