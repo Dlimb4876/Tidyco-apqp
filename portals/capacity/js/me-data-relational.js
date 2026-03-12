@@ -26,8 +26,7 @@ window.meLoadRelationalTeams = async function(userId) {
   try {
     const { data, error } = await supa
       .from('me_teams')
-      .select('*')
-      .eq('user_id', userId);
+      .select('*');
 
     if (error) {
       console.warn('meLoadRelationalTeams error:', error.message);
@@ -55,8 +54,7 @@ window.meLoadRelationalProducts = async function(userId) {
   try {
     const { data, error } = await supa
       .from('me_products')
-      .select('*')
-      .eq('user_id', userId);
+      .select('*');
 
     if (error) {
       console.warn('meLoadRelationalProducts error:', error.message);
@@ -84,8 +82,7 @@ window.meLoadRelationalHolidays = async function(userId) {
   try {
     const { data, error } = await supa
       .from('me_holidays')
-      .select('*')
-      .eq('user_id', userId);
+      .select('*');
 
     if (error) {
       console.warn('meLoadRelationalHolidays error:', error.message);
@@ -110,8 +107,7 @@ window.meLoadRelationalTasks = async function(userId) {
     // Load all tasks for this user
     const { data: tasksData, error: tasksError } = await supa
       .from('me_tasks')
-      .select('*')
-      .eq('user_id', userId);
+      .select('*');
 
     if (tasksError) {
       console.warn('meLoadRelationalTasks error:', tasksError.message);

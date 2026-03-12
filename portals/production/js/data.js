@@ -37,18 +37,15 @@ async function prodDataInit() {
     // Load families from database
     const families = await supa.from('families')
       .select('*')
-      .eq('user_id', currentUser.id)
       .order('label', { ascending: true });
 
     // Load products from product management database (not production_products table)
     const products = await supa.from('products')
       .select('*')
-      .eq('user_id', currentUser.id)
       .order('name', { ascending: true });
 
     const batches = await supa.from('production_batches')
       .select('*')
-      .eq('user_id', currentUser.id)
       .order('created_at', { ascending: true });
 
     prodState.families = families.data || [];
@@ -68,7 +65,6 @@ async function prodDataReloadProducts() {
   try {
     const { data, error } = await supa.from('products')
       .select('*')
-      .eq('user_id', currentUser.id)
       .order('name', { ascending: true });
     if (error) throw error;
     prodState.products = data || [];
@@ -163,8 +159,7 @@ window.prodDataUpdateProduct = async function(idx, field, value) {
   try {
     const { error } = await supa.from('products')
       .update(updates)
-      .eq('id', product.id)
-      .eq('user_id', currentUser.id);
+      .eq('id', product.id);
 
     if (error) throw error;
 
@@ -185,7 +180,7 @@ window.prodDataDeleteProduct = async function(idx) {
   const product = prodState.products[idx];
 
   try {
-    const { error } = await supa.from('products').delete().eq('id', product.id).eq('user_id', currentUser.id);
+    const { error } = await supa.from('products').delete().eq('id', product.id);
     if (error) throw error;
 
     prodState.products.splice(idx, 1);
@@ -264,8 +259,7 @@ window.prodDataUpdateBatch = async function(idx, field, value) {
   try {
     const { error } = await supa.from('production_batches')
       .update(updates)
-      .eq('id', batch.id)
-      .eq('user_id', currentUser.id);
+      .eq('id', batch.id);
 
     if (error) throw error;
 
@@ -285,7 +279,7 @@ window.prodDataDeleteBatch = async function(idx) {
   const batch = prodState.batches[idx];
 
   try {
-    const { error } = await supa.from('production_batches').delete().eq('id', batch.id).eq('user_id', currentUser.id);
+    const { error } = await supa.from('production_batches').delete().eq('id', batch.id);
     if (error) throw error;
 
     prodState.batches.splice(idx, 1);
@@ -367,8 +361,7 @@ window.prodDataUpdateFamily = async function(familyId, updates) {
   try {
     const { error } = await supa.from('families')
       .update(updates)
-      .eq('id', familyId)
-      .eq('user_id', currentUser.id);
+      .eq('id', familyId);
 
     if (error) throw error;
 
@@ -388,7 +381,7 @@ window.prodDataDeleteFamily = async function(familyId) {
   if (idx === -1) return false;
 
   try {
-    const { error } = await supa.from('families').delete().eq('id', familyId).eq('user_id', currentUser.id);
+    const { error } = await supa.from('families').delete().eq('id', familyId);
     if (error) throw error;
 
     prodState.families.splice(idx, 1);
@@ -432,8 +425,6 @@ window.prodDataSubscribe = function() {
       prodState.batches = prodState.batches.filter(b => b.id !== deleted.id);
       render();
     }
-  }, {
-    filter: `user_id=eq.${currentUser.id}`
   });
 
   // Subscribe to products changes (from product management)
@@ -455,8 +446,6 @@ window.prodDataSubscribe = function() {
       prodState.products = prodState.products.filter(p => p.id !== deleted.id);
       render();
     }
-  }, {
-    filter: `user_id=eq.${currentUser.id}`
   });
 
   // Subscribe to families changes
@@ -478,8 +467,6 @@ window.prodDataSubscribe = function() {
       prodState.families = prodState.families.filter(f => f.id !== deleted.id);
       render();
     }
-  }, {
-    filter: `user_id=eq.${currentUser.id}`
   });
 };
 

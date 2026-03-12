@@ -15,7 +15,6 @@ async function familyTemplatesDataInit() {
   try {
     const { data, error } = await supa.from('family_pfmea_templates')
       .select('*')
-      .eq('user_id', currentUser.id)
       .order('family_id,template_name', { ascending: true });
 
     if (error) throw error;
@@ -96,8 +95,7 @@ window.familyTemplatesUpdateItem = async function(itemId, updates) {
   try {
     const { error } = await supa.from('family_pfmea_templates')
       .update(updates)
-      .eq('id', itemId)
-      .eq('user_id', currentUser.id);
+      .eq('id', itemId);
 
     if (error) throw error;
 
@@ -118,8 +116,7 @@ window.familyTemplatesDeleteItem = async function(itemId) {
   try {
     const { error } = await supa.from('family_pfmea_templates')
       .delete()
-      .eq('id', itemId)
-      .eq('user_id', currentUser.id);
+      .eq('id', itemId);
 
     if (error) throw error;
 
@@ -143,8 +140,7 @@ window.familyTemplatesDeleteFamily = async function(familyId, templateName) {
   try {
     const { error } = await supa.from('family_pfmea_templates')
       .delete()
-      .in('id', itemsToDelete)
-      .eq('user_id', currentUser.id);
+      .in('id', itemsToDelete);
 
     if (error) throw error;
 
