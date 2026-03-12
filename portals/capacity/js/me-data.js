@@ -580,13 +580,11 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // 4. Save holidays (use upsert on conflict to handle updates and new rows)
+        // 4. Save holidays using upsert to handle both new and existing rows
         if (meDataState.holidays && meDataState.holidays.length > 0) {
-          // Batch upsert with proper conflict resolution on unique key (user_id, person_id, date)
           const holidayData = meDataState.holidays
             .filter(h => h.personId)  // Skip bank holidays
             .map(h => ({
-              id: h.id,
               user_id: currentUser.id,
               person_id: h.personId,
               date: h.date,
@@ -594,25 +592,17 @@ window.meDataSave = async function(showAlert) {
             }));
 
           if (holidayData.length > 0) {
-            // First delete old holidays to avoid constraint violations
-            const { error: deleteErr } = await supa
+            // Use upsert on the natural key (user_id, person_id, date)
+            // This creates new rows or updates existing ones
+            const { error: upsertErr } = await supa
               .from('me_holidays')
-              .delete()
-              .eq('user_id', currentUser.id)
-              .gt('date', '2000-01-01');  // Ensure we only delete real holidays, not metadata
+              .upsert(holidayData, {
+                onConflict: 'user_id,person_id,date',
+                ignoreDuplicates: false
+              });
 
-            if (!deleteErr) {
-              // Now insert fresh holidays
-              const { error: insertErr } = await supa
-                .from('me_holidays')
-                .insert(holidayData);
-
-              if (insertErr) {
-                console.warn('Failed to insert holidays:', insertErr.message);
-                relationalSuccess = false;
-              }
-            } else {
-              console.warn('Failed to delete old holidays:', deleteErr.message);
+            if (upsertErr) {
+              console.warn('Failed to upsert holidays:', upsertErr.message);
               relationalSuccess = false;
             }
           }
