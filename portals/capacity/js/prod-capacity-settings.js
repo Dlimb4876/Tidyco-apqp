@@ -290,7 +290,7 @@ async function prodCapSettingsClearAll() {
   try {
     const { error } = await supa.from('production_capacity')
       .delete()
-      .eq('user_id', currentUser.id);
+      .neq('id', 'null');
     if (error) throw error;
     prodCapState.capacityRecords = [];
     render();

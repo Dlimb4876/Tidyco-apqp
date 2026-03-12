@@ -294,8 +294,7 @@ window.meSaveTaskRelational = async function(userId, task) {
           total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0),
           updated_at: new Date().toISOString()
         })
-        .eq('id', task.id)
-        .eq('user_id', userId);
+        .eq('id', task.id);
 
       if (error) {
         console.warn('meSaveTaskRelational update error:', error.message);
