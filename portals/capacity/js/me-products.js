@@ -3,8 +3,6 @@
    ============================================================ */
 
 window.meRenderProductsTab = function(productsArray, availableProducts, tasksArray) {
-  // Auto-sync products from product management (status = "Production")
-  meDataAutoSyncProductionProducts();
   const updated = meDataGetProducts();
   const tasks = tasksArray || meDataGetTasks();
 
@@ -30,13 +28,18 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
 
   let rows = '';
   updated.forEach((product, idx) => {
+    const taskCount = tasks.filter(t => t.productId === product.id).length;
+    const taskDemand = demandByProduct[product.id] || 0;
+    const supportPerMonth = ((product.hoursPerWeek || 0) * weeksPerMonth).toFixed(1);
+    const totalLoad = (taskDemand + parseFloat(supportPerMonth)).toFixed(1);
+
     rows += `
       <tr>
         <td>${esc(product.name)}</td>
-        <td><input type="date" value="${product.supportFrom || ''}" onchange="meDataUpdateProduct(${idx}, 'supportFrom', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${product.supportUntil || ''}" onchange="meDataUpdateProduct(${idx}, 'supportUntil', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
-        <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${idx}, 'notes', this.value); meDebouncedSave();"></td>
+        <td style="text-align:center">${taskCount}</td>
+        <td style="text-align:right">${taskDemand.toFixed(1)} h</td>
+        <td style="text-align:right">${supportPerMonth} h</td>
+        <td style="text-align:right; font-weight:bold">${totalLoad} h</td>
       </tr>`;
   });
 
@@ -63,25 +66,25 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       <div class="me-card">
         <div class="me-card-head">
           <span class="me-card-title">PRODUCTS / ONGOING SUPPORT</span>
-          <span style="font-size:12px;color:var(--muted)">${totalLoadWeekly} h/wk · Auto-synced from Product Management</span>
+          <span style="font-size:12px;color:var(--muted)">${totalLoadWeekly} h/wk</span>
         </div>
       <div class="me-card-body">
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
-              <th style="width:200px">Product Name</th>
-              <th style="width:120px">Support From</th>
-              <th style="width:120px">Support Until</th>
-              <th style="width:120px">Hours/Week</th>
-              <th style="width:200px">Notes</th>
+              <th style="width:200px">PRODUCT</th>
+              <th style="width:80px;text-align:center">TASKS</th>
+              <th style="width:120px;text-align:right">TASK DEMAND</th>
+              <th style="width:120px;text-align:right">SUPPORT/MONTH</th>
+              <th style="width:120px;text-align:right">TOTAL LOAD</th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="6"><div style="text-align:center;padding:40px;color:var(--muted)">No production products found</div></td></tr>'}
+              ${rows || '<tr><td colspan="5"><div style="text-align:center;padding:40px;color:var(--muted)">No production products found</div></td></tr>'}
             </tbody>
           </table>
         </div>
         <div style="font-size: 12px; color: var(--muted); padding: 12px 0;">
-          💡 Products are automatically loaded from Product Management (status: Production). Edit support dates and hours as needed.
+          💡 Products are synced from the Product Management database. Task Demand is calculated from assigned tasks. Support/Month and Total Load are shown for capacity planning.
         </div>
       </div>
     </div>

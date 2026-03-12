@@ -148,7 +148,7 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
             <h3 style="margin-top: 0;">🎯 Confidence Level</h3>
             <div class="me-factor-item">
               <label style="font-size: 12px; margin-bottom: 8px; display: block;">Risk Adjustment</label>
-              <input type="range" min="0.5" max="2.0" value="${confidenceLevel}" step="0.1" onchange="meEstimationUpdateConfidence(${taskIdx}, this.value)" class="me-slider" id="me-confidence-slider">
+              <input type="range" min="0.5" max="2.0" value="${confidenceLevel}" step="0.1" oninput="meEstimationUpdateConfidence(${taskIdx}, this.value)" class="me-slider" id="me-confidence-slider">
               <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted);">
                 <span>Pessimistic (0.5)</span>
                 <span id="me-confidence-display" style="color: var(--ink); font-weight: 600; font-family: 'IBM Plex Mono', monospace;">${confidenceLevel.toFixed(1)}</span>
