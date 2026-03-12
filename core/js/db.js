@@ -55,7 +55,7 @@ async function saveRemote(attempt) {
       if (!updated || updated.length === 0) {
         const { error: insErr } = await supa
           .from('programmes')
-          .insert({ prog_id: p.id, user_id: currentUser.id, name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p });
+          .insert({ prog_id: p.id, name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: p });
         if (insErr) {
           console.error('Insert err', p.name, insErr);
           errors.push(p.name + ' (' + (insErr.message || 'unknown error') + ')');
