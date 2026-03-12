@@ -187,8 +187,6 @@ window.bugSubmitInline = async function() {
 
 // ── Inline editing ────────────────────────────────────────────
 
-let bugEditingId = null;
-
 window.bugStartInlineEdit = function(id) {
   bugEditingId = id;
   render();
