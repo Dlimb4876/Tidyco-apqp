@@ -46,10 +46,8 @@ body {
 .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; cursor: pointer; }
 .brand:hover .brand-name { color: #93c5fd; }
-.brand-hex {
-  width: 26px; height: 26px;
-  background: var(--blue);
-  clip-path: polygon(50% 0%,93.3% 25%,93.3% 75%,50% 100%,6.7% 75%,6.7% 25%);
+.brand-logo {
+  width: 26px; height: 26px; object-fit: contain; flex-shrink: 0;
 }
 .brand-name { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #fff; letter-spacing: 1px; transition: color .15s; }
 .brand-sep  { color: #2d3f5e; margin: 0 2px; }
@@ -108,6 +106,7 @@ body {
   width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
 }
 .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+.login-logo-img { width: 40px; height: 40px; object-fit: contain; flex-shrink: 0; }
 .login-logo-name  { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: 1px; }
 .login-logo-sub   { font-size: 13px; color: var(--muted); margin-top: 1px; }
 .login-title      { font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
