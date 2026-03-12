@@ -56,7 +56,8 @@
       "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/product-development/js/*.js)",
       "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/product-development/product-management/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/product-development/product-management/css/*.css)",
       "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/production/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/production/css/*.css)",
-      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/bugs/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/bugs/css/*.css /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/productmgmt/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/productmgmt/css/*.css)"
+      "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/bugs/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/bugs/css/*.css /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/productmgmt/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/productmgmt/css/*.css)",
+      "Bash(find /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp -name *.sql)"
     ]
   }
 }
