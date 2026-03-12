@@ -100,11 +100,24 @@ function renderProdCapWorkArea() {
             </tr>`;
         }).join('');
 
+  // ── Month offset indicator
+  const offsetLabel = prodCapMonthOffset === 0 ? 'Current' :
+                      prodCapMonthOffset > 0 ? `+${prodCapMonthOffset} month${prodCapMonthOffset > 1 ? 's' : ''}` :
+                      `${prodCapMonthOffset} month${prodCapMonthOffset < -1 ? 's' : ''}`;
+
   return `
     <div class="pc-workarea">
 
       <!-- Work Area Tabs -->
       <div class="pc-nav" style="margin-bottom:20px">${tabPills}</div>
+
+      <!-- Perpetual Window Controls -->
+      <div class="pc-window-controls">
+        <button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('prev')" title="View previous month">← Previous</button>
+        <div class="pc-window-label">${offsetLabel}</div>
+        <button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('next')" title="View next month">Next →</button>
+        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" onclick="prodCapResetMonthOffset()" title="Reset to current month">Reset</button>` : ''}
+      </div>
 
       <!-- Chart -->
       <div class="pc-card">

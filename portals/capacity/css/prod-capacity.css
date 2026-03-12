@@ -531,6 +531,25 @@
   max-width: 100%;
 }
 
+/* ── Perpetual Window Controls ───────────────────────────────── */
+.pc-window-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(59,130,246,0.08);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.pc-window-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 80px;
+  text-align: center;
+}
+
 /* ── Work Area ───────────────────────────────────────────────── */
 .pc-workarea {
   max-width: 100%;

@@ -27,6 +27,8 @@ async function prodCapDataInit() {
     console.error('❌ Error loading production capacity:', err);
     prodCapState.capacityRecords = [];
   }
+  // Load perpetual month offset
+  prodCapLoadMonthOffset();
 }
 
 // ── Load utilization factor from Supabase or localStorage ────────
@@ -216,11 +218,14 @@ function prodCapMonthLabelFull(key) {
   return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
-// ── Generate ordered month keys for a 2-year window ──────────
+// ── Generate ordered month keys for a 2-year window (perpetual, rolling) ──────────
 function prodCapGet24MonthKeys() {
   const today = new Date();
-  const baseYear  = today.getFullYear();
-  const baseMonth = today.getMonth() + 1;
+  let baseYear  = today.getFullYear();
+  let baseMonth = today.getMonth() + 1 + prodCapMonthOffset;
+  // Normalize base month
+  while (baseMonth > 12) { baseMonth -= 12; baseYear++; }
+  while (baseMonth < 1) { baseMonth += 12; baseYear--; }
   const keys = [];
   for (let i = 0; i < 24; i++) {
     keys.push(prodCapMonthKey(baseYear, baseMonth, i));
@@ -280,6 +285,18 @@ function prodCapCalcDemandMatrix(monthKeys) {
   return matrix;
 }
 
+// ── Helper: resolve family ID to label for display ────────────
+function prodCapResolveFamilyLabel(familyIdOrName) {
+  if (!familyIdOrName) return 'Other';
+  // Check if familiesState exists and has families
+  if (typeof familiesState !== 'undefined' && familiesState?.families) {
+    const family = familiesState.families.find(f => f.id === familyIdOrName);
+    if (family) return family.label;
+  }
+  // Fall back to direct name (not a UUID)
+  return familyIdOrName;
+}
+
 // ── Family-grouped demand matrix ─────────────────────────────
 // Returns { 'YYYY-MM': { familyName: hours } }
 function prodCapCalcFamilyDemandMatrix(monthKeys) {
@@ -302,7 +319,7 @@ function prodCapCalcFamilyDemandMatrix(monthKeys) {
     if (hoursPerUnit === 0) return;
 
     const totalHours = hoursPerUnit * Number(batch.quantity);
-    const family     = product.family || 'Other';
+    const family     = prodCapResolveFamilyLabel(product.family) || 'Other';
 
     const batchStart = new Date(batch.start_date + 'T00:00:00');
     const batchEnd   = new Date(batch.due_date   + 'T00:00:00');
@@ -349,4 +366,25 @@ function prodCapCalcSupplyMatrix(monthKeys, workAreas) {
 function prodCapUtil(demand, supply) {
   if (!supply || supply === 0) return demand > 0 ? 999 : 0;
   return Math.round((demand / supply) * 100);
+}
+
+// ── Perpetual window adjustment ────────────────────────────────
+function prodCapShiftMonth(direction) {
+  const delta = direction === 'next' ? 1 : -1;
+  prodCapMonthOffset += delta;
+  localStorage.setItem('prodCapMonthOffset', prodCapMonthOffset.toString());
+  render();
+}
+
+function prodCapResetMonthOffset() {
+  prodCapMonthOffset = 0;
+  localStorage.setItem('prodCapMonthOffset', '0');
+  render();
+}
+
+function prodCapLoadMonthOffset() {
+  const stored = localStorage.getItem('prodCapMonthOffset');
+  if (stored) {
+    prodCapMonthOffset = parseInt(stored, 10);
+  }
 }

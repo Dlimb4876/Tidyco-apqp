@@ -62,8 +62,21 @@ function renderProdCapDashboard() {
     alertsHtml = `<div class="pc-alert pc-alert-info">No production batches scheduled yet. Add batches in Production → Schedule to see capacity load.</div>`;
   }
 
+  // ── Month offset indicator
+  const offsetLabel = prodCapMonthOffset === 0 ? 'Current' :
+                      prodCapMonthOffset > 0 ? `+${prodCapMonthOffset} month${prodCapMonthOffset > 1 ? 's' : ''}` :
+                      `${prodCapMonthOffset} month${prodCapMonthOffset < -1 ? 's' : ''}`;
+
   return `
     <div class="pc-dashboard">
+
+      <!-- Perpetual Window Controls -->
+      <div class="pc-window-controls">
+        <button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('prev')" title="View previous month">← Previous</button>
+        <div class="pc-window-label">${offsetLabel}</div>
+        <button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('next')" title="View next month">Next →</button>
+        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" onclick="prodCapResetMonthOffset()" title="Reset to current month">Reset</button>` : ''}
+      </div>
 
       <!-- KPI Row -->
       <div class="pc-kpi-row">

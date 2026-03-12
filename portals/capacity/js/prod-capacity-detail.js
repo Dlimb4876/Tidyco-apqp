@@ -6,6 +6,18 @@
 
 let prodCapDetailFilter = { status: '', family: '', workArea: '' };
 
+// ── Helper: resolve family ID to label ──────────────────────────
+function prodCapGetFamilyLabel(familyIdOrName) {
+  if (!familyIdOrName) return 'Other';
+  // Check if familiesState exists and has families
+  if (typeof familiesState !== 'undefined' && familiesState?.families) {
+    const family = familiesState.families.find(f => f.id === familyIdOrName);
+    if (family) return family.label;
+  }
+  // Fall back to direct name (not a UUID)
+  return familyIdOrName;
+}
+
 function renderProdCapDetail() {
   const batches  = prodState?.batches  || [];
   const products = prodState?.products || [];
@@ -13,8 +25,12 @@ function renderProdCapDetail() {
   const productMap = {};
   products.forEach(p => { productMap[p.id] = p; });
 
-  // Families for filter
-  const familySet = new Set(products.map(p => p.family || 'Other').filter(Boolean));
+  // Families for filter — resolve IDs to labels
+  const familySet = new Set();
+  products.forEach(p => {
+    const label = prodCapGetFamilyLabel(p.family);
+    if (label && label !== '—') familySet.add(label);
+  });
   const families  = Array.from(familySet).sort();
   const workAreas = prodCapGetWorkAreas();
 
@@ -23,7 +39,7 @@ function renderProdCapDetail() {
     const prod = productMap[b.product_id];
     if (prodCapDetailFilter.status && b.status !== prodCapDetailFilter.status) return false;
     if (prodCapDetailFilter.workArea && b.work_location !== prodCapDetailFilter.workArea) return false;
-    if (prodCapDetailFilter.family && prod?.family !== prodCapDetailFilter.family) return false;
+    if (prodCapDetailFilter.family && prodCapGetFamilyLabel(prod?.family) !== prodCapDetailFilter.family) return false;
     return true;
   });
 
@@ -36,7 +52,7 @@ function renderProdCapDetail() {
     const prod = productMap[batch.product_id];
     const hoursPerUnit = prod ? Number(prod.current_overhaul_hours) || 0 : 0;
     const totalHours   = hoursPerUnit * (batch.quantity || 0);
-    const family       = prod?.family || '—';
+    const family       = prod ? prodCapGetFamilyLabel(prod.family) : '—';
     const wa           = batch.work_location || prod?.work_location || '—';
 
     // Monthly distribution for this batch
