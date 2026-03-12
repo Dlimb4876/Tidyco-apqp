@@ -11,7 +11,7 @@ function renderProductMaster() {
     <tr class="row-new" id="prod-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
       <td><input class="cell-edit" id="prod-new-name" placeholder="Product name" onkeydown="handleProdRowKey(event, 'name')"></td>
-      <td><input class="cell-edit" id="prod-new-code" placeholder="Code" onkeydown="handleProdRowKey(event, 'code')"></td>
+      <td><input class="cell-edit" id="prod-new-code" placeholder="Part Number" onkeydown="handleProdRowKey(event, 'part_number')"></td>
       <td>
         <select class="cell-edit" id="prod-new-family" onkeydown="handleProdRowKey(event, 'family')">
           <option value="">—</option>
@@ -44,7 +44,7 @@ function renderProductMaster() {
       <tr class="${isInactive ? 'row-inactive' : ''}">
         <td class="w28 ctr">${idx + 1}</td>
         <td><input class="cell-edit" value="${esc(prod.name || '')}" onchange="prodDataUpdateProduct(${idx}, 'name', this.value)" onkeydown="handleCellKey(event)"></td>
-        <td><input class="cell-edit" value="${esc(prod.code || '')}" onchange="prodDataUpdateProduct(${idx}, 'code', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td><input class="cell-edit" value="${esc(prod.part_number || '')}" onchange="prodDataUpdateProduct(${idx}, 'part_number', this.value)" onkeydown="handleCellKey(event)"></td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'family', this.value)" onkeydown="handleCellKey(event)">
             <option value="">—</option>

@@ -16,7 +16,7 @@ function renderProductsPortalHTML() {
             type="text"
             id="productSearch"
             class="search-input"
-            placeholder="Search by name, code, or customer..."
+            placeholder="Search by name, part number, or customer..."
           >
           <button class="btn btn-primary" id="btnAddProduct">+ Add Product</button>
         </div>
@@ -52,8 +52,8 @@ function renderProductsPortalHTML() {
               <input type="text" id="productName" required>
             </div>
             <div class="form-group">
-              <label>Product Code *</label>
-              <input type="text" id="productCode" required>
+              <label>Part Number *</label>
+              <input type="text" id="productPartNumber" required>
             </div>
             <div class="form-group">
               <label>Product Family</label>
@@ -132,7 +132,7 @@ function renderProductsList() {
   const filtered = products.filter(p => {
     const term = searchTerm.toLowerCase();
     return p.name.toLowerCase().includes(term) ||
-           p.code.toLowerCase().includes(term) ||
+           p.part_number.toLowerCase().includes(term) ||
            p.customer.toLowerCase().includes(term);
   });
 
@@ -145,7 +145,7 @@ function renderProductsList() {
     <table class="data-table">
       <thead>
         <tr>
-          <th>Code</th>
+          <th>Part Number</th>
           <th>Product Name</th>
           <th>Family</th>
           <th>Work Location</th>
@@ -162,7 +162,7 @@ function renderProductsList() {
           const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || p.family) : '—';
           return `
           <tr>
-            <td><strong>${esc(p.code)}</strong></td>
+            <td><strong>${esc(p.part_number)}</strong></td>
             <td>${esc(p.name)}</td>
             <td>${esc(familyLabel)}</td>
             <td>${esc(p.work_location || '—')}</td>
@@ -225,7 +225,7 @@ function showProductModal(productId = null, product = null) {
   if (productId && product) {
     title.textContent = `Edit Product: ${product.name}`;
     document.getElementById('productName').value = product.name;
-    document.getElementById('productCode').value = product.code;
+    document.getElementById('productPartNumber').value = product.part_number;
     document.getElementById('productFamily').value = product.family || '';
     document.getElementById('productCustomer').value = product.customer;
     document.getElementById('productOverhaulHours').value = product.current_overhaul_hours;
@@ -292,7 +292,7 @@ function setupProductsEventListeners() {
     const productId = document.getElementById('productForm').dataset.productId;
     const productData = {
       name: document.getElementById('productName').value,
-      code: document.getElementById('productCode').value,
+      part_number: document.getElementById('productPartNumber').value,
       family: document.getElementById('productFamily').value,
       customer: document.getElementById('productCustomer').value,
       current_overhaul_hours: parseFloat(document.getElementById('productOverhaulHours').value) || 0,

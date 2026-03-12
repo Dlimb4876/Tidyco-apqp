@@ -131,8 +131,8 @@ window.prodDataUpdateProduct = async function(idx, field, value) {
     case 'name':
       updates.name = value || '';
       break;
-    case 'code':
-      updates.code = value ? value.trim() : null;
+    case 'part_number':
+      updates.part_number = value ? value.trim() : null;
       break;
     case 'family':
       updates.family = value || null;
@@ -292,7 +292,7 @@ window.prodDataDeleteBatch = async function(idx) {
 
 window.prodDataGetProductName = function(productId) {
   const product = prodState.products.find(p => p.id === productId);
-  return product ? `${product.name} (${product.code || 'N/A'})` : 'Unknown Product';
+  return product ? `${product.name} (${product.part_number || 'N/A'})` : 'Unknown Product';
 };
 
 window.prodDataGetProductById = function(productId) {
@@ -304,7 +304,16 @@ window.prodDataGetBatchesByProduct = function(productId) {
 };
 
 window.prodDataGetBatchesByWorkLocation = function(workLocation) {
-  return prodState.batches.filter(b => b.work_location === workLocation);
+  return prodState.batches.filter(b => {
+    const batchLocation = b.work_location;
+    if (batchLocation === workLocation) return true;
+    // Fallback to product's work_location if batch doesn't have one
+    if (!batchLocation) {
+      const product = prodState.products.find(p => p.id === b.product_id);
+      return product && product.work_location === workLocation;
+    }
+    return false;
+  });
 };
 
 window.prodSetActiveUnit = function(unit) {

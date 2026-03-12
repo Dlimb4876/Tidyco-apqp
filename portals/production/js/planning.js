@@ -1,7 +1,7 @@
 // Production Planning Views
 
 function renderPlanByProduct() {
-  const activeProducts = prodState.products.filter(p => p.status === 'active');
+  const activeProducts = prodState.products.filter(p => p.status && p.status?.toLowerCase() !== 'closed' && p.status?.toLowerCase() !== 'inactive');
 
   let content = '';
   activeProducts.forEach(product => {
@@ -30,7 +30,7 @@ function renderPlanByProduct() {
         <div class="product-header">
           <div>
             <div class="product-name">${esc(product.name)}</div>
-            <div class="product-code">${esc(product.code || 'N/A')}</div>
+            <div class="product-code">${esc(product.part_number || 'N/A')}</div>
           </div>
           <div class="product-meta">
             ${product.family ? `<span>${esc(prodState.families.find(f => f.id === product.family)?.label || product.family)}</span>` : ''}
@@ -209,7 +209,7 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
   let batchRowsHtml = '';
   batches.forEach((batch, idx) => {
     const product = prodDataGetProductById(batch.product_id);
-    const productName = product ? product.code : `Batch ${idx + 1}`;
+    const productName = product ? product.part_number : `Batch ${idx + 1}`;
     const startD = batch.start_date ? new Date(batch.start_date) : null;
     const endD = batch.due_date ? new Date(batch.due_date) : null;
 
@@ -225,7 +225,7 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
 
     const statusBadge = getStatusBadge(batch.status);
     const isOverdue = endD && endD < new Date(todayStr) && batch.status !== 'Complete';
-    const displayLabel = product ? esc(product.code) : `${batch.quantity || 0}u`;
+    const displayLabel = product ? esc(product.part_number) : `${batch.quantity || 0}u`;
 
     // Format batch meta with IN/OUT
     const inDate = formatDisplayDate(batch.start_date) || '—';

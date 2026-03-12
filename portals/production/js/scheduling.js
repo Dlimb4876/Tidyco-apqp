@@ -18,7 +18,7 @@ function renderScheduling() {
       <td>
         <select class="cell-edit" id="batch-new-product" onchange="calcBatchDueDate(); updateFamilyDisplay('new'); autoPopulateWorkLocation()" onkeydown="handleBatchRowKey(event, 'product')">
           <option value="">— Select Product</option>
-          ${prodState.products.filter(p => p.status !== 'closed').map(p => `<option value="${p.id}">${p.name} (${p.code || 'N/A'})</option>`).join('')}
+          ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}">${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
         </select>
       </td>
       <td>
@@ -61,7 +61,7 @@ function renderScheduling() {
         <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
         <td>
           <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'product_id', this.value); autoPopulateWorkLocationForBatch(${batchIdx}, this.value)" onkeydown="handleCellKey(event)">
-            ${prodState.products.filter(p => p.status !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.code || 'N/A'})</option>`).join('')}
+            ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
           </select>
         </td>
         <td>
@@ -121,7 +121,7 @@ function renderScheduling() {
           <label>Product:</label>
           <select onchange="prodSchedulingFilters.product = this.value; render()">
             <option value="">— All Products</option>
-            ${prodState.products.filter(p => p.status !== 'closed' && (!prodSchedulingFilters.family || p.family === prodSchedulingFilters.family)).map(p => `<option value="${p.id}" ${prodSchedulingFilters.product === p.id ? 'selected' : ''}>${p.name} (${p.code || ''})</option>`).join('')}
+            ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed' && (!prodSchedulingFilters.family || p.family === prodSchedulingFilters.family)).map(p => `<option value="${p.id}" ${prodSchedulingFilters.product === p.id ? 'selected' : ''}>${p.name} (${p.part_number || ''})</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">

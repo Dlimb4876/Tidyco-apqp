@@ -80,7 +80,7 @@ async function productsDataAddProduct(product) {
     const newProduct = {
       user_id: currentUser.id,
       name: product.name,
-      code: product.code,
+      part_number: product.part_number,
       family: product.family || '',
       customer: product.customer,
       current_overhaul_hours: product.current_overhaul_hours || 0,
