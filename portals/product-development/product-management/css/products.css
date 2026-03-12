@@ -208,6 +208,50 @@
   color: #666;
 }
 
+/* Inline table editing */
+.products-inline-table .cell-edit {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: inherit;
+  background: white;
+  box-sizing: border-box;
+}
+
+.products-inline-table .cell-edit:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.15);
+}
+
+.products-inline-table .cell-num {
+  width: 70px;
+}
+
+.products-new-row {
+  background: #f0f7f0;
+}
+
+.products-new-row td {
+  padding: 6px 8px;
+}
+
+.products-edit-row {
+  background: #fffde7;
+}
+
+.products-edit-row td {
+  padding: 6px 8px;
+}
+
+.empty-state-cell {
+  padding: 30px 20px;
+  text-align: center;
+  color: #999;
+}
+
 /* Empty State */
 .empty-state {
   padding: 40px 20px;

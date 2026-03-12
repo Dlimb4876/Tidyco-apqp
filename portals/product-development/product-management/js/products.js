@@ -1,7 +1,11 @@
 /**
  * Products Management Portal
  * Main orchestrator for product list, CRUD, and overhaul history tracking
+ * Uses inline editing — no modals
  */
+
+// Track which product row is currently being edited
+let productsEditingId = null;
 
 /**
  * Get products portal HTML
@@ -19,7 +23,6 @@ function renderProductsPortalHTML() {
               class="search-input"
               placeholder="Search by name, part number, or customer..."
             >
-            <button class="btn btn-primary" id="btnAddProduct">+ Add Product</button>
           </div>
         </div>
         <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root');render()">← Back to Product Development</button>
@@ -41,71 +44,6 @@ function renderProductsPortalHTML() {
 
       <div id="productsFamiliesTab" class="products-tab-content">
       </div>
-
-      <!-- Add/Edit Product Modal -->
-      <div id="productModal" class="modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="modalTitle">Add Product</h2>
-            <button class="modal-close">&times;</button>
-          </div>
-          <form id="productForm">
-            <div class="form-group">
-              <label>Product Name *</label>
-              <input type="text" id="productName" required>
-            </div>
-            <div class="form-group">
-              <label>Part Number *</label>
-              <input type="text" id="productPartNumber" required>
-            </div>
-            <div class="form-group">
-              <label>Product Family</label>
-              <select id="productFamily">
-                <option value="">Select a family...</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Customer *</label>
-              <input type="text" id="productCustomer" required>
-            </div>
-            <div class="form-group">
-              <label>Current Overhaul Time (hours)</label>
-              <input type="number" id="productOverhaulHours" min="0" step="0.5">
-            </div>
-            <div class="form-group">
-              <label>Turnaround Time (days)</label>
-              <input type="number" id="productTurnaroundTime" min="0" step="0.5">
-            </div>
-            <div class="form-group">
-              <label>Work Location</label>
-              <select id="productWorkLocation">
-                <option value="">Select location...</option>
-                <option value="Unit 2">Unit 2</option>
-                <option value="Unit 3">Unit 3</option>
-                <option value="Unit 6">Unit 6</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Status</label>
-              <select id="productStatus">
-                <option value="Tender">Tender</option>
-                <option value="NPI">NPI</option>
-                <option value="Production">Production</option>
-                <option value="Closed">Closed</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Notes</label>
-              <textarea id="productNotes" rows="3"></textarea>
-            </div>
-            <div class="modal-actions">
-              <button type="submit" class="btn btn-primary">Save Product</button>
-              <button type="button" class="btn btn-secondary" id="btnModalCancel">Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
     </div>
   `;
 }
@@ -114,143 +52,237 @@ function renderProductsPortalHTML() {
  * Setup products portal after rendering
  */
 function renderProductsPortalSetup() {
-  // Populate family select with dynamic families
-  const famSel = document.getElementById('productFamily');
-  if (famSel) {
-    famSel.innerHTML = '<option value="">Select a family...</option>' +
-      getFamilies().map(f => `<option value="${esc(f.id)}">${esc(f.icon)} ${esc(f.label)}</option>`).join('');
-  }
   setupProductsEventListeners();
   renderProductsList();
 }
 
 /**
- * Render products list table
+ * Build family select options HTML
+ */
+function buildFamilyOptions(selectedId) {
+  return '<option value="">— Family —</option>' +
+    getFamilies().map(f =>
+      `<option value="${esc(f.id)}" ${f.id === selectedId ? 'selected' : ''}>${esc(f.icon)} ${esc(f.label)}</option>`
+    ).join('');
+}
+
+/**
+ * Build status select options HTML
+ */
+function buildStatusOptions(selected) {
+  return ['Tender', 'NPI', 'Production', 'Closed'].map(s =>
+    `<option value="${s}" ${s === selected ? 'selected' : ''}>${s}</option>`
+  ).join('');
+}
+
+/**
+ * Build work location select options HTML
+ */
+function buildLocationOptions(selected) {
+  return '<option value="">— Location —</option>' +
+    ['Unit 2', 'Unit 3', 'Unit 6'].map(l =>
+      `<option value="${l}" ${l === selected ? 'selected' : ''}>${l}</option>`
+    ).join('');
+}
+
+/**
+ * Render products list table with inline add/edit
  */
 function renderProductsList() {
   const container = document.getElementById('productsTable');
+  if (!container) return;
+
   const products = productsDataGetAll();
-  const searchTerm = document.getElementById('productSearch')?.value?.toLowerCase() || '';
+  const searchTerm = (document.getElementById('productSearch')?.value || '').toLowerCase();
 
   const filtered = products.filter(p => {
-    const term = searchTerm.toLowerCase();
-    return p.name.toLowerCase().includes(term) ||
-           p.part_number.toLowerCase().includes(term) ||
-           p.customer.toLowerCase().includes(term);
+    if (!searchTerm) return true;
+    return (p.name || '').toLowerCase().includes(searchTerm) ||
+           (p.part_number || '').toLowerCase().includes(searchTerm) ||
+           (p.customer || '').toLowerCase().includes(searchTerm);
   });
 
-  if (filtered.length === 0) {
-    container.innerHTML = '<div class="empty-state">No products found. Add one to get started.</div>';
-    return;
-  }
-
   const html = `
-    <table class="data-table">
+    <table class="data-table products-inline-table">
       <thead>
         <tr>
           <th>Product Name</th>
           <th>Part Number</th>
           <th>Family</th>
-          <th>Work Location</th>
+          <th>Location</th>
           <th>Customer</th>
           <th class="col-center">Overhaul (hrs)</th>
           <th class="col-center">Turnaround (days)</th>
           <th>Notes</th>
-          <th class="col-center">Status</th>
+          <th>Status</th>
           <th class="col-center">Actions</th>
         </tr>
       </thead>
       <tbody>
-        ${filtered.map(p => {
-          const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || p.family) : '—';
+        <!-- New row -->
+        <tr class="products-new-row" id="productsNewRow">
+          <td><input class="cell-edit" id="pNew-name" placeholder="Product name"></td>
+          <td><input class="cell-edit" id="pNew-partNumber" placeholder="Part number"></td>
+          <td><select class="cell-edit" id="pNew-family">${buildFamilyOptions('')}</select></td>
+          <td><select class="cell-edit" id="pNew-location">${buildLocationOptions('')}</select></td>
+          <td><input class="cell-edit" id="pNew-customer" placeholder="Customer"></td>
+          <td><input class="cell-edit cell-num" id="pNew-hours" type="number" min="0" step="0.5" placeholder="0"></td>
+          <td><input class="cell-edit cell-num" id="pNew-turnaround" type="number" min="0" step="1" placeholder="—"></td>
+          <td><input class="cell-edit" id="pNew-notes" placeholder="Notes"></td>
+          <td><select class="cell-edit" id="pNew-status">${buildStatusOptions('Tender')}</select></td>
+          <td class="col-center">
+            <button class="btn-icon" title="Add product" onclick="productsAddRow()">✓</button>
+          </td>
+        </tr>
+        ${filtered.length === 0 ? `
+          <tr><td colspan="10" class="empty-state-cell">No products found.</td></tr>
+        ` : filtered.map(p => {
+          const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || '—') : '—';
+          if (productsEditingId === p.id) {
+            return `
+            <tr class="products-edit-row">
+              <td><input class="cell-edit" id="pEdit-name" value="${esc(p.name || '')}"></td>
+              <td><input class="cell-edit" id="pEdit-partNumber" value="${esc(p.part_number || '')}"></td>
+              <td><select class="cell-edit" id="pEdit-family">${buildFamilyOptions(p.family || '')}</select></td>
+              <td><select class="cell-edit" id="pEdit-location">${buildLocationOptions(p.work_location || '')}</select></td>
+              <td><input class="cell-edit" id="pEdit-customer" value="${esc(p.customer || '')}"></td>
+              <td><input class="cell-edit cell-num" id="pEdit-hours" type="number" min="0" step="0.5" value="${p.current_overhaul_hours || 0}"></td>
+              <td><input class="cell-edit cell-num" id="pEdit-turnaround" type="number" min="0" step="1" value="${p.turnaround_days || ''}"></td>
+              <td><input class="cell-edit" id="pEdit-notes" value="${esc(p.notes || '')}"></td>
+              <td><select class="cell-edit" id="pEdit-status">${buildStatusOptions(p.status || 'Tender')}</select></td>
+              <td class="col-center">
+                <button class="btn-icon" title="Save" onclick="productsSaveEdit('${p.id}')">✓</button>
+                <button class="btn-icon" title="Cancel" onclick="productsCancelEdit()">✕</button>
+              </td>
+            </tr>`;
+          }
           return `
           <tr>
             <td>${esc(p.name)}</td>
-            <td><strong>${esc(p.part_number)}</strong></td>
+            <td><strong>${esc(p.part_number || '')}</strong></td>
             <td>${esc(familyLabel)}</td>
             <td>${esc(p.work_location || '—')}</td>
-            <td>${esc(p.customer)}</td>
-            <td class="col-center">${p.current_overhaul_hours.toFixed(1)}</td>
-            <td class="col-center">${p.turnaround_days ? p.turnaround_days.toFixed(0) : '—'}</td>
-            <td class="notes-cell" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '...' : '') : '—'}</td>
-            <td class="col-center"><span class="badge badge-${p.status}">${p.status}</span></td>
+            <td>${esc(p.customer || '')}</td>
+            <td class="col-center">${(p.current_overhaul_hours || 0).toFixed(1)}</td>
+            <td class="col-center">${p.turnaround_days ? Math.round(p.turnaround_days) : '—'}</td>
+            <td class="notes-cell" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</td>
+            <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td class="col-center">
-              <button class="btn-icon" title="Edit" data-action="edit" data-id="${p.id}">✏️</button>
-              <button class="btn-icon" title="Delete" data-action="delete" data-id="${p.id}">🗑️</button>
+              <button class="btn-icon" title="Edit" onclick="productsStartEdit('${p.id}')">✏️</button>
+              <button class="btn-icon" title="Delete" onclick="productsDeleteRow('${p.id}', '${esc(p.name)}')">🗑️</button>
             </td>
-          </tr>
-        `;}).join('')}
+          </tr>`;
+        }).join('')}
       </tbody>
     </table>
   `;
 
   container.innerHTML = html;
-
-  // Event delegation for action buttons
-  container.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const action = btn.dataset.action;
-      const productId = btn.dataset.id;
-      const product = productsDataGetAll().find(p => p.id === productId);
-
-      if (action === 'edit') {
-        showProductModal(productId, product);
-      } else if (action === 'delete') {
-        if (confirm(`Delete product "${product.name}"? This cannot be undone.`)) {
-          await productsDataDeleteProduct(productId);
-          renderProductsList();
-          // Sync changes to production portal
-          if (typeof prodDataReloadProducts === 'function') {
-            await prodDataReloadProducts();
-          }
-        }
-      }
-    });
-  });
 }
 
 /**
- * Show product add/edit modal
+ * Add new product from the new row inputs
  */
-function showProductModal(productId = null, product = null) {
-  const modal = document.getElementById('productModal');
-  const form = document.getElementById('productForm');
-  const title = document.getElementById('modalTitle');
+async function productsAddRow() {
+  const name = document.getElementById('pNew-name')?.value.trim();
+  const partNumber = document.getElementById('pNew-partNumber')?.value.trim();
+  const customer = document.getElementById('pNew-customer')?.value.trim();
 
-  // Refresh family options in case families were edited
-  const famSel = document.getElementById('productFamily');
-  if (famSel) {
-    famSel.innerHTML = '<option value="">Select a family...</option>' +
-      getFamilies().map(f => `<option value="${esc(f.id)}">${esc(f.icon)} ${esc(f.label)}</option>`).join('');
+  if (!name) {
+    document.getElementById('pNew-name')?.focus();
+    return;
   }
 
-  if (productId && product) {
-    title.textContent = `Edit Product: ${product.name}`;
-    document.getElementById('productName').value = product.name;
-    document.getElementById('productPartNumber').value = product.part_number;
-    document.getElementById('productFamily').value = product.family || '';
-    document.getElementById('productCustomer').value = product.customer;
-    document.getElementById('productOverhaulHours').value = product.current_overhaul_hours;
-    document.getElementById('productTurnaroundTime').value = product.turnaround_days || '';
-    document.getElementById('productWorkLocation').value = product.work_location || '';
-    document.getElementById('productStatus').value = product.status;
-    document.getElementById('productNotes').value = product.notes || '';
-    form.dataset.productId = productId;
-  } else {
-    title.textContent = 'Add Product';
-    form.reset();
-    delete form.dataset.productId;
-    document.getElementById('productOverhaulHours').value = 0;
-    document.getElementById('productTurnaroundTime').value = '';
-    document.getElementById('productStatus').value = 'Tender';
-  }
+  const productData = {
+    name,
+    part_number: partNumber || '',
+    family: document.getElementById('pNew-family')?.value || '',
+    work_location: document.getElementById('pNew-location')?.value || null,
+    customer: customer || '',
+    current_overhaul_hours: parseFloat(document.getElementById('pNew-hours')?.value) || 0,
+    turnaround_days: parseFloat(document.getElementById('pNew-turnaround')?.value) || null,
+    notes: document.getElementById('pNew-notes')?.value.trim() || '',
+    status: document.getElementById('pNew-status')?.value || 'Tender'
+  };
 
-  modal.classList.add('active');
+  try {
+    await productsDataAddProduct(productData);
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    renderProductsList();
+    // Re-focus name input for quick entry of next product
+    document.getElementById('pNew-name')?.focus();
+  } catch (err) {
+    alert('Error adding product: ' + err.message);
+  }
 }
 
 /**
- * Render overhaul trends visualization with KPIs and charts
+ * Start editing a product row inline
+ */
+function productsStartEdit(productId) {
+  productsEditingId = productId;
+  renderProductsList();
+  document.getElementById('pEdit-name')?.focus();
+}
+
+/**
+ * Save inline edit
+ */
+async function productsSaveEdit(productId) {
+  const name = document.getElementById('pEdit-name')?.value.trim();
+  if (!name) {
+    document.getElementById('pEdit-name')?.focus();
+    return;
+  }
+
+  const updates = {
+    name,
+    part_number: document.getElementById('pEdit-partNumber')?.value.trim() || '',
+    family: document.getElementById('pEdit-family')?.value || '',
+    work_location: document.getElementById('pEdit-location')?.value || null,
+    customer: document.getElementById('pEdit-customer')?.value.trim() || '',
+    current_overhaul_hours: parseFloat(document.getElementById('pEdit-hours')?.value) || 0,
+    turnaround_days: parseFloat(document.getElementById('pEdit-turnaround')?.value) || null,
+    notes: document.getElementById('pEdit-notes')?.value.trim() || '',
+    status: document.getElementById('pEdit-status')?.value || 'Tender'
+  };
+
+  try {
+    await productsDataUpdateProduct(productId, updates);
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+  } catch (err) {
+    alert('Error saving product: ' + err.message);
+  }
+
+  productsEditingId = null;
+  renderProductsList();
+}
+
+/**
+ * Cancel inline edit
+ */
+function productsCancelEdit() {
+  productsEditingId = null;
+  renderProductsList();
+}
+
+/**
+ * Delete a product
+ */
+async function productsDeleteRow(productId, productName) {
+  if (!confirm(`Delete product "${productName}"? This cannot be undone.`)) return;
+  try {
+    await productsDataDeleteProduct(productId);
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    if (productsEditingId === productId) productsEditingId = null;
+    renderProductsList();
+  } catch (err) {
+    alert('Error deleting product: ' + err.message);
+  }
+}
+
+/**
+ * Render overhaul trends visualization
  */
 function renderProductsTrends() {
   renderAllProductsTrends();
@@ -267,11 +299,8 @@ function setupProductsEventListeners() {
   document.querySelectorAll('.products-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
-
-      // Update active tabs/content
       document.querySelectorAll('.products-tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.products-tab-content').forEach(c => c.classList.remove('active'));
-
       btn.classList.add('active');
       document.getElementById(`products${tab.charAt(0).toUpperCase() + tab.slice(1)}Tab`).classList.add('active');
 
@@ -285,61 +314,10 @@ function setupProductsEventListeners() {
     });
   });
 
-  // Add product button
-  document.getElementById('btnAddProduct').addEventListener('click', () => showProductModal());
-
-  // Product form
-  document.getElementById('productForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const productId = document.getElementById('productForm').dataset.productId;
-    const productData = {
-      name: document.getElementById('productName').value,
-      part_number: document.getElementById('productPartNumber').value,
-      family: document.getElementById('productFamily').value,
-      customer: document.getElementById('productCustomer').value,
-      current_overhaul_hours: parseFloat(document.getElementById('productOverhaulHours').value) || 0,
-      turnaround_days: parseFloat(document.getElementById('productTurnaroundTime').value) || null,
-      work_location: document.getElementById('productWorkLocation').value || null,
-      status: document.getElementById('productStatus').value,
-      notes: document.getElementById('productNotes').value
-    };
-
-    try {
-      if (productId) {
-        await productsDataUpdateProduct(productId, productData);
-      } else {
-        await productsDataAddProduct(productData);
-      }
-      document.getElementById('productModal').classList.remove('active');
-      renderProductsList();
-      // Sync changes to production portal
-      if (typeof prodDataReloadProducts === 'function') {
-        await prodDataReloadProducts();
-      }
-    } catch (err) {
-      alert('Error saving product: ' + err.message);
-    }
-  });
-
-  // Modal close buttons
-  document.querySelectorAll('.modal-close').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.target.closest('.modal').classList.remove('active');
-    });
-  });
-
-  // Modal cancel buttons
-  document.getElementById('btnModalCancel').addEventListener('click', () => {
-    document.getElementById('productModal').classList.remove('active');
-  });
-
-  // Click outside modal to close
-  document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.remove('active');
-      }
+  // Allow Enter key on new row inputs to trigger add
+  ['pNew-name', 'pNew-partNumber', 'pNew-customer', 'pNew-hours', 'pNew-turnaround', 'pNew-notes'].forEach(id => {
+    document.getElementById(id)?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') productsAddRow();
     });
   });
 }
