@@ -482,6 +482,9 @@ window.meDataInit = async function() {
       });
 
       window.meDataState = meDataState;
+
+      // Set up real-time sync
+      meDataSubscribe();
     } else {
       console.warn('ME init skipped: supa or currentUser not available');
     }
@@ -664,3 +667,110 @@ function meUUID() {
     return v.toString(16);
   });
 }
+
+// ─────────────────────────────────────────────────────────────
+// Real-Time Sync (Generic System)
+// ─────────────────────────────────────────────────────────────
+
+window.meDataSubscribe = function() {
+  if (!currentUser) return;
+
+  // Subscribe to teams changes
+  createRealtimeSubscription('me_teams', 'me_teams_channel', {
+    onInsert: (newTeam) => {
+      if (!meDataState.team.some(t => t.id === newTeam.id)) {
+        meDataState.team.push(newTeam);
+        render();
+      }
+    },
+    onUpdate: (updated) => {
+      const idx = meDataState.team.findIndex(t => t.id === updated.id);
+      if (idx >= 0) {
+        meDataState.team[idx] = updated;
+        render();
+      }
+    },
+    onDelete: (deleted) => {
+      meDataState.team = meDataState.team.filter(t => t.id !== deleted.id);
+      render();
+    }
+  }, {
+    filter: `user_id=eq.${currentUser.id}`
+  });
+
+  // Subscribe to tasks changes
+  createRealtimeSubscription('me_tasks', 'me_tasks_channel', {
+    onInsert: (newTask) => {
+      if (!meDataState.tasks.some(t => t.id === newTask.id)) {
+        meDataState.tasks.push(newTask);
+        render();
+      }
+    },
+    onUpdate: (updated) => {
+      const idx = meDataState.tasks.findIndex(t => t.id === updated.id);
+      if (idx >= 0) {
+        meDataState.tasks[idx] = updated;
+        render();
+      }
+    },
+    onDelete: (deleted) => {
+      meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
+      render();
+    }
+  }, {
+    filter: `user_id=eq.${currentUser.id}`
+  });
+
+  // Subscribe to products changes
+  createRealtimeSubscription('me_products', 'me_products_channel', {
+    onInsert: (newProduct) => {
+      if (!meDataState.products.some(p => p.id === newProduct.id)) {
+        meDataState.products.push(newProduct);
+        render();
+      }
+    },
+    onUpdate: (updated) => {
+      const idx = meDataState.products.findIndex(p => p.id === updated.id);
+      if (idx >= 0) {
+        meDataState.products[idx] = updated;
+        render();
+      }
+    },
+    onDelete: (deleted) => {
+      meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
+      render();
+    }
+  }, {
+    filter: `user_id=eq.${currentUser.id}`
+  });
+
+  // Subscribe to holidays changes
+  createRealtimeSubscription('me_holidays', 'me_holidays_channel', {
+    onInsert: (newHoliday) => {
+      if (!meDataState.holidays.some(h => h.id === newHoliday.id)) {
+        meDataState.holidays.push(newHoliday);
+        render();
+      }
+    },
+    onUpdate: (updated) => {
+      const idx = meDataState.holidays.findIndex(h => h.id === updated.id);
+      if (idx >= 0) {
+        meDataState.holidays[idx] = updated;
+        render();
+      }
+    },
+    onDelete: (deleted) => {
+      meDataState.holidays = meDataState.holidays.filter(h => h.id !== deleted.id);
+      render();
+    }
+  }, {
+    filter: `user_id=eq.${currentUser.id}`
+  });
+};
+
+window.meDataUnsubscribe = function() {
+  removeRealtimeSubscription('me_teams_channel');
+  removeRealtimeSubscription('me_tasks_channel');
+  removeRealtimeSubscription('me_products_channel');
+  removeRealtimeSubscription('me_holidays_channel');
+};

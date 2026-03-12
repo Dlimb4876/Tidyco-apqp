@@ -34,13 +34,19 @@ function navigate(sec, { pushHash = true } = {}) {
   }
 
   // Clean up subscriptions when leaving capacity
-  if (currentSection === 'capacity' && sec !== 'capacity' && typeof prodCapUnsubscribeUtilization === 'function') {
-    prodCapUnsubscribeUtilization();
+  if (currentSection === 'capacity' && sec !== 'capacity') {
+    if (typeof meDataUnsubscribe === 'function') meDataUnsubscribe();
+    if (typeof prodCapUnsubscribeUtilization === 'function') prodCapUnsubscribeUtilization();
   }
 
   // Reset capacityTab to 'root' when navigating TO capacity from outside (e.g., from hub)
   if (sec === 'capacity' && currentSection !== 'capacity') {
     capacityTab = 'root';
+  }
+
+  // Clean up subscriptions when leaving production
+  if (currentSection === 'production' && sec !== 'production') {
+    if (typeof prodDataUnsubscribe === 'function') prodDataUnsubscribe();
   }
 
   // Reset productionTab to 'root' when navigating TO production from outside

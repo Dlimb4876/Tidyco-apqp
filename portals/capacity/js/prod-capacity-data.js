@@ -11,8 +11,6 @@ let prodCapState = {
   loaded: false
 };
 
-let prodCapUtilizationSubscription = null;
-
 // ── Initialise from Supabase ──────────────────────────────────
 async function prodCapDataInit() {
   if (!currentUser) return;
@@ -69,35 +67,25 @@ async function prodCapLoadUtilization() {
 
 // ── Subscribe to utilization factor changes (real-time sync) ────────────
 function prodCapSubscribeUtilization() {
-  if (prodCapUtilizationSubscription) return;
-
-  try {
-    prodCapUtilizationSubscription = supa
-      .channel('prod_cap_util_channel')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'global_settings',
-        filter: 'setting_key=eq.prod_cap_utilization'
-      }, (payload) => {
-        const newValue = parseFloat(payload.new.setting_value);
+  createRealtimeSubscription('global_settings', 'prod_cap_util_channel', {
+    onUpdate: (updated) => {
+      if (updated.setting_key === 'prod_cap_utilization') {
+        const newValue = parseFloat(updated.setting_value);
         if (!isNaN(newValue) && newValue >= 0 && newValue <= 1) {
           prodCapUtilizationFactor = newValue;
           console.log('✓ Utilization factor updated by another user:', Math.round(newValue * 100) + '%');
           render();
         }
-      })
-      .subscribe();
-  } catch (err) {
-    console.debug('Could not set up real-time utilization sync:', err);
-  }
+      }
+    }
+  }, {
+    filter: 'setting_key=eq.prod_cap_utilization',
+    events: ['UPDATE']
+  });
 }
 
 function prodCapUnsubscribeUtilization() {
-  if (prodCapUtilizationSubscription) {
-    supa.removeChannel(prodCapUtilizationSubscription);
-    prodCapUtilizationSubscription = null;
-  }
+  removeRealtimeSubscription('prod_cap_util_channel');
 }
 
 // ── Save utilization factor to Supabase (global) and localStorage ────────

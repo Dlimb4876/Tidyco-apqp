@@ -51,6 +51,9 @@ async function prodDataInit() {
     prodState.families = families.data || [];
     prodState.products = products.data || [];
     prodState.batches = batches.data || [];
+
+    // Set up real-time sync
+    prodDataSubscribe();
   } catch (err) {
     console.error('Error loading production data:', err);
     prodState = { families: [], products: [], batches: [] };
@@ -394,4 +397,83 @@ window.prodDataDeleteFamily = async function(familyId) {
 window.prodDataGetFamilyName = function(familyId) {
   const family = prodState.families.find(f => f.id === familyId);
   return family ? family.label : 'Unknown Family';
+};
+
+// ────────────────────────────────────────────────────────────
+// Real-Time Sync (Generic System)
+// ────────────────────────────────────────────────────────────
+
+window.prodDataSubscribe = function() {
+  if (!currentUser) return;
+
+  // Subscribe to production batches changes
+  createRealtimeSubscription('production_batches', 'prod_batches_channel', {
+    onInsert: (newBatch) => {
+      if (!prodState.batches.some(b => b.id === newBatch.id)) {
+        prodState.batches.push(newBatch);
+        render();
+      }
+    },
+    onUpdate: (updated) => {
+      const idx = prodState.batches.findIndex(b => b.id === updated.id);
+      if (idx >= 0) {
+        prodState.batches[idx] = updated;
+        render();
+      }
+    },
+    onDelete: (deleted) => {
+      prodState.batches = prodState.batches.filter(b => b.id !== deleted.id);
+      render();
+    }
+  }, {
+    filter: `user_id=eq.${currentUser.id}`
+  });
+
+  // Subscribe to products changes (from product management)
+  createRealtimeSubscription('products', 'prod_products_channel', {
+    onInsert: (newProduct) => {
+      if (!prodState.products.some(p => p.id === newProduct.id)) {
+        prodState.products.push(newProduct);
+        render();
+      }
+    },
+    onUpdate: (updated) => {
+      const idx = prodState.products.findIndex(p => p.id === updated.id);
+      if (idx >= 0) {
+        prodState.products[idx] = updated;
+        render();
+      }
+    },
+    onDelete: (deleted) => {
+      prodState.products = prodState.products.filter(p => p.id !== deleted.id);
+      render();
+    }
+  });
+
+  // Subscribe to families changes
+  createRealtimeSubscription('families', 'prod_families_channel', {
+    onInsert: (newFamily) => {
+      if (!prodState.families.some(f => f.id === newFamily.id)) {
+        prodState.families.push(newFamily);
+        render();
+      }
+    },
+    onUpdate: (updated) => {
+      const idx = prodState.families.findIndex(f => f.id === updated.id);
+      if (idx >= 0) {
+        prodState.families[idx] = updated;
+        render();
+      }
+    },
+    onDelete: (deleted) => {
+      prodState.families = prodState.families.filter(f => f.id !== deleted.id);
+      render();
+    }
+  });
+};
+
+window.prodDataUnsubscribe = function() {
+  removeRealtimeSubscription('prod_batches_channel');
+  removeRealtimeSubscription('prod_products_channel');
+  removeRealtimeSubscription('prod_families_channel');
 };

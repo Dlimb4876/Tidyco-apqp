@@ -6,7 +6,6 @@
 let bugState = { reports: [] };
 let bugTab = 'add';
 let bugEditingId = null;
-let bugSubscription = null;
 
 async function bugDataInit() {
   if (!currentUser) return;
@@ -26,45 +25,30 @@ async function bugDataInit() {
 
 function bugDataSubscribe() {
   if (!currentUser) return;
-  if (bugSubscription) return;
 
-  try {
-    bugSubscription = supa
-      .channel('bug_reports_channel')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'bug_reports'
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const newReport = payload.new;
-          if (!bugState.reports.some(r => r.id === newReport.id)) {
-            bugState.reports.unshift(newReport);
-            render();
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          const updated = payload.new;
-          const idx = bugState.reports.findIndex(r => r.id === updated.id);
-          if (idx >= 0) {
-            bugState.reports[idx] = updated;
-            render();
-          }
-        } else if (payload.eventType === 'DELETE') {
-          bugState.reports = bugState.reports.filter(r => r.id !== payload.old.id);
-          render();
-        }
-      })
-      .subscribe();
-  } catch (err) {
-    console.debug('Could not set up real-time subscription for bug reports:', err);
-  }
+  createRealtimeSubscription('bug_reports', 'bug_reports_channel', {
+    onInsert: (newReport) => {
+      if (!bugState.reports.some(r => r.id === newReport.id)) {
+        bugState.reports.unshift(newReport);
+        render();
+      }
+    },
+    onUpdate: (updated) => {
+      const idx = bugState.reports.findIndex(r => r.id === updated.id);
+      if (idx >= 0) {
+        bugState.reports[idx] = updated;
+        render();
+      }
+    },
+    onDelete: (deleted) => {
+      bugState.reports = bugState.reports.filter(r => r.id !== deleted.id);
+      render();
+    }
+  });
 }
 
 function bugDataUnsubscribe() {
-  if (bugSubscription) {
-    supa.removeChannel(bugSubscription);
-    bugSubscription = null;
-  }
+  removeRealtimeSubscription('bug_reports_channel');
 }
 
 window.bugDataAdd = async function(page, description) {
