@@ -431,39 +431,115 @@ npi.dashboard.renderDashboard = function() {
   const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋'
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null
   const liveUpdateBadge = typeof npiRealtimeIndicatorHTML === 'function' ? npiRealtimeIndicatorHTML() : ''
+  const curGateIndex = curGate >= 0 ? curGate : 5
+  const curGateDef = GATE_DEFS[curGateIndex]
+  const openRiskCount = p.risks.filter(r => r.status !== 'Closed').length
 
-  return `<div class="dash-hero"><div style="display:flex;align-items:center;gap:12px"><button class="btn btn-ghost" style="border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="npi.nav.navigate('projects')">← Back to Projects</button><div><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME Lead: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 Project Manager: ${esc(p.pm)}</span>` : ''} ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''} ${totalBomItems > 0 ? `<span>📦 BOM: ${totalBomItems} items</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span></div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="npi.dashboard.showEditProject()">✎ Edit Project</button></div></div>
-  ${liveUpdateBadge ? `<div style="margin:10px 0 0 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
-  <div class="dash-body">
-    <div class="kpi-grid">
-      <div class="kpi-card" onclick="npi.nav.navigate('gate_${curGate >= 0 ? curGate : 5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
-      <div class="kpi-card" onclick="npi.nav.navigate('actions')" style="--kpi-color:${overdueAct > 0 ? 'var(--red)' : openAct > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${openAct}</div><div class="kpi-label">Open Actions</div><div class="kpi-sub">${overdueAct > 0 ? `<span style="color:var(--red)">${overdueAct} overdue</span>` : '—'}</div></div>
-      <div class="kpi-card" onclick="npi.nav.navigate('risks')" style="--kpi-color:${highRisks > 0 ? 'var(--red)' : 'var(--blue)'}"><div class="kpi-num">${p.risks.filter(r => r.status !== 'Closed').length}</div><div class="kpi-label">Open Risks</div><div class="kpi-sub">${highRisks > 0 ? `<span style="color:var(--red)">${highRisks} high</span>` : '—'}</div></div>
-      <div class="kpi-card" onclick="npi.nav.openPfmeaTab()" style="--kpi-color:${highRPN > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${highRPN}</div><div class="kpi-label">High RPN</div><div class="kpi-sub">${p.pfmea.length} total rows</div></div>
-    </div>
-    ${alerts ? `<div class="alert-row">${alerts}</div>` : ''}
-    <div class="dash-section-label">Gate Progress</div>
-    <div class="gate-strip">${gateStrip}</div>
-    <div class="dash-section-label" style="margin-top:8px">Tools</div>
-    <div class="section-launcher" style="margin-bottom:16px">${launcherHTML}</div>
-    ${parentProg ? `<div class="parent-prog-card" onclick="npi.nav.openProjectById('${parentProg.id}')">
-      <div class="parent-prog-label">↑ PARENT PROGRAMME</div>
-      <div class="parent-prog-name">${esc(parentProg.name)}</div>
-      ${parentProg.unit ? `<div class="parent-prog-meta">🚂 ${esc(parentProg.unit)}</div>` : ''}
-    </div>` : ''}
-    <div class="dash-split-row">
-      <div class="dash-split-col">
-        <div class="dash-section-label">Sub-assemblies</div>
-        ${subAsmHTML}
+  const trajectoryHTML = GATE_DEFS.map((g, i) => {
+    const gd = p.gates[i] || {}
+    const done = npi.gate.gateAllSigned(gd)
+    const cls = done ? 'done' : i === curGateIndex ? 'active pulse' : ''
+    const node = `<button class="gate ${cls}" onclick="npi.nav.navigate('gate_${g.num}')" title="Open Gate ${g.num}: ${g.name}">${g.num}</button>`
+    if (i === GATE_DEFS.length - 1) return node
+    const connectorCls = i < curGateIndex ? 'done' : i === curGateIndex - 1 ? 'active' : ''
+    return `${node}<div class="connector ${connectorCls}"></div>`
+  }).join('')
+
+  const nextSteps = []
+  if (overdueAct > 0) nextSteps.push(`Close ${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}`)
+  if (curGateDef) nextSteps.push(`Complete remaining checks for Gate ${curGateDef.num}`)
+  if (highRisks > 0) nextSteps.push(`Review ${highRisks} high-severity risk${highRisks !== 1 ? 's' : ''}`)
+  if (nextSteps.length === 0) nextSteps.push('Project is in good shape, continue planned activity')
+
+  return `<div class="mc-shell">
+    <div class="dash-hero">
+      <div class="hero-left">
+        <div class="eyebrow">APQP MISSION CONTROL</div>
+        <div class="dash-prog-name">${esc(p.name)}</div>
+        <div class="hero-sub">Focus view: what matters now, what is blocked, what to do next.</div>
       </div>
-      <div class="dash-split-col">
-        <div class="dash-section-label">PFMEA RPN Burndown</div>
-        ${rpnBurndownHTML}
+      <div class="hero-right">
+        <button class="btn btn-ghost" onclick="npi.nav.navigate('projects')">← Back</button>
+        <button class="btn btn-primary" onclick="npi.dashboard.showEditProject()">Edit Project</button>
       </div>
     </div>
-    <div class="dash-grid">
-      <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Open Actions</span><button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('actions')">View all →</button></div>${actHTML}</div>
-      <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Top Risks</span><button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('risks')">View all →</button></div>${riskHTML}</div>
+    ${liveUpdateBadge ? `<div class="live-row">${liveUpdateBadge}</div>` : ''}
+    <div class="dash-body">
+      <div class="command-strip">
+        <article class="cmd-card spotlight" onclick="npi.nav.navigate('gate_${curGateIndex}')">
+          <div class="cmd-title">Current Gate</div>
+          <div class="cmd-big">Gate ${curGateIndex}</div>
+          <div class="cmd-sub">${esc(curGateDef ? curGateDef.name : 'All complete')}</div>
+        </article>
+        <article class="cmd-card alarm" onclick="npi.nav.navigate('actions')">
+          <div class="cmd-title">Critical Attention</div>
+          <div class="cmd-big">${overdueAct}</div>
+          <div class="cmd-sub">Overdue actions</div>
+        </article>
+        <article class="cmd-card" onclick="npi.nav.navigate('risks')">
+          <div class="cmd-title">Risk Heat</div>
+          <div class="cmd-big">${highRisks}</div>
+          <div class="cmd-sub">High severity open risks</div>
+        </article>
+      </div>
+
+      <section class="layout">
+        <div class="panel gate-panel">
+          <div class="panel-head">
+            <h2>Gate Trajectory</h2>
+            <span>Click a gate to open detail</span>
+          </div>
+          <div class="trajectory">${trajectoryHTML}</div>
+          <div class="next-box">
+            <h3>Next 72 Hours</h3>
+            <ul>${nextSteps.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+          </div>
+        </div>
+
+        <div class="panel stack">
+          <div class="stack-card">
+            <h3>Quick Launch</h3>
+            <div class="chips">
+              <button onclick="npi.nav.navigate('apqp')">APQP</button>
+              <button onclick="npi.nav.navigate('bom')">BOM</button>
+              <button onclick="npi.nav.navigate('timing')">Timing</button>
+              <button onclick="npi.nav.navigate('actions')">Actions</button>
+              <button onclick="npi.nav.navigate('risks')">Risks</button>
+            </div>
+          </div>
+
+          <div class="stack-card muted">
+            <h3>Project Snapshot</h3>
+            <div class="dash-prog-meta">
+              <span>${famIcon} ${esc(p.family || 'Other')}</span>
+              ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''}
+              ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''}
+              ${p.pm ? `<span>📋 ${esc(p.pm)}</span>` : ''}
+              ${p.qNumber ? `<span>🔢 Q ${esc(p.qNumber)}</span>` : ''}
+            </div>
+            ${parentProg ? `<div class="parent-link" onclick="npi.nav.openProjectById('${parentProg.id}')">Parent: ${esc(parentProg.name)}</div>` : ''}
+          </div>
+        </div>
+      </section>
+
+      <div class="stack-card muted detail-stack">
+        <h3>Details (Collapsed by default)</h3>
+        <details>
+          <summary>Sub-assemblies</summary>
+          <div class="detail-body">${subAsmHTML}</div>
+        </details>
+        <details>
+          <summary>RPN Burndown</summary>
+          <div class="detail-body">${rpnBurndownHTML}</div>
+        </details>
+        <details>
+          <summary>Open Actions and Top Risks</summary>
+          <div class="detail-body dash-grid">
+            <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Open Actions</span><button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('actions')">View all →</button></div>${actHTML}</div>
+            <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Top Risks</span><button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('risks')">View all →</button></div>${riskHTML}</div>
+          </div>
+        </details>
+      </div>
     </div>
   </div>`
 }
