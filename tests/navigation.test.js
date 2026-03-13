@@ -42,6 +42,7 @@ global.apqpTab = 'ctq';
 global.capacityTab = 'root';
 global.productionTab = 'root';
 global.productDevelopmentTab = 'root';
+global.productsActiveTab = 'list';
 
 // Mock prog() accessor function
 global.prog = () => global.db.programmes.find(p => p.id === global.progId) || null;
@@ -140,6 +141,7 @@ describe('Navigation Module (navigation.js)', () => {
     global.capacityTab = 'root';
     global.productionTab = 'root';
     global.productDevelopmentTab = 'root';
+    global.productsActiveTab = 'list';
     window.location.hash = '';
     document.getElementById('mainContent').innerHTML = '';
   });
@@ -236,6 +238,20 @@ describe('Navigation Module (navigation.js)', () => {
       global.productDevelopmentTab = 'npi';
       navigate('product-development');
       expect(global.productDevelopmentTab).toBe('root');
+    });
+
+    test('should reset productsActiveTab to list when navigating to product-development', () => {
+      global.productsActiveTab = 'families';
+      global.currentSection = 'hub';
+      navigate('product-development');
+      expect(global.productsActiveTab).toBe('list');
+    });
+
+    test('should not reset productsActiveTab when already in product-development', () => {
+      global.productsActiveTab = 'families';
+      global.currentSection = 'product-development';
+      navigate('product-development');
+      expect(global.productsActiveTab).toBe('families');
     });
   });
 

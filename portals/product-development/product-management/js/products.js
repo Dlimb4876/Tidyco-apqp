@@ -7,10 +7,14 @@
 // Track which product row is currently being edited
 let productsEditingId = null;
 
+// Track which products sub-tab is active so re-renders restore the correct tab
+let productsActiveTab = 'list'; // 'list' | 'trends' | 'families'
+
 /**
  * Get products portal HTML
  */
 function renderProductsPortalHTML() {
+  const tab = productsActiveTab || 'list';
   return `
     <div class="products-portal">
       <div class="products-header">
@@ -29,20 +33,20 @@ function renderProductsPortalHTML() {
       </div>
 
       <div class="products-tabs">
-        <button class="products-tab-btn active" data-tab="list">Product List</button>
-        <button class="products-tab-btn" data-tab="trends">Overhaul Trends</button>
-        <button class="products-tab-btn" data-tab="families">Product Families</button>
+        <button class="products-tab-btn ${tab === 'list' ? 'active' : ''}" data-tab="list">Product List</button>
+        <button class="products-tab-btn ${tab === 'trends' ? 'active' : ''}" data-tab="trends">Overhaul Trends</button>
+        <button class="products-tab-btn ${tab === 'families' ? 'active' : ''}" data-tab="families">Product Families</button>
       </div>
 
-      <div id="productsListTab" class="products-tab-content active">
+      <div id="productsListTab" class="products-tab-content ${tab === 'list' ? 'active' : ''}">
         <div id="productsTable"></div>
       </div>
 
-      <div id="productsTrendsTab" class="products-tab-content">
+      <div id="productsTrendsTab" class="products-tab-content ${tab === 'trends' ? 'active' : ''}">
         <div id="productsTrends"></div>
       </div>
 
-      <div id="productsFamiliesTab" class="products-tab-content">
+      <div id="productsFamiliesTab" class="products-tab-content ${tab === 'families' ? 'active' : ''}">
       </div>
     </div>
   `;
@@ -53,7 +57,13 @@ function renderProductsPortalHTML() {
  */
 function renderProductsPortalSetup() {
   setupProductsEventListeners();
-  renderProductsList();
+  if (productsActiveTab === 'trends') {
+    renderProductsTrends();
+  } else if (productsActiveTab === 'families') {
+    renderFamiliesTabContent();
+  } else {
+    renderProductsList();
+  }
 }
 
 /**
@@ -486,6 +496,7 @@ function setupProductsEventListeners() {
   document.querySelectorAll('.products-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
+      productsActiveTab = tab;
       document.querySelectorAll('.products-tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.products-tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');

@@ -84,6 +84,7 @@ function navigate(sec, { pushHash = true } = {}) {
   // Reset productDevelopmentTab to 'root' when navigating TO product-development from outside
   if (sec === 'product-development' && currentSection !== 'product-development') {
     productDevelopmentTab = 'root';
+    if (typeof productsActiveTab !== 'undefined') productsActiveTab = 'list';
   }
 
   // Clean up families subscription when leaving product-development

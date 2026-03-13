@@ -111,7 +111,8 @@ function renderSchedulingRow(batch, idx, activeBatches) {
 }
 
 function addSchedulingRowEventListeners(batch) {
-  const batchIdx = prodState.batches.indexOf(batch);
+  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
+  const batchIdx = batches.indexOf(batch);
   const row = document.getElementById(`batch-row-${batchIdx}`);
   if (!row) return;
 
@@ -280,16 +281,17 @@ function renderScheduling() {
 
 
 function getFilteredBatches() {
-  // Ensure batches is an array
+  // Ensure batches and products are arrays
   if (!prodState || !Array.isArray(prodState.batches)) {
     return [];
   }
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
 
   let filtered = prodState.batches;
 
   if (prodSchedulingFilters.family) {
     // Filter by family ID
-    const familyProducts = prodState.products.filter(p => p.family === prodSchedulingFilters.family).map(p => p.id);
+    const familyProducts = products.filter(p => p.family === prodSchedulingFilters.family).map(p => p.id);
     filtered = filtered.filter(b => familyProducts.includes(b.product_id));
   }
 
@@ -319,8 +321,8 @@ function getFilteredBatches() {
 
     // Special handling for family (pulled from product and family database)
     if (prodSchedulingSort.field === 'family') {
-      const productA = prodState.products.find(p => p.id === a.product_id);
-      const productB = prodState.products.find(p => p.id === b.product_id);
+      const productA = products.find(p => p.id === a.product_id);
+      const productB = products.find(p => p.id === b.product_id);
       const familyA = productA ? getFamilies().find(f => f.id === productA.family) : null;
       const familyB = productB ? getFamilies().find(f => f.id === productB.family) : null;
       aVal = familyA?.label || '';
@@ -470,7 +472,8 @@ function calcBatchDueDate() {
   const startIso = parseDisplayDate(startDisplayDate);
   if (!startIso) return;
 
-  const product = prodState.products.find(p => p.id === productId);
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  const product = products.find(p => p.id === productId);
   if (!product) return;
 
   // Calculate due date: start date + lead time days (or just start date if no lead time)
@@ -494,9 +497,10 @@ function toggleHideCompleteBatches() {
 }
 
 async function duplicateBatchRow(batchIdx) {
-  if (batchIdx < 0 || batchIdx >= prodState.batches.length) return;
+  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
+  if (batchIdx < 0 || batchIdx >= batches.length) return;
 
-  const source = prodState.batches[batchIdx];
+  const source = batches[batchIdx];
   await prodDataAddBatch(
     source.product_id,
     source.work_location,
@@ -615,7 +619,8 @@ function updateFamilyDisplay(scope) {
   if (!productSelect || !familyDisplay) return;
 
   const productId = productSelect.value;
-  const product = prodState.products.find(p => p.id === productId);
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  const product = products.find(p => p.id === productId);
 
   if (product && product.family) {
     const family = getFamilies().find(f => f.id === product.family);
@@ -633,7 +638,8 @@ function autoPopulateWorkLocation() {
   if (!productSelect || !workLocationDiv) return;
 
   const productId = productSelect.value;
-  const product = prodState.products.find(p => p.id === productId);
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  const product = products.find(p => p.id === productId);
 
   if (product && product.work_location) {
     workLocationDiv.textContent = product.work_location;
@@ -644,7 +650,8 @@ function autoPopulateWorkLocation() {
 
 // Auto-populate work location from selected product (existing batch row)
 function autoPopulateWorkLocationForBatch(batchIdx, productId) {
-  const product = prodState.products.find(p => p.id === productId);
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  const product = products.find(p => p.id === productId);
 
   if (product && product.work_location) {
     prodDataUpdateBatch(batchIdx, 'work_location', product.work_location);
