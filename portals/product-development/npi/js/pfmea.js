@@ -344,6 +344,18 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
 npi.pfmea.pfDelCause   = function(mi, ei, ci) { prog().pfmea[mi].effects[ei].causes.splice(ci, 1); save(); render() }
 npi.pfmea.pfRefreshRPN = function()           { save() }
 
+// Returns max RPN across all effects/causes of a failure mode row
+npi.pfmea.calcRPN = function(mode) {
+  let max = 0
+  ;(mode.effects || []).forEach(ef => {
+    ;(ef.causes || []).forEach(ca => {
+      const rpn = (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
+      if (rpn > max) max = rpn
+    })
+  })
+  return max
+}
+
 // ── Live DOM RPN / Forecast updates ──────────────────────────
 npi.pfmea.pfRpnClass = function(rpn) { return rpn >= RPN_CRITICAL ? 'rpn-hi' : rpn >= RPN_HIGH ? 'rpn-md' : 'rpn-lo' }
 
