@@ -10,12 +10,7 @@ function setProductDevelopmentTab(tab) {
 }
 
 function renderProductDevelopment() {
-  if (productDevelopmentTab === 'npi') {
-    if (typeof npi !== 'undefined' && npi.dashboard && typeof npi.dashboard.renderProjects === 'function') {
-      return npi.dashboard.renderProjects();
-    }
-    return `<div style="padding:20px;color:red">Error: NPI dashboard not loaded</div>`;
-  }
+  if (productDevelopmentTab === 'npi') return npi.dashboard.renderProjects();
   if (productDevelopmentTab === 'product-management') return renderProductManagement();
   if (productDevelopmentTab === 'product-family-db') return renderProductFamilyDatabase();
 
