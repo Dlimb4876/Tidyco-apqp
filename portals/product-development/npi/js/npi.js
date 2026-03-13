@@ -5,7 +5,7 @@
 // ═══════════════════════════════════
 
 window.npi = {
-  nav: {}, // navigation wrappers for inline handlers
+  nav: {},        // navigation wrappers
   data: {}, // npi-data.js facade
   components: {}, // npi-components.js UI helpers
   ctq: {}, // npi-ctq.js
@@ -18,6 +18,7 @@ window.npi = {
   pfmea: {}, // pfmea.js
   apqp: {}, // apqp.js
   dashboard: {}, // dashboard.js
+  events: {},     // npi-events.js
   init: null,
   cleanup: null,
   render: null
@@ -32,6 +33,17 @@ npi.nav.openProjectById = function(id) { progId = id; navigate('project') }
 npi.nav.openPfmeaTab = function() { apqpTab = 'pfmea'; navigate('apqp') }
 npi.nav.alertEnterNameFirst = function() { alert('Enter name first') }
 npi.nav.stopEvent = function(evt) { if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation() }
+
+// ── Pub-sub: subscribe/publish render events ─────────────────
+npi._subs = {}
+npi.watch = function(key, cb) {
+  if (!npi._subs[key]) npi._subs[key] = []
+  npi._subs[key].push(cb)
+}
+npi.notify = function(key) {
+  const cbs = npi._subs[key] || []
+  cbs.forEach(cb => { try { cb() } catch (e) { console.error('[NPI] notify error:', e) } })
+}
 
 // ── Realtime sync for shared NPI programmes ──────────────────
 let npiRealtimeActive = false

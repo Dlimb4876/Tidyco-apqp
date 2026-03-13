@@ -4,9 +4,9 @@
 The NPI portal (`portals/product-development/npi/`) is an 8-file, 1,775-line vanilla JS system with tight coupling and no namespacing. The goal is incremental modernization to match the architecture patterns of the Capacity portal (`portals/capacity/js/`) which uses a clean data/component/feature layer separation. This checklist is ordered for low-risk, incremental delivery.
 
 ## Progress Snapshot (2026-03-13)
-- Implementation checklist progress (Stages 1-3): **44/56 complete (~79%)**
-- Full plan progress (including verification): **44/65 complete (~68%)**
-- Status: Stages 1 and 2 are complete. Stage 3 is not started.
+- Implementation checklist progress (Stages 1-3): **56/56 complete (100%)**
+- Full plan progress (including verification): **56/65 complete (~86%)**
+- Status: Stages 1, 2, and 3 are complete.
 
 ---
 
@@ -83,22 +83,22 @@ The NPI portal (`portals/product-development/npi/`) is an 8-file, 1,775-line van
 ## Stage 3: Modernization and Final Polish
 
 ### 3.1 Modernize Event Handling
-- [ ] Audit all inline `onclick`, `onchange`, `oninput` attributes across NPI HTML template strings
-- [ ] Replace with `addEventListener` using event delegation per container — add `data-action` attributes to interactive elements
-- [ ] Implement a single delegated listener in each feature module (pattern: `container.addEventListener('click', e => { const action = e.target.dataset.action; ... })`)
-- [ ] Remove all inline handler strings from HTML generation functions
+- [x] Audit all inline `onclick`, `onchange`, `oninput` attributes across NPI HTML template strings
+- [x] Replace with `addEventListener` using event delegation per container — add `data-action` attributes to interactive elements
+- [x] Implement a single delegated listener in each feature module (pattern: `container.addEventListener('click', e => { const action = e.target.dataset.action; ... })`)
+- [x] Remove all inline handler strings from HTML generation functions
 
 ### 3.2 Improve State Management
-- [ ] Define a lightweight reactive helper in `npi.js`: `npi.watch(key, callback)` that triggers callbacks when `prog()[key]` changes
-- [ ] Replace explicit `render*()` calls after mutations with `npi.notify(key)` signals
-- [ ] Update all mutation functions in `npi-data.js` to call `npi.notify()` instead of direct render calls
-- [ ] Wire render functions as subscribers via `npi.watch()` on init
+- [x] Define a lightweight reactive helper in `npi.js`: `npi.watch(key, callback)` that triggers callbacks when `prog()[key]` changes
+- [x] Replace explicit `render*()` calls after mutations with `npi.notify(key)` signals
+- [x] Update all mutation functions in `npi-data.js` to call `npi.notify()` instead of direct render calls
+- [x] Wire render functions as subscribers via `npi.watch()` on init
 
 ### 3.3 Adopt Async/Await
-- [ ] Audit all NPI data save calls — confirm they already use the debounced `save()` from `db.js` (async-safe)
-- [ ] Convert any remaining synchronous Supabase calls in NPI-related code to `async/await`
-- [ ] Add `async/await` error handling (`try/catch`) around Supabase operations in `npi-data.js`
-- [ ] Ensure `npi.init()` in `npi-orchestrator.js` is `async` and awaits data load before first render
+- [x] Audit all NPI data save calls — confirm they already use the debounced `save()` from `db.js` (async-safe)
+- [x] Convert any remaining synchronous Supabase calls in NPI-related code to `async/await`
+- [x] Add `async/await` error handling (`try/catch`) around Supabase operations in `npi-data.js`
+- [x] Ensure `npi.init()` in `npi-orchestrator.js` is `async` and awaits data load before first render
 
 ---
 

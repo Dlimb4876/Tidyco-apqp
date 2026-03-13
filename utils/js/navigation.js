@@ -85,6 +85,7 @@ function navigate(sec, { pushHash = true } = {}) {
   if (currentSection === 'capacity' && sec !== 'capacity') {
     if (typeof meDataUnsubscribe === 'function') meDataUnsubscribe();
     if (typeof prodCapUnsubscribeUtilization === 'function') prodCapUnsubscribeUtilization();
+    if (typeof workAreasDataUnsubscribe === 'function') workAreasDataUnsubscribe();
   }
 
   // Clean up subscriptions when leaving production
@@ -100,6 +101,9 @@ function navigate(sec, { pushHash = true } = {}) {
   // Clean up families subscription when leaving product-development
   if (currentSection === 'product-development' && sec !== 'product-development' && typeof familiesDataCleanup === 'function') {
     familiesDataCleanup();
+  }
+  if (currentSection === 'product-development' && sec !== 'product-development' && typeof familyTemplatesDataUnsubscribe === 'function') {
+    familyTemplatesDataUnsubscribe();
   }
 
   // Initialize operations real-time subscriptions when entering operations.
@@ -287,6 +291,7 @@ function render() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       autoResizeAll();
+      if (typeof npi?.events?.setup === 'function') npi.events.setup();
     });
   });
 }

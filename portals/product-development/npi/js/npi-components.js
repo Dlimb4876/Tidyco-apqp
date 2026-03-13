@@ -39,7 +39,7 @@ npi.components.scoreInput = function(value, handler) {
   const cls = handler?.className || 'cell-edit mono pfmea-score-input'
   const placeholder = handler?.placeholder ? ` placeholder="${handler.placeholder}"` : ''
   const style = handler?.style ? ` style="${handler.style}"` : ''
-  const oninput = handler?.oninput ? ` oninput="${handler.oninput}"` : ''
-  const onchange = handler?.onchange ? ` onchange="${handler.onchange}"` : ''
-  return `<input type="number" class="${cls}" min="${min}" max="${max}" value="${value ?? ''}"${placeholder}${style}${oninput}${onchange}>`
+  const action = handler?.action ? ` data-action="${handler.action}"` : ''
+  const extra = handler?.extra ? ` ${handler.extra}` : ''
+  return `<input type="number" class="${cls}" min="${min}" max="${max}" value="${value ?? ''}"${placeholder}${style}${action}${extra}>`
 }

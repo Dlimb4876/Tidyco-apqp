@@ -6,6 +6,7 @@
 
 // Track which product row is currently being edited
 let productsEditingId = null;
+let productsPortalListenerRoot = null;
 
 // Track which products sub-tab is active so re-renders restore the correct tab
 let productsActiveTab = 'list'; // 'list' | 'trends' | 'families'
@@ -16,7 +17,7 @@ let productsActiveTab = 'list'; // 'list' | 'trends' | 'families'
 function renderProductsPortalHTML() {
   const tab = productsActiveTab || 'list';
   return `
-    <div class="products-portal">
+    <div class="products-portal" id="productsPortalRoot">
       <div class="products-header">
         <div>
           <h1>Product Management</h1>
@@ -29,13 +30,13 @@ function renderProductsPortalHTML() {
             >
           </div>
         </div>
-        <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root');render()">← Back to Product Development</button>
+        <button class="btn btn-ghost" data-action="products-back-root">← Back to Product Development</button>
       </div>
 
       <div class="products-tabs">
-        <button class="products-tab-btn ${tab === 'list' ? 'active' : ''}" data-tab="list">Product List</button>
-        <button class="products-tab-btn ${tab === 'trends' ? 'active' : ''}" data-tab="trends">Overhaul Trends</button>
-        <button class="products-tab-btn ${tab === 'families' ? 'active' : ''}" data-tab="families">Product Families</button>
+        <button class="products-tab-btn ${tab === 'list' ? 'active' : ''}" data-action="products-switch-tab" data-tab="list">Product List</button>
+        <button class="products-tab-btn ${tab === 'trends' ? 'active' : ''}" data-action="products-switch-tab" data-tab="trends">Overhaul Trends</button>
+        <button class="products-tab-btn ${tab === 'families' ? 'active' : ''}" data-action="products-switch-tab" data-tab="families">Product Families</button>
       </div>
 
       <div id="productsListTab" class="products-tab-content ${tab === 'list' ? 'active' : ''}">
@@ -114,7 +115,7 @@ function renderFamiliesTabContent() {
       <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
         <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load product families</div>
         <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(familiesTabLoadError)}</div>
-        <button class="btn btn-ghost" onclick="ensureFamiliesTabData(true)">Retry</button>
+        <button class="btn btn-ghost" data-action="families-retry-load">Retry</button>
       </div>
     `;
     return;
@@ -158,7 +159,7 @@ function renderFamiliesTabContent() {
             <td><input class="cell-edit" id="fNew-desc" placeholder="Description…"></td>
             <td class="col-center">—</td>
             <td class="col-center">
-              <button class="btn-icon" title="Add family" onclick="familiesAddRow()">✓</button>
+              <button class="btn-icon" title="Add family" data-action="families-add-row">✓</button>
             </td>
           </tr>
           ${families.length === 0 ? `
@@ -174,8 +175,8 @@ function renderFamiliesTabContent() {
                 <td><input class="cell-edit" id="fEdit-desc" value="${esc(f.description || '')}"></td>
                 <td class="col-center">${usage}</td>
                 <td class="col-center">
-                  <button class="btn-icon" title="Save" onclick="familiesSaveEdit('${esc(f.id)}')">✓</button>
-                  <button class="btn-icon" title="Cancel" onclick="familiesCancelEdit()">✕</button>
+                  <button class="btn-icon" title="Save" data-action="families-save-edit" data-family-id="${esc(f.id)}">✓</button>
+                  <button class="btn-icon" title="Cancel" data-action="families-cancel-edit">✕</button>
                 </td>
               </tr>`;
             }
@@ -187,8 +188,8 @@ function renderFamiliesTabContent() {
               <td>${esc(f.description || '—')}</td>
               <td class="col-center"><span class="badge badge-NPI">${usage}</span></td>
               <td class="col-center">
-                <button class="btn-icon" title="Edit" onclick="familiesStartEdit('${esc(f.id)}')">✏️</button>
-                <button class="btn-icon" title="Delete" onclick="familiesDeleteRow('${esc(f.id)}', '${esc(f.label)}')">🗑️</button>
+                <button class="btn-icon" title="Edit" data-action="families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
+                <button class="btn-icon" title="Delete" data-action="families-delete-row" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
               </td>
             </tr>`;
           }).join('')}
@@ -378,7 +379,7 @@ function renderProductsList() {
           <td><input class="cell-edit" id="pNew-notes" placeholder="Notes"></td>
           <td><select class="cell-edit" id="pNew-status">${buildStatusOptions('Tender')}</select></td>
           <td class="col-center">
-            <button class="btn-icon" title="Add product" onclick="productsAddRow()">✓</button>
+            <button class="btn-icon" title="Add product" data-action="products-add-row">✓</button>
           </td>
         </tr>
         ${filtered.length === 0 ? `
@@ -398,8 +399,8 @@ function renderProductsList() {
               <td><input class="cell-edit" id="pEdit-notes" value="${esc(p.notes || '')}"></td>
               <td><select class="cell-edit" id="pEdit-status">${buildStatusOptions(p.status || 'Tender')}</select></td>
               <td class="col-center">
-                <button class="btn-icon" title="Save" onclick="productsSaveEdit('${p.id}')">✓</button>
-                <button class="btn-icon" title="Cancel" onclick="productsCancelEdit()">✕</button>
+                <button class="btn-icon" title="Save" data-action="products-save-edit" data-product-id="${esc(p.id)}">✓</button>
+                <button class="btn-icon" title="Cancel" data-action="products-cancel-edit">✕</button>
               </td>
             </tr>`;
           }
@@ -415,8 +416,8 @@ function renderProductsList() {
             <td class="notes-cell" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td class="col-center">
-              <button class="btn-icon" title="Edit" onclick="productsStartEdit('${p.id}')">✏️</button>
-              <button class="btn-icon" title="Delete" onclick="productsDeleteRow('${p.id}', '${esc(p.name)}')">🗑️</button>
+              <button class="btn-icon" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
+              <button class="btn-icon" title="Delete" data-action="products-delete-row" data-product-id="${esc(p.id)}" data-product-name="${esc(p.name)}">🗑️</button>
             </td>
           </tr>`;
         }).join('')}
@@ -539,29 +540,100 @@ function renderProductsTrends() {
  * Setup event listeners
  */
 function setupProductsEventListeners() {
-  // Search
-  document.getElementById('productSearch')?.addEventListener('input', () => renderProductsList());
+  const root = document.getElementById('productsPortalRoot');
+  if (root && productsPortalListenerRoot !== root) {
+    productsPortalListenerRoot = root;
+    root.addEventListener('click', async (event) => {
+      const actionEl = event.target.closest('[data-action]');
+      if (!actionEl || !root.contains(actionEl)) return;
 
-  // Tab switching
-  document.querySelectorAll('.products-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
-      productsActiveTab = tab;
-      document.querySelectorAll('.products-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.products-tab-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`products${tab.charAt(0).toUpperCase() + tab.slice(1)}Tab`).classList.add('active');
+      const action = actionEl.dataset.action;
 
-      if (tab === 'trends') {
-        renderProductsTrends();
-      } else if (tab === 'families') {
-        renderFamiliesTabContent();
+      if (action === 'products-back-root') {
+        setProductDevelopmentTab('root');
+        render();
+        return;
+      }
+
+      if (action === 'products-switch-tab') {
+        const tab = actionEl.dataset.tab;
+        if (!tab) return;
+
+        productsActiveTab = tab;
+        document.querySelectorAll('.products-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.products-tab-content').forEach(c => c.classList.remove('active'));
+        actionEl.classList.add('active');
+        document.getElementById(`products${tab.charAt(0).toUpperCase() + tab.slice(1)}Tab`)?.classList.add('active');
+
+        if (tab === 'trends') {
+          renderProductsTrends();
+        } else if (tab === 'families') {
+          renderFamiliesTabContent();
+          ensureFamiliesTabData(true);
+        } else {
+          renderProductsList();
+        }
+        return;
+      }
+
+      if (action === 'families-retry-load') {
         ensureFamiliesTabData(true);
-      } else {
-        renderProductsList();
+        return;
+      }
+
+      if (action === 'families-add-row') {
+        await familiesAddRow();
+        return;
+      }
+
+      if (action === 'families-save-edit') {
+        await familiesSaveEdit(actionEl.dataset.familyId || '');
+        return;
+      }
+
+      if (action === 'families-cancel-edit') {
+        familiesCancelEdit();
+        return;
+      }
+
+      if (action === 'families-start-edit') {
+        familiesStartEdit(actionEl.dataset.familyId || '');
+        return;
+      }
+
+      if (action === 'families-delete-row') {
+        await familiesDeleteRow(actionEl.dataset.familyId || '', actionEl.dataset.familyLabel || '');
+        return;
+      }
+
+      if (action === 'products-add-row') {
+        await productsAddRow();
+        return;
+      }
+
+      if (action === 'products-save-edit') {
+        await productsSaveEdit(actionEl.dataset.productId || '');
+        return;
+      }
+
+      if (action === 'products-cancel-edit') {
+        productsCancelEdit();
+        return;
+      }
+
+      if (action === 'products-start-edit') {
+        productsStartEdit(actionEl.dataset.productId || '');
+        return;
+      }
+
+      if (action === 'products-delete-row') {
+        await productsDeleteRow(actionEl.dataset.productId || '', actionEl.dataset.productName || '');
       }
     });
-  });
+  }
+
+  // Search
+  document.getElementById('productSearch')?.addEventListener('input', () => renderProductsList());
 
   // Allow Enter key on new row inputs to trigger add
   ['pNew-name', 'pNew-partNumber', 'pNew-customer', 'pNew-hours', 'pNew-turnaround', 'pNew-notes'].forEach(id => {

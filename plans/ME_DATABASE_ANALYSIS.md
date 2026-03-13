@@ -8,7 +8,7 @@
 
 The ME Capacity system uses **relational Supabase tables only**. The legacy JSON blob (`me_capacity` table) is no longer written to and no longer read from — the migration to relational is complete.
 
-All six relational tables are now active. PERT estimation data (subtasks and 3-point estimates) is saved to `me_task_subtasks` and `me_task_pert_history` and correctly restored on load. **PERT data now survives page refresh.** (Fixed 2026-03-13.)
+All six relational tables are active and connected. The PERT estimation UI (`me-estimation-page.js`) is currently **not loaded** in `index.html` — the feature is dormant but the file and DB tables are intentionally preserved for future reactivation. The save/load code for subtasks and PERT history is in place and will work as soon as the estimation page is re-added to the script load order.
 
 ---
 
@@ -328,8 +328,8 @@ Resolved as a consequence of fixing Bug #2. `meSaveTaskRelational` now writes `a
 - [x] **Add subtask load — read `me_task_subtasks` and attach to tasks**
   - `me-data-relational.js`: `meLoadRelationalTasks` now fetches tasks, subtasks, and PERT history in parallel. Groups by `task_id`, reconstructs `task.subtasks` and `task.advancedEstimation` on load. Sets `type: 'root'` when subtasks or PERT history exist.
 
-- [ ] **Verify PERT hours survive a full save-refresh-load cycle** ← manual browser test still needed
-  - Create a task, add PERT estimation, save, refresh page, confirm hours and subtasks are intact
+- [ ] **Verify PERT hours survive a full save-refresh-load cycle** ← test when estimation UI is reactivated
+  - Re-add `me-estimation-page.js` to `index.html` load order, create a PERT task, save, refresh, confirm hours and subtasks are intact
 
 ---
 

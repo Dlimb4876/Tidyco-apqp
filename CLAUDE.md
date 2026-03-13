@@ -376,6 +376,57 @@ RLS enforces authentication — users must be logged in to access any data. All 
 | `product_overhaul_history` | Historical overhaul records |
 | `bug_reports` | Bug and issue reports with real-time subscriptions |
 | `me_capacity` | Legacy JSON blob (no longer written to; may be removed) |
+| `work_areas` | Production work areas (Unit 2, Unit 3, etc.) |
+
+### `bug_reports` Table Schema
+
+| Column | Type | Nullable | Purpose |
+|---|---|---|---|
+| `id` | UUID | No | Primary key |
+| `user_id` | UUID | No | Supabase auth user ID |
+| `raised_by` | text | No | Email of user who raised bug |
+| `date_raised` | timestamp | No | ISO 8601 when reported |
+| `page` | text | Yes | Page/area where bug found |
+| `description` | text | No | Full bug description |
+| `status` | text | No | `'open'` or `'closed'` |
+| `response` | text | Yes | Response/fix description |
+| `responded_by` | text | Yes | Email of responder |
+| `responded_at` | timestamp | Yes | When response submitted |
+| `created_at` | timestamp | No | Supabase system column |
+| `updated_at` | timestamp | No | Supabase system column |
+
+**RLS Policies:**
+```sql
+ALTER TABLE bug_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow authenticated users to read bug reports"
+ON bug_reports FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Allow authenticated users to insert bug reports"
+ON bug_reports FOR INSERT WITH CHECK (auth.role() = 'authenticated' AND user_id = auth.uid());
+
+CREATE POLICY "Allow authenticated users to update bug reports"
+ON bug_reports FOR UPDATE USING (auth.role() = 'authenticated');
+```
+
+### `work_areas` Table Schema
+
+| Column | Type | Nullable | Purpose |
+|---|---|---|---|
+| `id` | UUID | No | Primary key |
+| `user_id` | UUID | No | Supabase auth user ID |
+| `name` | text | No | Work area name (e.g., "Unit 2") |
+| `description` | text | Yes | Optional description |
+| `created_at` | timestamp | No | Supabase system column |
+| `updated_at` | timestamp | No | Supabase system column |
+
+**RLS Policies:**
+```sql
+ALTER TABLE work_areas ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow authenticated users to access work areas"
+ON work_areas FOR ALL USING (auth.role() = 'authenticated');
+```
 
 ---
 
@@ -636,8 +687,6 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 | `plans/FAMILY_TEMPLATES_ARCHITECTURE.md` | Family PFMEA template system design (DB schema, data flow, security) |
 | `plans/FAMILY_TEMPLATES_GUIDE.md` | User guide for creating and applying family PFMEA templates |
 | `plans/ME_DATABASE_ANALYSIS.md` | Deep-dive into ME Capacity relational DB schema (6 tables, field mappings, known issues) |
-| `plans/BUG_REPORTS_SCHEMA.md` | Bug reports table schema, RLS policies, and code examples |
-| `plans/REALTIME_SYNC_GUIDE.md` | How to add real-time Supabase subscriptions to any portal |
 
 ---
 
@@ -660,8 +709,9 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 
 ### Real-time Subscriptions
 - `utils/js/realtime.js` provides utilities for real-time data sync
-- Used by bugs portal and other features requiring live updates
+- Used by bugs portal, work areas, family templates, and other features requiring live updates
 - Load order: after `navigation.js`, before portal modules
+- Cleanup: navigation.js handles unsubscribe when leaving sections (capacity, product-development, bugreports, production, operations)
 
 ---
 

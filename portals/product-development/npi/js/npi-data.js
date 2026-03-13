@@ -27,23 +27,26 @@ npi.data.ctq = {
   add() {
     const item = { id: crypto.randomUUID(), req: '', spec: '', testMethod: '', source: 'Customer Spec', oos_action: 'TBD', customerAgreed: false }
     prog().ctq.push(item)
-    npiRelSaveCTQ(item)
+    Promise.resolve().then(() => npiRelSaveCTQ(item)).catch(err => console.error('[NPI] save CTQ failed:', err))
+    npi.notify('render')
     return item
   },
   upd(i, f, v) {
     const p = prog()
     if (!p.ctq[i]) return
     p.ctq[i][f] = v
-    npiRelSaveCTQ(p.ctq[i])
+    Promise.resolve().then(() => npiRelSaveCTQ(p.ctq[i])).catch(err => console.error('[NPI] save CTQ failed:', err))
+    if (f === 'customerAgreed') npi.notify('render')
   },
   del(i) {
     const p = prog()
     if (!p.ctq[i]) return
     const cid = p.ctq[i].id
-    p.pfd.forEach(s => { s.ctqIds = (s.ctqIds || []).filter(x => x !== cid); npiRelSavePFDStep(s) })
-    p.pfmea.forEach(r => { r.ctqIds = (r.ctqIds || []).filter(x => x !== cid); npiRelSavePFMEAMode(r) })
-    npiRelDeleteCTQ(cid)
+    p.pfd.forEach(s => { s.ctqIds = (s.ctqIds || []).filter(x => x !== cid); Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err)) })
+    p.pfmea.forEach(r => { r.ctqIds = (r.ctqIds || []).filter(x => x !== cid); Promise.resolve().then(() => npiRelSavePFMEAMode(r)).catch(err => console.error('[NPI] save PFMEA mode failed:', err)) })
+    Promise.resolve().then(() => npiRelDeleteCTQ(cid)).catch(err => console.error('[NPI] delete CTQ failed:', err))
     p.ctq.splice(i, 1)
+    npi.notify('render')
   }
 }
 
@@ -52,7 +55,8 @@ npi.data.pfd = {
     const p = prog()
     const step = { id: crypto.randomUUID(), stepNum: npi.data.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }
     p.pfd.push(step)
-    npiRelSavePFDStep(step)
+    Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
     return step
   },
   insertStep(num, type) {
@@ -61,38 +65,43 @@ npi.data.pfd = {
     if (npi.data.stepNumConflict(p.pfd, num)) return { ok: false, error: `Step ${num} exists` }
     const step = { id: crypto.randomUUID(), stepNum: num, type: type || 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }
     p.pfd.push(step)
-    npiRelSavePFDStep(step)
-    return { ok: true, step }
+    Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
+    return { ok: true, step: step }
   },
   del(sid) {
     const p = prog()
     const i = p.pfd.findIndex(s => s.id === sid)
     if (i < 0) return
-    p.pfmea.forEach(r => { if (r.pfdId === sid) { r.pfdId = ''; npiRelSavePFMEAMode(r) } })
+    p.pfmea.forEach(r => { if (r.pfdId === sid) { r.pfdId = ''; Promise.resolve().then(() => npiRelSavePFMEAMode(r)).catch(err => console.error('[NPI] save PFMEA mode failed:', err)) } })
     p.pfd.splice(i, 1)
-    npiRelDeletePFDStep(sid)
+    Promise.resolve().then(() => npiRelDeletePFDStep(sid)).catch(err => console.error('[NPI] delete PFD step failed:', err))
+    npi.notify('render')
   },
   upd(sid, f, v) {
     const s = prog().pfd.find(x => x.id === sid)
     if (!s) return
     s[f] = v
-    npiRelSavePFDStep(s)
+    Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
   },
   toggleGroup(collapsedGroups, key) {
     if (collapsedGroups.has(key)) collapsedGroups.delete(key)
     else collapsedGroups.add(key)
+    npi.notify('render')
   },
   delBomRef(sid, bt, iid) {
     const s = prog().pfd.find(x => x.id === sid)
     if (!s) return
     s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === bt && r.itemId === iid))
-    npiRelSavePFDStep(s)
+    Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
   },
   saveCtqPick(stepIndex, selectedIds) {
     const step = prog().pfd[stepIndex]
     if (!step) return
     step.ctqIds = [...selectedIds]
-    npiRelSavePFDStep(step)
+    Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
   },
   saveBomPick(stepId, selectedKeys) {
     const s = prog().pfd.find(x => x.id === stepId)
@@ -101,7 +110,8 @@ npi.data.pfd = {
       const [bt, id] = k.split('|')
       return { bomType: bt, itemId: id }
     })
-    npiRelSavePFDStep(s)
+    Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
   }
 }
 
@@ -125,31 +135,34 @@ npi.data.cp = {
             freq: '100%', resp: '', reaction: fc ? fc.oos_action || '' : '', ctqIds: [...cids]
           }
           p.cp.push(item)
-          npiRelSaveCP(item)
+          Promise.resolve().then(() => npiRelSaveCP(item)).catch(err => console.error('[NPI] save CP failed:', err))
           n++
         })
       })
     })
+    npi.notify('render')
     return n
   },
   add() {
     const item = { id: crypto.randomUUID(), pfmeaId: '', pfdId: '', char: '', type: 'Process', spec: '', method: '', freq: '', resp: '', reaction: '', ctqIds: [] }
     prog().cp.push(item)
-    npiRelSaveCP(item)
+    Promise.resolve().then(() => npiRelSaveCP(item)).catch(err => console.error('[NPI] save CP failed:', err))
+    npi.notify('render')
     return item
   },
   upd(i, f, v) {
     const p = prog()
     if (!p.cp[i]) return
     p.cp[i][f] = v
-    npiRelSaveCP(p.cp[i])
+    Promise.resolve().then(() => npiRelSaveCP(p.cp[i])).catch(err => console.error('[NPI] save CP failed:', err))
   },
   del(i) {
     const p = prog()
     if (!p.cp[i]) return
     const id = p.cp[i].id
     p.cp.splice(i, 1)
-    npiRelDeleteCP(id)
+    Promise.resolve().then(() => npiRelDeleteCP(id)).catch(err => console.error('[NPI] delete CP failed:', err))
+    npi.notify('render')
   }
 }
 
@@ -164,14 +177,15 @@ npi.data.bom = {
     else if (type === 'equip') item = { ...base, equipId: '', location: '' }
     else if (type === 'mat' || type === 'cons') item = { ...base, pn: '', unit: '', qtyPerUnit: 0 }
     p.bom[type].push(item)
-    npiRelSaveBOMItem(type, item)
+    Promise.resolve().then(() => npiRelSaveBOMItem(type, item)).catch(err => console.error('[NPI] save BOM item failed:', err))
+    npi.notify('render')
     return item
   },
   updRow(type, i, f, v) {
     const p = prog()
     if (!p.bom[type] || !p.bom[type][i]) return
     p.bom[type][i][f] = v
-    npiRelSaveBOMItem(type, p.bom[type][i])
+    Promise.resolve().then(() => npiRelSaveBOMItem(type, p.bom[type][i])).catch(err => console.error('[NPI] save BOM item failed:', err))
   },
   delRow(type, i) {
     const p = prog()
@@ -180,42 +194,46 @@ npi.data.bom = {
     p.pfd.forEach(s => {
       const before = (s.bomRefs || []).length
       s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === type && r.itemId === item.id))
-      if (s.bomRefs.length !== before) npiRelSavePFDStep(s)
+      if (s.bomRefs.length !== before) Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
     })
     p.bom.kits.forEach(k => { k.items = (k.items || []).filter(r => !(r.bomType === type && r.itemId === item.id)) })
     p.bom[type].splice(i, 1)
-    npiRelDeleteBOMItem(item.id)
+    Promise.resolve().then(() => npiRelDeleteBOMItem(item.id)).catch(err => console.error('[NPI] delete BOM item failed:', err))
+    npi.notify('render')
   },
   addKit() {
     const kit = { id: crypto.randomUUID(), name: '', items: [] }
     prog().bom.kits.push(kit)
-    npiRelSaveBOMKit(kit)
+    Promise.resolve().then(() => npiRelSaveBOMKit(kit)).catch(err => console.error('[NPI] save BOM kit failed:', err))
+    npi.notify('render')
     return kit
   },
   updKit(ki, f, v) {
     const p = prog()
     if (!p.bom.kits[ki]) return
     p.bom.kits[ki][f] = v
-    npiRelSaveBOMKit(p.bom.kits[ki])
+    Promise.resolve().then(() => npiRelSaveBOMKit(p.bom.kits[ki])).catch(err => console.error('[NPI] save BOM kit failed:', err))
   },
   delKit(ki) {
     const p = prog()
     if (!p.bom.kits[ki]) return
     const id = p.bom.kits[ki].id
     p.bom.kits.splice(ki, 1)
-    npiRelDeleteBOMKit(id)
+    Promise.resolve().then(() => npiRelDeleteBOMKit(id)).catch(err => console.error('[NPI] delete BOM kit failed:', err))
+    npi.notify('render')
   },
   updKitItem(ki, ri, f, v) {
     const p = prog()
     if (!p.bom.kits[ki] || !p.bom.kits[ki].items[ri]) return
     p.bom.kits[ki].items[ri][f] = v
-    npiRelSaveKitItems(p.bom.kits[ki])
+    Promise.resolve().then(() => npiRelSaveKitItems(p.bom.kits[ki])).catch(err => console.error('[NPI] save kit items failed:', err))
   },
   delKitItem(ki, ri) {
     const p = prog()
     if (!p.bom.kits[ki]) return
     p.bom.kits[ki].items.splice(ri, 1)
-    npiRelSaveKitItems(p.bom.kits[ki])
+    Promise.resolve().then(() => npiRelSaveKitItems(p.bom.kits[ki])).catch(err => console.error('[NPI] save kit items failed:', err))
+    npi.notify('render')
   },
   saveKitPick(kitIndex, selectedKeys) {
     const p = prog()
@@ -227,7 +245,8 @@ npi.data.bom = {
       const [bt, id] = key.split('|')
       return { bomType: bt, itemId: id, qty: existing[key] || 1 }
     })
-    npiRelSaveKitItems(kit)
+    Promise.resolve().then(() => npiRelSaveKitItems(kit)).catch(err => console.error('[NPI] save kit items failed:', err))
+    npi.notify('render')
   }
 }
 
@@ -235,61 +254,70 @@ npi.data.tracker = {
   addAction() {
     const item = { id: crypto.randomUUID(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }
     prog().actions.push(item)
-    npiRelSaveAction(item)
+    Promise.resolve().then(() => npiRelSaveAction(item)).catch(err => console.error('[NPI] save action failed:', err))
+    npi.notify('render')
     return item
   },
   updAction(i, f, v) {
     const p = prog()
     if (!p.actions[i]) return
     p.actions[i][f] = v
-    npiRelSaveAction(p.actions[i])
+    Promise.resolve().then(() => npiRelSaveAction(p.actions[i])).catch(err => console.error('[NPI] save action failed:', err))
+    if (f === 'status' || f === 'due') npi.notify('render')
   },
   delAction(i) {
     const p = prog()
     if (!p.actions[i]) return
     const id = p.actions[i].id
     p.actions.splice(i, 1)
-    npiRelDeleteAction(id)
+    Promise.resolve().then(() => npiRelDeleteAction(id)).catch(err => console.error('[NPI] delete action failed:', err))
+    npi.notify('render')
   },
   addRisk() {
     const item = { id: crypto.randomUUID(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }
     prog().risks.push(item)
-    npiRelSaveRisk(item)
+    Promise.resolve().then(() => npiRelSaveRisk(item)).catch(err => console.error('[NPI] save risk failed:', err))
+    npi.notify('render')
     return item
   },
   updRisk(i, f, v, saveNow = true) {
     const p = prog()
     if (!p.risks[i]) return
     p.risks[i][f] = v
-    if (saveNow) npiRelSaveRisk(p.risks[i])
+    if (saveNow) Promise.resolve().then(() => npiRelSaveRisk(p.risks[i])).catch(err => console.error('[NPI] save risk failed:', err))
+    if (f === 'status') npi.notify('render')
   },
   delRisk(i) {
     const p = prog()
     if (!p.risks[i]) return
     const id = p.risks[i].id
     p.risks.splice(i, 1)
-    npiRelDeleteRisk(id)
+    Promise.resolve().then(() => npiRelDeleteRisk(id)).catch(err => console.error('[NPI] delete risk failed:', err))
+    npi.notify('render')
   }
 }
 
 npi.data.gate = {
   toggleCheck(gi, ii, v) {
     prog().gates[gi].checks[ii] = v
-    npiRelSaveGate(gi)
+    Promise.resolve().then(() => npiRelSaveGate(gi)).catch(err => console.error('[NPI] save gate failed:', err))
+    npi.notify('render')
   },
   updSig(gi, si, f, v) {
     prog().gates[gi].sigs[si][f] = v
-    npiRelSaveGateSig(gi, si)
+    Promise.resolve().then(() => npiRelSaveGateSig(gi, si)).catch(err => console.error('[NPI] save gate sig failed:', err))
   },
   signOff(gi, si) {
     const sig = prog().gates[gi].sigs[si]
     sig.signed = true
     if (!sig.date) sig.date = new Date().toISOString().slice(0, 10)
-    npiRelSaveGateSig(gi, si)
+    Promise.resolve().then(() => npiRelSaveGateSig(gi, si)).catch(err => console.error('[NPI] save gate sig failed:', err))
+    npi.notify('render')
   },
   unsign(gi, si) {
     prog().gates[gi].sigs[si].signed = false
-    npiRelSaveGateSig(gi, si)
+    Promise.resolve().then(() => npiRelSaveGateSig(gi, si)).catch(err => console.error('[NPI] save gate sig failed:', err))
+    npi.notify('render')
   }
 }
 
@@ -298,32 +326,36 @@ npi.data.timing = {
     const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return
     if (!row.planned || row.planned.length < GANTT_WEEKS) row.planned = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.planned || [])[i] || 0)
     row.planned[wi] = row.planned[wi] ? 0 : 1
-    npiRelSaveGanttRow(row)
+    Promise.resolve().then(() => npiRelSaveGanttRow(row)).catch(err => console.error('[NPI] save gantt row failed:', err))
+    npi.notify('render')
   },
   toggleAct(id, wi) {
     const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return
     if (!row.actual || row.actual.length < GANTT_WEEKS) row.actual = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.actual || [])[i] || 0)
     row.actual[wi] = row.actual[wi] ? 0 : 1
-    npiRelSaveGanttRow(row)
+    Promise.resolve().then(() => npiRelSaveGanttRow(row)).catch(err => console.error('[NPI] save gantt row failed:', err))
+    npi.notify('render')
   },
   addRow(section) {
     const p = prog(); if (!p.gantt) p.gantt = []
     const row = npi.data.ganttNewRow(section)
     p.gantt.push(row)
-    npiRelSaveGanttRow(row)
+    Promise.resolve().then(() => npiRelSaveGanttRow(row)).catch(err => console.error('[NPI] save gantt row failed:', err))
+    npi.notify('render')
     return row
   },
-  updTask(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.task = val; npiRelSaveGanttRow(r) } },
-  updSec(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.section = val; npiRelSaveGanttRow(r) } },
-  updRole(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.role = val; npiRelSaveGanttRow(r) } },
-  updNotes(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.notes = val; npiRelSaveGanttRow(r) } },
-  delRow(id) { const p = prog(); p.gantt = p.gantt.filter(r => r.id !== id); npiRelDeleteGanttRow(id) },
-  setStart(val) { const p = prog(); p.ganttStart = val; save() },
+  updTask(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.task = val; Promise.resolve().then(() => npiRelSaveGanttRow(r)).catch(err => console.error('[NPI] save gantt row failed:', err)) } },
+  updSec(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.section = val; Promise.resolve().then(() => npiRelSaveGanttRow(r)).catch(err => console.error('[NPI] save gantt row failed:', err)); npi.notify('render') } },
+  updRole(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.role = val; Promise.resolve().then(() => npiRelSaveGanttRow(r)).catch(err => console.error('[NPI] save gantt row failed:', err)); npi.notify('render') } },
+  updNotes(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.notes = val; Promise.resolve().then(() => npiRelSaveGanttRow(r)).catch(err => console.error('[NPI] save gantt row failed:', err)) } },
+  delRow(id) { const p = prog(); p.gantt = p.gantt.filter(r => r.id !== id); Promise.resolve().then(() => npiRelDeleteGanttRow(id)).catch(err => console.error('[NPI] delete gantt row failed:', err)); npi.notify('render') },
+  setStart(val) { const p = prog(); p.ganttStart = val; save(); npi.notify('render') },
   clear() {
     const p = prog()
     const ids = p.gantt.map(r => r.id)
     p.gantt = []
-    ids.forEach(id => npiRelDeleteGanttRow(id))
+    ids.forEach(id => Promise.resolve().then(() => npiRelDeleteGanttRow(id)).catch(err => console.error('[NPI] delete gantt row failed:', err)))
+    npi.notify('render')
   }
 }
 
@@ -333,50 +365,52 @@ npi.data.pfmea = {
     const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
     const mode = { id: crypto.randomUUID(), _type: 'mode', pfdId, mode: '', ctqIds: [], effects: [ef] }
     prog().pfmea.push(mode)
-    npiRelSavePFMEAMode(mode)
-    npiRelSavePFMEAEffect(mode.id, ef)
-    npiRelSavePFMEACause(ef.id, ca)
+    Promise.resolve().then(() => { npiRelSavePFMEAMode(mode); npiRelSavePFMEAEffect(mode.id, ef); npiRelSavePFMEACause(ef.id, ca) }).catch(err => console.error('[NPI] save PFMEA mode failed:', err))
+    npi.notify('render')
   },
-  updMode(mi, f, v) { prog().pfmea[mi][f] = v; npiRelSavePFMEAMode(prog().pfmea[mi]) },
+  updMode(mi, f, v) { prog().pfmea[mi][f] = v; Promise.resolve().then(() => npiRelSavePFMEAMode(prog().pfmea[mi])).catch(err => console.error('[NPI] save PFMEA mode failed:', err)) },
   delMode(mi) {
     const p = prog()
     const mode = p.pfmea[mi]
     const fid = mode.id
     p.cp.forEach(r => { if (r.pfmeaId === fid) r.pfmeaId = '' })
     p.pfmea.splice(mi, 1)
-    npiRelDeletePFMEAMode(mode)
+    Promise.resolve().then(() => npiRelDeletePFMEAMode(mode)).catch(err => console.error('[NPI] delete PFMEA mode failed:', err))
+    npi.notify('render')
   },
   addEffect(mi) {
     const mode = prog().pfmea[mi]
     const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
     const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
     mode.effects.push(ef)
-    npiRelSavePFMEAEffect(mode.id, ef)
-    npiRelSavePFMEACause(ef.id, ca)
+    Promise.resolve().then(() => { npiRelSavePFMEAEffect(mode.id, ef); npiRelSavePFMEACause(ef.id, ca) }).catch(err => console.error('[NPI] save PFMEA effect failed:', err))
+    npi.notify('render')
   },
   updEffect(mi, ei, f, v, saveNow = true) {
     if (f === 'sev') v = npi.pfmea.pfNormalizeScore(v, false)
     const mode = prog().pfmea[mi]
     mode.effects[ei][f] = v
-    if (saveNow) npiRelSavePFMEAEffect(mode.id, mode.effects[ei])
+    if (saveNow) Promise.resolve().then(() => npiRelSavePFMEAEffect(mode.id, mode.effects[ei])).catch(err => console.error('[NPI] save PFMEA effect failed:', err))
   },
   delEffect(mi, ei) {
     const mode = prog().pfmea[mi]
     const ef = mode.effects[ei]
     mode.effects.splice(ei, 1)
-    npiRelDeletePFMEAEffect(ef)
+    Promise.resolve().then(() => npiRelDeletePFMEAEffect(ef)).catch(err => console.error('[NPI] delete PFMEA effect failed:', err))
+    npi.notify('render')
   },
   addCause(mi, ei) {
     const ef = prog().pfmea[mi].effects[ei]
     const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
     ef.causes.push(ca)
-    npiRelSavePFMEACause(ef.id, ca)
+    Promise.resolve().then(() => npiRelSavePFMEACause(ef.id, ca)).catch(err => console.error('[NPI] save PFMEA cause failed:', err))
+    npi.notify('render')
   },
   updCause(mi, ei, ci, f, v, saveNow = true) {
     if (f === 'occ' || f === 'det') v = npi.pfmea.pfNormalizeScore(v, false)
     const ef = prog().pfmea[mi].effects[ei]
     ef.causes[ci][f] = v
-    if (saveNow) npiRelSavePFMEACause(ef.id, ef.causes[ci])
+    if (saveNow) Promise.resolve().then(() => npiRelSavePFMEACause(ef.id, ef.causes[ci])).catch(err => console.error('[NPI] save PFMEA cause failed:', err))
   },
   updCauseAction(mi, ei, ci, f, v, saveNow = true) {
     const ef = prog().pfmea[mi].effects[ei]
@@ -384,7 +418,7 @@ npi.data.pfmea = {
     if (!ca.action) ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
     if (f === 'newOcc' || f === 'newDet') v = npi.pfmea.pfNormalizeScore(v, true)
     ca.action[f] = v
-    if (saveNow) npiRelSavePFMEACause(ef.id, ca)
+    if (saveNow) Promise.resolve().then(() => npiRelSavePFMEACause(ef.id, ca)).catch(err => console.error('[NPI] save PFMEA cause failed:', err))
   },
   implementAction(mi, ei, ci) {
     const p = prog()
@@ -408,14 +442,15 @@ npi.data.pfmea = {
     ca.occ = newOcc
     ca.det = newDet
     ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
-    npiRelSavePFMEACause(ef.id, ca)
-    npiRelSavePFMEAHistory(ca.id, histEntry)
+    Promise.resolve().then(() => { npiRelSavePFMEACause(ef.id, ca); npiRelSavePFMEAHistory(ca.id, histEntry) }).catch(err => console.error('[NPI] save PFMEA history failed:', err))
+    npi.notify('render')
     return { ok: true }
   },
   delCause(mi, ei, ci) {
     const ef = prog().pfmea[mi].effects[ei]
     const ca = ef.causes[ci]
     ef.causes.splice(ci, 1)
-    npiRelDeletePFMEACause(ca)
+    Promise.resolve().then(() => npiRelDeletePFMEACause(ca)).catch(err => console.error('[NPI] delete PFMEA cause failed:', err))
+    npi.notify('render')
   }
 }

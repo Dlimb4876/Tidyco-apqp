@@ -24,6 +24,7 @@ async function workAreasDataInit() {
 
     workAreasState.workAreas = data || [];
     workAreasState.loading = false;
+    workAreasDataSubscribe();
     console.log('✓ Work areas loaded:', workAreasState.workAreas.length, 'areas');
     return workAreasState.workAreas;
   } catch (err) {
@@ -120,4 +121,29 @@ window.workAreasDataGetWorkAreaName = function(workAreaId) {
 // ── Get all work areas ───────────────────────────────────────────
 window.workAreasDataGetAll = function() {
   return [...workAreasState.workAreas];
+};
+
+// ── Real-time subscription ───────────────────────────────────────
+function workAreasDataSubscribe() {
+  createRealtimeSubscription('work_areas', 'work_areas_channel', {
+    onInsert: (record) => {
+      workAreasState.workAreas.push(record);
+      workAreasState.workAreas.sort((a, b) => a.name.localeCompare(b.name));
+      render();
+    },
+    onUpdate: (record) => {
+      const idx = workAreasState.workAreas.findIndex(w => w.id === record.id);
+      if (idx >= 0) workAreasState.workAreas[idx] = record;
+      workAreasState.workAreas.sort((a, b) => a.name.localeCompare(b.name));
+      render();
+    },
+    onDelete: (record) => {
+      workAreasState.workAreas = workAreasState.workAreas.filter(w => w.id !== record.id);
+      render();
+    }
+  });
+}
+
+window.workAreasDataUnsubscribe = function() {
+  removeRealtimeSubscription('work_areas_channel');
 };

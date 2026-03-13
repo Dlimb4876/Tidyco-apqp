@@ -21,6 +21,7 @@ async function familyTemplatesDataInit() {
 
     familyTemplatesState.templates = data || [];
     familyTemplatesState.loading = false;
+    familyTemplatesDataSubscribe();
     return familyTemplatesState.templates;
   } catch (err) {
     console.error('Error loading family templates:', err);
@@ -212,6 +213,29 @@ window.familyTemplatesApplyToProject = function(familyId, templateName) {
     actions: [],
     notes: item.notes || ''
   }));
+};
+
+// ── Real-time subscription ───────────────────────────────────────
+function familyTemplatesDataSubscribe() {
+  createRealtimeSubscription('family_pfmea_templates', 'family_templates_channel', {
+    onInsert: (record) => {
+      familyTemplatesState.templates.push(record);
+      render();
+    },
+    onUpdate: (record) => {
+      const idx = familyTemplatesState.templates.findIndex(t => t.id === record.id);
+      if (idx >= 0) familyTemplatesState.templates[idx] = record;
+      render();
+    },
+    onDelete: (record) => {
+      familyTemplatesState.templates = familyTemplatesState.templates.filter(t => t.id !== record.id);
+      render();
+    }
+  });
+}
+
+window.familyTemplatesDataUnsubscribe = function() {
+  removeRealtimeSubscription('family_templates_channel');
 };
 
 // Get template statistics

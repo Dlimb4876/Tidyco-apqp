@@ -512,11 +512,12 @@ function opsBuildMetrics() {
   };
 }
 
-function opsMetricCard(label, value, detail, tone = 'good', onclick = '') {
-  const clickAttr = onclick ? ` onclick="${onclick}"` : '';
-  const role = onclick ? ' role="button" tabindex="0"' : '';
+function opsMetricCard(label, value, detail, tone = 'good', dest = '') {
+  const actionAttrs = dest
+    ? ` data-action="metric-navigate" data-dest="${esc(dest)}" role="button" tabindex="0"`
+    : '';
   return `
-    <article class="ops-metric ops-tone-${tone}"${clickAttr}${role}>
+    <article class="ops-metric ops-tone-${tone}"${actionAttrs}>
       <div class="ops-metric-label">${esc(label)}</div>
       <div class="ops-metric-value">${esc(value)}</div>
       <div class="ops-metric-detail">${esc(detail)}</div>
@@ -647,14 +648,14 @@ function opsRenderOverview(metrics) {
       </section>
 
       <section class="ops-metrics-grid">
-        ${opsMetricCard('Active Programmes', String(metrics.programmesFlow.active), `${metrics.programmesFlow.archived} archived`, 'good', "navigate('product-development')")}
-        ${opsMetricCard('Gate Completion', `${metrics.gate.percentage}%`, `${metrics.gate.doneChecks}/${metrics.gate.totalChecks} checks done`, metrics.gate.percentage < 65 ? 'critical' : metrics.gate.percentage < 85 ? 'watch' : 'good', "navigate('product-development')")}
-        ${opsMetricCard('ME Utilisation', metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready', metrics.me.ready ? `${metrics.me.headroom}h headroom this month` : 'Open Capacity once to initialize', meTone, "navigate('capacity')")}
-        ${opsMetricCard('Overdue Actions', String(metrics.actions.overdue), `${metrics.actions.totalOpen} actions open`, actionTone, "navigate('product-development')")}
-        ${opsMetricCard('High RPN Causes', String(metrics.risk.highRpn), `${metrics.risk.highRisks} high-risk tracker items`, metrics.risk.highRpn > 0 ? 'critical' : 'good', "navigate('product-development')")}
-        ${opsMetricCard('Open Bugs', String(metrics.bugs.open), `${metrics.bugs.closed7d} closed in last 7 days`, bugTone, "navigate('bugreports')")}
-        ${opsMetricCard('Production Completion', `${metrics.production.completionRate}%`, `${metrics.production.completed}/${metrics.production.total} batches complete`, metrics.production.completionRate < 40 ? 'critical' : metrics.production.completionRate < 70 ? 'watch' : 'good', "navigate('production')")}
-        ${opsMetricCard('Active Batches', String(metrics.production.active), 'Live production work packets', metrics.production.active > 0 ? 'watch' : 'good', "navigate('production')")}
+        ${opsMetricCard('Active Programmes', String(metrics.programmesFlow.active), `${metrics.programmesFlow.archived} archived`, 'good', 'product-development')}
+        ${opsMetricCard('Gate Completion', `${metrics.gate.percentage}%`, `${metrics.gate.doneChecks}/${metrics.gate.totalChecks} checks done`, metrics.gate.percentage < 65 ? 'critical' : metrics.gate.percentage < 85 ? 'watch' : 'good', 'product-development')}
+        ${opsMetricCard('ME Utilisation', metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready', metrics.me.ready ? `${metrics.me.headroom}h headroom this month` : 'Open Capacity once to initialize', meTone, 'capacity')}
+        ${opsMetricCard('Overdue Actions', String(metrics.actions.overdue), `${metrics.actions.totalOpen} actions open`, actionTone, 'product-development')}
+        ${opsMetricCard('High RPN Causes', String(metrics.risk.highRpn), `${metrics.risk.highRisks} high-risk tracker items`, metrics.risk.highRpn > 0 ? 'critical' : 'good', 'product-development')}
+        ${opsMetricCard('Open Bugs', String(metrics.bugs.open), `${metrics.bugs.closed7d} closed in last 7 days`, bugTone, 'bugreports')}
+        ${opsMetricCard('Production Completion', `${metrics.production.completionRate}%`, `${metrics.production.completed}/${metrics.production.total} batches complete`, metrics.production.completionRate < 40 ? 'critical' : metrics.production.completionRate < 70 ? 'watch' : 'good', 'production')}
+        ${opsMetricCard('Active Batches', String(metrics.production.active), 'Live production work packets', metrics.production.active > 0 ? 'watch' : 'good', 'production')}
       </section>
 
       <section class="ops-columns">
@@ -1166,10 +1167,14 @@ function setupOpsPulseFeed() {
   opsPulseFeedContainer = container;
 
   container.addEventListener('click', (event) => {
-    const el = event.target.closest('[data-action="pulse-navigate"]');
+    const el = event.target.closest('[data-action]');
     if (!el || !container.contains(el)) return;
-    const dest = el.dataset.dest;
-    if (dest) navigate(dest);
+
+    const action = el.dataset.action;
+    if (action === 'pulse-navigate' || action === 'metric-navigate') {
+      const dest = el.dataset.dest;
+      if (dest) navigate(dest);
+    }
   });
 }
 

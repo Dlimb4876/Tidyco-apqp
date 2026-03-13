@@ -368,4 +368,17 @@ describe('Operations Dashboard', () => {
     saveSpy.mockRestore();
     cancelSpy.mockRestore();
   });
+
+  test('overview metric cards use delegated data-action attributes', () => {
+    currentSection = 'operations';
+    operationsTab = 'overview';
+
+    const html = renderOperationsDashboard();
+
+    expect(html).toContain('data-action="metric-navigate"');
+    expect(html).toContain('data-dest="capacity"');
+    expect(html).toMatch(/<article class="ops-metric[^>]*data-action="metric-navigate"[^>]*>/);
+    expect(html).not.toMatch(/<article class="ops-metric[^>]*onclick=/);
+  });
+
 });
