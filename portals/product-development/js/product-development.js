@@ -10,7 +10,7 @@ function setProductDevelopmentTab(tab) {
 }
 
 function renderProductDevelopment() {
-  if (productDevelopmentTab === 'npi') return renderProjects();
+  if (productDevelopmentTab === 'npi') return npi.dashboard.renderProjects();
   if (productDevelopmentTab === 'product-management') return renderProductManagement();
   if (productDevelopmentTab === 'product-family-db') return renderProductFamilyDatabase();
 
