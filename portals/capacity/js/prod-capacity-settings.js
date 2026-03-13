@@ -288,11 +288,15 @@ async function prodCapSettingsClearAll() {
   if (!currentUser) return;
 
   try {
+    // Delete all records for current user only (RLS-safe)
     const { error } = await supa.from('production_capacity')
       .delete()
-      .neq('id', 'null');
+      .eq('user_id', currentUser.id);
     if (error) throw error;
-    prodCapState.capacityRecords = [];
+    // Filter local state to keep only other users' records
+    prodCapState.capacityRecords = prodCapState.capacityRecords.filter(
+      r => r.user_id !== currentUser.id
+    );
     render();
   } catch (err) {
     console.error('Error clearing capacity:', err);

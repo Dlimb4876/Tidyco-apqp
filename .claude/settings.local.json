@@ -76,7 +76,13 @@
       "Bash(mv /workspaces/Tidyco-apqp/REALTIME_SYNC_GUIDE.md /workspaces/Tidyco-apqp/plans/)",
       "Bash(mv /workspaces/Tidyco-apqp/ME_DATABASE_ANALYSIS.md /workspaces/Tidyco-apqp/plans/)",
       "Bash(mv /workspaces/Tidyco-apqp/FAMILY_TEMPLATES_ARCHITECTURE.md /workspaces/Tidyco-apqp/plans/)",
-      "Bash(mv /workspaces/Tidyco-apqp/FAMILY_TEMPLATES_GUIDE.md /workspaces/Tidyco-apqp/plans/)"
+      "Bash(mv /workspaces/Tidyco-apqp/FAMILY_TEMPLATES_GUIDE.md /workspaces/Tidyco-apqp/plans/)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(claude mcp:*)",
+      "Bash(where claude:*)",
+      "Read(//c/Users/Tidyco/AppData/Roaming/npm/**)",
+      "Read(//c/Users/Tidyco/AppData/Local/Programs/**)"
     ]
   }
 }

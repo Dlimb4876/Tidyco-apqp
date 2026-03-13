@@ -20,10 +20,18 @@ async function familiesDataInit() {
 
     // Set up real-time subscription for collaborative editing
     if (typeof createRealtimeSubscription === 'function') {
+      const reloadAndRender = async () => {
+        await familiesDataLoad();
+        if (typeof renderFamiliesTabContent === 'function') renderFamiliesTabContent();
+      };
       familiesState.subscription = createRealtimeSubscription(
         'families',
         'families_changed',
-        () => familiesDataLoad()
+        {
+          onInsert: reloadAndRender,
+          onUpdate: reloadAndRender,
+          onDelete: reloadAndRender
+        }
       );
     }
 

@@ -141,24 +141,38 @@ async function prodCapDataSetStaff(workArea, year, month, staffCount) {
     );
 
     if (existing) {
-      const { data, error } = await supa.from('production_capacity')
+      // Update existing record - don't use .select().single() to avoid RLS issues
+      const { error } = await supa.from('production_capacity')
         .update({ staff_count: count, updated_at: new Date().toISOString() })
-        .eq('id', existing.id)
-        .select()
-        .single();
+        .eq('id', existing.id);
       if (error) throw error;
+      // Update local state directly
       const idx = prodCapState.capacityRecords.findIndex(r => r.id === existing.id);
-      if (idx >= 0) prodCapState.capacityRecords[idx] = data;
+      if (idx >= 0) {
+        prodCapState.capacityRecords[idx] = {
+          ...prodCapState.capacityRecords[idx],
+          staff_count: count,
+          updated_at: new Date().toISOString()
+        };
+      }
     } else {
-      const { data, error } = await supa.from('production_capacity')
-        .insert([{ user_id: currentUser.id, work_area: workArea, year, month, staff_count: count }])
-        .select()
-        .single();
+      // Insert new record - don't use .select().single() to avoid RLS issues
+      const { error } = await supa.from('production_capacity')
+        .insert([{ user_id: currentUser.id, work_area: workArea, year, month, staff_count: count }]);
       if (error) throw error;
-      prodCapState.capacityRecords.push(data);
+      // Add to local state with optimistic data
+      prodCapState.capacityRecords.push({
+        user_id: currentUser.id,
+        work_area: workArea,
+        year: year,
+        month: month,
+        staff_count: count
+      });
     }
+    console.log('✓ Production capacity saved:', workArea, year, month, '=', count);
   } catch (err) {
     console.error('❌ Error saving production capacity:', err);
+    throw err; // Re-throw so caller can handle
   }
 }
 

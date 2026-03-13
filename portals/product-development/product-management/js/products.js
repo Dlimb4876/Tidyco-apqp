@@ -78,13 +78,16 @@ function renderFamiliesTabContent() {
   const container = document.getElementById('productsFamiliesTab');
   if (!container) return;
 
-  // Ensure families data is loaded
-  if (!familiesState || !familiesState.families) {
+  // If families are still loading, show a spinner
+  if (familiesState.loading) {
     container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families...</div>';
-    // Initialize families data if not already done
-    if (typeof familiesDataInit === 'function') {
-      familiesDataInit();
-    }
+    return;
+  }
+
+  // If families state is missing or data array is absent, trigger a reload
+  if (!familiesState || !Array.isArray(familiesState.families)) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families...</div>';
+    if (typeof familiesDataInit === 'function') familiesDataInit().then(() => renderFamiliesTabContent());
     return;
   }
 
