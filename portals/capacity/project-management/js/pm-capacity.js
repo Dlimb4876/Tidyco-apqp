@@ -77,6 +77,17 @@ function pmDrawOverviewWidgets() {
 window.pmRenderCapacity = function() {
   window.meCurrentDepartmentContext = 'PM';
 
+  // Auto-sync project products (Tender/NPI) from the Product Management database
+  if (typeof meDataAutoSyncPMProducts === 'function') {
+    const synced = meDataAutoSyncPMProducts();
+    if (synced) {
+      // Persist any newly-added products to Supabase (debounced)
+      setTimeout(() => {
+        if (typeof meDataSave === 'function') meDataSave(false);
+      }, 1000);
+    }
+  }
+
   const html = `
     <div class="pm-shell me-shell">
       <div class="me-topbar">

@@ -340,6 +340,66 @@ window.meDataAutoSyncProductionProducts = function() {
   return true;
 };
 
+/**
+ * Auto-sync project products (Tender/NPI status) from product management database
+ * for the PM capacity view. Mirrors meDataAutoSyncProductionProducts for the PM stream.
+ */
+window.meDataAutoSyncPMProducts = function() {
+  if (!productsState || !productsState.products) {
+    return false;
+  }
+
+  // Get NPI and Production status products (active projects managed by PM)
+  const projectProducts = productsState.products.filter(p =>
+    p.status === 'NPI' || p.status === 'Production'
+  );
+
+  // Build a lookup map by product database ID
+  const projectMap = {};
+  projectProducts.forEach(p => {
+    projectMap[p.id] = p;
+  });
+
+  // Update or create PM-tagged products
+  projectProducts.forEach(projProd => {
+    const existing = meDataState.products.find(meP =>
+      meP.productDatabaseId === projProd.id && meP.department === 'PM'
+    );
+    if (existing) {
+      // Keep in sync with latest name/notes from product management
+      existing.name = projProd.name;
+      existing.notes = projProd.notes || '';
+    } else {
+      // Temporarily set context to PM so meDataAddProduct tags the product correctly
+      const savedContext = window.meCurrentDepartmentContext;
+      window.meCurrentDepartmentContext = 'PM';
+      meDataAddProduct(projProd.name, '', '', 0, projProd.notes || '', projProd.id);
+      window.meCurrentDepartmentContext = savedContext;
+    }
+  });
+
+  // De-dup PM products and remove those no longer in Tender/NPI
+  const seenDbIds = new Set();
+  const seenNames = new Set();
+  meDataState.products = meDataState.products.filter(meP => {
+    if (meP.department !== 'PM') return true; // Leave ME products untouched
+
+    if (!meP.productDatabaseId) {
+      // Manual entries: de-dup by name
+      if (seenNames.has(meP.name)) return false;
+      seenNames.add(meP.name);
+      return true;
+    }
+
+    if (seenDbIds.has(meP.productDatabaseId)) return false;
+    seenDbIds.add(meP.productDatabaseId);
+    // Only keep if still NPI or Production
+    return projectMap[meP.productDatabaseId] !== undefined;
+  });
+
+  return true;
+};
+
 // ─────────────────────────────────────────────────────────────
 // HOLIDAY CRUD
 // ─────────────────────────────────────────────────────────────
