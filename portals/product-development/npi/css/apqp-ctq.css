@@ -1,0 +1,218 @@
+/* ============================================================
+   apqp-ctq.css — CTQ-specific styles: agreement checkboxes,
+   tag/badge classes, action-tracker column sizing, resource
+   pills, and CTQ pick chips.
+   Tidyco APQP Quality Tool
+   ============================================================ */
+
+/* ── CTQ Agreement Styling ──────────────────────────────────── */
+.ctq-agreed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.ctq-agreed input[type=checkbox] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--green);
+}
+
+.ctq-agreed-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  transition: color 0.15s;
+}
+
+/* ── Tag Classes ───────────────────────────────────────────── */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.tag-ctq {
+  background: var(--teal-pale);
+  color: var(--teal);
+}
+
+.tag-step {
+  background: var(--blue-pale);
+  color: var(--blue);
+}
+
+.tag-sub {
+  background: var(--purple-pale);
+  color: var(--purple);
+}
+
+.tag-amber {
+  background: var(--amber-pale);
+  color: var(--amber);
+}
+
+.tag-green {
+  background: var(--green-pale);
+  color: var(--green);
+}
+
+/* ── Action tracker table ───────────────────────────────────── */
+.act-tbl td:nth-child(2) { min-width: 200px; }
+.act-tbl td:nth-child(3) { min-width: 90px; }
+.act-tbl td:nth-child(6) { min-width: 100px; }
+.act-tbl td:nth-child(7) { min-width: 120px; }
+
+/* ── Resource Pills ────────────────────────────────────────── */
+.res-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid;
+}
+
+.res-pill:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+.res-pill-tool {
+  background: var(--navy-pale);
+  color: var(--navy);
+  border-color: #b3c8e0;
+}
+
+.res-pill-tool:hover {
+  background: #d0e0f0;
+  border-color: var(--navy);
+}
+
+.res-pill-equip {
+  background: var(--amber-pale);
+  color: var(--amber);
+  border-color: var(--amber-mid);
+}
+
+.res-pill-equip:hover {
+  background: #f5d89f;
+  border-color: var(--amber);
+}
+
+.res-pill-mat {
+  background: var(--green-pale);
+  color: var(--green);
+  border-color: var(--green-mid);
+}
+
+.res-pill-mat:hover {
+  background: #c3e9d2;
+  border-color: var(--green);
+}
+
+.res-pill-cons {
+  background: var(--red-pale);
+  color: var(--red);
+  border-color: #f0b4ae;
+}
+
+.res-pill-cons:hover {
+  background: #f0d4d0;
+  border-color: var(--red);
+}
+
+.res-pill-part {
+  background: var(--blue-pale);
+  color: var(--blue);
+  border-color: var(--blue-mid);
+}
+
+.res-pill-part:hover {
+  background: #d0e8f5;
+  border-color: var(--blue);
+}
+
+.res-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--line2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.res-add-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-pale);
+  border-style: solid;
+}
+
+/* ── CTQ Pick Chips ────────────────────────────────────────── */
+.ctq-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-height: 22px;
+}
+
+.ctq-pick-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--teal-pale);
+  color: var(--teal);
+  border: 1px solid #9ed6cf;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.ctq-pick-item:hover {
+  background: #c5ebe6;
+  border-color: var(--teal);
+  transform: translateY(-1px);
+}
+
+.ctq-pick-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px dashed var(--line2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.ctq-pick-add:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-pale);
+  border-style: solid;
+}
