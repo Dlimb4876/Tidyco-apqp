@@ -1,0 +1,237 @@
+/* ============================================================
+   apqp-pfd.css — Process Flow Diagram (PFD) specific styles:
+   step rows, sub-assembly groups, insert-row affordance, and
+   the flow ribbon.
+   Tidyco APQP Quality Tool
+   ============================================================ */
+
+/* ── PFD step rows ──────────────────────────────────────────── */
+.step-row {
+  border-bottom: 1px solid var(--line);
+  transition: background-color 0.15s;
+}
+
+.step-row:last-child { border-bottom: none; }
+
+.step-row:hover {
+  background: rgba(0, 102, 204, 0.02);
+}
+
+.step-main-row {
+  display: flex;
+  align-items: stretch;
+}
+
+.step-num-cell {
+  width: 54px;
+  min-width: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 5px 7px;
+  border-right: 1px solid var(--line);
+  background: #fafbfd;
+  gap: 3px;
+}
+
+.step-num-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+  background: var(--purple);
+  border-radius: 5px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.step-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.step-fields {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+}
+
+.step-field {
+  padding: 8px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  align-items: flex-start;
+}
+
+.step-field:last-child { border-right: none; }
+
+.step-field.f-op { width: 190px; min-width: 150px; }
+.step-field.f-detail { flex: 1; }
+.step-field.f-ctq { width: 150px; min-width: 120px; }
+.step-field.f-pfmea {
+  width: 80px;
+  min-width: 70px;
+  justify-content: center;
+  align-items: center;
+}
+
+.step-resources {
+  border-top: 1px solid var(--line);
+  background: #f9fbfd;
+  padding: 6px 8px 6px 62px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── PFD Sub-Assembly Group ────────────────────────────────── */
+.sub-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--purple-pale);
+  border-bottom: 2px solid #d8c8f0;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 600;
+  color: var(--purple);
+}
+
+.sub-group-header:hover {
+  background: #e9deff;
+  border-bottom-color: var(--purple);
+}
+
+.sub-group-header > span:first-child {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+  color: var(--purple);
+}
+
+.sub-group-body.collapsed {
+  display: none;
+}
+
+.sub-group-body.collapsed ~ .insert-row {
+  display: none;
+}
+
+/* ── PFD Insert Row Affordance ─────────────────────────────── */
+.insert-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: rgba(0, 102, 204, 0.02);
+}
+
+.insert-row:hover {
+  opacity: 1 !important;
+}
+
+.step-row:hover + .insert-row {
+  opacity: 0.5;
+}
+
+.insert-btn {
+  padding: 4px 12px;
+  font-size: 11px;
+  border: 1px dashed var(--blue);
+  background: var(--blue-pale);
+  color: var(--blue);
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.insert-btn:hover {
+  background: var(--blue);
+  color: white;
+  border-style: solid;
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.15);
+}
+
+/* ── PFD Flow Ribbon ───────────────────────────────────────── */
+.flow-ribbon {
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 0;
+}
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--line2);
+  font-size: 16px;
+  padding: 0 8px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.flow-node {
+  flex: 1;
+  min-width: 74px;
+  max-width: 120px;
+  padding: 12px 10px;
+  border-right: 1px solid var(--line);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.flow-node:hover {
+  background: var(--bg);
+  border-right-color: var(--blue);
+}
+
+.flow-node:last-child {
+  border-right: none;
+}
+
+.flow-node-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.flow-node-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.flow-node.is-sub {
+  background: var(--purple-pale);
+}
+
+.flow-node.is-sub .flow-node-num {
+  color: var(--purple);
+}
