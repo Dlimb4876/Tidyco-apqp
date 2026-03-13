@@ -4,6 +4,25 @@
 
 **The primary user of this project has zero coding experience.** When providing explanations, generating code, or describing changes, please use the simplest possible terms (layman's terms). Avoid jargon and assume no prior knowledge of programming concepts, git, or web development. Your goal is to make the process as understandable and accessible as possible for a non-technical user.
 
+### Task Tracking
+
+For any multi-step request (e.g. "add a new feature", "fix this bug", "update these files"), **always create a Todo list** at the start of the task and keep it updated throughout. This helps the user follow along and see what has been done and what is still to come.
+
+- Break the work into small, clear steps
+- Mark each step as in-progress before starting it
+- Mark each step as completed immediately after finishing it
+- Never batch-complete multiple steps — tick them off one at a time
+- If a new subtask is discovered mid-way, add it to the list before starting it
+
+### Agent Work Assessment
+
+When planning a Todo list, **assess each task for suitability as agent work** before starting:
+
+- **Good candidates for an agent:** read-only research tasks (e.g. "find all usages of X", "explore how Y is structured", "check if Z exists"), tasks that require searching many files, or background investigations that don't depend on previous steps
+- **Keep in the main flow:** tasks that write or edit files, tasks that depend on earlier results, anything requiring user confirmation, and sequential steps where order matters
+- Delegate suitable tasks to the `Explore` subagent to avoid cluttering the main conversation with long searches
+- Run multiple independent agent tasks in parallel where possible to save time
+
 ---
 
 ## Project Overview

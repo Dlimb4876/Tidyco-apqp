@@ -68,7 +68,6 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
     const memberName    = escapeHtml(member.name || 'Unnamed');
     const hoursPerWeek  = meGetHoursPerWeek(member.hoursPerWeek);
     const utilisationPct = member.utilisation || 80;
-    const dailyHours    = meGetDailyHours(hoursPerWeek, utilisationPct);
 
     let activeStart = new Date(Math.max(monthStart, new Date(member.startDate)));
     let activeEnd   = monthEnd;
@@ -81,19 +80,20 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
       return `
         <tr>
           <td>${memberName}</td>
-          <td style="text-align:right;">${hoursPerWeek}</td>
           <td style="text-align:right;">${utilisationPct}%</td>
           <td style="text-align:right;">0</td>
           <td style="text-align:right;">—</td>
+          <td style="text-align:right;">0.0 h</td>
           <td style="text-align:right;font-weight:600;color:var(--muted);">0.0 h</td>
         </tr>
       `;
     }
 
     const netDays    = countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
-    const rawCapacity = hoursPerWeek * (utilisationPct / 100) * (netDays / 5);
+    const totalHours = hoursPerWeek * (netDays / 5);
 
-    let holidayDeduction = 0;
+    // Count holiday days — deducted from gross (1 day = 8h) BEFORE utilisation is applied
+    let holidayDays = 0;
     holidaysArray.forEach(holiday => {
       if (!holiday || holiday.personId !== member.id || !holiday.date) return;
       if (holiday.date.substring(0, 7) !== currentMonthKey) return;
@@ -107,21 +107,22 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
       if (bankHolSet.has(hdStr)) return;
       if (hd < activeStart || hd > activeEnd) return;
 
-      if (holiday.type === 'full')      holidayDeduction += dailyHours;
-      else if (holiday.type === 'half') holidayDeduction += dailyHours / 2;
+      if (holiday.type === 'full')      holidayDays += 1;
+      else if (holiday.type === 'half') holidayDays += 0.5;
     });
 
-    const adjustedCapacity = Math.max(0, rawCapacity - holidayDeduction);
-    teamCapacityTotal += adjustedCapacity;
+    const adjustedTotal  = Math.max(0, totalHours - holidayDays * 8);
+    const utilisedHours  = adjustedTotal * (utilisationPct / 100);
+    teamCapacityTotal += utilisedHours;
 
     return `
       <tr>
         <td>${memberName}</td>
-        <td style="text-align:right;">${hoursPerWeek}</td>
         <td style="text-align:right;">${utilisationPct}%</td>
         <td style="text-align:right;">${netDays}</td>
-        <td style="text-align:right;">${holidayDeduction > 0 ? holidayDeduction.toFixed(1) + ' h' : '—'}</td>
-        <td style="text-align:right;font-weight:600;">${adjustedCapacity.toFixed(1)} h</td>
+        <td style="text-align:right;">${holidayDays > 0 ? holidayDays + ' d' : '—'}</td>
+        <td style="text-align:right;">${totalHours.toFixed(1)} h</td>
+        <td style="text-align:right;font-weight:600;">${utilisedHours.toFixed(1)} h</td>
       </tr>
     `;
   }).filter(Boolean);
@@ -233,11 +234,11 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
               <table class="me-tbl">
                 <thead><tr>
                   <th>Engineer</th>
-                  <th style="text-align:right;">Hrs / Wk</th>
                   <th style="text-align:right;">Util %</th>
                   <th style="text-align:right;">Working Days</th>
-                  <th style="text-align:right;">Holiday Off</th>
-                  <th style="text-align:right;">Available (h)</th>
+                  <th style="text-align:right;">Holiday (days)</th>
+                  <th style="text-align:right;">Total (h)</th>
+                  <th style="text-align:right;">Utilization (h)</th>
                 </tr></thead>
                 <tbody>${memberCapacityTableBody}</tbody>
               </table>

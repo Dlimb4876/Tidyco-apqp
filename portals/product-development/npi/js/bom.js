@@ -36,61 +36,63 @@ npi.bom.renderBomTable = function(type, p) {
 
   let thead = '', tbody = ''
   if (type === 'parts') {
-    thead = `<tr><th>Part Number</th><th>Description</th><th>Qty</th><th>Unit</th><th>Std</th><th>AAW</th><th>Repair</th><th>Notes</th><th></th></tr>`
+    thead = `<tr><th>Tidyco PN</th><th>Supplier PN</th><th>Description</th><th>Qty</th><th>Unit</th><th>Std</th><th>AAW</th><th>Repair</th><th>Notes</th><th></th></tr>`
     tbody = items.map((r, i) => `<tr>
-      <td class="w110"><input class="cell-edit mono" value="${esc(r.pn)}" onchange="npi.bom.updBom('parts',${i},'pn',this.value)" placeholder="PN"></td>
-      <td><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('parts',${i},'desc',this.value)" placeholder="Description"></td>
-      <td class="w50 ctr"><input type="number" class="cell-edit mono" min="0" value="${r.qty || ''}" onchange="npi.bom.updBom('parts',${i},'qty',+this.value)"></td>
+      <td class="w110"><input class="cell-edit mono" value="${esc(r.pn)}" onchange="npi.bom.updBom('parts',${i},'pn',this.value)" placeholder="Tidyco PN"></td>
+      <td class="w110"><input class="cell-edit mono" value="${esc(r.supplierPN||'')}" onchange="npi.bom.updBom('parts',${i},'supplierPN',this.value)" placeholder="Supplier PN"></td>
+      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('parts',${i},'desc',this.value)" placeholder="Description"></td>
+      <td class="w75 ctr"><input type="number" class="cell-edit mono" min="0" value="${r.qty || ''}" onchange="npi.bom.updBom('parts',${i},'qty',+this.value)"></td>
       <td class="w50"><input class="cell-edit" value="${esc(r.unit)}" onchange="npi.bom.updBom('parts',${i},'unit',this.value)" placeholder="ea"></td>
       <td class="w44 ctr"><input type="checkbox" ${r.isStd    ? 'checked' : ''} onchange="npi.bom.updBom('parts',${i},'isStd',this.checked)"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
       <td class="w44 ctr"><input type="checkbox" ${r.isAaw    ? 'checked' : ''} onchange="npi.bom.updBom('parts',${i},'isAaw',this.checked)"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
       <td class="w44 ctr"><input type="checkbox" ${r.isRepair ? 'checked' : ''} onchange="npi.bom.updBom('parts',${i},'isRepair',this.checked)" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
-      <td><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('parts',${i},'notes',this.value)" placeholder="Notes / scheme ref"></td>
+      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('parts',${i},'notes',this.value)" placeholder="Notes / scheme ref"></td>
       <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('parts',${i})">×</button></td>
     </tr>`).join('')
   } else if (type === 'tools') {
     thead = `<tr><th>Tool ID</th><th>Description</th><th>Spec / PN</th><th>Notes</th><th></th></tr>`
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" value="${esc(r.toolId)}" onchange="npi.bom.updBom('tools',${i},'toolId',this.value)" placeholder="TL-001"></td>
-      <td><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('tools',${i},'desc',this.value)" placeholder="Description"></td>
+      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('tools',${i},'desc',this.value)" placeholder="Description"></td>
       <td class="w140"><input class="cell-edit mono" value="${esc(r.spec)}" onchange="npi.bom.updBom('tools',${i},'spec',this.value)" placeholder="Spec / PN"></td>
-      <td><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('tools',${i},'notes',this.value)" placeholder="Notes"></td>
+      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('tools',${i},'notes',this.value)" placeholder="Notes"></td>
       <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('tools',${i})">×</button></td>
     </tr>`).join('')
   } else if (type === 'equip') {
     thead = `<tr><th>Equip ID</th><th>Description</th><th>Location</th><th>Notes</th><th></th></tr>`
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" value="${esc(r.equipId)}" onchange="npi.bom.updBom('equip',${i},'equipId',this.value)" placeholder="EQ-001"></td>
-      <td><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('equip',${i},'desc',this.value)" placeholder="Description"></td>
+      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('equip',${i},'desc',this.value)" placeholder="Description"></td>
       <td class="w140"><input class="cell-edit" value="${esc(r.location)}" onchange="npi.bom.updBom('equip',${i},'location',this.value)" placeholder="Bay / location"></td>
-      <td><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('equip',${i},'notes',this.value)" placeholder="Notes"></td>
+      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('equip',${i},'notes',this.value)" placeholder="Notes"></td>
       <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('equip',${i})">×</button></td>
     </tr>`).join('')
   } else {
     thead = `<tr><th>Part / Cat. No.</th><th>Description</th><th>Unit</th><th>Qty/Unit</th><th>Std</th><th>AAW</th><th>Repair</th><th>Notes</th><th></th></tr>`
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" value="${esc(r.pn)}" onchange="npi.bom.updBom('${type}',${i},'pn',this.value)" placeholder="PN"></td>
-      <td><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('${type}',${i},'desc',this.value)" placeholder="Description"></td>
+      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('${type}',${i},'desc',this.value)" placeholder="Description"></td>
       <td class="w60"><input class="cell-edit" value="${esc(r.unit)}" onchange="npi.bom.updBom('${type}',${i},'unit',this.value)" placeholder="kg/L/m"></td>
-      <td class="w70 ctr"><input type="number" class="cell-edit mono" min="0" step="0.01" value="${r.qtyPerUnit || ''}" onchange="npi.bom.updBom('${type}',${i},'qtyPerUnit',+this.value)"></td>
+      <td class="w100 ctr"><input type="number" class="cell-edit mono" min="0" step="0.01" value="${r.qtyPerUnit || ''}" onchange="npi.bom.updBom('${type}',${i},'qtyPerUnit',+this.value)"></td>
       <td class="w44 ctr"><input type="checkbox" ${r.isStd    ? 'checked' : ''} onchange="npi.bom.updBom('${type}',${i},'isStd',this.checked)"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
       <td class="w44 ctr"><input type="checkbox" ${r.isAaw    ? 'checked' : ''} onchange="npi.bom.updBom('${type}',${i},'isAaw',this.checked)"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
       <td class="w44 ctr"><input type="checkbox" ${r.isRepair ? 'checked' : ''} onchange="npi.bom.updBom('${type}',${i},'isRepair',this.checked)" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
-      <td><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('${type}',${i},'notes',this.value)" placeholder="Notes"></td>
+      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('${type}',${i},'notes',this.value)" placeholder="Notes"></td>
       <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('${type}',${i})">×</button></td>
     </tr>`).join('')
   }
 
-  return `${statsHTML}<div class="card" style="overflow-x:auto">
+  const tableMinWidth = type === 'parts' ? '920px' : '800px'
+  return `<div class="bom-register-wrap">${statsHTML}<div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">${t.icon} ${t.label} Register</span><span class="card-meta">${items.length} items</span><button class="btn btn-primary btn-sm" onclick="npi.bom.addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div>
-  ${items.length === 0 ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click ＋ Add to start. Link items to PFD steps using ＋ Resource.') : `<table class="tbl" style="min-width:800px"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`}
-  <button class="add-row" onclick="npi.bom.addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div>`
+  ${items.length === 0 ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click ＋ Add to start. Link items to PFD steps using ＋ Resource.') : `<table class="tbl bom-tbl" style="min-width:${tableMinWidth}"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`}
+  <button class="add-row" onclick="npi.bom.addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div></div>`
 }
 
 npi.bom.addBomRow = function(type) {
   const p = prog()
   let item = { id: 'bom_' + Date.now() }
-  if (type === 'parts') item = { ...item, pn: '', desc: '', qty: 1, unit: 'ea', isStd: false, isAaw: false, isRepair: false, notes: '' }
+  if (type === 'parts') item = { ...item, pn: '', supplierPN: '', desc: '', qty: 1, unit: 'ea', isStd: false, isAaw: false, isRepair: false, notes: '' }
   else if (type === 'tools') item = { ...item, toolId: '', desc: '', spec: '', notes: '' }
   else if (type === 'equip') item = { ...item, equipId: '', desc: '', location: '', notes: '' }
   else item = { ...item, pn: '', desc: '', unit: '', qtyPerUnit: 0, isStd: false, isAaw: false, isRepair: false, notes: '' }

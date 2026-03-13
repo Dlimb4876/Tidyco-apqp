@@ -34,38 +34,10 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   const bankHolSet = new Set();
   relevantYears.forEach(y => window.getBankHolidaysForYear(y).forEach(h => bankHolSet.add(h.date)));
 
-  // Calculate capacity using network days (Mon-Fri, excluding bank holidays)
-  let capacity = 0;
-  let capacityMax = 0;
-  teamArray.forEach(member => {
-    if (!member.startDate) return;
-
-    const weeklyHours = meGetHoursPerWeek(member.hoursPerWeek);
-    const utilisation = member.utilisation || 80;
-    const hoursAdjusted = weeklyHours * (utilisation / 100);
-    const hoursMax = weeklyHours;
-
-    let activeStart = monthStart;
-    let activeEnd = monthEnd;
-
-    const startDate = new Date(member.startDate);
-    if (startDate > monthStart) activeStart = startDate;
-
-    if (member.endDate) {
-      const endDate = new Date(member.endDate);
-      if (endDate < monthEnd) activeEnd = endDate;
-    }
-
-    if (activeStart <= activeEnd) {
-      const netDays = window.countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
-      capacity += hoursAdjusted * (netDays / 5);
-      capacityMax += hoursMax * (netDays / 5);
-    }
-  });
-
-  // Subtract user-marked personal holidays (bank holidays already excluded via network days)
-  let holidayDeduction = 0;
+  // Build per-member holiday days map (1 full day = 1, half day = 0.5)
+  // Holiday hours are deducted from gross capacity BEFORE utilisation is applied (1 day = 8h)
   const teamById = new Map(teamArray.map(member => [member.id, member]));
+  const holidayDaysByMember = new Map();
 
   holidaysArray.forEach(holiday => {
     if (!holiday || !holiday.date || !holiday.personId) return;
@@ -73,8 +45,7 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     if (holidayMonth !== monthKey) return;
 
     const member = teamById.get(holiday.personId);
-    if (!member) return;
-    if (!member.startDate) return;
+    if (!member || !member.startDate) return;
 
     const holidayDate = new Date(holiday.date);
     holidayDate.setHours(0, 0, 0, 0);
@@ -94,13 +65,44 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
       if (holidayDate > memberEnd) return;
     }
 
-    const memberDailyCapacity = meGetDailyHours(member.hoursPerWeek, member.utilisation || 80);
-    if (holiday.type === 'full') holidayDeduction += memberDailyCapacity;
-    else if (holiday.type === 'half') holidayDeduction += memberDailyCapacity / 2;
+    const increment = holiday.type === 'full' ? 1 : holiday.type === 'half' ? 0.5 : 0;
+    if (increment > 0) {
+      holidayDaysByMember.set(holiday.personId, (holidayDaysByMember.get(holiday.personId) || 0) + increment);
+    }
   });
 
-  const adjustedCapacity = Math.max(0, capacity - holidayDeduction);
-  const adjustedCapacityMax = Math.max(0, capacityMax - holidayDeduction);
+  // Calculate capacity: gross hours minus holiday hours (1 day = 8h), then apply utilisation
+  let capacity = 0;
+  let capacityMax = 0;
+  teamArray.forEach(member => {
+    if (!member.startDate) return;
+
+    const weeklyHours = meGetHoursPerWeek(member.hoursPerWeek);
+    const utilisation = member.utilisation || 80;
+
+    let activeStart = monthStart;
+    let activeEnd = monthEnd;
+
+    const startDate = new Date(member.startDate);
+    if (startDate > monthStart) activeStart = startDate;
+
+    if (member.endDate) {
+      const endDate = new Date(member.endDate);
+      if (endDate < monthEnd) activeEnd = endDate;
+    }
+
+    if (activeStart <= activeEnd) {
+      const netDays = window.countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
+      const grossHours = weeklyHours * (netDays / 5);
+      const holidayDays = holidayDaysByMember.get(member.id) || 0;
+      const adjustedGross = Math.max(0, grossHours - holidayDays * 8);
+      capacity += adjustedGross * (utilisation / 100);
+      capacityMax += adjustedGross; // capacityMax = adjusted gross at 100% utilisation
+    }
+  });
+
+  const adjustedCapacity = capacity;
+  const adjustedCapacityMax = capacityMax;
 
   // Calculate demand using network days proration (equivalent to NETWORKDAYS in Excel)
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
@@ -180,15 +182,15 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
   relevantYears.forEach(y => window.getBankHolidaysForYear(y).forEach(h => bankHolSet.add(h.date)));
 
   const baseHours = meGetHoursPerWeek(person.hoursPerWeek);
-  const adjustedHours = baseHours * ((person.utilisation || 80) / 100);
+  const utilisation = person.utilisation || 80;
 
   // Capacity: network days in week (Mon-Fri, excluding bank holidays)
   const netDays = window.countNetworkDaysBetween(weekStart_d, weekEnd_d, bankHolSet);
-  const capacityBefore = adjustedHours * (netDays / 5);
+  const grossCapacity = baseHours * (netDays / 5);
 
-  // Subtract user-marked personal holidays for this person (bank hols already excluded)
-  let holidayDeduction = 0;
-  const hoursPerDay = meGetDailyHours(person.hoursPerWeek, person.utilisation || 80);
+  // Count personal holiday days (bank hols already excluded via network days)
+  // Holidays deducted from gross (1 day = 8h) BEFORE utilisation is applied
+  let holidayDays = 0;
 
   holidaysArray.forEach(holiday => {
     if (holiday.personId !== personId) return;
@@ -199,12 +201,13 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
     const dateStr = formatDateForHolidays(hDate);
     if (bankHolSet.has(dateStr)) return;
     if (hDate >= weekStart_d && hDate <= weekEnd_d) {
-      if (holiday.type === 'full') holidayDeduction += hoursPerDay;
-      else if (holiday.type === 'half') holidayDeduction += hoursPerDay / 2;
+      if (holiday.type === 'full') holidayDays += 1;
+      else if (holiday.type === 'half') holidayDays += 0.5;
     }
   });
 
-  const capacity = Math.max(0, capacityBefore - holidayDeduction);
+  const adjustedGross = Math.max(0, grossCapacity - holidayDays * 8);
+  const capacity = adjustedGross * (utilisation / 100);
 
   // Demand: network days proration (NETWORKDAYS equivalent)
   let demand = 0;

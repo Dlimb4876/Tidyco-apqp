@@ -849,6 +849,22 @@
   font-weight: 600;
 }
 
+/* ── BOM Register Layout & Column Sizing ─────────────────────── */
+.bom-register-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+td.w75 { width: 75px; }
+
+.bom-tbl td .cell-edit {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bom-tbl td.bom-col-desc  { width: 150px; }
+.bom-tbl td.bom-col-notes { width: 110px; }
+
 /* ── BOM Picker (Modal List) ───────────────────────────────── */
 .bom-filter-row {
   display: flex;

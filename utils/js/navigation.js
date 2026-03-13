@@ -66,25 +66,9 @@ function navigate(sec, { pushHash = true } = {}) {
     if (typeof prodCapUnsubscribeUtilization === 'function') prodCapUnsubscribeUtilization();
   }
 
-  // Reset capacityTab to 'root' when navigating TO capacity from outside (e.g., from hub)
-  if (sec === 'capacity' && currentSection !== 'capacity') {
-    capacityTab = 'root';
-  }
-
   // Clean up subscriptions when leaving production
   if (currentSection === 'production' && sec !== 'production') {
     if (typeof prodDataUnsubscribe === 'function') prodDataUnsubscribe();
-  }
-
-  // Reset productionTab to 'root' when navigating TO production from outside
-  if (sec === 'production' && currentSection !== 'production') {
-    productionTab = 'root';
-  }
-
-  // Reset productDevelopmentTab to 'root' when navigating TO product-development from outside
-  if (sec === 'product-development' && currentSection !== 'product-development') {
-    productDevelopmentTab = 'root';
-    if (typeof productsActiveTab !== 'undefined') productsActiveTab = 'list';
   }
 
   // Clean up families subscription when leaving product-development
@@ -92,9 +76,19 @@ function navigate(sec, { pushHash = true } = {}) {
     familiesDataCleanup();
   }
 
+  const prevSection = currentSection;
   currentSection = sec;
 
   if (pushHash) {
+    // Reset portal tabs to 'root' only for new user-driven navigations (not back/forward restores).
+    // This intentionally runs after prevSection is captured so the check is correct.
+    if (sec === 'capacity' && prevSection !== 'capacity') capacityTab = 'root';
+    if (sec === 'production' && prevSection !== 'production') productionTab = 'root';
+    if (sec === 'product-development' && prevSection !== 'product-development') {
+      productDevelopmentTab = 'root';
+      if (typeof productsActiveTab !== 'undefined') productsActiveTab = 'list';
+    }
+
     const parts = [];
     if (progId)             parts.push('p=' + encodeURIComponent(progId));
     if (sec !== 'projects') parts.push('s=' + encodeURIComponent(sec));
@@ -104,7 +98,7 @@ function navigate(sec, { pushHash = true } = {}) {
     if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
     if (sec === 'product-development' && productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(productDevelopmentTab));
     const hash = parts.length ? '#' + parts.join('&') : '#';
-    if (sec === currentSection || sec === 'apqp' || sec === 'capacity' || sec === 'production' || sec === 'product-development') {
+    if (sec === prevSection) {
       history.replaceState(null, '', hash);
     } else {
       history.pushState(null, '', hash);
@@ -130,10 +124,25 @@ function goHome()     { navigate('project'); }
 
 /**
  * Intelligent back navigation
+ * Portal sub-pages (capacity/me, production/scheduling, etc.) → portal root
+ * Portal root (capacity, production, product-development) → hub
  * NPI sub-sections (apqp, actions, risks, bom, timing) → product-development
  * All other sections → hub
  */
 function navigateBack() {
+  // Step back to portal root before going all the way to hub
+  if (currentSection === 'capacity' && capacityTab !== 'root') {
+    setCapacityTab('root');
+    return;
+  }
+  if (currentSection === 'production' && productionTab !== 'root') {
+    setProductionTab('root');
+    return;
+  }
+  if (currentSection === 'product-development' && productDevelopmentTab !== 'root') {
+    setProductDevelopmentTab('root');
+    return;
+  }
   const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing'];
   if (npiSections.includes(currentSection) || currentSection.startsWith('gate_')) {
     navigate('product-development');
@@ -251,15 +260,19 @@ window.addEventListener('popstate', () => {
   if (!currentUser) return;
   const h = parseHash();
   npiTab = h.nft || 'all';
+  // Always restore all tab state from hash before navigating.
+  // navigate() with pushHash:false will NOT reset tabs, so these values stick.
+  capacityTab          = h.ct  || 'root';
+  productionTab        = h.pt  || 'root';
+  productDevelopmentTab = h.pdt || 'root';
+  if (h.t) apqpTab = h.t;
   if (h.p && db.programmes.find(p => p.id === h.p)) {
     progId = h.p;
-    if (h.t)   apqpTab              = h.t;
-    if (h.ct)  capacityTab          = h.ct;
-    if (h.pt)  productionTab        = h.pt;
-    if (h.pdt) productDevelopmentTab = h.pdt;
     navigate(h.s || 'project', { pushHash: false });
+  } else if (h.s) {
+    navigate(h.s, { pushHash: false });
   } else {
-    navigate('projects', { pushHash: false });
+    navigate('hub', { pushHash: false });
   }
 });
 
