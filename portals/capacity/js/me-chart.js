@@ -3,111 +3,112 @@
    ============================================================ */
 
 window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
-  // Always show KPIs for current month, not the chart start month
+  // KPIs always reflect the current calendar month
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   const currentMonthData = meCalculateMonthData(currentMonthKey, teamArray, tasksArray, productsArray, holidaysArray);
-  const capacity = currentMonthData.capacity.toFixed(1);
-  const demand = currentMonthData.totalDemand.toFixed(1);
+
+  const capacity    = currentMonthData.capacity.toFixed(1);
+  const demand      = currentMonthData.totalDemand.toFixed(1);
   const utilisation = currentMonthData.utilisation;
-  const headroom = Math.max(0, currentMonthData.capacity - currentMonthData.totalDemand).toFixed(1);
+  const headroom    = Math.max(0, currentMonthData.capacity - currentMonthData.totalDemand).toFixed(1);
 
   const utilisationColor = getUtilisationColor(utilisation);
-
   const currentMonthLabel = meGetMonthLabel(currentMonthKey);
 
-  // Build breakdown table HTML
-  const percentOrZero = (value) => {
-    if (currentMonthData.totalDemand === 0) return '0%';
-    return ((value / currentMonthData.totalDemand) * 100).toFixed(0) + '%';
-  };
+  // ── Demand breakdown rows ──────────────────────────────────
+  const pct = (v) => currentMonthData.totalDemand === 0 ? '—' : ((v / currentMonthData.totalDemand) * 100).toFixed(0) + '%';
 
   const breakdownRows = `
     <tr>
-      <td style="width: 120px;">NPI</td>
-      <td style="text-align: right; width: 100px;">${currentMonthData.npi.toFixed(1)} h</td>
-      <td style="text-align: right; width: 60px;">${percentOrZero(currentMonthData.npi)}</td>
+      <td>NPI</td>
+      <td style="text-align:right;">${currentMonthData.npi.toFixed(1)} h</td>
+      <td style="text-align:right;">${pct(currentMonthData.npi)}</td>
     </tr>
     <tr>
       <td>Improvement</td>
-      <td style="text-align: right;">${currentMonthData.improvement.toFixed(1)} h</td>
-      <td style="text-align: right;">${percentOrZero(currentMonthData.improvement)}</td>
+      <td style="text-align:right;">${currentMonthData.improvement.toFixed(1)} h</td>
+      <td style="text-align:right;">${pct(currentMonthData.improvement)}</td>
     </tr>
     <tr>
       <td>Tendering</td>
-      <td style="text-align: right;">${currentMonthData.tendering.toFixed(1)} h</td>
-      <td style="text-align: right;">${percentOrZero(currentMonthData.tendering)}</td>
+      <td style="text-align:right;">${currentMonthData.tendering.toFixed(1)} h</td>
+      <td style="text-align:right;">${pct(currentMonthData.tendering)}</td>
     </tr>
     <tr>
       <td>Support</td>
-      <td style="text-align: right;">${currentMonthData.support.toFixed(1)} h</td>
-      <td style="text-align: right;">${percentOrZero(currentMonthData.support)}</td>
+      <td style="text-align:right;">${currentMonthData.support.toFixed(1)} h</td>
+      <td style="text-align:right;">${pct(currentMonthData.support)}</td>
     </tr>
     <tr>
       <td>Other</td>
-      <td style="text-align: right;">${currentMonthData.other.toFixed(1)} h</td>
-      <td style="text-align: right;">${percentOrZero(currentMonthData.other)}</td>
+      <td style="text-align:right;">${currentMonthData.other.toFixed(1)} h</td>
+      <td style="text-align:right;">${pct(currentMonthData.other)}</td>
     </tr>
-    <tr style="border-top: 2px solid var(--line); font-weight: 600;">
+    <tr style="border-top:2px solid var(--line);font-weight:700;background:#fafbfd;">
       <td>Total Demand</td>
-      <td style="text-align: right;">${currentMonthData.totalDemand.toFixed(1)} h</td>
-      <td style="text-align: right;">100%</td>
+      <td style="text-align:right;">${currentMonthData.totalDemand.toFixed(1)} h</td>
+      <td style="text-align:right;">100%</td>
     </tr>
   `;
 
-  // Build monthly capacity-by-member table for the same month shown in the KPIs
-  const [currentYear] = currentMonthKey.split('-').map(Number);
-  const monthStart = new Date(currentYear, Number(currentMonthKey.split('-')[1]) - 1, 1);
-  const monthEnd = new Date(currentYear, Number(currentMonthKey.split('-')[1]), 0);
-  const bankHolSet = new Set(getBankHolidaysForYear(currentYear).map(h => h.date));
+  // ── Per-engineer capacity rows ─────────────────────────────
+  // NOTE: members without a startDate are excluded here to match meCalculateMonthData
+  // (fixes mismatch between KPI totals and table totals)
+  const [currentYear, currentMonthNum] = currentMonthKey.split('-').map(Number);
+  const monthStart  = new Date(currentYear, currentMonthNum - 1, 1);
+  const monthEnd    = new Date(currentYear, currentMonthNum, 0);
+  const bankHolSet  = new Set(getBankHolidaysForYear(currentYear).map(h => h.date));
 
   let teamCapacityTotal = 0;
   const memberCapacityRows = teamArray.map(member => {
     if (!member || !member.id) return null;
+    if (!member.startDate) return null;   // must match meCalculateMonthData exclusion logic
 
-    const memberName = escapeHtml(member.name || 'Unnamed');
-    const hoursPerWeek = meGetHoursPerWeek(member.hoursPerWeek);
+    const memberName    = escapeHtml(member.name || 'Unnamed');
+    const hoursPerWeek  = meGetHoursPerWeek(member.hoursPerWeek);
     const utilisationPct = member.utilisation || 80;
-    const adjustedDailyHours = meGetDailyHours(hoursPerWeek, utilisationPct);
+    const dailyHours    = meGetDailyHours(hoursPerWeek, utilisationPct);
 
-    let activeStart = monthStart;
-    let activeEnd = monthEnd;
-
-    if (member.startDate) {
-      const startDate = new Date(member.startDate);
-      if (startDate > monthStart) activeStart = startDate;
-    }
-
+    let activeStart = new Date(Math.max(monthStart, new Date(member.startDate)));
+    let activeEnd   = monthEnd;
     if (member.endDate) {
-      const endDate = new Date(member.endDate);
-      if (endDate < monthEnd) activeEnd = endDate;
+      activeEnd = new Date(Math.min(monthEnd, new Date(member.endDate)));
     }
 
-    let netDays = 0;
-    let rawCapacity = 0;
-
-    if (activeStart <= activeEnd) {
-      netDays = countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
-      const adjustedHoursPerWeek = hoursPerWeek * (utilisationPct / 100);
-      rawCapacity = adjustedHoursPerWeek * (netDays / 5);
+    if (activeStart > activeEnd) {
+      // Member not active this month — show zero row but don't add to total
+      return `
+        <tr>
+          <td>${memberName}</td>
+          <td style="text-align:right;">${hoursPerWeek}</td>
+          <td style="text-align:right;">${utilisationPct}%</td>
+          <td style="text-align:right;">0</td>
+          <td style="text-align:right;">—</td>
+          <td style="text-align:right;font-weight:600;color:var(--muted);">0.0 h</td>
+        </tr>
+      `;
     }
+
+    const netDays    = countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
+    const rawCapacity = hoursPerWeek * (utilisationPct / 100) * (netDays / 5);
 
     let holidayDeduction = 0;
     holidaysArray.forEach(holiday => {
       if (!holiday || holiday.personId !== member.id || !holiday.date) return;
       if (holiday.date.substring(0, 7) !== currentMonthKey) return;
 
-      const holidayDate = new Date(holiday.date);
-      holidayDate.setHours(0, 0, 0, 0);
-      const dayOfWeek = holidayDate.getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) return;
+      const hd = new Date(holiday.date);
+      hd.setHours(0, 0, 0, 0);
+      const dow = hd.getDay();
+      if (dow === 0 || dow === 6) return;
 
-      const holidayDateStr = `${holidayDate.getFullYear()}-${String(holidayDate.getMonth() + 1).padStart(2, '0')}-${String(holidayDate.getDate()).padStart(2, '0')}`;
-      if (bankHolSet.has(holidayDateStr)) return;
-      if (holidayDate < activeStart || holidayDate > activeEnd) return;
+      const hdStr = `${hd.getFullYear()}-${String(hd.getMonth() + 1).padStart(2, '0')}-${String(hd.getDate()).padStart(2, '0')}`;
+      if (bankHolSet.has(hdStr)) return;
+      if (hd < activeStart || hd > activeEnd) return;
 
-      if (holiday.type === 'full') holidayDeduction += adjustedDailyHours;
-      else if (holiday.type === 'half') holidayDeduction += adjustedDailyHours / 2;
+      if (holiday.type === 'full')      holidayDeduction += dailyHours;
+      else if (holiday.type === 'half') holidayDeduction += dailyHours / 2;
     });
 
     const adjustedCapacity = Math.max(0, rawCapacity - holidayDeduction);
@@ -116,29 +117,27 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
     return `
       <tr>
         <td>${memberName}</td>
-        <td style="text-align: right;">${rawCapacity.toFixed(1)} h</td>
-        <td style="text-align: right;">${utilisationPct}%</td>
-        <td style="text-align: right;">${netDays}</td>
-        <td style="text-align: right;">${holidayDeduction.toFixed(1)} h</td>
-        <td style="text-align: right; font-weight: 600;">${adjustedCapacity.toFixed(1)} h</td>
+        <td style="text-align:right;">${hoursPerWeek}</td>
+        <td style="text-align:right;">${utilisationPct}%</td>
+        <td style="text-align:right;">${netDays}</td>
+        <td style="text-align:right;">${holidayDeduction > 0 ? holidayDeduction.toFixed(1) + ' h' : '—'}</td>
+        <td style="text-align:right;font-weight:600;">${adjustedCapacity.toFixed(1)} h</td>
       </tr>
     `;
   }).filter(Boolean);
 
   const memberCapacityTableBody = memberCapacityRows.length
     ? memberCapacityRows.join('') + `
-      <tr style="border-top: 2px solid var(--line); font-weight: 700;">
-        <td>Total Team Capacity</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td style="text-align: right;">${teamCapacityTotal.toFixed(1)} h</td>
+      <tr style="border-top:2px solid var(--line);font-weight:700;background:#fafbfd;">
+        <td colspan="5">Total Available Capacity</td>
+        <td style="text-align:right;">${teamCapacityTotal.toFixed(1)} h</td>
       </tr>
     `
     : `
       <tr>
-        <td colspan="6" style="text-align:center; color: var(--muted); padding: 12px;">No team members added yet</td>
+        <td colspan="6" style="text-align:center;color:var(--muted);padding:20px;font-style:italic;">
+          No engineers with a start date set — add start dates on the Team tab.
+        </td>
       </tr>
     `;
 
@@ -148,102 +147,108 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
 
   return `
     <div class="me-chart-container">
+
+      <!-- ── KPI Strip ── -->
       <div class="me-kpi-strip">
-        <div class="me-kpi me-kpi-capacity" style="border-bottom: 4px solid var(--green);">
-          <div class="me-kpi-label">Team Capacity (hours)</div>
-          <div class="me-kpi-value">${capacity}</div>
+        <div class="me-kpi" style="border-left:4px solid var(--green);">
+          <div class="me-kpi-label">Available Capacity</div>
+          <div class="me-kpi-value">${capacity} <span style="font-size:14px;font-weight:500;color:var(--muted);">h</span></div>
           <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
-        <div class="me-kpi me-kpi-demand" style="border-bottom: 4px solid var(--blue);">
-          <div class="me-kpi-label">Total Demand (hours)</div>
-          <div class="me-kpi-value">${demand}</div>
+        <div class="me-kpi" style="border-left:4px solid var(--blue);">
+          <div class="me-kpi-label">Total Demand</div>
+          <div class="me-kpi-value">${demand} <span style="font-size:14px;font-weight:500;color:var(--muted);">h</span></div>
           <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
-        <div class="me-kpi me-kpi-util" style="border-bottom: 4px solid ${utilisationColor};">
+        <div class="me-kpi" style="border-left:4px solid ${utilisationColor};">
           <div class="me-kpi-label">Utilisation</div>
-          <div class="me-kpi-value">${utilisation}%</div>
-          <div class="me-kpi-month">${utilisation < 85 ? '✓ Healthy' : utilisation < 100 ? '⚠ Tight' : '✗ Over'}</div>
+          <div class="me-kpi-value" style="color:${utilisationColor};">${utilisation}%</div>
+          <div class="me-kpi-month">${utilisation < 85 ? '✓ Healthy' : utilisation < 100 ? '⚠ Tight' : '✗ Over capacity'}</div>
         </div>
-        <div class="me-kpi me-kpi-headroom" style="border-bottom: 4px solid var(--navy);">
-          <div class="me-kpi-label">Available Headroom (hours)</div>
-          <div class="me-kpi-value">${headroom}</div>
+        <div class="me-kpi" style="border-left:4px solid var(--navy);">
+          <div class="me-kpi-label">Headroom</div>
+          <div class="me-kpi-value">${headroom} <span style="font-size:14px;font-weight:500;color:var(--muted);">h</span></div>
           <div class="me-kpi-month">${currentMonthLabel}</div>
         </div>
       </div>
 
-      <div class="me-chart-title-section">
-        <div class="me-chart-title">📈 Team Capacity Forecast</div>
-        <div class="me-chart-subtitle">18-Month Outlook | Stacked Demand (NPI, Improvement, Tendering, Support, Other)</div>
-      </div>
-
-      <div class="me-chart-controls">
-        <div class="me-chart-ctrl-left">
-          <button class="btn btn-secondary" onclick="meOnPrevMonth()">← Previous</button>
-          <input type="month" id="meChartMonthInput" value="${monthKey}" onchange="meOnMonthChange(this.value)" />
-          <button class="btn btn-secondary" onclick="meOnNextMonth()">Next →</button>
+      <!-- ── Chart Card (DO NOT MODIFY CHART INTERNALS) ── -->
+      <div class="me-card" style="margin-bottom:20px;">
+        <div class="me-card-head" style="flex-wrap:wrap;gap:12px;padding:12px 16px;">
+          <div>
+            <div class="me-card-title">TEAM CAPACITY FORECAST</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px;font-weight:400;">18-Month Outlook &nbsp;·&nbsp; Stacked demand by category vs. available capacity</div>
+          </div>
+          <div class="me-chart-ctrl-left">
+            <button class="btn btn-secondary btn-sm" onclick="meOnPrevMonth()">← Prev</button>
+            <input type="month" id="meChartMonthInput" value="${monthKey}" onchange="meOnMonthChange(this.value)" />
+            <button class="btn btn-secondary btn-sm" onclick="meOnNextMonth()">Next →</button>
+            <a href="javascript:void(0)" class="me-chart-today-link" onclick="meOnTodayClick()">Today</a>
+          </div>
         </div>
-        <a href="javascript:void(0)" class="me-chart-today-link" onclick="meOnTodayClick()">Today</a>
-      </div>
-
-      <div class="me-chart-wrapper">
-        <canvas id="meChart" height="300"></canvas>
-      </div>
-
-      <div class="me-chart-legend">
-        <div class="legend-item"><div class="legend-color" style="background: #1e40af;"></div><span>NPI</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #15803d;"></div><span>Improvement</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #ea580c;"></div><span>Tendering</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #be185d;"></div><span>Support</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #7c3aed;"></div><span>Other</span></div>
-        <div class="legend-item" style="margin-left: 30px;"><div class="legend-line" style="background: #ef4444;"></div><span>Team Capacity</span></div>
-      </div>
-
-      <div class="me-card" style="margin-top: 24px;">
-        <div class="me-card-head">
-          <span class="me-card-title">DEMAND BREAKDOWN</span>
-          <span style="font-size:12px;color:var(--muted)">${currentMonthLabel}</span>
-        </div>
-        <div class="me-card-body">
-          <div class="me-tbl-wrap">
-            <table class="me-tbl">
-              <thead><tr>
-                <th style="width: 120px;">Category</th>
-                <th style="width: 100px; text-align: right;">Hours</th>
-                <th style="width: 60px; text-align: right;">Share</th>
-              </tr></thead>
-              <tbody>
-                ${breakdownRows}
-              </tbody>
-            </table>
+        <div class="me-card-body" style="padding:16px;">
+          <div class="me-chart-wrapper">
+            <canvas id="meChart" height="300"></canvas>
+          </div>
+          <div class="me-chart-legend">
+            <div class="legend-item"><div class="legend-color" style="background:#1e40af;"></div><span>NPI</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#15803d;"></div><span>Improvement</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#ea580c;"></div><span>Tendering</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#be185d;"></div><span>Support</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#7c3aed;"></div><span>Other</span></div>
+            <div class="legend-item" style="margin-left:24px;"><div class="legend-line" style="background:#ef4444;"></div><span>Team Capacity</span></div>
           </div>
         </div>
       </div>
 
-      <div class="me-card" style="margin-top: 16px;">
-        <div class="me-card-head">
-          <span class="me-card-title">CAPACITY PER TEAM MEMBER (MONTH)</span>
-          <span style="font-size:12px;color:var(--muted)">${currentMonthLabel}</span>
-        </div>
-        <div class="me-card-body">
-          <div class="me-tbl-wrap">
-            <table class="me-tbl">
-              <thead><tr>
-                <th>Team Member</th>
-                <th style="text-align: right;">Gross Capacity (h/month)</th>
-                <th style="text-align: right;">Utilisation</th>
-                <th style="text-align: right;">Net Days</th>
-                <th style="text-align: right;">Holiday Deduction (h/month)</th>
-                <th style="text-align: right;">Monthly Capacity (h/month)</th>
-              </tr></thead>
-              <tbody>
-                ${memberCapacityTableBody}
-              </tbody>
-            </table>
+      <!-- ── Lower Grid: breakdown + per-engineer ── -->
+      <div class="me-chart-lower-grid">
+
+        <div class="me-card">
+          <div class="me-card-head">
+            <span class="me-card-title">DEMAND BREAKDOWN</span>
+            <span style="font-size:11px;color:var(--muted);">${currentMonthLabel}</span>
+          </div>
+          <div class="me-card-body">
+            <div class="me-tbl-wrap">
+              <table class="me-tbl">
+                <thead><tr>
+                  <th>Category</th>
+                  <th style="text-align:right;">Hours</th>
+                  <th style="text-align:right;">Share</th>
+                </tr></thead>
+                <tbody>${breakdownRows}</tbody>
+              </table>
+            </div>
           </div>
         </div>
+
+        <div class="me-card">
+          <div class="me-card-head">
+            <span class="me-card-title">CAPACITY PER ENGINEER</span>
+            <span style="font-size:11px;color:var(--muted);">${currentMonthLabel}</span>
+          </div>
+          <div class="me-card-body">
+            <div class="me-tbl-wrap">
+              <table class="me-tbl">
+                <thead><tr>
+                  <th>Engineer</th>
+                  <th style="text-align:right;">Hrs / Wk</th>
+                  <th style="text-align:right;">Util %</th>
+                  <th style="text-align:right;">Working Days</th>
+                  <th style="text-align:right;">Holiday Off</th>
+                  <th style="text-align:right;">Available (h)</th>
+                </tr></thead>
+                <tbody>${memberCapacityTableBody}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       ${heatmapPanelHtml}
+
     </div>
   `;
 };
