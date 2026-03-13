@@ -1,6 +1,13 @@
 // ═══════════════════════════════════
-// operations-dashboard.js — Operations Mission Control
-// Depends on: state.js, navigation.js, helpers.js
+// DEPRECATED MONOLITH
+// operations-dashboard.js has been replaced by split modules:
+// operations-dashboard-state.js
+// operations-dashboard-metrics.js
+// operations-dashboard-realtime.js
+// operations-dashboard-render-core.js
+// operations-dashboard-forecast-view.js
+// operations-dashboard-forecast-actions.js
+// operations-dashboard-main.js
 // ═══════════════════════════════════
 
 let opsRealtimeActive = false;
@@ -703,15 +710,26 @@ function opsRenderPeopleView(metrics) {
     <div class="ops-shell">
       <section class="ops-panel">
         <div class="ops-panel-head">
-          <h3>People Load</h3>
-          <span>Capacity pressure and breathing room</span>
+          <h3>ME Load</h3>
+          <span>Manufacturing Engineering capacity pressure and breathing room</span>
         </div>
         <div class="ops-metrics-grid">
           ${opsMetricCard('ME Utilisation', metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready', metrics.me.ready ? `${metrics.me.capacity}h capacity / ${metrics.me.demand}h demand` : 'Open Capacity once to initialize', metrics.me.ready ? (metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good') : 'watch')}
           ${opsMetricCard('ME Headroom', metrics.me.ready ? `${metrics.me.headroom}h` : 'Not Ready', 'Current month available room', metrics.me.ready && metrics.me.headroom < 0 ? 'critical' : 'good')}
-          ${opsMetricCard('Open Actions', String(metrics.actions.totalOpen), 'Cross-team workload commitments', metrics.actions.totalOpen > 20 ? 'watch' : 'good')}
         </div>
       </section>
+      
+      <section class="ops-panel">
+        <div class="ops-panel-head">
+          <h3>PM Load</h3>
+          <span>Project Management capacity pressure and breathing room</span>
+        </div>
+        <div class="ops-metrics-grid">
+          ${opsMetricCard('PM Utilisation', metrics.pm.ready ? `${metrics.pm.utilisation}%` : 'Not Ready', metrics.pm.ready ? `${metrics.pm.capacity}h capacity / ${metrics.pm.demand}h demand` : 'Open Capacity once to initialize', metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch')}
+          ${opsMetricCard('PM Headroom', metrics.pm.ready ? `${metrics.pm.headroom}h` : 'Not Ready', 'Current month available room', metrics.pm.ready && metrics.pm.headroom < 0 ? 'critical' : 'good')}
+        </div>
+      </section>
+      
       ${opsRenderQuickActions()}
     </div>`;
 }

@@ -1,2 +1,187 @@
-/* me-capacity-heatmap.css */
-/* Phase 1 scaffold: heatmap grid and detail modal presentation rules. */
+/* ============================================================
+	 me-capacity-heatmap.css — heatmap and detail modal
+	 ============================================================ */
+
+/* ── Heat Map ────────────────────────────────────────────── */
+.me-heatmap-container {
+	display: flex; flex-direction: column; height: 100%;
+}
+
+.me-heatmap-wrapper {
+	flex: 1; overflow: hidden; border: 1px solid var(--line);
+	border-radius: 8px; background: var(--white);
+	margin: 16px 0;
+}
+
+.me-heatmap-grid {
+	display: grid;
+	grid-template-columns: 140px repeat(auto-fit, 52px);
+	gap: 0; background: var(--white);
+	padding: 0;
+	overflow: auto;
+	height: 100%;
+}
+
+.me-heatmap-person-header {
+	grid-column: 1; position: sticky; top: 0; left: 0;
+	background: #f4f6fa; border-bottom: 1px solid var(--line);
+	border-right: 2px solid var(--line); z-index: 3;
+	height: 60px;
+}
+
+.me-heatmap-person-label {
+	grid-column: 1; position: sticky; left: 0;
+	background: #fafbfd; border-bottom: 1px solid var(--line);
+	border-right: 2px solid var(--line); z-index: 2;
+	padding: 8px 10px; font-weight: 500; color: var(--ink);
+	white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	font-size: 12px; display: flex; align-items: center;
+	min-height: 52px;
+}
+
+.me-heatmap-week-header {
+	position: sticky; top: 0; background: var(--white);
+	border-bottom: 1px solid #d1d5db; border-right: none;
+	display: flex; align-items: center; justify-content: center;
+	z-index: 2; min-height: 48px; font-size: 12px;
+	text-align: center; color: var(--ink);
+	font-family: 'IBM Plex Sans', sans-serif; font-weight: 500;
+	padding: 6px 2px;
+}
+
+.me-heatmap-cell {
+	height: 52px; width: 52px; display: flex; align-items: center; justify-content: center;
+	border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+	cursor: pointer; user-select: none; font-weight: 600; font-size: 14px;
+	transition: all .12s; position: relative;
+}
+
+.me-heatmap-cell:hover {
+	opacity: 0.85; transform: scale(1.05);
+}
+
+.me-heatmap-cell-value {
+	font-size: 16px; font-weight: 700; color: var(--white);
+	text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.me-heatmap-util-low {
+	background: #10b981; color: var(--white);
+}
+
+.me-heatmap-util-mid {
+	background: #f59e0b; color: var(--white);
+}
+
+.me-heatmap-util-high {
+	background: #ef4444; color: var(--white);
+}
+
+.me-heatmap-no-capacity {
+	background: #e5e7eb; color: var(--muted);
+}
+
+/* ── Detail Modal ────────────────────────────────────────── */
+.me-detail-modal {
+	position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+	display: flex; align-items: center; justify-content: center;
+	z-index: 1000; background: rgba(0,0,0,0.5);
+	animation: fadeIn .15s ease-out;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+.me-detail-modal-overlay {
+	position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+	cursor: pointer;
+}
+
+.me-detail-modal-content {
+	position: relative; background: var(--white); border-radius: 12px;
+	box-shadow: 0 10px 40px rgba(0,0,0,0.15); width: 90%; max-width: 500px;
+	max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column;
+	z-index: 1001;
+}
+
+.me-detail-header {
+	display: flex; align-items: center; gap: 12px; padding: 16px;
+	border-bottom: 1px solid var(--line); flex-shrink: 0;
+}
+
+.me-detail-header > div {
+	flex: 1;
+}
+
+.me-detail-title {
+	font-size: 14px; font-weight: 600; color: var(--ink);
+}
+
+.me-detail-subtitle {
+	font-size: 12px; color: var(--muted); margin-top: 2px;
+}
+
+.me-detail-body {
+	padding: 16px; flex: 1; overflow-y: auto;
+}
+
+.me-detail-stats {
+	display: flex; flex-direction: column; gap: 12px;
+}
+
+.me-detail-empty {
+	text-align: center; color: var(--muted); padding: 24px 0;
+	font-size: 13px; font-style: italic;
+}
+
+.me-detail-task-count {
+	font-size: 11px; font-weight: 600; text-transform: uppercase;
+	color: var(--muted); letter-spacing: 0.5px;
+}
+
+.me-detail-tasks {
+	display: flex; flex-direction: column; gap: 12px;
+}
+
+.me-detail-task-row {
+	padding: 10px; background: #fafbfd; border: 1px solid var(--line);
+	border-radius: 6px;
+}
+
+.me-detail-task-header {
+	display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+
+.me-detail-task-name {
+	font-weight: 500; color: var(--ink); font-size: 13px;
+}
+
+.me-detail-task-hours {
+	font-size: 12px; font-weight: 600; color: var(--blue);
+	font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-detail-task-dates {
+	font-size: 11px; color: var(--muted); margin-top: 4px;
+	font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-detail-holidays {
+	margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line);
+}
+
+.me-detail-section-label {
+	font-size: 10px; font-weight: 600; text-transform: uppercase;
+	color: var(--muted); letter-spacing: 0.5px; margin-bottom: 8px;
+}
+
+.me-detail-holiday {
+	font-size: 12px; color: var(--ink); padding: 6px 0;
+	font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-detail-holiday::before {
+	content: '🏖️ '; margin-right: 4px;
+}

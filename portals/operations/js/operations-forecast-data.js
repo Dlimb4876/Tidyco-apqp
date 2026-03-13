@@ -6,6 +6,11 @@
 const OPS_FORECAST_TABLE = 'operations_forecast_opportunities';
 const OPS_FORECAST_FALLBACK_KEY = 'opsForecastRows';
 const OPS_FORECAST_ACTIVE_STATUSES = ['identified', 'quoted', 'negotiation', 'won', 'active'];
+const OPS_FORECAST_PROBABILITY_BANDS = {
+  low: { label: 'Low', pct: 30 },
+  medium: { label: 'Medium', pct: 60 },
+  high: { label: 'High', pct: 90 }
+};
 
 function opsForecastToNumber(value, fallback = 0) {
   const n = Number(value);
@@ -21,6 +26,31 @@ function opsForecastNormStatus(status) {
   return raw || 'identified';
 }
 
+function opsForecastNormProbabilityBand(band) {
+  const raw = (band || '').toString().trim().toLowerCase();
+  if (raw === 'low' || raw === 'medium' || raw === 'high') return raw;
+  return '';
+}
+
+function opsForecastProbabilityBandFromPct(probabilityPct) {
+  const pct = opsForecastClamp(opsForecastToNumber(probabilityPct, 0), 0, 100);
+  if (pct <= 33) return 'low';
+  if (pct <= 66) return 'medium';
+  return 'high';
+}
+
+function opsForecastProbabilityPctFromBand(band) {
+  const normalizedBand = opsForecastNormProbabilityBand(band);
+  if (!normalizedBand) return 0;
+  return OPS_FORECAST_PROBABILITY_BANDS[normalizedBand].pct;
+}
+
+function opsForecastProbabilityLabel(bandOrPct) {
+  const normalizedBand = opsForecastNormProbabilityBand(bandOrPct);
+  const band = normalizedBand || opsForecastProbabilityBandFromPct(bandOrPct);
+  return OPS_FORECAST_PROBABILITY_BANDS[band].label;
+}
+
 function opsForecastParseDate(raw) {
   if (!raw) return null;
   const d = new Date(String(raw) + 'T00:00:00');
@@ -29,6 +59,13 @@ function opsForecastParseDate(raw) {
 }
 
 function opsForecastNormalizeRow(row) {
+  const hasProbabilityPct = row && row.probability_pct !== undefined && row.probability_pct !== null && row.probability_pct !== '';
+  const normalizedBand = opsForecastNormProbabilityBand(row && row.probability_band);
+  const probabilityPct = hasProbabilityPct
+    ? opsForecastClamp(opsForecastToNumber(row.probability_pct, 0), 0, 100)
+    : opsForecastProbabilityPctFromBand(normalizedBand || 'low');
+  const probabilityBand = normalizedBand || opsForecastProbabilityBandFromPct(probabilityPct);
+
   return {
     id: row.id || ('tmp_' + Math.random().toString(36).slice(2, 8)),
     title: (row.title || '').toString().trim(),
@@ -38,7 +75,8 @@ function opsForecastNormalizeRow(row) {
     start_date: row.start_date || '',
     due_date: row.due_date || '',
     total_hours: opsForecastToNumber(row.total_hours, 0),
-    probability_pct: opsForecastClamp(opsForecastToNumber(row.probability_pct, 0), 0, 100),
+    probability_pct: probabilityPct,
+    probability_band: probabilityBand,
     notes: (row.notes || '').toString().trim(),
     user_id: row.user_id || null,
     created_by_name: (row.created_by_name || '').toString(),
@@ -56,7 +94,14 @@ function opsForecastBuildWeightedMatrix(monthKeys, rows) {
   const safeRows = Array.isArray(rows) ? rows : [];
 
   monthKeys.forEach(key => {
-    matrix[key] = { _total: 0 };
+    matrix[key] = {
+      _total: 0,
+      _bands: {
+        low: 0,
+        medium: 0,
+        high: 0
+      }
+    };
   });
 
   safeRows.forEach(row => {
@@ -68,6 +113,7 @@ function opsForecastBuildWeightedMatrix(monthKeys, rows) {
 
     const totalHours = Math.max(0, opsForecastToNumber(row.total_hours, 0));
     const probability = opsForecastClamp(opsForecastToNumber(row.probability_pct, 0), 0, 100) / 100;
+    const probabilityBand = opsForecastProbabilityBandFromPct(row.probability_pct);
     const weightedTotalHours = totalHours * probability;
     if (weightedTotalHours <= 0) return;
 
@@ -93,6 +139,7 @@ function opsForecastBuildWeightedMatrix(monthKeys, rows) {
       if (!matrix[key][workArea]) matrix[key][workArea] = 0;
       matrix[key][workArea] += monthHours;
       matrix[key]._total += monthHours;
+      matrix[key]._bands[probabilityBand] += monthHours;
     });
   });
 
@@ -282,3 +329,6 @@ window.opsForecastManager = {
 
 window.opsForecastBuildWeightedMatrix = opsForecastBuildWeightedMatrix;
 window.opsForecastIsActiveStatus = opsForecastIsActiveStatus;
+window.opsForecastProbabilityBandFromPct = opsForecastProbabilityBandFromPct;
+window.opsForecastProbabilityPctFromBand = opsForecastProbabilityPctFromBand;
+window.opsForecastProbabilityLabel = opsForecastProbabilityLabel;

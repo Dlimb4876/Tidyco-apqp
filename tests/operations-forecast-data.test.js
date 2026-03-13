@@ -70,4 +70,47 @@ describe('Operations Forecast Data', () => {
 
     expect(matrix['2026-01']._total).toBe(0);
   });
+
+  test('weighted matrix includes low medium high band breakdown', () => {
+    const monthKeys = ['2026-01'];
+    const rows = [
+      {
+        id: 'o4',
+        title: 'Low Band',
+        status: 'identified',
+        work_area: 'Unit 2',
+        start_date: '2026-01-01',
+        due_date: '2026-01-31',
+        total_hours: 100,
+        probability_pct: 30
+      },
+      {
+        id: 'o5',
+        title: 'Medium Band',
+        status: 'quoted',
+        work_area: 'Unit 3',
+        start_date: '2026-01-01',
+        due_date: '2026-01-31',
+        total_hours: 100,
+        probability_pct: 60
+      },
+      {
+        id: 'o6',
+        title: 'High Band',
+        status: 'negotiation',
+        work_area: 'Unit 6',
+        start_date: '2026-01-01',
+        due_date: '2026-01-31',
+        total_hours: 100,
+        probability_pct: 90
+      }
+    ];
+
+    const matrix = opsForecastBuildWeightedMatrix(monthKeys, rows);
+
+    expect(Math.round(matrix['2026-01']._bands.low)).toBe(30);
+    expect(Math.round(matrix['2026-01']._bands.medium)).toBe(60);
+    expect(Math.round(matrix['2026-01']._bands.high)).toBe(90);
+    expect(Math.round(matrix['2026-01']._total)).toBe(180);
+  });
 });

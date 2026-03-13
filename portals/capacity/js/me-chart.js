@@ -273,6 +273,7 @@ window.meDrawChartNow = function() {
 
   const monthKeys = meGetMonthRange(meChartStart, 18);
   const monthLabels = monthKeys.map(m => meGetMonthLabel(m));
+  const isSmallScreen = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
 
   const npiData = [];
   const improvementData = [];
@@ -438,13 +439,12 @@ window.meDrawChartNow = function() {
         x: {
           grid: { display: true, color: 'rgba(0,0,0,0.02)', drawBorder: false },
           ticks: {
-            autoSkip: true,
-            maxRotation: 0,
-            minRotation: 0,
+            autoSkip: false,
+            maxRotation: isSmallScreen ? 35 : 0,
+            minRotation: isSmallScreen ? 35 : 0,
             font: { size: 11, weight: '500' },
             padding: 8,
-            color: '#666',
-            maxTicksLimit: 10
+            color: '#666'
           }
         },
         y: {

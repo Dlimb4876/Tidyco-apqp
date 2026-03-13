@@ -139,57 +139,65 @@ function renderFamiliesTabContent() {
 
   const html = `
     <div class="families-table-wrap">
-      <table class="data-table families-inline-table">
+      <table class="prod-tbl families-inline-table" style="table-layout:auto;width:100%">
+        <colgroup>
+          <col style="width:60px">
+          <col style="min-width:120px">
+          <col style="min-width:180px">
+          <col style="min-width:220px">
+          <col style="width:80px">
+          <col style="width:100px">
+        </colgroup>
         <thead>
           <tr>
-            <th class="col-icon">Icon</th>
+            <th class="ctr">Icon</th>
             <th>Family ID</th>
             <th>Family Name</th>
             <th>Description</th>
-            <th class="col-center">Projects</th>
-            <th class="col-center">Actions</th>
+            <th class="ctr">Projects</th>
+            <th class="ctr">Actions</th>
           </tr>
         </thead>
         <tbody>
           <!-- New row -->
-          <tr class="families-new-row">
+          <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
             <td><input class="cell-edit" id="fNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
             <td><input class="cell-edit" id="fNew-id" placeholder="e.g. HVAC"></td>
             <td><input class="cell-edit" id="fNew-label" placeholder="e.g. HVAC Systems"></td>
             <td><input class="cell-edit" id="fNew-desc" placeholder="Description…"></td>
-            <td class="col-center">—</td>
-            <td class="col-center">
-              <button class="btn-icon" title="Add family" data-action="families-add-row">✓</button>
+            <td class="ctr">—</td>
+            <td class="w28 ctr">
+              <button class="btn-del" title="Add family" data-action="families-add-row">✓</button>
             </td>
           </tr>
           ${families.length === 0 ? `
-            <tr><td colspan="6" class="empty-state-cell">No families defined yet.</td></tr>
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No families defined yet.</td></tr>
           ` : families.map(f => {
             const usage = usageMap[f.id] || 0;
             if (familiesEditingId === f.id) {
               return `
-              <tr class="families-edit-row">
+              <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
                 <td><input class="cell-edit" id="fEdit-icon" value="${esc(f.icon || '📋')}" style="width:50px;text-align:center"></td>
                 <td><input class="cell-edit" id="fEdit-id" value="${esc(f.name || f.id)}"></td>
                 <td><input class="cell-edit" id="fEdit-label" value="${esc(f.label || '')}"></td>
                 <td><input class="cell-edit" id="fEdit-desc" value="${esc(f.description || '')}"></td>
-                <td class="col-center">${usage}</td>
-                <td class="col-center">
-                  <button class="btn-icon" title="Save" data-action="families-save-edit" data-family-id="${esc(f.id)}">✓</button>
-                  <button class="btn-icon" title="Cancel" data-action="families-cancel-edit">✕</button>
+                <td class="ctr">${usage}</td>
+                <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
+                  <button class="btn-del" title="Save" data-action="families-save-edit" data-family-id="${esc(f.id)}">✓</button>
+                  <button class="btn-del" title="Cancel" data-action="families-cancel-edit">✕</button>
                 </td>
               </tr>`;
             }
             return `
             <tr>
-              <td class="col-center" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
+              <td class="ctr" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
               <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
               <td><strong>${esc(f.label)}</strong></td>
               <td>${esc(f.description || '—')}</td>
-              <td class="col-center"><span class="badge badge-NPI">${usage}</span></td>
-              <td class="col-center">
-                <button class="btn-icon" title="Edit" data-action="families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
-                <button class="btn-icon" title="Delete" data-action="families-delete-row" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
+              <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
+              <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
+                <button class="btn-del" title="Edit" data-action="families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
+                <button class="btn-del" title="Delete" data-action="families-delete-row" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
               </td>
             </tr>`;
           }).join('')}
@@ -351,7 +359,19 @@ function renderProductsList() {
   });
 
   const html = `
-    <table class="data-table products-inline-table">
+    <table class="prod-tbl products-inline-table" style="table-layout:auto;width:100%">
+      <colgroup>
+        <col style="min-width:200px">
+        <col style="min-width:140px">
+        <col style="min-width:140px">
+        <col style="min-width:100px">
+        <col style="min-width:140px">
+        <col style="min-width:120px">
+        <col style="min-width:120px">
+        <col style="min-width:200px">
+        <col style="min-width:100px">
+        <col style="width:80px">
+      </colgroup>
       <thead>
         <tr>
           <th>Product Name</th>
@@ -359,16 +379,16 @@ function renderProductsList() {
           <th>Family</th>
           <th>Location</th>
           <th>Customer</th>
-          <th class="col-center">Overhaul (hrs)</th>
-          <th class="col-center">Turnaround (days)</th>
+          <th class="ctr">Overhaul (hrs)</th>
+          <th class="ctr">Turnaround (days)</th>
           <th>Notes</th>
           <th>Status</th>
-          <th class="col-center">Actions</th>
+          <th class="ctr">Actions</th>
         </tr>
       </thead>
       <tbody>
         <!-- New row -->
-        <tr class="products-new-row" id="productsNewRow">
+        <tr class="row-new" id="productsNewRow" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
           <td><input class="cell-edit" id="pNew-name" placeholder="Product name"></td>
           <td><input class="cell-edit" id="pNew-partNumber" placeholder="Part number"></td>
           <td><select class="cell-edit" id="pNew-family">${buildFamilyOptions('')}</select></td>
@@ -378,17 +398,17 @@ function renderProductsList() {
           <td><input class="cell-edit cell-num" id="pNew-turnaround" type="number" min="0" step="1" placeholder="—"></td>
           <td><input class="cell-edit" id="pNew-notes" placeholder="Notes"></td>
           <td><select class="cell-edit" id="pNew-status">${buildStatusOptions('Tender')}</select></td>
-          <td class="col-center">
-            <button class="btn-icon" title="Add product" data-action="products-add-row">✓</button>
+          <td class="w28 ctr">
+            <button class="btn-del" title="Add product" data-action="products-add-row">✓</button>
           </td>
         </tr>
         ${filtered.length === 0 ? `
-          <tr><td colspan="10" class="empty-state-cell">No products found.</td></tr>
+          <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted)">No products found.</td></tr>
         ` : filtered.map(p => {
           const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || '—') : '—';
           if (productsEditingId === p.id) {
             return `
-            <tr class="products-edit-row">
+            <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
               <td><input class="cell-edit" id="pEdit-name" value="${esc(p.name || '')}"></td>
               <td><input class="cell-edit" id="pEdit-partNumber" value="${esc(p.part_number || '')}"></td>
               <td><select class="cell-edit" id="pEdit-family">${buildFamilyOptions(p.family || '')}</select></td>
@@ -398,9 +418,9 @@ function renderProductsList() {
               <td><input class="cell-edit cell-num" id="pEdit-turnaround" type="number" min="0" step="1" value="${p.turnaround_days || ''}"></td>
               <td><input class="cell-edit" id="pEdit-notes" value="${esc(p.notes || '')}"></td>
               <td><select class="cell-edit" id="pEdit-status">${buildStatusOptions(p.status || 'Tender')}</select></td>
-              <td class="col-center">
-                <button class="btn-icon" title="Save" data-action="products-save-edit" data-product-id="${esc(p.id)}">✓</button>
-                <button class="btn-icon" title="Cancel" data-action="products-cancel-edit">✕</button>
+              <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
+                <button class="btn-del" title="Save" data-action="products-save-edit" data-product-id="${esc(p.id)}">✓</button>
+                <button class="btn-del" title="Cancel" data-action="products-cancel-edit">✕</button>
               </td>
             </tr>`;
           }
@@ -411,13 +431,13 @@ function renderProductsList() {
             <td>${esc(familyLabel)}</td>
             <td>${esc(p.work_location || '—')}</td>
             <td>${esc(p.customer || '')}</td>
-            <td class="col-center">${(p.current_overhaul_hours || 0).toFixed(1)}</td>
-            <td class="col-center">${p.turnaround_days ? Math.round(p.turnaround_days) : '—'}</td>
-            <td class="notes-cell" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</td>
+            <td class="ctr">${(p.current_overhaul_hours || 0).toFixed(1)}</td>
+            <td class="ctr">${p.turnaround_days ? Math.round(p.turnaround_days) : '—'}</td>
+            <td><div class="cell-display" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</div></td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
-            <td class="col-center">
-              <button class="btn-icon" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
-              <button class="btn-icon" title="Delete" data-action="products-delete-row" data-product-id="${esc(p.id)}" data-product-name="${esc(p.name)}">🗑️</button>
+            <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
+              <button class="btn-del" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
+              <button class="btn-del" title="Delete" data-action="products-delete-row" data-product-id="${esc(p.id)}" data-product-name="${esc(p.name)}">🗑️</button>
             </td>
           </tr>`;
         }).join('')}

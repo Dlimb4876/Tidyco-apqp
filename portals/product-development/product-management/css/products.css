@@ -90,7 +90,7 @@
   to { opacity: 1; }
 }
 
-/* Data Table */
+/* Data Table - kept for backwards compatibility, use prod-tbl instead */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -162,6 +162,22 @@
 .btn-icon:hover {
   opacity: 1;
   transform: scale(1.1);
+}
+
+/* Product Management tables now use prod-tbl styling for consistency */
+.products-inline-table.prod-tbl,
+.families-inline-table.prod-tbl {
+  /* Inherits all prod-tbl styles from production.css */
+}
+
+.products-inline-table.prod-tbl .cell-edit,
+.families-inline-table.prod-tbl .cell-edit {
+  /* Use production table cell styling */
+}
+
+.products-inline-table.prod-tbl .btn-del,
+.families-inline-table.prod-tbl .btn-del {
+  /* Use production table button styling */
 }
 
 /* Status Badges */
