@@ -3,7 +3,7 @@
    ============================================================ */
 
 // ── Module state ───────────────────────────────────────────
-let meTab = 'dashboard';
+let meTab = 'chart';
 let meChartStart = null; // ISO month string (e.g., '2025-03')
 let meHolidayMonth = null; // Holiday planner month (independent from chart)
 let meChartInst = null;  // Chart.js instance
@@ -32,14 +32,12 @@ window.renderMeCapacity = function() {
       </div>
 
       <div class="me-nav">
-        <button class="me-nav-btn ${meTab === 'dashboard' ? 'active' : ''}" onclick="meSetTab('dashboard')">📈 Dashboard</button>
-        <button class="me-nav-btn ${meTab === 'chart' ? 'active' : ''}" onclick="meSetTab('chart')">📊 Capacity Chart</button>
-        <button class="me-nav-btn ${meTab === 'heatmap' ? 'active' : ''}" onclick="meSetTab('heatmap')">🔥 Heat Map</button>
-        <button class="me-nav-btn ${meTab === 'team' ? 'active' : ''}" onclick="meSetTab('team')">👷 Team</button>
-        <button class="me-nav-btn ${meTab === 'tasks' ? 'active' : ''}" onclick="meSetTab('tasks')">📋 Tasks</button>
-        <button class="me-nav-btn ${meTab === 'products' ? 'active' : ''}" onclick="meSetTab('products')">🚂 Product Support</button>
-        <button class="me-nav-btn ${meTab === 'product-taskload' ? 'active' : ''}" onclick="meSetTab('product-taskload')">📦 Product Load</button>
-        <button class="me-nav-btn ${meTab === 'holidays' ? 'active' : ''}" onclick="meSetTab('holidays')">🏖️ Holiday Planner</button>
+        <button class="me-nav-btn ${meTab === 'chart' ? 'active' : ''}" data-tab="chart" onclick="meSetTab('chart')">📊 Capacity Chart</button>
+        <button class="me-nav-btn ${meTab === 'team' ? 'active' : ''}" data-tab="team" onclick="meSetTab('team')">👷 Team</button>
+        <button class="me-nav-btn ${meTab === 'tasks' ? 'active' : ''}" data-tab="tasks" onclick="meSetTab('tasks')">📋 Tasks</button>
+        <button class="me-nav-btn ${meTab === 'products' ? 'active' : ''}" data-tab="products" onclick="meSetTab('products')">🚂 Product Support</button>
+        <button class="me-nav-btn ${meTab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" onclick="meSetTab('product-taskload')">📦 Product Load</button>
+        <button class="me-nav-btn ${meTab === 'holidays' ? 'active' : ''}" data-tab="holidays" onclick="meSetTab('holidays')">🏖️ Holiday Planner</button>
       </div>
 
       <div class="me-body" id="meBody">
@@ -48,15 +46,11 @@ window.renderMeCapacity = function() {
     </div>
   `;
 
-  // Draw dashboard charts on initial render
+  // Draw chart and embedded heat map on initial render
   setTimeout(() => {
-    if (meTab === 'dashboard') {
-      const team = meDataGetTeam();
-      const tasks = meDataGetTasks();
-      const products = meDataGetProducts();
-      const holidays = meDataGetHolidays();
-      meDashboardDrawMiniChart(team, tasks, products, holidays);
-      meDashboardDrawMiniHeatmap(team, tasks, holidays);
+    if (meTab === 'chart') {
+      meDrawChartNow();
+      meDrawHeatmapNow();
     }
   }, 100);
 
@@ -65,15 +59,14 @@ window.renderMeCapacity = function() {
 
 // ── Tab management ─────────────────────────────────────────
 window.meSetTab = function(tab) {
+  if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart';
   meTab = tab;
 
   // Update nav button active states
   document.querySelectorAll('.me-nav-btn').forEach(btn => {
     btn.classList.remove('active');
   });
-  const activeBtn = document.querySelector(`.me-nav-btn:nth-child(${
-    tab === 'dashboard' ? 1 : tab === 'chart' ? 2 : tab === 'heatmap' ? 3 : tab === 'team' ? 4 : tab === 'tasks' ? 5 : tab === 'products' ? 6 : tab === 'product-taskload' ? 7 : 8
-  })`);
+  const activeBtn = document.querySelector(`.me-nav-btn[data-tab="${tab}"]`);
   if (activeBtn) activeBtn.classList.add('active');
 
   // Update body content
@@ -81,15 +74,10 @@ window.meSetTab = function(tab) {
   if (body) {
     body.innerHTML = meGetTabContent();
     setTimeout(() => {
-      if (tab === 'dashboard') {
-        const team = meDataGetTeam();
-        const tasks = meDataGetTasks();
-        const products = meDataGetProducts();
-        const holidays = meDataGetHolidays();
-        meDashboardDrawMiniChart(team, tasks, products, holidays);
-        meDashboardDrawMiniHeatmap(team, tasks, holidays);
-      } else if (tab === 'chart') meDrawChartNow();
-      else if (tab === 'heatmap') meDrawHeatmapNow();
+      if (tab === 'chart') {
+        meDrawChartNow();
+        meDrawHeatmapNow();
+      }
     }, 100);
   }
 };
@@ -100,15 +88,10 @@ window.meRefreshCurrentTab = function() {
   if (body) {
     body.innerHTML = meGetTabContent();
     setTimeout(() => {
-      if (meTab === 'dashboard') {
-        const team = meDataGetTeam();
-        const tasks = meDataGetTasks();
-        const products = meDataGetProducts();
-        const holidays = meDataGetHolidays();
-        meDashboardDrawMiniChart(team, tasks, products, holidays);
-        meDashboardDrawMiniHeatmap(team, tasks, holidays);
-      } else if (meTab === 'chart') meDrawChartNow();
-      else if (meTab === 'heatmap') meDrawHeatmapNow();
+      if (meTab === 'chart') {
+        meDrawChartNow();
+        meDrawHeatmapNow();
+      }
     }, 100);
   }
 };
@@ -129,8 +112,6 @@ function meGetTabContent() {
   const availableProducts = products || [];
 
   switch (meTab) {
-    case 'dashboard':
-      return meRenderDashboardTab(meChartStart, team, tasks, products, holidays);
     case 'team':
       return meRenderTeamTab(team);
     case 'tasks':
@@ -141,8 +122,6 @@ function meGetTabContent() {
       return meRenderProductTaskLoadTab(tasks, products);
     case 'holidays':
       return meRenderHolidaysTab(holidays, team, meHolidayMonth);
-    case 'heatmap':
-      return meRenderHeatmapTab(meChartStart, team, tasks, products, holidays);
     case 'chart':
     default:
       return meRenderChartTab(meChartStart, team, tasks, products, holidays);
@@ -205,7 +184,10 @@ function meDebouncedSave() {
     const body = document.getElementById('meBody');
     if (body) {
       body.innerHTML = meGetTabContent();
-      if (meTab === 'chart') meDrawChartNow();
+      if (meTab === 'chart') {
+        meDrawChartNow();
+        meDrawHeatmapNow();
+      }
     }
   }, 900);
 }

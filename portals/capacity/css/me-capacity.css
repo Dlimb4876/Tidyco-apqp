@@ -261,7 +261,7 @@
   overflow-x: auto; padding: 0;
 }
 .holiday-matrix {
-  width: 100%; border-collapse: collapse; font-size: 12px;
+  border-collapse: collapse; font-size: 12px;
   table-layout: auto;
 }
 .holiday-matrix thead th {

@@ -2,6 +2,21 @@
    me-utils.js — Shared Utility Functions
    ============================================================ */
 
+// ── Capacity Defaults ───────────────────────────────────────
+window.ME_HOURS_PER_DAY = 8;
+window.ME_DEFAULT_HOURS_PER_WEEK = window.ME_HOURS_PER_DAY * 5;
+
+window.meGetHoursPerWeek = function(hoursPerWeek) {
+  const parsed = parseFloat(hoursPerWeek);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : window.ME_DEFAULT_HOURS_PER_WEEK;
+};
+
+window.meGetDailyHours = function(hoursPerWeek, utilisationPercent) {
+  const weeklyHours = meGetHoursPerWeek(hoursPerWeek);
+  const util = Number.isFinite(parseFloat(utilisationPercent)) ? parseFloat(utilisationPercent) : 100;
+  return (weeklyHours * (util / 100)) / 5;
+};
+
 // ── HTML Escape ────────────────────────────────────────────
 window.escapeHtml = function(text) {
   if (!text) return '';

@@ -60,15 +60,15 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   const monthStart = new Date(currentYear, Number(currentMonthKey.split('-')[1]) - 1, 1);
   const monthEnd = new Date(currentYear, Number(currentMonthKey.split('-')[1]), 0);
   const bankHolSet = new Set(getBankHolidaysForYear(currentYear).map(h => h.date));
-  const hoursPerDay = 7.5;
 
   let teamCapacityTotal = 0;
   const memberCapacityRows = teamArray.map(member => {
     if (!member || !member.id) return null;
 
     const memberName = escapeHtml(member.name || 'Unnamed');
-    const hoursPerWeek = member.hoursPerWeek || 37.5;
+    const hoursPerWeek = meGetHoursPerWeek(member.hoursPerWeek);
     const utilisationPct = member.utilisation || 80;
+    const adjustedDailyHours = meGetDailyHours(hoursPerWeek, utilisationPct);
 
     let activeStart = monthStart;
     let activeEnd = monthEnd;
@@ -96,8 +96,18 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
     holidaysArray.forEach(holiday => {
       if (!holiday || holiday.personId !== member.id || !holiday.date) return;
       if (holiday.date.substring(0, 7) !== currentMonthKey) return;
-      if (holiday.type === 'full') holidayDeduction += hoursPerDay;
-      else if (holiday.type === 'half') holidayDeduction += hoursPerDay / 2;
+
+      const holidayDate = new Date(holiday.date);
+      holidayDate.setHours(0, 0, 0, 0);
+      const dayOfWeek = holidayDate.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) return;
+
+      const holidayDateStr = `${holidayDate.getFullYear()}-${String(holidayDate.getMonth() + 1).padStart(2, '0')}-${String(holidayDate.getDate()).padStart(2, '0')}`;
+      if (bankHolSet.has(holidayDateStr)) return;
+      if (holidayDate < activeStart || holidayDate > activeEnd) return;
+
+      if (holiday.type === 'full') holidayDeduction += adjustedDailyHours;
+      else if (holiday.type === 'half') holidayDeduction += adjustedDailyHours / 2;
     });
 
     const adjustedCapacity = Math.max(0, rawCapacity - holidayDeduction);
@@ -131,6 +141,10 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
         <td colspan="6" style="text-align:center; color: var(--muted); padding: 12px;">No team members added yet</td>
       </tr>
     `;
+
+  const heatmapPanelHtml = typeof meRenderHeatmapPanel === 'function'
+    ? meRenderHeatmapPanel(monthKey)
+    : '';
 
   return `
     <div class="me-chart-container">
@@ -228,6 +242,8 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
           </div>
         </div>
       </div>
+
+      ${heatmapPanelHtml}
     </div>
   `;
 };

@@ -72,8 +72,8 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
         <td><strong>${esc(load.productName)}</strong></td>
         <td style="text-align: center;">${load.taskCount}</td>
         <td style="text-align: right;">${(load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
-        <td style="text-align: right;">${(parseFloat(load.totalHours) + load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
         <td style="text-align: right; font-weight: 600; color: var(--blue);">${load.totalHours.toFixed(1)}h</td>
+        <td style="text-align: right;">${(parseFloat(load.totalHours) + load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
       </tr>`;
   });
 
@@ -84,8 +84,8 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
         <td><em>Unassigned Tasks</em></td>
         <td style="text-align: center;">${unassignedTasks.length}</td>
         <td style="text-align: right;">—</td>
-        <td style="text-align: right;">${unassignedHours}h</td>
         <td style="text-align: right; font-weight: 600; color: var(--blue);">${unassignedHours}h</td>
+        <td style="text-align: right;">${unassignedHours}h</td>
       </tr>`;
   }
 
@@ -126,8 +126,8 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
                 <th style="width:200px">Product</th>
                 <th style="width:80px">Tasks</th>
                 <th style="width:120px">Support/Month</th>
-                <th style="width:120px">Total Load</th>
                 <th style="width:120px">Task Demand</th>
+                <th style="width:120px">Total Product Demand</th>
               </tr></thead>
               <tbody>
                 ${rows || '<tr><td colspan="7"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks assigned to products</div></td></tr>'}

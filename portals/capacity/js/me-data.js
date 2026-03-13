@@ -44,7 +44,7 @@ window.meDataAddTeam = function(name, hoursPerWeek, utilisation, startDate, endD
   const member = {
     id: meUUID(),
     name: name.trim(),
-    hoursPerWeek: parseFloat(hoursPerWeek) || 37.5,
+    hoursPerWeek: meGetHoursPerWeek(hoursPerWeek),
     utilisation: parseFloat(utilisation) || 80,
     jobTitle: '',
     group: '',
@@ -63,7 +63,7 @@ window.meDataUpdateTeam = function(idx, field, value) {
       member.name = value.trim();
       break;
     case 'hoursPerWeek':
-      member.hoursPerWeek = parseFloat(value) || 37.5;
+      member.hoursPerWeek = meGetHoursPerWeek(value);
       break;
     case 'utilisation':
       member.utilisation = parseFloat(value) || 80;

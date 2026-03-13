@@ -4,66 +4,25 @@
 
 let meHeatmapDetailOpen = null; // { personId, weekStart, weekEnd } when modal is open
 
-// ── Main render function ────────────────────────────────────
-window.meRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
+window.meRenderHeatmapPanel = function(monthKey) {
   const monthLabel = meGetMonthLabel(monthKey);
-
-  // Calculate overall stats
-  const weeks = meGetWeekRange(monthKey, 20);
-  let totalCapacity = 0, totalDemand = 0;
-
-  teamArray.forEach(person => {
-    if (!person.startDate) return;
-    weeks.forEach(({ start, end }) => {
-      const data = meCalcWeekUtilisation(person.id, start, end, tasksArray, holidaysArray);
-      totalCapacity += data.capacity;
-      totalDemand += data.demand;
-    });
-  });
-
-  const avgUtil = totalCapacity > 0 ? Math.round((totalDemand / totalCapacity) * 100) : 0;
-  const utilizationColor = avgUtil < 85 ? 'var(--green)' : avgUtil < 100 ? 'var(--amber)' : 'var(--red)';
-
   return `
-    <div class="me-heatmap-container">
-      <div class="me-kpi-strip">
-        <div class="me-kpi" style="border-left: 4px solid var(--green);">
-          <div class="me-kpi-value">${totalCapacity.toFixed(0)}</div>
-          <div class="me-kpi-label">Total Capacity (hours)</div>
-          <div class="me-kpi-month">12-week view</div>
-        </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--blue);">
-          <div class="me-kpi-value">${totalDemand.toFixed(0)}</div>
-          <div class="me-kpi-label">Total Demand (hours)</div>
-          <div class="me-kpi-month">12-week view</div>
-        </div>
-        <div class="me-kpi" style="border-left: 4px solid ${utilizationColor};">
-          <div class="me-kpi-value">${avgUtil}%</div>
-          <div class="me-kpi-label">Avg Team Utilisation</div>
-          <div class="me-kpi-month">${avgUtil < 85 ? '✓ Healthy' : avgUtil < 100 ? '⚠ Tight' : '✗ Over'}</div>
-        </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--navy);">
-          <div class="me-kpi-value">${Math.max(0, totalCapacity - totalDemand).toFixed(0)}</div>
-          <div class="me-kpi-label">Available Headroom (hours)</div>
-          <div class="me-kpi-month">Unused capacity</div>
-        </div>
+    <div class="me-card" style="margin-top: 16px;">
+      <div class="me-card-head">
+        <span class="me-card-title">TEAM UTILISATION HEAT MAP (20 WEEKS)</span>
+        <span style="font-size:12px;color:var(--muted)">${monthLabel}</span>
       </div>
+      <div class="me-card-body" style="padding: 16px;">
+        <div class="me-heatmap-wrapper">
+          <div id="meHeatmapGrid" class="me-heatmap-grid"></div>
+        </div>
 
-      <div class="me-chart-controls">
-        <button class="btn btn-secondary" onclick="meOnPrevMonth()">← Previous</button>
-        <input type="month" id="meChartMonthInput" value="${monthKey}" onchange="meOnMonthChange(this.value)" />
-        <button class="btn btn-secondary" onclick="meOnNextMonth()">Next →</button>
-      </div>
-
-      <div class="me-heatmap-wrapper">
-        <div id="meHeatmapGrid" class="me-heatmap-grid"></div>
-      </div>
-
-      <div class="me-chart-legend">
-        <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Underutilized (&lt;80%)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>At Capacity (80–100%)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>Overloaded (&gt;100%)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background: #e5e7eb;"></div><span>No capacity</span></div>
+        <div class="me-chart-legend" style="margin-top: 12px;">
+          <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Underutilized (&lt;80%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>At Capacity (80–100%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>Overloaded (&gt;100%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background: #e5e7eb;"></div><span>No capacity</span></div>
+        </div>
       </div>
     </div>
 
@@ -82,6 +41,11 @@ window.meRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsAr
       </div>
     </div>
   `;
+};
+
+// ── Main render function ────────────────────────────────────
+window.meRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
+  return meRenderHeatmapPanel(monthKey);
 };
 
 // ── Heat map rendering ──────────────────────────────────────

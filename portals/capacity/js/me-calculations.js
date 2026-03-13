@@ -40,8 +40,10 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   teamArray.forEach(member => {
     if (!member.startDate) return;
 
-    const hoursAdjusted = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100);
-    const hoursMax = (member.hoursPerWeek || 37.5);
+    const weeklyHours = meGetHoursPerWeek(member.hoursPerWeek);
+    const utilisation = member.utilisation || 80;
+    const hoursAdjusted = weeklyHours * (utilisation / 100);
+    const hoursMax = weeklyHours;
 
     let activeStart = monthStart;
     let activeEnd = monthEnd;
@@ -63,14 +65,38 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
 
   // Subtract user-marked personal holidays (bank holidays already excluded via network days)
   let holidayDeduction = 0;
-  const hoursPerDay = 7.5;
+  const teamById = new Map(teamArray.map(member => [member.id, member]));
 
   holidaysArray.forEach(holiday => {
+    if (!holiday || !holiday.date || !holiday.personId) return;
     const holidayMonth = holiday.date.substring(0, 7);
-    if (holidayMonth === monthKey) {
-      if (holiday.type === 'full') holidayDeduction += hoursPerDay;
-      else if (holiday.type === 'half') holidayDeduction += hoursPerDay / 2;
+    if (holidayMonth !== monthKey) return;
+
+    const member = teamById.get(holiday.personId);
+    if (!member) return;
+    if (!member.startDate) return;
+
+    const holidayDate = new Date(holiday.date);
+    holidayDate.setHours(0, 0, 0, 0);
+
+    const dayOfWeek = holidayDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) return;
+    const holidayDateStr = formatDateForHolidays(holidayDate);
+    if (bankHolSet.has(holidayDateStr)) return;
+
+    const memberStart = new Date(member.startDate);
+    memberStart.setHours(0, 0, 0, 0);
+    if (holidayDate < memberStart) return;
+
+    if (member.endDate) {
+      const memberEnd = new Date(member.endDate);
+      memberEnd.setHours(0, 0, 0, 0);
+      if (holidayDate > memberEnd) return;
     }
+
+    const memberDailyCapacity = meGetDailyHours(member.hoursPerWeek, member.utilisation || 80);
+    if (holiday.type === 'full') holidayDeduction += memberDailyCapacity;
+    else if (holiday.type === 'half') holidayDeduction += memberDailyCapacity / 2;
   });
 
   const adjustedCapacity = Math.max(0, capacity - holidayDeduction);
@@ -153,7 +179,7 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
   const bankHolSet = new Set();
   relevantYears.forEach(y => window.getBankHolidaysForYear(y).forEach(h => bankHolSet.add(h.date)));
 
-  const baseHours = (person.hoursPerWeek || 37.5);
+  const baseHours = meGetHoursPerWeek(person.hoursPerWeek);
   const adjustedHours = baseHours * ((person.utilisation || 80) / 100);
 
   // Capacity: network days in week (Mon-Fri, excluding bank holidays)
@@ -162,11 +188,16 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
 
   // Subtract user-marked personal holidays for this person (bank hols already excluded)
   let holidayDeduction = 0;
-  const hoursPerDay = 7.5;
+  const hoursPerDay = meGetDailyHours(person.hoursPerWeek, person.utilisation || 80);
 
   holidaysArray.forEach(holiday => {
     if (holiday.personId !== personId) return;
+    if (!holiday.date) return;
     const hDate = new Date(holiday.date);
+    const dayOfWeek = hDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) return;
+    const dateStr = formatDateForHolidays(hDate);
+    if (bankHolSet.has(dateStr)) return;
     if (hDate >= weekStart_d && hDate <= weekEnd_d) {
       if (holiday.type === 'full') holidayDeduction += hoursPerDay;
       else if (holiday.type === 'half') holidayDeduction += hoursPerDay / 2;

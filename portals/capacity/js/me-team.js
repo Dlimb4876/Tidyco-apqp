@@ -6,13 +6,13 @@ window.meRenderTeamTab = function(teamArray) {
   // Calculate monthly capacity (4.33 weeks per month average)
   const weeksPerMonth = 4.33;
   const totalCapacity = teamArray.reduce((sum, member) => {
-    const hours = (member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100) * weeksPerMonth;
+    const hours = meGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100) * weeksPerMonth;
     return sum + hours;
   }, 0).toFixed(1);
 
   // Calculate group availability
-  const npiCapacity = teamArray.filter(m => (m.group || '') === 'NPI').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
-  const prodCapacity = teamArray.filter(m => (m.group || '') === 'Production').reduce((sum, m) => sum + ((m.hoursPerWeek || 37.5) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
+  const npiCapacity = teamArray.filter(m => (m.group || '') === 'NPI').reduce((sum, m) => sum + (meGetHoursPerWeek(m.hoursPerWeek) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
+  const prodCapacity = teamArray.filter(m => (m.group || '') === 'Production').reduce((sum, m) => sum + (meGetHoursPerWeek(m.hoursPerWeek) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
 
   // Calculate holidays this month
   const today = new Date();
@@ -22,7 +22,7 @@ window.meRenderTeamTab = function(teamArray) {
 
   let rows = '';
   teamArray.forEach((member, idx) => {
-    const effective = ((member.hoursPerWeek || 37.5) * ((member.utilisation || 80) / 100)).toFixed(1);
+    const effective = (meGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100)).toFixed(1);
     const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option>';
     rows += `
       <tr>
@@ -31,7 +31,7 @@ window.meRenderTeamTab = function(teamArray) {
         <td><select onchange="meDataUpdateTeam(${idx}, 'group', this.value); meDebouncedSave();">${groupOpts}</select></td>
         <td><input type="date" value="${member.startDate || ''}" onchange="meDataUpdateTeam(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
         <td><input type="date" value="${member.endDate || ''}" onchange="meDataUpdateTeam(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${member.hoursPerWeek || 37.5}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
+        <td><input type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" onchange="meDataUpdateTeam(${idx}, 'utilisation', this.value); meDebouncedSave();"></td>
         <td style="font-weight: bold;">${effective}</td>
         <td style="text-align: center;"><button class="me-del-btn" onclick="if(confirm('Delete engineer?')) { meDataDeleteTeam(${idx}); meOnSave(); meSetTab('team'); }">✕</button></td>
@@ -90,7 +90,7 @@ window.meRenderTeamTab = function(teamArray) {
             </table>
           </div>
           <div class="me-add-row">
-            <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('New Engineer', 37.5, 80); meOnSave(); meSetTab('team');">＋ Add Engineer</button>
+            <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('New Engineer', ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team');">＋ Add Engineer</button>
           </div>
         </div>
       </div>
