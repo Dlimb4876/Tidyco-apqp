@@ -42,7 +42,7 @@ async function launchApp() {
 
   // Load Products Management data (separate Supabase tables, silent if tables absent)
   await productsDataInit();
-  ensureProductProgrammes();
+  npi.dashboard.ensureProductProgrammes();
 
   // Load Production Capacity settings (production_capacity table)
   await prodCapDataInit();
