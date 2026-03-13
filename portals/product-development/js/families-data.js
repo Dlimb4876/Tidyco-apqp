@@ -1,17 +1,44 @@
 // Families Data Layer
 // Manages product families with Supabase persistence
+// Collaborative: all users see the same data, changes sync in real-time
 
 let familiesState = {
   families: [],
   loading: false,
-  error: null
+  error: null,
+  subscription: null
 };
 
-// Initialize families from Supabase
+// Initialize families from Supabase with real-time subscription
 async function familiesDataInit() {
   familiesState.loading = true;
   familiesState.error = null;
 
+  try {
+    // Load initial data
+    await familiesDataLoad();
+
+    // Set up real-time subscription for collaborative editing
+    if (typeof createRealtimeSubscription === 'function') {
+      familiesState.subscription = createRealtimeSubscription(
+        'families',
+        'families_changed',
+        () => familiesDataLoad()
+      );
+    }
+
+    familiesState.loading = false;
+    return familiesState.families;
+  } catch (err) {
+    console.error('Error initializing families:', err);
+    familiesState.error = err.message;
+    familiesState.loading = false;
+    return [];
+  }
+}
+
+// Load families from Supabase
+async function familiesDataLoad() {
   try {
     const { data, error } = await supa.from('families')
       .select('*')
@@ -20,13 +47,20 @@ async function familiesDataInit() {
     if (error) throw error;
 
     familiesState.families = data || [];
-    familiesState.loading = false;
+    console.log('✓ Families loaded:', familiesState.families.length);
     return familiesState.families;
   } catch (err) {
     console.error('Error loading families:', err);
     familiesState.error = err.message;
-    familiesState.loading = false;
-    return [];
+    throw err;
+  }
+}
+
+// Cleanup function for real-time subscription
+function familiesDataCleanup() {
+  if (familiesState.subscription && typeof removeRealtimeSubscription === 'function') {
+    removeRealtimeSubscription(familiesState.subscription);
+    familiesState.subscription = null;
   }
 }
 
@@ -52,7 +86,7 @@ window.familiesDataAddFamily = async function(name, label, icon, description) {
     if (data && data[0]) {
       familiesState.families.push(data[0]);
       familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
-      render();
+      console.log('✓ Family added:', data[0].id);
       return data[0];
     }
   } catch (err) {
@@ -69,14 +103,18 @@ window.familiesDataUpdateFamily = async function(familyId, updates) {
 
   try {
     const { error } = await supa.from('families')
-      .update(updates)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', familyId);
 
     if (error) throw error;
 
+    // Update local state
     Object.assign(family, updates);
     familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
-    render();
+    console.log('✓ Family updated:', familyId);
     return true;
   } catch (err) {
     console.error('Error updating family:', err);
@@ -98,7 +136,7 @@ window.familiesDataDeleteFamily = async function(familyId) {
     if (error) throw error;
 
     familiesState.families.splice(idx, 1);
-    render();
+    console.log('✓ Family deleted:', familyId);
     return true;
   } catch (err) {
     console.error('Error deleting family:', err);

@@ -262,6 +262,38 @@
   border: 1px dashed #ddd;
 }
 
+/* Families Table */
+.families-table-wrap {
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.families-inline-table .col-icon {
+  width: 60px;
+  text-align: center;
+}
+
+.families-inline-table .col-center {
+  width: 100px;
+}
+
+.families-new-row {
+  background: #f0f7f0;
+}
+
+.families-new-row td {
+  padding: 6px 8px;
+}
+
+.families-edit-row {
+  background: #fffde7;
+}
+
+.families-edit-row td {
+  padding: 6px 8px;
+}
+
 /* Modal */
 .modal {
   display: none;

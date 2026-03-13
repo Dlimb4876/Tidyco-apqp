@@ -86,6 +86,11 @@ function navigate(sec, { pushHash = true } = {}) {
     productDevelopmentTab = 'root';
   }
 
+  // Clean up families subscription when leaving product-development
+  if (currentSection === 'product-development' && sec !== 'product-development' && typeof familiesDataCleanup === 'function') {
+    familiesDataCleanup();
+  }
+
   currentSection = sec;
 
   if (pushHash) {

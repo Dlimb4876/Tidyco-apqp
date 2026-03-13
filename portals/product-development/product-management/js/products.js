@@ -57,6 +57,193 @@ function renderProductsPortalSetup() {
 }
 
 /**
+ * Track which family is currently being edited
+ */
+let familiesEditingId = null;
+
+/**
+ * Render families tab content as editable table
+ */
+function renderFamiliesTabContent() {
+  const families = familiesDataGetAll();
+  const container = document.getElementById('productsFamiliesTab');
+  if (!container) return;
+
+  // Count usage in projects
+  const usageMap = {};
+  (db.programmes || []).forEach(p => {
+    const fid = p.family || 'Other';
+    usageMap[fid] = (usageMap[fid] || 0) + 1;
+  });
+
+  const html = `
+    <div class="families-table-wrap">
+      <table class="data-table families-inline-table">
+        <thead>
+          <tr>
+            <th class="col-icon">Icon</th>
+            <th>Family ID</th>
+            <th>Family Name</th>
+            <th>Description</th>
+            <th class="col-center">Projects</th>
+            <th class="col-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- New row -->
+          <tr class="families-new-row">
+            <td><input class="cell-edit" id="fNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
+            <td><input class="cell-edit" id="fNew-id" placeholder="e.g. HVAC"></td>
+            <td><input class="cell-edit" id="fNew-label" placeholder="e.g. HVAC Systems"></td>
+            <td><input class="cell-edit" id="fNew-desc" placeholder="Description…"></td>
+            <td class="col-center">—</td>
+            <td class="col-center">
+              <button class="btn-icon" title="Add family" onclick="familiesAddRow()">✓</button>
+            </td>
+          </tr>
+          ${families.length === 0 ? `
+            <tr><td colspan="6" class="empty-state-cell">No families defined yet.</td></tr>
+          ` : families.map(f => {
+            const usage = usageMap[f.id] || 0;
+            if (familiesEditingId === f.id) {
+              return `
+              <tr class="families-edit-row">
+                <td><input class="cell-edit" id="fEdit-icon" value="${esc(f.icon || '📋')}" style="width:50px;text-align:center"></td>
+                <td><input class="cell-edit" id="fEdit-id" value="${esc(f.name || f.id)}"></td>
+                <td><input class="cell-edit" id="fEdit-label" value="${esc(f.label || '')}"></td>
+                <td><input class="cell-edit" id="fEdit-desc" value="${esc(f.description || '')}"></td>
+                <td class="col-center">${usage}</td>
+                <td class="col-center">
+                  <button class="btn-icon" title="Save" onclick="familiesSaveEdit('${esc(f.id)}')">✓</button>
+                  <button class="btn-icon" title="Cancel" onclick="familiesCancelEdit()">✕</button>
+                </td>
+              </tr>`;
+            }
+            return `
+            <tr>
+              <td class="col-center" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
+              <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
+              <td><strong>${esc(f.label)}</strong></td>
+              <td>${esc(f.description || '—')}</td>
+              <td class="col-center"><span class="badge badge-NPI">${usage}</span></td>
+              <td class="col-center">
+                <button class="btn-icon" title="Edit" onclick="familiesStartEdit('${esc(f.id)}')">✏️</button>
+                <button class="btn-icon" title="Delete" onclick="familiesDeleteRow('${esc(f.id)}', '${esc(f.label)}')">🗑️</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+/**
+ * Add new family from the new row inputs
+ */
+async function familiesAddRow() {
+  const icon = document.getElementById('fNew-icon')?.value.trim() || '📋';
+  const id = document.getElementById('fNew-id')?.value.trim();
+  const label = document.getElementById('fNew-label')?.value.trim();
+  const description = document.getElementById('fNew-desc')?.value.trim() || '';
+
+  if (!id) {
+    document.getElementById('fNew-id')?.focus();
+    return;
+  }
+  if (!label) {
+    document.getElementById('fNew-label')?.focus();
+    return;
+  }
+
+  try {
+    await familiesDataAddFamily(id, label, icon, description);
+    // Re-focus id input for quick entry of next family
+    document.getElementById('fNew-id').value = '';
+    document.getElementById('fNew-label').value = '';
+    document.getElementById('fNew-desc').value = '';
+    document.getElementById('fNew-id')?.focus();
+  } catch (err) {
+    alert('Error adding family: ' + err.message);
+  }
+}
+
+/**
+ * Start editing a family row inline
+ */
+function familiesStartEdit(familyId) {
+  familiesEditingId = familyId;
+  renderFamiliesTabContent();
+  document.getElementById('fEdit-label')?.focus();
+}
+
+/**
+ * Save inline edit
+ */
+async function familiesSaveEdit(familyId) {
+  const id = document.getElementById('fEdit-id')?.value.trim();
+  const label = document.getElementById('fEdit-label')?.value.trim();
+
+  if (!id) {
+    document.getElementById('fEdit-id')?.focus();
+    return;
+  }
+  if (!label) {
+    document.getElementById('fEdit-label')?.focus();
+    return;
+  }
+
+  const updates = {
+    name: id,
+    label: label,
+    icon: document.getElementById('fEdit-icon')?.value.trim() || '📋',
+    description: document.getElementById('fEdit-desc')?.value.trim() || ''
+  };
+
+  try {
+    await familiesDataUpdateFamily(familyId, updates);
+  } catch (err) {
+    alert('Error saving family: ' + err.message);
+  }
+
+  familiesEditingId = null;
+  renderFamiliesTabContent();
+}
+
+/**
+ * Cancel inline edit
+ */
+function familiesCancelEdit() {
+  familiesEditingId = null;
+  renderFamiliesTabContent();
+}
+
+/**
+ * Delete a family
+ */
+async function familiesDeleteRow(familyId, familyLabel) {
+  // Check usage
+  const usage = (db.programmes || []).filter(p => p.family === familyId).length;
+  if (usage > 0) {
+    if (!confirm(`Delete family "${familyLabel}"?\n\nWarning: ${usage} project${usage !== 1 ? 's' : ''} use this family. They will need to be reassigned manually.`)) {
+      return;
+    }
+  } else {
+    if (!confirm(`Delete family "${familyLabel}"? This cannot be undone.`)) return;
+  }
+
+  try {
+    await familiesDataDeleteFamily(familyId);
+    if (familiesEditingId === familyId) familiesEditingId = null;
+    renderFamiliesTabContent();
+  } catch (err) {
+    alert('Error deleting family: ' + err.message);
+  }
+}
+
+/**
  * Build family select options HTML
  */
 function buildFamilyOptions(selectedId) {
@@ -307,7 +494,7 @@ function setupProductsEventListeners() {
       if (tab === 'trends') {
         renderProductsTrends();
       } else if (tab === 'families') {
-        document.getElementById('productsFamiliesTab').innerHTML = renderFamiliesTabContent();
+        renderFamiliesTabContent();
       } else {
         renderProductsList();
       }

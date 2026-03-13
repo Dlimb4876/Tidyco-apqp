@@ -64,7 +64,8 @@
       "Bash(npm install:*)",
       "Bash(./node_modules/.bin/eslint 'portals/product-development/npi/**/*.js')",
       "Bash(npx prettier:*)",
-      "Bash(grep -n \"^npi\" /workspaces/Tidyco-apqp/portals/product-development/npi/js/*.js)"
+      "Bash(grep -n \"^npi\" /workspaces/Tidyco-apqp/portals/product-development/npi/js/*.js)",
+      "Bash(grep -l \"apqp\\\\|openBomPick\\\\|BOM\" /workspaces/Tidyco-apqp/tests/*.test.js)"
     ]
   }
 }
