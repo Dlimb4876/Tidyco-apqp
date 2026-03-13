@@ -4,9 +4,9 @@
 The NPI portal (`portals/product-development/npi/`) is an 8-file, 1,775-line vanilla JS system with tight coupling and no namespacing. The goal is incremental modernization to match the architecture patterns of the Capacity portal (`portals/capacity/js/`) which uses a clean data/component/feature layer separation. This checklist is ordered for low-risk, incremental delivery.
 
 ## Progress Snapshot (2026-03-13)
-- Implementation checklist progress (Stages 1-3): **19/56 complete (~34%)**
-- Full plan progress (including verification): **19/65 complete (~29%)**
-- Status: Stage 1 is complete. Stages 2 and 3 are largely not started.
+- Implementation checklist progress (Stages 1-3): **44/56 complete (~79%)**
+- Full plan progress (including verification): **44/65 complete (~68%)**
+- Status: Stages 1 and 2 are complete. Stage 3 is not started.
 
 ---
 
@@ -42,41 +42,41 @@ The NPI portal (`portals/product-development/npi/`) is an 8-file, 1,775-line van
 ## Stage 2: Architectural Refactoring
 
 ### 2.1 Create a Data Layer (`npi-data.js`)
-- [ ] Create `portals/product-development/npi/js/npi-data.js`
-- [ ] Move all data read helpers into it: `prog()` wrappers, `sortedPfd()`, `ganttNewRow()`, and any derived-data functions
-- [ ] Move all mutation + save helpers: `addCTQ/updCTQ/delCTQ`, `addMainStep`, `addBomRow/updBom/delBom`, `addAction/updAction/delAction`, `addRisk/updRisk/delRisk`, all `pf*` mutations
-- [ ] Ensure each mutation calls `save()` then the appropriate `render*()` — remove these calls from UI handlers
-- [ ] Add `npi-data.js` to `index.html` script load order after `npi.js` (so it's available to all NPI feature files)
+- [x] Create `portals/product-development/npi/js/npi-data.js`
+- [x] Move all data read helpers into it: `prog()` wrappers, `sortedPfd()`, `ganttNewRow()`, and any derived-data functions
+- [x] Move all mutation + save helpers: `addCTQ/updCTQ/delCTQ`, `addMainStep`, `addBomRow/updBom/delBom`, `addAction/updAction/delAction`, `addRisk/updRisk/delRisk`, all `pf*` mutations
+- [x] Ensure each mutation calls persistence then the appropriate `render*()` — remove direct persistence calls from UI handlers where refactored
+- [x] Add `npi-data.js` to `index.html` script load order after `npi.js` (so it's available to all NPI feature files)
 
 ### 2.2 Build a Component Library (`npi-components.js`)
-- [ ] Create `portals/product-development/npi/js/npi-components.js`
-- [ ] Extract reusable table header builder (used in CTQ, PFD, CP, BOM tables) — implement as `npi.components.tableHeader(cols)`
-- [ ] Extract status badge renderer (used in dashboard KPIs and tracker) — implement as `npi.components.badge(value, thresholds)`
-- [ ] Extract RPN badge renderer (shared between pfmea.js and dashboard.js `pfRpnClass/rpnColor`) — move to `npi.components.rpnBadge(rpn)`
-- [ ] Extract inline edit input pattern (score inputs in PFMEA, weight inputs in trackers) — implement as `npi.components.scoreInput(value, handler)`
-- [ ] Add `npi-components.js` to `index.html` script load order after `npi-data.js`
+- [x] Create `portals/product-development/npi/js/npi-components.js`
+- [x] Extract reusable table header builder (used in CTQ, PFD, CP, BOM tables) — implement as `npi.components.tableHeader(cols)`
+- [x] Extract status badge renderer (used in dashboard KPIs and tracker) — implement as `npi.components.badge(value, thresholds)`
+- [x] Extract RPN badge renderer (shared between pfmea.js and dashboard.js `pfRpnClass/rpnColor`) — move to `npi.components.rpnBadge(rpn)`
+- [x] Extract inline edit input pattern (score inputs in PFMEA, weight inputs in trackers) — implement as `npi.components.scoreInput(value, handler)`
+- [x] Add `npi-components.js` to `index.html` script load order after `npi-data.js`
 
 ### 2.3 Decompose Monolithic Files
 
 #### Split apqp.js (currently handles CTQ + PFD + CP + dispatch)
-- [ ] Create `portals/product-development/npi/js/npi-ctq.js` — move all CTQ rendering and mutation functions from `apqp.js`
-- [ ] Create `portals/product-development/npi/js/npi-pfd.js` — move all PFD rendering and mutation functions from `apqp.js`
-- [ ] Create `portals/product-development/npi/js/npi-cp.js` — move all Control Plan rendering and mutation functions from `apqp.js`
-- [ ] Reduce `apqp.js` to a pure dispatcher: `renderAPQP()` switches on `apqpTab` and delegates to `npi.ctq.*`, `npi.pfd.*`, `npi.cp.*`, `npi.pfmea.*`
-- [ ] Add the 3 new files to `index.html` load order before `apqp.js`
+- [x] Create `portals/product-development/npi/js/npi-ctq.js` — move all CTQ rendering and mutation functions from `apqp.js`
+- [x] Create `portals/product-development/npi/js/npi-pfd.js` — move all PFD rendering and mutation functions from `apqp.js`
+- [x] Create `portals/product-development/npi/js/npi-cp.js` — move all Control Plan rendering and mutation functions from `apqp.js`
+- [x] Reduce `apqp.js` to a pure dispatcher: `renderAPQP()` switches on `apqpTab` and delegates to `npi.ctq.*`, `npi.pfd.*`, `npi.cp.*`, `npi.pfmea.*`
+- [x] Add the 3 new files to `index.html` load order before `apqp.js`
 
 #### Refactor rendering functions to use component library
-- [ ] Update `pfmea.js` table rendering to use `npi.components.rpnBadge()` and `npi.components.scoreInput()`
-- [ ] Update `dashboard.js` KPI section to use `npi.components.badge()`
-- [ ] Update `trackers.js` score rendering to use `npi.components.scoreInput()`
-- [ ] Update all BOM category tables to use `npi.components.tableHeader()`
+- [x] Update `pfmea.js` table rendering to use `npi.components.rpnBadge()` and `npi.components.scoreInput()`
+- [x] Update `dashboard.js` KPI section to use `npi.components.badge()`
+- [x] Update `trackers.js` score rendering to use `npi.components.scoreInput()`
+- [x] Update all BOM category tables to use `npi.components.tableHeader()`
 
 #### Create `npi-orchestrator.js` entry point
-- [ ] Create `portals/product-development/npi/js/npi-orchestrator.js` as the main coordinator (analogous to `me-capacity.js`)
-- [ ] Move tab routing logic from `navigation.js` NPI case into `npi-orchestrator.js::npi.render(tab)`
-- [ ] Move NPI init logic (currently scattered) into `npi-orchestrator.js::npi.init()`
-- [ ] Add `npi-orchestrator.js` to `index.html` load order last among NPI files (before `app.js`)
-- [ ] Update `navigation.js` to call `npi.render(tab)` instead of individual render functions
+- [x] Create `portals/product-development/npi/js/npi-orchestrator.js` as the main coordinator (analogous to `me-capacity.js`)
+- [x] Move tab routing logic from `navigation.js` NPI case into `npi-orchestrator.js::npi.render(tab)`
+- [x] Move NPI init logic (currently scattered) into `npi-orchestrator.js::npi.init()`
+- [x] Add `npi-orchestrator.js` to `index.html` load order last among NPI files (before `app.js`)
+- [x] Update `navigation.js` to call `npi.render(tab)` instead of individual render functions
 
 ---
 

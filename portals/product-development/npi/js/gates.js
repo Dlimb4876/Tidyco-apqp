@@ -87,7 +87,7 @@ npi.gate.renderGatePage = function(gateNum) {
   </div>`
 }
 
-npi.gate.toggleCheck = function(gi, ii, v) { prog().gates[gi].checks[ii] = v; npiRelSaveGate(gi); render() }
-npi.gate.updSig     = function(gi, si, f, v) { prog().gates[gi].sigs[si][f] = v; npiRelSaveGateSig(gi, si) }
-npi.gate.signOff    = function(gi, si) { const sig = prog().gates[gi].sigs[si]; sig.signed = true; if (!sig.date) sig.date = new Date().toISOString().slice(0, 10); npiRelSaveGateSig(gi, si); render() }
-npi.gate.unsign     = function(gi, si) { prog().gates[gi].sigs[si].signed = false; npiRelSaveGateSig(gi, si); render() }
+npi.gate.toggleCheck = function(gi, ii, v) { npi.data.gate.toggleCheck(gi, ii, v); render() }
+npi.gate.updSig     = function(gi, si, f, v) { npi.data.gate.updSig(gi, si, f, v) }
+npi.gate.signOff    = function(gi, si) { npi.data.gate.signOff(gi, si); render() }
+npi.gate.unsign     = function(gi, si) { npi.data.gate.unsign(gi, si); render() }

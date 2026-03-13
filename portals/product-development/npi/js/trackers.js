@@ -43,17 +43,14 @@ npi.tracker.renderActions = function() {
   <button class="add-row" onclick="npi.tracker.addAction()">＋ Add Action</button></div>`
 }
 npi.tracker.addAction = function() {
-  const item = { id: crypto.randomUUID(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }
-  prog().actions.push(item)
-  npiRelSaveAction(item)
+  npi.data.tracker.addAction()
   render()
 }
 npi.tracker.updAction = function(i, f, v) {
-  prog().actions[i][f] = v
-  npiRelSaveAction(prog().actions[i])
+  npi.data.tracker.updAction(i, f, v)
   if (f === 'status' || f === 'due') render()
 }
-npi.tracker.delAction = function(i) { const id = prog().actions[i].id; prog().actions.splice(i, 1); npiRelDeleteAction(id); render() }
+npi.tracker.delAction = function(i) { npi.data.tracker.delAction(i); render() }
 
 // ══════════════════════════════════════
 // RISK REGISTER
@@ -73,8 +70,8 @@ npi.tracker.renderRisks = function() {
       <td><textarea class="cell-edit" rows="2" onchange="npi.tracker.updRisk(${i},'desc',this.value)" placeholder="Risk description">${esc(r.desc)}</textarea></td>
       <td><select class="cell-edit" onchange="npi.tracker.updRisk(${i},'cat',this.value)" style="width:100%">${['Technical', 'Supply Chain', 'Schedule', 'Resource', 'Customer', 'Commercial'].map(s => `<option${r.cat === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
       <td><input class="cell-edit" value="${esc(r.owner)}" onchange="npi.tracker.updRisk(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
-      <td class="risk-score-cell"><input type="number" class="cell-edit mono risk-score-input" min="1" max="5" value="${r.lik || 1}" oninput="const v=npi.tracker.riskScorePreview(this,${r.lik || 1});npi.tracker.updRisk(${i},'lik',v,false);npi.tracker.refreshRS(${i},false)" onchange="const v=npi.tracker.riskScoreInput(this);npi.tracker.updRisk(${i},'lik',v);npi.tracker.refreshRS(${i})"></td>
-      <td class="risk-score-cell"><input type="number" class="cell-edit mono risk-score-input" min="1" max="5" value="${r.imp || 1}" oninput="const v=npi.tracker.riskScorePreview(this,${r.imp || 1});npi.tracker.updRisk(${i},'imp',v,false);npi.tracker.refreshRS(${i},false)" onchange="const v=npi.tracker.riskScoreInput(this);npi.tracker.updRisk(${i},'imp',v);npi.tracker.refreshRS(${i})"></td>
+      <td class="risk-score-cell">${npi.components.scoreInput(r.lik || 1, { min: 1, max: 5, className: 'cell-edit mono risk-score-input', oninput: `const v=npi.tracker.riskScorePreview(this,${r.lik || 1});npi.tracker.updRisk(${i},'lik',v,false);npi.tracker.refreshRS(${i},false)`, onchange: `const v=npi.tracker.riskScoreInput(this);npi.tracker.updRisk(${i},'lik',v);npi.tracker.refreshRS(${i})` })}</td>
+      <td class="risk-score-cell">${npi.components.scoreInput(r.imp || 1, { min: 1, max: 5, className: 'cell-edit mono risk-score-input', oninput: `const v=npi.tracker.riskScorePreview(this,${r.imp || 1});npi.tracker.updRisk(${i},'imp',v,false);npi.tracker.refreshRS(${i},false)`, onchange: `const v=npi.tracker.riskScoreInput(this);npi.tracker.updRisk(${i},'imp',v);npi.tracker.refreshRS(${i})` })}</td>
       <td style="text-align:center"><span class="rpn ${sc}" id="rs_${i}">${score}</span></td>
       <td><textarea class="cell-edit" rows="2" onchange="npi.tracker.updRisk(${i},'mit',this.value)" placeholder="Mitigation">${esc(r.mit)}</textarea></td>
       <td><select class="cell-edit" onchange="npi.tracker.updRisk(${i},'status',this.value)" style="width:100%">${['Open', 'Mitigated', 'Closed'].map(s => `<option${r.status === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
@@ -98,9 +95,7 @@ npi.tracker.renderRisks = function() {
   <button class="add-row" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div>`
 }
 npi.tracker.addRisk = function() {
-  const item = { id: crypto.randomUUID(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }
-  prog().risks.push(item)
-  npiRelSaveRisk(item)
+  npi.data.tracker.addRisk()
   render()
 }
 npi.tracker.normalizeRiskScore = function(v) {
@@ -122,11 +117,10 @@ npi.tracker.riskScorePreview = function(inputEl, fallback) {
 }
 npi.tracker.updRisk = function(i, f, v) {
   const saveNow = arguments.length < 4 ? true : !!arguments[3]
-  prog().risks[i][f] = v
-  if (saveNow) npiRelSaveRisk(prog().risks[i])
+  npi.data.tracker.updRisk(i, f, v, saveNow)
   if (f === 'status') render()
 }
-npi.tracker.delRisk = function(i) { const id = prog().risks[i].id; prog().risks.splice(i, 1); npiRelDeleteRisk(id); render() }
+npi.tracker.delRisk = function(i) { npi.data.tracker.delRisk(i); render() }
 npi.tracker.refreshRS = function(i, saveNow) {
   const r     = prog().risks[i]
   const score = r.lik * r.imp

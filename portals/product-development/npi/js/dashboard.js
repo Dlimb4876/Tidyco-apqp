@@ -331,7 +331,7 @@ npi.dashboard.renderDashboard = function() {
   let alerts = ''
   if (overdueAct > 0) alerts += `<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}</strong> — <a href="#" onclick="npi.nav.navigate('actions');return false" style="color:inherit;text-decoration:underline">View Actions →</a></div>`
   if (highRisks > 0) alerts += `<div class="alert-item alert-amber">🟡 <strong>${highRisks} high-severity risk${highRisks !== 1 ? 's' : ''}</strong> open — <a href="#" onclick="npi.nav.navigate('risks');return false" style="color:inherit;text-decoration:underline">View Risks →</a></div>`
-  if (highRPN > 0)   alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRPN} failure cause${highRPN !== 1 ? 's' : ''} with RPN ≥ 100</strong> — <a href="#" onclick="npi.nav.openPfmeaTab();return false" style="color:inherit;text-decoration:underline">View PFMEA →</a></div>`
+  if (highRPN > 0)   alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRPN} failure cause${highRPN !== 1 ? 's' : ''} with RPN ≥ 100</strong> ${npi.components.badge(highRPN, { low: 1, high: 5, critical: 10 })} — <a href="#" onclick="npi.nav.openPfmeaTab();return false" style="color:inherit;text-decoration:underline">View PFMEA →</a></div>`
 
   const gateStrip = GATE_DEFS.map((g, i) => {
     const gd      = p.gates[i] || {}

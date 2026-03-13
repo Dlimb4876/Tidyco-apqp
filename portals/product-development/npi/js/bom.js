@@ -32,7 +32,7 @@ npi.bom.renderBomTable = function(type, p) {
 
   let thead = '', tbody = ''
   if (type === 'parts') {
-    thead = `<tr><th>Tidyco PN</th><th>Supplier PN</th><th>Description</th><th>Qty</th><th>Unit</th><th>Std</th><th>AAW</th><th>Repair</th><th>Notes</th><th></th></tr>`
+    thead = npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Supplier PN' }, { label: 'Description' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
       <td class="w110"><input class="cell-edit mono" value="${esc(r.pn)}" onchange="npi.bom.updBom('parts',${i},'pn',this.value)" placeholder="Tidyco PN"></td>
       <td class="w110"><input class="cell-edit mono" value="${esc(r.supplierPN||'')}" onchange="npi.bom.updBom('parts',${i},'supplierPN',this.value)" placeholder="Supplier PN"></td>
@@ -46,7 +46,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('parts',${i})">×</button></td>
     </tr>`).join('')
   } else if (type === 'tools') {
-    thead = `<tr><th>Tool ID</th><th>Description</th><th>Spec / PN</th><th>Notes</th><th></th></tr>`
+    thead = npi.components.tableHeader([{ label: 'Tool ID' }, { label: 'Description' }, { label: 'Spec / PN' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" value="${esc(r.toolId)}" onchange="npi.bom.updBom('tools',${i},'toolId',this.value)" placeholder="TL-001"></td>
       <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('tools',${i},'desc',this.value)" placeholder="Description"></td>
@@ -55,7 +55,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('tools',${i})">×</button></td>
     </tr>`).join('')
   } else if (type === 'equip') {
-    thead = `<tr><th>Equip ID</th><th>Description</th><th>Location</th><th>Notes</th><th></th></tr>`
+    thead = npi.components.tableHeader([{ label: 'Equip ID' }, { label: 'Description' }, { label: 'Location' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" value="${esc(r.equipId)}" onchange="npi.bom.updBom('equip',${i},'equipId',this.value)" placeholder="EQ-001"></td>
       <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('equip',${i},'desc',this.value)" placeholder="Description"></td>
@@ -64,7 +64,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('equip',${i})">×</button></td>
     </tr>`).join('')
   } else {
-    thead = `<tr><th>Part / Cat. No.</th><th>Description</th><th>Unit</th><th>Qty/Unit</th><th>Std</th><th>AAW</th><th>Repair</th><th>Notes</th><th></th></tr>`
+    thead = npi.components.tableHeader([{ label: 'Part / Cat. No.' }, { label: 'Description' }, { label: 'Unit' }, { label: 'Qty/Unit' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" value="${esc(r.pn)}" onchange="npi.bom.updBom('${type}',${i},'pn',this.value)" placeholder="PN"></td>
       <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('${type}',${i},'desc',this.value)" placeholder="Description"></td>
@@ -81,32 +81,18 @@ npi.bom.renderBomTable = function(type, p) {
   const tableMinWidth = type === 'parts' ? '920px' : '800px'
   return `<div class="bom-register-wrap">${statsHTML}<div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">${t.icon} ${t.label} Register</span><span class="card-meta">${items.length} items</span><button class="btn btn-primary btn-sm" onclick="npi.bom.addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div>
-  ${items.length === 0 ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click ＋ Add to start. Link items to PFD steps using ＋ Resource.') : `<table class="tbl bom-tbl" style="min-width:${tableMinWidth}"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`}
+  ${items.length === 0 ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click ＋ Add to start. Link items to PFD steps using ＋ Resource.') : `<table class="tbl bom-tbl" style="min-width:${tableMinWidth}">${thead}<tbody>${tbody}</tbody></table>`}
   <button class="add-row" onclick="npi.bom.addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div></div>`
 }
 
 npi.bom.addBomRow = function(type) {
-  const p = prog()
-  let item = { id: crypto.randomUUID() }
-  if (type === 'parts') item = { ...item, pn: '', supplierPN: '', desc: '', qty: 1, unit: 'ea', isStd: false, isAaw: false, isRepair: false, notes: '' }
-  else if (type === 'tools') item = { ...item, toolId: '', desc: '', spec: '', notes: '' }
-  else if (type === 'equip') item = { ...item, equipId: '', desc: '', location: '', notes: '' }
-  else item = { ...item, pn: '', desc: '', unit: '', qtyPerUnit: 0, isStd: false, isAaw: false, isRepair: false, notes: '' }
-  p.bom[type].push(item)
-  npiRelSaveBOMItem(type, item)
+  npi.data.bom.addRow(type)
   render()
   setTimeout(() => { const tbl = document.querySelector('.card table'); if (tbl) { const rows = tbl.querySelectorAll('tbody tr'); if (rows.length > 0) rows[rows.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' }) } }, 50)
 }
-npi.bom.updBom = function(type, i, f, v) { prog().bom[type][i][f] = v; npiRelSaveBOMItem(type, prog().bom[type][i]) }
+npi.bom.updBom = function(type, i, f, v) { npi.data.bom.updRow(type, i, f, v) }
 npi.bom.delBom = function(type, i) {
-  const item = prog().bom[type][i]
-  prog().pfd.forEach(s => {
-    const before = (s.bomRefs || []).length
-    s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === type && r.itemId === item.id))
-    if (s.bomRefs.length !== before) npiRelSavePFDStep(s)
-  })
-  prog().bom[type].splice(i, 1)
-  npiRelDeleteBOMItem(item.id)
+  npi.data.bom.delRow(type, i)
   render()
 }
 
@@ -168,25 +154,19 @@ npi.bom.renderKits = function(p) {
 }
 
 npi.bom.addKit = function() {
-  const kit = { id: crypto.randomUUID(), name: '', items: [] }
-  prog().bom.kits.push(kit)
-  npiRelSaveBOMKit(kit)
+  npi.data.bom.addKit()
   render()
 }
-npi.bom.updKit = function(ki, f, v) { prog().bom.kits[ki][f] = v; npiRelSaveBOMKit(prog().bom.kits[ki]) }
+npi.bom.updKit = function(ki, f, v) { npi.data.bom.updKit(ki, f, v) }
 npi.bom.delKit = function(ki) {
-  const id = prog().bom.kits[ki].id
-  prog().bom.kits.splice(ki, 1)
-  npiRelDeleteBOMKit(id)
+  npi.data.bom.delKit(ki)
   render()
 }
 npi.bom.updKitItem = function(ki, ri, f, v) {
-  prog().bom.kits[ki].items[ri][f] = v
-  npiRelSaveKitItems(prog().bom.kits[ki])
+  npi.data.bom.updKitItem(ki, ri, f, v)
 }
 npi.bom.delKitItem = function(ki, ri) {
-  prog().bom.kits[ki].items.splice(ri, 1)
-  npiRelSaveKitItems(prog().bom.kits[ki])
+  npi.data.bom.delKitItem(ki, ri)
   render()
 }
 
@@ -198,15 +178,10 @@ npi.bom.openKitPick = function(ki) {
   kitPickFilter     = 'all'
   bomPickSelected   = [...kitPickSelected]
   bomPickFilter     = kitPickFilter
-  npi.apqp.refreshBomPickModal(p, 'kitPickFilter', 'kitPickList', 'all')
+  npi.pfd.refreshBomPickModal(p, 'kitPickFilter', 'kitPickList', 'all')
   showModal('modalKitPick')
 }
 npi.bom.saveKitPick = function() {
-  const p   = prog()
-  const kit = p.bom.kits[kitPickTarget]
-  const existing = {}
-  kit.items.forEach(r => { existing[r.bomType + '|' + r.itemId] = r.qty })
-  kit.items = bomPickSelected.map(key => { const [bt, id] = key.split('|'); return { bomType: bt, itemId: id, qty: existing[key] || 1 } })
-  npiRelSaveKitItems(kit)
+  npi.data.bom.saveKitPick(kitPickTarget, bomPickSelected)
   closeModal('modalKitPick'); render()
 }

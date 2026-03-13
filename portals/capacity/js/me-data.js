@@ -2,18 +2,8 @@
    me-data.js — ME Capacity Data Layer (Global Namespace)
    Combines all data/me-data/*.js modules into one file
 
-   Supabase Table: me_capacity
-   Data Structure:
-   {
-     user_id: string,
-     data: {
-       team: [{id, name, hoursPerWeek, utilisation, jobTitle, group}],
-       tasks: [{id, name, category, assigneeId, startDate, endDate, totalHours, advancedEstimation}],
-       products: [{id, name, supportFrom, supportUntil, hoursPerWeek, notes}],
-       holidays: [{id, personId, date, type ('full'|'half')}]
-     },
-     updated_at: ISO string
-   }
+   Supabase Tables: me_teams, me_tasks, me_task_subtasks,
+                    me_task_pert_history, me_products, me_holidays
    ============================================================ */
 
 // ─────────────────────────────────────────────────────────────

@@ -130,7 +130,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   const memberCapacityTableBody = memberCapacityRows.length
     ? memberCapacityRows.join('') + `
       <tr style="border-top:2px solid var(--line);font-weight:700;background:#fafbfd;">
-        <td colspan="5">Total Available Capacity</td>
+        <td colspan="5">Total Available (after holidays &amp; utilisation)</td>
         <td style="text-align:right;">${teamCapacityTotal.toFixed(1)} h</td>
       </tr>
     `
@@ -237,8 +237,8 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
                   <th style="text-align:right;">Util %</th>
                   <th style="text-align:right;">Working Days</th>
                   <th style="text-align:right;">Holiday (days)</th>
-                  <th style="text-align:right;">Total (h)</th>
-                  <th style="text-align:right;">Utilization (h)</th>
+                  <th style="text-align:right;">Gross (h)</th>
+                  <th style="text-align:right;">Available (h)</th>
                 </tr></thead>
                 <tbody>${memberCapacityTableBody}</tbody>
               </table>

@@ -8,20 +8,57 @@
 // ══════════════════════════════════════
 // PFMEA — grouped by PFD step, multi-row per step
 // ══════════════════════════════════════
+npi.pfmea.getRpnFilter = function() {
+  const cur = (globalThis.pfmeaRpnFilter || 'all').toString()
+  return ['all', 'high', 'r1_49', 'r50_99', 'r100_199', 'r200_plus'].includes(cur) ? cur : 'all'
+}
+
+npi.pfmea.setRpnFilter = function(nextFilter) {
+  const safe = (nextFilter || 'all').toString()
+  globalThis.pfmeaRpnFilter = ['all', 'high', 'r1_49', 'r50_99', 'r100_199', 'r200_plus'].includes(safe) ? safe : 'all'
+  render()
+}
+
+npi.pfmea.rpnInFilter = function(rpn, filter) {
+  const v = Number(rpn) || 0
+  if (filter === 'high') return v >= RPN_HIGH
+  if (filter === 'r1_49') return v >= 1 && v <= 49
+  if (filter === 'r50_99') return v >= 50 && v <= 99
+  if (filter === 'r100_199') return v >= 100 && v <= 199
+  if (filter === 'r200_plus') return v >= 200
+  return true
+}
+
+npi.pfmea.modeMatchesFilter = function(mode, filter) {
+  if (filter === 'all') return true
+  return npi.pfmea.rpnInFilter(npi.pfmea.calcRPN(mode), filter)
+}
+
 npi.pfmea.renderPFMEA = function() {
   const p = prog()
-  const sorted = sortedPfd(p.pfd).filter(s => s.type !== 'group')
+  const sorted = npi.data.sortedPfd(p.pfd).filter(s => s.type !== 'group')
   if (sorted.length === 0) return emptyState('⚠️', 'No process steps', 'Add steps in Process Flow first.')
 
   // NOTE: PFMEA structure migration has been moved to migrateprog() in db.js
   // and now runs once per load rather than on every render.
 
   const highRPN = p.pfmea.reduce((n, m) => n + (m.effects || []).reduce((en, ef) => en + (ef.causes || []).filter(ca => (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1) >= RPN_HIGH).length, 0), 0)
+  const activeFilter = npi.pfmea.getRpnFilter()
 
   const byStep = {}; sorted.forEach(s => { byStep[s.id] = [] }); byStep['__none'] = []
   p.pfmea.forEach(r => { const key = (r.pfdId && byStep[r.pfdId] !== undefined) ? r.pfdId : '__none'; byStep[key].push(r) })
 
-  let html = `<div class="pfmea-wrap" style="-webkit-overflow-scrolling:touch"><table class="tbl pfmea-tbl" style="table-layout:fixed;min-width:1808px;width:100%">
+  const visibleSteps = sorted.reduce((acc, step) => {
+    const stepModes = byStep[step.id] || []
+    const filteredModes = stepModes.filter(mode => npi.pfmea.modeMatchesFilter(mode, activeFilter))
+    if (activeFilter === 'all' || filteredModes.length > 0) acc.push({ step, modes: activeFilter === 'all' ? stepModes : filteredModes })
+    return acc
+  }, [])
+
+  const totalModeCount = p.pfmea.length
+  const visibleModeCount = visibleSteps.reduce((sum, block) => sum + block.modes.length, 0)
+
+  let html = `<div class="pfmea-wrap" style="-webkit-overflow-scrolling:touch"><table class="tbl tbl--compact pfmea-tbl" style="table-layout:fixed;min-width:1808px;width:100%">
   <colgroup>
     <col style="width:180px"><!-- failure mode -->
     <col style="width:180px"><!-- effect -->
@@ -69,8 +106,9 @@ npi.pfmea.renderPFMEA = function() {
   </thead>
   <tbody>`
 
-  sorted.forEach(s => {
-    const modes = byStep[s.id] || []
+  visibleSteps.forEach(block => {
+    const s = block.step
+    const modes = block.modes || []
     const ctqBadges = (s.ctqIds || []).map(cid => {
       const ci = p.ctq.findIndex(c => c.id === cid)
       return ci >= 0 ? `<span class="tag tag-ctq" style="font-size:9px">C${ci + 1}</span>` : ''
@@ -78,7 +116,7 @@ npi.pfmea.renderPFMEA = function() {
 
     html += `<tr><td colspan="18" style="padding:0;border-top:3px solid #6b7280"><div class="pfmea-step-header"><span class="pfmea-step-label">Step ${s.stepNum} — ${esc(s.op || '(unnamed)')}</span><div class="pfmea-step-ctqs">${ctqBadges}</div></div></td></tr>`
 
-    if (modes.length === 0) {
+    if (modes.length === 0 && activeFilter === 'all') {
       html += `<tr class="pfmea-row-sub"><td colspan="17" style="padding:8px 14px;color:var(--muted);font-size:12px;font-style:italic">No failure modes yet</td><td></td></tr>`
     }
 
@@ -173,7 +211,7 @@ npi.pfmea.renderPFMEA = function() {
                 onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdCause(${mi},${ei},${ci},'det',v)">
             </td>
             <td class="pfmea-score-cell">
-              <span id="rpn_${mi}_${ei}_${ci}" class="rpn ${rpnCls}">${rpn}</span>
+              ${npi.components.rpnBadge(rpn, { id: `rpn_${mi}_${ei}_${ci}` })}
               ${hist.length > 0 ? `<button class="rpn-hist-btn" onclick="npi.pfmea.pfShowHist(event,'${ca.id}')">⏱${hist.length}</button>` : ''}
               <div class="hist-popup" id="hist_${ca.id}" style="display:none;position:fixed;z-index:9999;background:white;border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.15);max-height:400px;overflow-y:auto">
                 <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">RPN History</div>
@@ -195,7 +233,7 @@ npi.pfmea.renderPFMEA = function() {
                 onchange="const v=npi.pfmea.pfScoreInput(this,true);npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newDet',v)" style="background:#eff6ff">
             </td>
             <td class="pfmea-score-cell">
-              <span id="forecast_${mi}_${ei}_${ci}" class="rpn ${hasAction ? fCls : 'rpn-lo'}" style="opacity:${hasAction ? '1' : '0'}">${hasAction ? forecast : '—'}</span>
+              <span style="opacity:${hasAction ? '1' : '0'}">${npi.components.rpnBadge(hasAction ? forecast : 0, { id: `forecast_${mi}_${ei}_${ci}`, emptyLabel: '—' })}</span>
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:4px">
               <button class="btn btn-sm btn-green" style="font-size:9px;padding:3px 6px;white-space:nowrap" onclick="npi.pfmea.pfImplementAction(${mi},${ei},${ci})" title="Apply new OCC/DET and log to history">▶ Apply</button>
@@ -253,11 +291,34 @@ npi.pfmea.renderPFMEA = function() {
     html += `<tr><td colspan="18" style="padding:0"><div class="pfmea-add-row" onclick="npi.pfmea.pfAddMode('${s.id}')">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`
   })
 
+  if (visibleSteps.length === 0) {
+    html += `<tr class="pfmea-row-sub"><td colspan="18" style="padding:14px;color:var(--muted);font-size:12px;font-style:italic;text-align:center">No operations match this RPN filter. <a href="#" onclick="npi.pfmea.setRpnFilter('all');return false" style="color:var(--blue)">Show all</a></td></tr>`
+  }
+
   html += '</tbody></table></div>'
+
+  const filterLabel = activeFilter === 'all' ? 'All RPN' :
+    activeFilter === 'high' ? `High RPN (>=${RPN_HIGH})` :
+    activeFilter === 'r1_49' ? 'RPN 1-49' :
+    activeFilter === 'r50_99' ? 'RPN 50-99' :
+    activeFilter === 'r100_199' ? 'RPN 100-199' : 'RPN 200+'
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div class="sec-title">PFMEA</div>
   <div class="sec-desc">Failure Mode → Effect (SEV) → Cause (OCC) → Controls Prevent / Detect (DET) → RPN. Actions and rescoring per cause.</div></div>
-  <div class="sec-actions">${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high RPN ≥${RPN_HIGH}</span>` : ''}</div></div>
+  <div class="sec-actions pfmea-filter-wrap">
+    <label class="pfmea-filter-label">RPN Filter
+      <select class="pfmea-filter-select" onchange="npi.pfmea.setRpnFilter(this.value)">
+        <option value="all"${activeFilter === 'all' ? ' selected' : ''}>All</option>
+        <option value="high"${activeFilter === 'high' ? ' selected' : ''}>High only (>=${RPN_HIGH})</option>
+        <option value="r1_49"${activeFilter === 'r1_49' ? ' selected' : ''}>1-49</option>
+        <option value="r50_99"${activeFilter === 'r50_99' ? ' selected' : ''}>50-99</option>
+        <option value="r100_199"${activeFilter === 'r100_199' ? ' selected' : ''}>100-199</option>
+        <option value="r200_plus"${activeFilter === 'r200_plus' ? ' selected' : ''}>200+</option>
+      </select>
+    </label>
+    <span class="tag" style="align-self:center">${filterLabel}: ${visibleModeCount}/${totalModeCount} operations</span>
+    ${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high RPN ≥${RPN_HIGH}</span>` : ''}
+  </div></div>
 <div class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
     <div class="card-head" style="padding:10px 14px">
       <span class="card-title">📉 RPN Burndown — Total Original vs Total Current</span>
@@ -289,34 +350,10 @@ npi.pfmea.pfShowHist = function(evt, cid) {
 document.addEventListener('click', () => document.querySelectorAll('.hist-popup').forEach(p => p.style.display = 'none'))
 
 // ── PFMEA data mutators ───────────────────────────────────────
-npi.pfmea.pfAddMode = function(pfdId) {
-  const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
-  const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
-  const mode = { id: crypto.randomUUID(), _type: 'mode', pfdId, mode: '', ctqIds: [], effects: [ef] }
-  prog().pfmea.push(mode)
-  npiRelSavePFMEAMode(mode)
-  npiRelSavePFMEAEffect(mode.id, ef)
-  npiRelSavePFMEACause(ef.id, ca)
-  render()
-}
-npi.pfmea.pfUpdMode = function(mi, f, v) { prog().pfmea[mi][f] = v; npiRelSavePFMEAMode(prog().pfmea[mi]) }
-npi.pfmea.pfDelMode = function(mi) {
-  const mode = prog().pfmea[mi]
-  const fid = mode.id
-  prog().cp.forEach(r => { if (r.pfmeaId === fid) r.pfmeaId = '' })
-  prog().pfmea.splice(mi, 1)
-  npiRelDeletePFMEAMode(mode)
-  render()
-}
-npi.pfmea.pfAddEffect = function(mi) {
-  const mode = prog().pfmea[mi]
-  const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
-  const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
-  mode.effects.push(ef)
-  npiRelSavePFMEAEffect(mode.id, ef)
-  npiRelSavePFMEACause(ef.id, ca)
-  render()
-}
+npi.pfmea.pfAddMode = function(pfdId) { npi.data.pfmea.addMode(pfdId); render() }
+npi.pfmea.pfUpdMode = function(mi, f, v) { npi.data.pfmea.updMode(mi, f, v) }
+npi.pfmea.pfDelMode = function(mi) { npi.data.pfmea.delMode(mi); render() }
+npi.pfmea.pfAddEffect = function(mi) { npi.data.pfmea.addEffect(mi); render() }
 npi.pfmea.pfNormalizeScore = function(v, allowBlank) {
   const raw = v === undefined || v === null ? '' : String(v).trim()
   if (!raw) return allowBlank ? '' : 1
@@ -338,52 +375,19 @@ npi.pfmea.pfScorePreview = function(inputEl, allowBlank, fallback) {
 }
 npi.pfmea.pfUpdEffect = function(mi, ei, f, v) {
   const saveNow = arguments.length < 5 ? true : !!arguments[4]
-  if (f === 'sev') v = npi.pfmea.pfNormalizeScore(v, false)
-  const mode = prog().pfmea[mi]
-  mode.effects[ei][f] = v
-  if (saveNow) npiRelSavePFMEAEffect(mode.id, mode.effects[ei])
+  npi.data.pfmea.updEffect(mi, ei, f, v, saveNow)
 }
-npi.pfmea.pfDelEffect = function(mi, ei) {
-  const mode = prog().pfmea[mi]
-  const ef = mode.effects[ei]
-  mode.effects.splice(ei, 1)
-  npiRelDeletePFMEAEffect(ef)
-  render()
-}
-npi.pfmea.pfAddCause = function(mi, ei) {
-  const mode = prog().pfmea[mi]
-  const ef = mode.effects[ei]
-  const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
-  ef.causes.push(ca)
-  npiRelSavePFMEACause(ef.id, ca)
-  render()
-}
+npi.pfmea.pfDelEffect = function(mi, ei) { npi.data.pfmea.delEffect(mi, ei); render() }
+npi.pfmea.pfAddCause = function(mi, ei) { npi.data.pfmea.addCause(mi, ei); render() }
 npi.pfmea.pfUpdCause = function(mi, ei, ci, f, v) {
   const saveNow = arguments.length < 6 ? true : !!arguments[5]
-  if (f === 'occ' || f === 'det') v = npi.pfmea.pfNormalizeScore(v, false)
-  const ef = prog().pfmea[mi].effects[ei]
-  ef.causes[ci][f] = v
-  if (saveNow) npiRelSavePFMEACause(ef.id, ef.causes[ci])
+  npi.data.pfmea.updCause(mi, ei, ci, f, v, saveNow)
 }
 npi.pfmea.pfUpdCauseAction = function(mi, ei, ci, f, v) {
   const saveNow = arguments.length < 6 ? true : !!arguments[5]
-  const ef = prog().pfmea[mi].effects[ei]
-  const ca = ef.causes[ci]
-  if (!ca.action) ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
-  if (!('taken' in ca.action)) ca.action.taken = ''
-  if (f === 'newOcc' || f === 'newDet') v = npi.pfmea.pfNormalizeScore(v, true)
-  ca.action[f] = v
-  if (saveNow) npiRelSavePFMEACause(ef.id, ca)
+  npi.data.pfmea.updCauseAction(mi, ei, ci, f, v, saveNow)
 }
 npi.pfmea.pfImplementAction = function(mi, ei, ci) {
-  const saveCause = (effectId, cause) => {
-    if (typeof npiRelSavePFMEACause === 'function') return npiRelSavePFMEACause(effectId, cause)
-    if (typeof save === 'function') return save()
-  }
-  const saveHistory = (causeId, entry) => {
-    if (typeof npiRelSavePFMEAHistory === 'function') return npiRelSavePFMEAHistory(causeId, entry)
-    if (typeof save === 'function') return save()
-  }
   const p = prog()
   const mode = p.pfmea[mi]; const ef = mode.effects[ei]; const ca = ef.causes[ci]
   const act = ca.action || {}
@@ -392,31 +396,35 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   const newOcc = act.newOcc ? +act.newOcc : ca.occ
   const newDet = act.newDet ? +act.newDet : ca.det
   if (!confirm(`Implement action?\n\nThis will:\n• Update OCC: ${ca.occ} → ${newOcc}\n• Update DET: ${ca.det} → ${newDet}\n• New RPN: ${(ef.sev || 1) * newOcc * newDet}\n• Log old RPN (${oldRpn}) to history\n• Clear the action fields`)) return
+
+  if (typeof npi.data?.pfmea?.implementAction === 'function') {
+    const result = npi.data.pfmea.implementAction(mi, ei, ci)
+    if (!result.ok) return
+    render()
+    return
+  }
+
+  // Legacy fallback for isolated test loads where npi-data.js is not loaded.
   const newRpn = (ef.sev || 1) * newOcc * newDet
   if (!ca.history) ca.history = []
   const histEntry = {
     rpn: oldRpn,
-    newRpn: newRpn,
+    newRpn,
     date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
     desc: act.taken || act.desc || 'Action implemented',
     oldOcc: ca.occ, oldDet: ca.det,
-    newOcc: newOcc,  newDet: newDet
+    newOcc, newDet
   }
   ca.history.push(histEntry)
   ca.occ = newOcc
   ca.det = newDet
   ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
-  saveCause(ef.id, ca)
-  saveHistory(ca.id, histEntry)
+  if (typeof npiRelSavePFMEACause === 'function') npiRelSavePFMEACause(ef.id, ca)
+  if (typeof npiRelSavePFMEAHistory === 'function') npiRelSavePFMEAHistory(ca.id, histEntry)
+  else if (typeof save === 'function') save()
   render()
 }
-npi.pfmea.pfDelCause = function(mi, ei, ci) {
-  const ef = prog().pfmea[mi].effects[ei]
-  const ca = ef.causes[ci]
-  ef.causes.splice(ci, 1)
-  npiRelDeletePFMEACause(ca)
-  render()
-}
+npi.pfmea.pfDelCause = function(mi, ei, ci) { npi.data.pfmea.delCause(mi, ei, ci); render() }
 npi.pfmea.pfRefreshRPN = function() {}
 
 // Returns max RPN across all effects/causes of a failure mode row

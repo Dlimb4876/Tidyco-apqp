@@ -6,13 +6,21 @@
 
 window.npi = {
   nav: {}, // navigation wrappers for inline handlers
+  data: {}, // npi-data.js facade
+  components: {}, // npi-components.js UI helpers
+  ctq: {}, // npi-ctq.js
+  pfd: {}, // npi-pfd.js
+  cp: {}, // npi-cp.js
   gate: {}, // gates.js
   tracker: {}, // trackers.js
   bom: {}, // bom.js
   timing: {}, // timing.js
   pfmea: {}, // pfmea.js
   apqp: {}, // apqp.js
-  dashboard: {} // dashboard.js
+  dashboard: {}, // dashboard.js
+  init: null,
+  cleanup: null,
+  render: null
 }
 
 npi.nav.navigate = function(section) { navigate(section) }

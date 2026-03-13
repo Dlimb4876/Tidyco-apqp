@@ -8,6 +8,7 @@ let opsRefreshTimers = {};
 let opsForecastChart = null;
 let opsForecastEditingId = '';
 let opsForecastInlineEditId = '';
+let opsPulseFeedContainer = null;
 
 function opsForecastDomKey(id) {
   return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -531,28 +532,28 @@ function opsBuildPulseRows(metrics) {
       ? `Current utilisation is ${metrics.me.utilisation}% with ${metrics.me.headroom}h headroom this month.`
       : 'ME capacity data has not been initialized yet. Open Capacity once to hydrate data.',
     tone: metrics.me.ready ? (metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good') : 'watch',
-    action: "navigate('capacity', { pushHash: true })"
+    dest: 'capacity'
   });
 
   rows.push({
     title: 'Delivery Confidence',
     detail: `${metrics.actions.overdue} overdue actions and ${metrics.risk.highRpn} high-RPN causes currently need attention.`,
     tone: metrics.actions.overdue > 0 || metrics.risk.highRpn > 0 ? 'critical' : 'good',
-    action: "navigate('product-development', { pushHash: true })"
+    dest: 'product-development'
   });
 
   rows.push({
     title: 'Production Flow',
     detail: `${metrics.production.active} active batches, ${metrics.production.completed} completed, ${metrics.production.total} total tracked.`,
     tone: metrics.production.active > metrics.production.completed ? 'watch' : 'good',
-    action: "navigate('production', { pushHash: true })"
+    dest: 'production'
   });
 
   rows.push({
     title: 'Stability Signal',
     detail: `${metrics.bugs.open} open bug reports and ${metrics.bugs.closed7d} closed in the last 7 days.`,
     tone: metrics.bugs.open > 5 ? 'critical' : metrics.bugs.open > 0 ? 'watch' : 'good',
-    action: "navigate('bugreports', { pushHash: true })"
+    dest: 'bugreports'
   });
 
   return rows;
@@ -568,7 +569,7 @@ function opsRenderPulseFeed(metrics) {
       </div>
       <div class="ops-feed-list">
         ${rows.map(row => `
-          <button class="ops-feed-row ops-tone-${row.tone}" onclick="${row.action}">
+          <button class="ops-feed-row ops-tone-${row.tone}" data-action="pulse-navigate" data-dest="${row.dest}">
             <div class="ops-feed-title">${esc(row.title)}</div>
             <div class="ops-feed-detail">${esc(row.detail)}</div>
           </button>
@@ -1159,6 +1160,19 @@ function setOperationsTab(tab) {
   render();
 }
 
+function setupOpsPulseFeed() {
+  const container = document.getElementById('ops-dashboard');
+  if (!container || opsPulseFeedContainer === container) return;
+  opsPulseFeedContainer = container;
+
+  container.addEventListener('click', (event) => {
+    const el = event.target.closest('[data-action="pulse-navigate"]');
+    if (!el || !container.contains(el)) return;
+    const dest = el.dataset.dest;
+    if (dest) navigate(dest);
+  });
+}
+
 function renderOperationsDashboard() {
   opsRealtimeInit();
 
@@ -1173,16 +1187,15 @@ function renderOperationsDashboard() {
   else if (tab === 'forecast') body = opsRenderForecastView(metrics);
   else body = opsRenderOverview(metrics);
 
-  if (tab === 'forecast') {
-    setTimeout(() => {
-      if (currentSection === 'operations' && (operationsTab || 'overview') === 'forecast') {
-        opsRenderForecastChart(metrics.forecast);
-      }
-    }, 0);
-  }
+  setTimeout(() => {
+    setupOpsPulseFeed();
+    if (tab === 'forecast' && currentSection === 'operations' && (operationsTab || 'overview') === 'forecast') {
+      opsRenderForecastChart(metrics.forecast);
+    }
+  }, 0);
 
   return `
-    <div class="proj-home ops-home">
+    <div class="proj-home ops-home" id="ops-dashboard">
       <div class="proj-home-header ops-headline">
         <div>
           <div class="proj-home-title">Operations Mission Control</div>

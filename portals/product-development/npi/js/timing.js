@@ -5,15 +5,7 @@
 // All functions under npi.timing.*
 // ═══════════════════════════════════
 
-npi.timing.ganttNewRow = function(section) {
-  return {
-    id: crypto.randomUUID(),
-    task: '', section: section || 's1', role: 'ME',
-    planned: Array(GANTT_WEEKS).fill(0),
-    actual:  Array(GANTT_WEEKS).fill(0),
-    notes: '', collapsed: false
-  }
-}
+npi.timing.ganttNewRow = function(section) { return npi.data.ganttNewRow(section) }
 
 npi.timing.ganttWeekDate = function(startStr, wi) {
   if (!startStr) return null
@@ -158,13 +150,13 @@ npi.timing.renderTimingPlan = function() {
 
   const totalRows = p.gantt.length
 
-  // colgroup: task(220) + role(70) + plan/actual label(42) + week cols + notes(140) + del(28)
-  let colgroup = `<col style="width:220px"><col style="width:70px"><col style="width:42px">`
+  // colgroup: task(200) + role(64) + plan/actual label(36) + week cols + notes(128) + del(28)
+  let colgroup = `<col style="width:200px"><col style="width:64px"><col style="width:36px">`
   months.forEach(mo => {
-    if (isMonthCollapsed(p, mo.mo)) { colgroup += `<col style="width:20px">` }
-    else { mo.weeks.forEach(() => { colgroup += `<col style="width:26px">` }) }
+    if (isMonthCollapsed(p, mo.mo)) { colgroup += `<col style="width:18px">` }
+    else { mo.weeks.forEach(() => { colgroup += `<col style="width:22px">` }) }
   })
-  colgroup += `<col style="width:140px"><col style="width:28px">`
+  colgroup += `<col style="width:128px"><col style="width:28px">`
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">NPI Timing Plan</div>
     <div class="sec-desc">Planned (green) and Actual (orange). Click month headers to collapse. Click cells to toggle.</div></div>
@@ -187,7 +179,7 @@ npi.timing.renderTimingPlan = function() {
     </div>
   </div>
   <div style="overflow-x:auto;border:1px solid var(--line);border-radius:8px">
-    <table class="tbl gantt-tbl" style="table-layout:fixed;width:max-content;min-width:100%;border-collapse:collapse">
+    <table class="tbl tbl--compact gantt-tbl" style="table-layout:fixed;width:max-content;min-width:100%;border-collapse:collapse">
       <colgroup>${colgroup}</colgroup>
       <thead>
         <tr class="gantt-month-row">
@@ -209,35 +201,17 @@ npi.timing.renderTimingPlan = function() {
   ${totalRows === 0 ? `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No tasks yet — click <strong>＋ Add Task</strong> to start</div>` : ''}`
 }
 
-npi.timing.ganttTogglePlan = function(id, wi) {
-  const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return
-  if (!row.planned || row.planned.length < GANTT_WEEKS) row.planned = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.planned || [])[i] || 0)
-  row.planned[wi] = row.planned[wi] ? 0 : 1
-  npiRelSaveGanttRow(row); render()
-}
-npi.timing.ganttToggleAct = function(id, wi) {
-  const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return
-  if (!row.actual || row.actual.length < GANTT_WEEKS) row.actual = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.actual || [])[i] || 0)
-  row.actual[wi] = row.actual[wi] ? 0 : 1
-  npiRelSaveGanttRow(row); render()
-}
-npi.timing.ganttAddRow = function(section) {
-  const p = prog(); if (!p.gantt) p.gantt = []
-  const row = npi.timing.ganttNewRow(section)
-  p.gantt.push(row)
-  npiRelSaveGanttRow(row); render()
-}
-npi.timing.ganttUpdTask  = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.task    = val; npiRelSaveGanttRow(r) } }
-npi.timing.ganttUpdSec   = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.section = val; npiRelSaveGanttRow(r); render() } }
-npi.timing.ganttUpdRole  = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.role    = val; npiRelSaveGanttRow(r); render() } }
-npi.timing.ganttUpdNotes = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.notes   = val; npiRelSaveGanttRow(r) } }
-npi.timing.ganttDelRow   = function(id)      { const p = prog(); p.gantt = p.gantt.filter(r => r.id !== id); npiRelDeleteGanttRow(id); render() }
-npi.timing.ganttSetStart = function(val)     { const p = prog(); p.ganttStart = val; save(); render() }
+npi.timing.ganttTogglePlan = function(id, wi) { npi.data.timing.togglePlan(id, wi); render() }
+npi.timing.ganttToggleAct = function(id, wi) { npi.data.timing.toggleAct(id, wi); render() }
+npi.timing.ganttAddRow = function(section) { npi.data.timing.addRow(section); render() }
+npi.timing.ganttUpdTask  = function(id, val) { npi.data.timing.updTask(id, val) }
+npi.timing.ganttUpdSec   = function(id, val) { npi.data.timing.updSec(id, val); render() }
+npi.timing.ganttUpdRole  = function(id, val) { npi.data.timing.updRole(id, val); render() }
+npi.timing.ganttUpdNotes = function(id, val) { npi.data.timing.updNotes(id, val) }
+npi.timing.ganttDelRow   = function(id)      { npi.data.timing.delRow(id); render() }
+npi.timing.ganttSetStart = function(val)     { npi.data.timing.setStart(val); render() }
 npi.timing.ganttClear    = function() {
   if (!confirm('Clear all timing plan tasks?')) return
-  const p = prog()
-  const ids = p.gantt.map(r => r.id)
-  p.gantt = []
-  ids.forEach(id => npiRelDeleteGanttRow(id))
+  npi.data.timing.clear()
   render()
 }

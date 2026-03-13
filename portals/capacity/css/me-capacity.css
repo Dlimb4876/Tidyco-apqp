@@ -260,34 +260,34 @@
 
 /* ── Holiday Planner ─────────────────────────────────────────── */
 .holiday-matrix-wrap {
-  overflow-x: auto; padding: 0;
+  overflow-x: auto; overflow-y: auto; max-height: 68vh; padding: 0;
 }
 .holiday-matrix {
-  border-collapse: collapse; font-size: 12px;
+  border-collapse: collapse; font-size: var(--table-cell-font-size);
   table-layout: auto;
 }
 .holiday-matrix thead th {
-  padding: 8px 4px; background: #f4f6fa;
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
-  color: var(--muted); letter-spacing: 0.5px; text-align: center;
-  border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
-  position: sticky; top: 0; z-index: 2; white-space: nowrap;
+  padding: var(--table-head-py) 3px; background: var(--table-head-bg);
+  font-family: 'IBM Plex Mono', monospace; font-size: var(--table-head-font-size); font-weight: 600;
+  color: var(--table-head-ink); letter-spacing: 0.5px; text-align: center;
+  border-bottom: 1px solid var(--table-border); border-right: 1px solid var(--table-border);
+  position: sticky; top: 0; z-index: 15; white-space: nowrap;
 }
-.holiday-matrix thead th:first-child { position: sticky; left: 0; z-index: 3; }
-.holiday-matrix tbody tr { border-bottom: 1px solid var(--line); }
-.holiday-matrix tbody tr:hover { background: #fafbfd; }
+.holiday-matrix thead th:first-child { position: sticky; left: 0; z-index: 16; }
+.holiday-matrix tbody tr { border-bottom: 1px solid var(--table-border); }
+.holiday-matrix tbody tr:hover { background: var(--table-row-hover); }
 
 .holiday-person-header {
-  text-align: left; width: 140px; min-width: 140px;
-  position: sticky; left: 0; background: #f4f6fa !important; z-index: 2;
-  border-right: 2px solid var(--line);
+  text-align: left; width: 124px; min-width: 124px;
+  position: sticky; left: 0; background: var(--table-head-bg) !important; z-index: 16;
+  border-right: 2px solid var(--table-border);
 }
 .holiday-person-name {
-  padding: 8px 10px; text-align: left; background: #fafbfd;
+  padding: 6px 8px; text-align: left; background: #f7fbff;
   font-weight: 500; color: var(--ink);
-  min-width: 140px; width: 140px;
-  position: sticky; left: 0; z-index: 1;
-  border-right: 2px solid var(--line); border-bottom: 1px solid var(--line);
+  min-width: 124px; width: 124px;
+  position: sticky; left: 0; z-index: 14;
+  border-right: 2px solid var(--table-border); border-bottom: 1px solid var(--table-border);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -297,15 +297,15 @@
 }
 
 .holiday-cell {
-  width: 42px; min-width: 42px; height: 42px;
+  width: 34px; min-width: 34px; height: 34px;
   text-align: center; vertical-align: middle;
   cursor: pointer; user-select: none;
-  font-size: 13px; font-weight: 600; color: var(--muted);
-  border-right: 1px solid var(--line);
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  border-right: 1px solid var(--table-border);
   transition: background 0.15s, color 0.15s;
 }
 .holiday-cell:hover {
-  background: #f0f4f8; color: var(--blue);
+  background: #edf5ff; color: var(--blue);
 }
 .holiday-cell.holiday-half {
   background: var(--amber-pale); color: var(--amber); font-weight: 700;
@@ -331,7 +331,7 @@
 }
 
 .holiday-date-header {
-  padding: 6px 2px; min-width: 42px; width: 42px;
+  padding: 4px 2px; min-width: 34px; width: 34px;
 }
 .holiday-date-header.bank-holiday-header {
   background: #e0f2fe; color: #0284c7; font-weight: 600;
@@ -341,10 +341,10 @@
   border-left: none;
 }
 .holiday-date-header.week-start {
-  border-left: 3px solid var(--line);
+  border-left: 2px solid var(--table-border);
 }
 .holiday-cell.week-start {
-  border-left: 3px solid var(--line);
+  border-left: 2px solid var(--table-border);
 }
 
 /* ── Heat Map ────────────────────────────────────────────── */

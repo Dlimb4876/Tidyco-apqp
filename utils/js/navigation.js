@@ -61,12 +61,14 @@ function navigate(sec, { pushHash = true } = {}) {
   const leavingNpiLiveSection = isNpiLiveSection(currentSection) && !isNpiLiveSection(sec);
   const enteringNpiLiveSection = !isNpiLiveSection(currentSection) && isNpiLiveSection(sec);
 
-  if (leavingNpiLiveSection && typeof npiDataUnsubscribe === 'function') {
-    npiDataUnsubscribe();
+  if (leavingNpiLiveSection) {
+    if (typeof npi?.cleanup === 'function') npi.cleanup();
+    else if (typeof npiDataUnsubscribe === 'function') npiDataUnsubscribe();
   }
 
-  if (enteringNpiLiveSection && typeof npiDataInit === 'function') {
-    npiDataInit();
+  if (enteringNpiLiveSection) {
+    if (typeof npi?.init === 'function') npi.init();
+    else if (typeof npiDataInit === 'function') npiDataInit();
   }
 
   // Clean up subscriptions when leaving bugreports
@@ -269,9 +271,15 @@ function render() {
 
   if (currentSection === 'hub') { mc.innerHTML = renderHub(); return; }
 
-  if (currentSection === 'project') mc.innerHTML = npi.dashboard.renderDashboard();
-  else if (currentSection.startsWith('gate_')) mc.innerHTML = npi.gate.renderGatePage(+currentSection.split('_')[1]);
-  else { mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`; }
+  if (currentSection === 'project' || currentSection.startsWith('gate_')) {
+    mc.innerHTML = typeof npi?.render === 'function'
+      ? npi.render(currentSection)
+      : (currentSection === 'project'
+        ? npi.dashboard.renderDashboard()
+        : npi.gate.renderGatePage(+currentSection.split('_')[1]));
+  } else {
+    mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`;
+  }
 
   // Double rAF: first frame commits the new HTML to the DOM;
   // second frame ensures layout is fully calculated before
@@ -288,11 +296,12 @@ function render() {
  * @returns {string} HTML content for the current section
  */
 function renderSection() {
-  if (currentSection === 'apqp')    return npi.apqp.renderAPQP();
+  if (typeof npi?.render === 'function') return npi.render(currentSection);
+  if (currentSection === 'apqp') return npi.apqp.renderAPQP();
   if (currentSection === 'actions') return npi.tracker.renderActions();
-  if (currentSection === 'risks')   return npi.tracker.renderRisks();
-  if (currentSection === 'bom')     return npi.bom.renderBOM();
-  if (currentSection === 'timing')  return npi.timing.renderTimingPlan();
+  if (currentSection === 'risks') return npi.tracker.renderRisks();
+  if (currentSection === 'bom') return npi.bom.renderBOM();
+  if (currentSection === 'timing') return npi.timing.renderTimingPlan();
   return '';
 }
 

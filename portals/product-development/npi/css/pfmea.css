@@ -69,10 +69,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  background: #f4f6fa;
-  border-bottom: 2px solid var(--line);
-  border-top: 1px solid var(--line);
+  padding: 8px 10px;
+  background: var(--table-head-bg);
+  border-bottom: 1px solid var(--table-border);
+  border-top: 1px solid var(--table-border);
   transition: all 0.15s;
   font-weight: 600;
 }
@@ -98,14 +98,49 @@
   flex-wrap: wrap;
 }
 
+.pfmea-filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pfmea-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--mid);
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pfmea-filter-select {
+  min-height: 30px;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 12px;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.pfmea-filter-select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(11, 95, 167, 0.15);
+}
+
 /* ── Add-Row Affordance ────────────────────────────────────── */
 .pfmea-add-row {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: rgba(0, 102, 204, 0.02);
-  border-top: 1px dashed var(--line);
+  border-top: 1px dashed var(--table-border);
   font-size: 11px;
   color: var(--muted);
   cursor: pointer;
@@ -122,26 +157,37 @@
 
 /* ── Table cell types ────────────────────────────────────────── */
 .pfmea-mode-cell {
-  background: #e8eeff;
-  border-right: 3px solid #6b7280 !important;
+  background: #edf3ff;
+  border-right: 2px solid #7a8aa1 !important;
 }
 .pfmea-effect-cell {
-  background: #f5f7ff;
-  border-bottom: 2px solid #cbd5e1 !important;
-  border-right: 2px solid #cbd5e1 !important;
+  background: #f6f9ff;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
 }
 .pfmea-cause-cell { background: #fffdf5; }
 
 /* ── Cause row separators ────────────────────────────────────── */
 tr.pfmea-row-sub td {
-  border-bottom: 2px solid #94a3b8 !important;
+  border-bottom: 1px solid #9fb0c4 !important;
   border-top: 1px solid #e2e8f0;
 }
-td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
+td.pfmea-cause-text { border-left: 2px solid #94a3b8 !important; }
 
 /* ── Horizontal scroll wrapper ───────────────────────────────── */
 .pfmea-wrap {
+  max-height: 70vh;
   overflow-x: auto;
+  overflow-y: auto;
+}
+
+.pfmea-tbl td {
+  line-height: 1.3;
+}
+
+.pfmea-tbl .cell-edit {
+  padding: 2px 4px;
+  min-height: var(--table-input-min-h);
 }
 
 /* Keep compact score values readable in narrow PFMEA number columns. */
@@ -170,7 +216,7 @@ td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
 .pfmea-score-input {
   width: 36px !important;
   min-width: 36px;
-  min-height: 30px;
+  min-height: var(--table-input-min-h);
   padding: 2px 0 !important;
   text-align: center;
   font-family: 'IBM Plex Mono', monospace;
@@ -197,11 +243,25 @@ td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
 .cell-edit[data-autoresize] {
   overflow: hidden;
   resize: none;
-  min-height: 32px;
+  min-height: var(--table-input-min-h);
 }
 
 /* ── Responsive Design ──────────────────────────────────────── */
 @media (max-width: 767px) {
+  .pfmea-filter-wrap {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .pfmea-filter-label {
+    width: 100%;
+  }
+
+  .pfmea-filter-select {
+    flex: 1;
+    min-width: 160px;
+  }
+
   .rpn {
     font-size: 11px;
     min-width: 30px;

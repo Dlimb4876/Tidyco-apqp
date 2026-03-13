@@ -2,7 +2,8 @@
    me-data-relational.js — ME Capacity Relational DB Operations
 
    Handles all Supabase table operations for:
-   - me_teams, me_tasks, me_products, me_holidays
+   - me_teams, me_tasks, me_task_subtasks, me_task_pert_history,
+     me_products, me_holidays
 
    Called by me-data.js during meDataInit() and meDataSave()
    ============================================================ */
@@ -111,30 +112,105 @@ window.meLoadRelationalHolidays = async function(userId) {
 
 window.meLoadRelationalTasks = async function(userId) {
   try {
-    // Load all tasks for this user
-    const { data: tasksData, error: tasksError } = await supa
-      .from('me_tasks')
-      .select('*');
+    // Load tasks, subtasks, and PERT history in parallel
+    const [
+      { data: tasksData,    error: tasksError },
+      { data: subtasksData, error: subtasksError },
+      { data: pertData,     error: pertError }
+    ] = await Promise.all([
+      supa.from('me_tasks').select('*'),
+      supa.from('me_task_subtasks').select('*'),
+      supa.from('me_task_pert_history').select('*')
+    ]);
 
     if (tasksError) {
       console.warn('meLoadRelationalTasks error:', tasksError.message);
       return [];
     }
+    if (subtasksError) console.warn('meLoadRelationalTasks subtasks error:', subtasksError.message);
+    if (pertError)     console.warn('meLoadRelationalTasks pert error:', pertError.message);
 
-    // Transform to camelCase
-    const tasks = (tasksData || []).map(t => ({
-      id: t.id,
-      name: t.name,
-      category: t.category,
-      type: 'standard',
-      assigneeId: t.assignee_id || '',
-      productId: t.product_id || '',
-      startDate: t.start_date || '',
-      endDate: t.end_date || '',
-      totalHours: t.total_hours || 0,
-      department: meNormalizeDepartmentTag(t.department, 'ME'),
-      createdAt: t.created_at
-    }));
+    // Group subtasks and PERT estimates by task_id for fast lookup
+    const subtasksByTask = {};
+    (subtasksData || []).forEach(st => {
+      if (!subtasksByTask[st.task_id]) subtasksByTask[st.task_id] = [];
+      subtasksByTask[st.task_id].push(st);
+    });
+
+    const pertByTask = {};
+    (pertData || []).forEach(pe => {
+      if (!pertByTask[pe.task_id]) pertByTask[pe.task_id] = [];
+      pertByTask[pe.task_id].push(pe);
+    });
+
+    // Build task objects with subtasks and advancedEstimation reconstructed
+    const tasks = (tasksData || []).map(t => {
+      const rawSubtasks = subtasksByTask[t.id] || [];
+      const rawPert     = pertByTask[t.id]     || [];
+      const isRoot = t.type === 'root' || rawSubtasks.length > 0 || rawPert.length > 0;
+
+      // Subtasks array — used by capacity calculations
+      const subtasks = rawSubtasks.map(st => ({
+        id:         st.id,
+        name:       st.name,
+        assigneeId: st.assignee_id || '',
+        hours:      st.hours || 0,
+        startDate:  st.start_date || t.start_date || '',
+        endDate:    st.end_date   || t.end_date   || '',
+        source:     st.source || 'pert'
+      }));
+
+      // Reconstruct advancedEstimation so the PERT editor can re-open correctly
+      let advancedEstimation = null;
+      if (isRoot) {
+        const confidenceLevel = rawPert.length > 0 ? (rawPert[0].confidence_level || 1.0) : 1.0;
+
+        const estimates = rawPert.map(pe => ({
+          id:          pe.estimate_id || pe.id,
+          name:        pe.name,
+          optimistic:  pe.optimistic  || 0,
+          mostLikely:  pe.most_likely || 0,
+          pessimistic: pe.pessimistic || 0,
+          assignedTo:  pe.assignee_id || '',
+          finalHours:  pe.final_hours || 0
+        }));
+
+        const totalFinalHours = Math.round(
+          (rawPert.length > 0
+            ? estimates.reduce((s, e) => s + (e.finalHours || 0), 0)
+            : subtasks.reduce((s, st) => s + (st.hours || 0), 0)
+          ) * 10
+        ) / 10;
+
+        advancedEstimation = {
+          totalFinalHours,
+          confidenceLevel,
+          pertEstimates: estimates,
+          pertData: {
+            estimates,
+            confidenceLevel,
+            totalCalculatedHours: totalFinalHours,
+            lastUpdated: t.updated_at || ''
+          }
+        };
+      }
+
+      return {
+        id:                 t.id,
+        name:               t.name,
+        category:           t.category,
+        type:               isRoot ? 'root' : (t.type || 'standard'),
+        assigneeId:         t.assignee_id || '',
+        productId:          t.product_id  || '',
+        startDate:          t.start_date  || '',
+        endDate:            t.end_date    || '',
+        totalHours:         t.total_hours || 0,
+        department:         meNormalizeDepartmentTag(t.department, 'ME'),
+        createdAt:          t.created_at,
+        subtasks,
+        advancedEstimation
+      };
+    });
 
     return tasks;
   } catch (err) {
@@ -277,18 +353,23 @@ window.meSaveTaskRelational = async function(userId, task) {
     const startDate = task.startDate || todayStr;
     const endDate = task.endDate || todayStr;
 
+    // For root tasks use PERT-calculated hours so total_hours stays accurate after reload
+    const totalHours = (task.type === 'root' && task.advancedEstimation)
+      ? (task.advancedEstimation.totalFinalHours || task.totalHours || 0)
+      : (task.totalHours || 0);
+
     if (!task.id) {
       // Insert new task and capture the returned ID
       const payload = {
         user_id: userId,
         name: task.name,
         category: task.category,
-        type: task.type,
+        type: task.type || 'standard',
         assignee_id: task.assigneeId || null,
         product_id: task.productId || null,
         start_date: startDate,
         end_date: endDate,
-        total_hours: task.totalHours || 0,
+        total_hours: totalHours,
         department
       };
 
@@ -302,20 +383,23 @@ window.meSaveTaskRelational = async function(userId, task) {
         return { success: false, taskId: null };
       }
 
-      // Return the newly created task ID
       const newId = data && data.length > 0 ? data[0].id : null;
+      if (newId) {
+        task.id = newId;
+        await meSaveTaskSubtasksRelational(userId, newId, task);
+      }
       return { success: true, taskId: newId };
     } else {
       // Update existing task
       const updatePayload = {
         name: task.name,
         category: task.category,
-        type: 'standard',
+        type: task.type || 'standard',
         assignee_id: task.assigneeId || null,
         product_id: task.productId || null,
         start_date: startDate,
         end_date: endDate,
-        total_hours: task.totalHours || 0,
+        total_hours: totalHours,
         department,
         updated_at: new Date().toISOString()
       };
@@ -330,6 +414,7 @@ window.meSaveTaskRelational = async function(userId, task) {
         return { success: false, taskId: null };
       }
 
+      await meSaveTaskSubtasksRelational(userId, task.id, task);
       return { success: true, taskId: task.id };
     }
   } catch (err) {
@@ -338,6 +423,81 @@ window.meSaveTaskRelational = async function(userId, task) {
   }
 };
 
+
+// ─────────────────────────────────────────────────────────────
+// SUBTASK + PERT SAVE — Write PERT estimation data to DB
+// Called by meSaveTaskRelational after the parent task is saved
+// ─────────────────────────────────────────────────────────────
+
+window.meSaveTaskSubtasksRelational = async function(userId, taskId, task) {
+  try {
+    // Only root tasks have PERT/subtask data
+    if (task.type !== 'root') return true;
+
+    const subtasks = task.subtasks || [];
+    const pertEstimates = (task.advancedEstimation && task.advancedEstimation.pertData)
+      ? (task.advancedEstimation.pertData.estimates || [])
+      : [];
+    const confidenceLevel = (task.advancedEstimation && task.advancedEstimation.confidenceLevel) || 1.0;
+    const startDate = task.startDate || getTodayDateString();
+    const endDate   = task.endDate   || getTodayDateString();
+
+    // Delete existing subtasks and PERT history for this task then re-insert
+    await supa.from('me_task_subtasks').delete().eq('task_id', taskId);
+    await supa.from('me_task_pert_history').delete().eq('task_id', taskId);
+
+    // Insert subtasks
+    if (subtasks.length > 0) {
+      const subtaskRows = subtasks.map(st => ({
+        user_id:    userId,
+        task_id:    taskId,
+        name:       st.name,
+        assignee_id: st.assigneeId || null,
+        hours:      st.hours || 0,
+        start_date: st.startDate || startDate,
+        end_date:   st.endDate   || endDate,
+        source:     st.source || 'pert'
+      }));
+
+      const { error: insSubErr } = await supa
+        .from('me_task_subtasks')
+        .insert(subtaskRows);
+
+      if (insSubErr) {
+        console.warn('meSaveTaskSubtasksRelational subtask insert error:', insSubErr.message);
+      }
+    }
+
+    // Insert PERT 3-point estimates
+    if (pertEstimates.length > 0) {
+      const pertRows = pertEstimates.map(est => ({
+        user_id:          userId,
+        task_id:          taskId,
+        estimate_id:      est.id || null,
+        name:             est.name,
+        optimistic:       parseFloat(est.optimistic)  || 0,
+        most_likely:      parseFloat(est.mostLikely)  || 0,
+        pessimistic:      parseFloat(est.pessimistic) || 0,
+        confidence_level: confidenceLevel,
+        final_hours:      parseFloat(est.finalHours)  || 0,
+        assignee_id:      est.assignedTo || null
+      }));
+
+      const { error: insPertErr } = await supa
+        .from('me_task_pert_history')
+        .insert(pertRows);
+
+      if (insPertErr) {
+        console.warn('meSaveTaskSubtasksRelational pert insert error:', insPertErr.message);
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meSaveTaskSubtasksRelational exception:', err.message);
+    return false;
+  }
+};
 
 // ─────────────────────────────────────────────────────────────
 // DELETE OPERATIONS — Remove records (cascade via FK)

@@ -51,8 +51,7 @@ async function saveRemote(attempt) {
         part_number:      p.partNumber       || null,
         product_id:       p.product_id       || null,
         updated_at:       now,
-        updated_by:       email,
-        data:             null
+        updated_by:       email
       };
 
       const { data: updated, error: updErr } = await supa

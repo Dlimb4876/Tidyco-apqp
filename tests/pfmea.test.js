@@ -82,6 +82,28 @@ describe('PFMEA core rules', () => {
     expect(npi.pfmea.calcRPN(mode)).toBe(126);
   });
 
+  test('matches RPN values against configured ranges', () => {
+    expect(npi.pfmea.rpnInFilter(120, 'high')).toBe(true);
+    expect(npi.pfmea.rpnInFilter(80, 'high')).toBe(false);
+    expect(npi.pfmea.rpnInFilter(35, 'r1_49')).toBe(true);
+    expect(npi.pfmea.rpnInFilter(70, 'r50_99')).toBe(true);
+    expect(npi.pfmea.rpnInFilter(140, 'r100_199')).toBe(true);
+    expect(npi.pfmea.rpnInFilter(240, 'r200_plus')).toBe(true);
+  });
+
+  test('filters operation by max mode RPN', () => {
+    const mode = {
+      effects: [
+        { sev: 3, causes: [{ occ: 2, det: 2 }] },
+        { sev: 8, causes: [{ occ: 5, det: 4 }] }
+      ]
+    };
+
+    expect(npi.pfmea.modeMatchesFilter(mode, 'high')).toBe(true);
+    expect(npi.pfmea.modeMatchesFilter(mode, 'r50_99')).toBe(false);
+    expect(npi.pfmea.modeMatchesFilter(mode, 'r100_199')).toBe(true);
+  });
+
   test('implements action, updates OCC/DET, and writes history', () => {
     npi.pfmea.pfImplementAction(0, 0, 0);
 
