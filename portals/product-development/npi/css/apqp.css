@@ -862,8 +862,8 @@ td.w75 { width: 75px; }
   box-sizing: border-box;
 }
 
-.bom-tbl td.bom-col-desc  { width: 150px; }
-.bom-tbl td.bom-col-notes { width: 110px; }
+.bom-tbl td.bom-col-desc  { width: 180px; }
+.bom-tbl td.bom-col-notes { width: 180px; }
 
 /* ── BOM Picker (Modal List) ───────────────────────────────── */
 .bom-filter-row {

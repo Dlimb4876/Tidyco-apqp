@@ -235,8 +235,8 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
     }
   });
 
-  const utilisation = capacity > 0 ? Math.round((demand / capacity) * 100) : 0;
-  return { capacity, demand, utilisation };
+  const utilisationPct = capacity > 0 ? Math.round((demand / capacity) * 100) : 0;
+  return { capacity, demand, utilisation: utilisationPct };
 };
 
 // ── Work Days Calculation ───────────────────────────────────
