@@ -4,7 +4,8 @@
 let prodState = {
   products: [],
   batches: [],
-  activeUnit: 'Unit 2'
+  activeUnit: 'Unit 2',
+  activeProductId: null
 };
 
 // ── Date formatting helpers ─────────────────────────────
@@ -48,7 +49,7 @@ async function prodDataInit() {
   } catch (err) {
     console.error('Error loading production data:', err);
     // Preserve activeUnit when resetting state
-    prodState = { products: [], batches: [], activeUnit: 'Unit 2' };
+    prodState = { products: [], batches: [], activeUnit: 'Unit 2', activeProductId: null };
   }
 }
 
@@ -301,6 +302,10 @@ window.prodDataGetBatchesByWorkLocation = function(workLocation) {
 
 window.prodSetActiveUnit = function(unit) {
   prodState.activeUnit = unit;
+};
+
+window.prodSetActiveProduct = function(productId) {
+  prodState.activeProductId = productId || null;
 };
 
 // ────────────────────────────────────────────────────────────

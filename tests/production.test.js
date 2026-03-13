@@ -40,7 +40,8 @@ global.render = jest.fn();
 global.prodState = {
     products: [],
     batches: [],
-    activeUnit: 'Unit 2'
+  activeUnit: 'Unit 2',
+  activeProductId: null
 };
 
 // Mocking the DOM
@@ -61,6 +62,7 @@ describe('Production Portal', () => {
     prodState.products = [];
     prodState.batches = [];
     prodState.activeUnit = 'Unit 2';
+    prodState.activeProductId = null;
   });
 
     describe('Scheduling', () => {
@@ -112,6 +114,41 @@ describe('Production Portal', () => {
 
       expect(html).toContain("prodSetMonthOffset(0)");
       expect(html).toContain("prodSetMonthOffset(2)");
+    });
+  });
+
+  describe('Plan by Product', () => {
+    test('renderPlanByProduct shows product dropdown and selected product gantt', () => {
+      prodState.products = [
+        { id: 'p1', name: 'Rotor X', part_number: 'RX-21', status: 'active', family: 'f1', lead_time_days: 30 },
+        { id: 'p2', name: 'Stator Y', part_number: 'SY-11', status: 'active', family: 'f2' }
+      ];
+      prodState.batches = [
+        { id: 'b1', product_id: 'p1', work_location: 'Unit 2', quantity: 5, start_date: '2026-03-01', due_date: '2026-04-14', status: 'In Progress' },
+        { id: 'b2', product_id: 'p2', work_location: 'Unit 3', quantity: 4, start_date: '2026-03-08', due_date: '2026-03-28', status: 'Planned' }
+      ];
+
+      const html = renderPlanByProduct();
+
+      expect(html).toContain('id="prodProductPicker"');
+      expect(html).toContain('Rotor X');
+      expect(html).not.toContain('Batch 1 • Unit 3');
+      expect(html).toContain('6-month schedule with weekly and monthly scale');
+      expect(html).toContain('All current card information retained');
+      expect(html).toContain('Today');
+    });
+
+    test('buildProductSixMonthGantt renders 6 month bands and week labels', () => {
+      const product = { id: 'p1', name: 'Rotor X', part_number: 'RX-21' };
+      const html = buildProductSixMonthGantt(product, [
+        { id: 'b1', product_id: 'p1', work_location: 'Unit 2', quantity: 5, start_date: '2026-03-01', due_date: '2026-04-14', status: 'In Progress' }
+      ], '2026-03-05');
+
+      const monthBandCount = (html.match(/gantt-month-band/g) || []).length;
+      expect(monthBandCount).toBe(6);
+      expect(html).toContain('gantt-week-marker-name');
+      expect(html).toContain('Window:');
+      expect(html).toContain('Today');
     });
   });
 });

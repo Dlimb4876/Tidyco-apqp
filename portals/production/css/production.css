@@ -284,6 +284,42 @@
   margin-top: 20px;
 }
 
+.prod-product-toolbar {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 14px;
+  margin-top: 20px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.prod-product-toolbar .filter-group {
+  min-width: 0;
+}
+
+.prod-product-toolbar select {
+  width: 100%;
+}
+
+.prod-product-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  min-width: 0;
+}
+
+.product-six-month-wrap {
+  padding: 14px;
+}
+
+.batch-detail-card {
+  margin-top: 14px;
+}
+
 .product-card {
   background: var(--white);
   border: 1.5px solid var(--line);
@@ -1116,6 +1152,143 @@
   margin-top: 12px;
 }
 
+/* Six-month product timeline */
+.gantt-container.six-month-product-view {
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.six-month-product-view .gantt-window-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mid);
+  font-family: 'IBM Plex Mono';
+}
+
+.six-month-product-view .gantt-header {
+  display: grid;
+  grid-template-columns: 280px 1fr 112px;
+  border-bottom: 2px solid var(--line);
+}
+
+.six-month-product-view .gantt-header-chart {
+  min-width: 980px;
+  padding: 0;
+}
+
+.six-month-product-view .gantt-month-bands {
+  display: flex;
+  min-height: 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.six-month-product-view .gantt-month-band {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  border-right: 1px solid var(--line2);
+  text-align: center;
+  padding: 0 6px;
+}
+
+.six-month-product-view .gantt-month-band:last-child {
+  border-right: none;
+}
+
+.six-month-product-view .gantt-week-scale {
+  position: relative;
+  height: 36px;
+  background: repeating-linear-gradient(
+    to right,
+    transparent,
+    transparent calc(100% / 26 - 1px),
+    rgba(126, 140, 162, 0.2) calc(100% / 26),
+    transparent calc(100% / 26)
+  );
+}
+
+.six-month-product-view .gantt-week-marker {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.six-month-product-view .gantt-week-marker-name {
+  font-size: 10px;
+  color: var(--mid);
+  font-family: 'IBM Plex Mono';
+  font-weight: 700;
+}
+
+.six-month-product-view .gantt-week-marker-date {
+  font-size: 9px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono';
+}
+
+.six-month-product-view .gantt-today-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--red);
+  z-index: 3;
+}
+
+.six-month-product-view .gantt-today-label {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--red);
+  font-family: 'IBM Plex Mono';
+  background: var(--white);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+.six-month-product-view .gantt-batch-row {
+  grid-template-columns: 280px 1fr 112px;
+  padding: 3px 0;
+}
+
+.six-month-product-view .gantt-batch-chart {
+  min-width: 980px;
+  padding: 0 10px;
+  background: repeating-linear-gradient(
+    to right,
+    transparent,
+    transparent calc(100% / 26 - 1px),
+    rgba(126, 140, 162, 0.14) calc(100% / 26),
+    transparent calc(100% / 26)
+  );
+}
+
+.six-month-product-view .gantt-today-row-marker {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  background: rgba(239, 68, 68, 0.55);
+  z-index: 2;
+}
+
+.six-month-product-view .gantt-bar {
+  z-index: 3;
+  border-radius: 5px;
+}
+
 /* ── Responsive Design ──────────────────────────────────────── */
 @media (max-width: 1199px) {
   .prod-grid {
@@ -1233,6 +1406,32 @@
 
   .compact-two-month .gantt-batch-meta {
     font-size: 10px;
+  }
+
+  .prod-product-toolbar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .six-month-product-view .gantt-header {
+    grid-template-columns: 210px 1fr 95px;
+  }
+
+  .six-month-product-view .gantt-batch-row {
+    grid-template-columns: 210px 1fr 95px;
+  }
+
+  .six-month-product-view .gantt-header-chart,
+  .six-month-product-view .gantt-batch-chart {
+    min-width: 700px;
+  }
+
+  .six-month-product-view .gantt-week-marker-name {
+    font-size: 9px;
+  }
+
+  .six-month-product-view .gantt-week-marker-date {
+    display: none;
   }
 }
 
