@@ -608,7 +608,7 @@ window.meDataSave = async function(showAlert) {
         const { error: delHolErr } = await supa
           .from('me_holidays')
           .delete()
-          .not('person_id', 'is', null);
+          .eq('user_id', currentUser.id);
 
         if (delHolErr) {
           console.warn('Failed to clear holidays:', delHolErr.message);

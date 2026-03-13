@@ -3,10 +3,93 @@
 // Depends on: bugs-data.js, helpers.js, navigation.js
 // ═══════════════════════════════════
 
+// ── Event Listener ───────────────────────────────────────────
+// Listen for changes in the bug data and re-render the UI.
+document.addEventListener('bugDataChanged', () => render());
+
+// ── Global App Object for Inline Event Handlers ──────────────
+// Grouping functions on a single object avoids polluting the global namespace.
+window.bugApp = {
+  switchTab(tab) {
+    bugDataManager.setTab(tab);
+  },
+
+  async submitInline() {
+    const pageInput = document.getElementById('bugInlinePage');
+    const descInput = document.getElementById('bugInlineDesc');
+    const feedback = document.getElementById('bugInlineFeedback');
+    const page = pageInput.value.trim();
+    const desc = descInput.value.trim();
+
+    if (!desc) {
+      this._showFeedback('Please describe the bug.', 'error', feedback);
+      return;
+    }
+
+    try {
+      await bugDataManager.addReport(page, desc);
+      pageInput.value = '';
+      descInput.value = '';
+      this._showFeedback('✓ Bug report submitted successfully!', 'success', feedback);
+      setTimeout(() => feedback.style.display = 'none', 3000);
+    } catch (error) {
+      this._showFeedback(error.message, 'error', feedback);
+    }
+  },
+
+  startEditing(id) {
+    bugDataManager.setEditingId(id);
+  },
+
+  cancelEditing() {
+    bugDataManager.setEditingId(null);
+  },
+
+  async saveResponse(id, idx) {
+    const textarea = document.getElementById(`bugResponseText_${idx}`);
+    const statusSelect = document.getElementById(`bugStatusSelect_${idx}`);
+    if (!textarea || !statusSelect) return;
+
+    const response = textarea.value.trim();
+    const status = statusSelect.value;
+
+    if (!response) {
+      // Using alert for now as there's no dedicated feedback element in the table row.
+      // A better solution would be a small, non-modal feedback message near the save button.
+      alert('Please enter a response.');
+      return;
+    }
+
+    try {
+      await bugDataManager.respond(id, response, status);
+      bugDataManager.setEditingId(null); // This will trigger a re-render
+    } catch (error) {
+      alert(error.message); // Same as above, alert is a fallback.
+    }
+  },
+
+  async reopen(id) {
+    try {
+      await bugDataManager.reopen(id);
+    } catch (error) {
+      alert(error.message);
+    }
+  },
+
+  // Helper for showing feedback messages
+  _showFeedback(message, type, element) {
+    element.textContent = message;
+    element.className = `bugs-form-feedback bugs-form-feedback-${type}`;
+    element.style.display = 'block';
+  }
+};
+
+
+// ── UI Rendering ─────────────────────────────────────────────
+
 function renderBugReports() {
-  const reports = bugState.reports;
+  const { reports, tab } = bugDataManager.state;
   const openCount = reports.filter(r => r.status === 'open').length;
-  const tab = bugTab || 'add';
 
   return `
     <div class="bugs-header">
@@ -17,10 +100,10 @@ function renderBugReports() {
     </div>
 
     <div class="bugs-tabs">
-      <button class="bugs-tab ${tab === 'add' ? 'bugs-tab-active' : ''}" onclick="bugSwitchTab('add')">
+      <button class="bugs-tab ${tab === 'add' ? 'bugs-tab-active' : ''}" onclick="bugApp.switchTab('add')">
         + Add Bug
       </button>
-      <button class="bugs-tab ${tab === 'view' ? 'bugs-tab-active' : ''}" onclick="bugSwitchTab('view')">
+      <button class="bugs-tab ${tab === 'view' ? 'bugs-tab-active' : ''}" onclick="bugApp.switchTab('view')">
         View &amp; Update
       </button>
     </div>
@@ -60,7 +143,7 @@ function bugRenderAddTab() {
         </div>
 
         <div class="bugs-form-actions">
-          <button class="btn btn-primary" onclick="bugSubmitInline()">Submit Report</button>
+          <button class="btn btn-primary" onclick="bugApp.submitInline()">Submit Report</button>
           <div class="bugs-form-feedback" id="bugInlineFeedback" style="display:none"></div>
         </div>
       </div>
@@ -101,12 +184,13 @@ function bugRenderViewTab(reports) {
 }
 
 function bugRowHTML(r, i) {
+  const { editingId } = bugDataManager.state;
   const date = r.date_raised ? new Date(r.date_raised).toLocaleDateString('en-GB') : '—';
   const isOpen = r.status === 'open';
-  const isEditing = bugEditingId === r.id;
+  const isEditing = editingId === r.id;
 
   const statusCell = isEditing
-    ? `<select id="bugStatusSelect_${i}" class="bug-inline-select" onchange="bugUpdateInlineStatus('${esc(r.id)}', ${i})">
+    ? `<select id="bugStatusSelect_${i}" class="bug-inline-select">
         <option value="open" ${r.status === 'open' ? 'selected' : ''}>OPEN</option>
         <option value="closed" ${r.status === 'closed' ? 'selected' : ''}>FIXED</option>
       </select>`
@@ -125,12 +209,12 @@ function bugRowHTML(r, i) {
 
   const actionBtn = isEditing
     ? `<div class="bug-inline-actions">
-        <button class="btn btn-xs btn-primary" onclick="bugSaveInlineResponse('${esc(r.id)}', ${i})">Save</button>
-        <button class="btn btn-xs btn-ghost" onclick="bugCancelInlineEdit()">Cancel</button>
+        <button class="btn btn-xs btn-primary" onclick="bugApp.saveResponse('${esc(r.id)}', ${i})">Save</button>
+        <button class="btn btn-xs btn-ghost" onclick="bugApp.cancelEditing()">Cancel</button>
       </div>`
     : (isOpen
-      ? `<button class="btn btn-sm btn-ghost" onclick="bugStartInlineEdit('${esc(r.id)}')">Edit</button>`
-      : `<button class="btn btn-sm btn-ghost bugs-reopen-btn" onclick="bugDataReopen('${esc(r.id)}')">Re-open</button>`);
+      ? `<button class="btn btn-sm btn-ghost" onclick="bugApp.startEditing('${esc(r.id)}')">Edit</button>`
+      : `<button class="btn btn-sm btn-ghost bugs-reopen-btn" onclick="bugApp.reopen('${esc(r.id)}')">Re-open</button>`);
 
   return `
     <tr class="${isOpen ? '' : 'bug-row-closed'}">
@@ -146,87 +230,10 @@ function bugRowHTML(r, i) {
   `;
 }
 
-// ── Tab switching ─────────────────────────────────────────────
 
-window.bugSwitchTab = function(tab) {
-  bugTab = tab;
-  render();
-};
-
-// ── Inline form submission ────────────────────────────────────
-
-window.bugSubmitInline = async function() {
-  const page = document.getElementById('bugInlinePage').value.trim();
-  const desc = document.getElementById('bugInlineDesc').value.trim();
-  const feedback = document.getElementById('bugInlineFeedback');
-
-  if (!desc) {
-    feedback.textContent = 'Please describe the bug.';
-    feedback.className = 'bugs-form-feedback bugs-form-feedback-error';
-    feedback.style.display = 'block';
-    return;
-  }
-
-  const ok = await bugDataAdd(page, desc);
-  if (ok) {
-    // Clear form
-    document.getElementById('bugInlinePage').value = '';
-    document.getElementById('bugInlineDesc').value = '';
-    feedback.textContent = '✓ Bug report submitted successfully!';
-    feedback.className = 'bugs-form-feedback bugs-form-feedback-success';
-    feedback.style.display = 'block';
-    setTimeout(() => {
-      feedback.style.display = 'none';
-    }, 3000);
-  } else {
-    feedback.textContent = 'Failed to submit bug report. Please try again.';
-    feedback.className = 'bugs-form-feedback bugs-form-feedback-error';
-    feedback.style.display = 'block';
-  }
-};
-
-// ── Inline editing ────────────────────────────────────────────
-
-window.bugStartInlineEdit = function(id) {
-  bugEditingId = id;
-  render();
-};
-
-window.bugCancelInlineEdit = function() {
-  bugEditingId = null;
-  render();
-};
-
-window.bugUpdateInlineStatus = function(id, idx) {
-  const select = document.getElementById(`bugStatusSelect_${idx}`);
-  if (!select) return;
-  const newStatus = select.value;
-  const report = bugState.reports.find(r => r.id === id);
-  if (report) {
-    report.status = newStatus;
-    render();
-  }
-};
-
-window.bugSaveInlineResponse = async function(id, idx) {
-  const textarea = document.getElementById(`bugResponseText_${idx}`);
-  if (!textarea) return;
-  const response = textarea.value.trim();
-  if (!response) {
-    alert('Please enter a response.');
-    return;
-  }
-  // Get the current status from bugState (which was updated by bugUpdateInlineStatus)
-  const report = bugState.reports.find(r => r.id === id);
-  const status = report ? report.status : 'closed';
-  const ok = await bugDataRespond(id, response, status);
-  if (ok) {
-    bugEditingId = null;
-    render();
-  }
-};
-
-// ── Modal helpers (deprecated but kept for compatibility) ────
+// ── Deprecated Modal helpers ─────────────────────────────────
+// These are no longer part of the primary UI but are kept for now.
+// They should be updated to use the new data manager if they are to be kept.
 
 let _bugRespondId = null;
 
@@ -244,13 +251,18 @@ window.bugSubmitNew = async function() {
   const page = document.getElementById('bugNewPage').value.trim();
   const desc = document.getElementById('bugNewDesc').value.trim();
   if (!desc) { alert('Please describe the bug.'); return; }
-  const ok = await bugDataAdd(page, desc);
-  if (ok) closeModal('modalNewBug');
+
+  try {
+    await bugDataManager.addReport(page, desc);
+    closeModal('modalNewBug');
+  } catch(error) {
+    alert(error.message);
+  }
 };
 
 window.bugOpenRespondModal = function(id, idx) {
   _bugRespondId = id;
-  const r = bugState.reports[idx];
+  const r = bugDataManager.state.reports[idx];
   document.getElementById('bugRespondDesc').textContent = r ? r.description : '';
   document.getElementById('bugRespondText').value = '';
   showModal('modalRespondBug');
@@ -259,6 +271,12 @@ window.bugOpenRespondModal = function(id, idx) {
 window.bugSubmitRespond = async function() {
   const response = document.getElementById('bugRespondText').value.trim();
   if (!response) { alert('Please enter a response before closing.'); return; }
-  const ok = await bugDataRespond(_bugRespondId, response, 'closed');
-  if (ok) { _bugRespondId = null; closeModal('modalRespondBug'); }
+
+  try {
+    await bugDataManager.respond(_bugRespondId, response, 'closed');
+    _bugRespondId = null;
+    closeModal('modalRespondBug');
+  } catch(error) {
+    alert(error.message)
+  }
 };
