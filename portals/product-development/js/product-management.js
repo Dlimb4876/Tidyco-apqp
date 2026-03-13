@@ -17,6 +17,8 @@ function renderProductManagement() {
   // Schedule setup after render
   setTimeout(() => {
     renderProductsPortalSetup();
+    // Populate families tab on initial load
+    renderFamiliesTabContent();
   }, 100);
 
   return html;

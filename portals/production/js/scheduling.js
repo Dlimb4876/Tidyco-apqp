@@ -272,6 +272,11 @@ function renderScheduling() {
 
 
 function getFilteredBatches() {
+  // Ensure batches is an array
+  if (!prodState || !Array.isArray(prodState.batches)) {
+    return [];
+  }
+
   let filtered = prodState.batches;
 
   if (prodSchedulingFilters.family) {

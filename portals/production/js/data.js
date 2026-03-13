@@ -47,7 +47,8 @@ async function prodDataInit() {
     prodDataSubscribe();
   } catch (err) {
     console.error('Error loading production data:', err);
-    prodState = { products: [], batches: [] };
+    // Preserve activeUnit when resetting state
+    prodState = { products: [], batches: [], activeUnit: 'Unit 2' };
   }
 }
 

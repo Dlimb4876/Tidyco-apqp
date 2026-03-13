@@ -64,7 +64,8 @@ function renderPlanByProduct() {
 
 function renderPlanByUnit() {
   const units = ['Unit 2', 'Unit 3', 'Unit 6'];
-  const activeUnit = prodState.activeUnit || 'Unit 2';
+  // Ensure activeUnit is defined with fallback
+  const activeUnit = (prodState && prodState.activeUnit) || 'Unit 2';
 
   // Generate tabs
   let tabsHtml = units.map(unit => {
