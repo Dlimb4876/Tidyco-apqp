@@ -473,3 +473,20 @@ npm test -- tests/navigation.test.js
 - **State initialization:** Always check portal state objects exist before accessing properties (e.g., `if (!prodState || !Array.isArray(prodState.batches)) return []`)
 - **Bank holidays:** Use `getBankHolidaysForYear(year)` for correct UK bank holiday dates (movable holidays calculated dynamically)
 - **Real-time sync filters:** NEVER filter subscriptions by `user_id` for collaborative data — all users must see all changes immediately
+- **Silent file parse failures:** A `SyntaxError` in any JS file (e.g. duplicate `const` in the same scope) silently prevents the entire file from loading — all `window.*` functions defined in that file will be `undefined` at runtime, even if the broken code appears after the function definition
+
+---
+
+## Bug Squashing Process
+
+When a runtime error like `X is not a function` or `X is undefined` occurs, follow this diagnostic routine:
+
+1. **Read the error** — note the file and line number where the error occurs (e.g. `me-calculations.js:44`)
+2. **Find the definition** — use `Grep` to search for where the missing function/variable is defined across all files
+3. **Check load order** — search `index.html` for the relevant `<script>` tags; confirm the defining file loads before the caller. If it doesn't, reorder the tags
+4. **If load order is correct, read the defining file** — the file may be failing to parse entirely due to a `SyntaxError` (duplicate `const`/`let`, unclosed bracket, etc.), which silently prevents any of its `window.*` assignments from running
+5. **Look for duplicate variable names** — a common JS pitfall in large functions: two `const foo` declarations in the same scope cause a `SyntaxError` that kills the whole file
+6. **Fix the syntax error** — rename the duplicate, then verify the function is now accessible
+
+### Key Insight: No Build Step = No Compile-Time Errors
+Because this project has no bundler or transpiler, syntax errors in JS files are only caught at runtime in the browser. A broken file fails silently — nothing in the console will say "me-utils.js failed to parse" before the downstream `is not a function` error appears. Always suspect a parse failure in the *defining* file, not just a missing import or load-order issue.

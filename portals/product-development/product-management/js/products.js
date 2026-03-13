@@ -75,9 +75,20 @@ let familiesEditingId = null;
  * Render families tab content as editable table
  */
 function renderFamiliesTabContent() {
-  const families = familiesDataGetAll();
   const container = document.getElementById('productsFamiliesTab');
   if (!container) return;
+
+  // Ensure families data is loaded
+  if (!familiesState || !familiesState.families) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families...</div>';
+    // Initialize families data if not already done
+    if (typeof familiesDataInit === 'function') {
+      familiesDataInit();
+    }
+    return;
+  }
+
+  const families = familiesDataGetAll();
 
   // Count usage in projects
   const usageMap = {};
