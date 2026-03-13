@@ -26,6 +26,37 @@ window.meDataState = {
   holidays: []
 };
 
+function meNormalizeHolidayRecord(holiday) {
+  if (!holiday || typeof holiday !== 'object') return null;
+
+  const personId = holiday.personId || holiday.person_id;
+  const date = holiday.date || '';
+  const type = holiday.type === 'half' ? 'half' : 'full';
+
+  if (!personId || !date) return null;
+
+  return {
+    id: holiday.id || meUUID(),
+    personId,
+    date,
+    type,
+    createdAt: holiday.createdAt || holiday.created_at || new Date().toISOString()
+  };
+}
+
+function meNormalizeAndDedupeHolidays(holidays) {
+  if (!Array.isArray(holidays)) return [];
+
+  const byPersonDate = new Map();
+  holidays.forEach(rawHoliday => {
+    const normalized = meNormalizeHolidayRecord(rawHoliday);
+    if (!normalized) return;
+    byPersonDate.set(`${normalized.personId}|${normalized.date}`, normalized);
+  });
+
+  return Array.from(byPersonDate.values());
+}
+
 // Initialize missing date fields on backward compatibility
 function meInitTeamDates() {
   meDataState.team.forEach(member => {
@@ -317,6 +348,7 @@ window.meDataDeleteHoliday = function(personId, date) {
 };
 
 window.meDataGetHolidays = function() {
+  meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays);
   return meDataState.holidays;
 };
 
@@ -342,7 +374,7 @@ window.meDataInit = async function() {
           const relTeam = await meLoadRelationalTeams(currentUser.id);
           const relTasks = await meLoadRelationalTasks(currentUser.id);
           const relProducts = await meLoadRelationalProducts(currentUser.id);
-          const relHolidays = await meLoadRelationalHolidays(currentUser.id);
+          const relHolidays = meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays(currentUser.id));
 
           // If we got any data from relational tables, use it
           if ((relTeam && relTeam.length > 0) || (relTasks && relTasks.length > 0) ||
@@ -384,7 +416,7 @@ window.meDataInit = async function() {
               team: Array.isArray(data.data.team) ? data.data.team : [],
               tasks: Array.isArray(data.data.tasks) ? data.data.tasks : [],
               products: Array.isArray(data.data.products) ? data.data.products : [],
-              holidays: Array.isArray(data.data.holidays) ? data.data.holidays : []
+              holidays: meNormalizeAndDedupeHolidays(data.data.holidays)
             };
           }
           // Handle flat structure (fallback for migration)
@@ -394,7 +426,7 @@ window.meDataInit = async function() {
               team: Array.isArray(data.team) ? data.team : [],
               tasks: Array.isArray(data.tasks) ? data.tasks : [],
               products: Array.isArray(data.products) ? data.products : [],
-              holidays: Array.isArray(data.holidays) ? data.holidays : []
+              holidays: meNormalizeAndDedupeHolidays(data.holidays)
             };
           }
 
@@ -520,8 +552,8 @@ window.meDataSave = async function(showAlert) {
         // stale rows from other user_ids causing duplicate key violations on insert.
         // Deduplicate by (person_id, date) in case load returned multi-user duplicates.
         const _holSeen = new Set();
+        meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays);
         const holidayData = (meDataState.holidays || [])
-          .filter(h => h.personId)
           .filter(h => {
             const key = h.personId + '_' + h.date;
             if (_holSeen.has(key)) return false;
@@ -529,6 +561,7 @@ window.meDataSave = async function(showAlert) {
             return true;
           })
           .map(h => ({
+            id: h.id,
             user_id: currentUser.id,
             person_id: h.personId,
             date: h.date,
@@ -538,7 +571,7 @@ window.meDataSave = async function(showAlert) {
         const { error: delHolErr } = await supa
           .from('me_holidays')
           .delete()
-          .eq('user_id', currentUser.id);
+          .not('person_id', 'is', null);
 
         if (delHolErr) {
           console.warn('Failed to clear holidays:', delHolErr.message);
@@ -678,14 +711,30 @@ window.meDataSubscribe = function() {
   // Subscribe to holidays changes
   createRealtimeSubscription('me_holidays', 'me_holidays_channel', {
     onInsert: (newHoliday) => {
-      if (!meDataState.holidays.some(h => h.id === newHoliday.id)) {
-        meDataState.holidays.push(newHoliday);
-        render();
+      const normalized = meNormalizeHolidayRecord(newHoliday);
+      if (!normalized) return;
+
+      const existingIdx = meDataState.holidays.findIndex(h =>
+        h.id === normalized.id ||
+        (h.personId === normalized.personId && h.date === normalized.date)
+      );
+
+      if (existingIdx >= 0) {
+        meDataState.holidays[existingIdx] = normalized;
+      } else {
+        meDataState.holidays.push(normalized);
       }
+
+      render();
     },
     onUpdate: () => { /* no-op — local state already up to date */ },
     onDelete: (deleted) => {
-      meDataState.holidays = meDataState.holidays.filter(h => h.id !== deleted.id);
+      const normalized = meNormalizeHolidayRecord(deleted);
+      meDataState.holidays = meDataState.holidays.filter(h => {
+        if (h.id === deleted.id) return false;
+        if (normalized && h.personId === normalized.personId && h.date === normalized.date) return false;
+        return true;
+      });
       render();
     }
   });

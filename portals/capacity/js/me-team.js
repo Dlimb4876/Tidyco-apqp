@@ -19,6 +19,11 @@ window.meRenderTeamTab = function(teamArray) {
   const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   const holidays = meDataGetHolidays();
   const holidaysThisMonth = holidays.filter(h => h.date.substring(0, 7) === thisMonth);
+  const uniqueHolidayKeysThisMonth = new Set(
+    holidaysThisMonth
+      .map(h => `${h.personId || h.person_id || ''}|${h.date}`)
+      .filter(key => !key.startsWith('|'))
+  );
 
   let rows = '';
   teamArray.forEach((member, idx) => {
@@ -59,7 +64,7 @@ window.meRenderTeamTab = function(teamArray) {
           <div class="me-kpi-month">h/month</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--teal); cursor: pointer;" onclick="meSetTab('holidays')">
-          <div class="me-kpi-value">${holidaysThisMonth.length}</div>
+          <div class="me-kpi-value">${uniqueHolidayKeysThisMonth.size}</div>
           <div class="me-kpi-label">Holidays This Month</div>
           <div class="me-kpi-month">${monthLabel}</div>
         </div>
