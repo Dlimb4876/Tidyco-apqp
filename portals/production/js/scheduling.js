@@ -5,13 +5,16 @@ let prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFro
 let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
 
 function renderSchedulingNewRow() {
+  // Defensive check: ensure prodState exists
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  
   return `
     <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
       <td>
         <select class="cell-edit" id="batch-new-product" data-field="product">
           <option value="">— Select Product</option>
-          ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}">${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
+          ${products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}">${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
         </select>
       </td>
       <td>
@@ -59,7 +62,10 @@ function addSchedulingNewRowEventListeners() {
 
 function renderSchedulingRow(batch, idx, activeBatches) {
   const product = prodDataGetProductById(batch.product_id);
-  const batchIdx = prodState.batches.indexOf(batch);
+  const batchIdx = (prodState && Array.isArray(prodState.batches)) ? prodState.batches.indexOf(batch) : -1;
+  
+  // Defensive check for products array
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
 
   // Auto-populate work location if empty
   let workLocation = batch.work_location;
@@ -72,7 +78,7 @@ function renderSchedulingRow(batch, idx, activeBatches) {
       <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
       <td>
         <select class="cell-edit" data-field="product_id">
-          ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
+          ${products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
         </select>
       </td>
       <td>
@@ -133,7 +139,9 @@ function addSchedulingRowEventListeners(batch) {
 }
 
 function renderScheduling() {
-  const batches = prodState.batches;
+  // Defensive checks for prodState
+  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
   const activeBatches = getFilteredBatches();
 
   let rows = renderSchedulingNewRow();
@@ -173,7 +181,7 @@ function renderScheduling() {
           <label>Product:</label>
           <select id="product-filter">
             <option value="">— All Products</option>
-            ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed' && (!prodSchedulingFilters.family || p.family === prodSchedulingFilters.family)).map(p => `<option value="${p.id}" ${prodSchedulingFilters.product === p.id ? 'selected' : ''}>${p.name} (${p.part_number || ''})</option>`).join('')}
+            ${products.filter(p => p.status?.toLowerCase() !== 'closed' && (!prodSchedulingFilters.family || p.family === prodSchedulingFilters.family)).map(p => `<option value="${p.id}" ${prodSchedulingFilters.product === p.id ? 'selected' : ''}>${p.name} (${p.part_number || ''})</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">

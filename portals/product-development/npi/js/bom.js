@@ -171,7 +171,7 @@ npi.bom.openKitPick = function(ki) {
   kitPickFilter     = 'all'
   bomPickSelected   = [...kitPickSelected]
   bomPickFilter     = kitPickFilter
-  refreshBomPickModal(p, 'kitPickFilter', 'kitPickList', 'all')
+  npi.apqp.refreshBomPickModal(p, 'kitPickFilter', 'kitPickList', 'all')
   showModal('modalKitPick')
 }
 npi.bom.saveKitPick = function() {

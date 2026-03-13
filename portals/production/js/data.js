@@ -268,25 +268,31 @@ window.prodDataDeleteBatch = async function(idx) {
 // ===== HELPERS =====
 
 window.prodDataGetProductName = function(productId) {
-  const product = prodState.products.find(p => p.id === productId);
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  const product = products.find(p => p.id === productId);
   return product ? `${product.name} (${product.part_number || 'N/A'})` : 'Unknown Product';
 };
 
 window.prodDataGetProductById = function(productId) {
-  return prodState.products.find(p => p.id === productId);
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  return products.find(p => p.id === productId);
 };
 
 window.prodDataGetBatchesByProduct = function(productId) {
-  return prodState.batches.filter(b => b.product_id === productId);
+  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
+  return batches.filter(b => b.product_id === productId);
 };
 
 window.prodDataGetBatchesByWorkLocation = function(workLocation) {
-  return prodState.batches.filter(b => {
+  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  
+  return batches.filter(b => {
     const batchLocation = b.work_location;
     if (batchLocation === workLocation) return true;
     // Fallback to product's work_location if batch doesn't have one
     if (!batchLocation) {
-      const product = prodState.products.find(p => p.id === b.product_id);
+      const product = products.find(p => p.id === b.product_id);
       return product && product.work_location === workLocation;
     }
     return false;
@@ -308,12 +314,14 @@ window.prodDataSubscribe = function() {
   // Subscribe to production batches changes
   createRealtimeSubscription('production_batches', 'prod_batches_channel', {
     onInsert: (newBatch) => {
+      if (!prodState || !Array.isArray(prodState.batches)) return;
       if (!prodState.batches.some(b => b.id === newBatch.id)) {
         prodState.batches.push(newBatch);
         render();
       }
     },
     onUpdate: (updated) => {
+      if (!prodState || !Array.isArray(prodState.batches)) return;
       const idx = prodState.batches.findIndex(b => b.id === updated.id);
       if (idx >= 0) {
         prodState.batches[idx] = updated;
@@ -321,6 +329,7 @@ window.prodDataSubscribe = function() {
       }
     },
     onDelete: (deleted) => {
+      if (!prodState || !Array.isArray(prodState.batches)) return;
       prodState.batches = prodState.batches.filter(b => b.id !== deleted.id);
       render();
     }
@@ -329,12 +338,14 @@ window.prodDataSubscribe = function() {
   // Subscribe to products changes (from product management)
   createRealtimeSubscription('products', 'prod_products_channel', {
     onInsert: (newProduct) => {
+      if (!prodState || !Array.isArray(prodState.products)) return;
       if (!prodState.products.some(p => p.id === newProduct.id)) {
         prodState.products.push(newProduct);
         render();
       }
     },
     onUpdate: (updated) => {
+      if (!prodState || !Array.isArray(prodState.products)) return;
       const idx = prodState.products.findIndex(p => p.id === updated.id);
       if (idx >= 0) {
         prodState.products[idx] = updated;
@@ -342,6 +353,7 @@ window.prodDataSubscribe = function() {
       }
     },
     onDelete: (deleted) => {
+      if (!prodState || !Array.isArray(prodState.products)) return;
       prodState.products = prodState.products.filter(p => p.id !== deleted.id);
       render();
     }

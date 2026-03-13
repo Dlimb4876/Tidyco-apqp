@@ -67,7 +67,9 @@
       "Bash(grep -n \"^npi\" /workspaces/Tidyco-apqp/portals/product-development/npi/js/*.js)",
       "Bash(grep -l \"apqp\\\\|openBomPick\\\\|BOM\" /workspaces/Tidyco-apqp/tests/*.test.js)",
       "Bash(/tmp/fix_bug_reports_rls.sql:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(npm test:*)",
+      "Bash(node -e \":*)"
     ]
   }
 }

@@ -1,7 +1,9 @@
 // Production Planning Views
 
 function renderPlanByProduct() {
-  const activeProducts = prodState.products.filter(p => p.status && p.status?.toLowerCase() !== 'closed' && p.status?.toLowerCase() !== 'inactive');
+  // Defensive check for prodState
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  const activeProducts = products.filter(p => p.status && p.status?.toLowerCase() !== 'closed' && p.status?.toLowerCase() !== 'inactive');
 
   let content = '';
   activeProducts.forEach(product => {
