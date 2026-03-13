@@ -144,6 +144,22 @@ td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
   overflow-x: auto;
 }
 
+/* Keep compact score values readable in narrow PFMEA number columns. */
+.pfmea-tbl input[type="number"].cell-edit.mono {
+  width: 36px !important;
+  min-width: 36px;
+  padding: 1px 0 !important;
+  text-align: center;
+  line-height: 1.2;
+  -moz-appearance: textfield;
+}
+
+.pfmea-tbl input[type="number"].cell-edit.mono::-webkit-outer-spin-button,
+.pfmea-tbl input[type="number"].cell-edit.mono::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* ── History popup ───────────────────────────────────────────── */
 .hist-popup {
   display: none;
