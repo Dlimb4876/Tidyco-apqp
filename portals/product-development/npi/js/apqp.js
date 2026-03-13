@@ -63,9 +63,21 @@ npi.apqp.renderCTQ = function() {
   ${p.ctq.length > 0 ? `<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" onclick="npi.nav.setApqpTab('pfd');return false" style="color:var(--blue)">Process Flow →</a></div>` : ''}`
 }
 
-npi.apqp.addCTQ = function() { prog().ctq.push({ id: 'c_' + Date.now(), req: '', spec: '', testMethod: '', source: 'Customer Spec', oos_action: 'TBD', customerAgreed: false }); save(); render() }
-npi.apqp.updCTQ = function(i, f, v) { prog().ctq[i][f] = v; save() }
-npi.apqp.delCTQ = function(i) { const cid = prog().ctq[i].id; prog().pfd.forEach(s => s.ctqIds = (s.ctqIds || []).filter(x => x !== cid)); prog().pfmea.forEach(r => r.ctqIds = (r.ctqIds || []).filter(x => x !== cid)); prog().ctq.splice(i, 1); save(); render() }
+npi.apqp.addCTQ = function() {
+  const item = { id: crypto.randomUUID(), req: '', spec: '', testMethod: '', source: 'Customer Spec', oos_action: 'TBD', customerAgreed: false }
+  prog().ctq.push(item)
+  npiRelSaveCTQ(item)
+  render()
+}
+npi.apqp.updCTQ = function(i, f, v) { prog().ctq[i][f] = v; npiRelSaveCTQ(prog().ctq[i]) }
+npi.apqp.delCTQ = function(i) {
+  const cid = prog().ctq[i].id
+  prog().pfd.forEach(s => { s.ctqIds = (s.ctqIds || []).filter(x => x !== cid); npiRelSavePFDStep(s) })
+  prog().pfmea.forEach(r => { r.ctqIds = (r.ctqIds || []).filter(x => x !== cid); npiRelSavePFMEAMode(r) })
+  npiRelDeleteCTQ(cid)
+  prog().ctq.splice(i, 1)
+  render()
+}
 
 // ══════════════════════════════════════
 // PFD
@@ -101,7 +113,13 @@ npi.apqp.renderPFD = function() {
   ${p.pfd.length > 0 ? `<div class="info-banner">💡 Next: <a href="#" onclick="npi.nav.setApqpTab('pfmea');return false" style="color:var(--blue)">PFMEA →</a></div>` : ''}`
 }
 
-npi.apqp.addMainStep = function() { const p = prog(); p.pfd.push({ id: 's_' + Date.now(), stepNum: nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }); save(); render() }
+npi.apqp.addMainStep = function() {
+  const p = prog()
+  const step = { id: crypto.randomUUID(), stepNum: nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }
+  p.pfd.push(step)
+  npiRelSavePFDStep(step)
+  render()
+}
 npi.apqp.openInsert = function(afterOi, ft) {
   insertOriginIdx = afterOi; const p = prog(); const sorted = sortedPfd(p.pfd)
   if (ft) document.getElementById('insertType').value = ft
@@ -110,12 +128,26 @@ npi.apqp.openInsert = function(afterOi, ft) {
   else { const n = nextMainStepNum(p.pfd); ni.value = n; hi.textContent = `Next: ${n}` }
   showModal('modalInsert')
 }
-npi.apqp.confirmInsert = function() { const p = prog(); const num = parseInt(document.getElementById('insertNum').value); const type = document.getElementById('insertType').value; if (!num || num < 1) return alert('Enter valid number'); if (stepNumConflict(p.pfd, num)) return alert(`Step ${num} exists`); p.pfd.push({ id: 's_' + Date.now(), stepNum: num, type, op: '', detail: '', ctqIds: [], bomRefs: [] }); save(); closeModal('modalInsert'); render() }
-npi.apqp.delPFD = function(sid) { const p = prog(); const i = p.pfd.findIndex(s => s.id === sid); if (i < 0) return; p.pfmea.forEach(r => { if (r.pfdId === sid) r.pfdId = '' }); p.pfd.splice(i, 1); save(); render() }
-npi.apqp.updPFD = function(sid, f, v) { const s = prog().pfd.find(x => x.id === sid); if (s) { s[f] = v; save() } }
+npi.apqp.confirmInsert = function() {
+  const p = prog(); const num = parseInt(document.getElementById('insertNum').value); const type = document.getElementById('insertType').value
+  if (!num || num < 1) return alert('Enter valid number')
+  if (stepNumConflict(p.pfd, num)) return alert(`Step ${num} exists`)
+  const step = { id: crypto.randomUUID(), stepNum: num, type, op: '', detail: '', ctqIds: [], bomRefs: [] }
+  p.pfd.push(step)
+  npiRelSavePFDStep(step)
+  closeModal('modalInsert'); render()
+}
+npi.apqp.delPFD = function(sid) {
+  const p = prog(); const i = p.pfd.findIndex(s => s.id === sid); if (i < 0) return
+  p.pfmea.forEach(r => { if (r.pfdId === sid) { r.pfdId = ''; npiRelSavePFMEAMode(r) } })
+  p.pfd.splice(i, 1)
+  npiRelDeletePFDStep(sid)
+  render()
+}
+npi.apqp.updPFD = function(sid, f, v) { const s = prog().pfd.find(x => x.id === sid); if (s) { s[f] = v; npiRelSavePFDStep(s) } }
 npi.apqp.scrollToPfd = function(sid) { const el = document.getElementById('pfd-row-' + sid); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
 npi.apqp.toggleGroup = function(key) { if (collapsedGroups.has(key)) collapsedGroups.delete(key); else collapsedGroups.add(key); render() }
-npi.apqp.delBomRef = function(sid, bt, iid) { const s = prog().pfd.find(x => x.id === sid); if (!s) return; s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === bt && r.itemId === iid)); save(); render() }
+npi.apqp.delBomRef = function(sid, bt, iid) { const s = prog().pfd.find(x => x.id === sid); if (!s) return; s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === bt && r.itemId === iid)); npiRelSavePFDStep(s); render() }
 
 // ── CTQ picker modal ──────────────────────────────────────────
 npi.apqp.openCtqPick = function(oi) {
@@ -126,7 +158,12 @@ npi.apqp.openCtqPick = function(oi) {
   showModal('modalCtqPick')
 }
 npi.apqp.tCP = function(cid, checked) { if (checked) { if (!ctqPickSelected.includes(cid)) ctqPickSelected.push(cid) } else ctqPickSelected = ctqPickSelected.filter(x => x !== cid) }
-npi.apqp.saveCtqPick = function() { prog().pfd[ctqPickTarget].ctqIds = [...ctqPickSelected]; save(); closeModal('modalCtqPick'); render() }
+npi.apqp.saveCtqPick = function() {
+  const step = prog().pfd[ctqPickTarget]
+  step.ctqIds = [...ctqPickSelected]
+  npiRelSavePFDStep(step)
+  closeModal('modalCtqPick'); render()
+}
 
 // ── BOM picker modal ──────────────────────────────────────────
 npi.apqp.openBomPick = function(sid) {
@@ -177,7 +214,12 @@ npi.apqp.toggleBomPick = function(key, el) {
     if (chk) chk.checked = true
   }
 }
-npi.apqp.saveBomPick = function() { const s = prog().pfd.find(x => x.id === bomPickTarget); if (!s) return; s.bomRefs = bomPickSelected.map(k => { const [bt, id] = k.split('|'); return { bomType: bt, itemId: id } }); save(); closeModal('modalBomPick'); render() }
+npi.apqp.saveBomPick = function() {
+  const s = prog().pfd.find(x => x.id === bomPickTarget); if (!s) return
+  s.bomRefs = bomPickSelected.map(k => { const [bt, id] = k.split('|'); return { bomType: bt, itemId: id } })
+  npiRelSavePFDStep(s)
+  closeModal('modalBomPick'); render()
+}
 
 // ══════════════════════════════════════
 // CONTROL PLAN
@@ -238,19 +280,27 @@ npi.apqp.syncFromPFMEA = function() {
     (mode.effects || []).forEach(ef => {
       (ef.causes || []).forEach(ca => {
         if (ex.has(ca.id)) return
-        p.cp.push({
-          id: 'cp_' + Date.now() + '_' + (n++),
+        const item = {
+          id: crypto.randomUUID(),
           pfmeaId: mode.id, pfmeaEffectId: ef.id, pfmeaCauseId: ca.id, pfdId: mode.pfdId,
           char: mode.mode + (ef.effect ? ' → ' + ef.effect : '') + (ca.cause ? ' (' + ca.cause + ')' : ''),
           type: 'Process', spec: fc ? fc.spec : '', method: ca.detect || ca.prevent || '',
           freq: '100%', resp: '', reaction: fc ? fc.oos_action || '' : '', ctqIds: [...cids]
-        })
+        }
+        p.cp.push(item)
+        npiRelSaveCP(item)
+        n++
       })
     })
   })
   if (n === 0) return alert('All PFMEA causes already in control plan.')
-  save(); render()
+  render()
 }
-npi.apqp.addCP        = function() { prog().cp.push({ id: 'cp_' + Date.now(), pfmeaId: '', pfdId: '', char: '', type: 'Process', spec: '', method: '', freq: '', resp: '', reaction: '', ctqIds: [] }); save(); render() }
-npi.apqp.updCP = function(i, f, v) { prog().cp[i][f] = v; save() }
-npi.apqp.delCP = function(i)       { prog().cp.splice(i, 1); save(); render() }
+npi.apqp.addCP = function() {
+  const item = { id: crypto.randomUUID(), pfmeaId: '', pfdId: '', char: '', type: 'Process', spec: '', method: '', freq: '', resp: '', reaction: '', ctqIds: [] }
+  prog().cp.push(item)
+  npiRelSaveCP(item)
+  render()
+}
+npi.apqp.updCP = function(i, f, v) { prog().cp[i][f] = v; npiRelSaveCP(prog().cp[i]) }
+npi.apqp.delCP = function(i) { const id = prog().cp[i].id; prog().cp.splice(i, 1); npiRelDeleteCP(id); render() }

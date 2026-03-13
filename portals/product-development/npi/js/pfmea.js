@@ -290,22 +290,32 @@ document.addEventListener('click', () => document.querySelectorAll('.hist-popup'
 
 // ── PFMEA data mutators ───────────────────────────────────────
 npi.pfmea.pfAddMode = function(pfdId) {
-  prog().pfmea.push({ id: 'f_' + Date.now(), _type: 'mode', pfdId, mode: '', ctqIds: [],
-    effects: [{ id: 'e_' + Date.now(), effect: '', sev: 1, controls: '', action: '',
-      causes: [{ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 }] }] })
-  save(); render()
+  const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
+  const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
+  const mode = { id: crypto.randomUUID(), _type: 'mode', pfdId, mode: '', ctqIds: [], effects: [ef] }
+  prog().pfmea.push(mode)
+  npiRelSavePFMEAMode(mode)
+  npiRelSavePFMEAEffect(mode.id, ef)
+  npiRelSavePFMEACause(ef.id, ca)
+  render()
 }
-npi.pfmea.pfUpdMode = function(mi, f, v) { prog().pfmea[mi][f] = v; save() }
+npi.pfmea.pfUpdMode = function(mi, f, v) { prog().pfmea[mi][f] = v; npiRelSavePFMEAMode(prog().pfmea[mi]) }
 npi.pfmea.pfDelMode = function(mi) {
-  const fid = prog().pfmea[mi].id
+  const mode = prog().pfmea[mi]
+  const fid = mode.id
   prog().cp.forEach(r => { if (r.pfmeaId === fid) r.pfmeaId = '' })
   prog().pfmea.splice(mi, 1)
-  save(); render()
+  npiRelDeletePFMEAMode(mode)
+  render()
 }
 npi.pfmea.pfAddEffect = function(mi) {
-  prog().pfmea[mi].effects.push({ id: 'e_' + Date.now(), effect: '', sev: 1, controls: '', action: '',
-    causes: [{ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 }] })
-  save(); render()
+  const mode = prog().pfmea[mi]
+  const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
+  const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
+  mode.effects.push(ef)
+  npiRelSavePFMEAEffect(mode.id, ef)
+  npiRelSavePFMEACause(ef.id, ca)
+  render()
 }
 npi.pfmea.pfNormalizeScore = function(v, allowBlank) {
   const raw = v === undefined || v === null ? '' : String(v).trim()
@@ -326,28 +336,44 @@ npi.pfmea.pfScorePreview = function(inputEl, allowBlank, fallback) {
   if (!Number.isFinite(n)) return allowBlank ? '' : npi.pfmea.pfNormalizeScore(fallback, false)
   return Math.min(PFMEA_SCORE_MAX, Math.max(PFMEA_SCORE_MIN, n))
 }
-npi.pfmea.pfUpdEffect     = function(mi, ei, f, v)     {
+npi.pfmea.pfUpdEffect = function(mi, ei, f, v) {
   const saveNow = arguments.length < 5 ? true : !!arguments[4]
   if (f === 'sev') v = npi.pfmea.pfNormalizeScore(v, false)
-  prog().pfmea[mi].effects[ei][f] = v
-  if (saveNow) save()
+  const mode = prog().pfmea[mi]
+  mode.effects[ei][f] = v
+  if (saveNow) npiRelSavePFMEAEffect(mode.id, mode.effects[ei])
 }
-npi.pfmea.pfDelEffect     = function(mi, ei)            { prog().pfmea[mi].effects.splice(ei, 1); save(); render() }
-npi.pfmea.pfAddCause      = function(mi, ei)            { prog().pfmea[mi].effects[ei].causes.push({ id: 'c_' + Date.now(), cause: '', occ: 1, det: 1 }); save(); render() }
-npi.pfmea.pfUpdCause      = function(mi, ei, ci, f, v)  {
+npi.pfmea.pfDelEffect = function(mi, ei) {
+  const mode = prog().pfmea[mi]
+  const ef = mode.effects[ei]
+  mode.effects.splice(ei, 1)
+  npiRelDeletePFMEAEffect(ef)
+  render()
+}
+npi.pfmea.pfAddCause = function(mi, ei) {
+  const mode = prog().pfmea[mi]
+  const ef = mode.effects[ei]
+  const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
+  ef.causes.push(ca)
+  npiRelSavePFMEACause(ef.id, ca)
+  render()
+}
+npi.pfmea.pfUpdCause = function(mi, ei, ci, f, v) {
   const saveNow = arguments.length < 6 ? true : !!arguments[5]
   if (f === 'occ' || f === 'det') v = npi.pfmea.pfNormalizeScore(v, false)
-  prog().pfmea[mi].effects[ei].causes[ci][f] = v
-  if (saveNow) save()
+  const ef = prog().pfmea[mi].effects[ei]
+  ef.causes[ci][f] = v
+  if (saveNow) npiRelSavePFMEACause(ef.id, ef.causes[ci])
 }
 npi.pfmea.pfUpdCauseAction = function(mi, ei, ci, f, v) {
   const saveNow = arguments.length < 6 ? true : !!arguments[5]
-  const ca = prog().pfmea[mi].effects[ei].causes[ci]
+  const ef = prog().pfmea[mi].effects[ei]
+  const ca = ef.causes[ci]
   if (!ca.action) ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
   if (!('taken' in ca.action)) ca.action.taken = ''
   if (f === 'newOcc' || f === 'newDet') v = npi.pfmea.pfNormalizeScore(v, true)
   ca.action[f] = v
-  if (saveNow) save()
+  if (saveNow) npiRelSavePFMEACause(ef.id, ca)
 }
 npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   const p = prog()
@@ -360,21 +386,30 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   if (!confirm(`Implement action?\n\nThis will:\n• Update OCC: ${ca.occ} → ${newOcc}\n• Update DET: ${ca.det} → ${newDet}\n• New RPN: ${(ef.sev || 1) * newOcc * newDet}\n• Log old RPN (${oldRpn}) to history\n• Clear the action fields`)) return
   const newRpn = (ef.sev || 1) * newOcc * newDet
   if (!ca.history) ca.history = []
-  ca.history.push({
+  const histEntry = {
     rpn: oldRpn,
     newRpn: newRpn,
     date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
     desc: act.taken || act.desc || 'Action implemented',
     oldOcc: ca.occ, oldDet: ca.det,
     newOcc: newOcc,  newDet: newDet
-  })
+  }
+  ca.history.push(histEntry)
   ca.occ = newOcc
   ca.det = newDet
   ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
-  save(); render()
+  npiRelSavePFMEACause(ef.id, ca)
+  npiRelSavePFMEAHistory(ca.id, histEntry)
+  render()
 }
-npi.pfmea.pfDelCause   = function(mi, ei, ci) { prog().pfmea[mi].effects[ei].causes.splice(ci, 1); save(); render() }
-npi.pfmea.pfRefreshRPN = function()           { save() }
+npi.pfmea.pfDelCause = function(mi, ei, ci) {
+  const ef = prog().pfmea[mi].effects[ei]
+  const ca = ef.causes[ci]
+  ef.causes.splice(ci, 1)
+  npiRelDeletePFMEACause(ca)
+  render()
+}
+npi.pfmea.pfRefreshRPN = function() {}
 
 // Returns max RPN across all effects/causes of a failure mode row
 npi.pfmea.calcRPN = function(mode) {

@@ -5,6 +5,7 @@
 window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
   availableProducts = availableProducts || [];
   const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other'];
+  const allTasks = typeof meDataGetTasks === 'function' ? meDataGetTasks() : tasksArray;
 
   let totalHoursValue = 0;
   tasksArray.forEach(t => { totalHoursValue += t.totalHours || 0; });
@@ -25,21 +26,25 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
 
   let rows = '';
   tasksArray.forEach((task, idx) => {
+    const taskIdx = allTasks.indexOf(task);
+    const taskIndex = taskIdx >= 0 ? taskIdx : idx;
     const catOpts = ME_CATS.map(c => `<option value="${c}" ${task.category === c ? 'selected' : ''}>${c}</option>`).join('');
     const memOpts = '<option value="">Unassigned</option>' + teamArray.map(m => `<option value="${m.id}" ${task.assigneeId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
     const prodOpts = '<option value="">— No Product</option>' + availableProducts.map(p => `<option value="${p.id}" ${task.productId === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+    const department = (task.department || 'ME').toUpperCase() === 'PM' ? 'PM' : 'ME';
 
     rows += `
-      <tr class="me-task-row" data-task-idx="${idx}">
-        <td><input value="${esc(task.name)}" placeholder="new task" onchange="meDataUpdateTask(${idx}, 'name', this.value); meDebouncedSave();"></td>
-        <td><select onchange="meDataUpdateTask(${idx}, 'category', this.value); meDebouncedSave();">${catOpts}</select></td>
-        <td><select onchange="meDataUpdateTask(${idx}, 'assigneeId', this.value); meDebouncedSave();">${memOpts}</select></td>
-        <td><select onchange="meDataUpdateTask(${idx}, 'productId', this.value); meDebouncedSave();">${prodOpts}</select></td>
-        <td><input type="date" value="${task.startDate || ''}" onchange="meDataUpdateTask(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${task.endDate || ''}" onchange="meDataUpdateTask(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${task.totalHours || 0}" step="0.1" onchange="meDataUpdateTask(${idx}, 'totalHours', this.value); meDebouncedSave();"></td>
+      <tr class="me-task-row" data-task-idx="${taskIndex}">
+        <td><input value="${esc(task.name)}" placeholder="new task" onchange="meDataUpdateTask(${taskIndex}, 'name', this.value); meDebouncedSave();"></td>
+        <td><span class="me-cat ${department === 'PM' ? 'me-cat-support' : 'me-cat-npi'}">${department}</span></td>
+        <td><select onchange="meDataUpdateTask(${taskIndex}, 'category', this.value); meDebouncedSave();">${catOpts}</select></td>
+        <td><select onchange="meDataUpdateTask(${taskIndex}, 'assigneeId', this.value); meDebouncedSave();">${memOpts}</select></td>
+        <td><select onchange="meDataUpdateTask(${taskIndex}, 'productId', this.value); meDebouncedSave();">${prodOpts}</select></td>
+        <td><input type="date" value="${task.startDate || ''}" onchange="meDataUpdateTask(${taskIndex}, 'startDate', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${task.endDate || ''}" onchange="meDataUpdateTask(${taskIndex}, 'endDate', this.value); meDebouncedSave();"></td>
+        <td><input type="number" value="${task.totalHours || 0}" step="0.1" onchange="meDataUpdateTask(${taskIndex}, 'totalHours', this.value); meDebouncedSave();"></td>
         <td style="text-align: center;">
-          <button class="me-del-btn" onclick="if(confirm('Delete task?')) { meDataDeleteTask(${idx}); meOnSave(); meSetTab('tasks'); }">✕</button>
+          <button class="me-del-btn" onclick="if(confirm('Delete task?')) { meDataDeleteTask(${taskIndex}); meOnSave(); meSetTab('tasks'); }">✕</button>
         </td>
       </tr>`;
   });
@@ -84,6 +89,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
           <table class="me-tbl">
             <thead><tr>
               <th style="width:150px">Task Name</th>
+              <th style="width:90px">Dept</th>
               <th style="width:110px">Category</th>
               <th style="width:130px">Assignee</th>
               <th style="width:130px">Product</th>
@@ -93,7 +99,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
               <th style="width:60px"></th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="8"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks added</div></td></tr>'}
+              ${rows || '<tr><td colspan="9"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks added</div></td></tr>'}
             </tbody>
           </table>
         </div>
@@ -106,7 +112,10 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts) {
 };
 
 window.meAddDefaultTask = function() {
-  meDataAddTask('New Task', 'NPI', '', '', '', 0);
+  const department = typeof meGetDepartmentFromContext === 'function'
+    ? meGetDepartmentFromContext()
+    : 'ME';
+  meDataAddTask('New Task', 'NPI', '', '', '', 0, '', department);
   meOnSave();
   meSetTab('tasks');
 };

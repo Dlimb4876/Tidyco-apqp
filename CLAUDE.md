@@ -68,6 +68,15 @@ When adding new features, assume all authenticated users will see the data. If y
 
 When designing or modifying any feature, you MUST account for:
 
+### Capacity Parity Rule
+
+When changing the ME Capacity plan, make the equivalent change in the PM Capacity plan under `portals/capacity/project-management/` unless the request explicitly says not to.
+
+- ✅ Treat ME Capacity and PM Capacity as paired features
+- ✅ Mirror relevant UI, data, routing, and persistence changes across both plans
+- ✅ Call out any intentional differences clearly in your explanation
+- ❌ Do not update only ME Capacity and leave PM Capacity behind by accident
+
 1. **Real-Time Sync**
    - All data changes must propagate to all connected users immediately
    - Use Supabase real-time subscriptions (`createRealtimeSubscription()`)

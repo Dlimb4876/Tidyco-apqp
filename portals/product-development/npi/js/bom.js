@@ -87,16 +87,28 @@ npi.bom.renderBomTable = function(type, p) {
 
 npi.bom.addBomRow = function(type) {
   const p = prog()
-  let item = { id: 'bom_' + Date.now() }
+  let item = { id: crypto.randomUUID() }
   if (type === 'parts') item = { ...item, pn: '', supplierPN: '', desc: '', qty: 1, unit: 'ea', isStd: false, isAaw: false, isRepair: false, notes: '' }
   else if (type === 'tools') item = { ...item, toolId: '', desc: '', spec: '', notes: '' }
   else if (type === 'equip') item = { ...item, equipId: '', desc: '', location: '', notes: '' }
   else item = { ...item, pn: '', desc: '', unit: '', qtyPerUnit: 0, isStd: false, isAaw: false, isRepair: false, notes: '' }
-  p.bom[type].push(item); save(); render()
+  p.bom[type].push(item)
+  npiRelSaveBOMItem(type, item)
+  render()
   setTimeout(() => { const tbl = document.querySelector('.card table'); if (tbl) { const rows = tbl.querySelectorAll('tbody tr'); if (rows.length > 0) rows[rows.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' }) } }, 50)
 }
-npi.bom.updBom = function(type, i, f, v) { prog().bom[type][i][f] = v; save() }
-npi.bom.delBom = function(type, i) { const item = prog().bom[type][i]; prog().pfd.forEach(s => s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === type && r.itemId === item.id))); prog().bom[type].splice(i, 1); save(); render() }
+npi.bom.updBom = function(type, i, f, v) { prog().bom[type][i][f] = v; npiRelSaveBOMItem(type, prog().bom[type][i]) }
+npi.bom.delBom = function(type, i) {
+  const item = prog().bom[type][i]
+  prog().pfd.forEach(s => {
+    const before = (s.bomRefs || []).length
+    s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === type && r.itemId === item.id))
+    if (s.bomRefs.length !== before) npiRelSavePFDStep(s)
+  })
+  prog().bom[type].splice(i, 1)
+  npiRelDeleteBOMItem(item.id)
+  render()
+}
 
 // ══════════════════════════════════════
 // KITS
@@ -155,11 +167,28 @@ npi.bom.renderKits = function(p) {
     : `<div class="kit-list">${kitCards}</div>`}`
 }
 
-npi.bom.addKit     = function()            { prog().bom.kits.push({ id: 'kit_' + Date.now(), name: '', items: [] }); save(); render() }
-npi.bom.updKit     = function(ki, f, v)    { prog().bom.kits[ki][f] = v; save() }
-npi.bom.delKit     = function(ki)          { prog().bom.kits.splice(ki, 1); save(); render() }
-npi.bom.updKitItem = function(ki, ri, f, v){ prog().bom.kits[ki].items[ri][f] = v; save() }
-npi.bom.delKitItem = function(ki, ri)      { prog().bom.kits[ki].items.splice(ri, 1); save(); render() }
+npi.bom.addKit = function() {
+  const kit = { id: crypto.randomUUID(), name: '', items: [] }
+  prog().bom.kits.push(kit)
+  npiRelSaveBOMKit(kit)
+  render()
+}
+npi.bom.updKit = function(ki, f, v) { prog().bom.kits[ki][f] = v; npiRelSaveBOMKit(prog().bom.kits[ki]) }
+npi.bom.delKit = function(ki) {
+  const id = prog().bom.kits[ki].id
+  prog().bom.kits.splice(ki, 1)
+  npiRelDeleteBOMKit(id)
+  render()
+}
+npi.bom.updKitItem = function(ki, ri, f, v) {
+  prog().bom.kits[ki].items[ri][f] = v
+  npiRelSaveKitItems(prog().bom.kits[ki])
+}
+npi.bom.delKitItem = function(ki, ri) {
+  prog().bom.kits[ki].items.splice(ri, 1)
+  npiRelSaveKitItems(prog().bom.kits[ki])
+  render()
+}
 
 npi.bom.openKitPick = function(ki) {
   kitPickTarget = ki
@@ -178,5 +207,6 @@ npi.bom.saveKitPick = function() {
   const existing = {}
   kit.items.forEach(r => { existing[r.bomType + '|' + r.itemId] = r.qty })
   kit.items = bomPickSelected.map(key => { const [bt, id] = key.split('|'); return { bomType: bt, itemId: id, qty: existing[key] || 1 } })
-  save(); closeModal('modalKitPick'); render()
+  npiRelSaveKitItems(kit)
+  closeModal('modalKitPick'); render()
 }

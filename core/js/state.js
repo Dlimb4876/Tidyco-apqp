@@ -9,6 +9,7 @@ let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
 let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
 let capacityTab = 'root'; // root|me|overhaul|projects
 let prodCapTab  = 'dashboard'; // dashboard|by-work-area|settings|detail
+let pmCapTab = 'tasks'; // tasks (project-management capacity)
 let productionTab = 'root'; // root|products|scheduling|by-product|by-unit
 let productDevelopmentTab = 'root'; // root|npi|product-management
 let npiTab = 'all'; // 'all' | family id — active tab on the NPI project selection screen

@@ -26,6 +26,33 @@ window.meDataState = {
   holidays: []
 };
 
+function meNormalizeDepartmentTag(value, fallback = 'ME') {
+  const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
+  return normalized === 'PM' ? 'PM' : 'ME';
+}
+
+window.meGetDepartmentFromContext = function(explicitDepartment) {
+  if (explicitDepartment) {
+    return meNormalizeDepartmentTag(explicitDepartment, 'ME');
+  }
+
+  if (typeof window.meCurrentDepartmentContext === 'string' && window.meCurrentDepartmentContext.length > 0) {
+    return meNormalizeDepartmentTag(window.meCurrentDepartmentContext, 'ME');
+  }
+
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects') {
+    return 'PM';
+  }
+
+  return 'ME';
+};
+
+window.meFilterByDepartment = function(list, department, fallback = 'ME') {
+  if (!Array.isArray(list)) return [];
+  const target = meNormalizeDepartmentTag(department, fallback);
+  return list.filter(item => meNormalizeDepartmentTag(item && item.department, fallback) === target);
+};
+
 function meNormalizeHolidayRecord(holiday) {
   if (!holiday || typeof holiday !== 'object') return null;
 
@@ -40,6 +67,7 @@ function meNormalizeHolidayRecord(holiday) {
     personId,
     date,
     type,
+    department: meNormalizeDepartmentTag(holiday.department, 'ME'),
     createdAt: holiday.createdAt || holiday.created_at || new Date().toISOString()
   };
 }
@@ -70,7 +98,7 @@ function meInitTeamDates() {
 // TEAM CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddTeam = function(name, hoursPerWeek, utilisation, startDate, endDate) {
+window.meDataAddTeam = function(name, hoursPerWeek, utilisation, startDate, endDate, department) {
   if (!name || name.trim().length === 0) return false;
   const member = {
     id: meUUID(),
@@ -79,6 +107,7 @@ window.meDataAddTeam = function(name, hoursPerWeek, utilisation, startDate, endD
     utilisation: parseFloat(utilisation) || 80,
     jobTitle: '',
     group: '',
+    department: meGetDepartmentFromContext(department),
     startDate: startDate || '',
     endDate: endDate || ''
   };
@@ -104,6 +133,9 @@ window.meDataUpdateTeam = function(idx, field, value) {
       break;
     case 'group':
       member.group = value ? value.trim() : '';
+      break;
+    case 'department':
+      member.department = meNormalizeDepartmentTag(value, 'ME');
       break;
     case 'startDate':
       member.startDate = value || '';
@@ -131,13 +163,14 @@ window.meDataGetTeam = function() {
 // TASK CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours, productId) {
+window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours, productId, department) {
   if (!name || name.trim().length === 0) return false;
   const todayStr = new Date().toISOString().split('T')[0];
   const task = {
     name: name.trim(),
     category: category || 'NPI',
     type: 'standard',
+    department: meGetDepartmentFromContext(department),
     assigneeId: assigneeId || '',
     productId: productId || '',
     startDate: startDate || todayStr,
@@ -158,6 +191,9 @@ window.meDataUpdateTask = function(idx, field, value) {
       break;
     case 'category':
       task.category = value || 'NPI';
+      break;
+    case 'department':
+      task.department = meNormalizeDepartmentTag(value, 'ME');
       break;
     case 'assigneeId':
       task.assigneeId = value || '';
@@ -194,11 +230,12 @@ window.meDataGetTasks = function() {
 // PRODUCT CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek, notes, productDatabaseId) {
+window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek, notes, productDatabaseId, department) {
   if (!name || name.trim().length === 0) return false;
   const product = {
     id: meUUID(),
     name: name.trim(),
+    department: meGetDepartmentFromContext(department),
     supportFrom: supportFrom,
     supportUntil: supportUntil,
     hoursPerWeek: parseFloat(hoursPerWeek) || 5,
@@ -228,6 +265,9 @@ window.meDataUpdateProduct = function(idx, field, value) {
       break;
     case 'notes':
       product.notes = value ? value.trim() : '';
+      break;
+    case 'department':
+      product.department = meNormalizeDepartmentTag(value, 'ME');
       break;
     default:
       return false;
@@ -304,11 +344,12 @@ window.meDataAutoSyncProductionProducts = function() {
 // HOLIDAY CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddHoliday = function(personId, date, type) {
+window.meDataAddHoliday = function(personId, date, type, department) {
   if (!personId || !date || !['full', 'half'].includes(type)) return false;
   const existing = meDataState.holidays.find(h => h.personId === personId && h.date === date);
   if (existing) {
     existing.type = type;
+    existing.department = meGetDepartmentFromContext(department);
     return true;
   }
   const holiday = {
@@ -316,6 +357,7 @@ window.meDataAddHoliday = function(personId, date, type) {
     personId: personId,
     date: date,
     type: type,
+    department: meGetDepartmentFromContext(department),
     createdAt: new Date().toISOString()
   };
   meDataState.holidays.push(holiday);
@@ -456,17 +498,22 @@ window.meDataInit = async function() {
       meDataState.team.forEach(member => {
         if (!('jobTitle' in member)) member.jobTitle = '';
         if (!('group' in member)) member.group = '';
+        if (!('department' in member)) member.department = 'ME';
         if (!('startDate' in member)) member.startDate = '';
         if (!('endDate' in member)) member.endDate = '';
       });
 
       meDataState.tasks.forEach(task => {
         if (!('type' in task)) task.type = 'standard';
+        if (!('department' in task)) task.department = 'ME';
       });
 
       meDataState.products.forEach(product => {
         if (!('productDatabaseId' in product)) product.productDatabaseId = '';
+        if (!('department' in product)) product.department = 'ME';
       });
+
+      meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays || []);
 
       window.meDataState = meDataState;
 
@@ -560,13 +607,17 @@ window.meDataSave = async function(showAlert) {
             _holSeen.add(key);
             return true;
           })
-          .map(h => ({
-            id: h.id,
-            user_id: currentUser.id,
-            person_id: h.personId,
-            date: h.date,
-            type: h.type
-          }));
+          .map(h => {
+            const row = {
+              id: h.id,
+              user_id: currentUser.id,
+              person_id: h.personId,
+              date: h.date,
+              type: h.type,
+              department: meNormalizeDepartmentTag(h.department, 'ME')
+            };
+            return row;
+          });
 
         const { error: delHolErr } = await supa
           .from('me_holidays')
@@ -666,8 +717,21 @@ window.meDataSubscribe = function() {
   // Calling render() on our own write-echo would clobber any in-progress user input.
   createRealtimeSubscription('me_teams', 'me_teams_channel', {
     onInsert: (newTeam) => {
-      if (!meDataState.team.some(t => t.id === newTeam.id)) {
-        meDataState.team.push(newTeam);
+      const normalizedTeam = {
+        id: newTeam.id,
+        name: newTeam.name || '',
+        hoursPerWeek: meGetHoursPerWeek(newTeam.hours_per_week),
+        utilisation: parseFloat(newTeam.utilisation) || 80,
+        jobTitle: newTeam.job_title || '',
+        group: newTeam.team_group || '',
+        department: meNormalizeDepartmentTag(newTeam.department, 'ME'),
+        startDate: newTeam.start_date || '',
+        endDate: newTeam.end_date || '',
+        createdAt: newTeam.created_at || new Date().toISOString()
+      };
+
+      if (!meDataState.team.some(t => t.id === normalizedTeam.id)) {
+        meDataState.team.push(normalizedTeam);
         render();
       }
     },
@@ -681,8 +745,22 @@ window.meDataSubscribe = function() {
   // Subscribe to tasks changes
   createRealtimeSubscription('me_tasks', 'me_tasks_channel', {
     onInsert: (newTask) => {
-      if (!meDataState.tasks.some(t => t.id === newTask.id)) {
-        meDataState.tasks.push(newTask);
+      const normalizedTask = {
+        id: newTask.id,
+        name: newTask.name || '',
+        category: newTask.category || 'NPI',
+        type: newTask.type || 'standard',
+        department: meNormalizeDepartmentTag(newTask.department, 'ME'),
+        assigneeId: newTask.assignee_id || '',
+        productId: newTask.product_id || '',
+        startDate: newTask.start_date || '',
+        endDate: newTask.end_date || '',
+        totalHours: parseFloat(newTask.total_hours) || 0,
+        createdAt: newTask.created_at || new Date().toISOString()
+      };
+
+      if (!meDataState.tasks.some(t => t.id === normalizedTask.id)) {
+        meDataState.tasks.push(normalizedTask);
         render();
       }
     },
@@ -696,8 +774,21 @@ window.meDataSubscribe = function() {
   // Subscribe to products changes
   createRealtimeSubscription('me_products', 'me_products_channel', {
     onInsert: (newProduct) => {
-      if (!meDataState.products.some(p => p.id === newProduct.id)) {
-        meDataState.products.push(newProduct);
+      const normalizedProduct = {
+        id: newProduct.id,
+        name: newProduct.name || '(Unknown Product)',
+        productDatabaseId: newProduct.product_database_id || '',
+        supportFrom: newProduct.support_from || '',
+        supportUntil: newProduct.support_until || '',
+        hoursPerWeek: parseFloat(newProduct.hours_per_week) || 0,
+        department: meNormalizeDepartmentTag(newProduct.department, 'ME'),
+        notes: newProduct.notes || '',
+        createdAt: newProduct.created_at || new Date().toISOString(),
+        updatedAt: newProduct.updated_at || ''
+      };
+
+      if (!meDataState.products.some(p => p.id === normalizedProduct.id)) {
+        meDataState.products.push(normalizedProduct);
         render();
       }
     },

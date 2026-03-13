@@ -14,6 +14,8 @@ let meSaveTimer = null;  // Debounce timer
  * Main render function for ME Capacity Portal
  */
 window.renderMeCapacity = function() {
+  window.meCurrentDepartmentContext = 'ME';
+
   if (!meChartStart) {
     // Load from localStorage, or default to January 2026
     meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';
@@ -97,10 +99,18 @@ window.meRefreshCurrentTab = function() {
 };
 
 function meGetTabContent() {
-  const team = meDataGetTeam();
-  const tasks = meDataGetTasks();
-  const products = meDataGetProducts();
-  const holidays = meDataGetHolidays();
+  const team = typeof meFilterByDepartment === 'function'
+    ? meFilterByDepartment(meDataGetTeam(), 'ME', 'ME')
+    : meDataGetTeam();
+  const tasks = typeof meFilterByDepartment === 'function'
+    ? meFilterByDepartment(meDataGetTasks(), 'ME', 'ME')
+    : meDataGetTasks();
+  const products = typeof meFilterByDepartment === 'function'
+    ? meFilterByDepartment(meDataGetProducts(), 'ME', 'ME')
+    : meDataGetProducts();
+  const holidays = typeof meFilterByDepartment === 'function'
+    ? meFilterByDepartment(meDataGetHolidays(), 'ME', 'ME')
+    : meDataGetHolidays();
 
   // Initialize holiday month on first view
   if (!meHolidayMonth) {

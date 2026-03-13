@@ -42,13 +42,18 @@ npi.tracker.renderActions = function() {
     : `<div class="sticky-card-scroll"><table class="tbl act-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:120px"><col style="width:100px"><col style="width:100px"><col style="width:220px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="npi.tracker.addAction()">＋ Add Action</button></div>`
 }
-npi.tracker.addAction = function()        { prog().actions.push({ id: 'a_' + Date.now(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }); save(); render() }
+npi.tracker.addAction = function() {
+  const item = { id: crypto.randomUUID(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }
+  prog().actions.push(item)
+  npiRelSaveAction(item)
+  render()
+}
 npi.tracker.updAction = function(i, f, v) {
   prog().actions[i][f] = v
-  save()
+  npiRelSaveAction(prog().actions[i])
   if (f === 'status' || f === 'due') render()
 }
-npi.tracker.delAction = function(i)       { prog().actions.splice(i, 1); save(); render() }
+npi.tracker.delAction = function(i) { const id = prog().actions[i].id; prog().actions.splice(i, 1); npiRelDeleteAction(id); render() }
 
 // ══════════════════════════════════════
 // RISK REGISTER
@@ -92,7 +97,12 @@ npi.tracker.renderRisks = function() {
     : `<div class="sticky-card-scroll"><table class="tbl risk-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:40px"><col style="width:40px"><col style="width:56px"><col style="width:280px"><col style="width:100px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div>`
 }
-npi.tracker.addRisk  = function()        { prog().risks.push({ id: 'r_' + Date.now(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }); save(); render() }
+npi.tracker.addRisk = function() {
+  const item = { id: crypto.randomUUID(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }
+  prog().risks.push(item)
+  npiRelSaveRisk(item)
+  render()
+}
 npi.tracker.normalizeRiskScore = function(v) {
   const n = parseInt(v, 10)
   if (!Number.isFinite(n)) return 1
@@ -110,13 +120,13 @@ npi.tracker.riskScorePreview = function(inputEl, fallback) {
   if (!Number.isFinite(n)) return npi.tracker.normalizeRiskScore(fallback)
   return Math.min(5, Math.max(1, n))
 }
-npi.tracker.updRisk  = function(i, f, v) {
+npi.tracker.updRisk = function(i, f, v) {
   const saveNow = arguments.length < 4 ? true : !!arguments[3]
   prog().risks[i][f] = v
-  if (saveNow) save()
+  if (saveNow) npiRelSaveRisk(prog().risks[i])
   if (f === 'status') render()
 }
-npi.tracker.delRisk  = function(i)       { prog().risks.splice(i, 1); save(); render() }
+npi.tracker.delRisk = function(i) { const id = prog().risks[i].id; prog().risks.splice(i, 1); npiRelDeleteRisk(id); render() }
 npi.tracker.refreshRS = function(i, saveNow) {
   const r     = prog().risks[i]
   const score = r.lik * r.imp
@@ -127,5 +137,5 @@ npi.tracker.refreshRS = function(i, saveNow) {
     if (score >= 12 && r.status !== 'Closed') row.classList.add('row-hi')
     else row.classList.remove('row-hi')
   }
-  if (saveNow !== false) save()
+  if (saveNow !== false) npiRelSaveRisk(r)
 }

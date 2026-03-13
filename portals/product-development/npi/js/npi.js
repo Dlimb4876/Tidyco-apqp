@@ -27,8 +27,11 @@ npi.nav.stopEvent = function(evt) { if (evt && typeof evt.stopPropagation === 'f
 
 // ── Realtime sync for shared NPI programmes ──────────────────
 let npiRealtimeActive = false
+let npiLoadedProgId = null
 const NPI_PROGRAMMES_CHANNEL = 'npi_programmes_channel'
+const NPI_TABLES_CHANNEL_PREFIX = 'npi_tables_'
 let npiLastRealtimeUpdateAt = 0
+let npiReloadTimer = null
 
 function formatRealtimeTime(dt) {
   return dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -66,11 +69,32 @@ function shouldRenderForProgramme(progRowId) {
   return false
 }
 
+// Schedule a throttled reload from relational tables (for remote changes)
+function npiScheduleReload() {
+  clearTimeout(npiReloadTimer)
+  npiReloadTimer = setTimeout(() => {
+    if (!progId || typeof npiRelLoad !== 'function') return
+    npiRelLoad(progId).then(() => {
+      npiMarkRealtimeUpdate()
+      render()
+    })
+  }, 600)
+}
+
 function npiDataInit() {
-  if (npiRealtimeActive) return
   if (typeof createRealtimeSubscription !== 'function') return
 
-  const sub = createRealtimeSubscription('programmes', NPI_PROGRAMMES_CHANNEL, {
+  // Load relational data when switching to a new programme
+  if (npiLoadedProgId !== progId && progId && typeof npiRelLoad === 'function') {
+    npiLoadedProgId = progId
+    npiRelLoad(progId).then(() => render())
+  }
+
+  // Subscriptions are one-time setup (guard against re-init)
+  if (npiRealtimeActive) return
+
+  // Subscribe to programmes table (metadata changes)
+  createRealtimeSubscription('programmes', NPI_PROGRAMMES_CHANNEL, {
     onInsert: (row) => {
       if (!upsertRealtimeProgramme(row)) return
       npiMarkRealtimeUpdate()
@@ -93,7 +117,22 @@ function npiDataInit() {
     }
   })
 
-  npiRealtimeActive = !!sub
+  // Subscribe to all NPI-specific tables — any remote change triggers a reload
+  const npiTables = [
+    'npi_ctq', 'npi_pfd_steps', 'npi_pfmea_modes', 'npi_pfmea_effects',
+    'npi_pfmea_causes', 'npi_pfmea_history', 'npi_control_plan',
+    'npi_bom_items', 'npi_bom_kits', 'npi_bom_kit_items',
+    'npi_gates', 'npi_gate_sigs', 'npi_actions', 'npi_risks', 'npi_gantt_rows'
+  ]
+  npiTables.forEach(table => {
+    createRealtimeSubscription(table, NPI_TABLES_CHANNEL_PREFIX + table, {
+      onInsert: npiScheduleReload,
+      onUpdate: npiScheduleReload,
+      onDelete: npiScheduleReload
+    })
+  })
+
+  npiRealtimeActive = true
 }
 
 function npiDataUnsubscribe() {
@@ -101,5 +140,10 @@ function npiDataUnsubscribe() {
   if (typeof removeRealtimeSubscription === 'function') {
     removeRealtimeSubscription(NPI_PROGRAMMES_CHANNEL)
   }
+  if (typeof removeRealtimeSubscriptionsMatching === 'function') {
+    removeRealtimeSubscriptionsMatching(NPI_TABLES_CHANNEL_PREFIX)
+  }
   npiRealtimeActive = false
+  npiLoadedProgId = null
+  clearTimeout(npiReloadTimer)
 }

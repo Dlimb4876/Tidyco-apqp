@@ -7,7 +7,7 @@
 
 npi.timing.ganttNewRow = function(section) {
   return {
-    id: 'g_' + Date.now() + '_' + Math.random().toString(36).slice(2),
+    id: crypto.randomUUID(),
     task: '', section: section || 's1', role: 'ME',
     planned: Array(GANTT_WEEKS).fill(0),
     actual:  Array(GANTT_WEEKS).fill(0),
@@ -209,13 +209,35 @@ npi.timing.renderTimingPlan = function() {
   ${totalRows === 0 ? `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No tasks yet — click <strong>＋ Add Task</strong> to start</div>` : ''}`
 }
 
-npi.timing.ganttTogglePlan = function(id, wi) { const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return; if (!row.planned || row.planned.length < GANTT_WEEKS) row.planned = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.planned || [])[i] || 0); row.planned[wi] = row.planned[wi] ? 0 : 1; save(); render() }
-npi.timing.ganttToggleAct  = function(id, wi) { const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return; if (!row.actual  || row.actual.length  < GANTT_WEEKS) row.actual  = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.actual  || [])[i] || 0); row.actual[wi]  = row.actual[wi]  ? 0 : 1; save(); render() }
-npi.timing.ganttAddRow     = function(section) { const p = prog(); if (!p.gantt) p.gantt = []; p.gantt.push(npi.timing.ganttNewRow(section)); save(); render() }
-npi.timing.ganttUpdTask    = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.task    = val; save() } }
-npi.timing.ganttUpdSec     = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.section = val; save(); render() } }
-npi.timing.ganttUpdRole    = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.role    = val; save(); render() } }
-npi.timing.ganttUpdNotes   = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.notes   = val; save() } }
-npi.timing.ganttDelRow     = function(id)      { const p = prog(); p.gantt = p.gantt.filter(r => r.id !== id); save(); render() }
-npi.timing.ganttSetStart   = function(val)     { const p = prog(); p.ganttStart = val; save(); render() }
-npi.timing.ganttClear      = function()        { if (!confirm('Clear all timing plan tasks?')) return; prog().gantt = []; save(); render() }
+npi.timing.ganttTogglePlan = function(id, wi) {
+  const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return
+  if (!row.planned || row.planned.length < GANTT_WEEKS) row.planned = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.planned || [])[i] || 0)
+  row.planned[wi] = row.planned[wi] ? 0 : 1
+  npiRelSaveGanttRow(row); render()
+}
+npi.timing.ganttToggleAct = function(id, wi) {
+  const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return
+  if (!row.actual || row.actual.length < GANTT_WEEKS) row.actual = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.actual || [])[i] || 0)
+  row.actual[wi] = row.actual[wi] ? 0 : 1
+  npiRelSaveGanttRow(row); render()
+}
+npi.timing.ganttAddRow = function(section) {
+  const p = prog(); if (!p.gantt) p.gantt = []
+  const row = npi.timing.ganttNewRow(section)
+  p.gantt.push(row)
+  npiRelSaveGanttRow(row); render()
+}
+npi.timing.ganttUpdTask  = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.task    = val; npiRelSaveGanttRow(r) } }
+npi.timing.ganttUpdSec   = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.section = val; npiRelSaveGanttRow(r); render() } }
+npi.timing.ganttUpdRole  = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.role    = val; npiRelSaveGanttRow(r); render() } }
+npi.timing.ganttUpdNotes = function(id, val) { const p = prog(); const r = p.gantt.find(x => x.id === id); if (r) { r.notes   = val; npiRelSaveGanttRow(r) } }
+npi.timing.ganttDelRow   = function(id)      { const p = prog(); p.gantt = p.gantt.filter(r => r.id !== id); npiRelDeleteGanttRow(id); render() }
+npi.timing.ganttSetStart = function(val)     { const p = prog(); p.ganttStart = val; save(); render() }
+npi.timing.ganttClear    = function() {
+  if (!confirm('Clear all timing plan tasks?')) return
+  const p = prog()
+  const ids = p.gantt.map(r => r.id)
+  p.gantt = []
+  ids.forEach(id => npiRelDeleteGanttRow(id))
+  render()
+}

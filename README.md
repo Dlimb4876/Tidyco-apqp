@@ -72,6 +72,14 @@ The app is organised into discrete portals, all accessible from the central Hub.
 
 ---
 
+## Capacity Change Rule
+
+When changing the ME Capacity plan, make the equivalent change in the PM Capacity plan under `portals/capacity/project-management/` unless the request explicitly says not to.
+
+This applies to UI, routing, shared data handling, and persistence changes so the two capacity plans do not drift apart.
+
+---
+
 ## Project Structure
 
 ```

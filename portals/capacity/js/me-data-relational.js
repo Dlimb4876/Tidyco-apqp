@@ -17,6 +17,11 @@ function getTodayDateString() {
   return now.toISOString().split('T')[0];
 }
 
+function meNormalizeDepartmentTag(value, fallback = 'ME') {
+  const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
+  return normalized === 'PM' ? 'PM' : 'ME';
+}
+
 // ─────────────────────────────────────────────────────────────
 // LOAD OPERATIONS — Fetch data from relational tables
 // ─────────────────────────────────────────────────────────────
@@ -39,6 +44,7 @@ window.meLoadRelationalTeams = async function(userId) {
       utilisation: t.utilisation,
       jobTitle: t.job_title || '',
       group: t.team_group || '',
+      department: meNormalizeDepartmentTag(t.department, 'ME'),
       startDate: t.start_date || '',
       endDate: t.end_date || '',
       createdAt: t.created_at
@@ -67,6 +73,7 @@ window.meLoadRelationalProducts = async function(userId) {
       supportFrom: mp.support_from || '',
       supportUntil: mp.support_until || '',
       hoursPerWeek: mp.hours_per_week,
+      department: meNormalizeDepartmentTag(mp.department, 'ME'),
       notes: mp.notes,
       createdAt: mp.created_at,
       updatedAt: mp.updated_at
@@ -93,6 +100,7 @@ window.meLoadRelationalHolidays = async function(userId) {
       personId: h.person_id,
       date: h.date,
       type: h.type,
+      department: meNormalizeDepartmentTag(h.department, 'ME'),
       createdAt: h.created_at
     }));
   } catch (err) {
@@ -124,6 +132,7 @@ window.meLoadRelationalTasks = async function(userId) {
       startDate: t.start_date || '',
       endDate: t.end_date || '',
       totalHours: t.total_hours || 0,
+      department: meNormalizeDepartmentTag(t.department, 'ME'),
       createdAt: t.created_at
     }));
 
@@ -140,20 +149,24 @@ window.meLoadRelationalTasks = async function(userId) {
 
 window.meSaveTeamRelational = async function(userId, teamMember) {
   try {
+    const department = meNormalizeDepartmentTag(teamMember.department, 'ME');
     if (!teamMember.id) {
       // Insert new team member
+      const payload = {
+        user_id: userId,
+        name: teamMember.name,
+        hours_per_week: teamMember.hoursPerWeek,
+        utilisation: teamMember.utilisation,
+        job_title: teamMember.jobTitle,
+        team_group: teamMember.group,
+        department,
+        start_date: teamMember.startDate || null,
+        end_date: teamMember.endDate || null
+      };
+
       const { data, error } = await supa
         .from('me_teams')
-        .insert([{
-          user_id: userId,
-          name: teamMember.name,
-          hours_per_week: teamMember.hoursPerWeek,
-          utilisation: teamMember.utilisation,
-          job_title: teamMember.jobTitle,
-          team_group: teamMember.group,
-          start_date: teamMember.startDate || null,
-          end_date: teamMember.endDate || null
-        }])
+        .insert([payload])
         .select('id');
 
       if (error) {
@@ -166,18 +179,21 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
       return true;
     } else {
       // Update existing team member
+      const updatePayload = {
+        name: teamMember.name,
+        hours_per_week: teamMember.hoursPerWeek,
+        utilisation: teamMember.utilisation,
+        job_title: teamMember.jobTitle,
+        team_group: teamMember.group,
+        department,
+        start_date: teamMember.startDate || null,
+        end_date: teamMember.endDate || null,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supa
         .from('me_teams')
-        .update({
-          name: teamMember.name,
-          hours_per_week: teamMember.hoursPerWeek,
-          utilisation: teamMember.utilisation,
-          job_title: teamMember.jobTitle,
-          team_group: teamMember.group,
-          start_date: teamMember.startDate || null,
-          end_date: teamMember.endDate || null,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', teamMember.id);
 
       if (error) {
@@ -194,22 +210,26 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
 
 window.meSaveProductRelational = async function(userId, product) {
   try {
+    const department = meNormalizeDepartmentTag(product.department, 'ME');
     const supportFrom = product.supportFrom || product.support_from || null;
     const supportUntil = product.supportUntil || product.support_until || null;
 
     if (!product.id) {
       // Insert new product
+      const payload = {
+        user_id: userId,
+        name: product.name || '',
+        product_database_id: product.productDatabaseId || null,
+        support_from: supportFrom || null,
+        support_until: supportUntil || null,
+        hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
+        department,
+        notes: product.notes || null
+      };
+
       const { data, error } = await supa
         .from('me_products')
-        .insert([{
-          user_id: userId,
-          name: product.name || '',
-          product_database_id: product.productDatabaseId || null,
-          support_from: supportFrom || null,
-          support_until: supportUntil || null,
-          hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
-          notes: product.notes || null
-        }])
+        .insert([payload])
         .select('id');
 
       if (error) {
@@ -222,17 +242,20 @@ window.meSaveProductRelational = async function(userId, product) {
       return true;
     } else {
       // Update existing product
+      const updatePayload = {
+        name: product.name || '',
+        product_database_id: product.productDatabaseId || null,
+        support_from: supportFrom || null,
+        support_until: supportUntil || null,
+        hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
+        department,
+        notes: product.notes || null,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supa
         .from('me_products')
-        .update({
-          name: product.name || '',
-          product_database_id: product.productDatabaseId || null,
-          support_from: supportFrom || null,
-          support_until: supportUntil || null,
-          hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
-          notes: product.notes || null,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', product.id);
 
       if (error) {
@@ -249,25 +272,29 @@ window.meSaveProductRelational = async function(userId, product) {
 
 window.meSaveTaskRelational = async function(userId, task) {
   try {
+    const department = meNormalizeDepartmentTag(task.department, 'ME');
     const todayStr = getTodayDateString();
     const startDate = task.startDate || todayStr;
     const endDate = task.endDate || todayStr;
 
     if (!task.id) {
       // Insert new task and capture the returned ID
+      const payload = {
+        user_id: userId,
+        name: task.name,
+        category: task.category,
+        type: task.type,
+        assignee_id: task.assigneeId || null,
+        product_id: task.productId || null,
+        start_date: startDate,
+        end_date: endDate,
+        total_hours: task.totalHours || 0,
+        department
+      };
+
       const { data, error } = await supa
         .from('me_tasks')
-        .insert([{
-          user_id: userId,
-          name: task.name,
-          category: task.category,
-          type: task.type,
-          assignee_id: task.assigneeId || null,
-          product_id: task.productId || null,
-          start_date: startDate,
-          end_date: endDate,
-          total_hours: task.totalHours || 0
-        }])
+        .insert([payload])
         .select('id');
 
       if (error) {
@@ -280,19 +307,22 @@ window.meSaveTaskRelational = async function(userId, task) {
       return { success: true, taskId: newId };
     } else {
       // Update existing task
+      const updatePayload = {
+        name: task.name,
+        category: task.category,
+        type: 'standard',
+        assignee_id: task.assigneeId || null,
+        product_id: task.productId || null,
+        start_date: startDate,
+        end_date: endDate,
+        total_hours: task.totalHours || 0,
+        department,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supa
         .from('me_tasks')
-        .update({
-          name: task.name,
-          category: task.category,
-          type: 'standard',
-          assignee_id: task.assigneeId || null,
-          product_id: task.productId || null,
-          start_date: startDate,
-          end_date: endDate,
-          total_hours: task.totalHours || 0,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', task.id);
 
       if (error) {
@@ -437,13 +467,17 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
     if (jsonData.holidays && Array.isArray(jsonData.holidays)) {
       const holidayData = jsonData.holidays
         .filter(h => h.personId)
-        .map(h => ({
-          id: h.id,
-          user_id: userId,
-          person_id: h.personId,
-          date: h.date,
-          type: h.type
-        }));
+        .map(h => {
+          const row = {
+            id: h.id,
+            user_id: userId,
+            person_id: h.personId,
+            date: h.date,
+            type: h.type,
+            department: meNormalizeDepartmentTag(h.department, 'ME')
+          };
+          return row;
+        });
 
       if (holidayData.length > 0) {
         // Delete ALL holidays first (shared-data model)
