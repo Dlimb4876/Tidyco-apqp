@@ -141,6 +141,13 @@ function buildGanttTimeline(batches, todayStr) {
   const monthTwoLabel = monthTwoStart.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   const dateRangeLabel = `${String(windowStart.getDate()).padStart(2, '0')}/${String(windowStart.getMonth() + 1).padStart(2, '0')}/${windowStart.getFullYear()} - ${String(windowEnd.getDate()).padStart(2, '0')}/${String(windowEnd.getMonth() + 1).padStart(2, '0')}/${windowEnd.getFullYear()}`;
 
+  const isTodayInWindow = today >= windowStart && today <= windowEnd;
+  let todayLeftPercent = null;
+  if (isTodayInWindow) {
+    const dayIndex = Math.floor((today - windowStart) / (1000 * 60 * 60 * 24));
+    todayLeftPercent = ((dayIndex + 0.5) / totalDays) * 100;
+  }
+
   const navHtml = `
     <div class="gantt-nav-controls">
       <button class="btn btn-sm btn-ghost" onclick="prodSetMonthOffset(${prodPlanMonthOffset - 1}); render()">← Previous Month</button>
@@ -149,20 +156,20 @@ function buildGanttTimeline(batches, todayStr) {
     </div>
   `;
 
-  const dayMarkers = [1, 8, 15, 22, 29]
-    .filter(day => day <= monthOneDays)
-    .map(day => {
-      const left = ((day - 1) / totalDays) * 100;
-      return `<span class="gantt-day-marker" style="left:${left}%;">${day}</span>`;
-    })
-    .join('') +
-    [1, 8, 15, 22, 29]
-      .filter(day => day <= monthTwoDays)
-      .map(day => {
-        const left = ((monthOneDays + day - 1) / totalDays) * 100;
-        return `<span class="gantt-day-marker" style="left:${left}%;">${day}</span>`;
-      })
-      .join('');
+  function buildMonthMarkers(offsetDays, daysInMonth) {
+    const result = [];
+    for (let day = 1; day <= daysInMonth; day += 5) {
+      const left = ((offsetDays + day - 1) / totalDays) * 100;
+      result.push(`<span class="gantt-day-marker" style="left:${left}%;">${day}</span>`);
+    }
+    if ((daysInMonth - 1) % 5 !== 0) {
+      const monthEndLeft = ((offsetDays + daysInMonth - 1) / totalDays) * 100;
+      result.push(`<span class="gantt-day-marker month-end" style="left:${monthEndLeft}%;">${daysInMonth}</span>`);
+    }
+    return result.join('');
+  }
+
+  const dayMarkers = `${buildMonthMarkers(0, monthOneDays)}${buildMonthMarkers(monthOneDays, monthTwoDays)}`;
 
   const windowBatches = batches.filter(batch => {
     const startD = batch.start_date ? new Date(`${batch.start_date}T00:00:00`) : null;
@@ -218,6 +225,7 @@ function buildGanttTimeline(batches, todayStr) {
         </div>
         <div class="gantt-batch-chart" style="position: relative; height: 40px;">
           <div class="gantt-month-divider" style="left:${monthOneWidth}%;"></div>
+          ${todayLeftPercent !== null ? `<div class="gantt-today-row-marker" style="left:${todayLeftPercent}%;"></div>` : ''}
           <div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
                style="position: absolute; left: ${barLeftPercent}%; width: ${barWidthPercent}%; height: 28px; top: 6px; background-color: ${barColor};"
                title="${esc(productName)} - ${inDate} to ${outDate}">
@@ -245,11 +253,12 @@ function buildGanttTimeline(batches, todayStr) {
         <div class="gantt-header-label">Product / Batch</div>
         <div class="gantt-header-chart">
           <div class="gantt-month-bands">
-            <div class="gantt-month-band" style="width:${monthOneWidth}%;">${monthOneLabel}</div>
-            <div class="gantt-month-band" style="width:${100 - monthOneWidth}%;">${monthTwoLabel}</div>
+            <div class="gantt-month-band" style="width:${monthOneWidth}%">${monthOneLabel} (${String(monthOneDays).padStart(2, '0')} days)</div>
+            <div class="gantt-month-band" style="width:${100 - monthOneWidth}%">${monthTwoLabel} (${String(monthTwoDays).padStart(2, '0')} days)</div>
           </div>
           <div class="gantt-day-scale">
             ${dayMarkers}
+            ${todayLeftPercent !== null ? `<div class="gantt-today-marker" style="left:${todayLeftPercent}%;"><span class="gantt-today-label">Today</span></div>` : ''}
           </div>
         </div>
         <div class="gantt-header-status">Status</div>

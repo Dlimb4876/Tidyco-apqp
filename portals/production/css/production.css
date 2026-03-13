@@ -1032,6 +1032,34 @@
   font-family: 'IBM Plex Mono';
 }
 
+.compact-two-month .gantt-day-marker.month-end {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.compact-two-month .gantt-today-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--red);
+  z-index: 3;
+}
+
+.compact-two-month .gantt-today-label {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--red);
+  font-family: 'IBM Plex Mono';
+  background: var(--white);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
 .compact-two-month .gantt-rows {
   gap: 0;
 }
@@ -1066,8 +1094,17 @@
   z-index: 1;
 }
 
-.compact-two-month .gantt-bar {
+.compact-two-month .gantt-today-row-marker {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  background: rgba(239, 68, 68, 0.55);
   z-index: 2;
+}
+
+.compact-two-month .gantt-bar {
+  z-index: 3;
   border-radius: 5px;
 }
 
