@@ -5,8 +5,8 @@
   "main": "check_onclick.js",
   "scripts": {
     "test": "jest",
-    "lint:npi": "eslint 'portals/product-development/npi/**/*.js'",
-    "format:npi": "prettier --write 'portals/product-development/npi/**/*.js'"
+    "lint:npi": "eslint portals/product-development/npi/**/*.js",
+    "format:npi": "prettier --write portals/product-development/npi/**/*.js"
   },
   "repository": {
     "type": "git",

@@ -1,12 +1,13 @@
 // Production Planning Data Layer
 // Handles CRUD for products and batches with Supabase persistence
 
-let prodState = {
+let prodState = window.prodState || {
   products: [],
   batches: [],
   activeUnit: 'Unit 2',
   activeProductId: null
 };
+window.prodState = prodState;
 
 // ── Date formatting helpers ─────────────────────────────
 function formatDisplayDate(isoDate) {
@@ -50,6 +51,7 @@ async function prodDataInit() {
     console.error('Error loading production data:', err);
     // Preserve activeUnit when resetting state
     prodState = { products: [], batches: [], activeUnit: 'Unit 2', activeProductId: null };
+    window.prodState = prodState;
   }
 }
 

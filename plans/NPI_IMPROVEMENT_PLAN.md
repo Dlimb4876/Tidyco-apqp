@@ -3,34 +3,39 @@
 ## Context
 The NPI portal (`portals/product-development/npi/`) is an 8-file, 1,775-line vanilla JS system with tight coupling and no namespacing. The goal is incremental modernization to match the architecture patterns of the Capacity portal (`portals/capacity/js/`) which uses a clean data/component/feature layer separation. This checklist is ordered for low-risk, incremental delivery.
 
+## Progress Snapshot (2026-03-13)
+- Implementation checklist progress (Stages 1-3): **19/56 complete (~34%)**
+- Full plan progress (including verification): **19/65 complete (~29%)**
+- Status: Stage 1 is complete. Stages 2 and 3 are largely not started.
+
 ---
 
 ## Stage 1: Foundational Cleanup and Standardization
 
 ### 1.1 Code Style
-- [ ] Add `.eslintrc` or `eslint.config.js` at repo root with basic ES6 rules (no-unused-vars, no-undef, eqeqeq)
-- [ ] Add `.prettierrc` with project style (2-space indent, single quotes, no semicolons to match existing files)
-- [ ] Run linter across all 8 NPI JS files and log all violations without fixing yet
-- [ ] Fix violations file-by-file: `rpn-chart.js` → `gates.js` → `trackers.js` → `bom.js` → `timing.js` → `pfmea.js` → `apqp.js` → `dashboard.js`
+- [x] Add `.eslintrc` or `eslint.config.js` at repo root with basic ES6 rules (no-unused-vars, no-undef, eqeqeq)
+- [x] Add `.prettierrc` with project style (2-space indent, single quotes, no semicolons to match existing files)
+- [x] Run linter across all 8 NPI JS files and log all violations without fixing yet
+- [x] Fix violations file-by-file: `rpn-chart.js` → `gates.js` → `trackers.js` → `bom.js` → `timing.js` → `pfmea.js` → `apqp.js` → `dashboard.js`
 
 ### 1.2 Centralize Constants
-- [ ] Audit all hardcoded strings in timing.js (`GANTT_WEEKS=72`, `GANTT_ROLES`, `GANTT_SECTIONS`) — move to `core/js/state.js` or a new `portals/product-development/npi/js/npi-constants.js`
-- [ ] Audit magic numbers in pfmea.js (RPN threshold `100`, score range `1–10`) — confirm they match `state.js` constants or centralize them
-- [ ] Audit hardcoded tab names/keys in apqp.js and bom.js (`'parts'`, `'tools'`, etc.) — ensure they reference `BOM_TYPES` from `state.js`
-- [ ] Add `npi-constants.js` to `index.html` script load order if created (before `rpn-chart.js` at line 312)
+- [x] Audit all hardcoded strings in timing.js (`GANTT_WEEKS=72`, `GANTT_ROLES`, `GANTT_SECTIONS`) — move to `core/js/state.js` or a new `portals/product-development/npi/js/npi-constants.js`
+- [x] Audit magic numbers in pfmea.js (RPN threshold `100`, score range `1–10`) — confirm they match `state.js` constants or centralize them
+- [x] Audit hardcoded tab names/keys in apqp.js and bom.js (`'parts'`, `'tools'`, etc.) — ensure they reference `BOM_TYPES` from `state.js`
+- [x] Add `npi-constants.js` to `index.html` script load order if created (before `rpn-chart.js` at line 312)
 
 ### 1.3 Namespace Functions
-- [ ] Define a global `npi` namespace object in a new `portals/product-development/npi/js/npi.js` file: `window.npi = {}`
-- [ ] Migrate `gates.js` functions to `npi.gate.*` prefix (6 functions: `gateAllSigned`, `renderGatePage`, `toggleCheck`, `updSig`, `signOff`, `unsign`)
-- [ ] Migrate `trackers.js` functions to `npi.tracker.*` prefix (7 functions: `renderActions`, `renderRisks`, `addAction`, `updAction`, `delAction`, `addRisk`, `updRisk`, `delRisk`, `refreshRS`)
-- [ ] Migrate `bom.js` functions to `npi.bom.*` prefix (6 functions: `renderBOM`, `renderBomTable`, `setBomTab`, `addBomRow`, `updBom`, `delBom`)
-- [ ] Migrate `timing.js` functions to `npi.timing.*` prefix (7 functions: `renderTimingPlan`, `ganttNewRow`, `ganttWeekDate`, `fmtWeekDate`, `toggleMonth`, `buildMonthGroups`)
-- [ ] Migrate `pfmea.js` functions to `npi.pfmea.*` prefix (all `pf*()` functions)
-- [ ] Migrate `apqp.js` functions to `npi.apqp.*` prefix (`renderAPQP`, `renderCTQ`, `renderPFD`, `renderCP`, CTQ/PFD mutations)
-- [ ] Migrate `dashboard.js` functions to `npi.dashboard.*` prefix (all `renderProjects`, `renderDashboard`, project CRUD)
-- [ ] Update all inline `onclick="functionName()"` HTML strings across all files to use `npi.*.*()` calls
-- [ ] Update `navigation.js` dispatch calls to use new namespace
-- [ ] Add `npi.js` to `index.html` script load order before all other NPI JS files (line 311)
+- [x] Define a global `npi` namespace object in a new `portals/product-development/npi/js/npi.js` file: `window.npi = {}`
+- [x] Migrate `gates.js` functions to `npi.gate.*` prefix (6 functions: `gateAllSigned`, `renderGatePage`, `toggleCheck`, `updSig`, `signOff`, `unsign`)
+- [x] Migrate `trackers.js` functions to `npi.tracker.*` prefix (7 functions: `renderActions`, `renderRisks`, `addAction`, `updAction`, `delAction`, `addRisk`, `updRisk`, `delRisk`, `refreshRS`)
+- [x] Migrate `bom.js` functions to `npi.bom.*` prefix (6 functions: `renderBOM`, `renderBomTable`, `setBomTab`, `addBomRow`, `updBom`, `delBom`)
+- [x] Migrate `timing.js` functions to `npi.timing.*` prefix (7 functions: `renderTimingPlan`, `ganttNewRow`, `ganttWeekDate`, `fmtWeekDate`, `toggleMonth`, `buildMonthGroups`)
+- [x] Migrate `pfmea.js` functions to `npi.pfmea.*` prefix (all `pf*()` functions)
+- [x] Migrate `apqp.js` functions to `npi.apqp.*` prefix (`renderAPQP`, `renderCTQ`, `renderPFD`, `renderCP`, CTQ/PFD mutations)
+- [x] Migrate `dashboard.js` functions to `npi.dashboard.*` prefix (all `renderProjects`, `renderDashboard`, project CRUD)
+- [x] Update all inline `onclick="functionName()"` HTML strings across all files to use `npi.*.*()` calls
+- [x] Update `navigation.js` dispatch calls to use new namespace
+- [x] Add `npi.js` to `index.html` script load order before all other NPI JS files (line 311)
 
 ---
 

@@ -20,16 +20,19 @@ npi.apqp.renderAPQP = function() {
   const p = prog()
   const highRPN = p.pfmea.filter(r => npi.pfmea.calcRPN(r) >= RPN_HIGH).length
   const tabs = [
-    { id: 'ctq',   label: 'CTQ Matrix',  badge: p.ctq.length },
-    { id: 'pfd',   label: 'Process Flow', badge: p.pfd.filter(s => s.type !== 'group').length },
-    { id: 'pfmea', label: 'PFMEA',        badge: p.pfmea.length, warn: highRPN > 0 },
-    { id: 'cp',    label: 'Control Plan', badge: p.cp.length }
+    { id: APQP_TABS.CTQ,   label: 'CTQ Matrix',   badge: p.ctq.length },
+    { id: APQP_TABS.PFD,   label: 'Process Flow', badge: p.pfd.filter(s => s.type !== 'group').length },
+    { id: APQP_TABS.PFMEA, label: 'PFMEA',        badge: p.pfmea.length, warn: highRPN > 0 },
+    { id: APQP_TABS.CP,    label: 'Control Plan', badge: p.cp.length }
   ]
   const tabNav = `<div class="apqp-tabs-shell">${
-    tabs.map(t => `<button class="apqp-tab-btn ${apqpTab === t.id ? 'active' : ''}" onclick="setApqpTab('${t.id}')">${t.label}${t.badge > 0 ? `<span class="apqp-tab-badge">(${t.badge})</span>` : ''}${t.warn ? `<span class="apqp-tab-warning">⚠</span>` : ''}</button>`).join('')
+    tabs.map(t => `<button class="apqp-tab-btn ${apqpTab === t.id ? 'active' : ''}" onclick="npi.nav.setApqpTab('${t.id}')">${t.label}${t.badge > 0 ? `<span class="apqp-tab-badge">(${t.badge})</span>` : ''}${t.warn ? `<span class="apqp-tab-warning">⚠</span>` : ''}</button>`).join('')
   }</div>`
-  const inner = apqpTab === 'ctq' ? npi.apqp.renderCTQ() : apqpTab === 'pfd' ? npi.apqp.renderPFD() : apqpTab === 'pfmea' ? npi.pfmea.renderPFMEA() : npi.apqp.renderCP()
-  return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div><div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="goHome()">← Dashboard</button></div></div>
+  const inner = apqpTab === APQP_TABS.CTQ ? npi.apqp.renderCTQ()
+    : apqpTab === APQP_TABS.PFD ? npi.apqp.renderPFD()
+    : apqpTab === APQP_TABS.PFMEA ? npi.pfmea.renderPFMEA()
+    : npi.apqp.renderCP()
+  return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div><div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button></div></div>
   ${tabNav}
   <div style="background:var(--white);border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;padding:24px 0 0"></div>
   <div class="apqp-tab-content" style="padding:24px">${inner}</div>`
@@ -57,7 +60,7 @@ npi.apqp.renderCTQ = function() {
   <div class="card"><div class="card-head"><span class="card-title">Requirements</span><span class="card-meta">${p.ctq.length} defined</span></div>
   ${p.ctq.length === 0 ? emptyState('🎯', 'No CTQs yet', 'Add critical requirements') : `<div class="sticky-table-wrap"><table class="tbl ctq-tbl" style="min-width:960px;table-layout:fixed;width:100%"><colgroup><col style="width:40px"><col style="width:22%"><col style="width:14%"><col style="width:18%"><col style="width:13%"><col style="width:13%"><col style="width:74px"><col style="width:30px"></colgroup><thead><tr><th>Ref</th><th>Requirement</th><th>Target / Tolerance</th><th>Test Method</th><th>Source</th><th>Out-of-Spec Action</th><th style="text-align:center">Agreed</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="npi.apqp.addCTQ()">＋ Add CTQ</button></div>
-  ${p.ctq.length > 0 ? `<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" onclick="setApqpTab('pfd');return false" style="color:var(--blue)">Process Flow →</a></div>` : ''}`
+  ${p.ctq.length > 0 ? `<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" onclick="npi.nav.setApqpTab('pfd');return false" style="color:var(--blue)">Process Flow →</a></div>` : ''}`
 }
 
 npi.apqp.addCTQ = function() { prog().ctq.push({ id: 'c_' + Date.now(), req: '', spec: '', testMethod: '', source: 'Customer Spec', oos_action: 'TBD', customerAgreed: false }); save(); render() }
@@ -84,7 +87,7 @@ npi.apqp.renderPFD = function() {
         ch.push({ s: sorted[j], oi: p.pfd.indexOf(sorted[j]) }); j++
       }
       const col = collapsedGroups.has(s.id)
-      body += `<div class="step-row" id="pfd-row-${s.id}"><div class="sub-group-header" onclick="npi.apqp.toggleGroup('${s.id}')"><span style="font-size:10px;color:var(--purple);display:inline-block;${col ? '' : 'transform:rotate(90deg)'}">▶</span><span class="tag tag-sub">${s.stepNum}</span><span style="font-size:13px;font-weight:600;color:var(--purple)">${esc(s.op) || 'Sub-assembly Group'}</span><span style="font-size:11px;color:#9b74cc;margin-left:auto">${ch.length} step${ch.length !== 1 ? 's' : ''}</span><button class="del-btn" style="margin-left:8px" onclick="event.stopPropagation();npi.apqp.delPFD('${s.id}')">×</button></div><div class="sub-group-body${col ? ' collapsed' : ''}"> ${ch.map(c => stepRowHTML(c.s, c.oi, p)).join('')}</div></div>`
+      body += `<div class="step-row" id="pfd-row-${s.id}"><div class="sub-group-header" onclick="npi.apqp.toggleGroup('${s.id}')"><span style="font-size:10px;color:var(--purple);display:inline-block;${col ? '' : 'transform:rotate(90deg)'}">▶</span><span class="tag tag-sub">${s.stepNum}</span><span style="font-size:13px;font-weight:600;color:var(--purple)">${esc(s.op) || 'Sub-assembly Group'}</span><span style="font-size:11px;color:#9b74cc;margin-left:auto">${ch.length} step${ch.length !== 1 ? 's' : ''}</span><button class="del-btn" style="margin-left:8px" onclick="npi.nav.stopEvent(event);npi.apqp.delPFD('${s.id}')">×</button></div><div class="sub-group-body${col ? ' collapsed' : ''}"> ${ch.map(c => stepRowHTML(c.s, c.oi, p)).join('')}</div></div>`
       i = j
     } else { body += stepRowHTML(s, oi, p); i++ }
     body += `<div class="insert-row"><button class="insert-btn" onclick="npi.apqp.openInsert(${oi})">＋ after ${s.stepNum}</button></div>`
@@ -95,7 +98,7 @@ npi.apqp.renderPFD = function() {
   <div class="card"><div class="card-head"><span class="card-title">Process Steps</span><span class="card-meta">${p.pfd.filter(s => s.type !== 'group').length} executable steps</span></div>
   ${p.pfd.length === 0 ? emptyState('🔄', 'No steps yet', 'Add your first process step') : `<div>${body}</div>`}
   <button class="add-row" onclick="npi.apqp.addMainStep()">＋ Add Process Step</button></div>
-  ${p.pfd.length > 0 ? `<div class="info-banner">💡 Next: <a href="#" onclick="setApqpTab('pfmea');return false" style="color:var(--blue)">PFMEA →</a></div>` : ''}`
+  ${p.pfd.length > 0 ? `<div class="info-banner">💡 Next: <a href="#" onclick="npi.nav.setApqpTab('pfmea');return false" style="color:var(--blue)">PFMEA →</a></div>` : ''}`
 }
 
 npi.apqp.addMainStep = function() { const p = prog(); p.pfd.push({ id: 's_' + Date.now(), stepNum: nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }); save(); render() }

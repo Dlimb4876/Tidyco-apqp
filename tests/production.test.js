@@ -101,7 +101,7 @@ describe('Production Portal', () => {
         { id: 'b1', product_id: 'p1', work_location: 'Unit 2', quantity: 5, start_date: '2026-03-01', due_date: '2026-04-14', status: 'In Progress' }
       ], '2026-03-05');
 
-      const monthBandCount = (html.match(/gantt-month-band/g) || []).length;
+      const monthBandCount = (html.match(/class="gantt-month-band"/g) || []).length;
       expect(monthBandCount).toBe(2);
       expect(html).toContain('IN: 01/03/2026');
       expect(html).toContain('OUT: 14/04/2026');
@@ -144,7 +144,7 @@ describe('Production Portal', () => {
         { id: 'b1', product_id: 'p1', work_location: 'Unit 2', quantity: 5, start_date: '2026-03-01', due_date: '2026-04-14', status: 'In Progress' }
       ], '2026-03-05');
 
-      const monthBandCount = (html.match(/gantt-month-band/g) || []).length;
+      const monthBandCount = (html.match(/class="gantt-month-band"/g) || []).length;
       expect(monthBandCount).toBe(6);
       expect(html).toContain('gantt-week-marker-name');
       expect(html).toContain('Window:');

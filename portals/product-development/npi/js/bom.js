@@ -7,19 +7,15 @@
 npi.bom.renderBOM = function() {
   const p    = prog()
   const tabs = [
-    { id: 'parts', label: '🔩 Parts',        count: p.bom.parts.length },
-    { id: 'tools', label: '🔧 Tools',        count: p.bom.tools.length },
-    { id: 'equip', label: '⚙️ Equipment',    count: p.bom.equip.length },
-    { id: 'mat',   label: '📦 Materials',    count: p.bom.mat.length   },
-    { id: 'cons',  label: '🧴 Consumables',  count: p.bom.cons.length  },
-    { id: 'kits',  label: '📦 Kits',         count: p.bom.kits.length  },
+    ...Object.entries(BOM_TYPES).map(([id, meta]) => ({ id, label: `${meta.icon} ${meta.label}`, count: (p.bom[id] || []).length })),
+    { id: 'kits', label: '📦 Kits', count: p.bom.kits.length },
   ]
   const tabHTML = `<div class="bom-subnav">${
     tabs.map(t => `<button class="bom-tab${bomSubTab === t.id ? ' active' : ''}" onclick="npi.bom.setBomTab('${t.id}')">${t.label} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:inherit;opacity:.7">(${t.count})</span></button>`).join('')
   }</div>`
 
   const content = bomSubTab === 'kits' ? npi.bom.renderKits(p) : npi.bom.renderBomTable(bomSubTab, p)
-  return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="goHome()">← Dashboard</button></div></div>${tabHTML}${content}`
+  return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button></div></div>${tabHTML}${content}`
 }
 
 npi.bom.setBomTab = function(t) { bomSubTab = t; render() }
@@ -31,7 +27,7 @@ npi.bom.renderBomTable = function(type, p) {
   const rep     = items.filter(x => x.isRepair).length
   const statsHTML = `<div style="display:flex;gap:8px;margin-bottom:14px">
     <span class="flag" style="background:var(--bg);border:1px solid var(--line);color:var(--mid)">${items.length} total</span>
-    ${type !== 'tools' && type !== 'equip' ? `<span class="flag flag-aaw">${aaw} AAW</span><span class="flag flag-repair">${rep} Repair</span>` : ''}
+    ${type !== 'tools' && type !== 'equip' ? `<span class="flag-aaw bom-summary-pill">${aaw} AAW</span><span class="flag-repair bom-summary-pill">${rep} Repair</span>` : ''}
   </div>`
 
   let thead = '', tbody = ''

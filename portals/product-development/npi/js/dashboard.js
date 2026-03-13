@@ -69,13 +69,13 @@ npi.dashboard.renderProjects = function() {
           <div class="proj-home-title">NPI Projects</div>
           <div class="proj-home-sub">Signed in as ${esc(user)}</div>
         </div>
-        <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Hub</button>
+        <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
       </div>
       <div style="text-align:center;padding:80px 20px;color:var(--muted)">
         <div style="font-size:48px;margin-bottom:16px">📦</div>
         <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No products yet</div>
         <div style="font-size:13px;margin-bottom:24px">Add products in Product Management to get started</div>
-        <button class="btn btn-primary" onclick="setProductDevelopmentTab('product-management')">Go to Product Management</button>
+        <button class="btn btn-primary" onclick="npi.nav.setProductDevelopmentTab('product-management')">Go to Product Management</button>
       </div>
     </div>`
   }
@@ -110,7 +110,7 @@ npi.dashboard.renderProjects = function() {
         <div class="proj-home-title">NPI Projects</div>
         <div class="proj-home-sub">Signed in as ${esc(user)}</div>
       </div>
-      <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Hub</button>
+      <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
     </div>
     <div class="npi-swimlane-wrap">
       <div class="npi-col-headers">${colHeadersHTML}</div>`
@@ -171,8 +171,8 @@ npi.dashboard.renderNpiSlimCard = function(product, programme) {
         return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`
       }).join('') + `</div>`
   }
-  const onclick = programme ? `npi.dashboard.openProject('${programme.id}')` : `render()`
-  return `<div class="npi-slim-card" onclick="${onclick}">
+  const targetProgId = programme ? programme.id : ''
+  return `<div class="npi-slim-card" onclick="npi.dashboard.openProjectOrRender('${targetProgId}')">
     <div class="npi-slim-card-name">${esc(product.name)}</div>
     ${product.code     ? `<div class="npi-slim-card-code">${esc(product.code)}</div>` : ''}
     ${product.customer ? `<div class="npi-slim-card-meta">👤 ${esc(product.customer)}</div>` : ''}
@@ -195,9 +195,9 @@ npi.dashboard.renderDashboard = function() {
   const timingFilled = gantt.filter(r => r.weeks && r.weeks.some(w => w > 0)).length
 
   let alerts = ''
-  if (overdueAct > 0) alerts += `<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}</strong> — <a href="#" onclick="navigate('actions');return false" style="color:inherit;text-decoration:underline">View Actions →</a></div>`
-  if (highRisks > 0) alerts += `<div class="alert-item alert-amber">🟡 <strong>${highRisks} high-severity risk${highRisks !== 1 ? 's' : ''}</strong> open — <a href="#" onclick="navigate('risks');return false" style="color:inherit;text-decoration:underline">View Risks →</a></div>`
-  if (highRPN > 0)   alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRPN} failure cause${highRPN !== 1 ? 's' : ''} with RPN ≥ 100</strong> — <a href="#" onclick="apqpTab='pfmea';navigate('apqp');return false" style="color:inherit;text-decoration:underline">View PFMEA →</a></div>`
+  if (overdueAct > 0) alerts += `<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}</strong> — <a href="#" onclick="npi.nav.navigate('actions');return false" style="color:inherit;text-decoration:underline">View Actions →</a></div>`
+  if (highRisks > 0) alerts += `<div class="alert-item alert-amber">🟡 <strong>${highRisks} high-severity risk${highRisks !== 1 ? 's' : ''}</strong> open — <a href="#" onclick="npi.nav.navigate('risks');return false" style="color:inherit;text-decoration:underline">View Risks →</a></div>`
+  if (highRPN > 0)   alerts += `<div class="alert-item alert-amber">⚠ <strong>${highRPN} failure cause${highRPN !== 1 ? 's' : ''} with RPN ≥ 100</strong> — <a href="#" onclick="npi.nav.openPfmeaTab();return false" style="color:inherit;text-decoration:underline">View PFMEA →</a></div>`
 
   const gateStrip = GATE_DEFS.map((g, i) => {
     const gd      = p.gates[i] || {}
@@ -210,7 +210,7 @@ npi.dashboard.renderDashboard = function() {
     const dotCls  = signed ? 'gs-signed' : hasActivity ? 'gs-open' : 'gs-pending'
     const labelCol = signed ? 'var(--green)' : i === (curGate < 0 ? 5 : curGate) ? 'var(--blue)' : 'var(--muted)'
     const nodeBg  = signed ? 'background:var(--green-pale)' : hasActivity ? 'background:var(--amber-pale)' : ''
-    return `<div class="gate-node" style="${nodeBg}" onclick="navigate('gate_${g.num}')" title="Open Gate ${g.num}: ${g.name}">
+    return `<div class="gate-node" style="${nodeBg}" onclick="npi.nav.navigate('gate_${g.num}')" title="Open Gate ${g.num}: ${g.name}">
       <div class="gate-node-num" style="color:${labelCol}">Gate ${g.num}</div>
       <div class="gate-node-name">${g.name}</div>
       <div style="display:flex;align-items:center;gap:5px;margin-top:5px">
@@ -247,10 +247,10 @@ npi.dashboard.renderDashboard = function() {
       const saRisks   = (sp.risks || []).filter(r => r.status !== 'Closed').length
       const saHighR   = (sp.risks || []).filter(r => r.lik * r.imp >= 12 && r.status !== 'Closed').length
       const saHighRPN = (sp.pfmea || []).filter(r => npi.pfmea.calcRPN(r) >= RPN_HIGH).length
-      return `<div class="sub-asm-card" onclick="progId='${sp.id}';navigate('project')">
+      return `<div class="sub-asm-card" onclick="npi.nav.openProjectById('${sp.id}')">
         <div class="sub-asm-card-head">
           <span class="sub-asm-name">${esc(sp.name)}</span>
-          <button class="del-btn" style="font-size:10px" onclick="event.stopPropagation();npi.dashboard.unlinkSubAsm(${li})">× Unlink</button>
+          <button class="del-btn" style="font-size:10px" onclick="npi.nav.stopEvent(event);npi.dashboard.unlinkSubAsm(${li})">× Unlink</button>
         </div>
         ${sp.unit ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px">🚂 ${esc(sp.unit)}</div>` : ''}
         <div class="sub-asm-stats">
@@ -273,7 +273,7 @@ npi.dashboard.renderDashboard = function() {
     <div class="card" style="margin-bottom:0;padding:0;overflow:hidden;height:100%;box-sizing:border-box">
       <div class="card-head" style="padding:10px 14px">
         <span class="card-title">RPN Burndown — Original vs Current</span>
-        <button class="btn btn-ghost btn-sm" onclick="apqpTab='pfmea';navigate('apqp')">Full PFMEA →</button>
+        <button class="btn btn-ghost btn-sm" onclick="npi.nav.openPfmeaTab()">Full PFMEA →</button>
       </div>
       <div style="padding:14px 16px 16px">${renderRpnBurndown(true)}</div>
     </div>` : `<div class="card" style="margin-bottom:0;display:flex;align-items:center;justify-content:center;min-height:80px">
@@ -281,7 +281,7 @@ npi.dashboard.renderDashboard = function() {
     </div>`
 
   const launcherHTML = sections.map(s =>
-    `<div class="section-card" onclick="navigate('${s.id}')" style="--sc-color:${s.color}"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${s.color};margin-bottom:1px">${s.icon} ${s.title}</div><div class="section-card-desc">${s.desc}</div></div>`
+    `<div class="section-card" onclick="npi.nav.navigate('${s.id}')" style="--sc-color:${s.color}"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:${s.color};margin-bottom:1px">${s.icon} ${s.title}</div><div class="section-card-desc">${s.desc}</div></div>`
   ).join('')
 
   const actHTML = p.actions.filter(a => a.status !== 'Closed').slice(0, 5).map(a => {
@@ -297,20 +297,20 @@ npi.dashboard.renderDashboard = function() {
   const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋'
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null
 
-  return `<div class="dash-hero"><div style="display:flex;align-items:center;gap:12px"><button class="btn btn-ghost" style="border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="navigate('projects')">← Back to Projects</button><div><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME Lead: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 Project Manager: ${esc(p.pm)}</span>` : ''} ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''} ${totalBomItems > 0 ? `<span>📦 BOM: ${totalBomItems} items</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span></div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="npi.dashboard.showEditProject()">✎ Edit Project</button></div></div>
+  return `<div class="dash-hero"><div style="display:flex;align-items:center;gap:12px"><button class="btn btn-ghost" style="border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="npi.nav.navigate('projects')">← Back to Projects</button><div><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME Lead: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 Project Manager: ${esc(p.pm)}</span>` : ''} ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''} ${totalBomItems > 0 ? `<span>📦 BOM: ${totalBomItems} items</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span></div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="npi.dashboard.showEditProject()">✎ Edit Project</button></div></div>
   <div class="dash-body">
     <div class="kpi-grid">
-      <div class="kpi-card" onclick="navigate('gate_${curGate >= 0 ? curGate : 5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
-      <div class="kpi-card" onclick="navigate('actions')" style="--kpi-color:${overdueAct > 0 ? 'var(--red)' : openAct > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${openAct}</div><div class="kpi-label">Open Actions</div><div class="kpi-sub">${overdueAct > 0 ? `<span style="color:var(--red)">${overdueAct} overdue</span>` : '—'}</div></div>
-      <div class="kpi-card" onclick="navigate('risks')" style="--kpi-color:${highRisks > 0 ? 'var(--red)' : 'var(--blue)'}"><div class="kpi-num">${p.risks.filter(r => r.status !== 'Closed').length}</div><div class="kpi-label">Open Risks</div><div class="kpi-sub">${highRisks > 0 ? `<span style="color:var(--red)">${highRisks} high</span>` : '—'}</div></div>
-      <div class="kpi-card" onclick="apqpTab='pfmea';navigate('apqp')" style="--kpi-color:${highRPN > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${highRPN}</div><div class="kpi-label">High RPN</div><div class="kpi-sub">${p.pfmea.length} total rows</div></div>
+      <div class="kpi-card" onclick="npi.nav.navigate('gate_${curGate >= 0 ? curGate : 5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>
+      <div class="kpi-card" onclick="npi.nav.navigate('actions')" style="--kpi-color:${overdueAct > 0 ? 'var(--red)' : openAct > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${openAct}</div><div class="kpi-label">Open Actions</div><div class="kpi-sub">${overdueAct > 0 ? `<span style="color:var(--red)">${overdueAct} overdue</span>` : '—'}</div></div>
+      <div class="kpi-card" onclick="npi.nav.navigate('risks')" style="--kpi-color:${highRisks > 0 ? 'var(--red)' : 'var(--blue)'}"><div class="kpi-num">${p.risks.filter(r => r.status !== 'Closed').length}</div><div class="kpi-label">Open Risks</div><div class="kpi-sub">${highRisks > 0 ? `<span style="color:var(--red)">${highRisks} high</span>` : '—'}</div></div>
+      <div class="kpi-card" onclick="npi.nav.openPfmeaTab()" style="--kpi-color:${highRPN > 0 ? 'var(--amber)' : 'var(--green)'}"><div class="kpi-num">${highRPN}</div><div class="kpi-label">High RPN</div><div class="kpi-sub">${p.pfmea.length} total rows</div></div>
     </div>
     ${alerts ? `<div class="alert-row">${alerts}</div>` : ''}
     <div class="dash-section-label">Gate Progress</div>
     <div class="gate-strip">${gateStrip}</div>
     <div class="dash-section-label" style="margin-top:8px">Tools</div>
     <div class="section-launcher" style="margin-bottom:16px">${launcherHTML}</div>
-    ${parentProg ? `<div class="parent-prog-card" onclick="progId='${parentProg.id}';navigate('project')">
+    ${parentProg ? `<div class="parent-prog-card" onclick="npi.nav.openProjectById('${parentProg.id}')">
       <div class="parent-prog-label">↑ PARENT PROGRAMME</div>
       <div class="parent-prog-name">${esc(parentProg.name)}</div>
       ${parentProg.unit ? `<div class="parent-prog-meta">🚂 ${esc(parentProg.unit)}</div>` : ''}
@@ -326,14 +326,21 @@ npi.dashboard.renderDashboard = function() {
       </div>
     </div>
     <div class="dash-grid">
-      <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Open Actions</span><button class="btn btn-ghost btn-sm" onclick="navigate('actions')">View all →</button></div>${actHTML}</div>
-      <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Top Risks</span><button class="btn btn-ghost btn-sm" onclick="navigate('risks')">View all →</button></div>${riskHTML}</div>
+      <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Open Actions</span><button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('actions')">View all →</button></div>${actHTML}</div>
+      <div class="card" style="margin-bottom:0"><div class="card-head"><span class="card-title">Top Risks</span><button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('risks')">View all →</button></div>${riskHTML}</div>
     </div>
   </div>`
 }
 
 // ── Project CRUD ──────────────────────────────────────────────
 npi.dashboard.openProject = function(id) { progId = id; navigate('project') }
+npi.dashboard.openProjectOrRender = function(id) {
+  if (id) {
+    npi.dashboard.openProject(id)
+    return
+  }
+  npi.nav.render()
+}
 
 npi.dashboard.newProjectInFamily = function(famId) {
   const sel = document.getElementById('np_family')

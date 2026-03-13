@@ -43,7 +43,7 @@ npi.gate.renderGatePage = function(gateNum) {
         <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Name</label><input style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:#f0faf4;border-color:var(--green-mid)' : ''}" value="${esc(sig.name)}" placeholder="Full name" onchange="npi.gate.updSig(${gateNum},${si},'name',this.value)"></div>
         <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Date</label><input type="date" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:#f0faf4;border-color:var(--green-mid)' : ''}" value="${sig.date || ''}" onchange="npi.gate.updSig(${gateNum},${si},'date',this.value)"></div>
         ${!sig.signed
-          ? `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;${sig.name ? 'background:var(--blue);color:white' : 'background:var(--line);color:var(--muted);cursor:not-allowed'}" onclick="${sig.name ? `npi.gate.signOff(${gateNum},${si})` : 'alert(\'Enter name first\')'}">${sig.name ? 'Sign Off' : 'Enter name to sign'}</button>`
+          ? `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;${sig.name ? 'background:var(--blue);color:white' : 'background:var(--line);color:var(--muted);cursor:not-allowed'}" onclick="${sig.name ? `npi.gate.signOff(${gateNum},${si})` : 'npi.nav.alertEnterNameFirst()'}">${sig.name ? 'Sign Off' : 'Enter name to sign'}</button>`
           : `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;background:var(--green);color:white;cursor:default;font-family:'IBM Plex Sans',sans-serif">✓ Signed</button>
              <button onclick="npi.gate.unsign(${gateNum},${si})" style="font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'IBM Plex Sans',sans-serif;padding:0;margin-top:2px">Undo sign-off</button>`}
       </div>
@@ -61,9 +61,9 @@ npi.gate.renderGatePage = function(gateNum) {
         <div style="font-size:12px;color:var(--muted);margin-top:3px">Required signatories: ${g.signatories.join(' · ')}</div>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
-        ${prevGate !== null ? `<button class="btn btn-ghost btn-sm" onclick="navigate('gate_${prevGate}')">← Gate ${prevGate}</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="goHome()">Dashboard</button>
-        ${nextGate !== null ? `<button class="btn btn-ghost btn-sm" onclick="navigate('gate_${nextGate}')">Gate ${nextGate} →</button>` : ''}
+        ${prevGate !== null ? `<button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('gate_${prevGate}')">← Gate ${prevGate}</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">Dashboard</button>
+        ${nextGate !== null ? `<button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('gate_${nextGate}')">Gate ${nextGate} →</button>` : ''}
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:14px">

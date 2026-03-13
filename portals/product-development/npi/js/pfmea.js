@@ -146,7 +146,7 @@ npi.pfmea.renderPFMEA = function() {
               </div>
             </td>
             <td rowspan="${efRowspan}" style="text-align:center;vertical-align:top;padding-top:6px">
-              <input type="number" class="cell-edit mono" min="1" max="9" value="${sev}"
+              <input type="number" class="cell-edit mono" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
                 oninput="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdEffect(${mi},${ei},'sev',v);npi.pfmea.pfLiveRPN(${mi},${ei},-1)"
                 onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdEffect(${mi},${ei},'sev',v)" style="width:30px;text-align:center;font-weight:700;font-size:13px">
             </td>`
@@ -157,7 +157,7 @@ npi.pfmea.renderPFMEA = function() {
               <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdCause(${mi},${ei},${ci},'cause',this.value)" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:6px">
-              <input type="number" class="cell-edit mono" min="1" max="9" value="${occ}"
+              <input type="number" class="cell-edit mono" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${occ}"
                 oninput="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdCause(${mi},${ei},${ci},'occ',v);npi.pfmea.pfLiveRPN(${mi},${ei},${ci})"
                 onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdCause(${mi},${ei},${ci},'occ',v)" style="width:30px;text-align:center">
             </td>
@@ -168,7 +168,7 @@ npi.pfmea.renderPFMEA = function() {
               <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdCause(${mi},${ei},${ci},'detect',this.value)" placeholder="Detection controls" style="width:100%">${esc(ca.detect || '')}</textarea>
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:6px">
-              <input type="number" class="cell-edit mono" min="1" max="9" value="${det}"
+              <input type="number" class="cell-edit mono" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${det}"
                 oninput="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdCause(${mi},${ei},${ci},'det',v);npi.pfmea.pfLiveRPN(${mi},${ei},${ci})"
                 onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdCause(${mi},${ei},${ci},'det',v)" style="width:30px;text-align:center">
             </td>
@@ -185,12 +185,12 @@ npi.pfmea.renderPFMEA = function() {
             <td><input class="cell-edit" value="${esc(act.owner || '')}" onchange="npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
             <td><input type="date" class="cell-edit mono" value="${esc(act.due || '')}" onchange="npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'due',this.value)" style="width:100%;font-size:11px"></td>
             <td style="text-align:center;vertical-align:top;padding-top:6px">
-              <input type="number" class="cell-edit mono" min="1" max="9" value="${act.newOcc || ''}" placeholder="${occ}"
+              <input type="number" class="cell-edit mono" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newOcc || ''}" placeholder="${occ}"
                 oninput="const v=npi.pfmea.pfScoreInput(this,true);npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newOcc',v);npi.pfmea.pfLiveForecast(${mi},${ei},${ci})"
                 onchange="const v=npi.pfmea.pfScoreInput(this,true);npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newOcc',v)" style="width:30px;text-align:center;background:#eff6ff">
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:6px">
-              <input type="number" class="cell-edit mono" min="1" max="9" value="${act.newDet || ''}" placeholder="${det}"
+              <input type="number" class="cell-edit mono" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newDet || ''}" placeholder="${det}"
                 oninput="const v=npi.pfmea.pfScoreInput(this,true);npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newDet',v);npi.pfmea.pfLiveForecast(${mi},${ei},${ci})"
                 onchange="const v=npi.pfmea.pfScoreInput(this,true);npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newDet',v)" style="width:30px;text-align:center;background:#eff6ff">
             </td>
@@ -225,7 +225,7 @@ npi.pfmea.renderPFMEA = function() {
               </div>
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:6px">
-              <input type="number" class="cell-edit mono" min="1" max="9" value="${sev}"
+              <input type="number" class="cell-edit mono" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
                 oninput="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdEffect(${mi},${ei},'sev',v);npi.pfmea.pfLiveRPN(${mi},${ei},-1)"
                 onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdEffect(${mi},${ei},'sev',v)" style="width:30px;text-align:center;font-weight:700;font-size:13px">
             </td>
@@ -266,7 +266,7 @@ npi.pfmea.renderPFMEA = function() {
     <div style="padding:14px 16px 16px">${renderRpnBurndown(false)}</div>
 </div>
 <div class="card">${html}</div>
-${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" onclick="setApqpTab('cp');return false" style="color:var(--blue)">Control Plan →</a></div>` : ''}`
+${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" onclick="npi.nav.setApqpTab('cp');return false" style="color:var(--blue)">Control Plan →</a></div>` : ''}`
 }
 
 // ── History popup ─────────────────────────────────────────────
@@ -312,7 +312,7 @@ npi.pfmea.pfNormalizeScore = function(v, allowBlank) {
   if (!raw) return allowBlank ? '' : 1
   const n = parseInt(raw.replace(/[^0-9]/g, ''), 10)
   if (!Number.isFinite(n)) return allowBlank ? '' : 1
-  return Math.min(9, Math.max(1, n))
+  return Math.min(PFMEA_SCORE_MAX, Math.max(PFMEA_SCORE_MIN, n))
 }
 npi.pfmea.pfScoreInput = function(inputEl, allowBlank) {
   const safe = npi.pfmea.pfNormalizeScore(inputEl.value, allowBlank)

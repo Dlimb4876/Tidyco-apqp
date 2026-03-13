@@ -41,6 +41,8 @@ export default [
         // npi-constants.js
         RPN_HIGH: 'readonly',
         RPN_CRITICAL: 'readonly',
+        PFMEA_SCORE_MIN: 'readonly',
+        PFMEA_SCORE_MAX: 'readonly',
         APQP_TABS: 'readonly',
         BOM_TABS: 'readonly',
         GANTT_WEEKS: 'readonly',
@@ -78,6 +80,7 @@ export default [
         setApqpTab: 'readonly',
         initProgSelect: 'readonly',
         setSyncBadge: 'readonly',
+        setProductDevelopmentTab: 'readonly',
         sortedPfd: 'readonly',
         calcRPN: 'readonly',
         getWeekNumber: 'readonly',

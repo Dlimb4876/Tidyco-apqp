@@ -60,6 +60,17 @@ td.w75 { width: 75px; }
 .bom-tbl td.bom-col-desc  { width: 180px; }
 .bom-tbl td.bom-col-notes { width: 180px; }
 
+.bom-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1;
+}
+
 /* ── BOM Picker (Modal List) ───────────────────────────────── */
 .bom-filter-row {
   display: flex;
