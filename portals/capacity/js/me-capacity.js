@@ -61,6 +61,11 @@ window.renderMeCapacity = function() {
 
 // ── Tab management ─────────────────────────────────────────
 window.meSetTab = function(tab) {
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmSetTab === 'function') {
+    pmSetTab(tab);
+    return;
+  }
+
   if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart';
   meTab = tab;
 
@@ -86,6 +91,11 @@ window.meSetTab = function(tab) {
 
 // Refresh current tab without switching tabs
 window.meRefreshCurrentTab = function() {
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmRefreshCurrentTab === 'function') {
+    pmRefreshCurrentTab();
+    return;
+  }
+
   const body = document.getElementById('meBody');
   if (body) {
     body.innerHTML = meGetTabContent();
@@ -140,6 +150,11 @@ function meGetTabContent() {
 
 // ── Month navigation handlers ──────────────────────────────
 window.meOnMonthChange = function(newMonth) {
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnMonthChange === 'function') {
+    pmOnMonthChange(newMonth);
+    return;
+  }
+
   if (meTab === 'holidays') {
     meHolidayMonth = newMonth;
   } else {
@@ -150,6 +165,11 @@ window.meOnMonthChange = function(newMonth) {
 };
 
 window.meOnNextMonth = function() {
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnNextMonth === 'function') {
+    pmOnNextMonth();
+    return;
+  }
+
   const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart;
   const [year, month] = currentMonth.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
@@ -166,6 +186,11 @@ window.meOnNextMonth = function() {
 };
 
 window.meOnPrevMonth = function() {
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnPrevMonth === 'function') {
+    pmOnPrevMonth();
+    return;
+  }
+
   const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart;
   const [year, month] = currentMonth.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
@@ -183,10 +208,20 @@ window.meOnPrevMonth = function() {
 
 // ── Persistence ────────────────────────────────────────────
 window.meOnSave = async function(showAlert) {
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnSave === 'function') {
+    await pmOnSave(showAlert);
+    return;
+  }
+
   await meDataSave(showAlert);
 };
 
 function meDebouncedSave() {
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmDebouncedSave === 'function') {
+    pmDebouncedSave();
+    return;
+  }
+
   clearTimeout(meSaveTimer);
   meSaveTimer = setTimeout(async () => {
     await meDataSave(false);

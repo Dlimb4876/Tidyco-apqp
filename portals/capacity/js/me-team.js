@@ -3,6 +3,11 @@
    ============================================================ */
 
 window.meRenderTeamTab = function(teamArray) {
+  const department = typeof meGetDepartmentFromContext === 'function'
+    ? meGetDepartmentFromContext()
+    : 'ME';
+  const isPmContext = department === 'PM';
+
   // Calculate monthly capacity (4.33 weeks per month average)
   const weeksPerMonth = 4.33;
   const totalCapacity = teamArray.reduce((sum, member) => {
@@ -17,7 +22,10 @@ window.meRenderTeamTab = function(teamArray) {
   // Calculate holidays this month
   const today = new Date();
   const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-  const holidays = meDataGetHolidays();
+  const allHolidays = meDataGetHolidays();
+  const holidays = typeof meFilterByDepartment === 'function'
+    ? meFilterByDepartment(allHolidays, department, 'ME')
+    : allHolidays;
   const holidaysThisMonth = holidays.filter(h => h.date.substring(0, 7) === thisMonth);
   const uniqueHolidayKeysThisMonth = new Set(
     holidaysThisMonth
@@ -25,21 +33,25 @@ window.meRenderTeamTab = function(teamArray) {
       .filter(key => !key.startsWith('|'))
   );
 
+  const allTeam = typeof meDataGetTeam === 'function' ? meDataGetTeam() : teamArray;
+
   let rows = '';
   teamArray.forEach((member, idx) => {
+    const globalIdx = allTeam.indexOf(member);
+    const rowIndex = globalIdx >= 0 ? globalIdx : idx;
     const effective = (meGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100)).toFixed(1);
     const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option>';
     rows += `
       <tr>
-        <td><input value="${esc(member.name)}" onchange="meDataUpdateTeam(${idx}, 'name', this.value); meDebouncedSave();"></td>
-        <td><input value="${esc(member.jobTitle || '')}" onchange="meDataUpdateTeam(${idx}, 'jobTitle', this.value); meDebouncedSave();"></td>
-        <td><select onchange="meDataUpdateTeam(${idx}, 'group', this.value); meDebouncedSave();">${groupOpts}</select></td>
-        <td><input type="date" value="${member.startDate || ''}" onchange="meDataUpdateTeam(${idx}, 'startDate', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${member.endDate || ''}" onchange="meDataUpdateTeam(${idx}, 'endDate', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" onchange="meDataUpdateTeam(${idx}, 'utilisation', this.value); meDebouncedSave();"></td>
+        <td><input value="${esc(member.name)}" onchange="meDataUpdateTeam(${rowIndex}, 'name', this.value); meDebouncedSave();"></td>
+        <td><input value="${esc(member.jobTitle || '')}" onchange="meDataUpdateTeam(${rowIndex}, 'jobTitle', this.value); meDebouncedSave();"></td>
+        <td><select onchange="meDataUpdateTeam(${rowIndex}, 'group', this.value); meDebouncedSave();">${groupOpts}</select></td>
+        <td><input type="date" value="${member.startDate || ''}" onchange="meDataUpdateTeam(${rowIndex}, 'startDate', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${member.endDate || ''}" onchange="meDataUpdateTeam(${rowIndex}, 'endDate', this.value); meDebouncedSave();"></td>
+        <td><input type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${rowIndex}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
+        <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" onchange="meDataUpdateTeam(${rowIndex}, 'utilisation', this.value); meDebouncedSave();"></td>
         <td style="font-weight: bold;">${effective}</td>
-        <td style="text-align: center;"><button class="me-del-btn" onclick="if(confirm('Delete engineer?')) { meDataDeleteTeam(${idx}); meOnSave(); meSetTab('team'); }">✕</button></td>
+        <td style="text-align: center;"><button class="me-del-btn" onclick="if(confirm('Delete team member?')) { meDataDeleteTeam(${rowIndex}); meOnSave(); meSetTab('team'); }">✕</button></td>
       </tr>`;
   });
 
@@ -73,7 +85,7 @@ window.meRenderTeamTab = function(teamArray) {
       <div class="me-card">
         <div class="me-card-head">
           <span class="me-card-title">TEAM MEMBERS</span>
-          <span style="font-size:12px;color:var(--muted)">${teamArray.length} engineers</span>
+          <span style="font-size:12px;color:var(--muted)">${teamArray.length} team members</span>
         </div>
         <div class="me-card-body">
           <div class="me-tbl-wrap">
@@ -95,7 +107,7 @@ window.meRenderTeamTab = function(teamArray) {
             </table>
           </div>
           <div class="me-add-row">
-            <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('New Engineer', ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team');">＋ Add Engineer</button>
+            <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('${isPmContext ? 'New PM Team Member' : 'New Engineer'}', ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team');">＋ Add Team Member</button>
           </div>
         </div>
       </div>

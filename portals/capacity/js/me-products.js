@@ -3,8 +3,14 @@
    ============================================================ */
 
 window.meRenderProductsTab = function(productsArray, availableProducts, tasksArray) {
-  const updated = meDataGetProducts();
+  const department = typeof meGetDepartmentFromContext === 'function'
+    ? meGetDepartmentFromContext()
+    : 'ME';
+  const isPmContext = department === 'PM';
+
+  const updated = Array.isArray(productsArray) ? productsArray : meDataGetProducts();
   const tasks = tasksArray || meDataGetTasks();
+  const allProducts = typeof meDataGetProducts === 'function' ? meDataGetProducts() : updated;
 
   const weeksPerMonth = 4.33;
   const totalLoadWeekly = updated.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
@@ -28,13 +34,15 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
 
   let rows = '';
   updated.forEach((product, idx) => {
+    const globalIdx = allProducts.indexOf(product);
+    const rowIndex = globalIdx >= 0 ? globalIdx : idx;
     rows += `
       <tr>
         <td>${esc(product.name)}</td>
-        <td><input type="date" value="${product.supportFrom || ''}" onchange="meDataUpdateProduct(${idx}, 'supportFrom', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${product.supportUntil || ''}" onchange="meDataUpdateProduct(${idx}, 'supportUntil', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${idx}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
-        <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${idx}, 'notes', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${product.supportFrom || ''}" onchange="meDataUpdateProduct(${rowIndex}, 'supportFrom', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${product.supportUntil || ''}" onchange="meDataUpdateProduct(${rowIndex}, 'supportUntil', this.value); meDebouncedSave();"></td>
+        <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${rowIndex}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
+        <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${rowIndex}, 'notes', this.value); meDebouncedSave();"></td>
       </tr>`;
   });
 
@@ -74,12 +82,12 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
               <th style="width:200px">Notes</th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="5"><div style="text-align:center;padding:40px;color:var(--muted)">No production products found</div></td></tr>'}
+              ${rows || `<tr><td colspan="5"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
             </tbody>
           </table>
         </div>
         <div style="font-size: 12px; color: var(--muted); padding: 12px 0;">
-          💡 Products are synced from the Product Management database. Edit support dates and hours per week as needed for capacity planning.
+          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. Edit support dates and hours per week as needed for capacity planning.
         </div>
       </div>
     </div>

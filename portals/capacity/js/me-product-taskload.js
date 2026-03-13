@@ -12,6 +12,11 @@ function esc(str) {
 }
 
 window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
+  const department = typeof meGetDepartmentFromContext === 'function'
+    ? meGetDepartmentFromContext()
+    : 'ME';
+  const isPmContext = department === 'PM';
+
   const weeksPerMonth = 4.33;
 
   // Group tasks by productId
@@ -117,7 +122,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
       <div class="me-card">
         <div class="me-card-head">
           <span class="me-card-title">PRODUCT TASK LOAD ANALYSIS</span>
-          <span style="font-size:12px;color:var(--muted)">Demand from ME capacity tasks per product</span>
+          <span style="font-size:12px;color:var(--muted)">Demand from ${isPmContext ? 'PM' : 'ME'} capacity tasks per product</span>
         </div>
         <div class="me-card-body">
           <div class="me-tbl-wrap">
@@ -135,7 +140,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
             </table>
           </div>
           <div style="font-size: 12px; color: var(--muted); padding: 12px 0; margin-top: 12px;">
-            💡 Support/Month = support hours per week × 4.33 | Total Load = Task Demand + Support/Month | Task Demand = sum of ME capacity task hours
+            💡 Support/Month = support hours per week × 4.33 | Total Load = Task Demand + Support/Month | Task Demand = sum of ${isPmContext ? 'PM' : 'ME'} capacity task hours
           </div>
         </div>
       </div>
