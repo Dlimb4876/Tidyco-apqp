@@ -10,6 +10,58 @@ let productsState = {
   loaded: false
 };
 
+const PRODUCTS_CHANNEL = 'products_channel';
+let productsRealtimeActive = false;
+
+function productsDataIsKanbanVisible() {
+  return currentSection === 'projects' ||
+    (currentSection === 'product-development' && productDevelopmentTab === 'npi');
+}
+
+function productsDataTriggerKanbanRefresh() {
+  if (!productsDataIsKanbanVisible()) return;
+  if (typeof render === 'function') render();
+}
+
+function productsDataUpsertProduct(row) {
+  if (!row || !row.id) return;
+  const idx = productsState.products.findIndex(p => p.id === row.id);
+  if (idx >= 0) {
+    productsState.products[idx] = row;
+  } else {
+    productsState.products.push(row);
+  }
+  productsState.products.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+}
+
+function productsDataRemoveProduct(productId) {
+  if (!productId) return;
+  productsState.products = productsState.products.filter(p => p.id !== productId);
+  delete productsState.history[productId];
+}
+
+function productsDataInitRealtime() {
+  if (productsRealtimeActive) return;
+  if (typeof createRealtimeSubscription !== 'function') return;
+
+  const sub = createRealtimeSubscription('products', PRODUCTS_CHANNEL, {
+    onInsert: (row) => {
+      productsDataUpsertProduct(row);
+      productsDataTriggerKanbanRefresh();
+    },
+    onUpdate: (row) => {
+      productsDataUpsertProduct(row);
+      productsDataTriggerKanbanRefresh();
+    },
+    onDelete: (row) => {
+      productsDataRemoveProduct(row?.id);
+      productsDataTriggerKanbanRefresh();
+    }
+  });
+
+  productsRealtimeActive = !!sub;
+}
+
 /**
  * Initialize products data from Supabase
  */
@@ -42,6 +94,7 @@ async function productsDataInit() {
     }
 
     productsState.loaded = true;
+    productsDataInitRealtime();
     console.log('✓ Products data initialized:', productsState.products.length, 'products');
   } catch (err) {
     console.error('❌ Error initializing products:', err);
@@ -96,6 +149,7 @@ async function productsDataAddProduct(product) {
 
     productsState.products.push(data);
     productsState.products.sort((a, b) => a.name.localeCompare(b.name));
+    productsDataTriggerKanbanRefresh();
 
     console.log('✓ Product added:', data.id);
     return data;
@@ -127,6 +181,7 @@ async function productsDataUpdateProduct(productId, updates) {
       productsState.products[idx] = data;
       productsState.products.sort((a, b) => a.name.localeCompare(b.name));
     }
+    productsDataTriggerKanbanRefresh();
 
     console.log('✓ Product updated:', productId);
     return data;
@@ -147,6 +202,7 @@ async function productsDataDeleteProduct(productId) {
 
     productsState.products = productsState.products.filter(p => p.id !== productId);
     delete productsState.history[productId];
+    productsDataTriggerKanbanRefresh();
 
     console.log('✓ Product deleted:', productId);
   } catch (err) {

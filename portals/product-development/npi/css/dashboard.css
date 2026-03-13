@@ -482,6 +482,94 @@
 /* ── NPI Swimlane Kanban ─────────────────────────────────────── */
 .npi-swimlane-wrap { position: relative; }
 
+.npi-projects-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.npi-mode-group {
+  display: inline-flex;
+  gap: 6px;
+}
+.npi-mode-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.npi-mode-btn.is-active {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: rgba(0, 102, 204, 0.08);
+}
+.npi-completed-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--white);
+  color: var(--mid);
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.npi-view-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 8px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.npi-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+}
+.npi-search-input,
+.npi-family-filter {
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--ink);
+  padding: 0 10px;
+  font-size: 12px;
+}
+.npi-search-input {
+  min-width: 220px;
+  flex: 1 1 260px;
+}
+.npi-family-filter {
+  min-width: 180px;
+}
+.npi-status-chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.npi-status-chip {
+  padding: 5px 9px;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.npi-status-chip.is-active {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: rgba(0, 102, 204, 0.08);
+}
+.npi-empty-view {
+  text-align: center;
+  padding: 30px 16px;
+  color: var(--muted);
+  border: 1px dashed var(--line2);
+  border-radius: 8px;
+  background: var(--white);
+}
+
 .npi-col-headers {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -593,6 +681,29 @@
 .npi-slim-card-meta { font-size: 10px; color: var(--muted); }
 
 @media (max-width: 768px) {
+  .npi-projects-toolbar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .npi-mode-group {
+    width: 100%;
+  }
+  .npi-mode-btn {
+    flex: 1;
+    text-align: center;
+  }
+  .npi-search-input,
+  .npi-family-filter {
+    width: 100%;
+    min-width: 0;
+  }
+  .npi-status-chips {
+    width: 100%;
+  }
+  .npi-status-chip {
+    flex: 1 1 calc(50% - 6px);
+    text-align: center;
+  }
   .npi-lane-body   { grid-template-columns: 1fr; }
   .npi-col-headers { grid-template-columns: 1fr; }
   .npi-col-headers .npi-col-header-label:not(:first-child) { display: none; }

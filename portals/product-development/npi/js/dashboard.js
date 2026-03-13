@@ -8,6 +8,46 @@ const npiCollapsedLanes = new Set(
   JSON.parse(localStorage.getItem('npi_collapsed_lanes') || '[]')
 )
 
+const NPI_PROJECTS_VIEW_MODE_KEY = 'npi_projects_view_mode'
+let npiProjectsViewMode = localStorage.getItem(NPI_PROJECTS_VIEW_MODE_KEY) || 'active'
+if (!['active', 'all', 'completed'].includes(npiProjectsViewMode)) {
+  npiProjectsViewMode = 'active'
+}
+
+let npiProjectsSearch = ''
+let npiProjectsFamilyFilter = 'all'
+let npiProjectsStatusFilter = 'all'
+
+npi.dashboard.setProjectsViewMode = function(mode) {
+  if (!['active', 'all', 'completed'].includes(mode)) return
+  npiProjectsViewMode = mode
+  localStorage.setItem(NPI_PROJECTS_VIEW_MODE_KEY, mode)
+  npiProjectsStatusFilter = 'all'
+  render()
+}
+
+npi.dashboard.setProjectsSearch = function(value) {
+  npiProjectsSearch = (value || '').trim().toLowerCase()
+  render()
+}
+
+npi.dashboard.setProjectsFamilyFilter = function(value) {
+  npiProjectsFamilyFilter = value || 'all'
+  render()
+}
+
+npi.dashboard.setProjectsStatusFilter = function(value) {
+  npiProjectsStatusFilter = value || 'all'
+  render()
+}
+
+npi.dashboard.clearProjectFilters = function() {
+  npiProjectsSearch = ''
+  npiProjectsFamilyFilter = 'all'
+  npiProjectsStatusFilter = 'all'
+  render()
+}
+
 // ── Auto-create programmes for all products ───────────────────
 npi.dashboard.ensureProductProgrammes = function() {
   const products = productsDataGetAll()
@@ -54,13 +94,19 @@ npi.dashboard.toggleNpiLane = function(familyId) {
 npi.dashboard.renderProjects = function() {
   npi.dashboard.ensureProductProgrammes()
   const user = currentUser ? currentUser.email.split('@')[0] : ''
-  const products = productsDataGetAll()
+  const products = productsDataGetAll() || []
   const families = getFamilies()
-  const STATUSES = [
+  const baseStatuses = [
     { key: 'Tender',     icon: '📋', color: 'var(--amber)' },
     { key: 'NPI',        icon: '🔧', color: 'var(--blue)'  },
     { key: 'Production', icon: '🏭', color: 'var(--green)' },
   ]
+  const STATUSES = npiProjectsViewMode === 'active'
+    ? baseStatuses
+    : [...baseStatuses, { key: 'Closed', icon: '📦', color: 'var(--muted)' }]
+  const statusKeys = new Set(STATUSES.map(s => s.key))
+  const completedCount = products.filter(p => p.status === 'Closed').length
+  const familyKeys = new Set(families.map(f => f.id))
 
   if (!products || products.length === 0) {
     return `<div class="proj-home">
@@ -80,21 +126,61 @@ npi.dashboard.renderProjects = function() {
     </div>`
   }
 
-  // Group active products by family
-  const activeProducts = products.filter(p => p.status !== 'Closed')
+  const productsByMode = products.filter(p => {
+    if (npiProjectsViewMode === 'active') return p.status !== 'Closed'
+    if (npiProjectsViewMode === 'completed') return p.status === 'Closed'
+    return true
+  })
+
+  const visibleProducts = productsByMode.filter(product => {
+    if (npiProjectsFamilyFilter !== 'all') {
+      const familyId = familyKeys.has(product.family) ? product.family : '__other__'
+      if (familyId !== npiProjectsFamilyFilter) return false
+    }
+
+    if (npiProjectsStatusFilter !== 'all' && product.status !== npiProjectsStatusFilter) {
+      return false
+    }
+
+    if (npiProjectsSearch) {
+      const haystack = [
+        product.name,
+        product.code,
+        product.part_number,
+        product.customer,
+        product.family,
+      ].join(' ').toLowerCase()
+      if (!haystack.includes(npiProjectsSearch)) return false
+    }
+
+    return true
+  })
+
+  const buildFamilyBucket = () => {
+    const byStatus = {}
+    STATUSES.forEach(s => { byStatus[s.key] = [] })
+    return { all: [], byStatus }
+  }
+
+  // Group visible products by family
   const familyMap = {}
-  families.forEach(fam => { familyMap[fam.id] = [] })
-  familyMap['__other__'] = []
-  activeProducts.forEach(product => {
+  families.forEach(fam => { familyMap[fam.id] = buildFamilyBucket() })
+  familyMap['__other__'] = buildFamilyBucket()
+  visibleProducts.forEach(product => {
     const famId = product.family && familyMap[product.family] !== undefined
       ? product.family : '__other__'
-    familyMap[famId].push(product)
+    const bucket = familyMap[famId]
+    const status = statusKeys.has(product.status) ? product.status : 'Tender'
+    bucket.all.push(product)
+    bucket.byStatus[status].push(product)
   })
 
   // Global counts per status column
   const totalByStatus = {}
-  STATUSES.forEach(s => {
-    totalByStatus[s.key] = activeProducts.filter(p => p.status === s.key).length
+  STATUSES.forEach(s => { totalByStatus[s.key] = 0 })
+  visibleProducts.forEach(product => {
+    const status = statusKeys.has(product.status) ? product.status : 'Tender'
+    totalByStatus[status]++
   })
 
   const colHeadersHTML = STATUSES.map(s =>
@@ -104,33 +190,74 @@ npi.dashboard.renderProjects = function() {
     </div>`
   ).join('')
 
+  const modeButtons = [
+    { key: 'active', label: 'Active' },
+    { key: 'all', label: 'All' },
+    { key: 'completed', label: 'Completed' },
+  ].map(mode =>
+    `<button class="btn btn-ghost npi-mode-btn${npiProjectsViewMode === mode.key ? ' is-active' : ''}" onclick="npi.dashboard.setProjectsViewMode('${mode.key}')">${mode.label}</button>`
+  ).join('')
+
+  const visibleLabel = npiProjectsViewMode === 'active'
+    ? 'Active view'
+    : npiProjectsViewMode === 'completed'
+      ? 'Completed view'
+      : 'All projects view'
+
+  const statusFilterButtons = [{ key: 'all', label: 'All status' }, ...STATUSES.map(s => ({ key: s.key, label: s.key }))]
+    .map(s => `<button class="btn btn-ghost npi-status-chip${npiProjectsStatusFilter === s.key ? ' is-active' : ''}" onclick="npi.dashboard.setProjectsStatusFilter('${s.key}')">${s.label}</button>`)
+    .join('')
+
+  const familyOptions = [
+    `<option value="all" ${npiProjectsFamilyFilter === 'all' ? 'selected' : ''}>All families</option>`,
+    ...families.map(f => `<option value="${esc(f.id)}" ${npiProjectsFamilyFilter === f.id ? 'selected' : ''}>${esc(f.icon)} ${esc(f.label)}</option>`),
+    `<option value="__other__" ${npiProjectsFamilyFilter === '__other__' ? 'selected' : ''}>📋 Unassigned</option>`
+  ].join('')
+
+  const hasActiveFilters = !!npiProjectsSearch || npiProjectsFamilyFilter !== 'all' || npiProjectsStatusFilter !== 'all'
+
+  const programmeByProductId = new Map((db.programmes || []).filter(p => p.product_id).map(p => [p.product_id, p]))
+
   let html = `<div class="proj-home">
     <div class="proj-home-header">
       <div>
         <div class="proj-home-title">NPI Projects</div>
-        <div class="proj-home-sub">Signed in as ${esc(user)}</div>
+        <div class="proj-home-sub">Signed in as ${esc(user)} · Status is managed in Product Management</div>
       </div>
-      <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
+      <div class="npi-projects-toolbar">
+        <div class="npi-mode-group">${modeButtons}</div>
+        <span class="npi-completed-badge" title="Completed projects retained in archive view">Completed: ${completedCount}</span>
+        <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
+      </div>
     </div>
     <div class="npi-swimlane-wrap">
-      <div class="npi-col-headers">${colHeadersHTML}</div>`
+      <div class="npi-view-note">${visibleLabel} · ${visibleProducts.length} shown</div>
+      <div class="npi-filter-row">
+        <input class="npi-search-input" type="search" placeholder="Search name, code, customer..." value="${esc(npiProjectsSearch)}" oninput="npi.dashboard.setProjectsSearch(this.value)">
+        <select class="npi-family-filter" onchange="npi.dashboard.setProjectsFamilyFilter(this.value)">
+          ${familyOptions}
+        </select>
+        <div class="npi-status-chips">${statusFilterButtons}</div>
+        ${hasActiveFilters ? `<button class="btn btn-ghost" onclick="npi.dashboard.clearProjectFilters()">Clear filters</button>` : ''}
+      </div>
+      <div class="npi-col-headers" style="grid-template-columns:repeat(${STATUSES.length}, minmax(0, 1fr))">${colHeadersHTML}</div>`
 
-  const renderLane = (famId, famLabel, famIcon, prods) => {
-    if (prods.length === 0) return ''
+  const renderLane = (famId, famLabel, famIcon, laneData) => {
+    if (!laneData || laneData.all.length === 0) return ''
     const elemId    = 'npi-lane-' + famId.replace(/[^a-zA-Z0-9]/g, '_')
     const collapsed = npiCollapsedLanes.has(famId)
     const countBits = STATUSES.map(s => {
-      const n = prods.filter(p => p.status === s.key).length
+      const n = laneData.byStatus[s.key].length
       return n > 0 ? `<span style="color:${s.color}">${n}</span>` : null
     }).filter(Boolean).join('<span style="color:var(--line2)"> · </span>')
 
     const colsHTML = STATUSES.map(s => {
-      const col = prods.filter(p => p.status === s.key)
+      const col = laneData.byStatus[s.key]
       return `<div class="npi-lane-col">
         ${col.length === 0
           ? `<div class="npi-lane-empty">—</div>`
           : col.map(product => {
-              const programme = db.programmes.find(p => p.product_id === product.id)
+              const programme = programmeByProductId.get(product.id)
               return npi.dashboard.renderNpiSlimCard(product, programme)
             }).join('')
         }
@@ -143,15 +270,19 @@ npi.dashboard.renderProjects = function() {
         <span class="npi-lane-label">${famIcon} ${esc(famLabel)}</span>
         <span class="npi-lane-counts">${countBits}</span>
       </div>
-      <div class="npi-lane-body">${colsHTML}</div>
+      <div class="npi-lane-body" style="grid-template-columns:repeat(${STATUSES.length}, minmax(0, 1fr))">${colsHTML}</div>
     </div>`
   }
 
   families.forEach(fam => {
-    html += renderLane(fam.id, fam.label, fam.icon, familyMap[fam.id] || [])
+    html += renderLane(fam.id, fam.label, fam.icon, familyMap[fam.id])
   })
-  if ((familyMap['__other__'] || []).length > 0) {
+  if ((familyMap['__other__'] || {}).all && familyMap['__other__'].all.length > 0) {
     html += renderLane('__other__', 'Unassigned', '📋', familyMap['__other__'])
+  }
+
+  if (visibleProducts.length === 0) {
+    html += `<div class="npi-empty-view">No projects match this view/filter combination.</div>`
   }
 
   html += `</div></div>`
@@ -291,13 +422,15 @@ npi.dashboard.renderDashboard = function() {
 
   const riskHTML = p.risks.filter(r => r.status !== 'Closed').sort((a, b) => b.lik * b.imp - a.lik * a.imp).slice(0, 4).map(r => {
     const s = r.lik * r.imp
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)"><span class="rs ${s >= 12 ? 'rs-hi' : s >= 6 ? 'rs-med' : 'rs-lo'}">${s}</span><span style="flex:1;font-size:12px">${esc(r.desc)}</span><span style="font-size:10px;color:var(--muted)">${esc(r.cat || '')}</span></div>`
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)"><span class="rpn ${s >= 12 ? 'rpn-hi' : s >= 6 ? 'rpn-md' : 'rpn-lo'}">${s}</span><span style="flex:1;font-size:12px">${esc(r.desc)}</span><span style="font-size:10px;color:var(--muted)">${esc(r.cat || '')}</span></div>`
   }).join('') || `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open risks</div>`
 
   const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋'
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null
+  const liveUpdateBadge = typeof npiRealtimeIndicatorHTML === 'function' ? npiRealtimeIndicatorHTML() : ''
 
   return `<div class="dash-hero"><div style="display:flex;align-items:center;gap:12px"><button class="btn btn-ghost" style="border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="npi.nav.navigate('projects')">← Back to Projects</button><div><div class="dash-prog-name">${esc(p.name)}</div><div class="dash-prog-meta"><span>${famIcon} ${esc(p.family || 'Other')}</span> ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''} ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''} ${p.lead ? `<span>🧑‍💼 ME Lead: ${esc(p.lead)}</span>` : ''} ${p.pm ? `<span>📋 Project Manager: ${esc(p.pm)}</span>` : ''} ${p.qNumber ? `<span>🔢 Q: ${esc(p.qNumber)}</span>` : ''} ${totalBomItems > 0 ? `<span>📦 BOM: ${totalBomItems} items</span>` : ''} ${p.date ? `<span>📅 ${p.date}</span>` : ''} <span>📍 Gate ${curGate >= 0 ? curGate : '✓ All complete'}</span></div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)" onclick="npi.dashboard.showEditProject()">✎ Edit Project</button></div></div>
+  ${liveUpdateBadge ? `<div style="margin:10px 0 0 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
   <div class="dash-body">
     <div class="kpi-grid">
       <div class="kpi-card" onclick="npi.nav.navigate('gate_${curGate >= 0 ? curGate : 5}')" style="--kpi-color:var(--green)"><div class="kpi-num">${gatesDone}<span style="font-size:16px;color:var(--muted)">/6</span></div><div class="kpi-label">Gates Signed</div></div>

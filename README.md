@@ -16,7 +16,7 @@ Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and
 4. **Script Load Order** (near bottom) — understand dependencies
 
 **Looking for task guidance?** See **CLAUDE.md** (primary reference for AI workers):
-- Feature addition checklist (complete workflow)
+- Adding New Features (complete workflow)
 - Common mistakes to avoid (syntax, RLS, subscriptions)
 - State variables reference (all global variables)
 - Bug squashing process (debugging guide)
@@ -53,7 +53,7 @@ When adding features, always account for:
 - **Responsive modals** — Max-width: 90vw on mobile, 400–600px on desktop
 - **No fixed widths** — Use flexbox/grid with relative units
 
-See **CLAUDE.md** "Complete Feature Addition Checklist" section for full workflow.
+See **CLAUDE.md** "Adding New Features" section for full workflow.
 
 ---
 

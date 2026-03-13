@@ -28,6 +28,23 @@ npi.nav.stopEvent = function(evt) { if (evt && typeof evt.stopPropagation === 'f
 // ── Realtime sync for shared NPI programmes ──────────────────
 let npiRealtimeActive = false
 const NPI_PROGRAMMES_CHANNEL = 'npi_programmes_channel'
+let npiLastRealtimeUpdateAt = 0
+
+function formatRealtimeTime(dt) {
+  return dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+function npiMarkRealtimeUpdate() {
+  npiLastRealtimeUpdateAt = Date.now()
+}
+
+function npiRealtimeIndicatorHTML() {
+  if (!npiLastRealtimeUpdateAt) return ''
+  const dt = new Date(npiLastRealtimeUpdateAt)
+  const ageMs = Date.now() - npiLastRealtimeUpdateAt
+  const recentTag = ageMs < 10000 ? '<span style="font-size:10px;font-weight:700;color:var(--green);margin-left:6px">JUST NOW</span>' : ''
+  return `<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:11px;color:var(--muted)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green)"></span><span>Live updated ${formatRealtimeTime(dt)}</span>${recentTag}</div>`
+}
 
 function upsertRealtimeProgramme(row) {
   if (!row || !row.prog_id) return false
@@ -56,10 +73,12 @@ function npiDataInit() {
   const sub = createRealtimeSubscription('programmes', NPI_PROGRAMMES_CHANNEL, {
     onInsert: (row) => {
       if (!upsertRealtimeProgramme(row)) return
+      npiMarkRealtimeUpdate()
       if (shouldRenderForProgramme(row.prog_id)) render()
     },
     onUpdate: (row) => {
       if (!upsertRealtimeProgramme(row)) return
+      npiMarkRealtimeUpdate()
       if (shouldRenderForProgramme(row.prog_id)) render()
     },
     onDelete: (row) => {
@@ -68,6 +87,7 @@ function npiDataInit() {
       const idx = db.programmes.findIndex(p => p.id === row.prog_id)
       if (idx < 0) return
       db.programmes.splice(idx, 1)
+      npiMarkRealtimeUpdate()
       if (wasCurrentProgramme) progId = db.programmes[0]?.id || null
       if (currentSection === 'projects' || wasCurrentProgramme) render()
     }

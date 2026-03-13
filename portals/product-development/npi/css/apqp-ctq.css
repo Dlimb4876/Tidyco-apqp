@@ -69,6 +69,32 @@
 .act-tbl td:nth-child(6) { min-width: 100px; }
 .act-tbl td:nth-child(7) { min-width: 120px; }
 
+.risk-score-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.risk-score-input {
+  width: 36px !important;
+  min-width: 36px;
+  min-height: 30px;
+  padding: 2px 0 !important;
+  text-align: center;
+  line-height: 1.2;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  -moz-appearance: textfield;
+}
+
+.risk-score-input::-webkit-outer-spin-button,
+.risk-score-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* ── Resource Pills ────────────────────────────────────────── */
 .res-pill {
   display: inline-flex;

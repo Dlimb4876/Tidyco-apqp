@@ -84,15 +84,6 @@ td.ctr  { text-align: center; }
 .sp-inprog { background: var(--amber-pale); color: var(--amber); }
 .sp-closed { background: var(--green-pale); color: var(--green); }
 
-/* ── Risk score badges ──────────────────────────────────────── */
-.rs {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 22px; border-radius: 4px;
-  font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700;
-}
-.rs-hi  { background: var(--red-pale);   color: var(--red);   }
-.rs-med { background: var(--amber-pale); color: var(--amber); }
-.rs-lo  { background: var(--green-pale); color: var(--green); }
 .row-hi td { background: #fffaf9; }
 
 /* ── Flag pills ─────────────────────────────────────────────── */

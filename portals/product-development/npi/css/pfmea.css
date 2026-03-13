@@ -160,6 +160,24 @@ td.pfmea-cause-text { border-left: 3px solid #94a3b8 !important; }
   margin: 0;
 }
 
+.pfmea-score-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.pfmea-score-input {
+  width: 36px !important;
+  min-width: 36px;
+  min-height: 30px;
+  padding: 2px 0 !important;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 /* ── History popup ───────────────────────────────────────────── */
 .hist-popup {
   display: none;
