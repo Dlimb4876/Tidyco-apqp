@@ -127,17 +127,25 @@ npi.apqp.saveCtqPick = function() { prog().pfd[ctqPickTarget].ctqIds = [...ctqPi
 
 // ── BOM picker modal ──────────────────────────────────────────
 npi.apqp.openBomPick = function(sid) {
-  bomPickTarget = sid; const p = prog(); const s = p.pfd.find(x => x.id === sid)
+  const p = prog()
+  if (!p) return
+  const s = p.pfd.find(x => x.id === sid)
+  if (!s) return
+  bomPickTarget = sid
   bomPickSelected = [...(s.bomRefs || []).map(r => r.bomType + '|' + r.itemId)]
   bomPickFilter = 'all'
-  document.getElementById('bomPickTitle').textContent = `Resources — Step ${s.stepNum}: ${s.op || '(unnamed)'}`
+  const titleEl = document.getElementById('bomPickTitle')
+  if (titleEl) titleEl.textContent = `Resources — Step ${s.stepNum}: ${s.op || '(unnamed)'}`
   npi.apqp.refreshBomPickModal(p, 'bomPickFilter', 'bomPickList', bomPickFilter)
   showModal('modalBomPick')
 }
 npi.apqp.refreshBomPickModal = function(p, filterId, listId, activeFilter) {
+  const filterEl = document.getElementById(filterId)
+  const listEl = document.getElementById(listId)
+  if (!filterEl || !listEl) return
   const types = Object.entries(BOM_TYPES)
   const total = types.reduce((n, [k]) => n + p.bom[k].length, 0)
-  document.getElementById(filterId).innerHTML = `<button class="bom-filter-btn${activeFilter === 'all' ? ' active' : ''}" onclick="npi.apqp.setBomFilter('all','${filterId}','${listId}')">All (${total})</button>` + types.map(([k, t]) => `<button class="bom-filter-btn${activeFilter === k ? ' active' : ''}" onclick="npi.apqp.setBomFilter('${k}','${filterId}','${listId}')">${t.icon} ${t.label} (${p.bom[k].length})</button>`).join('')
+  filterEl.innerHTML = `<button class="bom-filter-btn${activeFilter === 'all' ? ' active' : ''}" onclick="npi.apqp.setBomFilter('all','${filterId}','${listId}')">All (${total})</button>` + types.map(([k, t]) => `<button class="bom-filter-btn${activeFilter === k ? ' active' : ''}" onclick="npi.apqp.setBomFilter('${k}','${filterId}','${listId}')">${t.icon} ${t.label} (${p.bom[k].length})</button>`).join('')
   const items = []
   types.forEach(([k, t]) => {
     if (activeFilter !== 'all' && activeFilter !== k) return
@@ -151,7 +159,7 @@ npi.apqp.refreshBomPickModal = function(p, filterId, listId, activeFilter) {
       items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" onclick="npi.apqp.toggleBomPick('${key}',this)"><input type="checkbox" ${bomPickSelected.includes(key) ? 'checked' : ''} onchange="npi.apqp.toggleBomPick('${key}',this.closest('.bom-pick-item'))"><div class="bom-pick-info"><div class="bom-pick-name">${t.icon} ${esc(name || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">${t.label}</span></div>`)
     })
   })
-  document.getElementById(listId).innerHTML = items.length ? items.join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No items in BoM yet.</div>'
+  listEl.innerHTML = items.length ? items.join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No items in BoM yet.</div>'
 }
 npi.apqp.setBomFilter = function(f, fid, lid) { bomPickFilter = f; npi.apqp.refreshBomPickModal(prog(), fid, lid, f) }
 npi.apqp.toggleBomPick = function(key, el) {
