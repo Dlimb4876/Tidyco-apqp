@@ -2,8 +2,7 @@
    me-data-relational.js — ME Capacity Relational DB Operations
 
    Handles all Supabase table operations for:
-   - me_teams, me_tasks, me_task_subtasks, me_task_pert_history
-   - me_products, me_holidays
+   - me_teams, me_tasks, me_products, me_holidays
 
    Called by me-data.js during meDataInit() and meDataSave()
    ============================================================ */
@@ -119,64 +118,14 @@ window.meLoadRelationalTasks = async function(userId) {
       id: t.id,
       name: t.name,
       category: t.category,
-      type: t.type || 'standard',
+      type: 'standard',
       assigneeId: t.assignee_id || '',
       productId: t.product_id || '',
       startDate: t.start_date || '',
       endDate: t.end_date || '',
       totalHours: t.total_hours || 0,
-      advancedEstimation: null,
-      subtasks: [],
       createdAt: t.created_at
     }));
-
-    // Load subtasks and PERT history for root tasks
-    const taskIds = tasks.filter(t => t.type === 'root').map(t => t.id);
-
-    if (taskIds.length > 0) {
-      const { data: subtasksData, error: subtasksError } = await supa
-        .from('me_task_subtasks')
-        .select('*')
-        .in('task_id', taskIds);
-
-      if (subtasksError) {
-        console.warn('meLoadRelationalTasks subtasks error:', subtasksError.message);
-      } else {
-        // Transform subtasks to camelCase
-        const subtasks = (subtasksData || []).map(st => ({
-          id: st.id,
-          task_id: st.task_id,
-          name: st.name,
-          assigneeId: st.assignee_id || '',
-          hours: st.hours || 0,
-          startDate: st.start_date || '',
-          endDate: st.end_date || '',
-          source: st.source || 'pert'
-        }));
-
-        tasks.forEach(task => {
-          if (task.type === 'root') {
-            task.subtasks = subtasks.filter(st => st.task_id === task.id);
-          }
-        });
-      }
-
-      const { data: historyData, error: historyError } = await supa
-        .from('me_task_pert_history')
-        .select('*')
-        .in('task_id', taskIds);
-
-      if (historyError) {
-        console.warn('meLoadRelationalTasks history error:', historyError.message);
-      } else {
-        const history = historyData || [];
-        tasks.forEach(task => {
-          if (task.type === 'root') {
-            task.pertHistory = history.filter(h => h.task_id === task.id);
-          }
-        });
-      }
-    }
 
     return tasks;
   } catch (err) {
@@ -317,7 +266,7 @@ window.meSaveTaskRelational = async function(userId, task) {
           product_id: task.productId || null,
           start_date: startDate,
           end_date: endDate,
-          total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0)
+          total_hours: task.totalHours || 0
         }])
         .select('id');
 
@@ -336,12 +285,12 @@ window.meSaveTaskRelational = async function(userId, task) {
         .update({
           name: task.name,
           category: task.category,
-          type: task.type,
+          type: 'standard',
           assignee_id: task.assigneeId || null,
           product_id: task.productId || null,
           start_date: startDate,
           end_date: endDate,
-          total_hours: task.totalHours || (task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : 0),
+          total_hours: task.totalHours || 0,
           updated_at: new Date().toISOString()
         })
         .eq('id', task.id);
@@ -359,103 +308,6 @@ window.meSaveTaskRelational = async function(userId, task) {
   }
 };
 
-window.meSaveTaskSubtasksRelational = async function(taskId, subtasks, userId) {
-  try {
-    // Delete old subtasks for this task
-    const { error: deleteError } = await supa
-      .from('me_task_subtasks')
-      .delete()
-      .eq('task_id', taskId);
-
-    if (deleteError) {
-      console.warn('meSaveTaskSubtasksRelational delete error:', deleteError.message);
-      return false;
-    }
-
-    // Insert new subtasks (MUST include user_id for RLS)
-    if (subtasks && subtasks.length > 0) {
-      const todayStr = getTodayDateString();
-      const subtasksData = subtasks.map(st => ({
-        task_id: taskId,
-        user_id: userId,  // REQUIRED for RLS policy
-        name: st.name,
-        assignee_id: st.assigneeId || null,
-        hours: st.hours,
-        start_date: st.startDate || todayStr,
-        end_date: st.endDate || todayStr,
-        source: st.source || 'pert'
-      }));
-
-      const { error: insertError } = await supa
-        .from('me_task_subtasks')
-        .insert(subtasksData);
-
-      if (insertError) {
-        console.warn('meSaveTaskSubtasksRelational insert error:', insertError.message);
-        return false;
-      }
-    }
-
-    return true;
-  } catch (err) {
-    console.warn('meSaveTaskSubtasksRelational exception:', err.message);
-    return false;
-  }
-};
-
-window.meSaveTaskPertHistoryRelational = async function(taskId, estimates, confidenceLevel, userId) {
-  try {
-    // Delete old history
-    const { error: deleteError } = await supa
-      .from('me_task_pert_history')
-      .delete()
-      .eq('task_id', taskId);
-
-    if (deleteError) {
-      console.warn('meSaveTaskPertHistoryRelational delete error:', deleteError.message);
-      return false;
-    }
-
-    // Insert new history records (MUST include user_id for RLS)
-    if (estimates && estimates.length > 0) {
-      const historyData = estimates.map(est => {
-        const O = parseFloat(est.optimistic) || 0;
-        const ML = parseFloat(est.mostLikely) || 0;
-        const P = parseFloat(est.pessimistic) || 0;
-        const pertEst = (O + 4*ML + P) / 6;
-        const stdDev = (P - O) / 6;
-        const finalEst = pertEst + (stdDev * (confidenceLevel - 1.0));
-
-        return {
-          task_id: taskId,
-          user_id: userId,  // REQUIRED for RLS policy
-          estimate_id: est.id,
-          name: est.name,
-          optimistic: O,
-          most_likely: ML,
-          pessimistic: P,
-          confidence_level: confidenceLevel,
-          final_hours: finalEst,
-          assignee_id: est.assigneeId || est.assignedTo || null
-        };
-      });
-
-      const { error: insertError } = await supa
-        .from('me_task_pert_history')
-        .insert(historyData);
-
-      if (insertError) {
-        console.warn('meSaveTaskPertHistoryRelational insert error:', insertError.message);
-        return false;
-      }
-    }
-
-    return true;
-  } catch (err) {
-    console.warn('meSaveTaskPertHistoryRelational exception:', err.message);
-    return false;
-  }
-};
 
 // ─────────────────────────────────────────────────────────────
 // DELETE OPERATIONS — Remove records (cascade via FK)
@@ -546,7 +398,6 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
     const results = {
       teams: 0,
       tasks: 0,
-      subtasks: 0,
       products: 0,
       holidays: 0,
       errors: []
@@ -576,27 +427,6 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
         const taskResult = await meSaveTaskRelational(userId, task);
         if (taskResult.success) {
           results.tasks++;
-
-          // Use the returned task ID (important for newly created tasks)
-          const taskId = taskResult.taskId || task.id;
-
-          // Save subtasks if root task
-          if (taskId && task.type === 'root' && task.subtasks && Array.isArray(task.subtasks)) {
-            const subtasksSuccess = await meSaveTaskSubtasksRelational(taskId, task.subtasks, userId);
-            if (subtasksSuccess) {
-              results.subtasks += task.subtasks.length;
-            }
-
-            // Save PERT history
-            if (task.advancedEstimation && task.advancedEstimation.pertData) {
-              await meSaveTaskPertHistoryRelational(
-                taskId,
-                task.advancedEstimation.pertData.estimates,
-                task.advancedEstimation.confidenceLevel || task.advancedEstimation.pertData.confidenceLevel || 1.0,
-                userId
-              );
-            }
-          }
         } else {
           results.errors.push(`Failed to migrate task: ${task.name}`);
         }

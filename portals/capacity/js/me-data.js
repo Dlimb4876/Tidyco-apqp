@@ -34,44 +34,6 @@ function meInitTeamDates() {
   });
 }
 
-// Convert old PERT data (pertData.estimates[]) to new subtasks[] structure
-function meConvertPertDataToSubtasks(tasks) {
-  return tasks.map(task => {
-    // Skip if already has subtasks array or no advanced estimation
-    if (task.subtasks || !task.advancedEstimation?.pertData?.estimates) {
-      return task;
-    }
-
-    // Convert pertData.estimates → subtasks[] (inheriting root task's date range)
-    const subtasks = task.advancedEstimation.pertData.estimates.map(est => ({
-      id: est.id,
-      name: est.name,
-      assigneeId: est.assigneeId || est.assignedTo || '',
-      hours: est.finalHours || 0,
-      startDate: task.startDate,  // Subtask inherits root task's date range
-      endDate: task.endDate,
-      source: 'pert'
-    }));
-
-    // Find primary assignee (first with assigneeId)
-    const primaryAssignee = task.advancedEstimation.pertData.estimates
-      .find(e => e.assigneeId || e.assignedTo)?.assigneeId || 
-      task.advancedEstimation.pertData.estimates.find(e => e.assigneeId || e.assignedTo)?.assignedTo || '';
-
-    return {
-      ...task,
-      type: 'root',
-      assigneeId: primaryAssignee,
-      subtasks,
-      advancedEstimation: {
-        ...task.advancedEstimation,
-        pertEstimates: task.advancedEstimation.pertData.estimates,
-        confidenceLevel: task.advancedEstimation.pertData.confidenceLevel,
-        totalFinalHours: subtasks.reduce((sum, s) => sum + (s.hours || 0), 0)
-      }
-    };
-  });
-}
 
 // ─────────────────────────────────────────────────────────────
 // TEAM CRUD
@@ -150,9 +112,7 @@ window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, 
     startDate: startDate || todayStr,
     endDate: endDate || todayStr,
     totalHours: parseFloat(totalHours) || 0,
-    createdAt: new Date().toISOString(),
-    advancedEstimation: null,
-    subtasks: []
+    createdAt: new Date().toISOString()
   };
   meDataState.tasks.push(task);
   return true;
@@ -182,9 +142,6 @@ window.meDataUpdateTask = function(idx, field, value) {
       break;
     case 'totalHours':
       task.totalHours = parseFloat(value) || 0;
-      break;
-    case 'advancedEstimation':
-      task.advancedEstimation = value || null;
       break;
     default:
       return false;
@@ -472,15 +429,8 @@ window.meDataInit = async function() {
       });
 
       meDataState.tasks.forEach(task => {
-        if (!('advancedEstimation' in task)) task.advancedEstimation = null;
-        if (!('type' in task)) {
-          task.type = task.advancedEstimation && task.advancedEstimation.pertData ? 'root' : 'standard';
-        }
-        if (!('subtasks' in task)) task.subtasks = [];
+        if (!('type' in task)) task.type = 'standard';
       });
-
-      // Convert old pertData.estimates[] to new subtasks[] structure (if not already done)
-      meDataState.tasks = meConvertPertDataToSubtasks(meDataState.tasks);
 
       meDataState.products.forEach(product => {
         if (!('productDatabaseId' in product)) product.productDatabaseId = '';
@@ -559,28 +509,8 @@ window.meDataSave = async function(showAlert) {
             relationalSuccess = false;
           } else {
             const taskId = taskResult.taskId || task.id;
-
             if (!task.id && taskId) {
               task.id = taskId;
-            }
-
-            if (taskId && task.subtasks && task.subtasks.length > 0) {
-              const subtaskSuccess = await meSaveTaskSubtasksRelational(taskId, task.subtasks, currentUser.id);
-              if (!subtaskSuccess) {
-                console.warn('Failed to save subtasks for task', i);
-                relationalSuccess = false;
-              }
-            }
-            if (taskId && task.type === 'root' && task.advancedEstimation) {
-              const histSuccess = await meSaveTaskPertHistoryRelational(
-                taskId,
-                task.advancedEstimation.pertEstimates || [],
-                task.advancedEstimation.confidenceLevel || task.advancedEstimation.pertData?.confidenceLevel || 1.0,
-                currentUser.id
-              );
-              if (!histSuccess) {
-                console.warn('Failed to save PERT history for task', i);
-              }
             }
           }
         }

@@ -7,23 +7,14 @@
    ============================================================ */
 
 // ── Helper: Get Effective Subtasks ──────────────────────────
-// Returns the actual work items to be calculated for a task.
-// ROOT tasks have subtasks[] (from PERT estimation).
-// STANDARD tasks have implicit subtask if they have an assignee.
+// Returns the work item for a task (one implicit subtask per assignee).
 window.getEffectiveSubtasks = function(task) {
-  if (task.type === 'root') {
-    // Root task: return actual subtasks array
-    return task.subtasks || [];
-  } else if (task.type === 'standard' || !task.type) {
-    // Standard task: create implicit subtask for assignee
-    if (task.assigneeId) {
-      return [{
-        assigneeId: task.assigneeId,
-        hours: task.totalHours || 0,
-        name: task.name
-      }];
-    }
-    return [];
+  if (task.assigneeId) {
+    return [{
+      assigneeId: task.assigneeId,
+      hours: task.totalHours || 0,
+      name: task.name
+    }];
   }
   return [];
 };

@@ -151,8 +151,7 @@ function renderScheduling() {
     rows += renderSchedulingRow(batch, idx, activeBatches);
   });
 
-  const mainContent = document.getElementById('mainContent');
-  mainContent.innerHTML = `
+  const html = `
     <div class="prod-section">
       <div class="sec-head">
         <div>
@@ -245,38 +244,42 @@ function renderScheduling() {
     </div>
   `;
 
-  addSchedulingNewRowEventListeners();
-  activeBatches.forEach(addSchedulingRowEventListeners);
+  setTimeout(() => {
+    addSchedulingNewRowEventListeners();
+    activeBatches.forEach(addSchedulingRowEventListeners);
 
-  document.getElementById('toggle-hide-complete').addEventListener('click', toggleHideCompleteBatches);
-  document.getElementById('add-batch-button').addEventListener('click', focusBatchNewRow);
-  document.getElementById('back-to-prod-hub').addEventListener('click', () => setProductionTab('root'));
-  
-  document.getElementById('family-filter').addEventListener('change', (e) => {
-    prodSchedulingFilters.family = e.target.value;
-    prodSchedulingFilters.product = '';
-    render();
-  });
-  document.getElementById('product-filter').addEventListener('change', (e) => {
-    prodSchedulingFilters.product = e.target.value;
-    render();
-  });
-  document.getElementById('work-location-filter').addEventListener('change', (e) => {
-    prodSchedulingFilters.workLocation = e.target.value;
-    render();
-  });
-  document.getElementById('date-from-filter').addEventListener('change', (e) => {
-    prodSchedulingFilters.dateFrom = e.target.value;
-    render();
-  });
-  document.getElementById('date-to-filter').addEventListener('change', (e) => {
-    prodSchedulingFilters.dateTo = e.target.value;
-    render();
-  });
-  
-  document.querySelectorAll('th[data-sort-field]').forEach(th => {
-    th.addEventListener('click', () => toggleSort(th.getAttribute('data-sort-field')));
-  });
+    document.getElementById('toggle-hide-complete')?.addEventListener('click', toggleHideCompleteBatches);
+    document.getElementById('add-batch-button')?.addEventListener('click', focusBatchNewRow);
+    document.getElementById('back-to-prod-hub')?.addEventListener('click', () => setProductionTab('root'));
+
+    document.getElementById('family-filter')?.addEventListener('change', (e) => {
+      prodSchedulingFilters.family = e.target.value;
+      prodSchedulingFilters.product = '';
+      render();
+    });
+    document.getElementById('product-filter')?.addEventListener('change', (e) => {
+      prodSchedulingFilters.product = e.target.value;
+      render();
+    });
+    document.getElementById('work-location-filter')?.addEventListener('change', (e) => {
+      prodSchedulingFilters.workLocation = e.target.value;
+      render();
+    });
+    document.getElementById('date-from-filter')?.addEventListener('change', (e) => {
+      prodSchedulingFilters.dateFrom = e.target.value;
+      render();
+    });
+    document.getElementById('date-to-filter')?.addEventListener('change', (e) => {
+      prodSchedulingFilters.dateTo = e.target.value;
+      render();
+    });
+
+    document.querySelectorAll('th[data-sort-field]').forEach(th => {
+      th.addEventListener('click', () => toggleSort(th.getAttribute('data-sort-field')));
+    });
+  }, 0);
+
+  return html;
 }
 
 

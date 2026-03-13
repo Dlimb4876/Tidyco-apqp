@@ -156,7 +156,7 @@ window.countWorkDaysBetween = function(startDate, endDate) {
 
 // ── Bank Holidays (UK) ────────────────────────────────────
 window.getBankHolidaysForYear = function(year) {
-  // Return UK bank holidays for a given year
+  // Return England/Wales bank holidays for a given year
   // With caching to avoid recalculation
   
   if (!window.meBankHolidaysCache) {
@@ -193,57 +193,77 @@ window.getBankHolidaysForYear = function(year) {
   const goodFriday = new Date(easterDate);
   goodFriday.setDate(goodFriday.getDate() - 2);
 
-  // Calculate movable bank holidays correctly
-  // Early May: First Monday in May
-  const earlyMay = new Date(year, 4, 1); // May 1st
-  const earlyMayDay = earlyMay.getDay();
-  const daysUntilMonday = earlyMayDay === 1 ? 0 : (8 - earlyMayDay) % 7;
-  earlyMay.setDate(earlyMay.getDate() + daysUntilMonday);
+  const formatHolidayDate = (date) => {
+    return `${year}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
 
-  // Spring: Last Monday in May
-  const springBank = new Date(year, 4, 31); // May 31st
-  const springDay = springBank.getDay();
-  const daysBackToMonday = springDay === 1 ? 0 : springDay - 1;
-  springBank.setDate(springBank.getDate() - daysBackToMonday);
+  const getFirstMonday = (y, monthIndex) => {
+    const date = new Date(y, monthIndex, 1);
+    const day = date.getDay();
+    const daysUntilMonday = day === 1 ? 0 : (8 - day) % 7;
+    date.setDate(date.getDate() + daysUntilMonday);
+    return date;
+  };
 
-  // Summer: Last Monday in August
-  const summerBank = new Date(year, 7, 31); // August 31st
-  const summerDay = summerBank.getDay();
-  const daysBackToMondaySummer = summerDay === 1 ? 0 : summerDay - 1;
-  summerBank.setDate(summerBank.getDate() - daysBackToMondaySummer);
+  const getLastMonday = (y, monthIndex) => {
+    const date = new Date(y, monthIndex + 1, 0);
+    const day = date.getDay();
+    const daysBackToMonday = (day + 6) % 7;
+    date.setDate(date.getDate() - daysBackToMonday);
+    return date;
+  };
+
+  // Calculate movable bank holidays
+  // Early May: first Monday in May
+  const earlyMay = getFirstMonday(year, 4);
+
+  // Spring: last Monday in May
+  const springBank = getLastMonday(year, 4);
+
+  // Summer: last Monday in August
+  const summerBank = getLastMonday(year, 7);
+
+  // New Year substitution when Jan 1 falls on weekend
+  const newYear = new Date(year, 0, 1);
+  const newYearDow = newYear.getDay();
+  if (newYearDow === 6) {
+    newYear.setDate(3); // Saturday -> Monday 3rd
+  } else if (newYearDow === 0) {
+    newYear.setDate(2); // Sunday -> Monday 2nd
+  }
 
   // Handle weekend Christmas/Boxing Day substitution
   let christmasDay = new Date(year, 11, 25);
   let boxingDay = new Date(year, 11, 26);
-  
-  // If Christmas is Saturday, substitute Monday
+
+  // If Christmas is Saturday, substitute Monday/Tuesday
   if (christmasDay.getDay() === 6) {
     christmasDay = new Date(year, 11, 27);
     boxingDay = new Date(year, 11, 28);
   }
-  // If Christmas is Sunday, substitute Monday/Tuesday
-  if (christmasDay.getDay() === 0) {
-    christmasDay = new Date(year, 11, 26);
-    boxingDay = new Date(year, 11, 27);
+  // If Christmas is Sunday, Boxing Day substitute is Monday and Christmas substitute is Tuesday
+  else if (christmasDay.getDay() === 0) {
+    christmasDay = new Date(year, 11, 27);
+    boxingDay = new Date(year, 11, 26);
   }
   // If Boxing Day is Saturday, substitute Monday
-  if (boxingDay.getDay() === 6 && christmasDay.getDay() !== 0) {
+  else if (boxingDay.getDay() === 6) {
     boxingDay = new Date(year, 11, 28);
   }
-  // If Boxing Day is Sunday, substitute Tuesday
-  if (boxingDay.getDay() === 0) {
+  // If Boxing Day is Sunday, substitute Monday
+  else if (boxingDay.getDay() === 0) {
     boxingDay = new Date(year, 11, 28);
   }
 
   const holidays = [
-    { date: `${year}-01-01`, name: 'New Year\'s Day' },
-    { date: `${year}-${String(goodFriday.getMonth() + 1).padStart(2, '0')}-${String(goodFriday.getDate()).padStart(2, '0')}`, name: 'Good Friday' },
-    { date: `${year}-${String(easterMonday.getMonth() + 1).padStart(2, '0')}-${String(easterMonday.getDate()).padStart(2, '0')}`, name: 'Easter Monday' },
-    { date: `${year}-${String(earlyMay.getMonth() + 1).padStart(2, '0')}-${String(earlyMay.getDate()).padStart(2, '0')}`, name: 'Early May Bank Holiday' },
-    { date: `${year}-${String(springBank.getMonth() + 1).padStart(2, '0')}-${String(springBank.getDate()).padStart(2, '0')}`, name: 'Spring Bank Holiday' },
-    { date: `${year}-${String(summerBank.getMonth() + 1).padStart(2, '0')}-${String(summerBank.getDate()).padStart(2, '0')}`, name: 'Summer Bank Holiday' },
-    { date: `${year}-${String(christmasDay.getMonth() + 1).padStart(2, '0')}-${String(christmasDay.getDate()).padStart(2, '0')}`, name: 'Christmas Day' },
-    { date: `${year}-${String(boxingDay.getMonth() + 1).padStart(2, '0')}-${String(boxingDay.getDate()).padStart(2, '0')}`, name: 'Boxing Day' }
+    { date: formatHolidayDate(newYear), name: 'New Year\'s Day' },
+    { date: formatHolidayDate(goodFriday), name: 'Good Friday' },
+    { date: formatHolidayDate(easterMonday), name: 'Easter Monday' },
+    { date: formatHolidayDate(earlyMay), name: 'Early May Bank Holiday' },
+    { date: formatHolidayDate(springBank), name: 'Spring Bank Holiday' },
+    { date: formatHolidayDate(summerBank), name: 'Summer Bank Holiday' },
+    { date: formatHolidayDate(christmasDay), name: 'Christmas Day' },
+    { date: formatHolidayDate(boxingDay), name: 'Boxing Day' }
   ];
 
   window.meBankHolidaysCache[year] = holidays;

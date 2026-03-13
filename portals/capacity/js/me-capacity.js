@@ -8,7 +8,6 @@ let meChartStart = null; // ISO month string (e.g., '2025-03')
 let meHolidayMonth = null; // Holiday planner month (independent from chart)
 let meChartInst = null;  // Chart.js instance
 let meSaveTimer = null;  // Debounce timer
-let meEstimationTaskIdx = null;  // Task index for estimation subsystem
 
 // ── Entry point ────────────────────────────────────────────
 /**
@@ -32,7 +31,7 @@ window.renderMeCapacity = function() {
         </div>
       </div>
 
-      <div class="me-nav" style="${meTab === 'estimation' ? 'display: none;' : ''}">
+      <div class="me-nav">
         <button class="me-nav-btn ${meTab === 'dashboard' ? 'active' : ''}" onclick="meSetTab('dashboard')">📈 Dashboard</button>
         <button class="me-nav-btn ${meTab === 'chart' ? 'active' : ''}" onclick="meSetTab('chart')">📊 Capacity Chart</button>
         <button class="me-nav-btn ${meTab === 'heatmap' ? 'active' : ''}" onclick="meSetTab('heatmap')">🔥 Heat Map</button>
@@ -144,8 +143,6 @@ function meGetTabContent() {
       return meRenderHolidaysTab(holidays, team, meHolidayMonth);
     case 'heatmap':
       return meRenderHeatmapTab(meChartStart, team, tasks, products, holidays);
-    case 'estimation':
-      return meRenderEstimationPage(meEstimationTaskIdx, tasks, team);
     case 'chart':
     default:
       return meRenderChartTab(meChartStart, team, tasks, products, holidays);
@@ -220,17 +217,6 @@ window.meInit = async function() {
     // Load from localStorage, or default to January 2026
     meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';
   }
-};
-
-// ── Estimation Subsystem ──────────────────────────────────
-window.meOpenEstimationSubsystem = function(taskIdx) {
-  meEstimationTaskIdx = taskIdx;
-  meSetTab('estimation');
-};
-
-window.meCloseEstimationSubsystem = function() {
-  meEstimationTaskIdx = null;
-  meSetTab('tasks');
 };
 
 // ── Utility Functions ──────────────────────────────────────

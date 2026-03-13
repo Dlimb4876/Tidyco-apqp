@@ -21,7 +21,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
   tasks.forEach(task => {
     if (task.productId) {
       if (!demandByProduct[task.productId]) demandByProduct[task.productId] = 0;
-      const hours = task.type === 'root' ? (task.advancedEstimation?.totalFinalHours || 0) : (task.totalHours || 0);
+      const hours = task.totalHours || 0;
       demandByProduct[task.productId] += hours;
     }
   });
