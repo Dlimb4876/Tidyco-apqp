@@ -33,6 +33,11 @@ function navigate(sec, { pushHash = true } = {}) {
     bugDataUnsubscribe();
   }
 
+  // Initialize bugreports data when navigating TO bugreports
+  if (sec === 'bugreports' && currentSection !== 'bugreports' && typeof bugDataManager !== 'undefined') {
+    bugDataManager.init().catch(err => console.error('Failed to initialize bug reports:', err));
+  }
+
   // Clean up subscriptions when leaving capacity
   if (currentSection === 'capacity' && sec !== 'capacity') {
     if (typeof meDataUnsubscribe === 'function') meDataUnsubscribe();
