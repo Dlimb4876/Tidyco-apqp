@@ -112,12 +112,63 @@ All new features must follow mobile-first responsive design:
 
 - **Mobile-first layouts** — Design assumes 480px width first, scales up
 - **Media queries** — All new CSS must include `@media (max-width: 767px)` and `@media (min-width: 768px)`
+- **Viewport gutter** — Keep a small page edge gutter so cards/panels never touch screen edges (target: 10px mobile, 14px tablet/desktop)
 - **Responsive tables** — Tables scroll horizontally on mobile (no wrapping columns)
 - **Responsive modals** — Max-width: 90vw on mobile, 400–600px on desktop
 - **No fixed widths** — Use flexbox/grid with relative units
 - **Test at breakpoints** — 375px (mobile), 768px (tablet), 1920px (desktop)
 
 See README.md "Responsive Design" section for complete details.
+
+### Full Visual Package (Global Default)
+
+For all new pages and major UI refreshes, apply this full visual package unless the user asks for a specific exception.
+
+1. **Colour Direction (Light Mission Control)**
+  - Use light surfaces with cool blue/teal accents, not dark-heavy screens
+  - Keep backgrounds soft and readable (`--bg`, `--white`)
+  - Use strong contrast for important text and actions
+  - Reserve warning colours for true alerts only (amber/red)
+
+2. **Surface and Card Styling**
+  - Primary content should live in cards/panels with gentle radius and subtle borders
+  - Prefer soft gradients and light depth instead of flat grey blocks
+  - Keep cards visually separated with spacing and hierarchy
+
+3. **Spacing System (Mandatory)**
+  - Keep a viewport gutter so content never touches the screen edge
+  - Target gutter: 10px mobile, 14px tablet/desktop
+  - Use consistent internal spacing for cards and sections
+
+4. **Typography and Readability**
+  - Keep headings bold and short
+  - Keep body text simple and easy to scan
+  - Use small uppercase labels only for metadata, not long content
+
+5. **Buttons and Inputs**
+  - Primary actions should be clearly visible and visually consistent
+  - Secondary actions should be ghost or low-emphasis buttons
+  - Inputs should have clear borders, strong focus states, and comfortable touch size
+
+6. **Data Density and Overload Control**
+  - Default to progressive disclosure (collapsed details or sections)
+  - Put critical metrics first, detail second
+  - Avoid opening every panel at once on page load
+
+7. **Motion and Feedback**
+  - Use subtle hover/press transitions only where they add clarity
+  - Avoid flashy or distracting animation
+  - Show clear visual feedback for loading, saving, and realtime updates
+
+8. **Accessibility Baseline**
+  - Maintain readable contrast for text and controls
+  - Ensure keyboard focus is visible
+  - Do not rely on colour alone to communicate status
+
+9. **Implementation Rule**
+  - Prefer shared global styles in `core/css/main.css` and `core/css/components.css`
+  - Only add local portal overrides when required by content structure
+  - If a local style conflicts with the global package, align it to global unless intentionally different
 
 ### Example Pattern for New Features
 
