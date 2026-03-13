@@ -376,6 +376,14 @@ npi.pfmea.pfUpdCauseAction = function(mi, ei, ci, f, v) {
   if (saveNow) npiRelSavePFMEACause(ef.id, ca)
 }
 npi.pfmea.pfImplementAction = function(mi, ei, ci) {
+  const saveCause = (effectId, cause) => {
+    if (typeof npiRelSavePFMEACause === 'function') return npiRelSavePFMEACause(effectId, cause)
+    if (typeof save === 'function') return save()
+  }
+  const saveHistory = (causeId, entry) => {
+    if (typeof npiRelSavePFMEAHistory === 'function') return npiRelSavePFMEAHistory(causeId, entry)
+    if (typeof save === 'function') return save()
+  }
   const p = prog()
   const mode = p.pfmea[mi]; const ef = mode.effects[ei]; const ca = ef.causes[ci]
   const act = ca.action || {}
@@ -398,8 +406,8 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   ca.occ = newOcc
   ca.det = newDet
   ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
-  npiRelSavePFMEACause(ef.id, ca)
-  npiRelSavePFMEAHistory(ca.id, histEntry)
+  saveCause(ef.id, ca)
+  saveHistory(ca.id, histEntry)
   render()
 }
 npi.pfmea.pfDelCause = function(mi, ei, ci) {

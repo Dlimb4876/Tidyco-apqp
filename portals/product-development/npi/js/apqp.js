@@ -270,6 +270,10 @@ npi.apqp.renderCP = function() {
 }
 
 npi.apqp.syncFromPFMEA = function() {
+  const saveCP = (item) => {
+    if (typeof npiRelSaveCP === 'function') return npiRelSaveCP(item)
+    if (typeof save === 'function') return save()
+  }
   const p  = prog()
   const ex = new Set(p.cp.map(r => r.pfmeaCauseId || r.pfmeaEffectId || r.pfmeaId))
   let n    = 0
@@ -288,7 +292,7 @@ npi.apqp.syncFromPFMEA = function() {
           freq: '100%', resp: '', reaction: fc ? fc.oos_action || '' : '', ctqIds: [...cids]
         }
         p.cp.push(item)
-        npiRelSaveCP(item)
+        saveCP(item)
         n++
       })
     })
@@ -297,9 +301,13 @@ npi.apqp.syncFromPFMEA = function() {
   render()
 }
 npi.apqp.addCP = function() {
+  const saveCP = (item) => {
+    if (typeof npiRelSaveCP === 'function') return npiRelSaveCP(item)
+    if (typeof save === 'function') return save()
+  }
   const item = { id: crypto.randomUUID(), pfmeaId: '', pfdId: '', char: '', type: 'Process', spec: '', method: '', freq: '', resp: '', reaction: '', ctqIds: [] }
   prog().cp.push(item)
-  npiRelSaveCP(item)
+  saveCP(item)
   render()
 }
 npi.apqp.updCP = function(i, f, v) { prog().cp[i][f] = v; npiRelSaveCP(prog().cp[i]) }

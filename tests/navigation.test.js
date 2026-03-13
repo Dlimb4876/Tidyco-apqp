@@ -256,34 +256,34 @@ describe('Navigation Module (navigation.js)', () => {
   });
 
   describe('navigateBack', () => {
-    test('should navigate to product-development from APQP sections', () => {
+    test('should navigate to project from APQP sections', () => {
       global.currentSection = 'apqp';
       navigateBack();
-      expect(global.currentSection).toBe('product-development');
+      expect(global.currentSection).toBe('project');
     });
 
-    test('should navigate to product-development from actions', () => {
+    test('should navigate to project from actions', () => {
       global.currentSection = 'actions';
       navigateBack();
-      expect(global.currentSection).toBe('product-development');
+      expect(global.currentSection).toBe('project');
     });
 
-    test('should navigate to product-development from risks', () => {
+    test('should navigate to project from risks', () => {
       global.currentSection = 'risks';
       navigateBack();
-      expect(global.currentSection).toBe('product-development');
+      expect(global.currentSection).toBe('project');
     });
 
-    test('should navigate to product-development from bom', () => {
+    test('should navigate to project from bom', () => {
       global.currentSection = 'bom';
       navigateBack();
-      expect(global.currentSection).toBe('product-development');
+      expect(global.currentSection).toBe('project');
     });
 
-    test('should navigate to product-development from timing', () => {
+    test('should navigate to project from timing', () => {
       global.currentSection = 'timing';
       navigateBack();
-      expect(global.currentSection).toBe('product-development');
+      expect(global.currentSection).toBe('project');
     });
 
     test('should navigate to hub from capacity', () => {
