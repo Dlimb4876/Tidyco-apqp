@@ -34,24 +34,30 @@ async function saveRemote(attempt) {
   const errors = [];
   try {
     for (const p of db.programmes) {
-      // Strip NPI arrays from blob — they now live in relational tables
-      const dataToSave = Object.assign({}, p, {
-        ctq: [], pfd: [], pfmea: [], cp: [],
-        bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
-        gates: [], actions: [], risks: [], timing: [], gantt: []
-      });
-
-      // Check if serialized data exceeds safe limit (~1MB)
-      const serialized = JSON.stringify(dataToSave);
-      if (serialized.length > 1000000) {
-        console.error('Programme too large to save:', p.name, 'size:', serialized.length);
-        errors.push(p.name + ' (too large)');
-        continue;
-      }
+      const row = {
+        prog_id:          p.id,
+        name:             p.name,
+        customer:         p.customer         || '',
+        unit_name:        p.unit             || '',
+        family:           p.family           || '',
+        lead:             p.lead             || '',
+        pm:               p.pm               || '',
+        start_date:       p.date             || null,
+        gantt_start:      p.ganttStart       || null,
+        gantt_collapsed:  p.ganttCollapsed   || [],
+        sub_assembly_ids: p.subAssemblies    || [],
+        prog_status:      p.status           || 'Active',
+        q_number:         p.qNumber          || null,
+        part_number:      p.partNumber       || null,
+        product_id:       p.product_id       || null,
+        updated_at:       now,
+        updated_by:       email,
+        data:             null
+      };
 
       const { data: updated, error: updErr } = await supa
         .from('programmes')
-        .update({ name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: dataToSave })
+        .update(row)
         .eq('prog_id', p.id)
         .select();
       if (updErr) {
@@ -62,7 +68,7 @@ async function saveRemote(attempt) {
       if (!updated || updated.length === 0) {
         const { error: insErr } = await supa
           .from('programmes')
-          .insert({ prog_id: p.id, name: p.name, product_id: p.product_id || null, updated_at: now, updated_by: email, data: dataToSave });
+          .insert(row);
         if (insErr) {
           console.error('Insert err', p.name, insErr);
           errors.push(p.name + ' (' + (insErr.message || 'unknown error') + ')');
@@ -92,11 +98,27 @@ async function loadRemote() {
   if (!currentUser) return;
   const { data, error } = await supa
     .from('programmes')
-    .select('prog_id,name,updated_at,updated_by,data')
+    .select('prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by')
     .order('updated_at', { ascending: false });
   if (error) { console.error('Load error', error); return; }
   if (data && data.length > 0) {
-    db.programmes = data.map(row => migrateprog(row.data));
+    db.programmes = data.map(row => migrateprog({
+      id:             row.prog_id,
+      name:           row.name,
+      customer:       row.customer          || '',
+      unit:           row.unit_name         || '',
+      family:         row.family            || '',
+      lead:           row.lead              || '',
+      pm:             row.pm                || '',
+      date:           row.start_date        || '',
+      ganttStart:     row.gantt_start       || '',
+      ganttCollapsed: row.gantt_collapsed   || [],
+      subAssemblies:  row.sub_assembly_ids  || [],
+      status:         row.prog_status       || 'Active',
+      qNumber:        row.q_number          || '',
+      partNumber:     row.part_number       || '',
+      product_id:     row.product_id        || null,
+    }));
     const last = data[0];
     if (last.updated_by) {
       const who  = last.updated_by.split('@')[0];

@@ -4,6 +4,7 @@
 
 let pmTab = 'overview';
 let pmHolidayMonth = null;
+let pmChartStart = null;
 let pmSaveTimer = null;
 
 function pmFilterByDepartment(list, department, fallback) {
@@ -39,6 +40,8 @@ function pmGetTabContent() {
     pmHolidayMonth = pmGetCurrentMonthKey();
   }
 
+  if (!pmChartStart) pmChartStart = pmGetCurrentMonthKey();
+
   switch (pmTab) {
     case 'team':
       return meRenderTeamTab(team);
@@ -50,6 +53,10 @@ function pmGetTabContent() {
       return meRenderProductTaskLoadTab(tasks, products);
     case 'holidays':
       return meRenderHolidaysTab(holidays, team, pmHolidayMonth);
+    case 'chart':
+      return meRenderChartTab(pmChartStart, team, tasks, products, holidays);
+    case 'heatmap':
+      return meRenderHeatmapTab(pmChartStart, team, tasks, products, holidays);
     case 'overview':
     default:
       return meRenderDashboardTab(pmGetCurrentMonthKey(), team, tasks, products, holidays);
@@ -84,6 +91,8 @@ window.pmRenderCapacity = function() {
 
       <div class="me-nav">
         <button class="me-nav-btn ${pmTab === 'overview' ? 'active' : ''}" data-tab="overview" onclick="pmSetTab('overview')">📊 Overview</button>
+        <button class="me-nav-btn ${pmTab === 'chart' ? 'active' : ''}" data-tab="chart" onclick="pmSetTab('chart')">📉 Chart</button>
+        <button class="me-nav-btn ${pmTab === 'heatmap' ? 'active' : ''}" data-tab="heatmap" onclick="pmSetTab('heatmap')">🌡️ Heatmap</button>
         <button class="me-nav-btn ${pmTab === 'team' ? 'active' : ''}" data-tab="team" onclick="pmSetTab('team')">👥 Team</button>
         <button class="me-nav-btn ${pmTab === 'tasks' ? 'active' : ''}" data-tab="tasks" onclick="pmSetTab('tasks')">📋 Tasks</button>
         <button class="me-nav-btn ${pmTab === 'products' ? 'active' : ''}" data-tab="products" onclick="pmSetTab('products')">📦 Products</button>
@@ -118,6 +127,11 @@ window.pmSetTab = function(tab) {
     body.innerHTML = pmGetTabContent();
     setTimeout(() => {
       pmDrawOverviewWidgets();
+      if (tab === 'chart' || tab === 'heatmap') {
+        if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
+        if (tab === 'chart' && typeof meDrawChartNow === 'function') meDrawChartNow();
+        if (tab === 'heatmap' && typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+      }
     }, 100);
   }
 };
@@ -129,30 +143,43 @@ window.pmRefreshCurrentTab = function() {
     body.innerHTML = pmGetTabContent();
     setTimeout(() => {
       pmDrawOverviewWidgets();
+      if (pmTab === 'chart' || pmTab === 'heatmap') {
+        if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
+        if (pmTab === 'chart' && typeof meDrawChartNow === 'function') meDrawChartNow();
+        if (pmTab === 'heatmap' && typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+      }
     }, 100);
   }
 };
 
 window.pmOnMonthChange = function(newMonth) {
-  pmHolidayMonth = newMonth;
+  if (pmTab === 'chart' || pmTab === 'heatmap') {
+    pmChartStart = newMonth;
+  } else {
+    pmHolidayMonth = newMonth;
+  }
   pmRefreshCurrentTab();
 };
 
 window.pmOnNextMonth = function() {
-  const current = pmHolidayMonth || pmGetCurrentMonthKey();
+  const isChart = pmTab === 'chart' || pmTab === 'heatmap';
+  const current = isChart ? (pmChartStart || pmGetCurrentMonthKey()) : (pmHolidayMonth || pmGetCurrentMonthKey());
   const [year, month] = current.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() + 1);
-  pmHolidayMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  if (isChart) { pmChartStart = newMonth; } else { pmHolidayMonth = newMonth; }
   pmRefreshCurrentTab();
 };
 
 window.pmOnPrevMonth = function() {
-  const current = pmHolidayMonth || pmGetCurrentMonthKey();
+  const isChart = pmTab === 'chart' || pmTab === 'heatmap';
+  const current = isChart ? (pmChartStart || pmGetCurrentMonthKey()) : (pmHolidayMonth || pmGetCurrentMonthKey());
   const [year, month] = current.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() - 1);
-  pmHolidayMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  if (isChart) { pmChartStart = newMonth; } else { pmHolidayMonth = newMonth; }
   pmRefreshCurrentTab();
 };
 

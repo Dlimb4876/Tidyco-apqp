@@ -13,6 +13,7 @@ const SECTION_LABELS = {
   bom:     'Bill of Materials',
   timing:  'NPI Timing Plan',
   capacity: 'Capacity Management',
+  operations: 'Operations Mission Control',
   production: 'Production Planning',
   products: 'Products',
   productmgmt: 'Product Management',
@@ -89,9 +90,19 @@ function navigate(sec, { pushHash = true } = {}) {
     if (typeof prodDataUnsubscribe === 'function') prodDataUnsubscribe();
   }
 
+  // Clean up subscriptions when leaving operations
+  if (currentSection === 'operations' && sec !== 'operations') {
+    if (typeof opsRealtimeCleanup === 'function') opsRealtimeCleanup();
+  }
+
   // Clean up families subscription when leaving product-development
   if (currentSection === 'product-development' && sec !== 'product-development' && typeof familiesDataCleanup === 'function') {
     familiesDataCleanup();
+  }
+
+  // Initialize operations real-time subscriptions when entering operations.
+  if (sec === 'operations' && currentSection !== 'operations' && typeof opsRealtimeInit === 'function') {
+    opsRealtimeInit();
   }
 
   const prevSection = currentSection;
@@ -101,6 +112,7 @@ function navigate(sec, { pushHash = true } = {}) {
     // Reset portal tabs to 'root' only for new user-driven navigations (not back/forward restores).
     // This intentionally runs after prevSection is captured so the check is correct.
     if (sec === 'capacity' && prevSection !== 'capacity') capacityTab = 'root';
+    if (sec === 'operations' && prevSection !== 'operations') operationsTab = 'overview';
     if (sec === 'production' && prevSection !== 'production') productionTab = 'root';
     if (sec === 'product-development' && prevSection !== 'product-development') {
       productDevelopmentTab = 'root';
@@ -113,6 +125,7 @@ function navigate(sec, { pushHash = true } = {}) {
     if (sec === 'projects' && npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab));
     if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
     if (sec === 'capacity' && capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(capacityTab));
+    if (sec === 'operations' && operationsTab !== 'overview') parts.push('od=' + encodeURIComponent(operationsTab));
     if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
     if (sec === 'product-development' && productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(productDevelopmentTab));
     const hash = parts.length ? '#' + parts.join('&') : '#';
@@ -155,6 +168,10 @@ function navigateBack() {
   }
   if (currentSection === 'production' && productionTab !== 'root') {
     setProductionTab('root');
+    return;
+  }
+  if (currentSection === 'operations' && operationsTab !== 'overview') {
+    setOperationsTab('overview');
     return;
   }
   if (currentSection === 'product-development' && productDevelopmentTab !== 'root') {
@@ -216,6 +233,10 @@ function render() {
   }
   if (currentSection === 'productmgmt') {
     mc.innerHTML = `<div class="section-inner">${renderProductMgmt()}</div>`;
+    return;
+  }
+  if (currentSection === 'operations') {
+    mc.innerHTML = `<div class="section-inner">${renderOperationsDashboard()}</div>`;
     return;
   }
   if (currentSection === 'bugreports') {
@@ -287,6 +308,7 @@ window.addEventListener('popstate', () => {
   // Always restore all tab state from hash before navigating.
   // navigate() with pushHash:false will NOT reset tabs, so these values stick.
   capacityTab          = h.ct  || 'root';
+  operationsTab        = h.od  || 'overview';
   productionTab        = h.pt  || 'root';
   productDevelopmentTab = h.pdt || 'root';
   if (h.t) apqpTab = h.t;

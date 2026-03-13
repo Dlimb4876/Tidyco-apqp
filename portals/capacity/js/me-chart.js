@@ -255,10 +255,11 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
 };
 
 window.meDrawChartNow = function() {
-  const team = meDataGetTeam();
-  const tasks = meDataGetTasks();
-  const products = meDataGetProducts();
-  const holidays = meDataGetHolidays();
+  const dept = window.meCurrentDepartmentContext || 'ME';
+  const team     = meFilterByDepartment(meDataGetTeam(),     dept, 'ME');
+  const tasks    = meFilterByDepartment(meDataGetTasks(),    dept, 'ME');
+  const products = meFilterByDepartment(meDataGetProducts(), dept, 'ME');
+  const holidays = meFilterByDepartment(meDataGetHolidays(), dept, 'ME');
 
   if (!window.Chart) {
     console.warn('Chart.js not loaded');

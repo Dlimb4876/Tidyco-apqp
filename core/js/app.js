@@ -67,6 +67,7 @@ async function launchApp() {
     }
     if (h.t)   apqpTab               = h.t;
     if (h.ct)  capacityTab           = h.ct;
+    if (h.od)  operationsTab         = h.od;
     if (h.pt)  productionTab         = h.pt;
     if (h.pdt) productDevelopmentTab = h.pdt;
     navigate(h.s, { pushHash: false });

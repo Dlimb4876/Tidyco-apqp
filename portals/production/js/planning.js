@@ -1,5 +1,7 @@
 // Production Planning Views
 
+let productionPlanningDelegationContainer = null;
+
 function renderPlanByProduct() {
   const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
   const activeProducts = products.filter(p => {
@@ -8,15 +10,16 @@ function renderPlanByProduct() {
   });
 
   if (!activeProducts.length) {
+    setTimeout(setupProductionPlanningDelegation, 0);
     return `
-      <div class="prod-section">
+      <div class="prod-section" id="prod-planning-container">
         <div class="sec-head">
           <div>
             <div class="sec-eyebrow">PRODUCTION PLAN</div>
             <div class="sec-title">By Product</div>
             <div class="sec-desc">Choose one product and view a 6-month schedule</div>
           </div>
-          <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
+          <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
         </div>
 
         <div style="padding:32px;text-align:center;color:var(--muted)">No active products to display</div>
@@ -68,21 +71,22 @@ function renderPlanByProduct() {
     });
   }
 
+  setTimeout(setupProductionPlanningDelegation, 0);
   return `
-    <div class="prod-section">
+    <div class="prod-section" id="prod-planning-container">
       <div class="sec-head">
         <div>
           <div class="sec-eyebrow">PRODUCTION PLAN</div>
           <div class="sec-title">By Product</div>
           <div class="sec-desc">6-month schedule with weekly and monthly scale</div>
         </div>
-        <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
+        <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
       </div>
 
       <div class="prod-product-toolbar">
         <div class="filter-group">
           <label for="prodProductPicker">Product</label>
-          <select id="prodProductPicker" onchange="prodSetActiveProduct(this.value); render()">
+          <select id="prodProductPicker" data-action="plan-set-active-product">
             ${productOptionsHtml}
           </select>
         </div>
@@ -173,9 +177,9 @@ function buildProductSixMonthGantt(product, batches, todayStr) {
 
   const navHtml = `
     <div class="gantt-nav-controls">
-      <button class="btn btn-sm btn-ghost" onclick="prodSetMonthOffset(${prodPlanMonthOffset - 1}); render()">← Previous Month</button>
+      <button class="btn btn-sm btn-ghost" data-action="plan-month-offset" data-offset="${prodPlanMonthOffset - 1}">← Previous Month</button>
       <div class="gantt-month-header">${windowStart.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })} - ${windowEnd.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</div>
-      <button class="btn btn-sm btn-ghost" onclick="prodSetMonthOffset(${prodPlanMonthOffset + 1}); render()">Next Month →</button>
+      <button class="btn btn-sm btn-ghost" data-action="plan-month-offset" data-offset="${prodPlanMonthOffset + 1}">Next Month →</button>
     </div>
   `;
 
@@ -294,7 +298,8 @@ function renderPlanByUnit() {
     return `
       <button
         class="unit-tab ${isActive ? 'active' : ''}"
-        onclick="prodSetActiveUnit('${unit}'); setProductionTab('by-unit')"
+        data-action="plan-set-active-unit"
+        data-unit="${unit}"
       >
         ${unit} <span class="tab-count">${count}</span>
       </button>
@@ -313,15 +318,16 @@ function renderPlanByUnit() {
     timelineHtml = buildGanttTimeline(sortedBatches, todayStr);
   }
 
+  setTimeout(setupProductionPlanningDelegation, 0);
   return `
-    <div class="prod-section">
+    <div class="prod-section" id="prod-planning-container">
       <div class="sec-head">
         <div>
           <div class="sec-eyebrow">PRODUCTION PLAN</div>
           <div class="sec-title">By Work Area</div>
           <div class="sec-desc">Rolling 2-month timeline showing arrivals and departures</div>
         </div>
-        <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
+        <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
       </div>
 
       <div class="unit-tabs-container">
@@ -367,9 +373,9 @@ function buildGanttTimeline(batches, todayStr) {
 
   const navHtml = `
     <div class="gantt-nav-controls">
-      <button class="btn btn-sm btn-ghost" onclick="prodSetMonthOffset(${prodPlanMonthOffset - 1}); render()">← Previous Month</button>
+      <button class="btn btn-sm btn-ghost" data-action="plan-month-offset" data-offset="${prodPlanMonthOffset - 1}">← Previous Month</button>
       <div class="gantt-month-header">${monthOneLabel} - ${monthTwoLabel}</div>
-      <button class="btn btn-sm btn-ghost" onclick="prodSetMonthOffset(${prodPlanMonthOffset + 1}); render()">Next Month →</button>
+      <button class="btn btn-sm btn-ghost" data-action="plan-month-offset" data-offset="${prodPlanMonthOffset + 1}">Next Month →</button>
     </div>
   `;
 
@@ -522,4 +528,43 @@ function getStatusBadge(status) {
 
 function prodSetMonthOffset(offset) {
   prodPlanMonthOffset = Number(offset) || 0;
+}
+
+function setupProductionPlanningDelegation() {
+  const container = document.getElementById('prod-planning-container');
+  if (!container || productionPlanningDelegationContainer === container) return;
+
+  productionPlanningDelegationContainer = container;
+
+  container.addEventListener('click', (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl || !container.contains(actionEl)) return;
+
+    const action = actionEl.dataset.action;
+    if (action === 'plan-back-root') {
+      setProductionTab('root');
+      return;
+    }
+
+    if (action === 'plan-month-offset') {
+      prodSetMonthOffset(actionEl.dataset.offset);
+      render();
+      return;
+    }
+
+    if (action === 'plan-set-active-unit') {
+      const unit = actionEl.dataset.unit;
+      if (!unit) return;
+      prodSetActiveUnit(unit);
+      setProductionTab('by-unit');
+    }
+  });
+
+  container.addEventListener('change', (event) => {
+    const actionEl = event.target.closest('[data-action="plan-set-active-product"]');
+    if (!actionEl || !container.contains(actionEl)) return;
+
+    prodSetActiveProduct(actionEl.value);
+    render();
+  });
 }

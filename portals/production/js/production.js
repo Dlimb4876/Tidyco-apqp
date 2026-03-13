@@ -1,6 +1,8 @@
 // Production Planning Portal Hub
 // Entry point for production planning module
 
+let productionPortalDelegationContainer = null;
+
 function setProductionTab(tab) {
   productionTab = tab;
   const parts = ['s=production'];
@@ -12,9 +14,9 @@ function setProductionTab(tab) {
 function prodNavBar() {
   return `
     <div class="prod-nav-bar">
-      <button class="prod-nav-item ${productionTab === 'scheduling' ? 'active' : ''}" onclick="setProductionTab('scheduling')">📅 Schedule</button>
-      <button class="prod-nav-item ${productionTab === 'by-product' ? 'active' : ''}" onclick="setProductionTab('by-product')">📋 Plan by Product</button>
-      <button class="prod-nav-item ${productionTab === 'by-unit' ? 'active' : ''}" onclick="setProductionTab('by-unit')">🏭 Plan by Work Area</button>
+      <button class="prod-nav-item ${productionTab === 'scheduling' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="scheduling">📅 Schedule</button>
+      <button class="prod-nav-item ${productionTab === 'by-product' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="by-product">📋 Plan by Product</button>
+      <button class="prod-nav-item ${productionTab === 'by-unit' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="by-unit">🏭 Plan by Work Area</button>
     </div>
   `;
 }
@@ -24,25 +26,36 @@ function renderProduction() {
   // Products are now managed in Product Management — redirect if accessed
   if (productionTab === 'products') {
     setProductionTab('scheduling');
-    return nav + renderScheduling();
+    setTimeout(setupProductionPortalDelegation, 0);
+    return `<div id="production-portal-container">${nav}${renderScheduling()}</div>`;
   }
-  if (productionTab === 'scheduling') return nav + renderScheduling();
-  if (productionTab === 'by-product') return nav + renderPlanByProduct();
-  if (productionTab === 'by-unit') return nav + renderPlanByUnit();
+  if (productionTab === 'scheduling') {
+    setTimeout(setupProductionPortalDelegation, 0);
+    return `<div id="production-portal-container">${nav}${renderScheduling()}</div>`;
+  }
+  if (productionTab === 'by-product') {
+    setTimeout(setupProductionPortalDelegation, 0);
+    return `<div id="production-portal-container">${nav}${renderPlanByProduct()}</div>`;
+  }
+  if (productionTab === 'by-unit') {
+    setTimeout(setupProductionPortalDelegation, 0);
+    return `<div id="production-portal-container">${nav}${renderPlanByUnit()}</div>`;
+  }
 
   // Root hub view
+  setTimeout(setupProductionPortalDelegation, 0);
   return `
-    <div class="proj-home">
+    <div class="proj-home" id="production-portal-container">
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Production Planning</div>
           <div class="proj-home-sub">Production schedules and batch planning</div>
         </div>
-        <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Portal</button>
+        <button class="btn btn-ghost" data-action="prod-nav-hub">← Back to Portal</button>
       </div>
 
       <div class="proj-cards hub-grid">
-        <div class="proj-card hub-card" onclick="setProductionTab('scheduling')">
+        <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="scheduling">
           <div class="hub-card-content">
             <div class="hub-icon">📅</div>
             <div class="proj-card-name">Schedule</div>
@@ -50,7 +63,7 @@ function renderProduction() {
           </div>
         </div>
 
-        <div class="proj-card hub-card" onclick="setProductionTab('by-product')">
+        <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="by-product">
           <div class="hub-card-content">
             <div class="hub-icon">📋</div>
             <div class="proj-card-name">Plan by Product</div>
@@ -58,7 +71,7 @@ function renderProduction() {
           </div>
         </div>
 
-        <div class="proj-card hub-card" onclick="setProductionTab('by-unit')">
+        <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="by-unit">
           <div class="hub-card-content">
             <div class="hub-icon">🏭</div>
             <div class="proj-card-name">Plan by Work Area</div>
@@ -68,4 +81,27 @@ function renderProduction() {
       </div>
     </div>
   `;
+}
+
+function setupProductionPortalDelegation() {
+  const container = document.getElementById('production-portal-container');
+  if (!container || productionPortalDelegationContainer === container) return;
+
+  productionPortalDelegationContainer = container;
+
+  container.addEventListener('click', (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl || !container.contains(actionEl)) return;
+
+    const action = actionEl.dataset.action;
+    if (action === 'prod-nav-tab' || action === 'prod-hub-tab') {
+      const tab = actionEl.dataset.tab;
+      if (tab) setProductionTab(tab);
+      return;
+    }
+
+    if (action === 'prod-nav-hub') {
+      navigate('hub');
+    }
+  });
 }

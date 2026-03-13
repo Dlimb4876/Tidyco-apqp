@@ -13,6 +13,7 @@ global.esc = (v) => String(v ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#039;');
 
+global.meFilterByDepartment = jest.fn((list) => Array.isArray(list) ? list : []);
 global.meGetMonthLabel = jest.fn(() => 'Mar 2026');
 global.meGetWeekRange = jest.fn(() => [
   { start: '2026-03-02', end: '2026-03-08' },

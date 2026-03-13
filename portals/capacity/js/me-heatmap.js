@@ -50,9 +50,10 @@ window.meRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsAr
 
 // ── Heat map rendering ──────────────────────────────────────
 window.meDrawHeatmapNow = function() {
-  const team = meDataGetTeam();
-  const tasks = meDataGetTasks();
-  const holidays = meDataGetHolidays();
+  const dept = window.meCurrentDepartmentContext || 'ME';
+  const team     = meFilterByDepartment(meDataGetTeam(),     dept, 'ME');
+  const tasks    = meFilterByDepartment(meDataGetTasks(),    dept, 'ME');
+  const holidays = meFilterByDepartment(meDataGetHolidays(), dept, 'ME');
   const monthKey = meChartStart;
 
   const weeks = meGetWeekRange(monthKey, 20);

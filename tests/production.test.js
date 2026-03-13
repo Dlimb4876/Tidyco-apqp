@@ -52,13 +52,16 @@ document.documentElement.innerHTML = html.toString();
 const dataScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/data.js'), 'utf8');
 const schedulingScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/scheduling.js'), 'utf8');
 const planningScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/planning.js'), 'utf8');
+const productionScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/production.js'), 'utf8');
 eval(dataScript);
 eval(schedulingScript);
 eval(planningScript);
+eval(productionScript);
 
 describe('Production Portal', () => {
   beforeEach(() => {
     prodPlanMonthOffset = 0;
+    productionTab = 'root';
     prodState.products = [];
     prodState.batches = [];
     prodState.activeUnit = 'Unit 2';
@@ -69,6 +72,19 @@ describe('Production Portal', () => {
         test('renderScheduling should run without errors', () => {
             expect(() => renderScheduling()).not.toThrow();
         });
+
+      test('renderProduction uses delegated data-action controls', () => {
+        productionTab = 'root';
+        const rootHtml = renderProduction();
+        expect(rootHtml).toContain('data-action="prod-hub-tab"');
+        expect(rootHtml).toContain('data-action="prod-nav-hub"');
+        expect(rootHtml).not.toContain('onclick=');
+
+        productionTab = 'scheduling';
+        const tabHtml = renderProduction();
+        expect(tabHtml).toContain('data-action="prod-nav-tab"');
+        expect(tabHtml).not.toContain('onclick=');
+      });
     });
 
   describe('Plan by Work Area', () => {
@@ -112,8 +128,8 @@ describe('Production Portal', () => {
       prodPlanMonthOffset = 1;
       const html = buildGanttTimeline([], '2026-03-05');
 
-      expect(html).toContain("prodSetMonthOffset(0)");
-      expect(html).toContain("prodSetMonthOffset(2)");
+      expect(html).toContain('data-action="plan-month-offset" data-offset="0"');
+      expect(html).toContain('data-action="plan-month-offset" data-offset="2"');
     });
   });
 
@@ -131,6 +147,7 @@ describe('Production Portal', () => {
       const html = renderPlanByProduct();
 
       expect(html).toContain('id="prodProductPicker"');
+      expect(html).toContain('data-action="plan-set-active-product"');
       expect(html).toContain('Rotor X');
       expect(html).not.toContain('Batch 1 • Unit 3');
       expect(html).toContain('6-month schedule with weekly and monthly scale');

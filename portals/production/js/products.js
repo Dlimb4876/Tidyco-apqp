@@ -1,5 +1,7 @@
 // Product Master List Management
 
+let productMasterDelegationContainer = null;
+
 function renderProductMaster() {
   const products = prodState.products;
   const activeCount = products.filter(p => p.status === 'active').length;
@@ -10,31 +12,31 @@ function renderProductMaster() {
   rows += `
     <tr class="row-new" id="prod-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
-      <td><input class="cell-edit" id="prod-new-name" placeholder="Product name" onkeydown="handleProdRowKey(event, 'name')"></td>
-      <td><input class="cell-edit" id="prod-new-code" placeholder="Part Number" onkeydown="handleProdRowKey(event, 'part_number')"></td>
+      <td><input class="cell-edit" id="prod-new-name" placeholder="Product name" data-action="new-row-keydown" data-field="name"></td>
+      <td><input class="cell-edit" id="prod-new-code" placeholder="Part Number" data-action="new-row-keydown" data-field="code"></td>
       <td>
-        <select class="cell-edit" id="prod-new-family" onkeydown="handleProdRowKey(event, 'family')">
+        <select class="cell-edit" id="prod-new-family" data-action="new-row-keydown" data-field="family">
           <option value="">—</option>
           ${getFamilies().map(f => `<option value="${f.id}">${f.label}</option>`).join('')}
         </select>
       </td>
-      <td><input class="cell-edit" id="prod-new-lead" type="number" placeholder="Turnaround time (days)" onkeydown="handleProdRowKey(event, 'lead')" title="Time between receipt and delivery (in days)"></td>
+      <td><input class="cell-edit" id="prod-new-lead" type="number" placeholder="Turnaround time (days)" data-action="new-row-keydown" data-field="lead" title="Time between receipt and delivery (in days)"></td>
       <td>
-        <select class="cell-edit" id="prod-new-status" onkeydown="handleProdRowKey(event, 'status')">
+        <select class="cell-edit" id="prod-new-status" data-action="new-row-keydown" data-field="status">
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
       </td>
       <td>
-        <select class="cell-edit" id="prod-new-unit" onkeydown="handleProdRowKey(event, 'unit')">
+        <select class="cell-edit" id="prod-new-unit" data-action="new-row-keydown" data-field="unit">
           <option value="">—</option>
           <option value="Unit 2">Unit 2</option>
           <option value="Unit 3">Unit 3</option>
           <option value="Unit 6">Unit 6</option>
         </select>
       </td>
-      <td><textarea class="cell-edit" id="prod-new-notes" placeholder="Notes" onkeydown="handleProdRowKey(event, 'notes')"></textarea></td>
-      <td class="w28 ctr"><button class="btn-del" onclick="addNewProductRow()" title="Save (Ctrl+Enter)">✓</button></td>
+      <td><textarea class="cell-edit" id="prod-new-notes" placeholder="Notes" data-action="new-row-keydown" data-field="notes"></textarea></td>
+      <td class="w28 ctr"><button class="btn-del" data-action="add-product" title="Save (Ctrl+Enter)">✓</button></td>
     </tr>
   `;
 
@@ -43,37 +45,39 @@ function renderProductMaster() {
     rows += `
       <tr class="${isInactive ? 'row-inactive' : ''}">
         <td class="w28 ctr">${idx + 1}</td>
-        <td><input class="cell-edit" value="${esc(prod.name || '')}" onchange="prodDataUpdateProduct(${idx}, 'name', this.value)" onkeydown="handleCellKey(event)"></td>
-        <td><input class="cell-edit" value="${esc(prod.part_number || '')}" onchange="prodDataUpdateProduct(${idx}, 'part_number', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td><input class="cell-edit" value="${esc(prod.name || '')}" data-action="update-product" data-idx="${idx}" data-field="name" data-keydown="edit-row"></td>
+        <td><input class="cell-edit" value="${esc(prod.part_number || '')}" data-action="update-product" data-idx="${idx}" data-field="part_number" data-keydown="edit-row"></td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'family', this.value)" onkeydown="handleCellKey(event)">
+          <select class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="family" data-keydown="edit-row">
             <option value="">—</option>
             ${getFamilies().map(f => `<option value="${f.id}" ${prod.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
           </select>
         </td>
-        <td><input class="cell-edit" type="number" value="${prod.lead_time_days || ''}" onchange="prodDataUpdateProduct(${idx}, 'lead_time_days', this.value)" onkeydown="handleCellKey(event)"></td>
+        <td><input class="cell-edit" type="number" value="${prod.lead_time_days || ''}" data-action="update-product" data-idx="${idx}" data-field="lead_time_days" data-keydown="edit-row"></td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'status', this.value)" onkeydown="handleCellKey(event)">
+          <select class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="status" data-keydown="edit-row">
             <option value="active" ${prod.status === 'active' ? 'selected' : ''}>Active</option>
             <option value="inactive" ${prod.status === 'inactive' ? 'selected' : ''}>Inactive</option>
           </select>
         </td>
         <td>
-          <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'assigned_unit', this.value)" onkeydown="handleCellKey(event)">
+          <select class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="assigned_unit" data-keydown="edit-row">
             <option value="">—</option>
             <option value="Unit 2" ${prod.assigned_unit === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
             <option value="Unit 3" ${prod.assigned_unit === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
             <option value="Unit 6" ${prod.assigned_unit === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
           </select>
         </td>
-        <td><textarea class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'notes', this.value)" onkeydown="handleCellKey(event)">${esc(prod.notes || '')}</textarea></td>
-        <td class="w28 ctr"><button class="btn-del" onclick="if(confirm('Delete product?')) prodDataDeleteProduct(${idx})">✕</button></td>
+        <td><textarea class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="notes" data-keydown="edit-row">${esc(prod.notes || '')}</textarea></td>
+        <td class="w28 ctr"><button class="btn-del" data-action="delete-product" data-idx="${idx}">✕</button></td>
       </tr>
     `;
   });
 
+  setTimeout(setupProductMasterEventDelegation, 0);
+
   return `
-    <div class="prod-section">
+    <div class="prod-section" id="prod-master-container">
       <div class="sec-head">
         <div>
           <div class="sec-eyebrow">PRODUCT MASTER LIST</div>
@@ -81,8 +85,8 @@ function renderProductMaster() {
           <div class="sec-desc">${activeCount} active products — Click cells to edit, Tab/Enter to navigate</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="focusProdNewRow()">➕ Add Product</button>
-          <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
+          <button class="btn btn-primary" data-action="focus-new-product">➕ Add Product</button>
+          <button class="btn btn-ghost" data-action="set-production-tab" data-tab="root">← Back</button>
         </div>
       </div>
 
@@ -117,6 +121,66 @@ function renderProductMaster() {
       </table>
     </div>
   `;
+}
+
+function setupProductMasterEventDelegation() {
+  const container = document.getElementById('prod-master-container');
+  if (!container || productMasterDelegationContainer === container) return;
+
+  productMasterDelegationContainer = container;
+
+  container.addEventListener('click', async (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl || !container.contains(actionEl)) return;
+
+    const action = actionEl.dataset.action;
+    if (action === 'add-product') {
+      await addNewProductRow();
+      return;
+    }
+
+    if (action === 'delete-product') {
+      const idx = Number(actionEl.dataset.idx);
+      if (!Number.isNaN(idx) && confirm('Delete product?')) {
+        await prodDataDeleteProduct(idx);
+      }
+      return;
+    }
+
+    if (action === 'focus-new-product') {
+      focusProdNewRow();
+      return;
+    }
+
+    if (action === 'set-production-tab') {
+      setProductionTab(actionEl.dataset.tab || 'root');
+    }
+  });
+
+  container.addEventListener('change', async (event) => {
+    const updateEl = event.target.closest('[data-action="update-product"]');
+    if (!updateEl || !container.contains(updateEl)) return;
+
+    const idx = Number(updateEl.dataset.idx);
+    const field = updateEl.dataset.field;
+    if (Number.isNaN(idx) || !field) return;
+
+    await prodDataUpdateProduct(idx, field, updateEl.value);
+  });
+
+  container.addEventListener('keydown', (event) => {
+    const keydownEl = event.target.closest('[data-keydown], [data-action="new-row-keydown"]');
+    if (!keydownEl || !container.contains(keydownEl)) return;
+
+    if (keydownEl.dataset.action === 'new-row-keydown') {
+      handleProdRowKey(event, keydownEl.dataset.field);
+      return;
+    }
+
+    if (keydownEl.dataset.keydown === 'edit-row') {
+      handleCellKey(event);
+    }
+  });
 }
 
 // Keyboard handlers for product row

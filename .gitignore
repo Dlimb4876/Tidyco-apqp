@@ -12,3 +12,14 @@ yarn-error.log*
 
 # System files
 .DS_Store
+Thumbs.db
+
+# Windows junk
+*.bat
+
+# Local/personal settings (not for sharing)
+.claude/settings.local.json
+
+# Debug/scratch files
+test-holidays.html
+check_onclick.js

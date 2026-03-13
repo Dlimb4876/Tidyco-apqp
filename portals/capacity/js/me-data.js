@@ -403,94 +403,22 @@ window.meDataInit = async function() {
     if (typeof supa !== 'undefined' && typeof currentUser !== 'undefined' && currentUser) {
       console.log('Loading ME capacity data for user:', currentUser.id);
 
-      // ─────────────────────────────────────────────────────────────
-      // PHASE 1: Try loading from relational tables first (fallback to JSON)
-      // ─────────────────────────────────────────────────────────────
-
-      let loadedFromRelational = false;
-
-      // Step 1: Try relational tables
+      // Load from relational tables
       if (typeof meLoadRelationalTeams === 'function') {
         try {
-          console.log('Attempting to load from relational tables...');
-          const relTeam = await meLoadRelationalTeams(currentUser.id);
-          const relTasks = await meLoadRelationalTasks(currentUser.id);
+          const relTeam     = await meLoadRelationalTeams(currentUser.id);
+          const relTasks    = await meLoadRelationalTasks(currentUser.id);
           const relProducts = await meLoadRelationalProducts(currentUser.id);
           const relHolidays = meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays(currentUser.id));
-
-          // If we got any data from relational tables, use it
-          if ((relTeam && relTeam.length > 0) || (relTasks && relTasks.length > 0) ||
-              (relProducts && relProducts.length > 0) || (relHolidays && relHolidays.length > 0)) {
-            meDataState = {
-              team: relTeam || [],
-              tasks: relTasks || [],
-              products: relProducts || [],
-              holidays: relHolidays || []
-            };
-            loadedFromRelational = true;
-            console.log('✓ Loaded from relational tables (team=' + meDataState.team.length +
-                       ' tasks=' + meDataState.tasks.length + ')');
-          } else {
-            console.log('Relational tables empty - will try JSON blob fallback');
-          }
+          meDataState = {
+            team:     relTeam     || [],
+            tasks:    relTasks    || [],
+            products: relProducts || [],
+            holidays: relHolidays || []
+          };
+          console.log('✓ Loaded ME data (team=' + meDataState.team.length + ' tasks=' + meDataState.tasks.length + ')');
         } catch (relErr) {
-          console.warn('Relational load failed:', relErr.message, '- falling back to JSON');
-        }
-      }
-
-      // Step 2: If relational empty, try JSON blob fallback
-      if (!loadedFromRelational) {
-        const { data, error } = await supa
-          .from('me_capacity')
-          .select('*')
-          .limit(1);
-
-        // PGRST116 = no rows found (expected for new users)
-        if (error && error.code !== 'PGRST116') {
-          console.warn('Supabase JSON load error (code ' + error.code + '):', error.message);
-        }
-
-        if (data) {
-          console.log('Loaded from JSON blob fallback');
-          // Handle nested structure (current format)
-          if (data.data && typeof data.data === 'object') {
-            meDataState = {
-              team: Array.isArray(data.data.team) ? data.data.team : [],
-              tasks: Array.isArray(data.data.tasks) ? data.data.tasks : [],
-              products: Array.isArray(data.data.products) ? data.data.products : [],
-              holidays: meNormalizeAndDedupeHolidays(data.data.holidays)
-            };
-          }
-          // Handle flat structure (fallback for migration)
-          else if (data.team || data.tasks || data.products || data.holidays) {
-            console.log('Loaded in flat format (migration fallback)');
-            meDataState = {
-              team: Array.isArray(data.team) ? data.team : [],
-              tasks: Array.isArray(data.tasks) ? data.tasks : [],
-              products: Array.isArray(data.products) ? data.products : [],
-              holidays: meNormalizeAndDedupeHolidays(data.holidays)
-            };
-          }
-
-          // Step 3: Auto-migrate JSON to relational if we loaded from JSON blob
-          if (meDataState.team.length > 0 || meDataState.tasks.length > 0 ||
-              meDataState.products.length > 0 || meDataState.holidays.length > 0) {
-            if (typeof meMigrateJsonToRelational === 'function') {
-              console.log('Auto-migrating JSON data to relational tables...');
-              const migResult = await meMigrateJsonToRelational(currentUser.id, meDataState);
-              if (migResult.success !== false) {
-                console.log('✓ Migration complete: ' +
-                  (migResult.teams || 0) + ' teams, ' +
-                  (migResult.tasks || 0) + ' tasks, ' +
-                  (migResult.products || 0) + ' products, ' +
-                  (migResult.holidays || 0) + ' holidays');
-              } else {
-                console.warn('Migration had issues:', migResult.errors);
-              }
-            }
-          }
-        } else {
-          console.log('No existing ME capacity data found - will create new record on first save');
+          console.warn('ME relational load failed:', relErr.message);
         }
       }
 

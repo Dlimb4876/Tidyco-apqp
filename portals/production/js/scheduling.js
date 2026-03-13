@@ -63,7 +63,7 @@ function addSchedulingNewRowEventListeners() {
 function renderSchedulingRow(batch, idx, activeBatches) {
   const product = prodDataGetProductById(batch.product_id);
   const batchIdx = (prodState && Array.isArray(prodState.batches)) ? prodState.batches.indexOf(batch) : -1;
-  
+
   // Defensive check for products array
   const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
 
@@ -73,8 +73,24 @@ function renderSchedulingRow(batch, idx, activeBatches) {
     workLocation = product.work_location;
   }
 
+  // Due date urgency check
+  let dueBadge = ''
+  let rowUrgencyClass = ''
+  if (batch.due_date && batch.status !== 'Complete') {
+    const today = new Date(); today.setHours(0,0,0,0)
+    const due = new Date(batch.due_date); due.setHours(0,0,0,0)
+    const daysLeft = Math.round((due - today) / 86400000)
+    if (daysLeft < 0) {
+      dueBadge = `<div class="batch-due-badge batch-overdue">⚠ Overdue</div>`
+      rowUrgencyClass = 'batch-row-overdue'
+    } else if (daysLeft <= 7) {
+      dueBadge = `<div class="batch-due-badge batch-due-soon">⚠ Due soon</div>`
+      rowUrgencyClass = 'batch-row-due-soon'
+    }
+  }
+
   return `
-    <tr id="batch-row-${batchIdx}">
+    <tr id="batch-row-${batchIdx}" class="${rowUrgencyClass}">
       <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
       <td>
         <select class="cell-edit" data-field="product_id">
@@ -93,6 +109,7 @@ function renderSchedulingRow(batch, idx, activeBatches) {
       </td>
       <td>
         <input class="cell-edit" placeholder="DD/MM/YYYY" value="${formatDisplayDate(batch.due_date || '')}" data-field="due_date" id="batch-due-${batchIdx}">
+        ${dueBadge}
       </td>
       <td>
         <select class="cell-edit" data-field="status">

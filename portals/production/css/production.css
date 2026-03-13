@@ -1,5 +1,27 @@
 /* Production Planning Portal Styles */
 
+/* ── Batch due date urgency ───────────────────────────────────── */
+.batch-due-badge {
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-top: 3px;
+  display: inline-block;
+}
+.batch-overdue {
+  color: #991b1b;
+  background: #fee2e2;
+  border: 1px solid #f87171;
+}
+.batch-due-soon {
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+}
+tr.batch-row-overdue { background: #fff5f5; }
+tr.batch-row-due-soon { background: #fffbeb; }
+
 /* Top Navigation Bar */
 .prod-nav-bar {
   display: flex;

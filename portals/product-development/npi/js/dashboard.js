@@ -302,11 +302,14 @@ npi.dashboard.renderNpiSlimCard = function(product, programme) {
         return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`
       }).join('') + `</div>`
   }
+  const hasHighRPN = programme && (programme.pfmea || []).some(r => npi.pfmea.calcRPN(r) >= RPN_HIGH)
+  const rpnBadge = hasHighRPN ? `<div class="npi-slim-rpn-badge">⚠ High RPN</div>` : ''
   const targetProgId = programme ? programme.id : ''
   return `<div class="npi-slim-card" onclick="npi.dashboard.openProjectOrRender('${targetProgId}')">
     <div class="npi-slim-card-name">${esc(product.name)}</div>
     ${product.code     ? `<div class="npi-slim-card-code">${esc(product.code)}</div>` : ''}
     ${product.customer ? `<div class="npi-slim-card-meta">👤 ${esc(product.customer)}</div>` : ''}
+    ${rpnBadge}
     ${pipsHtml}
   </div>`
 }
