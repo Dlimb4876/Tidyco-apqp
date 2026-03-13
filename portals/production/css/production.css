@@ -160,18 +160,18 @@ tr.batch-row-due-soon { background: #fffbeb; }
 }
 
 .prod-tbl thead {
-  background: var(--bg);
-  border-bottom: 2px solid var(--line);
+  background: var(--table-head-bg);
+  border-bottom: 1px solid var(--table-border);
 }
 
 .prod-tbl th {
-  padding: 8px 8px;
+  padding: var(--table-head-py) var(--table-head-px);
   text-align: left;
   font-weight: 600;
-  font-size: 12px;
-  color: var(--mid);
+  font-size: var(--table-head-font-size);
+  color: var(--table-head-ink);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 1px;
   user-select: none;
 }
 
@@ -185,18 +185,18 @@ tr.batch-row-due-soon { background: #fffbeb; }
 }
 
 .prod-tbl td {
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--line);
-  min-height: 28px;
+  padding: var(--table-cell-py) var(--table-cell-px);
+  border-bottom: 1px solid var(--table-border);
+  min-height: var(--table-input-min-h);
 }
 
 .prod-tbl tr:hover {
-  background: var(--bg);
+  background: var(--table-row-hover);
 }
 
 .prod-tbl .row-inactive {
   opacity: 0.6;
-  background: var(--bg);
+  background: var(--bg-soft);
 }
 
 .prod-tbl .row-new {
@@ -204,8 +204,8 @@ tr.batch-row-due-soon { background: #fffbeb; }
 }
 
 .prod-tbl .row-new td {
-  padding: 4px 8px;
-  min-height: 28px;
+  padding: var(--table-cell-py) var(--table-cell-px);
+  min-height: var(--table-input-min-h);
 }
 
 .prod-tbl .row-new:hover {
@@ -214,14 +214,14 @@ tr.batch-row-due-soon { background: #fffbeb; }
 
 .prod-tbl .cell-edit {
   width: 100%;
-  padding: 4px 6px;
+  padding: 3px 5px;
   border: 1px solid transparent;
   border-radius: 3px;
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--table-cell-font-size);
   background: transparent;
   transition: all 0.15s;
-  min-height: 28px;
+  min-height: var(--table-input-min-h);
 }
 
 .prod-tbl .cell-edit:focus {

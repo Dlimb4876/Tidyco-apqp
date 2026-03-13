@@ -177,4 +177,195 @@ describe('Operations Dashboard', () => {
     expect(metrics.production.total).toBe(2);
     expect(metrics.production.completed).toBe(1);
   });
+
+  test('forecast edit mode pre-fills form for selected opportunity', () => {
+    global.prodCapGet24MonthKeys = jest.fn().mockReturnValue(['2026-01']);
+    global.prodCapGetWorkAreas = jest.fn().mockReturnValue(['Unit 2']);
+    global.prodCapCalcDemandMatrix = jest.fn().mockReturnValue({ '2026-01': { _total: 100 } });
+    global.prodCapCalcSupplyMatrix = jest.fn().mockReturnValue({ '2026-01': { _total: 200 } });
+    global.prodCapUtil = jest.fn().mockReturnValue(50);
+    global.prodCapMonthLabel = jest.fn().mockReturnValue('Jan 26');
+    global.opsForecastBuildWeightedMatrix = jest.fn().mockReturnValue({ '2026-01': { _total: 20 } });
+    global.opsForecastIsActiveStatus = jest.fn().mockReturnValue(true);
+
+    global.opsForecastManager = {
+      state: { mode: 'remote', lastError: '' },
+      getRows: jest.fn().mockReturnValue([
+        {
+          id: 'opp-1',
+          title: 'Tender Alpha',
+          owner: 'Alex',
+          status: 'quoted',
+          work_area: 'Unit 2',
+          start_date: '2026-01-01',
+          due_date: '2026-01-31',
+          total_hours: 120,
+          probability_pct: 60,
+          notes: 'Priority'
+        }
+      ])
+    };
+
+    currentSection = 'hub';
+    operationsTab = 'forecast';
+    opsForecastStartEdit('opp-1');
+    currentSection = 'operations';
+
+    const html = renderOperationsDashboard();
+
+    expect(html).toContain('Edit Opportunity');
+    expect(html).toContain('Save Changes');
+    expect(html).toContain('value="Tender Alpha"');
+  });
+
+  test('opsForecastSubmit updates existing opportunity when id is present', async () => {
+    const upsertMock = jest.fn().mockResolvedValue({ ok: true });
+    global.opsForecastManager = {
+      upsertOpportunity: upsertMock
+    };
+
+    currentSection = 'hub';
+
+    const form = document.createElement('form');
+    form.innerHTML = `
+      <input name="opportunity_id" value="opp-9" />
+      <input name="title" value="Update Me" />
+      <input name="owner" value="Jamie" />
+      <input name="status" value="quoted" />
+      <input name="work_area" value="Unit 6" />
+      <input name="start_date" value="2026-02-01" />
+      <input name="due_date" value="2026-02-28" />
+      <input name="total_hours" value="80" />
+      <input name="probability_pct" value="55" />
+      <textarea name="notes">Updated notes</textarea>
+    `;
+
+    await opsForecastSubmit({
+      preventDefault: jest.fn(),
+      target: form
+    });
+
+    expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'opp-9',
+      title: 'Update Me',
+      owner: 'Jamie'
+    }));
+  });
+
+  test('forecast quick edit renders inline controls for selected row', () => {
+    global.prodCapGet24MonthKeys = jest.fn().mockReturnValue(['2026-01']);
+    global.prodCapGetWorkAreas = jest.fn().mockReturnValue(['Unit 2']);
+    global.prodCapCalcDemandMatrix = jest.fn().mockReturnValue({ '2026-01': { _total: 100 } });
+    global.prodCapCalcSupplyMatrix = jest.fn().mockReturnValue({ '2026-01': { _total: 200 } });
+    global.prodCapUtil = jest.fn().mockReturnValue(50);
+    global.prodCapMonthLabel = jest.fn().mockReturnValue('Jan 26');
+    global.opsForecastBuildWeightedMatrix = jest.fn().mockReturnValue({ '2026-01': { _total: 20 } });
+    global.opsForecastIsActiveStatus = jest.fn().mockReturnValue(true);
+
+    global.opsForecastManager = {
+      state: { mode: 'remote', lastError: '' },
+      getRows: jest.fn().mockReturnValue([
+        {
+          id: 'opp-inline',
+          title: 'Inline Tender',
+          owner: 'Alex',
+          status: 'quoted',
+          work_area: 'Unit 2',
+          start_date: '2026-01-01',
+          due_date: '2026-01-31',
+          total_hours: 120,
+          probability_pct: 60,
+          notes: 'Priority'
+        }
+      ])
+    };
+
+    operationsTab = 'forecast';
+    currentSection = 'hub';
+    opsForecastStartInlineEdit('opp-inline');
+    currentSection = 'operations';
+
+    const html = renderOperationsDashboard();
+
+    expect(html).toContain('opsForecastInline_opp-inline_title');
+    expect(html).toContain('opsForecastSaveInline');
+  });
+
+  test('opsForecastSaveInline updates row values', async () => {
+    const upsertMock = jest.fn().mockResolvedValue({ ok: true });
+    global.opsForecastManager = {
+      getRows: jest.fn().mockReturnValue([
+        {
+          id: 'opp-save',
+          title: 'Original',
+          status: 'identified',
+          work_area: 'Unit 2',
+          start_date: '2026-01-01',
+          due_date: '2026-01-31',
+          total_hours: 80,
+          probability_pct: 40
+        }
+      ]),
+      upsertOpportunity: upsertMock
+    };
+
+    document.body.innerHTML = `
+      <input id="opsForecastInline_opp-save_title" value="Updated Inline" />
+      <select id="opsForecastInline_opp-save_status"><option value="quoted" selected>Quoted</option></select>
+      <input id="opsForecastInline_opp-save_work_area" value="Unit 6" />
+      <input id="opsForecastInline_opp-save_start_date" value="2026-02-01" />
+      <input id="opsForecastInline_opp-save_due_date" value="2026-02-20" />
+      <input id="opsForecastInline_opp-save_total_hours" value="95" />
+      <input id="opsForecastInline_opp-save_probability_pct" value="70" />
+    `;
+
+    await opsForecastSaveInline('opp-save');
+
+    expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'opp-save',
+      title: 'Updated Inline',
+      status: 'quoted',
+      work_area: 'Unit 6',
+      total_hours: 95,
+      probability_pct: 70
+    }));
+  });
+
+  test('opsForecastInlineKeydown Enter triggers inline save', () => {
+    const saveSpy = jest.spyOn(global, 'opsForecastSaveInline').mockImplementation(() => Promise.resolve());
+    const cancelSpy = jest.spyOn(global, 'opsForecastCancelInline').mockImplementation(() => {});
+
+    const event = {
+      key: 'Enter',
+      preventDefault: jest.fn()
+    };
+
+    opsForecastInlineKeydown(event, 'opp-key');
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(saveSpy).toHaveBeenCalledWith('opp-key');
+    expect(cancelSpy).not.toHaveBeenCalled();
+
+    saveSpy.mockRestore();
+    cancelSpy.mockRestore();
+  });
+
+  test('opsForecastInlineKeydown Escape cancels inline edit', () => {
+    const saveSpy = jest.spyOn(global, 'opsForecastSaveInline').mockImplementation(() => Promise.resolve());
+    const cancelSpy = jest.spyOn(global, 'opsForecastCancelInline').mockImplementation(() => {});
+
+    const event = {
+      key: 'Escape',
+      preventDefault: jest.fn()
+    };
+
+    opsForecastInlineKeydown(event, 'opp-key');
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(cancelSpy).toHaveBeenCalled();
+    expect(saveSpy).not.toHaveBeenCalled();
+
+    saveSpy.mockRestore();
+    cancelSpy.mockRestore();
+  });
 });

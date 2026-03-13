@@ -9,36 +9,36 @@
 .apqp-tbl {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--table-cell-font-size);
 }
 
 .apqp-tbl thead {
-  background: #f4f6fa;
+  background: var(--table-head-bg);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .apqp-tbl th {
-  padding: 8px;
+  padding: var(--table-head-py) var(--table-head-px);
   text-align: left;
-  font-size: 10px;
+  font-size: var(--table-head-font-size);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--mid);
-  border-bottom: 1px solid var(--line);
+  letter-spacing: 1px;
+  color: var(--table-head-ink);
+  border-bottom: 1px solid var(--table-border);
   font-family: 'IBM Plex Mono', monospace;
 }
 
 .apqp-tbl td {
-  padding: 6px 8px;
-  border-bottom: 1px solid #f0f2f7;
+  padding: var(--table-cell-py) var(--table-cell-px);
+  border-bottom: 1px solid var(--table-border);
   vertical-align: top;
 }
 
 .apqp-tbl tbody tr:hover {
-  background: var(--bg);
+  background: var(--table-row-hover);
 }
 
 .ctq-tbl {
@@ -61,13 +61,13 @@
 .apqp-tbl select {
   border: 1.5px solid var(--line);
   border-radius: 5px;
-  padding: 6px 8px;
-  font-size: 13px;
+  padding: 4px 6px;
+  font-size: var(--table-cell-font-size);
   font-family: 'IBM Plex Sans', sans-serif;
   background: var(--white);
   color: var(--ink);
   transition: border-color 0.15s, box-shadow 0.15s;
-  min-height: 32px;
+  min-height: var(--table-input-min-h);
 }
 
 .apqp-tbl input[type="text"]:focus,
@@ -79,18 +79,19 @@
   box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
 }
 
-.cell-edit {
+.apqp-tbl .cell-edit {
   border: 1.5px solid var(--line);
   border-radius: 5px;
-  padding: 6px 8px;
-  font-size: 13px;
+  padding: 4px 6px;
+  font-size: var(--table-cell-font-size);
   font-family: 'IBM Plex Sans', sans-serif;
   background: var(--white);
   color: var(--ink);
   transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: var(--table-input-min-h);
 }
 
-.cell-edit:focus {
+.apqp-tbl .cell-edit:focus {
   outline: none;
   border-color: var(--blue);
   box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);

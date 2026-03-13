@@ -7,6 +7,17 @@
   --ink:#0f2135; --ink2:#1f3044; --mid:#455d73; --muted:#6f8397;
   --line:#d7e2ec; --line2:#c2d2e0; --bg:#eef4f9; --white:#ffffff;
   --bg-soft:#f8fbff; --surface:#ffffff;
+  --table-border: var(--line);
+  --table-head-bg: #e9f2fb;
+  --table-head-ink: #4f6478;
+  --table-row-hover: rgba(11,95,167,.06);
+  --table-head-py: 6px;
+  --table-head-px: 9px;
+  --table-cell-py: 4px;
+  --table-cell-px: 7px;
+  --table-head-font-size: 10px;
+  --table-cell-font-size: 13px;
+  --table-input-min-h: 28px;
   --blue:#0b5fa7; --blue-dark:#0a4f8a; --blue-pale:#e7f1fb; --blue-mid:#b5cee7;
   --green:#1a7a3c; --green-pale:#e6f4ec; --green-mid:#9ad6b2;
   --amber:#b45309; --amber-pale:#fef3e2; --amber-mid:#f6c87a;
@@ -214,6 +225,16 @@ body {
 @media (max-width: 767px) {
   .section-inner { padding: 16px 16px 60px; }
   .topbar { padding: 0 12px; }
+
+  :root {
+    --table-head-py: 5px;
+    --table-head-px: 7px;
+    --table-cell-py: 3px;
+    --table-cell-px: 6px;
+    --table-head-font-size: 9px;
+    --table-cell-font-size: 12px;
+    --table-input-min-h: 26px;
+  }
 }
 
 /* Responsive typography */

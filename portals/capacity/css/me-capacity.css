@@ -57,26 +57,28 @@
   width: 100%; border-collapse: collapse; font-size: 13px;
 }
 .me-tbl thead th {
-  padding: 7px 10px; background: #f4f6fa;
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600;
-  color: var(--muted); letter-spacing: 1.1px; text-transform: uppercase;
-  border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap;
-  position: sticky; top: 0; z-index: 2;
+  padding: var(--table-head-py) var(--table-head-px);
+  background: var(--table-head-bg);
+  font-family: 'IBM Plex Mono', monospace; font-size: var(--table-head-font-size); font-weight: 600;
+  color: var(--table-head-ink); letter-spacing: 1px; text-transform: uppercase;
+  border-bottom: 1px solid var(--table-border); text-align: left; white-space: nowrap;
+  position: sticky; top: 0; z-index: 15;
 }
-.me-tbl tbody tr { border-bottom: 1px solid var(--line); }
+.me-tbl tbody tr { border-bottom: 1px solid var(--table-border); }
 .me-tbl tbody tr:last-child { border-bottom: none; }
-.me-tbl tbody tr:hover { background: #fafbfd; }
+.me-tbl tbody tr:hover { background: var(--table-row-hover); }
 .me-tbl td {
-  padding: 4px 6px; vertical-align: middle; color: var(--ink);
+  padding: var(--table-cell-py) var(--table-cell-px); vertical-align: middle; color: var(--ink);
 }
 
 /* Inline editable cells */
 .me-tbl td input,
 .me-tbl td select {
   width: 100%; border: 1px solid transparent; background: transparent;
-  padding: 4px 6px; border-radius: 4px; font-size: 13px; color: var(--ink);
+  padding: 3px 5px; border-radius: 4px; font-size: var(--table-cell-font-size); color: var(--ink);
   font-family: 'IBM Plex Sans', sans-serif; outline: none;
   transition: border-color .12s, background .12s;
+  min-height: var(--table-input-min-h);
 }
 .me-tbl td input:hover,
 .me-tbl td select:hover { border-color: var(--line2); background: var(--white); }
