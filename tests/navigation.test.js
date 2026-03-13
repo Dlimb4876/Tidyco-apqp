@@ -425,6 +425,19 @@ describe('Navigation Module (navigation.js)', () => {
       expect(global.currentSection).toBe('hub');
     });
 
+    test('should return to project dashboard from NPI sections', () => {
+      global.currentSection = 'apqp';
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        bubbles: true,
+        cancelable: true
+      });
+
+      window.dispatchEvent(event);
+      expect(global.currentSection).toBe('project');
+    });
+
     test('should not navigate back when Backspace is pressed inside an input', () => {
       global.currentSection = 'capacity';
       const input = document.createElement('input');
@@ -473,6 +486,27 @@ describe('Navigation Module (navigation.js)', () => {
 
       window.dispatchEvent(event);
       expect(global.currentSection).toBe('capacity');
+    });
+
+    test('should not navigate when non-editable text is selected', () => {
+      global.currentSection = 'capacity';
+
+      const originalGetSelection = window.getSelection;
+      window.getSelection = jest.fn(() => ({
+        isCollapsed: false,
+        toString: () => 'Selected text'
+      }));
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        bubbles: true,
+        cancelable: true
+      });
+
+      window.dispatchEvent(event);
+      expect(global.currentSection).toBe('capacity');
+
+      window.getSelection = originalGetSelection;
     });
   });
 });

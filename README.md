@@ -7,6 +7,24 @@ Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and
 
 ---
 
+## Quick Navigation
+
+**First time here?** Read these sections in order:
+1. **Responsive Design** (below) — understand mobile-first approach
+2. **Portals** (below) — find which portal you need
+3. **Project Structure** (below) — see where files are organized
+4. **Script Load Order** (near bottom) — understand dependencies
+
+**Looking for task guidance?** See **CLAUDE.md** (primary reference for AI workers):
+- Feature addition checklist (complete workflow)
+- Common mistakes to avoid (syntax, RLS, subscriptions)
+- State variables reference (all global variables)
+- Bug squashing process (debugging guide)
+
+**Writing tests?** See **TESTING_STRATEGY.md** for patterns and module guides.
+
+---
+
 ## Responsive Design
 
 The application is designed with a **progressive enhancement** approach:
@@ -25,6 +43,18 @@ All portals maintain full functionality across breakpoints. Desktop appearance i
 - Tab navigation scrolls horizontally on small screens
 - Table column widths auto-adjust with horizontal scroll fallback
 
+### Required Design Practices for All New Features
+
+When adding features, always account for:
+
+- **Mobile-first layouts** — Design assumes 480px width first, scales up
+- **Media queries** — All new CSS must include `@media (max-width: 767px)` and `@media (min-width: 768px)`
+- **Responsive tables** — Tables scroll horizontally on mobile (no wrapping columns)
+- **Responsive modals** — Max-width: 90vw on mobile, 400–600px on desktop
+- **No fixed widths** — Use flexbox/grid with relative units
+
+See **CLAUDE.md** "Complete Feature Addition Checklist" section for full workflow.
+
 ---
 
 ## Portals
@@ -38,6 +68,7 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | **Product Development** | `product-development` | NPI (APQP) and Product Management |
 | **Production** | `production` | Production planning, scheduling, and plan views |
 | **Product Management** | `productmgmt` | Central product registry (in development) |
+| **Bug Reports** | `bugreports` | Bug and issue reporting (real-time) |
 
 ---
 
@@ -106,13 +137,20 @@ The app is organised into discrete portals, all accessible from the central Hub.
 │   │       ├── products.js           # Product master view
 │   │       ├── scheduling.js         # Schedule view
 │   │       └── planning.js           # Plan by Product / Plan by Unit views
-│   └── /productmgmt                  # Central Product Management (in development)
-│       ├── /css/productmgmt.css
-│       └── /js/productmgmt.js
+│   ├── /productmgmt                  # Central Product Management (in development)
+│   │   ├── /css/productmgmt.css
+│   │   └── /js/productmgmt.js
+│   └── /bugs                         # Bug Reports (real-time)
+│       ├── /css/bugs.css
+│       └── /js
+│           ├── bugs-data.js          # Bug data layer and real-time subscriptions
+│           └── bugs.js               # Bug reports UI and interactions
 ├── /utils                            # Shared utilities
-│   └── /js
-│       ├── helpers.js                # Escaping, modal management, and UI utils
-│       └── navigation.js             # Hash-based routing and render switchboard
+│   ├── /js
+│   │   ├── helpers.js                # Escaping, modal management, and UI utils
+│   │   ├── navigation.js             # Hash-based routing and render switchboard
+│   │   └── realtime.js               # Real-time subscription helpers
+│   └── /css
 ├── index.html                        # Main application entry point
 └── README.md
 ```
@@ -127,22 +165,7 @@ The app is organised into discrete portals, all accessible from the central Hub.
 - **PFMEA**: Nested structure: Failure Mode → Effects → Causes (with RPN/Action history).
 - **BOM**: Categorised into `parts`, `tools`, `equip`, `mat`, `cons`, and `kits`.
 
----
-
-## State Management
-
-| Variable | Description |
-|----------|-------------|
-| `db` | Global object containing all programmes |
-| `progId` | UUID of the currently active project |
-| `currentSection` | Current UI route (e.g. `hub`, `capacity`, `production`) |
-| `apqpTab` | Active APQP sub-tab (`ctq` / `pfd` / `pfmea` / `cp`) |
-| `bomSubTab` | Active BOM sub-tab (`parts` / `tools` / `equip` / `mat` / `cons` / `kits`) |
-| `capacityTab` | Active capacity stream (`root` / `me` / `overhaul`) |
-| `productionTab` | Active production view (`root` / `products` / `scheduling` / `by-product` / `by-unit`) |
-| `productDevelopmentTab` | Active product development sub-tab (`root` / `npi` / `product-management`) |
-| `prodPlanMonthOffset` | Month offset from current month for the production plan Gantt view |
-| `meStartOffset` | Month offset for the ME capacity chart |
+For complete state variables reference, see **CLAUDE.md "State Management"** section.
 
 ---
 
@@ -177,7 +200,7 @@ The application uses hash-based routing with the following parameters:
 | `t` | APQP sub-tab | `t=ctq`, `t=pfd`, `t=pfmea`, `t=cp` |
 | `ct` | Capacity sub-tab | `ct=root`, `ct=me`, `ct=overhaul`, `ct=projects` |
 | `pt` | Production sub-tab | `pt=root`, `pt=products`, `pt=scheduling` |
-| `pdt` | Product Development sub-tab | `pt=root`, `pt=npi`, `pt=product-management` |
+| `pdt` | Product Development sub-tab | `pdt=root`, `pdt=npi`, `pdt=product-management` |
 
 ### Example URLs
 
@@ -189,10 +212,10 @@ The application uses hash-based routing with the following parameters:
 #s=capacity&ct=me
 
 # Product Development portal, NPI section, PFMEA tab
-#p=<uuid>&s=product-development&nt=npi&t=pfmea
+#p=<uuid>&s=product-development&pdt=npi&t=pfmea
 
 # APQP section (when project is active)
-#p=<uuid>&s=apqp&t=ctq
+#p=<uuid>&s=product-development&t=ctq
 
 # Production portal
 #s=production&pt=scheduling
@@ -223,41 +246,6 @@ Navigation automatically handles cleanup for real-time subscriptions:
 - **Production**: Unsubscribes when leaving `production`
 
 Always use `navigate()` instead of directly setting `window.location.hash` to ensure proper cleanup.
-
----
-
-## Script Load Order
-
-Scripts must be loaded in dependency order (all use the global scope):
-
-```
-state.js → auth.js → db.js →
-helpers.js → navigation.js →
-hub.js → rpn-chart.js → dashboard.js →
-capacity.js → me-data.js → me-team.js → me-tasks.js → me-products.js →
-  me-holidays.js → me-chart.js → me-heatmap.js → me-dashboard.js → me-capacity.js →
-data.js → production.js → products.js (production) → scheduling.js → planning.js →
-products-data.js → products.js (product-dev) →
-product-development.js → product-management.js →
-productmgmt.js →
-gates.js → pfmea.js → apqp.js → bom.js → timing.js → trackers.js →
-app.js
-```
-
----
-
-## CSS Load Order
-
-CSS files must be loaded in cascade order so feature overrides work correctly:
-
-```
-main.css → components.css →
-dashboard.css → hub.css →
-capacity.css → me-capacity.css →
-production.css →
-products.css (product-dev) → productmgmt.css →
-pfmea.css → gantt.css → apqp.css → rpn-chart.css
-```
 
 ---
 
@@ -322,38 +310,29 @@ Six gates (0–5) are defined in `state.js` as `GATE_DEFS`, each with a name, ph
 
 ---
 
-## Recent Updates (2026-03-10)
+## Script Load Order
 
-### Mobile-Friendly Responsive Design
+⚠️ **Script load order is defined in index.html `<script>` tags. That is the source of truth.** See **CLAUDE.md "Script Load Order"** for complete reference list.
 
-**New responsive CSS has been implemented across all portals** to provide a seamless experience on mobile devices, tablets, and desktops without changing the desktop design.
+The load order is critical because scripts use the global scope and depend on earlier scripts being available. When adding a new JS file:
+1. Add `<script>` tag to index.html in the correct position
+2. Update CLAUDE.md script load order reference
+3. Do NOT add `<script>` tags out of order
 
-#### Changes Made:
-- **13 CSS files updated** with comprehensive media queries
-- **Three-tier responsive strategy**: 480px (mobile), 768px (tablet), 1200px (desktop)
-- **No JavaScript changes** — purely CSS-based solution
-- **Progressive enhancement** — layouts scale from single-column (mobile) to multi-column (desktop)
+---
 
-#### Files Modified:
-- **Core**: `main.css`, `components.css`
-- **Portals**: `hub.css`, `capacity.css`, `me-capacity.css`, `production.css`
-- **Product Development**: `dashboard.css`, `apqp.css`, `pfmea.css`, `gantt.css`, `rpn-chart.css`
-- **Product Management**: `products.css`, `productmgmt.css`
+## CSS Load Order
 
-#### Key Features:
-✅ Desktop design **unchanged** — no visual differences on large screens
-✅ Mobile **single-column layouts** with optimized spacing and font sizes
-✅ Tablet **2-column layouts** where applicable for balanced readability
-✅ **Horizontal scroll preserved** for data-intensive tables on mobile
-✅ **Touch-friendly adjustments** — reduced padding, scalable components
-✅ **Chart responsiveness** — Chart.js maintains responsive: true configuration
+CSS files must be loaded in cascade order so feature overrides work correctly:
 
-#### Testing Breakpoints:
-- **375px** (iPhone SE)
-- **768px** (iPad)
-- **1920px** (Desktop)
-
-All portals have been tested at these breakpoints for functional consistency.
+```
+main.css → components.css →
+dashboard.css → hub.css →
+capacity.css → me-capacity.css →
+production.css →
+products.css (product-dev) → productmgmt.css →
+pfmea.css → gantt.css → apqp.css → rpn-chart.css
+```
 
 ---
 
@@ -364,3 +343,50 @@ All portals have been tested at these breakpoints for functional consistency.
 | Supabase JS v2 | CDN | Authentication and remote persistence |
 | Chart.js v4.4.0 | CDN | Capacity charts and RPN trend charts (responsive: true) |
 | IBM Plex Sans / Mono | Google Fonts | Typography (scales responsively) |
+
+---
+
+## Recent Updates (2026-03-13)
+
+### Documentation Improvements
+
+**Major improvements to CLAUDE.md and TESTING_STRATEGY.md to improve AI worker guidance:**
+
+- **CLAUDE.md**: Added "Common Mistakes" checklist (syntax errors, RLS failures, subscription leaks, modal state, debounce timing)
+- **CLAUDE.md**: Added "RLS Design Philosophy" explaining why all users see all data and implications
+- **CLAUDE.md**: Added complete "Feature Addition Checklist" (consolidated from multiple sections)
+- **CLAUDE.md**: Consolidated all state variables in single State Management table
+- **CLAUDE.md**: Clarified "About This Project" (no subagents, use bash directly)
+- **README.md**: Removed duplicate state/load order tables, added cross-references to CLAUDE.md
+- **TESTING_STRATEGY.md**: Added "Test Coverage Status" section
+- **TESTING_STRATEGY.md**: Added async testing patterns (debounce, subscriptions, cleanup)
+
+### Mobile-Friendly Responsive Design (2026-03-10)
+
+**New responsive CSS has been implemented across all portals** to provide a seamless experience on mobile devices, tablets, and desktops without changing the desktop design.
+
+#### Changes Made:
+- **13 CSS files updated** with comprehensive media queries
+- **Three-tier responsive strategy**: 480px (mobile), 768px (tablet), 1200px (desktop)
+- **No JavaScript changes** — purely CSS-based solution
+- **Progressive enhancement** — layouts scale from single-column (mobile) to multi-column (desktop)
+
+#### Key Features:
+✅ Desktop design **unchanged** — no visual differences on large screens
+✅ Mobile **single-column layouts** with optimized spacing and font sizes
+✅ Tablet **2-column layouts** where applicable for balanced readability
+✅ **Horizontal scroll preserved** for data-intensive tables on mobile
+✅ **Touch-friendly adjustments** — reduced padding, scalable components
+✅ **Chart responsiveness** — Chart.js maintains responsive: true configuration
+
+---
+
+## Getting Started as an AI Worker
+
+1. **Read CLAUDE.md first** — it's the primary reference for AI workers working on this project
+2. **Understand the architecture** — read "Core Architecture" and "RLS Design Philosophy" sections
+3. **Follow the Feature Addition Checklist** — it guides you through the complete process
+4. **Avoid common mistakes** — read the "Common Mistakes" section before coding
+5. **Write tests** — see TESTING_STRATEGY.md for patterns and guidelines
+6. **Update documentation** — when you make changes, update CLAUDE.md and README.md
+

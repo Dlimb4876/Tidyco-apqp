@@ -384,32 +384,28 @@ npi.dashboard.createProg = function() {
 
 npi.dashboard.showEditProject = function() {
   const p = prog(); if (!p) return
-  populateFamilySelects()
-  document.getElementById('ep_name').value     = p.name     || ''
-  document.getElementById('ep_family').value   = p.family   || getFamilies()[0]?.id || 'Other'
-  document.getElementById('ep_status').value   = p.status   || 'Active'
-  document.getElementById('ep_customer').value = p.customer || ''
-  document.getElementById('ep_unit').value     = p.unit     || ''
-  document.getElementById('ep_lead').value     = p.lead     || ''
-  document.getElementById('ep_pm').value       = p.pm       || ''
-  document.getElementById('ep_date').value     = p.date     || ''
-  document.getElementById('ep_qNumber').value    = p.qNumber    || ''
-  document.getElementById('ep_partNumber').value = p.partNumber || ''
+  // Read-only product info
+  const familyName = getFamilies().find(f => f.id === p.family)?.name || p.family || '—'
+  document.getElementById('ep_ro_name').textContent     = p.name     || '—'
+  document.getElementById('ep_ro_customer').textContent = p.customer ? 'Customer: ' + p.customer : ''
+  document.getElementById('ep_ro_unit').textContent     = p.unit     ? 'Unit: ' + p.unit         : ''
+  document.getElementById('ep_ro_family').textContent   = familyName ? 'Family: ' + familyName   : ''
+  // Editable project fields
+  document.getElementById('ep_status').value = p.status || 'Active'
+  document.getElementById('ep_lead').value   = p.lead   || ''
+  document.getElementById('ep_pm').value     = p.pm     || ''
+  document.getElementById('ep_date').value   = p.date   || ''
+  document.getElementById('ep_qNumber').value = p.qNumber || ''
   showModal('modalEditProj')
 }
 
 npi.dashboard.saveEditProject = function() {
   const p = prog(); if (!p) return
-  p.name     = document.getElementById('ep_name').value.trim()     || p.name
-  p.family   = document.getElementById('ep_family').value          || 'Other'
-  p.status   = document.getElementById('ep_status').value          || 'Active'
-  p.customer = document.getElementById('ep_customer').value.trim() || ''
-  p.unit     = document.getElementById('ep_unit').value.trim()     || ''
-  p.lead     = document.getElementById('ep_lead').value.trim()     || ''
-  p.pm       = document.getElementById('ep_pm').value.trim()       || ''
-  p.date     = document.getElementById('ep_date').value            || ''
-  p.qNumber    = document.getElementById('ep_qNumber').value.trim()    || ''
-  p.partNumber = document.getElementById('ep_partNumber').value.trim() || ''
+  p.status = document.getElementById('ep_status').value || 'Active'
+  p.lead   = document.getElementById('ep_lead').value.trim()    || ''
+  p.pm     = document.getElementById('ep_pm').value.trim()      || ''
+  p.date   = document.getElementById('ep_date').value           || ''
+  p.qNumber = document.getElementById('ep_qNumber').value.trim() || ''
   save()
   closeModal('modalEditProj')
   render()

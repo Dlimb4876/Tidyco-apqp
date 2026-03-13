@@ -35,6 +35,12 @@ function parseHash() {
   }));
 }
 
+function isNpiLiveSection(sec) {
+  if (!sec) return false;
+  if (sec.startsWith('gate_')) return true;
+  return ['projects', 'project', 'apqp', 'actions', 'risks', 'bom', 'timing'].includes(sec);
+}
+
 /**
  * Primary navigation function - updates section, URL hash, and triggers render
  * @param {string} sec - Section to navigate to
@@ -49,6 +55,18 @@ function parseHash() {
  */
 function navigate(sec, { pushHash = true } = {}) {
   if (sec === 'home') sec = 'project';
+
+  // Keep NPI project pages live-updated across all users.
+  const leavingNpiLiveSection = isNpiLiveSection(currentSection) && !isNpiLiveSection(sec);
+  const enteringNpiLiveSection = !isNpiLiveSection(currentSection) && isNpiLiveSection(sec);
+
+  if (leavingNpiLiveSection && typeof npiDataUnsubscribe === 'function') {
+    npiDataUnsubscribe();
+  }
+
+  if (enteringNpiLiveSection && typeof npiDataInit === 'function') {
+    npiDataInit();
+  }
 
   // Clean up subscriptions when leaving bugreports
   if (currentSection === 'bugreports' && sec !== 'bugreports' && typeof bugDataUnsubscribe === 'function') {
@@ -126,7 +144,7 @@ function goHome()     { navigate('project'); }
  * Intelligent back navigation
  * Portal sub-pages (capacity/me, production/scheduling, etc.) → portal root
  * Portal root (capacity, production, product-development) → hub
- * NPI sub-sections (apqp, actions, risks, bom, timing) → product-development
+ * NPI sub-sections (apqp, actions, risks, bom, timing, gates) → active project dashboard
  * All other sections → hub
  */
 function navigateBack() {
@@ -145,7 +163,7 @@ function navigateBack() {
   }
   const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing'];
   if (npiSections.includes(currentSection) || currentSection.startsWith('gate_')) {
-    navigate('product-development');
+    navigate('project');
   } else {
     navigate('hub');
   }
@@ -295,6 +313,18 @@ function isEditableElement(el) {
 }
 
 /**
+ * Returns true when there is an active non-collapsed text selection.
+ * This avoids hijacking Backspace while users are interacting with selected text.
+ * @returns {boolean}
+ */
+function hasActiveTextSelection() {
+  if (typeof window.getSelection !== 'function') return false;
+  const selection = window.getSelection();
+  if (!selection) return false;
+  return !selection.isCollapsed && selection.toString().length > 0;
+}
+
+/**
  * Backspace acts as app-level back navigation when not typing/editing.
  */
 window.addEventListener('keydown', (event) => {
@@ -305,6 +335,7 @@ window.addEventListener('keydown', (event) => {
 
   const activeEl = document.activeElement;
   if (isEditableElement(event.target) || isEditableElement(activeEl)) return;
+  if (hasActiveTextSelection()) return;
 
   event.preventDefault();
   navigateBack();

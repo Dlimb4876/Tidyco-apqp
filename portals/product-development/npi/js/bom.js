@@ -26,7 +26,7 @@ npi.bom.renderBomTable = function(type, p) {
   const aaw     = items.filter(x => x.isAaw).length
   const rep     = items.filter(x => x.isRepair).length
   const statsHTML = `<div style="display:flex;gap:8px;margin-bottom:14px">
-    <span class="flag" style="background:var(--bg);border:1px solid var(--line);color:var(--mid)">${items.length} total</span>
+    <span class="flag bom-summary-pill" style="background:var(--bg);border:1px solid var(--line);color:var(--mid)">${items.length} total</span>
     ${type !== 'tools' && type !== 'equip' ? `<span class="flag-aaw bom-summary-pill">${aaw} AAW</span><span class="flag-repair bom-summary-pill">${rep} Repair</span>` : ''}
   </div>`
 

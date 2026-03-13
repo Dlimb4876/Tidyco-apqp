@@ -14,14 +14,19 @@ For any multi-step request (e.g. "add a new feature", "fix this bug", "update th
 - Never batch-complete multiple steps — tick them off one at a time
 - If a new subtask is discovered mid-way, add it to the list before starting it
 
-### Agent Work Assessment
+---
 
-When planning a Todo list, **assess each task for suitability as agent work** before starting:
+## About This Project
 
-- **Good candidates for an agent:** read-only research tasks (e.g. "find all usages of X", "explore how Y is structured", "check if Z exists"), tasks that require searching many files, or background investigations that don't depend on previous steps
-- **Keep in the main flow:** tasks that write or edit files, tasks that depend on earlier results, anything requiring user confirmation, and sequential steps where order matters
-- Delegate suitable tasks to the `Explore` subagent to avoid cluttering the main conversation with long searches
-- Run multiple independent agent tasks in parallel where possible to save time
+This project uses **vanilla JavaScript with no build pipeline**. All work is done in the primary Claude conversation using bash, file tools, and code editing tools. There are no subagents or delegated workers.
+
+When you encounter a task like "find all files that use X", use bash (grep, find, xargs) rather than delegating:
+
+```bash
+grep -r "functionName" --include="*.js" .
+```
+
+Batch file operations together to reduce tool calls (e.g., edit 3 related files in sequence rather than triggering 3 separate create_file calls).
 
 ---
 
@@ -35,9 +40,29 @@ Tidyco APQP is a **vanilla JavaScript Single Page Application (SPA)** for managi
 
 ---
 
-## Core Design Principle: Collaborative Operations Tool
+## Core Architecture
+
+### Collaborative Operations Model
 
 **This is a fully collaborative multi-user operations portal.** All users work simultaneously on shared data with real-time visibility.
+
+#### RLS Design Philosophy (Important!)
+
+The application uses **Supabase RLS for authentication gating only**, not for row-level authorization:
+
+- ✅ All authenticated users see all data (by design)
+- ✅ RLS prevents unauthenticated access
+- ❌ RLS does NOT isolate data by user
+- ❌ User filtering does NOT happen in the application
+
+**Why this design?**
+- Simpler RLS policies (one policy per table, no complex per-user logic)
+- All team members see same data (collaborative operations model)
+- No multi-tenancy complexity
+- Trade-off: No per-user privacy isolation
+
+**Consequence for feature design:**
+When adding new features, assume all authenticated users will see the data. If you need per-user isolation later, RLS policies would need complete redesign. Do not build user-specific filters into features without explicit discussion.
 
 ### Design Requirements for All Features
 
@@ -71,6 +96,19 @@ When designing or modifying any feature, you MUST account for:
 6. **Presence Indicators** (where applicable)
    - Show who is viewing/editing the same record
    - Locking is NOT used — embrace collaborative editing
+
+### Mobile-First Design Requirements
+
+All new features must follow mobile-first responsive design:
+
+- **Mobile-first layouts** — Design assumes 480px width first, scales up
+- **Media queries** — All new CSS must include `@media (max-width: 767px)` and `@media (min-width: 768px)`
+- **Responsive tables** — Tables scroll horizontally on mobile (no wrapping columns)
+- **Responsive modals** — Max-width: 90vw on mobile, 400–600px on desktop
+- **No fixed widths** — Use flexbox/grid with relative units
+- **Test at breakpoints** — 375px (mobile), 768px (tablet), 1920px (desktop)
+
+See README.md "Responsive Design" section for complete details.
 
 ### Example Pattern for New Features
 
@@ -112,6 +150,62 @@ async function myFeatureUpdate(id, updates) {
 
 ---
 
+## Common Mistakes (Prevent These!)
+
+### 1. Syntax Errors Kill Entire Files
+
+A single syntax error in a JS file prevents the whole file from loading. The error may not appear in the browser console—the file simply won't execute. Watch for:
+
+- ❌ `const foo = 1; const foo = 2;` — duplicate variable name in same scope
+- ❌ `{ foo: 1, bar: 2 }` — missing comma between object properties  
+- ❌ Multiple `const x = ...` declarations in same function scope
+- ❌ Unclosed bracket or parenthesis
+- ✅ Use `let` for reassignable values, `const` for constants
+- ✅ Check opening/closing brackets match: `{ } [ ] ( )`
+
+**Diagnostic:** If you see "functionName is not a function" at runtime, **suspect a parse error in the *defining* file first**, not just a load order issue. Read the file where the function is defined and look for syntax errors.
+
+### 2. RLS Returns Empty Data Silently
+
+Supabase RLS errors don't show in the browser console. Your query just returns empty data without error message. Watch for:
+
+- ❌ Querying a new table without an RLS policy → returns `{ data: [], error: null }` (looks successful!)
+- ❌ Querying a table that exists in Supabase but you haven't defined an RLS policy for
+- ✅ Check that every table has a policy allowing authenticated users: `CREATE POLICY "authenticated" ON table FOR ALL USING (auth.role() = 'authenticated')`
+- ✅ Don't filter queries by `user_id` on the client side; RLS handles authentication, not authorization
+- ✅ If a query returns empty when you expect data, check the Supabase table RLS policies first
+
+### 3. Subscription Cleanup Leaks Memory
+
+Forgetting to unsubscribe from real-time channels causes memory leaks and stale data across the app.
+
+- ❌ `createRealtimeSubscription('table', ...)` in `init()` but no cleanup when feature closes
+- ❌ Multiple subscriptions to same table without cleanup
+- ✅ Always store subscription reference: `const subRef = createRealtimeSubscription(...)`
+- ✅ Always cleanup before navigation: `removeRealtimeSubscription(subRef)` in navigation handlers
+- ✅ Use navigation.js functions (`navigate()`) which handle cleanup automatically for known features
+
+### 4. Modal State Pollution
+
+Modals pass data via global variables. Forgetting to clear them causes bugs when reopening modals.
+
+- ❌ `ctqPickTarget = row; showModal('...')` but never clear `ctqPickTarget` afterward
+- ❌ Modal templates use global variables without checking they're initialized
+- ✅ Clear the target variable in close handler: `ctqPickTarget = null`
+- ✅ Initialize modal globals before use: `if (!ctqPickTarget) return;`
+
+### 5. Debounce Timing (800ms / 900ms)
+
+Saves don't sync to Supabase instantly. They debounce to avoid excessive writes.
+
+- ❌ Assume data is persisted to Supabase immediately after user edit
+- ❌ Write test code expecting instant Supabase updates
+- ✅ Test that debounce actually delays the save (use browser DevTools Network tab to observe)
+- ✅ If testing async behavior, use fake timers: `jest.useFakeTimers(); ... jest.runAllTimers();`
+- ✅ Typical debounce: 800ms for capacity/production, 900ms for ME capacity
+
+---
+
 ## Repository Structure
 
 ```
@@ -145,55 +239,26 @@ async function myFeatureUpdate(id, updates) {
 
 ---
 
-## Script Load Order (Critical)
-
-Scripts are loaded via `<script>` tags in `index.html`. **Order matters** — do not rearrange.
-
-```
-CSS:  main.css → components.css → [feature CSS files]
-
-JS:
-  Layer 1 (Core):      state.js → auth.js → db.js
-  Layer 2 (Utils):     helpers.js → navigation.js → realtime.js
-  Layer 3 (Portals):   hub.js →
-                       products-data.js → trends-chart.js →
-                       capacity.js → me-data-relational.js → me-data.js → me-utils.js →
-                       me-calculations.js → me-components.js → me-team.js → me-tasks.js →
-                       me-products.js → me-product-taskload.js → me-holidays.js →
-                       me-chart.js → me-heatmap.js → me-dashboard.js → me-capacity.js →
-                       me-estimation-page.js →
-                       prod-capacity-data.js → work-areas-data.js → prod-capacity-dashboard.js →
-                       prod-capacity-workarea.js → prod-capacity-settings.js →
-                       prod-capacity-detail.js → prod-capacity.js →
-                       production.js → scheduling.js → planning.js →
-                       families-data.js → family-templates-data.js → products.js →
-                       product-development.js → product-management.js → productmgmt.js →
-                       npi-constants.js → npi.js → rpn-chart.js → dashboard.js →
-                       gates.js → pfmea.js → apqp.js → bom.js → timing.js → trackers.js →
-                       bugs-data.js → bugs.js
-  Layer 4 (Last):      app.js
-```
-
-When adding a new JS file, add its `<script>` tag to `index.html` in the correct position relative to its dependencies.
-
----
-
 ## State Management
 
 All application state lives in **global variables** defined in `core/js/state.js`.
 
 | Variable | Type | Purpose |
-|---|---|---|
+|----------|------|---------|
 | `db` | Object | All project data (`{ programmes[], families[], ... }`) |
 | `progId` | String (UUID) | Currently active project |
-| `currentSection` | String | Active portal (`hub`, `capacity`, `product-development`, `production`) |
-| `apqpTab` | String | Active APQP sub-tab |
-| `capacityTab` | String | Active capacity sub-tab |
-| `productionTab` | String | Active production sub-tab |
-| `productDevelopmentTab` | String | Active product development sub-tab |
+| `currentSection` | String | Active portal (`hub`, `capacity`, `product-development`, `production`, `bugreports`, `productmgmt`) |
+| `apqpTab` | String | Active APQP sub-tab (`ctq`, `pfd`, `pfmea`, `cp`, `gates`, `bom`, `timing`, `trackers`) |
+| `capacityTab` | String | Active capacity sub-tab (`root`, `me`, `overhaul`, `projects`) |
+| `productionTab` | String | Active production sub-tab (`root`, `products`, `scheduling`, `by-product`, `by-unit`) |
+| `productDevelopmentTab` | String | Active product development sub-tab (`root`, `npi`, `product-management`) |
 | `bomSubTab` | String | Active BOM category (`parts`, `tools`, `equip`, `mat`, `cons`, `kits`) |
+| `meStartOffset` | Number | Month offset for ME capacity chart (0 = current month) |
+| `prodPlanMonthOffset` | Number | Month offset for production plan Gantt view (0 = current month) |
 
 **Accessor:** `prog()` returns the active programme object: `db.programmes.find(p => p.id === progId)`.
+
+**State Storage:** All variables are defined in `core/js/state.js`. When adding a new state variable, add it there with a default value. Do not create state variables in other files.
 
 ### Key Constants (in `state.js`)
 
@@ -211,10 +276,10 @@ Navigation uses **URL hash** parameters. The main `render()` function in `utils/
 
 Example hashes:
 - `#s=hub` — Hub dashboard
-- `#s=capacity&t=dashboard` — Capacity portal, dashboard tab
+- `#s=capacity&ct=me` — Capacity portal, ME view
 - `#p=<uuid>&s=product-development&t=npi&nt=pfmea` — PFMEA tab for a project
 
-When navigating programmatically, use helper functions (e.g., `goTo(section, tab)`) or update the hash directly — do not call render functions directly.
+When navigating programmatically, use `navigate(section, options)` or update the hash directly — do not call render functions directly. Always use `navigate()` when you need subscription cleanup.
 
 ---
 
@@ -326,6 +391,122 @@ High RPN threshold: ≥ 100 (renders amber/red badges)
 
 ---
 
+## Script Load Order (Critical)
+
+Scripts are loaded via `<script>` tags in `index.html`. **Order matters** — do not rearrange.
+
+⚠️ **Script load order is defined in index.html `<script>` tags. That is the source of truth.** The list below is informational only and may lag if scripts are reordered. When reordering scripts, update index.html first, then update this reference.
+
+```
+CSS:  main.css → components.css → [feature CSS files]
+
+JS:
+  Layer 1 (Core):      state.js → auth.js → db.js
+  Layer 2 (Utils):     helpers.js → navigation.js → realtime.js
+  Layer 3 (Portals):   hub.js →
+                       products-data.js → trends-chart.js →
+                       capacity.js → me-data-relational.js → me-data.js → me-utils.js →
+                       me-calculations.js → me-components.js → me-team.js → me-tasks.js →
+                       me-products.js → me-product-taskload.js → me-holidays.js →
+                       me-chart.js → me-heatmap.js → me-dashboard.js → me-capacity.js →
+                       me-estimation-page.js →
+                       prod-capacity-data.js → work-areas-data.js → prod-capacity-dashboard.js →
+                       prod-capacity-workarea.js → prod-capacity-settings.js →
+                       prod-capacity-detail.js → prod-capacity.js →
+                       production.js → scheduling.js → planning.js →
+                       families-data.js → family-templates-data.js → products.js →
+                       product-development.js → product-management.js → productmgmt.js →
+                       npi-constants.js → npi.js → rpn-chart.js → dashboard.js →
+                       gates.js → pfmea.js → apqp.js → bom.js → timing.js → trackers.js →
+                       bugs-data.js → bugs.js
+  Layer 4 (Last):      app.js
+```
+
+When adding a new JS file, add its `<script>` tag to `index.html` in the correct position relative to its dependencies.
+
+---
+
+## Complete Feature Addition Checklist
+
+### Step 1: Understand Requirements
+- [ ] Read the Portal structure in README.md (understand the pattern for your feature type)
+- [ ] Check this CLAUDE.md script load order (verify dependencies)
+- [ ] Check if this needs real-time subscriptions (plan cleanup in navigation.js)
+- [ ] Check if this needs responsive design (plan mobile-first layouts with media queries)
+
+### Step 2: Create Files
+- [ ] **New portal?** Create `portals/<name>/<name>.js` + `<name>.css`
+- [ ] **New sub-tab?** Create in parent portal directory following naming convention
+- [ ] **New data layer?** Create `<feature>-data.js` in portal directory
+- [ ] **New database table?** Create in Supabase with `user_id` column + RLS policy
+
+### Step 3: Register in index.html
+- [ ] Add `<link>` for CSS in correct position (see CSS load order section)
+- [ ] Add `<script>` for JS in correct position (dependencies must load before dependents)
+- [ ] Run `npm test` to verify no load errors
+
+### Step 4: Add Navigation
+- [ ] Add case to `render()` switch in utils/js/navigation.js
+- [ ] Add state variable to state.js if new section/tab (with default value)
+- [ ] Add navigation card to parent portal hub (e.g., hub.js, product-development.js)
+- [ ] Update hash example in README.md if new major section
+
+### Step 5: Implement Mobile-First Responsive Design
+- [ ] Add `@media (max-width: 767px)` for mobile layout (single column, optimized spacing)
+- [ ] Add `@media (min-width: 768px)` for tablet layout (2 columns where applicable)
+- [ ] Design is mobile-first: start with mobile, scale up
+- [ ] Test at 375px (mobile), 768px (tablet), 1920px (desktop)
+- [ ] Ensure horizontal scroll for data-heavy tables (don't wrap columns)
+- [ ] Reference: README.md "Required Design Practices" section
+
+### Step 6: Add Real-Time Sync (if applicable)
+- [ ] Check CLAUDE.md "Example Pattern for New Features" section
+- [ ] Initialize subscription in feature `init()` function
+- [ ] Store subscription reference in global variable: `const subRef = createRealtimeSubscription(...)`
+- [ ] Add cleanup in navigation.js before leaving section: `removeRealtimeSubscription(subRef)`
+- [ ] Alternative: Use `navigate()` function which handles cleanup automatically for known features
+- [ ] Test concurrent edits (two users changing same record)
+
+### Step 7: Write Tests
+- [ ] Create `tests/<feature>.test.js` following TESTING_STRATEGY.md patterns
+- [ ] Mock Supabase, DOM, subscriptions, and globals
+- [ ] Test happy path (normal flow) + error cases (Supabase failures)
+- [ ] Run `npm test` locally before committing
+- [ ] See TESTING_STRATEGY.md "Module-Specific Testing Guides" for feature-specific patterns
+
+### Step 8: Update Documentation
+- [ ] Add entry to README.md Portal table (if new portal/major section)
+- [ ] Update load order in CLAUDE.md AND index.html (if you added new files)
+- [ ] Add to plans/ folder if architectural changes or complex logic
+- [ ] Update state variables reference (CLAUDE.md) if new state variable added
+
+---
+
+## Bug Squashing Process
+
+When a runtime error like `X is not a function` or `X is undefined` occurs, follow this diagnostic routine:
+
+1. **Read the error** — note the file and line number where the error occurs (e.g. `me-calculations.js:44`)
+2. **Check for parse errors in the defining file** — use bash to search for the missing function/variable:
+   ```bash
+   grep -rn "function myFunc\|const myFunc\|let myFunc" portals/ utils/ core/
+   ```
+3. **Read the defining file for syntax errors** — the file may be failing to parse entirely due to:
+   - Duplicate `const` declarations in same scope
+   - Unclosed brackets or parentheses
+   - Missing commas in object literals
+   - Other JavaScript syntax errors
+4. **Check load order** — search `index.html` for the relevant `<script>` tags; confirm the defining file loads before the caller
+5. **If load order is correct, check for syntax errors again** — a file that fails to parse silently prevents any of its `window.*` assignments from running
+6. **Look for duplicate variable names** — a common JS pitfall: two `const foo` declarations in same scope cause a SyntaxError that kills the whole file
+7. **Fix the error** — rename the duplicate, close the bracket, add the comma, then verify the function is now accessible
+
+### Key Insight: No Build Step = No Compile-Time Errors
+
+Because this project has no bundler or transpiler, syntax errors in JS files are only caught at runtime in the browser. A broken file fails silently — nothing in the console will say "me-utils.js failed to parse" before the downstream `is not a function` error appears. **Always suspect a parse failure in the *defining* file, not just a missing import or load-order issue.**
+
+---
+
 ## Key Conventions
 
 ### Naming
@@ -380,31 +561,6 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 - Credentials in `core/js/auth.js` (hardcoded anon key — secured via RLS)
 - Login flow: `doLogin()` → `supa.auth.signInWithPassword()` → `launchApp()` → `db.js::loadRemote()`
 - Logout: `doLogout()` clears state and returns to login screen
-
----
-
-## Adding New Features
-
-### New Portal
-1. Create `portals/<name>/` directory with `<name>.js` and `<name>.css`
-2. Add `<link>` in `index.html` CSS section
-3. Add `<script>` in `index.html` JS section (before `app.js`)
-4. Add case to `render()` switch in `utils/js/navigation.js`
-5. Add navigation card to `portals/hub/hub.js`
-6. Add state variable to `core/js/state.js` if needed
-
-### New APQP Sub-Tab
-1. Add tab definition to `portals/product-development/product-development.js`
-2. Create feature JS module in `portals/product-development/npi/`
-3. Add corresponding CSS file
-4. Register both in `index.html` load order
-5. Add case to NPI tab render dispatcher
-
-### New Database Table
-1. Create table in Supabase with a `user_id` column (for record metadata — who created it)
-2. Add RLS policy requiring authentication: `CREATE POLICY "authenticated access" ON table FOR ALL USING (auth.role() = 'authenticated')`
-3. Add load/save functions in the appropriate data module — **do not filter queries by `user_id`**; RLS handles access control
-4. Call load function from `db.js::loadRemote()` or feature init
 
 ---
 
@@ -502,16 +658,10 @@ npm test -- tests/navigation.test.js
 
 ---
 
-## Bug Squashing Process
+## External Dependencies
 
-When a runtime error like `X is not a function` or `X is undefined` occurs, follow this diagnostic routine:
-
-1. **Read the error** — note the file and line number where the error occurs (e.g. `me-calculations.js:44`)
-2. **Find the definition** — use `Grep` to search for where the missing function/variable is defined across all files
-3. **Check load order** — search `index.html` for the relevant `<script>` tags; confirm the defining file loads before the caller. If it doesn't, reorder the tags
-4. **If load order is correct, read the defining file** — the file may be failing to parse entirely due to a `SyntaxError` (duplicate `const`/`let`, unclosed bracket, etc.), which silently prevents any of its `window.*` assignments from running
-5. **Look for duplicate variable names** — a common JS pitfall in large functions: two `const foo` declarations in the same scope cause a `SyntaxError` that kills the whole file
-6. **Fix the syntax error** — rename the duplicate, then verify the function is now accessible
-
-### Key Insight: No Build Step = No Compile-Time Errors
-Because this project has no bundler or transpiler, syntax errors in JS files are only caught at runtime in the browser. A broken file fails silently — nothing in the console will say "me-utils.js failed to parse" before the downstream `is not a function` error appears. Always suspect a parse failure in the *defining* file, not just a missing import or load-order issue.
+| Library | Source | Purpose |
+|---------|--------|---------|
+| Supabase JS v2 | CDN | Authentication and remote persistence |
+| Chart.js v4.4.0 | CDN | Capacity charts and RPN trend charts (responsive: true) |
+| IBM Plex Sans / Mono | Google Fonts | Typography (scales responsively) |

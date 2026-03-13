@@ -41,20 +41,169 @@ npm test -- --coverage
 
 ---
 
+## Test Coverage Status (March 2026)
+
+### ✅ Fully Tested (Production-Ready)
+- **`navigation.test.js`** — 38 tests, 85% coverage
+  - Hash parsing with various formats
+  - Navigation to each section
+  - Subscription cleanup on section changes
+  - Tab reset behavior
+  - Return button visibility
+  - Back navigation logic
+  - popstate event handling
+
+- **`production.test.js`** — Tests for production portal CRUD and calculations
+
+- **`bugs.test.js`** — Tests for bug reports real-time subscriptions and data layer
+
+### 🚧 Partially Tested or TODO
+- **`auth.test.js`** — 0 tests; login/logout flows need coverage
+  - Login with valid/invalid credentials
+  - Login with empty fields
+  - Logout functionality
+  - Session restoration
+
+- **`db.test.js`** — 0 tests; save/load/migrate functions need coverage
+  - Remote data loading
+  - Local storage sync
+  - Save debouncing
+  - Data migration
+  - Error recovery
+
+- **`helpers.test.js`** — 0 tests; utilities need coverage
+  - HTML escaping (esc function)
+  - Modal management functions
+  - UI utility functions
+
+**When writing new tests, prioritize completing the TODO items above.**
+
+---
+
 ## Test File Structure
 
 ```
 /tests/
-├── navigation.test.js      # Hash routing and render switchboard
+├── navigation.test.js      # Hash routing and render switchboard (38 tests)
 ├── production.test.js      # Production portal functionality
 ├── bugs.test.js           # Bug reports data module
-├── auth.test.js           # Authentication (TO DO)
-├── db.test.js             # Data persistence (TO DO)
-├── helpers.test.js        # Utility functions (TO DO)
+├── auth.test.js           # Authentication (TODO)
+├── db.test.js             # Data persistence (TODO)
+├── helpers.test.js        # Utility functions (TODO)
 └── ...
 ```
 
 **Naming Convention:** `<module>.test.js` mirrors source file `<module>.js`
+
+---
+
+## Complete jest.setup.js Template
+
+Use this as a base for test files. Modify mocks as needed for your specific feature:
+
+```javascript
+// jest.setup.js
+const fs = require('fs');
+const path = require('path');
+
+// ─────────────────────────────────────────────────────────────
+// Mock Supabase Client
+// ─────────────────────────────────────────────────────────────
+
+global.supa = {
+  from: jest.fn((table) => ({
+    select: jest.fn().mockReturnValue({
+      order: jest.fn().mockResolvedValue({ data: [], error: null }),
+      eq: jest.fn().mockReturnValue({
+        data: [],
+        error: null,
+      }),
+    }),
+    insert: jest.fn().mockResolvedValue({
+      data: [{ id: 'test-id' }],
+      error: null,
+    }),
+    update: jest.fn().mockReturnValue({
+      eq: jest.fn().mockResolvedValue({
+        data: [],
+        error: null,
+      }),
+    }),
+    delete: jest.fn().mockReturnValue({
+      eq: jest.fn().mockResolvedValue({
+        data: [],
+        error: null,
+      }),
+    }),
+  })),
+  auth: {
+    getSession: jest.fn().mockResolvedValue({
+      data: {
+        session: {
+          user: { id: 'user-123', email: 'test@test.com' },
+        },
+      },
+    }),
+    signInWithPassword: jest.fn(),
+    signOut: jest.fn(),
+  },
+  realtime: {
+    on: jest.fn(),
+    subscribe: jest.fn(),
+    unsubscribe: jest.fn(),
+  },
+};
+
+// ─────────────────────────────────────────────────────────────
+// Mock Real-Time Subscriptions
+// ─────────────────────────────────────────────────────────────
+
+global.createRealtimeSubscription = jest.fn();
+global.removeRealtimeSubscription = jest.fn();
+
+// ─────────────────────────────────────────────────────────────
+// Mock Global State
+// ─────────────────────────────────────────────────────────────
+
+global.currentUser = { id: 'user-123', email: 'test@test.com' };
+global.db = { programmes: [], families: [], me_teams: [] };
+global.progId = 'prog-123';
+global.currentSection = 'hub';
+global.apqpTab = 'ctq';
+global.capacityTab = 'root';
+global.productionTab = 'root';
+global.productDevelopmentTab = 'root';
+global.bomSubTab = 'parts';
+global.meStartOffset = 0;
+global.prodPlanMonthOffset = 0;
+
+// ─────────────────────────────────────────────────────────────
+// Load DOM
+// ─────────────────────────────────────────────────────────────
+
+const html = fs.readFileSync(
+  path.resolve(__dirname, './index.html'),
+  'utf8'
+);
+document.documentElement.innerHTML = html.toString();
+
+// ─────────────────────────────────────────────────────────────
+// Ensure Critical DOM Elements Exist
+// ─────────────────────────────────────────────────────────────
+
+const ensureElement = (id) => {
+  if (!document.getElementById(id)) {
+    const el = document.createElement('div');
+    el.id = id;
+    document.body.appendChild(el);
+  }
+};
+
+ensureElement('mainContent');
+ensureElement('modalBg');
+ensureElement('loginForm');
+ensureElement('returnHubBtn');
+```
 
 ---
 
@@ -68,14 +217,16 @@ All tests must mock these global dependencies:
 ```javascript
 global.supa = {
   from: jest.fn(() => ({
-    select: jest.fn(() => ({
-      order: jest.fn(() => ({ data: [], error: null })),
-    })),
+    select: jest.fn(() => ({ order: jest.fn(() => ({ data: [], error: null })) })),
+    insert: jest.fn().mockResolvedValue({ data: [{ id: 'test' }], error: null }),
+    update: jest.fn().mockReturnValue({
+      eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+    }),
   })),
   auth: {
-    getSession: jest.fn(() => ({
+    getSession: jest.fn().mockResolvedValue({
       data: { session: { user: { id: 'test-user', email: 'test@test.com' } } }
-    }))
+    })
   }
 };
 ```
@@ -91,12 +242,12 @@ global.removeRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
 ```
 
-#### 4. Global State
+#### 4. Global State (all variables)
 ```javascript
 global.db = { programmes: [{ id: 'test-prog-1', name: 'Test Project' }] };
 global.progId = 'test-prog-1';
 global.currentSection = 'hub';
-// ... other state variables
+// ... other state variables from state.js
 ```
 
 #### 5. DOM Setup
@@ -122,7 +273,6 @@ global.npi = {
   dashboard: { renderProjects: jest.fn().mockReturnValue('<div>Projects</div>') },
   gate: { renderGatePage: jest.fn((num) => `<div>Gate ${num}</div>`) },
   apqp: { renderAPQP: jest.fn().mockReturnValue('<div>APQP</div>') },
-  // ...
 };
 
 // Mock subscription cleanup
@@ -141,7 +291,6 @@ Group related tests using `describe()`:
 ```javascript
 describe('Navigation Module (navigation.js)', () => {
   beforeEach(() => {
-    // Reset state before each test
     jest.clearAllMocks();
     global.currentSection = 'hub';
   });
@@ -230,39 +379,135 @@ test('doLogin should show an error if email or password is blank', async () => {
 
 ---
 
+## Async Testing Patterns
+
+Real-time subscriptions and debounced saves are common in this app. Here's how to test them:
+
+### Pattern: Testing Debounced Saves (800ms)
+
+```javascript
+test('should debounce save to Supabase by 800ms', async () => {
+  jest.useFakeTimers();
+  
+  // User makes an edit
+  await myFeatureUpdate(id, { name: 'New Name' });
+  
+  // Supabase update should NOT be called yet
+  expect(global.supa.from().update).not.toHaveBeenCalled();
+  
+  // Fast-forward 800ms
+  jest.advanceTimersByTime(800);
+  
+  // NOW it should be called
+  expect(global.supa.from().update).toHaveBeenCalled();
+  
+  jest.useRealTimers();
+});
+```
+
+### Pattern: Testing Real-Time Subscriptions
+
+```javascript
+test('should update UI when real-time notification arrives', async () => {
+  let onUpdateCallback;
+  
+  global.createRealtimeSubscription.mockImplementation((table, channel, handlers) => {
+    onUpdateCallback = handlers.onUpdate;
+    return 'sub-ref-123';
+  });
+  
+  // Initialize feature (which sets up subscription)
+  await bugDataInit();
+  
+  // Simulate real-time update from Supabase
+  const newBug = { id: 'bug-1', title: 'New Bug', status: 'open' };
+  onUpdateCallback(newBug);
+  
+  // Assert UI updated
+  expect(document.querySelector('[data-bug-id="bug-1"]')).toBeTruthy();
+});
+```
+
+### Pattern: Testing Subscription Cleanup
+
+```javascript
+test('should unsubscribe from real-time when navigating away', () => {
+  const mockSubRef = { id: 'sub-123' };
+  global.bugDataUnsubscribe = jest.fn();
+  
+  navigate('capacity');
+  
+  expect(global.bugDataUnsubscribe).toHaveBeenCalledWith(mockSubRef);
+});
+```
+
+### Pattern: Testing Concurrent Edits
+
+```javascript
+test('should handle concurrent edits with last-write-wins', async () => {
+  const oldValue = 'Original';
+  const value1 = 'Edit 1';
+  const value2 = 'Edit 2';
+  
+  // User 1 edits
+  await featureUpdate(id, { field: value1 });
+  jest.advanceTimersByTime(800);
+  
+  // User 2 edits while save is in flight
+  await featureUpdate(id, { field: value2 });
+  jest.advanceTimersByTime(800);
+  
+  // Final Supabase call should have value2 (last write)
+  expect(global.supa.from().update).toHaveBeenLastCalledWith(
+    expect.objectContaining({ field: value2 }),
+    expect.anything()
+  );
+});
+```
+
+---
+
 ## What to Test
 
 ### High Priority (Test Everything)
 
 ✅ **Navigation & Routing**
 - Hash parsing
-- Section navigation
-- Tab changes
-- Subscription cleanup
+- Section navigation (test all 5+ main sections)
+- Tab changes (test all tabs in each section)
+- Subscription cleanup on navigation
 - Back/forward navigation
+- Hash parameter conflicts
 
-✅ **Data Layer**
-- Data initialization
-- CRUD operations
-- Supabase interactions
-- Error handling
+✅ **Data Layer (CRUD)**
+- Data initialization and loading
+- Create operations
+- Read operations
+- Update operations
+- Delete operations
+- Supabase error handling
+- Empty state handling
 
 ✅ **Authentication**
-- Login flow
+- Login flow with valid credentials
+- Login flow with invalid credentials
+- Login with empty fields
 - Logout flow
 - Session handling
 - Error states
 
 ✅ **Complex Business Logic**
-- RPN calculations
+- RPN calculations (edge cases: 0, 99, 1000)
 - Capacity calculations
 - PERT estimation
 - Data transformations
+- Sorting and filtering logic
 
 ✅ **State Management**
 - State initialization
 - State transitions
 - Cross-module state dependencies
+- Stale state cleanup
 
 ### Medium Priority (Test Critical Paths)
 
@@ -270,12 +515,15 @@ test('doLogin should show an error if email or password is blank', async () => {
 - Render without errors
 - Correct HTML structure
 - Empty state handling
+- Loading state handling
+- Error state rendering
 
 ✅ **User Interactions**
 - Form submissions
 - Button clicks
 - Modal open/close
 - Tab switching
+- Keyboard navigation
 
 ### Lower Priority (Test When Time Permits)
 
@@ -297,11 +545,11 @@ test('doLogin should show an error if email or password is blank', async () => {
 - Global state variables
 
 **Key Test Scenarios:**
-1. Hash parsing with various formats
-2. Navigation to each section
+1. Hash parsing with various formats (empty, single param, multiple params)
+2. Navigation to each section (hub, capacity, product-dev, production, bugreports, productmgmt)
 3. Subscription cleanup on section changes
 4. Tab reset behavior
-5. Return button visibility
+5. Return button visibility on feature pages
 6. Back navigation logic
 7. popstate event handling
 
@@ -328,7 +576,7 @@ describe('navigate', () => {
 2. Login with invalid credentials
 3. Login with empty fields
 4. Logout functionality
-5. Session restoration
+5. Session restoration on app load
 
 **Example:**
 ```javascript
@@ -354,9 +602,10 @@ test('doLogin should call launchApp on successful authentication', async () => {
 **Key Test Scenarios:**
 1. Remote data loading
 2. Local storage sync
-3. Save debouncing
+3. Save debouncing (800ms)
 4. Data migration
 5. Error recovery
+6. Concurrent save handling
 
 ### Testing Feature Modules (Capacity, Production, NPI)
 
@@ -365,13 +614,16 @@ test('doLogin should call launchApp on successful authentication', async () => {
 - Chart.js (if chart rendering)
 - Render functions for sub-components
 - Data store functions
+- Real-time subscriptions
 
 **Key Test Scenarios:**
-1. Data initialization
-2. CRUD operations
+1. Data initialization and loading
+2. CRUD operations (create, read, update, delete)
 3. Calculations and transformations
-4. UI rendering
-5. User interactions
+4. UI rendering and updates
+5. User interactions and events
+6. Error handling and recovery
+7. Real-time sync and concurrent edits
 
 ---
 
@@ -398,18 +650,24 @@ beforeEach(() => {
 jest.useFakeTimers();
 // ... run code
 jest.runAllTimers();
+jest.useRealTimers();
 ```
 
 ### Problem: Missing DOM Elements
 **Symptom:** Tests fail with "Cannot read property of null".
 
-**Solution:** Ensure all required DOM elements exist:
+**Solution:** Ensure all required DOM elements exist (see jest.setup.js template above):
 ```javascript
-if (!document.getElementById('mainContent')) {
-  const mc = document.createElement('div');
-  mc.id = 'mainContent';
-  document.body.appendChild(mc);
-}
+const ensureElement = (id) => {
+  if (!document.getElementById(id)) {
+    const el = document.createElement('div');
+    el.id = id;
+    document.body.appendChild(el);
+  }
+};
+
+ensureElement('mainContent');
+ensureElement('modalBg');
 ```
 
 ### Problem: Global State Leakage
@@ -420,6 +678,28 @@ if (!document.getElementById('mainContent')) {
 let savedProgId;
 beforeEach(() => { savedProgId = global.progId; });
 afterEach(() => { global.progId = savedProgId; });
+```
+
+### Problem: Flaky Async Tests
+**Symptom:** Tests pass sometimes, fail other times, due to timing.
+
+**Solution:** Use fake timers consistently:
+```javascript
+beforeEach(() => {
+  jest.useFakeTimers();
+});
+
+afterEach(() => {
+  jest.useRealTimers();
+});
+
+test('should debounce save', async () => {
+  await myFeatureUpdate(id, { name: 'New' });
+  expect(supa.from().update).not.toHaveBeenCalled();
+  
+  jest.advanceTimersByTime(800);
+  expect(supa.from().update).toHaveBeenCalled();
+});
 ```
 
 ---
@@ -463,15 +743,18 @@ jobs:
 When adding tests for a new module:
 
 - [ ] Create `<module>.test.js` in `tests/` directory
+- [ ] Copy jest.setup.js template or reference from existing test file
 - [ ] Mock all external dependencies (Supabase, DOM, globals)
-- [ ] Load the script using `fs.readFileSync` and `eval()`
+- [ ] Load the script using `fs.readFileSync` and `eval()` (or require if applicable)
 - [ ] Set up `beforeEach()` to reset state
 - [ ] Test happy path first
 - [ ] Test error cases and edge cases
 - [ ] Test state changes and side effects
+- [ ] Test concurrent scenarios (real-time, debounce)
 - [ ] Verify mock function calls where appropriate
-- [ ] Run tests locally before committing
-- [ ] Ensure tests pass with `npm test`
+- [ ] Run tests locally before committing: `npm test`
+- [ ] Ensure tests pass with all other tests: `npm test`
+- [ ] Update Test Coverage Status section above
 
 ---
 
@@ -485,7 +768,7 @@ const path = require('path');
 // Mock Dependencies
 // ─────────────────────────────────────────────────────────────
 
-global.supa = { /* ... */ };
+global.supa = { /* ... see jest.setup.js template ... */ };
 global.createRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
 global.db = { programmes: [] };
@@ -495,24 +778,53 @@ const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
 document.documentElement.innerHTML = html.toString();
 
 // Load script(s) to test
-const script = fs.readFileSync(path.resolve(__dirname, '../path/to/module.js'), 'utf8');
+const script = fs.readFileSync(
+  path.resolve(__dirname, '../path/to/module.js'),
+  'utf8'
+);
 eval(script);
 
 // ─────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────
 
-describe('Module Name', () => {
+describe('Module Name (module.js)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Reset state
+    // Reset state to defaults
+    global.currentSection = 'hub';
   });
 
-  describe('Function Group', () => {
-    test('should do something', () => {
-      // Arrange
-      // Act
-      // Assert
+  describe('Function Group 1', () => {
+    test('should do something specific', () => {
+      // Arrange: Set up test data
+      const input = { id: '123', name: 'Test' };
+      
+      // Act: Execute the function
+      const result = myFunction(input);
+      
+      // Assert: Verify the result
+      expect(result).toEqual({ ...input, processed: true });
+    });
+
+    test('should handle errors gracefully', async () => {
+      global.supa.from().select.mockRejectedValueOnce(
+        new Error('Network error')
+      );
+      
+      await expect(myAsyncFunction()).rejects.toThrow('Network error');
+    });
+  });
+
+  describe('Function Group 2', () => {
+    test('should interact with Supabase correctly', async () => {
+      await myFeatureUpdate(id, updates);
+      
+      expect(global.supa.from).toHaveBeenCalledWith('my_table');
+      expect(global.supa.from().update).toHaveBeenCalledWith(
+        expect.objectContaining(updates),
+        expect.anything()
+      );
     });
   });
 });
@@ -526,11 +838,13 @@ describe('Module Name', () => {
 - [Testing Library Best Practices](https://testing-library.com/docs/react-testing-library/intro/)
 - [Jest Mock Functions](https://jestjs.io/docs/mock-functions)
 - [Testing Async Code](https://jestjs.io/docs/asynchronous)
+- [Fake Timers Guide](https://jestjs.io/docs/timer-mocks)
 
 ---
 
 ## Questions?
 
-For testing guidance or to discuss test strategy, refer to existing test files as examples or consult the project documentation.
+For testing guidance or to discuss test strategy, refer to existing test files in the `tests/` directory as examples or consult this document.
 
 **Remember:** Good tests are like documentation—they describe what the code should do and catch it when it doesn't.
+

@@ -41,7 +41,11 @@ npi.tracker.renderActions = function() {
   <button class="add-row" onclick="npi.tracker.addAction()">＋ Add Action</button></div>`
 }
 npi.tracker.addAction = function()        { prog().actions.push({ id: 'a_' + Date.now(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }); save(); render() }
-npi.tracker.updAction = function(i, f, v) { prog().actions[i][f] = v; save() }
+npi.tracker.updAction = function(i, f, v) {
+  prog().actions[i][f] = v
+  save()
+  if (f === 'status' || f === 'due') render()
+}
 npi.tracker.delAction = function(i)       { prog().actions.splice(i, 1); save(); render() }
 
 // ══════════════════════════════════════
@@ -85,7 +89,11 @@ npi.tracker.renderRisks = function() {
   <button class="add-row" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div>`
 }
 npi.tracker.addRisk  = function()        { prog().risks.push({ id: 'r_' + Date.now(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }); save(); render() }
-npi.tracker.updRisk  = function(i, f, v) { prog().risks[i][f] = v; save() }
+npi.tracker.updRisk  = function(i, f, v) {
+  prog().risks[i][f] = v
+  save()
+  if (f === 'status') render()
+}
 npi.tracker.delRisk  = function(i)       { prog().risks.splice(i, 1); save(); render() }
 npi.tracker.refreshRS = function(i) {
   const r     = prog().risks[i]
@@ -93,4 +101,5 @@ npi.tracker.refreshRS = function(i) {
   const el    = document.getElementById('rs_' + i)
   if (el) { el.textContent = score; el.className = 'rs ' + (score >= 12 ? 'rs-hi' : score >= 6 ? 'rs-med' : 'rs-lo') }
   save()
+  render()
 }
