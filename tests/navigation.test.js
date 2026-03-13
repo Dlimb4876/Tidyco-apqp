@@ -410,4 +410,69 @@ describe('Navigation Module (navigation.js)', () => {
       expect(global.apqpTab).toBe('pfd');
     });
   });
+
+  describe('global Backspace navigation', () => {
+    test('should navigate back when Backspace is pressed outside editable fields', () => {
+      global.currentSection = 'capacity';
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        bubbles: true,
+        cancelable: true
+      });
+
+      window.dispatchEvent(event);
+      expect(global.currentSection).toBe('hub');
+    });
+
+    test('should not navigate back when Backspace is pressed inside an input', () => {
+      global.currentSection = 'capacity';
+      const input = document.createElement('input');
+      document.body.appendChild(input);
+      input.focus();
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        bubbles: true,
+        cancelable: true
+      });
+
+      input.dispatchEvent(event);
+      expect(global.currentSection).toBe('capacity');
+      input.remove();
+    });
+
+    test('should not navigate back when Backspace is pressed inside contenteditable', () => {
+      global.currentSection = 'capacity';
+      const editable = document.createElement('div');
+      editable.setAttribute('contenteditable', 'true');
+      editable.textContent = 'Editable content';
+      document.body.appendChild(editable);
+      editable.focus();
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        bubbles: true,
+        cancelable: true
+      });
+
+      editable.dispatchEvent(event);
+      expect(global.currentSection).toBe('capacity');
+      editable.remove();
+    });
+
+    test('should not navigate back when modifier keys are pressed', () => {
+      global.currentSection = 'capacity';
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true
+      });
+
+      window.dispatchEvent(event);
+      expect(global.currentSection).toBe('capacity');
+    });
+  });
 });

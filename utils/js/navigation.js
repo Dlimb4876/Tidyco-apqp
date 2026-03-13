@@ -262,3 +262,37 @@ window.addEventListener('popstate', () => {
     navigate('projects', { pushHash: false });
   }
 });
+
+// ── Global keyboard navigation ──────────────────────────────
+/**
+ * Returns true when the element is an editable input context
+ * (text controls, selects, or contenteditable nodes).
+ * @param {EventTarget|null} el - Keyboard event target/active element
+ * @returns {boolean}
+ */
+function isEditableElement(el) {
+  if (!el || !(el instanceof Element)) return false;
+
+  const tag = el.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (el.isContentEditable) return true;
+
+  // Handle nested nodes inside editable containers.
+  return !!el.closest('[contenteditable="true"], input, textarea, select');
+}
+
+/**
+ * Backspace acts as app-level back navigation when not typing/editing.
+ */
+window.addEventListener('keydown', (event) => {
+  const isBackspace = event.key === 'Backspace' || event.keyCode === 8;
+  if (!isBackspace) return;
+  if (event.defaultPrevented) return;
+  if (event.ctrlKey || event.altKey || event.metaKey) return;
+
+  const activeEl = document.activeElement;
+  if (isEditableElement(event.target) || isEditableElement(activeEl)) return;
+
+  event.preventDefault();
+  navigateBack();
+});

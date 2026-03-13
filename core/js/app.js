@@ -58,8 +58,21 @@ async function launchApp() {
   // Load Bug Reports (bug_reports table, shared across all users)
   await bugDataInit();
 
-  // Always start at hub after login
-  navigate('hub', { pushHash: false });
+  // Restore previous page state from URL hash (e.g. after a page refresh)
+  const h = parseHash();
+  if (h.s) {
+    npiTab = h.nft || 'all';
+    if (h.p && db.programmes.find(p => p.id === h.p)) {
+      progId = h.p;
+    }
+    if (h.t)   apqpTab               = h.t;
+    if (h.ct)  capacityTab           = h.ct;
+    if (h.pt)  productionTab         = h.pt;
+    if (h.pdt) productDevelopmentTab = h.pdt;
+    navigate(h.s, { pushHash: false });
+  } else {
+    navigate('hub', { pushHash: false });
+  }
 }
 
 // ── Kick off on page load if session exists ───────────────────
