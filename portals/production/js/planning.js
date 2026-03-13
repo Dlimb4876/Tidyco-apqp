@@ -84,37 +84,16 @@ function renderPlanByUnit() {
     `;
   }).join('');
 
-  // Render Gantt timeline for active unit
+  // Render compact 2-month timeline for active unit
   const batches = prodDataGetBatchesByWorkLocation(activeUnit);
   const sortedBatches = batches.sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
-
-  // Calculate date range
-  let minDate = null, maxDate = null;
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
-
-  sortedBatches.forEach(batch => {
-    if (batch.start_date) {
-      minDate = !minDate || batch.start_date < minDate ? batch.start_date : minDate;
-    }
-    if (batch.due_date) {
-      maxDate = !maxDate || batch.due_date > maxDate ? batch.due_date : maxDate;
-    }
-  });
-
-  // Ensure we have a range
-  if (!minDate || !maxDate) {
-    minDate = todayStr;
-    const end = new Date();
-    end.setDate(end.getDate() + 28);
-    maxDate = end.toISOString().split('T')[0];
-  }
+  const todayStr = new Date().toISOString().split('T')[0];
 
   let timelineHtml = '';
   if (sortedBatches.length === 0) {
     timelineHtml = '<div style="padding:32px;text-align:center;color:var(--muted);font-style:italic">No batches scheduled for this unit</div>';
   } else {
-    timelineHtml = buildGanttTimeline(sortedBatches, minDate, maxDate, todayStr);
+    timelineHtml = buildGanttTimeline(sortedBatches, todayStr);
   }
 
   return `
@@ -123,7 +102,7 @@ function renderPlanByUnit() {
         <div>
           <div class="sec-eyebrow">PRODUCTION PLAN</div>
           <div class="sec-title">By Work Area</div>
-          <div class="sec-desc">Gantt timeline showing due dates</div>
+          <div class="sec-desc">Rolling 2-month timeline showing arrivals and departures</div>
         </div>
         <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
       </div>
@@ -139,60 +118,68 @@ function renderPlanByUnit() {
   `;
 }
 
-function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
-  const today = new Date(todayStr);
+function buildGanttTimeline(batches, todayStr) {
+  const today = new Date(`${todayStr}T00:00:00`);
 
-  // Initialize month offset if not set
-  if (prodPlanMonthOffset === undefined) {
+  if (typeof prodPlanMonthOffset !== 'number' || Number.isNaN(prodPlanMonthOffset)) {
     prodPlanMonthOffset = 0;
   }
 
-  // Calculate the view month (starting from today + offset months)
-  const viewDate = new Date(today);
-  viewDate.setMonth(viewDate.getMonth() + prodPlanMonthOffset);
-  const viewYear = viewDate.getFullYear();
-  const viewMonth = viewDate.getMonth();
+  const monthOneStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  monthOneStart.setMonth(monthOneStart.getMonth() + prodPlanMonthOffset);
+  const monthTwoStart = new Date(monthOneStart.getFullYear(), monthOneStart.getMonth() + 1, 1);
+  const monthTwoEnd = new Date(monthTwoStart.getFullYear(), monthTwoStart.getMonth() + 1, 0);
+  const monthOneDays = new Date(monthOneStart.getFullYear(), monthOneStart.getMonth() + 1, 0).getDate();
+  const monthTwoDays = monthTwoEnd.getDate();
+  const totalDays = monthOneDays + monthTwoDays;
+  const monthOneWidth = (monthOneDays / totalDays) * 100;
 
-  // Get first and last day of the month
-  const monthStart = new Date(viewYear, viewMonth, 1);
-  const monthEnd = new Date(viewYear, viewMonth + 1, 0);
-  const daysInMonth = monthEnd.getDate();
+  const windowStart = new Date(monthOneStart.getFullYear(), monthOneStart.getMonth(), 1);
+  const windowEnd = new Date(monthTwoEnd.getFullYear(), monthTwoEnd.getMonth(), monthTwoEnd.getDate());
 
-  // Calculate grid size (need to account for days before month starts if they're in the week grid)
-  const firstDayOfWeek = monthStart.getDay();
-  const totalGridDays = firstDayOfWeek + daysInMonth;
+  const monthOneLabel = monthOneStart.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const monthTwoLabel = monthTwoStart.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const dateRangeLabel = `${String(windowStart.getDate()).padStart(2, '0')}/${String(windowStart.getMonth() + 1).padStart(2, '0')}/${windowStart.getFullYear()} - ${String(windowEnd.getDate()).padStart(2, '0')}/${String(windowEnd.getMonth() + 1).padStart(2, '0')}/${windowEnd.getFullYear()}`;
 
-  // Today tracking
-  const isCurrentMonth = today.getFullYear() === viewYear && today.getMonth() === viewMonth;
-  const todayDate = isCurrentMonth ? today.getDate() : -1;
-
-  // Month header
-  const monthName = monthStart.toLocaleDateString('en-US', { month: 'long' });
-  const monthHeader = `${monthName} ${viewYear}`;
-
-  // Navigation controls (can go back to past, forward to future)
   const navHtml = `
     <div class="gantt-nav-controls">
       <button class="btn btn-sm btn-ghost" onclick="prodSetMonthOffset(${prodPlanMonthOffset - 1}); render()">← Previous Month</button>
-      <div class="gantt-month-header">${monthHeader}</div>
+      <div class="gantt-month-header">${monthOneLabel} - ${monthTwoLabel}</div>
       <button class="btn btn-sm btn-ghost" onclick="prodSetMonthOffset(${prodPlanMonthOffset + 1}); render()">Next Month →</button>
     </div>
   `;
 
-  // Simple date range header
-  const monthEndStr = `${String(viewMonth + 1).padStart(2, '0')}/${String(monthEnd.getDate()).padStart(2, '0')}/${viewYear}`;
-  const monthStartStr = `${String(viewMonth + 1).padStart(2, '0')}/01/${viewYear}`;
-  const dateRangeHtml = `<div style="padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--mid); white-space: nowrap;">${monthStartStr} — ${monthEndStr}</div>`;
+  const dayMarkers = [1, 8, 15, 22, 29]
+    .filter(day => day <= monthOneDays)
+    .map(day => {
+      const left = ((day - 1) / totalDays) * 100;
+      return `<span class="gantt-day-marker" style="left:${left}%;">${day}</span>`;
+    })
+    .join('') +
+    [1, 8, 15, 22, 29]
+      .filter(day => day <= monthTwoDays)
+      .map(day => {
+        const left = ((monthOneDays + day - 1) / totalDays) * 100;
+        return `<span class="gantt-day-marker" style="left:${left}%;">${day}</span>`;
+      })
+      .join('');
 
-  // Generate batch rows for the month view
+  const windowBatches = batches.filter(batch => {
+    const startD = batch.start_date ? new Date(`${batch.start_date}T00:00:00`) : null;
+    const endD = batch.due_date ? new Date(`${batch.due_date}T00:00:00`) : null;
+    if (!startD && !endD) return false;
+    if (startD && endD) return !(endD < windowStart || startD > windowEnd);
+    if (startD) return startD >= windowStart && startD <= windowEnd;
+    return endD >= windowStart && endD <= windowEnd;
+  });
+
   let batchRowsHtml = '';
-  batches.forEach((batch, idx) => {
+  windowBatches.forEach((batch, idx) => {
     const product = prodDataGetProductById(batch.product_id);
     const productName = product ? product.name : `Batch ${idx + 1}`;
-    const startD = batch.start_date ? new Date(batch.start_date) : null;
-    const endD = batch.due_date ? new Date(batch.due_date) : null;
+    const startD = batch.start_date ? new Date(`${batch.start_date}T00:00:00`) : null;
+    const endD = batch.due_date ? new Date(`${batch.due_date}T00:00:00`) : null;
 
-    // Determine bar color
     let barColor = 'var(--blue)';
     if (batch.status === 'Complete') {
       barColor = 'var(--green)';
@@ -204,36 +191,23 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
 
     const statusBadge = getStatusBadge(batch.status);
     const isOverdue = endD && endD < new Date(todayStr) && batch.status !== 'Complete';
-    const displayLabel = product ? esc(product.part_number) : `${batch.quantity || 0}u`;
+    const displayLabel = product ? esc(product.part_number || product.name || 'Batch') : `${batch.quantity || 0}u`;
 
-    // Format batch meta with IN/OUT
     const inDate = formatDisplayDate(batch.start_date) || '—';
     const outDate = formatDisplayDate(batch.due_date) || '—';
     const batchMetaText = `${batch.quantity || 0} units • IN: ${inDate} OUT: ${outDate}`;
 
-    // Calculate batch position as percentage of the month
     let barLeftPercent = 0;
-    let barWidthPercent = 100;
+    let barWidthPercent = 2;
 
-    if (startD && endD) {
-      const monthLength = daysInMonth;
-      let daysFromStart = 1;
-      let daySpan = 1;
-
-      if (startD.getMonth() === viewMonth && startD.getFullYear() === viewYear) {
-        daysFromStart = startD.getDate();
-      } else if (startD < monthStart) {
-        daysFromStart = 1;
-      }
-
-      if (endD.getMonth() === viewMonth && endD.getFullYear() === viewYear) {
-        daySpan = endD.getDate() - daysFromStart + 1;
-      } else if (endD > monthEnd) {
-        daySpan = daysInMonth - daysFromStart + 1;
-      }
-
-      barLeftPercent = ((daysFromStart - 1) / monthLength) * 100;
-      barWidthPercent = (daySpan / monthLength) * 100;
+    if (startD || endD) {
+      const effectiveStart = startD ? new Date(Math.max(startD.getTime(), windowStart.getTime())) : new Date(Math.max(endD.getTime(), windowStart.getTime()));
+      const effectiveEnd = endD ? new Date(Math.min(endD.getTime(), windowEnd.getTime())) : new Date(Math.min(startD.getTime(), windowEnd.getTime()));
+      const startDiff = Math.max(0, Math.floor((effectiveStart - windowStart) / (1000 * 60 * 60 * 24)));
+      const endDiff = Math.max(startDiff, Math.floor((effectiveEnd - windowStart) / (1000 * 60 * 60 * 24)));
+      const spanDays = Math.max(1, endDiff - startDiff + 1);
+      barLeftPercent = (startDiff / totalDays) * 100;
+      barWidthPercent = Math.max(2, (spanDays / totalDays) * 100);
     }
 
     batchRowsHtml += `
@@ -243,6 +217,7 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
           <div class="gantt-batch-meta">${batchMetaText}</div>
         </div>
         <div class="gantt-batch-chart" style="position: relative; height: 40px;">
+          <div class="gantt-month-divider" style="left:${monthOneWidth}%;"></div>
           <div class="gantt-bar ${isOverdue ? 'overdue' : ''}"
                style="position: absolute; left: ${barLeftPercent}%; width: ${barWidthPercent}%; height: 28px; top: 6px; background-color: ${barColor};"
                title="${esc(productName)} - ${inDate} to ${outDate}">
@@ -256,18 +231,31 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
     `;
   });
 
+  const emptyWindowHtml = `
+    <div style="padding:22px 14px;color:var(--muted);font-style:italic;text-align:center;">
+      No arrivals/departures scheduled in this 2-month window.
+    </div>
+  `;
+
   return `
-    <div class="gantt-container">
+    <div class="gantt-container compact-two-month">
       ${navHtml}
+      <div class="gantt-window-label">Window: ${dateRangeLabel}</div>
       <div class="gantt-header">
-        <div class="gantt-header-label">Product</div>
+        <div class="gantt-header-label">Product / Batch</div>
         <div class="gantt-header-chart">
-          ${dateRangeHtml}
+          <div class="gantt-month-bands">
+            <div class="gantt-month-band" style="width:${monthOneWidth}%;">${monthOneLabel}</div>
+            <div class="gantt-month-band" style="width:${100 - monthOneWidth}%;">${monthTwoLabel}</div>
+          </div>
+          <div class="gantt-day-scale">
+            ${dayMarkers}
+          </div>
         </div>
         <div class="gantt-header-status">Status</div>
       </div>
       <div class="gantt-rows">
-        ${batchRowsHtml}
+        ${batchRowsHtml || emptyWindowHtml}
       </div>
       <div class="gantt-legend">
         <div class="gantt-legend-item">
@@ -307,5 +295,5 @@ function getStatusBadge(status) {
 }
 
 function prodSetMonthOffset(offset) {
-  prodPlanMonthOffset = offset;
+  prodPlanMonthOffset = Number(offset) || 0;
 }

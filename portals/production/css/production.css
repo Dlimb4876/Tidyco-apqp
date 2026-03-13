@@ -958,6 +958,127 @@
   cursor: not-allowed;
 }
 
+/* Compact 2-month timeline refresh */
+.gantt-container.compact-two-month {
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.compact-two-month .gantt-window-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mid);
+  font-family: 'IBM Plex Mono';
+}
+
+.compact-two-month .gantt-header {
+  display: grid;
+  grid-template-columns: 260px 1fr 112px;
+  border-bottom: 2px solid var(--line);
+}
+
+.compact-two-month .gantt-header-label,
+.compact-two-month .gantt-header-status {
+  padding: 8px 10px;
+}
+
+.compact-two-month .gantt-header-chart {
+  min-width: 720px;
+  padding: 0;
+}
+
+.compact-two-month .gantt-month-bands {
+  display: flex;
+  min-height: 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.compact-two-month .gantt-month-band {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  border-right: 1px solid var(--line2);
+  text-align: center;
+  padding: 0 6px;
+}
+
+.compact-two-month .gantt-month-band:last-child {
+  border-right: none;
+}
+
+.compact-two-month .gantt-day-scale {
+  position: relative;
+  height: 22px;
+  background: repeating-linear-gradient(
+    to right,
+    transparent,
+    transparent calc(100% / 61 - 1px),
+    var(--line2) calc(100% / 61),
+    transparent calc(100% / 61)
+  );
+}
+
+.compact-two-month .gantt-day-marker {
+  position: absolute;
+  top: 3px;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono';
+}
+
+.compact-two-month .gantt-rows {
+  gap: 0;
+}
+
+.compact-two-month .gantt-batch-row {
+  grid-template-columns: 260px 1fr 112px;
+  padding: 3px 0;
+}
+
+.compact-two-month .gantt-batch-label {
+  padding: 8px 10px;
+}
+
+.compact-two-month .gantt-batch-chart {
+  min-width: 720px;
+  padding: 0 10px;
+  background: repeating-linear-gradient(
+    to right,
+    transparent,
+    transparent calc(100% / 61 - 1px),
+    rgba(126, 140, 162, 0.14) calc(100% / 61),
+    transparent calc(100% / 61)
+  );
+}
+
+.compact-two-month .gantt-month-divider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--line);
+  z-index: 1;
+}
+
+.compact-two-month .gantt-bar {
+  z-index: 2;
+  border-radius: 5px;
+}
+
+.compact-two-month .gantt-batch-status {
+  padding: 8px 10px;
+}
+
+.compact-two-month .gantt-legend {
+  margin-top: 12px;
+}
+
 /* ── Responsive Design ──────────────────────────────────────── */
 @media (max-width: 1199px) {
   .prod-grid {
@@ -1054,6 +1175,27 @@
     min-width: 80px;
     padding: 6px 10px;
     font-size: 11px;
+  }
+
+  .compact-two-month .gantt-header {
+    grid-template-columns: 200px 1fr 95px;
+  }
+
+  .compact-two-month .gantt-batch-row {
+    grid-template-columns: 200px 1fr 95px;
+  }
+
+  .compact-two-month .gantt-header-chart,
+  .compact-two-month .gantt-batch-chart {
+    min-width: 560px;
+  }
+
+  .compact-two-month .gantt-product-code {
+    font-size: 12px;
+  }
+
+  .compact-two-month .gantt-batch-meta {
+    font-size: 10px;
   }
 }
 

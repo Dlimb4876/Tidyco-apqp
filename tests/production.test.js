@@ -30,6 +30,13 @@ global.removeRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
 global.db = { programmes: [] };
 global.getFamilies = () => [];
+global.esc = (v) => String(v ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/\"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+global.render = jest.fn();
 global.prodState = {
     products: [],
     batches: [],
@@ -43,13 +50,68 @@ document.documentElement.innerHTML = html.toString();
 // Dynamically import the scripts to be tested
 const dataScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/data.js'), 'utf8');
 const schedulingScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/scheduling.js'), 'utf8');
+const planningScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/planning.js'), 'utf8');
 eval(dataScript);
 eval(schedulingScript);
+eval(planningScript);
 
 describe('Production Portal', () => {
+  beforeEach(() => {
+    prodPlanMonthOffset = 0;
+    prodState.products = [];
+    prodState.batches = [];
+    prodState.activeUnit = 'Unit 2';
+  });
+
     describe('Scheduling', () => {
         test('renderScheduling should run without errors', () => {
             expect(() => renderScheduling()).not.toThrow();
         });
     });
+
+  describe('Plan by Work Area', () => {
+    test('renderPlanByUnit keeps Unit 2/3/6 tabs and shows only active unit rows', () => {
+      prodState.products = [
+        { id: 'p1', name: 'Pump A', part_number: 'PA-01', work_location: 'Unit 2' },
+        { id: 'p2', name: 'Pump B', part_number: 'PB-01', work_location: 'Unit 3' }
+      ];
+      prodState.batches = [
+        { id: 'b1', product_id: 'p1', work_location: 'Unit 2', quantity: 10, start_date: '2026-03-10', due_date: '2026-03-20', status: 'Planned' },
+        { id: 'b2', product_id: 'p2', work_location: 'Unit 3', quantity: 8, start_date: '2026-03-12', due_date: '2026-03-24', status: 'Planned' }
+      ];
+      prodState.activeUnit = 'Unit 2';
+
+      const html = renderPlanByUnit();
+
+      expect(html).toContain('Unit 2');
+      expect(html).toContain('Unit 3');
+      expect(html).toContain('Unit 6');
+      expect(html).toContain('Pump A');
+      expect(html).not.toContain('Pump B');
+    });
+
+    test('buildGanttTimeline renders 2-month structure and IN/OUT details', () => {
+      prodState.products = [
+        { id: 'p1', name: 'Rotor X', part_number: 'RX-21', work_location: 'Unit 2' }
+      ];
+
+      const html = buildGanttTimeline([
+        { id: 'b1', product_id: 'p1', work_location: 'Unit 2', quantity: 5, start_date: '2026-03-01', due_date: '2026-04-14', status: 'In Progress' }
+      ], '2026-03-05');
+
+      const monthBandCount = (html.match(/gantt-month-band/g) || []).length;
+      expect(monthBandCount).toBe(2);
+      expect(html).toContain('IN: 01/03/2026');
+      expect(html).toContain('OUT: 14/04/2026');
+      expect(html).toContain('Window:');
+    });
+
+    test('month navigation remains rolling by 1 month', () => {
+      prodPlanMonthOffset = 1;
+      const html = buildGanttTimeline([], '2026-03-05');
+
+      expect(html).toContain("prodSetMonthOffset(0)");
+      expect(html).toContain("prodSetMonthOffset(2)");
+    });
+  });
 });

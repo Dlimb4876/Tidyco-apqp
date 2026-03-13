@@ -1,5 +1,11 @@
 # CLAUDE.md — Tidyco APQP Quality Tool
 
+## A Note for AI Assistants
+
+**The primary user of this project has zero coding experience.** When providing explanations, generating code, or describing changes, please use the simplest possible terms (layman's terms). Avoid jargon and assume no prior knowledge of programming concepts, git, or web development. Your goal is to make the process as understandable and accessible as possible for a non-technical user.
+
+---
+
 ## Project Overview
 
 Tidyco APQP is a **vanilla JavaScript Single Page Application (SPA)** for managing Advanced Product Quality Planning (APQP) and Manufacturing Engineering capacity. It uses **no build pipeline** — all files are served as static HTML/JS/CSS directly to the browser.

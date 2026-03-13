@@ -301,7 +301,6 @@ window.prodDataGetBatchesByWorkLocation = function(workLocation) {
 
 window.prodSetActiveUnit = function(unit) {
   prodState.activeUnit = unit;
-  prodPlanMonthOffset = 0; // Reset month offset when switching units
 };
 
 // ────────────────────────────────────────────────────────────

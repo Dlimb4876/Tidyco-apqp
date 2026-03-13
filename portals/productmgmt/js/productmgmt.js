@@ -110,8 +110,8 @@ function renderProductMgmt() {
   `;
 }
 
-// ── Families tab content (used inside the Product Management portal) ──
-function renderFamiliesTabContent() {
+// ── Families tab content (used inside the productmgmt portal) ──
+function pmRenderFamiliesContent() {
   const families = getFamilies();
   const pmFamilyListHeader = `
     <div class="pm-family-row pm-family-header">
@@ -177,7 +177,7 @@ function pmRefresh() {
   } else {
     // Inside the Product Management portal families tab
     const tab = document.getElementById('productsFamiliesTab');
-    if (tab) tab.innerHTML = renderFamiliesTabContent();
+    if (tab) tab.innerHTML = pmRenderFamiliesContent();
     // Update the product family select if it exists
     const sel = document.getElementById('productFamily');
     if (sel) {
