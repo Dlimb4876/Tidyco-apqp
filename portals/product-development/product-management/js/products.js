@@ -61,6 +61,7 @@ function renderProductsPortalSetup() {
     renderProductsTrends();
   } else if (productsActiveTab === 'families') {
     renderFamiliesTabContent();
+    ensureFamiliesTabData(true);
   } else {
     renderProductsList();
   }
@@ -70,6 +71,30 @@ function renderProductsPortalSetup() {
  * Track which family is currently being edited
  */
 let familiesEditingId = null;
+let familiesTabLoading = false;
+let familiesTabLoadError = null;
+
+async function ensureFamiliesTabData(forceReload = false) {
+  if (familiesTabLoading) return;
+  if (!forceReload && Array.isArray(familiesState?.families) && familiesState.families.length > 0) return;
+
+  familiesTabLoading = true;
+  familiesTabLoadError = null;
+  renderFamiliesTabContent();
+
+  try {
+    if (typeof familiesDataLoad === 'function') {
+      await familiesDataLoad();
+    } else if (typeof familiesDataInit === 'function') {
+      await familiesDataInit();
+    }
+  } catch (err) {
+    familiesTabLoadError = err?.message || 'Failed to load families';
+  } finally {
+    familiesTabLoading = false;
+    renderFamiliesTabContent();
+  }
+}
 
 /**
  * Render families tab content as editable table
@@ -79,19 +104,30 @@ function renderFamiliesTabContent() {
   if (!container) return;
 
   // If families are still loading, show a spinner
-  if (familiesState.loading) {
+  if (familiesTabLoading || familiesState.loading) {
     container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families...</div>';
+    return;
+  }
+
+  if (familiesTabLoadError) {
+    container.innerHTML = `
+      <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
+        <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load product families</div>
+        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(familiesTabLoadError)}</div>
+        <button class="btn btn-ghost" onclick="ensureFamiliesTabData(true)">Retry</button>
+      </div>
+    `;
     return;
   }
 
   // If families state is missing or data array is absent, trigger a reload
   if (!familiesState || !Array.isArray(familiesState.families)) {
     container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families...</div>';
-    if (typeof familiesDataInit === 'function') familiesDataInit().then(() => renderFamiliesTabContent());
+    ensureFamiliesTabData(true);
     return;
   }
 
-  const families = familiesDataGetAll();
+  const families = typeof familiesDataGetAll === 'function' ? familiesDataGetAll() : [...familiesState.families];
 
   // Count usage in projects
   const usageMap = {};
@@ -520,6 +556,7 @@ function setupProductsEventListeners() {
         renderProductsTrends();
       } else if (tab === 'families') {
         renderFamiliesTabContent();
+        ensureFamiliesTabData(true);
       } else {
         renderProductsList();
       }

@@ -55,6 +55,83 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
     </tr>
   `;
 
+  // Build monthly capacity-by-member table for the same month shown in the KPIs
+  const [currentYear] = currentMonthKey.split('-').map(Number);
+  const monthStart = new Date(currentYear, Number(currentMonthKey.split('-')[1]) - 1, 1);
+  const monthEnd = new Date(currentYear, Number(currentMonthKey.split('-')[1]), 0);
+  const bankHolSet = new Set(getBankHolidaysForYear(currentYear).map(h => h.date));
+  const hoursPerDay = 7.5;
+
+  let teamCapacityTotal = 0;
+  const memberCapacityRows = teamArray.map(member => {
+    if (!member || !member.id) return null;
+
+    const memberName = escapeHtml(member.name || 'Unnamed');
+    const hoursPerWeek = member.hoursPerWeek || 37.5;
+    const utilisationPct = member.utilisation || 80;
+
+    let activeStart = monthStart;
+    let activeEnd = monthEnd;
+
+    if (member.startDate) {
+      const startDate = new Date(member.startDate);
+      if (startDate > monthStart) activeStart = startDate;
+    }
+
+    if (member.endDate) {
+      const endDate = new Date(member.endDate);
+      if (endDate < monthEnd) activeEnd = endDate;
+    }
+
+    let netDays = 0;
+    let rawCapacity = 0;
+
+    if (activeStart <= activeEnd) {
+      netDays = countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
+      const adjustedHoursPerWeek = hoursPerWeek * (utilisationPct / 100);
+      rawCapacity = adjustedHoursPerWeek * (netDays / 5);
+    }
+
+    let holidayDeduction = 0;
+    holidaysArray.forEach(holiday => {
+      if (!holiday || holiday.personId !== member.id || !holiday.date) return;
+      if (holiday.date.substring(0, 7) !== currentMonthKey) return;
+      if (holiday.type === 'full') holidayDeduction += hoursPerDay;
+      else if (holiday.type === 'half') holidayDeduction += hoursPerDay / 2;
+    });
+
+    const adjustedCapacity = Math.max(0, rawCapacity - holidayDeduction);
+    teamCapacityTotal += adjustedCapacity;
+
+    return `
+      <tr>
+        <td>${memberName}</td>
+        <td style="text-align: right;">${rawCapacity.toFixed(1)} h</td>
+        <td style="text-align: right;">${utilisationPct}%</td>
+        <td style="text-align: right;">${netDays}</td>
+        <td style="text-align: right;">${holidayDeduction.toFixed(1)} h</td>
+        <td style="text-align: right; font-weight: 600;">${adjustedCapacity.toFixed(1)} h</td>
+      </tr>
+    `;
+  }).filter(Boolean);
+
+  const memberCapacityTableBody = memberCapacityRows.length
+    ? memberCapacityRows.join('') + `
+      <tr style="border-top: 2px solid var(--line); font-weight: 700;">
+        <td>Total Team Capacity</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td style="text-align: right;">${teamCapacityTotal.toFixed(1)} h</td>
+      </tr>
+    `
+    : `
+      <tr>
+        <td colspan="6" style="text-align:center; color: var(--muted); padding: 12px;">No team members added yet</td>
+      </tr>
+    `;
+
   return `
     <div class="me-chart-container">
       <div class="me-kpi-strip">
@@ -122,6 +199,30 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
               </tr></thead>
               <tbody>
                 ${breakdownRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="me-card" style="margin-top: 16px;">
+        <div class="me-card-head">
+          <span class="me-card-title">CAPACITY PER TEAM MEMBER (MONTH)</span>
+          <span style="font-size:12px;color:var(--muted)">${currentMonthLabel}</span>
+        </div>
+        <div class="me-card-body">
+          <div class="me-tbl-wrap">
+            <table class="me-tbl">
+              <thead><tr>
+                <th>Team Member</th>
+                <th style="text-align: right;">Gross Capacity (h/month)</th>
+                <th style="text-align: right;">Utilisation</th>
+                <th style="text-align: right;">Net Days</th>
+                <th style="text-align: right;">Holiday Deduction (h/month)</th>
+                <th style="text-align: right;">Monthly Capacity (h/month)</th>
+              </tr></thead>
+              <tbody>
+                ${memberCapacityTableBody}
               </tbody>
             </table>
           </div>
