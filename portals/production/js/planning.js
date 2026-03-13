@@ -33,7 +33,7 @@ function renderPlanByProduct() {
             <div class="product-code">${esc(product.part_number || 'N/A')}</div>
           </div>
           <div class="product-meta">
-            ${product.family ? `<span>${esc(prodState.families.find(f => f.id === product.family)?.label || product.family)}</span>` : ''}
+            ${product.family ? `<span>${esc(getFamilies().find(f => f.id === product.family)?.label || product.family)}</span>` : ''}
             ${product.lead_time_days ? `<span>${product.lead_time_days}d lead time</span>` : ''}
           </div>
         </div>
@@ -286,51 +286,6 @@ function buildGanttTimeline(batches, minDate, maxDate, todayStr) {
       </div>
     </div>
   `;
-}
-
-function formatDateShort(d) {
-  const m = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
-  return `${day}/${m}`;
-}
-
-function getWeekOfYear(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-}
-
-function getWeeksInRange(startStr, endStr) {
-  if (!startStr || !endStr) return [];
-
-  const start = new Date(startStr);
-  const end = new Date(endStr);
-  const weeks = [];
-
-  let current = new Date(start);
-  current.setDate(current.getDate() - current.getDay() + 1); // Start on Monday
-
-  while (current <= end) {
-    const weekStart = new Date(current);
-    const weekEnd = new Date(current);
-    weekEnd.setDate(weekEnd.getDate() + 6); // End on Sunday
-
-    weeks.push({ start: weekStart, end: weekEnd });
-    current.setDate(current.getDate() + 7);
-  }
-
-  return weeks;
-}
-
-function formatWeekRange(startDate, endDate) {
-  const fmt = (d) => {
-    const m = (d.getMonth() + 1).toString().padStart(2, '0');
-    const day = d.getDate().toString().padStart(2, '0');
-    return `${day}/${m}`;
-  };
-  return `${fmt(startDate)} – ${fmt(endDate)}`;
 }
 
 function getStatusBadge(status) {

@@ -86,19 +86,29 @@
 
 /* Family list */
 .pm-family-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .pm-family-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: table-row;
+}
+
+.pm-family-row > * {
+  display: table-cell;
   padding: 10px 12px;
-  border-radius: 4px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+}
+
+.pm-family-header {
+  font-weight: 600;
+  background: var(--bg-secondary);
+}
+
+.pm-family-header .pm-family-actions {
+  text-align: right;
 }
 
 .pm-family-row:hover {
@@ -113,10 +123,8 @@
 }
 
 .pm-family-info {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
 .pm-family-name {
@@ -130,8 +138,7 @@
 }
 
 .pm-family-actions {
-  display: flex;
-  gap: 6px;
+  text-align: right;
   opacity: 0;
   transition: opacity 0.15s;
 }
@@ -172,6 +179,23 @@
   text-align: center;
   padding: 24px 0;
   margin: 0;
+}
+
+.pm-family-row.editing {
+  background: var(--blue-pale) !important;
+  border-color: var(--blue-mid) !important;
+}
+
+.pm-family-row [contenteditable="true"] {
+  background: white;
+  outline: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 4px;
+  cursor: text;
+}
+
+.pm-family-row [contenteditable="true"]:focus {
+  outline: 1px solid var(--blue);
 }
 
 /* ── Responsive Design ──────────────────────────────────────── */

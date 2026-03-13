@@ -113,7 +113,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button>
-      <button class="btn btn-primary" onclick="createProg()">Create</button>
+      <button class="btn btn-primary" onclick="npi.dashboard.createProg()">Create</button>
     </div>
   </div>
 </div>
@@ -149,10 +149,10 @@
       <div class="field"><label>Part Number</label><input id="ep_partNumber"></div>
     </div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
-      <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="deleteProject()">Delete Project</button>
+      <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="npi.dashboard.deleteProject()">Delete Project</button>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="closeModal('modalEditProj')">Cancel</button>
-        <button class="btn btn-primary" onclick="saveEditProject()">Save</button>
+        <button class="btn btn-primary" onclick="npi.dashboard.saveEditProject()">Save</button>
       </div>
     </div>
   </div>
@@ -177,7 +177,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalInsert')">Cancel</button>
-      <button class="btn btn-primary" onclick="confirmInsert()">Insert</button>
+      <button class="btn btn-primary" onclick="npi.apqp.confirmInsert()">Insert</button>
     </div>
   </div>
 </div>
@@ -189,7 +189,7 @@
     <div id="ctqPickList" style="display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalCtqPick')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveCtqPick()">Save</button>
+      <button class="btn btn-primary" onclick="npi.apqp.saveCtqPick()">Save</button>
     </div>
   </div>
 </div>
@@ -202,7 +202,7 @@
     <div class="bom-pick-list" id="bomPickList"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalBomPick')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveBomPick()">Save</button>
+      <button class="btn btn-primary" onclick="npi.apqp.saveBomPick()">Save</button>
     </div>
   </div>
 </div>
@@ -215,34 +215,12 @@
     <div class="bom-pick-list" id="kitPickList"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalKitPick')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveKitPick()">Add Selected</button>
+      <button class="btn btn-primary" onclick="npi.bom.saveKitPick()">Add Selected</button>
     </div>
   </div>
 </div>
 
-<!-- Edit Product Family (productmgmt portal) -->
-<div class="modal-bg" id="pmEditModal" style="display:none" onclick="if(event.target===this)closeModal('pmEditModal')">
-  <div class="modal modal-sm">
-    <div class="modal-title">Edit Family</div>
-    <div class="field">
-      <label>Icon</label>
-      <input id="pmEditIcon" type="text" maxlength="4" class="pm-icon-input">
-    </div>
-    <div class="field">
-      <label>Family Name</label>
-      <input id="pmEditLabel" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
-    </div>
-    <div class="field">
-      <label>Description</label>
-      <input id="pmEditDescription" type="text" onkeydown="if(event.key==='Enter')pmSaveEdit()">
-    </div>
-    <input type="hidden" id="pmEditIdx">
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('pmEditModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="pmSaveEdit()">Save</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- New Bug Report -->
 <div class="modal-bg" id="modalNewBug" style="display:none">
@@ -295,7 +273,7 @@
 <!-- ═══════════════════════════════════
      SCRIPTS — load order matters
      state → auth → db → helpers → navigation →
-     hub → rpn-chart → dashboard →
+     hub → npi-constants → npi → rpn-chart → dashboard →
      capacity → me-capacity →
      gates → pfmea → apqp → bom → timing → trackers → app
      ═══════════════════════════════════ -->
@@ -309,6 +287,8 @@
 <script src="utils/js/realtime.js"></script>
 
 <script src="portals/hub/js/hub.js"></script>
+<script src="portals/product-development/npi/js/npi-constants.js"></script>
+<script src="portals/product-development/npi/js/npi.js"></script>
 <script src="portals/product-development/npi/js/rpn-chart.js"></script>
 <script src="portals/product-development/npi/js/dashboard.js"></script>
 
@@ -359,6 +339,11 @@
 
 <script src="portals/productmgmt/js/productmgmt.js"></script>
 
+<!-- NPI Portal: namespace root and centralized constants -->
+<script src="portals/product-development/npi/js/npi-constants.js"></script>
+<script src="portals/product-development/npi/js/npi.js"></script>
+
+<!-- NPI Portal: feature modules (all under npi.* namespace) -->
 <script src="portals/product-development/npi/js/gates.js"></script>
 <script src="portals/product-development/npi/js/pfmea.js"></script>
 <script src="portals/product-development/npi/js/apqp.js"></script>

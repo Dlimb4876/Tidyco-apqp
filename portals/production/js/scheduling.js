@@ -2,21 +2,14 @@
 
 let prodSchedulingSort = { field: 'start_date', ascending: true };
 let prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFrom: '', dateTo: '' };
-let prodSchedulingNewRow = false;
 let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
 
-function renderScheduling() {
-  const batches = prodState.batches;
-  const activeBatches = getFilteredBatches();
-
-  let rows = '';
-
-  // Quick-add empty row at the top
-  rows += `
+function renderSchedulingNewRow() {
+  return `
     <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
       <td>
-        <select class="cell-edit" id="batch-new-product" onchange="calcBatchDueDate(); updateFamilyDisplay('new'); autoPopulateWorkLocation()" onkeydown="handleBatchRowKey(event, 'product')">
+        <select class="cell-edit" id="batch-new-product" data-field="product">
           <option value="">— Select Product</option>
           ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}">${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
         </select>
@@ -27,73 +20,130 @@ function renderScheduling() {
       <td>
         <div class="cell-display" id="batch-new-work-location">—</div>
       </td>
-      <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" onkeydown="handleBatchRowKey(event, 'qty')"></td>
+      <td><input class="cell-edit" id="batch-new-qty" type="number" placeholder="Qty" data-field="qty"></td>
       <td>
-        <input class="cell-edit" id="batch-new-start" placeholder="DD/MM/YYYY" onchange="calcBatchDueDate()" onblur="smartDateFormat('batch-new-start', calcBatchDueDate)" onkeydown="handleDateInput(event, 'batch-new-start', 'start')">
+        <input class="cell-edit" id="batch-new-start" placeholder="DD/MM/YYYY" data-field="start">
       </td>
       <td>
-        <input class="cell-edit" id="batch-new-due" placeholder="DD/MM/YYYY" onblur="smartDateFormat('batch-new-due')" onkeydown="handleDateInput(event, 'batch-new-due', 'due')">
+        <input class="cell-edit" id="batch-new-due" placeholder="DD/MM/YYYY" data-field="due">
       </td>
       <td>
-        <select class="cell-edit" id="batch-new-status" onkeydown="handleBatchRowKey(event, 'status')">
+        <select class="cell-edit" id="batch-new-status" data-field="status">
           <option value="Planned">Planned</option>
           <option value="In Progress">In Progress</option>
           <option value="Complete">Complete</option>
         </select>
       </td>
-      <td><textarea class="cell-edit" id="batch-new-notes" placeholder="Notes" onkeydown="handleBatchRowKey(event, 'notes')"></textarea></td>
-      <td class="w28 ctr"><button class="btn-del" onclick="addNewBatchRow()" title="Save (Ctrl+Enter)">✓</button></td>
+      <td><textarea class="cell-edit" id="batch-new-notes" placeholder="Notes" data-field="notes"></textarea></td>
+      <td class="w28 ctr"><button class="btn-del" id="batch-new-save" title="Save (Ctrl+Enter)">✓</button></td>
     </tr>
   `;
+}
 
-  activeBatches.forEach((batch, idx) => {
-    const product = prodDataGetProductById(batch.product_id);
-    const batchIdx = prodState.batches.indexOf(batch);
-
-    // Auto-populate work location if empty
-    let workLocation = batch.work_location;
-    if (!workLocation && product && product.work_location) {
-      workLocation = product.work_location;
-    }
-
-    rows += `
-      <tr>
-        <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
-        <td>
-          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'product_id', this.value); autoPopulateWorkLocationForBatch(${batchIdx}, this.value)" onkeydown="handleCellKey(event)">
-            ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
-          </select>
-        </td>
-        <td>
-          <div class="cell-display">${product && product.family ? (prodState.families.find(f => f.id === product.family)?.label || '—') : '—'}</div>
-        </td>
-        <td>
-          <div class="cell-display">${workLocation || '—'}</div>
-        </td>
-        <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" onchange="prodDataUpdateBatch(${batchIdx}, 'quantity', this.value)" onkeydown="handleCellKey(event)"></td>
-        <td>
-          <input class="cell-edit" placeholder="DD/MM/YYYY" value="${formatDisplayDate(batch.start_date || '')}" onchange="prodDataUpdateBatch(${batchIdx}, 'start_date', parseDisplayDate(this.value))" onblur="smartDateFormat('batch-start-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'start_date', parseDisplayDate(document.getElementById('batch-start-${batchIdx}').value)))" onkeydown="handleDateInput(event, 'batch-start-${batchIdx}', 'start', ${batchIdx})" id="batch-start-${batchIdx}">
-        </td>
-        <td>
-          <input class="cell-edit" placeholder="DD/MM/YYYY" value="${formatDisplayDate(batch.due_date || '')}" onchange="prodDataUpdateBatch(${batchIdx}, 'due_date', parseDisplayDate(this.value))" onblur="smartDateFormat('batch-due-${batchIdx}', () => prodDataUpdateBatch(${batchIdx}, 'due_date', parseDisplayDate(document.getElementById('batch-due-${batchIdx}').value)))" onkeydown="handleDateInput(event, 'batch-due-${batchIdx}', 'due')" id="batch-due-${batchIdx}">
-        </td>
-        <td>
-          <select class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'status', this.value)" onkeydown="handleCellKey(event)">
-            <option value="Planned" ${batch.status === 'Planned' ? 'selected' : ''}>Planned</option>
-            <option value="In Progress" ${batch.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-            <option value="Complete" ${batch.status === 'Complete' ? 'selected' : ''}>Complete</option>
-          </select>
-        </td>
-        <td><textarea class="cell-edit" onchange="prodDataUpdateBatch(${batchIdx}, 'notes', this.value)" onkeydown="handleCellKey(event)">${esc(batch.notes || '')}</textarea></td>
-        <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
-          <button class="btn-del" onclick="duplicateBatchRow(${batchIdx})" title="Duplicate batch">⧉</button>
-          <button class="btn-del" onclick="if(confirm('Delete batch?')) prodDataDeleteBatch(${batchIdx})">✕</button>
-        </td>
-      </tr>
-    `;
+function addSchedulingNewRowEventListeners() {
+  document.getElementById('batch-new-product').addEventListener('change', () => {
+    calcBatchDueDate();
+    updateFamilyDisplay('new');
+    autoPopulateWorkLocation();
   });
+  document.getElementById('batch-new-start').addEventListener('change', calcBatchDueDate);
+  document.getElementById('batch-new-start').addEventListener('blur', () => smartDateFormat('batch-new-start', calcBatchDueDate));
+  document.getElementById('batch-new-due').addEventListener('blur', () => smartDateFormat('batch-new-due'));
+  document.getElementById('batch-new-save').addEventListener('click', addNewBatchRow);
+
+  const fields = ['product', 'qty', 'start', 'due', 'status', 'notes'];
+  fields.forEach(field => {
+    document.getElementById(`batch-new-${field}`).addEventListener('keydown', (event) => handleBatchRowKey(event, field));
+  });
+}
+
+function renderSchedulingRow(batch, idx, activeBatches) {
+  const product = prodDataGetProductById(batch.product_id);
+  const batchIdx = prodState.batches.indexOf(batch);
+
+  // Auto-populate work location if empty
+  let workLocation = batch.work_location;
+  if (!workLocation && product && product.work_location) {
+    workLocation = product.work_location;
+  }
 
   return `
+    <tr id="batch-row-${batchIdx}">
+      <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
+      <td>
+        <select class="cell-edit" data-field="product_id">
+          ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="cell-display">${product && product.family ? (getFamilies().find(f => f.id === product.family)?.label || '—') : '—'}</div>
+      </td>
+      <td>
+        <div class="cell-display">${workLocation || '—'}</div>
+      </td>
+      <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" data-field="quantity"></td>
+      <td>
+        <input class="cell-edit" placeholder="DD/MM/YYYY" value="${formatDisplayDate(batch.start_date || '')}" data-field="start_date" id="batch-start-${batchIdx}">
+      </td>
+      <td>
+        <input class="cell-edit" placeholder="DD/MM/YYYY" value="${formatDisplayDate(batch.due_date || '')}" data-field="due_date" id="batch-due-${batchIdx}">
+      </td>
+      <td>
+        <select class="cell-edit" data-field="status">
+          <option value="Planned" ${batch.status === 'Planned' ? 'selected' : ''}>Planned</option>
+          <option value="In Progress" ${batch.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+          <option value="Complete" ${batch.status === 'Complete' ? 'selected' : ''}>Complete</option>
+        </select>
+      </td>
+      <td><textarea class="cell-edit" data-field="notes">${esc(batch.notes || '')}</textarea></td>
+      <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
+        <button class="btn-del" data-action="duplicate" title="Duplicate batch">⧉</button>
+        <button class="btn-del" data-action="delete" title="Delete batch">✕</button>
+      </td>
+    </tr>
+  `;
+}
+
+function addSchedulingRowEventListeners(batch) {
+  const batchIdx = prodState.batches.indexOf(batch);
+  const row = document.getElementById(`batch-row-${batchIdx}`);
+  if (!row) return;
+
+  row.querySelectorAll('[data-field]').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const field = e.target.getAttribute('data-field');
+      const value = e.target.value;
+      prodDataUpdateBatch(batchIdx, field, value);
+      if (field === 'product_id') {
+        autoPopulateWorkLocationForBatch(batchIdx, value);
+      }
+    });
+    input.addEventListener('keydown', handleCellKey);
+  });
+
+  row.querySelector(`[data-field="start_date"]`).addEventListener('blur', (e) => smartDateFormat(e.target.id, () => prodDataUpdateBatch(batchIdx, 'start_date', parseDisplayDate(e.target.value))));
+  row.querySelector(`[data-field="due_date"]`).addEventListener('blur', (e) => smartDateFormat(e.target.id, () => prodDataUpdateBatch(batchIdx, 'due_date', parseDisplayDate(e.target.value))));
+
+  row.querySelector('[data-action="duplicate"]').addEventListener('click', () => duplicateBatchRow(batchIdx));
+  row.querySelector('[data-action="delete"]').addEventListener('click', () => {
+    if (confirm('Delete batch?')) {
+      prodDataDeleteBatch(batchIdx);
+    }
+  });
+}
+
+function renderScheduling() {
+  const batches = prodState.batches;
+  const activeBatches = getFilteredBatches();
+
+  let rows = renderSchedulingNewRow();
+
+  activeBatches.forEach((batch, idx) => {
+    rows += renderSchedulingRow(batch, idx, activeBatches);
+  });
+
+  const mainContent = document.getElementById('mainContent');
+  mainContent.innerHTML = `
     <div class="prod-section">
       <div class="sec-head">
         <div>
@@ -102,9 +152,11 @@ function renderScheduling() {
           <div class="sec-desc">${activeBatches.length} of ${batches.length} batches — Click cells to edit, Tab/Enter to navigate</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn ${prodSchedulingHideComplete ? 'btn-primary' : 'btn-ghost'}" onclick="toggleHideCompleteBatches()" title="Hide completed batches">${prodSchedulingHideComplete ? '✓ Hide Complete' : '○ Show All'}</button>
-          <button class="btn btn-primary" onclick="focusBatchNewRow()">➕ Add Batch</button>
-          <button class="btn btn-ghost" onclick="setProductionTab('root')">← Back</button>
+          <button class="btn ${prodSchedulingHideComplete ? 'btn-primary' : 'btn-ghost'}" id="toggle-hide-complete">
+            ${prodSchedulingHideComplete ? '✓ Hide Complete' : '○ Show All'}
+          </button>
+          <button class="btn btn-primary" id="add-batch-button">➕ Add Batch</button>
+          <button class="btn btn-ghost" id="back-to-prod-hub">← Back</button>
         </div>
       </div>
 
@@ -112,21 +164,21 @@ function renderScheduling() {
       <div class="prod-filters">
         <div class="filter-group">
           <label>Family:</label>
-          <select onchange="prodSchedulingFilters.family = this.value; prodSchedulingFilters.product = ''; render()">
+          <select id="family-filter">
             <option value="">— All Families</option>
-            ${prodState.families.map(f => `<option value="${f.id}" ${prodSchedulingFilters.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
+            ${getFamilies().map(f => `<option value="${f.id}" ${prodSchedulingFilters.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">
           <label>Product:</label>
-          <select onchange="prodSchedulingFilters.product = this.value; render()">
+          <select id="product-filter">
             <option value="">— All Products</option>
             ${prodState.products.filter(p => p.status?.toLowerCase() !== 'closed' && (!prodSchedulingFilters.family || p.family === prodSchedulingFilters.family)).map(p => `<option value="${p.id}" ${prodSchedulingFilters.product === p.id ? 'selected' : ''}>${p.name} (${p.part_number || ''})</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">
           <label>Work Location:</label>
-          <select onchange="prodSchedulingFilters.workLocation = this.value; render()">
+          <select id="work-location-filter">
             <option value="">— All Locations</option>
             <option value="Unit 2" ${prodSchedulingFilters.workLocation === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
             <option value="Unit 3" ${prodSchedulingFilters.workLocation === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
@@ -136,9 +188,9 @@ function renderScheduling() {
         <div class="filter-group">
           <label>Date Range:</label>
           <div style="display:flex;gap:6px">
-            <input type="date" value="${prodSchedulingFilters.dateFrom}" onchange="prodSchedulingFilters.dateFrom = this.value; render()">
+            <input type="date" id="date-from-filter" value="${prodSchedulingFilters.dateFrom}">
             <span style="display:flex;align-items:center">–</span>
-            <input type="date" value="${prodSchedulingFilters.dateTo}" onchange="prodSchedulingFilters.dateTo = this.value; render()">
+            <input type="date" id="date-to-filter" value="${prodSchedulingFilters.dateTo}">
           </div>
         </div>
       </div>
@@ -166,13 +218,13 @@ function renderScheduling() {
         <thead>
           <tr>
             <th>#</th>
-            <th onclick="toggleSort('product_id')" style="cursor:pointer">Product ${prodSchedulingSort.field === 'product_id' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
-            <th onclick="toggleSort('family')" style="cursor:pointer">Family ${prodSchedulingSort.field === 'family' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
-            <th onclick="toggleSort('work_location')" style="cursor:pointer">Work Location ${prodSchedulingSort.field === 'work_location' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
-            <th onclick="toggleSort('quantity')" style="cursor:pointer">Qty ${prodSchedulingSort.field === 'quantity' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
-            <th onclick="toggleSort('start_date')" style="cursor:pointer">Start Date ${prodSchedulingSort.field === 'start_date' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
-            <th onclick="toggleSort('due_date')" style="cursor:pointer">Due Date ${prodSchedulingSort.field === 'due_date' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
-            <th onclick="toggleSort('status')" style="cursor:pointer">Status ${prodSchedulingSort.field === 'status' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th data-sort-field="product_id" style="cursor:pointer">Product ${prodSchedulingSort.field === 'product_id' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th data-sort-field="family" style="cursor:pointer">Family ${prodSchedulingSort.field === 'family' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th data-sort-field="work_location" style="cursor:pointer">Work Location ${prodSchedulingSort.field === 'work_location' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th data-sort-field="quantity" style="cursor:pointer">Qty ${prodSchedulingSort.field === 'quantity' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th data-sort-field="start_date" style="cursor:pointer">Start Date ${prodSchedulingSort.field === 'start_date' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th data-sort-field="due_date" style="cursor:pointer">Due Date ${prodSchedulingSort.field === 'due_date' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
+            <th data-sort-field="status" style="cursor:pointer">Status ${prodSchedulingSort.field === 'status' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th>Notes</th>
             <th></th>
           </tr>
@@ -183,7 +235,41 @@ function renderScheduling() {
       </table>
     </div>
   `;
+
+  addSchedulingNewRowEventListeners();
+  activeBatches.forEach(addSchedulingRowEventListeners);
+
+  document.getElementById('toggle-hide-complete').addEventListener('click', toggleHideCompleteBatches);
+  document.getElementById('add-batch-button').addEventListener('click', focusBatchNewRow);
+  document.getElementById('back-to-prod-hub').addEventListener('click', () => setProductionTab('root'));
+  
+  document.getElementById('family-filter').addEventListener('change', (e) => {
+    prodSchedulingFilters.family = e.target.value;
+    prodSchedulingFilters.product = '';
+    render();
+  });
+  document.getElementById('product-filter').addEventListener('change', (e) => {
+    prodSchedulingFilters.product = e.target.value;
+    render();
+  });
+  document.getElementById('work-location-filter').addEventListener('change', (e) => {
+    prodSchedulingFilters.workLocation = e.target.value;
+    render();
+  });
+  document.getElementById('date-from-filter').addEventListener('change', (e) => {
+    prodSchedulingFilters.dateFrom = e.target.value;
+    render();
+  });
+  document.getElementById('date-to-filter').addEventListener('change', (e) => {
+    prodSchedulingFilters.dateTo = e.target.value;
+    render();
+  });
+  
+  document.querySelectorAll('th[data-sort-field]').forEach(th => {
+    th.addEventListener('click', () => toggleSort(th.getAttribute('data-sort-field')));
+  });
 }
+
 
 function getFilteredBatches() {
   let filtered = prodState.batches;
@@ -222,8 +308,8 @@ function getFilteredBatches() {
     if (prodSchedulingSort.field === 'family') {
       const productA = prodState.products.find(p => p.id === a.product_id);
       const productB = prodState.products.find(p => p.id === b.product_id);
-      const familyA = productA ? prodState.families.find(f => f.id === productA.family) : null;
-      const familyB = productB ? prodState.families.find(f => f.id === productB.family) : null;
+      const familyA = productA ? getFamilies().find(f => f.id === productA.family) : null;
+      const familyB = productB ? getFamilies().find(f => f.id === productB.family) : null;
       aVal = familyA?.label || '';
       bVal = familyB?.label || '';
     } else {
@@ -303,7 +389,13 @@ async function addNewBatchRow() {
   const notes = document.getElementById('batch-new-notes')?.value;
 
   if (!productId || !workLocation || workLocation === '—') {
-    alert('Product and Work Location are required');
+    const productEl = document.getElementById('batch-new-product');
+    productEl.style.borderColor = 'var(--red)';
+    productEl.title = 'Product and Work Location are required';
+    setTimeout(() => {
+      productEl.style.borderColor = '';
+      productEl.title = '';
+    }, 2000);
     return;
   }
 
@@ -313,13 +405,25 @@ async function addNewBatchRow() {
 
   // Validate dates if provided
   if (startInput && !start) {
-    alert(`Invalid start date format: "${startInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`);
-    document.getElementById('batch-new-start').focus();
+    const startEl = document.getElementById('batch-new-start');
+    startEl.style.borderColor = 'var(--red)';
+    startEl.title = `Invalid start date format: "${startInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`;
+    setTimeout(() => {
+        startEl.style.borderColor = '';
+        startEl.title = '';
+    }, 2000);
+    startEl.focus();
     return;
   }
   if (dueInput && !due) {
-    alert(`Invalid due date format: "${dueInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`);
-    document.getElementById('batch-new-due').focus();
+    const dueEl = document.getElementById('batch-new-due');
+    dueEl.style.borderColor = 'var(--red)';
+    dueEl.title = `Invalid due date format: "${dueInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`;
+    setTimeout(() => {
+        dueEl.style.borderColor = '';
+        dueEl.title = '';
+    }, 2000);
+    dueEl.focus();
     return;
   }
 
@@ -501,7 +605,7 @@ function updateFamilyDisplay(scope) {
   const product = prodState.products.find(p => p.id === productId);
 
   if (product && product.family) {
-    const family = prodState.families.find(f => f.id === product.family);
+    const family = getFamilies().find(f => f.id === product.family);
     familyDisplay.textContent = family ? family.label : '—';
   } else {
     familyDisplay.textContent = '—';

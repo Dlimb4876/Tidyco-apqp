@@ -113,7 +113,7 @@ function setApqpTab(t) {
 
 function render() {
   const mc = document.getElementById('mainContent');
-  if (currentSection === 'projects') { mc.innerHTML = renderProjects(); return; }
+  if (currentSection === 'projects') { mc.innerHTML = npi.dashboard.renderProjects(); return; }
   if (currentSection === 'product-development') {
     let html = `<div class="section-inner">${renderProductDevelopment()}</div>`;
     if (familyModalState?.isOpen && typeof renderFamilyModal === 'function') {
@@ -162,8 +162,8 @@ function render() {
 
   if (currentSection === 'hub') { mc.innerHTML = renderHub(); return; }
 
-  if (currentSection === 'project') mc.innerHTML = renderDashboard();
-  else if (currentSection.startsWith('gate_')) mc.innerHTML = renderGatePage(+currentSection.split('_')[1]);
+  if (currentSection === 'project') mc.innerHTML = npi.dashboard.renderDashboard();
+  else if (currentSection.startsWith('gate_')) mc.innerHTML = npi.gate.renderGatePage(+currentSection.split('_')[1]);
   else { mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`; }
 
   // Double rAF: first frame commits the new HTML to the DOM;
@@ -177,11 +177,11 @@ function render() {
 }
 
 function renderSection() {
-  if (currentSection === 'apqp')    return renderAPQP();
-  if (currentSection === 'actions') return renderActions();
-  if (currentSection === 'risks')   return renderRisks();
-  if (currentSection === 'bom')     return renderBOM();
-  if (currentSection === 'timing')  return renderTimingPlan();
+  if (currentSection === 'apqp')    return npi.apqp.renderAPQP();
+  if (currentSection === 'actions') return npi.tracker.renderActions();
+  if (currentSection === 'risks')   return npi.tracker.renderRisks();
+  if (currentSection === 'bom')     return npi.bom.renderBOM();
+  if (currentSection === 'timing')  return npi.timing.renderTimingPlan();
   return '';
 }
 

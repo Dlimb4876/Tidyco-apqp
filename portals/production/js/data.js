@@ -2,13 +2,10 @@
 // Handles CRUD for products and batches with Supabase persistence
 
 let prodState = {
-  families: [],
   products: [],
   batches: [],
   activeUnit: 'Unit 2'
 };
-
-let prodDebouncedSave = null;
 
 // ── Date formatting helpers ─────────────────────────────
 function formatDisplayDate(isoDate) {
@@ -34,11 +31,6 @@ function parseDisplayDate(displayDate) {
 // Initialize production data from Supabase
 async function prodDataInit() {
   try {
-    // Load families from database
-    const families = await supa.from('families')
-      .select('*')
-      .order('label', { ascending: true });
-
     // Load products from product management database (not production_products table)
     const products = await supa.from('products')
       .select('*')
@@ -48,7 +40,6 @@ async function prodDataInit() {
       .select('*')
       .order('created_at', { ascending: true });
 
-    prodState.families = families.data || [];
     prodState.products = products.data || [];
     prodState.batches = batches.data || [];
 
@@ -56,7 +47,7 @@ async function prodDataInit() {
     prodDataSubscribe();
   } catch (err) {
     console.error('Error loading production data:', err);
-    prodState = { families: [], products: [], batches: [] };
+    prodState = { products: [], batches: [] };
   }
 }
 
@@ -71,23 +62,6 @@ async function prodDataReloadProducts() {
     console.log('✓ Production portal products reloaded');
   } catch (err) {
     console.error('Error reloading products:', err);
-  }
-}
-
-// Debounced save function
-function prodDebouncedSaveNow() {
-  if (prodDebouncedSave) clearTimeout(prodDebouncedSave);
-  prodDebouncedSave = setTimeout(() => prodDataSave(), 800);
-}
-
-// Main save function - persists to Supabase
-async function prodDataSave() {
-  try {
-    // Products are synced back to Supabase via individual insert/update operations
-    // Batches are synced back to Supabase via individual insert/update operations
-    // This is done in the individual CRUD functions
-  } catch (err) {
-    console.error('Error saving production data:', err);
   }
 }
 
@@ -265,7 +239,6 @@ window.prodDataUpdateBatch = async function(idx, field, value) {
 
     Object.assign(batch, updates);
     render();
-    prodDebouncedSaveNow();
     return true;
   } catch (err) {
     console.error('Error updating batch:', err);
@@ -324,81 +297,6 @@ window.prodSetActiveUnit = function(unit) {
   prodPlanMonthOffset = 0; // Reset month offset when switching units
 };
 
-// ===== FAMILY MANAGEMENT =====
-
-window.prodDataAddFamily = async function(name, label, icon, description) {
-  if (!name || !label) return null;
-
-  const family = {
-    user_id: currentUser.id,
-    name: name.trim(),
-    label: label.trim(),
-    icon: icon || '📋',
-    description: description ? description.trim() : null
-  };
-
-  try {
-    const { data, error } = await supa.from('families').insert([family]).select();
-    if (error) throw error;
-
-    if (data && data[0]) {
-      prodState.families.push(data[0]);
-      prodState.families.sort((a, b) => a.label.localeCompare(b.label));
-      render();
-      return data[0];
-    }
-  } catch (err) {
-    console.error('Error adding family:', err);
-    alert('Failed to add family: ' + err.message);
-  }
-  return null;
-};
-
-window.prodDataUpdateFamily = async function(familyId, updates) {
-  const family = prodState.families.find(f => f.id === familyId);
-  if (!family) return false;
-
-  try {
-    const { error } = await supa.from('families')
-      .update(updates)
-      .eq('id', familyId);
-
-    if (error) throw error;
-
-    Object.assign(family, updates);
-    prodState.families.sort((a, b) => a.label.localeCompare(b.label));
-    render();
-    return true;
-  } catch (err) {
-    console.error('Error updating family:', err);
-    alert('Failed to update family: ' + err.message);
-  }
-  return false;
-};
-
-window.prodDataDeleteFamily = async function(familyId) {
-  const idx = prodState.families.findIndex(f => f.id === familyId);
-  if (idx === -1) return false;
-
-  try {
-    const { error } = await supa.from('families').delete().eq('id', familyId);
-    if (error) throw error;
-
-    prodState.families.splice(idx, 1);
-    render();
-    return true;
-  } catch (err) {
-    console.error('Error deleting family:', err);
-    alert('Failed to delete family: ' + err.message);
-  }
-  return false;
-};
-
-window.prodDataGetFamilyName = function(familyId) {
-  const family = prodState.families.find(f => f.id === familyId);
-  return family ? family.label : 'Unknown Family';
-};
-
 // ────────────────────────────────────────────────────────────
 // Real-Time Sync (Generic System)
 // ────────────────────────────────────────────────────────────
@@ -447,31 +345,9 @@ window.prodDataSubscribe = function() {
       render();
     }
   });
-
-  // Subscribe to families changes
-  createRealtimeSubscription('families', 'prod_families_channel', {
-    onInsert: (newFamily) => {
-      if (!prodState.families.some(f => f.id === newFamily.id)) {
-        prodState.families.push(newFamily);
-        render();
-      }
-    },
-    onUpdate: (updated) => {
-      const idx = prodState.families.findIndex(f => f.id === updated.id);
-      if (idx >= 0) {
-        prodState.families[idx] = updated;
-        render();
-      }
-    },
-    onDelete: (deleted) => {
-      prodState.families = prodState.families.filter(f => f.id !== deleted.id);
-      render();
-    }
-  });
 };
 
 window.prodDataUnsubscribe = function() {
   removeRealtimeSubscription('prod_batches_channel');
   removeRealtimeSubscription('prod_products_channel');
-  removeRealtimeSubscription('prod_families_channel');
 };

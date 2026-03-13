@@ -58,7 +58,12 @@
       "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/production/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/production/css/*.css)",
       "Bash(wc -l /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/bugs/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/bugs/css/*.css /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/productmgmt/js/*.js /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp/portals/productmgmt/css/*.css)",
       "Bash(find /c/Users/Tidyco/Documents/GitHub/Tidyco-apqp -name *.sql)",
-      "Bash(powershell.exe -Command \":*)"
+      "Bash(powershell.exe -Command \":*)",
+      "Bash(./node_modules/.bin/eslint --version)",
+      "Bash(npx eslint:*)",
+      "Bash(npm install:*)",
+      "Bash(./node_modules/.bin/eslint 'portals/product-development/npi/**/*.js')",
+      "Bash(npx prettier:*)"
     ]
   }
 }

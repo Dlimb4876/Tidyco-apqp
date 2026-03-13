@@ -1,36 +1,37 @@
 // ═══════════════════════════════════
 // gates.js — Gate checklist and sign-off logic
-// Depends on: state.js, helpers.js
+// Depends on: state.js, helpers.js, npi.js
+// All functions under npi.gate.*
 // ═══════════════════════════════════
 
-function gateAllSigned(gd) {
-  return gd.sigs && gd.sigs.length > 0 && gd.sigs.every(s => s.signed);
+npi.gate.gateAllSigned = function(gd) {
+  return gd.sigs && gd.sigs.length > 0 && gd.sigs.every(s => s.signed)
 }
 
-function renderGatePage(gateNum) {
-  const p   = prog();
-  const g   = GATE_DEFS[gateNum];
-  const gd  = p.gates[gateNum];
-  const checked = gd.checks.filter(Boolean).length;
-  const total   = g.items.length;
-  const pct     = Math.round(checked / total * 100);
-  const allSigned  = gateAllSigned(gd);
-  const hasActivity = gd.checks.some(Boolean) || (gd.sigs && gd.sigs.some(s => s.signed));
+npi.gate.renderGatePage = function(gateNum) {
+  const p   = prog()
+  const g   = GATE_DEFS[gateNum]
+  const gd  = p.gates[gateNum]
+  const checked = gd.checks.filter(Boolean).length
+  const total   = g.items.length
+  const pct     = Math.round(checked / total * 100)
+  const allSigned  = npi.gate.gateAllSigned(gd)
+  const hasActivity = gd.checks.some(Boolean) || (gd.sigs && gd.sigs.some(s => s.signed))
 
-  const bannerBg     = allSigned ? 'var(--green-pale)'  : hasActivity ? 'var(--amber-pale)'  : 'var(--bg)';
-  const bannerBorder = allSigned ? 'var(--green-mid)'   : hasActivity ? 'var(--amber-mid)'   : 'var(--line)';
-  const bannerCol    = allSigned ? 'var(--green)'       : hasActivity ? 'var(--amber)'       : 'var(--muted)';
+  const bannerBg     = allSigned ? 'var(--green-pale)'  : hasActivity ? 'var(--amber-pale)'  : 'var(--bg)'
+  const bannerBorder = allSigned ? 'var(--green-mid)'   : hasActivity ? 'var(--amber-mid)'   : 'var(--line)'
+  const bannerCol    = allSigned ? 'var(--green)'       : hasActivity ? 'var(--amber)'       : 'var(--muted)'
   const bannerText   = allSigned
     ? `✓ Gate signed off by all required signatories`
     : hasActivity
       ? `⚙ In progress — ${checked}/${total} items checked · ${gd.sigs.filter(s => s.signed).length}/${gd.sigs.length} signed`
-      : `⏸ Not yet started — ${total} checklist items`;
+      : `⏸ Not yet started — ${total} checklist items`
 
   const checklist = g.items.map((item, ii) => `
     <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);${gd.checks[ii] ? 'background:#f7fffe;' : ''}">
-      <input type="checkbox" id="gc_${gateNum}_${ii}" ${gd.checks[ii] ? 'checked' : ''} onchange="toggleCheck(${gateNum},${ii},this.checked)" style="width:15px;height:15px;accent-color:var(--blue);flex-shrink:0;margin-top:3px;cursor:pointer">
+      <input type="checkbox" id="gc_${gateNum}_${ii}" ${gd.checks[ii] ? 'checked' : ''} onchange="npi.gate.toggleCheck(${gateNum},${ii},this.checked)" style="width:15px;height:15px;accent-color:var(--blue);flex-shrink:0;margin-top:3px;cursor:pointer">
       <label for="gc_${gateNum}_${ii}" style="font-size:13px;color:${gd.checks[ii] ? 'var(--muted)' : 'var(--ink)'};cursor:pointer;flex:1;${gd.checks[ii] ? 'text-decoration:line-through;' : ''}">${esc(item)}</label>
-    </div>`).join('');
+    </div>`).join('')
 
   const sigCards = (gd.sigs || []).map((sig, si) => `
     <div style="background:var(--white);border:1px solid ${sig.signed ? 'var(--green-mid)' : 'var(--line)'};border-radius:8px;overflow:hidden;${sig.signed ? 'background:var(--green-pale);' : ''}">
@@ -39,17 +40,17 @@ function renderGatePage(gateNum) {
         <span style="font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:4px;${sig.signed ? 'background:var(--green);color:white' : 'background:var(--line);color:var(--muted)'}">${sig.signed ? '✓ SIGNED' : 'PENDING'}</span>
       </div>
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
-        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Name</label><input style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:#f0faf4;border-color:var(--green-mid)' : ''}" value="${esc(sig.name)}" placeholder="Full name" onchange="updSig(${gateNum},${si},'name',this.value)"></div>
-        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Date</label><input type="date" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:#f0faf4;border-color:var(--green-mid)' : ''}" value="${sig.date || ''}" onchange="updSig(${gateNum},${si},'date',this.value)"></div>
+        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Name</label><input style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:#f0faf4;border-color:var(--green-mid)' : ''}" value="${esc(sig.name)}" placeholder="Full name" onchange="npi.gate.updSig(${gateNum},${si},'name',this.value)"></div>
+        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Date</label><input type="date" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:#f0faf4;border-color:var(--green-mid)' : ''}" value="${sig.date || ''}" onchange="npi.gate.updSig(${gateNum},${si},'date',this.value)"></div>
         ${!sig.signed
-          ? `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;${sig.name ? 'background:var(--blue);color:white' : 'background:var(--line);color:var(--muted);cursor:not-allowed'}" onclick="${sig.name ? `signOff(${gateNum},${si})` : 'alert(\'Enter name first\')'}">${sig.name ? 'Sign Off' : 'Enter name to sign'}</button>`
+          ? `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;${sig.name ? 'background:var(--blue);color:white' : 'background:var(--line);color:var(--muted);cursor:not-allowed'}" onclick="${sig.name ? `npi.gate.signOff(${gateNum},${si})` : 'alert(\'Enter name first\')'}">${sig.name ? 'Sign Off' : 'Enter name to sign'}</button>`
           : `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;background:var(--green);color:white;cursor:default;font-family:'IBM Plex Sans',sans-serif">✓ Signed</button>
-             <button onclick="unsign(${gateNum},${si})" style="font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'IBM Plex Sans',sans-serif;padding:0;margin-top:2px">Undo sign-off</button>`}
+             <button onclick="npi.gate.unsign(${gateNum},${si})" style="font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'IBM Plex Sans',sans-serif;padding:0;margin-top:2px">Undo sign-off</button>`}
       </div>
-    </div>`).join('');
+    </div>`).join('')
 
-  const prevGate = gateNum > 0 ? gateNum - 1 : null;
-  const nextGate = gateNum < 5 ? gateNum + 1 : null;
+  const prevGate = gateNum > 0 ? gateNum - 1 : null
+  const nextGate = gateNum < 5 ? gateNum + 1 : null
 
   return `
   <div style="padding:24px 28px 18px;background:var(--white);border-bottom:1px solid var(--line)">
@@ -83,10 +84,10 @@ function renderGatePage(gateNum) {
       </div>
       <div style="display:flex;flex-direction:column;gap:12px">${sigCards}</div>
     </div>
-  </div>`;
+  </div>`
 }
 
-function toggleCheck(gi, ii, v) { prog().gates[gi].checks[ii] = v; save(); render(); }
-function updSig(gi, si, f, v)   { prog().gates[gi].sigs[si][f] = v; save(); }
-function signOff(gi, si) { const sig = prog().gates[gi].sigs[si]; sig.signed = true; if (!sig.date) sig.date = new Date().toISOString().slice(0, 10); save(); render(); }
-function unsign(gi, si)  { prog().gates[gi].sigs[si].signed = false; save(); render(); }
+npi.gate.toggleCheck = function(gi, ii, v) { prog().gates[gi].checks[ii] = v; save(); render() }
+npi.gate.updSig     = function(gi, si, f, v) { prog().gates[gi].sigs[si][f] = v; save() }
+npi.gate.signOff    = function(gi, si) { const sig = prog().gates[gi].sigs[si]; sig.signed = true; if (!sig.date) sig.date = new Date().toISOString().slice(0, 10); save(); render() }
+npi.gate.unsign     = function(gi, si) { prog().gates[gi].sigs[si].signed = false; save(); render() }

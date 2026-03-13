@@ -3,7 +3,7 @@
 // Depends on: state.js, auth.js
 // ═══════════════════════════════════
 
-const bugDataManager = {
+window.bugDataManager = {
   state: {
     reports: [],
     tab: 'add',
@@ -125,7 +125,12 @@ const bugDataManager = {
   }
 };
 
+async function bugDataInit() {
+  await bugDataManager.init();
+}
+
+
 // For compatibility with navigation.js
 function bugDataUnsubscribe() {
-  bugDataManager.unsubscribe();
+  window.bugDataManager.unsubscribe();
 }

@@ -15,7 +15,7 @@ function renderProductMaster() {
       <td>
         <select class="cell-edit" id="prod-new-family" onkeydown="handleProdRowKey(event, 'family')">
           <option value="">—</option>
-          ${prodState.families.map(f => `<option value="${f.id}">${f.label}</option>`).join('')}
+          ${getFamilies().map(f => `<option value="${f.id}">${f.label}</option>`).join('')}
         </select>
       </td>
       <td><input class="cell-edit" id="prod-new-lead" type="number" placeholder="Turnaround time (days)" onkeydown="handleProdRowKey(event, 'lead')" title="Time between receipt and delivery (in days)"></td>
@@ -48,7 +48,7 @@ function renderProductMaster() {
         <td>
           <select class="cell-edit" onchange="prodDataUpdateProduct(${idx}, 'family', this.value)" onkeydown="handleCellKey(event)">
             <option value="">—</option>
-            ${prodState.families.map(f => `<option value="${f.id}" ${prod.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
+            ${getFamilies().map(f => `<option value="${f.id}" ${prod.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
           </select>
         </td>
         <td><input class="cell-edit" type="number" value="${prod.lead_time_days || ''}" onchange="prodDataUpdateProduct(${idx}, 'lead_time_days', this.value)" onkeydown="handleCellKey(event)"></td>

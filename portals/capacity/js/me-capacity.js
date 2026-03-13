@@ -246,9 +246,27 @@ meInit().catch(err => console.error('ME init failed:', err));
 
 // Prevent data loss on page close by flushing debounce timer
 window.addEventListener('beforeunload', (event) => {
-  clearTimeout(meSaveTimer);  // Cancel pending debounced save
-  // Attempt immediate save (fallback for async failures)
-  if (typeof meDataSave === 'function') {
-    meDataSave(false);  // Don't show alert on unload
+  if (meSaveTimer) {
+    clearTimeout(meSaveTimer);
+    // Flush pending save synchronously using XMLHttpRequest to ensure it completes
+    flushMEDataNow();
   }
 });
+
+// Immediate synchronous save without debounce (for beforeunload)
+window.flushMEDataNow = function() {
+  if (!supa || !currentUser) return;
+
+  // Quick synchronous save for team members only (most critical)
+  if (meDataState.team && meDataState.team.length > 0) {
+    console.log('Flushing ME data on page unload...');
+    meDataState.team.forEach((member, i) => {
+      if (typeof meSaveTeamRelational === 'function') {
+        // Don't await, just fire and forget for unload
+        meSaveTeamRelational(currentUser.id, member).catch(err => {
+          console.warn('Failed to flush team member', i, err.message);
+        });
+      }
+    });
+  }
+};

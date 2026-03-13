@@ -1,0 +1,28 @@
+{
+  "name": "tidyco-apqp",
+  "version": "1.0.0",
+  "description": "A Manufacturing Engineering tool for rail overhaul, managing APQP Gates 0–5 and broader operational workflows. Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and Supabase for persistence.",
+  "main": "check_onclick.js",
+  "scripts": {
+    "test": "jest",
+    "lint:npi": "eslint 'portals/product-development/npi/**/*.js'",
+    "format:npi": "prettier --write 'portals/product-development/npi/**/*.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dlimb4876/Tidyco-apqp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dlimb4876/Tidyco-apqp/issues"
+  },
+  "homepage": "https://github.com/Dlimb4876/Tidyco-apqp#readme",
+  "devDependencies": {
+    "eslint": "^9.39.4",
+    "globals": "^17.4.0",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0"
+  }
+}
