@@ -698,6 +698,7 @@ window.meDataSubscribe = function() {
   if (!currentUser) return;
 
   // Subscribe to teams changes
+  // CRITICAL: NO user_id filter — all users see all records for collaborative editing
   // onUpdate: no render() — state is already current from the local edit that triggered the save.
   // Calling render() on our own write-echo would clobber any in-progress user input.
   createRealtimeSubscription('me_teams', 'me_teams_channel', {
@@ -712,8 +713,6 @@ window.meDataSubscribe = function() {
       meDataState.team = meDataState.team.filter(t => t.id !== deleted.id);
       render();
     }
-  }, {
-    filter: `user_id=eq.${currentUser.id}`
   });
 
   // Subscribe to tasks changes
@@ -729,8 +728,6 @@ window.meDataSubscribe = function() {
       meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
       render();
     }
-  }, {
-    filter: `user_id=eq.${currentUser.id}`
   });
 
   // Subscribe to products changes
@@ -746,8 +743,6 @@ window.meDataSubscribe = function() {
       meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
       render();
     }
-  }, {
-    filter: `user_id=eq.${currentUser.id}`
   });
 
   // Subscribe to holidays changes
@@ -763,8 +758,6 @@ window.meDataSubscribe = function() {
       meDataState.holidays = meDataState.holidays.filter(h => h.id !== deleted.id);
       render();
     }
-  }, {
-    filter: `user_id=eq.${currentUser.id}`
   });
 };
 

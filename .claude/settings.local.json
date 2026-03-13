@@ -69,7 +69,14 @@
       "Bash(/tmp/fix_bug_reports_rls.sql:*)",
       "Read(//tmp/**)",
       "Bash(npm test:*)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(mkdir -p /workspaces/Tidyco-apqp/plans)",
+      "Bash(mv /workspaces/Tidyco-apqp/NPI_IMPROVEMENT_PLAN.md /workspaces/Tidyco-apqp/plans/)",
+      "Bash(mv /workspaces/Tidyco-apqp/BUG_REPORTS_SCHEMA.md /workspaces/Tidyco-apqp/plans/)",
+      "Bash(mv /workspaces/Tidyco-apqp/REALTIME_SYNC_GUIDE.md /workspaces/Tidyco-apqp/plans/)",
+      "Bash(mv /workspaces/Tidyco-apqp/ME_DATABASE_ANALYSIS.md /workspaces/Tidyco-apqp/plans/)",
+      "Bash(mv /workspaces/Tidyco-apqp/FAMILY_TEMPLATES_ARCHITECTURE.md /workspaces/Tidyco-apqp/plans/)",
+      "Bash(mv /workspaces/Tidyco-apqp/FAMILY_TEMPLATES_GUIDE.md /workspaces/Tidyco-apqp/plans/)"
     ]
   }
 }

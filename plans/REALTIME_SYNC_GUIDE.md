@@ -49,19 +49,23 @@ function meDataUnsubscribe() {
 }
 ```
 
-### 2. With Filters (Optional)
+### 2. With Filters (Use Carefully!)
 
-If you only want to sync your own records:
+Filters restrict which records you receive. **Only use filters for user-specific data, NOT for collaborative shared data.**
 
 ```javascript
-createRealtimeSubscription('me_teams', 'me_teams_user_channel', {
-  onInsert: (newRecord) => { /* ... */ },
-  onUpdate: (updated) => { /* ... */ }
+// ✅ GOOD: User-specific notes (each user has their own)
+createRealtimeSubscription('user_notes', 'my_notes_channel', {
+  onInsert: (newNote) => { /* ... */ }
 }, {
-  filter: `user_id=eq.${currentUser.id}`,  // Only your records
-  events: ['INSERT', 'UPDATE']  // Skip DELETE events
+  filter: `user_id=eq.${currentUser.id}`
 });
+
+// ❌ WRONG: Team capacity data (everyone sees everything)
+// Don't filter by user_id — removes other users' changes!
 ```
+
+**Rule of thumb:** If multiple users should see and edit the same data (capacity, batches, bugs), DO NOT filter by `user_id`.
 
 ### 3. For Global Settings
 
@@ -99,6 +103,8 @@ async function meDataInit() {
 
 // At the bottom, add these functions
 function meDataSubscribe() {
+  // IMPORTANT: No user_id filter — collaborative editing means everyone sees everything
+  
   // Teams subscription
   createRealtimeSubscription('me_teams', 'me_teams_channel', {
     onInsert: (newTeam) => {
@@ -115,6 +121,7 @@ function meDataSubscribe() {
       render();
     }
   });
+  // NO filter option — all users see all teams for collaboration
 
   // Tasks subscription
   createRealtimeSubscription('me_tasks', 'me_tasks_channel', {
@@ -186,6 +193,41 @@ if (currentSection === 'capacity' && sec !== 'capacity') {
   if (typeof meDataUnsubscribe === 'function') meDataUnsubscribe();
   if (typeof prodCapUnsubscribeUtilization === 'function') prodCapUnsubscribeUtilization();
 }
+```
+
+---
+
+## Critical: Collaborative Editing Pattern
+
+**All users must see all data** for collaborative editing to work. This means:
+
+1. **NO `user_id` filters** on subscriptions for shared data (capacity, batches, bugs, APQP)
+2. **Optimistic UI updates** — update immediately, sync in background
+3. **Audit fields** — track `user_id`, `created_at`, `updated_by` for accountability
+4. **Last-write-wins** — concurrent edits resolved by timestamp
+
+### Correct Pattern for Collaborative Data
+
+```javascript
+// ✅ CORRECT: All users see all records
+createRealtimeSubscription('me_teams', 'me_teams_channel', {
+  onInsert: (newTeam) => {
+    meState.teams.push(newTeam);
+    render();
+  }
+});
+// No filter — collaborative!
+```
+
+### Incorrect Pattern (BREAKS collaboration)
+
+```javascript
+// ❌ WRONG: Only current user sees their own records
+createRealtimeSubscription('me_teams', 'me_teams_channel', {
+  onInsert: (newTeam) => { /* ... */ }
+}, {
+  filter: `user_id=eq.${currentUser.id}`  // BREAKS real-time sync!
+});
 ```
 
 ---
@@ -280,6 +322,10 @@ Open browser DevTools → Console, watch for:
 - `⚠️ Could not set up...` (failure — check Supabase realtime is enabled)
 
 ### Common Issues
+
+**"User A adds data but User B doesn't see it until refresh"**
+- ❌ Caused by: `user_id` filter on subscription
+- ✅ Fix: Remove the filter — all users must see all data for collaboration
 
 **"Could not set up real-time subscription"**
 - Supabase realtime is disabled on your project
