@@ -209,8 +209,8 @@ window.getBankHolidaysForYear = function(year) {
   // Summer: Last Monday in August
   const summerBank = new Date(year, 7, 31); // August 31st
   const summerDay = summerBank.getDay();
-  const daysBackToMonday = summerDay === 1 ? 0 : summerDay - 1;
-  summerBank.setDate(summerBank.getDate() - daysBackToMonday);
+  const daysBackToMondaySummer = summerDay === 1 ? 0 : summerDay - 1;
+  summerBank.setDate(summerBank.getDate() - daysBackToMondaySummer);
 
   // Handle weekend Christmas/Boxing Day substitution
   let christmasDay = new Date(year, 11, 25);
