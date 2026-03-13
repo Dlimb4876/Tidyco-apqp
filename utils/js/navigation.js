@@ -3,6 +3,9 @@
 // Depends on: state.js, helpers.js, all feature renderers
 // ═══════════════════════════════════
 
+/**
+ * Section labels for UI display (reserved for future use)
+ */
 const SECTION_LABELS = {
   apqp:    'APQP',
   actions: 'Action Tracker',
@@ -16,6 +19,13 @@ const SECTION_LABELS = {
   bugreports: 'Bug Reports'
 };
 
+/**
+ * Parses URL hash into key-value parameters
+ * @returns {Object} Parsed hash parameters
+ * @example
+ * // Hash: #p=uuid&s=apqp&t=ctq
+ * // Returns: { p: 'uuid', s: 'apqp', t: 'ctq' }
+ */
 function parseHash() {
   const hash = window.location.hash.slice(1);
   if (!hash) return {};
@@ -25,6 +35,18 @@ function parseHash() {
   }));
 }
 
+/**
+ * Primary navigation function - updates section, URL hash, and triggers render
+ * @param {string} sec - Section to navigate to
+ * @param {Object} options - Navigation options
+ * @param {boolean} options.pushHash - Whether to push new history entry (default: true)
+ * 
+ * Features:
+ * - Automatic subscription cleanup when leaving sections
+ * - Tab reset when navigating to sections from outside
+ * - Return button visibility management
+ * - Bug reports data initialization
+ */
 function navigate(sec, { pushHash = true } = {}) {
   if (sec === 'home') sec = 'project';
 
@@ -90,10 +112,21 @@ function navigate(sec, { pushHash = true } = {}) {
   render();
 }
 
+/**
+ * Navigate to projects list
+ */
 function goProjects() { navigate('projects'); }
+
+/**
+ * Navigate to current project home (dashboard)
+ */
 function goHome()     { navigate('project'); }
 
-// NPI sub-sections sit one level inside product-development; all others go to hub
+/**
+ * Intelligent back navigation
+ * NPI sub-sections (apqp, actions, risks, bom, timing) → product-development
+ * All other sections → hub
+ */
 function navigateBack() {
   const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing'];
   if (npiSections.includes(currentSection) || currentSection.startsWith('gate_')) {
@@ -103,6 +136,10 @@ function navigateBack() {
   }
 }
 
+/**
+ * Set APQP sub-tab and update URL hash
+ * @param {string} t - Tab name (ctq, pfd, pfmea, cp)
+ */
 function setApqpTab(t) {
   apqpTab = t;
   const parts = ['p=' + encodeURIComponent(progId), 's=apqp'];
@@ -111,6 +148,16 @@ function setApqpTab(t) {
   render();
 }
 
+/**
+ * Main UI render switchboard - clears and repaints #mainContent
+ * Routes to appropriate render function based on currentSection
+ * 
+ * Render flow:
+ * 1. Portal-level routing (projects, product-development, production, etc.)
+ * 2. Sub-tab routing within portals (capacity, production, product-development)
+ * 3. NPI section routing (apqp, actions, risks, bom, timing, gates)
+ * 4. Post-render hooks (auto-resize textareas)
+ */
 function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = npi.dashboard.renderProjects(); return; }
@@ -176,6 +223,10 @@ function render() {
   });
 }
 
+/**
+ * Renders NPI/APQP sections (apqp, actions, risks, bom, timing)
+ * @returns {string} HTML content for the current section
+ */
 function renderSection() {
   if (currentSection === 'apqp')    return npi.apqp.renderAPQP();
   if (currentSection === 'actions') return npi.tracker.renderActions();
@@ -186,6 +237,10 @@ function renderSection() {
 }
 
 // ── Browser back/forward support ─────────────────────────────
+/**
+ * Handles browser back/forward button navigation
+ * Restores state from URL hash parameters
+ */
 window.addEventListener('popstate', () => {
   if (!currentUser) return;
   const h = parseHash();

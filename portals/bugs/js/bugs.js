@@ -48,14 +48,15 @@ window.bugApp = {
   async saveResponse(id, idx) {
     const textarea = document.getElementById(`bugResponseText_${idx}`);
     const statusSelect = document.getElementById(`bugStatusSelect_${idx}`);
-    if (!textarea || !statusSelect) return;
+    if (!textarea || !statusSelect) {
+      console.error(`saveResponse: Could not find elements for idx=${idx}`);
+      return;
+    }
 
     const response = textarea.value.trim();
     const status = statusSelect.value;
 
     if (!response) {
-      // Using alert for now as there's no dedicated feedback element in the table row.
-      // A better solution would be a small, non-modal feedback message near the save button.
       alert('Please enter a response.');
       return;
     }
@@ -64,7 +65,8 @@ window.bugApp = {
       await bugDataManager.respond(id, response, status);
       bugDataManager.setEditingId(null); // This will trigger a re-render
     } catch (error) {
-      alert(error.message); // Same as above, alert is a fallback.
+      console.error('Save response error:', error);
+      alert(error.message);
     }
   },
 

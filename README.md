@@ -155,6 +155,74 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | `navigate(sec)` | navigation.js | Updates `currentSection` and URL hash, calls `render()` |
 | `render()` | navigation.js | Main UI switchboard, clears and repaints `#mainContent` |
 | `launchApp()` | app.js | Loads remote data and restores navigation from URL hash |
+| `parseHash()` | navigation.js | Parses URL hash into key-value parameters |
+| `navigateBack()` | navigation.js | Smart back navigation (NPI sections → product-development, others → hub) |
+| `setApqpTab(tab)` | navigation.js | Sets APQP sub-tab and updates URL hash |
+| `goProjects()` | navigation.js | Quick navigation to projects list |
+| `goHome()` | navigation.js | Quick navigation to current project home |
+
+---
+
+## Navigation API
+
+### URL Hash Parameters
+
+The application uses hash-based routing with the following parameters:
+
+| Parameter | Description | Example Values |
+|-----------|-------------|----------------|
+| `p` | Programme/project UUID | `p=a1b2c3d4-e5f6-...` |
+| `s` | Section/portal | `s=hub`, `s=capacity`, `s=product-development`, `s=production` |
+| `nft` | NPI projects filter tab | `nft=all`, `nft=HVAC`, `nft=Pneumatics` |
+| `t` | APQP sub-tab | `t=ctq`, `t=pfd`, `t=pfmea`, `t=cp` |
+| `ct` | Capacity sub-tab | `ct=root`, `ct=me`, `ct=overhaul`, `ct=projects` |
+| `pt` | Production sub-tab | `pt=root`, `pt=products`, `pt=scheduling` |
+| `pdt` | Product Development sub-tab | `pt=root`, `pt=npi`, `pt=product-management` |
+
+### Example URLs
+
+```
+# Hub dashboard
+#s=hub
+
+# Capacity portal, ME view
+#s=capacity&ct=me
+
+# Product Development portal, NPI section, PFMEA tab
+#p=<uuid>&s=product-development&nt=npi&t=pfmea
+
+# APQP section (when project is active)
+#p=<uuid>&s=apqp&t=ctq
+
+# Production portal
+#s=production&pt=scheduling
+```
+
+### Navigation Functions
+
+**`navigate(section, options)`**
+- Primary navigation function
+- Automatically manages subscription cleanup and tab resets
+- Options: `{ pushHash: true }` - set to false to replace history instead of pushing
+
+**`navigateBack()`**
+- Intelligent back navigation
+- NPI sections (apqp, actions, risks, bom, timing) → product-development
+- All other sections → hub
+
+**`setApqpTab(tab)`**
+- Changes APQP sub-tab without full navigation
+- Valid tabs: `ctq`, `pfd`, `pfmea`, `cp`
+
+### Subscription Management
+
+Navigation automatically handles cleanup for real-time subscriptions:
+
+- **Bug Reports**: Unsubscribes when leaving `bugreports` section
+- **ME Capacity**: Unsubscribes from team data and utilization when leaving `capacity`
+- **Production**: Unsubscribes when leaving `production`
+
+Always use `navigate()` instead of directly setting `window.location.hash` to ensure proper cleanup.
 
 ---
 

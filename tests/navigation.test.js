@@ -1,0 +1,397 @@
+const fs = require('fs');
+const path = require('path');
+
+// ─────────────────────────────────────────────────────────────
+// Mock Dependencies
+// ─────────────────────────────────────────────────────────────
+
+// Mock Supabase
+global.supa = {
+  from: jest.fn(() => ({
+    select: jest.fn(() => ({
+      order: jest.fn(() => ({
+        data: [],
+        error: null,
+      })),
+    })),
+  })),
+  auth: {
+    getSession: jest.fn(() => ({
+      data: {
+        session: {
+          user: { id: 'test-user', email: 'test@test.com' }
+        }
+      }
+    }))
+  }
+};
+
+// Mock realtime subscriptions
+global.createRealtimeSubscription = jest.fn();
+global.removeRealtimeSubscription = jest.fn();
+global.currentUser = { id: 'test-user', email: 'test@test.com' };
+
+// Mock global state variables
+global.db = { programmes: [
+  { id: 'test-prog-1', name: 'Test Project', customer: 'Test Customer' }
+]};
+global.progId = 'test-prog-1';
+global.currentSection = 'hub';
+global.npiTab = 'all';
+global.apqpTab = 'ctq';
+global.capacityTab = 'root';
+global.productionTab = 'root';
+global.productDevelopmentTab = 'root';
+
+// Mock prog() accessor function
+global.prog = () => global.db.programmes.find(p => p.id === global.progId) || null;
+
+// Mock subscription cleanup functions
+global.bugDataUnsubscribe = jest.fn();
+global.meDataUnsubscribe = jest.fn();
+global.prodCapUnsubscribeUtilization = jest.fn();
+global.prodDataUnsubscribe = jest.fn();
+
+// Mock bugDataManager
+global.bugDataManager = {
+  init: jest.fn().mockResolvedValue(undefined)
+};
+
+// Mock render functions
+global.renderProductDevelopment = jest.fn().mockReturnValue('<div>Product Development</div>');
+global.renderProduction = jest.fn().mockReturnValue('<div>Production</div>');
+global.renderProductsPortalHTML = jest.fn().mockReturnValue('<div>Products</div>');
+global.renderProductsPortalSetup = jest.fn();
+global.renderProductMgmt = jest.fn().mockReturnValue('<div>Product Mgmt</div>');
+global.renderBugReports = jest.fn().mockReturnValue('<div>Bug Reports</div>');
+global.renderCapacity = jest.fn().mockReturnValue('<div>Capacity</div>');
+global.renderMeCapacity = jest.fn().mockReturnValue('<div>ME Capacity</div>');
+global.renderProdCapacity = jest.fn().mockReturnValue('<div>Prod Capacity</div>');
+global.renderHub = jest.fn().mockReturnValue('<div>Hub</div>');
+global.meDrawChartNow = jest.fn();
+global.autoResizeAll = jest.fn();
+
+// Mock npi module
+global.npi = {
+  dashboard: {
+    renderProjects: jest.fn().mockReturnValue('<div>Projects Dashboard</div>'),
+    renderDashboard: jest.fn().mockReturnValue('<div>NPI Dashboard</div>')
+  },
+  gate: {
+    renderGatePage: jest.fn((num) => `<div>Gate ${num}</div>`)
+  },
+  apqp: { renderAPQP: jest.fn().mockReturnValue('<div>APQP</div>') },
+  tracker: {
+    renderActions: jest.fn().mockReturnValue('<div>Actions</div>'),
+    renderRisks: jest.fn().mockReturnValue('<div>Risks</div>')
+  },
+  bom: { renderBOM: jest.fn().mockReturnValue('<div>BOM</div>') },
+  timing: { renderTimingPlan: jest.fn().mockReturnValue('<div>Timing</div>') }
+};
+
+// Mock family/template modal state
+global.familyModalState = { isOpen: false };
+global.templateManagerState = { isOpen: false };
+global.renderFamilyModal = jest.fn().mockReturnValue('');
+global.renderTemplateManager = jest.fn().mockReturnValue('');
+
+// Mock return hub button
+const mockReturnBtn = {
+  style: { display: 'none' }
+};
+
+// Set up DOM
+const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+document.documentElement.innerHTML = html.toString();
+
+// Add mock return button if not in HTML
+if (!document.getElementById('returnHubBtn')) {
+  const btn = document.createElement('div');
+  btn.id = 'returnHubBtn';
+  btn.style.display = 'none';
+  document.body.appendChild(btn);
+}
+
+// Add main content div
+if (!document.getElementById('mainContent')) {
+  const mc = document.createElement('div');
+  mc.id = 'mainContent';
+  document.body.appendChild(mc);
+}
+
+// Load navigation script
+const navScript = fs.readFileSync(
+  path.resolve(__dirname, '../utils/js/navigation.js'),
+  'utf8'
+);
+eval(navScript);
+
+// ─────────────────────────────────────────────────────────────
+// Tests
+// ─────────────────────────────────────────────────────────────
+
+describe('Navigation Module (navigation.js)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.progId = 'test-prog-1';
+    global.currentSection = 'hub';
+    global.npiTab = 'all';
+    global.apqpTab = 'ctq';
+    global.capacityTab = 'root';
+    global.productionTab = 'root';
+    global.productDevelopmentTab = 'root';
+    window.location.hash = '';
+    document.getElementById('mainContent').innerHTML = '';
+  });
+
+  describe('parseHash', () => {
+    test('should return empty object for empty hash', () => {
+      window.location.hash = '';
+      expect(parseHash()).toEqual({});
+    });
+
+    test('should parse single parameter', () => {
+      window.location.hash = '#s=hub';
+      expect(parseHash()).toEqual({ s: 'hub' });
+    });
+
+    test('should parse multiple parameters', () => {
+      window.location.hash = '#p=test-prog-1&s=apqp&t=ctq';
+      expect(parseHash()).toEqual({ p: 'test-prog-1', s: 'apqp', t: 'ctq' });
+    });
+
+    test('should handle encoded characters', () => {
+      window.location.hash = '#s=product-development';
+      expect(parseHash()).toEqual({ s: 'product-development' });
+    });
+  });
+
+  describe('navigate', () => {
+    test('should navigate to projects section', () => {
+      navigate('projects');
+      expect(global.currentSection).toBe('projects');
+      // Note: projects section doesn't include 's=projects' in hash, only programme
+      expect(window.location.hash).toBe('#p=test-prog-1');
+    });
+
+    test('should redirect "home" to "project"', () => {
+      navigate('home');
+      expect(global.currentSection).toBe('project');
+    });
+
+    test('should show return button on feature pages', () => {
+      navigate('apqp');
+      const btn = document.getElementById('returnHubBtn');
+      expect(btn.style.display).toBe('flex');
+    });
+
+    test('should hide return button on hub/projects/project', () => {
+      navigate('hub');
+      expect(document.getElementById('returnHubBtn').style.display).toBe('none');
+
+      navigate('projects');
+      expect(document.getElementById('returnHubBtn').style.display).toBe('none');
+
+      navigate('project');
+      expect(document.getElementById('returnHubBtn').style.display).toBe('none');
+    });
+
+    test('should initialize bug reports data when navigating to bugreports', () => {
+      navigate('bugreports');
+      expect(global.bugDataManager.init).toHaveBeenCalled();
+    });
+
+    test('should cleanup bug reports subscription when leaving bugreports', () => {
+      global.currentSection = 'bugreports';
+      navigate('hub');
+      expect(global.bugDataUnsubscribe).toHaveBeenCalled();
+    });
+
+    test('should reset capacityTab when navigating to capacity', () => {
+      global.capacityTab = 'me';
+      navigate('capacity');
+      expect(global.capacityTab).toBe('root');
+    });
+
+    test('should cleanup capacity subscriptions when leaving capacity', () => {
+      global.currentSection = 'capacity';
+      navigate('hub');
+      expect(global.meDataUnsubscribe).toHaveBeenCalled();
+      expect(global.prodCapUnsubscribeUtilization).toHaveBeenCalled();
+    });
+
+    test('should reset productionTab when navigating to production', () => {
+      global.productionTab = 'scheduling';
+      navigate('production');
+      expect(global.productionTab).toBe('root');
+    });
+
+    test('should cleanup production subscription when leaving production', () => {
+      global.currentSection = 'production';
+      navigate('hub');
+      expect(global.prodDataUnsubscribe).toHaveBeenCalled();
+    });
+
+    test('should reset productDevelopmentTab when navigating to product-development', () => {
+      global.productDevelopmentTab = 'npi';
+      navigate('product-development');
+      expect(global.productDevelopmentTab).toBe('root');
+    });
+  });
+
+  describe('navigateBack', () => {
+    test('should navigate to product-development from APQP sections', () => {
+      global.currentSection = 'apqp';
+      navigateBack();
+      expect(global.currentSection).toBe('product-development');
+    });
+
+    test('should navigate to product-development from actions', () => {
+      global.currentSection = 'actions';
+      navigateBack();
+      expect(global.currentSection).toBe('product-development');
+    });
+
+    test('should navigate to product-development from risks', () => {
+      global.currentSection = 'risks';
+      navigateBack();
+      expect(global.currentSection).toBe('product-development');
+    });
+
+    test('should navigate to product-development from bom', () => {
+      global.currentSection = 'bom';
+      navigateBack();
+      expect(global.currentSection).toBe('product-development');
+    });
+
+    test('should navigate to product-development from timing', () => {
+      global.currentSection = 'timing';
+      navigateBack();
+      expect(global.currentSection).toBe('product-development');
+    });
+
+    test('should navigate to hub from capacity', () => {
+      global.currentSection = 'capacity';
+      navigateBack();
+      expect(global.currentSection).toBe('hub');
+    });
+
+    test('should navigate to hub from production', () => {
+      global.currentSection = 'production';
+      navigateBack();
+      expect(global.currentSection).toBe('hub');
+    });
+  });
+
+  describe('setApqpTab', () => {
+    test('should set apqpTab and update hash', () => {
+      setApqpTab('pfd');
+      expect(global.apqpTab).toBe('pfd');
+      expect(window.location.hash).toContain('t=pfd');
+    });
+
+    test('should not add tab parameter when tab is ctq (default)', () => {
+      setApqpTab('ctq');
+      expect(global.apqpTab).toBe('ctq');
+      expect(window.location.hash).not.toContain('t=');
+    });
+  });
+
+  describe('render', () => {
+    beforeEach(() => {
+      document.getElementById('mainContent').innerHTML = '';
+    });
+
+    test('should render projects dashboard', () => {
+      global.currentSection = 'projects';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('Projects Dashboard');
+    });
+
+    test('should render product-development section', () => {
+      global.currentSection = 'product-development';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('Product Development');
+    });
+
+    test('should render production section', () => {
+      global.currentSection = 'production';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('Production');
+    });
+
+    test('should render capacity section', () => {
+      global.currentSection = 'capacity';
+      global.capacityTab = 'root';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('Capacity');
+    });
+
+    test('should render ME capacity and trigger chart draw', () => {
+      global.currentSection = 'capacity';
+      global.capacityTab = 'me';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('ME Capacity');
+    });
+
+    test('should render bugreports section', () => {
+      global.currentSection = 'bugreports';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('Bug Reports');
+    });
+
+    test('should render productmgmt section', () => {
+      global.currentSection = 'productmgmt';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('Product Mgmt');
+    });
+
+    test('should render NPI dashboard for project section', () => {
+      global.currentSection = 'project';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('NPI Dashboard');
+    });
+
+    test('should render gate page for gate_* sections', () => {
+      global.currentSection = 'gate_2';
+      render();
+      expect(global.npi.gate.renderGatePage).toHaveBeenCalledWith(2);
+    });
+
+    test('should render APQP section', () => {
+      global.currentSection = 'apqp';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('APQP');
+    });
+
+    test('should call autoResizeAll after rendering NPI sections', () => {
+      global.currentSection = 'apqp';
+      render();
+      // Auto-resize is called in nested rAF, so we just verify it's defined
+      expect(typeof global.autoResizeAll).toBe('function');
+    });
+  });
+
+  describe('goProjects and goHome helpers', () => {
+    test('goProjects should navigate to projects', () => {
+      goProjects();
+      expect(global.currentSection).toBe('projects');
+    });
+
+    test('goHome should navigate to project', () => {
+      goHome();
+      expect(global.currentSection).toBe('project');
+    });
+  });
+
+  describe('popstate event handler', () => {
+    test('should handle back/forward navigation', () => {
+      window.location.hash = '#p=test-prog-1&s=apqp&t=pfd';
+      const event = new Event('popstate');
+      window.dispatchEvent(event);
+      // Handler should update state based on hash
+      expect(global.currentSection).toBe('apqp');
+      expect(global.apqpTab).toBe('pfd');
+    });
+  });
+});

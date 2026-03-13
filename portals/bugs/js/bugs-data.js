@@ -86,7 +86,9 @@ window.bugDataManager = {
   async updateReport(id, updates) {
     if (!currentUser) throw new Error('You must be logged in to update a report.');
     try {
-      const { error } = await supa.from('bug_reports').update(updates).eq('id', id);
+      console.log('Updating bug_reports id:', id, 'with:', updates);
+      const { data, error } = await supa.from('bug_reports').update(updates).eq('id', id).select();
+      console.log('Update response:', { data, error });
       if (error) throw error;
       // The realtime subscription will handle updating the state.
       // const report = this.state.reports.find(r => r.id === id);
@@ -100,12 +102,14 @@ window.bugDataManager = {
   },
 
   async respond(id, response, status) {
+    if (!currentUser) throw new Error('You must be logged in to respond.');
     const updates = {
       response: response.trim(),
       responded_by: currentUser.email,
       responded_at: new Date().toISOString(),
       status: status || 'closed'
     };
+    console.log('Bug respond: updating', id, 'with', updates);
     return this.updateReport(id, updates);
   },
 

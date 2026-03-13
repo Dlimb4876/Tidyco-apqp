@@ -31,12 +31,13 @@ Tidyco APQP is a **vanilla JavaScript Single Page Application (SPA)** for managi
 │   └── css/
 ├── portals/
 │   ├── hub/                        # Central operations dashboard
-│   ├── capacity/                   # ME load capacity (18 JS modules)
+│   ├── capacity/                   # ME load capacity + production capacity planning
 │   ├── product-development/
-│   │   ├── npi/                    # Core APQP modules (8 JS modules)
+│   │   ├── npi/                    # Core APQP modules (PFMEA, gates, BOM, etc.)
 │   │   └── product-management/    # Product registry with overhaul history
 │   ├── production/                 # Production scheduling and Gantt planning
-│   └── productmgmt/               # Central product master (in development)
+│   ├── productmgmt/               # Central product master
+│   └── bugs/                       # Bug reports portal with real-time subscriptions
 └── *.md                            # Architecture and feature documentation
 ```
 
@@ -47,22 +48,27 @@ Tidyco APQP is a **vanilla JavaScript Single Page Application (SPA)** for managi
 Scripts are loaded via `<script>` tags in `index.html`. **Order matters** — do not rearrange.
 
 ```
-CSS:  main.css → components.css → [feature CSS files] → apqp.css → rpn-chart.css
+CSS:  main.css → components.css → [feature CSS files]
 
 JS:
   Layer 1 (Core):      state.js → auth.js → db.js
-  Layer 2 (Utils):     helpers.js → navigation.js
-  Layer 3 (Portals):   hub.js → rpn-chart.js → dashboard.js →
+  Layer 2 (Utils):     helpers.js → navigation.js → realtime.js
+  Layer 3 (Portals):   hub.js →
                        products-data.js → trends-chart.js →
                        capacity.js → me-data-relational.js → me-data.js → me-utils.js →
                        me-calculations.js → me-components.js → me-team.js → me-tasks.js →
                        me-products.js → me-product-taskload.js → me-holidays.js →
                        me-chart.js → me-heatmap.js → me-dashboard.js → me-capacity.js →
                        me-estimation-page.js →
+                       prod-capacity-data.js → work-areas-data.js → prod-capacity-dashboard.js →
+                       prod-capacity-workarea.js → prod-capacity-settings.js →
+                       prod-capacity-detail.js → prod-capacity.js →
                        production.js → scheduling.js → planning.js →
                        families-data.js → family-templates-data.js → products.js →
                        product-development.js → product-management.js → productmgmt.js →
-                       gates.js → pfmea.js → apqp.js → bom.js → timing.js → trackers.js
+                       npi-constants.js → npi.js → rpn-chart.js → dashboard.js →
+                       gates.js → pfmea.js → apqp.js → bom.js → timing.js → trackers.js →
+                       bugs-data.js → bugs.js
   Layer 4 (Last):      app.js
 ```
 
@@ -141,6 +147,7 @@ RLS enforces authentication — users must be logged in to access any data. All 
 | `production_batches` | Production scheduling batches |
 | `products` | Overhaul product registry |
 | `product_overhaul_history` | Historical overhaul records |
+| `bug_reports` | Bug and issue reports with real-time subscriptions |
 | `me_capacity` | Legacy JSON blob (no longer written to; may be removed) |
 
 ---
@@ -311,6 +318,30 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 
 ---
 
+## Recent Additions
+
+### Bugs Portal
+- Real-time bug reporting system in `portals/bugs/`
+- Uses Supabase real-time subscriptions via `bugDataManager` (init, add, update, delete)
+- Table: `bug_reports` with columns for title, description, status, severity
+- Loads on portal navigation via `bugDataManager.init()`
+
+### Production Capacity Planning
+- Extended capacity module with production-focused planning
+- Modules: `prod-capacity-data.js`, `work-areas-data.js`, production capacity dashboard/settings/detail
+- Complements ME capacity with production-side planning tools
+
+### NPI Constants Module
+- Centralized constants for NPI/APQP workflows (`npi-constants.js`)
+- Loaded before main NPI module to support shared definitions
+
+### Real-time Subscriptions
+- `utils/js/realtime.js` provides utilities for real-time data sync
+- Used by bugs portal and other features requiring live updates
+- Load order: after `navigation.js`, before portal modules
+
+---
+
 ## Development Notes
 
 ### No Build Step
@@ -337,3 +368,5 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 - **HTML injection:** Use `esc()` (from `helpers.js`) when interpolating user data into HTML strings
 - **Load order errors:** If a function is undefined at runtime, check that its file is loaded before the caller in `index.html`
 - **RLS errors:** New Supabase tables need an RLS policy — inserts/selects silently fail without one. Policy must allow authenticated users; do not filter by `user_id` in queries
+- **Portal initialization:** Portals with data subscriptions (e.g., bugs) must call their init functions in navigation handlers to load real-time data
+- **Date fields:** Use empty string for HTML date inputs (not default date), send null to Supabase for empty dates
