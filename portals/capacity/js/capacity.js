@@ -15,10 +15,10 @@ function renderCapacity() {
           <div class="proj-home-title">Capacity Management</div>
           <div class="proj-home-sub">Select a capacity stream to view loading</div>
         </div>
-        <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Portal</button>
+        <button class="btn btn-ghost" data-cap-action="cap-nav-hub">← Back to Portal</button>
       </div>
       <div class="proj-cards capacity-grid">
-        <div class="proj-card capacity-card" onclick="setCapacityTab('production')">
+        <div class="proj-card capacity-card" data-cap-action="cap-set-tab" data-tab="production">
           <div class="hub-card-content">
             <div class="hub-icon">🚂</div>
             <div class="proj-card-name">Production</div>
@@ -26,7 +26,7 @@ function renderCapacity() {
           </div>
         </div>
 
-        <div class="proj-card capacity-card" onclick="setCapacityTab('me')">
+        <div class="proj-card capacity-card" data-cap-action="cap-set-tab" data-tab="me">
           <div class="hub-card-content">
             <div class="hub-icon">🧑‍🔧</div>
             <div class="proj-card-name">Manufacturing Engineering</div>
@@ -34,7 +34,7 @@ function renderCapacity() {
           </div>
         </div>
 
-        <div class="proj-card capacity-card" onclick="setCapacityTab('projects')">
+        <div class="proj-card capacity-card" data-cap-action="cap-set-tab" data-tab="projects">
           <div class="hub-card-content">
             <div class="hub-icon">📅</div>
             <div class="proj-card-name">Project Management</div>

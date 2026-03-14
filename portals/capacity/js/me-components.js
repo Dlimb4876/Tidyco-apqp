@@ -30,14 +30,13 @@ window.renderKPIStrip = function(kpis) {
 window.renderMonthPicker = function(monthKey, onPrevClick, onNextClick, onChangeClick) {
   // monthKey: 'YYYY-MM' format
   // Returns HTML for month picker with prev/next buttons + input
-  const [month, year] = getMonthLabel(monthKey);
-  const displayLabel = `${month} ${year}`;
-
+  // onPrevClick / onNextClick / onChangeClick kept as params for backward compatibility
+  // but rendered as data-cap-action attributes for delegation
   return `
     <div class="me-chart-controls">
-      <button class="btn btn-secondary" onclick="${onPrevClick}">← Previous</button>
-      <input type="month" id="meChartMonthInput" value="${monthKey}" onchange="${onChangeClick}(this.value)" />
-      <button class="btn btn-secondary" onclick="${onNextClick}">Next →</button>
+      <button class="btn btn-secondary" data-cap-action="cap-me-prev-month">← Previous</button>
+      <input type="month" id="meChartMonthInput" value="${monthKey}" data-cap-action="cap-me-month-change" />
+      <button class="btn btn-secondary" data-cap-action="cap-me-next-month">Next →</button>
     </div>
   `;
 };
@@ -59,23 +58,22 @@ window.renderTableHeader = function(headers) {
 
 // ── Editable Cell Component ─────────────────────────────────
 window.renderEditableCell = function(value, fieldType, onBlurHandler, placeholder) {
-  // fieldType: 'text', 'number', 'date', 'select'
-  // onBlurHandler: JavaScript function call as string (e.g., "myFunc(this.value)")
-  // Returns <input> or <select> element
-
+  // fieldType: 'text', 'number', 'date'
+  // onBlurHandler kept as param for backward compatibility but not used in HTML
+  // Callers should use data-cap-action attributes on the returned element instead
   placeholder = placeholder || '';
   let html = '';
 
   switch (fieldType) {
     case 'number':
-      html = `<input type="number" value="${value || 0}" step="0.1" onchange="${onBlurHandler}" placeholder="${placeholder}">`;
+      html = `<input type="number" value="${value || 0}" step="0.1" placeholder="${placeholder}">`;
       break;
     case 'date':
-      html = `<input type="date" value="${value || ''}" onchange="${onBlurHandler}" placeholder="${placeholder}">`;
+      html = `<input type="date" value="${value || ''}" placeholder="${placeholder}">`;
       break;
     case 'text':
     default:
-      html = `<input value="${escapeHtml(value)}" onchange="${onBlurHandler}" placeholder="${placeholder}">`;
+      html = `<input value="${escapeHtml(value)}" placeholder="${placeholder}">`;
       break;
   }
 

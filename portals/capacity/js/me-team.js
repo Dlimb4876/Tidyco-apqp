@@ -42,16 +42,16 @@ window.meRenderTeamTab = function(teamArray) {
     const effective = (meGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100)).toFixed(1);
     const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option>';
     rows += `
-      <tr>
-        <td><input value="${esc(member.name)}" onchange="meDataUpdateTeam(${rowIndex}, 'name', this.value); meDebouncedSave();"></td>
-        <td><input value="${esc(member.jobTitle || '')}" onchange="meDataUpdateTeam(${rowIndex}, 'jobTitle', this.value); meDebouncedSave();"></td>
-        <td><select onchange="meDataUpdateTeam(${rowIndex}, 'group', this.value); meDebouncedSave();">${groupOpts}</select></td>
-        <td><input type="date" value="${member.startDate || ''}" onblur="meDataUpdateTeam(${rowIndex}, 'startDate', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${member.endDate || ''}" onblur="meDataUpdateTeam(${rowIndex}, 'endDate', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${rowIndex}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" onchange="meDataUpdateTeam(${rowIndex}, 'utilisation', this.value); meDebouncedSave();"></td>
+      <tr data-member-idx="${rowIndex}">
+        <td><input value="${esc(member.name)}" data-cap-action="cap-team-upd" data-field="name"></td>
+        <td><input value="${esc(member.jobTitle || '')}" data-cap-action="cap-team-upd" data-field="jobTitle"></td>
+        <td><select data-cap-action="cap-team-upd" data-field="group">${groupOpts}</select></td>
+        <td><input type="date" value="${member.startDate || ''}" data-cap-action="cap-team-upd" data-field="startDate"></td>
+        <td><input type="date" value="${member.endDate || ''}" data-cap-action="cap-team-upd" data-field="endDate"></td>
+        <td><input type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" data-cap-action="cap-team-upd" data-field="hoursPerWeek"></td>
+        <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" data-cap-action="cap-team-upd" data-field="utilisation"></td>
         <td style="font-weight: bold;">${effective}</td>
-        <td style="text-align: center;"><button class="me-del-btn" onclick="if(confirm('Delete team member?')) { meDataDeleteTeam(${rowIndex}); meOnSave(); meSetTab('team'); }">✕</button></td>
+        <td style="text-align: center;"><button class="me-del-btn" data-cap-action="cap-team-del">✕</button></td>
       </tr>`;
   });
 
@@ -75,7 +75,7 @@ window.meRenderTeamTab = function(teamArray) {
           <div class="me-kpi-label">Production Group</div>
           <div class="me-kpi-month">h/month</div>
         </div>
-        <div class="me-kpi" style="border-left: 4px solid var(--teal); cursor: pointer;" onclick="meSetTab('holidays')">
+        <div class="me-kpi" style="border-left: 4px solid var(--teal); cursor: pointer;" data-cap-action="cap-team-holidays">
           <div class="me-kpi-value">${uniqueHolidayKeysThisMonth.size}</div>
           <div class="me-kpi-label">Holidays This Month</div>
           <div class="me-kpi-month">${monthLabel}</div>
@@ -104,13 +104,13 @@ window.meRenderTeamTab = function(teamArray) {
               <tbody>
                 ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
                   <div style="color:var(--muted);margin-bottom:12px">No ${isPmContext ? 'managers' : 'engineers'} added yet</div>
-                  <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('${isPmContext ? 'New PM Manager' : 'New Engineer'}', ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team');">＋ Add First ${isPmContext ? 'Manager' : 'Engineer'}</button>
+                  <button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add First ${isPmContext ? 'Manager' : 'Engineer'}</button>
                 </div></td></tr>`}
               </tbody>
             </table>
           </div>
           <div class="me-add-row">
-            <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('${isPmContext ? 'New PM Manager' : 'New Engineer'}', ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team');">＋ Add ${isPmContext ? 'Manager' : 'Engineer'}</button>
+            <button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add ${isPmContext ? 'Manager' : 'Engineer'}</button>
           </div>
         </div>
       </div>

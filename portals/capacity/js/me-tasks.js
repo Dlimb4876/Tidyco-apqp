@@ -182,16 +182,16 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
 
     rows += `
       <tr class="me-task-row ${rowUrgencyClass}" data-task-idx="${taskIndex}">
-        <td><input value="${esc(task.name)}" placeholder="new task" onchange="meDataUpdateTask(${taskIndex}, 'name', this.value); ${debouncedSaveFunc}();"></td>
-        <td><select onchange="meDataUpdateTask(${taskIndex}, 'category', this.value); ${debouncedSaveFunc}();">${catOpts}</select></td>
-        <td><select onchange="meDataUpdateTask(${taskIndex}, 'assigneeId', this.value); ${debouncedSaveFunc}();">${memOpts}</select></td>
-        <td><select onchange="meDataUpdateTask(${taskIndex}, 'productId', this.value); ${debouncedSaveFunc}();">${prodOpts}</select></td>
-        <td><input type="date" value="${task.startDate || ''}" onblur="meDataUpdateTask(${taskIndex}, 'startDate', this.value); ${debouncedSaveFunc}();"></td>
-        <td><input type="date" value="${task.endDate || ''}" onblur="meDataUpdateTask(${taskIndex}, 'endDate', this.value); ${debouncedSaveFunc}();"></td>
-        <td><select onchange="meDataUpdateTask(${taskIndex}, 'status', this.value); ${debouncedSaveFunc}(); ${setTabFunc}('tasks');">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
-        <td><input type="number" value="${task.totalHours || 0}" step="0.5" onchange="meDataUpdateTask(${taskIndex}, 'totalHours', this.value); ${debouncedSaveFunc}();"></td>
+        <td><input value="${esc(task.name)}" placeholder="new task" data-cap-action="cap-task-upd" data-field="name"></td>
+        <td><select data-cap-action="cap-task-upd" data-field="category">${catOpts}</select></td>
+        <td><select data-cap-action="cap-task-upd" data-field="assigneeId">${memOpts}</select></td>
+        <td><select data-cap-action="cap-task-upd" data-field="productId">${prodOpts}</select></td>
+        <td><input type="date" value="${task.startDate || ''}" data-cap-action="cap-task-upd" data-field="startDate"></td>
+        <td><input type="date" value="${task.endDate || ''}" data-cap-action="cap-task-upd" data-field="endDate"></td>
+        <td><select data-cap-action="cap-task-status-upd">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
+        <td><input type="number" value="${task.totalHours || 0}" step="0.5" data-cap-action="cap-task-upd" data-field="totalHours"></td>
         <td style="text-align: center;">
-          <button class="me-del-btn" onclick="if(confirm('Delete task?')) { meDataDeleteTask(${taskIndex}); meOnSave(); ${setTabFunc}('tasks'); }">✕</button>
+          <button class="me-del-btn" data-cap-action="cap-task-del">✕</button>
         </td>
       </tr>`;
   });
@@ -249,59 +249,59 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
           <div class="me-filters" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
             <div class="filter-chip">
               <input type="text" class="me-filter-input" placeholder="🔍 Search tasks..." value="${esc(currentFilters.search || '')}"
-                oninput="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.search = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+                data-cap-action="cap-task-search"
                 style="flex:1;min-width:180px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
-              ${currentFilters.search ? `<button class="filter-clear" onclick="${filterStateVar}.search=''; document.querySelector('.me-filter-input').value=''; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');" title="Clear search">×</button>` : ''}
+              ${currentFilters.search ? `<button class="filter-clear" data-cap-action="cap-task-clear-search" title="Clear search">×</button>` : ''}
             </div>
             <div class="filter-chip">
-              <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.category = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+              <select class="me-filter-select" data-cap-action="cap-task-filter-category"
                 style="min-width:130px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
                 ${catOpts}
               </select>
-              ${currentFilters.category && currentFilters.category !== 'all' ? `<button class="filter-clear" onclick="${filterStateVar}.category='all'; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');" title="Clear category filter">×</button>` : ''}
+              ${currentFilters.category && currentFilters.category !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-category" title="Clear category filter">×</button>` : ''}
             </div>
             <div class="filter-chip">
-              <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.assignee = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+              <select class="me-filter-select" data-cap-action="cap-task-filter-assignee"
                 style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
                 ${assigneeOpts}
               </select>
-              ${currentFilters.assignee && currentFilters.assignee !== 'all' ? `<button class="filter-clear" onclick="${filterStateVar}.assignee='all'; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');" title="Clear assignee filter">×</button>` : ''}
+              ${currentFilters.assignee && currentFilters.assignee !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-assignee" title="Clear assignee filter">×</button>` : ''}
             </div>
             <div class="filter-chip">
-              <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.product = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+              <select class="me-filter-select" data-cap-action="cap-task-filter-product"
                 style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
                 ${productOpts}
               </select>
-              ${currentFilters.product && currentFilters.product !== 'all' ? `<button class="filter-clear" onclick="${filterStateVar}.product='all'; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');" title="Clear product filter">×</button>` : ''}
+              ${currentFilters.product && currentFilters.product !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-product" title="Clear product filter">×</button>` : ''}
             </div>
-            <button class="btn ${currentFilters.hideCompleted ? 'btn-primary' : 'btn-ghost'} btn-sm" onclick="${filterStateVar}.hideCompleted = !${filterStateVar}.hideCompleted; localStorage.setItem('${isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'}', ${filterStateVar}.hideCompleted); ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+            <button class="btn ${currentFilters.hideCompleted ? 'btn-primary' : 'btn-ghost'} btn-sm" data-cap-action="cap-task-toggle-hide-completed"
               style="padding:6px 10px;font-size:13px;" title="Toggle completed tasks">${currentFilters.hideCompleted ? '✓ Hide Completed' : '○ Show All'}</button>
-            <button class="btn btn-ghost btn-sm" onclick="${filterStateVar} = {search:'', category:'all', assignee:'all', product:'all', hideCompleted:${isPM ? 'window.pmTasksFilters.hideCompleted' : 'window.meTasksFilters.hideCompleted'}}; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+            <button class="btn btn-ghost btn-sm" data-cap-action="cap-task-clear-all-filters"
               style="padding:6px 10px;font-size:13px;" title="Clear all filters">Clear</button>
           </div>
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
-              <th style="width:150px;cursor:pointer;" onclick="meTasksSortBy('name', ${isPM})" title="Sort by name">${meGetSortIcon('name', isPM)} Task Name</th>
-              <th style="width:110px;cursor:pointer;" onclick="meTasksSortBy('category', ${isPM})" title="Sort by category">${meGetSortIcon('category', isPM)} Category</th>
-              <th style="width:130px;cursor:pointer;" onclick="meTasksSortBy('assignee', ${isPM})" title="Sort by assignee">${meGetSortIcon('assignee', isPM)} Assignee</th>
-              <th style="width:130px;cursor:pointer;" onclick="meTasksSortBy('product', ${isPM})" title="Sort by product">${meGetSortIcon('product', isPM)} Product</th>
-              <th style="width:110px;cursor:pointer;" onclick="meTasksSortBy('startDate', ${isPM})" title="Sort by start date">${meGetSortIcon('startDate', isPM)} Start Date</th>
-              <th style="width:110px;cursor:pointer;" onclick="meTasksSortBy('endDate', ${isPM})" title="Sort by end date">${meGetSortIcon('endDate', isPM)} End Date</th>
-              <th style="width:120px;cursor:pointer;" onclick="meTasksSortBy('status', ${isPM})" title="Sort by status">${meGetSortIcon('status', isPM)} Status</th>
-              <th style="width:80px;cursor:pointer;" onclick="meTasksSortBy('hours', ${isPM})" title="Sort by hours">${meGetSortIcon('hours', isPM)} Hours</th>
+              <th style="width:150px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">${meGetSortIcon('name', isPM)} Task Name</th>
+              <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">${meGetSortIcon('category', isPM)} Category</th>
+              <th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="assignee" title="Sort by assignee">${meGetSortIcon('assignee', isPM)} Assignee</th>
+              <th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${meGetSortIcon('product', isPM)} Product</th>
+              <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">${meGetSortIcon('startDate', isPM)} Start Date</th>
+              <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">${meGetSortIcon('endDate', isPM)} End Date</th>
+              <th style="width:120px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">${meGetSortIcon('status', isPM)} Status</th>
+              <th style="width:80px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="hours" title="Sort by hours">${meGetSortIcon('hours', isPM)} Hours</th>
               <th style="width:60px"></th>
             </tr></thead>
             <tbody>
               ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
                   <div style="color:var(--muted);margin-bottom:12px">No tasks match the current filters</div>
-                  <button class="btn btn-primary btn-sm" onclick="meAddDefaultTask();">＋ Add Task</button>
+                  <button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>
                 </div></td></tr>`}
             </tbody>
           </table>
         </div>
         <div class="me-add-row">
-          <button class="btn btn-primary btn-sm" onclick="meAddDefaultTask();">＋ Add Task</button>
+          <button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>
         </div>
       </div>
     </div>

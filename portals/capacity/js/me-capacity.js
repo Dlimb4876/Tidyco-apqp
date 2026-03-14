@@ -22,10 +22,10 @@ window.renderMeCapacity = function() {
   }
 
   const html = `
-    <div class="me-shell">
+    <div class="me-shell" data-cap-context="me">
       <div class="me-topbar">
         <div class="me-topbar-left">
-          <button class="btn btn-ghost btn-sm" onclick="setCapacityTab('root')">← Back</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-back">← Back</button>
           <div>
             <div class="me-topbar-title">ME Load Capacity</div>
             <div class="me-topbar-sub">Manufacturing Engineering · Man-hours planning</div>
@@ -34,12 +34,12 @@ window.renderMeCapacity = function() {
       </div>
 
       <div class="me-nav">
-        <button class="me-nav-btn ${meTab === 'chart' ? 'active' : ''}" data-tab="chart" onclick="meSetTab('chart')">📊 Capacity Chart</button>
-        <button class="me-nav-btn ${meTab === 'team' ? 'active' : ''}" data-tab="team" onclick="meSetTab('team')">👷 Team</button>
-        <button class="me-nav-btn ${meTab === 'tasks' ? 'active' : ''}" data-tab="tasks" onclick="meSetTab('tasks')">📋 Tasks</button>
-        <button class="me-nav-btn ${meTab === 'products' ? 'active' : ''}" data-tab="products" onclick="meSetTab('products')">🚂 Product Support</button>
-        <button class="me-nav-btn ${meTab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" onclick="meSetTab('product-taskload')">📦 Product Load</button>
-        <button class="me-nav-btn ${meTab === 'holidays' ? 'active' : ''}" data-tab="holidays" onclick="meSetTab('holidays')">🏖️ Holiday Planner</button>
+        <button class="me-nav-btn ${meTab === 'chart' ? 'active' : ''}" data-tab="chart" data-cap-action="cap-me-set-tab">📊 Capacity Chart</button>
+        <button class="me-nav-btn ${meTab === 'team' ? 'active' : ''}" data-tab="team" data-cap-action="cap-me-set-tab">👷 Team</button>
+        <button class="me-nav-btn ${meTab === 'tasks' ? 'active' : ''}" data-tab="tasks" data-cap-action="cap-me-set-tab">📋 Tasks</button>
+        <button class="me-nav-btn ${meTab === 'products' ? 'active' : ''}" data-tab="products" data-cap-action="cap-me-set-tab">🚂 Product Support</button>
+        <button class="me-nav-btn ${meTab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" data-cap-action="cap-me-set-tab">📦 Product Load</button>
+        <button class="me-nav-btn ${meTab === 'holidays' ? 'active' : ''}" data-tab="holidays" data-cap-action="cap-me-set-tab">🏖️ Holiday Planner</button>
       </div>
 
       <div class="me-body" id="meBody">

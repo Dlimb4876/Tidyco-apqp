@@ -28,10 +28,10 @@ window.meRenderHeatmapPanel = function(monthKey) {
 
     <!-- Drill-down modal -->
     <div id="meDetailModal" class="me-detail-modal" style="display:none;">
-      <div class="me-detail-modal-overlay" onclick="meCloseHeatmapDetail()"></div>
+      <div class="me-detail-modal-overlay" data-cap-action="cap-me-heatmap-close"></div>
       <div class="me-detail-modal-content">
         <div class="me-detail-header">
-          <button class="btn btn-ghost btn-sm" onclick="meCloseHeatmapDetail()">✕</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-heatmap-close">✕</button>
           <div>
             <div class="me-detail-title" id="meDetailTitle">Person Name · Week</div>
             <div class="me-detail-subtitle" id="meDetailSubtitle">Capacity & Tasks</div>
@@ -97,7 +97,10 @@ window.meDrawHeatmapNow = function() {
 
       html += `
         <div class="${cellClass}"
-             onclick="meOpenHeatmapDetail('${person.id}', '${start}', '${end}')"
+             data-cap-action="cap-me-heatmap-open"
+             data-member-id="${person.id}"
+             data-start="${start}"
+             data-end="${end}"
              title="${person.name}: ${util}% (${data.demand.toFixed(1)}h / ${data.capacity.toFixed(1)}h)">
           <div class="me-heatmap-cell-value">${util}%</div>
         </div>

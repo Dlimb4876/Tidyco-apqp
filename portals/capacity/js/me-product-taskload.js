@@ -259,18 +259,21 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
               type="text"
               placeholder="Filter by product"
               value="${esc(state.search)}"
-              oninput="meProductLoadSetSearch(this.value, '${department}')"
+              data-cap-action="cap-product-load-search"
+              data-dept="${department}"
               style="min-width:220px;flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
             >
             <select
-              onchange="meProductLoadSetFamilyFilter(this.value, '${department}')"
+              data-cap-action="cap-product-load-family-filter"
+              data-dept="${department}"
               style="min-width:170px;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
             >
               <option value="all" ${state.family === 'all' ? 'selected' : ''}>All families</option>
               ${familyOptions.map(label => `<option value="${esc(label)}" ${state.family === label ? 'selected' : ''}>${esc(label)}</option>`).join('')}
             </select>
             <select
-              onchange="meProductLoadSetSort(this.value, '${department}')"
+              data-cap-action="cap-product-load-sort"
+              data-dept="${department}"
               style="min-width:170px;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
             >
               <option value="total" ${state.sortBy === 'total' ? 'selected' : ''}>Sort: Task Demand</option>
@@ -279,10 +282,10 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
               <option value="family" ${state.sortBy === 'family' ? 'selected' : ''}>Sort: Family</option>
               <option value="product" ${state.sortBy === 'product' ? 'selected' : ''}>Sort: Product</option>
             </select>
-            <button class="btn btn-ghost btn-sm" onclick="meProductLoadToggleSortDir('${department}')" title="Toggle sort direction">
+            <button class="btn btn-ghost btn-sm" data-cap-action="cap-product-load-sort-dir" data-dept="${department}" title="Toggle sort direction">
               ${state.sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
             </button>
-            <button class="btn btn-ghost btn-sm" onclick="meProductLoadClearFilters('${department}')">Clear</button>
+            <button class="btn btn-ghost btn-sm" data-cap-action="cap-product-load-clear-filters" data-dept="${department}">Clear</button>
           </div>
           <div class="me-tbl-wrap">
             <table class="me-tbl">

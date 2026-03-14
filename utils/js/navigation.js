@@ -272,8 +272,11 @@ function render() {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (typeof meDrawChartNow === 'function') meDrawChartNow();
+          if (typeof capacityEvents?.setup === 'function') capacityEvents.setup();
         });
       });
+    } else {
+      if (typeof capacityEvents?.setup === 'function') capacityEvents.setup();
     }
     return;
   }

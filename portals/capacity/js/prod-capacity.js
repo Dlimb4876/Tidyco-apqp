@@ -31,7 +31,7 @@ function renderProdCapacity() {
   ];
 
   const navBtns = tabs.map(t => `
-    <button class="pc-nav-btn ${prodCapTab === t.id ? 'active' : ''}" onclick="setProdCapTab('${t.id}')">
+    <button class="pc-nav-btn ${prodCapTab === t.id ? 'active' : ''}" data-cap-action="cap-prod-set-tab" data-tab="${t.id}">
       ${t.icon} ${t.label}
     </button>`).join('');
 
@@ -40,14 +40,14 @@ function renderProdCapacity() {
       <!-- Top bar -->
       <div class="pc-topbar">
         <div class="pc-topbar-left">
-          <button class="btn btn-ghost btn-sm" onclick="setCapacityTab('root')">← Back</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-back">← Back</button>
           <div>
             <div class="pc-topbar-title">Production Load Capacity</div>
             <div class="pc-topbar-sub">Schedule-driven capacity plan · ${(prodState?.batches||[]).length} batches · ${(prodState?.products||[]).filter(p=>p.status==='active').length} active products</div>
           </div>
         </div>
         <div class="pc-topbar-actions">
-          <button class="btn btn-ghost btn-sm" onclick="navigate('production');setProductionTab('scheduling')">↗ Open Schedule</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-open-schedule">↗ Open Schedule</button>
         </div>
       </div>
 

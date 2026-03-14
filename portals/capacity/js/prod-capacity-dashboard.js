@@ -72,10 +72,10 @@ function renderProdCapDashboard() {
 
       <!-- Perpetual Window Controls -->
       <div class="pc-window-controls">
-        <button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('prev')" title="View previous month">← Previous</button>
+        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>
         <div class="pc-window-label">${offsetLabel}</div>
-        <button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('next')" title="View next month">Next →</button>
-        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" onclick="prodCapResetMonthOffset()" title="Reset to current month">Reset</button>` : ''}
+        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
+        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
       </div>
 
       <!-- KPI Row -->
