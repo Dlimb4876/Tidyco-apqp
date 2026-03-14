@@ -123,14 +123,22 @@ portals/product-development/
 ### Modified Files
 
 ```
+portals/product-development/product-management/js/
+├── products-data.js                 (MODIFY) Add status change hook for "Tender"
+└── products.js                      (MINOR) Optional: "Create NPI Project" button on product row
+
 portals/product-development/npi/js/
 ├── npi.js                           (MODIFY) Add npi.gates namespace
 ├── gates.js                         (MODIFY) Render selected questions only
-├── dashboard.js                     (MODIFY) Add "Edit Gate Questions" button to project
+├── dashboard.js                     (MODIFY) Accept product context; add "Edit Gate Questions" button
 └── npi-data.js                      (MODIFY) Add gate selection mutation functions
 
+portals/product-development/js/
+├── family-gates-data.js             (NEW)
+└── family-gates-manager.js          (NEW)
+
 core/js/
-├── state.js                         (MODIFY) Add default fallback gate selection logic
+├── state.js                         (MODIFY) Add gate state variables and helper functions
 └── app.js                           (MODIFY) Initialize family gate templates on launch
 
 index.html                           (MODIFY) Add new script tags in correct load order
@@ -152,10 +160,38 @@ index.html                           (MODIFY) Add new script tags in correct loa
 4. Subscribe to real-time changes   (NEW: family_gate_templates channel)
 ```
 
+### Trigger Point: Product Status → "Tender"
+
+When a product in **Product Management** portal has status changed to **"Tender"**, the system should:
+
+```
+1. User: Product Management portal → Edit product
+2. User: Changes status from "—" or "Production" to "Tender"
+3. System: On save (productsDataUpdateProduct)
+   ├─ Saves product with status = "Tender"
+   ├─ Checks if `currentSection === 'product-development'`
+   ├─ If yes, triggers: `productTenderStatusTriggered(productId)`
+4. productTenderStatusTriggered():
+   ├─ Loads product data
+   ├─ Pre-populates new project modal with product info:
+   │  └─ name, customer, unit, family (if set)
+   ├─ Navigates to NPI → New Project modal
+   ├─ Project creation flow includes gate selection (Phase 3)
+5. User: Completes project creation with gate selection
+6. Project linked to product (via product_id or name matching)
+```
+
+**Integration Points:**
+- `products-data.js::productsDataUpdateProduct()` — Add status change hook
+- `dashboard.js::showNewProjectModal()` — Accept product data parameter
+- UI flow: Product detail → "Create NPI Project" button → New project modal with gates
+
+---
+
 ### Create New Project (with Tendering)
 
 ```
-1. User: "New Project" → showNewProjectModal()
+1. User: "New Project" → showNewProjectModal() [or triggered by product Tender status]
 2. User: Selects family (e.g., "HVAC")
 3. System: Auto-loads "HVAC" family gate templates
 4. User: Reviews suggested gate questions per gate (0–5)
@@ -272,7 +308,34 @@ function getDefaultGateSelection(familyId, gateNum) {
 
 ## 🛠️ Implementation Phases
 
-### Phase 1: Database & Data Layer ✅ (Foundation)
+### Phase 0: Integration Hook (Prerequisite)
+
+**Goal:** Add trigger point for when product status changes to "Tender"
+
+**Deliverables:**
+- [ ] Modify `products-data.js::productsDataUpdateProduct()`
+  - [ ] After successful update, check if `updates.status === 'Tender'`
+  - [ ] If true, call `productTenderStatusTriggered(productId, updates)` (new function)
+  - [ ] Pass product name, customer, family to NPI project creation context
+
+- [ ] Create helper function `productTenderStatusTriggered(productId, productData)`
+  - [ ] Store product context in global variable: `tenderedProductContext = { id, name, customer, family }`
+  - [ ] Navigate to NPI → New Project modal
+  - [ ] Modal pre-fills with product data (name, customer, family)
+  - [ ] Gate selection feature activates automatically (Phase 3)
+
+- [ ] Modify `dashboard.js::showNewProjectModal()`
+  - [ ] Accept optional `prefilledData` parameter from product context
+  - [ ] If `tenderedProductContext` exists, auto-select family and pre-fill fields
+  - [ ] Display: "Creating NPI Project for Product: <product name>" (header hint)
+
+**Effort:** 0.5–1 day
+**Dependencies:** None (minimal changes to existing code)
+**Testing:** Verify product status change triggers modal; pre-filled fields appear
+
+---
+
+### Phase 1: Database & Data Layer (Foundation)
 
 **Goal:** Set up database, data loading, real-time sync
 
@@ -292,7 +355,7 @@ function getDefaultGateSelection(familyId, gateNum) {
 - [ ] Add script tags to `index.html`
 
 **Effort:** 2–3 days
-**Dependencies:** None (new feature)
+**Dependencies:** Phase 0 (product tender context)
 **Testing:** Unit tests for data functions; Supabase policies verified
 
 ---
@@ -332,7 +395,7 @@ function getDefaultGateSelection(familyId, gateNum) {
 
 ---
 
-### Phase 3: Project Gate Question Selector ✅ (Per-Project Customization)
+### Phase 3: Project Gate Question Selector (Per-Project Customization)
 
 **Goal:** Allow projects to select which family gate questions apply
 
@@ -344,13 +407,15 @@ function getDefaultGateSelection(familyId, gateNum) {
   - [ ] Option: "Customize by gate" (manual selection)
   - [ ] Load from `familyGatesGetGroupedByGate(familyId)`
   - [ ] Store in `gate_selections` on project creation
+  - [ ] **Integration:** If `tenderedProductContext` exists, auto-skip to gate selection (don't ask family, use from product)
 
 - [ ] Create `npi-gates-editor.js` module
-  - [ ] `renderGateQuestionSelector()` — The modal UI
+  - [ ] `renderGateQuestionSelector(projectData = null)` — The modal UI
   - [ ] `renderGateSelectorTab(gateNum, templateQuestions)` — One gate's tab
   - [ ] Checkbox list for each gate (0–5)
   - [ ] Preview gate progress: "X selected from Y total"
   - [ ] Buttons: "Apply Defaults" (reset to family), "Customize", "Save"
+  - [ ] **Integration:** If called from product tender trigger, show: "Product: <name> (Tendered)"
 
 - [ ] Add **Edit Gate Questions** feature to project dashboard
   - [ ] New button/action in project header: "⚙ Edit Gate Questions"
@@ -361,6 +426,7 @@ function getDefaultGateSelection(familyId, gateNum) {
 - [ ] Modify `dashboard.js::newProgTemplate()`
   - [ ] Accept `gateSelections` parameter
   - [ ] Initialize `gates` array with selections
+  - [ ] Accept `prefilledData` from product context (`tenderedProductContext`)
 
 **Styling:**
 - Modal: 90vw max-width on mobile, 500px on desktop
@@ -369,8 +435,8 @@ function getDefaultGateSelection(familyId, gateNum) {
 - "X selected / Y total" per gate
 
 **Effort:** 3–4 days
-**Dependencies:** Phase 1 (data), Phase 2 (UI patterns)
-**Testing:** Modal state, selection persistence, default loading
+**Dependencies:** Phase 0 (product context), Phase 1 (data), Phase 2 (UI patterns)
+**Testing:** Modal state, selection persistence, default loading, product context pre-fill
 
 ---
 
@@ -717,6 +783,53 @@ describe('NPI Gate Tendering', () => {
 
 ---
 
+## 🔗 Product-to-NPI Integration
+
+### Tender Status Workflow
+
+The NPI Gate Tendering feature is **triggered by product status change**:
+
+```
+Product Management Portal
+    ↓
+    User edits product → Status = "Tender"
+    ↓
+    productsDataUpdateProduct(productId, {status: "Tender"})
+    ↓
+    Hook: productTenderStatusTriggered(productId, productData)
+    ↓
+    Global Context: tenderedProductContext = {id, name, customer, family}
+    ↓
+    Navigate → NPI Portal → New Project Modal
+    ↓
+    Modal pre-fills: name, customer, family (from product)
+    ↓
+    Gate Selection Step: User picks which gate questions apply
+    ↓
+    Project Created with gate_selections saved
+    ↓
+    Gates display only selected questions throughout project lifecycle
+```
+
+### Data Linkage
+
+**Option A: Implicit Linkage (Recommended)**
+- Product name matches NPI project name
+- Link maintained at UI level only
+- No database foreign key needed
+- Simpler, fewer schema changes
+
+**Option B: Explicit Linkage (Alternative)**
+- Add column to `programmes` table: `product_id UUID`
+- FK reference to `products` table
+- Enables "Create NPI Project" button on product row
+- Richer querying (e.g., "show all NPI projects for product")
+- Trade-off: More complex schema
+
+**Decision:** Start with Option A (implicit). If needed, Option B can be added in Phase 8.
+
+---
+
 ## 🔗 Key Architectural Decisions
 
 ### 1. Why JSON Blob for `gate_selections` instead of Normalized Table?
@@ -822,6 +935,14 @@ gate_selections["0"] = [
 
 ## 📋 Acceptance Criteria
 
+### For Phase 0 (Integration Hook)
+- [ ] Product status change to "Tender" is captured
+- [ ] `productTenderStatusTriggered()` function called on status change
+- [ ] Global `tenderedProductContext` populated with product data (id, name, customer, family)
+- [ ] New Project modal opens automatically with pre-filled fields
+- [ ] Modal shows hint: "Creating NPI Project for Product: <name> (Tendered)"
+- [ ] Existing NPI project creation flow still works (no breaking changes)
+
 ### For Phase 1 (Database & Data Layer)
 - [ ] Supabase table `family_gate_templates` created with correct schema
 - [ ] RLS policies enforce user isolation
@@ -872,9 +993,54 @@ gate_selections["0"] = [
 ## 🎯 Next Steps
 
 1. **Immediate:** Review this plan with team; adjust priorities
-2. **Phase 1 Start:** Create database schema and data layer
-3. **Weekly Check-ins:** Review phase progress; adjust as needed
-4. **Final Review:** Team walkthrough before production launch
+2. **Phase 0 Start:** Implement product tender status trigger (minimal changes, fast)
+3. **Phase 1 Start:** Create database schema and data layer
+4. **Weekly Check-ins:** Review phase progress; adjust as needed
+5. **Phase 2–7:** Follow implementation phases sequentially
+6. **Final Review:** Team walkthrough before production launch
+
+---
+
+## 🗺️ Workflow Overview (End-to-End)
+
+```
+PRODUCT MANAGER
+    ↓
+    Creates new product in Product Management
+    • Name: "HVAC Cooling Unit Pro"
+    • Customer: "Acme Corp"
+    • Family: "HVAC Systems"
+    • Status: "Tender" ← TRIGGER
+    ↓
+SYSTEM RESPONSE (Phase 0)
+    • Opens NPI New Project modal
+    • Pre-fills: name, customer, family
+    • Shows: "Creating NPI Project for Product: HVAC Cooling Unit Pro (Tendered)"
+    ↓
+PROJECT MANAGER / ENGINEER
+    ↓
+    Sees gate question selector (Phase 3)
+    • Gate 0: Family templates loaded → 6 questions available
+    • User: Selects 6 (all apply to HVAC)
+    • Gate 1: 15 questions available → User selects 12
+    • ... (Gates 2–5)
+    ↓
+    Creates NPI project with gate_selections saved
+    ↓
+APQP PROCESS
+    ↓
+    Project gates display only selected questions (Phase 4)
+    • Gate 0: Shows 6 questions (not all possible)
+    • Team completes checks, signs off
+    • Only selected questions in audit trail
+    ↓
+    Project progresses through gates 0→5 normally
+    ↓
+COMPLETION
+    ↓
+    All gates signed off
+    Product moves from Tender → NPI → Production (manually updated in Product Management)
+```
 
 ---
 
