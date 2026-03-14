@@ -295,6 +295,7 @@ function exportJSON() {
   a.href = URL.createObjectURL(b);
   a.download = 'tidyco_apqp_' + new Date().toISOString().slice(0, 10) + '.json';
   a.click();
+  if (typeof showToast === 'function') showToast('Data exported', 'success', 3000);
 }
 
 function importJSON(e) {
@@ -304,11 +305,22 @@ function importJSON(e) {
     try {
       const d = JSON.parse(ev.target.result);
       if (d.programmes) {
+        if (!confirm(`Import ${d.programmes.length} programme(s)? This will overwrite current data.`)) {
+          e.target.value = '';
+          return;
+        }
         db = d;
         db.programmes = db.programmes.map(p => migrateprog(p));
         save(); initProgSelect(); navigate('home');
-      } else { alert('Invalid file'); }
-    } catch (x) { alert('Invalid JSON'); }
+        if (typeof showToast === 'function') showToast('Data imported successfully', 'success', 3000);
+      } else {
+        if (typeof showToast === 'function') showToast('Invalid backup file', 'error');
+        else alert('Invalid file');
+      }
+    } catch (x) {
+      if (typeof showToast === 'function') showToast('Invalid JSON file', 'error');
+      else alert('Invalid JSON');
+    }
   };
   r.readAsText(f);
   e.target.value = '';

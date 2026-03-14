@@ -54,6 +54,18 @@ describe('Product Management Event Delegation', () => {
     global.confirm = jest.fn(() => true);
     global.alert = jest.fn();
 
+    // Phase 2 QoL globals
+    global.BulkSelect = {
+      headerCell: () => '<th class="bulk-th"></th>',
+      rowCell: () => '<td class="bulk-td"></td>',
+      bind: jest.fn()
+    };
+    global.exportToCsv = jest.fn();
+    global.UndoManager = { add: jest.fn() };
+    global.initPreviewTooltips = jest.fn();
+    global.loadColWidths = jest.fn();
+    global.showToast = jest.fn();
+
     const script = fs.readFileSync(
       path.resolve(__dirname, '../portals/product-development/product-management/js/products.js'),
       'utf8'

@@ -104,8 +104,8 @@ body {
   background: rgba(255,255,255,0.14);
   border: 1px solid rgba(213, 231, 246, 0.45);
   color: #edf6ff;
-  font-size: 13px; font-weight: 500; padding: 6px 16px;
-  border-radius: 6px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 11px; font-weight: 500; padding: 5px 10px;
+  border-radius: 4px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
   transition: all .12s; white-space: nowrap;
   position: relative; z-index: 10;
 }
@@ -281,4 +281,111 @@ body {
 .coming-soon-content p {
   color: var(--muted);
   margin: 0;
+}
+
+/* ── Density Toggle CSS Properties ─────────────────────────── */
+:root,
+:root[data-density="normal"] {
+  --density-font: 14px;
+  --density-row-h: 40px;
+  --density-cell-py: 4px;
+  --density-cell-px: 7px;
+}
+:root[data-density="compact"] {
+  --density-font: 12px;
+  --density-row-h: 32px;
+  --density-cell-py: 2px;
+  --density-cell-px: 5px;
+  --table-cell-py: 2px;
+  --table-cell-px: 5px;
+  --table-cell-font-size: 12px;
+  --table-input-min-h: 24px;
+}
+:root[data-density="comfortable"] {
+  --density-font: 15px;
+  --density-row-h: 48px;
+  --density-cell-py: 6px;
+  --density-cell-px: 10px;
+  --table-cell-py: 6px;
+  --table-cell-px: 10px;
+  --table-cell-font-size: 14px;
+  --table-input-min-h: 32px;
+}
+
+/* ── Print Styles ───────────────────────────────────────────── */
+@media print {
+  /* Hide interactive chrome */
+  .topbar,
+  .back-btn,
+  .bug-report-btn,
+  .topbar-actions,
+  .tbtn,
+  button,
+  .btn,
+  .modal,
+  .toast-container,
+  .context-menu,
+  #bulkToolbar,
+  .sync-badge,
+  input[type="file"] {
+    display: none !important;
+  }
+
+  /* Clean page background */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+  }
+
+  .shell {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .main {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .section-inner { padding: 0 !important; }
+
+  /* Tables print well */
+  table {
+    page-break-inside: auto;
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  thead { display: table-header-group; }
+  tr    { page-break-inside: avoid; }
+  th, td {
+    border: 1px solid #999 !important;
+    padding: 5px 7px !important;
+  }
+
+  /* Cards and panels */
+  .card, .panel, .surface-shell {
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+
+  /* Print header */
+  body::before {
+    content: "Tidyco Operations Portal — " attr(data-section);
+    display: block;
+    font-size: 14pt;
+    font-weight: bold;
+    margin-bottom: 16pt;
+    border-bottom: 2pt solid #000;
+    padding-bottom: 8pt;
+  }
+
+  /* Show href for links */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #555;
+  }
 }

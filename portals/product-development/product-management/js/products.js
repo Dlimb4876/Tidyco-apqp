@@ -359,9 +359,11 @@ function renderProductsList() {
   });
 
   const html = `
+    <div id="bulkToolbar" data-context="products"></div>
     <div class="products-table-wrap">
-      <table class="prod-tbl products-inline-table" style="table-layout:auto;width:100%">
+      <table class="prod-tbl products-inline-table resizable" style="table-layout:auto;width:100%">
         <colgroup>
+          <col style="width:32px">
           <col style="min-width:200px">
           <col style="min-width:140px">
           <col style="min-width:140px">
@@ -375,14 +377,15 @@ function renderProductsList() {
         </colgroup>
       <thead>
         <tr>
-          <th>Product Name</th>
-          <th>Part Number</th>
-          <th>Family</th>
-          <th>Location</th>
-          <th>Customer</th>
+          ${BulkSelect.headerCell()}
+          <th>Product Name <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
+          <th>Part Number <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
+          <th>Family <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
+          <th>Location <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
+          <th>Customer <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
           <th class="ctr">Overhaul (hrs)</th>
           <th class="ctr">Turnaround (days)</th>
-          <th>Notes</th>
+          <th>Notes <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
           <th>Status</th>
           <th class="ctr">Actions</th>
         </tr>
@@ -390,6 +393,7 @@ function renderProductsList() {
       <tbody>
         <!-- New row -->
         <tr class="row-new" id="productsNewRow" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+          <td></td>
           <td><input class="cell-edit" id="pNew-name" placeholder="Product name"></td>
           <td><input class="cell-edit" id="pNew-partNumber" placeholder="Part number"></td>
           <td><select class="cell-edit" id="pNew-family">${buildFamilyOptions('')}</select></td>
@@ -404,12 +408,13 @@ function renderProductsList() {
           </td>
         </tr>
         ${filtered.length === 0 ? `
-          <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted)">No products found.</td></tr>
+          <tr><td colspan="11" style="text-align:center;padding:24px;color:var(--muted)">No products found.</td></tr>
         ` : filtered.map(p => {
           const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || '—') : '—';
           if (productsEditingId === p.id) {
             return `
-            <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+            <tr class="row-new" data-id="${esc(p.id)}" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+              <td></td>
               <td><input class="cell-edit" id="pEdit-name" value="${esc(p.name || '')}"></td>
               <td><input class="cell-edit" id="pEdit-partNumber" value="${esc(p.part_number || '')}"></td>
               <td><select class="cell-edit" id="pEdit-family">${buildFamilyOptions(p.family || '')}</select></td>
@@ -426,7 +431,8 @@ function renderProductsList() {
             </tr>`;
           }
           return `
-          <tr>
+          <tr data-id="${esc(p.id)}">
+            ${BulkSelect.rowCell()}
             <td>${esc(p.name)}</td>
             <td><strong>${esc(p.part_number || '')}</strong></td>
             <td>${esc(familyLabel)}</td>
@@ -434,7 +440,7 @@ function renderProductsList() {
             <td>${esc(p.customer || '')}</td>
             <td class="ctr">${(p.current_overhaul_hours || 0).toFixed(1)}</td>
             <td class="ctr">${p.turnaround_days ? Math.round(p.turnaround_days) : '—'}</td>
-            <td><div class="cell-display" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</div></td>
+            <td class="truncated-cell" data-full-content="${esc(p.notes || '')}" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
               <button class="btn-del" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
@@ -448,6 +454,29 @@ function renderProductsList() {
   `;
 
   container.innerHTML = html;
+
+  // Bind bulk-select handlers for products
+  BulkSelect.bind('products', {
+    onDelete: async (ids) => {
+      for (const id of ids) {
+        const p = productsDataGetAll().find(x => x.id === id);
+        if (p) await productsDataDeleteProduct(id);
+      }
+      renderProductsList();
+    },
+    onExport: (ids) => {
+      const rows = productsDataGetAll().filter(p => ids.includes(p.id));
+      exportToCsv(rows.map(p => ({
+        Name: p.name, 'Part Number': p.part_number, Customer: p.customer,
+        Status: p.status, 'Overhaul hrs': p.current_overhaul_hours, Notes: p.notes
+      })), 'products');
+    }
+  });
+
+  // Activate preview tooltips on truncated cells
+  if (typeof initPreviewTooltips === 'function') initPreviewTooltips(container);
+  // Load saved column widths
+  if (typeof loadColWidths === 'function') loadColWidths();
 }
 
 /**
@@ -542,12 +571,34 @@ function productsCancelEdit() {
 async function productsDeleteRow(productId, productName) {
   if (!confirm(`Delete product "${productName}"? This cannot be undone.`)) return;
   try {
-    await productsDataDeleteProduct(productId);
-    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
-    if (productsEditingId === productId) productsEditingId = null;
-    renderProductsList();
+    if (typeof UndoManager !== 'undefined') {
+      // Soft-delete with 5-second undo
+      const snapshot = productsDataGetAll().find(p => p.id === productId);
+      // Optimistic UI removal
+      if (productsEditingId === productId) productsEditingId = null;
+      // Remove row visually
+      const row = document.querySelector(`tr[data-id="${productId}"]`);
+      if (row) { row.classList.add('rt-removing'); setTimeout(() => row.remove(), 250); }
+      UndoManager.add(productName, async () => {
+        await productsDataDeleteProduct(productId);
+        if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+        renderProductsList();
+      }, async () => {
+        // Restore: re-add the snapshot
+        if (snapshot) {
+          await productsDataAddProduct(snapshot);
+        }
+        renderProductsList();
+      });
+    } else {
+      await productsDataDeleteProduct(productId);
+      if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+      if (productsEditingId === productId) productsEditingId = null;
+      renderProductsList();
+    }
   } catch (err) {
-    alert('Error deleting product: ' + err.message);
+    if (typeof showToast === 'function') showToast('Error deleting product: ' + err.message, 'error');
+    else alert('Error deleting product: ' + err.message);
   }
 }
 

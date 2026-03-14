@@ -17,6 +17,9 @@ if (!['active', 'all', 'completed'].includes(npiProjectsViewMode)) {
 let npiProjectsSearch = ''
 let npiProjectsFamilyFilter = 'all'
 let npiProjectsStatusFilter = 'all'
+let npiProjectsDateFrom = ''
+let npiProjectsDateTo = ''
+let npiAdvFilterOpen = false
 
 npi.dashboard.setProjectsViewMode = function(mode) {
   if (!['active', 'all', 'completed'].includes(mode)) return
@@ -45,8 +48,18 @@ npi.dashboard.clearProjectFilters = function() {
   npiProjectsSearch = ''
   npiProjectsFamilyFilter = 'all'
   npiProjectsStatusFilter = 'all'
+  npiProjectsDateFrom = ''
+  npiProjectsDateTo = ''
   render()
 }
+
+npi.dashboard.toggleAdvFilter = function() {
+  npiAdvFilterOpen = !npiAdvFilterOpen
+  render()
+}
+
+npi.dashboard.setDateFrom = function(v) { npiProjectsDateFrom = v || ''; render(); }
+npi.dashboard.setDateTo   = function(v) { npiProjectsDateTo   = v || ''; render(); }
 
 npi.dashboard.setDashTab = function(tab) {
   if (!['projects', 'abc-catalogue'].includes(tab)) return
@@ -175,6 +188,14 @@ npi.dashboard.renderProjects = function() {
       if (!haystack.includes(npiProjectsSearch)) return false
     }
 
+    // Date range filter (by product created_at if available, else skip)
+    if (npiProjectsDateFrom && product.created_at) {
+      if (new Date(product.created_at) < new Date(npiProjectsDateFrom)) return false
+    }
+    if (npiProjectsDateTo && product.created_at) {
+      if (new Date(product.created_at) > new Date(npiProjectsDateTo + 'T23:59:59')) return false
+    }
+
     return true
   })
 
@@ -236,7 +257,7 @@ npi.dashboard.renderProjects = function() {
     `<option value="__other__" ${npiProjectsFamilyFilter === '__other__' ? 'selected' : ''}>📋 Unassigned</option>`
   ].join('')
 
-  const hasActiveFilters = !!npiProjectsSearch || npiProjectsFamilyFilter !== 'all' || npiProjectsStatusFilter !== 'all'
+  const hasActiveFilters = !!npiProjectsSearch || npiProjectsFamilyFilter !== 'all' || npiProjectsStatusFilter !== 'all' || !!npiProjectsDateFrom || !!npiProjectsDateTo
 
   const programmeByProductId = new Map((db.programmes || []).filter(p => p.product_id).map(p => [p.product_id, p]))
 
@@ -287,8 +308,18 @@ npi.dashboard.renderProjects = function() {
           ${familyOptions}
         </select>
         <div class="npi-status-chips">${statusFilterButtons}</div>
-        ${hasActiveFilters ? `<button class="btn btn-ghost" onclick="npi.dashboard.clearProjectFilters()">Clear filters</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="npi.dashboard.toggleAdvFilter()" title="Advanced filters" style="white-space:nowrap">⚙️ Advanced${npiAdvFilterOpen ? ' ▴' : ' ▾'}</button>
+        ${hasActiveFilters ? `<button class="btn btn-ghost" onclick="npi.dashboard.clearProjectFilters()">✕ Clear</button>` : ''}
       </div>
+      ${npiAdvFilterOpen ? `
+      <div class="advanced-filters" style="margin:8px 0">
+        <div class="filter-row">
+          <label style="min-width:90px;font-weight:600;font-size:12px">Added From</label>
+          <input type="date" value="${esc(npiProjectsDateFrom)}" onchange="npi.dashboard.setDateFrom(this.value)" style="padding:5px 8px;border:1px solid var(--line);border-radius:4px;font-size:12px">
+          <label style="font-weight:600;font-size:12px">To</label>
+          <input type="date" value="${esc(npiProjectsDateTo)}" onchange="npi.dashboard.setDateTo(this.value)" style="padding:5px 8px;border:1px solid var(--line);border-radius:4px;font-size:12px">
+        </div>
+      </div>` : ''}
       <div class="npi-col-headers" style="grid-template-columns:repeat(${STATUSES.length}, minmax(0, 1fr))">${colHeadersHTML}</div>`
 
   const renderLane = (famId, famLabel, famIcon, laneData) => {

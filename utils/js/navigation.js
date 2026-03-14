@@ -204,6 +204,63 @@ function setApqpTab(t) {
 }
 
 /**
+ * Builds and injects the breadcrumb trail in the topbar.
+ * Called automatically by render().
+ */
+function updateBreadcrumb() {
+  const container = document.getElementById('breadcrumb');
+  if (!container) return;
+  if (typeof esc !== 'function') return; // guard when helpers.js not loaded
+
+  const crumbs = [{ label: 'Hub', hash: '#s=hub' }];
+
+  if (currentSection && currentSection !== 'hub') {
+    const sectionNames = {
+      'capacity': 'Capacity',
+      'production': 'Production',
+      'product-development': 'Product Dev',
+      'productmgmt': 'Product Mgmt',
+      'operations': 'Operations',
+      'bugreports': 'Bug Reports',
+      'projects': 'Projects',
+      'project': 'Project',
+      'apqp': 'APQP',
+      'actions': 'Actions',
+      'risks': 'Risks',
+      'bom': 'BOM',
+      'timing': 'Timing'
+    };
+    const label = sectionNames[currentSection] || (currentSection.startsWith('gate_') ? 'Gate ' + currentSection.split('_')[1] : currentSection);
+    crumbs.push({ label, hash: `#s=${currentSection}` });
+  }
+
+  // Add sub-tab breadcrumb for capacity
+  if (currentSection === 'capacity' && capacityTab && capacityTab !== 'root') {
+    const tabNames = { me: 'ME Capacity', projects: 'PM Capacity', production: 'Prod Capacity' };
+    if (tabNames[capacityTab]) crumbs.push({ label: tabNames[capacityTab], hash: '#' });
+  }
+
+  // Add sub-tab breadcrumb for production
+  if (currentSection === 'production' && productionTab && productionTab !== 'root') {
+    const tabNames = { products: 'Products', scheduling: 'Scheduling', 'by-product': 'By Product', 'by-unit': 'By Unit' };
+    if (tabNames[productionTab]) crumbs.push({ label: tabNames[productionTab], hash: '#' });
+  }
+
+  // Add sub-tab breadcrumb for product-development
+  if (currentSection === 'product-development' && productDevelopmentTab && productDevelopmentTab !== 'root') {
+    const tabNames = { npi: 'NPI', 'product-management': 'Product Mgmt' };
+    if (tabNames[productDevelopmentTab]) crumbs.push({ label: tabNames[productDevelopmentTab], hash: '#' });
+  }
+
+  container.innerHTML = crumbs.map((c, i) => {
+    if (i === crumbs.length - 1) {
+      return `<span class="breadcrumb-current">${esc(c.label)}</span>`;
+    }
+    return `<a onclick="window.location.hash='${c.hash}';return false;" href="${c.hash}">${esc(c.label)}</a>`;
+  }).join('<span class="breadcrumb-sep"> › </span>');
+}
+
+/**
  * Main UI render switchboard - clears and repaints #mainContent
  * Routes to appropriate render function based on currentSection
  * 
@@ -214,6 +271,9 @@ function setApqpTab(t) {
  * 4. Post-render hooks (auto-resize textareas)
  */
 function render() {
+  // Update breadcrumb and print data attribute on every render
+  updateBreadcrumb();
+  document.body.setAttribute('data-section', SECTION_LABELS[currentSection] || currentSection || 'Hub');
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = npi.dashboard.renderProjects(); return; }
   if (currentSection === 'product-development') {

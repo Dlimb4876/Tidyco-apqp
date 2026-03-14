@@ -78,15 +78,22 @@
         <span class="brand-sub">Operations Portal</span>
       </div>
       <button class="back-btn" id="returnHubBtn" style="display:none" onclick="navigateBack()">← Return to Portal</button>
+      <button class="bug-report-btn" id="bugReportBtn" onclick="navigate('bugreports')">🪳 Bug</button>
     </div>
     <div class="topbar-center">
-      <button class="bug-report-btn" onclick="navigate('bugreports')">🪳 Report a Bug</button>
+      <div class="breadcrumb" id="breadcrumb"></div>
     </div>
     <div class="topbar-actions">
       <span class="sync-badge" id="syncBadge">● saved</span>
-      <button class="tbtn tbtn-ghost" onclick="exportJSON()" style="display:none">⬇ Export</button>
-      <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()" style="display:none">⬆ Import</button>
+      <button class="tbtn tbtn-ghost" onclick="exportJSON()" title="Export data backup">⬇ Export</button>
+      <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()" title="Import data backup">⬆ Import</button>
       <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
+      <button class="tbtn tbtn-ghost" onclick="window.print()" title="Print current view">🖨️</button>
+      <select class="density-select" id="densityToggle" title="View density" onchange="setDensity(this.value)">
+        <option value="compact">Compact</option>
+        <option value="normal" selected>Normal</option>
+        <option value="comfortable">Comfortable</option>
+      </select>
       <button class="tbtn tbtn-ghost" onclick="doLogout()" title="Sign out" style="margin-left:4px">⏻</button>
     </div>
   </div>
@@ -94,6 +101,8 @@
   <!-- MAIN CONTENT -->
   <div class="main" id="mainContent"></div>
 
+  <!-- Toast container (populated dynamically by showToast()) -->
+  <div id="toastContainer" class="toast-container"></div>
 
 </div><!-- end appShell -->
 

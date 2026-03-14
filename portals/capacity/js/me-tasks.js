@@ -181,7 +181,8 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
     const debouncedSaveFunc = isPM ? 'pmDebouncedSave' : 'meDebouncedSave';
 
     rows += `
-      <tr class="me-task-row ${rowUrgencyClass}" data-task-idx="${taskIndex}">
+      <tr class="me-task-row ${rowUrgencyClass}" data-task-idx="${taskIndex}" data-id="${esc(task.id || String(taskIndex))}">
+        ${BulkSelect.rowCell()}
         <td><input value="${esc(task.name)}" placeholder="new task" onchange="meDataUpdateTask(${taskIndex}, 'name', this.value); ${debouncedSaveFunc}();"></td>
         <td><select onchange="meDataUpdateTask(${taskIndex}, 'category', this.value); ${debouncedSaveFunc}();">${catOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${taskIndex}, 'assigneeId', this.value); ${debouncedSaveFunc}();">${memOpts}</select></td>
@@ -191,7 +192,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
         <td><select onchange="meDataUpdateTask(${taskIndex}, 'status', this.value); ${debouncedSaveFunc}(); ${setTabFunc}('tasks');">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
         <td><input type="number" value="${task.totalHours || 0}" step="0.5" onchange="meDataUpdateTask(${taskIndex}, 'totalHours', this.value); ${debouncedSaveFunc}();"></td>
         <td style="text-align: center;">
-          <button class="me-del-btn" onclick="if(confirm('Delete task?')) { meDataDeleteTask(${taskIndex}); meOnSave(); ${setTabFunc}('tasks'); }">✕</button>
+          <button class="me-del-btn" data-action="delete" onclick="if(confirm('Delete task?')) { meDataDeleteTask(${taskIndex}); meOnSave(); ${setTabFunc}('tasks'); }">✕</button>
         </td>
       </tr>`;
   });
@@ -268,12 +269,13 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
               style="padding:6px 10px;font-size:13px;" title="Clear filters">Clear</button>
           </div>
         <div class="me-tbl-wrap">
-          <table class="me-tbl">
+          <table class="me-tbl resizable">
             <thead><tr>
-              <th style="width:150px;cursor:pointer;" onclick="meTasksSortBy('name', ${isPM})" title="Sort by name">${meGetSortIcon('name', isPM)} Task Name</th>
-              <th style="width:110px;cursor:pointer;" onclick="meTasksSortBy('category', ${isPM})" title="Sort by category">${meGetSortIcon('category', isPM)} Category</th>
-              <th style="width:130px;cursor:pointer;" onclick="meTasksSortBy('assignee', ${isPM})" title="Sort by assignee">${meGetSortIcon('assignee', isPM)} Assignee</th>
-              <th style="width:130px;cursor:pointer;" onclick="meTasksSortBy('product', ${isPM})" title="Sort by product">${meGetSortIcon('product', isPM)} Product</th>
+              <th style="width:32px;text-align:center"><input type="checkbox" class="bulk-select-all" onchange="BulkSelect._toggleAll(this)" title="Select all"></th>
+              <th style="width:150px;cursor:pointer;" onclick="meTasksSortBy('name', ${isPM})" title="Sort by name">${meGetSortIcon('name', isPM)} Task Name <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
+              <th style="width:110px;cursor:pointer;" onclick="meTasksSortBy('category', ${isPM})" title="Sort by category">${meGetSortIcon('category', isPM)} Category <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
+              <th style="width:130px;cursor:pointer;" onclick="meTasksSortBy('assignee', ${isPM})" title="Sort by assignee">${meGetSortIcon('assignee', isPM)} Assignee <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
+              <th style="width:130px;cursor:pointer;" onclick="meTasksSortBy('product', ${isPM})" title="Sort by product">${meGetSortIcon('product', isPM)} Product <div class="resize-handle" onmousedown="startColResize(event,this)"></div></th>
               <th style="width:110px;cursor:pointer;" onclick="meTasksSortBy('startDate', ${isPM})" title="Sort by start date">${meGetSortIcon('startDate', isPM)} Start Date</th>
               <th style="width:110px;cursor:pointer;" onclick="meTasksSortBy('endDate', ${isPM})" title="Sort by end date">${meGetSortIcon('endDate', isPM)} End Date</th>
               <th style="width:120px;cursor:pointer;" onclick="meTasksSortBy('status', ${isPM})" title="Sort by status">${meGetSortIcon('status', isPM)} Status</th>
@@ -281,7 +283,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
               <th style="width:60px"></th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="9"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks match filters</div></td></tr>'}
+              ${rows || '<tr><td colspan="10"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks match filters</div></td></tr>'}
             </tbody>
           </table>
         </div>
