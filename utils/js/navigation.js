@@ -342,6 +342,9 @@ function render() {
     requestAnimationFrame(() => {
       autoResizeAll();
       if (typeof npi?.events?.setup === 'function') npi.events.setup();
+      // Phase 2: preview tooltips and column widths on any rendered table
+      if (typeof initPreviewTooltips === 'function') initPreviewTooltips(document.getElementById('mainContent'));
+      if (typeof loadColWidths === 'function') loadColWidths();
     });
   });
 }

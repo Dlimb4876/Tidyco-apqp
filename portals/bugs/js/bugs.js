@@ -219,7 +219,7 @@ function bugRowHTML(r, i) {
       : `<button class="btn btn-sm btn-ghost bugs-reopen-btn" onclick="bugApp.reopen('${esc(r.id)}')">Re-open</button>`);
 
   return `
-    <tr class="${isOpen ? '' : 'bug-row-closed'}">
+    <tr class="${isOpen ? '' : 'bug-row-closed'}" data-id="${esc(r.id)}">
       <td class="bugs-col-num bugs-muted">${i + 1}</td>
       <td class="bugs-col-by">${esc(r.raised_by)}</td>
       <td class="bugs-col-date bugs-muted">${date}</td>

@@ -68,6 +68,13 @@ export default [
         closeModal: 'readonly',
         emptyState: 'readonly',
         autoResizeAll: 'readonly',
+        showToast: 'readonly',
+        KeyboardShortcuts: 'readonly',
+        ContextMenu: 'readonly',
+        UndoManager: 'readonly',
+        BulkSelect: 'readonly',
+        exportToCsv: 'readonly',
+        preserveScrollDuringUpdate: 'readonly',
         // Utils (navigation.js)
         prog: 'readonly',
         render: 'readonly',
@@ -81,9 +88,16 @@ export default [
         initProgSelect: 'readonly',
         setSyncBadge: 'readonly',
         setProductDevelopmentTab: 'readonly',
+        updateBreadcrumb: 'readonly',
         sortedPfd: 'readonly',
         calcRPN: 'readonly',
         getWeekNumber: 'readonly',
+        // App globals (app.js)
+        setDensity: 'readonly',
+        loadDensity: 'readonly',
+        startColResize: 'readonly',
+        loadColWidths: 'readonly',
+        initPreviewTooltips: 'readonly',
         // npi.js namespace
         npi: 'writable',
         // Other portals that NPI calls cross-portal

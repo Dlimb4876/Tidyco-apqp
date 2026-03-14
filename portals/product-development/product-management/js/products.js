@@ -573,12 +573,15 @@ async function productsDeleteRow(productId, productName) {
   try {
     if (typeof UndoManager !== 'undefined') {
       // Soft-delete with 5-second undo
-      const snapshot = productsDataGetAll().find(p => p.id === productId);
+      const snapshot = JSON.parse(JSON.stringify(productsDataGetAll().find(p => p.id === productId) || null));
       // Optimistic UI removal
       if (productsEditingId === productId) productsEditingId = null;
       // Remove row visually
       const row = document.querySelector(`tr[data-id="${productId}"]`);
-      if (row) { row.classList.add('rt-removing'); setTimeout(() => row.remove(), 250); }
+      if (row) {
+        row.classList.add('rt-removing');
+        row.addEventListener('animationend', () => row.remove(), { once: true });
+      }
       UndoManager.add(productName, async () => {
         await productsDataDeleteProduct(productId);
         if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();

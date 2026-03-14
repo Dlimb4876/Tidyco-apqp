@@ -47,7 +47,11 @@ function _registerGlobalShortcuts() {
 
   // Escape — close open modal
   KeyboardShortcuts.register('escape', () => {
-    const modal = document.querySelector('.modal[style*="display: flex"], .modal[style*="display:flex"]');
+    // Find any modal that is currently visible (display is set to 'flex' or 'block' inline)
+    const modal = [...document.querySelectorAll('.modal')].find(m => {
+      const d = m.style.display;
+      return d && d !== 'none';
+    });
     if (modal && modal.id) closeModal(modal.id);
   }, 'Close modal / Cancel');
 }

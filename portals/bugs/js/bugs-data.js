@@ -10,7 +10,55 @@ window.bugDataManager = {
     editingId: null,
   },
 
-  _publishChange() {
+  _publishChange(options = {}) {
+    // Granular row-level update (2.11: Real-Time Granular Updates)
+    // When we know exactly which row changed and the type of change,
+    // update only that row instead of triggering a full render().
+    const { id, strategy } = options; // strategy: 'update' | 'insert' | 'delete'
+    if (id && strategy && typeof bugRowHTML === 'function' && !bugDataManager.state.editingId) {
+      const tbody = document.querySelector('.bugs-table tbody');
+      if (tbody) {
+        if (strategy === 'delete') {
+          const row = tbody.querySelector(`tr[data-id="${id}"]`);
+          if (row) {
+            row.classList.add('rt-removing');
+            row.addEventListener('animationend', () => row.remove(), { once: true });
+          }
+          return;
+        }
+        if (strategy === 'update') {
+          const row = tbody.querySelector(`tr[data-id="${id}"]`);
+          if (row) {
+            const idx = bugDataManager.state.reports.findIndex(r => r.id === id);
+            if (idx >= 0) {
+              const tempDiv = document.createElement('tbody');
+              tempDiv.innerHTML = bugRowHTML(bugDataManager.state.reports[idx], idx);
+              const newRow = tempDiv.firstElementChild;
+              if (newRow) { row.replaceWith(newRow); return; }
+            }
+          }
+        }
+        if (strategy === 'insert') {
+          const scrollTop = document.scrollingElement ? document.scrollingElement.scrollTop : 0;
+          const idx = bugDataManager.state.reports.findIndex(r => r.id === id);
+          if (idx >= 0) {
+            const tempDiv = document.createElement('tbody');
+            tempDiv.innerHTML = bugRowHTML(bugDataManager.state.reports[idx], idx);
+            const newRow = tempDiv.firstElementChild;
+            if (newRow) {
+              newRow.classList.add('rt-new');
+              tbody.insertBefore(newRow, tbody.firstChild);
+              // Restore scroll
+              requestAnimationFrame(() => {
+                if (document.scrollingElement) document.scrollingElement.scrollTop = scrollTop;
+              });
+              return;
+            }
+          }
+        }
+      }
+    }
+    // Fall back to full re-render via custom event
     document.dispatchEvent(new CustomEvent('bugDataChanged'));
   },
 
@@ -39,19 +87,19 @@ window.bugDataManager = {
       onInsert: (newReport) => {
         if (!this.state.reports.some(r => r.id === newReport.id)) {
           this.state.reports.unshift(newReport);
-          this._publishChange();
+          this._publishChange({ id: newReport.id, strategy: 'insert' });
         }
       },
       onUpdate: (updated) => {
         const idx = this.state.reports.findIndex(r => r.id === updated.id);
         if (idx >= 0) {
           this.state.reports[idx] = updated;
-          this._publishChange();
+          this._publishChange({ id: updated.id, strategy: 'update' });
         }
       },
       onDelete: (deleted) => {
         this.state.reports = this.state.reports.filter(r => r.id !== deleted.id);
-        this._publishChange();
+        this._publishChange({ id: deleted.id, strategy: 'delete' });
       }
     });
   },

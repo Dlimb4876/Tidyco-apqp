@@ -190,10 +190,12 @@ npi.dashboard.renderProjects = function() {
 
     // Date range filter (by product created_at if available, else skip)
     if (npiProjectsDateFrom && product.created_at) {
-      if (new Date(product.created_at) < new Date(npiProjectsDateFrom)) return false
+      const from = new Date(npiProjectsDateFrom); from.setHours(0, 0, 0, 0);
+      if (new Date(product.created_at) < from) return false
     }
     if (npiProjectsDateTo && product.created_at) {
-      if (new Date(product.created_at) > new Date(npiProjectsDateTo + 'T23:59:59')) return false
+      const to = new Date(npiProjectsDateTo); to.setHours(23, 59, 59, 999);
+      if (new Date(product.created_at) > to) return false
     }
 
     return true

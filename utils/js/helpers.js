@@ -67,7 +67,9 @@ function getWeekNumber(d) {
  * @param {string} message - Text to display
  * @param {'success'|'error'|'info'|'warning'} type - Visual style
  * @param {number} duration - Auto-dismiss after ms (default 3500)
- * @param {string} [actionHtml] - Optional HTML for an action button area
+ * @param {string} [actionHtml] - Optional pre-sanitized HTML for an action button area.
+ *   IMPORTANT: This is inserted as raw HTML. Callers MUST ensure this string contains
+ *   no user-supplied data or is properly sanitized to prevent XSS.
  */
 function showToast(message, type = 'info', duration = 3500, actionHtml = '') {
   let container = document.getElementById('toastContainer');
@@ -375,7 +377,7 @@ function exportToCsv(rows, filename) {
   const csv = [
     keys.join(','),
     ...rows.map(r => keys.map(k => {
-      const v = r[k] == null ? '' : String(r[k]);
+      const v = r[k] == null ? '' : String(r[k]).replace(/[\r\n]+/g, ' ');
       return '"' + v.replace(/"/g, '""') + '"';
     }).join(','))
   ].join('\n');
@@ -386,4 +388,18 @@ function exportToCsv(rows, filename) {
   a.download = filename + '_' + new Date().toISOString().slice(0, 10) + '.csv';
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+// ── Real-time Granular Update Helper ───────────────────────
+/**
+ * Run an update function while preserving the scroll position.
+ * @param {Function} updateFn - Function that modifies the DOM
+ */
+function preserveScrollDuringUpdate(updateFn) {
+  const scrollEl = document.scrollingElement || document.documentElement;
+  const scrollY = scrollEl ? scrollEl.scrollTop : 0;
+  updateFn();
+  requestAnimationFrame(() => {
+    if (scrollEl) scrollEl.scrollTop = scrollY;
+  });
 }
