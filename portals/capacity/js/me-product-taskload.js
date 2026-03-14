@@ -3,6 +3,60 @@
    Shows demand calculation per product from task list
    ============================================================ */
 
+const meProductLoadTableState = {
+  ME: { search: '', family: 'all', sortBy: 'total', sortDir: 'desc' },
+  PM: { search: '', family: 'all', sortBy: 'total', sortDir: 'desc' }
+};
+
+function meProductLoadGetState(department) {
+  const key = department === 'PM' ? 'PM' : 'ME';
+  if (!meProductLoadTableState[key]) {
+    meProductLoadTableState[key] = { search: '', family: 'all', sortBy: 'total', sortDir: 'desc' };
+  }
+  return meProductLoadTableState[key];
+}
+
+function meProductLoadRefreshTable() {
+  if (typeof meRefreshCurrentTab === 'function') {
+    meRefreshCurrentTab();
+    return;
+  }
+  if (typeof render === 'function') render();
+}
+
+window.meProductLoadSetSearch = function(value, department) {
+  const state = meProductLoadGetState(department);
+  state.search = (value || '').toString();
+  meProductLoadRefreshTable();
+};
+
+window.meProductLoadSetFamilyFilter = function(value, department) {
+  const state = meProductLoadGetState(department);
+  state.family = value || 'all';
+  meProductLoadRefreshTable();
+};
+
+window.meProductLoadSetSort = function(value, department) {
+  const state = meProductLoadGetState(department);
+  state.sortBy = value || 'total';
+  meProductLoadRefreshTable();
+};
+
+window.meProductLoadToggleSortDir = function(department) {
+  const state = meProductLoadGetState(department);
+  state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+  meProductLoadRefreshTable();
+};
+
+window.meProductLoadClearFilters = function(department) {
+  const state = meProductLoadGetState(department);
+  state.search = '';
+  state.family = 'all';
+  state.sortBy = 'total';
+  state.sortDir = 'desc';
+  meProductLoadRefreshTable();
+};
+
 // HTML escape utility
 function esc(str) {
   if (!str) return '';
@@ -16,8 +70,47 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
     ? meGetDepartmentFromContext()
     : 'ME';
   const isPmContext = department === 'PM';
+  const state = meProductLoadGetState(department);
 
   const weeksPerMonth = 4.33;
+  const allProds = typeof window.productsDataGetAll === 'function' ? window.productsDataGetAll() : [];
+  const families = typeof getFamilies === 'function' ? getFamilies() : [];
+
+  function resolveFamilyLabel(familyRef) {
+    if (!familyRef) return '—';
+
+    if (typeof findFamilyRecord === 'function') {
+      const matched = findFamilyRecord(familyRef);
+      if (matched) return matched.label || matched.name || matched.id || familyRef;
+    }
+
+    const matched = families.find(f =>
+      f.id === familyRef ||
+      f.name === familyRef ||
+      f.label === familyRef
+    );
+    return matched ? (matched.label || matched.name || matched.id || familyRef) : familyRef;
+  }
+
+  function resolveFamilyLabelForProduct(product) {
+    if (!product) return '—';
+
+    let dbProduct = null;
+    if (product.productDatabaseId) {
+      dbProduct = allProds.find(p => p.id === product.productDatabaseId) || null;
+    }
+
+    // Fallback for legacy ME/PM rows that predate productDatabaseId backfill.
+    if (!dbProduct && product.name) {
+      dbProduct = allProds.find(p => p.name === product.name) || null;
+    }
+
+    const familyRef = (dbProduct && dbProduct.family)
+      ? dbProduct.family
+      : (product.family || product.familyId || '');
+
+    return resolveFamilyLabel(familyRef);
+  }
 
   // Group tasks by productId
   const tasksByProduct = {};
@@ -35,6 +128,8 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
     const totalHours = tasks.reduce((sum, t) => sum + (t.totalHours || 0), 0);
     const taskCount = tasks.length;
 
+    const familyLabel = resolveFamilyLabelForProduct(product);
+
     // Group tasks by category
     const categories = {};
     tasks.forEach(task => {
@@ -49,6 +144,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
     return {
       productId: product.id,
       productName: product.name,
+      family: familyLabel,
       totalHours,
       taskCount,
       categories,
@@ -57,8 +153,40 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
     };
   });
 
-  // Sort by hours descending
-  productLoads.sort((a, b) => b.totalHours - a.totalHours);
+  const familyOptions = Array.from(new Set(
+    productLoads
+      .map(load => load.family)
+      .filter(label => label && label !== '—')
+  )).sort((a, b) => a.localeCompare(b));
+
+  const searchNeedle = state.search.trim().toLowerCase();
+  let visibleLoads = productLoads.filter(load => {
+    const familyMatch = state.family === 'all' || load.family === state.family;
+    if (!familyMatch) return false;
+    if (!searchNeedle) return true;
+
+    const haystack = [load.productName, load.family]
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(searchNeedle);
+  });
+
+  const dir = state.sortDir === 'desc' ? -1 : 1;
+  visibleLoads.sort((a, b) => {
+    switch (state.sortBy) {
+      case 'product':
+        return a.productName.localeCompare(b.productName) * dir;
+      case 'family':
+        return a.family.localeCompare(b.family) * dir;
+      case 'tasks':
+        return (a.taskCount - b.taskCount) * dir;
+      case 'support':
+        return (a.hoursPerWeek - b.hoursPerWeek) * dir;
+      case 'total':
+      default:
+        return (a.totalHours - b.totalHours) * dir;
+    }
+  });
 
   // Calculate totals
   const totalTaskHours = productLoads.reduce((sum, p) => sum + p.totalHours, 0).toFixed(1);
@@ -71,10 +199,11 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
   const unassignedHours = unassignedTasks.reduce((sum, t) => sum + (t.totalHours || 0), 0).toFixed(1);
 
   let rows = '';
-  productLoads.forEach(load => {
+  visibleLoads.forEach(load => {
     rows += `
       <tr>
         <td><strong>${esc(load.productName)}</strong></td>
+        <td>${esc(load.family)}</td>
         <td style="text-align: center;">${load.taskCount}</td>
         <td style="text-align: right;">${(load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
         <td style="text-align: right;">${load.totalHours.toFixed(1)}</td>
@@ -122,13 +251,44 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
       <div class="me-card">
         <div class="me-card-head">
           <span class="me-card-title">PRODUCT TASK LOAD ANALYSIS</span>
-          <span style="font-size:12px;color:var(--muted)">Demand from ${isPmContext ? 'PM' : 'ME'} capacity tasks per product</span>
+          <span style="font-size:12px;color:var(--muted)">Demand from ${isPmContext ? 'PM' : 'ME'} capacity tasks per product · Showing ${visibleLoads.length}/${productLoads.length}</span>
         </div>
         <div class="me-card-body">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+            <input
+              type="text"
+              placeholder="Filter by product"
+              value="${esc(state.search)}"
+              oninput="meProductLoadSetSearch(this.value, '${department}')"
+              style="min-width:220px;flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
+            >
+            <select
+              onchange="meProductLoadSetFamilyFilter(this.value, '${department}')"
+              style="min-width:170px;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
+            >
+              <option value="all" ${state.family === 'all' ? 'selected' : ''}>All families</option>
+              ${familyOptions.map(label => `<option value="${esc(label)}" ${state.family === label ? 'selected' : ''}>${esc(label)}</option>`).join('')}
+            </select>
+            <select
+              onchange="meProductLoadSetSort(this.value, '${department}')"
+              style="min-width:170px;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
+            >
+              <option value="total" ${state.sortBy === 'total' ? 'selected' : ''}>Sort: Task Demand</option>
+              <option value="tasks" ${state.sortBy === 'tasks' ? 'selected' : ''}>Sort: Tasks</option>
+              <option value="support" ${state.sortBy === 'support' ? 'selected' : ''}>Sort: Support/Month</option>
+              <option value="family" ${state.sortBy === 'family' ? 'selected' : ''}>Sort: Family</option>
+              <option value="product" ${state.sortBy === 'product' ? 'selected' : ''}>Sort: Product</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="meProductLoadToggleSortDir('${department}')" title="Toggle sort direction">
+              ${state.sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="meProductLoadClearFilters('${department}')">Clear</button>
+          </div>
           <div class="me-tbl-wrap">
             <table class="me-tbl">
               <thead><tr>
                 <th style="width:200px">Product</th>
+                <th style="width:150px">Family</th>
                 <th style="width:80px">Tasks</th>
                 <th style="width:120px">Support/Month</th>
                 <th style="width:120px">Task Demand</th>

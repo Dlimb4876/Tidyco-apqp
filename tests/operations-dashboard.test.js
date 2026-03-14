@@ -84,10 +84,15 @@ global.templateManagerState = { isOpen: false };
 global.renderFamilyModal = jest.fn().mockReturnValue('');
 global.renderTemplateManager = jest.fn().mockReturnValue('');
 
-const opsScript = fs.readFileSync(
-  path.resolve(__dirname, '../portals/operations/js/operations-dashboard.js'),
-  'utf8'
-);
+const opsScript = [
+  '../portals/operations/js/operations-dashboard-state.js',
+  '../portals/operations/js/operations-dashboard-metrics.js',
+  '../portals/operations/js/operations-dashboard-realtime.js',
+  '../portals/operations/js/operations-dashboard-render-core.js',
+  '../portals/operations/js/operations-dashboard-forecast-view.js',
+  '../portals/operations/js/operations-dashboard-forecast-actions.js',
+  '../portals/operations/js/operations-dashboard-main.js'
+].map((relativePath) => fs.readFileSync(path.resolve(__dirname, relativePath), 'utf8')).join('\n');
 const navScript = fs.readFileSync(
   path.resolve(__dirname, '../utils/js/navigation.js'),
   'utf8'

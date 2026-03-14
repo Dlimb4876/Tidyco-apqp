@@ -93,7 +93,7 @@ describe('Auth Module (auth.js)', () => {
     });
 
     test('should show error when password is empty but email is filled', async () => {
-      document.getElementById('loginEmail').value = 'user@example.com';
+      document.getElementById('loginEmail').value = 'user@tidyco.co.uk';
       document.getElementById('loginPassword').value = '';
 
       await doLogin();
@@ -102,11 +102,11 @@ describe('Auth Module (auth.js)', () => {
     });
 
     test('should call launchApp on successful login', async () => {
-      document.getElementById('loginEmail').value = 'user@example.com';
+      document.getElementById('loginEmail').value = 'user@tidyco.co.uk';
       document.getElementById('loginPassword').value = 'password123';
 
       global.supa.auth.signInWithPassword.mockResolvedValue({
-        data: { user: { id: 'test-user', email: 'user@example.com' } },
+        data: { user: { id: 'test-user', email: 'user@tidyco.co.uk' } },
         error: null
       });
 
@@ -116,7 +116,7 @@ describe('Auth Module (auth.js)', () => {
     });
 
     test('should show error message on failed login', async () => {
-      document.getElementById('loginEmail').value = 'user@example.com';
+      document.getElementById('loginEmail').value = 'user@tidyco.co.uk';
       document.getElementById('loginPassword').value = 'wrongpassword';
 
       global.supa.auth.signInWithPassword.mockResolvedValue({
@@ -133,7 +133,7 @@ describe('Auth Module (auth.js)', () => {
     });
 
     test('should re-enable login button after failed login', async () => {
-      document.getElementById('loginEmail').value = 'user@example.com';
+      document.getElementById('loginEmail').value = 'user@tidyco.co.uk';
       document.getElementById('loginPassword').value = 'wrongpassword';
 
       global.supa.auth.signInWithPassword.mockResolvedValue({
@@ -153,6 +153,18 @@ describe('Auth Module (auth.js)', () => {
 
       await doLogin();
 
+      expect(global.supa.auth.signInWithPassword).not.toHaveBeenCalled();
+    });
+
+    test('should block non-tidyco email before calling Supabase auth', async () => {
+      document.getElementById('loginEmail').value = 'user@example.com';
+      document.getElementById('loginPassword').value = 'password123';
+
+      await doLogin();
+
+      const errDiv = document.getElementById('loginErr');
+      expect(errDiv.style.display).toBe('block');
+      expect(errDiv.textContent).toBe('Please use your @tidyco.co.uk email address.');
       expect(global.supa.auth.signInWithPassword).not.toHaveBeenCalled();
     });
   });

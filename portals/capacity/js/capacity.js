@@ -18,7 +18,7 @@ function renderCapacity() {
         <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Portal</button>
       </div>
       <div class="proj-cards capacity-grid">
-        <div class="proj-card capacity-card" onclick="setCapacityTab('overhaul')">
+        <div class="proj-card capacity-card" onclick="setCapacityTab('production')">
           <div class="hub-card-content">
             <div class="hub-icon">🚂</div>
             <div class="proj-card-name">Production</div>

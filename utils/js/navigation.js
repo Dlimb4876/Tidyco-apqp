@@ -15,8 +15,7 @@ const SECTION_LABELS = {
   capacity: 'Capacity Management',
   operations: 'Operations Mission Control',
   production: 'Production Planning',
-  products: 'Products',
-  productmgmt: 'Product Management',
+  'product-development': 'Product Development',
   bugreports: 'Bug Reports'
 };
 
@@ -232,15 +231,6 @@ function render() {
     mc.innerHTML = `<div class="section-inner">${renderProduction()}</div>`;
     return;
   }
-  if (currentSection === 'products') {
-    mc.innerHTML = renderProductsPortalHTML();
-    renderProductsPortalSetup();
-    return;
-  }
-  if (currentSection === 'productmgmt') {
-    mc.innerHTML = `<div class="section-inner">${renderProductMgmt()}</div>`;
-    return;
-  }
   if (currentSection === 'operations') {
     mc.innerHTML = `<div class="section-inner">${renderOperationsDashboard()}</div>`;
     return;
@@ -252,7 +242,7 @@ function render() {
   if (currentSection === 'capacity') {
     if (capacityTab === 'root') mc.innerHTML = renderCapacity();
     else if (capacityTab === 'me') mc.innerHTML = `<div class="section-inner">${renderMeCapacity()}</div>`;
-    else if (capacityTab === 'overhaul') mc.innerHTML = `<div class="section-inner">${renderProdCapacity()}</div>`;
+    else if (capacityTab === 'production') mc.innerHTML = `<div class="section-inner">${renderProdCapacity()}</div>`;
     else if (capacityTab === 'projects') {
       if (typeof pmRenderCapacity === 'function') {
         mc.innerHTML = `<div class="section-inner">${pmRenderCapacity()}</div>`;

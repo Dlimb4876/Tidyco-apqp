@@ -4,7 +4,7 @@
  * Syncs with Supabase tables: products, overhaul_history
  */
 
-let productsState = {
+window.productsState = {
   products: [],
   history: {},  // product_id -> array of history records
   loaded: false
@@ -141,9 +141,9 @@ async function productsDataInit() {
 /**
  * Get all products
  */
-function productsDataGetAll() {
+window.productsDataGetAll = function() {
   return productsState.products;
-}
+};
 
 /**
  * Get single product with history

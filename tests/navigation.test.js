@@ -356,10 +356,10 @@ describe('Navigation Module (navigation.js)', () => {
       expect(document.getElementById('mainContent').innerHTML).toContain('Bug Reports');
     });
 
-    test('should render productmgmt section', () => {
+    test('should render empty section shell for unsupported section ids', () => {
       global.currentSection = 'productmgmt';
       render();
-      expect(document.getElementById('mainContent').innerHTML).toContain('Product Mgmt');
+      expect(document.getElementById('mainContent').innerHTML).toContain('section-inner');
     });
 
     test('should render NPI dashboard for project section', () => {

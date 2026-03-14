@@ -1,8 +1,66 @@
 /* css/hub.css */
 
+/* ── Operations Banner (top-of-hierarchy) ──────────────────────────────── */
+.hub-operations-banner {
+    margin-bottom: 32px;
+}
+
+.hub-card.hub-card-banner {
+    min-height: 120px;
+    max-height: 120px;
+    padding: 20px 24px !important;
+    background: linear-gradient(135deg, var(--blue-50, #f0f7ff) 0%, var(--teal-50, #f0fffe) 100%);
+    border: 2px solid var(--blue-200, #bae6fd);
+}
+
+.hub-card.hub-card-banner:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+    border-color: var(--blue-300, #7dd3fc);
+}
+
+.hub-card-content-banner {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 20px !important;
+    width: 100%;
+}
+
+.banner-text {
+    flex: 1;
+    text-align: left;
+}
+
+.hub-icon-banner {
+    font-size: 56px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.banner-text .proj-card-name {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.banner-text .proj-card-meta {
+    font-size: 13px;
+}
+
+/* ── Operations Header ──────────────────────────────── */
+.hub-operations-header {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding: 0 4px;
+}
+
 /* Doubled height for the Hub buttons */
 .hub-card {
-    min-height: 320px; 
+    min-height: 320px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -169,9 +227,31 @@
     padding: 24px !important;
   }
 
+  .hub-card.hub-card-banner {
+    min-height: 110px;
+    max-height: 110px;
+    padding: 16px 20px !important;
+  }
+
+  .hub-card-content-banner {
+    gap: 12px;
+  }
+
   .hub-icon {
     font-size: 48px;
     margin-bottom: 12px;
+  }
+
+  .hub-icon-banner {
+    font-size: 44px;
+  }
+
+  .banner-text .proj-card-name {
+    font-size: 14px;
+  }
+
+  .banner-text .proj-card-meta {
+    font-size: 12px;
   }
 
   .hub-card .proj-card-name {
