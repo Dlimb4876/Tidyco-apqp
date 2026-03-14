@@ -442,7 +442,7 @@ window.meEstimationSave = function(taskIdx) {
 
   // Validation
   if (!task.advancedEstimation || !task.advancedEstimation.pertData || task.advancedEstimation.pertData.estimates.length === 0) {
-    alert('Please add at least one estimate before saving');
+    showToast('Please add at least one estimate before saving', 'warning');
     return;
   }
 

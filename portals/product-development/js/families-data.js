@@ -99,7 +99,7 @@ window.familiesDataAddFamily = async function(name, label, icon, description) {
     }
   } catch (err) {
     console.error('Error adding family:', err);
-    alert('Failed to add family: ' + err.message);
+    showToast('Failed to add family: ' + err.message, 'error');
   }
   return null;
 };
@@ -126,7 +126,7 @@ window.familiesDataUpdateFamily = async function(familyId, updates) {
     return true;
   } catch (err) {
     console.error('Error updating family:', err);
-    alert('Failed to update family: ' + err.message);
+    showToast('Failed to update family: ' + err.message, 'error');
   }
   return false;
 };
@@ -148,7 +148,7 @@ window.familiesDataDeleteFamily = async function(familyId) {
     return true;
   } catch (err) {
     console.error('Error deleting family:', err);
-    alert('Failed to delete family: ' + err.message);
+    showToast('Failed to delete family: ' + err.message, 'error');
   }
   return false;
 };

@@ -144,6 +144,21 @@ function navigate(sec, { pushHash = true } = {}) {
   // Show Return to Portal button on all feature pages (not hub, projects, or project home)
   const returnBtn = document.getElementById('returnHubBtn');
   returnBtn.style.display = (sec === 'hub' || sec === 'projects' || sec === 'project') ? 'none' : 'flex';
+  // 1.5 Dynamic back button text
+  const backLabels = {
+    capacity: '← Back to Capacity',
+    production: '← Back to Production',
+    'product-development': '← Back to Product Development',
+    operations: '← Back to Operations',
+    productmgmt: '← Back to Product Management',
+    bugreports: '← Back to Bug Reports',
+    apqp: '← Back to Project',
+    actions: '← Back to Project',
+    risks: '← Back to Project',
+    bom: '← Back to Project',
+    timing: '← Back to Project'
+  };
+  returnBtn.textContent = backLabels[sec] || '← Return to Portal';
 
   render();
 }

@@ -307,8 +307,8 @@ function importJSON(e) {
         db = d;
         db.programmes = db.programmes.map(p => migrateprog(p));
         save(); initProgSelect(); navigate('home');
-      } else { alert('Invalid file'); }
-    } catch (x) { alert('Invalid JSON'); }
+      } else { showToast('Invalid file', 'error'); }
+    } catch (x) { showToast('Invalid JSON', 'error'); }
   };
   r.readAsText(f);
   e.target.value = '';

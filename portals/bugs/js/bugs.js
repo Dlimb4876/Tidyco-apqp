@@ -57,7 +57,7 @@ window.bugApp = {
     const status = statusSelect.value;
 
     if (!response) {
-      alert('Please enter a response.');
+      showToast('Please enter a response.', 'warning');
       return;
     }
 
@@ -66,7 +66,7 @@ window.bugApp = {
       bugDataManager.setEditingId(null); // This will trigger a re-render
     } catch (error) {
       console.error('Save response error:', error);
-      alert(error.message);
+      showToast(error.message, 'error');
     }
   },
 
@@ -74,7 +74,7 @@ window.bugApp = {
     try {
       await bugDataManager.reopen(id);
     } catch (error) {
-      alert(error.message);
+      showToast(error.message, 'error');
     }
   },
 
@@ -252,13 +252,13 @@ window.bugOpenNewModal = function() {
 window.bugSubmitNew = async function() {
   const page = document.getElementById('bugNewPage').value.trim();
   const desc = document.getElementById('bugNewDesc').value.trim();
-  if (!desc) { alert('Please describe the bug.'); return; }
+  if (!desc) { showToast('Please describe the bug.', 'warning'); return; }
 
   try {
     await bugDataManager.addReport(page, desc);
     closeModal('modalNewBug');
   } catch(error) {
-    alert(error.message);
+    showToast(error.message, 'error');
   }
 };
 
@@ -272,13 +272,13 @@ window.bugOpenRespondModal = function(id, idx) {
 
 window.bugSubmitRespond = async function() {
   const response = document.getElementById('bugRespondText').value.trim();
-  if (!response) { alert('Please enter a response before closing.'); return; }
+  if (!response) { showToast('Please enter a response before closing.', 'warning'); return; }
 
   try {
     await bugDataManager.respond(_bugRespondId, response, 'closed');
     _bugRespondId = null;
     closeModal('modalRespondBug');
   } catch(error) {
-    alert(error.message)
+    showToast(error.message, 'error')
   }
 };

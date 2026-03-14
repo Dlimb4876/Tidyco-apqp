@@ -391,7 +391,7 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   const p = prog()
   const mode = p.pfmea[mi]; const ef = mode.effects[ei]; const ca = ef.causes[ci]
   const act = ca.action || {}
-  if (!act.desc && !act.newOcc && !act.newDet) { alert('Add an action and/or new scores before implementing.'); return }
+  if (!act.desc && !act.newOcc && !act.newDet) { showToast('Add an action and/or new scores before implementing.', 'warning'); return }
   const oldRpn = (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
   const newOcc = act.newOcc ? +act.newOcc : ca.occ
   const newDet = act.newDet ? +act.newDet : ca.det

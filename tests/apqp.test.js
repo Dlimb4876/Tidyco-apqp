@@ -10,6 +10,7 @@ global.npi = { apqp: {}, pfmea: {}, nav: {} };
 global.save = jest.fn();
 global.render = jest.fn();
 global.alert = jest.fn();
+global.showToast = jest.fn();
 global.apqpTab = 'ctq';
 global.collapsedGroups = new Set();
 global.insertOriginIdx = null;
@@ -89,7 +90,7 @@ describe('APQP sync behavior', () => {
 
     npi.apqp.syncFromPFMEA();
 
-    expect(alert).toHaveBeenCalledWith('All PFMEA causes already in control plan.');
+    expect(showToast).toHaveBeenCalledWith('All PFMEA causes already in control plan.', 'info');
     expect(activeProgramme.cp).toHaveLength(1);
     expect(save).not.toHaveBeenCalled();
   });

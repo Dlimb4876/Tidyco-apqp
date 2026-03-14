@@ -59,7 +59,7 @@ npi.apqp.syncFromPFMEA = function() {
   if (typeof npi.cp?.syncFromPFMEA === 'function') return npi.cp.syncFromPFMEA()
   if (typeof npi.data?.cp?.syncFromPFMEA === 'function') {
     const added = npi.data.cp.syncFromPFMEA()
-    if (added === 0) alert('All PFMEA causes already in control plan.')
+    if (added === 0) showToast('All PFMEA causes already in control plan.', 'info')
     render()
     return
   }
@@ -89,7 +89,7 @@ npi.apqp.syncFromPFMEA = function() {
       })
     })
   })
-  if (n === 0) return alert('All PFMEA causes already in control plan.')
+  if (n === 0) return showToast('All PFMEA causes already in control plan.', 'info')
   render()
 }
 npi.apqp.addCP = function() {

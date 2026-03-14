@@ -147,11 +147,11 @@ npi.bom.saveABCEdit = async function() {
   const notes = document.getElementById('abcEditForm_notes').value.trim()
 
   if (!pn) {
-    alert('Part Number (PN) is required')
+    showToast('Part Number (PN) is required', 'warning')
     return
   }
   if (!desc) {
-    alert('Description is required')
+    showToast('Description is required', 'warning')
     return
   }
 
@@ -177,7 +177,7 @@ npi.bom.saveABCEdit = async function() {
     closeModal('modalABCEdit')
     render()
   } else {
-    alert('Failed to save catalogue entry. Check if PN already exists.')
+    showToast('Failed to save catalogue entry. Check if PN already exists.', 'error')
   }
 }
 

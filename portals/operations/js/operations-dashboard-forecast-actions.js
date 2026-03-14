@@ -42,15 +42,15 @@ async function opsForecastSubmit(event) {
 		: Math.max(0, Math.min(100, opsToNumber(fd.get('probability_pct'), 0)));
 
 	if (!title) {
-		alert('Please add a title for this opportunity.');
+		showToast('Please add a title for this opportunity.', 'warning');
 		return;
 	}
 	if (!startDate || !dueDate) {
-		alert('Please add both start and due dates.');
+		showToast('Please add both start and due dates.', 'warning');
 		return;
 	}
 	if (startDate > dueDate) {
-		alert('Start date must be before due date.');
+		showToast('Start date must be before due date.', 'warning');
 		return;
 	}
 
@@ -138,17 +138,17 @@ async function opsForecastSaveInline(id) {
 		: Math.max(0, Math.min(100, opsToNumber(probEl?.value, 0)));
 
 	if (!nextTitle) {
-		alert('Please add a title for this opportunity.');
+		showToast('Please add a title for this opportunity.', 'warning');
 		return;
 	}
 
 	if (!nextStart || !nextDue) {
-		alert('Please add both start and due dates.');
+		showToast('Please add both start and due dates.', 'warning');
 		return;
 	}
 
 	if (nextStart > nextDue) {
-		alert('Start date must be before due date.');
+		showToast('Start date must be before due date.', 'warning');
 		return;
 	}
 

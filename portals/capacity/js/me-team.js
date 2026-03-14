@@ -102,7 +102,10 @@ window.meRenderTeamTab = function(teamArray) {
                 <th style="width:36px"></th>
               </tr></thead>
               <tbody>
-                ${rows || '<tr><td colspan="9"><div style="text-align:center;padding:40px;color:var(--muted)">No ' + (isPmContext ? 'managers' : 'engineers') + ' added</div></td></tr>'}
+                ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
+                  <div style="color:var(--muted);margin-bottom:12px">No ${isPmContext ? 'managers' : 'engineers'} added yet</div>
+                  <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('${isPmContext ? 'New PM Manager' : 'New Engineer'}', ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team');">＋ Add First ${isPmContext ? 'Manager' : 'Engineer'}</button>
+                </div></td></tr>`}
               </tbody>
             </table>
           </div>

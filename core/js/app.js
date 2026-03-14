@@ -74,6 +74,9 @@ async function launchApp() {
   } else {
     navigate('hub', { pushHash: false });
   }
+
+  // 1.11 Smart date inputs — init after page renders
+  setTimeout(setupSmartDateInputs, 200);
 }
 
 // ── Kick off on page load if session exists ───────────────────

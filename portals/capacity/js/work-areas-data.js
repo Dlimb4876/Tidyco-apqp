@@ -59,7 +59,7 @@ window.workAreasDataAddWorkArea = async function(name, description) {
     }
   } catch (err) {
     console.error('Error adding work area:', err);
-    alert('Failed to add work area: ' + err.message);
+    showToast('Failed to add work area: ' + err.message, 'error');
   }
   return null;
 };
@@ -81,7 +81,7 @@ window.workAreasDataUpdateWorkArea = async function(workAreaId, updates) {
     return true;
   } catch (err) {
     console.error('Error updating work area:', err);
-    alert('Failed to update work area: ' + err.message);
+    showToast('Failed to update work area: ' + err.message, 'error');
   }
   return false;
 };
@@ -102,7 +102,7 @@ window.workAreasDataDeleteWorkArea = async function(workAreaId) {
     return true;
   } catch (err) {
     console.error('Error deleting work area:', err);
-    alert('Failed to delete work area: ' + err.message);
+    showToast('Failed to delete work area: ' + err.message, 'error');
   }
   return false;
 };
