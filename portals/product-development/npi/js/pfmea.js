@@ -166,10 +166,10 @@ npi.pfmea.renderPFMEA = function() {
           // Mode cell — first effect, first cause only
           if (ei === 0 && ci === 0) {
             rowHtml += `<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               <div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">
-                <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="npi.pfmea.pfAddEffect(${mi})">＋ Effect</button>
-                <button class="del-btn" onclick="npi.pfmea.pfDelMode(${mi})" style="font-size:9px">× Mode</button>
+                <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
+                <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
               </div>
             </td>`
           }
@@ -177,68 +177,63 @@ npi.pfmea.renderPFMEA = function() {
           // Effect + SEV — first cause of each effect only
           if (ci === 0) {
             rowHtml += `<td rowspan="${efRowspan}" style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdEffect(${mi},${ei},'effect',this.value)" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               <div style="margin-top:3px;display:flex;gap:3px">
-                <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="npi.pfmea.pfAddCause(${mi},${ei})">＋ Cause</button>
-                <button class="del-btn" onclick="npi.pfmea.pfDelEffect(${mi},${ei})" style="font-size:9px">× Eff</button>
+                <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
+                <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:9px">× Eff</button>
               </div>
             </td>
             <td rowspan="${efRowspan}" class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
-                oninput="const v=npi.pfmea.pfScorePreview(this,false,${sev});npi.pfmea.pfUpdEffect(${mi},${ei},'sev',v,false);npi.pfmea.pfLiveRPN(${mi},${ei},-1)"
-                onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdEffect(${mi},${ei},'sev',v)">
+                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="effect-sev" data-fallback="${sev}">
             </td>`
           }
 
           rowHtml += `
             <td class="pfmea-cause-cell pfmea-cause-text" style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdCause(${mi},${ei},${ci},'cause',this.value)" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="cause" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
             </td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${occ}"
-                oninput="const v=npi.pfmea.pfScorePreview(this,false,${occ});npi.pfmea.pfUpdCause(${mi},${ei},${ci},'occ',v,false);npi.pfmea.pfLiveRPN(${mi},${ei},${ci})"
-                onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdCause(${mi},${ei},${ci},'occ',v)">
+                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="cause-occ" data-fallback="${occ}">
             </td>
             <td style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdCause(${mi},${ei},${ci},'prevent',this.value)" placeholder="Prevention controls" style="width:100%">${esc(ca.prevent || '')}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="prevent" placeholder="Prevention controls" style="width:100%">${esc(ca.prevent || '')}</textarea>
             </td>
             <td style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdCause(${mi},${ei},${ci},'detect',this.value)" placeholder="Detection controls" style="width:100%">${esc(ca.detect || '')}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="detect" placeholder="Detection controls" style="width:100%">${esc(ca.detect || '')}</textarea>
             </td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${det}"
-                oninput="const v=npi.pfmea.pfScorePreview(this,false,${det});npi.pfmea.pfUpdCause(${mi},${ei},${ci},'det',v,false);npi.pfmea.pfLiveRPN(${mi},${ei},${ci})"
-                onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdCause(${mi},${ei},${ci},'det',v)">
+                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="cause-det" data-fallback="${det}">
             </td>
             <td class="pfmea-score-cell">
               ${npi.components.rpnBadge(rpn, { id: `rpn_${mi}_${ei}_${ci}` })}
-              ${hist.length > 0 ? `<button class="rpn-hist-btn" onclick="npi.pfmea.pfShowHist(event,'${ca.id}')">⏱${hist.length}</button>` : ''}
+              ${hist.length > 0 ? `<button class="rpn-hist-btn" data-action="pfmea-show-hist" data-cause-id="${ca.id}">⏱${hist.length}</button>` : ''}
               <div class="hist-popup" id="hist_${ca.id}" style="display:none;position:fixed;z-index:9999;background:white;border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.15);max-height:400px;overflow-y:auto">
                 <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">RPN History</div>
                 ${histRows}
               </div>
             </td>
-            <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'desc',this.value)" placeholder="Recommended action" style="width:100%;background:${act.desc ? '#eff6ff' : ''};">${esc(act.desc || '')}</textarea></td>
-            <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'taken',this.value)" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>
-            <td><input class="cell-edit" value="${esc(act.owner || '')}" onchange="npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
-            <td><input type="date" class="cell-edit mono" value="${esc(act.due || '')}" onchange="npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'due',this.value)" style="width:100%;font-size:11px"></td>
+            <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? '#eff6ff' : ''};">${esc(act.desc || '')}</textarea></td>
+            <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>
+            <td><input class="cell-edit" value="${esc(act.owner || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" placeholder="Owner" style="width:100%"></td>
+            <td><input type="date" class="cell-edit mono" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newOcc || ''}" placeholder="${occ}"
-                oninput="const v=npi.pfmea.pfScorePreview(this,true,'');npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newOcc',v,false);npi.pfmea.pfLiveForecast(${mi},${ei},${ci})"
-                onchange="const v=npi.pfmea.pfScoreInput(this,true);npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newOcc',v)" style="background:#eff6ff">
+                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-occ" data-allow-blank="1" data-fallback="" style="background:#eff6ff">
             </td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newDet || ''}" placeholder="${det}"
-                oninput="const v=npi.pfmea.pfScorePreview(this,true,'');npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newDet',v,false);npi.pfmea.pfLiveForecast(${mi},${ei},${ci})"
-                onchange="const v=npi.pfmea.pfScoreInput(this,true);npi.pfmea.pfUpdCauseAction(${mi},${ei},${ci},'newDet',v)" style="background:#eff6ff">
+                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-det" data-allow-blank="1" data-fallback="" style="background:#eff6ff">
             </td>
             <td class="pfmea-score-cell">
               <span style="opacity:${hasAction ? '1' : '0'}">${npi.components.rpnBadge(hasAction ? forecast : 0, { id: `forecast_${mi}_${ei}_${ci}`, emptyLabel: '—' })}</span>
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:4px">
-              <button class="btn btn-sm btn-green" style="font-size:9px;padding:3px 6px;white-space:nowrap" onclick="npi.pfmea.pfImplementAction(${mi},${ei},${ci})" title="Apply new OCC/DET and log to history">▶ Apply</button>
+              <button class="btn btn-sm btn-green" style="font-size:9px;padding:3px 6px;white-space:nowrap" data-action="pfmea-implement" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" title="Apply new OCC/DET and log to history">▶ Apply</button>
             </td>
-            <td style="text-align:center"><button class="del-btn" onclick="npi.pfmea.pfDelCause(${mi},${ei},${ci})">×</button></td>
+            <td style="text-align:center"><button class="del-btn" data-action="pfmea-del-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}">×</button></td>
           </tr>`
           html += rowHtml
         })
@@ -248,24 +243,23 @@ npi.pfmea.renderPFMEA = function() {
           let rowHtml = `<tr class="pfmea-row-sub">`
           if (ei === 0) {
             rowHtml += `<td rowspan="1" class="pfmea-mode-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               <div style="margin-top:4px;display:flex;gap:3px">
-                <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="npi.pfmea.pfAddEffect(${mi})">＋ Effect</button>
-                <button class="del-btn" onclick="npi.pfmea.pfDelMode(${mi})" style="font-size:9px">× Mode</button>
+                <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
+                <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
               </div>
             </td>`
           }
           rowHtml += `<td style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdEffect(${mi},${ei},'effect',this.value)" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
+              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               <div style="margin-top:3px;display:flex;gap:3px">
-                <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="npi.pfmea.pfAddCause(${mi},${ei})">＋ Cause</button>
-                <button class="del-btn" onclick="npi.pfmea.pfDelEffect(${mi},${ei})" style="font-size:9px">× Eff</button>
+                <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
+                <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:9px">× Eff</button>
               </div>
             </td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
-                oninput="const v=npi.pfmea.pfScorePreview(this,false,${sev});npi.pfmea.pfUpdEffect(${mi},${ei},'sev',v,false);npi.pfmea.pfLiveRPN(${mi},${ei},-1)"
-                onchange="const v=npi.pfmea.pfScoreInput(this,false);npi.pfmea.pfUpdEffect(${mi},${ei},'sev',v)">
+                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="-1" data-kind="effect-sev" data-fallback="${sev}">
             </td>
             <td colspan="15" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No causes yet — click ＋ Cause</td>
           </tr>`
@@ -277,10 +271,10 @@ npi.pfmea.renderPFMEA = function() {
       if (effects.length === 0) {
         html += `<tr class="pfmea-row-sub">
           <td class="pfmea-mode-cell" style="vertical-align:top">
-            <textarea class="cell-edit" rows="1" data-autoresize onchange="npi.pfmea.pfUpdMode(${mi},'mode',this.value)" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+            <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
             <div style="margin-top:4px;display:flex;gap:3px">
-              <button class="add-row" style="font-size:9px;padding:1px 6px" onclick="npi.pfmea.pfAddEffect(${mi})">＋ Effect</button>
-              <button class="del-btn" onclick="npi.pfmea.pfDelMode(${mi})" style="font-size:9px">× Mode</button>
+              <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
+              <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
             </div>
           </td>
           <td colspan="17" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No effects yet — click ＋ Effect</td>
@@ -288,11 +282,11 @@ npi.pfmea.renderPFMEA = function() {
       }
     })
 
-    html += `<tr><td colspan="18" style="padding:0"><div class="pfmea-add-row" onclick="npi.pfmea.pfAddMode('${s.id}')">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`
+    html += `<tr><td colspan="18" style="padding:0"><div class="pfmea-add-row" data-action="pfmea-add-mode" data-step-id="${s.id}">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`
   })
 
   if (visibleSteps.length === 0) {
-    html += `<tr class="pfmea-row-sub"><td colspan="18" style="padding:14px;color:var(--muted);font-size:12px;font-style:italic;text-align:center">No operations match this RPN filter. <a href="#" onclick="npi.pfmea.setRpnFilter('all');return false" style="color:var(--blue)">Show all</a></td></tr>`
+    html += `<tr class="pfmea-row-sub"><td colspan="18" style="padding:14px;color:var(--muted);font-size:12px;font-style:italic;text-align:center">No operations match this RPN filter. <a href="#" data-action="pfmea-filter-all" style="color:var(--blue)">Show all</a></td></tr>`
   }
 
   html += '</tbody></table></div>'
@@ -307,7 +301,7 @@ npi.pfmea.renderPFMEA = function() {
   <div class="sec-desc">Failure Mode → Effect (SEV) → Cause (OCC) → Controls Prevent / Detect (DET) → RPN. Actions and rescoring per cause.</div></div>
   <div class="sec-actions pfmea-filter-wrap">
     <label class="pfmea-filter-label">RPN Filter
-      <select class="pfmea-filter-select" onchange="npi.pfmea.setRpnFilter(this.value)">
+      <select class="pfmea-filter-select" data-action="pfmea-filter">
         <option value="all"${activeFilter === 'all' ? ' selected' : ''}>All</option>
         <option value="high"${activeFilter === 'high' ? ' selected' : ''}>High only (>=${RPN_HIGH})</option>
         <option value="r1_49"${activeFilter === 'r1_49' ? ' selected' : ''}>1-49</option>
@@ -327,7 +321,7 @@ npi.pfmea.renderPFMEA = function() {
     <div style="padding:14px 16px 16px">${renderRpnBurndown(false)}</div>
 </div>
 <div class="card">${html}</div>
-${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" onclick="npi.nav.setApqpTab('cp');return false" style="color:var(--blue)">Control Plan →</a></div>` : ''}`
+${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" data-action="npi-set-apqp" data-tab="cp" style="color:var(--blue)">Control Plan →</a></div>` : ''}`
 }
 
 // ── History popup ─────────────────────────────────────────────

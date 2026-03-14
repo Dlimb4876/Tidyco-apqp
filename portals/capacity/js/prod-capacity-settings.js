@@ -64,8 +64,11 @@ function renderProdCapSettings() {
             value="${staff > 0 ? staff : ''}"
             placeholder="0"
             title="${esc(wa)} — ${prodCapMonthLabelFull(key)} — ${hours}h available at current setting"
-            onchange="prodCapSettingsUpdate('${esc(wa)}', ${year}, ${month}, this.value)"
-            onkeydown="prodCapSettingsNavKey(event, '${esc(wa)}', '${key}')"
+            data-cap-action="cap-prod-settings-capacity"
+            data-workarea="${esc(wa)}"
+            data-year="${year}"
+            data-month="${month}"
+            data-key="${key}"
             id="pcStaff_${btoa(wa).replace(/=/g,'')}_${key}"
           >
           ${staff > 0 ? `<div class="pc-staff-hours">${hours}h</div>` : ''}
@@ -118,10 +121,10 @@ function renderProdCapSettings() {
 
       <!-- Perpetual Window Controls -->
       <div class="pc-window-controls">
-        <button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('prev')" title="View previous month">← Previous</button>
+        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>
         <div class="pc-window-label">${offsetLabel}</div>
-        <button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('next')" title="View next month">Next →</button>
-        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" onclick="prodCapResetMonthOffset()" title="Reset to current month">Reset</button>` : ''}
+        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
+        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
       </div>
 
       <!-- Utilization Factor Slider -->
@@ -140,7 +143,7 @@ function renderProdCapSettings() {
               max="100"
               step="5"
               value="${utilPercent}"
-              onchange="prodCapSettingsSetUtilization(this.value)"
+              data-cap-action="cap-prod-settings-utilization"
               style="flex:1;cursor:pointer"
             >
             <div style="min-width:60px;text-align:center;font-weight:700;color:var(--blue);font-size:16px">
@@ -162,8 +165,8 @@ function renderProdCapSettings() {
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn btn-ghost btn-sm" onclick="prodCapSettingsFillForward()">↠ Fill Forward</button>
-          <button class="btn btn-ghost btn-sm" onclick="prodCapSettingsClearAll()" style="color:var(--red)">✕ Clear All</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-settings-fill-forward">↠ Fill Forward</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-settings-clear-all" style="color:var(--red)">✕ Clear All</button>
         </div>
       </div>
 

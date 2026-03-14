@@ -64,9 +64,9 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
         <span style="font-size:11px;color:var(--muted)">5-day work week · Click cells: working → full day → half day → remove · Blue = bank holidays (read-only)</span>
       </div>
       <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border);">
-        <button class="btn btn-ghost btn-sm" onclick="meOnPrevMonth()">← Prev</button>
-        <input type="month" value="${selectedMonth}" onchange="meOnMonthChange(this.value)" style="padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;">
-        <button class="btn btn-ghost btn-sm" onclick="meOnNextMonth()">Next →</button>
+        <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-prev-month">← Prev</button>
+        <input type="month" value="${selectedMonth}" data-cap-action="cap-me-month-change" style="padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;">
+        <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-next-month">Next →</button>
       </div>
       <div class="me-card-body" style="overflow-x: auto;">
         <table class="holiday-matrix">
@@ -136,8 +136,8 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
         cellContent = 'H';
       }
 
-      const clickHandler = !isBank ? `onclick="meToggleHoliday('${member.id}', '${date}')"` : '';
-      html += `<td class="${cellClass}" ${clickHandler} title="${date}">${cellContent}</td>`;
+      const clickAttr = !isBank ? `data-cap-action="cap-me-toggle-holiday" data-member-id="${member.id}" data-date="${date}"` : '';
+      html += `<td class="${cellClass}" ${clickAttr} title="${date}">${cellContent}</td>`;
     });
 
     html += `</tr>`;

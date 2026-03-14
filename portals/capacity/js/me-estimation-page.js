@@ -58,7 +58,7 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
         <td><input type="number" class="me-input-hours me-est-pessimistic" placeholder="0" value="${est.pessimistic || ''}" step="0.1" data-idx="${idx}" title="Worst-case scenario" style="text-align: center;"></td>
         <td class="me-est-result" style="text-align: center; padding: 8px 4px;">${(O + 4*ML + P) / 6 > 0 ? ((O + 4*ML + P) / 6).toFixed(1) : '-'}</td>
         <td class="me-est-final" style="text-align: center; padding: 8px 4px; font-weight: bold;">${finalEst > 0 ? finalEst.toFixed(1) : '-'}</td>
-        <td style="text-align: center; padding: 4px;"><button class="me-btn-delete" onclick="meEstimationDeleteRow(${taskIdx}, ${idx})">🗑️</button></td>
+        <td style="text-align: center; padding: 4px;"><button class="me-btn-delete" data-cap-action="cap-estimation-del-row" data-task-idx="${taskIdx}" data-row-idx="${idx}">🗑️</button></td>
       </tr>
     `;
   });
@@ -115,7 +115,7 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
     <div class="me-estimation-subsystem">
       <!-- Top Bar -->
       <div class="me-subsystem-topbar">
-        <button class="btn btn-ghost btn-sm" onclick="meCloseEstimationSubsystem()">← Back to Tasks</button>
+        <button class="btn btn-ghost btn-sm" data-cap-action="cap-estimation-back">← Back to Tasks</button>
         <div>
           <div class="me-topbar-title">PERT Estimation: ${escapeHtml(task.name)}</div>
           <div class="me-topbar-sub">Three-point estimation with confidence adjustment</div>
@@ -148,7 +148,7 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
             <h3 style="margin-top: 0;">🎯 Confidence Level</h3>
             <div class="me-factor-item">
               <label style="font-size: 12px; margin-bottom: 8px; display: block;">Risk Adjustment</label>
-              <input type="range" min="0.5" max="2.0" value="${confidenceLevel}" step="0.1" oninput="meEstimationUpdateConfidence(${taskIdx}, this.value)" class="me-slider" id="me-confidence-slider">
+              <input type="range" min="0.5" max="2.0" value="${confidenceLevel}" step="0.1" data-cap-action="cap-estimation-confidence" data-task-idx="${taskIdx}" class="me-slider" id="me-confidence-slider">
               <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted);">
                 <span>Pessimistic (0.5)</span>
                 <span id="me-confidence-display" style="color: var(--ink); font-weight: 600; font-family: 'IBM Plex Mono', monospace;">${confidenceLevel.toFixed(1)}</span>
@@ -184,7 +184,7 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
               </tbody>
             </table>
           </div>
-          <button class="me-btn-primary" onclick="meEstimationAddRow(${taskIdx})" style="width: 100%; max-width: 810px;">＋ Add Task</button>
+          <button class="me-btn-primary" data-cap-action="cap-estimation-add-row" data-task-idx="${taskIdx}" style="width: 100%; max-width: 810px;">＋ Add Task</button>
         </div>
 
         <!-- Notes -->
@@ -196,9 +196,9 @@ window.meRenderEstimationPage = function(taskIdx, tasksArray, teamArray) {
 
       <!-- Footer -->
       <div class="me-estimation-footer" style="max-width: 810px; margin: 16px auto 0; padding: 12px; display: flex; gap: 8px; justify-content: flex-end;">
-        <button class="me-btn-secondary" onclick="meCloseEstimationSubsystem()">Cancel</button>
-        <button class="me-btn-danger" onclick="meEstimationClearData(${taskIdx})" title="Revert to simple estimation mode">Clear Advanced Data</button>
-        <button class="me-btn-primary" onclick="meEstimationSave(${taskIdx})">💾 Save Estimate</button>
+        <button class="me-btn-secondary" data-cap-action="cap-estimation-cancel">Cancel</button>
+        <button class="me-btn-danger" data-cap-action="cap-estimation-clear" data-task-idx="${taskIdx}" title="Revert to simple estimation mode">Clear Advanced Data</button>
+        <button class="me-btn-primary" data-cap-action="cap-estimation-save" data-task-idx="${taskIdx}">💾 Save Estimate</button>
       </div>
     </div>
   `;

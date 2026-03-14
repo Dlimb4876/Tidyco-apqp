@@ -192,10 +192,10 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
             <div style="font-size:11px;color:var(--muted);margin-top:3px;font-weight:400;">18-Month Outlook &nbsp;·&nbsp; Stacked demand by category vs. available capacity</div>
           </div>
           <div class="me-chart-ctrl-left">
-            <button class="btn btn-secondary btn-sm" onclick="meOnPrevMonth()">← Prev</button>
-            <input type="month" id="meChartMonthInput" value="${monthKey}" onchange="meOnMonthChange(this.value)" />
-            <button class="btn btn-secondary btn-sm" onclick="meOnNextMonth()">Next →</button>
-            <a href="javascript:void(0)" class="me-chart-today-link" onclick="meOnTodayClick()">Today</a>
+            <button class="btn btn-secondary btn-sm" data-cap-action="cap-me-prev-month">← Prev</button>
+            <input type="month" id="meChartMonthInput" value="${monthKey}" data-cap-action="cap-me-month-change" />
+            <button class="btn btn-secondary btn-sm" data-cap-action="cap-me-next-month">Next →</button>
+            <a href="javascript:void(0)" class="me-chart-today-link" data-cap-action="cap-me-today">Today</a>
           </div>
         </div>
         <div class="me-card-body" style="padding:16px;">

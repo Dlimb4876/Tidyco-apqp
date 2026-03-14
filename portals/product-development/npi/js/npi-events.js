@@ -89,6 +89,10 @@ npi.events._onClick = function(evt) {
   case 'bom-open-kit-pick': npi.bom.openKitPick(npiNum(el.getAttribute('data-ki'), -1)); break
   case 'bom-save-kit-pick': npi.bom.saveKitPick(); break
   case 'bom-del-kit-item': npi.bom.delKitItem(npiNum(el.getAttribute('data-ki'), -1), npiNum(el.getAttribute('data-ri'), -1)); break
+  case 'bom-open-abc-pick': npi.bom.openABCPick(); break
+  case 'bom-abc-filter': npi.bom.setAbcFilter(el.getAttribute('data-cls')); break
+  case 'bom-abc-info': npi.bom.showAbcInfo(); break
+  case 'bom-import-abc': npi.bom.importABCPart(npiNum(el.getAttribute('data-idx'), -1)); break
 
   case 'gantt-toggle-month': npi.timing.toggleMonth(npiNum(el.getAttribute('data-mi'), -1)); break
   case 'gantt-toggle-plan': npi.timing.ganttTogglePlan(el.getAttribute('data-id'), npiNum(el.getAttribute('data-wi'), -1)); break
@@ -164,6 +168,7 @@ npi.events._onChange = function(evt) {
     const field = el.getAttribute('data-field')
     let value = el.type === 'checkbox' ? !!el.checked : el.value
     if (el.getAttribute('data-number') === '1') value = Number(value)
+    if (el.getAttribute('data-nullable') === '1') value = value || null
     npi.bom.updBom(type, idx, field, value)
     break
   }

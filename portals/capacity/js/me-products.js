@@ -182,13 +182,13 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
     const product = row.product;
     const rowIndex = row.rowIndex;
     rows += `
-      <tr>
+      <tr data-product-idx="${rowIndex}">
         <td>${esc(product.name)}</td>
         <td>${esc(row.familyLabel)}</td>
-        <td><input type="date" value="${product.supportFrom || ''}" onblur="meDataUpdateProduct(${rowIndex}, 'supportFrom', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${product.supportUntil || ''}" onblur="meDataUpdateProduct(${rowIndex}, 'supportUntil', this.value); meDebouncedSave();"></td>
-        <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${rowIndex}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
-        <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${rowIndex}, 'notes', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${product.supportFrom || ''}" data-cap-action="cap-products-upd" data-field="supportFrom"></td>
+        <td><input type="date" value="${product.supportUntil || ''}" data-cap-action="cap-products-upd" data-field="supportUntil"></td>
+        <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" data-cap-action="cap-products-upd" data-field="hoursPerWeek"></td>
+        <td><input value="${esc(product.notes || '')}" data-cap-action="cap-products-upd" data-field="notes"></td>
       </tr>`;
   });
 
@@ -223,18 +223,21 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
             type="text"
             placeholder="Filter by product or notes"
             value="${esc(state.search)}"
-            oninput="meProductsSetSearch(this.value, '${department}')"
+            data-cap-action="cap-products-search"
+            data-dept="${department}"
             style="min-width:220px;flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
           >
           <select
-            onchange="meProductsSetFamilyFilter(this.value, '${department}')"
+            data-cap-action="cap-products-family-filter"
+            data-dept="${department}"
             style="min-width:170px;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
           >
             <option value="all" ${state.family === 'all' ? 'selected' : ''}>All families</option>
             ${familyOptions.map(label => `<option value="${esc(label)}" ${state.family === label ? 'selected' : ''}>${esc(label)}</option>`).join('')}
           </select>
           <select
-            onchange="meProductsSetSort(this.value, '${department}')"
+            data-cap-action="cap-products-sort"
+            data-dept="${department}"
             style="min-width:170px;padding:8px 10px;border:1px solid var(--line);border-radius:6px"
           >
             <option value="name" ${state.sortBy === 'name' ? 'selected' : ''}>Sort: Product</option>
@@ -243,10 +246,10 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
             <option value="supportFrom" ${state.sortBy === 'supportFrom' ? 'selected' : ''}>Sort: Support From</option>
             <option value="supportUntil" ${state.sortBy === 'supportUntil' ? 'selected' : ''}>Sort: Support Until</option>
           </select>
-          <button class="btn btn-ghost btn-sm" onclick="meProductsToggleSortDir('${department}')" title="Toggle sort direction">
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-sort-dir" data-dept="${department}" title="Toggle sort direction">
             ${state.sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
           </button>
-          <button class="btn btn-ghost btn-sm" onclick="meProductsClearFilters('${department}')">Clear</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-clear-filters" data-dept="${department}">Clear</button>
         </div>
         <div class="me-tbl-wrap">
           <table class="me-tbl">

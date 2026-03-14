@@ -74,10 +74,10 @@ window.pmRenderCapacity = function() {
   }
 
   const html = `
-    <div class="pm-shell me-shell">
+    <div class="pm-shell me-shell" data-cap-context="pm">
       <div class="me-topbar">
         <div class="me-topbar-left">
-          <button class="btn btn-ghost btn-sm" onclick="setCapacityTab('root')">← Back</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-pm-back">← Back</button>
           <div>
             <div class="me-topbar-title">Project Management Capacity</div>
             <div class="me-topbar-sub">PM stream · shared table with department tag</div>
@@ -86,12 +86,12 @@ window.pmRenderCapacity = function() {
       </div>
 
       <div class="me-nav">
-        <button class="me-nav-btn ${pmTab === 'chart' ? 'active' : ''}" data-tab="chart" onclick="pmSetTab('chart')">📊 Capacity Chart</button>
-        <button class="me-nav-btn ${pmTab === 'team' ? 'active' : ''}" data-tab="team" onclick="pmSetTab('team')">👷 Team</button>
-        <button class="me-nav-btn ${pmTab === 'tasks' ? 'active' : ''}" data-tab="tasks" onclick="pmSetTab('tasks')">📋 Tasks</button>
-        <button class="me-nav-btn ${pmTab === 'products' ? 'active' : ''}" data-tab="products" onclick="pmSetTab('products')">🚂 Product Support</button>
-        <button class="me-nav-btn ${pmTab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" onclick="pmSetTab('product-taskload')">📦 Product Load</button>
-        <button class="me-nav-btn ${pmTab === 'holidays' ? 'active' : ''}" data-tab="holidays" onclick="pmSetTab('holidays')">🏖️ Holiday Planner</button>
+        <button class="me-nav-btn ${pmTab === 'chart' ? 'active' : ''}" data-tab="chart" data-cap-action="cap-pm-set-tab">📊 Capacity Chart</button>
+        <button class="me-nav-btn ${pmTab === 'team' ? 'active' : ''}" data-tab="team" data-cap-action="cap-pm-set-tab">👷 Team</button>
+        <button class="me-nav-btn ${pmTab === 'tasks' ? 'active' : ''}" data-tab="tasks" data-cap-action="cap-pm-set-tab">📋 Tasks</button>
+        <button class="me-nav-btn ${pmTab === 'products' ? 'active' : ''}" data-tab="products" data-cap-action="cap-pm-set-tab">🚂 Product Support</button>
+        <button class="me-nav-btn ${pmTab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" data-cap-action="cap-pm-set-tab">📦 Product Load</button>
+        <button class="me-nav-btn ${pmTab === 'holidays' ? 'active' : ''}" data-tab="holidays" data-cap-action="cap-pm-set-tab">🏖️ Holiday Planner</button>
       </div>
 
       <div class="me-body" id="pmBody">

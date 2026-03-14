@@ -242,3 +242,19 @@
   background: var(--blue-pale);
   border-style: solid;
 }
+
+.ctq-pick-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  padding: 7px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  transition: background 0.12s;
+}
+
+.ctq-pick-label:hover {
+  background: var(--blue-pale);
+}

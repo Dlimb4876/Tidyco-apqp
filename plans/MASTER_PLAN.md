@@ -43,6 +43,8 @@ The following work is complete and has been merged into the codebase. Items are 
 ### Security
 - [x] **Security P0** — Critical XSS sink fixed: `opsMetricCard` in `operations-dashboard.js` no longer writes `onclick="${row.action}"` into HTML; now uses `data-action="metric-navigate"` delegation
 - [x] **Security P1 (products.js)** — `portals/product-development/product-management/js/products.js` migrated from inline `onclick` to delegated `data-action` handling; regression tests added in `tests/product-management.test.js`
+- [x] **Phase 1 NPI (1.1–1.4e)** — All inline `onclick`/`onchange`/`oninput` handlers removed from product-development.js, dashboard.js, operations-dashboard-render-core.js, gates.js, timing.js, bom.js, npi-pfd.js, pfmea.js. All delegated through `npi-events.js`.
+- [x] **Phase 1 Capacity (1.5)** — All inline handlers removed from 14+ capacity files. New `capacity-events.js` delegation hub created with click/change/input/keydown listeners. ME and PM capacity both migrated (Capacity Parity Rule applied).
 
 ### UX
 - [x] Hub tile height reduced from 320 px to 160 px (desktop), 120 px (mobile)
@@ -174,22 +176,13 @@ For each file, follow these steps:
 4. Run `npm test`.
 
 #### 1.4c `portals/product-development/npi/js/bom.js`
-1. Read the file. Identify all `onclick=` and `onchange=` attributes (approximately 13).
-2. Replace with `data-action` pattern. Key actions: `bom-add`, `bom-update`, `bom-delete`, `bom-set-tab`.
-3. Add delegated listener.
-4. Run `npm test`.
+✅ **COMPLETE** — All 45 inline handlers replaced with `data-action` attributes. ABC catalogue cases (`bom-open-abc-pick`, `bom-abc-filter`, `bom-import-abc`) added to npi-events.js. `data-nullable` support added.
 
 #### 1.4d `portals/product-development/npi/js/npi-pfd.js`
-1. Read the file. Identify all handlers (approximately 12).
-2. Replace with `data-action` pattern.
-3. Add delegated listener.
-4. Run `npm test`.
+✅ **COMPLETE** — File had 0 onclick/onchange (already clean from prior phase). Removed cosmetic `onmouseover`/`onmouseout` from CTQ pick labels; replaced with `.ctq-pick-label` CSS class (hover handled in CSS).
 
 #### 1.4e `portals/product-development/npi/js/pfmea.js`
-1. Read the file. Identify all handlers (approximately 16).
-2. Replace with `data-action` pattern. Key actions: `pfmea-add-mode`, `pfmea-add-cause`, `pfmea-update-rpn`, `pfmea-delete`.
-3. Add delegated listener.
-4. Run `npm test`.
+✅ **COMPLETE** — All ~30 inline onclick/onchange/oninput replaced with `data-action` attributes. PFMEA score inputs unified under `pfmea-score` action with `data-kind`, `data-fallback`, and `data-allow-blank`. Added `pfmea-filter` and `npi-set-apqp` to npi-events.js.
 
 **Done when:**
 - `grep "onclick=" portals/product-development/npi/js/*.js` returns zero results
@@ -200,31 +193,21 @@ For each file, follow these steps:
 
 ### 1.5 Migrate Capacity Portal Files (Phase P3)
 
-**Priority:** 🟡 Medium | **Effort:** 🕐🕐🕐 Large | **Files:** ~9 files  
-**Rule:** Apply equivalent changes to both ME Capacity and PM Capacity (Capacity Parity Rule).
+✅ **COMPLETE** — Created `portals/capacity/js/capacity-events.js` as centralized delegation hub. Migrated all 14 capacity files:
+- `capacity.js`, `me-capacity.js`, `me-chart.js`, `me-holidays.js`, `me-heatmap.js` — nav and controls
+- `me-team.js` — team CRUD with `data-member-idx` row context
+- `me-tasks.js` — task CRUD + filter + sort headers
+- `me-products.js`, `me-product-taskload.js` — product support + task load filters
+- `me-estimation-page.js` — PERT estimation buttons and confidence slider
+- `me-components.js` — generic components updated to use data-cap-action
+- `prod-capacity.js`, `prod-capacity-dashboard.js`, `prod-capacity-detail.js`, `prod-capacity-settings.js`, `prod-capacity-workarea.js` — production capacity navigation, filters, and settings
+- `project-management/js/pm-capacity.js` — PM capacity (parity with ME)
 
-**Sequence (simplest first):**
-1. `portals/capacity/js/capacity.js` (~4 handlers) — hub navigation tiles
-2. `portals/capacity/js/me-chart.js` (~3 handlers)
-3. `portals/capacity/js/me-holidays.js` (~3 handlers)
-4. `portals/capacity/js/me-components.js` (~2 remaining dynamic sinks)
-5. `portals/capacity/js/me-tasks.js` (~2 handlers)
-6. `portals/capacity/js/prod-capacity-dashboard.js` (~3 handlers)
-7. `portals/capacity/js/prod-capacity-settings.js` (~5 handlers)
-8. `portals/capacity/js/prod-capacity-workarea.js` (~4 handlers)
-9. `portals/capacity/js/me-capacity.js` (~8 handlers) + `portals/capacity/project-management/js/pm-capacity.js` (mirror)
-
-For each file:
-1. Read the file.
-2. Replace `onclick=`/`onchange=` with `data-action` + data attributes.
-3. Add or update delegated listener.
-4. Mirror equivalent changes in the PM Capacity counterpart if applicable.
-5. Run `npm test`.
-
-**Done when:**
-- `grep -r "onclick=" portals/capacity/` returns zero results
-- ME and PM capacity tabs navigate and save correctly
-- Tests pass
+Key design decisions:
+- `data-cap-context="me"` / `data-cap-context="pm"` on the shell container determines ME/PM context
+- `_onClick`, `_onChange`, `_onInput`, `_onKeydown` handlers all delegated from `#mainContent`
+- `capacityEvents.setup()` called after each capacity render in `navigation.js`
+- Added `global.capacityEvents` mock to `tests/navigation.test.js`
 
 ---
 
@@ -252,7 +235,8 @@ For each file:
 ### 1.7 Apply Database Integrity Constraints (Phase P4)
 
 **Priority:** 🟡 Medium | **Effort:** 🕐 Small (DB only — no code changes)  
-**Where:** Supabase SQL Editor
+**Where:** Supabase SQL Editor  
+⚠️ **Manual step — no repository code change required. See SQL below and run in Supabase SQL Editor.**
 
 **Steps:**
 1. Open the Supabase project SQL Editor.
