@@ -37,6 +37,10 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
     selectedMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   }
 
+  const department = typeof meGetDepartmentFromContext === 'function'
+    ? meGetDepartmentFromContext()
+    : 'ME';
+
   const [year, month] = selectedMonth.split('-').map(Number);
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
@@ -95,7 +99,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
 
   html += `</tr>
             <tr>
-              <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left; width: 130px; max-width: 130px;">Team Member</th>`;
+              <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left; width: 130px; max-width: 130px;">${department === 'PM' ? 'Manager' : 'Engineer'}</th>`;
 
   dates.forEach((date, idx) => {
     const d = new Date(date);

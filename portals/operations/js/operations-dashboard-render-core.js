@@ -27,6 +27,15 @@ function opsBuildPulseRows(metrics) {
 	});
 
 	rows.push({
+		title: 'PM Capacity Check',
+		detail: metrics.pm.ready
+			? `Current utilisation is ${metrics.pm.utilisation}% with ${metrics.pm.headroom}h headroom this month.`
+			: 'PM capacity data has not been initialized yet. Open Capacity once to hydrate data.',
+		tone: metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch',
+		dest: 'capacity'
+	});
+
+	rows.push({
 		title: 'Delivery Confidence',
 		detail: `${metrics.actions.overdue} overdue actions and ${metrics.risk.highRpn} high-RPN causes currently need attention.`,
 		tone: metrics.actions.overdue > 0 || metrics.risk.highRpn > 0 ? 'critical' : 'good',
@@ -38,13 +47,6 @@ function opsBuildPulseRows(metrics) {
 		detail: `${metrics.production.active} active batches, ${metrics.production.completed} completed, ${metrics.production.total} total tracked.`,
 		tone: metrics.production.active > metrics.production.completed ? 'watch' : 'good',
 		dest: 'production'
-	});
-
-	rows.push({
-		title: 'Stability Signal',
-		detail: `${metrics.bugs.open} open bug reports and ${metrics.bugs.closed7d} closed in the last 7 days.`,
-		tone: metrics.bugs.open > 5 ? 'critical' : metrics.bugs.open > 0 ? 'watch' : 'good',
-		dest: 'bugreports'
 	});
 
 	return rows;
@@ -72,7 +74,6 @@ function opsRenderPulseFeed(metrics) {
 function opsRenderRiskRadar(metrics) {
 	const rpnPct = Math.min(100, metrics.risk.highRpn * 4);
 	const overduePct = Math.min(100, metrics.actions.overdue * 12);
-	const bugPct = Math.min(100, metrics.bugs.open * 8);
 
 	return `
 		<section class="ops-panel">
@@ -91,12 +92,6 @@ function opsRenderRiskRadar(metrics) {
 				<div class="ops-radar-label">Overdue Actions</div>
 				<div class="ops-radar-bar"><span style="width:${overduePct}%"></span></div>
 				<div class="ops-radar-value">${metrics.actions.overdue}</div>
-			</div>
-
-			<div class="ops-radar-row">
-				<div class="ops-radar-label">Open Bugs</div>
-				<div class="ops-radar-bar"><span style="width:${bugPct}%"></span></div>
-				<div class="ops-radar-value">${metrics.bugs.open}</div>
 			</div>
 		</section>`;
 }
@@ -120,8 +115,8 @@ function opsRenderQuickActions() {
 function opsRenderOverview(metrics) {
 	const scoreTone = opsStatusTone(metrics.healthScore);
 	const meTone = metrics.me.ready ? (metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good') : 'watch';
+	const pmTone = metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch';
 	const actionTone = metrics.actions.overdue > 0 ? 'critical' : 'good';
-	const bugTone = metrics.bugs.open > 5 ? 'critical' : metrics.bugs.open > 0 ? 'watch' : 'good';
 
 	return `
 		<div class="ops-shell">
@@ -141,9 +136,9 @@ function opsRenderOverview(metrics) {
 				${opsMetricCard('Active Programmes', String(metrics.programmesFlow.active), `${metrics.programmesFlow.archived} archived`, 'good', 'product-development')}
 				${opsMetricCard('Gate Completion', `${metrics.gate.percentage}%`, `${metrics.gate.doneChecks}/${metrics.gate.totalChecks} checks done`, metrics.gate.percentage < 65 ? 'critical' : metrics.gate.percentage < 85 ? 'watch' : 'good', 'product-development')}
 				${opsMetricCard('ME Utilisation', metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready', metrics.me.ready ? `${metrics.me.headroom}h headroom this month` : 'Open Capacity once to initialize', meTone, 'capacity')}
+				${opsMetricCard('PM Utilisation', metrics.pm.ready ? `${metrics.pm.utilisation}%` : 'Not Ready', metrics.pm.ready ? `${metrics.pm.headroom}h headroom this month` : 'Open Capacity once to initialize', pmTone, 'capacity')}
 				${opsMetricCard('Overdue Actions', String(metrics.actions.overdue), `${metrics.actions.totalOpen} actions open`, actionTone, 'product-development')}
 				${opsMetricCard('High RPN Causes', String(metrics.risk.highRpn), `${metrics.risk.highRisks} high-risk tracker items`, metrics.risk.highRpn > 0 ? 'critical' : 'good', 'product-development')}
-				${opsMetricCard('Open Bugs', String(metrics.bugs.open), `${metrics.bugs.closed7d} closed in last 7 days`, bugTone, 'bugreports')}
 				${opsMetricCard('Production Completion', `${metrics.production.completionRate}%`, `${metrics.production.completed}/${metrics.production.total} batches complete`, metrics.production.completionRate < 40 ? 'critical' : metrics.production.completionRate < 70 ? 'watch' : 'good', 'production')}
 				${opsMetricCard('Active Batches', String(metrics.production.active), 'Live production work packets', metrics.production.active > 0 ? 'watch' : 'good', 'production')}
 			</section>
@@ -182,7 +177,6 @@ function opsRenderRiskView(metrics) {
 			<section class="ops-metrics-grid">
 				${opsMetricCard('Overdue Actions', String(metrics.actions.overdue), `${metrics.actions.totalOpen} open actions`, metrics.actions.overdue > 0 ? 'critical' : 'good')}
 				${opsMetricCard('High RPN Causes', String(metrics.risk.highRpn), 'PFMEA risk pressure points', metrics.risk.highRpn > 0 ? 'critical' : 'good')}
-				${opsMetricCard('Open Bugs', String(metrics.bugs.open), 'System stability backlog', metrics.bugs.open > 0 ? 'watch' : 'good')}
 			</section>
 			${opsRenderPulseFeed(metrics)}
 		</div>`;
@@ -228,7 +222,6 @@ function opsRenderActionsView(metrics) {
 				<div class="ops-actions-grid">
 					<button class="btn btn-primary" onclick="navigate('product-development')">Resolve Overdue Actions (${metrics.actions.overdue})</button>
 					<button class="btn btn-primary" onclick="navigate('product-development')">Review High RPN (${metrics.risk.highRpn})</button>
-					<button class="btn btn-primary" onclick="navigate('bugreports')">Triage Open Bugs (${metrics.bugs.open})</button>
 					<button class="btn btn-primary" onclick="navigate('capacity')">Balance Capacity (${metrics.me.ready ? metrics.me.utilisation + '%' : 'Pending'})</button>
 				</div>
 			</section>

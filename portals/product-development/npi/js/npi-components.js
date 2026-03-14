@@ -40,6 +40,8 @@ npi.components.scoreInput = function(value, handler) {
   const placeholder = handler?.placeholder ? ` placeholder="${handler.placeholder}"` : ''
   const style = handler?.style ? ` style="${handler.style}"` : ''
   const action = handler?.action ? ` data-action="${handler.action}"` : ''
+  const oninput = handler?.oninput ? ` oninput="${handler.oninput}"` : ''
+  const onchange = handler?.onchange ? ` onchange="${handler.onchange}"` : ''
   const extra = handler?.extra ? ` ${handler.extra}` : ''
-  return `<input type="number" class="${cls}" min="${min}" max="${max}" value="${value ?? ''}"${placeholder}${style}${action}${extra}>`
+  return `<input type="number" class="${cls}" min="${min}" max="${max}" value="${value ?? ''}"${placeholder}${style}${action}${oninput}${onchange}${extra}>`
 }

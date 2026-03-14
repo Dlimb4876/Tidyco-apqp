@@ -46,8 +46,8 @@ window.meRenderTeamTab = function(teamArray) {
         <td><input value="${esc(member.name)}" onchange="meDataUpdateTeam(${rowIndex}, 'name', this.value); meDebouncedSave();"></td>
         <td><input value="${esc(member.jobTitle || '')}" onchange="meDataUpdateTeam(${rowIndex}, 'jobTitle', this.value); meDebouncedSave();"></td>
         <td><select onchange="meDataUpdateTeam(${rowIndex}, 'group', this.value); meDebouncedSave();">${groupOpts}</select></td>
-        <td><input type="date" value="${member.startDate || ''}" onchange="meDataUpdateTeam(${rowIndex}, 'startDate', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${member.endDate || ''}" onchange="meDataUpdateTeam(${rowIndex}, 'endDate', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${member.startDate || ''}" onblur="meDataUpdateTeam(${rowIndex}, 'startDate', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${member.endDate || ''}" onblur="meDataUpdateTeam(${rowIndex}, 'endDate', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" onchange="meDataUpdateTeam(${rowIndex}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" onchange="meDataUpdateTeam(${rowIndex}, 'utilisation', this.value); meDebouncedSave();"></td>
         <td style="font-weight: bold;">${effective}</td>
@@ -84,8 +84,8 @@ window.meRenderTeamTab = function(teamArray) {
 
       <div class="me-card">
         <div class="me-card-head">
-          <span class="me-card-title">TEAM MEMBERS</span>
-          <span style="font-size:12px;color:var(--muted)">${teamArray.length} team members</span>
+          <span class="me-card-title">${isPmContext ? 'PM TEAM' : 'ENGINEERING TEAM'}</span>
+          <span style="font-size:12px;color:var(--muted)">${teamArray.length} ${isPmContext ? 'managers' : 'engineers'}</span>
         </div>
         <div class="me-card-body">
           <div class="me-tbl-wrap">
@@ -102,12 +102,12 @@ window.meRenderTeamTab = function(teamArray) {
                 <th style="width:36px"></th>
               </tr></thead>
               <tbody>
-                ${rows || '<tr><td colspan="9"><div style="text-align:center;padding:40px;color:var(--muted)">No team members added</div></td></tr>'}
+                ${rows || '<tr><td colspan="9"><div style="text-align:center;padding:40px;color:var(--muted)">No ' + (isPmContext ? 'managers' : 'engineers') + ' added</div></td></tr>'}
               </tbody>
             </table>
           </div>
           <div class="me-add-row">
-            <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('${isPmContext ? 'New PM Team Member' : 'New Engineer'}', ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team');">＋ Add Team Member</button>
+            <button class="btn btn-primary btn-sm" onclick="meDataAddTeam('${isPmContext ? 'New PM Manager' : 'New Engineer'}', ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team');">＋ Add ${isPmContext ? 'Manager' : 'Engineer'}</button>
           </div>
         </div>
       </div>

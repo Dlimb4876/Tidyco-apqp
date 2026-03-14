@@ -39,8 +39,8 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
     rows += `
       <tr>
         <td>${esc(product.name)}</td>
-        <td><input type="date" value="${product.supportFrom || ''}" onchange="meDataUpdateProduct(${rowIndex}, 'supportFrom', this.value); meDebouncedSave();"></td>
-        <td><input type="date" value="${product.supportUntil || ''}" onchange="meDataUpdateProduct(${rowIndex}, 'supportUntil', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${product.supportFrom || ''}" onblur="meDataUpdateProduct(${rowIndex}, 'supportFrom', this.value); meDebouncedSave();"></td>
+        <td><input type="date" value="${product.supportUntil || ''}" onblur="meDataUpdateProduct(${rowIndex}, 'supportUntil', this.value); meDebouncedSave();"></td>
         <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" onchange="meDataUpdateProduct(${rowIndex}, 'hoursPerWeek', this.value); meDebouncedSave();"></td>
         <td><input value="${esc(product.notes || '')}" onchange="meDataUpdateProduct(${rowIndex}, 'notes', this.value); meDebouncedSave();"></td>
       </tr>`;

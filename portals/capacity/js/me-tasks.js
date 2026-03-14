@@ -186,8 +186,8 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
         <td><select onchange="meDataUpdateTask(${taskIndex}, 'category', this.value); ${debouncedSaveFunc}();">${catOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${taskIndex}, 'assigneeId', this.value); ${debouncedSaveFunc}();">${memOpts}</select></td>
         <td><select onchange="meDataUpdateTask(${taskIndex}, 'productId', this.value); ${debouncedSaveFunc}();">${prodOpts}</select></td>
-        <td><input type="date" value="${task.startDate || ''}" onchange="meDataUpdateTask(${taskIndex}, 'startDate', this.value); ${debouncedSaveFunc}();"></td>
-        <td><input type="date" value="${task.endDate || ''}" onchange="meDataUpdateTask(${taskIndex}, 'endDate', this.value); ${debouncedSaveFunc}();"></td>
+        <td><input type="date" value="${task.startDate || ''}" onblur="meDataUpdateTask(${taskIndex}, 'startDate', this.value); ${debouncedSaveFunc}();"></td>
+        <td><input type="date" value="${task.endDate || ''}" onblur="meDataUpdateTask(${taskIndex}, 'endDate', this.value); ${debouncedSaveFunc}();"></td>
         <td><select onchange="meDataUpdateTask(${taskIndex}, 'status', this.value); ${debouncedSaveFunc}(); ${setTabFunc}('tasks');">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
         <td><input type="number" value="${task.totalHours || 0}" step="0.5" onchange="meDataUpdateTask(${taskIndex}, 'totalHours', this.value); ${debouncedSaveFunc}();"></td>
         <td style="text-align: center;">

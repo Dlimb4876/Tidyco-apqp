@@ -227,58 +227,35 @@ window.meLoadRelationalTasks = async function(userId) {
 window.meSaveTeamRelational = async function(userId, teamMember) {
   try {
     const department = meNormalizeDepartmentTag(teamMember.department, 'ME');
-    if (!teamMember.id) {
-      // Insert new team member
-      const payload = {
-        user_id: userId,
-        name: teamMember.name,
-        hours_per_week: teamMember.hoursPerWeek,
-        utilisation: teamMember.utilisation,
-        job_title: teamMember.jobTitle,
-        team_group: teamMember.group,
-        department,
-        start_date: teamMember.startDate || null,
-        end_date: teamMember.endDate || null
-      };
+    const teamId = teamMember.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
 
-      const { data, error } = await supa
-        .from('me_teams')
-        .insert([payload])
-        .select('id');
+    const payload = {
+      id: teamId,
+      user_id: userId,
+      name: teamMember.name,
+      hours_per_week: teamMember.hoursPerWeek,
+      utilisation: teamMember.utilisation,
+      job_title: teamMember.jobTitle,
+      team_group: teamMember.group,
+      department,
+      start_date: teamMember.startDate || null,
+      end_date: teamMember.endDate || null,
+      updated_at: new Date().toISOString()
+    };
 
-      if (error) {
-        console.warn('meSaveTeamRelational insert error:', error.message);
-        return false;
-      }
+    const { data, error } = await supa
+      .from('me_teams')
+      .upsert([payload], { onConflict: 'id' })
+      .select('id');
 
-      const newId = data && data.length > 0 ? data[0].id : null;
-      teamMember.id = newId;
-      return true;
-    } else {
-      // Update existing team member
-      const updatePayload = {
-        name: teamMember.name,
-        hours_per_week: teamMember.hoursPerWeek,
-        utilisation: teamMember.utilisation,
-        job_title: teamMember.jobTitle,
-        team_group: teamMember.group,
-        department,
-        start_date: teamMember.startDate || null,
-        end_date: teamMember.endDate || null,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await supa
-        .from('me_teams')
-        .update(updatePayload)
-        .eq('id', teamMember.id);
-
-      if (error) {
-        console.warn('meSaveTeamRelational update error:', error.message);
-        return false;
-      }
-      return true;
+    if (error) {
+      console.warn('meSaveTeamRelational upsert error:', error.message);
+      return false;
     }
+
+    const persistedId = data && data.length > 0 ? data[0].id : teamId;
+    teamMember.id = persistedId;
+    return true;
   } catch (err) {
     console.warn('meSaveTeamRelational exception:', err.message);
     return false;
@@ -290,57 +267,34 @@ window.meSaveProductRelational = async function(userId, product) {
     const department = meNormalizeDepartmentTag(product.department, 'ME');
     const supportFrom = product.supportFrom || product.support_from || null;
     const supportUntil = product.supportUntil || product.support_until || null;
+    const productId = product.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
 
-    if (!product.id) {
-      // Insert new product
-      const payload = {
-        user_id: userId,
-        name: product.name || '',
-        product_database_id: product.productDatabaseId || null,
-        support_from: supportFrom || null,
-        support_until: supportUntil || null,
-        hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
-        department,
-        notes: product.notes || null
-      };
+    const payload = {
+      id: productId,
+      user_id: userId,
+      name: product.name || '',
+      product_database_id: product.productDatabaseId || null,
+      support_from: supportFrom || null,
+      support_until: supportUntil || null,
+      hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
+      department,
+      notes: product.notes || null,
+      updated_at: new Date().toISOString()
+    };
 
-      const { data, error } = await supa
-        .from('me_products')
-        .insert([payload])
-        .select('id');
+    const { data, error } = await supa
+      .from('me_products')
+      .upsert([payload], { onConflict: 'id' })
+      .select('id');
 
-      if (error) {
-        console.warn('meSaveProductRelational insert error:', error.message);
-        return false;
-      }
-
-      const newId = data && data.length > 0 ? data[0].id : null;
-      product.id = newId;
-      return true;
-    } else {
-      // Update existing product
-      const updatePayload = {
-        name: product.name || '',
-        product_database_id: product.productDatabaseId || null,
-        support_from: supportFrom || null,
-        support_until: supportUntil || null,
-        hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
-        department,
-        notes: product.notes || null,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await supa
-        .from('me_products')
-        .update(updatePayload)
-        .eq('id', product.id);
-
-      if (error) {
-        console.warn('meSaveProductRelational update error:', error.message);
-        return false;
-      }
-      return true;
+    if (error) {
+      console.warn('meSaveProductRelational upsert error:', error.message);
+      return false;
     }
+
+    const persistedId = data && data.length > 0 ? data[0].id : productId;
+    product.id = persistedId;
+    return true;
   } catch (err) {
     console.warn('meSaveProductRelational exception:', err.message);
     return false;

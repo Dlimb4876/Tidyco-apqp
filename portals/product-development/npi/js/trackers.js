@@ -79,7 +79,7 @@ npi.tracker.renderRisks = function() {
     </tr>`
   }).join('')
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Risk Register</div><div class="sec-desc">Project-level risks. Likelihood × Impact = Score. All fields editable inline. High risks ≥ 12.</div></div>
-  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-primary btn-sm" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div></div>
+  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showModal('modalRiskMatrix')">📊 Risk Matrix</button><button class="btn btn-primary btn-sm" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div></div>
   ${liveUpdateBadge ? `<div style="margin:0 0 12px 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
   <div style="display:flex;gap:10px;margin-bottom:16px">
     <div class="kpi-card" style="--kpi-color:var(--red);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--red)">${hi}</div><div class="kpi-label">High ≥12</div></div>
@@ -91,7 +91,7 @@ npi.tracker.renderRisks = function() {
   <div class="card-head"><span class="card-title">Risk Register</span><span class="card-meta">${p.risks.length} risks · L × I = Score</span></div>
   ${p.risks.length === 0
     ? emptyState('🛡', 'No risks yet', 'Click ＋ Add Risk to start — all fields edit inline')
-    : `<div class="sticky-card-scroll"><table class="tbl risk-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:40px"><col style="width:40px"><col style="width:56px"><col style="width:280px"><col style="width:100px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>L</th><th>I</th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
+    : `<div class="sticky-card-scroll"><table class="tbl risk-tbl" style="table-layout:fixed;width:100%"><colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:52px"><col style="width:52px"><col style="width:56px"><col style="width:280px"><col style="width:100px"><col style="width:32px"></colgroup><thead><tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th title="Likelihood (1–5): How likely is this risk to occur?" style="line-height:1.3">L<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Likelihood</span></th><th title="Impact (1–5): How severe would the consequences be?" style="line-height:1.3">I<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Impact</span></th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`}
   <button class="add-row" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div>`
 }
 npi.tracker.addRisk = function() {

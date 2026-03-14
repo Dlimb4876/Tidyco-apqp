@@ -3,7 +3,8 @@
     "allow": [
       "Bash(ls /workspaces/Tidyco-apqp/*.md)",
       "Bash(head -20 grep -n \"from\\(\" c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/js/family-templates-data.js)",
-      "Bash(head -20 grep -n \"from\\(\" c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/operations/js/operations-forecast-data.js)"
+      "Bash(head -20 grep -n \"from\\(\" c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/operations/js/operations-forecast-data.js)",
+      "Bash(grep -rn \"type=\"\"date\"\"\" portals/capacity/js/*.js)"
     ]
   }
 }

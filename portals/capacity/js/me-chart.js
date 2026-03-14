@@ -3,6 +3,10 @@
    ============================================================ */
 
 window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
+  const department = typeof window.meCurrentDepartmentContext === 'string'
+    ? window.meCurrentDepartmentContext
+    : 'ME';
+    
   // KPIs always reflect the current calendar month
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -233,14 +237,14 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
 
         <div class="me-card">
           <div class="me-card-head">
-            <span class="me-card-title">CAPACITY PER ENGINEER</span>
+            <span class="me-card-title">${department === 'PM' ? 'CAPACITY PER MANAGER' : 'CAPACITY PER ENGINEER'}</span>
             <span style="font-size:11px;color:var(--muted);">${currentMonthLabel}</span>
           </div>
           <div class="me-card-body">
             <div class="me-tbl-wrap">
               <table class="me-tbl">
                 <thead><tr>
-                  <th>Engineer</th>
+                  <th>${department === 'PM' ? 'Manager' : 'Engineer'}</th>
                   <th style="text-align:right;">Util %</th>
                   <th style="text-align:right;">Working Days</th>
                   <th style="text-align:right;">Holiday (days)</th>

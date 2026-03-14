@@ -264,6 +264,84 @@
 </div>
 
 <!-- Respond & Close Bug -->
+<div class="modal-bg" id="modalRiskMatrix" style="display:none">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">5×5 Risk Matrix</div>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 16px">Score = Likelihood × Impact. Rate each between 1 (lowest) and 5 (highest).</p>
+    <table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:12px;text-align:center">
+      <!-- Top axis header: Impact -->
+      <thead>
+        <tr>
+          <td style="width:36px"></td>
+          <td style="width:28px"></td>
+          <th colspan="5" style="padding:7px 6px;background:#e0eeff;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:0.04em">IMPACT →</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">1</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">2</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">3</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">4</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">5</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <!-- Left axis header: Likelihood (rowspan 5) -->
+          <th rowspan="5" style="writing-mode:vertical-rl;transform:rotate(180deg);background:#e0eeff;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:0.04em;padding:8px 4px;white-space:nowrap">← LIKELIHOOD</th>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">1</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">1</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">3</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">5</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">6</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">8</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">10</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">3</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">3</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">6</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">9</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">12</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">15</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">4</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">8</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">12</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">16</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">20</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">5</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">5</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">10</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">15</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">20</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">25</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display:flex;gap:16px;margin-top:14px;font-size:12px;align-items:center">
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#d1fae5;border-radius:3px;border:1px solid #a7f3d0"></span><strong style="color:#065f46">Low</strong> &lt;6</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#fef3c7;border-radius:3px;border:1px solid #fcd34d"></span><strong style="color:#92400e">Medium</strong> 6–11</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#fee2e2;border-radius:3px;border:1px solid #fca5a5"></span><strong style="color:#991b1b">High</strong> ≥12</span>
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modalRiskMatrix')">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modalRespondBug" style="display:none">
   <div class="modal">
     <div class="modal-title">Respond &amp; Close Bug</div>

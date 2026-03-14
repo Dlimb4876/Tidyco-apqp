@@ -447,7 +447,12 @@ npi.dashboard.renderDashboard = function() {
 
   const nextSteps = []
   if (overdueAct > 0) nextSteps.push(`Close ${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}`)
-  if (curGateDef) nextSteps.push(`Complete remaining checks for Gate ${curGateDef.num}`)
+  if (curGateDef) {
+    const curGateData = p.gates[curGateIndex] || {}
+    const curGateChecks = curGateData.checks || []
+    const allChecksDone = curGateChecks.length > 0 && curGateChecks.every(Boolean)
+    nextSteps.push(allChecksDone ? `Complete gate sign off` : `Complete remaining checks for Gate ${curGateDef.num}`)
+  }
   if (highRisks > 0) nextSteps.push(`Review ${highRisks} high-severity risk${highRisks !== 1 ? 's' : ''}`)
   if (nextSteps.length === 0) nextSteps.push('Project is in good shape, continue planned activity')
 
@@ -491,7 +496,7 @@ npi.dashboard.renderDashboard = function() {
           </div>
           <div class="trajectory">${trajectoryHTML}</div>
           <div class="next-box">
-            <h3>Next 72 Hours</h3>
+            <h3>Current Focus</h3>
             <ul>${nextSteps.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
           </div>
         </div>
@@ -500,11 +505,11 @@ npi.dashboard.renderDashboard = function() {
           <div class="stack-card">
             <h3>Quick Launch</h3>
             <div class="chips">
-              <button onclick="npi.nav.navigate('apqp')">APQP</button>
-              <button onclick="npi.nav.navigate('bom')">BOM</button>
-              <button onclick="npi.nav.navigate('timing')">Timing</button>
-              <button onclick="npi.nav.navigate('actions')">Actions</button>
-              <button onclick="npi.nav.navigate('risks')">Risks</button>
+              <button onclick="npi.nav.navigate('apqp')">📐 APQP</button>
+              <button onclick="npi.nav.navigate('bom')">📦 BOM</button>
+              <button onclick="npi.nav.navigate('timing')">📅 Timing</button>
+              <button onclick="npi.nav.navigate('actions')">✅ Actions</button>
+              <button onclick="npi.nav.navigate('risks')">🛡 Risks</button>
             </div>
           </div>
 
