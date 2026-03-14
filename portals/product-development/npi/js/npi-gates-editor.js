@@ -144,7 +144,7 @@
   window.openTenderGateSelectionModal = function(productId) {
     const programme = resolveProgramme(productId);
     if (!programme) {
-      alert('Could not find a linked NPI project for this product.');
+      showToast('Could not find a linked NPI project for this product.', 'warning');
       return;
     }
 
@@ -199,7 +199,7 @@
     const programme = getProgrammeById(tenderGateScopeState.programmeId);
     if (!programme) return;
     if (isGateSelectionLocked(programme.id)) {
-      alert('Gate scope is locked and cannot be edited.');
+      showToast('Gate scope is locked and cannot be edited.', 'warning');
       return;
     }
 
@@ -213,7 +213,7 @@
     const programme = getProgrammeById(tenderGateScopeState.programmeId);
     if (!programme) return;
     if (isGateSelectionLocked(programme.id)) {
-      alert('Gate scope is already locked for this project.');
+      showToast('Gate scope is already locked for this project.', 'warning');
       return;
     }
 

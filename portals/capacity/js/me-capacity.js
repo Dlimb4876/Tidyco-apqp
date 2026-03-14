@@ -272,7 +272,6 @@ window.flushMEDataNow = function() {
 
   // Quick synchronous save for team members only (most critical)
   if (meDataState.team && meDataState.team.length > 0) {
-    console.log('Flushing ME data on page unload...');
     meDataState.team.forEach((member, i) => {
       if (typeof meSaveTeamRelational === 'function') {
         // Don't await, just fire and forget for unload

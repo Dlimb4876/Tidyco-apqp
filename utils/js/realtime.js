@@ -59,7 +59,6 @@ function createRealtimeSubscription(tableName, channelName, callbacks = {}, opti
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log(`✓ Real-time sync active: ${channelName}`);
         }
       });
 
@@ -82,7 +81,6 @@ function removeRealtimeSubscription(channelName) {
   try {
     supa.removeChannel(realtimeSubscriptions[channelName]);
     delete realtimeSubscriptions[channelName];
-    console.log(`✓ Real-time sync stopped: ${channelName}`);
   } catch (err) {
     console.debug(`Could not unsubscribe from "${channelName}":`, err);
   }

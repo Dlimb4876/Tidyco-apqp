@@ -897,5 +897,4 @@ window.npiRelClearAll = async function(pid) {
   for (const table of tables) {
     await supa.from(table).delete().eq('programme_id', pid);
   }
-  console.log('npiRelClearAll: cleared all NPI data for', pid);
 };

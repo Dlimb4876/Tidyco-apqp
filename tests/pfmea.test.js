@@ -14,6 +14,7 @@ global.PFMEA_SCORE_MAX = 10;
 global.save = jest.fn();
 global.render = jest.fn();
 global.alert = jest.fn();
+global.showToast = jest.fn();
 global.confirm = jest.fn(() => true);
 
 global.esc = (v) => String(v ?? '')
@@ -131,7 +132,7 @@ describe('PFMEA core rules', () => {
 
     npi.pfmea.pfImplementAction(0, 0, 0);
 
-    expect(alert).toHaveBeenCalled();
+    expect(showToast).toHaveBeenCalled();
     expect(save).not.toHaveBeenCalled();
     expect(render).not.toHaveBeenCalled();
   });

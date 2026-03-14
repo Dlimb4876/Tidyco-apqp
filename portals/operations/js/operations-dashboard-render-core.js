@@ -107,7 +107,7 @@ function opsRenderQuickActions() {
 				<button class="btn btn-ghost" onclick="navigate('capacity')">Open Capacity Board</button>
 				<button class="btn btn-ghost" onclick="navigate('production')">Open Production Planner</button>
 				<button class="btn btn-ghost" onclick="navigate('product-development')">Open NPI Workspace</button>
-				<button class="btn btn-ghost" onclick="navigate('bugreports')">Open Bug Response</button>
+				<button class="btn btn-ghost" onclick="navigate('feedback')">Open Feedback & Bugs</button>
 			</div>
 		</section>`;
 }

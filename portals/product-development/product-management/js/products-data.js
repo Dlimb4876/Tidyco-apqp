@@ -132,7 +132,6 @@ async function productsDataInit() {
 
     productsState.loaded = true;
     productsDataInitRealtime();
-    console.log('✓ Products data initialized:', productsState.products.length, 'products');
   } catch (err) {
     console.error('❌ Error initializing products:', err);
   }
@@ -232,7 +231,6 @@ async function productsDataAddProduct(product) {
     productsState.products.sort((a, b) => a.name.localeCompare(b.name));
     productsDataTriggerKanbanRefresh();
 
-    console.log('✓ Product added:', data.id);
     return data;
   } catch (err) {
     console.error('❌ Error adding product:', err);
@@ -276,7 +274,6 @@ async function productsDataUpdateProduct(productId, updates) {
       productTenderStatusTriggered(productId, data);
     }
 
-    console.log('✓ Product updated:', productId);
     return data;
   } catch (err) {
     console.error('❌ Error updating product:', err);
@@ -297,7 +294,6 @@ async function productsDataDeleteProduct(productId) {
     delete productsState.history[productId];
     productsDataTriggerKanbanRefresh();
 
-    console.log('✓ Product deleted:', productId);
   } catch (err) {
     console.error('❌ Error deleting product:', err);
     throw err;
@@ -335,7 +331,6 @@ async function productsDataAddHistory(productId, historyRecord) {
       current_overhaul_hours: historyRecord.overhaul_hours
     });
 
-    console.log('✓ Overhaul history record added:', data.id);
     return data;
   } catch (err) {
     console.error('❌ Error adding history record:', err);
@@ -356,7 +351,6 @@ async function productsDataDeleteHistory(productId, historyId) {
         .filter(h => h.id !== historyId);
     }
 
-    console.log('✓ History record deleted:', historyId);
   } catch (err) {
     console.error('❌ Error deleting history record:', err);
     throw err;
@@ -390,5 +384,4 @@ function productsDataGetOverhaulTimeOnDate(productId, targetDate) {
  */
 async function productsDataSave() {
   // Data is auto-saved on each operation, but this can be called for explicit sync
-  console.log('✓ Products data synced');
 }

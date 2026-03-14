@@ -591,7 +591,6 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
       }
     }
 
-    console.log('Migration complete:', results);
     return results;
   } catch (err) {
     console.warn('meMigrateJsonToRelational exception:', err.message);

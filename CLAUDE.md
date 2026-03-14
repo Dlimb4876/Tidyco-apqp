@@ -307,7 +307,6 @@ Saves don't sync to Supabase instantly. They debounce to avoid excessive writes.
 │   │   ├── npi/                    # Core APQP modules (PFMEA, gates, BOM, etc.)
 │   │   └── product-management/    # Product registry with overhaul history
 │   ├── production/                 # Production scheduling and Gantt planning
-│   ├── productmgmt/               # Central product master
 │   └── bugs/                       # Bug reports portal with real-time subscriptions
 └── *.md                            # Architecture and feature documentation
 ```
@@ -322,7 +321,7 @@ All application state lives in **global variables** defined in `core/js/state.js
 |----------|------|---------|
 | `db` | Object | All project data (`{ programmes[], families[], ... }`) |
 | `progId` | String (UUID) | Currently active project |
-| `currentSection` | String | Active portal (`hub`, `capacity`, `product-development`, `production`, `bugreports`, `productmgmt`) |
+| `currentSection` | String | Active portal (`hub`, `capacity`, `product-development`, `production`, `bugreports`) |
 | `apqpTab` | String | Active APQP sub-tab (`ctq`, `pfd`, `pfmea`, `cp`, `gates`, `bom`, `timing`, `trackers`) |
 | `capacityTab` | String | Active capacity sub-tab (`root`, `me`, `overhaul`, `projects`) |
 | `productionTab` | String | Active production sub-tab (`root`, `products`, `scheduling`, `by-product`, `by-unit`) |
@@ -541,7 +540,7 @@ JS:
                        prod-capacity-detail.js → prod-capacity.js →
                        production.js → scheduling.js → planning.js →
                        families-data.js → family-templates-data.js → products.js →
-                       product-development.js → product-management.js → productmgmt.js →
+                       product-development.js → product-management.js →
                        npi-constants.js → npi.js → rpn-chart.js → dashboard.js →
                        gates.js → pfmea.js → apqp.js → bom.js → timing.js → trackers.js →
                        bugs-data.js → bugs.js

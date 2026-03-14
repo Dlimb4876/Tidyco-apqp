@@ -53,6 +53,7 @@ describe('Product Management Event Delegation', () => {
     global.render = jest.fn();
     global.confirm = jest.fn(() => true);
     global.alert = jest.fn();
+    global.showToast = jest.fn();
 
     const script = fs.readFileSync(
       path.resolve(__dirname, '../portals/product-development/product-management/js/products.js'),

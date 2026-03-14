@@ -586,7 +586,7 @@ function renderAllProductsTrends() {
       const hours = parseFloat(hoursVal);
 
       if (!date || !hoursVal || isNaN(hours)) {
-        alert('Please enter a date and overhaul hours.');
+        showToast('Please enter a date and overhaul hours.', 'warning');
         return;
       }
 
@@ -614,7 +614,7 @@ function renderAllProductsTrends() {
           yearSel.innerHTML = years.map(y => `<option value="${y}"${trendsSelectedYear == y ? ' selected' : ''}>${y}</option>`).join('');
         }
       } catch (err) {
-        alert('Error saving estimation: ' + err.message);
+        showToast('Error saving estimation: ' + err.message, 'error');
         btn.disabled = false;
         btn.textContent = 'Save Estimation';
       }

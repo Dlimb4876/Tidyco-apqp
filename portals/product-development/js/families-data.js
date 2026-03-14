@@ -55,7 +55,6 @@ async function familiesDataLoad() {
     if (error) throw error;
 
     familiesState.families = data || [];
-    console.log('✓ Families loaded:', familiesState.families.length);
     return familiesState.families;
   } catch (err) {
     console.error('Error loading families:', err);
@@ -94,12 +93,11 @@ window.familiesDataAddFamily = async function(name, label, icon, description) {
     if (data && data[0]) {
       familiesState.families.push(data[0]);
       familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
-      console.log('✓ Family added:', data[0].id);
       return data[0];
     }
   } catch (err) {
     console.error('Error adding family:', err);
-    alert('Failed to add family: ' + err.message);
+    showToast('Failed to add family: ' + err.message, 'error');
   }
   return null;
 };
@@ -122,11 +120,10 @@ window.familiesDataUpdateFamily = async function(familyId, updates) {
     // Update local state
     Object.assign(family, updates);
     familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
-    console.log('✓ Family updated:', familyId);
     return true;
   } catch (err) {
     console.error('Error updating family:', err);
-    alert('Failed to update family: ' + err.message);
+    showToast('Failed to update family: ' + err.message, 'error');
   }
   return false;
 };
@@ -144,11 +141,10 @@ window.familiesDataDeleteFamily = async function(familyId) {
     if (error) throw error;
 
     familiesState.families.splice(idx, 1);
-    console.log('✓ Family deleted:', familyId);
     return true;
   } catch (err) {
     console.error('Error deleting family:', err);
-    alert('Failed to delete family: ' + err.message);
+    showToast('Failed to delete family: ' + err.message, 'error');
   }
   return false;
 };

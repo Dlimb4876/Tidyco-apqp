@@ -256,7 +256,10 @@ function renderScheduling() {
           </tr>
         </thead>
         <tbody>
-          ${rows || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">No batches scheduled. Click "Add Batch" to get started.</td></tr>'}
+          ${rows || `<tr><td colspan="9" style="text-align:center;padding:32px">
+            <div style="color:var(--muted);margin-bottom:12px">No batches scheduled yet.</div>
+            <button class="btn btn-primary btn-sm" onclick="focusBatchNewRow()">＋ Schedule First Batch</button>
+          </td></tr>`}
         </tbody>
       </table>
       </div>

@@ -16,7 +16,23 @@ const SECTION_LABELS = {
   operations: 'Operations Mission Control',
   production: 'Production Planning',
   'product-development': 'Product Development',
-  bugreports: 'Bug Reports'
+  bugreports: 'Bug Reports',
+  feedback: 'Feedback & Bugs'
+};
+
+// 1.5 Back button labels — defined once at module level
+const BACK_BUTTON_LABELS = {
+  capacity: '← Back to Capacity',
+  production: '← Back to Production',
+  'product-development': '← Back to Product Development',
+  operations: '← Back to Operations',
+  bugreports: '← Back to Bug Reports',
+  feedback: '← Back to Feedback & Bugs',
+  apqp: '← Back to Project',
+  actions: '← Back to Project',
+  risks: '← Back to Project',
+  bom: '← Back to Project',
+  timing: '← Back to Project'
 };
 
 /**
@@ -78,6 +94,16 @@ function navigate(sec, { pushHash = true } = {}) {
   // Initialize bugreports data when navigating TO bugreports
   if (sec === 'bugreports' && currentSection !== 'bugreports' && typeof bugDataManager !== 'undefined') {
     bugDataManager.init().catch(err => console.error('Failed to initialize bug reports:', err));
+  }
+
+  // Clean up subscriptions when leaving feedback
+  if (currentSection === 'feedback' && sec !== 'feedback' && typeof feedbackDataUnsubscribe === 'function') {
+    feedbackDataUnsubscribe();
+  }
+
+  // Initialize feedback data when navigating TO feedback
+  if (sec === 'feedback' && currentSection !== 'feedback' && typeof feedbackDataManager !== 'undefined') {
+    feedbackDataManager.init().catch(err => console.error('Failed to initialize feedback:', err));
   }
 
   // Clean up subscriptions when leaving capacity
@@ -144,6 +170,8 @@ function navigate(sec, { pushHash = true } = {}) {
   // Show Return to Portal button on all feature pages (not hub, projects, or project home)
   const returnBtn = document.getElementById('returnHubBtn');
   returnBtn.style.display = (sec === 'hub' || sec === 'projects' || sec === 'project') ? 'none' : 'flex';
+  // 1.5 Dynamic back button text using module-level constant
+  returnBtn.textContent = BACK_BUTTON_LABELS[sec] || '← Return to Portal';
 
   render();
 }
@@ -237,6 +265,10 @@ function render() {
   }
   if (currentSection === 'bugreports') {
     mc.innerHTML = `<div class="section-inner">${renderBugReports()}</div>`;
+    return;
+  }
+  if (currentSection === 'feedback') {
+    mc.innerHTML = `<div class="section-inner">${renderFeedback()}</div>`;
     return;
   }
   if (currentSection === 'capacity') {

@@ -11,6 +11,15 @@ let productsPortalListenerRoot = null;
 // Track which products sub-tab is active so re-renders restore the correct tab
 let productsActiveTab = 'list'; // 'list' | 'trends' | 'families'
 
+// 1.7 Persist search state across renders
+const PRODUCTS_SEARCH_KEY = 'products_search_state';
+function loadProductsSearch() {
+  try { return localStorage.getItem(PRODUCTS_SEARCH_KEY) || ''; } catch { return ''; }
+}
+function saveProductsSearch(val) {
+  try { localStorage.setItem(PRODUCTS_SEARCH_KEY, val); } catch(e) {}
+}
+
 /**
  * Get products portal HTML
  */
@@ -235,7 +244,7 @@ async function familiesAddRow() {
     document.getElementById('fNew-desc').value = '';
     document.getElementById('fNew-id')?.focus();
   } catch (err) {
-    alert('Error adding family: ' + err.message);
+    showToast('Error adding family: ' + err.message, 'error');
   }
 }
 
@@ -274,7 +283,7 @@ async function familiesSaveEdit(familyId) {
   try {
     await familiesDataUpdateFamily(familyId, updates);
   } catch (err) {
-    alert('Error saving family: ' + err.message);
+    showToast('Error saving family: ' + err.message, 'error');
   }
 
   familiesEditingId = null;
@@ -308,7 +317,7 @@ async function familiesDeleteRow(familyId, familyLabel) {
     if (familiesEditingId === familyId) familiesEditingId = null;
     renderFamiliesTabContent();
   } catch (err) {
-    alert('Error deleting family: ' + err.message);
+    showToast('Error deleting family: ' + err.message, 'error');
   }
 }
 
@@ -349,7 +358,13 @@ function renderProductsList() {
   if (!container) return;
 
   const products = productsDataGetAll();
-  const searchTerm = (document.getElementById('productSearch')?.value || '').toLowerCase();
+  // 1.7 Restore saved search state if input not already focused
+  const searchInput = document.getElementById('productSearch');
+  if (searchInput && document.activeElement !== searchInput) {
+    const saved = loadProductsSearch();
+    if (saved) searchInput.value = saved;
+  }
+  const searchTerm = (searchInput?.value || '').toLowerCase();
 
   const filtered = products.filter(p => {
     if (!searchTerm) return true;
@@ -404,7 +419,10 @@ function renderProductsList() {
           </td>
         </tr>
         ${filtered.length === 0 ? `
-          <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted)">No products found.</td></tr>
+          <tr><td colspan="10" style="text-align:center;padding:32px">
+            <div style="color:var(--muted);margin-bottom:12px">No products found.</div>
+            <button class="btn btn-primary btn-sm" data-action="products-focus-add">＋ Add First Product</button>
+          </td></tr>
         ` : filtered.map(p => {
           const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || '—') : '—';
           if (productsEditingId === p.id) {
@@ -478,11 +496,26 @@ async function productsAddRow() {
   try {
     await productsDataAddProduct(productData);
     if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    // 1.6 Clear fields for quick sequential entry; keep family/location/status
+    const resetFields = {
+      'pNew-name': '', 'pNew-partNumber': '', 'pNew-customer': '',
+      'pNew-notes': '', 'pNew-hours': '0', 'pNew-turnaround': ''
+    };
+    Object.entries(resetFields).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
     renderProductsList();
-    // Re-focus name input for quick entry of next product
+    // Return focus to name for next entry
     document.getElementById('pNew-name')?.focus();
+    // Brief highlight on add row
+    const newRow = document.getElementById('productsNewRow');
+    if (newRow) {
+      newRow.style.backgroundColor = 'rgba(59,130,246,0.12)';
+      setTimeout(() => { newRow.style.backgroundColor = ''; }, 500);
+    }
   } catch (err) {
-    alert('Error adding product: ' + err.message);
+    showToast('Error adding product: ' + err.message, 'error');
   }
 }
 
@@ -521,7 +554,7 @@ async function productsSaveEdit(productId) {
     await productsDataUpdateProduct(productId, updates);
     if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
   } catch (err) {
-    alert('Error saving product: ' + err.message);
+    showToast('Error saving product: ' + err.message, 'error');
   }
 
   productsEditingId = null;
@@ -547,7 +580,7 @@ async function productsDeleteRow(productId, productName) {
     if (productsEditingId === productId) productsEditingId = null;
     renderProductsList();
   } catch (err) {
-    alert('Error deleting product: ' + err.message);
+    showToast('Error deleting product: ' + err.message, 'error');
   }
 }
 
@@ -651,11 +684,18 @@ function setupProductsEventListeners() {
       if (action === 'products-delete-row') {
         await productsDeleteRow(actionEl.dataset.productId || '', actionEl.dataset.productName || '');
       }
+
+      if (action === 'products-focus-add') {
+        document.getElementById('pNew-name')?.focus();
+      }
     });
   }
 
-  // Search
-  document.getElementById('productSearch')?.addEventListener('input', () => renderProductsList());
+  // Search — save state for persistence (1.7)
+  document.getElementById('productSearch')?.addEventListener('input', (e) => {
+    saveProductsSearch(e.target.value);
+    renderProductsList();
+  });
 
   // Allow Enter key on new row inputs to trigger add
   ['pNew-name', 'pNew-partNumber', 'pNew-customer', 'pNew-hours', 'pNew-turnaround', 'pNew-notes'].forEach(id => {

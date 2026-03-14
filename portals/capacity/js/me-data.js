@@ -459,7 +459,6 @@ window.meDataGetHolidays = function() {
 window.meDataInit = async function() {
   try {
     if (typeof supa !== 'undefined' && typeof currentUser !== 'undefined' && currentUser) {
-      console.log('Loading ME capacity data for user:', currentUser.id);
 
       // Load from relational tables
       if (typeof meLoadRelationalTeams === 'function') {
@@ -474,7 +473,6 @@ window.meDataInit = async function() {
             products: relProducts || [],
             holidays: relHolidays || []
           };
-          console.log('✓ Loaded ME data (team=' + meDataState.team.length + ' tasks=' + meDataState.tasks.length + ')');
         } catch (relErr) {
           console.warn('ME relational load failed:', relErr.message);
         }
@@ -533,10 +531,6 @@ window.meDataSave = async function(showAlert) {
       setSyncBadge('syncing', 'Saving...');
     }
 
-    console.log('ME save: user=' + currentUser.id + ' team=' + meDataState.team.length +
-                ' tasks=' + meDataState.tasks.length + ' products=' + meDataState.products.length +
-                ' holidays=' + meDataState.holidays.length);
-
     let relationalSuccess = true;
 
     // Save to relational tables (if functions available)
@@ -544,8 +538,7 @@ window.meDataSave = async function(showAlert) {
         typeof meSaveTaskRelational === 'function' &&
         typeof meSaveProductRelational === 'function') {
       try {
-        console.log('Saving to relational tables...');
-
+  
         // 1. Save products FIRST (tasks FK-reference products)
         for (let i = 0; i < meDataState.products.length; i++) {
           const success = await meSaveProductRelational(currentUser.id, meDataState.products[i]);
@@ -632,7 +625,6 @@ window.meDataSave = async function(showAlert) {
         }
 
         if (relationalSuccess) {
-          console.log('✓ Relational save complete');
         } else {
           console.warn('⚠ Relational save had issues');
         }
@@ -650,7 +642,6 @@ window.meDataSave = async function(showAlert) {
       if (typeof setSyncBadge === 'function') {
         setSyncBadge('saved', 'Saved');
       }
-      if (showAlert) console.log('ME capacity saved');
     } else {
       throw new Error('Relational save failed');
     }

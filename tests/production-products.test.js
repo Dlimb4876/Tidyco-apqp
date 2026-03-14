@@ -31,6 +31,7 @@ describe('Production Products Delegation (products.js)', () => {
     originalAlert = global.alert;
     global.confirm = jest.fn(() => true);
     global.alert = jest.fn();
+    global.showToast = jest.fn();
 
     const script = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/products.js'), 'utf8');
     eval(`${script}\nif (typeof renderProductMaster === 'function') global.renderProductMaster = renderProductMaster;`);

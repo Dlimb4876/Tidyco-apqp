@@ -22,7 +22,6 @@ async function prodCapDataInit() {
     if (error) throw error;
     prodCapState.capacityRecords = data || [];
     prodCapState.loaded = true;
-    console.log('✓ Production capacity loaded:', prodCapState.capacityRecords.length, 'records');
   } catch (err) {
     console.error('❌ Error loading production capacity:', err);
     prodCapState.capacityRecords = [];
@@ -44,7 +43,6 @@ async function prodCapLoadUtilization() {
       const value = parseFloat(data.setting_value);
       if (!isNaN(value) && value >= 0 && value <= 1) {
         prodCapUtilizationFactor = value;
-        console.log('✓ Loaded utilization factor from global settings:', Math.round(value * 100) + '%');
         prodCapSubscribeUtilization();
         return;
       }
@@ -60,7 +58,6 @@ async function prodCapLoadUtilization() {
     const value = parseFloat(stored);
     if (!isNaN(value) && value >= 0 && value <= 1) {
       prodCapUtilizationFactor = value;
-      console.log('✓ Loaded utilization factor from localStorage:', Math.round(value * 100) + '%');
     }
   }
 }
@@ -73,7 +70,6 @@ function prodCapSubscribeUtilization() {
         const newValue = parseFloat(updated.setting_value);
         if (!isNaN(newValue) && newValue >= 0 && newValue <= 1) {
           prodCapUtilizationFactor = newValue;
-          console.log('✓ Utilization factor updated by another user:', Math.round(newValue * 100) + '%');
           render();
         }
       }
@@ -115,7 +111,6 @@ async function prodCapSaveUtilization(percent) {
           setting_value: value.toString()
         }]);
     }
-    console.log('✓ Saved utilization factor to global settings:', Math.round(value * 100) + '%');
   } catch (err) {
     // Supabase unavailable, but localStorage is already saved
     console.debug('Could not save to global_settings, localStorage fallback active');
@@ -169,7 +164,6 @@ async function prodCapDataSetStaff(workArea, year, month, staffCount) {
         staff_count: count
       });
     }
-    console.log('✓ Production capacity saved:', workArea, year, month, '=', count);
   } catch (err) {
     console.error('❌ Error saving production capacity:', err);
     throw err; // Re-throw so caller can handle

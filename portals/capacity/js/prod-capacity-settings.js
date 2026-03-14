@@ -300,7 +300,7 @@ async function prodCapSettingsClearAll() {
     render();
   } catch (err) {
     console.error('Error clearing capacity:', err);
-    alert('Failed to clear: ' + err.message);
+    showToast('Failed to clear: ' + err.message, 'error');
   }
 }
 

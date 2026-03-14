@@ -216,7 +216,7 @@ async function addNewProductRow() {
   const notes = document.getElementById('prod-new-notes')?.value;
 
   if (!name || !name.trim()) {
-    alert('Product name is required');
+    showToast('Product name is required', 'warning');
     return;
   }
 

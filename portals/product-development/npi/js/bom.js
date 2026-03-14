@@ -271,7 +271,7 @@ npi.bom.openABCPick = async function() {
 }
 
 npi.bom.renderABCPickList = function() {
-  if (abcPickLoading) return '<div style="padding:20px;text-align:center;color:var(--muted)">Loading...</div>'
+  if (abcPickLoading) return '<div class="skeleton-loader"><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div><div class="skeleton-line" style="width:90%"></div></div>'
 
   // Apply filters
   const searchTerm = (abcPickSearch || '').toLowerCase()
