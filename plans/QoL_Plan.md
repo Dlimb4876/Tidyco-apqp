@@ -2400,18 +2400,18 @@ Each checklist contains **actionable instructions for AI agents** to implement. 
 # Completion Tracking
 
 ## Phase 1: Quick Wins
-- [ ] 1.1 Auto-Focus First Input in Modals
-- [ ] 1.2 Add Save Indicators
-- [ ] 1.3 Replace alert() with Toast Notifications
-- [ ] 1.4 Enhance Empty States with Actions
-- [ ] 1.5 Dynamic "Return to Portal" Button Text
-- [ ] 1.6 Quick-Add Pattern for Sequential Entry
-- [ ] 1.7 Persist Search and Filter State
-- [ ] 1.8 Add Tooltips to Icon-Only Buttons
-- [ ] 1.9 Individual Filter Clear Buttons
-- [ ] 1.10 Keyboard Shortcuts Help Modal
-- [ ] 1.11 Smart Date Entry Helper
-- [ ] 1.12 Improve Loading States
+- [x] 1.1 Auto-Focus First Input in Modals
+- [x] 1.2 Add Save Indicators
+- [x] 1.3 Replace alert() with Toast Notifications
+- [x] 1.4 Enhance Empty States with Actions
+- [x] 1.5 Dynamic "Return to Portal" Button Text
+- [x] 1.6 Quick-Add Pattern for Sequential Entry
+- [x] 1.7 Persist Search and Filter State
+- [x] 1.8 Add Tooltips to Icon-Only Buttons
+- [x] 1.9 Individual Filter Clear Buttons
+- [x] 1.10 Keyboard Shortcuts Help Modal
+- [x] 1.11 Smart Date Entry Helper
+- [x] 1.12 Improve Loading States
 
 ## Phase 2: Core UX
 - [ ] 2.1 Global Keyboard Shortcuts
@@ -2460,13 +2460,13 @@ Each checklist contains **actionable instructions for AI agents** to implement. 
 
 | Phase | Total | Complete | In Progress | Pending |
 |-------|-------|----------|-------------|---------|
-| Phase 1 | 12 | 0 | 0 | 12 |
+| Phase 1 | 12 | 12 | 0 | 0 |
 | Phase 2 | 12 | 0 | 0 | 12 |
 | Phase 3 | 12 | 0 | 0 | 12 |
 | Phase 4 | 11 | 0 | 0 | 11 |
-| **Total** | **47** | **0** | **0** | **47** |
+| **Total** | **47** | **12** | **0** | **35** |
 
 ---
 
 **Last Updated**: 2026-03-14  
-**Version**: 1.0
+**Version**: 1.1 — Phase 1 complete

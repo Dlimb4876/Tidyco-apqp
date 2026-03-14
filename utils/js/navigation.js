@@ -19,6 +19,21 @@ const SECTION_LABELS = {
   bugreports: 'Bug Reports'
 };
 
+// 1.5 Back button labels — defined once at module level
+const BACK_BUTTON_LABELS = {
+  capacity: '← Back to Capacity',
+  production: '← Back to Production',
+  'product-development': '← Back to Product Development',
+  operations: '← Back to Operations',
+  productmgmt: '← Back to Product Management',
+  bugreports: '← Back to Bug Reports',
+  apqp: '← Back to Project',
+  actions: '← Back to Project',
+  risks: '← Back to Project',
+  bom: '← Back to Project',
+  timing: '← Back to Project'
+};
+
 /**
  * Parses URL hash into key-value parameters
  * @returns {Object} Parsed hash parameters
@@ -144,21 +159,8 @@ function navigate(sec, { pushHash = true } = {}) {
   // Show Return to Portal button on all feature pages (not hub, projects, or project home)
   const returnBtn = document.getElementById('returnHubBtn');
   returnBtn.style.display = (sec === 'hub' || sec === 'projects' || sec === 'project') ? 'none' : 'flex';
-  // 1.5 Dynamic back button text
-  const backLabels = {
-    capacity: '← Back to Capacity',
-    production: '← Back to Production',
-    'product-development': '← Back to Product Development',
-    operations: '← Back to Operations',
-    productmgmt: '← Back to Product Management',
-    bugreports: '← Back to Bug Reports',
-    apqp: '← Back to Project',
-    actions: '← Back to Project',
-    risks: '← Back to Project',
-    bom: '← Back to Project',
-    timing: '← Back to Project'
-  };
-  returnBtn.textContent = backLabels[sec] || '← Return to Portal';
+  // 1.5 Dynamic back button text using module-level constant
+  returnBtn.textContent = BACK_BUTTON_LABELS[sec] || '← Return to Portal';
 
   render();
 }

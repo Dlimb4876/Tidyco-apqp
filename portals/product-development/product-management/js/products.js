@@ -362,7 +362,7 @@ function renderProductsList() {
   const searchInput = document.getElementById('productSearch');
   if (searchInput && document.activeElement !== searchInput) {
     const saved = loadProductsSearch();
-    if (saved && !searchInput.value) searchInput.value = saved;
+    if (saved) searchInput.value = saved;
   }
   const searchTerm = (searchInput?.value || '').toLowerCase();
 
@@ -496,11 +496,15 @@ async function productsAddRow() {
   try {
     await productsDataAddProduct(productData);
     if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
-    // 1.6 Clear name/part/customer/notes for quick sequential entry; keep family/location/status
-    const clearIds = ['pNew-name', 'pNew-partNumber', 'pNew-customer', 'pNew-notes'];
-    clearIds.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    document.getElementById('pNew-hours').value = '0';
-    document.getElementById('pNew-turnaround').value = '';
+    // 1.6 Clear fields for quick sequential entry; keep family/location/status
+    const resetFields = {
+      'pNew-name': '', 'pNew-partNumber': '', 'pNew-customer': '',
+      'pNew-notes': '', 'pNew-hours': '0', 'pNew-turnaround': ''
+    };
+    Object.entries(resetFields).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
     renderProductsList();
     // Return focus to name for next entry
     document.getElementById('pNew-name')?.focus();

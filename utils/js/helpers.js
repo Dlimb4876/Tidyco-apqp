@@ -147,8 +147,8 @@ function parseSmartDate(input) {
 
 function setupSmartDateInputs() {
   document.querySelectorAll('input[type="date"]').forEach(input => {
-    if (input.dataset.smartDateSetup) return;
-    input.dataset.smartDateSetup = '1';
+    if (input.hasAttribute('data-smart-date')) return;
+    input.setAttribute('data-smart-date', '');
     input.addEventListener('blur', (e) => {
       const parsed = parseSmartDate(e.target.value);
       if (parsed) {
