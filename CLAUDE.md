@@ -697,10 +697,16 @@ Use the existing short UUID pattern (5-char suffix with type prefix):
 |---|---|
 | `README.md` | Project overview, responsive design, portal structure, navigation API |
 | `TESTING_STRATEGY.md` | Jest testing framework, patterns, coverage goals, and examples |
-| `plans/NPI_IMPROVEMENT_PLAN.md` | Staged refactor checklist for NPI portal (namespacing, data layer, components) |
+| `plans/MASTER_PLAN.md` | **Single source of truth** — all planned work with phases, priorities, and step-by-step agent instructions |
+| `plans/NPI_TENDERING_FEATURE_PLAN.md` | Full 7-phase spec for the NPI tender gate scope feature (referenced from MASTER_PLAN) |
+| `plans/GATE_DEFINITIONS_GUIDE.md` | Technical reference for GATE_DEFS, all 6 gates, and gate selection indexing |
+| `plans/NPI_PROJECT_FLOW_GUIDE.md` | NPI project lifecycle, gate workflow, and integration patterns |
+| `plans/PRODUCT_MANAGEMENT_GUIDE.md` | Product Management portal: data model, CRUD workflow, RLS, real-time sync |
+| `plans/PRODUCT_FLOW_DIAGRAM.md` | Visual diagram of the product lifecycle (before tendering feature) |
 | `plans/FAMILY_TEMPLATES_ARCHITECTURE.md` | Family PFMEA template system design (DB schema, data flow, security) |
 | `plans/FAMILY_TEMPLATES_GUIDE.md` | User guide for creating and applying family PFMEA templates |
 | `plans/ME_DATABASE_ANALYSIS.md` | Deep-dive into ME Capacity relational DB schema (6 tables, field mappings, known issues) |
+| `plans/FEEDBACK_SETUP.md` | Setup guide for the Feedback & Bugs portal (Supabase table creation and RLS policies) |
 
 ---
 
