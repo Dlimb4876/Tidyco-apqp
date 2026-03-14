@@ -97,6 +97,26 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     showModal('shortcutsModal');
   }
+
+  if (isInputFocused()) return;
+
+  // Ctrl+F — focus search field in current view
+  if (e.ctrlKey && e.key === 'f') {
+    const search = document.querySelector(
+      'input[placeholder*="Search"], input[placeholder*="search"], ' +
+      'input.search-input, input.npi-search-input, input.feedback-search-input, input.me-filter-input'
+    );
+    if (search) {
+      e.preventDefault();
+      search.focus();
+    }
+  }
+
+  // Escape — close the topmost open modal (showModal uses display:flex)
+  if (e.key === 'Escape') {
+    const openModal = document.querySelector('.modal-bg[style*="display: flex"], .modal-bg[style*="display:flex"]');
+    if (openModal) closeModal(openModal.id);
+  }
 });
 
 // ── 1.11 Smart Date Entry Helper ──────────────────────────────

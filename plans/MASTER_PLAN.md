@@ -56,6 +56,7 @@ The following work is complete and has been merged into the codebase. Items are 
 - [x] Sync badge (`#syncBadge` in topbar-actions, `setSyncBadge()` in `core/js/db.js`)
 - [x] Keyboard shortcuts modal (`#shortcutsModal` in `index.html`) with `?` and `Ctrl+/` hotkeys
 - [x] `isInputFocused()` helper in `utils/js/helpers.js` to guard keyboard shortcuts
+- [x] `Ctrl+F` shortcut to focus search field; `Escape` shortcut to close open modals (`utils/js/helpers.js`)
 - [x] Feedback & Bugs portal (real-time bug reports + user feedback expansion)
 
 ### NPI Tendering (Partially Done)
@@ -651,38 +652,12 @@ Ordered by user impact. Each item is self-contained.
 
 ---
 
-### 4.5 Global Keyboard Shortcuts — Context-Aware Actions
+### ✅ 4.5 Global Keyboard Shortcuts — Context-Aware Actions
 
 **Priority:** 🟡 Medium | **Effort:** 🕐🕐 Medium  
 **Files:** `utils/js/helpers.js`, `utils/js/navigation.js`
 
-**Current state:** `?` and `Ctrl+/` open the shortcuts modal. No other global shortcuts are active.
-
-**Steps:**
-1. Open `utils/js/helpers.js`. Add to the existing `keydown` listener (or alongside it):
-   ```javascript
-   document.addEventListener('keydown', function(e) {
-     if (isInputFocused()) return;
-     // Ctrl+F — focus search in current view
-     if (e.ctrlKey && e.key === 'f') {
-       e.preventDefault();
-       const search = document.querySelector('input[placeholder*="Search"], input[placeholder*="search"]');
-       if (search) search.focus();
-     }
-     // Escape — close open modal
-     if (e.key === 'Escape') {
-       const openModal = document.querySelector('.modal-bg[style*="display: block"], .modal-bg[style*="display:block"]');
-       if (openModal) closeModal(openModal.id);
-     }
-   });
-   ```
-2. Update the `#shortcutsModal` in `index.html` to reflect any newly active shortcuts.
-3. Test each shortcut in different portals.
-
-**Done when:**
-- `Ctrl+F` focuses the search field in portals that have one
-- `Escape` closes open modals
-- The shortcuts modal lists accurate, working shortcuts
+**Current state:** ✅ Complete. `?`, `Ctrl+/`, `Ctrl+F`, and `Escape` are all active. The `#shortcutsModal` lists all working shortcuts.
 
 ---
 
