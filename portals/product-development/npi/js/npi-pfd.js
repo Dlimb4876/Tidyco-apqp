@@ -98,7 +98,7 @@ npi.pfd.openCtqPick = function(oi) {
   const p = prog(); ctqPickTarget = oi; ctqPickSelected = [...(p.pfd[oi].ctqIds || [])]
   document.getElementById('ctqPickList').innerHTML = p.ctq.length === 0
     ? '<p style="color:var(--muted);font-size:13px">No CTQs defined.</p>'
-    : p.ctq.map((c, i) => `<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:7px;border-radius:5px;border:1px solid var(--line);background:var(--white)" onmouseover="this.style.background='var(--blue-pale)'" onmouseout="this.style.background='var(--white)'"><input type="checkbox" ${ctqPickSelected.includes(c.id) ? 'checked' : ''} data-action="pfd-toggle-ctq-pick" data-id="${c.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag tag-ctq">C${i + 1}</span><span style="font-size:12px;font-weight:600">${esc(c.req || 'Unnamed')}</span></div><div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px">${esc(c.spec)}</div></div></label>`).join('')
+    : p.ctq.map((c, i) => `<label class="ctq-pick-label"><input type="checkbox" ${ctqPickSelected.includes(c.id) ? 'checked' : ''} data-action="pfd-toggle-ctq-pick" data-id="${c.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag tag-ctq">C${i + 1}</span><span style="font-size:12px;font-weight:600">${esc(c.req || 'Unnamed')}</span></div><div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px">${esc(c.spec)}</div></div></label>`).join('')
   showModal('modalCtqPick')
 }
 
