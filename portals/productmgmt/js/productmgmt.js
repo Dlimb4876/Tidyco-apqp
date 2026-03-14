@@ -201,12 +201,12 @@ function pmSaveNew() {
   const icon  = document.getElementById('pmNewIcon').value.trim()  || '📋';
   const label = document.getElementById('pmNewLabel').value.trim();
   const description = document.getElementById('pmNewDescription').value.trim() || '';
-  if (!label) { alert('Please enter a family name.'); return; }
+  if (!label) { showToast('Please enter a family name.', 'warning'); return; }
 
   pmEnsureCustomFamilies();
 
   if (db.families.find(f => f.label.toLowerCase() === label.toLowerCase())) {
-    alert('A family with this name already exists.'); return;
+    showToast('A family with this name already exists.', 'warning'); return;
   }
 
   db.families.push({ id: label, label, icon, description });
@@ -261,7 +261,7 @@ function pmSaveInline(idx) {
   const description = row.querySelector('.pm-family-desc').textContent.trim() || '';
 
   if (!label) {
-    alert('Please enter a family name.');
+    showToast('Please enter a family name.', 'warning');
     return;
   }
 
@@ -271,7 +271,7 @@ function pmSaveInline(idx) {
   const newId = label;
 
   if (db.families.some((f, i) => i !== idx && f.label.toLowerCase() === label.toLowerCase())) {
-    alert('A family with this name already exists.');
+    showToast('A family with this name already exists.', 'warning');
     return;
   }
 

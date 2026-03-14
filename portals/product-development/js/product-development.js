@@ -76,7 +76,12 @@ function renderProductFamilyDatabase() {
           <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
         </div>
         <div style="text-align:center;padding:80px 20px;color:var(--muted)">
-          <div style="font-size:24px;">⏳ Loading...</div>
+          <div class="skeleton-loader" style="max-width:600px;margin:0 auto">
+          <div class="skeleton-line" style="width:80%"></div>
+          <div class="skeleton-line" style="width:60%"></div>
+          <div class="skeleton-line" style="width:90%"></div>
+          <div class="skeleton-line" style="width:70%"></div>
+        </div>
         </div>
       </div>
     `;
@@ -186,7 +191,7 @@ async function saveFamilyModal() {
   const description = descInput?.value.trim();
 
   if (!name || !label) {
-    alert('Name and Label are required');
+    showToast('Name and Label are required', 'warning');
     return;
   }
 
@@ -327,7 +332,7 @@ function renderTemplateManager() {
 
 function showTemplateViewer(familyId, templateName) {
   // Placeholder for detailed template viewer
-  alert('Template viewer for "' + templateName + '" - shows all failure modes and allows editing');
+  showToast('Template viewer for "' + templateName + '" — coming soon', 'info');
 }
 
 function deleteTemplate(familyId, templateName) {
@@ -340,7 +345,7 @@ function showCreateTemplateModal(familyId) {
   // Placeholder for creating new template
   const templateName = prompt('Enter template name (e.g., "Standard HVAC PFMEA")');
   if (!templateName) return;
-  alert('Template creation for "' + templateName + '" - UI coming soon');
+  showToast('Template creation for "' + templateName + '" — coming soon', 'info');
 }
 
 // ═══════════════════════════════════

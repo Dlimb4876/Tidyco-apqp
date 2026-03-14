@@ -247,25 +247,37 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
         </div>
         <div class="me-card-body">
           <div class="me-filters" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-            <input type="text" class="me-filter-input" placeholder="🔍 Search tasks..." value="${esc(currentFilters.search || '')}"
-              oninput="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.search = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
-              style="flex:1;min-width:180px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
-            <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.category = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
-              style="min-width:130px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
-              ${catOpts}
-            </select>
-            <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.assignee = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
-              style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
-              ${assigneeOpts}
-            </select>
-            <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.product = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
-              style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
-              ${productOpts}
-            </select>
+            <div class="filter-chip">
+              <input type="text" class="me-filter-input" placeholder="🔍 Search tasks..." value="${esc(currentFilters.search || '')}"
+                oninput="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.search = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+                style="flex:1;min-width:180px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
+              ${currentFilters.search ? `<button class="filter-clear" onclick="${filterStateVar}.search=''; document.querySelector('.me-filter-input').value=''; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');" title="Clear search">×</button>` : ''}
+            </div>
+            <div class="filter-chip">
+              <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.category = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+                style="min-width:130px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
+                ${catOpts}
+              </select>
+              ${currentFilters.category && currentFilters.category !== 'all' ? `<button class="filter-clear" onclick="${filterStateVar}.category='all'; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');" title="Clear category filter">×</button>` : ''}
+            </div>
+            <div class="filter-chip">
+              <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.assignee = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+                style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
+                ${assigneeOpts}
+              </select>
+              ${currentFilters.assignee && currentFilters.assignee !== 'all' ? `<button class="filter-clear" onclick="${filterStateVar}.assignee='all'; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');" title="Clear assignee filter">×</button>` : ''}
+            </div>
+            <div class="filter-chip">
+              <select class="me-filter-select" onchange="${filterStateVar} = ${filterStateVar} || {}; ${filterStateVar}.product = this.value; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
+                style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
+                ${productOpts}
+              </select>
+              ${currentFilters.product && currentFilters.product !== 'all' ? `<button class="filter-clear" onclick="${filterStateVar}.product='all'; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');" title="Clear product filter">×</button>` : ''}
+            </div>
             <button class="btn ${currentFilters.hideCompleted ? 'btn-primary' : 'btn-ghost'} btn-sm" onclick="${filterStateVar}.hideCompleted = !${filterStateVar}.hideCompleted; localStorage.setItem('${isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'}', ${filterStateVar}.hideCompleted); ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
               style="padding:6px 10px;font-size:13px;" title="Toggle completed tasks">${currentFilters.hideCompleted ? '✓ Hide Completed' : '○ Show All'}</button>
             <button class="btn btn-ghost btn-sm" onclick="${filterStateVar} = {search:'', category:'all', assignee:'all', product:'all', hideCompleted:${isPM ? 'window.pmTasksFilters.hideCompleted' : 'window.meTasksFilters.hideCompleted'}}; ${isPM ? 'pmSetTab' : 'meSetTab'}('tasks');"
-              style="padding:6px 10px;font-size:13px;" title="Clear filters">Clear</button>
+              style="padding:6px 10px;font-size:13px;" title="Clear all filters">Clear</button>
           </div>
         <div class="me-tbl-wrap">
           <table class="me-tbl">
@@ -281,7 +293,10 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
               <th style="width:60px"></th>
             </tr></thead>
             <tbody>
-              ${rows || '<tr><td colspan="9"><div style="text-align:center;padding:40px;color:var(--muted)">No tasks match filters</div></td></tr>'}
+              ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
+                  <div style="color:var(--muted);margin-bottom:12px">No tasks match the current filters</div>
+                  <button class="btn btn-primary btn-sm" onclick="meAddDefaultTask();">＋ Add Task</button>
+                </div></td></tr>`}
             </tbody>
           </table>
         </div>

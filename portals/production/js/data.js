@@ -97,7 +97,7 @@ window.prodDataAddProduct = async function(name, code, family, lead_time_days, n
     }
   } catch (err) {
     console.error('Error adding product:', err);
-    alert('Failed to add product: ' + err.message);
+    showToast('Failed to add product: ' + err.message, 'error');
   }
   return false;
 };
@@ -147,7 +147,7 @@ window.prodDataUpdateProduct = async function(idx, field, value) {
     return true;
   } catch (err) {
     console.error('Error updating product:', err);
-    alert('Failed to update product: ' + err.message);
+    showToast('Failed to update product: ' + err.message, 'error');
   }
   return false;
 };
@@ -166,7 +166,7 @@ window.prodDataDeleteProduct = async function(idx) {
     return true;
   } catch (err) {
     console.error('Error deleting product:', err);
-    alert('Failed to delete product: ' + err.message);
+    showToast('Failed to delete product: ' + err.message, 'error');
   }
   return false;
 };

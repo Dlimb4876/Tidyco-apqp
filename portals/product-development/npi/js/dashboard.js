@@ -331,7 +331,10 @@ npi.dashboard.renderProjects = function() {
   }
 
   if (visibleProducts.length === 0) {
-    html += `<div class="npi-empty-view">No projects match this view/filter combination.</div>`
+    html += `<div class="npi-empty-view" style="text-align:center;padding:40px">
+      <div style="color:var(--muted);margin-bottom:12px">No projects match this view/filter combination.</div>
+      <button class="btn btn-primary btn-sm" onclick="showModal('modalNewProj')">＋ Create First Project</button>
+    </div>`
   }
 
   html += `</div></div>`
@@ -650,7 +653,7 @@ npi.dashboard.openGateScopeEditor = function() {
     window.openTenderGateSelectionModal(p.product_id || null)
     return
   }
-  alert('Gate scope editor is not available yet. Please refresh and try again.')
+  showToast('Gate scope editor is not available yet. Please refresh and try again.', 'warning')
 }
 
 npi.dashboard.newProjectInFamily = function(famId) {
@@ -661,7 +664,7 @@ npi.dashboard.newProjectInFamily = function(famId) {
 
 npi.dashboard.createProg = function() {
   const name = document.getElementById('np_name').value.trim()
-  if (!name) { alert('Project name is required.'); return }
+  if (!name) { showToast('Project name is required.', 'warning'); return }
   const id       = 'p_' + Math.random().toString(36).slice(2)
   const family   = document.getElementById('np_family')?.value   || 'Other'
   const customer = document.getElementById('np_customer')?.value || ''
@@ -737,7 +740,7 @@ npi.dashboard.deleteProject = function() {
 npi.dashboard.openSubAsmModal = function() {
   const p = prog(); if (!p) return
   const others = db.programmes.filter(x => x.id !== progId && !(p.subAssemblies || []).find(s => s.id === x.id))
-  if (others.length === 0) { alert('No other projects to link.'); return }
+  if (others.length === 0) { showToast('No other projects to link.', 'info'); return }
   const existing = document.getElementById('subAsmModalBg'); if (existing) existing.remove()
   const opts = others.map(x =>
     `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="npi.dashboard.linkSubAsm('${x.id}')">

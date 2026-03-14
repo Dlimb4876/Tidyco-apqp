@@ -31,7 +31,7 @@ npi.nav.setApqpTab = function(tab) { setApqpTab(tab) }
 npi.nav.setProductDevelopmentTab = function(tab) { setProductDevelopmentTab(tab) }
 npi.nav.openProjectById = function(id) { progId = id; navigate('project') }
 npi.nav.openPfmeaTab = function() { apqpTab = 'pfmea'; navigate('apqp') }
-npi.nav.alertEnterNameFirst = function() { alert('Enter name first') }
+npi.nav.alertEnterNameFirst = function() { showToast('Enter name first', 'warning') }
 npi.nav.stopEvent = function(evt) { if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation() }
 
 // ── Pub-sub: subscribe/publish render events ─────────────────

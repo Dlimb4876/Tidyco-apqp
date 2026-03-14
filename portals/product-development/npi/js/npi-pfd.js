@@ -84,7 +84,7 @@ npi.pfd.confirmInsert = function() {
   const num = parseInt(document.getElementById('insertNum').value, 10)
   const type = document.getElementById('insertType').value
   const result = npi.data.pfd.insertStep(num, type)
-  if (!result.ok) return alert(result.error)
+  if (!result.ok) return showToast(result.error, 'error')
   closeModal('modalInsert')
 }
 

@@ -83,7 +83,7 @@ window.familyTemplatesAddItem = async function(familyId, templateName, failureMo
     }
   } catch (err) {
     console.error('Error adding template item:', err);
-    alert('Failed to add template: ' + err.message);
+    showToast('Failed to add template: ' + err.message, 'error');
   }
   return null;
 };
@@ -104,7 +104,7 @@ window.familyTemplatesUpdateItem = async function(itemId, updates) {
     return true;
   } catch (err) {
     console.error('Error updating template item:', err);
-    alert('Failed to update template: ' + err.message);
+    showToast('Failed to update template: ' + err.message, 'error');
   }
   return false;
 };
@@ -125,7 +125,7 @@ window.familyTemplatesDeleteItem = async function(itemId) {
     return true;
   } catch (err) {
     console.error('Error deleting template item:', err);
-    alert('Failed to delete template: ' + err.message);
+    showToast('Failed to delete template: ' + err.message, 'error');
   }
   return false;
 };
@@ -151,7 +151,7 @@ window.familyTemplatesDeleteFamily = async function(familyId, templateName) {
     return true;
   } catch (err) {
     console.error('Error deleting family template:', err);
-    alert('Failed to delete template: ' + err.message);
+    showToast('Failed to delete template: ' + err.message, 'error');
   }
   return false;
 };
@@ -191,7 +191,7 @@ window.familyTemplatesCopyTemplate = async function(sourceFamilyId, sourceTempla
     }
   } catch (err) {
     console.error('Error copying template:', err);
-    alert('Failed to copy template: ' + err.message);
+    showToast('Failed to copy template: ' + err.message, 'error');
   }
   return false;
 };
