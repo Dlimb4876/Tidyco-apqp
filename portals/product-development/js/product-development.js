@@ -49,14 +49,6 @@ function renderProductDevelopment() {
             <div class="proj-card-meta">Family definitions & attributes</div>
           </div>
         </div>
-
-        <div class="proj-card hub-card" aria-disabled="true" title="Coming soon" style="opacity:0.65;cursor:not-allowed;filter:grayscale(0.2)">
-          <div class="hub-card-content">
-            <div class="hub-icon">🧩</div>
-            <div class="proj-card-name">Parts Database</div>
-            <div class="proj-card-meta">Coming soon</div>
-          </div>
-        </div>
       </div>
     </div>
   `;

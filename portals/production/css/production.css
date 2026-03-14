@@ -57,6 +57,12 @@ tr.batch-row-due-soon { background: #fffbeb; }
   color: var(--white);
 }
 
+.prod-nav-back {
+  margin-right: 8px;
+  border-color: var(--line2);
+  color: var(--muted);
+}
+
 .prod-home {
   padding: 24px;
 }

@@ -14,6 +14,7 @@ function setProductionTab(tab) {
 function prodNavBar() {
   return `
     <div class="prod-nav-bar">
+      <button class="prod-nav-item prod-nav-back" data-action="prod-nav-root">← Back</button>
       <button class="prod-nav-item ${productionTab === 'scheduling' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="scheduling">📅 Schedule</button>
       <button class="prod-nav-item ${productionTab === 'by-product' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="by-product">📋 Plan by Product</button>
       <button class="prod-nav-item ${productionTab === 'by-unit' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="by-unit">🏭 Plan by Work Area</button>
@@ -97,6 +98,11 @@ function setupProductionPortalDelegation() {
     if (action === 'prod-nav-tab' || action === 'prod-hub-tab') {
       const tab = actionEl.dataset.tab;
       if (tab) setProductionTab(tab);
+      return;
+    }
+
+    if (action === 'prod-nav-root') {
+      setProductionTab('root');
       return;
     }
 

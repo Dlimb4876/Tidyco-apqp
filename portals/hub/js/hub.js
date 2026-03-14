@@ -9,21 +9,6 @@ function renderHub() {
         </div>
       </div>
 
-      <!-- Director-level overview banner -->
-      <div class="hub-operations-banner">
-        <div class="proj-card hub-card hub-card-banner" onclick="navigate('operations')">
-          <div class="hub-card-content hub-card-content-banner">
-            <div class="banner-text">
-              <div class="proj-card-name">OPERATIONS DASHBOARD</div>
-              <div class="proj-card-meta">Director-level overview of all operations, metrics, and risks</div>
-            </div>
-            <div class="hub-icon hub-icon-banner">🛰️</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Operational portals grid -->
-      <div class="hub-operations-header">Operational Portals</div>
       <div class="proj-cards hub-grid">
         <div class="proj-card hub-card" onclick="navigate('capacity')">
           <div class="hub-card-content">
@@ -46,6 +31,14 @@ function renderHub() {
             <div class="hub-icon">🏭</div>
             <div class="proj-card-name">PRODUCTION</div>
             <div class="proj-card-meta">Batch Scheduling & Planning</div>
+          </div>
+        </div>
+
+        <div class="proj-card hub-card" onclick="navigate('operations')">
+          <div class="hub-card-content">
+            <div class="hub-icon">🛰️</div>
+            <div class="proj-card-name">OPERATIONS DASHBOARD</div>
+            <div class="proj-card-meta">Director-level overview of all operations, metrics, and risks</div>
           </div>
         </div>
       </div>
