@@ -466,13 +466,13 @@ window.meEstimationSave = function(taskIdx) {
     const finalEst = pertEst + (stdDev * (confidenceLevel - 1.0));
     totalFinalHours += finalEst;
 
-    // Generate subtask from estimate (inherits root task's date range for capacity calculations)
+    // Generate subtask from estimate (inherits task's date range for capacity calculations)
     subtasks.push({
       id: est.id,
       name: est.name,
       assigneeId: est.assignedTo || '',
       hours: finalEst,
-      startDate: task.startDate,  // Subtask inherits root task's date range
+      startDate: task.startDate,  // Subtask inherits task's date range
       endDate: task.endDate,
       source: 'pert'
     });
@@ -486,7 +486,6 @@ window.meEstimationSave = function(taskIdx) {
     .find(e => e.assignedTo)?.assignedTo || '';
 
   // Update task with final estimate and subtasks
-  task.type = 'root';
   task.assigneeId = primaryAssignee;
   task.subtasks = subtasks;
   task.advancedEstimation.pertData.totalCalculatedHours = roundedTotal;

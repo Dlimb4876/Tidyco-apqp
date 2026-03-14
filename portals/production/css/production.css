@@ -152,7 +152,15 @@ tr.batch-row-due-soon { background: #fffbeb; }
   outline: none;
 }
 
-/* Product Tables */
+/* Product Tables & Scrollable Wrapper */
+.scheduling-table-wrap {
+  background: var(--white);
+  border-radius: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
 .prod-tbl {
   width: 100%;
   border-collapse: collapse;

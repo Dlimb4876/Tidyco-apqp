@@ -133,7 +133,7 @@ function opsRenderOverview(metrics) {
 				</div>
 				<div class="ops-hero-actions">
 					<button class="btn btn-primary" onclick="setOperationsTab('risk')">View Risk Focus</button>
-					<button class="btn btn-ghost" onclick="setOperationsTab('flow')">Open Flow Lens</button>
+					<button class="btn btn-primary" onclick="setOperationsTab('flow')">Open Flow Lens</button>
 				</div>
 			</section>
 

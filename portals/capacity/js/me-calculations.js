@@ -19,6 +19,48 @@ window.getEffectiveSubtasks = function(task) {
   return [];
 };
 
+window.meParseDateOnlyLocal = function(value) {
+  if (!value) return null;
+  const dateOnly = String(value).substring(0, 10);
+  const parts = dateOnly.split('-').map(Number);
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+};
+
+window.meGetHolidayDaysInRange = function(memberId, rangeStart, rangeEnd, holidaysArray, bankHolSet) {
+  if (!memberId || !rangeStart || !rangeEnd || !Array.isArray(holidaysArray)) return 0;
+
+  const rangeStartDate = new Date(rangeStart);
+  rangeStartDate.setHours(0, 0, 0, 0);
+  const rangeEndDate = new Date(rangeEnd);
+  rangeEndDate.setHours(0, 0, 0, 0);
+
+  let holidayDays = 0;
+  holidaysArray.forEach(holiday => {
+    if (!holiday) return;
+    const holidayPersonId = holiday.personId || holiday.person_id;
+    if (holidayPersonId !== memberId) return;
+
+    const holidayDate = meParseDateOnlyLocal(holiday.date);
+    if (!holidayDate) return;
+    holidayDate.setHours(0, 0, 0, 0);
+
+    if (holidayDate < rangeStartDate || holidayDate > rangeEndDate) return;
+
+    const dayOfWeek = holidayDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) return;
+
+    const holidayDateStr = formatDateForHolidays(holidayDate);
+    if (bankHolSet && bankHolSet.has(holidayDateStr)) return;
+
+    const holidayType = String(holiday.type || 'full').toLowerCase();
+    if (holidayType === 'half') holidayDays += 0.5;
+    else holidayDays += 1;
+  });
+
+  return holidayDays;
+};
+
 // ── Month Capacity & Demand Calculation ─────────────────────
 window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const [year, month] = monthKey.split('-').map(Number);
@@ -34,44 +76,7 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   const bankHolSet = new Set();
   relevantYears.forEach(y => window.getBankHolidaysForYear(y).forEach(h => bankHolSet.add(h.date)));
 
-  // Build per-member holiday days map (1 full day = 1, half day = 0.5)
-  // Holiday hours are deducted from gross capacity BEFORE utilisation is applied (1 day = 8h)
-  const teamById = new Map(teamArray.map(member => [member.id, member]));
-  const holidayDaysByMember = new Map();
-
-  holidaysArray.forEach(holiday => {
-    if (!holiday || !holiday.date || !holiday.personId) return;
-    const holidayMonth = holiday.date.substring(0, 7);
-    if (holidayMonth !== monthKey) return;
-
-    const member = teamById.get(holiday.personId);
-    if (!member || !member.startDate) return;
-
-    const holidayDate = new Date(holiday.date);
-    holidayDate.setHours(0, 0, 0, 0);
-
-    const dayOfWeek = holidayDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) return;
-    const holidayDateStr = formatDateForHolidays(holidayDate);
-    if (bankHolSet.has(holidayDateStr)) return;
-
-    const memberStart = new Date(member.startDate);
-    memberStart.setHours(0, 0, 0, 0);
-    if (holidayDate < memberStart) return;
-
-    if (member.endDate) {
-      const memberEnd = new Date(member.endDate);
-      memberEnd.setHours(0, 0, 0, 0);
-      if (holidayDate > memberEnd) return;
-    }
-
-    const increment = holiday.type === 'full' ? 1 : holiday.type === 'half' ? 0.5 : 0;
-    if (increment > 0) {
-      holidayDaysByMember.set(holiday.personId, (holidayDaysByMember.get(holiday.personId) || 0) + increment);
-    }
-  });
-
-  // Calculate capacity: gross hours minus holiday hours (1 day = 8h), then apply utilisation
+  // Calculate capacity: gross hours minus personal holiday hours, then apply utilisation
   let capacity = 0;
   let capacityMax = 0;
   teamArray.forEach(member => {
@@ -94,8 +99,9 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     if (activeStart <= activeEnd) {
       const netDays = window.countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
       const grossHours = weeklyHours * (netDays / 5);
-      const holidayDays = holidayDaysByMember.get(member.id) || 0;
-      const adjustedGross = Math.max(0, grossHours - holidayDays * 8);
+      const holidayDays = meGetHolidayDaysInRange(member.id, activeStart, activeEnd, holidaysArray, bankHolSet);
+      const holidayHours = holidayDays * (weeklyHours / 5);
+      const adjustedGross = Math.max(0, grossHours - holidayHours);
       capacity += adjustedGross * (utilisation / 100);
       capacityMax += adjustedGross; // capacityMax = adjusted gross at 100% utilisation
     }
@@ -188,25 +194,9 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
   const netDays = window.countNetworkDaysBetween(weekStart_d, weekEnd_d, bankHolSet);
   const grossCapacity = baseHours * (netDays / 5);
 
-  // Count personal holiday days (bank hols already excluded via network days)
-  // Holidays deducted from gross (1 day = 8h) BEFORE utilisation is applied
-  let holidayDays = 0;
-
-  holidaysArray.forEach(holiday => {
-    if (holiday.personId !== personId) return;
-    if (!holiday.date) return;
-    const hDate = new Date(holiday.date);
-    const dayOfWeek = hDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) return;
-    const dateStr = formatDateForHolidays(hDate);
-    if (bankHolSet.has(dateStr)) return;
-    if (hDate >= weekStart_d && hDate <= weekEnd_d) {
-      if (holiday.type === 'full') holidayDays += 1;
-      else if (holiday.type === 'half') holidayDays += 0.5;
-    }
-  });
-
-  const adjustedGross = Math.max(0, grossCapacity - holidayDays * 8);
+  const holidayDays = meGetHolidayDaysInRange(personId, weekStart_d, weekEnd_d, holidaysArray, bankHolSet);
+  const holidayHours = holidayDays * (baseHours / 5);
+  const adjustedGross = Math.max(0, grossCapacity - holidayHours);
   const capacity = adjustedGross * (utilisation / 100);
 
   // Demand: network days proration (NETWORKDAYS equivalent)

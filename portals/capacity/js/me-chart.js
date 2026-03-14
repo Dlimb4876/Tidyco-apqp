@@ -92,13 +92,18 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
     const netDays    = countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
     const totalHours = hoursPerWeek * (netDays / 5);
 
-    // Count holiday days — deducted from gross (1 day = 8h) BEFORE utilisation is applied
     let holidayDays = 0;
     holidaysArray.forEach(holiday => {
-      if (!holiday || holiday.personId !== member.id || !holiday.date) return;
-      if (holiday.date.substring(0, 7) !== currentMonthKey) return;
+      if (!holiday || !holiday.date) return;
+      const holidayPersonId = holiday.personId || holiday.person_id;
+      if (holidayPersonId !== member.id) return;
 
-      const hd = new Date(holiday.date);
+      const parsedDate = typeof meParseDateOnlyLocal === 'function'
+        ? meParseDateOnlyLocal(holiday.date)
+        : new Date(String(holiday.date).substring(0, 10));
+      if (!parsedDate) return;
+
+      const hd = new Date(parsedDate);
       hd.setHours(0, 0, 0, 0);
       const dow = hd.getDay();
       if (dow === 0 || dow === 6) return;
@@ -107,12 +112,14 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
       if (bankHolSet.has(hdStr)) return;
       if (hd < activeStart || hd > activeEnd) return;
 
-      if (holiday.type === 'full')      holidayDays += 1;
-      else if (holiday.type === 'half') holidayDays += 0.5;
+      const holidayType = String(holiday.type || 'full').toLowerCase();
+      if (holidayType === 'half') holidayDays += 0.5;
+      else holidayDays += 1;
     });
 
-    const adjustedTotal  = Math.max(0, totalHours - holidayDays * 8);
-    const utilisedHours  = adjustedTotal * (utilisationPct / 100);
+    const holidayHours = holidayDays * (hoursPerWeek / 5);
+    const grossAfterHoliday = Math.max(0, totalHours - holidayHours);
+    const utilisedHours  = grossAfterHoliday * (utilisationPct / 100);
     teamCapacityTotal += utilisedHours;
 
     return `
@@ -121,7 +128,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
         <td style="text-align:right;">${utilisationPct}%</td>
         <td style="text-align:right;">${netDays}</td>
         <td style="text-align:right;">${holidayDays > 0 ? holidayDays + ' d' : '—'}</td>
-        <td style="text-align:right;">${totalHours.toFixed(1)} h</td>
+        <td style="text-align:right;">${grossAfterHoliday.toFixed(1)} h</td>
         <td style="text-align:right;font-weight:600;">${utilisedHours.toFixed(1)} h</td>
       </tr>
     `;

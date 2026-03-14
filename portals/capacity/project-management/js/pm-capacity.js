@@ -2,7 +2,7 @@
    pm-capacity.js — Project Management Capacity Orchestrator
    ============================================================ */
 
-let pmTab = 'overview';
+let pmTab = 'chart';
 let pmHolidayMonth = null;
 let pmChartStart = null;
 let pmSaveTimer = null;
@@ -46,7 +46,7 @@ function pmGetTabContent() {
     case 'team':
       return meRenderTeamTab(team);
     case 'tasks':
-      return meRenderTasksTab(tasks, team, products);
+      return meRenderTasksTab(tasks, team, products, true); // isPM = true
     case 'products':
       return meRenderProductsTab(products, products, tasks);
     case 'product-taskload':
@@ -54,23 +54,8 @@ function pmGetTabContent() {
     case 'holidays':
       return meRenderHolidaysTab(holidays, team, pmHolidayMonth);
     case 'chart':
-      return meRenderChartTab(pmChartStart, team, tasks, products, holidays);
-    case 'heatmap':
-      return meRenderHeatmapTab(pmChartStart, team, tasks, products, holidays);
-    case 'overview':
     default:
-      return meRenderDashboardTab(pmGetCurrentMonthKey(), team, tasks, products, holidays);
-  }
-}
-
-function pmDrawOverviewWidgets() {
-  if (pmTab !== 'overview') return;
-  const { team, tasks, products, holidays } = pmGetData();
-  if (typeof meDashboardDrawMiniChart === 'function') {
-    meDashboardDrawMiniChart(team, tasks, products, holidays);
-  }
-  if (typeof meDashboardDrawMiniHeatmap === 'function') {
-    meDashboardDrawMiniHeatmap(team, tasks, holidays);
+      return meRenderChartTab(pmChartStart, team, tasks, products, holidays);
   }
 }
 
@@ -101,14 +86,12 @@ window.pmRenderCapacity = function() {
       </div>
 
       <div class="me-nav">
-        <button class="me-nav-btn ${pmTab === 'overview' ? 'active' : ''}" data-tab="overview" onclick="pmSetTab('overview')">📊 Overview</button>
-        <button class="me-nav-btn ${pmTab === 'chart' ? 'active' : ''}" data-tab="chart" onclick="pmSetTab('chart')">📉 Chart</button>
-        <button class="me-nav-btn ${pmTab === 'heatmap' ? 'active' : ''}" data-tab="heatmap" onclick="pmSetTab('heatmap')">🌡️ Heatmap</button>
-        <button class="me-nav-btn ${pmTab === 'team' ? 'active' : ''}" data-tab="team" onclick="pmSetTab('team')">👥 Team</button>
+        <button class="me-nav-btn ${pmTab === 'chart' ? 'active' : ''}" data-tab="chart" onclick="pmSetTab('chart')">📊 Capacity Chart</button>
+        <button class="me-nav-btn ${pmTab === 'team' ? 'active' : ''}" data-tab="team" onclick="pmSetTab('team')">👷 Team</button>
         <button class="me-nav-btn ${pmTab === 'tasks' ? 'active' : ''}" data-tab="tasks" onclick="pmSetTab('tasks')">📋 Tasks</button>
-        <button class="me-nav-btn ${pmTab === 'products' ? 'active' : ''}" data-tab="products" onclick="pmSetTab('products')">📦 Products</button>
-        <button class="me-nav-btn ${pmTab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" onclick="pmSetTab('product-taskload')">📈 Product Load</button>
-        <button class="me-nav-btn ${pmTab === 'holidays' ? 'active' : ''}" data-tab="holidays" onclick="pmSetTab('holidays')">🏖️ Holidays</button>
+        <button class="me-nav-btn ${pmTab === 'products' ? 'active' : ''}" data-tab="products" onclick="pmSetTab('products')">🚂 Product Support</button>
+        <button class="me-nav-btn ${pmTab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" onclick="pmSetTab('product-taskload')">📦 Product Load</button>
+        <button class="me-nav-btn ${pmTab === 'holidays' ? 'active' : ''}" data-tab="holidays" onclick="pmSetTab('holidays')">🏖️ Holiday Planner</button>
       </div>
 
       <div class="me-body" id="pmBody">
@@ -117,7 +100,10 @@ window.pmRenderCapacity = function() {
     </div>`;
 
   setTimeout(() => {
-    pmDrawOverviewWidgets();
+    if (pmTab === 'chart') {
+      meDrawChartNow();
+      meDrawHeatmapNow();
+    }
   }, 100);
 
   return html;
@@ -137,11 +123,10 @@ window.pmSetTab = function(tab) {
   if (body) {
     body.innerHTML = pmGetTabContent();
     setTimeout(() => {
-      pmDrawOverviewWidgets();
-      if (tab === 'chart' || tab === 'heatmap') {
+      if (tab === 'chart') {
         if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
-        if (tab === 'chart' && typeof meDrawChartNow === 'function') meDrawChartNow();
-        if (tab === 'heatmap' && typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+        if (typeof meDrawChartNow === 'function') meDrawChartNow();
+        if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
       }
     }, 100);
   }
@@ -153,18 +138,17 @@ window.pmRefreshCurrentTab = function() {
   if (body) {
     body.innerHTML = pmGetTabContent();
     setTimeout(() => {
-      pmDrawOverviewWidgets();
-      if (pmTab === 'chart' || pmTab === 'heatmap') {
+      if (pmTab === 'chart') {
         if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
-        if (pmTab === 'chart' && typeof meDrawChartNow === 'function') meDrawChartNow();
-        if (pmTab === 'heatmap' && typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+        if (typeof meDrawChartNow === 'function') meDrawChartNow();
+        if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
       }
     }, 100);
   }
 };
 
 window.pmOnMonthChange = function(newMonth) {
-  if (pmTab === 'chart' || pmTab === 'heatmap') {
+  if (pmTab === 'chart') {
     pmChartStart = newMonth;
   } else {
     pmHolidayMonth = newMonth;
@@ -173,7 +157,7 @@ window.pmOnMonthChange = function(newMonth) {
 };
 
 window.pmOnNextMonth = function() {
-  const isChart = pmTab === 'chart' || pmTab === 'heatmap';
+  const isChart = pmTab === 'chart';
   const current = isChart ? (pmChartStart || pmGetCurrentMonthKey()) : (pmHolidayMonth || pmGetCurrentMonthKey());
   const [year, month] = current.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
@@ -184,7 +168,7 @@ window.pmOnNextMonth = function() {
 };
 
 window.pmOnPrevMonth = function() {
-  const isChart = pmTab === 'chart' || pmTab === 'heatmap';
+  const isChart = pmTab === 'chart';
   const current = isChart ? (pmChartStart || pmGetCurrentMonthKey()) : (pmHolidayMonth || pmGetCurrentMonthKey());
   const [year, month] = current.split('-').map(Number);
   const date = new Date(year, month - 1, 1);

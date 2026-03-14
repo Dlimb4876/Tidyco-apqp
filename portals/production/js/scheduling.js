@@ -227,19 +227,20 @@ function renderScheduling() {
       </div>
 
       <!-- Batch Table -->
-      <table class="tbl prod-tbl" style="table-layout:auto;width:100%">
-        <colgroup>
-          <col style="width:36px">
-          <col style="min-width:220px">
-          <col style="min-width:100px">
-          <col style="min-width:100px">
-          <col style="min-width:80px">
-          <col style="min-width:100px">
-          <col style="min-width:100px">
-          <col style="min-width:120px">
-          <col style="min-width:220px">
-          <col style="width:36px">
-        </colgroup>
+      <div class="scheduling-table-wrap">
+        <table class="tbl prod-tbl" style="table-layout:auto;width:100%">
+          <colgroup>
+            <col style="width:36px">
+            <col style="min-width:220px">
+            <col style="min-width:100px">
+            <col style="min-width:100px">
+            <col style="min-width:80px">
+            <col style="min-width:100px">
+            <col style="min-width:100px">
+            <col style="min-width:120px">
+            <col style="min-width:220px">
+            <col style="width:36px">
+          </colgroup>
         <thead>
           <tr>
             <th>#</th>
@@ -258,6 +259,7 @@ function renderScheduling() {
           ${rows || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">No batches scheduled. Click "Add Batch" to get started.</td></tr>'}
         </tbody>
       </table>
+      </div>
     </div>
   `;
 

@@ -147,7 +147,7 @@ window.meLoadRelationalTasks = async function(userId) {
     const tasks = (tasksData || []).map(t => {
       const rawSubtasks = subtasksByTask[t.id] || [];
       const rawPert     = pertByTask[t.id]     || [];
-      const isRoot = t.type === 'root' || rawSubtasks.length > 0 || rawPert.length > 0;
+      const hasAdvancedEstimation = rawSubtasks.length > 0 || rawPert.length > 0;
 
       // Subtasks array — used by capacity calculations
       const subtasks = rawSubtasks.map(st => ({
@@ -162,7 +162,7 @@ window.meLoadRelationalTasks = async function(userId) {
 
       // Reconstruct advancedEstimation so the PERT editor can re-open correctly
       let advancedEstimation = null;
-      if (isRoot) {
+      if (hasAdvancedEstimation) {
         const confidenceLevel = rawPert.length > 0 ? (rawPert[0].confidence_level || 1.0) : 1.0;
 
         const estimates = rawPert.map(pe => ({
@@ -199,12 +199,13 @@ window.meLoadRelationalTasks = async function(userId) {
         id:                 t.id,
         name:               t.name,
         category:           t.category,
-        type:               isRoot ? 'root' : (t.type || 'standard'),
+        type:               t.type || 'standard',
         assigneeId:         t.assignee_id || '',
         productId:          t.product_id  || '',
         startDate:          t.start_date  || '',
         endDate:            t.end_date    || '',
         totalHours:         t.total_hours || 0,
+        status:             t.status || 'SCHEDULED',
         department:         meNormalizeDepartmentTag(t.department, 'ME'),
         createdAt:          t.created_at,
         subtasks,
@@ -352,71 +353,44 @@ window.meSaveTaskRelational = async function(userId, task) {
     const todayStr = getTodayDateString();
     const startDate = task.startDate || todayStr;
     const endDate = task.endDate || todayStr;
+    const taskId = task.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
+    task.id = taskId;
 
-    // For root tasks use PERT-calculated hours so total_hours stays accurate after reload
-    const totalHours = (task.type === 'root' && task.advancedEstimation)
-      ? (task.advancedEstimation.totalFinalHours || task.totalHours || 0)
+    // For tasks with advanced estimation, use PERT-calculated hours so total_hours stays accurate after reload
+    const totalHours = (task.advancedEstimation && task.advancedEstimation.totalFinalHours)
+      ? task.advancedEstimation.totalFinalHours
       : (task.totalHours || 0);
 
-    if (!task.id) {
-      // Insert new task and capture the returned ID
-      const payload = {
-        user_id: userId,
-        name: task.name,
-        category: task.category,
-        type: task.type || 'standard',
-        assignee_id: task.assigneeId || null,
-        product_id: task.productId || null,
-        start_date: startDate,
-        end_date: endDate,
-        total_hours: totalHours,
-        department
-      };
+    const payload = {
+      id: taskId,
+      user_id: userId,
+      name: task.name,
+      category: task.category,
+      type: task.type || 'standard',
+      assignee_id: task.assigneeId || null,
+      product_id: task.productId || null,
+      start_date: startDate,
+      end_date: endDate,
+      total_hours: totalHours,
+      status: task.status || 'SCHEDULED',
+      department,
+      updated_at: new Date().toISOString()
+    };
 
-      const { data, error } = await supa
-        .from('me_tasks')
-        .insert([payload])
-        .select('id');
+    const { data, error } = await supa
+      .from('me_tasks')
+      .upsert([payload], { onConflict: 'id' })
+      .select('id');
 
-      if (error) {
-        console.warn('meSaveTaskRelational insert error:', error.message);
-        return { success: false, taskId: null };
-      }
-
-      const newId = data && data.length > 0 ? data[0].id : null;
-      if (newId) {
-        task.id = newId;
-        await meSaveTaskSubtasksRelational(userId, newId, task);
-      }
-      return { success: true, taskId: newId };
-    } else {
-      // Update existing task
-      const updatePayload = {
-        name: task.name,
-        category: task.category,
-        type: task.type || 'standard',
-        assignee_id: task.assigneeId || null,
-        product_id: task.productId || null,
-        start_date: startDate,
-        end_date: endDate,
-        total_hours: totalHours,
-        department,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await supa
-        .from('me_tasks')
-        .update(updatePayload)
-        .eq('id', task.id);
-
-      if (error) {
-        console.warn('meSaveTaskRelational update error:', error.message);
-        return { success: false, taskId: null };
-      }
-
-      await meSaveTaskSubtasksRelational(userId, task.id, task);
-      return { success: true, taskId: task.id };
+    if (error) {
+      console.warn('meSaveTaskRelational upsert error:', error.message);
+      return { success: false, taskId: null };
     }
+
+    const persistedId = data && data.length > 0 ? data[0].id : taskId;
+    task.id = persistedId;
+    await meSaveTaskSubtasksRelational(userId, persistedId, task);
+    return { success: true, taskId: persistedId };
   } catch (err) {
     console.warn('meSaveTaskRelational exception:', err.message);
     return { success: false, taskId: null };
@@ -431,8 +405,15 @@ window.meSaveTaskRelational = async function(userId, task) {
 
 window.meSaveTaskSubtasksRelational = async function(userId, taskId, task) {
   try {
-    // Only root tasks have PERT/subtask data
-    if (task.type !== 'root') return true;
+    // Tasks without advanced estimation: delete any orphaned rows left over from a previous PERT estimation
+    // (happens when a task is cleared via meEstimationClearData — old me_task_pert_history / me_task_subtasks rows may remain)
+    const hasAdvancedEstimation = task.subtasks && task.subtasks.length > 0 || 
+                                   (task.advancedEstimation && task.advancedEstimation.pertData);
+    if (!hasAdvancedEstimation) {
+      await supa.from('me_task_subtasks').delete().eq('task_id', taskId);
+      await supa.from('me_task_pert_history').delete().eq('task_id', taskId);
+      return true;
+    }
 
     const subtasks = task.subtasks || [];
     const pertEstimates = (task.advancedEstimation && task.advancedEstimation.pertData)

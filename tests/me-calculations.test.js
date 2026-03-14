@@ -55,6 +55,15 @@ describe('ME monthly capacity calculations', () => {
     expect(result.capacity).toBeCloseTo(164, 6);
   });
 
+  test('deducts holiday using member daily hours and supports legacy person_id field', () => {
+    const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 35, utilisation: 100 }];
+    const holidays = [{ person_id: 'p1', date: '2026-01-05', type: 'full' }];
+
+    const result = meCalculateMonthData('2026-01', team, [], [], holidays);
+    // Jan 2026: 21 network days => 35 * (21/5) = 147 gross, minus one 7h day = 140
+    expect(result.capacity).toBeCloseTo(140, 6);
+  });
+
   test('clips monthly capacity to member start and end date', () => {
     const team = [{
       id: 'p1',

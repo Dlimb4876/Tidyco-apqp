@@ -115,4 +115,22 @@ describe('ME chart tab rendering', () => {
 
     expect(result).toContain('No engineers with a start date set');
   });
+
+  test('reduces available hours when holiday days are present for a member', () => {
+    const team = [
+      { id: 'p1', name: 'Alex', startDate: '2026-01-01', hoursPerWeek: 40, utilisation: 80 }
+    ];
+
+    const holidays = [
+      { personId: 'p1', date: '2026-03-03', type: 'full' },
+      { personId: 'p1', date: '2026-03-04', type: 'full' },
+      { personId: 'p1', date: '2026-03-05', type: 'full' }
+    ];
+
+    const result = meRenderChartTab('2026-03', team, [], [], holidays);
+
+    expect(result).toContain('3 d');
+    expect(result).toContain('16.0 h');
+    expect(result).toContain('12.8 h');
+  });
 });

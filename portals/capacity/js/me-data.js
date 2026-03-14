@@ -16,6 +16,9 @@ window.meDataState = {
   holidays: []
 };
 
+window.meDataSaveInProgress = false;
+window.meDataSaveQueued = false;
+
 function meNormalizeDepartmentTag(value, fallback = 'ME') {
   const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
   return normalized === 'PM' ? 'PM' : 'ME';
@@ -157,6 +160,7 @@ window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, 
   if (!name || name.trim().length === 0) return false;
   const todayStr = new Date().toISOString().split('T')[0];
   const task = {
+    id: meUUID(),
     name: name.trim(),
     category: category || 'NPI',
     type: 'standard',
@@ -166,6 +170,7 @@ window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, 
     startDate: startDate || todayStr,
     endDate: endDate || todayStr,
     totalHours: parseFloat(totalHours) || 0,
+    status: 'SCHEDULED',
     createdAt: new Date().toISOString()
   };
   meDataState.tasks.push(task);
@@ -199,6 +204,9 @@ window.meDataUpdateTask = function(idx, field, value) {
       break;
     case 'totalHours':
       task.totalHours = parseFloat(value) || 0;
+      break;
+    case 'status':
+      task.status = value || 'SCHEDULED';
       break;
     default:
       return false;
@@ -484,6 +492,7 @@ window.meDataInit = async function() {
       meDataState.tasks.forEach(task => {
         if (!('type' in task)) task.type = 'standard';
         if (!('department' in task)) task.department = 'ME';
+        if (!('status' in task)) task.status = 'SCHEDULED';
       });
 
       meDataState.products.forEach(product => {
@@ -507,6 +516,13 @@ window.meDataInit = async function() {
 };
 
 window.meDataSave = async function(showAlert) {
+  if (window.meDataSaveInProgress) {
+    window.meDataSaveQueued = true;
+    return;
+  }
+
+  window.meDataSaveInProgress = true;
+
   try {
     if (typeof supa === 'undefined' || typeof currentUser === 'undefined' || !currentUser) {
       console.warn('ME save: Supabase not available');
@@ -643,6 +659,12 @@ window.meDataSave = async function(showAlert) {
     if (typeof setSyncBadge === 'function') {
       setSyncBadge('error', 'Save failed');
     }
+  } finally {
+    window.meDataSaveInProgress = false;
+    if (window.meDataSaveQueued) {
+      window.meDataSaveQueued = false;
+      await window.meDataSave(false);
+    }
   }
 };
 
@@ -734,6 +756,7 @@ window.meDataSubscribe = function() {
         startDate: newTask.start_date || '',
         endDate: newTask.end_date || '',
         totalHours: parseFloat(newTask.total_hours) || 0,
+        status: newTask.status || 'SCHEDULED',
         createdAt: newTask.created_at || new Date().toISOString()
       };
 

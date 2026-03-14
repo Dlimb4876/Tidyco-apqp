@@ -141,7 +141,6 @@ Create these in `portals/capacity/css/`:
 - activity editor controls
 - complexity sliders
 - summary/footer/buttons
-- PERT table
 - dropdown/subtask rows
 
 8. `me-capacity-responsive.css`

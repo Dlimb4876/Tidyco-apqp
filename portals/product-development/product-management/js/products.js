@@ -155,7 +155,7 @@ function renderFamiliesTabContent() {
             <th>Family Name</th>
             <th>Description</th>
             <th class="ctr">Projects</th>
-            <th class="ctr">Actions</th>
+            <th class="families-actions-col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -166,7 +166,7 @@ function renderFamiliesTabContent() {
             <td><input class="cell-edit" id="fNew-label" placeholder="e.g. HVAC Systems"></td>
             <td><input class="cell-edit" id="fNew-desc" placeholder="Description…"></td>
             <td class="ctr">—</td>
-            <td class="w28 ctr">
+            <td class="families-actions-col">
               <button class="btn-del" title="Add family" data-action="families-add-row">✓</button>
             </td>
           </tr>
@@ -182,7 +182,7 @@ function renderFamiliesTabContent() {
                 <td><input class="cell-edit" id="fEdit-label" value="${esc(f.label || '')}"></td>
                 <td><input class="cell-edit" id="fEdit-desc" value="${esc(f.description || '')}"></td>
                 <td class="ctr">${usage}</td>
-                <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
+                <td class="families-actions-col">
                   <button class="btn-del" title="Save" data-action="families-save-edit" data-family-id="${esc(f.id)}">✓</button>
                   <button class="btn-del" title="Cancel" data-action="families-cancel-edit">✕</button>
                 </td>
@@ -195,7 +195,7 @@ function renderFamiliesTabContent() {
               <td><strong>${esc(f.label)}</strong></td>
               <td>${esc(f.description || '—')}</td>
               <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
-              <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
+              <td class="families-actions-col">
                 <button class="btn-del" title="Edit" data-action="families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
                 <button class="btn-del" title="Delete" data-action="families-delete-row" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
               </td>
@@ -359,19 +359,20 @@ function renderProductsList() {
   });
 
   const html = `
-    <table class="prod-tbl products-inline-table" style="table-layout:auto;width:100%">
-      <colgroup>
-        <col style="min-width:200px">
-        <col style="min-width:140px">
-        <col style="min-width:140px">
-        <col style="min-width:100px">
-        <col style="min-width:140px">
-        <col style="min-width:120px">
-        <col style="min-width:120px">
-        <col style="min-width:200px">
-        <col style="min-width:100px">
-        <col style="width:80px">
-      </colgroup>
+    <div class="products-table-wrap">
+      <table class="prod-tbl products-inline-table" style="table-layout:auto;width:100%">
+        <colgroup>
+          <col style="min-width:200px">
+          <col style="min-width:140px">
+          <col style="min-width:140px">
+          <col style="min-width:100px">
+          <col style="min-width:140px">
+          <col style="min-width:120px">
+          <col style="min-width:120px">
+          <col style="min-width:200px">
+          <col style="min-width:100px">
+          <col style="width:80px">
+        </colgroup>
       <thead>
         <tr>
           <th>Product Name</th>
@@ -443,6 +444,7 @@ function renderProductsList() {
         }).join('')}
       </tbody>
     </table>
+    </div>
   `;
 
   container.innerHTML = html;

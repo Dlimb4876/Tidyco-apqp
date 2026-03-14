@@ -105,9 +105,11 @@ function renderProductFamilyDatabase() {
         <td style="padding:12px 16px;font-size:13px;font-weight:500;color:var(--ink);width:25%;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" id="fam-label-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'label')" title="Click to edit">${esc(fam.label)}</td>
         <td style="padding:12px 16px;font-size:13px;color:var(--text);width:50%;max-width:400px;cursor:pointer" id="fam-desc-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'description')" title="Click to edit">${fam.description ? esc(fam.description) : '<span style="color:var(--muted)">No description</span>'}</td>
         <td style="padding:12px 16px;font-size:24px;text-align:center;width:80px;cursor:pointer" id="fam-icon-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'icon')" title="Click to edit">${fam.icon || '📋'}</td>
-        <td style="padding:12px 16px;display:flex;gap:6px;justify-content:flex-end;width:150px">
-          <button class="btn btn-sm" onclick="showTemplateManager('${fam.id}')" title="Manage PFMEA Templates" style="font-size:11px;padding:4px 8px;flex:1">📋 Templates</button>
-          <button class="btn btn-sm" onclick="if(confirm('Delete ${esc(fam.label)}?')) familiesDataDeleteFamily('${fam.id}')" title="Delete" style="font-size:11px;padding:4px 8px;color:var(--red);border-color:var(--red);background:transparent;flex:0 0 auto;min-width:auto">Delete</button>
+        <td style="padding:12px 16px;text-align:right;width:150px;white-space:nowrap">
+          <span style="display:inline-flex;gap:6px;justify-content:flex-end;align-items:center">
+            <button class="btn btn-sm" onclick="showTemplateManager('${fam.id}')" title="Manage PFMEA Templates" style="font-size:11px;padding:4px 8px">📋 Templates</button>
+            <button class="btn btn-sm" onclick="if(confirm('Delete ${esc(fam.label)}?')) familiesDataDeleteFamily('${fam.id}')" title="Delete" style="font-size:11px;padding:4px 8px;color:var(--red);border-color:var(--red);background:transparent;min-width:auto">Delete</button>
+          </span>
         </td>
       </tr>
     `;

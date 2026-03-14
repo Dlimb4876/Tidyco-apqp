@@ -1,7 +1,7 @@
 /* Products Portal Styles */
 
 .products-portal {
-  padding: 20px;
+  padding: 14px;
   background: #f8f9fa;
   min-height: 100vh;
 }
@@ -180,6 +180,16 @@
   /* Use production table button styling */
 }
 
+.families-inline-table.prod-tbl th.families-actions-col,
+.families-inline-table.prod-tbl td.families-actions-col {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.families-inline-table.prod-tbl td.families-actions-col .btn-del + .btn-del {
+  margin-left: 4px;
+}
+
 /* Status Badges */
 .badge {
   display: inline-block;
@@ -278,11 +288,14 @@
   border: 1px dashed #ddd;
 }
 
-/* Families Table */
+/* Products & Families Table Wrappers */
+.products-table-wrap,
 .families-table-wrap {
   background: white;
   border-radius: 4px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .families-inline-table .col-icon {
@@ -719,7 +732,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .products-portal {
-    padding: 15px;
+    padding: 10px;
   }
 
   .products-controls {
@@ -756,7 +769,7 @@
 /* ── Additional Responsive Enhancements ──────────────────────── */
 @media (max-width: 767px) {
   .products-portal {
-    padding: 12px;
+    padding: 10px;
   }
 
   .products-header {
@@ -839,7 +852,7 @@
 
 @media (min-width: 768px) and (max-width: 1199px) {
   .products-portal {
-    padding: 16px;
+    padding: 14px;
   }
 
   .products-header h1 {

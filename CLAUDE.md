@@ -4,6 +4,19 @@
 
 **The primary user of this project has zero coding experience.** When providing explanations, generating code, or describing changes, please use the simplest possible terms (layman's terms). Avoid jargon and assume no prior knowledge of programming concepts, git, or web development. Your goal is to make the process as understandable and accessible as possible for a non-technical user.
 
+### Operator Acronyms
+
+When the user references these acronyms, they mean:
+
+- **ME** = Manufacturing Engineering
+- **PM** = Project Management
+- **APQP** = Advanced Product Quality Planning
+- **RLS** = Row Level Security (database access control)
+- **CTQ** = Critical to Quality
+- **PFMEA** = Process Failure Mode and Effects Analysis
+- **BOM** = Bill of Materials
+- **SPA** = Single Page Application
+
 ### Task Tracking
 
 For any multi-step request (e.g. "add a new feature", "fix this bug", "update these files"), **always create a Todo list** at the start of the task and keep it updated throughout. This helps the user follow along and see what has been done and what is still to come.
@@ -71,6 +84,8 @@ When designing or modifying any feature, you MUST account for:
 ### Capacity Parity Rule
 
 When changing the ME Capacity plan, make the equivalent change in the PM Capacity plan under `portals/capacity/project-management/` unless the request explicitly says not to.
+
+Maintenance note: this also applies to bug fixes and refactors. If you update ME capacity logic, review PM Projects Capacity in the same task and mirror relevant changes.
 
 - ✅ Treat ME Capacity and PM Capacity as paired features
 - ✅ Mirror relevant UI, data, routing, and persistence changes across both plans
