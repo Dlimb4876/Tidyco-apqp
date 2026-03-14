@@ -55,9 +55,6 @@ async function launchApp() {
   // Load Work Areas (work_areas table)
   await workAreasDataInit();
 
-  // Load Bug Reports (bug_reports table, shared across all users)
-  await bugDataInit();
-
   // Restore previous page state from URL hash (e.g. after a page refresh)
   const h = parseHash();
   if (h.s) {

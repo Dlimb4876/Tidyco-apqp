@@ -108,8 +108,9 @@ function opsCalcRiskHealth(programmes) {
 }
 
 function opsCalcBugHealth() {
-	const reports = window.bugDataManager?.state?.reports;
+	const reports = window.feedbackDataManager?.state?.feedback;
 	const rows = Array.isArray(reports) ? reports : [];
+	const closedStatuses = new Set(['completed', 'declined', 'squashed']);
 
 	let open = 0;
 	let closed7d = 0;
@@ -117,11 +118,13 @@ function opsCalcBugHealth() {
 	const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
 
 	rows.forEach(report => {
+		if ((report.feedback_type || '').toString().toLowerCase() !== 'bug') return;
+
 		const status = (report.status || '').toString().toLowerCase();
-		if (status === 'open') open += 1;
+		if (!closedStatuses.has(status)) open += 1;
 
 		const respondedAt = opsParseDateSafe(report.responded_at);
-		if (status === 'closed' && respondedAt && respondedAt >= sevenDaysAgo) {
+		if (closedStatuses.has(status) && respondedAt && respondedAt >= sevenDaysAgo) {
 			closed7d += 1;
 		}
 	});

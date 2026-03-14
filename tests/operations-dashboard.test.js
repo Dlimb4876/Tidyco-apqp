@@ -48,14 +48,14 @@ global.meLoadRelationalHolidays = jest.fn().mockResolvedValue([]);
 
 global.prodState = { products: [], batches: [] };
 global.meDataState = { team: [], tasks: [], products: [], holidays: [] };
-global.bugDataManager = { state: { reports: [] } };
+global.feedbackDataManager = { state: { feedback: [] } };
 
 global.renderProductDevelopment = jest.fn().mockReturnValue('<div>Product Development</div>');
 global.renderProduction = jest.fn().mockReturnValue('<div>Production</div>');
 global.renderProductsPortalHTML = jest.fn().mockReturnValue('<div>Products</div>');
 global.renderProductsPortalSetup = jest.fn();
 global.renderProductMgmt = jest.fn().mockReturnValue('<div>Product Mgmt</div>');
-global.renderBugReports = jest.fn().mockReturnValue('<div>Bug Reports</div>');
+global.renderFeedback = jest.fn().mockReturnValue('<div>Feedback</div>');
 global.renderCapacity = jest.fn().mockReturnValue('<div>Capacity</div>');
 global.renderMeCapacity = jest.fn().mockReturnValue('<div>ME Capacity</div>');
 global.renderProdCapacity = jest.fn().mockReturnValue('<div>Prod Capacity</div>');
@@ -144,9 +144,9 @@ describe('Operations Dashboard', () => {
       pfmea: [{ effects: [{ sev: 10, causes: [{ occ: 5, det: 3 }] }] }]
     }];
 
-    bugDataManager.state.reports = [
-      { status: 'open' },
-      { status: 'closed', responded_at: new Date().toISOString() }
+    feedbackDataManager.state.feedback = [
+      { feedback_type: 'bug', status: 'open' },
+      { feedback_type: 'bug', status: 'squashed', responded_at: new Date().toISOString() }
     ];
 
     meDataState = {

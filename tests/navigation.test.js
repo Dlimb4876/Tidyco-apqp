@@ -48,13 +48,13 @@ global.productsActiveTab = 'list';
 global.prog = () => global.db.programmes.find(p => p.id === global.progId) || null;
 
 // Mock subscription cleanup functions
-global.bugDataUnsubscribe = jest.fn();
+global.feedbackDataUnsubscribe = jest.fn();
 global.meDataUnsubscribe = jest.fn();
 global.prodCapUnsubscribeUtilization = jest.fn();
 global.prodDataUnsubscribe = jest.fn();
 
-// Mock bugDataManager
-global.bugDataManager = {
+// Mock feedbackDataManager
+global.feedbackDataManager = {
   init: jest.fn().mockResolvedValue(undefined)
 };
 
@@ -64,7 +64,7 @@ global.renderProduction = jest.fn().mockReturnValue('<div>Production</div>');
 global.renderProductsPortalHTML = jest.fn().mockReturnValue('<div>Products</div>');
 global.renderProductsPortalSetup = jest.fn();
 global.renderProductMgmt = jest.fn().mockReturnValue('<div>Product Mgmt</div>');
-global.renderBugReports = jest.fn().mockReturnValue('<div>Bug Reports</div>');
+global.renderFeedback = jest.fn().mockReturnValue('<div>Feedback</div>');
 global.renderCapacity = jest.fn().mockReturnValue('<div>Capacity</div>');
 global.renderMeCapacity = jest.fn().mockReturnValue('<div>ME Capacity</div>');
 global.renderProdCapacity = jest.fn().mockReturnValue('<div>Prod Capacity</div>');
@@ -198,15 +198,15 @@ describe('Navigation Module (navigation.js)', () => {
       expect(document.getElementById('returnHubBtn').style.display).toBe('none');
     });
 
-    test('should initialize bug reports data when navigating to bugreports', () => {
-      navigate('bugreports');
-      expect(global.bugDataManager.init).toHaveBeenCalled();
+    test('should initialize feedback data when navigating to feedback', () => {
+      navigate('feedback');
+      expect(global.feedbackDataManager.init).toHaveBeenCalled();
     });
 
-    test('should cleanup bug reports subscription when leaving bugreports', () => {
-      global.currentSection = 'bugreports';
+    test('should cleanup feedback subscription when leaving feedback', () => {
+      global.currentSection = 'feedback';
       navigate('hub');
-      expect(global.bugDataUnsubscribe).toHaveBeenCalled();
+      expect(global.feedbackDataUnsubscribe).toHaveBeenCalled();
     });
 
     test('should reset capacityTab when navigating to capacity', () => {
@@ -350,10 +350,10 @@ describe('Navigation Module (navigation.js)', () => {
       expect(document.getElementById('mainContent').innerHTML).toContain('ME Capacity');
     });
 
-    test('should render bugreports section', () => {
-      global.currentSection = 'bugreports';
+    test('should render feedback section', () => {
+      global.currentSection = 'feedback';
       render();
-      expect(document.getElementById('mainContent').innerHTML).toContain('Bug Reports');
+      expect(document.getElementById('mainContent').innerHTML).toContain('Feedback');
     });
 
     test('should render empty section shell for unsupported section ids', () => {

@@ -16,7 +16,6 @@ const SECTION_LABELS = {
   operations: 'Operations Mission Control',
   production: 'Production Planning',
   'product-development': 'Product Development',
-  bugreports: 'Bug Reports',
   feedback: 'Feedback & Bugs'
 };
 
@@ -26,7 +25,6 @@ const BACK_BUTTON_LABELS = {
   production: '← Back to Production',
   'product-development': '← Back to Product Development',
   operations: '← Back to Operations',
-  bugreports: '← Back to Bug Reports',
   feedback: '← Back to Feedback & Bugs',
   apqp: '← Back to Project',
   actions: '← Back to Project',
@@ -67,7 +65,7 @@ function isNpiLiveSection(sec) {
  * - Automatic subscription cleanup when leaving sections
  * - Tab reset when navigating to sections from outside
  * - Return button visibility management
- * - Bug reports data initialization
+ * - Feedback data initialization
  */
 function navigate(sec, { pushHash = true } = {}) {
   if (sec === 'home') sec = 'project';
@@ -84,16 +82,6 @@ function navigate(sec, { pushHash = true } = {}) {
   if (enteringNpiLiveSection) {
     if (typeof npi?.init === 'function') npi.init();
     else if (typeof npiDataInit === 'function') npiDataInit();
-  }
-
-  // Clean up subscriptions when leaving bugreports
-  if (currentSection === 'bugreports' && sec !== 'bugreports' && typeof bugDataUnsubscribe === 'function') {
-    bugDataUnsubscribe();
-  }
-
-  // Initialize bugreports data when navigating TO bugreports
-  if (sec === 'bugreports' && currentSection !== 'bugreports' && typeof bugDataManager !== 'undefined') {
-    bugDataManager.init().catch(err => console.error('Failed to initialize bug reports:', err));
   }
 
   // Clean up subscriptions when leaving feedback
@@ -261,10 +249,6 @@ function render() {
   }
   if (currentSection === 'operations') {
     mc.innerHTML = `<div class="section-inner">${renderOperationsDashboard()}</div>`;
-    return;
-  }
-  if (currentSection === 'bugreports') {
-    mc.innerHTML = `<div class="section-inner">${renderBugReports()}</div>`;
     return;
   }
   if (currentSection === 'feedback') {

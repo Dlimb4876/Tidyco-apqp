@@ -62,15 +62,16 @@ async function opsRefreshMeData() {
 }
 
 async function opsRefreshBugs() {
-	if (!currentUser || !window.bugDataManager || !window.bugDataManager.state) return;
+	if (!currentUser || !window.feedbackDataManager || !window.feedbackDataManager.state) return;
 
 	const { data, error } = await supa
-		.from('bug_reports')
+		.from('user_feedback')
 		.select('*')
-		.order('date_raised', { ascending: false });
+		.eq('feedback_type', 'bug')
+		.order('date_submitted', { ascending: false });
 
 	if (error) throw error;
-	window.bugDataManager.state.reports = data || [];
+	window.feedbackDataManager.state.feedback = data || [];
 }
 
 async function opsRefreshForecast() {
@@ -124,7 +125,7 @@ function opsRealtimeInit() {
 		onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
 	});
 
-	createRealtimeSubscription('bug_reports', 'ops_bug_reports_channel', {
+	createRealtimeSubscription('user_feedback', 'ops_feedback_bugs_channel', {
 		onInsert: () => opsScheduleRefresh('bugs', opsRefreshBugs),
 		onUpdate: () => opsScheduleRefresh('bugs', opsRefreshBugs),
 		onDelete: () => opsScheduleRefresh('bugs', opsRefreshBugs)
@@ -159,7 +160,7 @@ function opsRealtimeCleanup() {
 	removeRealtimeSubscription('ops_me_tasks_channel');
 	removeRealtimeSubscription('ops_me_products_channel');
 	removeRealtimeSubscription('ops_me_holidays_channel');
-	removeRealtimeSubscription('ops_bug_reports_channel');
+	removeRealtimeSubscription('ops_feedback_bugs_channel');
 	removeRealtimeSubscription('ops_forecast_channel');
 
 	if (opsForecastChart) {
