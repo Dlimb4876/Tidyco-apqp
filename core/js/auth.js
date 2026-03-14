@@ -15,6 +15,7 @@ async function doLogin() {
   const err      = document.getElementById('loginErr');
   err.style.display = 'none';
   if (!email || !password) { showLoginErr('Please enter your email and password.'); return; }
+  if (!email.endsWith('@tidyco.co.uk')) { showLoginErr('Please use your @tidyco.co.uk email address.'); return; }
   btn.disabled = true; btn.textContent = 'Signing in…';
   const { data, error } = await supa.auth.signInWithPassword({ email, password });
   btn.disabled = false; btn.textContent = 'Sign in';

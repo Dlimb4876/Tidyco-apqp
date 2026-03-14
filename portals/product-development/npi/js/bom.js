@@ -30,21 +30,61 @@ npi.bom.renderBomTable = function(type, p) {
     ${type !== 'tools' && type !== 'equip' ? `<span class="flag-aaw bom-summary-pill">${aaw} AAW</span><span class="flag-repair bom-summary-pill">${rep} Repair</span>` : ''}
   </div>`
 
+  // ABC filter and visible items (parts only)
+  let abcFilterBar = '', filterNote = '', visibleItems = items
+  if (type === 'parts') {
+    visibleItems = bomAbcFilter !== 'all'
+      ? items.filter(r => r.abcClass === bomAbcFilter)
+      : items
+
+    abcFilterBar = `<div class="bom-abc-filter-row">
+      <span class="bom-abc-filter-label">ABC Class:</span>
+      ${['all','A','B','C'].map(cls =>
+        `<button class="bom-abc-chip${bomAbcFilter === cls ? ' active' : ''}"
+          onclick="npi.bom.setAbcFilter('${cls}')">${cls === 'all' ? 'All' : cls}</button>`
+      ).join('')}
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto"
+        onclick="npi.bom.showAbcInfo()">What are A / B / C? ℹ</button>
+    </div>`;
+
+    filterNote = bomAbcFilter !== 'all'
+      ? `<span class="bom-abc-active-filter">Showing ${visibleItems.length} ${bomAbcFilter}-Class parts</span>`
+      : '';
+  }
+
   let thead = '', tbody = ''
   if (type === 'parts') {
-    thead = npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Supplier PN' }, { label: 'Description' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
-    tbody = items.map((r, i) => `<tr>
-      <td class="w110"><input class="cell-edit mono" value="${esc(r.pn)}" onchange="npi.bom.updBom('parts',${i},'pn',this.value)" placeholder="Tidyco PN"></td>
-      <td class="w110"><input class="cell-edit mono" value="${esc(r.supplierPN||'')}" onchange="npi.bom.updBom('parts',${i},'supplierPN',this.value)" placeholder="Supplier PN"></td>
-      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('parts',${i},'desc',this.value)" placeholder="Description"></td>
-      <td class="w75 ctr"><input type="number" class="cell-edit mono" min="0" value="${r.qty || ''}" onchange="npi.bom.updBom('parts',${i},'qty',+this.value)"></td>
-      <td class="w50"><input class="cell-edit" value="${esc(r.unit)}" onchange="npi.bom.updBom('parts',${i},'unit',this.value)" placeholder="ea"></td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isStd    ? 'checked' : ''} onchange="npi.bom.updBom('parts',${i},'isStd',this.checked)"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isAaw    ? 'checked' : ''} onchange="npi.bom.updBom('parts',${i},'isAaw',this.checked)"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isRepair ? 'checked' : ''} onchange="npi.bom.updBom('parts',${i},'isRepair',this.checked)" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
-      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('parts',${i},'notes',this.value)" placeholder="Notes / scheme ref"></td>
-      <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('parts',${i})">×</button></td>
-    </tr>`).join('')
+    thead = npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Supplier PN' }, { label: 'Description' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Sage' }, { label: 'Class' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
+    tbody = visibleItems.map((r, i) => {
+      const actualIdx = items.indexOf(r);
+      const sageBadge = r.abcCatalogueId
+        ? (() => {
+            const cat = abcCatalogueData.find(c => c.id === r.abcCatalogueId)
+            return cat && cat.in_sage ? '<span style="color:var(--green);font-weight:bold">✓</span>' : '<span style="color:var(--muted)">—</span>'
+          })()
+        : '<span style="color:var(--muted)">—</span>'
+      return `<tr>
+      <td class="w110"><input class="cell-edit mono" value="${esc(r.pn)}" onchange="npi.bom.updBom('parts',${actualIdx},'pn',this.value)" placeholder="Tidyco PN"></td>
+      <td class="w110"><input class="cell-edit mono" value="${esc(r.supplierPN||'')}" onchange="npi.bom.updBom('parts',${actualIdx},'supplierPN',this.value)" placeholder="Supplier PN"></td>
+      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" onchange="npi.bom.updBom('parts',${actualIdx},'desc',this.value)" placeholder="Description"></td>
+      <td class="w75 ctr"><input type="number" class="cell-edit mono" min="0" value="${r.qty || ''}" onchange="npi.bom.updBom('parts',${actualIdx},'qty',+this.value)"></td>
+      <td class="w50"><input class="cell-edit" value="${esc(r.unit)}" onchange="npi.bom.updBom('parts',${actualIdx},'unit',this.value)" placeholder="ea"></td>
+      <td class="w44 ctr">${sageBadge}</td>
+      <td class="w60 ctr">
+        <select class="abc-class-select abc-${r.abcClass || 'none'}"
+          onchange="npi.bom.updBom('parts',${actualIdx},'abcClass',this.value||null)">
+          <option value="">—</option>
+          <option value="A" ${r.abcClass==='A'?'selected':''}>A</option>
+          <option value="B" ${r.abcClass==='B'?'selected':''}>B</option>
+          <option value="C" ${r.abcClass==='C'?'selected':''}>C</option>
+        </select>
+      </td>
+      <td class="w44 ctr"><input type="checkbox" ${r.isStd    ? 'checked' : ''} onchange="npi.bom.updBom('parts',${actualIdx},'isStd',this.checked)"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
+      <td class="w44 ctr"><input type="checkbox" ${r.isAaw    ? 'checked' : ''} onchange="npi.bom.updBom('parts',${actualIdx},'isAaw',this.checked)"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
+      <td class="w44 ctr"><input type="checkbox" ${r.isRepair ? 'checked' : ''} onchange="npi.bom.updBom('parts',${actualIdx},'isRepair',this.checked)" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
+      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" onchange="npi.bom.updBom('parts',${actualIdx},'notes',this.value)" placeholder="Notes / scheme ref"></td>
+      <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delBom('parts',${actualIdx})">×</button></td>
+    </tr>`}).join('')
   } else if (type === 'tools') {
     thead = npi.components.tableHeader([{ label: 'Tool ID' }, { label: 'Description' }, { label: 'Spec / PN' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
@@ -78,10 +118,25 @@ npi.bom.renderBomTable = function(type, p) {
     </tr>`).join('')
   }
 
-  const tableMinWidth = type === 'parts' ? '920px' : '800px'
-  return `<div class="bom-register-wrap">${statsHTML}<div class="card" style="overflow-x:auto">
-  <div class="card-head"><span class="card-title">${t.icon} ${t.label} Register</span><span class="card-meta">${items.length} items</span><button class="btn btn-primary btn-sm" onclick="npi.bom.addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div>
-  ${items.length === 0 ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click ＋ Add to start. Link items to PFD steps using ＋ Resource.') : `<table class="tbl bom-tbl" style="min-width:${tableMinWidth}">${thead}<tbody>${tbody}</tbody></table>`}
+  const tableMinWidth = type === 'parts' ? '1080px' : '800px'
+
+  const content = type === 'parts'
+    ? `${abcFilterBar}${filterNote}${statsHTML}${
+        items.length === 0
+          ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click ＋ Add to start. Link items to PFD steps using ＋ Resource.')
+          : `<div style="overflow-x:auto"><table class="tbl bom-tbl" style="min-width:${tableMinWidth}">${thead}<tbody>${tbody}</tbody></table></div>`
+      }`
+    : `${statsHTML}${
+        items.length === 0
+          ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click ＋ Add to start. Link items to PFD steps using ＋ Resource.')
+          : `<div style="overflow-x:auto"><table class="tbl bom-tbl" style="min-width:${tableMinWidth}">${thead}<tbody>${tbody}</tbody></table></div>`
+      }`;
+
+  return `<div class="bom-register-wrap"><div class="card">
+  <div class="card-head"><span class="card-title">${t.icon} ${t.label} Register</span><span class="card-meta">${items.length} items</span>${
+    type === 'parts' ? `<button class="btn btn-ghost btn-sm" onclick="npi.bom.openABCPick()" style="margin-left:auto;margin-right:8px">Pick from Catalogue →</button>` : ''
+  }<button class="btn btn-primary btn-sm" onclick="npi.bom.addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div>
+  ${content}
   <button class="add-row" onclick="npi.bom.addBomRow('${type}')">＋ Add ${t.label.replace(/s$/, '')}</button></div></div>`
 }
 
@@ -184,4 +239,89 @@ npi.bom.openKitPick = function(ki) {
 npi.bom.saveKitPick = function() {
   npi.data.bom.saveKitPick(kitPickTarget, bomPickSelected)
   closeModal('modalKitPick'); render()
+}
+
+// ══════════════════════════════════════
+// ABC Class Filter and Picker
+// ══════════════════════════════════════
+npi.bom.setAbcFilter = function(cls) {
+  bomAbcFilter = cls
+  render()
+}
+
+npi.bom.showAbcInfo = function() {
+  showModal('modalAbcInfo')
+}
+
+npi.bom.openABCPick = async function() {
+  const p = prog()
+  if (!p) return
+  abcPickTarget = { progId: p.id, type: 'parts' }
+  abcPickResults = []
+  abcPickLoading = true
+  abcPickSearch = ''
+  abcPickClassFilter = 'all'
+  showModal('modalABCPick')
+  // Fetch and populate
+  abcPickResults = await npiRelFetchABCCatalogue()
+  abcPickLoading = false
+  // Re-render the modal list
+  const listEl = document.getElementById('abcPickList')
+  if (listEl) listEl.innerHTML = npi.bom.renderABCPickList()
+}
+
+npi.bom.renderABCPickList = function() {
+  if (abcPickLoading) return '<div style="padding:20px;text-align:center;color:var(--muted)">Loading...</div>'
+
+  // Apply filters
+  const searchTerm = (abcPickSearch || '').toLowerCase()
+  let filtered = searchTerm
+    ? abcPickResults.filter(r =>
+        (r.item_desc || '').toLowerCase().includes(searchTerm) ||
+        (r.pn || '').toLowerCase().includes(searchTerm)
+      )
+    : abcPickResults
+
+  if (abcPickClassFilter !== 'all') {
+    filtered = filtered.filter(r => r.abc_class === abcPickClassFilter)
+  }
+
+  if (!filtered.length) return '<div style="padding:20px;text-align:center;color:var(--muted)">No parts found.</div>'
+
+  return filtered.map((r, i) => {
+    const sageBadge = r.in_sage ? '<span style="color:var(--green);margin-left:4px">· Sage</span>' : ''
+    return `
+    <div class="bom-pick-item" onclick="npi.bom.importABCPart(${abcPickResults.indexOf(r)})" style="cursor:pointer">
+      <div>
+        <div class="bom-pick-name">${esc(r.item_desc)}</div>
+        <div class="bom-pick-meta">${r.pn ? 'PN: ' + esc(r.pn) + ' · ' : ''}${esc(r.unit || 'ea')}${r.notes ? ' · ' + esc(r.notes) : ''}${sageBadge}</div>
+      </div>
+      <span class="abc-badge abc-${r.abc_class}">${r.abc_class}</span>
+    </div>`
+  }).join('')
+}
+
+npi.bom.importABCPart = function(i) {
+  const src = abcPickResults[i]
+  if (!src) return
+  const p = prog()
+  if (!p) return
+  const item = {
+    id: crypto.randomUUID(),
+    desc: src.item_desc || '',
+    notes: src.notes || '',
+    pn: src.pn || '',
+    supplierPN: src.supplier_pn || '',
+    qty: 1,  // project-specific qty, user can adjust
+    unit: src.unit || 'ea',
+    isStd: false,
+    isAaw: false,
+    isRepair: false,
+    abcClass: src.abc_class || 'C',
+    abcCatalogueId: src.id  // link to catalogue
+  }
+  p.bom.parts.push(item)
+  Promise.resolve().then(() => npiRelSaveBOMItem('parts', item)).catch(err => console.error('[NPI] save BOM item failed:', err))
+  npi.notify('render')
+  closeModal('modalABCPick')
 }

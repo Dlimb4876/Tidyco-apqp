@@ -19,6 +19,12 @@ let prodPlanMonthOffset = 0; // Month offset from current month
 let meStartOffset = 0; // Months from today
 let prodCapMonthOffset = 0; // Production capacity month offset (perpetual rolling window)
 let prodCapUtilizationFactor = 1.0; // Global utilization factor (0.0–1.0) affects available capacity
+let tenderGateScopeState = {
+  isOpen: false,
+  programmeId: null,
+  selectedGate: 0,
+  workingSelections: null
+};
 
 // Modal picker state
 let ctqPickTarget = null, ctqPickSelected = [];
@@ -27,8 +33,89 @@ let kitPickTarget = null, kitPickSelected = [], kitPickFilter = 'all';
 let insertOriginIdx = null;
 let collapsedGroups = new Set();
 
+// ABC class filter and picker state
+let bomAbcFilter = 'all';       // 'all' | 'A' | 'B' | 'C' — active filter in BOM parts tab
+let abcPickTarget = null;       // { progId, type: 'parts' } — import target for ABC picker
+let abcPickResults = [];        // rows fetched from Supabase for the picker modal
+let abcPickLoading = false;     // true while fetch is in-flight
+let abcPickSearch  = '';        // live search text in the picker modal
+let abcPickClassFilter = 'all'; // 'all' | 'A' | 'B' | 'C' — class filter in picker
+
+// ABC Catalogue state (central management page)
+let abcCatalogueData    = [];       // all ABC parts from catalogue
+let abcCatalogueLoading = false;    // true while loading
+let abcCatalogueLoaded  = false;    // true once loaded
+let abcCatalogueSearch  = '';       // search filter text
+let abcCatalogueClassFilter = 'all'; // 'all' | 'A' | 'B' | 'C' — class filter on catalogue page
+let abcEditTarget = null;           // index into abcCatalogueData during edit, or null for new entry
+
+// NPI dashboard tab
+let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
+
 // ── Accessor ─────────────────────────────────────────────────
 function prog() { return db.programmes.find(p => p.id === progId) || null; }
+
+function findProgrammeByProductId(productId) {
+  if (!productId || !Array.isArray(db.programmes)) return null;
+  return db.programmes.find(p => p && p.product_id === productId) || null;
+}
+
+function getDefaultGateSelection(gateNum) {
+  const gateDef = GATE_DEFS.find(g => g.num === Number(gateNum));
+  if (!gateDef || !Array.isArray(gateDef.items)) return [];
+  return gateDef.items.map((_, idx) => idx);
+}
+
+function normalizeGateSelections(gateSelections) {
+  if (!gateSelections || typeof gateSelections !== 'object') return null;
+
+  const normalized = {};
+  GATE_DEFS.forEach(g => {
+    const gateKey = String(g.num);
+    const source = gateSelections[gateKey] || gateSelections[g.num];
+    if (!Array.isArray(source)) return;
+
+    const maxIndex = g.items.length - 1;
+    const seen = new Set();
+    const clean = [];
+    source.forEach(raw => {
+      const idx = Number(raw);
+      if (!Number.isInteger(idx)) return;
+      if (idx < 0 || idx > maxIndex) return;
+      if (seen.has(idx)) return;
+      seen.add(idx);
+      clean.push(idx);
+    });
+
+    normalized[gateKey] = clean;
+  });
+
+  return Object.keys(normalized).length > 0 ? normalized : null;
+}
+
+function getAllProjectGateSelections(projectId) {
+  const project = db.programmes.find(p => p.id === projectId);
+  if (!project) return null;
+  return normalizeGateSelections(project.gate_selections);
+}
+
+function getProjectGateSelection(projectId, gateNum) {
+  const gateKey = String(Number(gateNum));
+  const allSelections = getAllProjectGateSelections(projectId);
+  if (!allSelections || !Array.isArray(allSelections[gateKey])) {
+    return getDefaultGateSelection(gateNum);
+  }
+  return allSelections[gateKey].slice();
+}
+
+function isGateSelectionLocked(projectId) {
+  const project = db.programmes.find(p => p.id === projectId);
+  return !!(project && project.gate_selection_locked);
+}
+
+function canEditGateSelections(projectId) {
+  return !isGateSelectionLocked(projectId);
+}
 
 // ── BOM type registry ─────────────────────────────────────────
 const BOM_TYPES = {
@@ -72,6 +159,37 @@ function getFamilies() {
   return (db.families && db.families.length > 0) ? db.families : FAMILIES;
 }
 
+function findFamilyRecord(familyRef) {
+  if (!familyRef) return null;
+  const families = getFamilies();
+  return families.find(f => f.id === familyRef) ||
+    families.find(f => f.name === familyRef) ||
+    families.find(f => f.label === familyRef) ||
+    null;
+}
+
+function getDefaultFamilyId(preferredRef) {
+  const fallbackRef = preferredRef || 'Other';
+  const families = getFamilies();
+  if (!Array.isArray(families) || families.length === 0) return fallbackRef;
+  const preferred = findFamilyRecord(fallbackRef);
+  return preferred ? preferred.id : families[0].id;
+}
+
+function normalizeFamilyId(familyRef, preferredFallback) {
+  const match = findFamilyRecord(familyRef);
+  return match ? match.id : getDefaultFamilyId(preferredFallback);
+}
+
+function syncProgrammeFamily(programme, familyRef, preferredFallback) {
+  if (!programme) return false;
+  const fallbackRef = preferredFallback || programme.family || 'Other';
+  const normalizedFamily = normalizeFamilyId(familyRef || '', fallbackRef);
+  if ((programme.family || '') === normalizedFamily) return false;
+  programme.family = normalizedFamily;
+  return true;
+}
+
 // ── New programme factory ─────────────────────────────────────
 function newProgTemplate(name, customer, unit, family, lead, pm, date) {
   const gates = GATE_DEFS.map(g => ({
@@ -83,6 +201,11 @@ function newProgTemplate(name, customer, unit, family, lead, pm, date) {
     id: crypto.randomUUID(), name, customer, unit, family, lead, pm, date,
     ctq: [], pfd: [], pfmea: [], cp: [],
     bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
-    gates, actions: [], risks: [], timing: [], gantt: [], subAssemblies: []
+    gates, actions: [], risks: [], timing: [], gantt: [], subAssemblies: [],
+    product_id: null,
+    gate_selections: null,
+    gate_selection_locked: false,
+    gate_selection_locked_at: null,
+    gate_selection_locked_by: null
   };
 }

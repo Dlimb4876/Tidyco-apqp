@@ -162,7 +162,7 @@ window.npiRelLoad = async function(pid) {
           desc: r.item_desc || '',
           notes: r.notes || '',
           pn: r.pn || '',
-          supplierPN: '',
+          supplierPN: r.supplier_pn || '',
           qty: r.qty != null ? r.qty : 0,
           unit: r.unit || '',
           qtyPerUnit: r.qty_per_unit != null ? r.qty_per_unit : 0,
@@ -172,7 +172,9 @@ window.npiRelLoad = async function(pid) {
           toolId: r.tool_id || '',
           spec: r.spec || '',
           equipId: r.equip_id || '',
-          location: r.location || ''
+          location: r.location || '',
+          abcClass: r.abc_class || null,
+          abcCatalogueId: r.abc_catalogue_id || null
         });
       });
 
@@ -553,6 +555,7 @@ window.npiRelSaveBOMItem = async function(type, item) {
       item_desc: item.desc || '',
       notes: item.notes || '',
       pn: item.pn || null,
+      supplier_pn: item.supplierPN || null,
       qty: item.qty != null ? item.qty : null,
       unit: item.unit || null,
       qty_per_unit: item.qtyPerUnit != null ? item.qtyPerUnit : null,
@@ -563,6 +566,8 @@ window.npiRelSaveBOMItem = async function(type, item) {
       spec: item.spec || null,
       equip_id: item.equipId || null,
       location: item.location || null,
+      abc_class: item.abcClass || null,
+      abc_catalogue_id: item.abcCatalogueId || null,
       sort_order: (prog().bom[type] || []).indexOf(item),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
@@ -581,6 +586,54 @@ window.npiRelDeleteBOMItem = async function(id) {
     if (error) console.warn('npiRelDeleteBOMItem error:', error.message);
   } catch (err) {
     console.warn('npiRelDeleteBOMItem exception:', err.message);
+  }
+};
+
+// ── ABC Catalogue (central source of truth) ───────────────────
+window.npiRelFetchABCCatalogue = async function() {
+  try {
+    const { data, error } = await supa
+      .from('abc_catalogue')
+      .select('*')
+      .order('item_desc');
+    if (error) { console.warn('npiRelFetchABCCatalogue error:', error.message); return []; }
+    return data || [];
+  } catch (err) {
+    console.warn('npiRelFetchABCCatalogue exception:', err.message);
+    return [];
+  }
+};
+
+window.npiRelSaveABCCatalogueEntry = async function(entry) {
+  if (!entry || !entry.pn || !currentUser) return null;
+  try {
+    const { data, error } = await supa.from('abc_catalogue').upsert({
+      id: entry.id || undefined,
+      pn: entry.pn,
+      item_desc: entry.item_desc || '',
+      supplier_pn: entry.supplier_pn || null,
+      unit: entry.unit || 'ea',
+      notes: entry.notes || '',
+      abc_class: entry.abc_class || 'C',
+      in_sage: entry.in_sage || false,
+      user_id: currentUser.id,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' }).select('*');
+    if (error) { console.warn('npiRelSaveABCCatalogueEntry error:', error.message); return null; }
+    return (data && data[0]) || null;
+  } catch (err) {
+    console.warn('npiRelSaveABCCatalogueEntry exception:', err.message);
+    return null;
+  }
+};
+
+window.npiRelDeleteABCCatalogueEntry = async function(id) {
+  if (!id) return;
+  try {
+    const { error } = await supa.from('abc_catalogue').delete().eq('id', id);
+    if (error) console.warn('npiRelDeleteABCCatalogueEntry error:', error.message);
+  } catch (err) {
+    console.warn('npiRelDeleteABCCatalogueEntry exception:', err.message);
   }
 };
 

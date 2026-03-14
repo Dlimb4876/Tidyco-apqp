@@ -48,19 +48,33 @@ npi.dashboard.clearProjectFilters = function() {
   render()
 }
 
+npi.dashboard.setDashTab = function(tab) {
+  if (!['projects', 'abc-catalogue'].includes(tab)) return
+  npiDashboardTab = tab
+  render()
+}
+
 // ── Auto-create programmes for all products ───────────────────
 npi.dashboard.ensureProductProgrammes = function() {
   const products = productsDataGetAll()
   if (!products || products.length === 0) return
+  
   let created = 0
+  let updated = 0
   products.forEach(product => {
-    const existing = db.programmes.find(p => p.product_id === product.id)
+    const existing = typeof findProgrammeByProductId === 'function'
+      ? findProgrammeByProductId(product.id)
+      : db.programmes.find(p => p.product_id === product.id)
+    const family = typeof normalizeFamilyId === 'function'
+      ? normalizeFamilyId(product.family || '', 'Other')
+      : (product.family || 'Other')
+
     if (!existing) {
       const np = migrateprog({
         id: 'p_' + Math.random().toString(36).substr(2, 9),
         name: product.name,
         customer: product.customer || '',
-        family: product.family || '',
+        family: family,
         unit: product.code || '',
         product_id: product.id,
         date: new Date().toISOString().slice(0, 10),
@@ -68,9 +82,17 @@ npi.dashboard.ensureProductProgrammes = function() {
       })
       db.programmes.push(np)
       created++
+      return
+    }
+
+    if (typeof syncProgrammeFamily === 'function') {
+      if (syncProgrammeFamily(existing, family, existing.family || 'Other')) updated++
+    } else if ((existing.family || '') !== family) {
+      existing.family = family
+      updated++
     }
   })
-  if (created > 0) save()
+  if (created > 0 || updated > 0) save()
 }
 
 npi.dashboard.toggleNpiLane = function(familyId) {
@@ -218,6 +240,32 @@ npi.dashboard.renderProjects = function() {
 
   const programmeByProductId = new Map((db.programmes || []).filter(p => p.product_id).map(p => [p.product_id, p]))
 
+  // Tab switcher for Projects / Parts Catalogue
+  const dashTabs = ['projects', 'abc-catalogue']
+  const dashTabLabels = { 'projects': 'NPI Projects', 'abc-catalogue': 'Parts Catalogue' }
+  const tabBar = `<div class="npi-dash-tabs">
+    ${dashTabs.map(t =>
+      `<button class="npi-dash-tab${npiDashboardTab === t ? ' active' : ''}"
+        onclick="npi.dashboard.setDashTab('${t}')">${dashTabLabels[t]}</button>`
+    ).join('')}
+  </div>`
+
+  // If viewing ABC catalogue, render that instead
+  if (npiDashboardTab === 'abc-catalogue') {
+    const catalogueHTML = npi.bom.renderABCCatalogue() || '<div style="padding:20px;text-align:center;color:var(--muted)">Loading catalogue...</div>'
+    return `<div class="proj-home">
+      <div class="proj-home-header">
+        <div>
+          <div class="proj-home-title">NPI Projects</div>
+          <div class="proj-home-sub">Signed in as ${esc(user)} · Status is managed in Product Management</div>
+        </div>
+        <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
+      </div>
+      ${tabBar}
+      ${catalogueHTML}
+    </div>`
+  }
+
   let html = `<div class="proj-home">
     <div class="proj-home-header">
       <div>
@@ -230,6 +278,7 @@ npi.dashboard.renderProjects = function() {
         <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
       </div>
     </div>
+    ${tabBar}
     <div class="npi-swimlane-wrap">
       <div class="npi-view-note">${visibleLabel} · ${visibleProducts.length} shown</div>
       <div class="npi-filter-row">
@@ -292,6 +341,7 @@ npi.dashboard.renderProjects = function() {
 // ── Slim card for a product + its linked programme ────────────
 npi.dashboard.renderNpiSlimCard = function(product, programme) {
   let pipsHtml = ''
+  let gateScopeBadge = ''
   if (programme) {
     const gates = programme.gates || []
     const curGate = gates.findIndex(g => !npi.gate.gateAllSigned(g))
@@ -301,6 +351,21 @@ npi.dashboard.renderNpiSlimCard = function(product, programme) {
         const cls = gd && npi.gate.gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : ''
         return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`
       }).join('') + `</div>`
+
+    const scoped = !!programme.gate_selections
+    const locked = !!programme.gate_selection_locked
+    const selectedTotal = GATE_DEFS.reduce((sum, g) => sum + getProjectGateSelection(programme.id, g.num).length, 0)
+    const totalQuestions = GATE_DEFS.reduce((sum, g) => sum + getDefaultGateSelection(g.num).length, 0)
+    const perGate = GATE_DEFS.map(g => {
+      const sel = getProjectGateSelection(programme.id, g.num).length
+      const tot = getDefaultGateSelection(g.num).length
+      return `G${g.num} ${sel}/${tot}`
+    }).join(' · ')
+    const label = locked ? 'Scope Locked' : scoped ? 'Scope Editable' : 'Scope Default'
+    const border = locked ? 'var(--green-mid)' : scoped ? 'var(--blue)' : 'var(--line)'
+    const text = locked ? 'var(--green)' : scoped ? 'var(--blue)' : 'var(--muted)'
+
+    gateScopeBadge = `<div title="${esc(perGate)}" style="margin-top:6px;font-size:10px;font-family:'IBM Plex Mono',monospace;padding:3px 7px;border-radius:999px;border:1px solid ${border};color:${text};display:inline-flex;gap:6px;align-items:center">${label} · ${selectedTotal}/${totalQuestions}</div>`
   }
   const hasHighRPN = programme && (programme.pfmea || []).some(r => npi.pfmea.calcRPN(r) >= RPN_HIGH)
   const rpnBadge = hasHighRPN ? `<div class="npi-slim-rpn-badge">⚠ High RPN</div>` : ''
@@ -309,6 +374,7 @@ npi.dashboard.renderNpiSlimCard = function(product, programme) {
     <div class="npi-slim-card-name">${esc(product.name)}</div>
     ${product.code     ? `<div class="npi-slim-card-code">${esc(product.code)}</div>` : ''}
     ${product.customer ? `<div class="npi-slim-card-meta">👤 ${esc(product.customer)}</div>` : ''}
+    ${gateScopeBadge}
     ${rpnBadge}
     ${pipsHtml}
   </div>`
@@ -428,12 +494,23 @@ npi.dashboard.renderDashboard = function() {
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)"><span class="rpn ${s >= 12 ? 'rpn-hi' : s >= 6 ? 'rpn-md' : 'rpn-lo'}">${s}</span><span style="flex:1;font-size:12px">${esc(r.desc)}</span><span style="font-size:10px;color:var(--muted)">${esc(r.cat || '')}</span></div>`
   }).join('') || `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open risks</div>`
 
-  const famIcon    = FAMILIES.find(f => f.id === (p.family || 'Other'))?.icon || '📋'
+  const familyInfo = typeof findFamilyRecord === 'function' ? findFamilyRecord(p.family || 'Other') : null
+  const famIcon    = familyInfo?.icon || '📋'
+  const famLabel   = familyInfo?.label || familyInfo?.name || p.family || 'Other'
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null
   const liveUpdateBadge = typeof npiRealtimeIndicatorHTML === 'function' ? npiRealtimeIndicatorHTML() : ''
   const curGateIndex = curGate >= 0 ? curGate : 5
   const curGateDef = GATE_DEFS[curGateIndex]
   const openRiskCount = p.risks.filter(r => r.status !== 'Closed').length
+  const gateScopeSelections = getAllProjectGateSelections(p.id)
+  const gateScopeLocked = isGateSelectionLocked(p.id)
+  const gateScopeSelectedCount = GATE_DEFS.reduce((sum, g) => sum + getProjectGateSelection(p.id, g.num).length, 0)
+  const gateScopeTotalCount = GATE_DEFS.reduce((sum, g) => sum + getDefaultGateSelection(g.num).length, 0)
+  const gateScopeStatusText = gateScopeLocked
+    ? 'Locked'
+    : gateScopeSelections
+      ? 'Editable'
+      : 'Not set (using standard questions)'
 
   const trajectoryHTML = GATE_DEFS.map((g, i) => {
     const gd = p.gates[i] || {}
@@ -465,6 +542,7 @@ npi.dashboard.renderDashboard = function() {
       </div>
       <div class="hero-right">
         <button class="btn btn-ghost" onclick="npi.nav.navigate('projects')">← Back</button>
+        <button class="btn btn-ghost" onclick="npi.dashboard.openGateScopeEditor()">Gate Scope</button>
         <button class="btn btn-primary" onclick="npi.dashboard.showEditProject()">Edit Project</button>
       </div>
     </div>
@@ -516,11 +594,15 @@ npi.dashboard.renderDashboard = function() {
           <div class="stack-card muted">
             <h3>Project Snapshot</h3>
             <div class="dash-prog-meta">
-              <span>${famIcon} ${esc(p.family || 'Other')}</span>
+              <span>${famIcon} ${esc(famLabel)}</span>
               ${p.customer ? `<span>👤 ${esc(p.customer)}</span>` : ''}
               ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''}
               ${p.pm ? `<span>📋 ${esc(p.pm)}</span>` : ''}
               ${p.qNumber ? `<span>🔢 Q ${esc(p.qNumber)}</span>` : ''}
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--muted)">
+              Gate Scope: <strong style="color:${gateScopeLocked ? 'var(--green)' : 'var(--blue)'}">${esc(gateScopeStatusText)}</strong>
+              <span style="margin-left:6px">· ${gateScopeSelectedCount} / ${gateScopeTotalCount} selected checks</span>
             </div>
             ${parentProg ? `<div class="parent-link" onclick="npi.nav.openProjectById('${parentProg.id}')">Parent: ${esc(parentProg.name)}</div>` : ''}
           </div>
@@ -557,6 +639,18 @@ npi.dashboard.openProjectOrRender = function(id) {
     return
   }
   npi.nav.render()
+}
+
+npi.dashboard.openGateScopeEditor = function() {
+  const p = prog(); if (!p) return
+  if (typeof tenderGateScopeState === 'object' && tenderGateScopeState) {
+    tenderGateScopeState.programmeId = p.id
+  }
+  if (typeof window.openTenderGateSelectionModal === 'function') {
+    window.openTenderGateSelectionModal(p.product_id || null)
+    return
+  }
+  alert('Gate scope editor is not available yet. Please refresh and try again.')
 }
 
 npi.dashboard.newProjectInFamily = function(famId) {
@@ -602,7 +696,8 @@ npi.dashboard.createProg = function() {
 npi.dashboard.showEditProject = function() {
   const p = prog(); if (!p) return
   // Read-only product info
-  const familyName = getFamilies().find(f => f.id === p.family)?.name || p.family || '—'
+  const familyInfo = typeof findFamilyRecord === 'function' ? findFamilyRecord(p.family) : null
+  const familyName = familyInfo?.label || familyInfo?.name || p.family || '—'
   document.getElementById('ep_ro_name').textContent     = p.name     || '—'
   document.getElementById('ep_ro_customer').textContent = p.customer ? 'Customer: ' + p.customer : ''
   document.getElementById('ep_ro_unit').textContent     = p.unit     ? 'Unit: ' + p.unit         : ''

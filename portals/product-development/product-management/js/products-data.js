@@ -40,6 +40,30 @@ function productsDataRemoveProduct(productId) {
   delete productsState.history[productId];
 }
 
+function productsDataSyncLinkedProgrammeFamily(productId, familyRef) {
+  if (!productId || !Array.isArray(db?.programmes)) return false;
+
+  const linkedProgramme = typeof findProgrammeByProductId === 'function'
+    ? findProgrammeByProductId(productId)
+    : db.programmes.find(p => p && p.product_id === productId);
+
+  if (!linkedProgramme) return false;
+
+  if (typeof syncProgrammeFamily === 'function') {
+    return syncProgrammeFamily(linkedProgramme, familyRef || '', linkedProgramme.family || 'Other');
+  }
+
+  const fallbackFamily = linkedProgramme.family || 'Other';
+  const normalizedFamily = typeof normalizeFamilyId === 'function'
+    ? normalizeFamilyId(familyRef || '', fallbackFamily)
+    : (familyRef || fallbackFamily);
+
+  if ((linkedProgramme.family || '') === normalizedFamily) return false;
+
+  linkedProgramme.family = normalizedFamily;
+  return true;
+}
+
 function productsDataInitRealtime() {
   if (productsRealtimeActive) return;
   if (typeof createRealtimeSubscription !== 'function') return;
@@ -72,6 +96,19 @@ async function productsDataInit() {
     const prods = await supa.from('products').select('*').order('name', { ascending: true });
     if (prods.error) throw prods.error;
     productsState.products = prods.data || [];
+
+    // Validate family references - warn about orphaned families
+    if (typeof getFamilies === 'function') {
+      const validFamilies = getFamilies().map(f => f.id);
+      productsState.products.forEach(p => {
+        const isValidFamily = typeof findFamilyRecord === 'function'
+          ? !!findFamilyRecord(p.family)
+          : validFamilies.includes(p.family);
+        if (p.family && !isValidFamily) {
+          console.warn(`⚠️ Product "${p.name}" has invalid family "${p.family}". Valid families: ${validFamilies.join(', ')}`);
+        }
+      });
+    }
 
     // Load overhaul history for all products
     if (productsState.products.length > 0) {
@@ -124,6 +161,50 @@ function productsDataGetHistory(productId) {
   return productsState.history[productId] || [];
 }
 
+function productTenderStatusTriggered(productId, productData) {
+  let linkedProgramme = typeof findProgrammeByProductId === 'function'
+    ? findProgrammeByProductId(productId)
+    : db.programmes.find(p => p.product_id === productId);
+
+  if (!linkedProgramme && npi && npi.dashboard && typeof npi.dashboard.ensureProductProgrammes === 'function') {
+    npi.dashboard.ensureProductProgrammes();
+    linkedProgramme = typeof findProgrammeByProductId === 'function'
+      ? findProgrammeByProductId(productId)
+      : db.programmes.find(p => p.product_id === productId);
+  }
+
+  if (!linkedProgramme) {
+    console.warn('No linked programme found for Tender product:', productId);
+    return;
+  }
+
+  if (typeof tenderGateScopeState === 'object' && tenderGateScopeState) {
+    tenderGateScopeState.programmeId = linkedProgramme.id;
+    tenderGateScopeState.isOpen = false;
+    tenderGateScopeState.selectedGate = 0;
+    tenderGateScopeState.workingSelections = null;
+  }
+
+  if (typeof window !== 'undefined' && typeof window.openTenderGateSelectionModal === 'function') {
+    window.openTenderGateSelectionModal(productId);
+    return;
+  }
+
+  const productName = (productData && productData.name) || linkedProgramme.name || 'this product';
+  const openLinkedProject = confirm(
+    'Product "' + productName + '" moved to Tender.\n\nOpen the linked NPI project now to set gate scope?'
+  );
+  if (!openLinkedProject) return;
+
+  if (npi && npi.dashboard && typeof npi.dashboard.openProject === 'function') {
+    npi.dashboard.openProject(linkedProgramme.id);
+    return;
+  }
+
+  progId = linkedProgramme.id;
+  navigate('project');
+}
+
 /**
  * Add new product
  */
@@ -164,6 +245,9 @@ async function productsDataAddProduct(product) {
  */
 async function productsDataUpdateProduct(productId, updates) {
   try {
+    const existingProduct = productsState.products.find(p => p.id === productId);
+    const previousStatus = String((existingProduct && existingProduct.status) || '').toLowerCase();
+
     const result = await supa.from('products')
       .update({
         ...updates,
@@ -181,7 +265,16 @@ async function productsDataUpdateProduct(productId, updates) {
       productsState.products[idx] = data;
       productsState.products.sort((a, b) => a.name.localeCompare(b.name));
     }
+
+    const programmeFamilyUpdated = productsDataSyncLinkedProgrammeFamily(productId, data.family);
+    if (programmeFamilyUpdated && typeof save === 'function') save();
+
     productsDataTriggerKanbanRefresh();
+
+    const nextStatus = String((data && data.status) || '').toLowerCase();
+    if (previousStatus !== 'tender' && nextStatus === 'tender') {
+      productTenderStatusTriggered(productId, data);
+    }
 
     console.log('✓ Product updated:', productId);
     return data;

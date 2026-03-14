@@ -172,7 +172,7 @@ npi.data.bom = {
     if (!p.bom[type]) return null
     const base = { id: crypto.randomUUID(), desc: '', notes: '', isStd: false, isAaw: false, isRepair: false }
     let item = base
-    if (type === 'parts') item = { ...base, pn: '', supplierPN: '', qty: 1, unit: 'ea' }
+    if (type === 'parts') item = { ...base, pn: '', supplierPN: '', qty: 1, unit: 'ea', abcClass: null }
     else if (type === 'tools') item = { ...base, toolId: '', spec: '' }
     else if (type === 'equip') item = { ...base, equipId: '', location: '' }
     else if (type === 'mat' || type === 'cons') item = { ...base, pn: '', unit: '', qtyPerUnit: 0 }

@@ -4,6 +4,46 @@
 // ═══════════════════════════════════
 
 let saveTimer = null;
+let programmesGateScopeColumnsSupported = true;
+
+function isGateScopeColumnError(err) {
+  const msg = String((err && err.message) || '').toLowerCase();
+  return msg.includes('gate_selections') ||
+    msg.includes('gate_selection_locked') ||
+    msg.includes('gate_selection_locked_at') ||
+    msg.includes('gate_selection_locked_by');
+}
+
+function buildProgrammeRow(p, now, email) {
+  const row = {
+    prog_id:          p.id,
+    name:             p.name,
+    customer:         p.customer         || '',
+    unit_name:        p.unit             || '',
+    family:           p.family           || '',
+    lead:             p.lead             || '',
+    pm:               p.pm               || '',
+    start_date:       p.date             || null,
+    gantt_start:      p.ganttStart       || null,
+    gantt_collapsed:  p.ganttCollapsed   || [],
+    sub_assembly_ids: p.subAssemblies    || [],
+    prog_status:      p.status           || 'Active',
+    q_number:         p.qNumber          || null,
+    part_number:      p.partNumber       || null,
+    product_id:       p.product_id       || null,
+    updated_at:       now,
+    updated_by:       email
+  };
+
+  if (programmesGateScopeColumnsSupported) {
+    row.gate_selections = p.gate_selections || null;
+    row.gate_selection_locked = !!p.gate_selection_locked;
+    row.gate_selection_locked_at = p.gate_selection_locked_at || null;
+    row.gate_selection_locked_by = p.gate_selection_locked_by || null;
+  }
+
+  return row;
+}
 
 // ── Auto-resize textareas ─────────────────────────────────────
 function autoResizeAll() {
@@ -34,40 +74,42 @@ async function saveRemote(attempt) {
   const errors = [];
   try {
     for (const p of db.programmes) {
-      const row = {
-        prog_id:          p.id,
-        name:             p.name,
-        customer:         p.customer         || '',
-        unit_name:        p.unit             || '',
-        family:           p.family           || '',
-        lead:             p.lead             || '',
-        pm:               p.pm               || '',
-        start_date:       p.date             || null,
-        gantt_start:      p.ganttStart       || null,
-        gantt_collapsed:  p.ganttCollapsed   || [],
-        sub_assembly_ids: p.subAssemblies    || [],
-        prog_status:      p.status           || 'Active',
-        q_number:         p.qNumber          || null,
-        part_number:      p.partNumber       || null,
-        product_id:       p.product_id       || null,
-        updated_at:       now,
-        updated_by:       email
-      };
+      let row = buildProgrammeRow(p, now, email);
 
-      const { data: updated, error: updErr } = await supa
+      let { data: updated, error: updErr } = await supa
         .from('programmes')
         .update(row)
         .eq('prog_id', p.id)
         .select();
+
+      if (updErr && programmesGateScopeColumnsSupported && isGateScopeColumnError(updErr)) {
+        programmesGateScopeColumnsSupported = false;
+        row = buildProgrammeRow(p, now, email);
+        ({ data: updated, error: updErr } = await supa
+          .from('programmes')
+          .update(row)
+          .eq('prog_id', p.id)
+          .select());
+      }
+
       if (updErr) {
         console.error('Update err', p.name, updErr);
         errors.push(p.name + ' (' + (updErr.message || 'unknown error') + ')');
         continue;
       }
       if (!updated || updated.length === 0) {
-        const { error: insErr } = await supa
+        let { error: insErr } = await supa
           .from('programmes')
           .insert(row);
+
+        if (insErr && programmesGateScopeColumnsSupported && isGateScopeColumnError(insErr)) {
+          programmesGateScopeColumnsSupported = false;
+          row = buildProgrammeRow(p, now, email);
+          ({ error: insErr } = await supa
+            .from('programmes')
+            .insert(row));
+        }
+
         if (insErr) {
           console.error('Insert err', p.name, insErr);
           errors.push(p.name + ' (' + (insErr.message || 'unknown error') + ')');
@@ -95,10 +137,22 @@ async function saveRemote(attempt) {
 
 async function loadRemote() {
   if (!currentUser) return;
-  const { data, error } = await supa
+  const baseSelect = 'prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
+  const gateSelect = baseSelect + ',gate_selections,gate_selection_locked,gate_selection_locked_at,gate_selection_locked_by';
+
+  let { data, error } = await supa
     .from('programmes')
-    .select('prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by')
+    .select(programmesGateScopeColumnsSupported ? gateSelect : baseSelect)
     .order('updated_at', { ascending: false });
+
+  if (error && programmesGateScopeColumnsSupported && isGateScopeColumnError(error)) {
+    programmesGateScopeColumnsSupported = false;
+    ({ data, error } = await supa
+      .from('programmes')
+      .select(baseSelect)
+      .order('updated_at', { ascending: false }));
+  }
+
   if (error) { console.error('Load error', error); return; }
   if (data && data.length > 0) {
     db.programmes = data.map(row => migrateprog({
@@ -117,6 +171,10 @@ async function loadRemote() {
       qNumber:        row.q_number          || '',
       partNumber:     row.part_number       || '',
       product_id:     row.product_id        || null,
+      gate_selections: row.gate_selections || null,
+      gate_selection_locked: !!row.gate_selection_locked,
+      gate_selection_locked_at: row.gate_selection_locked_at || null,
+      gate_selection_locked_by: row.gate_selection_locked_by || null,
     }));
     const last = data[0];
     if (last.updated_by) {
@@ -139,6 +197,15 @@ function setSyncBadge(state, text) {
 function migrateprog(p) {
   if (!p) return newProgTemplate('Untitled', '', '', 'Other', '', '', new Date().toISOString().slice(0, 10));
   if (!p.product_id) p.product_id = null;
+  if (p.gate_selections === undefined) p.gate_selections = null;
+  if (typeof normalizeGateSelections === 'function') {
+    p.gate_selections = normalizeGateSelections(p.gate_selections);
+  } else if (!p.gate_selections || typeof p.gate_selections !== 'object') {
+    p.gate_selections = null;
+  }
+  if (p.gate_selection_locked !== true) p.gate_selection_locked = false;
+  if (!p.gate_selection_locked_at) p.gate_selection_locked_at = null;
+  if (!p.gate_selection_locked_by) p.gate_selection_locked_by = null;
   if (!p.ctq)     p.ctq     = [];
   if (!p.pfd)     p.pfd     = [];
   if (!p.pfmea)   p.pfmea   = [];

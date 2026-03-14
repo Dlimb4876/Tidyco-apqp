@@ -8,15 +8,39 @@ npi.gate.gateAllSigned = function(gd) {
   return gd.sigs && gd.sigs.length > 0 && gd.sigs.every(s => s.signed)
 }
 
+npi.gate.resolveGateChecklistItems = function(projectId, gateNum) {
+  const p = (db.programmes || []).find(x => x.id === projectId)
+  if (!p) return []
+  const g = GATE_DEFS[gateNum]
+  const gd = p.gates[gateNum] || { checks: [] }
+  if (!g) return []
+
+  const selected = getProjectGateSelection(projectId, gateNum)
+  return selected.map(sourceIndex => ({
+    sourceIndex,
+    text: g.items[sourceIndex] || '',
+    checked: !!gd.checks[sourceIndex]
+  })).filter(x => x.text !== '')
+}
+
+npi.gate.countSelectedGateQuestions = function(projectId, gateNum) {
+  return npi.gate.resolveGateChecklistItems(projectId, gateNum).length
+}
+
+npi.gate.countCompletedSelectedGateQuestions = function(projectId, gateNum) {
+  return npi.gate.resolveGateChecklistItems(projectId, gateNum).filter(x => x.checked).length
+}
+
 npi.gate.renderGatePage = function(gateNum) {
   const p   = prog()
   const g   = GATE_DEFS[gateNum]
   const gd  = p.gates[gateNum]
-  const checked = gd.checks.filter(Boolean).length
-  const total   = g.items.length
-  const pct     = Math.round(checked / total * 100)
+  const checklistItems = npi.gate.resolveGateChecklistItems(p.id, gateNum)
+  const checked = checklistItems.filter(x => x.checked).length
+  const total   = checklistItems.length
+  const pct     = total > 0 ? Math.round(checked / total * 100) : 0
   const allSigned  = npi.gate.gateAllSigned(gd)
-  const hasActivity = gd.checks.some(Boolean) || (gd.sigs && gd.sigs.some(s => s.signed))
+  const hasActivity = checked > 0 || (gd.sigs && gd.sigs.some(s => s.signed))
 
   const bannerBg     = allSigned ? 'var(--green-pale)'  : hasActivity ? 'var(--amber-pale)'  : 'var(--bg)'
   const bannerBorder = allSigned ? 'var(--green-mid)'   : hasActivity ? 'var(--amber-mid)'   : 'var(--line)'
@@ -27,10 +51,10 @@ npi.gate.renderGatePage = function(gateNum) {
       ? `⚙ In progress — ${checked}/${total} items checked · ${gd.sigs.filter(s => s.signed).length}/${gd.sigs.length} signed`
       : `⏸ Not yet started — ${total} checklist items`
 
-  const checklist = g.items.map((item, ii) => `
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);${gd.checks[ii] ? 'background:#f7fffe;' : ''}">
-      <input type="checkbox" id="gc_${gateNum}_${ii}" ${gd.checks[ii] ? 'checked' : ''} onchange="npi.gate.toggleCheck(${gateNum},${ii},this.checked)" style="width:15px;height:15px;accent-color:var(--blue);flex-shrink:0;margin-top:3px;cursor:pointer">
-      <label for="gc_${gateNum}_${ii}" style="font-size:13px;color:${gd.checks[ii] ? 'var(--muted)' : 'var(--ink)'};cursor:pointer;flex:1;${gd.checks[ii] ? 'text-decoration:line-through;' : ''}">${esc(item)}</label>
+  const checklist = checklistItems.map(row => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);${row.checked ? 'background:#f7fffe;' : ''}">
+      <input type="checkbox" id="gc_${gateNum}_${row.sourceIndex}" ${row.checked ? 'checked' : ''} onchange="npi.gate.toggleCheck(${gateNum},${row.sourceIndex},this.checked)" style="width:15px;height:15px;accent-color:var(--blue);flex-shrink:0;margin-top:3px;cursor:pointer">
+      <label for="gc_${gateNum}_${row.sourceIndex}" style="font-size:13px;color:${row.checked ? 'var(--muted)' : 'var(--ink)'};cursor:pointer;flex:1;${row.checked ? 'text-decoration:line-through;' : ''}">${esc(row.text)}</label>
     </div>`).join('')
 
   const sigCards = (gd.sigs || []).map((sig, si) => `
@@ -80,7 +104,7 @@ npi.gate.renderGatePage = function(gateNum) {
           <span style="font-size:12px;color:var(--muted)">${checked}/${total} complete</span>
         </div>
         <div style="height:4px;background:var(--line)"><div style="height:100%;width:${pct}%;background:var(--blue);transition:width .3s"></div></div>
-        ${checklist}
+        ${checklist || `<div style="padding:14px 16px;font-size:12px;color:var(--muted)">No checklist questions are selected for this gate.</div>`}
       </div>
       <div style="display:flex;flex-direction:column;gap:12px">${sigCards}</div>
     </div>
