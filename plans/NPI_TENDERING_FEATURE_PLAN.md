@@ -548,6 +548,13 @@ function getDefaultGateSelection(familyId, gateNum) {
   - [ ] Screenshots/mockups
   - [ ] FAQs
 
+- [ ] Update helper documentation
+  - [ ] Update `plans/PRODUCT_FLOW_DIAGRAM.md` (add "Future State" section showing tendering flow)
+  - [ ] Update `plans/NPI_PROJECT_FLOW_GUIDE.md` (add Phase 0 trigger details)
+  - [ ] Update `plans/GATE_DEFINITIONS_GUIDE.md` (add gate customization examples)
+  - [ ] Update `plans/PRODUCT_MANAGEMENT_GUIDE.md` (add tendering integration point)
+  - [ ] Update `plans/DOCUMENTATION_INDEX.md` (add references to tendering flow)
+
 - [ ] Update `CLAUDE.md`
   - [ ] Add to "Script Load Order" section
   - [ ] Add new files to "Repository Structure"
