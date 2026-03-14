@@ -102,18 +102,24 @@
 
 <!-- Keyboard Shortcuts Modal (1.10) -->
 <div class="modal-bg shortcuts-modal" id="shortcutsModal" style="display:none">
-  <div class="modal modal-sm">
-    <div class="modal-title">Keyboard Shortcuts</div>
+  <div class="modal shortcuts-modal-inner">
+    <div class="modal-title">⌨️ Keyboard Shortcuts</div>
+
+    <div class="shortcuts-section-label">Navigation</div>
     <div class="shortcuts-grid">
-      <div class="shortcut-item"><kbd>?</kbd><span>Show this help</span></div>
-      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>/</kbd><span>Show this help</span></div>
-      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>S</kbd><span>Save current work</span></div>
-      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Focus search</span></div>
-      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>Enter</kbd><span>Save form / row</span></div>
-      <div class="shortcut-item"><kbd>Enter</kbd><span>Add item (in add-row inputs)</span></div>
-      <div class="shortcut-item"><kbd>Escape</kbd><span>Cancel edit / Close modal</span></div>
-      <div class="shortcut-item"><kbd>Tab</kbd><span>Move to next field</span></div>
+      <div class="shortcut-item"><kbd>Backspace</kbd><span>Go back to previous view</span></div>
+      <div class="shortcut-item"><kbd>?</kbd><span>Show this shortcuts help</span></div>
+      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>/</kbd><span>Show this shortcuts help</span></div>
     </div>
+
+    <div class="shortcuts-section-label">Forms &amp; Data Entry</div>
+    <div class="shortcuts-grid">
+      <div class="shortcut-item"><kbd>Enter</kbd><span>Add item (new-row inputs)</span></div>
+      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>Enter</kbd><span>Save edited row</span></div>
+      <div class="shortcut-item"><kbd>Tab</kbd><span>Move to next field</span></div>
+      <div class="shortcut-item"><kbd>Escape</kbd><span>Cancel edit / close modal</span></div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="closeModal('shortcutsModal')">Close</button>
     </div>
