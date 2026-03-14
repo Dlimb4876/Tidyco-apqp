@@ -41,7 +41,19 @@ function opsCalcGateHealth(programmes) {
 	let totalChecks = 0;
 	let doneChecks = 0;
 
+	// Build a set of product IDs that have NPI status so we only score
+	// gate completion for products actively in the NPI phase.
+	const allProducts = Array.isArray(window.productsState?.products)
+		? window.productsState.products
+		: [];
+	const npiProductIds = new Set(
+		allProducts.filter(p => p.status === 'NPI').map(p => p.id)
+	);
+
 	programmes.forEach(programme => {
+		// Only count gates for programmes linked to an NPI-status product.
+		if (!programme.product_id || !npiProductIds.has(programme.product_id)) return;
+
 		const gates = Array.isArray(programme.gates) ? programme.gates : [];
 		gates.forEach(gate => {
 			const checks = Array.isArray(gate.checks) ? gate.checks : [];
