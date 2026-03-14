@@ -41,14 +41,6 @@ function renderCapacity() {
             <div class="proj-card-meta">Project Management load capacity plan</div>
           </div>
         </div>
-
-        <div class="proj-card capacity-card" aria-disabled="true" title="Coming soon" style="opacity:0.65;cursor:not-allowed;filter:grayscale(0.2)">
-          <div class="hub-card-content">
-            <div class="hub-icon">🚚</div>
-            <div class="proj-card-name">Logistics Capacity</div>
-            <div class="proj-card-meta">Coming soon</div>
-          </div>
-        </div>
       </div>
     </div>`;
 }

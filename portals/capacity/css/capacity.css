@@ -5,12 +5,12 @@
 }
 
 .capacity-card {
-    min-height: 320px;
+    min-height: 160px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 40px !important;
+    padding: 28px 32px !important;
     transition: transform 0.2s, box-shadow 0.2s;
     background: var(--white);
     border: 1px solid var(--line);
@@ -50,8 +50,8 @@
   }
 
   .capacity-card {
-    min-height: 200px;
-    padding: 24px !important;
+    min-height: 120px;
+    padding: 20px 24px !important;
   }
 
   .capacity-card .proj-card-name {
