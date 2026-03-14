@@ -92,10 +92,51 @@ function isInputFocused() {
 }
 
 document.addEventListener('keydown', function(e) {
+  // Show shortcuts modal: ? (when not typing) or Ctrl+/
   if ((e.key === '?' && !isInputFocused()) ||
       (e.ctrlKey && e.key === '/')) {
     e.preventDefault();
     showModal('shortcutsModal');
+    return;
+  }
+
+  // Escape — close any open modal
+  if (e.key === 'Escape') {
+    const modals = document.querySelectorAll('.modal-bg');
+    const openModal = Array.from(modals).find(m => m.style.display && m.style.display !== 'none');
+    if (openModal) {
+      e.preventDefault();
+      closeModal(openModal.id);
+    }
+    return;
+  }
+
+  // Skip remaining shortcuts when typing in an input/textarea/select
+  if (isInputFocused()) return;
+
+  // Ctrl+F — focus the search field in the current view
+  if (e.ctrlKey && e.key === 'f') {
+    const search = document.querySelector(
+      'input[placeholder*="Search"], input[placeholder*="search"], ' +
+      'input[placeholder*="Filter"], input[placeholder*="filter"]'
+    );
+    if (search) {
+      e.preventDefault();
+      search.focus();
+      search.select();
+    }
+    return;
+  }
+
+  // Ctrl+S — save current work immediately
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault();
+    try {
+      if (typeof save === 'function') save();
+    } catch (err) {
+      showToast('Save failed: ' + err.message, 'error');
+    }
+    return;
   }
 });
 
