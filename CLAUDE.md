@@ -759,6 +759,39 @@ npm test -- tests/navigation.test.js
 
 **See `TESTING_STRATEGY.md` for comprehensive testing guidelines.**
 
+### Development Skills — Automated Quality Checks
+
+**8 development skills** are available to catch common bugs before they cause runtime errors. These are project-specific utilities that run via `npm`:
+
+```bash
+# Run all checks at once (recommended before committing)
+npm run check:all
+
+# Or run individual checks
+npm run check:load-order      # Verify script load order in index.html
+npm run check:syntax          # Catch syntax errors (duplicate const, unclosed brackets)
+npm run check:subscriptions   # Find memory leaks in real-time subscriptions
+npm run check:mobile          # Ensure responsive CSS breakpoints
+npm run check:modals          # Verify modal state cleanup
+npm run check:state           # Track global state variables
+npm run check:rls             # Verify Supabase RLS policies (manual)
+npm run check:coverage        # Run Jest and analyze coverage
+```
+
+**When to use:**
+- Before every commit: `npm run check:all && npm test`
+- After adding a new `.js` file: `npm run check:load-order`
+- If seeing "function not a function" error: `npm run check:syntax`
+- After adding a real-time subscription: `npm run check:subscriptions`
+- After creating new CSS: `npm run check:mobile`
+- After adding a modal: `npm run check:modals`
+
+**Documentation:**
+- `SKILLS_GUIDE.md` — Detailed guide for each skill with patterns and templates
+- `SKILLS_QUICK_REFERENCE.txt` — Quick lookup card
+- `SKILLS_SUMMARY.md` — Overview and integration
+- `CHANGE_CHECKLIST.md` — Pre-commit checklist by change type
+
 ### No Build Step
 - Edit files and refresh the browser — changes are live immediately
 - No compilation, transpilation, or bundling required
