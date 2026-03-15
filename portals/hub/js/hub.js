@@ -4,7 +4,7 @@ function renderHub() {
     <div class="proj-home">
       <div class="proj-home-header">
         <div>
-          <div class="proj-home-title">Tidyco APQP Management System</div>
+          <div class="proj-home-title">Tidyco Operations Portal</div>
           <div class="proj-home-sub">Quality Planning, Production & Operations Control</div>
         </div>
       </div>
