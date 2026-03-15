@@ -134,6 +134,16 @@ td.w75 { width: 75px; }
   font-weight: 500;
 }
 
+.bom-pick-item--added {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.bom-pick-item--added:hover {
+  border-color: var(--line);
+  background: var(--white);
+}
+
 .bom-pick-name {
   font-size: 13px;
   font-weight: 600;

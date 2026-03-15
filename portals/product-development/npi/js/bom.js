@@ -255,16 +255,26 @@ npi.bom.openABCPick = async function() {
   if (!p) return
   abcPickTarget = { progId: p.id, type: 'parts' }
   abcPickResults = []
+  abcPickSelected = []
   abcPickLoading = true
   abcPickSearch = ''
   abcPickClassFilter = 'all'
   showModal('modalABCPick')
+  npi.bom._refreshAbcPickBtn()
   // Fetch and populate
   abcPickResults = await npiRelFetchABCCatalogue()
   abcPickLoading = false
   // Re-render the modal list
   const listEl = document.getElementById('abcPickList')
   if (listEl) listEl.innerHTML = npi.bom.renderABCPickList()
+}
+
+npi.bom._refreshAbcPickBtn = function() {
+  const btn = document.getElementById('abcPickAddBtn')
+  if (!btn) return
+  const n = abcPickSelected.length
+  btn.textContent = n > 0 ? `Add ${n} Part${n !== 1 ? 's' : ''}` : 'Add Parts'
+  btn.disabled = n === 0
 }
 
 npi.bom.renderABCPickList = function() {
@@ -285,12 +295,22 @@ npi.bom.renderABCPickList = function() {
 
   if (!filtered.length) return '<div style="padding:20px;text-align:center;color:var(--muted)">No parts found.</div>'
 
-  return filtered.map((r, i) => {
+  // IDs of parts already in this project's BOM
+  const p = prog()
+  const alreadyAdded = new Set((p && p.bom && p.bom.parts || []).map(x => x.abcCatalogueId).filter(Boolean))
+
+  return filtered.map(r => {
+    const idx = abcPickResults.indexOf(r)
+    const selected = abcPickSelected.includes(r.id)
+    const added = alreadyAdded.has(r.id)
     const sageBadge = r.in_sage ? '<span style="color:var(--green);margin-left:4px">· Sage</span>' : ''
+    const addedBadge = added ? '<span style="color:var(--muted);font-size:11px;margin-left:4px">· Already in BOM</span>' : ''
     return `
-    <div class="bom-pick-item" data-action="bom-import-abc" data-idx="${abcPickResults.indexOf(r)}" style="cursor:pointer">
-      <div>
-        <div class="bom-pick-name">${esc(r.item_desc)}</div>
+    <div class="bom-pick-item${selected ? ' selected' : ''}${added ? ' bom-pick-item--added' : ''}"
+         onclick="npi.bom.toggleABCPick(${idx})" style="cursor:pointer">
+      <input type="checkbox" ${selected || added ? 'checked' : ''} ${added ? 'disabled' : ''} style="pointer-events:none;margin-right:8px">
+      <div style="flex:1;min-width:0">
+        <div class="bom-pick-name">${esc(r.item_desc)}${addedBadge}</div>
         <div class="bom-pick-meta">${r.pn ? 'PN: ' + esc(r.pn) + ' · ' : ''}${esc(r.unit || 'ea')}${r.notes ? ' · ' + esc(r.notes) : ''}${sageBadge}</div>
       </div>
       <span class="abc-badge abc-${r.abc_class}">${r.abc_class}</span>
@@ -298,27 +318,49 @@ npi.bom.renderABCPickList = function() {
   }).join('')
 }
 
-npi.bom.importABCPart = function(i) {
-  const src = abcPickResults[i]
-  if (!src) return
+npi.bom.toggleABCPick = function(idx) {
+  const r = abcPickResults[idx]
+  if (!r) return
+  // Don't allow toggling parts already in the BOM
   const p = prog()
-  if (!p) return
-  const item = {
-    id: crypto.randomUUID(),
-    desc: src.item_desc || '',
-    notes: src.notes || '',
-    pn: src.pn || '',
-    supplierPN: src.supplier_pn || '',
-    qty: 1,  // project-specific qty, user can adjust
-    unit: src.unit || 'ea',
-    isStd: false,
-    isAaw: false,
-    isRepair: false,
-    abcClass: src.abc_class || 'C',
-    abcCatalogueId: src.id  // link to catalogue
+  const alreadyAdded = new Set((p && p.bom && p.bom.parts || []).map(x => x.abcCatalogueId).filter(Boolean))
+  if (alreadyAdded.has(r.id)) return
+
+  if (abcPickSelected.includes(r.id)) {
+    abcPickSelected = abcPickSelected.filter(id => id !== r.id)
+  } else {
+    abcPickSelected.push(r.id)
   }
-  p.bom.parts.push(item)
-  Promise.resolve().then(() => npiRelSaveBOMItem('parts', item)).catch(err => console.error('[NPI] save BOM item failed:', err))
+  // Re-render the full list to reflect new selection state
+  const listEl = document.getElementById('abcPickList')
+  if (listEl) listEl.innerHTML = npi.bom.renderABCPickList()
+  npi.bom._refreshAbcPickBtn()
+}
+
+npi.bom.confirmABCPick = function() {
+  const p = prog()
+  if (!p || !abcPickSelected.length) return
+  abcPickSelected.forEach(catId => {
+    const src = abcPickResults.find(r => r.id === catId)
+    if (!src) return
+    const item = {
+      id: crypto.randomUUID(),
+      desc: src.item_desc || '',
+      notes: src.notes || '',
+      pn: src.pn || '',
+      supplierPN: src.supplier_pn || '',
+      qty: 1,
+      unit: src.unit || 'ea',
+      isStd: false,
+      isAaw: false,
+      isRepair: false,
+      abcClass: src.abc_class || 'C',
+      abcCatalogueId: src.id
+    }
+    p.bom.parts.push(item)
+    Promise.resolve().then(() => npiRelSaveBOMItem('parts', item)).catch(err => console.error('[NPI] save BOM item failed:', err))
+  })
+  abcPickSelected = []
   npi.notify('render')
   closeModal('modalABCPick')
 }
