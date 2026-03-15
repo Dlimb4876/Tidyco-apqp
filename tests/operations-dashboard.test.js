@@ -49,6 +49,7 @@ global.meLoadRelationalHolidays = jest.fn().mockResolvedValue([]);
 global.prodState = { products: [], batches: [] };
 global.meDataState = { team: [], tasks: [], products: [], holidays: [] };
 global.feedbackDataManager = { state: { feedback: [] } };
+global.productsState = { products: [] };
 
 global.renderProductDevelopment = jest.fn().mockReturnValue('<div>Product Development</div>');
 global.renderProduction = jest.fn().mockReturnValue('<div>Production</div>');
@@ -134,6 +135,7 @@ describe('Operations Dashboard', () => {
   test('opsBuildMetrics aggregates expected KPI values', () => {
     db.programmes = [{
       id: 'prog-1',
+      product_id: 'prod-npi-1',
       status: 'Active',
       gates: [{ checks: [true, false, true] }],
       actions: [
@@ -143,6 +145,9 @@ describe('Operations Dashboard', () => {
       risks: [{ likelihood: 4, impact: 3 }],
       pfmea: [{ effects: [{ sev: 10, causes: [{ occ: 5, det: 3 }] }] }]
     }];
+
+    // Gate completion KPI only counts programmes linked to NPI-status products.
+    productsState.products = [{ id: 'prod-npi-1', status: 'NPI' }];
 
     feedbackDataManager.state.feedback = [
       { feedback_type: 'bug', status: 'open' },
