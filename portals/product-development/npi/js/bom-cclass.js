@@ -5,6 +5,8 @@
 // All functions under npi.bom.*
 // ═══════════════════════════════════
 
+let abcInlineSaveTimer = null
+
 npi.bom.renderABCCatalogue = function() {
   // Load data on first render (asynchronously in background)
   if (!abcCatalogueLoaded && !abcCatalogueLoading) {
@@ -26,7 +28,8 @@ npi.bom.renderABCCatalogue = function() {
   let filtered = searchTerm
     ? abcCatalogueData.filter(r =>
         (r.item_desc || '').toLowerCase().includes(searchTerm) ||
-        (r.pn || '').toLowerCase().includes(searchTerm)
+        (r.pn || '').toLowerCase().includes(searchTerm) ||
+        (r.supplier_pn || '').toLowerCase().includes(searchTerm)
       )
     : abcCatalogueData
 
@@ -34,65 +37,62 @@ npi.bom.renderABCCatalogue = function() {
     filtered = filtered.filter(r => r.abc_class === abcCatalogueClassFilter)
   }
 
-  const stats = `<div style="display:flex;gap:8px;margin-bottom:14px">
-    <span class="flag bom-summary-pill" style="background:var(--bg);border:1px solid var(--line);color:var(--mid)">${filtered.length} part${filtered.length !== 1 ? 's' : ''}</span>
-  </div>`
-
-  const classFilterBar = `<div class="bom-abc-filter-row" style="margin-bottom:12px">
+  // Combined toolbar: class filter + search input + info + add button all inline
+  const toolbar = `<div class="bom-abc-filter-row" style="margin-bottom:14px">
     <span class="bom-abc-filter-label">Class:</span>
     ${['all','A','B','C'].map(cls =>
       `<button class="bom-abc-chip${abcCatalogueClassFilter === cls ? ' active' : ''}"
         onclick="abcCatalogueClassFilter='${cls}';render()">${cls === 'all' ? 'All' : cls}</button>`
     ).join('')}
-  </div>`
-
-  const searchBox = `<div style="margin-bottom:12px">
     <input type="text" class="cell-edit" id="abcCatalogueSearch" value="${esc(abcCatalogueSearch)}"
       oninput="npi.bom.setABCSearch(this.value);render()"
-      placeholder="Search by description or PN…" style="width:100%;max-width:300px">
+      placeholder="Search by PN, supplier PN, or description…" style="flex:1;min-width:160px;max-width:260px;margin-left:4px">
+    <span style="margin-left:auto;display:flex;gap:6px;flex-shrink:0">
+      <button class="btn btn-ghost btn-sm" onclick="npi.bom.showAbcInfo()">What are A / B / C? ℹ</button>
+      <button class="btn btn-primary btn-sm" onclick="npi.bom.openABCNew()">＋ Add Part</button>
+    </span>
+  </div>`
+
+  const stats = `<div style="display:flex;gap:8px;margin-bottom:10px">
+    <span class="flag bom-summary-pill" style="background:var(--bg);border:1px solid var(--line);color:var(--mid)">${filtered.length} part${filtered.length !== 1 ? 's' : ''}</span>
   </div>`
 
   const tableRows = filtered.length === 0
-    ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">No parts in catalogue</td></tr>'
-    : filtered.map((r, i) => {
-      const inSageBadge = r.in_sage
-        ? '<span style="color:var(--green);font-weight:bold">✓ Sage</span>'
-        : '<span style="color:var(--muted)">—</span>'
-      const classBadge = `<span class="abc-badge abc-${r.abc_class}">${r.abc_class}</span>`
+    ? `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">${abcCatalogueData.length === 0 ? 'No parts yet. Click ＋ Add Part to start building the catalogue.' : 'No parts match the current filter.'}</td></tr>`
+    : filtered.map(r => {
+      const i = abcCatalogueData.indexOf(r)
       return `<tr>
-        <td class="bom-col-desc"><strong>${esc(r.item_desc)}</strong></td>
-        <td class="w100"><code>${esc(r.pn || '—')}</code></td>
-        <td class="w100"><code>${esc(r.supplier_pn || '—')}</code></td>
-        <td class="w60">${esc(r.unit || 'ea')}</td>
-        <td class="w80 ctr">${inSageBadge}</td>
-        <td class="w60 ctr">${classBadge}</td>
-        <td class="w80 ctr" style="display:flex;gap:4px;justify-content:center">
-          <button class="btn-icon" onclick="npi.bom.openABCEdit(${i})" title="Edit">✎</button>
-          <button class="btn-icon del-btn" onclick="npi.bom.delABCEntry(${i})" title="Delete">×</button>
+        <td class="w110"><input class="cell-edit mono" value="${esc(r.pn || '')}"
+          onchange="npi.bom.updABCInline(${i}, 'pn', this.value)" placeholder="Tidyco PN" style="width:100%"></td>
+        <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.item_desc || '')}"
+          onchange="npi.bom.updABCInline(${i}, 'item_desc', this.value)" placeholder="Description" style="width:100%"></td>
+        <td class="w110"><input class="cell-edit mono" value="${esc(r.supplier_pn || '')}"
+          onchange="npi.bom.updABCInline(${i}, 'supplier_pn', this.value)" placeholder="Supplier PN" style="width:100%"></td>
+        <td class="w60"><input class="cell-edit" value="${esc(r.unit || 'ea')}"
+          onchange="npi.bom.updABCInline(${i}, 'unit', this.value)" placeholder="ea" style="width:100%"></td>
+        <td class="w44 ctr"><input type="checkbox" ${r.in_sage ? 'checked' : ''}
+          onchange="npi.bom.updABCInline(${i}, 'in_sage', this.checked)"
+          style="accent-color:var(--green);width:15px;height:15px;cursor:pointer" title="Part in Sage (MRP)"></td>
+        <td class="w60 ctr">
+          <select class="abc-class-select abc-${r.abc_class || 'C'}"
+            onchange="npi.bom.updABCInline(${i}, 'abc_class', this.value); this.className='abc-class-select abc-' + this.value">
+            <option value="A" ${(r.abc_class||'C')==='A'?'selected':''}>A</option>
+            <option value="B" ${(r.abc_class||'C')==='B'?'selected':''}>B</option>
+            <option value="C" ${(r.abc_class||'C')==='C'?'selected':''}>C</option>
+          </select>
         </td>
+        <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delABCEntry(${i})" title="Delete">×</button></td>
       </tr>`
     }).join('')
 
   const table = `<div style="overflow-x:auto">
     <table class="tbl bom-tbl abc-catalogue-tbl" style="min-width:700px">
-      <thead>${npi.components.tableHeader([{ label: 'Description' }, { label: 'PN' }, { label: 'Supplier PN' }, { label: 'Unit' }, { label: 'In Sage' }, { label: 'Class' }, { label: '' }])}</thead>
+      <thead>${npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Description' }, { label: 'Supplier PN' }, { label: 'Unit' }, { label: 'In Sage' }, { label: 'Class' }, { label: '' }])}</thead>
       <tbody>${tableRows}</tbody>
     </table>
   </div>`
 
-  return `${stats}${classFilterBar}${searchBox}
-    <div class="card">
-      <div class="card-head">
-        <span class="card-title">📦 Parts Catalogue</span>
-        <span class="card-meta">A, B & C-Class central source</span>
-        <button class="btn btn-ghost btn-sm" onclick="npi.bom.showAbcInfo()" style="margin-left:auto;margin-right:8px">What are A / B / C? ℹ</button>
-        <button class="btn btn-primary btn-sm" onclick="npi.bom.openABCNew()">＋ Add Part</button>
-      </div>
-      ${filtered.length === 0 && abcCatalogueData.length === 0
-        ? '<div style="padding:20px;text-align:center;color:var(--muted)">No parts yet. Click ＋ Add Part to start building the catalogue.</div>'
-        : table
-      }
-    </div>`
+  return `${toolbar}${stats}<div class="card">${table}</div>`
 }
 
 npi.bom.loadABCCatalogue = function() {
@@ -195,4 +195,15 @@ npi.bom.delABCEntry = async function(i) {
 npi.bom.cancelABCEdit = function() {
   abcEditTarget = null
   closeModal('modalABCEdit')
+}
+
+// ── Inline cell editing ──────────────────────────────────
+npi.bom.updABCInline = function(i, field, value) {
+  const entry = abcCatalogueData[i]
+  if (!entry) return
+  entry[field] = value
+  clearTimeout(abcInlineSaveTimer)
+  abcInlineSaveTimer = setTimeout(async () => {
+    await npiRelSaveABCCatalogueEntry(entry)
+  }, 800)
 }
