@@ -77,11 +77,15 @@ function navigate(sec, { pushHash = true } = {}) {
   if (leavingNpiLiveSection) {
     if (typeof npi?.cleanup === 'function') npi.cleanup();
     else if (typeof npiDataUnsubscribe === 'function') npiDataUnsubscribe();
+    // Task 2-A: stop broadcasting presence when leaving NPI project view
+    if (typeof stopPresenceBroadcast === 'function') stopPresenceBroadcast();
   }
 
   if (enteringNpiLiveSection) {
     if (typeof npi?.init === 'function') npi.init();
     else if (typeof npiDataInit === 'function') npiDataInit();
+    // Task 2-A: start broadcasting presence when entering NPI project view
+    if (progId && typeof broadcastPresence === 'function') broadcastPresence(progId);
   }
 
   // Clean up subscriptions when leaving feedback

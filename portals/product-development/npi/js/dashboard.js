@@ -486,6 +486,14 @@ npi.dashboard.renderDashboard = function() {
   const linkedScopeLabel = linkedScope ? (linkedScope.charAt(0).toUpperCase() + linkedScope.slice(1)) : null
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null
   const liveUpdateBadge = typeof npiRealtimeIndicatorHTML === 'function' ? npiRealtimeIndicatorHTML() : ''
+  // Task 2-A: presence badges — other users viewing this project
+  const presenceUsers = typeof getPresenceForProg === 'function' ? getPresenceForProg(progId) : []
+  const presenceBadgesHTML = presenceUsers.length > 0
+    ? presenceUsers.map(u => {
+        const initials = typeof _getPresenceInitials === 'function' ? _getPresenceInitials(u.email) : (u.email?.slice(0, 2)?.toUpperCase() || '??')
+        return `<span class="presence-badge" title="${esc(u.email)}">${esc(initials)}</span>`
+      }).join('')
+    : ''
   const curGateIndex = curGate >= 0 ? curGate : 5
   const curGateDef = GATE_DEFS[curGateIndex]
   const openRiskCount = p.risks.filter(r => r.status !== 'Closed').length
@@ -528,6 +536,7 @@ npi.dashboard.renderDashboard = function() {
         <div class="hero-sub">Focus view: what matters now, what is blocked, what to do next.</div>
       </div>
       <div class="hero-right">
+        ${presenceBadgesHTML ? `<div class="presence-strip">${presenceBadgesHTML}</div>` : ''}
         <button class="btn btn-ghost" onclick="npi.nav.navigate('projects')">← Back</button>
         <button class="btn btn-ghost" onclick="npi.dashboard.openGateScopeEditor()">Gate Scope</button>
         <button class="btn btn-primary" onclick="npi.dashboard.showEditProject()">Edit Project</button>
@@ -721,6 +730,13 @@ npi.dashboard.deleteProject = async function() {
     if (error) {
       showToast('Could not delete project — ' + (error.message || 'unknown error'), 'error')
       return
+    }
+    // Task 2-C: cascade-delete all NPI relational data for this programme.
+    if (typeof npiRelDeleteAllForProgramme === 'function') {
+      showToast('Deleting NPI data…', 'info', 3000)
+      await npiRelDeleteAllForProgramme(deletedId).catch(err => {
+        console.warn('NPI cascade delete error:', err)
+      })
     }
   }
   db.programmes = db.programmes.filter(x => x.id !== deletedId)

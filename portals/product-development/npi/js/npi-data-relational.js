@@ -752,6 +752,27 @@ window.npiRelSaveGateSig = async function(gateNum, sigIdx) {
       signed: sig.signed || false
     };
     if (sig._id) {
+      // Task 2-D: Conflict-safe gate signing.
+      // Before saving a sign-off, check whether another user has already signed.
+      if (sig.signed) {
+        const { data: existing } = await supa
+          .from('npi_gate_sigs')
+          .select('signed, sig_name, sig_date')
+          .eq('id', sig._id)
+          .single();
+        if (existing && existing.signed && existing.sig_name && String(existing.sig_name) !== String(sig.name || '')) {
+          const signedDate = existing.sig_date ? ` on ${existing.sig_date}` : '';
+          if (typeof showToast === 'function') {
+            showToast(`Already signed by ${existing.sig_name}${signedDate}`, 'warning', 7000);
+          }
+          // Revert optimistic local update so the UI reflects reality
+          sig.signed = false;
+          sig.name   = existing.sig_name;
+          sig.date   = existing.sig_date || sig.date;
+          if (typeof npi !== 'undefined' && typeof npi.notify === 'function') npi.notify('render');
+          return;
+        }
+      }
       const { error } = await supa.from('npi_gate_sigs')
         .update({ sig_name: sig.name || '', sig_date: sig.date || null, signed: sig.signed || false })
         .eq('id', sig._id);
@@ -883,7 +904,7 @@ window.npiRelDeleteGanttRow = async function(id) {
 };
 
 // ─────────────────────────────────────────────────────────────
-// Clear all NPI relational data for a programme (for testing)
+// Clear all NPI relational data for a programme (for testing and cascade delete)
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelClearAll = async function(pid) {
@@ -898,3 +919,6 @@ window.npiRelClearAll = async function(pid) {
     await supa.from(table).delete().eq('programme_id', pid);
   }
 };
+
+// Task 2-C: Public alias used by deleteProject() to cascade-delete NPI relational data
+window.npiRelDeleteAllForProgramme = window.npiRelClearAll;
