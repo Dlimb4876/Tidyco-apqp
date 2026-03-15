@@ -49,7 +49,7 @@ npi.dashboard.clearProjectFilters = function() {
 }
 
 npi.dashboard.setDashTab = function(tab) {
-  if (!['projects', 'abc-catalogue'].includes(tab)) return
+  if (!['projects'].includes(tab)) return
   npiDashboardTab = tab
   render()
 }
@@ -240,32 +240,6 @@ npi.dashboard.renderProjects = function() {
 
   const programmeByProductId = new Map((db.programmes || []).filter(p => p.product_id).map(p => [p.product_id, p]))
 
-  // Tab switcher for Projects / Parts Catalogue
-  const dashTabs = ['projects', 'abc-catalogue']
-  const dashTabLabels = { 'projects': 'NPI Projects', 'abc-catalogue': 'Parts Catalogue' }
-  const tabBar = `<div class="npi-dash-tabs">
-    ${dashTabs.map(t =>
-      `<button class="npi-dash-tab${npiDashboardTab === t ? ' active' : ''}"
-        onclick="npi.dashboard.setDashTab('${t}')">${dashTabLabels[t]}</button>`
-    ).join('')}
-  </div>`
-
-  // If viewing ABC catalogue, render that instead
-  if (npiDashboardTab === 'abc-catalogue') {
-    const catalogueHTML = npi.bom.renderABCCatalogue() || '<div style="padding:20px;text-align:center;color:var(--muted)">Loading catalogue...</div>'
-    return `<div class="proj-home">
-      <div class="proj-home-header">
-        <div>
-          <div class="proj-home-title">NPI Projects</div>
-          <div class="proj-home-sub">Signed in as ${esc(user)} · Status is managed in Product Management</div>
-        </div>
-        <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
-      </div>
-      ${tabBar}
-      ${catalogueHTML}
-    </div>`
-  }
-
   let html = `<div class="proj-home">
     <div class="proj-home-header">
       <div>
@@ -278,7 +252,6 @@ npi.dashboard.renderProjects = function() {
         <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
       </div>
     </div>
-    ${tabBar}
     <div class="npi-swimlane-wrap">
       <div class="npi-view-note">${visibleLabel} · ${visibleProducts.length} shown</div>
       <div class="npi-filter-row">
