@@ -106,3 +106,56 @@ function removeRealtimeSubscriptionsMatching(pattern) {
 function getActiveRealtimeSubscriptions() {
   return Object.keys(realtimeSubscriptions);
 }
+
+// ── 3-B: Multi-table channel helper ──────────────────────────
+/**
+ * Subscribe to real-time changes on multiple tables using a single
+ * Supabase channel.  This reduces the number of WebSocket channels
+ * (and therefore Supabase concurrent-connection count) when several
+ * tables all trigger the same refresh logic.
+ *
+ * @param {Array<{table: string, onInsert?: Function, onUpdate?: Function, onDelete?: Function}>} tableConfigs
+ *   Array of per-table callback objects.  Each entry MUST have a `table`
+ *   field.  Callbacks receive the same payload shapes as createRealtimeSubscription.
+ * @param {string} channelName - Unique identifier for the consolidated channel.
+ * @returns {object|null} Supabase channel subscription handle.
+ */
+function createMultiTableRealtimeSubscription(tableConfigs, channelName) {
+  if (!Array.isArray(tableConfigs) || tableConfigs.length === 0 || !channelName) {
+    console.warn('⚠️ createMultiTableRealtimeSubscription: invalid arguments');
+    return null;
+  }
+
+  if (realtimeSubscriptions[channelName]) {
+    console.debug(`ℹ️ Multi-table subscription "${channelName}" already active`);
+    return realtimeSubscriptions[channelName];
+  }
+
+  try {
+    let channel = supa.channel(channelName);
+
+    tableConfigs.forEach(({ table, onInsert, onUpdate, onDelete }) => {
+      if (!table) return;
+      channel = channel.on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table },
+        (payload) => {
+          try {
+            if (payload.eventType === 'INSERT' && onInsert) onInsert(payload.new);
+            if (payload.eventType === 'UPDATE' && onUpdate) onUpdate(payload.new);
+            if (payload.eventType === 'DELETE' && onDelete) onDelete(payload.old);
+          } catch (err) {
+            console.error(`❌ Error in ${channelName}/${table} callback:`, err);
+          }
+        }
+      );
+    });
+
+    const subscription = channel.subscribe();
+    realtimeSubscriptions[channelName] = subscription;
+    return subscription;
+  } catch (err) {
+    console.debug(`⚠️ Could not set up multi-table subscription "${channelName}":`, err);
+    return null;
+  }
+}

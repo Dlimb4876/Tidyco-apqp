@@ -25,7 +25,7 @@ async function launchApp() {
   document.getElementById('appShell').style.display   = 'flex';
   setSyncBadge('syncing', '● loading…');
   populateFamilySelects();
-  await loadRemote();
+  await loadRemotePage(0);
   if (db.programmes.length === 0) load();
   subscribeProgrammesGlobally();
   initProgSelect();

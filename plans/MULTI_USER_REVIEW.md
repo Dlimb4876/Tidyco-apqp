@@ -16,10 +16,10 @@
 | Phase 2 | 2-B Stale data warning toast | ✅ Complete | `core/js/db.js` |
 | Phase 2 | 2-C Programme delete cascade (NPI data) | ✅ Complete | `portals/product-development/npi/js/npi-data-relational.js`, `portals/product-development/npi/js/dashboard.js` |
 | Phase 2 | 2-D Conflict-safe gate signing | ✅ Complete | `portals/product-development/npi/js/npi-data-relational.js` |
-| Phase 3 | 3-A Paginated programme list | ⏳ Pending | — |
-| Phase 3 | 3-B Supabase channel consolidation | ⏳ Pending | — |
-| Phase 3 | 3-C Server-side DB optimisations | ⏳ Pending | — |
-| Phase 3 | 3-D Optimistic save status | ⏳ Pending | — |
+| Phase 3 | 3-A Paginated programme list | ✅ Complete | `core/js/db.js`, `core/js/state.js`, `core/js/app.js`, `portals/product-development/npi/js/dashboard.js`, `portals/product-development/npi/css/dashboard.css` |
+| Phase 3 | 3-B Supabase channel consolidation | ✅ Complete | `utils/js/realtime.js`, `portals/capacity/js/me-data.js`, `portals/operations/js/operations-dashboard-realtime.js` |
+| Phase 3 | 3-C Server-side DB optimisations | ✅ Complete | `supabase/phase3_optimisations.sql` |
+| Phase 3 | 3-D Optimistic save status | ✅ Complete | `core/js/db.js` |
 
 ---
 
@@ -213,35 +213,37 @@ Gate signatures (`npi_gate_sigs`) are high-stakes. Two users signing simultaneou
 
 ---
 
-## 5. Phase 3 — Performance and Scale
+## 5. Phase 3 — Performance and Scale ✅ (Implemented)
 
-> **Goal:** Ensure the system remains fast at 500+ projects and 50+ users. Suitable for a future sprint when project count approaches 200+.
+> **Goal:** Ensure the system remains fast at 500+ projects and 50+ users.
 
 ### Step-by-step Agentic Tasks
 
-#### Task 3-A: Paginated Programme List
+#### Task 3-A: Paginated Programme List ✅
 
-1. In `core/js/db.js`, add a `loadRemotePage(page, pageSize = 50)` function that calls:
-   ```javascript
-   supa.from('programmes').select(cols).order('updated_at', { ascending: false })
-     .range(page * pageSize, (page + 1) * pageSize - 1)
-   ```
-2. Replace `loadRemote()` call in `launchApp()` with `loadRemotePage(0)`.
-3. Add an "Load more projects" button at the bottom of the hub projects list.
-4. On click, call `loadRemotePage(currentPage + 1)` and append results to `db.programmes`.
-5. Update `initProgSelect()` to account for paginated state.
+1. In `core/js/db.js`, added `loadRemotePage(page, pageSize = 50)` — uses `.range()` for server-side pagination.
+2. Replaced `loadRemote()` call in `launchApp()` with `loadRemotePage(0)`.
+3. Added `loadMoreProgrammes()` helper — fetches next page, appends (de-duplicated) to `db.programmes`, then re-renders.
+4. Added "⬇ Load more projects" button at the bottom of the NPI kanban view (only visible when `programmesAllLoaded === false`).
+5. Added `programmesPage` and `programmesAllLoaded` state variables to `state.js`.
+6. Updated `initProgSelect()` — no change needed; it already handles the first available programme.
 
-#### Task 3-B: Supabase Channel Consolidation
+**Files changed:** `core/js/db.js`, `core/js/state.js`, `core/js/app.js`, `portals/product-development/npi/js/dashboard.js`, `portals/product-development/npi/css/dashboard.css`
 
-Instead of ~40 individual channels, use Supabase's table-level filter on a single channel per logical group.
+#### Task 3-B: Supabase Channel Consolidation ✅
 
-1. Merge the 4 ME capacity channels (`me_teams`, `me_tasks`, `me_products`, `me_holidays`) into one channel using Supabase's `schema` subscription: `supabase.channel('me_all').on('postgres_changes', { event: '*', schema: 'public', table: 'me_teams' }, ...).on(...)`.
-2. Repeat for the 9 Operations Dashboard channels.
-3. This reduces per-user channel count from ~40 to ~10, well within any tier limit.
+Added `createMultiTableRealtimeSubscription(tableConfigs, channelName)` to `utils/js/realtime.js`. This allows multiple tables to share one Supabase WebSocket channel.
 
-#### Task 3-C: Server-Side Database Optimisations
+1. ME Capacity: 4 channels → **1** (`me_all_channel`). Updated `meDataSubscribe` / `meDataUnsubscribe` in `me-data.js`.
+2. Operations Dashboard: 9 channels → **3** (`ops_me_all_channel` + `ops_prod_all_channel` + `ops_misc_channel`). Updated `opsRealtimeInit` / `opsRealtimeCleanup` in `operations-dashboard-realtime.js`.
 
-Apply the following in the Supabase SQL editor:
+Per-user channel reduction: ME Capacity 4 → 1 (saves 3), Operations 9 → 3 (saves 6). Total saving: **9 channels per user**.
+
+**Files changed:** `utils/js/realtime.js`, `portals/capacity/js/me-data.js`, `portals/operations/js/operations-dashboard-realtime.js`
+
+#### Task 3-C: Server-Side Database Optimisations ✅
+
+Created `supabase/phase3_optimisations.sql`. Apply in the Supabase SQL editor.
 
 ```sql
 -- 1. Index for hub list query (ordered by recency)
@@ -249,26 +251,28 @@ CREATE INDEX IF NOT EXISTS idx_programmes_updated_at ON programmes (updated_at D
 
 -- 2. Index for NPI relational queries (all filtered by programme_id)
 CREATE INDEX IF NOT EXISTS idx_npi_ctq_prog ON npi_ctq (programme_id);
-CREATE INDEX IF NOT EXISTS idx_npi_pfd_prog ON npi_pfd_steps (programme_id);
-CREATE INDEX IF NOT EXISTS idx_npi_pfmea_modes_prog ON npi_pfmea_modes (programme_id);
--- (repeat for all 15 NPI tables)
+-- (repeat for all 15 NPI tables — full list in the SQL file)
 
--- 3. Cascade deletes (from Task 2-C, implement here if not done as client-side)
-ALTER TABLE npi_ctq ADD CONSTRAINT fk_prog FOREIGN KEY (programme_id) REFERENCES programmes(prog_id) ON DELETE CASCADE;
--- (repeat for all 15 NPI tables)
+-- 3. Cascade deletes (DB-level safety net; client-side cascade already in Phase 2)
+ALTER TABLE npi_ctq ADD CONSTRAINT fk_npi_ctq_prog FOREIGN KEY (programme_id) REFERENCES programmes(prog_id) ON DELETE CASCADE;
+-- (repeat for all 15 NPI tables — full list in the SQL file)
 
 -- 4. Unique constraint to prevent duplicate ME products
-ALTER TABLE me_products ADD CONSTRAINT uq_me_product UNIQUE (product_database_id);
+ALTER TABLE me_products ADD CONSTRAINT uq_me_product_database_id UNIQUE (product_database_id);
 ```
 
-#### Task 3-D: Optimistic Save Status
+**Files changed:** `supabase/phase3_optimisations.sql` (new file)
 
-Currently the sync badge shows "saving…" for 800 ms even though the UI is already updated. For large datasets (retries, bulk saves), the badge can stay in "saving" state for several seconds.
+#### Task 3-D: Optimistic Save Status ✅
 
-1. Track in-flight requests with a counter: `let pendingSaves = 0`.
-2. Increment on each `supa.from(...).update(...)` call, decrement on resolution.
-3. Show "saving (N remaining)" during multi-programme saves.
-4. On partial failure, list which projects failed rather than a generic error.
+1. Added `let pendingSaves = 0;` counter in `db.js`.
+2. Incremented by `toSave.length` at the start of each `saveRemote()` call.
+3. Decremented after each individual Supabase write (including error paths).
+4. Badge shows `● saving (N remaining)…` during multi-programme saves.
+5. `save()` shows `● saving (N queued)…` if a save is already in-flight.
+6. On partial failure the badge names the specific projects that failed (existing behaviour enhanced with correct per-project error tracking).
+
+**Files changed:** `core/js/db.js`
 
 ---
 
@@ -283,8 +287,8 @@ Currently the sync badge shows "saving…" for 800 ms even though the UI is alre
 | Orphaned NPI data after project delete | Medium | Low | Phase 2 ✅ |
 | No visibility of who is editing a project | Medium | Low | Phase 2 ✅ |
 | No warning when another user updates current project | Medium | Low | Phase 2 ✅ |
-| Slow initial load at 500+ projects | Medium | Medium | Phase 3 |
-| Channel limit hit on Supabase free tier | Medium | Medium | Phase 3 |
+| Slow initial load at 500+ projects | Medium | Medium | Phase 3 ✅ |
+| Channel limit hit on Supabase free tier | Medium | Medium | Phase 3 ✅ |
 | Concurrent edit of same PFMEA cause | Low | Medium | Phase 2 (partial) |
 
 ---

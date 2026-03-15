@@ -310,6 +310,13 @@ npi.dashboard.renderProjects = function() {
     </div>`
   }
 
+  // 3-A: "Load more" footer — only shown when more pages are available
+  if (typeof programmesAllLoaded !== 'undefined' && !programmesAllLoaded) {
+    html += `<div class="npi-load-more-row">
+      <button class="btn btn-ghost" onclick="loadMoreProgrammes()">⬇ Load more projects</button>
+    </div>`
+  }
+
   html += `</div></div>`
   return html
 }

@@ -57,6 +57,11 @@ let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
 // Tracks other users currently viewing the same project (updated via Broadcast).
 let presenceMap = {};
 
+// ── Pagination state for programmes list ──────────────────────
+// Tracks the current page loaded and whether all pages have been fetched.
+let programmesPage = 0;
+let programmesAllLoaded = false;
+
 // ── Accessor ─────────────────────────────────────────────────
 function prog() { return db.programmes.find(p => p.id === progId) || null; }
 

@@ -891,6 +891,13 @@
   background: var(--white);
 }
 
+/* 3-A: Load more button row beneath the kanban lanes */
+.npi-load-more-row {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 8px;
+}
+
 .npi-col-headers {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

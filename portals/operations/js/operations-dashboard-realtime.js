@@ -83,59 +83,74 @@ async function opsRefreshForecast() {
 function opsRealtimeInit() {
 	if (!currentUser || !supa || opsRealtimeActive) return;
 
-	createRealtimeSubscription('programmes', 'ops_programmes_channel', {
-		onInsert: () => opsScheduleRefresh('programmes', opsRefreshProgrammes),
-		onUpdate: () => opsScheduleRefresh('programmes', opsRefreshProgrammes),
-		onDelete: () => opsScheduleRefresh('programmes', opsRefreshProgrammes)
-	});
+	// 3-B: Consolidate channels to reduce per-user WebSocket connections.
+	// Before: 9 individual channels.  After: 3 consolidated channels.
+	//   ops_me_all_channel     — me_teams + me_tasks + me_products + me_holidays (4 → 1)
+	//   ops_prod_all_channel   — production_batches + products (2 → 1)
+	//   ops_misc_channel       — programmes + user_feedback + forecast (3 → 1)
 
-	createRealtimeSubscription('production_batches', 'ops_production_batches_channel', {
-		onInsert: () => opsScheduleRefresh('production_batches', opsRefreshProductionBatches),
-		onUpdate: () => opsScheduleRefresh('production_batches', opsRefreshProductionBatches),
-		onDelete: () => opsScheduleRefresh('production_batches', opsRefreshProductionBatches)
-	});
+	createMultiTableRealtimeSubscription([
+		{
+			table: 'me_teams',
+			onInsert: () => opsScheduleRefresh('me_data', opsRefreshMeData),
+			onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
+			onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
+		},
+		{
+			table: 'me_tasks',
+			onInsert: () => opsScheduleRefresh('me_data', opsRefreshMeData),
+			onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
+			onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
+		},
+		{
+			table: 'me_products',
+			onInsert: () => opsScheduleRefresh('me_data', opsRefreshMeData),
+			onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
+			onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
+		},
+		{
+			table: 'me_holidays',
+			onInsert: () => opsScheduleRefresh('me_data', opsRefreshMeData),
+			onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
+			onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
+		}
+	], 'ops_me_all_channel');
 
-	createRealtimeSubscription('products', 'ops_products_channel', {
-		onInsert: () => opsScheduleRefresh('products', opsRefreshProductionProducts),
-		onUpdate: () => opsScheduleRefresh('products', opsRefreshProductionProducts),
-		onDelete: () => opsScheduleRefresh('products', opsRefreshProductionProducts)
-	});
+	createMultiTableRealtimeSubscription([
+		{
+			table: 'production_batches',
+			onInsert: () => opsScheduleRefresh('production_batches', opsRefreshProductionBatches),
+			onUpdate: () => opsScheduleRefresh('production_batches', opsRefreshProductionBatches),
+			onDelete: () => opsScheduleRefresh('production_batches', opsRefreshProductionBatches)
+		},
+		{
+			table: 'products',
+			onInsert: () => opsScheduleRefresh('products', opsRefreshProductionProducts),
+			onUpdate: () => opsScheduleRefresh('products', opsRefreshProductionProducts),
+			onDelete: () => opsScheduleRefresh('products', opsRefreshProductionProducts)
+		}
+	], 'ops_prod_all_channel');
 
-	createRealtimeSubscription('me_teams', 'ops_me_teams_channel', {
-		onInsert: () => opsScheduleRefresh('me_data', opsRefreshMeData),
-		onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
-		onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
-	});
-
-	createRealtimeSubscription('me_tasks', 'ops_me_tasks_channel', {
-		onInsert: () => opsScheduleRefresh('me_data', opsRefreshMeData),
-		onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
-		onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
-	});
-
-	createRealtimeSubscription('me_products', 'ops_me_products_channel', {
-		onInsert: () => opsScheduleRefresh('me_data', opsRefreshMeData),
-		onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
-		onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
-	});
-
-	createRealtimeSubscription('me_holidays', 'ops_me_holidays_channel', {
-		onInsert: () => opsScheduleRefresh('me_data', opsRefreshMeData),
-		onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
-		onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
-	});
-
-	createRealtimeSubscription('user_feedback', 'ops_feedback_bugs_channel', {
-		onInsert: () => opsScheduleRefresh('bugs', opsRefreshBugs),
-		onUpdate: () => opsScheduleRefresh('bugs', opsRefreshBugs),
-		onDelete: () => opsScheduleRefresh('bugs', opsRefreshBugs)
-	});
-
-	createRealtimeSubscription('operations_forecast_opportunities', 'ops_forecast_channel', {
-		onInsert: () => opsScheduleRefresh('forecast', opsRefreshForecast),
-		onUpdate: () => opsScheduleRefresh('forecast', opsRefreshForecast),
-		onDelete: () => opsScheduleRefresh('forecast', opsRefreshForecast)
-	});
+	createMultiTableRealtimeSubscription([
+		{
+			table: 'programmes',
+			onInsert: () => opsScheduleRefresh('programmes', opsRefreshProgrammes),
+			onUpdate: () => opsScheduleRefresh('programmes', opsRefreshProgrammes),
+			onDelete: () => opsScheduleRefresh('programmes', opsRefreshProgrammes)
+		},
+		{
+			table: 'user_feedback',
+			onInsert: () => opsScheduleRefresh('bugs', opsRefreshBugs),
+			onUpdate: () => opsScheduleRefresh('bugs', opsRefreshBugs),
+			onDelete: () => opsScheduleRefresh('bugs', opsRefreshBugs)
+		},
+		{
+			table: 'operations_forecast_opportunities',
+			onInsert: () => opsScheduleRefresh('forecast', opsRefreshForecast),
+			onUpdate: () => opsScheduleRefresh('forecast', opsRefreshForecast),
+			onDelete: () => opsScheduleRefresh('forecast', opsRefreshForecast)
+		}
+	], 'ops_misc_channel');
 
 	opsScheduleRefresh('programmes', opsRefreshProgrammes, 10);
 	opsScheduleRefresh('production_batches', opsRefreshProductionBatches, 10);
@@ -153,15 +168,10 @@ function opsRealtimeCleanup() {
 	});
 	opsRefreshTimers = {};
 
-	removeRealtimeSubscription('ops_programmes_channel');
-	removeRealtimeSubscription('ops_production_batches_channel');
-	removeRealtimeSubscription('ops_products_channel');
-	removeRealtimeSubscription('ops_me_teams_channel');
-	removeRealtimeSubscription('ops_me_tasks_channel');
-	removeRealtimeSubscription('ops_me_products_channel');
-	removeRealtimeSubscription('ops_me_holidays_channel');
-	removeRealtimeSubscription('ops_feedback_bugs_channel');
-	removeRealtimeSubscription('ops_forecast_channel');
+	// 3-B: Remove the 3 consolidated channels (was 9 individual channels)
+	removeRealtimeSubscription('ops_me_all_channel');
+	removeRealtimeSubscription('ops_prod_all_channel');
+	removeRealtimeSubscription('ops_misc_channel');
 
 	if (opsForecastChart) {
 		try {
