@@ -5,10 +5,19 @@
 
 let saveTimer = null;
 let programmesGateScopeColumnsSupported = true;
+// 3-D: Tracks in-flight Supabase write requests so the save badge can show
+// "saving (N remaining)" when multiple programmes are being written concurrently.
+let pendingSaves = 0;
 // Tracks which programme IDs have local changes pending a Supabase write.
 // Only those IDs are written on the next saveRemote() call, preventing
 // one user's save from overwriting another user's concurrent edits.
 let dirtyProgrammes = new Set();
+
+// 3-A: Shared column-selection strings for programme queries.
+// Kept in one place so loadRemote() and loadRemotePage() always query
+// exactly the same fields (DRY — change once, both functions benefit).
+const PROG_BASE_SELECT = 'prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
+const PROG_GATE_SELECT = PROG_BASE_SELECT + ',gate_selections,gate_selection_locked,gate_selection_locked_at,gate_selection_locked_by';
 
 function isGateScopeColumnError(err) {
   const msg = String((err && err.message) || '').toLowerCase();
@@ -72,7 +81,12 @@ function save(...extraIds) {
   try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveRemote, 800);
-  setSyncBadge('syncing', '● saving…');
+  // 3-D: Show pending count while a save is already in flight
+  if (pendingSaves > 0) {
+    setSyncBadge('syncing', `● saving (${dirtyProgrammes.size} queued)…`);
+  } else {
+    setSyncBadge('syncing', '● saving…');
+  }
 }
 
 async function saveRemote(attempt) {
@@ -92,6 +106,13 @@ async function saveRemote(attempt) {
   const toSave = idsToSave
     ? db.programmes.filter(p => idsToSave.has(p.id))
     : db.programmes;
+
+  // 3-D: Show "saving (N remaining)" for multi-programme saves so users
+  // know the operation is still in progress.
+  pendingSaves += toSave.length;
+  if (toSave.length > 1) {
+    setSyncBadge('syncing', `● saving (${pendingSaves} remaining)…`);
+  }
 
   try {
     for (const p of toSave) {
@@ -116,6 +137,9 @@ async function saveRemote(attempt) {
       if (updErr) {
         console.error('Update err', p.name, updErr);
         errors.push(p.name + ' (' + (updErr.message || 'unknown error') + ')');
+        // Math.max guards against going negative if a race condition causes
+        // pendingSaves to be decremented more times than it was incremented.
+        pendingSaves = Math.max(0, pendingSaves - 1);
         continue;
       }
       if (!updated || updated.length === 0) {
@@ -136,6 +160,12 @@ async function saveRemote(attempt) {
           errors.push(p.name + ' (' + (insErr.message || 'unknown error') + ')');
         }
       }
+      // 3-D: Decrement counter and update badge after each write completes.
+      // Math.max prevents going negative in the unlikely event of a logic race.
+      pendingSaves = Math.max(0, pendingSaves - 1);
+      if (pendingSaves > 0) {
+        setSyncBadge('syncing', `● saving (${pendingSaves} remaining)…`);
+      }
     }
     if (errors.length === 0) {
       setSyncBadge('saved', '● saved  ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' · ' + email.split('@')[0]);
@@ -143,9 +173,11 @@ async function saveRemote(attempt) {
       setSyncBadge('syncing', '● retrying…');
       setTimeout(() => saveRemote(true), 1500);
     } else {
+      // 3-D: Name each failed project so the user knows exactly what didn't save
       setSyncBadge('error', '● save failed: ' + errors.join(', '));
     }
   } catch (e) {
+    pendingSaves = 0;
     console.error('saveRemote exception', e);
     if (!attempt) {
       setSyncBadge('syncing', '● retrying…');
@@ -158,19 +190,17 @@ async function saveRemote(attempt) {
 
 async function loadRemote() {
   if (!currentUser) return;
-  const baseSelect = 'prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
-  const gateSelect = baseSelect + ',gate_selections,gate_selection_locked,gate_selection_locked_at,gate_selection_locked_by';
 
   let { data, error } = await supa
     .from('programmes')
-    .select(programmesGateScopeColumnsSupported ? gateSelect : baseSelect)
+    .select(programmesGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
     .order('updated_at', { ascending: false });
 
   if (error && programmesGateScopeColumnsSupported && isGateScopeColumnError(error)) {
     programmesGateScopeColumnsSupported = false;
     ({ data, error } = await supa
       .from('programmes')
-      .select(baseSelect)
+      .select(PROG_BASE_SELECT)
       .order('updated_at', { ascending: false }));
   }
 
@@ -204,6 +234,89 @@ async function loadRemote() {
       setSyncBadge('saved', `● saved ${when} · ${who}`);
     }
   }
+}
+
+// ── 3-A: Paginated programme loader ──────────────────────────
+// Loads a single page of programmes (most-recently-updated first).
+// On the first page (page=0) it replaces db.programmes; subsequent
+// pages append to it, avoiding duplicate IDs.
+// Sets `programmesAllLoaded = true` when the returned page is smaller
+// than pageSize, indicating there are no more rows to fetch.
+async function loadRemotePage(page, pageSize = 50) {
+  if (!currentUser) return;
+
+  const from  = page * pageSize;
+  const to    = from + pageSize - 1;
+
+  let { data, error } = await supa
+    .from('programmes')
+    .select(programmesGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
+    .order('updated_at', { ascending: false })
+    .range(from, to);
+
+  if (error && programmesGateScopeColumnsSupported && isGateScopeColumnError(error)) {
+    programmesGateScopeColumnsSupported = false;
+    ({ data, error } = await supa
+      .from('programmes')
+      .select(PROG_BASE_SELECT)
+      .order('updated_at', { ascending: false })
+      .range(from, to));
+  }
+
+  if (error) { console.error('Load page error', error); return; }
+
+  const rows = (data || []).map(row => migrateprog({
+    id:              row.prog_id,
+    name:            row.name,
+    customer:        row.customer          || '',
+    unit:            row.unit_name         || '',
+    family:          row.family            || '',
+    lead:            row.lead              || '',
+    pm:              row.pm                || '',
+    date:            row.start_date        || '',
+    ganttStart:      row.gantt_start       || '',
+    ganttCollapsed:  row.gantt_collapsed   || [],
+    subAssemblies:   row.sub_assembly_ids  || [],
+    status:          row.prog_status       || 'Active',
+    qNumber:         row.q_number          || '',
+    partNumber:      row.part_number       || '',
+    product_id:      row.product_id        || null,
+    gate_selections:          row.gate_selections          || null,
+    gate_selection_locked:    !!row.gate_selection_locked,
+    gate_selection_locked_at: row.gate_selection_locked_at || null,
+    gate_selection_locked_by: row.gate_selection_locked_by || null,
+  }));
+
+  if (page === 0) {
+    db.programmes = rows;
+  } else {
+    // Append only rows not already in memory (guard against duplicates)
+    const knownIds = new Set(db.programmes.map(p => p.id));
+    rows.forEach(p => { if (!knownIds.has(p.id)) db.programmes.push(p); });
+  }
+
+  programmesPage       = page;
+  programmesAllLoaded  = rows.length < pageSize;
+
+  if (rows.length > 0) {
+    const last = data[0];
+    if (last.updated_by) {
+      const who  = last.updated_by.split('@')[0];
+      const when = new Date(last.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      setSyncBadge('saved', `● saved ${when} · ${who}`);
+    }
+  }
+
+  try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+}
+
+// Load the next page of programmes (called from "Load more" button in hub).
+async function loadMoreProgrammes() {
+  if (programmesAllLoaded) return;
+  setSyncBadge('syncing', '● loading…');
+  await loadRemotePage(programmesPage + 1);
+  initProgSelect();
+  if (typeof render === 'function') render();
 }
 
 function setSyncBadge(state, text) {

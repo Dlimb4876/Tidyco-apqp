@@ -702,130 +702,124 @@ function meUUID() {
 window.meDataSubscribe = function() {
   if (!currentUser) return;
 
-  // Subscribe to teams changes
+  // 3-B: Merge the 4 individual ME capacity channels (me_teams, me_tasks,
+  // me_products, me_holidays) into a single Supabase channel to reduce the
+  // per-user WebSocket connection count.
   // CRITICAL: NO user_id filter — all users see all records for collaborative editing
   // onUpdate: no render() — state is already current from the local edit that triggered the save.
   // Calling render() on our own write-echo would clobber any in-progress user input.
-  createRealtimeSubscription('me_teams', 'me_teams_channel', {
-    onInsert: (newTeam) => {
-      const normalizedTeam = {
-        id: newTeam.id,
-        name: newTeam.name || '',
-        hoursPerWeek: meGetHoursPerWeek(newTeam.hours_per_week),
-        utilisation: parseFloat(newTeam.utilisation) || 80,
-        jobTitle: newTeam.job_title || '',
-        group: newTeam.team_group || '',
-        department: meNormalizeDepartmentTag(newTeam.department, 'ME'),
-        startDate: newTeam.start_date || '',
-        endDate: newTeam.end_date || '',
-        createdAt: newTeam.created_at || new Date().toISOString()
-      };
-
-      if (!meDataState.team.some(t => t.id === normalizedTeam.id)) {
-        meDataState.team.push(normalizedTeam);
+  createMultiTableRealtimeSubscription([
+    {
+      table: 'me_teams',
+      onInsert: (newTeam) => {
+        const normalizedTeam = {
+          id: newTeam.id,
+          name: newTeam.name || '',
+          hoursPerWeek: meGetHoursPerWeek(newTeam.hours_per_week),
+          utilisation: parseFloat(newTeam.utilisation) || 80,
+          jobTitle: newTeam.job_title || '',
+          group: newTeam.team_group || '',
+          department: meNormalizeDepartmentTag(newTeam.department, 'ME'),
+          startDate: newTeam.start_date || '',
+          endDate: newTeam.end_date || '',
+          createdAt: newTeam.created_at || new Date().toISOString()
+        };
+        if (!meDataState.team.some(t => t.id === normalizedTeam.id)) {
+          meDataState.team.push(normalizedTeam);
+          render();
+        }
+      },
+      onUpdate: () => { /* no-op — local state already up to date */ },
+      onDelete: (deleted) => {
+        meDataState.team = meDataState.team.filter(t => t.id !== deleted.id);
         render();
       }
     },
-    onUpdate: () => { /* no-op — local state already up to date */ },
-    onDelete: (deleted) => {
-      meDataState.team = meDataState.team.filter(t => t.id !== deleted.id);
-      render();
-    }
-  });
-
-  // Subscribe to tasks changes
-  createRealtimeSubscription('me_tasks', 'me_tasks_channel', {
-    onInsert: (newTask) => {
-      const normalizedTask = {
-        id: newTask.id,
-        name: newTask.name || '',
-        category: newTask.category || 'NPI',
-        type: newTask.type || 'standard',
-        department: meNormalizeDepartmentTag(newTask.department, 'ME'),
-        assigneeId: newTask.assignee_id || '',
-        productId: newTask.product_id || '',
-        startDate: newTask.start_date || '',
-        endDate: newTask.end_date || '',
-        totalHours: parseFloat(newTask.total_hours) || 0,
-        status: newTask.status || 'SCHEDULED',
-        createdAt: newTask.created_at || new Date().toISOString()
-      };
-
-      if (!meDataState.tasks.some(t => t.id === normalizedTask.id)) {
-        meDataState.tasks.push(normalizedTask);
+    {
+      table: 'me_tasks',
+      onInsert: (newTask) => {
+        const normalizedTask = {
+          id: newTask.id,
+          name: newTask.name || '',
+          category: newTask.category || 'NPI',
+          type: newTask.type || 'standard',
+          department: meNormalizeDepartmentTag(newTask.department, 'ME'),
+          assigneeId: newTask.assignee_id || '',
+          productId: newTask.product_id || '',
+          startDate: newTask.start_date || '',
+          endDate: newTask.end_date || '',
+          totalHours: parseFloat(newTask.total_hours) || 0,
+          status: newTask.status || 'SCHEDULED',
+          createdAt: newTask.created_at || new Date().toISOString()
+        };
+        if (!meDataState.tasks.some(t => t.id === normalizedTask.id)) {
+          meDataState.tasks.push(normalizedTask);
+          render();
+        }
+      },
+      onUpdate: () => { /* no-op — local state already up to date */ },
+      onDelete: (deleted) => {
+        meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
         render();
       }
     },
-    onUpdate: () => { /* no-op — local state already up to date */ },
-    onDelete: (deleted) => {
-      meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
-      render();
-    }
-  });
-
-  // Subscribe to products changes
-  createRealtimeSubscription('me_products', 'me_products_channel', {
-    onInsert: (newProduct) => {
-      const normalizedProduct = {
-        id: newProduct.id,
-        name: newProduct.name || '(Unknown Product)',
-        productDatabaseId: newProduct.product_database_id || '',
-        supportFrom: newProduct.support_from || '',
-        supportUntil: newProduct.support_until || '',
-        hoursPerWeek: parseFloat(newProduct.hours_per_week) || 0,
-        department: meNormalizeDepartmentTag(newProduct.department, 'ME'),
-        notes: newProduct.notes || '',
-        createdAt: newProduct.created_at || new Date().toISOString(),
-        updatedAt: newProduct.updated_at || ''
-      };
-
-      if (!meDataState.products.some(p => p.id === normalizedProduct.id)) {
-        meDataState.products.push(normalizedProduct);
+    {
+      table: 'me_products',
+      onInsert: (newProduct) => {
+        const normalizedProduct = {
+          id: newProduct.id,
+          name: newProduct.name || '(Unknown Product)',
+          productDatabaseId: newProduct.product_database_id || '',
+          supportFrom: newProduct.support_from || '',
+          supportUntil: newProduct.support_until || '',
+          hoursPerWeek: parseFloat(newProduct.hours_per_week) || 0,
+          department: meNormalizeDepartmentTag(newProduct.department, 'ME'),
+          notes: newProduct.notes || '',
+          createdAt: newProduct.created_at || new Date().toISOString(),
+          updatedAt: newProduct.updated_at || ''
+        };
+        if (!meDataState.products.some(p => p.id === normalizedProduct.id)) {
+          meDataState.products.push(normalizedProduct);
+          render();
+        }
+      },
+      onUpdate: () => { /* no-op — local state already up to date */ },
+      onDelete: (deleted) => {
+        meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
         render();
       }
     },
-    onUpdate: () => { /* no-op — local state already up to date */ },
-    onDelete: (deleted) => {
-      meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
-      render();
-    }
-  });
-
-  // Subscribe to holidays changes
-  createRealtimeSubscription('me_holidays', 'me_holidays_channel', {
-    onInsert: (newHoliday) => {
-      const normalized = meNormalizeHolidayRecord(newHoliday);
-      if (!normalized) return;
-
-      const existingIdx = meDataState.holidays.findIndex(h =>
-        h.id === normalized.id ||
-        (h.personId === normalized.personId && h.date === normalized.date)
-      );
-
-      if (existingIdx >= 0) {
-        meDataState.holidays[existingIdx] = normalized;
-      } else {
-        meDataState.holidays.push(normalized);
+    {
+      table: 'me_holidays',
+      onInsert: (newHoliday) => {
+        const normalized = meNormalizeHolidayRecord(newHoliday);
+        if (!normalized) return;
+        const existingIdx = meDataState.holidays.findIndex(h =>
+          h.id === normalized.id ||
+          (h.personId === normalized.personId && h.date === normalized.date)
+        );
+        if (existingIdx >= 0) {
+          meDataState.holidays[existingIdx] = normalized;
+        } else {
+          meDataState.holidays.push(normalized);
+        }
+        render();
+      },
+      onUpdate: () => { /* no-op — local state already up to date */ },
+      onDelete: (deleted) => {
+        const normalized = meNormalizeHolidayRecord(deleted);
+        meDataState.holidays = meDataState.holidays.filter(h => {
+          if (h.id === deleted.id) return false;
+          if (normalized && h.personId === normalized.personId && h.date === normalized.date) return false;
+          return true;
+        });
+        render();
       }
-
-      render();
-    },
-    onUpdate: () => { /* no-op — local state already up to date */ },
-    onDelete: (deleted) => {
-      const normalized = meNormalizeHolidayRecord(deleted);
-      meDataState.holidays = meDataState.holidays.filter(h => {
-        if (h.id === deleted.id) return false;
-        if (normalized && h.personId === normalized.personId && h.date === normalized.date) return false;
-        return true;
-      });
-      render();
     }
-  });
+  ], 'me_all_channel');
 };
 
 window.meDataUnsubscribe = function() {
-  removeRealtimeSubscription('me_teams_channel');
-  removeRealtimeSubscription('me_tasks_channel');
-  removeRealtimeSubscription('me_products_channel');
-  removeRealtimeSubscription('me_holidays_channel');
+  // 3-B: Single consolidated channel replaces the previous 4 individual ones
+  removeRealtimeSubscription('me_all_channel');
 };
