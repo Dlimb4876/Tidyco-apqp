@@ -701,6 +701,10 @@ function meUUID() {
 
 window.meDataSubscribe = function() {
   if (!currentUser) return;
+  if (typeof render !== 'function') {
+    console.warn('meDataSubscribe: render() not yet defined, skipping subscription setup');
+    return;
+  }
 
   // 3-B: Merge the 4 individual ME capacity channels (me_teams, me_tasks,
   // me_products, me_holidays) into a single Supabase channel to reduce the
