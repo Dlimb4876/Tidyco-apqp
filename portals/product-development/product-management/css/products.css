@@ -234,6 +234,22 @@
   color: #666;
 }
 
+/* Scope Badges */
+.badge-scope-overhaul {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.badge-scope-repair {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.badge-scope-assembly {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
 /* Inline table editing */
 .products-inline-table .cell-edit {
   width: 100%;

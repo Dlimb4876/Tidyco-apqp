@@ -351,6 +351,16 @@ function buildLocationOptions(selected) {
 }
 
 /**
+ * Build scope select options HTML
+ */
+function buildScopeOptions(selected) {
+  const val = selected || 'overhaul';
+  return ['overhaul', 'repair', 'assembly'].map(s =>
+    `<option value="${s}" ${s === val ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+  ).join('');
+}
+
+/**
  * Render products list table with inline add/edit
  */
 function renderProductsList() {
@@ -386,6 +396,7 @@ function renderProductsList() {
           <col style="min-width:120px">
           <col style="min-width:200px">
           <col style="min-width:100px">
+          <col style="min-width:110px">
           <col style="width:80px">
         </colgroup>
       <thead>
@@ -399,6 +410,7 @@ function renderProductsList() {
           <th class="ctr">Turnaround (days)</th>
           <th>Notes</th>
           <th>Status</th>
+          <th>Scope</th>
           <th class="ctr">Actions</th>
         </tr>
       </thead>
@@ -414,12 +426,13 @@ function renderProductsList() {
           <td><input class="cell-edit cell-num" id="pNew-turnaround" type="number" min="0" step="1" placeholder="—"></td>
           <td><input class="cell-edit" id="pNew-notes" placeholder="Notes"></td>
           <td><select class="cell-edit" id="pNew-status">${buildStatusOptions('Tender')}</select></td>
+          <td><select class="cell-edit" id="pNew-scope">${buildScopeOptions('overhaul')}</select></td>
           <td class="w28 ctr">
             <button class="btn-del" title="Add product" data-action="products-add-row">✓</button>
           </td>
         </tr>
         ${filtered.length === 0 ? `
-          <tr><td colspan="10" style="text-align:center;padding:32px">
+          <tr><td colspan="11" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No products found.</div>
             <button class="btn btn-primary btn-sm" data-action="products-focus-add">＋ Add First Product</button>
           </td></tr>
@@ -437,6 +450,7 @@ function renderProductsList() {
               <td><input class="cell-edit cell-num" id="pEdit-turnaround" type="number" min="0" step="1" value="${p.turnaround_days || ''}"></td>
               <td><input class="cell-edit" id="pEdit-notes" value="${esc(p.notes || '')}"></td>
               <td><select class="cell-edit" id="pEdit-status">${buildStatusOptions(p.status || 'Tender')}</select></td>
+              <td><select class="cell-edit" id="pEdit-scope">${buildScopeOptions(p.scope || 'overhaul')}</select></td>
               <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
                 <button class="btn-del" title="Save" data-action="products-save-edit" data-product-id="${esc(p.id)}">✓</button>
                 <button class="btn-del" title="Cancel" data-action="products-cancel-edit">✕</button>
@@ -454,6 +468,7 @@ function renderProductsList() {
             <td class="ctr">${p.turnaround_days ? Math.round(p.turnaround_days) : '—'}</td>
             <td><div class="cell-display" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</div></td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
+            <td><span class="badge badge-scope-${esc(p.scope || 'overhaul')}">${(p.scope || 'overhaul').charAt(0).toUpperCase() + (p.scope || 'overhaul').slice(1)}</span></td>
             <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
               <button class="btn-del" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
               <button class="btn-del" title="Delete" data-action="products-delete-row" data-product-id="${esc(p.id)}" data-product-name="${esc(p.name)}">🗑️</button>
@@ -490,7 +505,8 @@ async function productsAddRow() {
     current_overhaul_hours: parseFloat(document.getElementById('pNew-hours')?.value) || 0,
     turnaround_days: parseFloat(document.getElementById('pNew-turnaround')?.value) || null,
     notes: document.getElementById('pNew-notes')?.value.trim() || '',
-    status: document.getElementById('pNew-status')?.value || 'Tender'
+    status: document.getElementById('pNew-status')?.value || 'Tender',
+    scope: document.getElementById('pNew-scope')?.value || 'overhaul'
   };
 
   try {
@@ -547,7 +563,8 @@ async function productsSaveEdit(productId) {
     current_overhaul_hours: parseFloat(document.getElementById('pEdit-hours')?.value) || 0,
     turnaround_days: parseFloat(document.getElementById('pEdit-turnaround')?.value) || null,
     notes: document.getElementById('pEdit-notes')?.value.trim() || '',
-    status: document.getElementById('pEdit-status')?.value || 'Tender'
+    status: document.getElementById('pEdit-status')?.value || 'Tender',
+    scope: document.getElementById('pEdit-scope')?.value || 'overhaul'
   };
 
   try {
