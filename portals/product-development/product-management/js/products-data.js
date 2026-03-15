@@ -220,7 +220,8 @@ async function productsDataAddProduct(product) {
       turnaround_days: product.turnaround_days || null,
       work_location: product.work_location || null,
       status: product.status || 'active',
-      notes: product.notes || ''
+      notes: product.notes || '',
+      scope: product.scope || 'overhaul'
     };
 
     const result = await supa.from('products').insert([newProduct]).select().single();

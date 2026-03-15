@@ -346,10 +346,16 @@ npi.dashboard.renderNpiSlimCard = function(product, programme) {
   const hasHighRPN = programme && (programme.pfmea || []).some(r => npi.pfmea.calcRPN(r) >= RPN_HIGH)
   const rpnBadge = hasHighRPN ? `<div class="npi-slim-rpn-badge">⚠ High RPN</div>` : ''
   const targetProgId = programme ? programme.id : ''
+  const productScope = product.scope || 'overhaul'
+  const scopeIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
+  const scopeIcon = scopeIcons[productScope] || '🔄'
+  const scopeLabel = productScope.charAt(0).toUpperCase() + productScope.slice(1)
+  const scopeBadge = `<div class="npi-slim-card-meta" style="margin-top:4px">${scopeIcon} ${esc(scopeLabel)}</div>`
   return `<div class="npi-slim-card" onclick="npi.dashboard.openProjectOrRender('${targetProgId}')">
     <div class="npi-slim-card-name">${esc(product.name)}</div>
     ${product.code     ? `<div class="npi-slim-card-code">${esc(product.code)}</div>` : ''}
     ${product.customer ? `<div class="npi-slim-card-meta">👤 ${esc(product.customer)}</div>` : ''}
+    ${scopeBadge}
     ${gateScopeBadge}
     ${rpnBadge}
     ${pipsHtml}
@@ -473,6 +479,11 @@ npi.dashboard.renderDashboard = function() {
   const familyInfo = typeof findFamilyRecord === 'function' ? findFamilyRecord(p.family || 'Other') : null
   const famIcon    = familyInfo?.icon || '📋'
   const famLabel   = familyInfo?.label || familyInfo?.name || p.family || 'Other'
+  const linkedProduct = p.product_id && productsState ? productsState.products.find(pr => pr.id === p.product_id) : null
+  const linkedScope = linkedProduct ? (linkedProduct.scope || 'overhaul') : null
+  const scopeDisplayIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
+  const linkedScopeIcon = linkedScope ? (scopeDisplayIcons[linkedScope] || '🔄') : '🔄'
+  const linkedScopeLabel = linkedScope ? (linkedScope.charAt(0).toUpperCase() + linkedScope.slice(1)) : null
   const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null
   const liveUpdateBadge = typeof npiRealtimeIndicatorHTML === 'function' ? npiRealtimeIndicatorHTML() : ''
   const curGateIndex = curGate >= 0 ? curGate : 5
@@ -575,6 +586,7 @@ npi.dashboard.renderDashboard = function() {
               ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''}
               ${p.pm ? `<span>📋 ${esc(p.pm)}</span>` : ''}
               ${p.qNumber ? `<span>🔢 Q ${esc(p.qNumber)}</span>` : ''}
+              ${linkedScopeLabel ? `<span>${linkedScopeIcon} ${esc(linkedScopeLabel)}</span>` : ''}
             </div>
             <div style="margin-top:8px;font-size:12px;color:var(--muted)">
               Gate Scope: <strong style="color:${gateScopeLocked ? 'var(--green)' : 'var(--blue)'}">${esc(gateScopeStatusText)}</strong>
