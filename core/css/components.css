@@ -440,3 +440,34 @@ kbd {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ── Task 2-A: Presence Badges ─────────────────────────────── */
+/* Avatar initials shown in the project header when other users are viewing */
+.presence-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+.presence-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: .5px;
+  border: 2px solid var(--white);
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  cursor: default;
+  flex-shrink: 0;
+}
+.presence-badge:nth-child(2)  { background: var(--teal);   }
+.presence-badge:nth-child(3)  { background: var(--purple); }
+.presence-badge:nth-child(4)  { background: var(--amber);  }
+.presence-badge:nth-child(n+5){ background: var(--mid);    }

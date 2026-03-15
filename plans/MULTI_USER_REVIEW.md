@@ -5,6 +5,24 @@
 
 ---
 
+## 📊 Progress Tracker
+
+| Phase | Task | Status | Files Changed |
+|---|---|---|---|
+| Phase 1 | 1.1 Dirty programme tracking | ✅ Complete | `core/js/db.js` |
+| Phase 1 | 1.2 Supabase DELETE on project deletion | ✅ Complete | `portals/product-development/npi/js/dashboard.js` |
+| Phase 1 | 1.3 Global hub real-time subscription | ✅ Complete | `core/js/db.js`, `core/js/app.js` |
+| Phase 2 | 2-A "Who's Here" presence indicator | ✅ Complete | `core/js/db.js`, `core/js/state.js`, `utils/js/navigation.js`, `portals/product-development/npi/js/dashboard.js`, `core/css/components.css` |
+| Phase 2 | 2-B Stale data warning toast | ✅ Complete | `core/js/db.js` |
+| Phase 2 | 2-C Programme delete cascade (NPI data) | ✅ Complete | `portals/product-development/npi/js/npi-data-relational.js`, `portals/product-development/npi/js/dashboard.js` |
+| Phase 2 | 2-D Conflict-safe gate signing | ✅ Complete | `portals/product-development/npi/js/npi-data-relational.js` |
+| Phase 3 | 3-A Paginated programme list | ⏳ Pending | — |
+| Phase 3 | 3-B Supabase channel consolidation | ⏳ Pending | — |
+| Phase 3 | 3-C Server-side DB optimisations | ⏳ Pending | — |
+| Phase 3 | 3-D Optimistic save status | ⏳ Pending | — |
+
+---
+
 ## 1. Executive Summary
 
 Tidyco APQP is a well-structured collaborative SPA backed by Supabase. The core real-time infrastructure is sound — subscriptions, debounced saves, and per-portal data isolation all work correctly for small teams. However, three issues become important as the team grows to 10–20 people:
@@ -146,61 +164,52 @@ Called once from `launchApp()` in `app.js` after `loadRemote()`.
 
 ---
 
-## 4. Phase 2 — Collaborative Enhancements
+## 4. Phase 2 — Collaborative Enhancements ✅ (Implemented)
 
-> **Goal:** Make concurrent editing safer and more visible. Suitable for implementation in the next sprint (1–2 weeks).
+> **Goal:** Make concurrent editing safer and more visible. Implemented in this PR.
 
 ### Step-by-step Agentic Tasks
 
-#### Task 2-A: "Who's Here" Presence Indicator
+#### Task 2-A: "Who's Here" Presence Indicator ✅
 
 Show a small avatar/initial badge in the programme header when another user is viewing the same project.
 
-1. In `core/js/db.js`, create `broadcastPresence()` — sends a Supabase Realtime **Broadcast** message (not a DB subscription) on channel `presence:${progId}` with `{ user: currentUser.email, section: currentSection }` every 30 s.
-2. In `navigation.js`, call `broadcastPresence()` whenever `progId` changes. Stop broadcasting when navigating away (clear the 30 s interval).
-3. Track incoming presence messages in a `presenceMap: Map<progId, Set<email>>`.
-4. In `portals/product-development/npi/js/dashboard.js`, render presence badges in the project header: `<span class="presence-badge">${initials}</span>`.
-5. Add CSS for `.presence-badge` in `core/css/components.css`.
+1. In `core/js/db.js`, created `broadcastPresence(pid)` — sends a Supabase Realtime **Broadcast** message on channel `presence:${progId}` with `{ email }` every 30 s. Also handles `user-gone` event.
+2. In `navigation.js`, `broadcastPresence(progId)` is called when entering any NPI live section. `stopPresenceBroadcast()` is called when leaving.
+3. `presenceMap` added to `state.js` to track `{ [progId]: [{ email, ts }] }` entries.
+4. In `portals/product-development/npi/js/dashboard.js`, presence badges render in the project header: `<span class="presence-badge">${initials}</span>`.
+5. CSS for `.presence-badge` and `.presence-strip` added to `core/css/components.css`.
 
 **Supabase setup needed:** Broadcast does not require a new table — it uses the existing Realtime WebSocket. No SQL migration required.
 
-#### Task 2-B: Stale Data Warning Toast
+#### Task 2-B: Stale Data Warning Toast ✅
 
 When the global subscription receives an UPDATE for the programme the current user is actively editing, show a non-blocking toast.
 
-1. In `subscribeProgrammesGlobally()` (db.js), when an `onUpdate` fires for `progId` and the source is not the current user (`row.updated_by !== currentUser.email`), call:
+1. In `subscribeProgrammesGlobally()` (db.js), when an `onUpdate` fires for `progId` and the source is not the current user, calls:
    ```javascript
    showToast(`${row.updated_by.split('@')[0]} just updated this project's details`, 'info', 6000);
    ```
-2. Do NOT force-refresh the user's in-progress edits — just inform them.
-3. Add `timeout` parameter support to `showToast()` in `utils/js/helpers.js` if not already present.
+2. Does NOT force-refresh the user's in-progress edits — just informs them.
+3. `showToast()` already supports `duration` parameter — no changes needed to `helpers.js`.
 
-#### Task 2-C: Programme Delete Cascade for NPI Relational Data
+#### Task 2-C: Programme Delete Cascade for NPI Relational Data ✅
 
-Currently deleting a programme leaves its NPI data (CTQ, PFMEA, BOM, etc.) as orphaned rows in the relational tables.
+1. In `npi.dashboard.deleteProject()` (dashboard.js), after the Supabase `programmes` delete succeeds, calls `npiRelDeleteAllForProgramme(deletedId)` from `npi-data-relational.js`.
+2. `npiRelDeleteAllForProgramme` is a new alias for `npiRelClearAll` exposed as `window.npiRelDeleteAllForProgramme`. Deletes all 15 NPI relational tables in dependency order.
+3. Shows a `'Deleting NPI data…'` progress toast during the cascade.
 
-1. In `npi.dashboard.deleteProject()` (dashboard.js), after the Supabase `programmes` delete succeeds, call `npiRelDeleteAllForProgramme(deletedId)` from `npi-data-relational.js`.
-2. `npiRelDeleteAllForProgramme(pid)` already exists (line 898 of npi-data-relational.js): `await supa.from(table).delete().eq('programme_id', pid)`. Expose it as a `window.*` function so it's callable from dashboard.js.
-3. Show a progress indicator during deletion since this involves 15 sequential Supabase deletes.
+**Alternative (recommended for future):** Add `ON DELETE CASCADE` constraints in Supabase SQL for all NPI tables' `programme_id` foreign keys (see Phase 3 / Task 3-C).
 
-**Alternative (recommended):** Add `ON DELETE CASCADE` constraints in Supabase SQL for all NPI tables' `programme_id` foreign keys. This is one SQL migration and eliminates the need for client-side cascade:
-```sql
-ALTER TABLE npi_ctq
-  ADD CONSTRAINT fk_npi_ctq_programme
-  FOREIGN KEY (programme_id) REFERENCES programmes(prog_id)
-  ON DELETE CASCADE;
--- Repeat for all 14 other NPI tables
-```
+#### Task 2-D: Conflict-Safe Gate Signing ✅
 
-#### Task 2-D: Conflict-Safe Gate Signing
+Gate signatures (`npi_gate_sigs`) are high-stakes. Two users signing simultaneously could overwrite each other.
 
-Gate signatures (`npi_gate_sigs`) are high-stakes operations. Two users signing the same gate simultaneously could overwrite each other.
-
-1. In `npi-data-relational.js`, change the gate-sig save from `upsert` to:
-   - `SELECT` the current sig first.
-   - Only `UPDATE` if the sig is currently unsigned (`signed = false`).
-   - If already signed by someone else, show an error toast: "Already signed by X on Y".
-2. Add an `updated_at` field to `npi_gate_sigs` and use it to detect staleness.
+1. In `npi-data-relational.js`, the gate-sig save now checks before updating:
+   - When `sig.signed === true` and `sig._id` exists (UPDATE path), `SELECT` the current DB row first.
+   - If the DB row is already `signed = true` with a **different** `sig_name`, the local sign-off is reverted and an error toast is shown: "Already signed by X on Y".
+   - If unsigned (or same user), the UPDATE proceeds normally.
+2. The optimistic local state is reverted if a conflict is detected, keeping both users' views consistent.
 
 ---
 
@@ -270,8 +279,10 @@ Currently the sync badge shows "saving…" for 800 ms even though the UI is alre
 | User A silently overwrites User B's project metadata | High | High | Phase 1 ✅ |
 | Deleted projects reappear after refresh | High | High | Phase 1 ✅ |
 | New projects invisible until page refresh | High | Medium | Phase 1 ✅ |
-| Two users sign the same gate simultaneously | Low | High | Phase 2 |
-| Orphaned NPI data after project delete | Medium | Low | Phase 2 |
+| Two users sign the same gate simultaneously | Low | High | Phase 2 ✅ |
+| Orphaned NPI data after project delete | Medium | Low | Phase 2 ✅ |
+| No visibility of who is editing a project | Medium | Low | Phase 2 ✅ |
+| No warning when another user updates current project | Medium | Low | Phase 2 ✅ |
 | Slow initial load at 500+ projects | Medium | Medium | Phase 3 |
 | Channel limit hit on Supabase free tier | Medium | Medium | Phase 3 |
 | Concurrent edit of same PFMEA cause | Low | Medium | Phase 2 (partial) |

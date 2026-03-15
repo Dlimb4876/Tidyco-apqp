@@ -53,6 +53,10 @@ let abcEditTarget = null;           // index into abcCatalogueData during edit, 
 // NPI dashboard tab
 let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
 
+// Presence map: { [progId]: [{ email, ts }] }
+// Tracks other users currently viewing the same project (updated via Broadcast).
+let presenceMap = {};
+
 // ── Accessor ─────────────────────────────────────────────────
 function prog() { return db.programmes.find(p => p.id === progId) || null; }
 

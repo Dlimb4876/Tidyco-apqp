@@ -382,6 +382,10 @@ function subscribeProgrammesGlobally() {
       // Skip echo of the local user's own save — the local state is already
       // up-to-date and applying the echo could discard in-progress edits.
       if (row.updated_by === currentUser?.email) return;
+      // Task 2-B: Warn the current user when someone else updates the project they're viewing.
+      if (progId && row.prog_id === progId && row.updated_by && typeof showToast === 'function') {
+        showToast(`${row.updated_by.split('@')[0]} just updated this project's details`, 'info', 6000);
+      }
       const p = db.programmes[idx];
       p.name       = row.name            || p.name;
       p.customer   = row.customer        || '';
@@ -421,3 +425,91 @@ function subscribeProgrammesGlobally() {
     }
   });
 }
+
+// ── Task 2-A: Presence Broadcast ──────────────────────────────
+// Tracks who else is viewing the same project in real time.
+// Uses Supabase Realtime Broadcast (no DB write needed).
+
+let _presenceChannel = null;
+let _presenceInterval = null;
+const PRESENCE_TTL_MS = 90000; // Remove stale entries after 90 s
+
+function _getPresenceInitials(email) {
+  if (!email) return '?';
+  const local = email.split('@')[0];
+  const parts = local.split(/[._-]/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return local.slice(0, 2).toUpperCase();
+}
+
+function broadcastPresence(pid) {
+  if (!pid || !currentUser) return;
+  stopPresenceBroadcast();
+
+  const channelName = 'presence:' + pid;
+  const email = currentUser.email;
+
+  const ch = supa.channel(channelName);
+  ch.on('broadcast', { event: 'user-here' }, ({ payload }) => {
+    if (!payload || !payload.email) return;
+    if (payload.email === email) return; // ignore own echo
+    if (!presenceMap[pid]) presenceMap[pid] = [];
+    const existing = presenceMap[pid].find(e => e.email === payload.email);
+    if (existing) {
+      existing.ts = Date.now();
+    } else {
+      presenceMap[pid].push({ email: payload.email, ts: Date.now() });
+    }
+    // Prune stale entries
+    presenceMap[pid] = presenceMap[pid].filter(e => Date.now() - e.ts < PRESENCE_TTL_MS);
+    // Re-render dashboard header if viewing this project
+    if (progId === pid && currentSection === 'project' && typeof render === 'function') render();
+  }).on('broadcast', { event: 'user-gone' }, ({ payload }) => {
+    if (!payload || !payload.email || !presenceMap[pid]) return;
+    presenceMap[pid] = presenceMap[pid].filter(e => e.email !== payload.email);
+    if (progId === pid && currentSection === 'project' && typeof render === 'function') render();
+  }).subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      ch.send({ type: 'broadcast', event: 'user-here', payload: { email } });
+    }
+  });
+
+  _presenceChannel = ch;
+  // Re-broadcast every 30 s to keep entries fresh for other users
+  _presenceInterval = setInterval(() => {
+    if (_presenceChannel) {
+      _presenceChannel.send({ type: 'broadcast', event: 'user-here', payload: { email } });
+    }
+  }, 30000);
+}
+
+function stopPresenceBroadcast() {
+  if (_presenceInterval) { clearInterval(_presenceInterval); _presenceInterval = null; }
+  if (_presenceChannel) {
+    try {
+      const email = currentUser?.email;
+      if (email) {
+        _presenceChannel.send({ type: 'broadcast', event: 'user-gone', payload: { email } }).catch(err => {
+          console.debug('presence user-gone send failed (channel may already be closing):', err);
+        });
+      }
+      supa.removeChannel(_presenceChannel);
+    } catch (e) {
+      console.debug('stopPresenceBroadcast cleanup error:', e);
+    }
+    _presenceChannel = null;
+  }
+}
+
+function getPresenceForProg(pid) {
+  if (!pid || !presenceMap[pid]) return [];
+  // Return only non-stale entries
+  presenceMap[pid] = presenceMap[pid].filter(e => Date.now() - e.ts < PRESENCE_TTL_MS);
+  return presenceMap[pid];
+}
+
+// Expose for use in navigation.js and dashboard.js
+window.broadcastPresence    = broadcastPresence;
+window.stopPresenceBroadcast = stopPresenceBroadcast;
+window.getPresenceForProg   = getPresenceForProg;
+window._getPresenceInitials = _getPresenceInitials;
