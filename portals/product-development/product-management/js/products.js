@@ -40,6 +40,7 @@ function renderProductsPortalHTML() {
           </div>
         </div>
         <button class="btn btn-ghost" data-action="products-back-root">← Back to Product Development</button>
+        <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-management" title="User Guide">❓ Guide</button>
       </div>
 
       <div class="products-tabs">
@@ -704,6 +705,11 @@ function setupProductsEventListeners() {
 
       if (action === 'products-focus-add') {
         document.getElementById('pNew-name')?.focus();
+      }
+
+      if (action === 'show-guide') {
+        const key = actionEl.dataset.guideKey;
+        if (key && typeof showGuide === 'function') showGuide(key);
       }
     });
   }

@@ -83,6 +83,7 @@ window.pmRenderCapacity = function() {
             <div class="me-topbar-sub">PM stream · shared table with department tag</div>
           </div>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('capacity-pm')" title="User Guide">❓ Guide</button>
       </div>
 
       <div class="me-nav">

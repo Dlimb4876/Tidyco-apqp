@@ -15,7 +15,10 @@ function renderCapacity() {
           <div class="proj-home-title">Capacity Management</div>
           <div class="proj-home-sub">Select a capacity stream to view loading</div>
         </div>
-        <button class="btn btn-ghost" data-cap-action="cap-nav-hub">← Back to Portal</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="showGuide('capacity')" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost" data-cap-action="cap-nav-hub">← Back to Portal</button>
+        </div>
       </div>
       <div class="proj-cards capacity-grid">
         <div class="proj-card capacity-card" data-cap-action="cap-set-tab" data-tab="production">

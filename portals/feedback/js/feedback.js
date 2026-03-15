@@ -131,12 +131,15 @@ function renderFeedback() {
         <div class="feedback-title">💬 Feedback & Bugs</div>
         <div class="feedback-sub">${feedback.length} submission${feedback.length !== 1 ? 's' : ''} · ${openCount} open</div>
       </div>
-      <div class="feedback-stats-bar">
-        <span class="feedback-stat">📊 ${stats.total} total</span>
-        <span class="feedback-stat-sep">·</span>
-        <span class="feedback-stat">🐛 ${stats.bugs} bug${stats.bugs !== 1 ? 's' : ''} (${stats.openBugs} open)</span>
-        <span class="feedback-stat-sep">·</span>
-        <span class="feedback-stat">💡 ${stats.feedback} feedback (${stats.openFeedback} open)</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="feedback-stats-bar">
+          <span class="feedback-stat">📊 ${stats.total} total</span>
+          <span class="feedback-stat-sep">·</span>
+          <span class="feedback-stat">🐛 ${stats.bugs} bug${stats.bugs !== 1 ? 's' : ''} (${stats.openBugs} open)</span>
+          <span class="feedback-stat-sep">·</span>
+          <span class="feedback-stat">💡 ${stats.feedback} feedback (${stats.openFeedback} open)</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('feedback')" title="User Guide">❓ Guide</button>
       </div>
     </div>
 

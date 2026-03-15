@@ -7,6 +7,7 @@ function renderHub() {
           <div class="proj-home-title">Tidyco Operations Portal</div>
           <div class="proj-home-sub">Quality Planning, Production & Operations Control</div>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('hub')" title="User Guide">❓ Guide</button>
       </div>
 
       <div class="proj-cards hub-grid">

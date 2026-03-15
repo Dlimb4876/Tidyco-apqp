@@ -180,6 +180,7 @@ function renderScheduling() {
           <button class="btn ${prodSchedulingHideComplete ? 'btn-primary' : 'btn-ghost'}" id="toggle-hide-complete">
             ${prodSchedulingHideComplete ? '✓ Hide Complete' : '○ Show All'}
           </button>
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-scheduling" title="User Guide">❓ Guide</button>
           <button class="btn btn-primary" id="add-batch-button">➕ Add Batch</button>
           <button class="btn btn-ghost" id="back-to-prod-hub">← Back</button>
         </div>

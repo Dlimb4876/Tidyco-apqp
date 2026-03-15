@@ -138,6 +138,7 @@ npi.dashboard.renderProjects = function() {
           <div class="proj-home-sub">Signed in as ${esc(user)}</div>
         </div>
         <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-projects')" title="User Guide">❓ Guide</button>
       </div>
       <div style="text-align:center;padding:80px 20px;color:var(--muted)">
         <div style="font-size:48px;margin-bottom:16px">📦</div>
@@ -249,6 +250,7 @@ npi.dashboard.renderProjects = function() {
       <div class="npi-projects-toolbar">
         <div class="npi-mode-group">${modeButtons}</div>
         <span class="npi-completed-badge" title="Completed projects retained in archive view">Completed: ${completedCount}</span>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-projects')" title="User Guide">❓ Guide</button>
         <button class="btn btn-ghost" onclick="npi.nav.navigate('hub')">← Back to Hub</button>
       </div>
     </div>
@@ -545,6 +547,7 @@ npi.dashboard.renderDashboard = function() {
       <div class="hero-right">
         ${presenceBadgesHTML ? `<div class="presence-strip">${presenceBadgesHTML}</div>` : ''}
         <button class="btn btn-ghost" onclick="npi.nav.navigate('projects')">← Back</button>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-dashboard')" title="User Guide">❓ Guide</button>
         <button class="btn btn-ghost" onclick="npi.dashboard.openGateScopeEditor()">Gate Scope</button>
         <button class="btn btn-primary" onclick="npi.dashboard.showEditProject()">Edit Project</button>
       </div>

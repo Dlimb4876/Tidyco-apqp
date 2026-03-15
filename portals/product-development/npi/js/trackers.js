@@ -28,7 +28,7 @@ npi.tracker.renderActions = function() {
     </tr>`
   }).join('')
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Action Tracker</div><div class="sec-desc">Central log of all actions. Overdue items highlighted. Edit all fields inline.</div></div>
-  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-primary btn-sm" onclick="npi.tracker.addAction()">＋ Add Action</button></div></div>
+  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-actions')" title="User Guide">❓ Guide</button><button class="btn btn-primary btn-sm" onclick="npi.tracker.addAction()">＋ Add Action</button></div></div>
   ${liveUpdateBadge ? `<div style="margin:0 0 12px 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
   <div style="display:flex;gap:10px;margin-bottom:16px">
     <div class="kpi-card" style="--kpi-color:var(--amber);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px">${open}</div><div class="kpi-label">Open</div></div>
@@ -79,7 +79,7 @@ npi.tracker.renderRisks = function() {
     </tr>`
   }).join('')
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Risk Register</div><div class="sec-desc">Project-level risks. Likelihood × Impact = Score. All fields editable inline. High risks ≥ 12.</div></div>
-  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showModal('modalRiskMatrix')">📊 Risk Matrix</button><button class="btn btn-primary btn-sm" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div></div>
+  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showModal('modalRiskMatrix')">📊 Risk Matrix</button><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-risks')" title="User Guide">❓ Guide</button><button class="btn btn-primary btn-sm" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div></div>
   ${liveUpdateBadge ? `<div style="margin:0 0 12px 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
   <div style="display:flex;gap:10px;margin-bottom:16px">
     <div class="kpi-card" style="--kpi-color:var(--red);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--red)">${hi}</div><div class="kpi-label">High ≥12</div></div>

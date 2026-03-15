@@ -162,6 +162,7 @@ npi.timing.renderTimingPlan = function() {
     <div class="sec-desc">Planned (green) and Actual (orange). Click month headers to collapse. Click cells to toggle.</div></div>
     <div style="display:flex;gap:8px;flex-shrink:0">
       <button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button>
+      <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-timing')" title="User Guide">❓ Guide</button>
       <button class="btn btn-ghost btn-sm" onclick="npi.timing.ganttClear()">Clear All</button>
       <button class="btn btn-primary btn-sm" onclick="npi.timing.ganttAddRow('s1')">＋ Add Task</button>
     </div>

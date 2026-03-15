@@ -80,7 +80,10 @@ function renderPlanByProduct() {
           <div class="sec-title">By Product</div>
           <div class="sec-desc">6-month schedule with weekly and monthly scale</div>
         </div>
-        <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-by-product" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
+        </div>
       </div>
 
       <div class="prod-product-toolbar">
@@ -327,7 +330,10 @@ function renderPlanByUnit() {
           <div class="sec-title">By Work Area</div>
           <div class="sec-desc">Rolling 2-month timeline showing arrivals and departures</div>
         </div>
-        <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-by-unit" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
+        </div>
       </div>
 
       <div class="unit-tabs-container">
@@ -557,6 +563,12 @@ function setupProductionPlanningDelegation() {
       if (!unit) return;
       prodSetActiveUnit(unit);
       setProductionTab('by-unit');
+      return;
+    }
+
+    if (action === 'show-guide') {
+      const key = actionEl.dataset.guideKey;
+      if (key && typeof showGuide === 'function') showGuide(key);
     }
   });
 

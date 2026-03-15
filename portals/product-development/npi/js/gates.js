@@ -87,6 +87,7 @@ npi.gate.renderGatePage = function(gateNum) {
       <div style="display:flex;gap:8px;flex-shrink:0">
         ${prevGate !== null ? `<button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('gate_${prevGate}')">← Gate ${prevGate}</button>` : ''}
         <button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">Dashboard</button>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-gates')" title="User Guide">❓ Guide</button>
         ${nextGate !== null ? `<button class="btn btn-ghost btn-sm" onclick="npi.nav.navigate('gate_${nextGate}')">Gate ${nextGate} →</button>` : ''}
       </div>
     </div>
