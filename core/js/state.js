@@ -40,6 +40,7 @@ let abcPickResults = [];        // rows fetched from Supabase for the picker mod
 let abcPickLoading = false;     // true while fetch is in-flight
 let abcPickSearch  = '';        // live search text in the picker modal
 let abcPickClassFilter = 'all'; // 'all' | 'A' | 'B' | 'C' — class filter in picker
+let abcPickSelected = [];       // catalogue IDs selected in the picker modal
 
 // ABC Catalogue state (central management page)
 let abcCatalogueData    = [];       // all ABC parts from catalogue
