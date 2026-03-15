@@ -63,22 +63,17 @@ npi.bom.renderBomTable = function(type, p) {
             return cat && cat.in_sage ? '<span style="color:var(--green);font-weight:bold">✓</span>' : '<span style="color:var(--muted)">—</span>'
           })()
         : '<span style="color:var(--muted)">—</span>'
+      const classBadge = r.abcClass
+        ? `<span class="abc-badge abc-${r.abcClass}">${r.abcClass}</span>`
+        : '<span style="color:var(--muted)">—</span>'
       return `<tr>
-      <td class="w110"><input class="cell-edit mono" value="${esc(r.pn)}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="pn" placeholder="Tidyco PN"></td>
-      <td class="w110"><input class="cell-edit mono" value="${esc(r.supplierPN||'')}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="supplierPN" placeholder="Supplier PN"></td>
-      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="desc" placeholder="Description"></td>
+      <td class="w110"><code style="font-size:11px">${esc(r.pn) || '—'}</code></td>
+      <td class="w110"><code style="font-size:11px">${esc(r.supplierPN||'') || '—'}</code></td>
+      <td class="bom-col-desc">${esc(r.desc) || '<span style="color:var(--muted)">—</span>'}</td>
       <td class="w75 ctr"><input type="number" class="cell-edit mono" min="0" value="${r.qty || ''}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="qty" data-number="1"></td>
-      <td class="w50"><input class="cell-edit" value="${esc(r.unit)}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="unit" placeholder="ea"></td>
+      <td class="w50 ctr"><span style="font-size:12px">${esc(r.unit) || 'ea'}</span></td>
       <td class="w44 ctr">${sageBadge}</td>
-      <td class="w60 ctr">
-        <select class="abc-class-select abc-${r.abcClass || 'none'}"
-          data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="abcClass" data-nullable="1">
-          <option value="">—</option>
-          <option value="A" ${r.abcClass==='A'?'selected':''}>A</option>
-          <option value="B" ${r.abcClass==='B'?'selected':''}>B</option>
-          <option value="C" ${r.abcClass==='C'?'selected':''}>C</option>
-        </select>
-      </td>
+      <td class="w60 ctr">${classBadge}</td>
       <td class="w44 ctr"><input type="checkbox" ${r.isStd    ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isStd"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
       <td class="w44 ctr"><input type="checkbox" ${r.isAaw    ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isAaw"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
       <td class="w44 ctr"><input type="checkbox" ${r.isRepair ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isRepair" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
@@ -123,7 +118,7 @@ npi.bom.renderBomTable = function(type, p) {
   const content = type === 'parts'
     ? `${abcFilterBar}${filterNote}${statsHTML}${
         items.length === 0
-          ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click ＋ Add to start. Link items to PFD steps using ＋ Resource.')
+          ? emptyState(t.icon, 'No ' + t.label.toLowerCase() + ' yet', 'Click "＋ Add from Parts Database" to search and add parts from the global catalogue.')
           : `<div style="overflow-x:auto"><table class="tbl bom-tbl" style="min-width:${tableMinWidth}">${thead}<tbody>${tbody}</tbody></table></div>`
       }`
     : `${statsHTML}${
@@ -134,10 +129,12 @@ npi.bom.renderBomTable = function(type, p) {
 
   return `<div class="bom-register-wrap"><div class="card">
   <div class="card-head"><span class="card-title">${t.icon} ${t.label} Register</span><span class="card-meta">${items.length} items</span>${
-    type === 'parts' ? `<button class="btn btn-ghost btn-sm" data-action="bom-open-abc-pick" style="margin-left:auto;margin-right:8px">Pick from Catalogue →</button>` : ''
-  }<button class="btn btn-primary btn-sm" data-action="bom-add-row" data-type="${type}">＋ Add ${t.label.replace(/s$/, '')}</button></div>
+    type === 'parts'
+      ? `<button class="btn btn-primary btn-sm" data-action="bom-open-abc-pick" style="margin-left:auto">＋ Add from Parts Database</button>`
+      : `<button class="btn btn-primary btn-sm" data-action="bom-add-row" data-type="${type}" style="margin-left:auto">＋ Add ${t.label.replace(/s$/, '')}</button>`
+  }</div>
   ${content}
-  <button class="add-row" data-action="bom-add-row" data-type="${type}">＋ Add ${t.label.replace(/s$/, '')}</button></div></div>`
+  ${type !== 'parts' ? `<button class="add-row" data-action="bom-add-row" data-type="${type}">＋ Add ${t.label.replace(/s$/, '')}</button>` : ''}</div></div>`
 }
 
 npi.bom.addBomRow = function(type) {
