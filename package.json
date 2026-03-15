@@ -6,7 +6,16 @@
   "scripts": {
     "test": "jest",
     "lint:npi": "eslint portals/product-development/npi/**/*.js",
-    "format:npi": "prettier --write portals/product-development/npi/**/*.js"
+    "format:npi": "prettier --write portals/product-development/npi/**/*.js",
+    "check:load-order": "node scripts/load-order-checker.js",
+    "check:syntax": "node scripts/syntax-validator.js",
+    "check:rls": "node scripts/rls-policy-checker.js",
+    "check:subscriptions": "node scripts/subscription-cleanup-auditor.js",
+    "check:mobile": "node scripts/mobile-breakpoint-verifier.js",
+    "check:modals": "node scripts/modal-state-auditor.js",
+    "check:state": "node scripts/state-variable-tracker.js",
+    "check:coverage": "node scripts/test-coverage-reporter.js",
+    "check:all": "npm run check:load-order && npm run check:syntax && npm run check:subscriptions && npm run check:mobile && npm run check:modals && npm run check:state && npm run check:coverage"
   },
   "repository": {
     "type": "git",
