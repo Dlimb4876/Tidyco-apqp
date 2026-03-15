@@ -42,7 +42,7 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: var(--green);
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
@@ -67,12 +67,12 @@
 }
 
 .products-tab-btn:hover {
-  color: #4CAF50;
+  color: var(--green);
 }
 
 .products-tab-btn.active {
-  color: #4CAF50;
-  border-bottom-color: #4CAF50;
+  color: var(--green);
+  border-bottom-color: var(--green);
 }
 
 /* Tab Content */
@@ -90,64 +90,7 @@
   to { opacity: 1; }
 }
 
-/* Data Table - kept for backwards compatibility, use prod-tbl instead */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.data-table thead {
-  background: #f0f0f0;
-  font-weight: 600;
-  color: #2c3e50;
-  text-align: left;
-}
-
-.data-table th {
-  padding: 12px 15px;
-  border-bottom: 2px solid #ddd;
-  white-space: nowrap;
-}
-
-.data-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #e8e8e8;
-}
-
-.data-table tbody tr:hover {
-  background: #f9f9f9;
-}
-
-.data-table td.numeric {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.data-table td.notes-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #666;
-  font-size: 0.95em;
-}
-
-.data-table .actions {
-  white-space: nowrap;
-  text-align: center;
-}
-
-/* Centered columns with fixed width */
-.data-table th.col-center,
-.data-table td.col-center {
-  text-align: center;
-  width: 90px;
-  padding: 12px 8px;
-}
+/* Note: .prod-tbl is the current standard for data tables (defined in production.css) */
 
 .btn-icon {
   background: none;
@@ -264,7 +207,7 @@
 
 .products-inline-table .cell-edit:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: var(--green);
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.15);
 }
 
@@ -372,7 +315,7 @@
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: var(--green);
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
@@ -461,12 +404,12 @@
 }
 
 .trend-tab-btn:hover {
-  color: #4CAF50;
+  color: var(--green);
 }
 
 .trend-tab-btn.active {
-  color: #4CAF50;
-  border-bottom-color: #4CAF50;
+  color: var(--green);
+  border-bottom-color: var(--green);
 }
 
 /* View Content */
@@ -496,7 +439,7 @@
 
 .trend-select:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: var(--green);
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
@@ -520,7 +463,7 @@
 }
 
 .kpi-card:hover {
-  border-color: #4CAF50;
+  border-color: var(--green);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.1);
   transform: translateY(-2px);
 }
@@ -564,13 +507,13 @@
 }
 
 .comparison-card:hover {
-  border-color: #4CAF50;
+  border-color: var(--green);
   box-shadow: 0 6px 20px rgba(76, 175, 80, 0.15);
   transform: translateY(-4px);
 }
 
 .card-header {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: linear-gradient(135deg, var(--green) 0%, #45a049 100%);
   color: white;
   padding: 16px;
   display: flex;
@@ -736,7 +679,7 @@
 /* History Badge */
 .history-badge {
   display: inline-block;
-  background: #4CAF50;
+  background: var(--green);
   color: white;
   border-radius: 12px;
   padding: 2px 8px;
@@ -745,44 +688,7 @@
   font-weight: 600;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .products-portal {
-    padding: 10px;
-  }
-
-  .products-controls {
-    flex-direction: column;
-  }
-
-  .search-input {
-    min-width: auto;
-  }
-
-  .data-table {
-    font-size: 0.9em;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 8px;
-  }
-
-  .modal-content {
-    max-width: 95%;
-  }
-
-  .modal-large {
-    max-width: 95%;
-  }
-
-  .history-summary {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
-
-/* ── Additional Responsive Enhancements ──────────────────────── */
+/* Responsive Design */
 @media (max-width: 767px) {
   .products-portal {
     padding: 10px;
@@ -820,15 +726,6 @@
     padding: 10px 12px;
     font-size: 0.9em;
     white-space: nowrap;
-  }
-
-  .data-table {
-    font-size: 0.85em;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 6px;
   }
 
   .modal-content {
@@ -881,9 +778,5 @@
 
   .search-input {
     min-width: 200px;
-  }
-
-  .data-table {
-    font-size: 0.95em;
   }
 }
