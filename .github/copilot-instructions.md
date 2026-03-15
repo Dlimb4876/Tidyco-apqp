@@ -1,5 +1,11 @@
 # Tidyco APQP — Copilot Instructions
 
+## User Context
+**The primary user has zero coding experience.** Use plain language, no jargon. For any multi-step task always create a Todo list and tick off each step individually — never batch-complete.
+
+## Acronyms
+ME = Manufacturing Engineering · PM = Project Management · APQP = Advanced Product Quality Planning · RLS = Row Level Security · CTQ = Critical to Quality · PFMEA = Process Failure Mode & Effects Analysis · BOM = Bill of Materials · SPA = Single Page Application
+
 ## What This Repo Does
 Tidyco APQP is a **vanilla JavaScript Single Page Application (SPA)** for managing APQP (Advanced Product Quality Planning) and Manufacturing Engineering workflows. It has no build pipeline — all files are static HTML/JS/CSS served directly in a browser. Backend is **Supabase** (PostgreSQL + Auth + RLS).
 
@@ -16,6 +22,7 @@ Tidyco APQP is a **vanilla JavaScript Single Page Application (SPA)** for managi
 ```bash
 npm install          # Always run first after cloning; installs jest + eslint devDeps
 npm test             # Run all tests (requires npm install first; jest is a local devDep)
+npm run check:all    # All quality checks — run before every commit
 npx eslint portals/product-development/npi/**/*.js   # Lint NPI files (warnings only; 0 errors expected)
 npx prettier --write portals/product-development/npi/**/*.js  # Auto-format NPI JS
 ```
@@ -91,6 +98,16 @@ showModal('modalId'); closeModal('modalId');
 // Navigation (hash-based, handles subscription cleanup)
 navigate('capacity', { ct: 'me' });
 // Hash format: #p=<uuid>&s=<section>&t=<tab>
+
+// RPN formula
+// RPN = SEV × OCC × DET  (each 1–10; high threshold ≥ 100)
+// Forecast RPN = SEV × New OCC × New DET
 ```
+
+## Bug Squashing: "X is not a function"
+1. Find defining file: `grep -rn "function X\|const X" portals/ utils/ core/`
+2. Read that file — look for duplicate `const`, unclosed brackets, missing commas (SyntaxError = whole file fails silently)
+3. Check `index.html` load order — defining file must load before caller
+4. Fix the syntax error; functions reappear once file parses cleanly
 
 Trust these instructions. Only search the codebase if information here is incomplete or appears incorrect.
