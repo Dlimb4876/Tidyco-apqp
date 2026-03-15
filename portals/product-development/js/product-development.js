@@ -13,6 +13,7 @@ function renderProductDevelopment() {
   if (productDevelopmentTab === 'npi') return npi.dashboard.renderProjects();
   if (productDevelopmentTab === 'product-management') return renderProductManagement();
   if (productDevelopmentTab === 'product-family-db') return renderProductFamilyDatabase();
+  if (productDevelopmentTab === 'parts-database') return renderPartsDatabase();
 
   // Root hub view
   return `
@@ -49,7 +50,35 @@ function renderProductDevelopment() {
             <div class="proj-card-meta">Family definitions & attributes</div>
           </div>
         </div>
+
+        <div class="proj-card hub-card" onclick="setProductDevelopmentTab('parts-database')">
+          <div class="hub-card-content">
+            <div class="hub-icon">🔩</div>
+            <div class="proj-card-name">Parts Database</div>
+            <div class="proj-card-meta">A, B & C-Class parts catalogue</div>
+          </div>
+        </div>
       </div>
+    </div>
+  `;
+}
+
+function renderPartsDatabase() {
+  const loadingMsg = '<div style="padding:20px;text-align:center;color:var(--muted)">Loading catalogue...</div>';
+  const catalogueHTML = (typeof npi !== 'undefined' && npi.bom && npi.bom.renderABCCatalogue)
+    ? (npi.bom.renderABCCatalogue() || loadingMsg)
+    : loadingMsg;
+
+  return `
+    <div class="proj-home">
+      <div class="proj-home-header">
+        <div>
+          <div class="proj-home-title">Parts Database</div>
+          <div class="proj-home-sub">A, B & C-Class central parts catalogue</div>
+        </div>
+        <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
+      </div>
+      ${catalogueHTML}
     </div>
   `;
 }
