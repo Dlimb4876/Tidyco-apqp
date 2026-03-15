@@ -711,12 +711,23 @@ npi.dashboard.saveEditProject = function() {
   render()
 }
 
-npi.dashboard.deleteProject = function() {
+npi.dashboard.deleteProject = async function() {
   const p = prog(); if (!p) return
   if (!confirm(`Permanently delete "${p.name}"? This cannot be undone.`)) return
-  db.programmes = db.programmes.filter(x => x.id !== progId)
+  const deletedId = progId
+  // Remove from Supabase first; abort the local delete if it fails.
+  if (typeof supa !== 'undefined') {
+    const { error } = await supa.from('programmes').delete().eq('prog_id', deletedId)
+    if (error) {
+      showToast('Could not delete project — ' + (error.message || 'unknown error'), 'error')
+      return
+    }
+  }
+  db.programmes = db.programmes.filter(x => x.id !== deletedId)
   progId = db.programmes.length ? db.programmes[0].id : null
-  save()
+  // Save any remaining dirty programmes but do not mark the deleted one.
+  if (dirtyProgrammes.has(deletedId)) dirtyProgrammes.delete(deletedId)
+  if (db.programmes.length > 0) save()
   closeModal('modalEditProj')
   navigate('projects')
 }
@@ -745,7 +756,8 @@ npi.dashboard.linkSubAsm = function(id) {
   if (!p.subAssemblies.find(x => x.id === id)) p.subAssemblies.push({ id })
   const child = db.programmes.find(x => x.id === id)
   if (child && !child.parentId) child.parentId = progId
-  save(); npi.dashboard.closeSubAsmModal(); render()
+  // Mark both parent (progId) and child dirty so both rows are written.
+  save(id); npi.dashboard.closeSubAsmModal(); render()
 }
 
 npi.dashboard.unlinkSubAsm = function(li) {
@@ -756,7 +768,8 @@ npi.dashboard.unlinkSubAsm = function(li) {
     if (child && child.parentId === progId) child.parentId = null
   }
   p.subAssemblies.splice(li, 1)
-  save(); render()
+  // Mark both parent (progId) and child dirty so both rows are written.
+  save(linked?.id); render()
 }
 
 npi.dashboard.closeSubAsmModal = function() { const el = document.getElementById('subAsmModalBg'); if (el) el.remove() }

@@ -5,6 +5,10 @@
 
 let saveTimer = null;
 let programmesGateScopeColumnsSupported = true;
+// Tracks which programme IDs have local changes pending a Supabase write.
+// Only those IDs are written on the next saveRemote() call, preventing
+// one user's save from overwriting another user's concurrent edits.
+let dirtyProgrammes = new Set();
 
 function isGateScopeColumnError(err) {
   const msg = String((err && err.message) || '').toLowerCase();
@@ -60,7 +64,11 @@ document.addEventListener('input', e => {
 });
 
 // ── Save ──────────────────────────────────────────────────────
-function save() {
+// Accepts optional extra programme IDs to mark dirty (e.g. when two
+// linked programmes are modified in the same operation).
+function save(...extraIds) {
+  if (progId) dirtyProgrammes.add(progId);
+  extraIds.forEach(id => { if (id) dirtyProgrammes.add(id); });
   try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveRemote, 800);
@@ -72,8 +80,21 @@ async function saveRemote(attempt) {
   const email  = currentUser.email;
   const now    = new Date().toISOString();
   const errors = [];
+
+  // Snapshot and clear dirty set before async work so any edits made
+  // during this save are queued for the next debounce cycle.
+  const idsToSave = dirtyProgrammes.size > 0 ? new Set(dirtyProgrammes) : null;
+  dirtyProgrammes.clear();
+
+  // Only write programmes that were modified locally.
+  // Fall back to writing all on retry (idsToSave is null after clear) so
+  // the retry logic below can pass null and save everything.
+  const toSave = idsToSave
+    ? db.programmes.filter(p => idsToSave.has(p.id))
+    : db.programmes;
+
   try {
-    for (const p of db.programmes) {
+    for (const p of toSave) {
       let row = buildProgrammeRow(p, now, email);
 
       let { data: updated, error: updErr } = await supa
@@ -306,6 +327,8 @@ function importJSON(e) {
       if (d.programmes) {
         db = d;
         db.programmes = db.programmes.map(p => migrateprog(p));
+        // Mark all imported programmes dirty so saveRemote writes every one.
+        db.programmes.forEach(p => dirtyProgrammes.add(p.id));
         save(); initProgSelect(); navigate('home');
       } else { showToast('Invalid file', 'error'); }
     } catch (x) { showToast('Invalid JSON', 'error'); }
@@ -317,4 +340,84 @@ function importJSON(e) {
 // ── Programme selector ────────────────────────────────────────
 function initProgSelect() {
   if (!progId && db.programmes.length) progId = db.programmes[0].id;
+}
+
+// ── Global real-time subscription for programmes ──────────────
+// Keeps every user's hub / projects list live without a page refresh.
+// Called once from launchApp() after the initial loadRemote().
+function subscribeProgrammesGlobally() {
+  createRealtimeSubscription('programmes', 'global_programmes_channel', {
+    onInsert: (row) => {
+      if (db.programmes.find(p => p.id === row.prog_id)) return; // already known
+      const newProg = migrateprog({
+        id:              row.prog_id,
+        name:            row.name            || '',
+        customer:        row.customer        || '',
+        unit:            row.unit_name       || '',
+        family:          row.family          || '',
+        lead:            row.lead            || '',
+        pm:              row.pm              || '',
+        date:            row.start_date      || '',
+        ganttStart:      row.gantt_start     || '',
+        ganttCollapsed:  row.gantt_collapsed || [],
+        subAssemblies:   row.sub_assembly_ids || [],
+        status:          row.prog_status     || 'Active',
+        qNumber:         row.q_number        || '',
+        partNumber:      row.part_number     || '',
+        product_id:      row.product_id      || null,
+        gate_selections:        row.gate_selections         || null,
+        gate_selection_locked:  !!row.gate_selection_locked,
+        gate_selection_locked_at: row.gate_selection_locked_at  || null,
+        gate_selection_locked_by: row.gate_selection_locked_by  || null,
+      });
+      db.programmes.unshift(newProg);
+      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+      if (currentSection === 'hub' || currentSection === 'projects') {
+        if (typeof render === 'function') render();
+      }
+    },
+    onUpdate: (row) => {
+      const idx = db.programmes.findIndex(p => p.id === row.prog_id);
+      if (idx < 0) return;
+      // Skip echo of the local user's own save — the local state is already
+      // up-to-date and applying the echo could discard in-progress edits.
+      if (row.updated_by === currentUser?.email) return;
+      const p = db.programmes[idx];
+      p.name       = row.name            || p.name;
+      p.customer   = row.customer        || '';
+      p.unit       = row.unit_name       || '';
+      p.family     = row.family          || '';
+      p.lead       = row.lead            || '';
+      p.pm         = row.pm              || '';
+      p.date       = row.start_date      || '';
+      p.ganttStart = row.gantt_start     || '';
+      p.ganttCollapsed  = row.gantt_collapsed  || [];
+      p.subAssemblies   = row.sub_assembly_ids || [];
+      p.status     = row.prog_status     || 'Active';
+      p.qNumber    = row.q_number        || '';
+      p.partNumber = row.part_number     || '';
+      p.product_id = row.product_id      || null;
+      if (row.gate_selections !== undefined)        p.gate_selections        = row.gate_selections;
+      if (row.gate_selection_locked !== undefined)  p.gate_selection_locked  = !!row.gate_selection_locked;
+      if (row.gate_selection_locked_at !== undefined) p.gate_selection_locked_at = row.gate_selection_locked_at;
+      if (row.gate_selection_locked_by !== undefined) p.gate_selection_locked_by = row.gate_selection_locked_by;
+      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+      if (currentSection === 'hub' || currentSection === 'projects') {
+        if (typeof render === 'function') render();
+      }
+    },
+    onDelete: (row) => {
+      const idx = db.programmes.findIndex(p => p.id === row.prog_id);
+      if (idx < 0) return;
+      db.programmes.splice(idx, 1);
+      if (progId === row.prog_id) {
+        progId = db.programmes.length ? db.programmes[0].id : null;
+      }
+      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+      if (currentSection === 'hub' || currentSection === 'projects' ||
+          currentSection === 'project' || currentSection === 'apqp') {
+        if (typeof render === 'function') render();
+      }
+    }
+  });
 }

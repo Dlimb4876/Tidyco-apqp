@@ -27,6 +27,7 @@ async function launchApp() {
   populateFamilySelects();
   await loadRemote();
   if (db.programmes.length === 0) load();
+  subscribeProgrammesGlobally();
   initProgSelect();
 
   // Load Families data from database (dynamic family definitions)
