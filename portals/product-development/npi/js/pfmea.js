@@ -312,6 +312,7 @@ npi.pfmea.renderPFMEA = function() {
     </label>
     <span class="tag" style="align-self:center">${filterLabel}: ${visibleModeCount}/${totalModeCount} operations</span>
     ${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high RPN ≥${RPN_HIGH}</span>` : ''}
+    <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-pfmea')" title="User Guide">❓ Guide</button>
   </div></div>
 <div class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
     <div class="card-head" style="padding:10px 14px">

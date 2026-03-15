@@ -59,6 +59,7 @@ function renderOperationsDashboard() {
 					<div class="proj-home-title">Operations Mission Control</div>
 					<div class="proj-home-sub">Director-level command surface with live operational signals</div>
 				</div>
+				<button class="btn btn-ghost btn-sm" onclick="showGuide('operations')" title="User Guide">❓ Guide</button>
 			</div>
 
 			<nav class="ops-tabs" aria-label="Operations dashboard views">

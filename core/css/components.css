@@ -471,3 +471,62 @@ kbd {
 .presence-badge:nth-child(3)  { background: var(--purple); }
 .presence-badge:nth-child(4)  { background: var(--amber);  }
 .presence-badge:nth-child(n+5){ background: var(--mid);    }
+
+/* ── User Guide Modal ──────────────────────────────────────── */
+.guide-modal { max-width: 600px; }
+
+.guide-modal-body {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding: 4px 2px 4px 0;
+  margin-bottom: 4px;
+}
+
+.guide-section {
+  margin-bottom: 18px;
+}
+
+.guide-section:last-child {
+  margin-bottom: 0;
+}
+
+.guide-section p {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+.guide-section p:last-child {
+  margin-bottom: 0;
+}
+
+.guide-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.guide-list {
+  margin: 6px 0 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.65;
+}
+
+.guide-list li {
+  margin-bottom: 4px;
+}
+
+.guide-list li:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .guide-modal { max-width: 92vw; }
+  .guide-modal-body { max-height: 55vh; }
+}

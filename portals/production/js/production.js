@@ -52,7 +52,10 @@ function renderProduction() {
           <div class="proj-home-title">Production Planning</div>
           <div class="proj-home-sub">Production schedules and batch planning</div>
         </div>
-        <button class="btn btn-ghost" data-action="prod-nav-hub">← Back to Portal</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost" data-action="prod-nav-hub">← Back to Portal</button>
+        </div>
       </div>
 
       <div class="proj-cards hub-grid">
@@ -108,6 +111,12 @@ function setupProductionPortalDelegation() {
 
     if (action === 'prod-nav-hub') {
       navigate('hub');
+      return;
+    }
+
+    if (action === 'show-guide') {
+      const key = actionEl.dataset.guideKey;
+      if (key && typeof showGuide === 'function') showGuide(key);
     }
   });
 }

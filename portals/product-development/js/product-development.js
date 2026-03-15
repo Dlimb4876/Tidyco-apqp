@@ -24,9 +24,8 @@ function renderProductDevelopment() {
           <div class="proj-home-sub">New Product Introduction & Project Management</div>
         </div>
         <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Portal</button>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('product-development')" title="User Guide">❓ Guide</button>
       </div>
-
-      <div class="proj-cards hub-grid">
         <div class="proj-card hub-card" onclick="setProductDevelopmentTab('npi')">
           <div class="hub-card-content">
             <div class="hub-icon">📋</div>
@@ -77,6 +76,7 @@ function renderPartsDatabase() {
           <div class="proj-home-sub">A, B & C-Class central parts catalogue</div>
         </div>
         <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('parts-database')" title="User Guide">❓ Guide</button>
       </div>
       ${catalogueHTML}
     </div>
@@ -94,7 +94,10 @@ function renderProductFamilyDatabase() {
             <div class="proj-home-title">Product Family Database</div>
             <div class="proj-home-sub">Loading families...</div>
           </div>
-          <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="showGuide('product-family-db')" title="User Guide">❓ Guide</button>
+            <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
+          </div>
         </div>
         <div style="text-align:center;padding:80px 20px;color:var(--muted)">
           <div class="skeleton-loader" style="max-width:600px;margin:0 auto">
@@ -118,6 +121,7 @@ function renderProductFamilyDatabase() {
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary" onclick="showFamilyModal()">➕ Add Family</button>
+            <button class="btn btn-ghost btn-sm" onclick="showGuide('product-family-db')" title="User Guide">❓ Guide</button>
             <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
           </div>
         </div>
@@ -158,6 +162,7 @@ function renderProductFamilyDatabase() {
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" onclick="showFamilyModal()">➕ Add Family</button>
+          <button class="btn btn-ghost btn-sm" onclick="showGuide('product-family-db')" title="User Guide">❓ Guide</button>
           <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
         </div>
       </div>

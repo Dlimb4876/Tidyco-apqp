@@ -46,7 +46,7 @@ npi.pfd.render = function() {
   }
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Step 02</div><div class="sec-title">Process Flow Diagram</div><div class="sec-desc">Steps numbered in 10s. Insert between steps. Numbers are permanent references in PFMEA and Control Plan.</div></div>
-  <div class="sec-actions"><button class="btn btn-ghost btn-sm" data-action="pfd-open-insert" data-after="" data-type="group">＋ Sub-assembly</button><button class="btn btn-primary btn-sm" data-action="pfd-add-main">＋ Add Step</button></div></div>
+  <div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-pfd')" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="pfd-open-insert" data-after="" data-type="group">＋ Sub-assembly</button><button class="btn btn-primary btn-sm" data-action="pfd-add-main">＋ Add Step</button></div></div>
   ${sorted.length > 0 ? `<div class="flow-ribbon">${ribbon}</div>` : ''}
   <div class="card"><div class="card-head"><span class="card-title">Process Steps</span><span class="card-meta">${p.pfd.filter(s => s.type !== 'group').length} executable steps</span></div>
   ${p.pfd.length === 0 ? emptyState('🔄', 'No steps yet', 'Add your first process step') : `<div>${body}</div>`}

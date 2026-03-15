@@ -441,6 +441,17 @@
   </div>
 </div>
 
+<!-- User Guide Modal (shared, populated dynamically by guide.js) -->
+<div class="modal-bg" id="modalGuide" style="display:none">
+  <div class="modal modal-lg guide-modal">
+    <div class="modal-title" id="guideModalTitle">User Guide</div>
+    <div class="guide-modal-body" id="guideModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalGuide')">Got it</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════
      SCRIPTS — load order matters
      state → auth → db → helpers → navigation →
@@ -454,6 +465,7 @@
 <script src="core/js/db.js"></script>
 
 <script src="utils/js/helpers.js"></script>
+<script src="utils/js/guide.js"></script>
 <script src="utils/js/navigation.js"></script>
 <script src="utils/js/realtime.js"></script>
 
