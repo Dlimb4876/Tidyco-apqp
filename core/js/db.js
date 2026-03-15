@@ -13,6 +13,12 @@ let pendingSaves = 0;
 // one user's save from overwriting another user's concurrent edits.
 let dirtyProgrammes = new Set();
 
+// 3-A: Shared column-selection strings for programme queries.
+// Kept in one place so loadRemote() and loadRemotePage() always query
+// exactly the same fields (DRY — change once, both functions benefit).
+const PROG_BASE_SELECT = 'prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
+const PROG_GATE_SELECT = PROG_BASE_SELECT + ',gate_selections,gate_selection_locked,gate_selection_locked_at,gate_selection_locked_by';
+
 function isGateScopeColumnError(err) {
   const msg = String((err && err.message) || '').toLowerCase();
   return msg.includes('gate_selections') ||
@@ -131,6 +137,8 @@ async function saveRemote(attempt) {
       if (updErr) {
         console.error('Update err', p.name, updErr);
         errors.push(p.name + ' (' + (updErr.message || 'unknown error') + ')');
+        // Math.max guards against going negative if a race condition causes
+        // pendingSaves to be decremented more times than it was incremented.
         pendingSaves = Math.max(0, pendingSaves - 1);
         continue;
       }
@@ -152,7 +160,8 @@ async function saveRemote(attempt) {
           errors.push(p.name + ' (' + (insErr.message || 'unknown error') + ')');
         }
       }
-      // 3-D: Decrement counter and update badge after each write completes
+      // 3-D: Decrement counter and update badge after each write completes.
+      // Math.max prevents going negative in the unlikely event of a logic race.
       pendingSaves = Math.max(0, pendingSaves - 1);
       if (pendingSaves > 0) {
         setSyncBadge('syncing', `● saving (${pendingSaves} remaining)…`);
@@ -181,19 +190,17 @@ async function saveRemote(attempt) {
 
 async function loadRemote() {
   if (!currentUser) return;
-  const baseSelect = 'prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
-  const gateSelect = baseSelect + ',gate_selections,gate_selection_locked,gate_selection_locked_at,gate_selection_locked_by';
 
   let { data, error } = await supa
     .from('programmes')
-    .select(programmesGateScopeColumnsSupported ? gateSelect : baseSelect)
+    .select(programmesGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
     .order('updated_at', { ascending: false });
 
   if (error && programmesGateScopeColumnsSupported && isGateScopeColumnError(error)) {
     programmesGateScopeColumnsSupported = false;
     ({ data, error } = await supa
       .from('programmes')
-      .select(baseSelect)
+      .select(PROG_BASE_SELECT)
       .order('updated_at', { ascending: false }));
   }
 
@@ -237,15 +244,13 @@ async function loadRemote() {
 // than pageSize, indicating there are no more rows to fetch.
 async function loadRemotePage(page, pageSize = 50) {
   if (!currentUser) return;
-  const baseSelect = 'prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
-  const gateSelect = baseSelect + ',gate_selections,gate_selection_locked,gate_selection_locked_at,gate_selection_locked_by';
 
   const from  = page * pageSize;
   const to    = from + pageSize - 1;
 
   let { data, error } = await supa
     .from('programmes')
-    .select(programmesGateScopeColumnsSupported ? gateSelect : baseSelect)
+    .select(programmesGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
     .order('updated_at', { ascending: false })
     .range(from, to);
 
@@ -253,7 +258,7 @@ async function loadRemotePage(page, pageSize = 50) {
     programmesGateScopeColumnsSupported = false;
     ({ data, error } = await supa
       .from('programmes')
-      .select(baseSelect)
+      .select(PROG_BASE_SELECT)
       .order('updated_at', { ascending: false })
       .range(from, to));
   }

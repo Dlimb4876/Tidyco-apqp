@@ -35,9 +35,13 @@ CREATE INDEX IF NOT EXISTS idx_npi_gantt_rows_prog    ON npi_gantt_rows    (prog
 -- This is a safety net in addition to the client-side cascade
 -- already implemented in Phase 2 (npiRelDeleteAllForProgramme).
 --
--- ⚠️  If the foreign-key constraints already exist, these statements
---     will fail with "already exists" — that is safe to ignore.
---     Run `\d npi_ctq` in psql to verify current constraints first.
+-- ⚠️  PostgreSQL does not support ADD CONSTRAINT IF NOT EXISTS.
+--     Run the statements below one at a time.  If a constraint already
+--     exists, Supabase will return "already exists" — that is safe to
+--     ignore.  You can check existing constraints in the Supabase
+--     dashboard: Table Editor → your table → Constraints tab, or by
+--     running:
+--       SELECT conname FROM pg_constraint WHERE conrelid = 'npi_ctq'::regclass;
 
 ALTER TABLE npi_ctq
   ADD CONSTRAINT fk_npi_ctq_prog

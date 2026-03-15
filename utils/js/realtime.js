@@ -121,7 +121,8 @@ function getActiveRealtimeSubscriptions() {
  * @returns {object|null} Supabase channel subscription handle.
  */
 function createMultiTableRealtimeSubscription(tableConfigs, channelName) {
-  if (!Array.isArray(tableConfigs) || tableConfigs.length === 0 || !channelName) {
+  if (!Array.isArray(tableConfigs) || tableConfigs.length === 0 ||
+      !channelName || typeof channelName !== 'string') {
     console.warn('⚠️ createMultiTableRealtimeSubscription: invalid arguments');
     return null;
   }
