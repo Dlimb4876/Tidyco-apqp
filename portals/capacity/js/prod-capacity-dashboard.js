@@ -217,6 +217,7 @@ function prodCapDrawDashChart() {
     backgroundColor: palette[i % palette.length],
     stack: 'demand',
     borderWidth: 0,
+    borderRadius: 2,
   }));
 
   // Capacity line
@@ -224,11 +225,14 @@ function prodCapDrawDashChart() {
     label: 'Capacity',
     data: monthKeys.map(k => Math.round(supplyMx[k]?._total || 0)),
     type: 'line',
-    borderColor: 'rgba(239,68,68,0.9)',
-    borderWidth: 2,
-    borderDash: [6, 3],
-    pointRadius: 3,
-    pointBackgroundColor: 'rgba(239,68,68,0.9)',
+    borderColor: '#ef4444',
+    borderWidth: 3,
+    tension: 0.3,
+    pointRadius: 5,
+    pointBackgroundColor: '#fff',
+    pointBorderColor: '#ef4444',
+    pointBorderWidth: 2,
+    pointHoverRadius: 6,
     backgroundColor: 'transparent',
     fill: false,
     order: 0,

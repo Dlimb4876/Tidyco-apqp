@@ -131,6 +131,38 @@
   margin-top: 4px;
 }
 
+/* ── KPI Row (Dashboard / Detail tabs) ───────────────────────── */
+.pc-kpi-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.pc-kpi {
+  flex: 1;
+  min-width: 140px;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.pc-kpi-val {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.pc-kpi-sub {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
 /* ── Alerts ──────────────────────────────────────────────────── */
 .pc-alert {
   padding: 10px 14px;
