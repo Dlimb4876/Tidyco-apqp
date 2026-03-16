@@ -328,14 +328,85 @@ async function productsDataUpdateProduct(productId, updates) {
 }
 
 /**
- * Delete product (and its history)
+ * Get counts of related data for a product
+ */
+async function productsDataGetRelatedDataCounts(productId) {
+  const counts = {
+    overhaulHistory: 0,
+    npiProjects: 0,
+    meProducts: 0,
+    meTasks: 0
+  };
+
+  try {
+    // Count overhaul history
+    const historyCount = await supa
+      .from('overhaul_history')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', productId);
+    counts.overhaulHistory = historyCount.count || 0;
+
+    // Count linked NPI projects
+    const projectsCount = await supa
+      .from('projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', productId);
+    counts.npiProjects = projectsCount.count || 0;
+
+    // Count ME products (support records)
+    const meProductsCount = await supa
+      .from('me_products')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_database_id', productId);
+    counts.meProducts = meProductsCount.count || 0;
+
+    // Count ME tasks
+    const meTasksCount = await supa
+      .from('me_tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', productId);
+    counts.meTasks = meTasksCount.count || 0;
+
+  } catch (err) {
+    console.warn('Warning: Could not count all related data:', err);
+  }
+
+  return counts;
+}
+
+/**
+ * Delete product with full cascade (overhaul history, NPI projects, ME data)
  */
 async function productsDataDeleteProduct(productId) {
   try {
-    // RLS cascade will delete history records
+    // Find and delete linked NPI projects
+    const linkedProjects = await supa
+      .from('projects')
+      .select('id')
+      .eq('product_id', productId);
+
+    if (linkedProjects.data && linkedProjects.data.length > 0) {
+      for (const project of linkedProjects.data) {
+        // Delete all NPI relational data for this project
+        if (typeof window.npiRelClearAll === 'function') {
+          await window.npiRelClearAll(project.id);
+        }
+        // Delete the project itself
+        await supa.from('projects').delete().eq('id', project.id);
+      }
+    }
+
+    // Delete ME products (support records)
+    await supa.from('me_products').delete().eq('product_database_id', productId);
+
+    // Delete ME tasks
+    await supa.from('me_tasks').delete().eq('product_id', productId);
+
+    // Delete the product itself (RLS cascade will delete overhaul_history)
     const result = await supa.from('products').delete().eq('id', productId);
     if (result.error) throw result.error;
 
+    // Clean up local state
     productsState.products = productsState.products.filter(p => p.id !== productId);
     delete productsState.history[productId];
     productsDataTriggerKanbanRefresh();
@@ -345,6 +416,9 @@ async function productsDataDeleteProduct(productId) {
     throw err;
   }
 }
+
+// Export for use by products.js
+window.productsDataGetRelatedDataCounts = productsDataGetRelatedDataCounts;
 
 /**
  * Add overhaul history record (new estimation)
