@@ -188,6 +188,53 @@ describe('Operations Dashboard', () => {
     expect(metrics.production.completed).toBe(1);
   });
 
+  test('dependency-injected metric functions prefer provided data over globals', () => {
+    const programmes = [{
+      id: 'prog-di-1',
+      product_id: 'prod-di-1',
+      gates: [{ checks: [true, false] }]
+    }];
+
+    productsState.products = [{ id: 'prod-global', status: 'NPI' }];
+    feedbackDataManager.state.feedback = [{ feedback_type: 'bug', status: 'open' }];
+
+    const dependencies = {
+      products: [{ id: 'prod-di-1', status: 'NPI' }],
+      feedback: [{ feedback_type: 'bug', status: 'squashed', responded_at: new Date().toISOString() }],
+      meDataState: {
+        team: [{ id: 'pm-1', department: 'PM' }],
+        tasks: [{ id: 'task-1', department: 'PM' }],
+        products: [{ id: 'prod-1', department: 'PM' }],
+        holidays: []
+      },
+      meFilterByDepartment: jest.fn((arr, department) => arr.filter(row => row.department === department)),
+      meCalculateMonthData: jest.fn().mockReturnValue({
+        capacity: 120,
+        totalDemand: 60,
+        utilisation: 50
+      })
+    };
+
+    const gate = opsCalcGateHealth(programmes, dependencies);
+    const bugs = opsCalcBugHealth(dependencies);
+    const pm = opsCalcPmCapacity(dependencies);
+
+    expect(gate.totalChecks).toBe(2);
+    expect(gate.doneChecks).toBe(1);
+    expect(gate.percentage).toBe(50);
+
+    expect(bugs.open).toBe(0);
+    expect(bugs.closed7d).toBe(1);
+
+    expect(pm.ready).toBe(true);
+    expect(pm.utilisation).toBe(50);
+    expect(pm.capacity).toBe(120);
+    expect(pm.demand).toBe(60);
+    expect(pm.headroom).toBe(60);
+    expect(dependencies.meFilterByDepartment).toHaveBeenCalled();
+    expect(dependencies.meCalculateMonthData).toHaveBeenCalled();
+  });
+
   test('forecast edit mode pre-fills form for selected opportunity', () => {
     global.prodCapGet24MonthKeys = jest.fn().mockReturnValue(['2026-01']);
     global.prodCapGetWorkAreas = jest.fn().mockReturnValue(['Unit 2']);

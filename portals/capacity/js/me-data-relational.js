@@ -23,6 +23,24 @@ function meNormalizeDepartmentTag(value, fallback = 'ME') {
   return normalized === 'PM' ? 'PM' : 'ME';
 }
 
+function meNormalizeIsoDate(dateValue, fallbackDate) {
+  if (!dateValue) return fallbackDate;
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return fallbackDate;
+  return parsed.toISOString().split('T')[0];
+}
+
+function meNormalizeDateRange(startDate, endDate, fallbackDate) {
+  let safeStart = meNormalizeIsoDate(startDate, fallbackDate);
+  let safeEnd = meNormalizeIsoDate(endDate, fallbackDate);
+
+  if (safeEnd < safeStart) {
+    safeEnd = safeStart;
+  }
+
+  return { safeStart, safeEnd };
+}
+
 // ─────────────────────────────────────────────────────────────
 // LOAD OPERATIONS — Fetch data from relational tables
 // ─────────────────────────────────────────────────────────────
@@ -305,10 +323,11 @@ window.meSaveTaskRelational = async function(userId, task) {
   try {
     const department = meNormalizeDepartmentTag(task.department, 'ME');
     const todayStr = getTodayDateString();
-    const startDate = task.startDate || todayStr;
-    const endDate = task.endDate || todayStr;
+    const { safeStart, safeEnd } = meNormalizeDateRange(task.startDate, task.endDate, todayStr);
     const taskId = task.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
     task.id = taskId;
+    task.startDate = safeStart;
+    task.endDate = safeEnd;
 
     // For tasks with advanced estimation, use PERT-calculated hours so total_hours stays accurate after reload
     const totalHours = (task.advancedEstimation && task.advancedEstimation.totalFinalHours)
@@ -323,8 +342,8 @@ window.meSaveTaskRelational = async function(userId, task) {
       type: task.type || 'standard',
       assignee_id: task.assigneeId || null,
       product_id: task.productId || null,
-      start_date: startDate,
-      end_date: endDate,
+      start_date: safeStart,
+      end_date: safeEnd,
       total_hours: totalHours,
       status: task.status || 'SCHEDULED',
       department,
@@ -374,8 +393,8 @@ window.meSaveTaskSubtasksRelational = async function(userId, taskId, task) {
       ? (task.advancedEstimation.pertData.estimates || [])
       : [];
     const confidenceLevel = (task.advancedEstimation && task.advancedEstimation.confidenceLevel) || 1.0;
-    const startDate = task.startDate || getTodayDateString();
-    const endDate   = task.endDate   || getTodayDateString();
+    const todayStr = getTodayDateString();
+    const { safeStart, safeEnd } = meNormalizeDateRange(task.startDate, task.endDate, todayStr);
 
     // Delete existing subtasks and PERT history for this task then re-insert
     await supa.from('me_task_subtasks').delete().eq('task_id', taskId);
@@ -389,8 +408,8 @@ window.meSaveTaskSubtasksRelational = async function(userId, taskId, task) {
         name:       st.name,
         assignee_id: st.assigneeId || null,
         hours:      st.hours || 0,
-        start_date: st.startDate || startDate,
-        end_date:   st.endDate   || endDate,
+        start_date: meNormalizeDateRange(st.startDate || safeStart, st.endDate || safeEnd, safeStart).safeStart,
+        end_date:   meNormalizeDateRange(st.startDate || safeStart, st.endDate || safeEnd, safeStart).safeEnd,
         source:     st.source || 'pert'
       }));
 

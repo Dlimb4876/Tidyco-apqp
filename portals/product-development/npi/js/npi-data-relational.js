@@ -688,31 +688,42 @@ window.npiRelSaveBOMItem = async function(type, item) {
   const programmeId = await window.npiRelResolveProgrammeId(progId);
   if (!item || !item.id || !programmeId || !currentUser) return;
   try {
-    const { error } = await supa.from('npi_bom_items').upsert({
+    const cleanItem = { ...item };
+    delete cleanItem.supplier_pn;
+    delete cleanItem.supplierPN;
+
+    const payload = {
       id: item.id,
       programme_id: programmeId,
       user_id: currentUser.id,
       bom_type: type,
-      item_desc: item.desc || '',
-      notes: item.notes || '',
-      pn: item.pn || null,
-      supplier_pn: item.supplierPN || null,
-      qty: item.qty != null ? item.qty : null,
-      unit: item.unit || null,
-      qty_per_unit: item.qtyPerUnit != null ? item.qtyPerUnit : null,
-      is_std: item.isStd || false,
-      is_aaw: item.isAaw || false,
-      is_repair: item.isRepair || false,
-      tool_id: item.toolId || null,
-      spec: item.spec || null,
-      equip_id: item.equipId || null,
-      location: item.location || null,
-      abc_class: item.abcClass || null,
-      abc_catalogue_id: item.abcCatalogueId || null,
+      item_desc: cleanItem.desc || '',
+      notes: cleanItem.notes || '',
+      pn: cleanItem.pn || null,
+      qty: cleanItem.qty != null ? cleanItem.qty : null,
+      unit: cleanItem.unit || null,
+      qty_per_unit: cleanItem.qtyPerUnit != null ? cleanItem.qtyPerUnit : null,
+      is_std: cleanItem.isStd || false,
+      is_aaw: cleanItem.isAaw || false,
+      is_repair: cleanItem.isRepair || false,
+      tool_id: cleanItem.toolId || null,
+      spec: cleanItem.spec || null,
+      equip_id: cleanItem.equipId || null,
+      location: cleanItem.location || null,
+      abc_class: cleanItem.abcClass || null,
+      abc_catalogue_id: cleanItem.abcCatalogueId || null,
       sort_order: (prog().bom[type] || []).indexOf(item),
       updated_at: new Date().toISOString()
-    }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveBOMItem error:', error.message);
+    };
+
+    const { error } = await supa.from('npi_bom_items').upsert(payload, { onConflict: 'id' });
+    if (error) {
+      if (error.message && error.message.includes('supplier_pn')) {
+        console.warn('npiRelSaveBOMItem schema mismatch (supplier_pn). Ensure npi_bom_items does not reference legacy supplier_pn payloads.', error.message);
+      } else {
+        console.warn('npiRelSaveBOMItem error:', error.message);
+      }
+    }
   } catch (err) {
     console.warn('npiRelSaveBOMItem exception:', err.message);
   }

@@ -22,17 +22,19 @@ npi.events.setup = function() {
   if (_npiEventsContainer === container) return
   if (_npiEventsContainer) npi.events.teardown()
 
-  container.addEventListener('click', npi.events._onClick)
-  container.addEventListener('change', npi.events._onChange)
-  container.addEventListener('input', npi.events._onInput)
+  // Listen at document level so shared modal content outside #npi-content
+  // can still dispatch NPI data-action events (e.g. kit and BOM pickers).
+  document.addEventListener('click', npi.events._onClick)
+  document.addEventListener('change', npi.events._onChange)
+  document.addEventListener('input', npi.events._onInput)
   _npiEventsContainer = container
 }
 
 npi.events.teardown = function() {
   if (!_npiEventsContainer) return
-  _npiEventsContainer.removeEventListener('click', npi.events._onClick)
-  _npiEventsContainer.removeEventListener('change', npi.events._onChange)
-  _npiEventsContainer.removeEventListener('input', npi.events._onInput)
+  document.removeEventListener('click', npi.events._onClick)
+  document.removeEventListener('change', npi.events._onChange)
+  document.removeEventListener('input', npi.events._onInput)
   _npiEventsContainer = null
 }
 

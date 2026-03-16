@@ -18,105 +18,138 @@ function prodCapGetFamilyLabel(familyIdOrName) {
   return familyIdOrName;
 }
 
-function renderProdCapDetail() {
-  const batches  = prodState?.batches  || [];
-  const products = prodState?.products || [];
-
+function prodCapBuildProductMap(products) {
   const productMap = {};
   products.forEach(p => { productMap[p.id] = p; });
+  return productMap;
+}
 
-  // Families for filter — resolve IDs to labels
+function prodCapGetDetailFamilies(products) {
   const familySet = new Set();
   products.forEach(p => {
     const label = prodCapGetFamilyLabel(p.family);
     if (label && label !== '—') familySet.add(label);
   });
-  const families  = Array.from(familySet).sort();
-  const workAreas = prodCapGetWorkAreas();
+  return Array.from(familySet).sort();
+}
 
-  // Apply filters
-  let filtered = batches.filter(b => {
-    const prod = productMap[b.product_id];
-    if (prodCapDetailFilter.status && b.status !== prodCapDetailFilter.status) return false;
-    if (prodCapDetailFilter.workArea && b.work_location !== prodCapDetailFilter.workArea) return false;
-    if (prodCapDetailFilter.family && prodCapGetFamilyLabel(prod?.family) !== prodCapDetailFilter.family) return false;
-    return true;
-  });
+function prodCapGetBatchMonthsWithLoad(batch, totalHours, monthKeys) {
+  const batchStart = batch.start_date ? new Date(batch.start_date + 'T00:00:00') : null;
+  const batchEnd = batch.due_date ? new Date(batch.due_date + 'T00:00:00') : null;
+  const totalDays = (batchStart && batchEnd) ? Math.max(1, (batchEnd - batchStart) / 86400000 + 1) : 1;
 
-  filtered.sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
+  return monthKeys
+    .map(key => {
+      if (!batchStart || !batchEnd) return null;
+      const { year, month } = prodCapParseKey(key);
+      const mStart = new Date(year, month - 1, 1);
+      const mEnd = new Date(year, month, 0);
+      const oStart = batchStart > mStart ? batchStart : mStart;
+      const oEnd = batchEnd < mEnd ? batchEnd : mEnd;
+      if (oStart > oEnd) return null;
+      const days = (oEnd - oStart) / 86400000 + 1;
+      const hours = totalHours * (days / totalDays);
+      return { key, hours };
+    })
+    .filter(Boolean);
+}
 
+function getProdCapDetailViewData(filter) {
+  const batches = prodState?.batches || [];
+  const products = prodState?.products || [];
+  const productMap = prodCapBuildProductMap(products);
   const monthKeys = prodCapGet24MonthKeys();
 
-  // Batch rows
-  const rows = filtered.map(batch => {
+  const filteredBatches = batches
+    .filter(batch => {
+      const prod = productMap[batch.product_id];
+      if (filter.status && batch.status !== filter.status) return false;
+      if (filter.workArea && batch.work_location !== filter.workArea) return false;
+      if (filter.family && prodCapGetFamilyLabel(prod?.family) !== filter.family) return false;
+      return true;
+    })
+    .sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
+
+  const viewBatches = filteredBatches.map(batch => {
     const prod = productMap[batch.product_id];
     const hoursPerUnit = prod ? Number(prod.current_overhaul_hours) || 0 : 0;
-    const totalHours   = hoursPerUnit * (batch.quantity || 0);
-    const family       = prod ? prodCapGetFamilyLabel(prod.family) : '—';
-    const wa           = batch.work_location || prod?.work_location || '—';
+    const totalHours = hoursPerUnit * (batch.quantity || 0);
+    const family = prod ? prodCapGetFamilyLabel(prod.family) : '—';
+    const workArea = batch.work_location || prod?.work_location || '—';
+    const monthsWithLoad = prodCapGetBatchMonthsWithLoad(batch, totalHours, monthKeys);
 
-    // Monthly distribution for this batch
-    const batchStart = batch.start_date ? new Date(batch.start_date + 'T00:00:00') : null;
-    const batchEnd   = batch.due_date   ? new Date(batch.due_date   + 'T00:00:00') : null;
-    const totalDays  = (batchStart && batchEnd) ? Math.max(1, (batchEnd - batchStart) / 86400000 + 1) : 1;
+    return {
+      batch,
+      productName: prod ? esc(prod.name) : '—',
+      productCode: prod ? esc(prod.code || '') : '',
+      family,
+      workArea,
+      quantity: batch.quantity || '—',
+      startDate: formatDisplayDate(batch.start_date) || '—',
+      dueDate: formatDisplayDate(batch.due_date) || '—',
+      hoursPerUnit,
+      totalHours,
+      hasHours: hoursPerUnit > 0 && batch.quantity,
+      monthsWithLoad,
+      status: batch.status || '—',
+      statusColor: batch.status === 'In Progress' ? 'var(--amber)' :
+        batch.status === 'Complete' ? 'var(--green)' : 'var(--muted)'
+    };
+  });
 
-    // Find months with load
-    const monthsWithLoad = monthKeys
-      .map(key => {
-        if (!batchStart || !batchEnd) return null;
-        const { year, month } = prodCapParseKey(key);
-        const mStart = new Date(year, month - 1, 1);
-        const mEnd   = new Date(year, month, 0);
-        const oStart = batchStart > mStart ? batchStart : mStart;
-        const oEnd   = batchEnd   < mEnd   ? batchEnd   : mEnd;
-        if (oStart > oEnd) return null;
-        const days  = (oEnd - oStart) / 86400000 + 1;
-        const hours = totalHours * (days / totalDays);
-        return { key, hours };
-      })
-      .filter(Boolean);
+  const totalUnits = filteredBatches.reduce((sum, batch) => sum + (batch.quantity || 0), 0);
+  const totalHours = filteredBatches.reduce((sum, batch) => {
+    const prod = productMap[batch.product_id];
+    return sum + (Number(prod?.current_overhaul_hours) || 0) * (batch.quantity || 0);
+  }, 0);
 
-    const monthPills = monthsWithLoad.map(({ key, hours }) =>
+  return {
+    filter,
+    families: prodCapGetDetailFamilies(products),
+    workAreas: prodCapGetWorkAreas(),
+    batches: viewBatches,
+    kpis: {
+      totalBatches: filteredBatches.length,
+      totalUnits,
+      totalHours,
+      avgHoursPerUnit: totalUnits > 0 ? totalHours / totalUnits : 0
+    }
+  };
+}
+
+function renderProdCapDetailRow(viewBatch) {
+  const monthPills = viewBatch.monthsWithLoad
+    .map(({ key, hours }) =>
       `<span class="pc-month-pill">${prodCapMonthLabel(key)} <strong>${Math.round(hours)}h</strong></span>`
-    ).join('');
+    )
+    .join('');
 
-    const statusColor = batch.status === 'In Progress' ? 'var(--amber)' :
-                        batch.status === 'Complete'    ? 'var(--green)'  : 'var(--muted)';
-    const hasHours    = hoursPerUnit > 0 && batch.quantity;
-
-    return `
-      <tr class="${batch.status === 'Complete' ? 'pc-row-complete' : ''}">
+  return `
+      <tr class="${viewBatch.status === 'Complete' ? 'pc-row-complete' : ''}">
         <td>
-          <div style="font-weight:600;font-size:13px">${prod ? esc(prod.name) : '—'}</div>
-          <div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono'">${prod ? esc(prod.code || '') : ''}</div>
+          <div style="font-weight:600;font-size:13px">${viewBatch.productName}</div>
+          <div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono'">${viewBatch.productCode}</div>
         </td>
-        <td><span class="pc-family-badge">${esc(family)}</span></td>
-        <td class="pc-tbl-mono">${esc(wa)}</td>
-        <td class="pc-tbl-num">${batch.quantity || '—'}</td>
-        <td class="pc-tbl-mono" style="font-size:11px">${formatDisplayDate(batch.start_date) || '—'} → ${formatDisplayDate(batch.due_date) || '—'}</td>
+        <td><span class="pc-family-badge">${esc(viewBatch.family)}</span></td>
+        <td class="pc-tbl-mono">${esc(viewBatch.workArea)}</td>
+        <td class="pc-tbl-num">${viewBatch.quantity}</td>
+        <td class="pc-tbl-mono" style="font-size:11px">${viewBatch.startDate} → ${viewBatch.dueDate}</td>
         <td class="pc-tbl-num">
-          ${hasHours ? `<strong>${Math.round(totalHours).toLocaleString()}h</strong>
-            <div style="font-size:10px;color:var(--muted)">${hoursPerUnit}h/unit</div>` : '—'}
+          ${viewBatch.hasHours ? `<strong>${Math.round(viewBatch.totalHours).toLocaleString()}h</strong>
+            <div style="font-size:10px;color:var(--muted)">${viewBatch.hoursPerUnit}h/unit</div>` : '—'}
         </td>
         <td>
           <div class="pc-month-pills">
             ${monthPills || '<span style="color:var(--muted);font-size:11px">No dates set</span>'}
           </div>
         </td>
-        <td><span style="color:${statusColor};font-size:11px;font-weight:600">${esc(batch.status || '—')}</span></td>
+        <td><span style="color:${viewBatch.statusColor};font-size:11px;font-weight:600">${esc(viewBatch.status)}</span></td>
       </tr>`;
-  }).join('');
+}
 
-  // Summary totals
-  const totalUnits = filtered.reduce((s, b) => s + (b.quantity || 0), 0);
-  const totalH     = filtered.reduce((b, batch) => {
-    const prod = productMap[batch.product_id];
-    return b + (Number(prod?.current_overhaul_hours) || 0) * (batch.quantity || 0);
-  }, 0);
-
-  // Average hours per unit and per batch
-  const avgHourPerUnit = totalUnits > 0 ? totalH / totalUnits : 0;
-  const avgHourPerBatch = filtered.length > 0 ? totalH / filtered.length : 0;
+function renderProdCapDetail() {
+  const viewData = getProdCapDetailViewData(prodCapDetailFilter);
+  const rows = viewData.batches.map(renderProdCapDetailRow).join('');
 
   return `
     <div class="pc-detail">
@@ -136,14 +169,14 @@ function renderProdCapDetail() {
           <label>Family</label>
           <select data-cap-action="cap-prod-detail-filter-family">
             <option value="">— All</option>
-            ${families.map(f => `<option value="${esc(f)}" ${prodCapDetailFilter.family===f?'selected':''}>${esc(f)}</option>`).join('')}
+            ${viewData.families.map(f => `<option value="${esc(f)}" ${prodCapDetailFilter.family===f?'selected':''}>${esc(f)}</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">
           <label>Work Area</label>
           <select data-cap-action="cap-prod-detail-filter-workarea">
             <option value="">— All</option>
-            ${workAreas.map(w => `<option value="${esc(w)}" ${prodCapDetailFilter.workArea===w?'selected':''}>${esc(w)}</option>`).join('')}
+            ${viewData.workAreas.map(w => `<option value="${esc(w)}" ${prodCapDetailFilter.workArea===w?'selected':''}>${esc(w)}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -151,19 +184,19 @@ function renderProdCapDetail() {
       <!-- KPI Row -->
       <div class="pc-kpi-row">
         <div class="pc-kpi" style="border-left:4px solid var(--blue)">
-          <div class="pc-kpi-val">${filtered.length}</div>
+          <div class="pc-kpi-val">${viewData.kpis.totalBatches}</div>
           <div class="pc-kpi-label">Batches</div>
         </div>
         <div class="pc-kpi" style="border-left:4px solid var(--green)">
-          <div class="pc-kpi-val">${totalUnits.toLocaleString()}</div>
+          <div class="pc-kpi-val">${viewData.kpis.totalUnits.toLocaleString()}</div>
           <div class="pc-kpi-label">Units</div>
         </div>
         <div class="pc-kpi" style="border-left:4px solid var(--amber)">
-          <div class="pc-kpi-val">${Math.round(totalH).toLocaleString()}h</div>
+          <div class="pc-kpi-val">${Math.round(viewData.kpis.totalHours).toLocaleString()}h</div>
           <div class="pc-kpi-label">Total Hours</div>
         </div>
         <div class="pc-kpi" style="border-left:4px solid var(--navy)">
-          <div class="pc-kpi-val">${Math.round(avgHourPerUnit)}</div>
+          <div class="pc-kpi-val">${Math.round(viewData.kpis.avgHoursPerUnit)}</div>
           <div class="pc-kpi-label">Avg Hours/Unit</div>
         </div>
       </div>

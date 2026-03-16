@@ -37,15 +37,30 @@ function opsStatusTone(value) {
 	return 'critical';
 }
 
-function opsCalcGateHealth(programmes) {
+function opsMetricsDependencies(overrides = {}) {
+	return {
+		products: Array.isArray(overrides.products)
+			? overrides.products
+			: (Array.isArray(window.productsState?.products) ? window.productsState.products : []),
+		feedback: Array.isArray(overrides.feedback)
+			? overrides.feedback
+			: (Array.isArray(window.feedbackDataManager?.state?.feedback)
+				? window.feedbackDataManager.state.feedback
+				: []),
+		meDataState: overrides.meDataState || window.meDataState || null,
+		meCalculateMonthData: overrides.meCalculateMonthData || window.meCalculateMonthData,
+		meFilterByDepartment: overrides.meFilterByDepartment || window.meFilterByDepartment
+	};
+}
+
+function opsCalcGateHealth(programmes, dependencies = {}) {
 	let totalChecks = 0;
 	let doneChecks = 0;
+	const deps = opsMetricsDependencies(dependencies);
 
 	// Build a set of product IDs that have NPI status so we only score
 	// gate completion for products actively in the NPI phase.
-	const allProducts = Array.isArray(window.productsState?.products)
-		? window.productsState.products
-		: [];
+	const allProducts = deps.products;
 	const npiProductIds = new Set(
 		allProducts.filter(p => p.status === 'NPI').map(p => p.id)
 	);
@@ -119,9 +134,9 @@ function opsCalcRiskHealth(programmes) {
 	return { highRisks, highRpn };
 }
 
-function opsCalcBugHealth() {
-	const reports = window.feedbackDataManager?.state?.feedback;
-	const rows = Array.isArray(reports) ? reports : [];
+function opsCalcBugHealth(dependencies = {}) {
+	const deps = opsMetricsDependencies(dependencies);
+	const rows = deps.feedback;
 	const closedStatuses = new Set(['completed', 'declined', 'squashed']);
 
 	let open = 0;
@@ -144,31 +159,32 @@ function opsCalcBugHealth() {
 	return { open, closed7d };
 }
 
-function opsCalcMeCapacity() {
-	if (typeof window.meCalculateMonthData !== 'function' || !window.meDataState) {
+function opsCalcDepartmentCapacity(department, dependencies = {}) {
+	const deps = opsMetricsDependencies(dependencies);
+	if (typeof deps.meCalculateMonthData !== 'function' || !deps.meDataState) {
 		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
 	}
 
 	const monthKey = opsCurrentMonthKey();
-	const team = Array.isArray(window.meDataState.team) ? window.meDataState.team : [];
-	const tasks = Array.isArray(window.meDataState.tasks) ? window.meDataState.tasks : [];
-	const products = Array.isArray(window.meDataState.products) ? window.meDataState.products : [];
-	const holidays = Array.isArray(window.meDataState.holidays) ? window.meDataState.holidays : [];
+	const team = Array.isArray(deps.meDataState.team) ? deps.meDataState.team : [];
+	const tasks = Array.isArray(deps.meDataState.tasks) ? deps.meDataState.tasks : [];
+	const products = Array.isArray(deps.meDataState.products) ? deps.meDataState.products : [];
+	const holidays = Array.isArray(deps.meDataState.holidays) ? deps.meDataState.holidays : [];
 
-	const teamMe = typeof window.meFilterByDepartment === 'function'
-		? window.meFilterByDepartment(team, 'ME', 'ME')
+	const teamFiltered = typeof deps.meFilterByDepartment === 'function'
+		? deps.meFilterByDepartment(team, department, 'ME')
 		: team;
-	const tasksMe = typeof window.meFilterByDepartment === 'function'
-		? window.meFilterByDepartment(tasks, 'ME', 'ME')
+	const tasksFiltered = typeof deps.meFilterByDepartment === 'function'
+		? deps.meFilterByDepartment(tasks, department, 'ME')
 		: tasks;
-	const productsMe = typeof window.meFilterByDepartment === 'function'
-		? window.meFilterByDepartment(products, 'ME', 'ME')
+	const productsFiltered = typeof deps.meFilterByDepartment === 'function'
+		? deps.meFilterByDepartment(products, department, 'ME')
 		: products;
-	const holidaysMe = typeof window.meFilterByDepartment === 'function'
-		? window.meFilterByDepartment(holidays, 'ME', 'ME')
+	const holidaysFiltered = typeof deps.meFilterByDepartment === 'function'
+		? deps.meFilterByDepartment(holidays, department, 'ME')
 		: holidays;
 
-	const monthData = window.meCalculateMonthData(monthKey, teamMe, tasksMe, productsMe, holidaysMe);
+	const monthData = deps.meCalculateMonthData(monthKey, teamFiltered, tasksFiltered, productsFiltered, holidaysFiltered);
 	const capacity = opsToNumber(monthData.capacity);
 	const demand = opsToNumber(monthData.totalDemand);
 	const utilisation = Math.max(0, Math.round(opsToNumber(monthData.utilisation)));
@@ -183,43 +199,12 @@ function opsCalcMeCapacity() {
 	};
 }
 
-function opsCalcPmCapacity() {
-	if (typeof window.meCalculateMonthData !== 'function' || !window.meDataState) {
-		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
-	}
+function opsCalcMeCapacity(dependencies = {}) {
+	return opsCalcDepartmentCapacity('ME', dependencies);
+}
 
-	const monthKey = opsCurrentMonthKey();
-	const team = Array.isArray(window.meDataState.team) ? window.meDataState.team : [];
-	const tasks = Array.isArray(window.meDataState.tasks) ? window.meDataState.tasks : [];
-	const products = Array.isArray(window.meDataState.products) ? window.meDataState.products : [];
-	const holidays = Array.isArray(window.meDataState.holidays) ? window.meDataState.holidays : [];
-
-	const teamPm = typeof window.meFilterByDepartment === 'function'
-		? window.meFilterByDepartment(team, 'PM', 'ME')
-		: team;
-	const tasksPm = typeof window.meFilterByDepartment === 'function'
-		? window.meFilterByDepartment(tasks, 'PM', 'ME')
-		: tasks;
-	const productsPm = typeof window.meFilterByDepartment === 'function'
-		? window.meFilterByDepartment(products, 'PM', 'ME')
-		: products;
-	const holidaysPm = typeof window.meFilterByDepartment === 'function'
-		? window.meFilterByDepartment(holidays, 'PM', 'ME')
-		: holidays;
-
-	const monthData = window.meCalculateMonthData(monthKey, teamPm, tasksPm, productsPm, holidaysPm);
-	const capacity = opsToNumber(monthData.capacity);
-	const demand = opsToNumber(monthData.totalDemand);
-	const utilisation = Math.max(0, Math.round(opsToNumber(monthData.utilisation)));
-	const headroom = Math.round(capacity - demand);
-
-	return {
-		ready: true,
-		utilisation,
-		headroom,
-		demand: Math.round(demand),
-		capacity: Math.round(capacity)
-	};
+function opsCalcPmCapacity(dependencies = {}) {
+	return opsCalcDepartmentCapacity('PM', dependencies);
 }
 
 function opsCalcProductionFlow() {
@@ -320,12 +305,13 @@ function opsCalcProgrammeFlow(programmes) {
 
 function opsBuildMetrics() {
 	const programmes = Array.isArray(db?.programmes) ? db.programmes : [];
-	const gate = opsCalcGateHealth(programmes);
+	const deps = opsMetricsDependencies();
+	const gate = opsCalcGateHealth(programmes, deps);
 	const actions = opsCalcActionHealth(programmes);
 	const risk = opsCalcRiskHealth(programmes);
-	const bugs = opsCalcBugHealth();
-	const me = opsCalcMeCapacity();
-	const pm = opsCalcPmCapacity();
+	const bugs = opsCalcBugHealth(deps);
+	const me = opsCalcMeCapacity(deps);
+	const pm = opsCalcPmCapacity(deps);
 	const production = opsCalcProductionFlow();
 	const forecast = opsCalcForecastProduction();
 	const programmesFlow = opsCalcProgrammeFlow(programmes);

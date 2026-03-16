@@ -458,7 +458,11 @@ window.meDataGetHolidays = function() {
 
 window.meDataInit = async function() {
   try {
-    if (typeof supa !== 'undefined' && typeof currentUser !== 'undefined' && currentUser) {
+    if (typeof supa === 'undefined' || typeof currentUser === 'undefined' || !currentUser) {
+      // meDataInit is called during early boot as well as post-login; skip quietly until auth is ready.
+      meEnsureStructure();
+      return;
+    }
 
       // Load from relational tables
       if (typeof meLoadRelationalTeams === 'function') {
@@ -504,9 +508,6 @@ window.meDataInit = async function() {
 
       // Set up real-time sync
       meDataSubscribe();
-    } else {
-      console.warn('ME init skipped: supa or currentUser not available');
-    }
   } catch (err) {
     console.warn('Supabase load exception, using defaults:', err);
   }
