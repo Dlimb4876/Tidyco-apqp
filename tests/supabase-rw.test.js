@@ -6,12 +6,12 @@
  * Confirms that the application can reach the live Supabase project and that
  * the REST API responds as expected for both read and write operations.
  *
- * Read test  — SELECT from bug_reports with the anon key.
+ * Read test  — SELECT from user_feedback with the anon key.
  *              RLS only returns rows to authenticated users, so the result is
  *              an empty array. A 200 status confirms the endpoint is reachable
  *              and the RLS policy is in place.
  *
- * Write test — INSERT into bug_reports with the anon key.
+ * Write test — INSERT into user_feedback with the anon key.
  *              The RLS INSERT policy requires auth.role() = 'authenticated', so
  *              the anon key is blocked (401 / 403 expected). A non-5xx response
  *              confirms the endpoint is reachable and RLS enforcement is active.
@@ -59,9 +59,9 @@ beforeAll(async () => {
     return
   }
 
-  // READ — GET bug_reports (anon, RLS returns empty array)
+  // READ — GET user_feedback (anon, RLS returns empty array)
   try {
-    const res = await fetch(`${SUPA_URL}/rest/v1/bug_reports?select=id,status&limit=1`, {
+    const res = await fetch(`${SUPA_URL}/rest/v1/user_feedback?select=id,status&limit=1`, {
       method: 'GET',
       headers: HEADERS,
     })
@@ -73,9 +73,9 @@ beforeAll(async () => {
     readBody = null
   }
 
-  // WRITE — POST to bug_reports (anon, RLS blocks insert)
+  // WRITE — POST to user_feedback (anon, RLS blocks insert)
   try {
-    const res = await fetch(`${SUPA_URL}/rest/v1/bug_reports`, {
+    const res = await fetch(`${SUPA_URL}/rest/v1/user_feedback`, {
       method: 'POST',
       headers: { ...HEADERS, Prefer: 'return=minimal' },
       body: JSON.stringify({
@@ -98,7 +98,8 @@ beforeAll(async () => {
 describe('Supabase READ connectivity (anon key)', () => {
   test('REST endpoint is reachable — HTTP status is not a network error', () => {
     if (!networkAvailable) {
-      console.warn('SKIP — no network access to Supabase (offline environment)')
+      // Explicitly declare zero assertions expected when skipping offline
+      expect.assertions(0)
       return
     }
     expect(readStatus).not.toBeNull()
@@ -108,7 +109,7 @@ describe('Supabase READ connectivity (anon key)', () => {
 
   test('HTTP 200 — RLS returns empty data for anon user (not an error)', () => {
     if (!networkAvailable) {
-      console.warn('SKIP — no network access to Supabase (offline environment)')
+      expect.assertions(0)
       return
     }
     expect(readStatus).toBe(200)
@@ -116,7 +117,7 @@ describe('Supabase READ connectivity (anon key)', () => {
 
   test('Response body is a valid JSON array', () => {
     if (!networkAvailable) {
-      console.warn('SKIP — no network access to Supabase (offline environment)')
+      expect.assertions(0)
       return
     }
     expect(Array.isArray(readBody)).toBe(true)
@@ -129,7 +130,7 @@ describe('Supabase READ connectivity (anon key)', () => {
 describe('Supabase WRITE connectivity (anon key)', () => {
   test('REST write endpoint is reachable — HTTP status is not a network error', () => {
     if (!networkAvailable) {
-      console.warn('SKIP — no network access to Supabase (offline environment)')
+      expect.assertions(0)
       return
     }
     expect(writeStatus).not.toBeNull()
@@ -139,7 +140,7 @@ describe('Supabase WRITE connectivity (anon key)', () => {
 
   test('RLS blocks anon writes — status is 401 or 403 (not 201)', () => {
     if (!networkAvailable) {
-      console.warn('SKIP — no network access to Supabase (offline environment)')
+      expect.assertions(0)
       return
     }
     // A 201 here would mean the row was actually inserted; RLS should prevent that.

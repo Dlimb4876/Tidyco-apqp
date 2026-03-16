@@ -264,9 +264,8 @@ describe('DB Module (db.js)', () => {
 
       await loadRemote();
 
-  expect(global.db.projects[0].dbId).toBe('11111111-1111-4111-8111-111111111111');
-
       expect(global.db.projects.length).toBe(1);
+      expect(global.db.projects[0].dbId).toBe('11111111-1111-4111-8111-111111111111');
       expect(global.db.projects[0].name).toBe('Remote Project');
     });
 

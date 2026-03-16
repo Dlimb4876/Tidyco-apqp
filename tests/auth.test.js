@@ -167,6 +167,30 @@ describe('Auth Module (auth.js)', () => {
       expect(errDiv.textContent).toBe('Please use your @tidyco.co.uk email address.');
       expect(global.supa.auth.signInWithPassword).not.toHaveBeenCalled();
     });
+
+    test('should block uppercase domain — domain check is case-sensitive', async () => {
+      document.getElementById('loginEmail').value = 'user@TIDYCO.CO.UK';
+      document.getElementById('loginPassword').value = 'password123';
+
+      await doLogin();
+
+      const errDiv = document.getElementById('loginErr');
+      expect(errDiv.style.display).toBe('block');
+      expect(errDiv.textContent).toBe('Please use your @tidyco.co.uk email address.');
+      expect(global.supa.auth.signInWithPassword).not.toHaveBeenCalled();
+    });
+
+    test('should block a subdomain that only ends with tidyco.co.uk via spoofing', async () => {
+      document.getElementById('loginEmail').value = 'user@evil.tidyco.co.uk';
+      document.getElementById('loginPassword').value = 'password123';
+
+      await doLogin();
+
+      // A subdomain does NOT match endsWith('@tidyco.co.uk'), so it is blocked.
+      const errDiv = document.getElementById('loginErr');
+      expect(errDiv.style.display).toBe('block');
+      expect(global.supa.auth.signInWithPassword).not.toHaveBeenCalled();
+    });
   });
 
   // ── showLoginErr ─────────────────────────────────────────────
