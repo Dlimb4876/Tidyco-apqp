@@ -400,15 +400,74 @@ function productsCancelEdit() {
 }
 
 /**
- * Delete a product
+ * Delete a product with enhanced confirmation
  */
 async function productsDeleteRow(productId, productName) {
-  if (!confirm(`Delete product "${productName}"? This cannot be undone.`)) return;
+  // First confirmation - basic warning
+  if (!confirm(`Delete product "${productName}"?\n\nThis will also delete all related data including NPI projects, APQP data, BOM, Gates, Actions, Risks, and ME capacity records.\n\nAre you sure you want to continue?`)) {
+    return;
+  }
+
+  // Get counts of related data
+  let counts = null;
   try {
+    if (typeof window.productsDataGetRelatedDataCounts === 'function') {
+      counts = await window.productsDataGetRelatedDataCounts(productId);
+    }
+  } catch (err) {
+    console.warn('Could not fetch related data counts:', err);
+  }
+
+  // Second confirmation - detailed warning with counts
+  let detailedMessage = `⚠️ PERMANENT DELETION WARNING ⚠️\n\n`;
+  detailedMessage += `Product: "${productName}"\n\n`;
+  detailedMessage += `This will PERMANENTLY delete:\n`;
+
+  if (counts) {
+    if (counts.overhaulHistory > 0) {
+      detailedMessage += `• ${counts.overhaulHistory} overhaul history record${counts.overhaulHistory === 1 ? '' : 's'}\n`;
+    }
+    if (counts.npiProjects > 0) {
+      detailedMessage += `• ${counts.npiProjects} NPI project${counts.npiProjects === 1 ? '' : 's'} (including all APQP, PFMEA, BOM, Gates, Actions, Risks, CTQ, Documents, Gantt data)\n`;
+    }
+    if (counts.meProducts > 0) {
+      detailedMessage += `• ${counts.meProducts} ME capacity support record${counts.meProducts === 1 ? '' : 's'}\n`;
+    }
+    if (counts.meTasks > 0) {
+      detailedMessage += `• ${counts.meTasks} ME task${counts.meTasks === 1 ? '' : 's'}\n`;
+    }
+
+    const totalItems = counts.overhaulHistory + counts.npiProjects + counts.meProducts + counts.meTasks;
+    if (totalItems === 0) {
+      detailedMessage += `• The product record (no related data found)\n`;
+    }
+  } else {
+    detailedMessage += `• All overhaul history records\n`;
+    detailedMessage += `• All linked NPI projects and their data\n`;
+    detailedMessage += `• All ME capacity records\n`;
+  }
+
+  detailedMessage += `\n❌ THIS CANNOT BE UNDONE ❌\n\n`;
+  detailedMessage += `Type the product name to confirm deletion.`;
+
+  // Show detailed confirmation
+  const userInput = prompt(detailedMessage);
+
+  if (userInput !== productName) {
+    if (userInput !== null) {
+      showToast('Deletion cancelled - product name did not match', 'info');
+    }
+    return;
+  }
+
+  // Perform deletion with loading indicator
+  try {
+    showToast('Deleting product and all related data...', 'info');
     await productsDataDeleteProduct(productId);
     if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
     if (productsEditingId === productId) productsEditingId = null;
     renderProductsList();
+    showToast(`Product "${productName}" and all related data deleted successfully`, 'success');
   } catch (err) {
     showToast('Error deleting product: ' + err.message, 'error');
   }
