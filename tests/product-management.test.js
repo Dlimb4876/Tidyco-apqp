@@ -46,7 +46,6 @@ describe('Product Management Event Delegation', () => {
     global.familiesDataUpdateFamily = jest.fn().mockResolvedValue(undefined);
     global.familiesDataDeleteFamily = jest.fn().mockResolvedValue(undefined);
 
-    global.ensureFamiliesTabData = jest.fn();
     global.renderAllProductsTrends = jest.fn();
 
     global.setProductDevelopmentTab = jest.fn();
@@ -62,7 +61,6 @@ describe('Product Management Event Delegation', () => {
     eval(`${script}
 window.renderProductsPortalHTML = renderProductsPortalHTML;
 window.renderProductsPortalSetup = renderProductsPortalSetup;
-window.renderFamiliesTabContent = renderFamiliesTabContent;
 window.renderProductsList = renderProductsList;
 window.setupProductsEventListeners = setupProductsEventListeners;`);
   });
@@ -72,23 +70,6 @@ window.setupProductsEventListeners = setupProductsEventListeners;`);
 
     expect(html).toContain('data-action="products-back-root"');
     expect(html).toContain('data-action="products-switch-tab"');
-    expect(html).not.toContain('onclick=');
-  });
-
-  test('renderFamiliesTabContent uses delegated actions and no inline onclick', () => {
-    document.body.innerHTML = '<div id="productsFamiliesTab"></div>';
-    familiesState = {
-      loading: false,
-      families: [{ id: 'hvac', name: 'HVAC', label: 'HVAC', icon: 'H', description: 'Heating' }]
-    };
-    familiesDataGetAll = jest.fn(() => familiesState.families);
-
-    window.renderFamiliesTabContent();
-    const html = document.getElementById('productsFamiliesTab').innerHTML;
-
-    expect(html).toContain('data-action="families-add-row"');
-    expect(html).toContain('data-action="families-start-edit"');
-    expect(html).toContain('data-action="families-delete-row"');
     expect(html).not.toContain('onclick=');
   });
 

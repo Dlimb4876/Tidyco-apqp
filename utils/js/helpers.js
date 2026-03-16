@@ -159,3 +159,17 @@ function setupSmartDateInputs() {
     });
   });
 }
+
+// ── Focus Guard Helper for Inline Editing ─────────────────────
+/**
+ * Returns true if the user's focus is currently inside a table cell
+ * (any input, select, or textarea inside a <table> element).
+ * Used by focus-guard logic to defer re-renders that would eject cursor.
+ */
+function isEditingInlineCell() {
+  const active = document.activeElement;
+  if (!active || active === document.body) return false;
+  const tag = active.tagName;
+  return (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA')
+    && !!active.closest('table');
+}

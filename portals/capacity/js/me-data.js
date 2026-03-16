@@ -691,12 +691,14 @@ window.meDataSubscribe = function() {
         };
         if (!meDataState.team.some(t => t.id === normalizedTeam.id)) {
           meDataState.team.push(normalizedTeam);
+          if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
           render();
         }
       },
       onUpdate: () => { /* no-op — local state already up to date */ },
       onDelete: (deleted) => {
         meDataState.team = meDataState.team.filter(t => t.id !== deleted.id);
+        if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
         render();
       }
     },
@@ -719,6 +721,10 @@ window.meDataSubscribe = function() {
         };
         if (!meDataState.tasks.some(t => t.id === normalizedTask.id)) {
           meDataState.tasks.push(normalizedTask);
+          if (isEditingInlineCell()) {
+            window.mePendingRealTimeUpdate = true;
+            return;
+          }
           render();
         }
       },
@@ -741,6 +747,10 @@ window.meDataSubscribe = function() {
         const idx = meDataState.tasks.findIndex(t => t.id === normalizedTask.id);
         if (idx < 0) {
           meDataState.tasks.push(normalizedTask);
+          if (isEditingInlineCell()) {
+            window.mePendingRealTimeUpdate = true;
+            return;
+          }
           render();
           return;
         }
@@ -760,10 +770,18 @@ window.meDataSubscribe = function() {
 
         if (!changed) return;
         meDataState.tasks[idx] = { ...current, ...normalizedTask };
+        if (isEditingInlineCell()) {
+          window.mePendingRealTimeUpdate = true;
+          return;
+        }
         render();
       },
       onDelete: (deleted) => {
         meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
+        if (isEditingInlineCell()) {
+          window.mePendingRealTimeUpdate = true;
+          return;
+        }
         render();
       }
     },
@@ -784,18 +802,23 @@ window.meDataSubscribe = function() {
         };
         if (!meDataState.products.some(p => p.id === normalizedProduct.id)) {
           meDataState.products.push(normalizedProduct);
+          if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
           render();
         }
       },
       onUpdate: () => { /* no-op — local state already up to date */ },
       onDelete: (deleted) => {
         meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
+        if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
         render();
       }
     },
     {
       table: 'me_holidays',
       onInsert: (newHoliday) => {
+        // meDataSave uses delete-all then re-insert — skip own-save echoes entirely.
+        // Each save fires one event per row; in-memory state is already correct.
+        if (window.meDataSaveInProgress) return;
         const normalized = meNormalizeHolidayRecord(newHoliday);
         if (!normalized) return;
         const existingIdx = meDataState.holidays.findIndex(h =>
@@ -807,16 +830,20 @@ window.meDataSubscribe = function() {
         } else {
           meDataState.holidays.push(normalized);
         }
+        if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
         render();
       },
       onUpdate: () => { /* no-op — local state already up to date */ },
       onDelete: (deleted) => {
+        // meDataSave uses delete-all then re-insert — skip own-save echoes entirely.
+        if (window.meDataSaveInProgress) return;
         const normalized = meNormalizeHolidayRecord(deleted);
         meDataState.holidays = meDataState.holidays.filter(h => {
           if (h.id === deleted.id) return false;
           if (normalized && h.personId === normalized.personId && h.date === normalized.date) return false;
           return true;
         });
+        if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
         render();
       }
     }

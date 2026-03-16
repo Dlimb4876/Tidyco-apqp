@@ -22,7 +22,7 @@ async function familiesDataInit() {
     if (typeof createRealtimeSubscription === 'function') {
       const reloadAndRender = async () => {
         await familiesDataLoad();
-        if (typeof renderFamiliesTabContent === 'function') renderFamiliesTabContent();
+        if (typeof renderSettingsFamiliesTab === 'function') renderSettingsFamiliesTab();
       };
       familiesState.subscription = createRealtimeSubscription(
         'families',

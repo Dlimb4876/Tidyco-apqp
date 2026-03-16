@@ -8,6 +8,8 @@ let meChartStart = null; // ISO month string (e.g., '2025-03')
 let meHolidayMonth = null; // Holiday planner month (independent from chart)
 let meChartInst = null;  // Chart.js instance
 let meSaveTimer = null;  // Debounce timer
+window.mePendingRealTimeUpdate = false;  // Deferred real-time render waiting for blur
+window.mePendingRerender = false;        // Deferred post-save KPI re-render waiting for blur
 
 // ── Entry point ────────────────────────────────────────────
 /**
@@ -236,6 +238,12 @@ function meDebouncedSave() {
   clearTimeout(meSaveTimer);
   meSaveTimer = setTimeout(async () => {
     await meDataSave(false);
+    // Only re-render for KPI/sum updates if the user is not mid-edit.
+    // If they are, defer the re-render until they blur out of the table.
+    if (isEditingInlineCell()) {
+      window.mePendingRerender = true;
+      return;
+    }
     // Re-render current tab to update KPIs and sums
     const body = document.getElementById('meBody');
     if (body) {

@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="portals/capacity/project-management/css/pm-capacity.css">
 <link rel="stylesheet" href="portals/production/css/production.css">
 <link rel="stylesheet" href="portals/product-development/product-management/css/products.css">
+<link rel="stylesheet" href="portals/settings/css/settings.css">
 <link rel="stylesheet" href="portals/product-development/npi/css/pfmea.css">
 <link rel="stylesheet" href="portals/product-development/npi/css/gantt.css">
 <link rel="stylesheet" href="portals/product-development/npi/css/apqp-shell.css">
@@ -86,6 +87,7 @@
       <button class="tbtn tbtn-ghost" onclick="exportJSON()" style="display:none">⬇ Export</button>
       <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()" style="display:none">⬆ Import</button>
       <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
+      <button class="tbtn tbtn-ghost" onclick="navigate('settings')" title="Settings" style="opacity:0.6">⚙️</button>
       <button class="tbtn tbtn-ghost" onclick="showModal('shortcutsModal')" title="Keyboard shortcuts (?)">⌨️</button>
       <button class="tbtn tbtn-ghost" onclick="doLogout()" title="Sign out" style="margin-left:4px">⏻</button>
     </div>
@@ -563,6 +565,7 @@
 
 <script src="portals/product-development/js/product-development.js"></script>
 <script src="portals/product-development/js/product-management.js"></script>
+<script src="portals/settings/js/settings.js"></script>
 
 <!-- NPI Portal: namespace root and centralized constants -->
 <script src="portals/product-development/npi/js/npi-constants.js"></script>

@@ -165,6 +165,12 @@ function navigate(sec, { pushHash = true } = {}) {
     familyTemplatesDataUnsubscribe();
   }
 
+  // Clean up subscriptions when leaving settings
+  if (currentSection === 'settings' && sec !== 'settings') {
+    if (typeof familiesDataCleanup === 'function') familiesDataCleanup();
+    if (typeof workAreasDataUnsubscribe === 'function') workAreasDataUnsubscribe();
+  }
+
   // Initialize operations real-time subscriptions when entering operations.
   if (sec === 'operations' && currentSection !== 'operations' && typeof opsRealtimeInit === 'function') {
     opsRealtimeInit();
@@ -305,6 +311,10 @@ function render() {
   }
   if (currentSection === 'feedback') {
     mc.innerHTML = `<div class="section-inner">${renderFeedback()}</div>`;
+    return;
+  }
+  if (currentSection === 'settings') {
+    mc.innerHTML = `<div class="section-inner">${renderSettings()}</div>`;
     return;
   }
   if (currentSection === 'capacity') {

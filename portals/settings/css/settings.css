@@ -1,0 +1,106 @@
+/* ═══════════════════════════════════════════════════════════════
+   settings.css — Global Settings Portal
+   ═══════════════════════════════════════════════════════════════ */
+
+.settings-portal {
+  padding: 12px 8px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  margin-bottom: 16px;
+}
+
+.settings-header h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.settings-header-desc {
+  font-size: 0.82rem;
+  color: var(--mid);
+  margin: 0;
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 20px;
+}
+
+.settings-tab-btn {
+  padding: 8px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--mid);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.settings-tab-btn:hover {
+  color: var(--ink);
+}
+
+.settings-tab-btn.active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+.settings-tab-content {
+  display: none;
+}
+
+.settings-tab-content.active {
+  display: block;
+}
+
+.settings-section {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.settings-section-header {
+  margin-bottom: 16px;
+}
+
+.settings-section-header h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.settings-section-desc {
+  font-size: 0.82rem;
+  color: var(--mid);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .settings-portal {
+    padding: 20px 24px;
+  }
+
+  .settings-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .settings-tab-btn {
+    padding: 10px 24px;
+    font-size: 0.95rem;
+  }
+
+  .settings-section {
+    padding: 20px;
+  }
+}

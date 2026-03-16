@@ -33,6 +33,7 @@ window.capacityEvents.setup = function() {
   container.addEventListener('change', window.capacityEvents._onChange)
   container.addEventListener('input', window.capacityEvents._onInput)
   container.addEventListener('keydown', window.capacityEvents._onKeydown)
+  container.addEventListener('focusout', window.capacityEvents._onFocusOut)
   _capEventsContainer = container
 }
 
@@ -42,6 +43,7 @@ window.capacityEvents.teardown = function() {
   _capEventsContainer.removeEventListener('change', window.capacityEvents._onChange)
   _capEventsContainer.removeEventListener('input', window.capacityEvents._onInput)
   _capEventsContainer.removeEventListener('keydown', window.capacityEvents._onKeydown)
+  _capEventsContainer.removeEventListener('focusout', window.capacityEvents._onFocusOut)
   _capEventsContainer = null
 }
 
@@ -222,8 +224,8 @@ window.capacityEvents._onChange = function(evt) {
     meDataUpdateTask(idx, 'status', el.value)
     if (isPM && typeof pmDebouncedSave === 'function') pmDebouncedSave()
     else meDebouncedSave()
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    // Do NOT immediately call meSetTab/pmSetTab — the debounce and blur handler
+    // will re-render at the right time, preserving focus.
     break
   }
   case 'cap-task-filter-category': {
@@ -349,4 +351,35 @@ window.capacityEvents._onKeydown = function(evt) {
   }
   default: break
   }
+}
+
+// ── Focus Guard: Deferred Re-render Flush ──────────────────
+/**
+ * When user leaves an inline-editable table cell, flush any pending re-renders
+ * that were deferred by the focus guard logic in me-capacity.js and me-data.js
+ */
+window.capacityEvents._onFocusOut = function(evt) {
+  const nextFocus = evt.relatedTarget
+  // If moving to next cell in same table, no need to flush
+  if (nextFocus && nextFocus.closest('table')) return
+  // No pending re-renders to flush
+  if (!window.mePendingRealTimeUpdate && !window.mePendingRerender) return
+
+  // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
+  setTimeout(function() {
+    // Re-check if still editing (in case user moved to a new cell)
+    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return
+
+    // Flush pending re-render using tab-level refresh only (not full render()).
+    // Using render() here would call renderMeCapacity() → meDataAutoSyncProductionProducts()
+    // which schedules another meDataSave, creating a feedback loop that constantly
+    // redraws the capacity chart.
+    if (window.mePendingRealTimeUpdate || window.mePendingRerender) {
+      window.mePendingRealTimeUpdate = false
+      window.mePendingRerender = false
+      if (typeof meRefreshCurrentTab === 'function') {
+        meRefreshCurrentTab()
+      }
+    }
+  }, 0)
 }

@@ -55,6 +55,9 @@ let abcEditTarget = null;           // index into abcCatalogueData during edit, 
 // NPI dashboard tab
 let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
 
+// Settings portal active tab
+let settingsActiveTab = 'families'; // 'families' | 'work-areas'
+
 // Presence map: { [progId]: [{ email, ts }] }
 // Tracks other users currently viewing the same project (updated via Broadcast).
 let presenceMap = {};

@@ -9,7 +9,7 @@ let productsEditingId = null;
 let productsPortalListenerRoot = null;
 
 // Track which products sub-tab is active so re-renders restore the correct tab
-let productsActiveTab = 'list'; // 'list' | 'trends' | 'families'
+let productsActiveTab = 'list'; // 'list' | 'trends'
 
 // 1.7 Persist search state across renders
 const PRODUCTS_SEARCH_KEY = 'products_search_state';
@@ -46,7 +46,6 @@ function renderProductsPortalHTML() {
       <div class="products-tabs">
         <button class="products-tab-btn ${tab === 'list' ? 'active' : ''}" data-action="products-switch-tab" data-tab="list">Product List</button>
         <button class="products-tab-btn ${tab === 'trends' ? 'active' : ''}" data-action="products-switch-tab" data-tab="trends">Overhaul Trends</button>
-        <button class="products-tab-btn ${tab === 'families' ? 'active' : ''}" data-action="products-switch-tab" data-tab="families">Product Families</button>
       </div>
 
       <div id="productsListTab" class="products-tab-content ${tab === 'list' ? 'active' : ''}">
@@ -55,9 +54,6 @@ function renderProductsPortalHTML() {
 
       <div id="productsTrendsTab" class="products-tab-content ${tab === 'trends' ? 'active' : ''}">
         <div id="productsTrends"></div>
-      </div>
-
-      <div id="productsFamiliesTab" class="products-tab-content ${tab === 'families' ? 'active' : ''}">
       </div>
     </div>
   `;
@@ -70,255 +66,8 @@ function renderProductsPortalSetup() {
   setupProductsEventListeners();
   if (productsActiveTab === 'trends') {
     renderProductsTrends();
-  } else if (productsActiveTab === 'families') {
-    renderFamiliesTabContent();
-    ensureFamiliesTabData(true);
   } else {
     renderProductsList();
-  }
-}
-
-/**
- * Track which family is currently being edited
- */
-let familiesEditingId = null;
-let familiesTabLoading = false;
-let familiesTabLoadError = null;
-
-async function ensureFamiliesTabData(forceReload = false) {
-  if (familiesTabLoading) return;
-  if (!forceReload && Array.isArray(familiesState?.families) && familiesState.families.length > 0) return;
-
-  familiesTabLoading = true;
-  familiesTabLoadError = null;
-  renderFamiliesTabContent();
-
-  try {
-    if (typeof familiesDataLoad === 'function') {
-      await familiesDataLoad();
-    } else if (typeof familiesDataInit === 'function') {
-      await familiesDataInit();
-    }
-  } catch (err) {
-    familiesTabLoadError = err?.message || 'Failed to load families';
-  } finally {
-    familiesTabLoading = false;
-    renderFamiliesTabContent();
-  }
-}
-
-/**
- * Render families tab content as editable table
- */
-function renderFamiliesTabContent() {
-  const container = document.getElementById('productsFamiliesTab');
-  if (!container) return;
-
-  // If families are still loading, show a spinner
-  if (familiesTabLoading || familiesState.loading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families...</div>';
-    return;
-  }
-
-  if (familiesTabLoadError) {
-    container.innerHTML = `
-      <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
-        <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load product families</div>
-        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(familiesTabLoadError)}</div>
-        <button class="btn btn-ghost" data-action="families-retry-load">Retry</button>
-      </div>
-    `;
-    return;
-  }
-
-  // If families state is missing or data array is absent, trigger a reload
-  if (!familiesState || !Array.isArray(familiesState.families)) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families...</div>';
-    ensureFamiliesTabData(true);
-    return;
-  }
-
-  const families = typeof familiesDataGetAll === 'function' ? familiesDataGetAll() : [...familiesState.families];
-
-  // Count usage in projects
-  const usageMap = {};
-  (db.projects || []).forEach(p => {
-    const fid = p.family || 'Other';
-    usageMap[fid] = (usageMap[fid] || 0) + 1;
-  });
-
-  const html = `
-    <div class="families-table-wrap">
-      <table class="prod-tbl families-inline-table" style="table-layout:auto;width:100%">
-        <colgroup>
-          <col style="width:60px">
-          <col style="min-width:120px">
-          <col style="min-width:180px">
-          <col style="min-width:220px">
-          <col style="width:80px">
-          <col style="width:100px">
-        </colgroup>
-        <thead>
-          <tr>
-            <th class="ctr">Icon</th>
-            <th>Family ID</th>
-            <th>Family Name</th>
-            <th>Description</th>
-            <th class="ctr">Projects</th>
-            <th class="families-actions-col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- New row -->
-          <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
-            <td><input class="cell-edit" id="fNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
-            <td><input class="cell-edit" id="fNew-id" placeholder="e.g. HVAC"></td>
-            <td><input class="cell-edit" id="fNew-label" placeholder="e.g. HVAC Systems"></td>
-            <td><input class="cell-edit" id="fNew-desc" placeholder="Description…"></td>
-            <td class="ctr">—</td>
-            <td class="families-actions-col">
-              <button class="btn-del" title="Add family" data-action="families-add-row">✓</button>
-            </td>
-          </tr>
-          ${families.length === 0 ? `
-            <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No families defined yet.</td></tr>
-          ` : families.map(f => {
-            const usage = usageMap[f.id] || 0;
-            if (familiesEditingId === f.id) {
-              return `
-              <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
-                <td><input class="cell-edit" id="fEdit-icon" value="${esc(f.icon || '📋')}" style="width:50px;text-align:center"></td>
-                <td><input class="cell-edit" id="fEdit-id" value="${esc(f.name || f.id)}"></td>
-                <td><input class="cell-edit" id="fEdit-label" value="${esc(f.label || '')}"></td>
-                <td><input class="cell-edit" id="fEdit-desc" value="${esc(f.description || '')}"></td>
-                <td class="ctr">${usage}</td>
-                <td class="families-actions-col">
-                  <button class="btn-del" title="Save" data-action="families-save-edit" data-family-id="${esc(f.id)}">✓</button>
-                  <button class="btn-del" title="Cancel" data-action="families-cancel-edit">✕</button>
-                </td>
-              </tr>`;
-            }
-            return `
-            <tr>
-              <td class="ctr" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
-              <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
-              <td><strong>${esc(f.label)}</strong></td>
-              <td>${esc(f.description || '—')}</td>
-              <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
-              <td class="families-actions-col">
-                <button class="btn-del" title="Edit" data-action="families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
-                <button class="btn-del" title="Delete" data-action="families-delete-row" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  container.innerHTML = html;
-}
-
-/**
- * Add new family from the new row inputs
- */
-async function familiesAddRow() {
-  const icon = document.getElementById('fNew-icon')?.value.trim() || '📋';
-  const id = document.getElementById('fNew-id')?.value.trim();
-  const label = document.getElementById('fNew-label')?.value.trim();
-  const description = document.getElementById('fNew-desc')?.value.trim() || '';
-
-  if (!id) {
-    document.getElementById('fNew-id')?.focus();
-    return;
-  }
-  if (!label) {
-    document.getElementById('fNew-label')?.focus();
-    return;
-  }
-
-  try {
-    await familiesDataAddFamily(id, label, icon, description);
-    // Re-focus id input for quick entry of next family
-    document.getElementById('fNew-id').value = '';
-    document.getElementById('fNew-label').value = '';
-    document.getElementById('fNew-desc').value = '';
-    document.getElementById('fNew-id')?.focus();
-  } catch (err) {
-    showToast('Error adding family: ' + err.message, 'error');
-  }
-}
-
-/**
- * Start editing a family row inline
- */
-function familiesStartEdit(familyId) {
-  familiesEditingId = familyId;
-  renderFamiliesTabContent();
-  document.getElementById('fEdit-label')?.focus();
-}
-
-/**
- * Save inline edit
- */
-async function familiesSaveEdit(familyId) {
-  const id = document.getElementById('fEdit-id')?.value.trim();
-  const label = document.getElementById('fEdit-label')?.value.trim();
-
-  if (!id) {
-    document.getElementById('fEdit-id')?.focus();
-    return;
-  }
-  if (!label) {
-    document.getElementById('fEdit-label')?.focus();
-    return;
-  }
-
-  const updates = {
-    name: id,
-    label: label,
-    icon: document.getElementById('fEdit-icon')?.value.trim() || '📋',
-    description: document.getElementById('fEdit-desc')?.value.trim() || ''
-  };
-
-  try {
-    await familiesDataUpdateFamily(familyId, updates);
-  } catch (err) {
-    showToast('Error saving family: ' + err.message, 'error');
-  }
-
-  familiesEditingId = null;
-  renderFamiliesTabContent();
-}
-
-/**
- * Cancel inline edit
- */
-function familiesCancelEdit() {
-  familiesEditingId = null;
-  renderFamiliesTabContent();
-}
-
-/**
- * Delete a family
- */
-async function familiesDeleteRow(familyId, familyLabel) {
-  // Check usage
-  const usage = (db.projects || []).filter(p => p.family === familyId).length;
-  if (usage > 0) {
-    if (!confirm(`Delete family "${familyLabel}"?\n\nWarning: ${usage} project${usage !== 1 ? 's' : ''} use this family. They will need to be reassigned manually.`)) {
-      return;
-    }
-  } else {
-    if (!confirm(`Delete family "${familyLabel}"? This cannot be undone.`)) return;
-  }
-
-  try {
-    await familiesDataDeleteFamily(familyId);
-    if (familiesEditingId === familyId) familiesEditingId = null;
-    renderFamiliesTabContent();
-  } catch (err) {
-    showToast('Error deleting family: ' + err.message, 'error');
   }
 }
 
@@ -640,42 +389,9 @@ function setupProductsEventListeners() {
 
         if (tab === 'trends') {
           renderProductsTrends();
-        } else if (tab === 'families') {
-          renderFamiliesTabContent();
-          ensureFamiliesTabData(true);
         } else {
           renderProductsList();
         }
-        return;
-      }
-
-      if (action === 'families-retry-load') {
-        ensureFamiliesTabData(true);
-        return;
-      }
-
-      if (action === 'families-add-row') {
-        await familiesAddRow();
-        return;
-      }
-
-      if (action === 'families-save-edit') {
-        await familiesSaveEdit(actionEl.dataset.familyId || '');
-        return;
-      }
-
-      if (action === 'families-cancel-edit') {
-        familiesCancelEdit();
-        return;
-      }
-
-      if (action === 'families-start-edit') {
-        familiesStartEdit(actionEl.dataset.familyId || '');
-        return;
-      }
-
-      if (action === 'families-delete-row') {
-        await familiesDeleteRow(actionEl.dataset.familyId || '', actionEl.dataset.familyLabel || '');
         return;
       }
 
