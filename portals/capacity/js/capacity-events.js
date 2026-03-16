@@ -266,6 +266,16 @@ window.capacityEvents._onChange = function(evt) {
     if (typeof meProductsSetSort === 'function') meProductsSetSort(el.value, el.getAttribute('data-dept'))
     break
   }
+  case 'cap-products-status-toggle': {
+    if (typeof meProductsToggleStatusFilter === 'function') {
+      meProductsToggleStatusFilter(
+        el.getAttribute('data-status'),
+        !!el.checked,
+        el.getAttribute('data-dept')
+      )
+    }
+    break
+  }
 
   // ── ME Product Taskload ────────────────────────────────────
   case 'cap-product-load-family-filter': {

@@ -16,6 +16,16 @@ let meSaveTimer = null;  // Debounce timer
 window.renderMeCapacity = function() {
   window.meCurrentDepartmentContext = 'ME';
 
+  // Auto-sync ME products from Product Management database (all statuses).
+  if (typeof meDataAutoSyncProductionProducts === 'function') {
+    const synced = meDataAutoSyncProductionProducts();
+    if (synced) {
+      setTimeout(() => {
+        if (typeof meDataSave === 'function') meDataSave(false);
+      }, 1000);
+    }
+  }
+
   if (!meChartStart) {
     // Load from localStorage, or default to January 2026
     meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';

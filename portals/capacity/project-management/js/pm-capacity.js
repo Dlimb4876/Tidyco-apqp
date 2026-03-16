@@ -62,7 +62,7 @@ function pmGetTabContent() {
 window.pmRenderCapacity = function() {
   window.meCurrentDepartmentContext = 'PM';
 
-  // Auto-sync project products (Tender/NPI) from the Product Management database
+  // Auto-sync PM products from the Product Management database (all statuses)
   if (typeof meDataAutoSyncPMProducts === 'function') {
     const synced = meDataAutoSyncPMProducts();
     if (synced) {

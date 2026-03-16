@@ -3,14 +3,14 @@
    ============================================================ */
 
 const meProductsTableState = {
-  ME: { search: '', family: 'all', sortBy: 'name', sortDir: 'asc' },
-  PM: { search: '', family: 'all', sortBy: 'name', sortDir: 'asc' }
+  ME: { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [] },
+  PM: { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [] }
 };
 
 function meProductsGetState(department) {
   const key = department === 'PM' ? 'PM' : 'ME';
   if (!meProductsTableState[key]) {
-    meProductsTableState[key] = { search: '', family: 'all', sortBy: 'name', sortDir: 'asc' };
+    meProductsTableState[key] = { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [] };
   }
   return meProductsTableState[key];
 }
@@ -53,6 +53,26 @@ window.meProductsClearFilters = function(department) {
   state.family = 'all';
   state.sortBy = 'name';
   state.sortDir = 'asc';
+  state.hiddenStatuses = [];
+  meProductsRefreshTable();
+};
+
+window.meProductsToggleStatusFilter = function(status, isEnabled, department) {
+  const state = meProductsGetState(department);
+  const label = (status || '').toString();
+  if (!label) return;
+
+  if (!Array.isArray(state.hiddenStatuses)) {
+    state.hiddenStatuses = [];
+  }
+
+  const hidden = new Set(state.hiddenStatuses);
+  if (isEnabled) {
+    hidden.delete(label);
+  } else {
+    hidden.add(label);
+  }
+  state.hiddenStatuses = Array.from(hidden);
   meProductsRefreshTable();
 };
 
@@ -126,14 +146,33 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
     return resolveFamilyLabel(familyRef);
   }
 
+  function resolveStatusForProduct(product) {
+    if (!product) return 'Unknown';
+
+    let dbProduct = null;
+    if (product.productDatabaseId) {
+      dbProduct = allProds.find(p => p.id === product.productDatabaseId) || null;
+    }
+
+    if (!dbProduct && product.name) {
+      dbProduct = allProds.find(p => p.name === product.name) || null;
+    }
+
+    return (dbProduct && dbProduct.status)
+      ? dbProduct.status
+      : 'Unknown';
+  }
+
   const preparedRows = updated.map((product, idx) => {
     const globalIdx = allProducts.indexOf(product);
     const rowIndex = globalIdx >= 0 ? globalIdx : idx;
     const familyLabel = resolveFamilyLabelForProduct(product);
+    const statusLabel = resolveStatusForProduct(product);
     return {
       product,
       rowIndex,
       familyLabel,
+      status: statusLabel,
       name: (product.name || '').toString(),
       supportFrom: (product.supportFrom || '').toString(),
       supportUntil: (product.supportUntil || '').toString(),
@@ -148,13 +187,23 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       .filter(label => label && label !== '—')
   )).sort((a, b) => a.localeCompare(b));
 
+  const statusOptions = Array.from(new Set(
+    preparedRows
+      .map(r => r.status)
+      .filter(label => label && label !== 'Unknown')
+  )).sort((a, b) => a.localeCompare(b));
+
+  const hiddenStatuses = Array.isArray(state.hiddenStatuses) ? state.hiddenStatuses : [];
+  const hiddenStatusSet = new Set(hiddenStatuses);
+
   const searchNeedle = state.search.trim().toLowerCase();
   let visibleRows = preparedRows.filter(row => {
     const familyMatch = state.family === 'all' || row.familyLabel === state.family;
     if (!familyMatch) return false;
+    if (hiddenStatusSet.has(row.status)) return false;
     if (!searchNeedle) return true;
 
-    const haystack = [row.name, row.familyLabel, row.notes]
+    const haystack = [row.name, row.familyLabel, row.status, row.notes]
       .join(' ')
       .toLowerCase();
     return haystack.includes(searchNeedle);
@@ -167,6 +216,8 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
         return a.familyLabel.localeCompare(b.familyLabel) * dir;
       case 'hours':
         return (a.hoursPerWeek - b.hoursPerWeek) * dir;
+      case 'status':
+        return a.status.localeCompare(b.status) * dir;
       case 'supportFrom':
         return a.supportFrom.localeCompare(b.supportFrom) * dir;
       case 'supportUntil':
@@ -185,6 +236,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       <tr data-product-idx="${rowIndex}">
         <td>${esc(product.name)}</td>
         <td>${esc(row.familyLabel)}</td>
+        <td>${typeof renderStatusBadge === 'function' ? renderStatusBadge(row.status) : esc(row.status)}</td>
         <td><input type="date" value="${product.supportFrom || ''}" data-cap-action="cap-products-upd" data-field="supportFrom"></td>
         <td><input type="date" value="${product.supportUntil || ''}" data-cap-action="cap-products-upd" data-field="supportUntil"></td>
         <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" data-cap-action="cap-products-upd" data-field="hoursPerWeek"></td>
@@ -242,6 +294,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
           >
             <option value="name" ${state.sortBy === 'name' ? 'selected' : ''}>Sort: Product</option>
             <option value="family" ${state.sortBy === 'family' ? 'selected' : ''}>Sort: Family</option>
+            <option value="status" ${state.sortBy === 'status' ? 'selected' : ''}>Sort: Status</option>
             <option value="hours" ${state.sortBy === 'hours' ? 'selected' : ''}>Sort: Hours/Week</option>
             <option value="supportFrom" ${state.sortBy === 'supportFrom' ? 'selected' : ''}>Sort: Support From</option>
             <option value="supportUntil" ${state.sortBy === 'supportUntil' ? 'selected' : ''}>Sort: Support Until</option>
@@ -251,18 +304,39 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
           </button>
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-clear-filters" data-dept="${department}">Clear</button>
         </div>
+        ${statusOptions.length > 0 ? `
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+            <span style="font-size:12px;color:var(--muted);font-weight:600">Statuses:</span>
+            ${statusOptions.map(status => {
+    const enabled = !hiddenStatusSet.has(status);
+    return `
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text);padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel)">
+                  <input
+                    type="checkbox"
+                    ${enabled ? 'checked' : ''}
+                    data-cap-action="cap-products-status-toggle"
+                    data-dept="${department}"
+                    data-status="${esc(status)}"
+                  >
+                  <span>${esc(status)}</span>
+                </label>
+              `;
+  }).join('')}
+          </div>
+        ` : ''}
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
               <th style="width:200px">Product Name</th>
               <th style="width:150px">Family</th>
+              <th style="width:130px">Status</th>
               <th style="width:120px">Support From</th>
               <th style="width:120px">Support Until</th>
               <th style="width:120px">Hours/Week</th>
               <th style="width:200px">Notes</th>
             </tr></thead>
             <tbody>
-              ${rows || `<tr><td colspan="6"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
+              ${rows || `<tr><td colspan="7"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
             </tbody>
           </table>
         </div>

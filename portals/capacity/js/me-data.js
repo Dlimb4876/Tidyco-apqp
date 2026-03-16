@@ -283,118 +283,79 @@ window.meDataGetProducts = function() {
 };
 
 /**
- * Auto-sync production products from product management database
- * Syncs products with status = "Production", removes those that are no longer production
+ * Auto-sync products from product management database into a department stream.
+ * Includes all product statuses so capacity planners can filter in the UI.
  */
-window.meDataAutoSyncProductionProducts = function() {
+function meDataAutoSyncDepartmentProducts(department) {
   if (!productsState || !productsState.products) {
     return false;
   }
 
-  // Get only "Production" status products from product management database
-  const pmProducts = productsState.products.filter(p => p.status === 'Production');
+  const targetDepartment = meNormalizeDepartmentTag(department, 'ME');
+  const dbProducts = Array.isArray(productsState.products) ? productsState.products : [];
 
-  // Build a map of productDatabaseId to PM product for quick lookup
-  const pmMap = {};
-  pmProducts.forEach(p => {
-    pmMap[p.id] = p;
+  // Build a map of DB products by ID for quick lookup
+  const dbMap = {};
+  dbProducts.forEach(p => {
+    if (p && p.id) dbMap[p.id] = p;
   });
 
-  // Update or create products that exist in PM with Production status
-  pmProducts.forEach(pmProd => {
-    const existing = meDataState.products.find(meP => meP.productDatabaseId === pmProd.id);
-    if (existing) {
-      // Update existing product with latest info from PM (name, notes)
-      existing.name = pmProd.name;
-      existing.notes = pmProd.notes || '';
-    } else {
-      // Create new product if not found
-      meDataAddProduct(pmProd.name, '', '', 0, pmProd.notes || '', pmProd.id);
-    }
-  });
-
-  // Remove duplicates by keeping only the first instance of each productDatabaseId
-  const seenDbIds = new Set();
-  const seenNames = new Set();
-  meDataState.products = meDataState.products.filter(meP => {
-    if (!meP.productDatabaseId) {
-      // For manual entries (no database ID), de-dup by name
-      if (seenNames.has(meP.name)) {
-        return false;
-      }
-      seenNames.add(meP.name);
-      return true;
-    }
-    // For DB-linked products, keep only the first instance
-    if (seenDbIds.has(meP.productDatabaseId)) {
-      return false;
-    }
-    seenDbIds.add(meP.productDatabaseId);
-    // Keep only those still in PM with Production status
-    return pmMap[meP.productDatabaseId] !== undefined;
-  });
-
-  return true;
-};
-
-/**
- * Auto-sync project products (Tender/NPI status) from product management database
- * for the PM capacity view. Mirrors meDataAutoSyncProductionProducts for the PM stream.
- */
-window.meDataAutoSyncPMProducts = function() {
-  if (!productsState || !productsState.products) {
-    return false;
-  }
-
-  // Get NPI and Production status products (active projects managed by PM)
-  const projectProducts = productsState.products.filter(p =>
-    p.status === 'NPI' || p.status === 'Production'
-  );
-
-  // Build a lookup map by product database ID
-  const projectMap = {};
-  projectProducts.forEach(p => {
-    projectMap[p.id] = p;
-  });
-
-  // Update or create PM-tagged products
-  projectProducts.forEach(projProd => {
+  // Update or create department-tagged products from the master products DB
+  dbProducts.forEach(dbProduct => {
     const existing = meDataState.products.find(meP =>
-      meP.productDatabaseId === projProd.id && meP.department === 'PM'
+      meP.productDatabaseId === dbProduct.id &&
+      meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment
     );
+
     if (existing) {
-      // Keep in sync with latest name/notes from product management
-      existing.name = projProd.name;
-      existing.notes = projProd.notes || '';
+      existing.name = dbProduct.name;
+      existing.notes = dbProduct.notes || '';
+      existing.department = targetDepartment;
     } else {
-      // Temporarily set context to PM so meDataAddProduct tags the product correctly
+      // Temporarily set context so meDataAddProduct tags the product correctly
       const savedContext = window.meCurrentDepartmentContext;
-      window.meCurrentDepartmentContext = 'PM';
-      meDataAddProduct(projProd.name, '', '', 0, projProd.notes || '', projProd.id);
+      window.meCurrentDepartmentContext = targetDepartment;
+      meDataAddProduct(dbProduct.name, '', '', 0, dbProduct.notes || '', dbProduct.id, targetDepartment);
       window.meCurrentDepartmentContext = savedContext;
     }
   });
 
-  // De-dup PM products and remove those no longer in Tender/NPI
+  // De-dup department products and remove DB-linked rows that no longer exist in products DB
   const seenDbIds = new Set();
   const seenNames = new Set();
   meDataState.products = meDataState.products.filter(meP => {
-    if (meP.department !== 'PM') return true; // Leave ME products untouched
-
-    if (!meP.productDatabaseId) {
-      // Manual entries: de-dup by name
-      if (seenNames.has(meP.name)) return false;
-      seenNames.add(meP.name);
+    if (meNormalizeDepartmentTag(meP.department, targetDepartment) !== targetDepartment) {
       return true;
     }
 
-    if (seenDbIds.has(meP.productDatabaseId)) return false;
+    if (!meP.productDatabaseId) {
+      // For manual entries (no DB ID), de-dup by name
+      const manualName = (meP.name || '').trim().toLowerCase();
+      if (seenNames.has(manualName)) return false;
+      seenNames.add(manualName);
+      return true;
+    }
+
+    // For DB-linked products, keep only the first instance and only if still in master DB
+    if (seenDbIds.has(meP.productDatabaseId)) {
+      return false;
+    }
     seenDbIds.add(meP.productDatabaseId);
-    // Only keep if still NPI or Production
-    return projectMap[meP.productDatabaseId] !== undefined;
+    return dbMap[meP.productDatabaseId] !== undefined;
   });
 
   return true;
+}
+
+window.meDataAutoSyncProductionProducts = function() {
+  return meDataAutoSyncDepartmentProducts('ME');
+};
+
+/**
+ * Auto-sync products from product management database for the PM capacity stream.
+ */
+window.meDataAutoSyncPMProducts = function() {
+  return meDataAutoSyncDepartmentProducts('PM');
 };
 
 // ─────────────────────────────────────────────────────────────
