@@ -175,7 +175,13 @@ window.capacityEvents._onClick = function(evt) {
   case 'cap-prod-reset-month': if (typeof prodCapResetMonthOffset === 'function') prodCapResetMonthOffset(); break
   case 'cap-prod-set-workarea': {
     const wa = el.getAttribute('data-workarea')
-    if (typeof prodCapWorkAreaSelected !== 'undefined') { window.prodCapWorkAreaSelected = wa; render() }
+    if (typeof window.prodCapSetWorkArea === 'function') {
+      window.prodCapSetWorkArea(wa)
+      render()
+    } else if (typeof prodCapWorkAreaSelected !== 'undefined') {
+      prodCapWorkAreaSelected = wa
+      render()
+    }
     break
   }
   case 'cap-prod-settings-fill-forward': if (typeof prodCapSettingsFillForward === 'function') prodCapSettingsFillForward(); break

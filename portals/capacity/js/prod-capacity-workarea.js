@@ -7,6 +7,10 @@
 let prodCapWorkAreaSelected = null;
 let prodCapWorkAreaChartInst = null;
 
+window.prodCapSetWorkArea = function(workArea) {
+  prodCapWorkAreaSelected = workArea || null;
+};
+
 function renderProdCapWorkArea() {
   const workAreas = prodCapGetWorkAreas();
 

@@ -8,23 +8,7 @@
 let abcInlineSaveTimer = null
 const ABC_CATALOGUE_CHANNEL = 'abc_catalogue_channel'
 
-npi.bom.renderABCCatalogue = function() {
-  // Load data on first render (asynchronously in background)
-  if (!abcCatalogueLoaded && !abcCatalogueLoading) {
-    abcCatalogueLoading = true
-    Promise.resolve().then(() => npi.bom.loadABCCatalogue()).then(() => {
-      abcCatalogueLoaded = true
-      abcCatalogueLoading = false
-      render() // Re-render when data is loaded
-    }).catch(err => {
-      console.error('[NPI] Failed to load ABC catalogue:', err)
-      abcCatalogueLoading = false
-      abcCatalogueLoaded = true // Mark as loaded to prevent retry spam
-      render()
-    })
-  }
-
-  // Apply filters
+function getFilteredAbcCatalogueRows() {
   const searchTerm = (abcCatalogueSearch || '').toLowerCase()
   let filtered = searchTerm
     ? abcCatalogueData.filter(r =>
@@ -40,21 +24,11 @@ npi.bom.renderABCCatalogue = function() {
     filtered = filtered.filter(r => r.abc_class === abcCatalogueClassFilter)
   }
 
-  // Combined toolbar: class filter + search input + info + add button all inline
-  const toolbar = `<div class="bom-abc-filter-row" style="margin-bottom:14px">
-    <span class="bom-abc-filter-label">Class:</span>
-    ${['all','A','B','C'].map(cls =>
-      `<button class="bom-abc-chip${abcCatalogueClassFilter === cls ? ' active' : ''}"
-        onclick="abcCatalogueClassFilter='${cls}';render()">${cls === 'all' ? 'All' : cls}</button>`
-    ).join('')}
-    <input type="text" class="cell-edit" id="abcCatalogueSearch" value="${esc(abcCatalogueSearch)}"
-      oninput="npi.bom.setABCSearch(this.value);render()"
-      placeholder="Search by PN, manufacturer PN, or description…" style="flex:1;min-width:160px;max-width:260px;margin-left:4px">
-    <span style="margin-left:auto;display:flex;gap:6px;flex-shrink:0">
-      <button class="btn btn-ghost btn-sm" onclick="npi.bom.showAbcInfo()">What are A / B / C? ℹ</button>
-      <button class="btn btn-primary btn-sm" onclick="npi.bom.openABCNew()">＋ Add Part</button>
-    </span>
-  </div>`
+  return filtered
+}
+
+npi.bom.renderABCCatalogueResults = function() {
+  const filtered = getFilteredAbcCatalogueRows()
 
   const stats = `<div style="display:flex;gap:8px;margin-bottom:10px">
     <span class="flag bom-summary-pill" style="background:var(--bg);border:1px solid var(--line);color:var(--mid)">${filtered.length} part${filtered.length !== 1 ? 's' : ''}</span>
@@ -107,7 +81,48 @@ npi.bom.renderABCCatalogue = function() {
     </table>
   </div>`
 
-  return `<div style="width:fit-content;min-width:600px">${toolbar}${stats}<div class="card">${table}</div></div>`
+  return `${stats}<div class="card">${table}</div>`
+}
+
+npi.bom.refreshABCCatalogueResults = function() {
+  const resultsEl = document.getElementById('abcCatalogueResults')
+  if (!resultsEl) return
+  resultsEl.innerHTML = npi.bom.renderABCCatalogueResults()
+}
+
+npi.bom.renderABCCatalogue = function() {
+  // Load data on first render (asynchronously in background)
+  if (!abcCatalogueLoaded && !abcCatalogueLoading) {
+    abcCatalogueLoading = true
+    Promise.resolve().then(() => npi.bom.loadABCCatalogue()).then(() => {
+      abcCatalogueLoaded = true
+      abcCatalogueLoading = false
+      render() // Re-render when data is loaded
+    }).catch(err => {
+      console.error('[NPI] Failed to load ABC catalogue:', err)
+      abcCatalogueLoading = false
+      abcCatalogueLoaded = true // Mark as loaded to prevent retry spam
+      render()
+    })
+  }
+
+  // Combined toolbar: class filter + search input + info + add button all inline
+  const toolbar = `<div class="bom-abc-filter-row" style="margin-bottom:14px">
+    <span class="bom-abc-filter-label">Class:</span>
+    ${['all','A','B','C'].map(cls =>
+      `<button class="bom-abc-chip${abcCatalogueClassFilter === cls ? ' active' : ''}"
+        onclick="abcCatalogueClassFilter='${cls}';npi.bom.refreshABCCatalogueResults()">${cls === 'all' ? 'All' : cls}</button>`
+    ).join('')}
+    <input type="text" class="cell-edit" id="abcCatalogueSearch" value="${esc(abcCatalogueSearch)}"
+      oninput="npi.bom.setABCSearch(this.value);npi.bom.refreshABCCatalogueResults()"
+      placeholder="Search by PN, manufacturer PN, or description…" style="flex:1;min-width:160px;max-width:260px;margin-left:4px">
+    <span style="margin-left:auto;display:flex;gap:6px;flex-shrink:0">
+      <button class="btn btn-ghost btn-sm" onclick="npi.bom.showAbcInfo()">What are A / B / C? ℹ</button>
+      <button class="btn btn-primary btn-sm" onclick="npi.bom.openABCNew()">＋ Add Part</button>
+    </span>
+  </div>`
+
+  return `<div style="width:fit-content;min-width:600px">${toolbar}<div id="abcCatalogueResults">${npi.bom.renderABCCatalogueResults()}</div></div>`
 }
 
 npi.bom.loadABCCatalogue = function() {

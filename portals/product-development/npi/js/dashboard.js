@@ -489,6 +489,7 @@ npi.dashboard.renderDashboard = function() {
   const famIcon    = familyInfo?.icon || '📋'
   const famLabel   = familyInfo?.label || familyInfo?.name || p.family || 'Other'
   const linkedProduct = p.product_id && productsState ? productsState.products.find(pr => pr.id === p.product_id) : null
+  const linkedPartNumber = linkedProduct?.part_number || p.partNumber || ''
   const linkedScope = linkedProduct ? (linkedProduct.scope || 'overhaul') : null
   const scopeDisplayIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
   const linkedScopeIcon = linkedScope ? (scopeDisplayIcons[linkedScope] || '🔄') : '🔄'
@@ -606,6 +607,7 @@ npi.dashboard.renderDashboard = function() {
               ${p.unit ? `<span>🚂 ${esc(p.unit)}</span>` : ''}
               ${p.pm ? `<span>📋 ${esc(p.pm)}</span>` : ''}
               ${p.qNumber ? `<span>🔢 Q ${esc(p.qNumber)}</span>` : ''}
+              ${linkedPartNumber ? `<span>🏷 ${esc(linkedPartNumber)}</span>` : ''}
               ${linkedScopeLabel ? `<span>${linkedScopeIcon} ${esc(linkedScopeLabel)}</span>` : ''}
             </div>
             <div style="margin-top:8px;font-size:12px;color:var(--muted)">
