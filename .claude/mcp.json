@@ -35,8 +35,8 @@
       "commands": [
         "npm test",
         "npm run check:all",
-        "npm run lint",
-        "npm run format"
+        "npm run lint:npi",
+        "npm run format:npi"
       ]
     },
     "supabase-cli": {
@@ -49,18 +49,35 @@
       ]
     }
   },
+  "agents": {
+    "code-review": {
+      "command": "node .claude/agents/code-review.js",
+      "description": "Runs lint + tests, writes a JSON summary and a dated log under .claude/agents/logs/"
+    },
+    "testing": {
+      "command": "node .claude/agents/testing.js",
+      "description": "Runs npm test and prints a short JSON success/failure summary"
+    },
+    "debugging": {
+      "command": "node .claude/agents/debugging.js",
+      "description": "Reads a JSON payload from stdin and returns heuristic diagnostics for test failures"
+    }
+  },
   "automation": {
     "on-commit": {
       "description": "Run quality checks before each commit",
-      "commands": ["npm run check:all"]
+      "agent": "testing",
+      "rule": ".claude/rules/on-commit.json"
     },
     "on-test-failure": {
       "description": "Analyze test failures and suggest fixes",
-      "agent": "debugging"
+      "agent": "debugging",
+      "rule": ".claude/rules/on-test-failure.json"
     },
     "on-pr-open": {
       "description": "Review PR for code quality and test coverage",
-      "agents": ["code-review", "testing"]
+      "agents": ["code-review", "testing"],
+      "rule": ".claude/rules/on-pr-open.json"
     }
   }
 }
