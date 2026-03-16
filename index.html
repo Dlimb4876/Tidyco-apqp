@@ -320,7 +320,7 @@
 <!-- ABC Catalogue Entry Edit/Add -->
 <div class="modal-bg" id="modalABCEdit" style="display:none">
   <div class="modal">
-    <div class="modal-title">📦 Parts Catalogue Entry</div>
+    <div class="modal-title">📦 Parts Database Entry</div>
     <div class="field">
       <label>Tidyco Part Number *</label>
       <input id="abcEditForm_pn" class="cell-edit" placeholder="e.g. FAS-001" style="font-family:'IBM Plex Mono',monospace">
@@ -379,6 +379,7 @@
       </div>
     </div>
     <div class="modal-actions">
+      <button id="abcEditForm_deleteBtn" class="btn btn-danger" onclick="npi.bom.deleteFromModal()" style="margin-right:auto;display:none">🗑 Delete Part</button>
       <button class="btn btn-ghost" onclick="npi.bom.cancelABCEdit()">Cancel</button>
       <button class="btn btn-primary" onclick="npi.bom.saveABCEdit()">Save</button>
     </div>

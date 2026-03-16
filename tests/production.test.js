@@ -30,6 +30,7 @@ global.removeRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
 global.db = { projects: [] };
 global.getFamilies = () => [];
+global.getWorkAreaOptions = () => '';
 global.esc = (v) => String(v ?? '')
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')

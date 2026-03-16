@@ -227,7 +227,7 @@ function prodCapDrawWorkAreaChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: { position: 'top', labels: { font: { family: 'IBM Plex Sans', size: 11 }, boxWidth: 12 } },
-        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}h` } }
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${(ctx.parsed.y ?? 0).toLocaleString()}h` } }
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 10 } } },

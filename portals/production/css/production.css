@@ -1115,7 +1115,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   bottom: 0;
   width: 2px;
   background: var(--red);
-  z-index: 3;
+  z-index: 5;
 }
 
 .compact-two-month .gantt-today-label {
@@ -1172,7 +1172,8 @@ tr.batch-row-due-soon { background: #fffbeb; }
   bottom: 5px;
   width: 2px;
   background: rgba(239, 68, 68, 0.55);
-  z-index: 2;
+  z-index: 5;
+  pointer-events: none;
 }
 
 .compact-two-month .gantt-bar {
@@ -1277,7 +1278,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   bottom: 0;
   width: 2px;
   background: var(--red);
-  z-index: 3;
+  z-index: 5;
 }
 
 .six-month-product-view .gantt-today-label {
@@ -1317,7 +1318,8 @@ tr.batch-row-due-soon { background: #fffbeb; }
   bottom: 5px;
   width: 2px;
   background: rgba(239, 68, 68, 0.55);
-  z-index: 2;
+  z-index: 5;
+  pointer-events: none;
 }
 
 .six-month-product-view .gantt-bar {

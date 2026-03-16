@@ -11,7 +11,9 @@ window.productsState = {
 };
 
 const PRODUCTS_CHANNEL = 'products_channel';
+const OVERHAUL_HISTORY_CHANNEL = 'overhaul_history_channel';
 let productsRealtimeActive = false;
+let overhaulRealtimeActive = false;
 
 function productsDataIsKanbanVisible() {
   return currentSection === 'projects' ||
@@ -86,6 +88,48 @@ function productsDataInitRealtime() {
   productsRealtimeActive = !!sub;
 }
 
+function productsDataInitOverhaulRealtime() {
+  if (overhaulRealtimeActive) return;
+  if (typeof createRealtimeSubscription !== 'function') return;
+
+  const sub = createRealtimeSubscription('overhaul_history', OVERHAUL_HISTORY_CHANNEL, {
+    onInsert: (row) => {
+      if (!productsState.history[row.product_id]) {
+        productsState.history[row.product_id] = [];
+      }
+      // Avoid duplicates
+      if (!productsState.history[row.product_id].find(h => h.id === row.id)) {
+        productsState.history[row.product_id].unshift(row);
+      }
+      if (currentSection === 'product-development' && productDevelopmentTab === 'npi') {
+        if (typeof render === 'function') render();
+      }
+    },
+    onUpdate: (row) => {
+      if (productsState.history[row.product_id]) {
+        const idx = productsState.history[row.product_id].findIndex(h => h.id === row.id);
+        if (idx >= 0) {
+          productsState.history[row.product_id][idx] = row;
+          if (currentSection === 'product-development' && productDevelopmentTab === 'npi') {
+            if (typeof render === 'function') render();
+          }
+        }
+      }
+    },
+    onDelete: (row) => {
+      if (productsState.history[row.product_id]) {
+        productsState.history[row.product_id] = productsState.history[row.product_id]
+          .filter(h => h.id !== row.id);
+        if (currentSection === 'product-development' && productDevelopmentTab === 'npi') {
+          if (typeof render === 'function') render();
+        }
+      }
+    }
+  });
+
+  overhaulRealtimeActive = !!sub;
+}
+
 /**
  * Initialize products data from Supabase
  */
@@ -132,6 +176,7 @@ async function productsDataInit() {
 
     productsState.loaded = true;
     productsDataInitRealtime();
+    productsDataInitOverhaulRealtime();
   } catch (err) {
     console.error('❌ Error initializing products:', err);
   }
@@ -386,3 +431,8 @@ function productsDataGetOverhaulTimeOnDate(productId, targetDate) {
 async function productsDataSave() {
   // Data is auto-saved on each operation, but this can be called for explicit sync
 }
+
+window.productsDataUnsubscribeAll = function() {
+  removeRealtimeSubscription(PRODUCTS_CHANNEL);
+  removeRealtimeSubscription(OVERHAUL_HISTORY_CHANNEL);
+};

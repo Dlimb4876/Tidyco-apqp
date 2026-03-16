@@ -385,20 +385,21 @@ function buildGanttTimeline(batches, todayStr) {
     </div>
   `;
 
-  function buildMonthMarkers(offsetDays, daysInMonth) {
+  function buildMonthMarkers(offsetDays, daysInMonth, monthDate) {
     const result = [];
-    for (let day = 1; day <= daysInMonth; day += 5) {
+    const monthShort = monthDate.toLocaleDateString('en-GB', { month: 'short' });
+    for (let day = 1; day <= daysInMonth; day += 7) {
       const left = ((offsetDays + day - 1) / totalDays) * 100;
-      result.push(`<span class="gantt-day-marker" style="left:${left}%;">${day}</span>`);
+      result.push(`<span class="gantt-day-marker" style="left:${left}%;">${day} ${monthShort}</span>`);
     }
-    if ((daysInMonth - 1) % 5 !== 0) {
+    if ((daysInMonth - 1) % 7 !== 0) {
       const monthEndLeft = ((offsetDays + daysInMonth - 1) / totalDays) * 100;
-      result.push(`<span class="gantt-day-marker month-end" style="left:${monthEndLeft}%;">${daysInMonth}</span>`);
+      result.push(`<span class="gantt-day-marker month-end" style="left:${monthEndLeft}%;">${daysInMonth} ${monthShort}</span>`);
     }
     return result.join('');
   }
 
-  const dayMarkers = `${buildMonthMarkers(0, monthOneDays)}${buildMonthMarkers(monthOneDays, monthTwoDays)}`;
+  const dayMarkers = `${buildMonthMarkers(0, monthOneDays, monthOneStart)}${buildMonthMarkers(monthOneDays, monthTwoDays, monthTwoStart)}`;
 
   const windowBatches = batches.filter(batch => {
     const startD = batch.start_date ? new Date(`${batch.start_date}T00:00:00`) : null;
@@ -427,7 +428,7 @@ function buildGanttTimeline(batches, todayStr) {
 
     const statusBadge = getStatusBadge(batch.status);
     const isOverdue = endD && endD < new Date(todayStr) && batch.status !== 'Complete';
-    const displayLabel = product ? esc(product.part_number || product.name || 'Batch') : `${batch.quantity || 0}u`;
+    const displayLabel = product ? esc(product.name || product.part_number || 'Batch') : `${batch.quantity || 0}u`;
 
     const inDate = formatDisplayDate(batch.start_date) || '—';
     const outDate = formatDisplayDate(batch.due_date) || '—';

@@ -6,6 +6,7 @@
 // ═══════════════════════════════════
 
 let abcInlineSaveTimer = null
+const ABC_CATALOGUE_CHANNEL = 'abc_catalogue_channel'
 
 npi.bom.renderABCCatalogue = function() {
   // Load data on first render (asynchronously in background)
@@ -85,39 +86,73 @@ npi.bom.renderABCCatalogue = function() {
         <td class="w44 ctr"><input type="checkbox" ${r.in_sage ? 'checked' : ''}
           onchange="npi.bom.updABCInline(${i}, 'in_sage', this.checked)"
           style="accent-color:var(--green);width:15px;height:15px;cursor:pointer" title="Part in Sage (MRP)"></td>
-        <td class="ctr" style="white-space:nowrap;padding:2px 4px"><button class="btn btn-ghost btn-sm" onclick="npi.bom.openABCEdit(${i})" title="Edit details" style="padding:1px 4px;font-size:12px">✏️</button><button class="del-btn" onclick="npi.bom.delABCEntry(${i})" title="Delete" style="width:20px;height:18px">×</button></td>
+        <td class="ctr" style="white-space:nowrap;padding:2px 4px"><button class="btn btn-ghost btn-sm" onclick="npi.bom.openABCEdit(${i})" title="Edit details" style="padding:1px 4px;font-size:12px">✏️</button></td>
       </tr>`
     }).join('')
 
-  const table = `<div style="overflow-x:auto;width:100%">
-    <table class="tbl bom-tbl abc-catalogue-tbl abc-tbl-compact" style="table-layout:fixed;width:100%">
+  const table = `<div style="overflow-x:auto">
+    <table class="tbl bom-tbl abc-catalogue-tbl abc-tbl-compact" style="table-layout:fixed;width:auto">
       <colgroup>
         <col style="width:150px">
         <col style="width:80px">
-        <col>
+        <col style="width:140px">
         <col style="width:80px">
         <col style="width:170px">
         <col style="width:170px">
         <col style="width:70px">
-        <col style="width:64px">
+        <col style="width:44px">
       </colgroup>
       <thead>${npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Class' }, { label: 'Description' }, { label: 'Units' }, { label: 'Manufacturer OEM' }, { label: 'Manufacturer PN' }, { label: 'In Sage' }, { label: '' }])}</thead>
       <tbody>${tableRows}</tbody>
     </table>
   </div>`
 
-  return `${toolbar}${stats}<div class="card">${table}</div>`
+  return `<div style="width:fit-content;min-width:600px">${toolbar}${stats}<div class="card">${table}</div></div>`
 }
 
 npi.bom.loadABCCatalogue = function() {
   return npiRelFetchABCCatalogue()
     .then(results => {
       abcCatalogueData = results || []
+      npi.bom.subscribeABCCatalogue()
     })
     .catch(err => {
       console.error('[NPI] Failed to load ABC catalogue:', err)
       abcCatalogueData = []
     })
+}
+
+npi.bom.subscribeABCCatalogue = function() {
+  createRealtimeSubscription('abc_catalogue', ABC_CATALOGUE_CHANNEL, {
+    onInsert: (row) => {
+      // Avoid duplicates
+      if (!abcCatalogueData.find(r => r.id === row.id)) {
+        abcCatalogueData.push(row)
+        if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
+          render()
+        }
+      }
+    },
+    onUpdate: (row) => {
+      const idx = abcCatalogueData.findIndex(r => r.id === row.id)
+      if (idx >= 0) {
+        abcCatalogueData[idx] = row
+        if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
+          render()
+        }
+      }
+    },
+    onDelete: (row) => {
+      abcCatalogueData = abcCatalogueData.filter(r => r.id !== row.id)
+      if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
+        render()
+      }
+    }
+  })
+}
+
+window.unsubscribeABCCatalogue = function() {
+  removeRealtimeSubscription(ABC_CATALOGUE_CHANNEL)
 }
 
 npi.bom.setABCSearch = function(val) {
@@ -137,6 +172,7 @@ npi.bom.openABCNew = function() {
   document.getElementById('abcEditForm_manufacturer').value = ''
   document.getElementById('abcEditForm_manufacturerPn').value = ''
   document.getElementById('abcEditForm_datasheetUrl').value = ''
+  document.getElementById('abcEditForm_deleteBtn').style.display = 'none'
   showModal('modalABCEdit')
 }
 
@@ -154,7 +190,18 @@ npi.bom.openABCEdit = function(i) {
   document.getElementById('abcEditForm_manufacturer').value = entry.manufacturer || ''
   document.getElementById('abcEditForm_manufacturerPn').value = entry.manufacturer_pn || ''
   document.getElementById('abcEditForm_datasheetUrl').value = entry.datasheet_url || ''
+  document.getElementById('abcEditForm_deleteBtn').style.display = ''
   showModal('modalABCEdit')
+}
+
+npi.bom.deleteFromModal = async function() {
+  const entry = abcCatalogueData[abcEditTarget]
+  if (!entry) return
+  if (!confirm(`Delete "${entry.item_desc}" from the parts catalogue?\n\nThis cannot be undone.`)) return
+  closeModal('modalABCEdit')
+  await npiRelDeleteABCCatalogueEntry(entry.id)
+  abcCatalogueLoaded = false
+  render()
 }
 
 npi.bom.saveABCEdit = async function() {

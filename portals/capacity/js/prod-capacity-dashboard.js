@@ -225,7 +225,6 @@ function prodCapDrawDashChart() {
     pointRadius: 3,
     pointBackgroundColor: 'rgba(239,68,68,0.9)',
     backgroundColor: 'transparent',
-    stack: undefined,
     fill: false,
     order: 0,
   });
@@ -245,7 +244,7 @@ function prodCapDrawDashChart() {
         },
         tooltip: {
           callbacks: {
-            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}h`
+            label: ctx => `${ctx.dataset.label}: ${(ctx.parsed.y ?? 0).toLocaleString()}h`
           }
         }
       },

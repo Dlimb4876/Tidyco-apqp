@@ -8,6 +8,11 @@ let opsForecastChart = null;
 let opsForecastEditingId = '';
 let opsForecastInlineEditId = '';
 let opsPulseFeedContainer = null;
+let opsForecastShowArchived = false;
+let opsForecastSortCol = '';
+let opsForecastSortDir = 'asc';
+let opsForecastFilterStatus = '';
+let opsForecastFilterText = '';
 
 function opsForecastDomKey(id) {
 	return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_');

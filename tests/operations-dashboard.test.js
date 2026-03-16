@@ -39,6 +39,7 @@ global.supa = {
   removeChannel: jest.fn()
 };
 
+global.getWorkAreaOptions = () => '';
 global.loadRemote = jest.fn().mockResolvedValue(undefined);
 global.prodDataReloadProducts = jest.fn().mockResolvedValue(undefined);
 global.meLoadRelationalTeams = jest.fn().mockResolvedValue([]);

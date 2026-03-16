@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const PROD_CAP_HOURS_PER_DAY = 8;
+const PROD_CAP_DATA_CHANNEL = 'prod_cap_data_channel';
 
 let prodCapState = {
   capacityRecords: [], // { id, work_area, year, month, staff_count, notes }
@@ -22,6 +23,7 @@ async function prodCapDataInit() {
     if (error) throw error;
     prodCapState.capacityRecords = data || [];
     prodCapState.loaded = true;
+    prodCapSubscribeData();
   } catch (err) {
     console.error('❌ Error loading production capacity:', err);
     prodCapState.capacityRecords = [];
@@ -82,6 +84,40 @@ function prodCapSubscribeUtilization() {
 
 function prodCapUnsubscribeUtilization() {
   removeRealtimeSubscription('prod_cap_util_channel');
+}
+
+// ── Subscribe to production capacity changes (real-time sync) ────────────
+function prodCapSubscribeData() {
+  createRealtimeSubscription('production_capacity', PROD_CAP_DATA_CHANNEL, {
+    onInsert: (row) => {
+      // Avoid duplicates
+      if (!prodCapState.capacityRecords.find(r => r.id === row.id)) {
+        prodCapState.capacityRecords.push(row);
+        if (currentSection === 'capacity' && capacityTab === 'production') {
+          render();
+        }
+      }
+    },
+    onUpdate: (row) => {
+      const idx = prodCapState.capacityRecords.findIndex(r => r.id === row.id);
+      if (idx >= 0) {
+        prodCapState.capacityRecords[idx] = row;
+        if (currentSection === 'capacity' && capacityTab === 'production') {
+          render();
+        }
+      }
+    },
+    onDelete: (row) => {
+      prodCapState.capacityRecords = prodCapState.capacityRecords.filter(r => r.id !== row.id);
+      if (currentSection === 'capacity' && capacityTab === 'production') {
+        render();
+      }
+    }
+  });
+}
+
+function prodCapUnsubscribeData() {
+  removeRealtimeSubscription(PROD_CAP_DATA_CHANNEL);
 }
 
 // ── Save utilization factor to Supabase (global) and localStorage ────────
@@ -413,3 +449,8 @@ function prodCapLoadMonthOffset() {
     prodCapMonthOffset = parseInt(stored, 10);
   }
 }
+
+window.prodCapUnsubscribeAll = function() {
+  prodCapUnsubscribeData();
+  prodCapUnsubscribeUtilization();
+};

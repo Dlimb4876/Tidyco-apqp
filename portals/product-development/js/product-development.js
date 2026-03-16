@@ -92,7 +92,7 @@ function renderProductDevelopment() {
           <div class="hub-card-content">
             <div class="hub-icon">🔩</div>
             <div class="proj-card-name">Parts Database</div>
-            <div class="proj-card-meta">A, B & C-Class parts catalogue</div>
+            <div class="proj-card-meta">A, B & C-Class parts database</div>
           </div>
         </div>
       </div>
@@ -200,7 +200,7 @@ function renderPartsDatabase() {
     : loadingMsg;
 
   return `
-    <div class="proj-home proj-home--fullwidth">
+    <div class="proj-home">
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Parts Database</div>

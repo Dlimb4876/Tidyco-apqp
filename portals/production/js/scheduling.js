@@ -206,9 +206,7 @@ function renderScheduling() {
           <label>Work Location:</label>
           <select id="work-location-filter">
             <option value="">— All Locations</option>
-            <option value="Unit 2" ${prodSchedulingFilters.workLocation === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
-            <option value="Unit 3" ${prodSchedulingFilters.workLocation === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
-            <option value="Unit 6" ${prodSchedulingFilters.workLocation === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
+            ${getWorkAreaOptions(prodSchedulingFilters.workLocation)}
           </select>
         </div>
         <div class="filter-group">

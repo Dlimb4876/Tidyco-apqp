@@ -306,6 +306,65 @@
   overflow-x: auto;
 }
 
+.ops-forecast-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ops-forecast-filter-text {
+  flex: 1 1 160px;
+  min-width: 140px;
+  max-width: 260px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 13px;
+  color: #0b2a43;
+  background: #fff;
+}
+
+.ops-forecast-filter-status {
+  flex: 0 0 auto;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 13px;
+  color: #0b2a43;
+  background: #fff;
+}
+
+.ops-forecast-archived-toggle {
+  flex: 0 0 auto;
+  height: 32px;
+  font-size: 12px;
+}
+
+.ops-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.ops-sortable:hover {
+  color: #0b2a43;
+}
+
+.ops-sort-icon {
+  font-size: 10px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+.ops-sort-inactive {
+  opacity: 0.35;
+}
+
 .ops-forecast-table {
   width: 100%;
   min-width: 920px;

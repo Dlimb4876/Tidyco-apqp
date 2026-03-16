@@ -820,6 +820,18 @@ window.meDataSubscribe = function() {
         });
         render();
       }
+    },
+    {
+      table: 'me_task_subtasks',
+      onInsert: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); },
+      onUpdate: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); },
+      onDelete: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); }
+    },
+    {
+      table: 'me_task_pert_history',
+      onInsert: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); },
+      onUpdate: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); },
+      onDelete: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); }
     }
   ], 'me_all_channel');
 };

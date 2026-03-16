@@ -20,6 +20,11 @@ describe('Production Products Delegation (products.js)', () => {
       { id: 'fam-a', label: 'Family A' },
       { id: 'fam-b', label: 'Family B' }
     ]);
+    global.getWorkAreaOptions = jest.fn((selected) =>
+      ['Unit 2', 'Unit 3', 'Unit 6']
+        .map(n => `<option value="${n}" ${selected === n ? 'selected' : ''}>${n}</option>`)
+        .join('')
+    );
 
     global.handleCellKey = jest.fn();
     global.setProductionTab = jest.fn();

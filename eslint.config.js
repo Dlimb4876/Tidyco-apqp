@@ -62,6 +62,8 @@ export default [
         exportJSON: 'readonly',
         importJSON: 'readonly',
         getFamilies: 'readonly',
+        getWorkAreaOptions: 'readonly',
+        workAreasState: 'readonly',
         // Utils (helpers.js)
         esc: 'readonly',
         showModal: 'readonly',

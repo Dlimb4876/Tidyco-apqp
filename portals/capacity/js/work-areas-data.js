@@ -122,6 +122,14 @@ window.workAreasDataGetAll = function() {
   return [...workAreasState.workAreas];
 };
 
+// ── Build <option> elements for all work area dropdowns ──────────
+// Usage: `<option value="">—</option>${getWorkAreaOptions(currentValue)}`
+window.getWorkAreaOptions = function(selected) {
+  return workAreasState.workAreas
+    .map(w => `<option value="${esc(w.name)}" ${selected === w.name ? 'selected' : ''}>${esc(w.name)}</option>`)
+    .join('');
+};
+
 // ── Real-time subscription ───────────────────────────────────────
 function workAreasDataSubscribe() {
   createRealtimeSubscription('work_areas', 'work_areas_channel', {

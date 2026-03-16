@@ -4,28 +4,97 @@
 
 function opsRenderForecastRows(rows) {
 	const safeRows = Array.isArray(rows) ? rows : [];
-	if (safeRows.length === 0) {
-		return '<div class="ops-empty-note">No opportunities yet. Add a tender or opportunity to start the forecast layer.</div>';
+
+	// Read filter/sort state
+	const filterText = (typeof opsForecastFilterText !== 'undefined' ? opsForecastFilterText : '').trim().toLowerCase();
+	const filterStatus = typeof opsForecastFilterStatus !== 'undefined' ? opsForecastFilterStatus : '';
+	const showArchived = typeof opsForecastShowArchived !== 'undefined' ? opsForecastShowArchived : false;
+	const sortCol = typeof opsForecastSortCol !== 'undefined' ? opsForecastSortCol : '';
+	const sortDir = typeof opsForecastSortDir !== 'undefined' ? opsForecastSortDir : 'asc';
+
+	// Filter rows
+	let displayRows = safeRows.filter(row => {
+		if (!showArchived && row.status === 'archived') return false;
+		if (filterStatus && row.status !== filterStatus) return false;
+		if (filterText && !(row.title || '').toLowerCase().includes(filterText)) return false;
+		return true;
+	});
+
+	// Sort rows
+	if (sortCol) {
+		displayRows = [...displayRows].sort((a, b) => {
+			let av, bv;
+			switch (sortCol) {
+				case 'title': av = (a.title || '').toLowerCase(); bv = (b.title || '').toLowerCase(); break;
+				case 'status': av = a.status || ''; bv = b.status || ''; break;
+				case 'area': av = (a.work_area || '').toLowerCase(); bv = (b.work_area || '').toLowerCase(); break;
+				case 'start': av = a.start_date || ''; bv = b.start_date || ''; break;
+				case 'end': av = a.due_date || ''; bv = b.due_date || ''; break;
+				case 'hours': av = opsToNumber(a.total_hours, 0); bv = opsToNumber(b.total_hours, 0); break;
+				case 'probability': av = opsToNumber(a.probability_pct, 0); bv = opsToNumber(b.probability_pct, 0); break;
+				default: av = ''; bv = '';
+			}
+			if (av < bv) return sortDir === 'asc' ? -1 : 1;
+			if (av > bv) return sortDir === 'asc' ? 1 : -1;
+			return 0;
+		});
+	}
+
+	function sortIcon(col) {
+		if (sortCol !== col) return '<span class="ops-sort-icon ops-sort-inactive">⇅</span>';
+		return sortDir === 'asc' ? '<span class="ops-sort-icon">↑</span>' : '<span class="ops-sort-icon">↓</span>';
+	}
+
+	const archivedCount = safeRows.filter(r => r.status === 'archived').length;
+
+	const filterControls = `
+		<div class="ops-forecast-filters">
+			<input
+				class="ops-forecast-filter-text"
+				type="text"
+				placeholder="Filter by title…"
+				value="${esc(opsForecastFilterText || '')}"
+				onchange="opsForecastSetFilterText(this.value)"
+			/>
+			<select class="ops-forecast-filter-status" onchange="opsForecastSetFilterStatus(this.value)">
+				<option value="">All statuses</option>
+				<option value="identified" ${filterStatus === 'identified' ? 'selected' : ''}>Identified</option>
+				<option value="quoted" ${filterStatus === 'quoted' ? 'selected' : ''}>Quoted</option>
+				<option value="negotiation" ${filterStatus === 'negotiation' ? 'selected' : ''}>Negotiation</option>
+				<option value="won" ${filterStatus === 'won' ? 'selected' : ''}>Won</option>
+				<option value="active" ${filterStatus === 'active' ? 'selected' : ''}>Active</option>
+				<option value="lost" ${filterStatus === 'lost' ? 'selected' : ''}>Lost</option>
+			</select>
+			<button class="btn btn-ghost ops-forecast-archived-toggle" onclick="opsForecastToggleArchived()">
+				${showArchived ? 'Hide Archived' : `Show Archived${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
+			</button>
+		</div>`;
+
+	if (displayRows.length === 0) {
+		return `
+			${filterControls}
+			<div class="ops-empty-note">${safeRows.length === 0 ? 'No opportunities yet. Add a tender or opportunity to start the forecast layer.' : 'No opportunities match the current filters.'}</div>`;
 	}
 
 	return `
+		${filterControls}
 		<div class="ops-forecast-table-wrap">
 			<table class="ops-forecast-table">
 				<thead>
 					<tr>
-						<th>Title</th>
-						<th>Status</th>
-						<th>Area</th>
-						<th>Start</th>
-						<th>Due</th>
-						<th>Total Hours</th>
-						<th>Probability</th>
+						<th class="ops-sortable" onclick="opsForecastSetSort('title')">Title ${sortIcon('title')}</th>
+						<th class="ops-sortable" onclick="opsForecastSetSort('status')">Status ${sortIcon('status')}</th>
+						<th class="ops-sortable" onclick="opsForecastSetSort('area')">Area ${sortIcon('area')}</th>
+						<th class="ops-sortable" onclick="opsForecastSetSort('start')">Start ${sortIcon('start')}</th>
+						<th class="ops-sortable" onclick="opsForecastSetSort('end')">End ${sortIcon('end')}</th>
+						<th class="ops-sortable" onclick="opsForecastSetSort('hours')">Total Hours ${sortIcon('hours')}</th>
+						<th class="ops-sortable" onclick="opsForecastSetSort('probability')">Probability ${sortIcon('probability')}</th>
 						<th>Weighted</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
-					${safeRows.map(row => {
+					${displayRows.map(row => {
 						const inlineMode = opsForecastInlineEditId === row.id;
 						const totalHours = opsToNumber(row.total_hours, 0);
 						const probability = Math.max(0, Math.min(100, opsToNumber(row.probability_pct, 0)));
@@ -59,7 +128,7 @@ function opsRenderForecastRows(rows) {
 								</td>
 								<td>
 									${inlineMode
-										? `<input class="ops-forecast-inline" id="opsForecastInline_${key}_work_area" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')" value="${esc(row.work_area || '')}" />`
+									? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_work_area" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')"><option value="">— Unassigned</option>${getWorkAreaOptions(row.work_area || '')}</select>`
 										: esc(row.work_area || 'Unassigned')}
 								</td>
 								<td>
@@ -88,11 +157,10 @@ function opsRenderForecastRows(rows) {
 								</td>
 								<td>${esc(opsFormatHours(weightedHours))}</td>
 								<td class="ops-forecast-actions">
-									<button class="btn btn-ghost" onclick="opsForecastStartEdit('${esc(row.id)}')">Edit</button>
 									${inlineMode
 										? `<button class="btn btn-primary" onclick="opsForecastSaveInline('${esc(row.id)}')">Save</button>
 											 <button class="btn btn-ghost" onclick="opsForecastCancelInline()">Cancel</button>`
-										: `<button class="btn btn-ghost" onclick="opsForecastStartInlineEdit('${esc(row.id)}')">Quick Edit</button>`}
+										: `<button class="btn btn-ghost" onclick="opsForecastStartInlineEdit('${esc(row.id)}')">Edit</button>`}
 									<button class="btn btn-ghost" onclick="opsForecastSetStatus('${esc(row.id)}', 'archived')">Archive</button>
 									<button class="btn btn-ghost" onclick="opsForecastDelete('${esc(row.id)}')">Delete</button>
 								</td>
@@ -179,9 +247,14 @@ function opsRenderForecastView(metrics) {
 							<option value="archived" ${editingRow?.status === 'archived' ? 'selected' : ''}>Archived</option>
 						</select>
 					</label>
-					<label>Work Area<input type="text" name="work_area" placeholder="Unit 2" value="${esc(editingRow?.work_area || '')}" /></label>
+					<label>Work Area
+						<select name="work_area">
+							<option value="">— Unassigned</option>
+							${getWorkAreaOptions(editingRow?.work_area || '')}
+						</select>
+					</label>
 					<label>Start Date<input type="date" name="start_date" required value="${esc(editingRow?.start_date || '')}" /></label>
-					<label>Due Date<input type="date" name="due_date" required value="${esc(editingRow?.due_date || '')}" /></label>
+					<label>End Date<input type="date" name="due_date" required value="${esc(editingRow?.due_date || '')}" /></label>
 					<label>Total Hours<input type="number" name="total_hours" required min="0" step="1" value="${esc(editingRow?.total_hours || 0)}" /></label>
 					<label>Probability
 						<select name="probability_band" required>

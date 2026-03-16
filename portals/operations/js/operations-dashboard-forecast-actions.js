@@ -180,3 +180,29 @@ function opsForecastCancelEdit() {
 	opsForecastInlineEditId = '';
 	if (currentSection === 'operations') render();
 }
+
+function opsForecastSetSort(col) {
+	if (!col) return;
+	if (opsForecastSortCol === col) {
+		opsForecastSortDir = opsForecastSortDir === 'asc' ? 'desc' : 'asc';
+	} else {
+		opsForecastSortCol = col;
+		opsForecastSortDir = 'asc';
+	}
+	if (currentSection === 'operations') render();
+}
+
+function opsForecastSetFilterStatus(val) {
+	opsForecastFilterStatus = (val || '').toString();
+	if (currentSection === 'operations') render();
+}
+
+function opsForecastSetFilterText(val) {
+	opsForecastFilterText = (val || '').toString().trim();
+	if (currentSection === 'operations') render();
+}
+
+function opsForecastToggleArchived() {
+	opsForecastShowArchived = !opsForecastShowArchived;
+	if (currentSection === 'operations') render();
+}

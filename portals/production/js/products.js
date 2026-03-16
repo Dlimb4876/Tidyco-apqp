@@ -30,9 +30,7 @@ function renderProductMaster() {
       <td>
         <select class="cell-edit" id="prod-new-unit" data-action="new-row-keydown" data-field="unit">
           <option value="">—</option>
-          <option value="Unit 2">Unit 2</option>
-          <option value="Unit 3">Unit 3</option>
-          <option value="Unit 6">Unit 6</option>
+          ${getWorkAreaOptions('')}
         </select>
       </td>
       <td><textarea class="cell-edit" id="prod-new-notes" placeholder="Notes" data-action="new-row-keydown" data-field="notes"></textarea></td>
@@ -63,9 +61,7 @@ function renderProductMaster() {
         <td>
           <select class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="assigned_unit" data-keydown="edit-row">
             <option value="">—</option>
-            <option value="Unit 2" ${prod.assigned_unit === 'Unit 2' ? 'selected' : ''}>Unit 2</option>
-            <option value="Unit 3" ${prod.assigned_unit === 'Unit 3' ? 'selected' : ''}>Unit 3</option>
-            <option value="Unit 6" ${prod.assigned_unit === 'Unit 6' ? 'selected' : ''}>Unit 6</option>
+            ${getWorkAreaOptions(prod.assigned_unit || '')}
           </select>
         </td>
         <td><textarea class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="notes" data-keydown="edit-row">${esc(prod.notes || '')}</textarea></td>
