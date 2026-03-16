@@ -224,12 +224,12 @@ function feedbackRenderSubmitTab() {
 
         <div class="field">
           <label>Submitted By</label>
-          <input type="text" value="${esc(email)}" readonly class="feedback-readonly-field">
+          <input type="text" name="feedback_submitted_by" value="${esc(email)}" readonly class="feedback-readonly-field">
         </div>
 
         <div class="field">
           <label>Date</label>
-          <input type="text" value="${today}" readonly class="feedback-readonly-field">
+          <input type="text" name="feedback_submitted_date" value="${today}" readonly class="feedback-readonly-field">
         </div>
 
         <div class="field">
@@ -282,7 +282,7 @@ function feedbackRenderBrowseTab(feedback) {
     <div class="feedback-filters">
       <div class="feedback-filter-group">
         <label>Type</label>
-        <select class="feedback-filter-select" onchange="feedbackApp.setFilter('type', this.value)">
+        <select class="feedback-filter-select" name="feedback_filter_type" onchange="feedbackApp.setFilter('type', this.value)">
           <option value="all" ${filter.type === 'all' ? 'selected' : ''}>All Types</option>
           <option value="bug" ${filter.type === 'bug' ? 'selected' : ''}>🐛 Bugs</option>
           <option value="usability" ${filter.type === 'usability' ? 'selected' : ''}>💡 Usability</option>
@@ -292,7 +292,7 @@ function feedbackRenderBrowseTab(feedback) {
       </div>
       <div class="feedback-filter-group">
         <label>Status</label>
-        <select class="feedback-filter-select" onchange="feedbackApp.setFilter('status', this.value)">
+        <select class="feedback-filter-select" name="feedback_filter_status" onchange="feedbackApp.setFilter('status', this.value)">
           <option value="all" ${filter.status === 'all' ? 'selected' : ''}>All Status</option>
           <option value="open" ${filter.status === 'open' ? 'selected' : ''}>Open</option>
           <option value="in_review" ${filter.status === 'in_review' ? 'selected' : ''}>In Review</option>

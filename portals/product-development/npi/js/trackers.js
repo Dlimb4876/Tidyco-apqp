@@ -17,13 +17,13 @@ npi.tracker.renderActions = function() {
     const overdue = a.status !== 'Closed' && a.due && new Date(a.due) < today
     return `<tr class="${overdue ? 'row-overdue' : ''}">
       <td class="w28 ctr" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${i + 1}</td>
-      <td><textarea class="cell-edit" rows="2" onchange="npi.tracker.updAction(${i},'desc',this.value)" placeholder="Action description">${esc(a.desc)}</textarea></td>
-      <td><input class="cell-edit" value="${esc(a.owner)}" onchange="npi.tracker.updAction(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
-      <td><input type="date" class="cell-edit" value="${a.due || ''}" onchange="npi.tracker.updAction(${i},'due',this.value)" style="width:100%;${overdue ? 'color:var(--red);font-weight:600' : ''}"></td>
-      <td><select class="cell-edit" onchange="npi.tracker.updAction(${i},'status',this.value)" style="width:100%">${['Open', 'In Progress', 'Closed', 'Blocked'].map(s => `<option${a.status === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
-      <td><select class="cell-edit" onchange="npi.tracker.updAction(${i},'priority',this.value)" style="width:100%">${['High', 'Medium', 'Low'].map(s => `<option${a.priority === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
-      <td><select class="cell-edit" onchange="npi.tracker.updAction(${i},'source',this.value)" style="width:100%">${['Gate', 'PFMEA', 'Risk', 'General'].map(s => `<option${a.source === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
-      <td><input class="cell-edit" value="${esc(a.notes)}" onchange="npi.tracker.updAction(${i},'notes',this.value)" placeholder="Notes" style="width:100%"></td>
+      <td><textarea class="cell-edit" name="tracker_action_${i}_desc" rows="2" onchange="npi.tracker.updAction(${i},'desc',this.value)" placeholder="Action description">${esc(a.desc)}</textarea></td>
+      <td><input class="cell-edit" name="tracker_action_${i}_owner" value="${esc(a.owner)}" onchange="npi.tracker.updAction(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
+      <td><input type="date" class="cell-edit" name="tracker_action_${i}_due" value="${a.due || ''}" onchange="npi.tracker.updAction(${i},'due',this.value)" style="width:100%;${overdue ? 'color:var(--red);font-weight:600' : ''}"></td>
+      <td><select class="cell-edit" name="tracker_action_${i}_status" onchange="npi.tracker.updAction(${i},'status',this.value)" style="width:100%">${['Open', 'In Progress', 'Closed', 'Blocked'].map(s => `<option${a.status === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
+      <td><select class="cell-edit" name="tracker_action_${i}_priority" onchange="npi.tracker.updAction(${i},'priority',this.value)" style="width:100%">${['High', 'Medium', 'Low'].map(s => `<option${a.priority === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
+      <td><select class="cell-edit" name="tracker_action_${i}_source" onchange="npi.tracker.updAction(${i},'source',this.value)" style="width:100%">${['Gate', 'PFMEA', 'Risk', 'General'].map(s => `<option${a.source === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
+      <td><input class="cell-edit" name="tracker_action_${i}_notes" value="${esc(a.notes)}" onchange="npi.tracker.updAction(${i},'notes',this.value)" placeholder="Notes" style="width:100%"></td>
       <td style="text-align:center"><button class="del-btn" onclick="npi.tracker.delAction(${i})">×</button></td>
     </tr>`
   }).join('')
@@ -67,14 +67,14 @@ npi.tracker.renderRisks = function() {
     const sc    = score >= 12 ? 'rpn-hi' : score >= 6 ? 'rpn-md' : 'rpn-lo'
     return `<tr class="${score >= 12 && r.status !== 'Closed' ? 'row-hi' : ''}">
       <td style="text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${i + 1}</td>
-      <td><textarea class="cell-edit" rows="2" onchange="npi.tracker.updRisk(${i},'desc',this.value)" placeholder="Risk description">${esc(r.desc)}</textarea></td>
-      <td><select class="cell-edit" onchange="npi.tracker.updRisk(${i},'cat',this.value)" style="width:100%">${['Technical', 'Supply Chain', 'Schedule', 'Resource', 'Customer', 'Commercial'].map(s => `<option${r.cat === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
-      <td><input class="cell-edit" value="${esc(r.owner)}" onchange="npi.tracker.updRisk(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
-      <td class="risk-score-cell">${npi.components.scoreInput(r.lik || 1, { min: 1, max: 5, className: 'cell-edit mono risk-score-input', oninput: `const v=npi.tracker.riskScorePreview(this,${r.lik || 1});npi.tracker.updRisk(${i},'lik',v,false);npi.tracker.refreshRS(${i},false)`, onchange: `const v=npi.tracker.riskScoreInput(this);npi.tracker.updRisk(${i},'lik',v);npi.tracker.refreshRS(${i})` })}</td>
-      <td class="risk-score-cell">${npi.components.scoreInput(r.imp || 1, { min: 1, max: 5, className: 'cell-edit mono risk-score-input', oninput: `const v=npi.tracker.riskScorePreview(this,${r.imp || 1});npi.tracker.updRisk(${i},'imp',v,false);npi.tracker.refreshRS(${i},false)`, onchange: `const v=npi.tracker.riskScoreInput(this);npi.tracker.updRisk(${i},'imp',v);npi.tracker.refreshRS(${i})` })}</td>
+      <td><textarea class="cell-edit" name="tracker_risk_${i}_desc" rows="2" onchange="npi.tracker.updRisk(${i},'desc',this.value)" placeholder="Risk description">${esc(r.desc)}</textarea></td>
+      <td><select class="cell-edit" name="tracker_risk_${i}_cat" onchange="npi.tracker.updRisk(${i},'cat',this.value)" style="width:100%">${['Technical', 'Supply Chain', 'Schedule', 'Resource', 'Customer', 'Commercial'].map(s => `<option${r.cat === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
+      <td><input class="cell-edit" name="tracker_risk_${i}_owner" value="${esc(r.owner)}" onchange="npi.tracker.updRisk(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
+      <td class="risk-score-cell">${npi.components.scoreInput(r.lik || 1, { min: 1, max: 5, className: 'cell-edit mono risk-score-input', name: `tracker_risk_${i}_lik`, oninput: `const v=npi.tracker.riskScorePreview(this,${r.lik || 1});npi.tracker.updRisk(${i},'lik',v,false);npi.tracker.refreshRS(${i},false)`, onchange: `const v=npi.tracker.riskScoreInput(this);npi.tracker.updRisk(${i},'lik',v);npi.tracker.refreshRS(${i})` })}</td>
+      <td class="risk-score-cell">${npi.components.scoreInput(r.imp || 1, { min: 1, max: 5, className: 'cell-edit mono risk-score-input', name: `tracker_risk_${i}_imp`, oninput: `const v=npi.tracker.riskScorePreview(this,${r.imp || 1});npi.tracker.updRisk(${i},'imp',v,false);npi.tracker.refreshRS(${i},false)`, onchange: `const v=npi.tracker.riskScoreInput(this);npi.tracker.updRisk(${i},'imp',v);npi.tracker.refreshRS(${i})` })}</td>
       <td style="text-align:center"><span class="rpn ${sc}" id="rs_${i}">${score}</span></td>
-      <td><textarea class="cell-edit" rows="2" onchange="npi.tracker.updRisk(${i},'mit',this.value)" placeholder="Mitigation">${esc(r.mit)}</textarea></td>
-      <td><select class="cell-edit" onchange="npi.tracker.updRisk(${i},'status',this.value)" style="width:100%">${['Open', 'Mitigated', 'Closed'].map(s => `<option${r.status === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
+      <td><textarea class="cell-edit" name="tracker_risk_${i}_mit" rows="2" onchange="npi.tracker.updRisk(${i},'mit',this.value)" placeholder="Mitigation">${esc(r.mit)}</textarea></td>
+      <td><select class="cell-edit" name="tracker_risk_${i}_status" onchange="npi.tracker.updRisk(${i},'status',this.value)" style="width:100%">${['Open', 'Mitigated', 'Closed'].map(s => `<option${r.status === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
       <td style="text-align:center"><button class="del-btn" onclick="npi.tracker.delRisk(${i})">×</button></td>
     </tr>`
   }).join('')

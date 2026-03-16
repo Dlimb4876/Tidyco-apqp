@@ -237,10 +237,10 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
         <td>${esc(product.name)}</td>
         <td>${esc(row.familyLabel)}</td>
         <td>${typeof renderStatusBadge === 'function' ? renderStatusBadge(row.status) : esc(row.status)}</td>
-        <td><input type="date" value="${product.supportFrom || ''}" data-cap-action="cap-products-upd" data-field="supportFrom"></td>
-        <td><input type="date" value="${product.supportUntil || ''}" data-cap-action="cap-products-upd" data-field="supportUntil"></td>
-        <td><input type="number" value="${product.hoursPerWeek || 0}" step="0.1" data-cap-action="cap-products-upd" data-field="hoursPerWeek"></td>
-        <td><input value="${esc(product.notes || '')}" data-cap-action="cap-products-upd" data-field="notes"></td>
+        <td><input name="cap_products_${rowIndex}_supportFrom" type="date" value="${product.supportFrom || ''}" data-cap-action="cap-products-upd" data-field="supportFrom"></td>
+        <td><input name="cap_products_${rowIndex}_supportUntil" type="date" value="${product.supportUntil || ''}" data-cap-action="cap-products-upd" data-field="supportUntil"></td>
+        <td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${product.hoursPerWeek || 0}" step="0.1" data-cap-action="cap-products-upd" data-field="hoursPerWeek"></td>
+        <td><input name="cap_products_${rowIndex}_notes" value="${esc(product.notes || '')}" data-cap-action="cap-products-upd" data-field="notes"></td>
       </tr>`;
   });
 

@@ -30,13 +30,13 @@ npi.cp.render = function() {
 
     return `<tr><td class="w100"><span class="tag tag-step" style="font-size:10px">${sl}</span></td>
       <td class="w140" style="font-size:11px;color:var(--mid)">${fr ? esc(fr.mode || '—') : '—'}${ef ? `<span style="color:var(--muted)"> → ${esc(ef.effect || '')}</span>` : ''}${ca ? `<div style="font-size:10px;color:var(--muted);margin-top:1px">Cause: ${esc(ca.cause || '')}</div>` : ''}${rpnBadge ? ` ${rpnBadge}` : ''}</td>
-      <td><input class="cell-edit" value="${esc(r.char)}" data-action="cp-upd" data-idx="${i}" data-field="char" placeholder="Characteristic"></td>
-      <td class="w80"><select class="cell-edit" data-action="cp-upd" data-idx="${i}" data-field="type">${['Product', 'Process', 'Dimensional', 'Functional', 'Visual'].map(o => `<option${r.type === o ? ' selected' : ''}>${o}</option>`).join('')}</select></td>
-      <td class="w110"><input class="cell-edit mono" value="${esc(r.spec)}" data-action="cp-upd" data-idx="${i}" data-field="spec" placeholder="Spec"></td>
-      <td class="w110"><input class="cell-edit" value="${esc(r.method)}" data-action="cp-upd" data-idx="${i}" data-field="method" placeholder="Method"></td>
-      <td class="w60"><input class="cell-edit" value="${esc(r.freq)}" data-action="cp-upd" data-idx="${i}" data-field="freq" placeholder="100%"></td>
-      <td class="w70"><input class="cell-edit" value="${esc(r.resp)}" data-action="cp-upd" data-idx="${i}" data-field="resp" placeholder="Who"></td>
-      <td><textarea class="cell-edit" rows="2" data-action="cp-upd" data-idx="${i}" data-field="reaction" placeholder="Reaction plan">${esc(r.reaction)}</textarea></td>
+      <td><input class="cell-edit" name="cp_${i}_char" value="${esc(r.char)}" data-action="cp-upd" data-idx="${i}" data-field="char" placeholder="Characteristic"></td>
+      <td class="w80"><select class="cell-edit" name="cp_${i}_type" data-action="cp-upd" data-idx="${i}" data-field="type">${['Product', 'Process', 'Dimensional', 'Functional', 'Visual'].map(o => `<option${r.type === o ? ' selected' : ''}>${o}</option>`).join('')}</select></td>
+      <td class="w110"><input class="cell-edit mono" name="cp_${i}_spec" value="${esc(r.spec)}" data-action="cp-upd" data-idx="${i}" data-field="spec" placeholder="Spec"></td>
+      <td class="w110"><input class="cell-edit" name="cp_${i}_method" value="${esc(r.method)}" data-action="cp-upd" data-idx="${i}" data-field="method" placeholder="Method"></td>
+      <td class="w60"><input class="cell-edit" name="cp_${i}_freq" value="${esc(r.freq)}" data-action="cp-upd" data-idx="${i}" data-field="freq" placeholder="100%"></td>
+      <td class="w70"><input class="cell-edit" name="cp_${i}_resp" value="${esc(r.resp)}" data-action="cp-upd" data-idx="${i}" data-field="resp" placeholder="Who"></td>
+      <td><textarea class="cell-edit" name="cp_${i}_reaction" rows="2" data-action="cp-upd" data-idx="${i}" data-field="reaction" placeholder="Reaction plan">${esc(r.reaction)}</textarea></td>
       <td class="w50"><div style="display:flex;flex-wrap:wrap;gap:2px">${ctqs || '—'}</div></td>
       <td class="w28 ctr"><button class="del-btn" data-action="cp-del" data-idx="${i}">×</button></td></tr>`
   }).join('')

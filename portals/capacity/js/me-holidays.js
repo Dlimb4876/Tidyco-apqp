@@ -65,7 +65,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
       </div>
       <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border);">
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-prev-month">← Prev</button>
-        <input type="month" value="${selectedMonth}" data-cap-action="cap-me-month-change" style="padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;">
+        <input type="month" name="cap_me_holidays_month" value="${selectedMonth}" data-cap-action="cap-me-month-change" style="padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;">
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-next-month">Next →</button>
       </div>
       <div class="me-card-body" style="overflow-x: auto;">

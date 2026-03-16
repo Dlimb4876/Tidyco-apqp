@@ -125,15 +125,15 @@ npi.timing.renderTimingPlan = function() {
       const rolecol = ROLE_COL[row.role] || '#6b7a99'
       body += `<tr class="gantt-row gantt-plan-row">
         <td class="gantt-task-cell" rowspan="2">
-          <input class="cell-edit" value="${esc(row.task)}" onchange="npi.timing.ganttUpdTask('${row.id}',this.value)" placeholder="Task name" style="width:100%;font-size:12px">
-          <select class="cell-edit" onchange="npi.timing.ganttUpdSec('${row.id}',this.value)" style="width:100%;font-size:10px;margin-top:2px">${GANTT_SECTIONS.map(s => `<option value="${s.id}"${row.section === s.id ? ' selected' : ''}>${s.label}</option>`).join('')}</select>
+          <input class="cell-edit" name="timing_${row.id}_task" value="${esc(row.task)}" onchange="npi.timing.ganttUpdTask('${row.id}',this.value)" placeholder="Task name" style="width:100%;font-size:12px">
+          <select class="cell-edit" name="timing_${row.id}_section" onchange="npi.timing.ganttUpdSec('${row.id}',this.value)" style="width:100%;font-size:10px;margin-top:2px">${GANTT_SECTIONS.map(s => `<option value="${s.id}"${row.section === s.id ? ' selected' : ''}>${s.label}</option>`).join('')}</select>
         </td>
         <td class="gantt-role-cell" rowspan="2">
-          <select class="cell-edit" onchange="npi.timing.ganttUpdRole('${row.id}',this.value)" style="width:100%;font-size:11px;font-weight:600;color:${rolecol};border-color:${rolecol}33">${GANTT_ROLES.map(r => `<option value="${r}"${row.role === r ? ' selected' : ''}>${r}</option>`).join('')}</select>
+          <select class="cell-edit" name="timing_${row.id}_role" onchange="npi.timing.ganttUpdRole('${row.id}',this.value)" style="width:100%;font-size:11px;font-weight:600;color:${rolecol};border-color:${rolecol}33">${GANTT_ROLES.map(r => `<option value="${r}"${row.role === r ? ' selected' : ''}>${r}</option>`).join('')}</select>
         </td>
         <td class="gantt-rowlabel">Plan</td>
         ${planCells}
-        <td class="gantt-notes-cell" rowspan="2"><input class="cell-edit" value="${esc(row.notes)}" onchange="npi.timing.ganttUpdNotes('${row.id}',this.value)" placeholder="Notes" style="width:100%;font-size:11px"></td>
+        <td class="gantt-notes-cell" rowspan="2"><input class="cell-edit" name="timing_${row.id}_notes" value="${esc(row.notes)}" onchange="npi.timing.ganttUpdNotes('${row.id}',this.value)" placeholder="Notes" style="width:100%;font-size:11px"></td>
         <td style="text-align:center" rowspan="2"><button class="del-btn" onclick="npi.timing.ganttDelRow('${row.id}')">×</button></td>
       </tr>
       <tr class="gantt-row gantt-act-row">
@@ -175,7 +175,7 @@ npi.timing.renderTimingPlan = function() {
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <label style="font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap">Plan start:</label>
-      <input type="date" class="cell-edit" value="${startDate}" onchange="npi.timing.ganttSetStart(this.value)" style="font-size:12px;padding:3px 7px;border-radius:5px;border:1.5px solid var(--line2)">
+      <input type="date" class="cell-edit" name="timing_plan_start" value="${startDate}" onchange="npi.timing.ganttSetStart(this.value)" style="font-size:12px;padding:3px 7px;border-radius:5px;border:1.5px solid var(--line2)">
       ${todayCol >= 0 ? `<span style="font-size:11px;color:var(--blue);font-family:'IBM Plex Mono',monospace">▼ Today = W${todayCol + 1}</span>` : ''}
     </div>
   </div>

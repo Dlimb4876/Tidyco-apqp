@@ -43,28 +43,28 @@ function renderProductMaster() {
     rows += `
       <tr class="${isInactive ? 'row-inactive' : ''}">
         <td class="w28 ctr">${idx + 1}</td>
-        <td><input class="cell-edit" value="${esc(prod.name || '')}" data-action="update-product" data-idx="${idx}" data-field="name" data-keydown="edit-row"></td>
-        <td><input class="cell-edit" value="${esc(prod.part_number || '')}" data-action="update-product" data-idx="${idx}" data-field="part_number" data-keydown="edit-row"></td>
+        <td><input class="cell-edit" name="prod_${idx}_name" value="${esc(prod.name || '')}" data-action="update-product" data-idx="${idx}" data-field="name" data-keydown="edit-row"></td>
+        <td><input class="cell-edit" name="prod_${idx}_part_number" value="${esc(prod.part_number || '')}" data-action="update-product" data-idx="${idx}" data-field="part_number" data-keydown="edit-row"></td>
         <td>
-          <select class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="family" data-keydown="edit-row">
+          <select class="cell-edit" name="prod_${idx}_family" data-action="update-product" data-idx="${idx}" data-field="family" data-keydown="edit-row">
             <option value="">—</option>
             ${getFamilies().map(f => `<option value="${f.id}" ${prod.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
           </select>
         </td>
-        <td><input class="cell-edit" type="number" value="${prod.lead_time_days || ''}" data-action="update-product" data-idx="${idx}" data-field="lead_time_days" data-keydown="edit-row"></td>
+        <td><input class="cell-edit" name="prod_${idx}_lead_time_days" type="number" value="${prod.lead_time_days || ''}" data-action="update-product" data-idx="${idx}" data-field="lead_time_days" data-keydown="edit-row"></td>
         <td>
-          <select class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="status" data-keydown="edit-row">
+          <select class="cell-edit" name="prod_${idx}_status" data-action="update-product" data-idx="${idx}" data-field="status" data-keydown="edit-row">
             <option value="active" ${prod.status === 'active' ? 'selected' : ''}>Active</option>
             <option value="inactive" ${prod.status === 'inactive' ? 'selected' : ''}>Inactive</option>
           </select>
         </td>
         <td>
-          <select class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="assigned_unit" data-keydown="edit-row">
+          <select class="cell-edit" name="prod_${idx}_assigned_unit" data-action="update-product" data-idx="${idx}" data-field="assigned_unit" data-keydown="edit-row">
             <option value="">—</option>
             ${getWorkAreaOptions(prod.assigned_unit || '')}
           </select>
         </td>
-        <td><textarea class="cell-edit" data-action="update-product" data-idx="${idx}" data-field="notes" data-keydown="edit-row">${esc(prod.notes || '')}</textarea></td>
+        <td><textarea class="cell-edit" name="prod_${idx}_notes" data-action="update-product" data-idx="${idx}" data-field="notes" data-keydown="edit-row">${esc(prod.notes || '')}</textarea></td>
         <td class="w28 ctr"><button class="btn-del" data-action="delete-product" data-idx="${idx}">✕</button></td>
       </tr>
     `;

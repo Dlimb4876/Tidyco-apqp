@@ -158,7 +158,7 @@ function renderProdCapDetail() {
       <div class="pc-filters">
         <div class="filter-group">
           <label>Status</label>
-          <select data-cap-action="cap-prod-detail-filter-status">
+          <select name="cap_prod_detail_filter_status" data-cap-action="cap-prod-detail-filter-status">
             <option value="">— All</option>
             <option value="Planned"     ${prodCapDetailFilter.status==='Planned'     ?'selected':''}>Planned</option>
             <option value="In Progress" ${prodCapDetailFilter.status==='In Progress' ?'selected':''}>In Progress</option>
@@ -167,14 +167,14 @@ function renderProdCapDetail() {
         </div>
         <div class="filter-group">
           <label>Family</label>
-          <select data-cap-action="cap-prod-detail-filter-family">
+          <select name="cap_prod_detail_filter_family" data-cap-action="cap-prod-detail-filter-family">
             <option value="">— All</option>
             ${viewData.families.map(f => `<option value="${esc(f)}" ${prodCapDetailFilter.family===f?'selected':''}>${esc(f)}</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">
           <label>Work Area</label>
-          <select data-cap-action="cap-prod-detail-filter-workarea">
+          <select name="cap_prod_detail_filter_workarea" data-cap-action="cap-prod-detail-filter-workarea">
             <option value="">— All</option>
             ${viewData.workAreas.map(w => `<option value="${esc(w)}" ${prodCapDetailFilter.workArea===w?'selected':''}>${esc(w)}</option>`).join('')}
           </select>

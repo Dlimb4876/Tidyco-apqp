@@ -182,14 +182,14 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
 
     rows += `
       <tr class="me-task-row ${rowUrgencyClass}" data-task-idx="${taskIndex}">
-        <td><input value="${esc(task.name)}" placeholder="new task" data-cap-action="cap-task-upd" data-field="name"></td>
-        <td><select data-cap-action="cap-task-upd" data-field="category">${catOpts}</select></td>
-        <td><select data-cap-action="cap-task-upd" data-field="assigneeId">${memOpts}</select></td>
-        <td><select data-cap-action="cap-task-upd" data-field="productId">${prodOpts}</select></td>
-        <td><input type="date" value="${task.startDate || ''}" data-cap-action="cap-task-upd" data-field="startDate"></td>
-        <td><input type="date" value="${task.endDate || ''}" data-cap-action="cap-task-upd" data-field="endDate"></td>
-        <td><select data-cap-action="cap-task-status-upd">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
-        <td><input type="number" value="${task.totalHours || 0}" step="0.5" data-cap-action="cap-task-upd" data-field="totalHours"></td>
+        <td><input name="cap_task_${taskIndex}_name" value="${esc(task.name)}" placeholder="new task" data-cap-action="cap-task-upd" data-field="name"></td>
+        <td><select name="cap_task_${taskIndex}_category" data-cap-action="cap-task-upd" data-field="category">${catOpts}</select></td>
+        <td><select name="cap_task_${taskIndex}_assigneeId" data-cap-action="cap-task-upd" data-field="assigneeId">${memOpts}</select></td>
+        <td><select name="cap_task_${taskIndex}_productId" data-cap-action="cap-task-upd" data-field="productId">${prodOpts}</select></td>
+        <td><input name="cap_task_${taskIndex}_startDate" type="date" value="${task.startDate || ''}" data-cap-action="cap-task-upd" data-field="startDate"></td>
+        <td><input name="cap_task_${taskIndex}_endDate" type="date" value="${task.endDate || ''}" data-cap-action="cap-task-upd" data-field="endDate"></td>
+        <td><select name="cap_task_${taskIndex}_status" data-cap-action="cap-task-status-upd">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
+        <td><input name="cap_task_${taskIndex}_totalHours" type="number" value="${task.totalHours || 0}" step="0.5" data-cap-action="cap-task-upd" data-field="totalHours"></td>
         <td style="text-align: center;">
           <button class="me-del-btn" data-cap-action="cap-task-del">✕</button>
         </td>

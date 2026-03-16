@@ -257,8 +257,8 @@ npi.dashboard.renderProjects = function() {
     <div class="npi-swimlane-wrap">
       <div class="npi-view-note">${visibleLabel} · ${visibleProducts.length} shown</div>
       <div class="npi-filter-row">
-        <input class="npi-search-input" type="search" placeholder="Search name, code, customer..." value="${esc(npiProjectsSearch)}" oninput="npi.dashboard.setProjectsSearch(this.value)">
-        <select class="npi-family-filter" onchange="npi.dashboard.setProjectsFamilyFilter(this.value)">
+        <input class="npi-search-input" name="npi_projects_search" type="search" placeholder="Search name, code, customer..." value="${esc(npiProjectsSearch)}" oninput="npi.dashboard.setProjectsSearch(this.value)">
+        <select class="npi-family-filter" name="npi_projects_family_filter" onchange="npi.dashboard.setProjectsFamilyFilter(this.value)">
           ${familyOptions}
         </select>
         <div class="npi-status-chips">${statusFilterButtons}</div>

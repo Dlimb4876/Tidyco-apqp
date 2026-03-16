@@ -350,7 +350,7 @@ npi.pfmea.renderPFMEA = function() {
           // Mode cell — first effect, first cause only
           if (ei === 0 && ci === 0) {
             rowHtml += `<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+              <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               <div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
                 <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
@@ -361,50 +361,50 @@ npi.pfmea.renderPFMEA = function() {
           // Effect + SEV — first cause of each effect only
           if (ci === 0) {
             rowHtml += `<td rowspan="${efRowspan}" style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
+              <textarea class="cell-edit" name="pfmea_effect_${mi}_${ei}" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               <div style="margin-top:3px;display:flex;gap:3px">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
                 <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:9px">× Eff</button>
               </div>
             </td>
             <td rowspan="${efRowspan}" class="pfmea-score-cell">
-              <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
+              <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_sev_${mi}_${ei}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="effect-sev" data-fallback="${sev}">
             </td>`
           }
 
           rowHtml += `
             <td class="pfmea-cause-cell pfmea-cause-text" style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="cause" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
+              <textarea class="cell-edit" name="pfmea_cause_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="cause" placeholder="Cause of failure" style="width:100%">${esc(ca.cause)}</textarea>
             </td>
             <td class="pfmea-score-cell">
-              <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${occ}"
+              <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_occ_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${occ}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="cause-occ" data-fallback="${occ}">
             </td>
             <td style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="prevent" placeholder="Prevention controls" style="width:100%">${esc(ca.prevent || '')}</textarea>
+              <textarea class="cell-edit" name="pfmea_prevent_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="prevent" placeholder="Prevention controls" style="width:100%">${esc(ca.prevent || '')}</textarea>
             </td>
             <td style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="detect" placeholder="Detection controls" style="width:100%">${esc(ca.detect || '')}</textarea>
+              <textarea class="cell-edit" name="pfmea_detect_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="detect" placeholder="Detection controls" style="width:100%">${esc(ca.detect || '')}</textarea>
             </td>
             <td class="pfmea-score-cell">
-              <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${det}"
+              <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_det_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${det}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="cause-det" data-fallback="${det}">
             </td>
             <td class="pfmea-score-cell">
               ${npi.components.rpnBadge(rpn, { id: `rpn_${mi}_${ei}_${ci}` })}
               ${hist.length > 0 ? `<button class="rpn-hist-btn" data-action="pfmea-show-hist" data-cause-id="${ca.id}">⏱${hist.length}</button>` : ''}
             </td>
-            <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? '#eff6ff' : ''};">${esc(act.desc || '')}</textarea></td>
-            <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>
-            <td><input class="cell-edit" value="${esc(act.owner || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" placeholder="Owner" style="width:100%"></td>
-            <td><input type="date" class="cell-edit mono" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>
+            <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? '#eff6ff' : ''};">${esc(act.desc || '')}</textarea></td>
+            <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_taken_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>
+            <td><input class="cell-edit" name="pfmea_action_owner_${mi}_${ei}_${ci}" value="${esc(act.owner || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" placeholder="Owner" style="width:100%"></td>
+            <td><input type="date" class="cell-edit mono" name="pfmea_action_due_${mi}_${ei}_${ci}" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>
             <td class="pfmea-score-cell">
-              <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newOcc || ''}" placeholder="${occ}"
+              <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_action_occ_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newOcc || ''}" placeholder="${occ}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-occ" data-allow-blank="1" data-fallback="" style="background:#eff6ff">
             </td>
             <td class="pfmea-score-cell">
-              <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newDet || ''}" placeholder="${det}"
+              <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_action_det_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newDet || ''}" placeholder="${det}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-det" data-allow-blank="1" data-fallback="" style="background:#eff6ff">
             </td>
             <td class="pfmea-score-cell">
@@ -423,7 +423,7 @@ npi.pfmea.renderPFMEA = function() {
           let rowHtml = `<tr class="pfmea-row-sub">`
           if (ei === 0) {
             rowHtml += `<td rowspan="1" class="pfmea-mode-cell" style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+              <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               <div style="margin-top:4px;display:flex;gap:3px">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
                 <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
@@ -431,14 +431,14 @@ npi.pfmea.renderPFMEA = function() {
             </td>`
           }
           rowHtml += `<td style="vertical-align:top">
-              <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
+              <textarea class="cell-edit" name="pfmea_effect_${mi}_${ei}" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               <div style="margin-top:3px;display:flex;gap:3px">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
                 <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:9px">× Eff</button>
               </div>
             </td>
             <td class="pfmea-score-cell">
-              <input type="number" class="cell-edit mono pfmea-score-input" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
+              <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_sev_${mi}_${ei}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="-1" data-kind="effect-sev" data-fallback="${sev}">
             </td>
             <td colspan="15" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No causes yet — click ＋ Cause</td>
@@ -451,7 +451,7 @@ npi.pfmea.renderPFMEA = function() {
       if (effects.length === 0) {
         html += `<tr class="pfmea-row-sub">
           <td class="pfmea-mode-cell" style="vertical-align:top">
-            <textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
+            <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
             <div style="margin-top:4px;display:flex;gap:3px">
               <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
               <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
@@ -483,7 +483,7 @@ npi.pfmea.renderPFMEA = function() {
   </div>${activeView === 'worksheet'
     ? `<div class="pfmea-filter-wrap">
       <label class="pfmea-filter-label">RPN Filter
-        <select class="pfmea-filter-select" data-action="pfmea-filter">
+        <select class="pfmea-filter-select" name="pfmea_filter" data-action="pfmea-filter">
           <option value="all"${activeFilter === 'all' ? ' selected' : ''}>All</option>
           <option value="high"${activeFilter === 'high' ? ' selected' : ''}>High only (>=${RPN_HIGH})</option>
           <option value="r1_49"${activeFilter === 'r1_49' ? ' selected' : ''}>1-49</option>

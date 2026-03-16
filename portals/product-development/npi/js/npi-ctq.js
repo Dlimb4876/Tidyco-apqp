@@ -9,13 +9,13 @@ npi.ctq.render = function() {
   const p = prog()
   const rows = p.ctq.map((r, i) => `<tr>
     <td style="text-align:center"><span class="tag tag-ctq">C${i + 1}</span></td>
-    <td><textarea class="cell-edit" rows="2" data-action="ctq-upd" data-idx="${i}" data-field="req" placeholder="CTQ requirement">${esc(r.req)}</textarea></td>
-    <td><input class="cell-edit mono" value="${esc(r.spec)}" data-action="ctq-upd" data-idx="${i}" data-field="spec" placeholder="e.g. 50±0.05mm" style="width:100%"></td>
-    <td><input class="cell-edit" value="${esc(r.testMethod || '')}" data-action="ctq-upd" data-idx="${i}" data-field="testMethod" placeholder="e.g. CMM, Gauge, Visual" style="width:100%"></td>
-    <td><select class="cell-edit" data-action="ctq-upd" data-idx="${i}" data-field="source" style="width:100%">${['Customer Spec', 'OEM Data', 'Internal Standard', 'Regulatory', 'Drawing'].map(o => `<option${r.source === o ? ' selected' : ''}>${o}</option>`).join('')}</select></td>
-    <td><select class="cell-edit" data-action="ctq-upd" data-idx="${i}" data-field="oos_action" style="width:100%">${['Repair', 'Replace', 'Scrap', 'Review', 'TBD'].map(o => `<option${r.oos_action === o ? ' selected' : ''}>${o}</option>`).join('')}</select></td>
+    <td><textarea class="cell-edit" name="ctq_${i}_req" rows="2" data-action="ctq-upd" data-idx="${i}" data-field="req" placeholder="CTQ requirement">${esc(r.req)}</textarea></td>
+    <td><input class="cell-edit mono" name="ctq_${i}_spec" value="${esc(r.spec)}" data-action="ctq-upd" data-idx="${i}" data-field="spec" placeholder="e.g. 50±0.05mm" style="width:100%"></td>
+    <td><input class="cell-edit" name="ctq_${i}_testMethod" value="${esc(r.testMethod || '')}" data-action="ctq-upd" data-idx="${i}" data-field="testMethod" placeholder="e.g. CMM, Gauge, Visual" style="width:100%"></td>
+    <td><select class="cell-edit" name="ctq_${i}_source" data-action="ctq-upd" data-idx="${i}" data-field="source" style="width:100%">${['Customer Spec', 'OEM Data', 'Internal Standard', 'Regulatory', 'Drawing'].map(o => `<option${r.source === o ? ' selected' : ''}>${o}</option>`).join('')}</select></td>
+    <td><select class="cell-edit" name="ctq_${i}_oos_action" data-action="ctq-upd" data-idx="${i}" data-field="oos_action" style="width:100%">${['Repair', 'Replace', 'Scrap', 'Review', 'TBD'].map(o => `<option${r.oos_action === o ? ' selected' : ''}>${o}</option>`).join('')}</select></td>
     <td><div class="ctq-agreed">
-      <input type="checkbox" ${r.customerAgreed ? 'checked' : ''} data-action="ctq-upd" data-idx="${i}" data-field="customerAgreed" title="Customer has accepted this CTQ method and out-of-spec plan">
+      <input type="checkbox" name="ctq_${i}_customerAgreed" ${r.customerAgreed ? 'checked' : ''} data-action="ctq-upd" data-idx="${i}" data-field="customerAgreed" title="Customer has accepted this CTQ method and out-of-spec plan">
       <span class="ctq-agreed-label" style="color:${r.customerAgreed ? 'var(--green)' : 'var(--muted)'}">${r.customerAgreed ? 'ACCEPTED' : '—'}</span>
     </div></td>
     <td style="text-align:center"><button class="del-btn" data-action="ctq-del" data-idx="${i}">×</button></td>

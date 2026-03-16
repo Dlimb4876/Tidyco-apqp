@@ -93,7 +93,7 @@ function renderSchedulingRow(batch, idx, activeBatches) {
     <tr id="batch-row-${batchIdx}" class="${rowUrgencyClass}">
       <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
       <td>
-        <select class="cell-edit" data-field="product_id">
+        <select class="cell-edit" name="batch_${batchIdx}_product_id" data-field="product_id">
           ${products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
         </select>
       </td>
@@ -103,7 +103,7 @@ function renderSchedulingRow(batch, idx, activeBatches) {
       <td>
         <div class="cell-display">${workLocation || '—'}</div>
       </td>
-      <td><input class="cell-edit" type="number" value="${batch.quantity || ''}" data-field="quantity"></td>
+      <td><input class="cell-edit" name="batch_${batchIdx}_quantity" type="number" value="${batch.quantity || ''}" data-field="quantity"></td>
       <td>
         <input class="cell-edit" placeholder="DD/MM/YYYY" value="${formatDisplayDate(batch.start_date || '')}" data-field="start_date" id="batch-start-${batchIdx}">
       </td>
@@ -112,13 +112,13 @@ function renderSchedulingRow(batch, idx, activeBatches) {
         ${dueBadge}
       </td>
       <td>
-        <select class="cell-edit" data-field="status">
+        <select class="cell-edit" name="batch_${batchIdx}_status" data-field="status">
           <option value="Planned" ${batch.status === 'Planned' ? 'selected' : ''}>Planned</option>
           <option value="In Progress" ${batch.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
           <option value="Complete" ${batch.status === 'Complete' ? 'selected' : ''}>Complete</option>
         </select>
       </td>
-      <td><textarea class="cell-edit" data-field="notes">${esc(batch.notes || '')}</textarea></td>
+      <td><textarea class="cell-edit" name="batch_${batchIdx}_notes" data-field="notes">${esc(batch.notes || '')}</textarea></td>
       <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
         <button class="btn-del" data-action="duplicate" title="Duplicate batch">⧉</button>
         <button class="btn-del" data-action="delete" title="Delete batch">✕</button>

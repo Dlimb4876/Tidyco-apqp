@@ -722,7 +722,46 @@ window.meDataSubscribe = function() {
           render();
         }
       },
-      onUpdate: () => { /* no-op — local state already up to date */ },
+      onUpdate: (updatedTask) => {
+        const normalizedTask = {
+          id: updatedTask.id,
+          name: updatedTask.name || '',
+          category: updatedTask.category || 'NPI',
+          type: updatedTask.type || 'standard',
+          department: meNormalizeDepartmentTag(updatedTask.department, 'ME'),
+          assigneeId: updatedTask.assignee_id || '',
+          productId: updatedTask.product_id || '',
+          startDate: updatedTask.start_date || '',
+          endDate: updatedTask.end_date || '',
+          totalHours: parseFloat(updatedTask.total_hours) || 0,
+          status: updatedTask.status || 'SCHEDULED',
+          createdAt: updatedTask.created_at || new Date().toISOString()
+        };
+
+        const idx = meDataState.tasks.findIndex(t => t.id === normalizedTask.id);
+        if (idx < 0) {
+          meDataState.tasks.push(normalizedTask);
+          render();
+          return;
+        }
+
+        const current = meDataState.tasks[idx];
+        const changed =
+          current.name !== normalizedTask.name ||
+          current.category !== normalizedTask.category ||
+          current.type !== normalizedTask.type ||
+          current.department !== normalizedTask.department ||
+          current.assigneeId !== normalizedTask.assigneeId ||
+          current.productId !== normalizedTask.productId ||
+          current.startDate !== normalizedTask.startDate ||
+          current.endDate !== normalizedTask.endDate ||
+          Number(current.totalHours || 0) !== Number(normalizedTask.totalHours || 0) ||
+          current.status !== normalizedTask.status;
+
+        if (!changed) return;
+        meDataState.tasks[idx] = { ...current, ...normalizedTask };
+        render();
+      },
       onDelete: (deleted) => {
         meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
         render();

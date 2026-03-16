@@ -84,7 +84,7 @@
       const checked = selectedSet.has(idx) ? 'checked' : '';
       const disabled = locked ? 'disabled' : '';
       return '<label style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--white)">' +
-        '<input type="checkbox" ' + checked + ' ' + disabled + ' onchange="tenderGateScopeToggleItem(' + gateNum + ',' + idx + ',this.checked)" style="margin-top:2px">' +
+        '<input type="checkbox" name="tender_gate_' + gateNum + '_item_' + idx + '" ' + checked + ' ' + disabled + ' onchange="tenderGateScopeToggleItem(' + gateNum + ',' + idx + ',this.checked)" style="margin-top:2px">' +
         '<span style="font-size:13px;line-height:1.35"><strong style="color:var(--muted)">Q' + (idx + 1) + '.</strong> ' + esc(item) + '</span>' +
       '</label>';
     }).join('');

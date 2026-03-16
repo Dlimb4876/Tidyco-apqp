@@ -43,13 +43,13 @@ window.meRenderTeamTab = function(teamArray) {
     const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option>';
     rows += `
       <tr data-member-idx="${rowIndex}">
-        <td><input value="${esc(member.name)}" data-cap-action="cap-team-upd" data-field="name"></td>
-        <td><input value="${esc(member.jobTitle || '')}" data-cap-action="cap-team-upd" data-field="jobTitle"></td>
-        <td><select data-cap-action="cap-team-upd" data-field="group">${groupOpts}</select></td>
-        <td><input type="date" value="${member.startDate || ''}" data-cap-action="cap-team-upd" data-field="startDate"></td>
-        <td><input type="date" value="${member.endDate || ''}" data-cap-action="cap-team-upd" data-field="endDate"></td>
-        <td><input type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" data-cap-action="cap-team-upd" data-field="hoursPerWeek"></td>
-        <td><input type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" data-cap-action="cap-team-upd" data-field="utilisation"></td>
+        <td><input name="cap_team_${rowIndex}_name" value="${esc(member.name)}" data-cap-action="cap-team-upd" data-field="name"></td>
+        <td><input name="cap_team_${rowIndex}_jobTitle" value="${esc(member.jobTitle || '')}" data-cap-action="cap-team-upd" data-field="jobTitle"></td>
+        <td><select name="cap_team_${rowIndex}_group" data-cap-action="cap-team-upd" data-field="group">${groupOpts}</select></td>
+        <td><input name="cap_team_${rowIndex}_startDate" type="date" value="${member.startDate || ''}" data-cap-action="cap-team-upd" data-field="startDate"></td>
+        <td><input name="cap_team_${rowIndex}_endDate" type="date" value="${member.endDate || ''}" data-cap-action="cap-team-upd" data-field="endDate"></td>
+        <td><input name="cap_team_${rowIndex}_hoursPerWeek" type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" data-cap-action="cap-team-upd" data-field="hoursPerWeek"></td>
+        <td><input name="cap_team_${rowIndex}_utilisation" type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" data-cap-action="cap-team-upd" data-field="utilisation"></td>
         <td style="font-weight: bold;">${effective}</td>
         <td style="text-align: center;"><button class="me-del-btn" data-cap-action="cap-team-del">✕</button></td>
       </tr>`;

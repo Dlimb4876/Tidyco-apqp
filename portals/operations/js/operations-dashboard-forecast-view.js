@@ -51,12 +51,13 @@ function opsRenderForecastRows(rows) {
 		<div class="ops-forecast-filters">
 			<input
 				class="ops-forecast-filter-text"
+				name="ops_forecast_filter_text"
 				type="text"
 				placeholder="Filter by title…"
 				value="${esc(opsForecastFilterText || '')}"
 				onchange="opsForecastSetFilterText(this.value)"
 			/>
-			<select class="ops-forecast-filter-status" onchange="opsForecastSetFilterStatus(this.value)">
+			<select class="ops-forecast-filter-status" name="ops_forecast_filter_status" onchange="opsForecastSetFilterStatus(this.value)">
 				<option value="">All statuses</option>
 				<option value="identified" ${filterStatus === 'identified' ? 'selected' : ''}>Identified</option>
 				<option value="quoted" ${filterStatus === 'quoted' ? 'selected' : ''}>Quoted</option>

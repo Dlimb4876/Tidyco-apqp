@@ -70,45 +70,45 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w110"><code style="font-size:11px">${esc(r.pn) || '—'}</code></td>
       <td class="w110"><code style="font-size:11px">${esc(r.supplierPN||'') || '—'}</code></td>
       <td class="bom-col-desc">${esc(r.desc) || '<span style="color:var(--muted)">—</span>'}</td>
-      <td class="w75 ctr"><input type="number" class="cell-edit mono" min="0" value="${r.qty || ''}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="qty" data-number="1"></td>
+      <td class="w75 ctr"><input type="number" class="cell-edit mono" name="bom_parts_${actualIdx}_qty" min="0" value="${r.qty || ''}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="qty" data-number="1"></td>
       <td class="w50 ctr"><span style="font-size:12px">${esc(r.unit) || 'ea'}</span></td>
       <td class="w44 ctr">${sageBadge}</td>
       <td class="w60 ctr">${classBadge}</td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isStd    ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isStd"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isAaw    ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isAaw"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isRepair ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isRepair" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
-      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="notes" placeholder="Notes / scheme ref"></td>
+      <td class="w44 ctr"><input type="checkbox" name="bom_parts_${actualIdx}_isStd" ${r.isStd    ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isStd"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
+      <td class="w44 ctr"><input type="checkbox" name="bom_parts_${actualIdx}_isAaw" ${r.isAaw    ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isAaw"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
+      <td class="w44 ctr"><input type="checkbox" name="bom_parts_${actualIdx}_isRepair" ${r.isRepair ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isRepair" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
+      <td class="bom-col-notes"><input class="cell-edit" name="bom_parts_${actualIdx}_notes" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="notes" placeholder="Notes / scheme ref"></td>
       <td class="w28 ctr"><button class="del-btn" data-action="bom-del-row" data-type="parts" data-idx="${actualIdx}">×</button></td>
     </tr>`}).join('')
   } else if (type === 'tools') {
     thead = npi.components.tableHeader([{ label: 'Tool ID' }, { label: 'Description' }, { label: 'Spec / PN' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
-      <td class="w100"><input class="cell-edit mono" value="${esc(r.toolId)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="toolId" placeholder="TL-001"></td>
-      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="desc" placeholder="Description"></td>
-      <td class="w140"><input class="cell-edit mono" value="${esc(r.spec)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="spec" placeholder="Spec / PN"></td>
-      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
+      <td class="w100"><input class="cell-edit mono" name="bom_tools_${i}_toolId" value="${esc(r.toolId)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="toolId" placeholder="TL-001"></td>
+      <td class="bom-col-desc"><input class="cell-edit" name="bom_tools_${i}_desc" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="desc" placeholder="Description"></td>
+      <td class="w140"><input class="cell-edit mono" name="bom_tools_${i}_spec" value="${esc(r.spec)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="spec" placeholder="Spec / PN"></td>
+      <td class="bom-col-notes"><input class="cell-edit" name="bom_tools_${i}_notes" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
       <td class="w28 ctr"><button class="del-btn" data-action="bom-del-row" data-type="tools" data-idx="${i}">×</button></td>
     </tr>`).join('')
   } else if (type === 'equip') {
     thead = npi.components.tableHeader([{ label: 'Equip ID' }, { label: 'Description' }, { label: 'Location' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
-      <td class="w100"><input class="cell-edit mono" value="${esc(r.equipId)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="equipId" placeholder="EQ-001"></td>
-      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="desc" placeholder="Description"></td>
-      <td class="w140"><input class="cell-edit" value="${esc(r.location)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="location" placeholder="Bay / location"></td>
-      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
+      <td class="w100"><input class="cell-edit mono" name="bom_equip_${i}_equipId" value="${esc(r.equipId)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="equipId" placeholder="EQ-001"></td>
+      <td class="bom-col-desc"><input class="cell-edit" name="bom_equip_${i}_desc" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="desc" placeholder="Description"></td>
+      <td class="w140"><input class="cell-edit" name="bom_equip_${i}_location" value="${esc(r.location)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="location" placeholder="Bay / location"></td>
+      <td class="bom-col-notes"><input class="cell-edit" name="bom_equip_${i}_notes" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
       <td class="w28 ctr"><button class="del-btn" data-action="bom-del-row" data-type="equip" data-idx="${i}">×</button></td>
     </tr>`).join('')
   } else {
     thead = npi.components.tableHeader([{ label: 'Part / Cat. No.' }, { label: 'Description' }, { label: 'Unit' }, { label: 'Qty/Unit' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
-      <td class="w100"><input class="cell-edit mono" value="${esc(r.pn)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="pn" placeholder="PN"></td>
-      <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="desc" placeholder="Description"></td>
-      <td class="w60"><input class="cell-edit" value="${esc(r.unit)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="unit" placeholder="kg/L/m"></td>
-      <td class="w100 ctr"><input type="number" class="cell-edit mono" min="0" step="0.01" value="${r.qtyPerUnit || ''}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="qtyPerUnit" data-number="1"></td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isStd    ? 'checked' : ''} data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="isStd"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isAaw    ? 'checked' : ''} data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="isAaw"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
-      <td class="w44 ctr"><input type="checkbox" ${r.isRepair ? 'checked' : ''} data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="isRepair" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
-      <td class="bom-col-notes"><input class="cell-edit" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
+      <td class="w100"><input class="cell-edit mono" name="bom_${type}_${i}_pn" value="${esc(r.pn)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="pn" placeholder="PN"></td>
+      <td class="bom-col-desc"><input class="cell-edit" name="bom_${type}_${i}_desc" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="desc" placeholder="Description"></td>
+      <td class="w60"><input class="cell-edit" name="bom_${type}_${i}_unit" value="${esc(r.unit)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="unit" placeholder="kg/L/m"></td>
+      <td class="w100 ctr"><input type="number" class="cell-edit mono" name="bom_${type}_${i}_qtyPerUnit" min="0" step="0.01" value="${r.qtyPerUnit || ''}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="qtyPerUnit" data-number="1"></td>
+      <td class="w44 ctr"><input type="checkbox" name="bom_${type}_${i}_isStd" ${r.isStd    ? 'checked' : ''} data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="isStd"    style="accent-color:var(--green);width:15px;height:15px;cursor:pointer"></td>
+      <td class="w44 ctr"><input type="checkbox" name="bom_${type}_${i}_isAaw" ${r.isAaw    ? 'checked' : ''} data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="isAaw"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
+      <td class="w44 ctr"><input type="checkbox" name="bom_${type}_${i}_isRepair" ${r.isRepair ? 'checked' : ''} data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="isRepair" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
+      <td class="bom-col-notes"><input class="cell-edit" name="bom_${type}_${i}_notes" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
       <td class="w28 ctr"><button class="del-btn" data-action="bom-del-row" data-type="${type}" data-idx="${i}">×</button></td>
     </tr>`).join('')
   }
@@ -176,7 +176,7 @@ npi.bom.renderKits = function(p) {
         <span class="kit-item-name">${esc(name)}</span>
         ${pn ? `<span class="kit-item-pn">${esc(pn)}</span>` : ''}
         <div style="display:flex;gap:3px">${flags.join('')}</div>
-        <input class="kit-qty-input" type="number" min="0" step="0.01" value="${ref.qty || 1}" data-action="bom-upd-kit-item" data-ki="${ki}" data-ri="${ri}" data-field="qty" title="Quantity">
+        <input class="kit-qty-input" type="number" name="bom_kit_${ki}_${ri}_qty" min="0" step="0.01" value="${ref.qty || 1}" data-action="bom-upd-kit-item" data-ki="${ki}" data-ri="${ri}" data-field="qty" title="Quantity">
         <span class="kit-unit">${item.unit || 'ea'}</span>
         <button class="del-btn" data-action="bom-del-kit-item" data-ki="${ki}" data-ri="${ri}">×</button>
       </div>`
@@ -184,7 +184,7 @@ npi.bom.renderKits = function(p) {
     return `<div class="kit-card">
       <div class="kit-header">
         <span style="font-size:20px">📦</span>
-        <input class="kit-name-input" value="${esc(kit.name)}" data-action="bom-upd-kit" data-ki="${ki}" data-field="name" placeholder="Kit name (e.g. Overhaul Kit, Fastener Kit…)">
+        <input class="kit-name-input" name="bom_kit_${ki}_name" value="${esc(kit.name)}" data-action="bom-upd-kit" data-ki="${ki}" data-field="name" placeholder="Kit name (e.g. Overhaul Kit, Fastener Kit…)">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-left:auto">${totalBomRefs} items</span>
         <button class="del-btn" data-action="bom-del-kit" data-ki="${ki}" style="margin-left:8px">×</button>
       </div>
@@ -308,7 +308,7 @@ npi.bom.renderABCPickList = function() {
     return `
     <div class="bom-pick-item${selected ? ' selected' : ''}${added ? ' bom-pick-item--added' : ''}"
          onclick="npi.bom.toggleABCPick(${idx})" style="cursor:pointer">
-      <input type="checkbox" ${selected || added ? 'checked' : ''} ${added ? 'disabled' : ''} style="pointer-events:none;margin-right:8px">
+      <input type="checkbox" name="bom_abc_pick_${idx}" ${selected || added ? 'checked' : ''} ${added ? 'disabled' : ''} style="pointer-events:none;margin-right:8px">
       <div style="flex:1;min-width:0">
         <div class="bom-pick-name">${esc(r.item_desc)}${addedBadge}</div>
         <div class="bom-pick-meta">${r.pn ? 'PN: ' + esc(r.pn) + ' · ' : ''}${esc(r.unit || 'ea')}${r.notes ? ' · ' + esc(r.notes) : ''}${sageBadge}</div>

@@ -14,13 +14,13 @@ npi.docs.render = function() {
 
   const rows = docs.map((d, i) => `<tr>
     <td class="w28 ctr" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${i + 1}</td>
-    <td><input class="cell-edit" value="${esc(d.docNumber)}" onchange="npi.docs.upd(${i},'docNumber',this.value)" placeholder="e.g. DWG-001" style="width:100%"></td>
-    <td><input class="cell-edit" value="${esc(d.title)}" onchange="npi.docs.upd(${i},'title',this.value)" placeholder="Document title" style="width:100%"></td>
-    <td><select class="cell-edit" onchange="npi.docs.upd(${i},'type',this.value)" style="width:100%">${DOC_TYPES.map(t => `<option${d.type === t ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></td>
-    <td><input class="cell-edit" type="number" value="${esc(d.issue)}" onchange="npi.docs.upd(${i},'issue',this.value)" placeholder="e.g. 1" style="width:100%;text-align:center"></td>
-    <td><input class="cell-edit" value="${esc(d.owner)}" onchange="npi.docs.upd(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
-    <td><select class="cell-edit" onchange="npi.docs.upd(${i},'status',this.value)" style="width:100%">${DOC_STATUSES.map(s => `<option${d.status === s ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select></td>
-    <td><input class="cell-edit" value="${esc(d.notes)}" onchange="npi.docs.upd(${i},'notes',this.value)" placeholder="Notes" style="width:100%"></td>
+    <td><input class="cell-edit" name="docs_${i}_docNumber" value="${esc(d.docNumber)}" onchange="npi.docs.upd(${i},'docNumber',this.value)" placeholder="e.g. DWG-001" style="width:100%"></td>
+    <td><input class="cell-edit" name="docs_${i}_title" value="${esc(d.title)}" onchange="npi.docs.upd(${i},'title',this.value)" placeholder="Document title" style="width:100%"></td>
+    <td><select class="cell-edit" name="docs_${i}_type" onchange="npi.docs.upd(${i},'type',this.value)" style="width:100%">${DOC_TYPES.map(t => `<option${d.type === t ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></td>
+    <td><input class="cell-edit" name="docs_${i}_issue" type="number" value="${esc(d.issue)}" onchange="npi.docs.upd(${i},'issue',this.value)" placeholder="e.g. 1" style="width:100%;text-align:center"></td>
+    <td><input class="cell-edit" name="docs_${i}_owner" value="${esc(d.owner)}" onchange="npi.docs.upd(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
+    <td><select class="cell-edit" name="docs_${i}_status" onchange="npi.docs.upd(${i},'status',this.value)" style="width:100%">${DOC_STATUSES.map(s => `<option${d.status === s ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select></td>
+    <td><input class="cell-edit" name="docs_${i}_notes" value="${esc(d.notes)}" onchange="npi.docs.upd(${i},'notes',this.value)" placeholder="Notes" style="width:100%"></td>
     <td style="text-align:center"><button class="del-btn" onclick="npi.docs.del(${i})">×</button></td>
   </tr>`).join('')
 
