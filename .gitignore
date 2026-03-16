@@ -23,3 +23,12 @@ Thumbs.db
 # Debug/scratch files
 test-holidays.html
 check_onclick.js
+
+# MCP local environment and runtime files
+.claude/.env
+.claude/.mcp-pids
+.claude/rules/last-pr-review.json
+# Un-ignore the agent logs directory so .gitkeep can be tracked,
+# then re-ignore the actual log files within it
+!.claude/agents/logs/
+.claude/agents/logs/*.log

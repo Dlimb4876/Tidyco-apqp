@@ -186,3 +186,22 @@ Agents support automation hooks. Future setup can include:
 - Auto-generate changelog from commits
 
 See `.claude/hooks.md` for automation patterns.
+
+---
+
+## Sample Agent Implementations
+
+Three minimal Node.js scripts have been added to `.claude/agents/` as working stand-ins for the agent names referenced in `mcp.json`:
+
+- **`.claude/agents/code-review.js`** — runs lint + tests, outputs JSON, writes a dated log.
+- **`.claude/agents/testing.js`** — runs `npm test` and outputs a JSON summary.
+- **`.claude/agents/debugging.js`** — reads a JSON failure payload from stdin and returns heuristic diagnostics.
+
+Each script:
+- accepts an optional JSON payload on stdin
+- exits with code `0` on success, `1` on failure
+- prints a machine-readable JSON object (`title`, `status`, `summary`) to stdout
+
+These scripts are **non-destructive** — they only run read-only operations (lint, test) and write logs to `.claude/agents/logs/`.
+
+For full setup and testing instructions see `.claude/README.md`.

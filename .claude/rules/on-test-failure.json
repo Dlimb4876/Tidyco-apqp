@@ -1,0 +1,14 @@
+{
+  "name": "on-test-failure",
+  "description": "When tests fail, invoke the debugging agent with the failure info to get heuristic diagnostics.",
+  "trigger": "on-test-failure",
+  "agents": ["debugging"],
+  "steps": [
+    {
+      "agent": "debugging",
+      "command": "node .claude/agents/debugging.js",
+      "description": "Read failing test payload from stdin and return likely causes + suggested fixes",
+      "input": "{ \"failingTest\": \"${TEST_FILE}\", \"error\": \"${TEST_ERROR}\" }"
+    }
+  ]
+}

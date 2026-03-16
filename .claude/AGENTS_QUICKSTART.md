@@ -276,3 +276,24 @@ Agent(description="Find more patterns", resume="agent_001")
 - See `.claude/rules/agents.md` for development patterns
 - See `.claude/hooks.md` for automation setup
 - Read CLAUDE.md for project context
+
+---
+
+## Sample Agent Scripts (Added for Local Testing)
+
+Three runnable Node.js agent scripts have been added to `.claude/agents/` so you can test the pipeline locally without a hosted service:
+
+| Script | What it does |
+|---|---|
+| `.claude/agents/code-review.js` | Runs `npm run lint:npi` + `npm test`, outputs a JSON summary, writes a dated log to `.claude/agents/logs/` |
+| `.claude/agents/testing.js` | Runs `npm test` and prints a short JSON pass/fail summary |
+| `.claude/agents/debugging.js` | Reads a failure description from stdin and returns heuristic likely-causes and fix suggestions |
+
+Quick test (from repo root):
+
+```bash
+node .claude/agents/code-review.js
+echo '{"error":"is not a function"}' | node .claude/agents/debugging.js
+```
+
+See `.claude/README.md` for full setup instructions, including how to start the MCP servers and simulate automation triggers.
