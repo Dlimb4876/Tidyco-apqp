@@ -1,6 +1,35 @@
 # Sub-Assembly Visibility Improvements
 
-## Current State Analysis
+## ✅ IMPLEMENTED
+
+**Implementation Date:** 2026-03-16
+
+### Changes Made
+
+1. **Removed Misleading "APQP TOOLS %" KPI**
+   - Removed the confusing "APQP tools" stat from sub-assembly cards
+   - Kept the APQP completion progress bar at the bottom (clearer labeling)
+   - Cards now show only: BoM items count and Root kit status
+
+2. **Promoted Sub-Assemblies to Main Dashboard Panel**
+   - Moved from collapsed details section to visible panel in main layout
+   - Sub-assemblies appear above Quick Launch when count > 0
+   - Added summary stats in panel header: `(3 total · 75% avg completion)`
+   - Empty state (no sub-assemblies) stays in collapsed details
+
+3. **Added Hero Section Badge**
+   - Badge appears next to project name: `🔩 3 Sub-asms`
+   - Hover tooltip shows average completion percentage
+   - Styled in blue with proper spacing and responsive wrapping
+
+### Files Modified
+
+- `portals/product-development/npi/js/dashboard.js` (layout changes)
+- `portals/product-development/npi/css/dashboard.css` (badge styling)
+
+---
+
+## Original Analysis (for reference)
 
 ### What is "APQP TOOLS %"?
 
