@@ -3,7 +3,5 @@
 
 ALTER PUBLICATION supabase_realtime ADD TABLE
   abc_catalogue,
-  me_task_subtasks,
-  me_task_pert_history,
   production_capacity,
   overhaul_history;

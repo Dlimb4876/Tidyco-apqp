@@ -16,8 +16,6 @@ const EXPECTED_TABLES = [
   'family_pfmea_templates',
   'me_teams',
   'me_tasks',
-  'me_task_subtasks',
-  'me_task_pert_history',
   'me_products',
   'production_batches',
   'products',

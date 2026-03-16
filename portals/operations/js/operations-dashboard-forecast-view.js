@@ -89,7 +89,6 @@ function opsRenderForecastRows(rows) {
 						<th class="ops-sortable" onclick="opsForecastSetSort('end')">End ${sortIcon('end')}</th>
 						<th class="ops-sortable" onclick="opsForecastSetSort('hours')">Total Hours ${sortIcon('hours')}</th>
 						<th class="ops-sortable" onclick="opsForecastSetSort('probability')">Probability ${sortIcon('probability')}</th>
-						<th>Weighted</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -104,7 +103,6 @@ function opsRenderForecastRows(rows) {
 						const probabilityLabel = typeof window.opsForecastProbabilityLabel === 'function'
 							? window.opsForecastProbabilityLabel(probabilityBand)
 							: (probabilityBand.charAt(0).toUpperCase() + probabilityBand.slice(1));
-						const weightedHours = totalHours * (probability / 100);
 						const key = opsForecastDomKey(row.id);
 						return `
 							<tr>
@@ -155,7 +153,6 @@ function opsRenderForecastRows(rows) {
 										</select>`
 										: esc(probabilityLabel)}
 								</td>
-								<td>${esc(opsFormatHours(weightedHours))}</td>
 								<td class="ops-forecast-actions">
 									${inlineMode
 										? `<button class="btn btn-primary" onclick="opsForecastSaveInline('${esc(row.id)}')">Save</button>
@@ -209,8 +206,8 @@ function opsRenderForecastView(metrics) {
 				<div class="ops-metrics-grid">
 					${opsMetricCard('Active Opportunities', String(forecast.activeOpportunities), 'Status in active pipeline', 'good')}
 					${opsMetricCard('Baseline Demand', opsFormatHours(forecast.baseline24h), 'Read-in from production load data', 'good')}
-					${opsMetricCard('Forecast Added', opsFormatHours(forecast.forecast24h), 'Weighted by probability', forecast.forecast24h > 0 ? 'watch' : 'good')}
-					${opsMetricCard('Forecast Total', opsFormatHours(forecast.total24h), 'Baseline + weighted layer', utilTone)}
+					${opsMetricCard('Forecast Added', opsFormatHours(forecast.forecast24h), 'From total opportunity hours', forecast.forecast24h > 0 ? 'watch' : 'good')}
+					${opsMetricCard('Forecast Total', opsFormatHours(forecast.total24h), 'Baseline + opportunity hours', utilTone)}
 					${opsMetricCard('Capacity Supply', opsFormatHours(forecast.supply24h), 'Available production capacity', 'good')}
 					${opsMetricCard('Headroom', opsFormatHours(forecast.headroom24h), 'Supply minus forecast total', headroomTone)}
 					${opsMetricCard('Utilisation', `${forecast.utilisation24}%`, '24-month blended utilisation', utilTone)}

@@ -385,21 +385,22 @@ function buildGanttTimeline(batches, todayStr) {
     </div>
   `;
 
-  function buildMonthMarkers(offsetDays, daysInMonth, monthDate) {
+  function buildWeeklyMarkers() {
     const result = [];
-    const monthShort = monthDate.toLocaleDateString('en-GB', { month: 'short' });
-    for (let day = 1; day <= daysInMonth; day += 7) {
-      const left = ((offsetDays + day - 1) / totalDays) * 100;
-      result.push(`<span class="gantt-day-marker" style="left:${left}%;">${day} ${monthShort}</span>`);
-    }
-    if ((daysInMonth - 1) % 7 !== 0) {
-      const monthEndLeft = ((offsetDays + daysInMonth - 1) / totalDays) * 100;
-      result.push(`<span class="gantt-day-marker month-end" style="left:${monthEndLeft}%;">${daysInMonth} ${monthShort}</span>`);
+    const cursor = new Date(windowStart);
+    // Advance to first Monday
+    while (cursor.getDay() !== 1) cursor.setDate(cursor.getDate() + 1);
+    while (cursor <= windowEnd) {
+      const dayOffset = Math.floor((cursor - windowStart) / (1000 * 60 * 60 * 24));
+      const left = (dayOffset / totalDays) * 100;
+      const label = cursor.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      result.push(`<span class="gantt-day-marker" style="left:${left}%;">${label}</span>`);
+      cursor.setDate(cursor.getDate() + 7);
     }
     return result.join('');
   }
 
-  const dayMarkers = `${buildMonthMarkers(0, monthOneDays, monthOneStart)}${buildMonthMarkers(monthOneDays, monthTwoDays, monthTwoStart)}`;
+  const dayMarkers = buildWeeklyMarkers();
 
   const windowBatches = batches.filter(batch => {
     const startD = batch.start_date ? new Date(`${batch.start_date}T00:00:00`) : null;

@@ -152,19 +152,6 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
 
-  // ── ME Estimation ─────────────────────────────────────────
-  case 'cap-estimation-back': if (typeof meCloseEstimationSubsystem === 'function') meCloseEstimationSubsystem(); break
-  case 'cap-estimation-add-row': if (typeof meEstimationAddRow === 'function') meEstimationAddRow(capNum(el.getAttribute('data-task-idx'), -1)); break
-  case 'cap-estimation-del-row': {
-    const tIdx = capNum(el.getAttribute('data-task-idx'), -1)
-    const rIdx = capNum(el.getAttribute('data-row-idx'), -1)
-    if (typeof meEstimationDeleteRow === 'function') meEstimationDeleteRow(tIdx, rIdx)
-    break
-  }
-  case 'cap-estimation-save': if (typeof meEstimationSave === 'function') meEstimationSave(capNum(el.getAttribute('data-task-idx'), -1)); break
-  case 'cap-estimation-cancel': if (typeof meCloseEstimationSubsystem === 'function') meCloseEstimationSubsystem(); break
-  case 'cap-estimation-clear': if (typeof meEstimationClearData === 'function') meEstimationClearData(capNum(el.getAttribute('data-task-idx'), -1)); break
-
   // ── ME Products ───────────────────────────────────────────
   case 'cap-products-sort-dir': if (typeof meProductsToggleSortDir === 'function') meProductsToggleSortDir(el.getAttribute('data-dept')); break
   case 'cap-products-clear-filters': if (typeof meProductsClearFilters === 'function') meProductsClearFilters(el.getAttribute('data-dept')); break
@@ -332,11 +319,6 @@ window.capacityEvents._onInput = function(evt) {
   case 'cap-product-load-search': {
     const dept = el.getAttribute('data-dept')
     if (typeof meProductLoadSetSearch === 'function') meProductLoadSetSearch(el.value, dept)
-    break
-  }
-  case 'cap-estimation-confidence': {
-    const tIdx = capNum(el.getAttribute('data-task-idx'), -1)
-    if (typeof meEstimationUpdateConfidence === 'function') meEstimationUpdateConfidence(tIdx, el.value)
     break
   }
   default: break

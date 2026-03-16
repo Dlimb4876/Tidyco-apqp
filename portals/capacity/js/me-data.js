@@ -2,8 +2,7 @@
    me-data.js — ME Capacity Data Layer (Global Namespace)
    Combines all data/me-data/*.js modules into one file
 
-   Supabase Tables: me_teams, me_tasks, me_task_subtasks,
-                    me_task_pert_history, me_products, me_holidays
+  Supabase Tables: me_teams, me_tasks, me_products, me_holidays
    ============================================================ */
 
 // ─────────────────────────────────────────────────────────────
@@ -820,18 +819,6 @@ window.meDataSubscribe = function() {
         });
         render();
       }
-    },
-    {
-      table: 'me_task_subtasks',
-      onInsert: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); },
-      onUpdate: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); },
-      onDelete: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); }
-    },
-    {
-      table: 'me_task_pert_history',
-      onInsert: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); },
-      onUpdate: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); },
-      onDelete: () => { meLoadRelationalTasks(currentUser.id).then(() => render()); }
     }
   ], 'me_all_channel');
 };

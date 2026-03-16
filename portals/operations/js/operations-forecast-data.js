@@ -112,10 +112,8 @@ function opsForecastBuildWeightedMatrix(monthKeys, rows) {
     if (!start || !end || start > end) return;
 
     const totalHours = Math.max(0, opsForecastToNumber(row.total_hours, 0));
-    const probability = opsForecastClamp(opsForecastToNumber(row.probability_pct, 0), 0, 100) / 100;
     const probabilityBand = opsForecastProbabilityBandFromPct(row.probability_pct);
-    const weightedTotalHours = totalHours * probability;
-    if (weightedTotalHours <= 0) return;
+    if (totalHours <= 0) return;
 
     const totalDays = Math.max(1, ((end - start) / 86400000) + 1);
     const workArea = (row.work_area || 'Unassigned').toString();
@@ -134,7 +132,7 @@ function opsForecastBuildWeightedMatrix(monthKeys, rows) {
       if (overlapStart > overlapEnd) return;
 
       const overlapDays = ((overlapEnd - overlapStart) / 86400000) + 1;
-      const monthHours = weightedTotalHours * (overlapDays / totalDays);
+      const monthHours = totalHours * (overlapDays / totalDays);
 
       if (!matrix[key][workArea]) matrix[key][workArea] = 0;
       matrix[key][workArea] += monthHours;

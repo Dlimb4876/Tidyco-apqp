@@ -14,7 +14,7 @@ describe('Operations Forecast Data', () => {
     eval(script);
   });
 
-  test('weighted matrix applies probability for single month', () => {
+  test('forecast matrix uses total hours for single month', () => {
     const monthKeys = ['2026-01'];
     const rows = [{
       id: 'o1',
@@ -29,11 +29,11 @@ describe('Operations Forecast Data', () => {
 
     const matrix = opsForecastBuildWeightedMatrix(monthKeys, rows);
 
-    expect(Math.round(matrix['2026-01']._total)).toBe(50);
-    expect(Math.round(matrix['2026-01']['Unit 2'])).toBe(50);
+    expect(Math.round(matrix['2026-01']._total)).toBe(100);
+    expect(Math.round(matrix['2026-01']['Unit 2'])).toBe(100);
   });
 
-  test('weighted matrix splits hours across month overlap', () => {
+  test('forecast matrix splits total hours across month overlap', () => {
     const monthKeys = ['2026-01', '2026-02'];
     const rows = [{
       id: 'o2',
@@ -53,7 +53,7 @@ describe('Operations Forecast Data', () => {
     expect(Math.round(matrix['2026-01']._total + matrix['2026-02']._total)).toBe(310);
   });
 
-  test('inactive statuses are excluded from weighted matrix', () => {
+  test('inactive statuses are excluded from forecast matrix', () => {
     const monthKeys = ['2026-01'];
     const rows = [{
       id: 'o3',
@@ -71,7 +71,7 @@ describe('Operations Forecast Data', () => {
     expect(matrix['2026-01']._total).toBe(0);
   });
 
-  test('weighted matrix includes low medium high band breakdown', () => {
+  test('forecast matrix includes low medium high band breakdown using total hours', () => {
     const monthKeys = ['2026-01'];
     const rows = [
       {
@@ -108,9 +108,9 @@ describe('Operations Forecast Data', () => {
 
     const matrix = opsForecastBuildWeightedMatrix(monthKeys, rows);
 
-    expect(Math.round(matrix['2026-01']._bands.low)).toBe(30);
-    expect(Math.round(matrix['2026-01']._bands.medium)).toBe(60);
-    expect(Math.round(matrix['2026-01']._bands.high)).toBe(90);
-    expect(Math.round(matrix['2026-01']._total)).toBe(180);
+    expect(Math.round(matrix['2026-01']._bands.low)).toBe(100);
+    expect(Math.round(matrix['2026-01']._bands.medium)).toBe(100);
+    expect(Math.round(matrix['2026-01']._bands.high)).toBe(100);
+    expect(Math.round(matrix['2026-01']._total)).toBe(300);
   });
 });

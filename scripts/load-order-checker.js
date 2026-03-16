@@ -37,7 +37,6 @@ const DEPENDENCIES = {
   'me-heatmap.js': ['me-calculations.js'],
   'me-dashboard.js': ['me-chart.js', 'me-heatmap.js'],
   'me-capacity.js': ['me-dashboard.js', 'me-team.js', 'me-tasks.js', 'me-products.js', 'me-holidays.js'],
-  'me-estimation-page.js': ['me-data.js'],
   'prod-capacity-data.js': ['db.js'],
   'work-areas-data.js': ['db.js'],
   'prod-capacity-dashboard.js': ['prod-capacity-data.js'],

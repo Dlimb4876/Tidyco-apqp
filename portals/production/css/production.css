@@ -1085,7 +1085,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 
 .compact-two-month .gantt-day-scale {
   position: relative;
-  height: 22px;
+  height: 28px;
   background: repeating-linear-gradient(
     to right,
     transparent,
@@ -1097,15 +1097,17 @@ tr.batch-row-due-soon { background: #fffbeb; }
 
 .compact-two-month .gantt-day-marker {
   position: absolute;
-  top: 3px;
+  top: 5px;
   transform: translateX(-50%);
-  font-size: 10px;
-  color: var(--muted);
+  font-size: 11px;
+  color: #000;
   font-family: 'IBM Plex Mono';
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .compact-two-month .gantt-day-marker.month-end {
-  color: var(--ink);
+  color: #000;
   font-weight: 700;
 }
 
@@ -1261,15 +1263,16 @@ tr.batch-row-due-soon { background: #fffbeb; }
 
 .six-month-product-view .gantt-week-marker-name {
   font-size: 10px;
-  color: var(--mid);
+  color: #000;
   font-family: 'IBM Plex Mono';
   font-weight: 700;
 }
 
 .six-month-product-view .gantt-week-marker-date {
-  font-size: 9px;
-  color: var(--muted);
+  font-size: 10px;
+  color: #000;
   font-family: 'IBM Plex Mono';
+  font-weight: 600;
 }
 
 .six-month-product-view .gantt-today-marker {
@@ -1469,7 +1472,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   }
 
   .six-month-product-view .gantt-week-marker-date {
-    display: none;
+    font-size: 9px;
   }
 }
 
