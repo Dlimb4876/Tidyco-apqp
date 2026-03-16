@@ -6,7 +6,7 @@ describe('Product Management Event Delegation', () => {
     jest.resetModules();
     document.body.innerHTML = '<div id="mount"></div>';
 
-    global.db = { programmes: [] };
+    global.db = { projects: [] };
     global.familiesState = { loading: false, families: [] };
     global.productsState = { products: [] };
 

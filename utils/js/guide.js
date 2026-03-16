@@ -474,7 +474,7 @@ const GUIDE_CONTENT = {
           <li><strong>B</strong> — Medium value (middle tier ~30%). Standard control.</li>
           <li><strong>C</strong> — Low value / common (50–70% of unique parts, ~5–10% of total value). Minimal control.</li>
         </ul>
-        <p>Items marked <strong>AAW</strong> (Always Available When needed) have special stocking requirements.</p>
+        <p>Items marked <strong>AAW</strong> (Additional Arising Work) have special stocking requirements.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Linking to PFD</div>
@@ -614,10 +614,6 @@ const GUIDE_CONTENT = {
           <li><strong>B — Medium Value</strong>: Middle tier (~30%). Standard inventory control with periodic review.</li>
           <li><strong>C — Low Value / Common</strong>: 50–70% of unique part numbers but only ~5–10% of total inventory value. Minimal control — bulk order, infrequent review.</li>
         </ul>
-      </div>
-      <div class="guide-section">
-        <div class="guide-section-title">AAW Flag</div>
-        <p>Parts marked <strong>AAW</strong> (Always Available When needed) must be in stock at all times. This flag is visible in the BOM and used to highlight critical stocking requirements.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Linking to Projects</div>

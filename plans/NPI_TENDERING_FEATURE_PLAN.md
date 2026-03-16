@@ -49,7 +49,7 @@ Both tracks are required for release readiness.
 
 - A per-project gate scope decision
 - Agreed during tender
-- Stored against the linked NPI programme
+- Stored against the linked NPI project
 - Used to render only the selected checklist questions on gate pages
 
 ### What this feature is not
@@ -66,16 +66,16 @@ Both tracks are required for release readiness.
 The app already has:
 
 - one central gate question set in `core/js/state.js` via `GATE_DEFS`
-- explicit product-to-programme linkage through `product_id`
-- an existing NPI programme lifecycle tied to product records
+- explicit product-to-project linkage through `product_id`
+- an existing NPI project lifecycle tied to product records
 
-Because of that, this feature should work with the existing linked programme rather than create a second parallel NPI project flow.
+Because of that, this feature should work with the existing linked project rather than create a second parallel NPI project flow.
 
 Recommended approach:
 
 1. Product is created or updated in Product Management
-2. Product has an existing linked NPI programme
-3. When the product enters Tender, the user opens a tender gate scope editor for that linked programme
+2. Product has an existing linked NPI project
+3. When the product enters Tender, the user opens a tender gate scope editor for that linked project
 4. The user selects which standard gate questions apply
 5. The selection is saved and then locked
 6. Gate pages render only those selected questions
@@ -84,12 +84,12 @@ Recommended approach:
 
 ## Database Changes
 
-### Programmes table
+### Projects table
 
-Add project-level fields to `programmes`:
+Add project-level fields to `projects`:
 
 ```sql
-ALTER TABLE programmes
+ALTER TABLE projects
 ADD COLUMN gate_selections JSONB DEFAULT NULL,
 ADD COLUMN gate_selection_locked BOOLEAN DEFAULT FALSE,
 ADD COLUMN gate_selection_locked_at TIMESTAMP NULL,
@@ -149,7 +149,7 @@ Add project-scope editor state in `core/js/state.js`:
 ```javascript
 let tenderGateScopeState = {
   isOpen: false,
-  programmeId: null,
+  projectId: null,
   selectedGate: 0,
   workingSelections: null
 };
@@ -223,7 +223,7 @@ Do not add these:
 
 1. User opens a product in Product Management
 2. Product status is set to `Tender`
-3. System resolves the linked NPI programme using `product_id`
+3. System resolves the linked NPI project using `product_id`
 4. User opens the tender gate scope editor
 5. User manually ticks which standard gate questions apply for this job
 6. User reviews all 6 gates
@@ -313,7 +313,7 @@ Recommended functions to add:
 
 ### Linkage helpers
 
-- `findProgrammeByProductId(productId)`
+- `findProjectByProductId(productId)`
 - `productTenderStatusTriggered(productId, productData)`
 
 ### Render-safe helpers
@@ -328,20 +328,20 @@ Recommended functions to add:
 
 ### Phase 0: Resolve linkage and trigger flow
 
-Goal: make sure tendering works against the existing linked programme, not a duplicate one.
+Goal: make sure tendering works against the existing linked project, not a duplicate one.
 
 Deliverables:
 
-- review current `ensureProductProgrammes()` behaviour
+- review current `ensureProductProjects()` behaviour
 - define one supported path for tender scope editing
-- add `findProgrammeByProductId(productId)`
+- add `findProjectByProductId(productId)`
 - add `productTenderStatusTriggered(productId, productData)`
-- ensure status change to `Tender` opens or offers the tender scope editor for the linked programme
+- ensure status change to `Tender` opens or offers the tender scope editor for the linked project
 
 Success criteria:
 
-- no duplicate NPI programmes created
-- tendering acts on the correct linked programme
+- no duplicate NPI projects created
+- tendering acts on the correct linked project
 
 ### Phase 1: Schema and state support
 
@@ -352,7 +352,7 @@ Deliverables:
 - add `gate_selections`
 - add `gate_selection_locked`
 - add lock audit fields
-- update programme migration logic in `db.js`
+- update project migration logic in `db.js`
 - add helper functions in `state.js`
 
 Success criteria:
@@ -431,10 +431,10 @@ This section turns the plan into implementation-ready tasks against the current 
 
 ### Step 1: Database schema update
 
-Apply a migration to add these columns to `programmes`:
+Apply a migration to add these columns to `projects`:
 
 ```sql
-ALTER TABLE programmes
+ALTER TABLE projects
 ADD COLUMN gate_selections JSONB DEFAULT NULL,
 ADD COLUMN gate_selection_locked BOOLEAN DEFAULT FALSE,
 ADD COLUMN gate_selection_locked_at TIMESTAMP NULL,
@@ -458,7 +458,7 @@ Tasks:
   - `gate_selection_locked`
   - `gate_selection_locked_at`
   - `gate_selection_locked_by`
-- update `loadRemote()` to select and map those fields back into each programme
+- update `loadRemote()` to select and map those fields back into each project
 - update `migrateprog()` to initialise safe defaults for:
   - `gate_selections`
   - `gate_selection_locked`
@@ -484,7 +484,7 @@ Tasks:
   - `canEditGateSelections(projectId)`
 - keep helpers generic and side-effect free where possible
 
-### Step 4: Product-to-programme resolution
+### Step 4: Product-to-project resolution
 
 Files:
 
@@ -494,11 +494,11 @@ Files:
 
 Tasks:
 
-- add `findProgrammeByProductId(productId)` in a shared place used by tender flow
-- review `npi.dashboard.ensureProductProgrammes()` and confirm how it should coexist with the tender scope editor
+- add `findProjectByProductId(productId)` in a shared place used by tender flow
+- review `npi.dashboard.ensureProductProjects()` and confirm how it should coexist with the tender scope editor
 - add `productTenderStatusTriggered(productId, productData)`
-- update `productsDataUpdateProduct()` so a move to `Tender` opens or offers the tender gate scope editor for the linked programme
-- make sure this does not create duplicate programmes
+- update `productsDataUpdateProduct()` so a move to `Tender` opens or offers the tender gate scope editor for the linked project
+- make sure this does not create duplicate projects
 
 ### Step 5: Tender gate scope editor UI
 
@@ -619,7 +619,7 @@ Tasks:
 
 - document that tender gate scope affects gate checklist only
 - document the lock behaviour
-- document new programme fields and helper functions
+- document new project fields and helper functions
 
 ---
 
@@ -657,7 +657,7 @@ Add tests for:
 Add tests for:
 
 1. product status changed to `Tender`
-2. linked programme is found correctly
+2. linked project is found correctly
 3. gate scope editor saves selection
 4. `Confirm and Lock` sets lock fields
 5. gate pages show only selected questions
@@ -708,7 +708,7 @@ Recommended validations:
 ### Compatibility
 
 - existing projects without `gate_selections` still show all standard gate questions
-- no duplicate NPI programmes are created
+- no duplicate NPI projects are created
 - product linkage continues to use `product_id`
 
 ### Audit
@@ -740,8 +740,8 @@ When explaining this feature in the UI, use wording like:
 
 ## Next Steps
 
-1. Update the data model on `programmes`
-2. Resolve tender trigger against the existing linked programme flow
+1. Update the data model on `projects`
+2. Resolve tender trigger against the existing linked project flow
 3. Build the manual gate scope editor
 4. Update gate rendering to use selected questions safely
 5. Add tests before rollout

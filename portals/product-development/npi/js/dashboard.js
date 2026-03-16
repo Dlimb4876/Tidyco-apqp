@@ -54,17 +54,17 @@ npi.dashboard.setDashTab = function(tab) {
   render()
 }
 
-// ── Auto-create programmes for all products ───────────────────
-npi.dashboard.ensureProductProgrammes = function() {
+// ── Auto-create projects for all products ───────────────────
+npi.dashboard.ensureProductProjects = function() {
   const products = productsDataGetAll()
   if (!products || products.length === 0) return
   
   let created = 0
   let updated = 0
   products.forEach(product => {
-    const existing = typeof findProgrammeByProductId === 'function'
-      ? findProgrammeByProductId(product.id)
-      : db.programmes.find(p => p.product_id === product.id)
+    const existing = typeof findProjectByProductId === 'function'
+      ? findProjectByProductId(product.id)
+      : db.projects.find(p => p.product_id === product.id)
     const family = typeof normalizeFamilyId === 'function'
       ? normalizeFamilyId(product.family || '', 'Other')
       : (product.family || 'Other')
@@ -80,13 +80,13 @@ npi.dashboard.ensureProductProgrammes = function() {
         date: new Date().toISOString().slice(0, 10),
         status: 'Active',
       })
-      db.programmes.push(np)
+      db.projects.push(np)
       created++
       return
     }
 
-    if (typeof syncProgrammeFamily === 'function') {
-      if (syncProgrammeFamily(existing, family, existing.family || 'Other')) updated++
+    if (typeof syncProjectFamily === 'function') {
+      if (syncProjectFamily(existing, family, existing.family || 'Other')) updated++
     } else if ((existing.family || '') !== family) {
       existing.family = family
       updated++
@@ -114,7 +114,7 @@ npi.dashboard.toggleNpiLane = function(familyId) {
 
 // ── Projects list (Kanban with family swim lanes) ─────────────
 npi.dashboard.renderProjects = function() {
-  npi.dashboard.ensureProductProgrammes()
+  npi.dashboard.ensureProductProjects()
   const user = currentUser ? currentUser.email.split('@')[0] : ''
   const products = productsDataGetAll() || []
   const families = getFamilies()
@@ -239,7 +239,7 @@ npi.dashboard.renderProjects = function() {
 
   const hasActiveFilters = !!npiProjectsSearch || npiProjectsFamilyFilter !== 'all' || npiProjectsStatusFilter !== 'all'
 
-  const programmeByProductId = new Map((db.programmes || []).filter(p => p.product_id).map(p => [p.product_id, p]))
+  const projectByProductId = new Map((db.projects || []).filter(p => p.product_id).map(p => [p.product_id, p]))
 
   let html = `<div class="proj-home">
     <div class="proj-home-header">
@@ -281,8 +281,8 @@ npi.dashboard.renderProjects = function() {
         ${col.length === 0
           ? `<div class="npi-lane-empty">—</div>`
           : col.map(product => {
-              const programme = programmeByProductId.get(product.id)
-              return npi.dashboard.renderNpiSlimCard(product, programme)
+              const project = projectByProductId.get(product.id)
+              return npi.dashboard.renderNpiSlimCard(product, project)
             }).join('')
         }
       </div>`
@@ -308,14 +308,14 @@ npi.dashboard.renderProjects = function() {
   if (visibleProducts.length === 0) {
     html += `<div class="npi-empty-view" style="text-align:center;padding:40px">
       <div style="color:var(--muted);margin-bottom:12px">No projects match this view/filter combination.</div>
-      <button class="btn btn-primary btn-sm" onclick="showModal('modalNewProj')">＋ Create First Project</button>
+      <div style="color:var(--muted)">Projects are created automatically when products are added in Product Management.</div>
     </div>`
   }
 
   // 3-A: "Load more" footer — only shown when more pages are available
-  if (typeof programmesAllLoaded !== 'undefined' && !programmesAllLoaded) {
+  if (typeof projectsAllLoaded !== 'undefined' && !projectsAllLoaded) {
     html += `<div class="npi-load-more-row">
-      <button class="btn btn-ghost" onclick="loadMoreProgrammes()">⬇ Load more projects</button>
+      <button class="btn btn-ghost" onclick="loadMoreProjects()">⬇ Load more projects</button>
     </div>`
   }
 
@@ -323,12 +323,12 @@ npi.dashboard.renderProjects = function() {
   return html
 }
 
-// ── Slim card for a product + its linked programme ────────────
-npi.dashboard.renderNpiSlimCard = function(product, programme) {
+// ── Slim card for a product + its linked project ────────────
+npi.dashboard.renderNpiSlimCard = function(product, project) {
   let pipsHtml = ''
   let gateScopeBadge = ''
-  if (programme) {
-    const gates = programme.gates || []
+  if (project) {
+    const gates = project.gates || []
     const curGate = gates.findIndex(g => !npi.gate.gateAllSigned(g))
     pipsHtml = `<div class="proj-card-gate" style="margin-top:6px">` +
       GATE_DEFS.map((g, i) => {
@@ -337,12 +337,12 @@ npi.dashboard.renderNpiSlimCard = function(product, programme) {
         return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`
       }).join('') + `</div>`
 
-    const scoped = !!programme.gate_selections
-    const locked = !!programme.gate_selection_locked
-    const selectedTotal = GATE_DEFS.reduce((sum, g) => sum + getProjectGateSelection(programme.id, g.num).length, 0)
+    const scoped = !!project.gate_selections
+    const locked = !!project.gate_selection_locked
+    const selectedTotal = GATE_DEFS.reduce((sum, g) => sum + getProjectGateSelection(project.id, g.num).length, 0)
     const totalQuestions = GATE_DEFS.reduce((sum, g) => sum + getDefaultGateSelection(g.num).length, 0)
     const perGate = GATE_DEFS.map(g => {
-      const sel = getProjectGateSelection(programme.id, g.num).length
+      const sel = getProjectGateSelection(project.id, g.num).length
       const tot = getDefaultGateSelection(g.num).length
       return `G${g.num} ${sel}/${tot}`
     }).join(' · ')
@@ -352,9 +352,9 @@ npi.dashboard.renderNpiSlimCard = function(product, programme) {
 
     gateScopeBadge = `<div title="${esc(perGate)}" style="margin-top:6px;font-size:10px;font-family:'IBM Plex Mono',monospace;padding:3px 7px;border-radius:999px;border:1px solid ${border};color:${text};display:inline-flex;gap:6px;align-items:center">${label} · ${selectedTotal}/${totalQuestions}</div>`
   }
-  const hasHighRPN = programme && (programme.pfmea || []).some(r => npi.pfmea.calcRPN(r) >= RPN_HIGH)
+  const hasHighRPN = project && (project.pfmea || []).some(r => npi.pfmea.calcRPN(r) >= RPN_HIGH)
   const rpnBadge = hasHighRPN ? `<div class="npi-slim-rpn-badge">⚠ High RPN</div>` : ''
-  const targetProgId = programme ? programme.id : ''
+  const targetProgId = project ? project.id : ''
   const productScope = product.scope || 'overhaul'
   const scopeIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
   const scopeIcon = scopeIcons[productScope] || '🔄'
@@ -425,7 +425,7 @@ npi.dashboard.renderDashboard = function() {
   if (!p.subAssemblies) p.subAssemblies = []
   const subAsmHTML = (() => {
     const cards = p.subAssemblies.map((link, li) => {
-      const sp = db.programmes.find(x => x.id === link.id)
+      const sp = db.projects.find(x => x.id === link.id)
       if (!sp) return ''
       const sg        = sp.gates || []
       const sgDone    = sg.filter(g => g.signed).length
@@ -493,7 +493,7 @@ npi.dashboard.renderDashboard = function() {
   const scopeDisplayIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
   const linkedScopeIcon = linkedScope ? (scopeDisplayIcons[linkedScope] || '🔄') : '🔄'
   const linkedScopeLabel = linkedScope ? (linkedScope.charAt(0).toUpperCase() + linkedScope.slice(1)) : null
-  const parentProg = p.parentId ? db.programmes.find(x => x.id === p.parentId) : null
+  const parentProg = p.parentId ? db.projects.find(x => x.id === p.parentId) : null
   const liveUpdateBadge = typeof npiRealtimeIndicatorHTML === 'function' ? npiRealtimeIndicatorHTML() : ''
   // Task 2-A: presence badges — other users viewing this project
   const presenceUsers = typeof getPresenceForProg === 'function' ? getPresenceForProg(progId) : []
@@ -652,7 +652,7 @@ npi.dashboard.openProjectOrRender = function(id) {
 npi.dashboard.openGateScopeEditor = function() {
   const p = prog(); if (!p) return
   if (typeof tenderGateScopeState === 'object' && tenderGateScopeState) {
-    tenderGateScopeState.programmeId = p.id
+    tenderGateScopeState.projectId = p.id
   }
   if (typeof window.openTenderGateSelectionModal === 'function') {
     window.openTenderGateSelectionModal(p.product_id || null)
@@ -687,9 +687,9 @@ npi.dashboard.createProg = function() {
     gates: [], ctq: [], pfd: [], pfmea: [], bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
     actions: [], risks: [], gantt: [], subAssemblies: []
   })
-  db.programmes.push(newProg)
+  db.projects.push(newProg)
   if (parentId) {
-    const parent = db.programmes.find(x => x.id === parentId)
+    const parent = db.projects.find(x => x.id === parentId)
     if (parent) {
       if (!parent.subAssemblies) parent.subAssemblies = []
       if (!parent.subAssemblies.find(x => x.id === id)) parent.subAssemblies.push({ id })
@@ -737,24 +737,24 @@ npi.dashboard.deleteProject = async function() {
   const deletedId = progId
   // Remove from Supabase first; abort the local delete if it fails.
   if (typeof supa !== 'undefined') {
-    const { error } = await supa.from('programmes').delete().eq('prog_id', deletedId)
+    const { error } = await supa.from('projects').delete().eq('prog_id', deletedId)
     if (error) {
       showToast('Could not delete project — ' + (error.message || 'unknown error'), 'error')
       return
     }
-    // Task 2-C: cascade-delete all NPI relational data for this programme.
-    if (typeof npiRelDeleteAllForProgramme === 'function') {
+    // Task 2-C: cascade-delete all NPI relational data for this project.
+    if (typeof npiRelDeleteAllForProject === 'function') {
       showToast('Deleting NPI data…', 'info', 3000)
-      await npiRelDeleteAllForProgramme(deletedId).catch(err => {
+      await npiRelDeleteAllForProject(deletedId).catch(err => {
         console.warn('NPI cascade delete error:', err)
       })
     }
   }
-  db.programmes = db.programmes.filter(x => x.id !== deletedId)
-  progId = db.programmes.length ? db.programmes[0].id : null
-  // Save any remaining dirty programmes but do not mark the deleted one.
-  if (dirtyProgrammes.has(deletedId)) dirtyProgrammes.delete(deletedId)
-  if (db.programmes.length > 0) save()
+  db.projects = db.projects.filter(x => x.id !== deletedId)
+  progId = db.projects.length ? db.projects[0].id : null
+  // Save any remaining dirty projects but do not mark the deleted one.
+  if (dirtyProjects.has(deletedId)) dirtyProjects.delete(deletedId)
+  if (db.projects.length > 0) save()
   closeModal('modalEditProj')
   navigate('projects')
 }
@@ -762,7 +762,7 @@ npi.dashboard.deleteProject = async function() {
 // ── Sub-assembly management ───────────────────────────────────
 npi.dashboard.openSubAsmModal = function() {
   const p = prog(); if (!p) return
-  const others = db.programmes.filter(x => x.id !== progId && !(p.subAssemblies || []).find(s => s.id === x.id))
+  const others = db.projects.filter(x => x.id !== progId && !(p.subAssemblies || []).find(s => s.id === x.id))
   if (others.length === 0) { showToast('No other projects to link.', 'info'); return }
   const existing = document.getElementById('subAsmModalBg'); if (existing) existing.remove()
   const opts = others.map(x =>
@@ -781,7 +781,7 @@ npi.dashboard.openSubAsmModal = function() {
 npi.dashboard.linkSubAsm = function(id) {
   const p = prog(); if (!p.subAssemblies) p.subAssemblies = []
   if (!p.subAssemblies.find(x => x.id === id)) p.subAssemblies.push({ id })
-  const child = db.programmes.find(x => x.id === id)
+  const child = db.projects.find(x => x.id === id)
   if (child && !child.parentId) child.parentId = progId
   // Mark both parent (progId) and child dirty so both rows are written.
   save(id); npi.dashboard.closeSubAsmModal(); render()
@@ -791,7 +791,7 @@ npi.dashboard.unlinkSubAsm = function(li) {
   const p = prog()
   const linked = p.subAssemblies[li]
   if (linked) {
-    const child = db.programmes.find(x => x.id === linked.id)
+    const child = db.projects.find(x => x.id === linked.id)
     if (child && child.parentId === progId) child.parentId = null
   }
   p.subAssemblies.splice(li, 1)

@@ -167,7 +167,7 @@ This applies to UI, routing, shared data handling, and persistence changes so th
 
 ## Core Data Model
 
-- **Programme**: Root object containing metadata (customer, unit, family) and child arrays.
+- **Project**: Root object containing metadata (customer, unit, family) and child arrays.
 - **CTQ**: Critical-to-Quality requirements (id, req, spec, testMethod).
 - **PFD**: Process Flow steps. Includes `bomRefs` and `ctqIds`.
 - **PFMEA**: Nested structure: Failure Mode → Effects → Causes (with RPN/Action history).
@@ -181,7 +181,7 @@ For complete state variables reference, see **CLAUDE.md "State Management"** sec
 
 | Function | Module | Description |
 |----------|--------|-------------|
-| `prog()` | state.js | Returns the active programme object |
+| `prog()` | state.js | Returns the active project object |
 | `save()` | db.js | Local backup + debounced Supabase `saveRemote()` |
 | `navigate(sec)` | navigation.js | Updates `currentSection` and URL hash, calls `render()` |
 | `render()` | navigation.js | Main UI switchboard, clears and repaints `#mainContent` |
@@ -202,7 +202,7 @@ The application uses hash-based routing with the following parameters:
 
 | Parameter | Description | Example Values |
 |-----------|-------------|----------------|
-| `p` | Programme/project UUID | `p=a1b2c3d4-e5f6-...` |
+| `p` | Project/project UUID | `p=a1b2c3d4-e5f6-...` |
 | `s` | Section/portal | `s=hub`, `s=capacity`, `s=product-development`, `s=production` |
 | `nft` | NPI projects filter tab | `nft=all`, `nft=HVAC`, `nft=Pneumatics` |
 | `t` | APQP sub-tab | `t=ctq`, `t=pfd`, `t=pfmea`, `t=cp` |

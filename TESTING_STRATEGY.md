@@ -166,7 +166,7 @@ global.removeRealtimeSubscription = jest.fn();
 // ─────────────────────────────────────────────────────────────
 
 global.currentUser = { id: 'user-123', email: 'test@test.com' };
-global.db = { programmes: [], families: [], me_teams: [] };
+global.db = { projects: [], families: [], me_teams: [] };
 global.progId = 'prog-123';
 global.currentSection = 'hub';
 global.apqpTab = 'ctq';
@@ -244,7 +244,7 @@ global.currentUser = { id: 'test-user', email: 'test@test.com' };
 
 #### 4. Global State (all variables)
 ```javascript
-global.db = { programmes: [{ id: 'test-prog-1', name: 'Test Project' }] };
+global.db = { projects: [{ id: 'test-prog-1', name: 'Test Project' }] };
 global.progId = 'test-prog-1';
 global.currentSection = 'hub';
 // ... other state variables from state.js
@@ -771,7 +771,7 @@ const path = require('path');
 global.supa = { /* ... see jest.setup.js template ... */ };
 global.createRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
-global.db = { programmes: [] };
+global.db = { projects: [] };
 
 // Set up DOM
 const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');

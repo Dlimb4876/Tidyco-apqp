@@ -89,8 +89,8 @@ eslint.config.js        # ESLint config (NPI files only; flat config format)
 // Short prefixed ID generation (5-char suffix; NOT a full UUID — used for in-array items)
 const id = 'f_' + Math.random().toString(36).substr(2, 5); // f_=mode, e_=effect, c_=cause, r_=risk, a_=action
 
-// Active programme accessor
-prog()  // returns db.programmes.find(p => p.id === progId)
+// Active project accessor
+prog()  // returns db.projects.find(p => p.id === progId)
 
 // Modal
 showModal('modalId'); closeModal('modalId');

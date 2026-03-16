@@ -28,7 +28,7 @@ global.supa = {
 global.createRealtimeSubscription = jest.fn();
 global.removeRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
-global.db = { programmes: [] };
+global.db = { projects: [] };
 global.getFamilies = () => [];
 global.esc = (v) => String(v ?? '')
   .replace(/&/g, '&amp;')

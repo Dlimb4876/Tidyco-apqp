@@ -88,7 +88,7 @@
 td.w28  { width: 28px; }  td.w36  { width: 36px; }  td.w44  { width: 44px; }
 td.w50  { width: 50px; }  td.w60  { width: 60px; }  td.w70  { width: 70px; }
 td.w80  { width: 80px; }  td.w90  { width: 90px; }  td.w100 { width: 100px; }
-td.w110 { width: 110px; } td.w120 { width: 120px; } td.w140 { width: 140px; }
+td.w110 { width: 150px; } td.w120 { width: 120px; } td.w140 { width: 140px; }
 td.ctr  { text-align: center; }
 
 /* ── Cell edit ──────────────────────────────────────────────── */

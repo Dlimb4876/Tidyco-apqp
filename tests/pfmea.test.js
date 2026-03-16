@@ -31,8 +31,8 @@ global.esc = (v) => String(v ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#039;');
 
-let activeProgramme;
-global.prog = () => activeProgramme;
+let activeProject;
+global.prog = () => activeProject;
 
 const script = fs.readFileSync(
   path.resolve(__dirname, '../portals/product-development/npi/js/pfmea.js'),
@@ -43,7 +43,7 @@ eval(script);
 describe('PFMEA core rules', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    activeProgramme = {
+    activeProject = {
       cp: [],
       pfd: [
         { id: 's1', stepNum: 10, op: 'Final assembly' }
@@ -117,7 +117,7 @@ describe('PFMEA core rules', () => {
   test('implements action, updates OCC/DET, and writes history', () => {
     npi.pfmea.pfImplementAction(0, 0, 0);
 
-    const cause = activeProgramme.pfmea[0].effects[0].causes[0];
+    const cause = activeProject.pfmea[0].effects[0].causes[0];
     expect(cause.occ).toBe(3);
     expect(cause.det).toBe(4);
     expect(cause.history).toHaveLength(1);
@@ -136,7 +136,7 @@ describe('PFMEA core rules', () => {
   });
 
   test('alerts and aborts when no action fields are set', () => {
-    const cause = activeProgramme.pfmea[0].effects[0].causes[0];
+    const cause = activeProject.pfmea[0].effects[0].causes[0];
     cause.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' };
 
     npi.pfmea.pfImplementAction(0, 0, 0);
@@ -147,7 +147,7 @@ describe('PFMEA core rules', () => {
   });
 
   test('opens centered PFMEA history modal from the history button', () => {
-    activeProgramme.pfmea[0].effects[0].causes[0].history = [
+    activeProject.pfmea[0].effects[0].causes[0].history = [
       { rpn: 240, newRpn: 96, oldOcc: 5, newOcc: 3, oldDet: 6, newDet: 4, desc: 'Added check', date: '16 Mar 26' }
     ];
     document.body.innerHTML += [
@@ -170,7 +170,7 @@ describe('PFMEA core rules', () => {
   });
 
   test('collects PFMEA history entries for the shared history tab', () => {
-    activeProgramme.pfmea[0].effects[0].causes[0].history = [
+    activeProject.pfmea[0].effects[0].causes[0].history = [
       { rpn: 240, newRpn: 96, oldOcc: 5, newOcc: 3, oldDet: 6, newDet: 4, desc: 'Added check', date: '16 Mar 26' }
     ];
 

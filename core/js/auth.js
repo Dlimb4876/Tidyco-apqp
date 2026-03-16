@@ -32,7 +32,7 @@ function showLoginErr(msg) {
 async function doLogout() {
   await supa.auth.signOut();
   currentUser = null;
-  db = { programmes: [] }; progId = null;
+  db = { projects: [] }; progId = null;
   document.getElementById('appShell').style.display   = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginPassword').value = '';

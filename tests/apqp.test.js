@@ -34,8 +34,8 @@ global.esc = (v) => String(v ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#039;');
 
-let activeProgramme;
-global.prog = () => activeProgramme;
+let activeProject;
+global.prog = () => activeProject;
 
 const script = fs.readFileSync(
   path.resolve(__dirname, '../portals/product-development/npi/js/apqp.js'),
@@ -46,7 +46,7 @@ eval(script);
 describe('APQP sync behavior', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    activeProgramme = {
+    activeProject = {
       ctq: [{ id: 'ctq1', spec: '50+-0.05', oos_action: 'Review' }],
       pfd: [{ id: 's1', stepNum: 10, op: 'Press', ctqIds: ['ctq1'], bomRefs: [] }],
       pfmea: [
@@ -73,34 +73,34 @@ describe('APQP sync behavior', () => {
   test('syncFromPFMEA adds missing cause rows into Control Plan', () => {
     npi.apqp.syncFromPFMEA();
 
-    expect(activeProgramme.cp).toHaveLength(1);
-    expect(activeProgramme.cp[0].pfmeaId).toBe('f1');
-    expect(activeProgramme.cp[0].pfmeaEffectId).toBe('e1');
-    expect(activeProgramme.cp[0].pfmeaCauseId).toBe('c1');
-    expect(activeProgramme.cp[0].method).toBe('Visual check');
-    expect(activeProgramme.cp[0].spec).toBe('50+-0.05');
-    expect(activeProgramme.cp[0].reaction).toBe('Review');
-    expect(activeProgramme.cp[0].ctqIds).toEqual(['ctq1']);
+    expect(activeProject.cp).toHaveLength(1);
+    expect(activeProject.cp[0].pfmeaId).toBe('f1');
+    expect(activeProject.cp[0].pfmeaEffectId).toBe('e1');
+    expect(activeProject.cp[0].pfmeaCauseId).toBe('c1');
+    expect(activeProject.cp[0].method).toBe('Visual check');
+    expect(activeProject.cp[0].spec).toBe('50+-0.05');
+    expect(activeProject.cp[0].reaction).toBe('Review');
+    expect(activeProject.cp[0].ctqIds).toEqual(['ctq1']);
     expect(save).toHaveBeenCalled();
     expect(render).toHaveBeenCalled();
   });
 
   test('syncFromPFMEA does not duplicate existing cause links', () => {
-    activeProgramme.cp.push({ id: 'cp1', pfmeaCauseId: 'c1' });
+    activeProject.cp.push({ id: 'cp1', pfmeaCauseId: 'c1' });
 
     npi.apqp.syncFromPFMEA();
 
     expect(showToast).toHaveBeenCalledWith('All PFMEA causes already in control plan.', 'info');
-    expect(activeProgramme.cp).toHaveLength(1);
+    expect(activeProject.cp).toHaveLength(1);
     expect(save).not.toHaveBeenCalled();
   });
 
   test('addCP creates a default manual row', () => {
     npi.apqp.addCP();
 
-    expect(activeProgramme.cp).toHaveLength(1);
-    expect(activeProgramme.cp[0].type).toBe('Process');
-    expect(activeProgramme.cp[0].pfmeaId).toBe('');
+    expect(activeProject.cp).toHaveLength(1);
+    expect(activeProject.cp[0].type).toBe('Process');
+    expect(activeProject.cp[0].pfmeaId).toBe('');
     expect(save).toHaveBeenCalled();
     expect(render).toHaveBeenCalled();
   });

@@ -23,7 +23,7 @@ All global state must live in `core/js/state.js` with a default value:
 **Example**:
 ```javascript
 // In state.js
-let currentProgramme = null;
+let currentProject = null;
 const GATE_DEFS = { ... };
 ```
 

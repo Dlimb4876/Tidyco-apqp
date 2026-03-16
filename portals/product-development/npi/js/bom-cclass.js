@@ -29,7 +29,9 @@ npi.bom.renderABCCatalogue = function() {
     ? abcCatalogueData.filter(r =>
         (r.item_desc || '').toLowerCase().includes(searchTerm) ||
         (r.pn || '').toLowerCase().includes(searchTerm) ||
-        (r.supplier_pn || '').toLowerCase().includes(searchTerm)
+        (r.supplier_pn || '').toLowerCase().includes(searchTerm) ||
+        (r.manufacturer || '').toLowerCase().includes(searchTerm) ||
+        (r.manufacturer_pn || '').toLowerCase().includes(searchTerm)
       )
     : abcCatalogueData
 
@@ -46,7 +48,7 @@ npi.bom.renderABCCatalogue = function() {
     ).join('')}
     <input type="text" class="cell-edit" id="abcCatalogueSearch" value="${esc(abcCatalogueSearch)}"
       oninput="npi.bom.setABCSearch(this.value);render()"
-      placeholder="Search by PN, supplier PN, or description…" style="flex:1;min-width:160px;max-width:260px;margin-left:4px">
+      placeholder="Search by PN, manufacturer PN, or description…" style="flex:1;min-width:160px;max-width:260px;margin-left:4px">
     <span style="margin-left:auto;display:flex;gap:6px;flex-shrink:0">
       <button class="btn btn-ghost btn-sm" onclick="npi.bom.showAbcInfo()">What are A / B / C? ℹ</button>
       <button class="btn btn-primary btn-sm" onclick="npi.bom.openABCNew()">＋ Add Part</button>
@@ -58,21 +60,12 @@ npi.bom.renderABCCatalogue = function() {
   </div>`
 
   const tableRows = filtered.length === 0
-    ? `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">${abcCatalogueData.length === 0 ? 'No parts yet. Click ＋ Add Part to start building the catalogue.' : 'No parts match the current filter.'}</td></tr>`
+    ? `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">${abcCatalogueData.length === 0 ? 'No parts yet. Click ＋ Add Part to start building the catalogue.' : 'No parts match the current filter.'}</td></tr>`
     : filtered.map(r => {
       const i = abcCatalogueData.indexOf(r)
       return `<tr>
         <td class="w110"><input class="cell-edit mono" value="${esc(r.pn || '')}"
           onchange="npi.bom.updABCInline(${i}, 'pn', this.value)" placeholder="Tidyco PN" style="width:100%"></td>
-        <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.item_desc || '')}"
-          onchange="npi.bom.updABCInline(${i}, 'item_desc', this.value)" placeholder="Description" style="width:100%"></td>
-        <td class="w110"><input class="cell-edit mono" value="${esc(r.supplier_pn || '')}"
-          onchange="npi.bom.updABCInline(${i}, 'supplier_pn', this.value)" placeholder="Supplier PN" style="width:100%"></td>
-        <td class="w60"><input class="cell-edit" value="${esc(r.unit || 'ea')}"
-          onchange="npi.bom.updABCInline(${i}, 'unit', this.value)" placeholder="ea" style="width:100%"></td>
-        <td class="w44 ctr"><input type="checkbox" ${r.in_sage ? 'checked' : ''}
-          onchange="npi.bom.updABCInline(${i}, 'in_sage', this.checked)"
-          style="accent-color:var(--green);width:15px;height:15px;cursor:pointer" title="Part in Sage (MRP)"></td>
         <td class="w60 ctr">
           <select class="abc-class-select abc-${r.abc_class || 'C'}"
             onchange="npi.bom.updABCInline(${i}, 'abc_class', this.value); this.className='abc-class-select abc-' + this.value">
@@ -81,13 +74,34 @@ npi.bom.renderABCCatalogue = function() {
             <option value="C" ${(r.abc_class||'C')==='C'?'selected':''}>C</option>
           </select>
         </td>
-        <td class="w28 ctr"><button class="del-btn" onclick="npi.bom.delABCEntry(${i})" title="Delete">×</button></td>
+        <td class="bom-col-desc"><input class="cell-edit" value="${esc(r.item_desc || '')}"
+          onchange="npi.bom.updABCInline(${i}, 'item_desc', this.value)" placeholder="Description" style="width:100%"></td>
+        <td class="w60"><input class="cell-edit" value="${esc(r.unit || 'ea')}"
+          onchange="npi.bom.updABCInline(${i}, 'unit', this.value)" placeholder="ea" style="width:100%"></td>
+        <td class="w110"><input class="cell-edit" value="${esc(r.manufacturer || '')}"
+          onchange="npi.bom.updABCInline(${i}, 'manufacturer', this.value)" placeholder="Manufacturer (OEM)" style="width:100%"></td>
+        <td class="w110"><input class="cell-edit mono" value="${esc(r.manufacturer_pn || '')}"
+          onchange="npi.bom.updABCInline(${i}, 'manufacturer_pn', this.value)" placeholder="Manufacturer PN" style="width:100%"></td>
+        <td class="w44 ctr"><input type="checkbox" ${r.in_sage ? 'checked' : ''}
+          onchange="npi.bom.updABCInline(${i}, 'in_sage', this.checked)"
+          style="accent-color:var(--green);width:15px;height:15px;cursor:pointer" title="Part in Sage (MRP)"></td>
+        <td class="ctr" style="white-space:nowrap;padding:2px 4px"><button class="btn btn-ghost btn-sm" onclick="npi.bom.openABCEdit(${i})" title="Edit details" style="padding:1px 4px;font-size:12px">✏️</button><button class="del-btn" onclick="npi.bom.delABCEntry(${i})" title="Delete" style="width:20px;height:18px">×</button></td>
       </tr>`
     }).join('')
 
-  const table = `<div style="overflow-x:auto">
-    <table class="tbl bom-tbl abc-catalogue-tbl" style="min-width:700px">
-      <thead>${npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Description' }, { label: 'Supplier PN' }, { label: 'Unit' }, { label: 'In Sage' }, { label: 'Class' }, { label: '' }])}</thead>
+  const table = `<div style="overflow-x:auto;width:100%">
+    <table class="tbl bom-tbl abc-catalogue-tbl abc-tbl-compact" style="table-layout:fixed;width:100%">
+      <colgroup>
+        <col style="width:150px">
+        <col style="width:80px">
+        <col>
+        <col style="width:80px">
+        <col style="width:170px">
+        <col style="width:170px">
+        <col style="width:70px">
+        <col style="width:64px">
+      </colgroup>
+      <thead>${npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Class' }, { label: 'Description' }, { label: 'Units' }, { label: 'Manufacturer OEM' }, { label: 'Manufacturer PN' }, { label: 'In Sage' }, { label: '' }])}</thead>
       <tbody>${tableRows}</tbody>
     </table>
   </div>`
@@ -120,6 +134,9 @@ npi.bom.openABCNew = function() {
   document.getElementById('abcEditForm_class').value = 'C'
   document.getElementById('abcEditForm_inSage').checked = false
   document.getElementById('abcEditForm_notes').value = ''
+  document.getElementById('abcEditForm_manufacturer').value = ''
+  document.getElementById('abcEditForm_manufacturerPn').value = ''
+  document.getElementById('abcEditForm_datasheetUrl').value = ''
   showModal('modalABCEdit')
 }
 
@@ -134,6 +151,9 @@ npi.bom.openABCEdit = function(i) {
   document.getElementById('abcEditForm_class').value = entry.abc_class || 'C'
   document.getElementById('abcEditForm_inSage').checked = entry.in_sage || false
   document.getElementById('abcEditForm_notes').value = entry.notes || ''
+  document.getElementById('abcEditForm_manufacturer').value = entry.manufacturer || ''
+  document.getElementById('abcEditForm_manufacturerPn').value = entry.manufacturer_pn || ''
+  document.getElementById('abcEditForm_datasheetUrl').value = entry.datasheet_url || ''
   showModal('modalABCEdit')
 }
 
@@ -145,9 +165,12 @@ npi.bom.saveABCEdit = async function() {
   const abcClass = document.getElementById('abcEditForm_class').value || 'C'
   const inSage = document.getElementById('abcEditForm_inSage').checked
   const notes = document.getElementById('abcEditForm_notes').value.trim()
+  const manufacturer = document.getElementById('abcEditForm_manufacturer').value.trim()
+  const manufacturerPn = document.getElementById('abcEditForm_manufacturerPn').value.trim()
+  const datasheetUrl = document.getElementById('abcEditForm_datasheetUrl').value.trim()
 
   if (!pn) {
-    showToast('Part Number (PN) is required', 'warning')
+    showToast('Tidyco Part Number is required', 'warning')
     return
   }
   if (!desc) {
@@ -162,7 +185,10 @@ npi.bom.saveABCEdit = async function() {
     unit: unit || 'ea',
     abc_class: abcClass,
     in_sage: inSage,
-    notes: notes || ''
+    notes: notes || '',
+    manufacturer: manufacturer || null,
+    manufacturer_pn: manufacturerPn || null,
+    datasheet_url: datasheetUrl || null
   }
 
   // If editing, include the ID
@@ -195,6 +221,26 @@ npi.bom.delABCEntry = async function(i) {
 npi.bom.cancelABCEdit = function() {
   abcEditTarget = null
   closeModal('modalABCEdit')
+}
+
+npi.bom.openABCDatasheetLink = function() {
+  const urlInput = document.getElementById('abcEditForm_datasheetUrl')
+  if (!urlInput) return
+
+  const rawUrl = urlInput.value.trim()
+  if (!rawUrl) {
+    showToast('Enter a datasheet URL first', 'warning')
+    return
+  }
+
+  const normalizedUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`
+  try {
+    const parsed = new URL(normalizedUrl)
+    window.open(parsed.toString(), '_blank', 'noopener,noreferrer')
+  } catch (err) {
+    console.error('[NPI] Invalid datasheet URL:', err)
+    showToast('Enter a valid URL', 'warning')
+  }
 }
 
 // ── Inline cell editing ──────────────────────────────────

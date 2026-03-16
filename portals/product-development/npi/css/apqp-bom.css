@@ -46,7 +46,7 @@
 
 /* ── BOM Register Layout & Column Sizing ─────────────────────── */
 .bom-register-wrap {
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -57,8 +57,12 @@ td.w75 { width: 75px; }
   box-sizing: border-box;
 }
 
-.bom-tbl td.bom-col-desc  { width: 180px; }
+.bom-tbl td.bom-col-desc  { width: 280px; }
 .bom-tbl td.bom-col-notes { width: 180px; }
+
+/* Compact ABC catalogue table for hundreds of rows */
+.abc-tbl-compact td { padding: 3px 6px !important; }
+.abc-tbl-compact .cell-edit { padding: 1px 3px; min-height: 20px; }
 
 .bom-summary-pill {
   display: inline-flex;

@@ -503,7 +503,7 @@
 }
 .sub-asm-add-card:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-pale); }
 
-/* ── Parent programme card ───────────────────────────────────── */
+/* ── Parent project card ───────────────────────────────────── */
 .sub-asm-parent-link {
   display: inline-flex; align-items: center; gap: 4px; font-size: 10px;
   color: var(--muted); background: var(--bg); border: 1px solid var(--line);
@@ -522,9 +522,26 @@
 
 /* ── Project home (project list screen) ─────────────────────── */
 .proj-home { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+.proj-home--fullwidth {
+  max-width: none;
+  width: 100%;
+  padding: 24px 44px;
+}
 .proj-home-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .proj-home-title  { font-size: 26px; font-weight: 700; color: var(--ink); }
 .proj-home-sub    { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .proj-home--fullwidth {
+    padding: 24px 32px;
+  }
+}
+
+@media (max-width: 767px) {
+  .proj-home--fullwidth {
+    padding: 16px 16px;
+  }
+}
 
 .proj-family-group { margin-bottom: 28px; }
 .proj-family-label {

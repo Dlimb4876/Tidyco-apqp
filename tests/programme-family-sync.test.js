@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
-describe('Programme family sync', () => {
+describe('Project family sync', () => {
   beforeEach(() => {
     jest.resetModules();
     localStorage.clear();
 
     global.currentUser = { id: 'user-1', email: 'planner@test.com' };
-    global.db = { programmes: [] };
+    global.db = { projects: [] };
     global.productsState = { products: [] };
     global.familiesState = {
       families: [
@@ -18,9 +18,9 @@ describe('Programme family sync', () => {
     global.createRealtimeSubscription = jest.fn();
     global.render = jest.fn();
     global.save = jest.fn();
-    global.findProgrammeByProductId = (productId) => global.db.programmes.find(p => p.product_id === productId) || null;
+    global.findProjectByProductId = (productId) => global.db.projects.find(p => p.product_id === productId) || null;
     global.productsDataGetAll = jest.fn(() => []);
-    global.migrateprog = (programme) => programme;
+    global.migrateprog = (project) => project;
     global.RPN_HIGH = 100;
     global.npi = {
       dashboard: {},
@@ -53,11 +53,11 @@ describe('Programme family sync', () => {
     global.findFamilyRecord = findFamilyRecord;
     global.getDefaultFamilyId = getDefaultFamilyId;
     global.normalizeFamilyId = normalizeFamilyId;
-    global.syncProgrammeFamily = syncProgrammeFamily;
+    global.syncProjectFamily = syncProjectFamily;
 
     const productsDataScript = fs.readFileSync(path.resolve(__dirname, '../portals/product-development/product-management/js/products-data.js'), 'utf8');
     eval(`${productsDataScript}
-  global.productsDataSyncLinkedProgrammeFamily = productsDataSyncLinkedProgrammeFamily;`);
+  global.productsDataSyncLinkedProjectFamily = productsDataSyncLinkedProjectFamily;`);
 
     productsState = global.productsState;
   });
@@ -67,12 +67,12 @@ describe('Programme family sync', () => {
     expect(normalizeFamilyId('family-hvac')).toBe('family-hvac');
   });
 
-  test('syncProgrammeFamily updates a programme from legacy family text to the DB family id', () => {
-    const programme = { id: 'prog-1', product_id: 'prod-1', family: 'HVAC' };
+  test('syncProjectFamily updates a project from legacy family text to the DB family id', () => {
+    const project = { id: 'prog-1', product_id: 'prod-1', family: 'HVAC' };
 
-    const changed = syncProgrammeFamily(programme, 'family-hvac', programme.family);
+    const changed = syncProjectFamily(project, 'family-hvac', project.family);
 
     expect(changed).toBe(true);
-    expect(programme.family).toBe('family-hvac');
+    expect(project.family).toBe('family-hvac');
   });
 });

@@ -8,7 +8,7 @@ This is a single-page application (SPA) using hash-based routing:
 ```
 
 Components:
-- `p` = programme UUID
+- `p` = project UUID
 - `s` = section (e.g., 'capacity', 'product-development')
 - `t` = tab (e.g., 'me', 'pm')
 
@@ -50,7 +50,7 @@ Read current route state:
 
 ```javascript
 const params = new URLSearchParams(window.location.hash.slice(1));
-const programmeId = params.get('p');
+const projectId = params.get('p');
 const section = params.get('s');
 const tab = params.get('t');
 ```

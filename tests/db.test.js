@@ -16,7 +16,7 @@ global.supa = {
 };
 
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
-global.db = { programmes: [] };
+global.db = { projects: [] };
 global.progId = null;
 
 // Stubs for functions db.js calls that live in other modules
@@ -48,7 +48,7 @@ global.BOM_TYPES = BOM_TYPES; // eslint-disable-line no-undef
 const dbScript = fs.readFileSync(path.resolve(__dirname, '../core/js/db.js'), 'utf8');
 eval(dbScript);
 
-// Helper to build a minimal valid programme for tests (without needing GATE_DEFS in test body)
+// Helper to build a minimal valid project for tests (without needing GATE_DEFS in test body)
 function makeTestProg(overrides = {}) {
   return {
     id: 'prog-test-1',
@@ -72,7 +72,7 @@ function makeTestProg(overrides = {}) {
 describe('DB Module (db.js)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    global.db = { programmes: [] };
+    global.db = { projects: [] };
     global.currentUser = { id: 'test-user', email: 'test@test.com' };
     global.progId = null;
     localStorage.clear();
@@ -80,7 +80,7 @@ describe('DB Module (db.js)', () => {
 
   // ── migrateprog ──────────────────────────────────────────────
   describe('migrateprog()', () => {
-    test('should return a default programme for null input', () => {
+    test('should return a default project for null input', () => {
       const result = migrateprog(null);
       expect(result).toBeDefined();
       expect(result.ctq).toEqual([]);
@@ -178,24 +178,24 @@ describe('DB Module (db.js)', () => {
 
   // ── load (localStorage) ──────────────────────────────────────
   describe('load()', () => {
-    test('should load programmes from localStorage key tidyco_v7', () => {
-      const testData = { programmes: [makeTestProg({ id: 'prog-123', name: 'Loaded Project' })] };
+    test('should load projects from localStorage key tidyco_v7', () => {
+      const testData = { projects: [makeTestProg({ id: 'prog-123', name: 'Loaded Project' })] };
       localStorage.setItem('tidyco_v7', JSON.stringify(testData));
 
-      global.db = { programmes: [] };
+      global.db = { projects: [] };
       load();
 
-      expect(global.db.programmes.length).toBe(1);
-      expect(global.db.programmes[0].name).toBe('Loaded Project');
+      expect(global.db.projects.length).toBe(1);
+      expect(global.db.projects[0].name).toBe('Loaded Project');
     });
 
-    test('should not overwrite existing programmes', () => {
-      global.db = { programmes: [{ id: 'existing', name: 'Existing' }] };
-      localStorage.setItem('tidyco_v7', JSON.stringify({ programmes: [makeTestProg({ id: 'new', name: 'New' })] }));
+    test('should not overwrite existing projects', () => {
+      global.db = { projects: [{ id: 'existing', name: 'Existing' }] };
+      localStorage.setItem('tidyco_v7', JSON.stringify({ projects: [makeTestProg({ id: 'new', name: 'New' })] }));
 
       load();
 
-      expect(global.db.programmes[0].name).toBe('Existing');
+      expect(global.db.projects[0].name).toBe('Existing');
     });
 
     test('should handle invalid JSON in localStorage gracefully', () => {
@@ -214,10 +214,10 @@ describe('DB Module (db.js)', () => {
     });
 
     test('should write db to localStorage', () => {
-      global.db = { programmes: [{ id: 'p1', name: 'Test Prog' }] };
+      global.db = { projects: [{ id: 'p1', name: 'Test Prog' }] };
       save();
       const stored = JSON.parse(localStorage.getItem('tidyco_v7'));
-      expect(stored.programmes[0].name).toBe('Test Prog');
+      expect(stored.projects[0].name).toBe('Test Prog');
     });
 
     test('should set syncBadge to saving state', () => {
@@ -243,7 +243,7 @@ describe('DB Module (db.js)', () => {
       expect(global.supa.from).not.toHaveBeenCalled();
     });
 
-    test('should load programmes from Supabase and run migration', async () => {
+    test('should load projects from Supabase and run migration', async () => {
       const remoteProg = makeTestProg({ id: 'remote-1', name: 'Remote Project' });
 
       global.supa.from = jest.fn(() => ({
@@ -264,10 +264,10 @@ describe('DB Module (db.js)', () => {
 
       await loadRemote();
 
-  expect(global.db.programmes[0].dbId).toBe('11111111-1111-4111-8111-111111111111');
+  expect(global.db.projects[0].dbId).toBe('11111111-1111-4111-8111-111111111111');
 
-      expect(global.db.programmes.length).toBe(1);
-      expect(global.db.programmes[0].name).toBe('Remote Project');
+      expect(global.db.projects.length).toBe(1);
+      expect(global.db.projects[0].name).toBe('Remote Project');
     });
 
     test('should handle Supabase error gracefully', async () => {
@@ -283,23 +283,23 @@ describe('DB Module (db.js)', () => {
 
   // ── initProgSelect ───────────────────────────────────────────
   describe('initProgSelect()', () => {
-    test('should set progId to first programme if progId is null', () => {
+    test('should set progId to first project if progId is null', () => {
       global.progId = null;
-      global.db = { programmes: [{ id: 'p-first' }, { id: 'p-second' }] };
+      global.db = { projects: [{ id: 'p-first' }, { id: 'p-second' }] };
       initProgSelect();
       expect(global.progId).toBe('p-first');
     });
 
     test('should not change progId if already set', () => {
       global.progId = 'existing-id';
-      global.db = { programmes: [{ id: 'p-first' }] };
+      global.db = { projects: [{ id: 'p-first' }] };
       initProgSelect();
       expect(global.progId).toBe('existing-id');
     });
 
-    test('should not change progId if no programmes exist', () => {
+    test('should not change progId if no projects exist', () => {
       global.progId = null;
-      global.db = { programmes: [] };
+      global.db = { projects: [] };
       initProgSelect();
       expect(global.progId).toBeNull();
     });

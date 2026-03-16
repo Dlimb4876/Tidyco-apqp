@@ -10,6 +10,13 @@
   margin-bottom: 6px;
 }
 
+.ops-headline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .ops-tabs {
   display: flex;
   flex-wrap: wrap;

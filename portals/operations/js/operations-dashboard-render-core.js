@@ -104,7 +104,8 @@ function opsRenderQuickActions() {
 				<span>Jump directly to response screens</span>
 			</div>
 			<div class="ops-actions-grid">
-				<button class="btn btn-ghost" onclick="navigate('capacity')">Open Capacity Board</button>
+				<button class="btn btn-ghost" onclick="navigate('capacity'); setCapacityTab('me')">Open ME Capacity</button>
+				<button class="btn btn-ghost" onclick="navigate('capacity'); setCapacityTab('projects')">Open PM Capacity</button>
 				<button class="btn btn-ghost" onclick="navigate('production')">Open Production Planner</button>
 				<button class="btn btn-ghost" onclick="navigate('product-development')">Open NPI Workspace</button>
 				<button class="btn btn-ghost" onclick="navigate('feedback')">Open Feedback & Bugs</button>
@@ -133,7 +134,7 @@ function opsRenderOverview(metrics) {
 			</section>
 
 			<section class="ops-metrics-grid">
-				${opsMetricCard('Active Programmes', String(metrics.programmesFlow.active), `${metrics.programmesFlow.archived} archived`, 'good', 'product-development')}
+				${opsMetricCard('Active Projects', String(metrics.projectsFlow.active), `${metrics.projectsFlow.archived} archived`, 'good', 'product-development')}
 				${opsMetricCard('Gate Completion', `${metrics.gate.percentage}%`, `${metrics.gate.doneChecks}/${metrics.gate.totalChecks} checks done`, metrics.gate.percentage < 65 ? 'critical' : metrics.gate.percentage < 85 ? 'watch' : 'good', 'product-development')}
 				${opsMetricCard('ME Utilisation', metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready', metrics.me.ready ? `${metrics.me.headroom}h headroom this month` : 'Open Capacity once to initialize', meTone, 'capacity')}
 				${opsMetricCard('PM Utilisation', metrics.pm.ready ? `${metrics.pm.utilisation}%` : 'Not Ready', metrics.pm.ready ? `${metrics.pm.headroom}h headroom this month` : 'Open Capacity once to initialize', pmTone, 'capacity')}
@@ -161,7 +162,7 @@ function opsRenderFlowView(metrics) {
 					<span>From demand to dispatch</span>
 				</div>
 				<div class="ops-flow-grid">
-					${opsMetricCard('Programmes In Flight', String(metrics.programmesFlow.active), 'Current change pipelines', 'good')}
+					${opsMetricCard('Projects In Flight', String(metrics.projectsFlow.active), 'Current change pipelines', 'good')}
 					${opsMetricCard('Production Active', String(metrics.production.active), 'Batches currently moving', metrics.production.active > 0 ? 'watch' : 'good')}
 					${opsMetricCard('Completion Rate', `${metrics.production.completionRate}%`, 'Overall production closure signal', metrics.production.completionRate >= 70 ? 'good' : 'watch')}
 				</div>

@@ -2,7 +2,7 @@
 // state.js — Global state and constants
 // ═══════════════════════════════════
 
-let db = { programmes: [] };
+let db = { projects: [] };
 let progId = null;
 let currentSection = 'hub';
 let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
@@ -22,7 +22,7 @@ let prodCapMonthOffset = 0; // Production capacity month offset (perpetual rolli
 let prodCapUtilizationFactor = 1.0; // Global utilization factor (0.0–1.0) affects available capacity
 let tenderGateScopeState = {
   isOpen: false,
-  programmeId: null,
+  projectId: null,
   selectedGate: 0,
   workingSelections: null
 };
@@ -59,17 +59,17 @@ let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
 // Tracks other users currently viewing the same project (updated via Broadcast).
 let presenceMap = {};
 
-// ── Pagination state for programmes list ──────────────────────
+// ── Pagination state for projects list ──────────────────────
 // Tracks the current page loaded and whether all pages have been fetched.
-let programmesPage = 0;
-let programmesAllLoaded = false;
+let projectsPage = 0;
+let projectsAllLoaded = false;
 
 // ── Accessor ─────────────────────────────────────────────────
-function prog() { return db.programmes.find(p => p.id === progId) || null; }
+function prog() { return db.projects.find(p => p.id === progId) || null; }
 
-function findProgrammeByProductId(productId) {
-  if (!productId || !Array.isArray(db.programmes)) return null;
-  return db.programmes.find(p => p && p.product_id === productId) || null;
+function findProjectByProductId(productId) {
+  if (!productId || !Array.isArray(db.projects)) return null;
+  return db.projects.find(p => p && p.product_id === productId) || null;
 }
 
 function getDefaultGateSelection(gateNum) {
@@ -106,7 +106,7 @@ function normalizeGateSelections(gateSelections) {
 }
 
 function getAllProjectGateSelections(projectId) {
-  const project = db.programmes.find(p => p.id === projectId);
+  const project = db.projects.find(p => p.id === projectId);
   if (!project) return null;
   return normalizeGateSelections(project.gate_selections);
 }
@@ -121,7 +121,7 @@ function getProjectGateSelection(projectId, gateNum) {
 }
 
 function isGateSelectionLocked(projectId) {
-  const project = db.programmes.find(p => p.id === projectId);
+  const project = db.projects.find(p => p.id === projectId);
   return !!(project && project.gate_selection_locked);
 }
 
@@ -141,7 +141,7 @@ const BOM_TYPES = {
 // ── Gate definitions ──────────────────────────────────────────
 const GATE_DEFS = [
   { num: 0, name: 'Pre-Planning',              phase: 'Section 0', signatories: ['ME Manager', 'Operations Director', 'Sales Director'],
-    items: ['Tender / ITT received and reviewed','ME resource confirmed available','Bid submitted with ME input','Contract awarded and signed','Programme file opened','ME formally assigned'] },
+    items: ['Tender / ITT received and reviewed','ME resource confirmed available','Bid submitted with ME input','Contract awarded and signed','Project file opened','ME formally assigned'] },
   { num: 1, name: 'Plan and Define',           phase: 'Section 1', signatories: ['ME Manager', 'Operations Director'],
     items: ['All specification information reviewed','Critical-to-Quality requirements identified','Internal CTQ metrics agreed with customer','All tolerances confirmed measurable','Product family lessons learned reviewed','Historic product information reviewed','Obsolescence issues discussed with customer','Long lead items / parts ordered','Lifting and mounting requirements confirmed','NPI team identified and confirmed','Suitable area allocated for NPI','Workshop / tooling / manpower capacity reviewed','Project timing plan produced','Project risk assessment completed','Development unit(s) received'] },
   { num: 2, name: 'Product Design & Dev',      phase: 'Section 2', signatories: ['ME Manager'],
@@ -193,16 +193,16 @@ function normalizeFamilyId(familyRef, preferredFallback) {
   return match ? match.id : getDefaultFamilyId(preferredFallback);
 }
 
-function syncProgrammeFamily(programme, familyRef, preferredFallback) {
-  if (!programme) return false;
-  const fallbackRef = preferredFallback || programme.family || 'Other';
+function syncProjectFamily(project, familyRef, preferredFallback) {
+  if (!project) return false;
+  const fallbackRef = preferredFallback || project.family || 'Other';
   const normalizedFamily = normalizeFamilyId(familyRef || '', fallbackRef);
-  if ((programme.family || '') === normalizedFamily) return false;
-  programme.family = normalizedFamily;
+  if ((project.family || '') === normalizedFamily) return false;
+  project.family = normalizedFamily;
   return true;
 }
 
-// ── New programme factory ─────────────────────────────────────
+// ── New project factory ─────────────────────────────────────
 function newProgTemplate(name, customer, unit, family, lead, pm, date) {
   const gates = GATE_DEFS.map(g => ({
     gateNum: g.num,

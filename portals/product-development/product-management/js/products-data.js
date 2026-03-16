@@ -40,27 +40,27 @@ function productsDataRemoveProduct(productId) {
   delete productsState.history[productId];
 }
 
-function productsDataSyncLinkedProgrammeFamily(productId, familyRef) {
-  if (!productId || !Array.isArray(db?.programmes)) return false;
+function productsDataSyncLinkedProjectFamily(productId, familyRef) {
+  if (!productId || !Array.isArray(db?.projects)) return false;
 
-  const linkedProgramme = typeof findProgrammeByProductId === 'function'
-    ? findProgrammeByProductId(productId)
-    : db.programmes.find(p => p && p.product_id === productId);
+  const linkedProject = typeof findProjectByProductId === 'function'
+    ? findProjectByProductId(productId)
+    : db.projects.find(p => p && p.product_id === productId);
 
-  if (!linkedProgramme) return false;
+  if (!linkedProject) return false;
 
-  if (typeof syncProgrammeFamily === 'function') {
-    return syncProgrammeFamily(linkedProgramme, familyRef || '', linkedProgramme.family || 'Other');
+  if (typeof syncProjectFamily === 'function') {
+    return syncProjectFamily(linkedProject, familyRef || '', linkedProject.family || 'Other');
   }
 
-  const fallbackFamily = linkedProgramme.family || 'Other';
+  const fallbackFamily = linkedProject.family || 'Other';
   const normalizedFamily = typeof normalizeFamilyId === 'function'
     ? normalizeFamilyId(familyRef || '', fallbackFamily)
     : (familyRef || fallbackFamily);
 
-  if ((linkedProgramme.family || '') === normalizedFamily) return false;
+  if ((linkedProject.family || '') === normalizedFamily) return false;
 
-  linkedProgramme.family = normalizedFamily;
+  linkedProject.family = normalizedFamily;
   return true;
 }
 
@@ -161,24 +161,24 @@ function productsDataGetHistory(productId) {
 }
 
 function productTenderStatusTriggered(productId, productData) {
-  let linkedProgramme = typeof findProgrammeByProductId === 'function'
-    ? findProgrammeByProductId(productId)
-    : db.programmes.find(p => p.product_id === productId);
+  let linkedProject = typeof findProjectByProductId === 'function'
+    ? findProjectByProductId(productId)
+    : db.projects.find(p => p.product_id === productId);
 
-  if (!linkedProgramme && npi && npi.dashboard && typeof npi.dashboard.ensureProductProgrammes === 'function') {
-    npi.dashboard.ensureProductProgrammes();
-    linkedProgramme = typeof findProgrammeByProductId === 'function'
-      ? findProgrammeByProductId(productId)
-      : db.programmes.find(p => p.product_id === productId);
+  if (!linkedProject && npi && npi.dashboard && typeof npi.dashboard.ensureProductProjects === 'function') {
+    npi.dashboard.ensureProductProjects();
+    linkedProject = typeof findProjectByProductId === 'function'
+      ? findProjectByProductId(productId)
+      : db.projects.find(p => p.product_id === productId);
   }
 
-  if (!linkedProgramme) {
-    console.warn('No linked programme found for Tender product:', productId);
+  if (!linkedProject) {
+    console.warn('No linked project found for Tender product:', productId);
     return;
   }
 
   if (typeof tenderGateScopeState === 'object' && tenderGateScopeState) {
-    tenderGateScopeState.programmeId = linkedProgramme.id;
+    tenderGateScopeState.projectId = linkedProject.id;
     tenderGateScopeState.isOpen = false;
     tenderGateScopeState.selectedGate = 0;
     tenderGateScopeState.workingSelections = null;
@@ -189,18 +189,18 @@ function productTenderStatusTriggered(productId, productData) {
     return;
   }
 
-  const productName = (productData && productData.name) || linkedProgramme.name || 'this product';
+  const productName = (productData && productData.name) || linkedProject.name || 'this product';
   const openLinkedProject = confirm(
     'Product "' + productName + '" moved to Tender.\n\nOpen the linked NPI project now to set gate scope?'
   );
   if (!openLinkedProject) return;
 
   if (npi && npi.dashboard && typeof npi.dashboard.openProject === 'function') {
-    npi.dashboard.openProject(linkedProgramme.id);
+    npi.dashboard.openProject(linkedProject.id);
     return;
   }
 
-  progId = linkedProgramme.id;
+  progId = linkedProject.id;
   navigate('project');
 }
 
@@ -265,8 +265,8 @@ async function productsDataUpdateProduct(productId, updates) {
       productsState.products.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    const programmeFamilyUpdated = productsDataSyncLinkedProgrammeFamily(productId, data.family);
-    if (programmeFamilyUpdated && typeof save === 'function') save();
+    const projectFamilyUpdated = productsDataSyncLinkedProjectFamily(productId, data.family);
+    if (projectFamilyUpdated && typeof save === 'function') save();
 
     productsDataTriggerKanbanRefresh();
 

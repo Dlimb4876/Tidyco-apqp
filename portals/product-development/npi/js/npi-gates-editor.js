@@ -4,29 +4,29 @@
 // ═══════════════════════════════════
 
 (function() {
-  function getProgrammeById(id) {
+  function getProjectById(id) {
     if (!id) return null;
-    return (db.programmes || []).find(p => p.id === id) || null;
+    return (db.projects || []).find(p => p.id === id) || null;
   }
 
-  function resolveProgramme(productId) {
-    if (productId && typeof findProgrammeByProductId === 'function') {
-      const byProduct = findProgrammeByProductId(productId);
+  function resolveProject(productId) {
+    if (productId && typeof findProjectByProductId === 'function') {
+      const byProduct = findProjectByProductId(productId);
       if (byProduct) return byProduct;
     }
 
-    if (tenderGateScopeState && tenderGateScopeState.programmeId) {
-      const byState = getProgrammeById(tenderGateScopeState.programmeId);
+    if (tenderGateScopeState && tenderGateScopeState.projectId) {
+      const byState = getProjectById(tenderGateScopeState.projectId);
       if (byState) return byState;
     }
 
     return typeof prog === 'function' ? prog() : null;
   }
 
-  function buildSelectionsSnapshot(programmeId) {
+  function buildSelectionsSnapshot(projectId) {
     const out = {};
     GATE_DEFS.forEach(g => {
-      out[String(g.num)] = getProjectGateSelection(programmeId, g.num);
+      out[String(g.num)] = getProjectGateSelection(projectId, g.num);
     });
     return out;
   }
@@ -56,17 +56,17 @@
     return working[gateKey];
   }
 
-  function selectedCountLabel(programmeId, gateNum) {
+  function selectedCountLabel(projectId, gateNum) {
     const selected = getWorkingGateSelection(gateNum).length;
     const total = getDefaultGateSelection(gateNum).length;
-    if (!programmeId) return '0 / ' + total;
+    if (!projectId) return '0 / ' + total;
     return selected + ' / ' + total;
   }
 
-  function renderGateTabs(programmeId) {
+  function renderGateTabs(projectId) {
     return GATE_DEFS.map(g => {
       const active = tenderGateScopeState.selectedGate === g.num;
-      const count = selectedCountLabel(programmeId, g.num);
+      const count = selectedCountLabel(projectId, g.num);
       return '<button class="btn ' + (active ? 'btn-primary' : 'btn-ghost') + '" style="padding:6px 10px" onclick="tenderGateScopeSelectGate(' + g.num + ')">' +
         'Gate ' + g.num + ' <span style="margin-left:6px;opacity:.85">' + count + '</span></button>';
     }).join('');
@@ -77,7 +77,7 @@
     const gateDef = GATE_DEFS.find(g => g.num === gateNum);
     if (!gateDef) return '<div class="empty">No gate selected.</div>';
 
-    const locked = isGateSelectionLocked(tenderGateScopeState.programmeId);
+    const locked = isGateSelectionLocked(tenderGateScopeState.projectId);
     const selectedSet = new Set(getWorkingGateSelection(gateNum));
 
     return gateDef.items.map(function(item, idx) {
@@ -112,23 +112,23 @@
     const mount = modal.querySelector('#tenderGateScopeMount');
     if (!mount) return;
 
-    const programme = getProgrammeById(tenderGateScopeState.programmeId);
-    if (!programme) {
-      mount.innerHTML = '<div class="modal-title">Tender Gate Scope</div><div class="empty">No linked programme found.</div>' +
+    const project = getProjectById(tenderGateScopeState.projectId);
+    if (!project) {
+      mount.innerHTML = '<div class="modal-title">Tender Gate Scope</div><div class="empty">No linked project found.</div>' +
         '<div class="modal-actions"><button class="btn btn-ghost" onclick="closeTenderGateSelectionModal()">Close</button></div>';
       return;
     }
 
-    const locked = isGateSelectionLocked(programme.id);
+    const locked = isGateSelectionLocked(project.id);
     const lockNote = locked
       ? 'Gate scope is locked for this project.'
       : 'Select which standard gate questions apply for this tender.';
 
     mount.innerHTML =
       '<div class="modal-title">Tender Gate Scope</div>' +
-      '<div style="font-size:12px;color:var(--muted);margin:-6px 0 10px">Project: <strong style="color:var(--text)">' + esc(programme.name || 'Unnamed') + '</strong></div>' +
+      '<div style="font-size:12px;color:var(--muted);margin:-6px 0 10px">Project: <strong style="color:var(--text)">' + esc(project.name || 'Unnamed') + '</strong></div>' +
       '<div style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:12px;margin-bottom:10px">' + esc(lockNote) + '</div>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' + renderGateTabs(programme.id) + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' + renderGateTabs(project.id) + '</div>' +
       '<div style="display:grid;grid-template-columns:1.6fr 1fr;gap:10px">' +
         '<div style="display:flex;flex-direction:column;gap:8px;max-height:min(56vh,520px);overflow:auto;padding-right:2px">' + renderCurrentGateChecklist() + '</div>' +
         '<div>' + renderSummary() + '</div>' +
@@ -142,18 +142,18 @@
   }
 
   window.openTenderGateSelectionModal = function(productId) {
-    const programme = resolveProgramme(productId);
-    if (!programme) {
+    const project = resolveProject(productId);
+    if (!project) {
       showToast('Could not find a linked NPI project for this product.', 'warning');
       return;
     }
 
     tenderGateScopeState.isOpen = true;
-    tenderGateScopeState.programmeId = programme.id;
+    tenderGateScopeState.projectId = project.id;
     tenderGateScopeState.selectedGate = Number.isInteger(tenderGateScopeState.selectedGate)
       ? tenderGateScopeState.selectedGate
       : 0;
-    tenderGateScopeState.workingSelections = buildSelectionsSnapshot(programme.id);
+    tenderGateScopeState.workingSelections = buildSelectionsSnapshot(project.id);
 
     renderModal();
     showModal('modalTenderGateScope');
@@ -171,12 +171,12 @@
   };
 
   window.tenderGateScopeToggleItem = function(gateNum, itemIndex, isChecked) {
-    const programmeId = tenderGateScopeState.programmeId;
-    if (!programmeId || isGateSelectionLocked(programmeId)) return;
+    const projectId = tenderGateScopeState.projectId;
+    if (!projectId || isGateSelectionLocked(projectId)) return;
 
     const gateKey = String(gateNum);
     if (!tenderGateScopeState.workingSelections) {
-      tenderGateScopeState.workingSelections = buildSelectionsSnapshot(programmeId);
+      tenderGateScopeState.workingSelections = buildSelectionsSnapshot(projectId);
     }
 
     const current = Array.isArray(tenderGateScopeState.workingSelections[gateKey])
@@ -196,50 +196,50 @@
   };
 
   window.tenderGateScopeSave = function() {
-    const programme = getProgrammeById(tenderGateScopeState.programmeId);
-    if (!programme) return;
-    if (isGateSelectionLocked(programme.id)) {
+    const project = getProjectById(tenderGateScopeState.projectId);
+    if (!project) return;
+    if (isGateSelectionLocked(project.id)) {
       showToast('Gate scope is locked and cannot be edited.', 'warning');
       return;
     }
 
     const normalized = normalizeGateSelections(tenderGateScopeState.workingSelections);
-    programme.gate_selections = normalized;
+    project.gate_selections = normalized;
     save();
     renderModal();
   };
 
   window.tenderGateScopeConfirmAndLock = function() {
-    const programme = getProgrammeById(tenderGateScopeState.programmeId);
-    if (!programme) return;
-    if (isGateSelectionLocked(programme.id)) {
+    const project = getProjectById(tenderGateScopeState.projectId);
+    if (!project) return;
+    if (isGateSelectionLocked(project.id)) {
       showToast('Gate scope is already locked for this project.', 'warning');
       return;
     }
 
     const normalized = normalizeGateSelections(tenderGateScopeState.workingSelections);
-    programme.gate_selections = normalized;
-    programme.gate_selection_locked = true;
-    programme.gate_selection_locked_at = new Date().toISOString();
-    programme.gate_selection_locked_by = (currentUser && currentUser.email) ? currentUser.email : null;
+    project.gate_selections = normalized;
+    project.gate_selection_locked = true;
+    project.gate_selection_locked_at = new Date().toISOString();
+    project.gate_selection_locked_by = (currentUser && currentUser.email) ? currentUser.email : null;
 
     save();
     renderModal();
   };
 
   window.tenderGateScopeUnlockForTesting = function() {
-    const programme = getProgrammeById(tenderGateScopeState.programmeId);
-    if (!programme) return;
-    if (!isGateSelectionLocked(programme.id)) return;
+    const project = getProjectById(tenderGateScopeState.projectId);
+    if (!project) return;
+    if (!isGateSelectionLocked(project.id)) return;
 
     const ok = confirm('Unlock this gate scope for testing? This allows editing and re-locking.');
     if (!ok) return;
 
-    programme.gate_selection_locked = false;
-    programme.gate_selection_locked_at = null;
-    programme.gate_selection_locked_by = null;
+    project.gate_selection_locked = false;
+    project.gate_selection_locked_at = null;
+    project.gate_selection_locked_by = null;
 
-    tenderGateScopeState.workingSelections = buildSelectionsSnapshot(programme.id);
+    tenderGateScopeState.workingSelections = buildSelectionsSnapshot(project.id);
     save();
     renderModal();
   };

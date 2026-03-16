@@ -200,7 +200,7 @@ function renderPartsDatabase() {
     : loadingMsg;
 
   return `
-    <div class="proj-home">
+    <div class="proj-home proj-home--fullwidth">
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Parts Database</div>

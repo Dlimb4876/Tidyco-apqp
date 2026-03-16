@@ -11,7 +11,7 @@ An **NPI Project** is a structured APQP (Advanced Product Quality Planning) work
 **Location:** `portals/product-development/npi/`
 
 **Key Entities:**
-- **Projects (Programmes)** — Container for APQP data
+- **Projects (Projects)** — Container for APQP data
 - **Gates** — 6 sequential quality checkpoints
 - **Checklists** — Items to complete per gate
 - **Sign-offs** — Required approvals per gate
@@ -23,7 +23,7 @@ An **NPI Project** is a structured APQP (Advanced Product Quality Planning) work
 
 ### Data Model
 
-An NPI project is stored in the `programmes` table with this structure:
+An NPI project is stored in the `projects` table with this structure:
 
 ```javascript
 {
@@ -164,7 +164,7 @@ productTenderStatusTriggered(productId)
       └─ Click "Create Project"
 
 2. Project Created in Database
-   ├─ INSERT INTO programmes (name, customer, family, unit, lead, pm, ...)
+   ├─ INSERT INTO projects (name, customer, family, unit, lead, pm, ...)
    ├─ Initialize empty arrays: ctq=[], pfd=[], pfmea=[], etc.
    ├─ Initialize gates: [6 empty gate objects]
    ├─ Set gate_selections: {0: [selected indices], 1: [...], ...}
@@ -244,7 +244,7 @@ System: renderGatePage(gateNum)
 User: Works through checklist
     ├─ Clicks checkboxes to mark items complete
     ├─ System: npi.gate.toggleCheck(gateNum, itemIndex, checked)
-    │   └─ Updates programmes.gates[gateNum].checks[itemIndex] = checked
+    │   └─ Updates projects.gates[gateNum].checks[itemIndex] = checked
     │   └─ Saves to Supabase (debounced)
     │
     └─ Banner updates in real-time:
@@ -263,7 +263,7 @@ Enters sign-off date: "2024-03-14"
 Clicks: "Sign Off"
     ↓
 System: npi.gate.signOff(gateNum, sigIndex)
-    ├─ Update: programmes.gates[gateNum].sigs[sigIndex].signed = true
+    ├─ Update: projects.gates[gateNum].sigs[sigIndex].signed = true
     ├─ Save to Supabase
     │
     └─ Display: "✓ Signed" (green badge)
@@ -339,7 +339,7 @@ Allows customization of which gate checklist items appear for a project.
 ### Data Storage
 
 ```javascript
-// In programmes table: gate_selections JSONB column
+// In projects table: gate_selections JSONB column
 
 gate_selections: {
   "0": [0, 1, 3, 5, 6],             // Gate 0: 5 selected from 6 total
@@ -374,7 +374,7 @@ gate_selections: {
    ├─ Opens selector modal
    ├─ Shows current selection per gate
    ├─ User customizes
-   └─ Saves: UPDATE programmes SET gate_selections = {...}
+   └─ Saves: UPDATE projects SET gate_selections = {...}
 
 3. Render Gate Page
    ├─ Load gate_selections[gateNum]
@@ -460,7 +460,7 @@ let apqpTab = 'ctq';                   // Active APQP tab (ctq|pfd|pfmea|cp|gate
 
 // Helpers
 function prog() {
-  return db.programmes.find(p => p.id === progId);
+  return db.projects.find(p => p.id === progId);
 }
 
 function getSelectedGateItems(projectId, gateNum) {
@@ -486,7 +486,7 @@ User A: Opens project → Gate 0
     └─ Subscribes to gate changes
 
 User A: Checks item 1
-    ├─ Updates programmes.gates[0].checks[0] = true
+    ├─ Updates projects.gates[0].checks[0] = true
     ├─ Saves to Supabase
     │
     └─ Subscription triggers on User B's browser:
@@ -614,7 +614,7 @@ A: Project remains unchanged. gate_selections is a snapshot taken at creation. F
 A: If user checked items [0, 1, 3, 5] in Gate 0, then later unchecks item 1 in selector, item 1 is removed from display but check state persists in database. If re-selected later, check state is restored.
 
 **Q: What's the difference between `checks[]` and `gate_selections`?**
-A: `checks[]` = completion status (true/false per item). `gate_selections` = which items are applicable (indices). Both stored together in `programmes.gates[gateNum]`.
+A: `checks[]` = completion status (true/false per item). `gate_selections` = which items are applicable (indices). Both stored together in `projects.gates[gateNum]`.
 
 ---
 

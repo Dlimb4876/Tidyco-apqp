@@ -387,7 +387,7 @@ window.addEventListener('popstate', () => {
   productionTab        = h.pt  || 'root';
   productDevelopmentTab = h.pdt || 'root';
   if (h.t) apqpTab = h.t;
-  if (h.p && db.programmes.find(p => p.id === h.p)) {
+  if (h.p && db.projects.find(p => p.id === h.p)) {
     progId = h.p;
     navigate(h.s || 'project', { pushHash: false });
   } else if (h.s) {

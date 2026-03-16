@@ -9,7 +9,7 @@ npi.gate.gateAllSigned = function(gd) {
 }
 
 npi.gate.resolveGateChecklistItems = function(projectId, gateNum) {
-  const p = (db.programmes || []).find(x => x.id === projectId)
+  const p = (db.projects || []).find(x => x.id === projectId)
   if (!p) return []
   const g = GATE_DEFS[gateNum]
   const gd = p.gates[gateNum] || { checks: [] }

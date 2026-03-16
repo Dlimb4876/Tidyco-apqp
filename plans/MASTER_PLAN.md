@@ -483,9 +483,9 @@ if (window.location.hash === '#recover') {
 #### Phase 0 — Product Tender Status Trigger
 1. Open `portals/product-development/product-management/js/products-data.js`.
 2. Find the product status update handler.
-3. When a product's status changes to `'Tender'`, check if a linked NPI programme exists.
-4. If no linked programme exists, show a modal offering to create one (use existing `modalNewProj`).
-5. Store the link (`product_id` on the programme record).
+3. When a product's status changes to `'Tender'`, check if a linked NPI project exists.
+4. If no linked project exists, show a modal offering to create one (use existing `modalNewProj`).
+5. Store the link (`product_id` on the project record).
 6. Test: Change a product's status to Tender and verify the modal is triggered.
 
 #### Phase 1 — Gate Scope Editor UI in NPI
@@ -511,9 +511,9 @@ if (window.location.hash === '#recover') {
 5. Test with a project that has selections and one that does not.
 
 #### Phase 3 — Gate Selection Data Persistence
-1. Ensure `gate_selections` is saved with the programme data via `save()` in `core/js/db.js`.
+1. Ensure `gate_selections` is saved with the project data via `save()` in `core/js/db.js`.
 2. Verify it round-trips: set selections → reload app → selections are preserved.
-3. If using Supabase directly: confirm `programmes` table columns `gate_selections` (JSONB), `gate_selection_locked` (boolean), `gate_selection_locked_at` (timestamp), `gate_selection_locked_by` (text) exist. If not, run the SQL in `plans/NPI_TENDERING_FEATURE_PLAN.md` — "Database Changes" section.
+3. If using Supabase directly: confirm `projects` table columns `gate_selections` (JSONB), `gate_selection_locked` (boolean), `gate_selection_locked_at` (timestamp), `gate_selection_locked_by` (text) exist. If not, run the SQL in `plans/NPI_TENDERING_FEATURE_PLAN.md` — "Database Changes" section.
 
 **Done when:**
 - Changing a product to Tender status triggers NPI project creation offer

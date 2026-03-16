@@ -32,7 +32,7 @@ global.removeRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
 
 // Mock global state variables
-global.db = { programmes: [
+global.db = { projects: [
   { id: 'test-prog-1', name: 'Test Project', customer: 'Test Customer' }
 ]};
 global.progId = 'test-prog-1';
@@ -46,7 +46,7 @@ global.productDevelopmentTab = 'root';
 global.productsActiveTab = 'list';
 
 // Mock prog() accessor function
-global.prog = () => global.db.programmes.find(p => p.id === global.progId) || null;
+global.prog = () => global.db.projects.find(p => p.id === global.progId) || null;
 
 // Mock subscription cleanup functions
 global.feedbackDataUnsubscribe = jest.fn();
@@ -198,7 +198,7 @@ describe('Navigation Module (navigation.js)', () => {
     test('should navigate to projects section', () => {
       navigate('projects');
       expect(global.currentSection).toBe('projects');
-      // Note: projects section doesn't include 's=projects' in hash, only programme
+      // Note: projects section doesn't include 's=projects' in hash, only project
       expect(window.location.hash).toBe('#p=test-prog-1');
     });
 

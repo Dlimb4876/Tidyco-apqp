@@ -39,7 +39,7 @@ function renderHub() {
           <div class="hub-card-content">
             <div class="hub-icon">🛰️</div>
             <div class="proj-card-name">OPERATIONS DASHBOARD</div>
-            <div class="proj-card-meta">Director-level overview of all operations, metrics, and risks</div>
+            <div class="proj-card-meta">Unified overview of all operations, metrics, and risks</div>
           </div>
         </div>
       </div>

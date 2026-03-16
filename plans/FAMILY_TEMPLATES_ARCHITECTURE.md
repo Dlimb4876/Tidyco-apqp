@@ -318,7 +318,7 @@ CREATE TABLE family_template_shares (
 ```sql
 CREATE TABLE project_template_applications (
   id UUID PRIMARY KEY,
-  project_id UUID REFERENCES programmes,
+  project_id UUID REFERENCES projects,
   family_id UUID,
   template_name TEXT,
   applied_at TIMESTAMP

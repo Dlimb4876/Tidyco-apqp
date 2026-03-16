@@ -142,7 +142,7 @@ function renderFamiliesTabContent() {
 
   // Count usage in projects
   const usageMap = {};
-  (db.programmes || []).forEach(p => {
+  (db.projects || []).forEach(p => {
     const fid = p.family || 'Other';
     usageMap[fid] = (usageMap[fid] || 0) + 1;
   });
@@ -304,7 +304,7 @@ function familiesCancelEdit() {
  */
 async function familiesDeleteRow(familyId, familyLabel) {
   // Check usage
-  const usage = (db.programmes || []).filter(p => p.family === familyId).length;
+  const usage = (db.projects || []).filter(p => p.family === familyId).length;
   if (usage > 0) {
     if (!confirm(`Delete family "${familyLabel}"?\n\nWarning: ${usage} project${usage !== 1 ? 's' : ''} use this family. They will need to be reassigned manually.`)) {
       return;

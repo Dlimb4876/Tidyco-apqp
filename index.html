@@ -322,7 +322,7 @@
   <div class="modal">
     <div class="modal-title">📦 Parts Catalogue Entry</div>
     <div class="field">
-      <label>Part Number (PN) *</label>
+      <label>Tidyco Part Number *</label>
       <input id="abcEditForm_pn" class="cell-edit" placeholder="e.g. FAS-001" style="font-family:'IBM Plex Mono',monospace">
     </div>
     <div class="field">
@@ -358,6 +358,25 @@
     <div class="field">
       <label>Notes</label>
       <textarea id="abcEditForm_notes" class="cell-edit" placeholder="Optional notes about this part…" rows="3" style="resize:vertical"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Manufacturer (OEM)</label>
+        <input id="abcEditForm_manufacturer" class="cell-edit" placeholder="e.g. Bossard">
+      </div>
+      <div class="field">
+        <label>Manufacturer PN</label>
+        <input id="abcEditForm_manufacturerPn" class="cell-edit" placeholder="e.g. MPN-0042" style="font-family:'IBM Plex Mono',monospace">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Datasheet URL</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="abcEditForm_datasheetUrl" class="cell-edit" type="url" placeholder="https://…" style="flex:1">
+          <button type="button" id="abcEditForm_openDatasheetBtn" class="btn btn-secondary" onclick="npi.bom.openABCDatasheetLink()">Open Link</button>
+        </div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="npi.bom.cancelABCEdit()">Cancel</button>

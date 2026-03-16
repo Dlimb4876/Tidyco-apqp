@@ -11,7 +11,7 @@ const path = require('path');
 
 // Known tables from CLAUDE.md and code analysis
 const EXPECTED_TABLES = [
-  'programmes',
+  'projects',
   'families',
   'family_pfmea_templates',
   'me_teams',
@@ -23,6 +23,7 @@ const EXPECTED_TABLES = [
   'products',
   'product_overhaul_history',
   'bug_reports',
+  'operations_forecast_opportunities',
   'me_capacity',
   'work_areas'
 ];

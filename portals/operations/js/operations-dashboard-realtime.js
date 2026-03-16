@@ -18,7 +18,7 @@ function opsScheduleRefresh(key, refreshFn, delayMs = 120) {
 	}, delayMs);
 }
 
-async function opsRefreshProgrammes() {
+async function opsRefreshProjects() {
 	if (typeof loadRemote === 'function' && currentUser) {
 		await loadRemote();
 	}
@@ -87,7 +87,7 @@ function opsRealtimeInit() {
 	// Before: 9 individual channels.  After: 3 consolidated channels.
 	//   ops_me_all_channel     — me_teams + me_tasks + me_products + me_holidays (4 → 1)
 	//   ops_prod_all_channel   — production_batches + products (2 → 1)
-	//   ops_misc_channel       — programmes + user_feedback + forecast (3 → 1)
+	//   ops_misc_channel       — projects + user_feedback + forecast (3 → 1)
 
 	createMultiTableRealtimeSubscription([
 		{
@@ -133,10 +133,10 @@ function opsRealtimeInit() {
 
 	createMultiTableRealtimeSubscription([
 		{
-			table: 'programmes',
-			onInsert: () => opsScheduleRefresh('programmes', opsRefreshProgrammes),
-			onUpdate: () => opsScheduleRefresh('programmes', opsRefreshProgrammes),
-			onDelete: () => opsScheduleRefresh('programmes', opsRefreshProgrammes)
+			table: 'projects',
+			onInsert: () => opsScheduleRefresh('projects', opsRefreshProjects),
+			onUpdate: () => opsScheduleRefresh('projects', opsRefreshProjects),
+			onDelete: () => opsScheduleRefresh('projects', opsRefreshProjects)
 		},
 		{
 			table: 'user_feedback',
@@ -152,7 +152,7 @@ function opsRealtimeInit() {
 		}
 	], 'ops_misc_channel');
 
-	opsScheduleRefresh('programmes', opsRefreshProgrammes, 10);
+	opsScheduleRefresh('projects', opsRefreshProjects, 10);
 	opsScheduleRefresh('production_batches', opsRefreshProductionBatches, 10);
 	opsScheduleRefresh('products', opsRefreshProductionProducts, 10);
 	opsScheduleRefresh('me_data', opsRefreshMeData, 10);

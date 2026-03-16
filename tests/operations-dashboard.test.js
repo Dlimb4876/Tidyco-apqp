@@ -6,7 +6,7 @@ document.documentElement.innerHTML = html.toString();
 
 // Core globals used by navigation and operations modules.
 global.currentUser = null;
-global.db = { programmes: [] };
+global.db = { projects: [] };
 global.progId = 'prog-1';
 global.currentSection = 'hub';
 global.npiTab = 'all';
@@ -17,7 +17,7 @@ global.productionTab = 'root';
 global.productDevelopmentTab = 'root';
 global.productsActiveTab = 'list';
 
-global.prog = () => global.db.programmes.find(p => p.id === global.progId) || null;
+global.prog = () => global.db.projects.find(p => p.id === global.progId) || null;
 
 global.esc = (v) => String(v ?? '')
   .replace(/&/g, '&amp;')
@@ -133,7 +133,7 @@ describe('Operations Dashboard', () => {
   });
 
   test('opsBuildMetrics aggregates expected KPI values', () => {
-    db.programmes = [{
+    db.projects = [{
       id: 'prog-1',
       product_id: 'prod-npi-1',
       status: 'Active',
@@ -146,7 +146,7 @@ describe('Operations Dashboard', () => {
       pfmea: [{ effects: [{ sev: 10, causes: [{ occ: 5, det: 3 }] }] }]
     }];
 
-    // Gate completion KPI only counts programmes linked to NPI-status products.
+    // Gate completion KPI only counts projects linked to NPI-status products.
     productsState.products = [{ id: 'prod-npi-1', status: 'NPI' }];
 
     feedbackDataManager.state.feedback = [
@@ -189,7 +189,7 @@ describe('Operations Dashboard', () => {
   });
 
   test('dependency-injected metric functions prefer provided data over globals', () => {
-    const programmes = [{
+    const projects = [{
       id: 'prog-di-1',
       product_id: 'prod-di-1',
       gates: [{ checks: [true, false] }]
@@ -215,7 +215,7 @@ describe('Operations Dashboard', () => {
       })
     };
 
-    const gate = opsCalcGateHealth(programmes, dependencies);
+    const gate = opsCalcGateHealth(projects, dependencies);
     const bugs = opsCalcBugHealth(dependencies);
     const pm = opsCalcPmCapacity(dependencies);
 

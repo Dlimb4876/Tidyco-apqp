@@ -22,7 +22,7 @@ global.supa = {
 };
 
 // Global state
-global.db = { programmes: [] };
+global.db = { projects: [] };
 global.progId = null;
 global.currentUser = null;
 
@@ -59,7 +59,7 @@ describe('Auth Module (auth.js)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.currentUser = null;
-    global.db = { programmes: [] };
+    global.db = { projects: [] };
     global.progId = null;
 
     document.getElementById('loginEmail').value = '';
@@ -193,7 +193,7 @@ describe('Auth Module (auth.js)', () => {
 
       // currentUser is a local let in auth.js scope; db and progId are globals
       expect(global.progId).toBeNull();
-      expect(global.db).toEqual({ programmes: [] });
+      expect(global.db).toEqual({ projects: [] });
     });
 
     test('should hide appShell and show loginScreen', async () => {

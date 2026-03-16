@@ -66,7 +66,7 @@ plans/                  # Architecture docs and feature plans (.md files)
 
 ## Key Patterns
 ```javascript
-prog()                                          // Active programme accessor
+prog()                                          // Active project accessor
 esc(value)                                      // XSS-safe HTML interpolation
 showModal('modalId'); closeModal('modalId')     // Modal open/close
 navigate('capacity', { ct: 'me' })             // Hash nav + subscription cleanup

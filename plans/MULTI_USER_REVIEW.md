@@ -9,14 +9,14 @@
 
 | Phase | Task | Status | Files Changed |
 |---|---|---|---|
-| Phase 1 | 1.1 Dirty programme tracking | ✅ Complete | `core/js/db.js` |
+| Phase 1 | 1.1 Dirty project tracking | ✅ Complete | `core/js/db.js` |
 | Phase 1 | 1.2 Supabase DELETE on project deletion | ✅ Complete | `portals/product-development/npi/js/dashboard.js` |
 | Phase 1 | 1.3 Global hub real-time subscription | ✅ Complete | `core/js/db.js`, `core/js/app.js` |
 | Phase 2 | 2-A "Who's Here" presence indicator | ✅ Complete | `core/js/db.js`, `core/js/state.js`, `utils/js/navigation.js`, `portals/product-development/npi/js/dashboard.js`, `core/css/components.css` |
 | Phase 2 | 2-B Stale data warning toast | ✅ Complete | `core/js/db.js` |
-| Phase 2 | 2-C Programme delete cascade (NPI data) | ✅ Complete | `portals/product-development/npi/js/npi-data-relational.js`, `portals/product-development/npi/js/dashboard.js` |
+| Phase 2 | 2-C Project delete cascade (NPI data) | ✅ Complete | `portals/product-development/npi/js/npi-data-relational.js`, `portals/product-development/npi/js/dashboard.js` |
 | Phase 2 | 2-D Conflict-safe gate signing | ✅ Complete | `portals/product-development/npi/js/npi-data-relational.js` |
-| Phase 3 | 3-A Paginated programme list | ✅ Complete | `core/js/db.js`, `core/js/state.js`, `core/js/app.js`, `portals/product-development/npi/js/dashboard.js`, `portals/product-development/npi/css/dashboard.css` |
+| Phase 3 | 3-A Paginated project list | ✅ Complete | `core/js/db.js`, `core/js/state.js`, `core/js/app.js`, `portals/product-development/npi/js/dashboard.js`, `portals/product-development/npi/css/dashboard.css` |
 | Phase 3 | 3-B Supabase channel consolidation | ✅ Complete | `utils/js/realtime.js`, `portals/capacity/js/me-data.js`, `portals/operations/js/operations-dashboard-realtime.js` |
 | Phase 3 | 3-C Server-side DB optimisations | ✅ Complete | `supabase/phase3_optimisations.sql` |
 | Phase 3 | 3-D Optimistic save status | ✅ Complete | `core/js/db.js` |
@@ -29,11 +29,11 @@ Tidyco APQP is a well-structured collaborative SPA backed by Supabase. The core 
 
 | Severity | Issue | Impact |
 |---|---|---|
-| 🔴 **Critical** | `saveRemote()` iterates and writes **all** programmes, not just the one edited | User A's save can silently overwrite User B's concurrent edits |
-| 🔴 **Critical** | `deleteProject()` removes a programme from memory but never deletes it from Supabase | Deleted projects reappear on page refresh for all users |
+| 🔴 **Critical** | `saveRemote()` iterates and writes **all** projects, not just the one edited | User A's save can silently overwrite User B's concurrent edits |
+| 🔴 **Critical** | `deleteProject()` removes a project from memory but never deletes it from Supabase | Deleted projects reappear on page refresh for all users |
 | 🟡 **Medium** | Hub / projects list has no real-time subscription | New or updated projects from other users are invisible until a page refresh |
-| 🟡 **Medium** | Sub-assembly linking marks only one of two linked programmes dirty | The child programme's `parentId` change may not be saved to Supabase |
-| 🟢 **Low** | No pagination — all programmes loaded on startup | Slow initial load as project count grows; not yet a problem at ≤200 projects |
+| 🟡 **Medium** | Sub-assembly linking marks only one of two linked projects dirty | The child project's `parentId` change may not be saved to Supabase |
+| 🟢 **Low** | No pagination — all projects loaded on startup | Slow initial load as project count grows; not yet a problem at ≤200 projects |
 | 🟢 **Low** | Up to ~40 Supabase realtime channels open simultaneously if all portals are active | Near Supabase free-tier limit; premium plans are unaffected |
 
 **Phase 1 changes have been implemented** directly in this PR. Phases 2 and 3 are documented below as agentic task plans.
@@ -45,7 +45,7 @@ Tidyco APQP is a well-structured collaborative SPA backed by Supabase. The core 
 ### 2.1 What Each User Experiences at Login
 
 1. `launchApp()` in `app.js` fires.
-2. `loadRemote()` queries `programmes`, loading **every record** with no limit. At 50–100 projects this is < 50 KB and completes in < 1 s.
+2. `loadRemote()` queries `projects`, loading **every record** with no limit. At 50–100 projects this is < 50 KB and completes in < 1 s.
 3. Seven further async loaders run (`meDataInit`, `prodDataInit`, `productsDataInit`, etc.), each fetching their own tables.
 4. A hash-based route renders the hub, and the user is live.
 
@@ -59,8 +59,8 @@ The system uses **Supabase PostgreSQL Change Data Capture (CDC)** via its Realti
 |---|---|---|
 | ME Capacity | 4 | `me_teams`, `me_tasks`, `me_products`, `me_holidays` |
 | Production | 2 | `production_batches`, `products` |
-| NPI project view | 16 | `programmes` + 15 NPI relational tables |
-| Operations Dashboard | 9 | `programmes`, batches, products, ME data, feedback, forecast |
+| NPI project view | 16 | `projects` + 15 NPI relational tables |
+| Operations Dashboard | 9 | `projects`, batches, products, ME data, feedback, forecast |
 | Feedback | 1 | `user_feedback` |
 | Families / Templates | 2 | `families`, `family_pfmea_templates` |
 | Work Areas | 1 | `work_areas` |
@@ -70,36 +70,36 @@ When two users are both in **ME Capacity**, every team member or task added by o
 
 When two users are in **NPI** for the same project, the 600 ms throttled reload keeps them in sync. CTQ changes, PFMEA edits, BOM additions — all propagate automatically.
 
-### 2.3 The Programmes-Save Race Condition (Critical — Fixed in Phase 1)
+### 2.3 The Projects-Save Race Condition (Critical — Fixed in Phase 1)
 
 **Before the fix:**
 
 ```
-User A logs in at 09:00. Loads 40 programmes. progId → Project #12.
-User B logs in at 09:01. Loads 40 programmes. Edits Project #15, saves at 09:02.
+User A logs in at 09:00. Loads 40 projects. progId → Project #12.
+User B logs in at 09:01. Loads 40 projects. Edits Project #15, saves at 09:02.
   → Supabase now has Project #15 with User B's data.
 
 User A edits Project #12 at 09:05, presses a field → save() fires → saveRemote() runs.
-  → saveRemote() iterates ALL 40 programmes in db.programmes.
+  → saveRemote() iterates ALL 40 projects in db.projects.
   → User A's copy of Project #15 is from 09:00 (stale).
   → Supabase UPDATE for Project #15 using User A's stale copy: User B's edit is lost.
 ```
 
 This is a **silent data-loss bug**. No error is shown; the save badge says "saved".
 
-**After Phase 1 fix:** `saveRemote()` only persists programmes that were explicitly modified in the current session (tracked via `dirtyProgrammes` Set). User A's save no longer touches Project #15.
+**After Phase 1 fix:** `saveRemote()` only persists projects that were explicitly modified in the current session (tracked via `dirtyProjects` Set). User A's save no longer touches Project #15.
 
 ### 2.4 The Hub Not Updating (Medium — Fixed in Phase 1)
 
 Before: If User A creates Project #41, every other user sees 40 projects in their hub until they manually refresh the page.
 
-After Phase 1: A global real-time subscription on the `programmes` table (`global_programmes_channel`) means new, updated, and deleted projects appear in all users' hubs within ~200 ms.
+After Phase 1: A global real-time subscription on the `projects` table (`global_projects_channel`) means new, updated, and deleted projects appear in all users' hubs within ~200 ms.
 
 ### 2.5 Project Deletion Not Reaching Supabase (Critical — Fixed in Phase 1)
 
-Before: Clicking "Delete Project" removed the project from in-memory `db.programmes` and called `save()`. Because `save()` only upserts remaining projects (never deletes), the deleted project remained in Supabase. On next login, it reappeared for all users.
+Before: Clicking "Delete Project" removed the project from in-memory `db.projects` and called `save()`. Because `save()` only upserts remaining projects (never deletes), the deleted project remained in Supabase. On next login, it reappeared for all users.
 
-After Phase 1: `deleteProject()` now calls `supa.from('programmes').delete().eq('prog_id', id)` before navigating away.
+After Phase 1: `deleteProject()` now calls `supa.from('projects').delete().eq('prog_id', id)` before navigating away.
 
 ### 2.6 Concurrent Editing of the Same Project
 
@@ -132,23 +132,23 @@ If multiple portals are open simultaneously per user (unlikely in normal operati
 
 These changes have been made directly in this PR.
 
-### 3.1 Dirty Programme Tracking (`core/js/db.js`)
+### 3.1 Dirty Project Tracking (`core/js/db.js`)
 
-**Change:** Introduced a `dirtyProgrammes` Set. `save()` adds `progId` to the Set. `saveRemote()` filters `db.programmes` to only save records in the Set. The Set is copied and cleared before iterating, so concurrent rapid saves accumulate correctly.
+**Change:** Introduced a `dirtyProjects` Set. `save()` adds `progId` to the Set. `saveRemote()` filters `db.projects` to only save records in the Set. The Set is copied and cleared before iterating, so concurrent rapid saves accumulate correctly.
 
 **Edge cases handled:**
-- Import JSON: marks all imported programme IDs dirty before calling `save()`, so the full dataset is written.
+- Import JSON: marks all imported project IDs dirty before calling `save()`, so the full dataset is written.
 - Sub-assembly link/unlink: `save(childId)` now accepts extra IDs, marking both parent and child dirty.
 - Retry: on failure, `saveRemote(true)` defaults to saving all (fallback) since the Set was already cleared.
 
-### 3.2 Programme Deletion from Supabase (`portals/product-development/npi/js/dashboard.js`)
+### 3.2 Project Deletion from Supabase (`portals/product-development/npi/js/dashboard.js`)
 
-**Change:** `npi.dashboard.deleteProject()` now calls `supa.from('programmes').delete().eq('prog_id', deletedId)` before updating local state. If the Supabase delete fails, the user is notified and the local delete is aborted.
+**Change:** `npi.dashboard.deleteProject()` now calls `supa.from('projects').delete().eq('prog_id', deletedId)` before updating local state. If the Supabase delete fails, the user is notified and the local delete is aborted.
 
 ### 3.3 Global Hub Real-Time Subscription (`core/js/db.js`, `core/js/app.js`)
 
-**Change:** Added `subscribeProgrammesGlobally()` in `db.js`. It creates a `global_programmes_channel` subscription to the `programmes` table. On INSERT/UPDATE/DELETE:
-- Local `db.programmes` is updated.
+**Change:** Added `subscribeProjectsGlobally()` in `db.js`. It creates a `global_projects_channel` subscription to the `projects` table. On INSERT/UPDATE/DELETE:
+- Local `db.projects` is updated.
 - If the user is on the hub or projects list, `render()` is called.
 - Updates originating from the local user (matched by `prog_id` already in-flight dirty set) are skipped to avoid double-renders.
 
@@ -158,8 +158,8 @@ Called once from `launchApp()` in `app.js` after `loadRemote()`.
 
 | File | Change |
 |---|---|
-| `core/js/db.js` | Dirty tracking, global programme subscription, `save()` extra-IDs API |
-| `core/js/app.js` | Call `subscribeProgrammesGlobally()` on launch |
+| `core/js/db.js` | Dirty tracking, global project subscription, `save()` extra-IDs API |
+| `core/js/app.js` | Call `subscribeProjectsGlobally()` on launch |
 | `portals/product-development/npi/js/dashboard.js` | Supabase DELETE on project deletion; `save(childId)` for sub-assembly ops |
 
 ---
@@ -172,7 +172,7 @@ Called once from `launchApp()` in `app.js` after `loadRemote()`.
 
 #### Task 2-A: "Who's Here" Presence Indicator ✅
 
-Show a small avatar/initial badge in the programme header when another user is viewing the same project.
+Show a small avatar/initial badge in the project header when another user is viewing the same project.
 
 1. In `core/js/db.js`, created `broadcastPresence(pid)` — sends a Supabase Realtime **Broadcast** message on channel `presence:${progId}` with `{ email }` every 30 s. Also handles `user-gone` event.
 2. In `navigation.js`, `broadcastPresence(progId)` is called when entering any NPI live section. `stopPresenceBroadcast()` is called when leaving.
@@ -184,22 +184,22 @@ Show a small avatar/initial badge in the programme header when another user is v
 
 #### Task 2-B: Stale Data Warning Toast ✅
 
-When the global subscription receives an UPDATE for the programme the current user is actively editing, show a non-blocking toast.
+When the global subscription receives an UPDATE for the project the current user is actively editing, show a non-blocking toast.
 
-1. In `subscribeProgrammesGlobally()` (db.js), when an `onUpdate` fires for `progId` and the source is not the current user, calls:
+1. In `subscribeProjectsGlobally()` (db.js), when an `onUpdate` fires for `progId` and the source is not the current user, calls:
    ```javascript
    showToast(`${row.updated_by.split('@')[0]} just updated this project's details`, 'info', 6000);
    ```
 2. Does NOT force-refresh the user's in-progress edits — just informs them.
 3. `showToast()` already supports `duration` parameter — no changes needed to `helpers.js`.
 
-#### Task 2-C: Programme Delete Cascade for NPI Relational Data ✅
+#### Task 2-C: Project Delete Cascade for NPI Relational Data ✅
 
-1. In `npi.dashboard.deleteProject()` (dashboard.js), after the Supabase `programmes` delete succeeds, calls `npiRelDeleteAllForProgramme(deletedId)` from `npi-data-relational.js`.
-2. `npiRelDeleteAllForProgramme` is a new alias for `npiRelClearAll` exposed as `window.npiRelDeleteAllForProgramme`. Deletes all 15 NPI relational tables in dependency order.
+1. In `npi.dashboard.deleteProject()` (dashboard.js), after the Supabase `projects` delete succeeds, calls `npiRelDeleteAllForProject(deletedId)` from `npi-data-relational.js`.
+2. `npiRelDeleteAllForProject` is a new alias for `npiRelClearAll` exposed as `window.npiRelDeleteAllForProject`. Deletes all 15 NPI relational tables in dependency order.
 3. Shows a `'Deleting NPI data…'` progress toast during the cascade.
 
-**Alternative (recommended for future):** Add `ON DELETE CASCADE` constraints in Supabase SQL for all NPI tables' `programme_id` foreign keys (see Phase 3 / Task 3-C).
+**Alternative (recommended for future):** Add `ON DELETE CASCADE` constraints in Supabase SQL for all NPI tables' `project_id` foreign keys (see Phase 3 / Task 3-C).
 
 #### Task 2-D: Conflict-Safe Gate Signing ✅
 
@@ -219,14 +219,14 @@ Gate signatures (`npi_gate_sigs`) are high-stakes. Two users signing simultaneou
 
 ### Step-by-step Agentic Tasks
 
-#### Task 3-A: Paginated Programme List ✅
+#### Task 3-A: Paginated Project List ✅
 
 1. In `core/js/db.js`, added `loadRemotePage(page, pageSize = 50)` — uses `.range()` for server-side pagination.
 2. Replaced `loadRemote()` call in `launchApp()` with `loadRemotePage(0)`.
-3. Added `loadMoreProgrammes()` helper — fetches next page, appends (de-duplicated) to `db.programmes`, then re-renders.
-4. Added "⬇ Load more projects" button at the bottom of the NPI kanban view (only visible when `programmesAllLoaded === false`).
-5. Added `programmesPage` and `programmesAllLoaded` state variables to `state.js`.
-6. Updated `initProgSelect()` — no change needed; it already handles the first available programme.
+3. Added `loadMoreProjects()` helper — fetches next page, appends (de-duplicated) to `db.projects`, then re-renders.
+4. Added "⬇ Load more projects" button at the bottom of the NPI kanban view (only visible when `projectsAllLoaded === false`).
+5. Added `projectsPage` and `projectsAllLoaded` state variables to `state.js`.
+6. Updated `initProgSelect()` — no change needed; it already handles the first available project.
 
 **Files changed:** `core/js/db.js`, `core/js/state.js`, `core/js/app.js`, `portals/product-development/npi/js/dashboard.js`, `portals/product-development/npi/css/dashboard.css`
 
@@ -247,14 +247,14 @@ Created `supabase/phase3_optimisations.sql`. Apply in the Supabase SQL editor.
 
 ```sql
 -- 1. Index for hub list query (ordered by recency)
-CREATE INDEX IF NOT EXISTS idx_programmes_updated_at ON programmes (updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_projects_updated_at ON projects (updated_at DESC);
 
--- 2. Index for NPI relational queries (all filtered by programme_id)
-CREATE INDEX IF NOT EXISTS idx_npi_ctq_prog ON npi_ctq (programme_id);
+-- 2. Index for NPI relational queries (all filtered by project_id)
+CREATE INDEX IF NOT EXISTS idx_npi_ctq_prog ON npi_ctq (project_id);
 -- (repeat for all 15 NPI tables — full list in the SQL file)
 
 -- 3. Cascade deletes (DB-level safety net; client-side cascade already in Phase 2)
-ALTER TABLE npi_ctq ADD CONSTRAINT fk_npi_ctq_prog FOREIGN KEY (programme_id) REFERENCES programmes(prog_id) ON DELETE CASCADE;
+ALTER TABLE npi_ctq ADD CONSTRAINT fk_npi_ctq_prog FOREIGN KEY (project_id) REFERENCES projects(prog_id) ON DELETE CASCADE;
 -- (repeat for all 15 NPI tables — full list in the SQL file)
 
 -- 4. Unique constraint to prevent duplicate ME products
@@ -268,7 +268,7 @@ ALTER TABLE me_products ADD CONSTRAINT uq_me_product_database_id UNIQUE (product
 1. Added `let pendingSaves = 0;` counter in `db.js`.
 2. Incremented by `toSave.length` at the start of each `saveRemote()` call.
 3. Decremented after each individual Supabase write (including error paths).
-4. Badge shows `● saving (N remaining)…` during multi-programme saves.
+4. Badge shows `● saving (N remaining)…` during multi-project saves.
 5. `save()` shows `● saving (N queued)…` if a save is already in-flight.
 6. On partial failure the badge names the specific projects that failed (existing behaviour enhanced with correct per-project error tracking).
 

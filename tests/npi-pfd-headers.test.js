@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 describe('NPI PFD header behavior', () => {
-  let activeProgramme
+  let activeProject
   let idCounter
 
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe('NPI PFD header behavior', () => {
       randomUUID: () => `id-${idCounter++}`
     }
 
-    activeProgramme = {
+    activeProject = {
       pfd: [
         { id: 's10', stepNum: 10, type: 'step', op: 'Op 10', detail: '', ctqIds: [], bomRefs: [] },
         { id: 's20', stepNum: 20, type: 'step', op: 'Op 20', detail: '', ctqIds: [], bomRefs: [] }
@@ -30,7 +30,7 @@ describe('NPI PFD header behavior', () => {
       notify: jest.fn()
     }
 
-    global.prog = () => activeProgramme
+    global.prog = () => activeProject
     global.npiRelSavePFDStep = jest.fn()
     global.npiRelSavePFMEAMode = jest.fn()
     global.npiRelDeletePFDStep = jest.fn()
@@ -73,7 +73,7 @@ describe('NPI PFD header behavior', () => {
     const header = npi.data.pfd.addSectionHeaderAfter('s10').step
     expect(header.type).toBe('header')
 
-    const sorted = npi.data.sortedPfd(activeProgramme.pfd)
+    const sorted = npi.data.sortedPfd(activeProject.pfd)
     expect(sorted.map(step => step.id)).toEqual(['s10', header.id, 's20'])
   })
 
@@ -84,7 +84,7 @@ describe('NPI PFD header behavior', () => {
     expect(header.beforeStepId).toBe('s10')
     expect(header.isDefault).toBe(true)
 
-    const sorted = npi.data.sortedPfd(activeProgramme.pfd)
+    const sorted = npi.data.sortedPfd(activeProject.pfd)
     expect(sorted[0].id).toBe(header.id)
     expect(sorted[1].id).toBe('s10')
   })
@@ -92,13 +92,13 @@ describe('NPI PFD header behavior', () => {
   test('nextMainStepNum only considers executable steps', () => {
     npi.data.pfd.addSectionHeaderAfter('s10')
 
-    const next = npi.data.nextMainStepNum(activeProgramme.pfd)
+    const next = npi.data.nextMainStepNum(activeProject.pfd)
     expect(next).toBe(30)
   })
 
   test('render hides steps inside a collapsed section', async () => {
     const header = npi.data.pfd.ensureLeadingHeader()
-    activeProgramme.pfd.push({ id: 's30', stepNum: 30, type: 'step', op: 'Op 30', detail: '', ctqIds: [], bomRefs: [] })
+    activeProject.pfd.push({ id: 's30', stepNum: 30, type: 'step', op: 'Op 30', detail: '', ctqIds: [], bomRefs: [] })
     collapsedGroups.add(header.id)
     await Promise.resolve()
 
@@ -111,12 +111,12 @@ describe('NPI PFD header behavior', () => {
   })
 
   test('addMainStep creates the default leading section for a new PFD', async () => {
-    activeProgramme.pfd = []
+    activeProject.pfd = []
 
     const step = npi.data.pfd.addMainStep()
     await Promise.resolve()
 
-    const sorted = npi.data.sortedPfd(activeProgramme.pfd)
+    const sorted = npi.data.sortedPfd(activeProject.pfd)
     expect(step.stepNum).toBe(10)
     expect(sorted[0].type).toBe('header')
     expect(sorted[0].beforeStepId).toBe(step.id)

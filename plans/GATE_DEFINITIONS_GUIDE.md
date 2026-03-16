@@ -33,7 +33,7 @@ const GATE_DEFS = [
       "ME resource confirmed available",
       "Bid submitted with ME input",
       "Contract awarded and signed",
-      "Programme file opened",
+      "Project file opened",
       "Project team assigned",
       "Preliminary timeline established"
     ]
@@ -81,7 +81,7 @@ const GATE_DEFS = [
 1. ME resource confirmed available
 2. Bid submitted with ME input
 3. Contract awarded and signed
-4. Programme file opened
+4. Project file opened
 5. Project team assigned
 6. Preliminary timeline established
 
@@ -233,7 +233,7 @@ GATE_DEFS[0].items = [
   "ME resource confirmed available",           // Index 0
   "Bid submitted with ME input",               // Index 1
   "Contract awarded and signed",               // Index 2
-  "Programme file opened",                     // Index 3
+  "Project file opened",                     // Index 3
   "Project team assigned",                     // Index 4
   "Preliminary timeline established"           // Index 5
 ]
@@ -270,7 +270,7 @@ const displayedItems = gateDefinition.items.filter((item, index) =>
 Each project has a `gates[]` array with 6 objects (one per gate):
 
 ```javascript
-programmes[n].gates = [
+projects[n].gates = [
   {
     gateNum: 0,
     checks: [true, false, true, false, true, false],  // Completion status
@@ -315,7 +315,7 @@ Gate 0 Page
 ├─ "ME resource confirmed available"        [✓]
 ├─ "Bid submitted with ME input"             [ ]
 ├─ "Contract awarded and signed"             [✓]
-├─ "Programme file opened"                   [ ]
+├─ "Project file opened"                   [ ]
 ├─ "Project team assigned"                   [✓]
 └─ "Preliminary timeline established"        [ ]
    Progress: 3/6 items
@@ -378,7 +378,7 @@ GATE_DEFS[0].signatories = ["ME Lead", "PM"]
 // - Role 1: "ME Lead" (could be John, Jane, etc.)
 // - Role 2: "PM" (could be Sarah, Bob, etc.)
 
-programmes[0].gates[0].sigs = [
+projects[0].gates[0].sigs = [
   {role: "ME Lead", name: "", date: "", signed: false},
   {role: "PM", name: "", date: "", signed: false}
 ]
@@ -440,7 +440,7 @@ const GATE_DEFS = [
 items[0] = "ME resource..."
 items[1] = "Bid submitted..."
 items[2] = "Contract awarded..."
-items[3] = "Programme file..."
+items[3] = "Project file..."
 items[4] = "Project team..."        // ← Delete this
 items[5] = "Preliminary timeline..."
 
@@ -448,7 +448,7 @@ items[5] = "Preliminary timeline..."
 items[0] = "ME resource..."
 items[1] = "Bid submitted..."
 items[2] = "Contract awarded..."
-items[3] = "Programme file..."
+items[3] = "Project file..."
 items[4] = "Preliminary timeline..."  // ← Index changed!
 ```
 
@@ -461,7 +461,7 @@ items: [
   "ME resource...",
   "Bid submitted...",
   "Contract awarded...",
-  "Programme file...",
+  "Project file...",
   "(Archived) Project team assigned",  // Mark but keep
   "Preliminary timeline..."
 ]
@@ -515,7 +515,7 @@ const GATE1_REINDEX = {
 };
 
 // After deploying new GATE_DEFS, run migration:
-db.programmes.forEach(p => {
+db.projects.forEach(p => {
   if (p.gate_selections && p.gate_selections[1]) {
     p.gate_selections[1] = p.gate_selections[1]
       .map(oldIndex => GATE1_REINDEX[oldIndex])

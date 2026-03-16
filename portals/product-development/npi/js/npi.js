@@ -46,10 +46,10 @@ npi.notify = function(key) {
   cbs.forEach(cb => { try { cb() } catch (e) { console.error('[NPI] notify error:', e) } })
 }
 
-// ── Realtime sync for shared NPI programmes ──────────────────
+// ── Realtime sync for shared NPI projects ──────────────────
 let npiRealtimeActive = false
 let npiLoadedProgId = null
-const NPI_PROGRAMMES_CHANNEL = 'npi_programmes_channel'
+const NPI_PROJECTS_CHANNEL = 'npi_projects_channel'
 const NPI_TABLES_CHANNEL_PREFIX = 'npi_tables_'
 let npiLastRealtimeUpdateAt = 0
 let npiReloadTimer = null
@@ -70,7 +70,7 @@ function npiRealtimeIndicatorHTML() {
   return `<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:11px;color:var(--muted)"><span style="width:7px;height:7px;border-radius:50%;background:var(--green)"></span><span>Live updated ${formatRealtimeTime(dt)}</span>${recentTag}</div>`
 }
 
-function upsertRealtimeProgramme(row) {
+function upsertRealtimeProject(row) {
   if (!row || !row.prog_id) return false
   if (!row.data) return false
 
@@ -79,13 +79,13 @@ function upsertRealtimeProgramme(row) {
   incoming.id = row.prog_id
   if (row.name && !incoming.name) incoming.name = row.name
 
-  const idx = db.programmes.findIndex(p => p.id === row.prog_id)
-  if (idx >= 0) db.programmes[idx] = incoming
-  else db.programmes.push(incoming)
+  const idx = db.projects.findIndex(p => p.id === row.prog_id)
+  if (idx >= 0) db.projects[idx] = incoming
+  else db.projects.push(incoming)
   return true
 }
 
-function shouldRenderForProgramme(progRowId) {
+function shouldRenderForProject(progRowId) {
   if (progId === progRowId) return true
   if (currentSection === 'projects') return true
   return false
@@ -106,7 +106,7 @@ function npiScheduleReload() {
 function npiDataInit() {
   if (typeof createRealtimeSubscription !== 'function') return
 
-  // Load relational data when switching to a new programme
+  // Load relational data when switching to a new project
   if (npiLoadedProgId !== progId && progId && typeof npiRelLoad === 'function') {
     npiLoadedProgId = progId
     npiRelLoad(progId).then(() => render())
@@ -115,27 +115,27 @@ function npiDataInit() {
   // Subscriptions are one-time setup (guard against re-init)
   if (npiRealtimeActive) return
 
-  // Subscribe to programmes table (metadata changes)
-  createRealtimeSubscription('programmes', NPI_PROGRAMMES_CHANNEL, {
+  // Subscribe to projects table (metadata changes)
+  createRealtimeSubscription('projects', NPI_PROJECTS_CHANNEL, {
     onInsert: (row) => {
-      if (!upsertRealtimeProgramme(row)) return
+      if (!upsertRealtimeProject(row)) return
       npiMarkRealtimeUpdate()
-      if (shouldRenderForProgramme(row.prog_id)) render()
+      if (shouldRenderForProject(row.prog_id)) render()
     },
     onUpdate: (row) => {
-      if (!upsertRealtimeProgramme(row)) return
+      if (!upsertRealtimeProject(row)) return
       npiMarkRealtimeUpdate()
-      if (shouldRenderForProgramme(row.prog_id)) render()
+      if (shouldRenderForProject(row.prog_id)) render()
     },
     onDelete: (row) => {
       if (!row || !row.prog_id) return
-      const wasCurrentProgramme = progId === row.prog_id
-      const idx = db.programmes.findIndex(p => p.id === row.prog_id)
+      const wasCurrentProject = progId === row.prog_id
+      const idx = db.projects.findIndex(p => p.id === row.prog_id)
       if (idx < 0) return
-      db.programmes.splice(idx, 1)
+      db.projects.splice(idx, 1)
       npiMarkRealtimeUpdate()
-      if (wasCurrentProgramme) progId = db.programmes[0]?.id || null
-      if (currentSection === 'projects' || wasCurrentProgramme) render()
+      if (wasCurrentProject) progId = db.projects[0]?.id || null
+      if (currentSection === 'projects' || wasCurrentProject) render()
     }
   })
 
@@ -161,7 +161,7 @@ function npiDataInit() {
 function npiDataUnsubscribe() {
   if (!npiRealtimeActive) return
   if (typeof removeRealtimeSubscription === 'function') {
-    removeRealtimeSubscription(NPI_PROGRAMMES_CHANNEL)
+    removeRealtimeSubscription(NPI_PROJECTS_CHANNEL)
   }
   if (typeof removeRealtimeSubscriptionsMatching === 'function') {
     removeRealtimeSubscriptionsMatching(NPI_TABLES_CHANNEL_PREFIX)

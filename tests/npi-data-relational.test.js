@@ -1,12 +1,12 @@
 const fs = require('fs')
 const path = require('path')
 
-describe('NPI relational programme UUID resolution', () => {
+describe('NPI relational project UUID resolution', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
     global.db = {
-      programmes: [
+      projects: [
         {
           id: 'p_local_1',
           dbId: '11111111-1111-4111-8111-111111111111',
@@ -16,14 +16,14 @@ describe('NPI relational programme UUID resolution', () => {
     }
     global.progId = 'p_local_1'
     global.currentUser = { id: '22222222-2222-4222-8222-222222222222', email: 'test@test.com' }
-    global.prog = () => global.db.programmes[0]
+    global.prog = () => global.db.projects[0]
 
     const upsert = jest.fn().mockResolvedValue({ error: null })
     const select = jest.fn(() => ({ eq: jest.fn(() => ({ limit: jest.fn().mockResolvedValue({ data: [], error: null }) })) }))
 
     global.supa = {
       from: jest.fn((table) => {
-        if (table === 'programmes') {
+        if (table === 'projects') {
           return { select }
         }
         return { upsert }
@@ -37,7 +37,7 @@ describe('NPI relational programme UUID resolution', () => {
     eval(script)
   })
 
-  test('uses programme dbId for document saves', async () => {
+  test('uses project dbId for document saves', async () => {
     const item = { id: '33333333-3333-4333-8333-333333333333', docNumber: 'DWG-001' }
 
     await npiRelSaveDoc(item)
@@ -47,14 +47,14 @@ describe('NPI relational programme UUID resolution', () => {
     const upsert = global.supa.from('npi_documents').upsert
     expect(upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        programme_id: '11111111-1111-4111-8111-111111111111'
+        project_id: '11111111-1111-4111-8111-111111111111'
       }),
       { onConflict: 'id' }
     )
   })
 
-  test('resolves missing dbId from programmes table by prog_id', async () => {
-    global.db.programmes[0].dbId = null
+  test('resolves missing dbId from projects table by prog_id', async () => {
+    global.db.projects[0].dbId = null
 
     const upsert = jest.fn().mockResolvedValue({ error: null })
     const limit = jest.fn().mockResolvedValue({
@@ -66,7 +66,7 @@ describe('NPI relational programme UUID resolution', () => {
 
     global.supa = {
       from: jest.fn((table) => {
-        if (table === 'programmes') {
+        if (table === 'projects') {
           return { select }
         }
         return { upsert }
@@ -81,13 +81,13 @@ describe('NPI relational programme UUID resolution', () => {
 
     await npiRelSaveDoc({ id: '33333333-3333-4333-8333-333333333333' })
 
-    expect(global.db.programmes[0].dbId).toBe('44444444-4444-4444-8444-444444444444')
+    expect(global.db.projects[0].dbId).toBe('44444444-4444-4444-8444-444444444444')
   })
 
   test('persists a leading header with a non-null surrogate step number', async () => {
     const step = { id: 'step-1', stepNum: 10, type: 'step', op: 'First Op', detail: '', ctqIds: [], bomRefs: [], docRefs: [] }
     const header = { id: 'header-1', stepNum: null, beforeStepId: 'step-1', type: 'header', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [] }
-    global.db.programmes[0].pfd = [step, header]
+    global.db.projects[0].pfd = [step, header]
 
     await npiRelSavePFDStep(header)
 

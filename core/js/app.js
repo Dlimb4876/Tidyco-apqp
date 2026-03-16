@@ -26,8 +26,8 @@ async function launchApp() {
   setSyncBadge('syncing', '● loading…');
   populateFamilySelects();
   await loadRemotePage(0);
-  if (db.programmes.length === 0) load();
-  subscribeProgrammesGlobally();
+  if (db.projects.length === 0) load();
+  subscribeProjectsGlobally();
   initProgSelect();
 
   // Load Families data from database (dynamic family definitions)
@@ -43,8 +43,8 @@ async function launchApp() {
 
   // Load Products Management data (separate Supabase tables, silent if tables absent)
   await productsDataInit();
-  if (npi && npi.dashboard && typeof npi.dashboard.ensureProductProgrammes === 'function') {
-    npi.dashboard.ensureProductProgrammes();
+  if (npi && npi.dashboard && typeof npi.dashboard.ensureProductProjects === 'function') {
+    npi.dashboard.ensureProductProjects();
   }
 
   // Load Production Capacity settings (production_capacity table)
@@ -60,7 +60,7 @@ async function launchApp() {
   const h = parseHash();
   if (h.s) {
     npiTab = h.nft || 'all';
-    if (h.p && db.programmes.find(p => p.id === h.p)) {
+    if (h.p && db.projects.find(p => p.id === h.p)) {
       progId = h.p;
     }
     if (h.t)   apqpTab               = h.t;

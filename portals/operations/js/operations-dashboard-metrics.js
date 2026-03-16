@@ -53,7 +53,7 @@ function opsMetricsDependencies(overrides = {}) {
 	};
 }
 
-function opsCalcGateHealth(programmes, dependencies = {}) {
+function opsCalcGateHealth(projects, dependencies = {}) {
 	let totalChecks = 0;
 	let doneChecks = 0;
 	const deps = opsMetricsDependencies(dependencies);
@@ -65,11 +65,11 @@ function opsCalcGateHealth(programmes, dependencies = {}) {
 		allProducts.filter(p => p.status === 'NPI').map(p => p.id)
 	);
 
-	programmes.forEach(programme => {
-		// Only count gates for programmes linked to an NPI-status product.
-		if (!programme.product_id || !npiProductIds.has(programme.product_id)) return;
+	projects.forEach(project => {
+		// Only count gates for projects linked to an NPI-status product.
+		if (!project.product_id || !npiProductIds.has(project.product_id)) return;
 
-		const gates = Array.isArray(programme.gates) ? programme.gates : [];
+		const gates = Array.isArray(project.gates) ? project.gates : [];
 		gates.forEach(gate => {
 			const checks = Array.isArray(gate.checks) ? gate.checks : [];
 			checks.forEach(check => {
@@ -83,13 +83,13 @@ function opsCalcGateHealth(programmes, dependencies = {}) {
 	return { doneChecks, totalChecks, percentage };
 }
 
-function opsCalcActionHealth(programmes) {
+function opsCalcActionHealth(projects) {
 	const today = opsTodayIso();
 	let totalOpen = 0;
 	let overdue = 0;
 
-	programmes.forEach(programme => {
-		const actions = Array.isArray(programme.actions) ? programme.actions : [];
+	projects.forEach(project => {
+		const actions = Array.isArray(project.actions) ? project.actions : [];
 		actions.forEach(action => {
 			const status = (action.status || '').toString().toLowerCase();
 			const closed = status === 'closed' || status === 'done' || status === 'complete';
@@ -104,18 +104,18 @@ function opsCalcActionHealth(programmes) {
 	return { totalOpen, overdue };
 }
 
-function opsCalcRiskHealth(programmes) {
+function opsCalcRiskHealth(projects) {
 	let highRisks = 0;
 	let highRpn = 0;
 
-	programmes.forEach(programme => {
-		const risks = Array.isArray(programme.risks) ? programme.risks : [];
+	projects.forEach(project => {
+		const risks = Array.isArray(project.risks) ? project.risks : [];
 		risks.forEach(risk => {
 			const score = opsToNumber(risk.score, opsToNumber(risk.likelihood) * opsToNumber(risk.impact));
 			if (score >= 12) highRisks += 1;
 		});
 
-		const pfmeaModes = Array.isArray(programme.pfmea) ? programme.pfmea : [];
+		const pfmeaModes = Array.isArray(project.pfmea) ? project.pfmea : [];
 		pfmeaModes.forEach(mode => {
 			const effects = Array.isArray(mode.effects) ? mode.effects : [];
 			effects.forEach(effect => {
@@ -296,25 +296,25 @@ function opsCalcForecastProduction() {
 	};
 }
 
-function opsCalcProgrammeFlow(programmes) {
-	const total = programmes.length;
-	const archived = programmes.filter(p => (p.status || '').toString().toLowerCase() === 'archive').length;
+function opsCalcProjectFlow(projects) {
+	const total = projects.length;
+	const archived = projects.filter(p => (p.status || '').toString().toLowerCase() === 'archive').length;
 	const active = Math.max(0, total - archived);
 	return { total, active, archived };
 }
 
 function opsBuildMetrics() {
-	const programmes = Array.isArray(db?.programmes) ? db.programmes : [];
+	const projects = Array.isArray(db?.projects) ? db.projects : [];
 	const deps = opsMetricsDependencies();
-	const gate = opsCalcGateHealth(programmes, deps);
-	const actions = opsCalcActionHealth(programmes);
-	const risk = opsCalcRiskHealth(programmes);
+	const gate = opsCalcGateHealth(projects, deps);
+	const actions = opsCalcActionHealth(projects);
+	const risk = opsCalcRiskHealth(projects);
 	const bugs = opsCalcBugHealth(deps);
 	const me = opsCalcMeCapacity(deps);
 	const pm = opsCalcPmCapacity(deps);
 	const production = opsCalcProductionFlow();
 	const forecast = opsCalcForecastProduction();
-	const programmesFlow = opsCalcProgrammeFlow(programmes);
+	const projectsFlow = opsCalcProjectFlow(projects);
 
 	const healthInputs = [
 		Math.max(0, 100 - (actions.overdue * 10)),
@@ -337,7 +337,7 @@ function opsBuildMetrics() {
 		pm,
 		production,
 		forecast,
-		programmesFlow,
+		projectsFlow,
 		healthScore,
 		generatedAt: new Date()
 	};

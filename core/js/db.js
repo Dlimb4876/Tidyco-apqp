@@ -4,16 +4,16 @@
 // ═══════════════════════════════════
 
 let saveTimer = null;
-let programmesGateScopeColumnsSupported = true;
+let projectsGateScopeColumnsSupported = true;
 // 3-D: Tracks in-flight Supabase write requests so the save badge can show
-// "saving (N remaining)" when multiple programmes are being written concurrently.
+// "saving (N remaining)" when multiple projects are being written concurrently.
 let pendingSaves = 0;
-// Tracks which programme IDs have local changes pending a Supabase write.
+// Tracks which project IDs have local changes pending a Supabase write.
 // Only those IDs are written on the next saveRemote() call, preventing
 // one user's save from overwriting another user's concurrent edits.
-let dirtyProgrammes = new Set();
+let dirtyProjects = new Set();
 
-// 3-A: Shared column-selection strings for programme queries.
+// 3-A: Shared column-selection strings for project queries.
 // Kept in one place so loadRemote() and loadRemotePage() always query
 // exactly the same fields (DRY — change once, both functions benefit).
 const PROG_BASE_SELECT = 'id,prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
@@ -27,7 +27,7 @@ function isGateScopeColumnError(err) {
     msg.includes('gate_selection_locked_by');
 }
 
-function buildProgrammeRow(p, now, email) {
+function buildProjectRow(p, now, email) {
   const row = {
     prog_id:          p.id,
     name:             p.name,
@@ -48,7 +48,7 @@ function buildProgrammeRow(p, now, email) {
     updated_by:       email
   };
 
-  if (programmesGateScopeColumnsSupported) {
+  if (projectsGateScopeColumnsSupported) {
     row.gate_selections = p.gate_selections || null;
     row.gate_selection_locked = !!p.gate_selection_locked;
     row.gate_selection_locked_at = p.gate_selection_locked_at || null;
@@ -73,17 +73,17 @@ document.addEventListener('input', e => {
 });
 
 // ── Save ──────────────────────────────────────────────────────
-// Accepts optional extra programme IDs to mark dirty (e.g. when two
-// linked programmes are modified in the same operation).
+// Accepts optional extra project IDs to mark dirty (e.g. when two
+// linked projects are modified in the same operation).
 function save(...extraIds) {
-  if (progId) dirtyProgrammes.add(progId);
-  extraIds.forEach(id => { if (id) dirtyProgrammes.add(id); });
+  if (progId) dirtyProjects.add(progId);
+  extraIds.forEach(id => { if (id) dirtyProjects.add(id); });
   try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveRemote, 800);
   // 3-D: Show pending count while a save is already in flight
   if (pendingSaves > 0) {
-    setSyncBadge('syncing', `● saving (${dirtyProgrammes.size} queued)…`);
+    setSyncBadge('syncing', `● saving (${dirtyProjects.size} queued)…`);
   } else {
     setSyncBadge('syncing', '● saving…');
   }
@@ -97,17 +97,17 @@ async function saveRemote(attempt) {
 
   // Snapshot and clear dirty set before async work so any edits made
   // during this save are queued for the next debounce cycle.
-  const idsToSave = dirtyProgrammes.size > 0 ? new Set(dirtyProgrammes) : null;
-  dirtyProgrammes.clear();
+  const idsToSave = dirtyProjects.size > 0 ? new Set(dirtyProjects) : null;
+  dirtyProjects.clear();
 
-  // Only write programmes that were modified locally.
+  // Only write projects that were modified locally.
   // Fall back to writing all on retry (idsToSave is null after clear) so
   // the retry logic below can pass null and save everything.
   const toSave = idsToSave
-    ? db.programmes.filter(p => idsToSave.has(p.id))
-    : db.programmes;
+    ? db.projects.filter(p => idsToSave.has(p.id))
+    : db.projects;
 
-  // 3-D: Show "saving (N remaining)" for multi-programme saves so users
+  // 3-D: Show "saving (N remaining)" for multi-project saves so users
   // know the operation is still in progress.
   pendingSaves += toSave.length;
   if (toSave.length > 1) {
@@ -116,19 +116,19 @@ async function saveRemote(attempt) {
 
   try {
     for (const p of toSave) {
-      let row = buildProgrammeRow(p, now, email);
+      let row = buildProjectRow(p, now, email);
 
       let { data: updated, error: updErr } = await supa
-        .from('programmes')
+        .from('projects')
         .update(row)
         .eq('prog_id', p.id)
         .select('id, prog_id');
 
-      if (updErr && programmesGateScopeColumnsSupported && isGateScopeColumnError(updErr)) {
-        programmesGateScopeColumnsSupported = false;
-        row = buildProgrammeRow(p, now, email);
+      if (updErr && projectsGateScopeColumnsSupported && isGateScopeColumnError(updErr)) {
+        projectsGateScopeColumnsSupported = false;
+        row = buildProjectRow(p, now, email);
         ({ data: updated, error: updErr } = await supa
-          .from('programmes')
+          .from('projects')
           .update(row)
           .eq('prog_id', p.id)
           .select('id, prog_id'));
@@ -147,15 +147,15 @@ async function saveRemote(attempt) {
       }
       if (!updated || updated.length === 0) {
         let { data: inserted, error: insErr } = await supa
-          .from('programmes')
+          .from('projects')
           .insert(row)
           .select('id, prog_id');
 
-        if (insErr && programmesGateScopeColumnsSupported && isGateScopeColumnError(insErr)) {
-          programmesGateScopeColumnsSupported = false;
-          row = buildProgrammeRow(p, now, email);
+        if (insErr && projectsGateScopeColumnsSupported && isGateScopeColumnError(insErr)) {
+          projectsGateScopeColumnsSupported = false;
+          row = buildProjectRow(p, now, email);
           ({ data: inserted, error: insErr } = await supa
-            .from('programmes')
+            .from('projects')
             .insert(row)
             .select('id, prog_id'));
         }
@@ -199,21 +199,21 @@ async function loadRemote() {
   if (!currentUser) return;
 
   let { data, error } = await supa
-    .from('programmes')
-    .select(programmesGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
+    .from('projects')
+    .select(projectsGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
     .order('updated_at', { ascending: false });
 
-  if (error && programmesGateScopeColumnsSupported && isGateScopeColumnError(error)) {
-    programmesGateScopeColumnsSupported = false;
+  if (error && projectsGateScopeColumnsSupported && isGateScopeColumnError(error)) {
+    projectsGateScopeColumnsSupported = false;
     ({ data, error } = await supa
-      .from('programmes')
+      .from('projects')
       .select(PROG_BASE_SELECT)
       .order('updated_at', { ascending: false }));
   }
 
   if (error) { console.error('Load error', error); return; }
   if (data && data.length > 0) {
-    db.programmes = data.map(row => migrateprog({
+    db.projects = data.map(row => migrateprog({
       dbId:           row.id || null,
       id:             row.prog_id,
       name:           row.name,
@@ -244,11 +244,11 @@ async function loadRemote() {
   }
 }
 
-// ── 3-A: Paginated programme loader ──────────────────────────
-// Loads a single page of programmes (most-recently-updated first).
-// On the first page (page=0) it replaces db.programmes; subsequent
+// ── 3-A: Paginated project loader ──────────────────────────
+// Loads a single page of projects (most-recently-updated first).
+// On the first page (page=0) it replaces db.projects; subsequent
 // pages append to it, avoiding duplicate IDs.
-// Sets `programmesAllLoaded = true` when the returned page is smaller
+// Sets `projectsAllLoaded = true` when the returned page is smaller
 // than pageSize, indicating there are no more rows to fetch.
 async function loadRemotePage(page, pageSize = 50) {
   if (!currentUser) return;
@@ -257,15 +257,15 @@ async function loadRemotePage(page, pageSize = 50) {
   const to    = from + pageSize - 1;
 
   let { data, error } = await supa
-    .from('programmes')
-    .select(programmesGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
+    .from('projects')
+    .select(projectsGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
     .order('updated_at', { ascending: false })
     .range(from, to);
 
-  if (error && programmesGateScopeColumnsSupported && isGateScopeColumnError(error)) {
-    programmesGateScopeColumnsSupported = false;
+  if (error && projectsGateScopeColumnsSupported && isGateScopeColumnError(error)) {
+    projectsGateScopeColumnsSupported = false;
     ({ data, error } = await supa
-      .from('programmes')
+      .from('projects')
       .select(PROG_BASE_SELECT)
       .order('updated_at', { ascending: false })
       .range(from, to));
@@ -297,15 +297,15 @@ async function loadRemotePage(page, pageSize = 50) {
   }));
 
   if (page === 0) {
-    db.programmes = rows;
+    db.projects = rows;
   } else {
     // Append only rows not already in memory (guard against duplicates)
-    const knownIds = new Set(db.programmes.map(p => p.id));
-    rows.forEach(p => { if (!knownIds.has(p.id)) db.programmes.push(p); });
+    const knownIds = new Set(db.projects.map(p => p.id));
+    rows.forEach(p => { if (!knownIds.has(p.id)) db.projects.push(p); });
   }
 
-  programmesPage       = page;
-  programmesAllLoaded  = rows.length < pageSize;
+  projectsPage       = page;
+  projectsAllLoaded  = rows.length < pageSize;
 
   if (rows.length > 0) {
     const last = data[0];
@@ -319,11 +319,11 @@ async function loadRemotePage(page, pageSize = 50) {
   try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
 }
 
-// Load the next page of programmes (called from "Load more" button in hub).
-async function loadMoreProgrammes() {
-  if (programmesAllLoaded) return;
+// Load the next page of projects (called from "Load more" button in hub).
+async function loadMoreProjects() {
+  if (projectsAllLoaded) return;
   setSyncBadge('syncing', '● loading…');
-  await loadRemotePage(programmesPage + 1);
+  await loadRemotePage(projectsPage + 1);
   initProgSelect();
   if (typeof render === 'function') render();
 }
@@ -423,13 +423,13 @@ function migrateprog(p) {
 // ── Legacy local load (fallback) ─────────────────────────────
 function load() {
   ['tidyco_v7', 'tidyco_v6', 'tidyco_v5'].forEach(key => {
-    if (db.programmes && db.programmes.length > 0) return;
+    if (db.projects && db.projects.length > 0) return;
     try {
       const s = localStorage.getItem(key);
-      if (s) { const d = JSON.parse(s); if (d.programmes && d.programmes.length > 0) db = d; }
+      if (s) { const d = JSON.parse(s); if (d.projects && d.projects.length > 0) db = d; }
     } catch (e) {}
   });
-  db.programmes = db.programmes.map(p => migrateprog(p));
+  db.projects = db.projects.map(p => migrateprog(p));
 }
 
 // ── Import / Export ───────────────────────────────────────────
@@ -447,11 +447,11 @@ function importJSON(e) {
   r.onload = async ev => {
     try {
       const d = JSON.parse(ev.target.result);
-      if (d.programmes) {
+      if (d.projects) {
         db = d;
-        db.programmes = db.programmes.map(p => migrateprog(p));
-        // Mark all imported programmes dirty so saveRemote writes every one.
-        db.programmes.forEach(p => dirtyProgrammes.add(p.id));
+        db.projects = db.projects.map(p => migrateprog(p));
+        // Mark all imported projects dirty so saveRemote writes every one.
+        db.projects.forEach(p => dirtyProjects.add(p.id));
         save(); initProgSelect(); navigate('home');
       } else { showToast('Invalid file', 'error'); }
     } catch (x) { showToast('Invalid JSON', 'error'); }
@@ -460,18 +460,18 @@ function importJSON(e) {
   e.target.value = '';
 }
 
-// ── Programme selector ────────────────────────────────────────
+// ── Project selector ────────────────────────────────────────
 function initProgSelect() {
-  if (!progId && db.programmes.length) progId = db.programmes[0].id;
+  if (!progId && db.projects.length) progId = db.projects[0].id;
 }
 
-// ── Global real-time subscription for programmes ──────────────
+// ── Global real-time subscription for projects ──────────────
 // Keeps every user's hub / projects list live without a page refresh.
 // Called once from launchApp() after the initial loadRemote().
-function subscribeProgrammesGlobally() {
-  createRealtimeSubscription('programmes', 'global_programmes_channel', {
+function subscribeProjectsGlobally() {
+  createRealtimeSubscription('projects', 'global_projects_channel', {
     onInsert: (row) => {
-      if (db.programmes.find(p => p.id === row.prog_id)) return; // already known
+      if (db.projects.find(p => p.id === row.prog_id)) return; // already known
       const newProg = migrateprog({
         dbId:            row.id || null,
         id:              row.prog_id,
@@ -494,14 +494,14 @@ function subscribeProgrammesGlobally() {
         gate_selection_locked_at: row.gate_selection_locked_at  || null,
         gate_selection_locked_by: row.gate_selection_locked_by  || null,
       });
-      db.programmes.unshift(newProg);
+      db.projects.unshift(newProg);
       try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
       if (currentSection === 'hub' || currentSection === 'projects') {
         if (typeof render === 'function') render();
       }
     },
     onUpdate: (row) => {
-      const idx = db.programmes.findIndex(p => p.id === row.prog_id);
+      const idx = db.projects.findIndex(p => p.id === row.prog_id);
       if (idx < 0) return;
       // Skip echo of the local user's own save — the local state is already
       // up-to-date and applying the echo could discard in-progress edits.
@@ -510,7 +510,7 @@ function subscribeProgrammesGlobally() {
       if (progId && row.prog_id === progId && row.updated_by && typeof showToast === 'function') {
         showToast(`${row.updated_by.split('@')[0]} just updated this project's details`, 'info', 6000);
       }
-      const p = db.programmes[idx];
+      const p = db.projects[idx];
       p.dbId       = row.id              || p.dbId || null;
       p.name       = row.name            || p.name;
       p.customer   = row.customer        || '';
@@ -536,11 +536,11 @@ function subscribeProgrammesGlobally() {
       }
     },
     onDelete: (row) => {
-      const idx = db.programmes.findIndex(p => p.id === row.prog_id);
+      const idx = db.projects.findIndex(p => p.id === row.prog_id);
       if (idx < 0) return;
-      db.programmes.splice(idx, 1);
+      db.projects.splice(idx, 1);
       if (progId === row.prog_id) {
-        progId = db.programmes.length ? db.programmes[0].id : null;
+        progId = db.projects.length ? db.projects[0].id : null;
       }
       try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
       if (currentSection === 'hub' || currentSection === 'projects' ||
