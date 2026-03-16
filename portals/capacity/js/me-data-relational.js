@@ -30,7 +30,7 @@ function meNormalizeIsoDate(dateValue, fallbackDate) {
 }
 
 function meNormalizeDateRange(startDate, endDate, fallbackDate) {
-  let safeStart = meNormalizeIsoDate(startDate, fallbackDate);
+  const safeStart = meNormalizeIsoDate(startDate, fallbackDate);
   let safeEnd = meNormalizeIsoDate(endDate, fallbackDate);
 
   if (safeEnd < safeStart) {

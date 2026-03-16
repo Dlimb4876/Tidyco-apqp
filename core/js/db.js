@@ -388,14 +388,14 @@ function migrateprog(p) {
 
   // ── PFMEA structure migration (moved from renderPFMEA) ────────
   p.pfmea.forEach(r => {
-    if (!r.id) r.id = 'f_' + Math.random().toString(36).slice(2);
+    if (!r.id) r.id = generateId('f_');
     if (!r._type) {
       r._type = 'mode';
       r.effects = [{
-        id: 'e_' + Math.random().toString(36).slice(2),
+        id: generateId('e_'),
         effect: r.effect || '', sev: r.sev || 1,
         causes: [{
-          id: 'c_' + Math.random().toString(36).slice(2),
+          id: generateId('c_'),
           cause: r.cause || '', occ: r.occ || 1, det: r.det || 1,
           prevent: r.controls || '', detect: '',
           action: { desc: '', owner: '', due: '', newOcc: '', newDet: '' },
@@ -415,8 +415,8 @@ function migrateprog(p) {
     });
   });
 
-  p.risks.forEach(r =>   { if (!r.id) r.id = 'r_' + Math.random().toString(36).slice(2); });
-  p.actions.forEach(a => { if (!a.id) a.id = 'a_' + Math.random().toString(36).slice(2); });
+  p.risks.forEach(r =>   { if (!r.id) r.id = generateId('r_'); });
+  p.actions.forEach(a => { if (!a.id) a.id = generateId('a_'); });
   return p;
 }
 

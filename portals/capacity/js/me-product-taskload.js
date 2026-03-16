@@ -154,7 +154,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
   )).sort((a, b) => a.localeCompare(b));
 
   const searchNeedle = state.search.trim().toLowerCase();
-  let visibleLoads = productLoads.filter(load => {
+  const visibleLoads = productLoads.filter(load => {
     const familyMatch = state.family === 'all' || load.family === state.family;
     if (!familyMatch) return false;
     if (!searchNeedle) return true;

@@ -157,7 +157,7 @@ function buildProductSixMonthGantt(product, batches, todayStr) {
   }
 
   const weekMarkers = [];
-  let weekCursor = new Date(windowStart.getFullYear(), windowStart.getMonth(), windowStart.getDate());
+  const weekCursor = new Date(windowStart.getFullYear(), windowStart.getMonth(), windowStart.getDate());
   while (weekCursor <= windowEnd) {
     const dayOffset = Math.floor((weekCursor - windowStart) / (1000 * 60 * 60 * 24));
     const left = (dayOffset / totalDays) * 100;
@@ -294,7 +294,7 @@ function renderPlanByUnit() {
   const activeUnit = (prodState && prodState.activeUnit) || 'Unit 2';
 
   // Generate tabs
-  let tabsHtml = units.map(unit => {
+  const tabsHtml = units.map(unit => {
     const batches = prodDataGetBatchesByWorkLocation(unit);
     const count = batches.length;
     const isActive = unit === activeUnit;

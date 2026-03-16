@@ -60,7 +60,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
   const filters = isPM ? (window.pmTasksFilters || {}) : (window.meTasksFilters || {});
 
   // Apply filters
-  let filteredTasks = pageTasks.filter(t => {
+  const filteredTasks = pageTasks.filter(t => {
     const search = (filters.search || '').toLowerCase();
     const cat = filters.category || 'all';
     const assignee = filters.assignee || 'all';

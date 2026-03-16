@@ -282,7 +282,7 @@ window.meGetWeekRange = function(monthKey, weekCount) {
   const monthStart = new Date(year, month - 1, 1);
 
   // Find first Monday of the month
-  let current = new Date(monthStart);
+  const current = new Date(monthStart);
   const dayOfWeek = current.getDay();
   const daysUntilMonday = dayOfWeek === 1 ? 0 : (8 - dayOfWeek) % 7;
   if (daysUntilMonday > 0) {

@@ -197,7 +197,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
   const hiddenStatusSet = new Set(hiddenStatuses);
 
   const searchNeedle = state.search.trim().toLowerCase();
-  let visibleRows = preparedRows.filter(row => {
+  const visibleRows = preparedRows.filter(row => {
     const familyMatch = state.family === 'all' || row.familyLabel === state.family;
     if (!familyMatch) return false;
     if (hiddenStatusSet.has(row.status)) return false;

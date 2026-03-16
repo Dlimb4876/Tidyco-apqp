@@ -5,6 +5,7 @@
   "main": "check_onclick.js",
   "scripts": {
     "test": "jest",
+    "lint": "eslint .",
     "lint:npi": "eslint portals/product-development/npi/**/*.js",
     "format:npi": "prettier --write portals/product-development/npi/**/*.js",
     "check:load-order": "node scripts/load-order-checker.js",

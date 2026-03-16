@@ -73,7 +73,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
     const hoursPerWeek  = meGetHoursPerWeek(member.hoursPerWeek);
     const utilisationPct = member.utilisation || 80;
 
-    let activeStart = new Date(Math.max(monthStart, new Date(member.startDate)));
+    const activeStart = new Date(Math.max(monthStart, new Date(member.startDate)));
     let activeEnd   = monthEnd;
     if (member.endDate) {
       activeEnd = new Date(Math.min(monthEnd, new Date(member.endDate)));

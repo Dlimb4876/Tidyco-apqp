@@ -71,7 +71,7 @@ npi.dashboard.ensureProductProjects = function () {
 
     if (!existing) {
       const np = migrateprog({
-        id: 'p_' + Math.random().toString(36).substr(2, 9),
+        id: generateId('p_'),
         name: product.name,
         customer: product.customer || '',
         family: family,
@@ -859,7 +859,7 @@ npi.dashboard.createProg = function () {
     showToast('Project name is required.', 'warning')
     return
   }
-  const id = 'p_' + Math.random().toString(36).slice(2)
+  const id = generateId('p_')
   const family = document.getElementById('np_family')?.value || 'Other'
   const customer = document.getElementById('np_customer')?.value || ''
   const unit = document.getElementById('np_unit')?.value || ''
@@ -1028,7 +1028,7 @@ npi.dashboard.saveNewSubAsm = function () {
   }
   const unit = unitEl ? unitEl.value.trim() : ''
   closeModal('modalNewSubAsm')
-  const id = 'p_' + Math.random().toString(36).slice(2)
+  const id = generateId('p_')
 
   const child = migrateprog({
     id,

@@ -397,7 +397,7 @@ window.capacityEvents._onFocusOut = function(evt) {
     if (window.pmPendingRealTimeUpdate || window.pmPendingRerender) {
       window.pmPendingRealTimeUpdate = false
       window.pmPendingRerender = false
-      var activePMBtn = document.querySelector('.pm-shell .me-nav-btn.active')
+      const activePMBtn = document.querySelector('.pm-shell .me-nav-btn.active')
       if (activePMBtn && activePMBtn.getAttribute('data-tab') === 'chart') {
         if (typeof pmCapSmartRender === 'function') pmCapSmartRender()
         return
@@ -415,7 +415,7 @@ window.capacityEvents._onFocusOut = function(evt) {
       window.mePendingRerender = false
       // Chart tab is read-only — mark dirty, recalculate when user navigates to it.
       // Only query .me-shell here; PM has already been handled above.
-      var activeNavBtn = contextRoot
+      const activeNavBtn = contextRoot
         ? contextRoot.querySelector('.me-nav-btn.active')
         : document.querySelector('.me-shell .me-nav-btn.active')
       if (activeNavBtn && activeNavBtn.getAttribute('data-tab') === 'chart') {

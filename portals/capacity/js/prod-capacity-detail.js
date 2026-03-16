@@ -4,7 +4,7 @@
 // Depends on: prod-capacity-data.js
 // ═══════════════════════════════════════════════════════════════
 
-let prodCapDetailFilter = { status: '', family: '', workArea: '' };
+const prodCapDetailFilter = { status: '', family: '', workArea: '' };
 
 // ── Helper: resolve family ID to label ──────────────────────────
 function prodCapGetFamilyLabel(familyIdOrName) {

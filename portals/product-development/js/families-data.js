@@ -2,7 +2,7 @@
 // Manages product families with Supabase persistence
 // Collaborative: all users see the same data, changes sync in real-time
 
-let familiesState = {
+const familiesState = {
   families: [],
   loading: false,
   error: null,

@@ -4,7 +4,7 @@
 // Depends on: auth.js (supa, currentUser)
 // ═══════════════════════════════════════════════════════════════
 
-let workAreasState = {
+const workAreasState = {
   workAreas: [],
   loading: false,
   error: null

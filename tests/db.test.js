@@ -38,11 +38,15 @@ const stateScript = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js
   .replace(/^const /gm, 'var ');
 eval(stateScript);
 // Now assign to globals so test body can reference them
-global.GATE_DEFS = GATE_DEFS; // eslint-disable-line no-undef
-global.newProgTemplate = newProgTemplate; // eslint-disable-line no-undef
-global.FAMILIES = FAMILIES; // eslint-disable-line no-undef
-global.getFamilies = getFamilies; // eslint-disable-line no-undef
-global.BOM_TYPES = BOM_TYPES; // eslint-disable-line no-undef
+global.GATE_DEFS = GATE_DEFS;  
+global.newProgTemplate = newProgTemplate;  
+global.FAMILIES = FAMILIES;  
+global.getFamilies = getFamilies;  
+global.BOM_TYPES = BOM_TYPES;  
+
+// Load helpers.js for generateId() function used in db.js
+const helpersScript = fs.readFileSync(path.resolve(__dirname, '../utils/js/helpers.js'), 'utf8');
+eval(helpersScript);
 
 // Load db script
 const dbScript = fs.readFileSync(path.resolve(__dirname, '../core/js/db.js'), 'utf8');

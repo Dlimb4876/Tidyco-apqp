@@ -134,7 +134,7 @@ window.meOpenHeatmapDetail = function(personId, weekStart, weekEnd) {
   const data = meCalcWeekUtilisation(personId, weekStart, weekEnd, tasks, holidays);
   const util = data.capacity > 0 ? Math.round((data.demand / data.capacity) * 100) : 0;
 
-  let subtitle = `${util}% utilised · ${data.demand.toFixed(1)}h / ${data.capacity.toFixed(1)}h`;
+  const subtitle = `${util}% utilised · ${data.demand.toFixed(1)}h / ${data.capacity.toFixed(1)}h`;
   document.getElementById('meDetailSubtitle').textContent = subtitle;
 
   const detailHTML = meRenderDetailPanel(personId, weekStart, weekEnd, tasks, holidays);

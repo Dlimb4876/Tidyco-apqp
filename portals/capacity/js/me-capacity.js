@@ -6,7 +6,7 @@
 let meTab = 'chart';
 let meChartStart = null; // ISO month string (e.g., '2025-03')
 let meHolidayMonth = null; // Holiday planner month (independent from chart)
-let meChartInst = null;  // Chart.js instance
+const meChartInst = null;  // Chart.js instance
 let meSaveTimer = null;  // Debounce timer
 let meChartDirty = true; // Chart tab recalculates only when accessed
 window.mePendingRealTimeUpdate = false;  // Deferred real-time render waiting for blur

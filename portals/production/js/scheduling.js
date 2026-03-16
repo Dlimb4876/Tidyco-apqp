@@ -1,7 +1,7 @@
 // Production Batch Scheduling
 
-let prodSchedulingSort = { field: 'start_date', ascending: true };
-let prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFrom: '', dateTo: '' };
+const prodSchedulingSort = { field: 'start_date', ascending: true };
+const prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFrom: '', dateTo: '' };
 let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
 
 function renderSchedulingNewRow() {

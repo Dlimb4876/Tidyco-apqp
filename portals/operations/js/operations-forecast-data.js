@@ -67,7 +67,7 @@ function opsForecastNormalizeRow(row) {
   const probabilityBand = normalizedBand || opsForecastProbabilityBandFromPct(probabilityPct);
 
   return {
-    id: row.id || ('tmp_' + Math.random().toString(36).slice(2, 8)),
+    id: row.id || generateId('tmp_', 6),
     title: (row.title || '').toString().trim(),
     owner: (row.owner || '').toString().trim(),
     status: opsForecastNormStatus(row.status),

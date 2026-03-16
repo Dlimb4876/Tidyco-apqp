@@ -9,7 +9,7 @@ const PROD_CAP_DAYS_PER_WEEK = 5;
 const PROD_CAP_HOURS_PER_WEEK = PROD_CAP_HOURS_PER_DAY * PROD_CAP_DAYS_PER_WEEK;
 const PROD_CAP_DATA_CHANNEL = 'prod_cap_data_channel';
 
-let prodCapState = {
+const prodCapState = {
   capacityRecords: [], // { id, work_area, year, month, staff_count, notes }
   loaded: false
 };

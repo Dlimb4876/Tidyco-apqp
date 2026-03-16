@@ -1,7 +1,7 @@
 // Family PFMEA Templates Data Layer
 // Manages PFMEA templates per product family with Supabase persistence
 
-let familyTemplatesState = {
+const familyTemplatesState = {
   templates: [],
   loading: false,
   error: null

@@ -323,7 +323,7 @@ function renderProductFamilyDatabase() {
 }
 
 // Family modal state
-let familyModalState = { isOpen: false, familyId: null };
+const familyModalState = { isOpen: false, familyId: null };
 
 function showFamilyModal(familyId = null) {
   familyModalState.isOpen = true;
@@ -414,7 +414,7 @@ function renderFamilyModal() {
 // FAMILY PFMEA TEMPLATE MANAGER
 // ═══════════════════════════════════
 
-let templateManagerState = { isOpen: false, familyId: null };
+const templateManagerState = { isOpen: false, familyId: null };
 
 function showTemplateManager(familyId) {
   templateManagerState.isOpen = true;
@@ -518,8 +518,8 @@ function startFamilyEdit(familyId, field) {
 
   familyInlineEdit = { familyId, field };
 
-  let cellId = `fam-${field}-${familyId}`;
-  let currentValue = field === 'label' ? family.label : (field === 'description' ? family.description : family.icon);
+  const cellId = `fam-${field}-${familyId}`;
+  const currentValue = field === 'label' ? family.label : (field === 'description' ? family.description : family.icon);
 
   let input;
   if (field === 'description') {
