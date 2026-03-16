@@ -17,46 +17,36 @@ function _renderProdCapKpiCards(kpis) {
   const headroom = totalSupply - totalDemand
   const totalUtil = totalSupply > 0 ? Math.round((totalDemand / totalSupply) * 100) : 0
 
-  const cards = [
-    { label: 'Products', value: totalProducts, icon: '📦' },
-    { label: 'Active Batches', value: activeBatches, icon: 'C' },
-    {
-      label: '2-Yr Headroom',
-      value: `${headroom.toLocaleString()}h`,
-      icon: '📈',
-      color: headroom > 0 ? 'var(--green)' : 'var(--red)',
-    },
-    {
-      label: '2-Yr Utilisation',
-      value: `${totalUtil}%`,
-      icon: '⚖️',
-      color: totalUtil < 80 ? 'var(--green)' : totalUtil < 100 ? 'var(--amber)' : 'var(--red)',
-    },
-    {
-      label: 'Peak Utilisation',
-      value: `${Math.round(peakUtil)}%`,
-      icon: '🎢',
-      color: peakUtil < 80 ? 'var(--green)' : peakUtil < 100 ? 'var(--amber)' : 'var(--red)',
-    },
-  ]
+  const headroomColor = headroom > 0 ? 'var(--green)' : 'var(--red)'
+  const utilColor = totalUtil < 80 ? 'var(--blue)' : totalUtil < 100 ? 'var(--amber)' : 'var(--red)'
+  const utilLabel = totalUtil < 80 ? '● Healthy' : totalUtil < 100 ? '⚠ Tight' : '✗ Over capacity'
+  const peakColor = peakUtil < 80 ? 'var(--blue)' : peakUtil < 100 ? 'var(--amber)' : 'var(--red)'
+  const peakLabel = peakUtil < 80 ? '● Healthy' : peakUtil < 100 ? '⚠ Tight' : '✗ Over capacity'
 
   return `
-    <div class="pc-kpi-grid">
-      ${cards
-        .map(
-          (card) => `
-        <div class="pc-kpi-card">
-          <div class="pc-kpi-icon">${card.icon}</div>
-          <div>
-            <div class="pc-kpi-value" style="${card.color ? `color:${card.color}` : ''}">${
-            card.value
-          }</div>
-            <div class="pc-kpi-label">${card.label}</div>
-          </div>
-        </div>
-      `
-        )
-        .join('')}
+    <div class="pc-kpi-row">
+      <div class="pc-kpi" style="border-left:4px solid var(--blue)">
+        <div class="pc-kpi-val">${totalProducts}</div>
+        <div class="pc-kpi-label">Products</div>
+      </div>
+      <div class="pc-kpi" style="border-left:4px solid var(--navy)">
+        <div class="pc-kpi-val">${activeBatches}</div>
+        <div class="pc-kpi-label">Active Batches</div>
+      </div>
+      <div class="pc-kpi" style="border-left:4px solid ${headroomColor}">
+        <div class="pc-kpi-val" style="color:${headroomColor}">${headroom.toLocaleString()}h</div>
+        <div class="pc-kpi-label">2-Yr Headroom</div>
+      </div>
+      <div class="pc-kpi" style="border-left:4px solid ${utilColor}">
+        <div class="pc-kpi-val" style="color:${utilColor}">${totalUtil}%</div>
+        <div class="pc-kpi-label">2-Yr Utilisation</div>
+        <div class="pc-kpi-sub" style="color:${utilColor}">${utilLabel}</div>
+      </div>
+      <div class="pc-kpi" style="border-left:4px solid ${peakColor}">
+        <div class="pc-kpi-val" style="color:${peakColor}">${Math.round(peakUtil)}%</div>
+        <div class="pc-kpi-label">Peak Utilisation</div>
+        <div class="pc-kpi-sub" style="color:${peakColor}">${peakLabel}</div>
+      </div>
     </div>
   `
 }
