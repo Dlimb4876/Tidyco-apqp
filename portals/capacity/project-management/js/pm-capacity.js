@@ -6,6 +6,16 @@ let pmTab = 'chart';
 let pmHolidayMonth = null;
 let pmChartStart = null;
 let pmSaveTimer = null;
+let pmChartDirty = true; // Chart tab recalculates only when accessed
+
+// ── Smart render: skips full re-render when on read-only chart tab ──
+window.pmCapSmartRender = function() {
+  if (pmTab === 'chart') {
+    pmChartDirty = true;
+    return;
+  }
+  render();
+};
 
 function pmFilterByDepartment(list, department, fallback) {
   if (typeof meFilterByDepartment === 'function') {
@@ -100,6 +110,7 @@ window.pmRenderCapacity = function() {
       </div>
     </div>`;
 
+  pmChartDirty = false;
   setTimeout(() => {
     if (pmTab === 'chart') {
       meDrawChartNow();
@@ -112,6 +123,7 @@ window.pmRenderCapacity = function() {
 
 window.pmSetTab = function(tab) {
   pmTab = tab;
+  if (tab === 'chart') pmChartDirty = false;
   window.meCurrentDepartmentContext = 'PM';
 
   document.querySelectorAll('.pm-shell .me-nav-btn').forEach(btn => {
@@ -187,6 +199,11 @@ window.pmDebouncedSave = function() {
   clearTimeout(pmSaveTimer);
   pmSaveTimer = setTimeout(async () => {
     await pmOnSave(false);
+    // Chart tab is read-only — mark dirty and skip re-render
+    if (pmTab === 'chart') {
+      pmChartDirty = true;
+      return;
+    }
     pmRefreshCurrentTab();
   }, 900);
 };

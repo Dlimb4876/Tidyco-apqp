@@ -275,7 +275,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
               ${currentFilters.product && currentFilters.product !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-product" title="Clear product filter">×</button>` : ''}
             </div>
             <button class="btn ${currentFilters.hideCompleted ? 'btn-primary' : 'btn-ghost'} btn-sm" data-cap-action="cap-task-toggle-hide-completed"
-              style="padding:6px 10px;font-size:13px;" title="Toggle completed tasks">${currentFilters.hideCompleted ? '✓ Hide Completed' : '○ Show All'}</button>
+              style="padding:6px 10px;font-size:13px;" title="Show or hide completed tasks">${currentFilters.hideCompleted ? 'Show Completed' : 'Hide Completed'}</button>
             <button class="btn btn-ghost btn-sm" data-cap-action="cap-task-clear-all-filters"
               style="padding:6px 10px;font-size:13px;" title="Clear all filters">Clear</button>
           </div>

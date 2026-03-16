@@ -360,6 +360,11 @@ window.capacityEvents._onKeydown = function(evt) {
  */
 window.capacityEvents._onFocusOut = function(evt) {
   const nextFocus = evt.relatedTarget
+  const contextRoot = evt.target && typeof evt.target.closest === 'function'
+    ? evt.target.closest('[data-cap-context]')
+    : null
+  const isPMContext = (contextRoot && contextRoot.getAttribute('data-cap-context') === 'pm') ||
+    window.meCurrentDepartmentContext === 'PM'
   // If moving to next cell in same table, no need to flush
   if (nextFocus && nextFocus.closest('table')) return
   // No pending re-renders to flush
@@ -377,7 +382,18 @@ window.capacityEvents._onFocusOut = function(evt) {
     if (window.mePendingRealTimeUpdate || window.mePendingRerender) {
       window.mePendingRealTimeUpdate = false
       window.mePendingRerender = false
-      if (typeof meRefreshCurrentTab === 'function') {
+      // Chart tab is read-only — mark dirty, recalculate when user navigates to it
+      var activeNavBtn = contextRoot
+        ? contextRoot.querySelector('.me-nav-btn.active')
+        : document.querySelector('.pm-shell .me-nav-btn.active, .me-shell .me-nav-btn.active')
+      if (activeNavBtn && activeNavBtn.getAttribute('data-tab') === 'chart') {
+        if (isPMContext && typeof pmCapSmartRender === 'function') pmCapSmartRender()
+        else if (typeof meCapSmartRender === 'function') meCapSmartRender()
+        return
+      }
+      if (isPMContext && typeof pmRefreshCurrentTab === 'function') {
+        pmRefreshCurrentTab()
+      } else if (typeof meRefreshCurrentTab === 'function') {
         meRefreshCurrentTab()
       }
     }

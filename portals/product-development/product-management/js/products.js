@@ -20,6 +20,29 @@ function saveProductsSearch(val) {
   try { localStorage.setItem(PRODUCTS_SEARCH_KEY, val); } catch(e) {}
 }
 
+const PRODUCTS_FILTERS_KEY = 'products_filters_state';
+function getDefaultProductsFilters() {
+  return {
+    family: 'all',
+    location: 'all',
+    scope: 'all',
+    status: 'all',
+    showClosed: false
+  };
+}
+function loadProductsFilters() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PRODUCTS_FILTERS_KEY) || '{}');
+    return { ...getDefaultProductsFilters(), ...parsed };
+  } catch {
+    return getDefaultProductsFilters();
+  }
+}
+function saveProductsFilters() {
+  try { localStorage.setItem(PRODUCTS_FILTERS_KEY, JSON.stringify(productsFilters)); } catch (e) {}
+}
+let productsFilters = loadProductsFilters();
+
 /**
  * Get products portal HTML
  */
@@ -125,16 +148,56 @@ function renderProductsList() {
     if (saved) searchInput.value = saved;
   }
   const searchTerm = (searchInput?.value || '').toLowerCase();
+  const families = getFamilies();
+  const statusLabelMap = {
+    all: 'All Statuses',
+    tender: 'Tender',
+    npi: 'NPI',
+    production: 'Production',
+    closed: 'Closed'
+  };
 
   const filtered = products.filter(p => {
+    const normalizedStatus = String(p.status || 'Tender').toLowerCase();
+    const normalizedScope = String(p.scope || 'overhaul').toLowerCase();
+
+    if (!productsFilters.showClosed && normalizedStatus === 'closed') return false;
+    if (productsFilters.status !== 'all' && normalizedStatus !== productsFilters.status) return false;
+    if (productsFilters.family !== 'all' && String(p.family || '') !== productsFilters.family) return false;
+    if (productsFilters.location !== 'all' && String(p.work_location || '') !== productsFilters.location) return false;
+    if (productsFilters.scope !== 'all' && normalizedScope !== productsFilters.scope) return false;
+
     if (!searchTerm) return true;
     return (p.name || '').toLowerCase().includes(searchTerm) ||
-           (p.part_number || '').toLowerCase().includes(searchTerm) ||
-           (p.customer || '').toLowerCase().includes(searchTerm);
+      (p.part_number || '').toLowerCase().includes(searchTerm) ||
+      (p.customer || '').toLowerCase().includes(searchTerm);
   });
+
+  const familyFilterOpts = '<option value="all" ' + (productsFilters.family === 'all' ? 'selected' : '') + '>All Families</option>' +
+    families.map(f => `<option value="${esc(f.id)}" ${productsFilters.family === f.id ? 'selected' : ''}>${esc(f.icon)} ${esc(f.label)}</option>`).join('');
+  const locationFilterOpts = ['all', 'Unit 2', 'Unit 3', 'Unit 6'].map(loc => {
+    const val = loc === 'all' ? 'all' : loc;
+    const label = loc === 'all' ? 'All Locations' : loc;
+    return `<option value="${esc(val)}" ${productsFilters.location === val ? 'selected' : ''}>${esc(label)}</option>`;
+  }).join('');
+  const scopeFilterOpts = ['all', 'overhaul', 'repair', 'assembly'].map(scope => {
+    const label = scope === 'all' ? 'All Scopes' : scope.charAt(0).toUpperCase() + scope.slice(1);
+    return `<option value="${esc(scope)}" ${productsFilters.scope === scope ? 'selected' : ''}>${esc(label)}</option>`;
+  }).join('');
+  const statusFilterOpts = Object.entries(statusLabelMap).map(([value, label]) =>
+    `<option value="${esc(value)}" ${productsFilters.status === value ? 'selected' : ''}>${esc(label)}</option>`
+  ).join('');
 
   const html = `
     <div class="products-table-wrap">
+      <div class="products-controls" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+        <select id="productsFilterFamily" class="search-input" data-action="products-filter-family">${familyFilterOpts}</select>
+        <select id="productsFilterLocation" class="search-input" data-action="products-filter-location">${locationFilterOpts}</select>
+        <select id="productsFilterScope" class="search-input" data-action="products-filter-scope">${scopeFilterOpts}</select>
+        <select id="productsFilterStatus" class="search-input" data-action="products-filter-status">${statusFilterOpts}</select>
+        <button class="btn ${productsFilters.showClosed ? 'btn-primary' : 'btn-ghost'} btn-sm" data-action="products-toggle-closed" title="Show or hide closed products">${productsFilters.showClosed ? 'Hide Closed' : 'Show Closed'}</button>
+        <button class="btn btn-ghost btn-sm" data-action="products-clear-filters" title="Clear product filters">Clear Filters</button>
+      </div>
       <table class="prod-tbl products-inline-table" style="table-layout:auto;width:100%">
         <colgroup>
           <col style="min-width:200px">
@@ -419,6 +482,20 @@ function setupProductsEventListeners() {
         await productsDeleteRow(actionEl.dataset.productId || '', actionEl.dataset.productName || '');
       }
 
+      if (action === 'products-toggle-closed') {
+        productsFilters.showClosed = !productsFilters.showClosed;
+        saveProductsFilters();
+        renderProductsList();
+        return;
+      }
+
+      if (action === 'products-clear-filters') {
+        productsFilters = getDefaultProductsFilters();
+        saveProductsFilters();
+        renderProductsList();
+        return;
+      }
+
       if (action === 'products-focus-add') {
         document.getElementById('pNew-name')?.focus();
       }
@@ -434,6 +511,39 @@ function setupProductsEventListeners() {
   document.getElementById('productSearch')?.addEventListener('input', (e) => {
     saveProductsSearch(e.target.value);
     renderProductsList();
+  });
+
+  root?.addEventListener('change', (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl || !root.contains(actionEl)) return;
+
+    const action = actionEl.dataset.action;
+    if (action === 'products-filter-family') {
+      productsFilters.family = actionEl.value || 'all';
+      saveProductsFilters();
+      renderProductsList();
+      return;
+    }
+    if (action === 'products-filter-location') {
+      productsFilters.location = actionEl.value || 'all';
+      saveProductsFilters();
+      renderProductsList();
+      return;
+    }
+    if (action === 'products-filter-scope') {
+      productsFilters.scope = actionEl.value || 'all';
+      saveProductsFilters();
+      renderProductsList();
+      return;
+    }
+    if (action === 'products-filter-status') {
+      productsFilters.status = actionEl.value || 'all';
+      if (productsFilters.status === 'closed') {
+        productsFilters.showClosed = true;
+      }
+      saveProductsFilters();
+      renderProductsList();
+    }
   });
 
   // Allow Enter key on new row inputs to trigger add

@@ -8,8 +8,23 @@ let meChartStart = null; // ISO month string (e.g., '2025-03')
 let meHolidayMonth = null; // Holiday planner month (independent from chart)
 let meChartInst = null;  // Chart.js instance
 let meSaveTimer = null;  // Debounce timer
+let meChartDirty = true; // Chart tab recalculates only when accessed
 window.mePendingRealTimeUpdate = false;  // Deferred real-time render waiting for blur
 window.mePendingRerender = false;        // Deferred post-save KPI re-render waiting for blur
+
+// ── Smart render: skips full re-render when on read-only chart tab ──
+window.meCapSmartRender = function() {
+  // Check PM context first (PM portal shares the same real-time handlers)
+  if (window.meCurrentDepartmentContext === 'PM' && typeof pmCapSmartRender === 'function') {
+    pmCapSmartRender();
+    return;
+  }
+  if (meTab === 'chart') {
+    meChartDirty = true;
+    return;
+  }
+  render();
+};
 
 // ── Entry point ────────────────────────────────────────────
 /**
@@ -62,6 +77,7 @@ window.renderMeCapacity = function() {
   `;
 
   // Draw chart and embedded heat map on initial render
+  meChartDirty = false;
   setTimeout(() => {
     if (meTab === 'chart') {
       meDrawChartNow();
@@ -81,6 +97,7 @@ window.meSetTab = function(tab) {
 
   if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart';
   meTab = tab;
+  if (tab === 'chart') meChartDirty = false;
 
   // Update nav button active states
   document.querySelectorAll('.me-nav-btn').forEach(btn => {
@@ -238,6 +255,11 @@ function meDebouncedSave() {
   clearTimeout(meSaveTimer);
   meSaveTimer = setTimeout(async () => {
     await meDataSave(false);
+    // Chart tab is read-only — mark dirty and skip re-render
+    if (meTab === 'chart') {
+      meChartDirty = true;
+      return;
+    }
     // Only re-render for KPI/sum updates if the user is not mid-edit.
     // If they are, defer the re-render until they blur out of the table.
     if (isEditingInlineCell()) {
@@ -248,10 +270,6 @@ function meDebouncedSave() {
     const body = document.getElementById('meBody');
     if (body) {
       body.innerHTML = meGetTabContent();
-      if (meTab === 'chart') {
-        meDrawChartNow();
-        meDrawHeatmapNow();
-      }
     }
   }, 900);
 }

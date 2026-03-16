@@ -692,14 +692,14 @@ window.meDataSubscribe = function() {
         if (!meDataState.team.some(t => t.id === normalizedTeam.id)) {
           meDataState.team.push(normalizedTeam);
           if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
-          render();
+          meCapSmartRender();
         }
       },
       onUpdate: () => { /* no-op — local state already up to date */ },
       onDelete: (deleted) => {
         meDataState.team = meDataState.team.filter(t => t.id !== deleted.id);
         if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
-        render();
+        meCapSmartRender();
       }
     },
     {
@@ -725,7 +725,7 @@ window.meDataSubscribe = function() {
             window.mePendingRealTimeUpdate = true;
             return;
           }
-          render();
+          meCapSmartRender();
         }
       },
       onUpdate: (updatedTask) => {
@@ -751,7 +751,7 @@ window.meDataSubscribe = function() {
             window.mePendingRealTimeUpdate = true;
             return;
           }
-          render();
+          meCapSmartRender();
           return;
         }
 
@@ -774,7 +774,7 @@ window.meDataSubscribe = function() {
           window.mePendingRealTimeUpdate = true;
           return;
         }
-        render();
+        meCapSmartRender();
       },
       onDelete: (deleted) => {
         meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
@@ -782,7 +782,7 @@ window.meDataSubscribe = function() {
           window.mePendingRealTimeUpdate = true;
           return;
         }
-        render();
+        meCapSmartRender();
       }
     },
     {
@@ -803,14 +803,14 @@ window.meDataSubscribe = function() {
         if (!meDataState.products.some(p => p.id === normalizedProduct.id)) {
           meDataState.products.push(normalizedProduct);
           if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
-          render();
+          meCapSmartRender();
         }
       },
       onUpdate: () => { /* no-op — local state already up to date */ },
       onDelete: (deleted) => {
         meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
         if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
-        render();
+        meCapSmartRender();
       }
     },
     {
@@ -831,7 +831,7 @@ window.meDataSubscribe = function() {
           meDataState.holidays.push(normalized);
         }
         if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
-        render();
+        meCapSmartRender();
       },
       onUpdate: () => { /* no-op — local state already up to date */ },
       onDelete: (deleted) => {
@@ -844,7 +844,7 @@ window.meDataSubscribe = function() {
           return true;
         });
         if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
-        render();
+        meCapSmartRender();
       }
     }
   ], 'me_all_channel');

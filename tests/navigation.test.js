@@ -382,6 +382,20 @@ describe('Navigation Module (navigation.js)', () => {
       expect(document.getElementById('mainContent').innerHTML).toContain('Feedback');
     });
 
+    test('should render hub when no active project exists', () => {
+      global.progId = 'missing-project';
+      global.currentSection = 'hub';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('Hub');
+    });
+
+    test('should fall back to projects dashboard when no active project exists', () => {
+      global.progId = 'missing-project';
+      global.currentSection = 'apqp';
+      render();
+      expect(document.getElementById('mainContent').innerHTML).toContain('Projects Dashboard');
+    });
+
     test('should render empty section shell for unsupported section ids', () => {
       global.currentSection = 'productmgmt';
       render();

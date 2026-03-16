@@ -342,9 +342,9 @@ function render() {
     }
     return;
   }
-  if (!prog()) { mc.innerHTML = renderProjects(); return; }
-
   if (currentSection === 'hub') { mc.innerHTML = renderHub(); return; }
+
+  if (!prog()) { mc.innerHTML = npi.dashboard.renderProjects(); return; }
 
   if (currentSection === 'project' || currentSection.startsWith('gate_')) {
     mc.innerHTML = typeof npi?.render === 'function'

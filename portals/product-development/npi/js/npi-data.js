@@ -529,7 +529,11 @@ npi.data.pfmea = {
     const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
     const mode = { id: crypto.randomUUID(), _type: 'mode', pfdId, mode: '', ctqIds: [], effects: [ef] }
     prog().pfmea.push(mode)
-    Promise.resolve().then(() => { npiRelSavePFMEAMode(mode); npiRelSavePFMEAEffect(mode.id, ef); npiRelSavePFMEACause(ef.id, ca) }).catch(err => console.error('[NPI] save PFMEA mode failed:', err))
+    Promise.resolve().then(async () => {
+      await npiRelSavePFMEAMode(mode)
+      await npiRelSavePFMEAEffect(mode.id, ef)
+      await npiRelSavePFMEACause(ef.id, ca)
+    }).catch(err => console.error('[NPI] save PFMEA mode failed:', err))
     npi.notify('render')
   },
   updMode(mi, f, v) { prog().pfmea[mi][f] = v; Promise.resolve().then(() => npiRelSavePFMEAMode(prog().pfmea[mi])).catch(err => console.error('[NPI] save PFMEA mode failed:', err)) },
@@ -547,7 +551,10 @@ npi.data.pfmea = {
     const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
     const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
     mode.effects.push(ef)
-    Promise.resolve().then(() => { npiRelSavePFMEAEffect(mode.id, ef); npiRelSavePFMEACause(ef.id, ca) }).catch(err => console.error('[NPI] save PFMEA effect failed:', err))
+    Promise.resolve().then(async () => {
+      await npiRelSavePFMEAEffect(mode.id, ef)
+      await npiRelSavePFMEACause(ef.id, ca)
+    }).catch(err => console.error('[NPI] save PFMEA effect failed:', err))
     npi.notify('render')
   },
   updEffect(mi, ei, f, v, saveNow = true) {

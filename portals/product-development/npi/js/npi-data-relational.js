@@ -533,9 +533,17 @@ window.npiRelSavePFMEACause = async function(effectId, cause) {
   const act = cause.action || {};
   try {
     let effObj = null;
+    let modeObj = null;
     for (const mode of (prog().pfmea || [])) {
       effObj = (mode.effects || []).find(e => e.id === effectId);
-      if (effObj) break;
+      if (effObj) {
+        modeObj = mode;
+        break;
+      }
+    }
+    if (effObj && modeObj) {
+      // Ensure parent row exists before inserting child row (effect_id FK).
+      await window.npiRelSavePFMEAEffect(modeObj.id, effObj);
     }
     const { error } = await supa.from('npi_pfmea_causes').upsert({
       id: cause.id,
