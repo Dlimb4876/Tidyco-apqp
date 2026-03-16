@@ -6,6 +6,8 @@ let pmTab = 'chart';
 let pmHolidayMonth = null;
 let pmChartStart = null;
 let pmSaveTimer = null;
+window.pmPendingRealTimeUpdate = false;  // Deferred real-time render waiting for blur
+window.pmPendingRerender = false;        // Deferred post-save re-render waiting for blur
 
 function pmFilterByDepartment(list, department, fallback) {
   if (typeof meFilterByDepartment === 'function') {
@@ -187,6 +189,11 @@ window.pmDebouncedSave = function() {
   clearTimeout(pmSaveTimer);
   pmSaveTimer = setTimeout(async () => {
     await pmOnSave(false);
+    // Only refresh if user is not mid-edit. If they are, defer until blur.
+    if (isEditingInlineCell()) {
+      window.pmPendingRerender = true;
+      return;
+    }
     pmRefreshCurrentTab();
   }, 900);
 };

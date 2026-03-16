@@ -53,6 +53,7 @@ const NPI_PROJECTS_CHANNEL = 'npi_projects_channel'
 const NPI_TABLES_CHANNEL_PREFIX = 'npi_tables_'
 let npiLastRealtimeUpdateAt = 0
 let npiReloadTimer = null
+window.npiPendingRealTimeUpdate = false // Deferred real-time render waiting for blur
 
 function formatRealtimeTime(dt) {
   return dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -98,6 +99,10 @@ function npiScheduleReload() {
     if (!progId || typeof npiRelLoad !== 'function') return
     npiRelLoad(progId).then(() => {
       npiMarkRealtimeUpdate()
+      if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+        window.npiPendingRealTimeUpdate = true
+        return
+      }
       render()
     })
   }, 600)
@@ -120,12 +125,24 @@ function npiDataInit() {
     onInsert: (row) => {
       if (!upsertRealtimeProject(row)) return
       npiMarkRealtimeUpdate()
-      if (shouldRenderForProject(row.prog_id)) render()
+      if (shouldRenderForProject(row.prog_id)) {
+        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+          window.npiPendingRealTimeUpdate = true
+        } else {
+          render()
+        }
+      }
     },
     onUpdate: (row) => {
       if (!upsertRealtimeProject(row)) return
       npiMarkRealtimeUpdate()
-      if (shouldRenderForProject(row.prog_id)) render()
+      if (shouldRenderForProject(row.prog_id)) {
+        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+          window.npiPendingRealTimeUpdate = true
+        } else {
+          render()
+        }
+      }
     },
     onDelete: (row) => {
       if (!row || !row.prog_id) return
@@ -135,7 +152,13 @@ function npiDataInit() {
       db.projects.splice(idx, 1)
       npiMarkRealtimeUpdate()
       if (wasCurrentProject) progId = db.projects[0]?.id || null
-      if (currentSection === 'projects' || wasCurrentProject) render()
+      if (currentSection === 'projects' || wasCurrentProject) {
+        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+          window.npiPendingRealTimeUpdate = true
+        } else {
+          render()
+        }
+      }
     }
   })
 

@@ -8,6 +8,7 @@ let prodState = window.prodState || {
   activeProductId: null
 };
 window.prodState = prodState;
+window.prodPendingRealTimeUpdate = false; // Deferred real-time render waiting for blur
 
 // ── Date formatting helpers ─────────────────────────────
 function formatDisplayDate(isoDate) {
@@ -142,7 +143,7 @@ window.prodDataUpdateProduct = async function(idx, field, value) {
 
     Object.assign(product, updates);
     prodState.products.sort((a, b) => a.name.localeCompare(b.name));
-    render();
+    if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; } else { render(); }
     return true;
   } catch (err) {
     console.error('Error updating product:', err);
@@ -241,7 +242,7 @@ window.prodDataUpdateBatch = async function(idx, field, value) {
     if (error) throw error;
 
     Object.assign(batch, updates);
-    render();
+    if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; } else { render(); }
     return true;
   } catch (err) {
     console.error('Error updating batch:', err);
@@ -322,7 +323,7 @@ window.prodDataSubscribe = function() {
       if (!prodState || !Array.isArray(prodState.batches)) return;
       if (!prodState.batches.some(b => b.id === newBatch.id)) {
         prodState.batches.push(newBatch);
-        render();
+        if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; } else { render(); }
       }
     },
     onUpdate: (updated) => {
@@ -330,13 +331,13 @@ window.prodDataSubscribe = function() {
       const idx = prodState.batches.findIndex(b => b.id === updated.id);
       if (idx >= 0) {
         prodState.batches[idx] = updated;
-        render();
+        if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; } else { render(); }
       }
     },
     onDelete: (deleted) => {
       if (!prodState || !Array.isArray(prodState.batches)) return;
       prodState.batches = prodState.batches.filter(b => b.id !== deleted.id);
-      render();
+      if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; } else { render(); }
     }
   });
 
@@ -346,7 +347,7 @@ window.prodDataSubscribe = function() {
       if (!prodState || !Array.isArray(prodState.products)) return;
       if (!prodState.products.some(p => p.id === newProduct.id)) {
         prodState.products.push(newProduct);
-        render();
+        if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; } else { render(); }
       }
     },
     onUpdate: (updated) => {
@@ -354,13 +355,13 @@ window.prodDataSubscribe = function() {
       const idx = prodState.products.findIndex(p => p.id === updated.id);
       if (idx >= 0) {
         prodState.products[idx] = updated;
-        render();
+        if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; } else { render(); }
       }
     },
     onDelete: (deleted) => {
       if (!prodState || !Array.isArray(prodState.products)) return;
       prodState.products = prodState.products.filter(p => p.id !== deleted.id);
-      render();
+      if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; } else { render(); }
     }
   });
 };

@@ -20,6 +20,18 @@ function setOperationsTab(tab) {
 	render();
 }
 
+/**
+ * Flush deferred realtime updates for the Operations portal.
+ * Calls render() since operations has no auto-sync feedback loop risk.
+ */
+function opsRefreshCurrentTab() {
+	if (currentSection !== 'operations') return;
+	if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return;
+	if (!window.opsPendingRealTimeUpdate) return;
+	window.opsPendingRealTimeUpdate = false;
+	render();
+}
+
 function setupOpsPulseFeed() {
 	const container = document.getElementById('ops-dashboard');
 	if (!container || opsPulseFeedContainer === container) return;
@@ -34,6 +46,15 @@ function setupOpsPulseFeed() {
 			const dest = el.dataset.dest;
 			if (dest) navigate(dest);
 		}
+	});
+
+	container.addEventListener('focusout', (evt) => {
+		const nextFocus = evt.relatedTarget;
+		if (nextFocus && nextFocus.closest('table')) return;
+		if (!window.opsPendingRealTimeUpdate) return;
+		setTimeout(function() {
+			opsRefreshCurrentTab();
+		}, 0);
 	});
 }
 

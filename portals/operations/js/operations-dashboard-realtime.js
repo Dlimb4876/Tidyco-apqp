@@ -13,7 +13,13 @@ function opsScheduleRefresh(key, refreshFn, delayMs = 120) {
 		} catch (err) {
 			console.warn('Operations refresh failed for', key, err && err.message ? err.message : err);
 		} finally {
-			if (currentSection === 'operations') render();
+			if (currentSection === 'operations') {
+				if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+					window.opsPendingRealTimeUpdate = true;
+				} else {
+					render();
+				}
+			}
 		}
 	}, delayMs);
 }

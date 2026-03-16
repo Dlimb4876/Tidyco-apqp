@@ -14,6 +14,23 @@ function setProdCapTab(tab) {
   render();
 }
 
+/**
+ * Refresh only the #pcBody content without a full render().
+ * Used by the focusout flush in capacity-events.js to avoid feedback loops.
+ */
+function prodCapRefreshCurrentTab() {
+  if (currentSection !== 'capacity' || capacityTab !== 'production') return;
+  const body = document.getElementById('pcBody');
+  if (!body) return;
+  let content = '';
+  if      (prodCapTab === 'dashboard')    content = typeof renderProdCapDashboard === 'function' ? renderProdCapDashboard() : '';
+  else if (prodCapTab === 'by-work-area') content = typeof renderProdCapWorkArea  === 'function' ? renderProdCapWorkArea()  : '';
+  else if (prodCapTab === 'settings')     content = typeof renderProdCapSettings  === 'function' ? renderProdCapSettings()  : '';
+  else if (prodCapTab === 'detail')       content = typeof renderProdCapDetail    === 'function' ? renderProdCapDetail()    : '';
+  else                                    content = typeof renderProdCapDashboard === 'function' ? renderProdCapDashboard() : '';
+  body.innerHTML = content;
+}
+
 function renderProdCapacity() {
   // Body content
   let body = '';

@@ -356,30 +356,45 @@ window.capacityEvents._onKeydown = function(evt) {
 // ── Focus Guard: Deferred Re-render Flush ──────────────────
 /**
  * When user leaves an inline-editable table cell, flush any pending re-renders
- * that were deferred by the focus guard logic in me-capacity.js and me-data.js
+ * that were deferred by the focus guard logic in me-capacity.js, pm-capacity.js,
+ * and me-data.js
  */
 window.capacityEvents._onFocusOut = function(evt) {
   const nextFocus = evt.relatedTarget
   // If moving to next cell in same table, no need to flush
   if (nextFocus && nextFocus.closest('table')) return
   // No pending re-renders to flush
-  if (!window.mePendingRealTimeUpdate && !window.mePendingRerender) return
+  const hasPending = window.mePendingRealTimeUpdate || window.mePendingRerender ||
+    window.pmPendingRealTimeUpdate || window.pmPendingRerender ||
+    window.prodCapPendingRealTimeUpdate
+  if (!hasPending) return
 
   // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
   setTimeout(function() {
     // Re-check if still editing (in case user moved to a new cell)
     if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return
 
-    // Flush pending re-render using tab-level refresh only (not full render()).
-    // Using render() here would call renderMeCapacity() → meDataAutoSyncProductionProducts()
-    // which schedules another meDataSave, creating a feedback loop that constantly
-    // redraws the capacity chart.
-    if (window.mePendingRealTimeUpdate || window.mePendingRerender) {
-      window.mePendingRealTimeUpdate = false
-      window.mePendingRerender = false
-      if (typeof meRefreshCurrentTab === 'function') {
-        meRefreshCurrentTab()
-      }
+    const hasME = window.mePendingRealTimeUpdate || window.mePendingRerender
+    const hasPM = window.pmPendingRealTimeUpdate || window.pmPendingRerender
+    const hasProdCap = window.prodCapPendingRealTimeUpdate
+
+    // Clear all flags
+    window.mePendingRealTimeUpdate = false
+    window.mePendingRerender = false
+    window.pmPendingRealTimeUpdate = false
+    window.pmPendingRerender = false
+    window.prodCapPendingRealTimeUpdate = false
+
+    // Determine which portal is active and call its tab-level refresh.
+    // Using render() would trigger feedback loops via auto-sync in some portals.
+    // Route by active capacityTab — not by meCurrentDepartmentContext — to avoid
+    // ambiguity when both ME and PM flags are set simultaneously.
+    if (hasProdCap) {
+      if (typeof prodCapRefreshCurrentTab === 'function') prodCapRefreshCurrentTab()
+    } else if (hasPM || (hasME && typeof capacityTab !== 'undefined' && capacityTab === 'projects')) {
+      if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab()
+    } else if (hasME) {
+      if (typeof meRefreshCurrentTab === 'function') meRefreshCurrentTab()
     }
   }, 0)
 }

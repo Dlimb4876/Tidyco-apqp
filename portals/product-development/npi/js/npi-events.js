@@ -27,6 +27,7 @@ npi.events.setup = function() {
   document.addEventListener('click', npi.events._onClick)
   document.addEventListener('change', npi.events._onChange)
   document.addEventListener('input', npi.events._onInput)
+  document.addEventListener('focusout', npi.events._onFocusOut)
   _npiEventsContainer = container
 }
 
@@ -35,7 +36,21 @@ npi.events.teardown = function() {
   document.removeEventListener('click', npi.events._onClick)
   document.removeEventListener('change', npi.events._onChange)
   document.removeEventListener('input', npi.events._onInput)
+  document.removeEventListener('focusout', npi.events._onFocusOut)
   _npiEventsContainer = null
+}
+
+npi.events._onFocusOut = function(evt) {
+  const nextFocus = evt.relatedTarget
+  if (nextFocus && nextFocus.closest('table')) return
+  if (!window.npiPendingRealTimeUpdate) return
+  setTimeout(function() {
+    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return
+    if (window.npiPendingRealTimeUpdate) {
+      window.npiPendingRealTimeUpdate = false
+      render()
+    }
+  }, 0)
 }
 
 npi.events._onClick = function(evt) {

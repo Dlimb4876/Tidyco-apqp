@@ -13,6 +13,7 @@ let opsForecastSortCol = '';
 let opsForecastSortDir = 'asc';
 let opsForecastFilterStatus = '';
 let opsForecastFilterText = '';
+window.opsPendingRealTimeUpdate = false; // Deferred real-time render waiting for blur
 
 function opsForecastDomKey(id) {
 	return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_');

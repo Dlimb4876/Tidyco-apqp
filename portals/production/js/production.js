@@ -3,6 +3,24 @@
 
 let productionPortalDelegationContainer = null;
 
+/**
+ * Refresh only the #prodTabBody content without a full render().
+ * Used by the focusout flush to avoid re-mounting the full portal.
+ */
+function prodRefreshCurrentTab() {
+  if (currentSection !== 'production') return;
+  if (isEditingInlineCell()) return;
+  if (!window.prodPendingRealTimeUpdate) return;
+  window.prodPendingRealTimeUpdate = false;
+  const body = document.getElementById('prodTabBody');
+  if (!body) { render(); return; }
+  let content = '';
+  if      (productionTab === 'scheduling')  content = typeof renderScheduling    === 'function' ? renderScheduling()    : '';
+  else if (productionTab === 'by-product')  content = typeof renderPlanByProduct === 'function' ? renderPlanByProduct() : '';
+  else if (productionTab === 'by-unit')     content = typeof renderPlanByUnit    === 'function' ? renderPlanByUnit()    : '';
+  body.innerHTML = content;
+}
+
 function setProductionTab(tab) {
   const prevTab = productionTab;
   productionTab = tab;
@@ -34,19 +52,19 @@ function renderProduction() {
   if (productionTab === 'products') {
     setProductionTab('scheduling');
     setTimeout(setupProductionPortalDelegation, 0);
-    return `<div id="production-portal-container">${nav}${renderScheduling()}</div>`;
+    return `<div id="production-portal-container">${nav}<div id="prodTabBody">${renderScheduling()}</div></div>`;
   }
   if (productionTab === 'scheduling') {
     setTimeout(setupProductionPortalDelegation, 0);
-    return `<div id="production-portal-container">${nav}${renderScheduling()}</div>`;
+    return `<div id="production-portal-container">${nav}<div id="prodTabBody">${renderScheduling()}</div></div>`;
   }
   if (productionTab === 'by-product') {
     setTimeout(setupProductionPortalDelegation, 0);
-    return `<div id="production-portal-container">${nav}${renderPlanByProduct()}</div>`;
+    return `<div id="production-portal-container">${nav}<div id="prodTabBody">${renderPlanByProduct()}</div></div>`;
   }
   if (productionTab === 'by-unit') {
     setTimeout(setupProductionPortalDelegation, 0);
-    return `<div id="production-portal-container">${nav}${renderPlanByUnit()}</div>`;
+    return `<div id="production-portal-container">${nav}<div id="prodTabBody">${renderPlanByUnit()}</div></div>`;
   }
 
   // Root hub view
@@ -124,5 +142,14 @@ function setupProductionPortalDelegation() {
       const key = actionEl.dataset.guideKey;
       if (key && typeof showGuide === 'function') showGuide(key);
     }
+  });
+
+  container.addEventListener('focusout', (evt) => {
+    const nextFocus = evt.relatedTarget;
+    if (nextFocus && nextFocus.closest('table')) return;
+    if (!window.prodPendingRealTimeUpdate) return;
+    setTimeout(function() {
+      prodRefreshCurrentTab();
+    }, 0);
   });
 }
