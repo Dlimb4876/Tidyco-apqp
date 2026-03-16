@@ -72,6 +72,7 @@ function prodCapSubscribeUtilization() {
         const newValue = parseFloat(updated.setting_value);
         if (!isNaN(newValue) && newValue >= 0 && newValue <= 1) {
           prodCapUtilizationFactor = newValue;
+          if (isEditingInlineCell()) { window.prodCapPendingRealTimeUpdate = true; return; }
           render();
         }
       }
@@ -94,6 +95,7 @@ function prodCapSubscribeData() {
       if (!prodCapState.capacityRecords.find(r => r.id === row.id)) {
         prodCapState.capacityRecords.push(row);
         if (currentSection === 'capacity' && capacityTab === 'production') {
+          if (isEditingInlineCell()) { window.prodCapPendingRealTimeUpdate = true; return; }
           render();
         }
       }
@@ -103,6 +105,7 @@ function prodCapSubscribeData() {
       if (idx >= 0) {
         prodCapState.capacityRecords[idx] = row;
         if (currentSection === 'capacity' && capacityTab === 'production') {
+          if (isEditingInlineCell()) { window.prodCapPendingRealTimeUpdate = true; return; }
           render();
         }
       }
@@ -110,6 +113,7 @@ function prodCapSubscribeData() {
     onDelete: (row) => {
       prodCapState.capacityRecords = prodCapState.capacityRecords.filter(r => r.id !== row.id);
       if (currentSection === 'capacity' && capacityTab === 'production') {
+        if (isEditingInlineCell()) { window.prodCapPendingRealTimeUpdate = true; return; }
         render();
       }
     }

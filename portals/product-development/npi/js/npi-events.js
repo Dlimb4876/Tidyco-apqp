@@ -27,6 +27,7 @@ npi.events.setup = function() {
   document.addEventListener('click', npi.events._onClick)
   document.addEventListener('change', npi.events._onChange)
   document.addEventListener('input', npi.events._onInput)
+  container.addEventListener('focusout', npi.events._onFocusOut)
   _npiEventsContainer = container
 }
 
@@ -35,6 +36,7 @@ npi.events.teardown = function() {
   document.removeEventListener('click', npi.events._onClick)
   document.removeEventListener('change', npi.events._onChange)
   document.removeEventListener('input', npi.events._onInput)
+  _npiEventsContainer.removeEventListener('focusout', npi.events._onFocusOut)
   _npiEventsContainer = null
 }
 
@@ -249,4 +251,20 @@ npi.events._onInput = function(evt) {
 
   default: break
   }
+}
+
+// ── Focus Guard: Deferred Re-render Flush ─────────────────────────────
+// When user leaves an inline-editable NPI table cell, flush any pending
+// re-renders that were deferred by the focus guard in npi.js.
+npi.events._onFocusOut = function(evt) {
+  const nextFocus = evt.relatedTarget
+  if (nextFocus && nextFocus.closest('table')) return
+  if (!window.npiPendingRealTimeUpdate) return
+  setTimeout(function() {
+    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return
+    if (window.npiPendingRealTimeUpdate) {
+      window.npiPendingRealTimeUpdate = false
+      render()
+    }
+  }, 0)
 }

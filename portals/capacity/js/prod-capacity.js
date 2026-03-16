@@ -70,3 +70,20 @@ function renderProdCapacity() {
 
   return html;
 }
+
+// ── Tab-level refresh (DOM body swap only — avoids full render() feedback loop) ──
+window.prodCapRefreshCurrentTab = function() {
+  const body = document.getElementById('pcBody');
+  if (!body) return;
+  let content = '';
+  if      (prodCapTab === 'dashboard')    content = renderProdCapDashboard();
+  else if (prodCapTab === 'by-work-area') content = renderProdCapWorkArea();
+  else if (prodCapTab === 'settings')     content = renderProdCapSettings();
+  else if (prodCapTab === 'detail')       content = renderProdCapDetail();
+  else                                    content = renderProdCapDashboard();
+  body.innerHTML = content;
+  setTimeout(() => {
+    if (prodCapTab === 'dashboard')    prodCapDrawDashChart();
+    if (prodCapTab === 'by-work-area') prodCapDrawWorkAreaChart();
+  }, 80);
+};

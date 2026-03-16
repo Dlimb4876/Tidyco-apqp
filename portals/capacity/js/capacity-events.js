@@ -356,7 +356,8 @@ window.capacityEvents._onKeydown = function(evt) {
 // ── Focus Guard: Deferred Re-render Flush ──────────────────
 /**
  * When user leaves an inline-editable table cell, flush any pending re-renders
- * that were deferred by the focus guard logic in me-capacity.js and me-data.js
+ * that were deferred by the focus guard logic in me-capacity.js, me-data.js,
+ * pm-capacity.js, and prod-capacity-data.js
  */
 window.capacityEvents._onFocusOut = function(evt) {
   const nextFocus = evt.relatedTarget
@@ -367,25 +368,50 @@ window.capacityEvents._onFocusOut = function(evt) {
     window.meCurrentDepartmentContext === 'PM'
   // If moving to next cell in same table, no need to flush
   if (nextFocus && nextFocus.closest('table')) return
-  // No pending re-renders to flush
-  if (!window.mePendingRealTimeUpdate && !window.mePendingRerender) return
+  // No pending re-renders to flush across any capacity portal
+  if (!window.mePendingRealTimeUpdate && !window.mePendingRerender &&
+      !window.pmPendingRealTimeUpdate && !window.pmPendingRerender &&
+      !window.prodCapPendingRealTimeUpdate) return
 
   // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
   setTimeout(function() {
     // Re-check if still editing (in case user moved to a new cell)
     if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return
 
-    // Flush pending re-render using tab-level refresh only (not full render()).
+    // ── Production Capacity flush ──────────────────────────
+    if (window.prodCapPendingRealTimeUpdate) {
+      window.prodCapPendingRealTimeUpdate = false
+      if (capacityTab === 'production' && typeof prodCapRefreshCurrentTab === 'function') {
+        prodCapRefreshCurrentTab()
+      }
+      return
+    }
+
+    // ── PM Capacity flush ──────────────────────────────────
+    if (window.pmPendingRealTimeUpdate || window.pmPendingRerender) {
+      window.pmPendingRealTimeUpdate = false
+      window.pmPendingRerender = false
+      var activePMBtn = document.querySelector('.pm-shell .me-nav-btn.active')
+      if (activePMBtn && activePMBtn.getAttribute('data-tab') === 'chart') {
+        if (typeof pmCapSmartRender === 'function') pmCapSmartRender()
+        return
+      }
+      if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab()
+      return
+    }
+
+    // ── ME Capacity flush ──────────────────────────────────
     // Using render() here would call renderMeCapacity() → meDataAutoSyncProductionProducts()
     // which schedules another meDataSave, creating a feedback loop that constantly
     // redraws the capacity chart.
     if (window.mePendingRealTimeUpdate || window.mePendingRerender) {
       window.mePendingRealTimeUpdate = false
       window.mePendingRerender = false
-      // Chart tab is read-only — mark dirty, recalculate when user navigates to it
+      // Chart tab is read-only — mark dirty, recalculate when user navigates to it.
+      // Only query .me-shell here; PM has already been handled above.
       var activeNavBtn = contextRoot
         ? contextRoot.querySelector('.me-nav-btn.active')
-        : document.querySelector('.pm-shell .me-nav-btn.active, .me-shell .me-nav-btn.active')
+        : document.querySelector('.me-shell .me-nav-btn.active')
       if (activeNavBtn && activeNavBtn.getAttribute('data-tab') === 'chart') {
         if (isPMContext && typeof pmCapSmartRender === 'function') pmCapSmartRender()
         else if (typeof meCapSmartRender === 'function') meCapSmartRender()
