@@ -16,6 +16,7 @@ let operationsTab = 'overview'; // overview|flow|risk|people|actions|forecast
 let npiTab = 'all'; // 'all' | family id — active tab on the NPI project selection screen
 let pfmeaRpnFilter = 'all'; // all|high|r1_49|r50_99|r100_199|r200_plus
 let pfmeaView = 'worksheet'; // worksheet|history
+let trackerSubAsmFilter = 'all'; // all|root|<sub-assembly-id>
 let prodPlanMonthOffset = 0; // Month offset from current month
 let meStartOffset = 0; // Months from today
 let prodCapMonthOffset = 0; // Production capacity month offset (perpetual rolling window)

@@ -196,12 +196,22 @@ function opsRenderForecastView(metrics) {
 		? window.opsForecastProbabilityBandFromPct(editingRow?.probability_pct ?? 0)
 		: ((editingRow?.probability_pct ?? 0) <= 33 ? 'low' : (editingRow?.probability_pct ?? 0) <= 66 ? 'medium' : 'high');
 
+	const forecastMonthLabel = typeof prodCapGet24MonthKeys === 'function' && typeof prodCapMonthLabelFull === 'function'
+		? prodCapMonthLabelFull(prodCapGet24MonthKeys()[0])
+		: '';
+
 	return `
 		<div class="ops-shell">
 			<section class="ops-panel">
 				<div class="ops-panel-head">
 					<h3>Production Capacity Forecast (24 Months)</h3>
 					<span>${esc(modeText)}</span>
+				</div>
+				<div class="pc-window-controls">
+					<button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('prev')" title="View previous month">← Previous</button>
+					<div class="pc-window-label">${forecastMonthLabel}</div>
+					<button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('next')" title="View next month">Next →</button>
+					${typeof prodCapMonthOffset !== 'undefined' && prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" onclick="prodCapResetMonthOffset()" title="Reset to current month">Reset</button>` : ''}
 				</div>
 				${forecast.error ? `<div class="ops-empty-note">Forecast sync warning: ${esc(forecast.error)}</div>` : ''}
 				<div class="ops-metrics-grid">

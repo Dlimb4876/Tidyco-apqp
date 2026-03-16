@@ -328,29 +328,34 @@ npi.dashboard.renderNpiSlimCard = function(product, project) {
   let pipsHtml = ''
   let gateScopeBadge = ''
   if (project) {
-    const gates = project.gates || []
-    const curGate = gates.findIndex(g => !npi.gate.gateAllSigned(g))
-    pipsHtml = `<div class="proj-card-gate" style="margin-top:6px">` +
-      GATE_DEFS.map((g, i) => {
-        const gd  = gates[i]
-        const cls = gd && npi.gate.gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : ''
-        return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`
-      }).join('') + `</div>`
+    if (project.parentId) {
+      pipsHtml = `<div style="margin-top:6px;font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace">Root-managed gates</div>`
+      gateScopeBadge = `<div style="margin-top:6px;font-size:10px;font-family:'IBM Plex Mono',monospace;padding:3px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);display:inline-flex;gap:6px;align-items:center">Sub-assembly · APQP + BOM</div>`
+    } else {
+      const gates = project.gates || []
+      const curGate = gates.findIndex(g => !npi.gate.gateAllSigned(g))
+      pipsHtml = `<div class="proj-card-gate" style="margin-top:6px">` +
+        GATE_DEFS.map((g, i) => {
+          const gd  = gates[i]
+          const cls = gd && npi.gate.gateAllSigned(gd) ? 'done' : i === curGate ? 'active' : ''
+          return `<div class="proj-gate-pip ${cls}" title="Gate ${g.num}: ${g.name}"></div>`
+        }).join('') + `</div>`
 
-    const scoped = !!project.gate_selections
-    const locked = !!project.gate_selection_locked
-    const selectedTotal = GATE_DEFS.reduce((sum, g) => sum + getProjectGateSelection(project.id, g.num).length, 0)
-    const totalQuestions = GATE_DEFS.reduce((sum, g) => sum + getDefaultGateSelection(g.num).length, 0)
-    const perGate = GATE_DEFS.map(g => {
-      const sel = getProjectGateSelection(project.id, g.num).length
-      const tot = getDefaultGateSelection(g.num).length
-      return `G${g.num} ${sel}/${tot}`
-    }).join(' · ')
-    const label = locked ? 'Scope Locked' : scoped ? 'Scope Editable' : 'Scope Default'
-    const border = locked ? 'var(--green-mid)' : scoped ? 'var(--blue)' : 'var(--line)'
-    const text = locked ? 'var(--green)' : scoped ? 'var(--blue)' : 'var(--muted)'
+      const scoped = !!project.gate_selections
+      const locked = !!project.gate_selection_locked
+      const selectedTotal = GATE_DEFS.reduce((sum, g) => sum + getProjectGateSelection(project.id, g.num).length, 0)
+      const totalQuestions = GATE_DEFS.reduce((sum, g) => sum + getDefaultGateSelection(g.num).length, 0)
+      const perGate = GATE_DEFS.map(g => {
+        const sel = getProjectGateSelection(project.id, g.num).length
+        const tot = getDefaultGateSelection(g.num).length
+        return `G${g.num} ${sel}/${tot}`
+      }).join(' · ')
+      const label = locked ? 'Scope Locked' : scoped ? 'Scope Editable' : 'Scope Default'
+      const border = locked ? 'var(--green-mid)' : scoped ? 'var(--blue)' : 'var(--line)'
+      const text = locked ? 'var(--green)' : scoped ? 'var(--blue)' : 'var(--muted)'
 
-    gateScopeBadge = `<div title="${esc(perGate)}" style="margin-top:6px;font-size:10px;font-family:'IBM Plex Mono',monospace;padding:3px 7px;border-radius:999px;border:1px solid ${border};color:${text};display:inline-flex;gap:6px;align-items:center">${label} · ${selectedTotal}/${totalQuestions}</div>`
+      gateScopeBadge = `<div title="${esc(perGate)}" style="margin-top:6px;font-size:10px;font-family:'IBM Plex Mono',monospace;padding:3px 7px;border-radius:999px;border:1px solid ${border};color:${text};display:inline-flex;gap:6px;align-items:center">${label} · ${selectedTotal}/${totalQuestions}</div>`
+    }
   }
   const hasHighRPN = project && (project.pfmea || []).some(r => npi.pfmea.calcRPN(r) >= RPN_HIGH)
   const rpnBadge = hasHighRPN ? `<div class="npi-slim-rpn-badge">⚠ High RPN</div>` : ''
@@ -384,6 +389,17 @@ npi.dashboard.renderDashboard = function() {
   const gantt      = p.gantt || []
   const timingTotal  = gantt.length
   const timingFilled = gantt.filter(r => r.weeks && r.weeks.some(w => w > 0)).length
+  const parentProg = p.parentId ? db.projects.find(x => x.id === p.parentId) : null
+
+  if (parentProg) {
+    const childBomItems = Object.keys(BOM_TYPES).reduce((n, k) => n + (p.bom[k] || []).length, 0)
+    const apqpSectionsDone = ['ctq', 'pfd', 'pfmea', 'cp'].filter(k => (p[k] || []).length > 0).length
+    const apqpPct = Math.round((apqpSectionsDone / 4) * 100)
+    const linkedInParent = (parentProg.subAssemblies || []).find(x => x.id === p.id)
+    const linkedKit = linkedInParent ? (parentProg.bom.kits || []).find(k => k.id === linkedInParent.kitId) : null
+
+    return `<div class="mc-shell"><div class="dash-hero"><div class="hero-left"><div class="eyebrow">SUB-ASSEMBLY WORKSPACE</div><div class="dash-prog-name">${esc(p.name)}</div><div class="hero-sub">APQP and BoM only. Gates and project management are controlled in root project ${esc(parentProg.name)}.</div></div><div class="hero-right"><button class="btn btn-ghost" onclick="npi.nav.openProjectById('${parentProg.id}')">← Open Root Project</button><button class="btn btn-primary" onclick="npi.nav.navigate('apqp')">Open APQP</button></div></div><div class="dash-body"><section class="layout"><div class="panel stack"><div class="stack-card"><h3>Sub-assembly Progress</h3><div class="dash-prog-meta"><span>📐 APQP tools: ${apqpPct}%</span><span>📦 BoM items: ${childBomItems}</span><span>🧩 Root kit: ${linkedKit ? esc(linkedKit.name || 'Linked') : 'Missing'}</span></div></div><div class="stack-card muted"><h3>Root-managed controls</h3><div class="chips"><button onclick="npi.nav.openParentSection('project')">Gate and PM Dashboard</button><button onclick="npi.nav.openParentSection('actions')">Root Actions</button><button onclick="npi.nav.openParentSection('risks')">Root Risks</button></div></div></div><div class="panel stack"><div class="stack-card"><h3>Quick Launch</h3><div class="chips"><button onclick="npi.nav.navigate('apqp')">📐 APQP</button><button onclick="npi.nav.navigate('bom')">📦 BOM</button></div></div></div></section></div></div>`
+  }
 
   let alerts = ''
   if (overdueAct > 0) alerts += `<div class="alert-item alert-red">🔴 <strong>${overdueAct} overdue action${overdueAct !== 1 ? 's' : ''}</strong> — <a href="#" onclick="npi.nav.navigate('actions');return false" style="color:inherit;text-decoration:underline">View Actions →</a></div>`
@@ -427,35 +443,28 @@ npi.dashboard.renderDashboard = function() {
     const cards = p.subAssemblies.map((link, li) => {
       const sp = db.projects.find(x => x.id === link.id)
       if (!sp) return ''
-      const sg        = sp.gates || []
-      const sgDone    = sg.filter(g => g.signed).length
-      const sgTotal   = sg.length || 6
-      const curGateSA = sg.findIndex(g => !g.signed)
-      const gLabel    = curGateSA < 0 ? '✓ Complete' : `Gate ${curGateSA}`
-      const gatePct   = Math.round(sgDone / sgTotal * 100)
-      const saOpen    = (sp.actions || []).filter(a => a.status !== 'Closed').length
-      const saOverdue = (sp.actions || []).filter(a => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()).length
-      const saRisks   = (sp.risks || []).filter(r => r.status !== 'Closed').length
-      const saHighR   = (sp.risks || []).filter(r => r.lik * r.imp >= 12 && r.status !== 'Closed').length
-      const saHighRPN = (sp.pfmea || []).filter(r => npi.pfmea.calcRPN(r) >= RPN_HIGH).length
+      const apqpSectionsDone = ['ctq', 'pfd', 'pfmea', 'cp'].filter(k => (sp[k] || []).length > 0).length
+      const apqpPct = Math.round((apqpSectionsDone / 4) * 100)
+      const bomItemCount = Object.keys(BOM_TYPES).reduce((sum, k) => sum + ((sp.bom && sp.bom[k]) ? sp.bom[k].length : 0), 0)
+      const linkedKit = (p.bom.kits || []).find(k => k.id === link.kitId)
       return `<div class="sub-asm-card" onclick="npi.nav.openProjectById('${sp.id}')">
         <div class="sub-asm-card-head">
           <span class="sub-asm-name">${esc(sp.name)}</span>
-          <button class="del-btn" style="font-size:10px" onclick="npi.nav.stopEvent(event);npi.dashboard.unlinkSubAsm(${li})">× Unlink</button>
+          <button class="del-btn" style="font-size:10px" onclick="npi.nav.stopEvent(event);npi.dashboard.deleteSubAsm(${li})">× Delete</button>
         </div>
         ${sp.unit ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px">🚂 ${esc(sp.unit)}</div>` : ''}
         <div class="sub-asm-stats">
-          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saOpen > 0 ? 'var(--red)' : 'var(--green)'}">${saOpen}</span><span class="sub-asm-stat-lbl">Actions${saOverdue > 0 ? ` (${saOverdue} OD)` : ''}</span></div>
-          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saHighR > 0 ? 'var(--red)' : 'var(--ink)'}">${saRisks}</span><span class="sub-asm-stat-lbl">Risks${saHighR > 0 ? ` (${saHighR} hi)` : ''}</span></div>
-          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${saHighRPN > 0 ? 'var(--amber)' : 'var(--ink)'}">${saHighRPN}</span><span class="sub-asm-stat-lbl">High RPN</span></div>
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${apqpPct >= 50 ? 'var(--green)' : 'var(--amber)'}">${apqpPct}%</span><span class="sub-asm-stat-lbl">APQP tools</span></div>
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:var(--ink)">${bomItemCount}</span><span class="sub-asm-stat-lbl">BoM items</span></div>
+          <div class="sub-asm-stat"><span class="sub-asm-stat-val" style="color:${linkedKit ? 'var(--green)' : 'var(--red)'}">${linkedKit ? 'Yes' : 'No'}</span><span class="sub-asm-stat-lbl">Root kit</span></div>
         </div>
         <div>
-          <div class="sub-asm-gate-bar"><div class="sub-asm-gate-fill" style="width:${gatePct}%"></div></div>
-          <div class="sub-asm-gate-label">${gLabel} · ${gatePct}%</div>
+          <div class="sub-asm-gate-bar"><div class="sub-asm-gate-fill" style="width:${apqpPct}%"></div></div>
+          <div class="sub-asm-gate-label">APQP completion · ${apqpPct}%</div>
         </div>
       </div>`
     }).filter(Boolean).join('')
-    const addCard = `<div class="sub-asm-add-card" onclick="npi.dashboard.openSubAsmModal()"><span style="font-size:16px">＋</span> Link sub-assembly project</div>`
+    const addCard = `<div class="sub-asm-add-card" onclick="npi.dashboard.createSubAsm()"><span style="font-size:16px">＋</span> Create sub-assembly</div>`
     return `<div class="sub-asm-grid">${cards}${addCard}</div>`
   })()
 
@@ -494,7 +503,6 @@ npi.dashboard.renderDashboard = function() {
   const scopeDisplayIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
   const linkedScopeIcon = linkedScope ? (scopeDisplayIcons[linkedScope] || '🔄') : '🔄'
   const linkedScopeLabel = linkedScope ? (linkedScope.charAt(0).toUpperCase() + linkedScope.slice(1)) : null
-  const parentProg = p.parentId ? db.projects.find(x => x.id === p.parentId) : null
   const liveUpdateBadge = typeof npiRealtimeIndicatorHTML === 'function' ? npiRealtimeIndicatorHTML() : ''
   // Task 2-A: presence badges — other users viewing this project
   const presenceUsers = typeof getPresenceForProg === 'function' ? getPresenceForProg(progId) : []
@@ -762,43 +770,148 @@ npi.dashboard.deleteProject = async function() {
 }
 
 // ── Sub-assembly management ───────────────────────────────────
-npi.dashboard.openSubAsmModal = function() {
+npi.dashboard.ensureSubAsmKit = function(child) {
+  const p = prog()
+  if (!p || !child) return null
+  if (!p.subAssemblies) p.subAssemblies = []
+
+  const link = p.subAssemblies.find(x => x.id === child.id)
+  if (link && link.kitId) {
+    const existingKit = (p.bom.kits || []).find(k => k.id === link.kitId)
+    if (existingKit) return existingKit
+  }
+
+  const kit = npi.data.bom.addKit()
+  kit.name = `${child.name || 'Sub-assembly'} Kit`
+  kit.linkedSubAssemblyId = child.id
+  if (typeof npiRelSaveBOMKit === 'function') {
+    npiRelSaveBOMKit(kit)
+  }
+
+  if (link) {
+    link.kitId = kit.id
+  } else {
+    p.subAssemblies.push({ id: child.id, kitId: kit.id })
+  }
+  return kit
+}
+
+npi.dashboard.createSubAsm = function() {
   const p = prog(); if (!p) return
-  const others = db.projects.filter(x => x.id !== progId && !(p.subAssemblies || []).find(s => s.id === x.id))
-  if (others.length === 0) { showToast('No other projects to link.', 'info'); return }
-  const existing = document.getElementById('subAsmModalBg'); if (existing) existing.remove()
-  const opts = others.map(x =>
-    `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''" onclick="npi.dashboard.linkSubAsm('${x.id}')">
-      <span style="font-size:13px">🔩</span>
-      <span style="flex:1;font-size:12px;font-weight:600">${esc(x.name)}</span>
-      ${x.unit ? `<span style="font-size:10px;color:var(--muted)">${esc(x.unit)}</span>` : ''}
-    </div>`
-  ).join('')
-  const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.id = 'subAsmModalBg'
-  bg.innerHTML = `<div class="modal" style="max-width:420px"><div class="modal-head"><span class="modal-title">Link Sub-assembly Project</span><button class="modal-close" onclick="npi.dashboard.closeSubAsmModal()">✕</button></div><div style="padding:8px 4px;max-height:320px;overflow-y:auto">${opts}</div></div>`
-  bg.addEventListener('click', e => { if (e.target === bg) npi.dashboard.closeSubAsmModal() })
-  document.body.appendChild(bg)
+  const nameEl = document.getElementById('nsa_name')
+  const unitEl = document.getElementById('nsa_unit')
+  if (nameEl) { nameEl.value = ''; nameEl.classList.remove('input-error') }
+  if (unitEl) unitEl.value = p.unit || ''
+  showModal('modalNewSubAsm')
+  setTimeout(() => { const el = document.getElementById('nsa_name'); if (el) el.focus() }, 50)
+}
+
+npi.dashboard.saveNewSubAsm = function() {
+  const p = prog(); if (!p) return
+  const nameEl = document.getElementById('nsa_name')
+  const unitEl = document.getElementById('nsa_unit')
+  const name = nameEl ? nameEl.value.trim() : ''
+  if (!name) {
+    if (nameEl) { nameEl.classList.add('input-error'); nameEl.focus() }
+    return
+  }
+  const unit = unitEl ? unitEl.value.trim() : ''
+  closeModal('modalNewSubAsm')
+  const id = 'p_' + Math.random().toString(36).slice(2)
+
+  const child = migrateprog({
+    id,
+    name,
+    family: p.family || 'Other',
+    customer: p.customer || '',
+    unit: unit || p.unit || '',
+    lead: p.lead || '',
+    pm: p.pm || '',
+    date: p.date || '',
+    parentId: p.id,
+    status: 'Active',
+    gates: [],
+    ctq: [],
+    pfd: [],
+    pfmea: [],
+    cp: [],
+    bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
+    actions: [],
+    risks: [],
+    gantt: []
+  })
+
+  db.projects.push(child)
+  if (!p.subAssemblies) p.subAssemblies = []
+  if (!p.subAssemblies.find(x => x.id === child.id)) p.subAssemblies.push({ id: child.id })
+  npi.dashboard.ensureSubAsmKit(child)
+  save(child.id)
+  render()
+  showToast(`Sub-assembly "${child.name}" created.`, 'success')
+}
+
+npi.dashboard.openSubAsmModal = function() {
+  npi.dashboard.createSubAsm()
 }
 
 npi.dashboard.linkSubAsm = function(id) {
-  const p = prog(); if (!p.subAssemblies) p.subAssemblies = []
-  if (!p.subAssemblies.find(x => x.id === id)) p.subAssemblies.push({ id })
+  const p = prog(); if (!p) return
   const child = db.projects.find(x => x.id === id)
-  if (child && !child.parentId) child.parentId = progId
-  // Mark both parent (progId) and child dirty so both rows are written.
-  save(id); npi.dashboard.closeSubAsmModal(); render()
+  if (!child) return
+
+  if (!p.subAssemblies) p.subAssemblies = []
+  if (!p.subAssemblies.find(x => x.id === id)) p.subAssemblies.push({ id })
+  child.parentId = progId
+  child.gates = []
+
+  npi.dashboard.ensureSubAsmKit(child)
+  save(id)
+  render()
+}
+
+npi.dashboard.deleteSubAsm = async function(li) {
+  const p = prog(); if (!p || !p.subAssemblies || !p.subAssemblies[li]) return
+  const linked = p.subAssemblies[li]
+  const child = db.projects.find(x => x.id === linked.id)
+  if (!child) {
+    p.subAssemblies.splice(li, 1)
+    save()
+    render()
+    return
+  }
+
+  const msg = `Delete sub-assembly "${child.name}"?\n\nThis will permanently delete:\n- The sub-assembly project\n- Its APQP data\n- Its linked root kit`
+  if (!confirm(msg)) return
+
+  if (typeof supa !== 'undefined') {
+    const { error } = await supa.from('projects').delete().eq('prog_id', child.id)
+    if (error) {
+      showToast('Could not delete sub-assembly — ' + (error.message || 'unknown error'), 'error')
+      return
+    }
+    if (typeof npiRelDeleteAllForProject === 'function') {
+      await npiRelDeleteAllForProject(child.id).catch(err => {
+        console.warn('Sub-assembly cascade delete error:', err)
+      })
+    }
+  }
+
+  const kitIndex = (p.bom.kits || []).findIndex(k => k.id === linked.kitId || k.linkedSubAssemblyId === child.id)
+  if (kitIndex >= 0) {
+    npi.data.bom.delKit(kitIndex)
+  }
+
+  p.subAssemblies.splice(li, 1)
+  db.projects = db.projects.filter(x => x.id !== child.id)
+  if (dirtyProjects.has(child.id)) dirtyProjects.delete(child.id)
+
+  save()
+  render()
+  showToast(`Sub-assembly "${child.name}" deleted.`, 'success')
 }
 
 npi.dashboard.unlinkSubAsm = function(li) {
-  const p = prog()
-  const linked = p.subAssemblies[li]
-  if (linked) {
-    const child = db.projects.find(x => x.id === linked.id)
-    if (child && child.parentId === progId) child.parentId = null
-  }
-  p.subAssemblies.splice(li, 1)
-  // Mark both parent (progId) and child dirty so both rows are written.
-  save(linked?.id); render()
+  npi.dashboard.deleteSubAsm(li)
 }
 
 npi.dashboard.closeSubAsmModal = function() { const el = document.getElementById('subAsmModalBg'); if (el) el.remove() }

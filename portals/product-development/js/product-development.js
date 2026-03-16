@@ -279,7 +279,6 @@ function renderProductFamilyDatabase() {
         <td style="padding:12px 16px;text-align:right;width:150px;white-space:nowrap">
           <span style="display:inline-flex;gap:6px;justify-content:flex-end;align-items:center">
             <button class="btn btn-sm" data-action="pd-show-template-manager" data-family-id="${fam.id}" title="Manage PFMEA Templates" style="font-size:11px;padding:4px 8px">📋 Templates</button>
-            <button class="btn btn-sm" data-action="pd-delete-family" data-family-id="${fam.id}" title="Delete" style="font-size:11px;padding:4px 8px;color:var(--red);border-color:var(--red);background:transparent;min-width:auto">Delete</button>
           </span>
         </td>
       </tr>

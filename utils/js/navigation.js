@@ -291,14 +291,16 @@ function render() {
   const mc = document.getElementById('mainContent');
   if (currentSection === 'projects') { mc.innerHTML = npi.dashboard.renderProjects(); return; }
   if (currentSection === 'product-development') {
-    let html = `<div class="section-inner">${renderProductDevelopment()}</div>`;
-    if (familyModalState?.isOpen && typeof renderFamilyModal === 'function') {
-      html += renderFamilyModal();
+    mc.innerHTML = `<div class="section-inner">${renderProductDevelopment()}</div>`;
+    const pdContainer = mc.querySelector('#product-development-portal-container');
+    if (pdContainer) {
+      if (familyModalState?.isOpen && typeof renderFamilyModal === 'function') {
+        pdContainer.insertAdjacentHTML('beforeend', renderFamilyModal());
+      }
+      if (templateManagerState?.isOpen && typeof renderTemplateManager === 'function') {
+        pdContainer.insertAdjacentHTML('beforeend', renderTemplateManager());
+      }
     }
-    if (templateManagerState?.isOpen && typeof renderTemplateManager === 'function') {
-      html += renderTemplateManager();
-    }
-    mc.innerHTML = html;
     return;
   }
   if (currentSection === 'production') {

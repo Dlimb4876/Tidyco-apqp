@@ -63,9 +63,7 @@ function renderProdCapDashboard() {
   }
 
   // ── Month offset indicator
-  const offsetLabel = prodCapMonthOffset === 0 ? 'Current' :
-                      prodCapMonthOffset > 0 ? `+${prodCapMonthOffset} month${prodCapMonthOffset > 1 ? 's' : ''}` :
-                      `${prodCapMonthOffset} month${prodCapMonthOffset < -1 ? 's' : ''}`;
+  const offsetLabel = prodCapMonthLabelFull(prodCapGet24MonthKeys()[0]);
 
   return `
     <div class="pc-dashboard">

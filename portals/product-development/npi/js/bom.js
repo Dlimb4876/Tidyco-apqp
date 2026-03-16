@@ -211,6 +211,12 @@ npi.bom.addKit = function() {
 }
 npi.bom.updKit = function(ki, f, v) { npi.data.bom.updKit(ki, f, v) }
 npi.bom.delKit = function(ki) {
+  const p = prog()
+  const kit = p && p.bom && p.bom.kits ? p.bom.kits[ki] : null
+  if (kit && kit.linkedSubAssemblyId) {
+    showToast('Delete the sub-assembly from the dashboard to remove this linked kit.', 'warning')
+    return
+  }
   npi.data.bom.delKit(ki)
   render()
 }

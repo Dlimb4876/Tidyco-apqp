@@ -25,13 +25,46 @@ npi.render = function(section) {
 }
 
 npi._renderInner = function(section) {
+  const p = typeof prog === 'function' ? prog() : null
+  const isSubAssembly = !!(p && p.parentId)
+
   if (section === 'project') return npi.dashboard.renderDashboard()
-  if (section && section.startsWith('gate_')) return npi.gate.renderGatePage(+section.split('_')[1])
+
+  if (isSubAssembly && section && section.startsWith('gate_')) {
+    return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Gates are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Sub-assemblies do not have standalone gates. Use the root project for gate reviews and sign-off.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('${section}')">Open Root Gate View</button></div></div>`
+  }
+
   if (section === 'apqp') return npi.apqp.renderAPQP()
-  if (section === 'actions') return npi.tracker.renderActions()
-  if (section === 'risks') return npi.tracker.renderRisks()
+
+  if (section === 'actions') {
+    if (isSubAssembly) {
+      return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Actions are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Open root actions to create or update items for this sub-assembly.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('actions')">Open Root Actions</button></div></div>`
+    }
+    return npi.tracker.renderActions()
+  }
+
+  if (section === 'risks') {
+    if (isSubAssembly) {
+      return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Risks are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Open root risks to create or update items for this sub-assembly.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('risks')">Open Root Risks</button></div></div>`
+    }
+    return npi.tracker.renderRisks()
+  }
+
   if (section === 'bom') return npi.bom.renderBOM()
-  if (section === 'timing') return npi.timing.renderTimingPlan()
-  if (section === 'documents') return npi.docs.render()
+
+  if (section === 'timing') {
+    if (isSubAssembly) {
+      return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Timing is managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Sub-assembly timing is reviewed from the root project view.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('project')">Open Root Project</button></div></div>`
+    }
+    return npi.timing.renderTimingPlan()
+  }
+
+  if (section === 'documents') {
+    if (isSubAssembly) {
+      return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Documents are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Use the root project for shared project-management documents.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('project')">Open Root Project</button></div></div>`
+    }
+    return npi.docs.render()
+  }
+
   return ''
 }

@@ -155,6 +155,19 @@
   </div>
 </div>
 
+<!-- New Sub-Assembly -->
+<div class="modal-bg" id="modalNewSubAsm" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">New Sub-Assembly</div>
+    <div class="field"><label>Sub-Assembly Name *</label><input id="nsa_name" placeholder="e.g. Gearbox Sub-Assembly"></div>
+    <div class="field"><label>Unit (optional)</label><input id="nsa_unit" placeholder="e.g. Unit 158001"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewSubAsm')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.dashboard.saveNewSubAsm()">Create</button>
+    </div>
+  </div>
+</div>
+
 <!-- Edit Project -->
 <div class="modal-bg" id="modalEditProj" style="display:none">
   <div class="modal modal-sm">

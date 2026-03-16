@@ -416,7 +416,7 @@ npi.data.bom = {
 
 npi.data.tracker = {
   addAction() {
-    const item = { id: crypto.randomUUID(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '' }
+    const item = { id: crypto.randomUUID(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '', subAsm: '' }
     prog().actions.push(item)
     Promise.resolve().then(() => npiRelSaveAction(item)).catch(err => console.error('[NPI] save action failed:', err))
     npi.notify('render')
@@ -438,7 +438,7 @@ npi.data.tracker = {
     npi.notify('render')
   },
   addRisk() {
-    const item = { id: crypto.randomUUID(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open' }
+    const item = { id: crypto.randomUUID(), desc: '', cat: 'Technical', owner: '', lik: 3, imp: 3, mit: '', status: 'Open', subAsm: '' }
     prog().risks.push(item)
     Promise.resolve().then(() => npiRelSaveRisk(item)).catch(err => console.error('[NPI] save risk failed:', err))
     npi.notify('render')

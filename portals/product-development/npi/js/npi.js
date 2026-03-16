@@ -25,12 +25,42 @@ window.npi = {
   render: null
 }
 
-npi.nav.navigate = function(section) { navigate(section) }
+npi.nav.navigate = function(section) {
+  const p = typeof prog === 'function' ? prog() : null
+  const isSubAssembly = !!(p && p.parentId)
+
+  if (isSubAssembly) {
+    const parent = db.projects.find(x => x.id === p.parentId)
+    if (parent) {
+      const blockedSections = new Set(['actions', 'risks', 'timing', 'documents'])
+      if (section && section.startsWith('gate_')) {
+        progId = parent.id
+        navigate(section)
+        return
+      }
+      if (blockedSections.has(section)) {
+        progId = parent.id
+        navigate(section === 'timing' || section === 'documents' ? 'project' : section)
+        return
+      }
+    }
+  }
+
+  navigate(section)
+}
 npi.nav.goHome = function() { goHome() }
 npi.nav.render = function() { render() }
 npi.nav.setApqpTab = function(tab) { setApqpTab(tab) }
 npi.nav.setProductDevelopmentTab = function(tab) { setProductDevelopmentTab(tab) }
 npi.nav.openProjectById = function(id) { progId = id; navigate('project') }
+npi.nav.openParentSection = function(section) {
+  const p = typeof prog === 'function' ? prog() : null
+  if (!p || !p.parentId) return
+  const parent = db.projects.find(x => x.id === p.parentId)
+  if (!parent) return
+  progId = parent.id
+  navigate(section || 'project')
+}
 npi.nav.openPfmeaTab = function() { apqpTab = 'pfmea'; navigate('apqp') }
 npi.nav.alertEnterNameFirst = function() { showToast('Enter name first', 'warning') }
 npi.nav.stopEvent = function(evt) { if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation() }

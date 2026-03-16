@@ -356,7 +356,8 @@ window.npiRelLoad = async function(pid) {
         status: r.status || 'Open',
         priority: r.priority || 'Medium',
         source: r.source || 'General',
-        notes: r.notes || ''
+         notes: r.notes || '',
+         subAsm: r.sub_assembly_id || ''
       }));
     }
 
@@ -370,7 +371,8 @@ window.npiRelLoad = async function(pid) {
         lik: r.likelihood || 3,
         imp: r.impact || 3,
         mit: r.mitigation || '',
-        status: r.status || 'Open'
+         status: r.status || 'Open',
+         subAsm: r.sub_assembly_id || ''
       }));
     }
 
@@ -978,6 +980,7 @@ window.npiRelSaveAction = async function(item) {
       priority: item.priority || 'Medium',
       source: item.source || 'General',
       notes: item.notes || '',
+      sub_assembly_id: item.subAsm || null,
       sort_order: (prog().actions || []).indexOf(item),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
@@ -1016,6 +1019,7 @@ window.npiRelSaveRisk = async function(item) {
       impact: item.imp || 3,
       mitigation: item.mit || '',
       status: item.status || 'Open',
+      sub_assembly_id: item.subAsm || null,
       sort_order: (prog().risks || []).indexOf(item),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
