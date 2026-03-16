@@ -35,6 +35,21 @@ function setupOpsPulseFeed() {
 			if (dest) navigate(dest);
 		}
 	});
+
+	// Flush any deferred re-renders when user leaves an inline table cell
+	container.addEventListener('focusout', function(evt) {
+		const nextFocus = evt.relatedTarget;
+		if (nextFocus && nextFocus.closest('table')) return;
+		if (!opsPendingRealTimeUpdate) return;
+		setTimeout(function() {
+			if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return;
+			if (opsPendingRealTimeUpdate) {
+				opsPendingRealTimeUpdate = false;
+				if (typeof opsRefreshCurrentTab === 'function') opsRefreshCurrentTab();
+				else render();
+			}
+		}, 0);
+	});
 }
 
 function renderOperationsDashboard() {

@@ -13,9 +13,38 @@ function opsScheduleRefresh(key, refreshFn, delayMs = 120) {
 		} catch (err) {
 			console.warn('Operations refresh failed for', key, err && err.message ? err.message : err);
 		} finally {
-			if (currentSection === 'operations') render();
+			if (currentSection === 'operations') {
+				if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+					opsPendingRealTimeUpdate = true;
+				} else {
+					render();
+				}
+			}
 		}
 	}, delayMs);
+}
+
+// ── Tab-level refresh (DOM body swap — avoids full render() feedback loop) ──
+window.opsRefreshCurrentTab = function() {
+	const container = document.getElementById('ops-dashboard');
+	if (!container) return;
+	const tab = operationsTab || 'overview';
+	const metrics = typeof opsBuildMetrics === 'function' ? opsBuildMetrics() : {};
+	let body = '';
+	if (typeof opsRenderFlowView === 'function' && tab === 'flow') body = opsRenderFlowView(metrics);
+	else if (typeof opsRenderRiskView === 'function' && tab === 'risk') body = opsRenderRiskView(metrics);
+	else if (typeof opsRenderPeopleView === 'function' && tab === 'people') body = opsRenderPeopleView(metrics);
+	else if (typeof opsRenderActionsView === 'function' && tab === 'actions') body = opsRenderActionsView(metrics);
+	else if (typeof opsRenderForecastView === 'function' && tab === 'forecast') body = opsRenderForecastView(metrics);
+	else if (typeof opsRenderOverview === 'function') body = opsRenderOverview(metrics);
+	// Replace only the tab body content, not the whole container
+	const tabBody = container.querySelector('.ops-tab-body');
+	if (tabBody) {
+		tabBody.innerHTML = body;
+	} else {
+		// Fall back to full render if tab body wrapper not found
+		render();
+	}
 }
 
 async function opsRefreshProjects() {

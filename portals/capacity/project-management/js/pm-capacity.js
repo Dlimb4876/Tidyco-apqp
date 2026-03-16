@@ -204,6 +204,11 @@ window.pmDebouncedSave = function() {
       pmChartDirty = true;
       return;
     }
+    // Defer tab refresh if user is still editing an inline cell
+    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+      window.pmPendingRerender = true;
+      return;
+    }
     pmRefreshCurrentTab();
   }, 900);
 };

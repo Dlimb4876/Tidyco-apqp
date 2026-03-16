@@ -34,19 +34,19 @@ function renderProduction() {
   if (productionTab === 'products') {
     setProductionTab('scheduling');
     setTimeout(setupProductionPortalDelegation, 0);
-    return `<div id="production-portal-container">${nav}${renderScheduling()}</div>`;
+    return `<div id="production-portal-container">${nav}<div id="prodTabBody">${renderScheduling()}</div></div>`;
   }
   if (productionTab === 'scheduling') {
     setTimeout(setupProductionPortalDelegation, 0);
-    return `<div id="production-portal-container">${nav}${renderScheduling()}</div>`;
+    return `<div id="production-portal-container">${nav}<div id="prodTabBody">${renderScheduling()}</div></div>`;
   }
   if (productionTab === 'by-product') {
     setTimeout(setupProductionPortalDelegation, 0);
-    return `<div id="production-portal-container">${nav}${renderPlanByProduct()}</div>`;
+    return `<div id="production-portal-container">${nav}<div id="prodTabBody">${renderPlanByProduct()}</div></div>`;
   }
   if (productionTab === 'by-unit') {
     setTimeout(setupProductionPortalDelegation, 0);
-    return `<div id="production-portal-container">${nav}${renderPlanByUnit()}</div>`;
+    return `<div id="production-portal-container">${nav}<div id="prodTabBody">${renderPlanByUnit()}</div></div>`;
   }
 
   // Root hub view
@@ -125,4 +125,30 @@ function setupProductionPortalDelegation() {
       if (key && typeof showGuide === 'function') showGuide(key);
     }
   });
+
+  // Flush any deferred re-renders when user leaves an inline table cell
+  container.addEventListener('focusout', function(evt) {
+    const nextFocus = evt.relatedTarget;
+    if (nextFocus && nextFocus.closest('table')) return;
+    if (!window.prodPendingRealTimeUpdate) return;
+    setTimeout(function() {
+      if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return;
+      if (window.prodPendingRealTimeUpdate) {
+        window.prodPendingRealTimeUpdate = false;
+        if (typeof prodRefreshCurrentTab === 'function') prodRefreshCurrentTab();
+      }
+    }, 0);
+  });
+}
+
+// ── Tab-level refresh (DOM body swap only — avoids full render() feedback loop) ──
+function prodRefreshCurrentTab() {
+  const body = document.getElementById('prodTabBody');
+  if (!body) { render(); return; }
+  let content = '';
+  if (productionTab === 'scheduling') content = renderScheduling();
+  else if (productionTab === 'by-product') content = renderPlanByProduct();
+  else if (productionTab === 'by-unit') content = renderPlanByUnit();
+  else return;
+  body.innerHTML = content;
 }

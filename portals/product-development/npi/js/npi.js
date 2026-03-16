@@ -96,6 +96,10 @@ function npiScheduleReload() {
   clearTimeout(npiReloadTimer)
   npiReloadTimer = setTimeout(() => {
     if (!progId || typeof npiRelLoad !== 'function') return
+    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+      window.npiPendingRealTimeUpdate = true
+      return
+    }
     npiRelLoad(progId).then(() => {
       npiMarkRealtimeUpdate()
       render()
@@ -120,12 +124,18 @@ function npiDataInit() {
     onInsert: (row) => {
       if (!upsertRealtimeProject(row)) return
       npiMarkRealtimeUpdate()
-      if (shouldRenderForProject(row.prog_id)) render()
+      if (shouldRenderForProject(row.prog_id)) {
+        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) { window.npiPendingRealTimeUpdate = true; return }
+        render()
+      }
     },
     onUpdate: (row) => {
       if (!upsertRealtimeProject(row)) return
       npiMarkRealtimeUpdate()
-      if (shouldRenderForProject(row.prog_id)) render()
+      if (shouldRenderForProject(row.prog_id)) {
+        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) { window.npiPendingRealTimeUpdate = true; return }
+        render()
+      }
     },
     onDelete: (row) => {
       if (!row || !row.prog_id) return
@@ -135,7 +145,10 @@ function npiDataInit() {
       db.projects.splice(idx, 1)
       npiMarkRealtimeUpdate()
       if (wasCurrentProject) progId = db.projects[0]?.id || null
-      if (currentSection === 'projects' || wasCurrentProject) render()
+      if (currentSection === 'projects' || wasCurrentProject) {
+        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) { window.npiPendingRealTimeUpdate = true; return }
+        render()
+      }
     }
   })
 

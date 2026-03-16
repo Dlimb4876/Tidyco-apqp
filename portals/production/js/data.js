@@ -142,6 +142,10 @@ window.prodDataUpdateProduct = async function(idx, field, value) {
 
     Object.assign(product, updates);
     prodState.products.sort((a, b) => a.name.localeCompare(b.name));
+    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+      window.prodPendingRealTimeUpdate = true;
+      return true;
+    }
     render();
     return true;
   } catch (err) {
@@ -241,6 +245,10 @@ window.prodDataUpdateBatch = async function(idx, field, value) {
     if (error) throw error;
 
     Object.assign(batch, updates);
+    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+      window.prodPendingRealTimeUpdate = true;
+      return true;
+    }
     render();
     return true;
   } catch (err) {
@@ -322,6 +330,7 @@ window.prodDataSubscribe = function() {
       if (!prodState || !Array.isArray(prodState.batches)) return;
       if (!prodState.batches.some(b => b.id === newBatch.id)) {
         prodState.batches.push(newBatch);
+        if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
         render();
       }
     },
@@ -330,12 +339,14 @@ window.prodDataSubscribe = function() {
       const idx = prodState.batches.findIndex(b => b.id === updated.id);
       if (idx >= 0) {
         prodState.batches[idx] = updated;
+        if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
         render();
       }
     },
     onDelete: (deleted) => {
       if (!prodState || !Array.isArray(prodState.batches)) return;
       prodState.batches = prodState.batches.filter(b => b.id !== deleted.id);
+      if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
       render();
     }
   });
@@ -346,6 +357,7 @@ window.prodDataSubscribe = function() {
       if (!prodState || !Array.isArray(prodState.products)) return;
       if (!prodState.products.some(p => p.id === newProduct.id)) {
         prodState.products.push(newProduct);
+        if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
         render();
       }
     },
@@ -354,12 +366,14 @@ window.prodDataSubscribe = function() {
       const idx = prodState.products.findIndex(p => p.id === updated.id);
       if (idx >= 0) {
         prodState.products[idx] = updated;
+        if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
         render();
       }
     },
     onDelete: (deleted) => {
       if (!prodState || !Array.isArray(prodState.products)) return;
       prodState.products = prodState.products.filter(p => p.id !== deleted.id);
+      if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
       render();
     }
   });
