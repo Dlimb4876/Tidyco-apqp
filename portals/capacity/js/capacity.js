@@ -32,15 +32,15 @@ function renderCapacity() {
   const nav = capacityNavBar();
   if (capacityTab === 'production') {
     setTimeout(setupCapacityPortalDelegation, 0);
-    return `<div id="capacity-portal-container">${nav}${renderProductionCapacity()}</div>`;
+    return `<div id="capacity-portal-container">${nav}${renderProdCapacity()}</div>`;
   }
   if (capacityTab === 'me') {
     setTimeout(setupCapacityPortalDelegation, 0);
-    return `<div id="capacity-portal-container">${nav}${renderMECapacity()}</div>`;
+    return `<div id="capacity-portal-container">${nav}${renderMeCapacity()}</div>`;
   }
   if (capacityTab === 'projects') {
     setTimeout(setupCapacityPortalDelegation, 0);
-    return `<div id="capacity-portal-container">${nav}${renderProjectsCapacity()}</div>`;
+    return `<div id="capacity-portal-container">${nav}${pmRenderCapacity()}</div>`;
   }
 
   // Root hub view

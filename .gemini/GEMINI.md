@@ -125,3 +125,8 @@ Always run in this order:
     -   **High**: `navigation.js`, data layers (CRUD), authentication, complex business logic (RPN).
     -   **Medium**: Render functions, user interactions (clicks, forms).
 -   **Async Testing**: Use `jest.useFakeTimers()` and `jest.advanceTimersByTime()` to test debounced functions (like `save()`) and other time-sensitive logic without waiting.
+---
+
+## 11. User Directives
+
+-   You should pre-plan and create checklists for all work undertaken in this codebase.

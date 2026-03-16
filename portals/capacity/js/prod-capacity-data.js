@@ -5,6 +5,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 const PROD_CAP_HOURS_PER_DAY = 8;
+const PROD_CAP_DAYS_PER_WEEK = 5;
+const PROD_CAP_HOURS_PER_WEEK = PROD_CAP_HOURS_PER_DAY * PROD_CAP_DAYS_PER_WEEK;
 const PROD_CAP_DATA_CHANNEL = 'prod_cap_data_channel';
 
 let prodCapState = {
@@ -210,14 +212,56 @@ async function prodCapDataSetStaff(workArea, year, month, staffCount) {
   }
 }
 
-// ── Working days calculator ───────────────────────────────────
-// Count Mon–Fri days in a given year/month (1-indexed month)
+// ── Working day helpers (Mon–Fri, excluding UK bank holidays) ─
+function prodCapDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function prodCapGetBankHolidaySetForYears(years) {
+  const set = new Set();
+  if (typeof window.getBankHolidaysForYear !== 'function') return set;
+  years.forEach(year => {
+    const holidays = window.getBankHolidaysForYear(year) || [];
+    holidays.forEach(holiday => {
+      if (holiday?.date) set.add(holiday.date);
+    });
+  });
+  return set;
+}
+
+function prodCapGetBankHolidaySetForRange(startDate, endDate) {
+  const years = new Set();
+  for (let y = startDate.getFullYear(); y <= endDate.getFullYear(); y++) {
+    years.add(y);
+  }
+  return prodCapGetBankHolidaySetForYears(years);
+}
+
+function prodCapIsWorkingDay(date, bankHolSet) {
+  const dow = date.getDay();
+  if (dow === 0 || dow === 6) return false;
+  return !bankHolSet.has(prodCapDateKey(date));
+}
+
+function prodCapCountWorkingDaysBetween(startDate, endDate, bankHolSet) {
+  if (!startDate || !endDate || startDate > endDate) return 0;
+  let count = 0;
+  const current = new Date(startDate);
+  while (current <= endDate) {
+    if (prodCapIsWorkingDay(current, bankHolSet)) count++;
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+}
+
+// Count working days in a given year/month (1-indexed month)
 function prodCapWorkingDays(year, month) {
+  const bankHolSet = prodCapGetBankHolidaySetForYears([year]);
   let count = 0;
   const days = new Date(year, month, 0).getDate(); // last day of month
   for (let d = 1; d <= days; d++) {
-    const dow = new Date(year, month - 1, d).getDay();
-    if (dow !== 0 && dow !== 6) count++;
+    const date = new Date(year, month - 1, d);
+    if (prodCapIsWorkingDay(date, bankHolSet)) count++;
   }
   return count;
 }
@@ -226,7 +270,8 @@ function prodCapWorkingDays(year, month) {
 function prodCapAvailableHours(workArea, year, month) {
   const staff = prodCapDataGetStaff(workArea, year, month);
   if (staff === 0) return 0;
-  const baseHours = staff * prodCapWorkingDays(year, month) * PROD_CAP_HOURS_PER_DAY;
+  const workingDays = prodCapWorkingDays(year, month);
+  const baseHours = staff * PROD_CAP_HOURS_PER_WEEK * (workingDays / PROD_CAP_DAYS_PER_WEEK);
   // Apply global utilization factor
   return baseHours * prodCapUtilizationFactor;
 }
@@ -325,8 +370,9 @@ function prodCapCalcDemandMatrix(monthKeys) {
 
     const batchStart = new Date(batch.start_date + 'T00:00:00');
     const batchEnd   = new Date(batch.due_date   + 'T00:00:00');
-    const totalMs    = batchEnd - batchStart;
-    const totalDays  = Math.max(1, totalMs / 86400000 + 1);
+    const bankHolSet = prodCapGetBankHolidaySetForRange(batchStart, batchEnd);
+    const totalDays  = prodCapCountWorkingDaysBetween(batchStart, batchEnd, bankHolSet);
+    if (totalDays === 0) return;
 
     monthKeys.forEach(key => {
       const { year, month } = prodCapParseKey(key);
@@ -338,7 +384,8 @@ function prodCapCalcDemandMatrix(monthKeys) {
 
       if (overlapStart > overlapEnd) return;
 
-      const overlapDays = (overlapEnd - overlapStart) / 86400000 + 1;
+      const overlapDays = prodCapCountWorkingDaysBetween(overlapStart, overlapEnd, bankHolSet);
+      if (overlapDays === 0) return;
       const hours       = totalHours * (overlapDays / totalDays);
 
       if (!matrix[key][workArea]) matrix[key][workArea] = 0;
@@ -388,7 +435,9 @@ function prodCapCalcFamilyDemandMatrix(monthKeys) {
 
     const batchStart = new Date(batch.start_date + 'T00:00:00');
     const batchEnd   = new Date(batch.due_date   + 'T00:00:00');
-    const totalDays  = Math.max(1, (batchEnd - batchStart) / 86400000 + 1);
+    const bankHolSet = prodCapGetBankHolidaySetForRange(batchStart, batchEnd);
+    const totalDays  = prodCapCountWorkingDaysBetween(batchStart, batchEnd, bankHolSet);
+    if (totalDays === 0) return;
 
     monthKeys.forEach(key => {
       const { year, month } = prodCapParseKey(key);
@@ -400,7 +449,8 @@ function prodCapCalcFamilyDemandMatrix(monthKeys) {
 
       if (overlapStart > overlapEnd) return;
 
-      const overlapDays = (overlapEnd - overlapStart) / 86400000 + 1;
+      const overlapDays = prodCapCountWorkingDaysBetween(overlapStart, overlapEnd, bankHolSet);
+      if (overlapDays === 0) return;
       const hours       = totalHours * (overlapDays / totalDays);
 
       if (!matrix[key][family]) matrix[key][family] = 0;

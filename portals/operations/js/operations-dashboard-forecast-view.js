@@ -207,12 +207,6 @@ function opsRenderForecastView(metrics) {
 					<h3>Production Capacity Forecast (24 Months)</h3>
 					<span>${esc(modeText)}</span>
 				</div>
-				<div class="pc-window-controls">
-					<button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('prev')" title="View previous month">← Previous</button>
-					<div class="pc-window-label">${forecastMonthLabel}</div>
-					<button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('next')" title="View next month">Next →</button>
-					${typeof prodCapMonthOffset !== 'undefined' && prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" onclick="prodCapResetMonthOffset()" title="Reset to current month">Reset</button>` : ''}
-				</div>
 				${forecast.error ? `<div class="ops-empty-note">Forecast sync warning: ${esc(forecast.error)}</div>` : ''}
 				<div class="ops-metrics-grid">
 					${opsMetricCard('Active Opportunities', String(forecast.activeOpportunities), 'Status in active pipeline', 'good')}
@@ -227,8 +221,16 @@ function opsRenderForecastView(metrics) {
 
 			<section class="ops-panel">
 				<div class="ops-panel-head">
-					<h3>Forecast Trend</h3>
-					<span>Baseline demand plus low, medium and high probability opportunity layers</span>
+					<div>
+						<h3>Forecast Trend</h3>
+						<span>Baseline demand plus low, medium and high probability opportunity layers</span>
+					</div>
+					<div class="pc-window-controls" style="margin-bottom: 0; padding: 0; border: none; background: none;">
+						<button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('prev')" title="View previous month">← Previous</button>
+						<div class="pc-window-label">${forecastMonthLabel}</div>
+						<button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('next')" title="View next month">Next →</button>
+						${typeof prodCapMonthOffset !== 'undefined' && prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" onclick="prodCapResetMonthOffset()" title="Reset to current month">Reset</button>` : ''}
+					</div>
 				</div>
 				<div class="ops-forecast-chart-wrap">
 					<canvas id="opsForecastTrendChart" aria-label="Forecast trend chart"></canvas>

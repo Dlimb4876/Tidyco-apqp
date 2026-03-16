@@ -2,7 +2,7 @@
 // prod-capacity-settings.js — Production Capacity Settings Tab
 // 2-year scrollable grid: work areas (rows) × months (columns)
 // Each cell = number of staff for that area/month
-// 1 staff = working days × 8h of available capacity
+// 1 staff = working days (Mon-Fri, excluding UK bank holidays) x 8h
 // Depends on: prod-capacity-data.js
 // ═══════════════════════════════════════════════════════════════
 
@@ -17,7 +17,7 @@ function renderProdCapSettings() {
       <div class="pc-settings">
         <div class="pc-card-header" style="margin-bottom:16px">
           <div class="pc-card-title">Capacity Settings</div>
-          <div class="pc-card-sub">Set the number of staff available per work area per month. 1 person = working days × 8h available.</div>
+          <div class="pc-card-sub">Set staff per work area per month. 1 person = Mon-Fri working days (excluding UK bank holidays) x 8h (40h/week baseline).</div>
         </div>
         <div class="pc-alert pc-alert-info">
           No work areas found. Add work areas in the Work Areas section of Capacity Settings.
@@ -159,7 +159,7 @@ function renderProdCapSettings() {
           <div class="pc-card-title">Capacity Settings — Staff Headcount</div>
           <div class="pc-card-sub">
             Enter staff count per work area per month. Decimals allowed (e.g. 0.5 for a half-time person).
-            <br>1 person = Mon–Fri working days × 8h = available capacity hours shown in grey below each cell.
+            <br>1 person = Mon-Fri working days (excluding UK bank holidays) x 8h = available capacity hours shown in grey below each cell.
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">

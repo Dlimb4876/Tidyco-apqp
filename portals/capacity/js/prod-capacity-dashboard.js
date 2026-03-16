@@ -68,14 +68,6 @@ function renderProdCapDashboard() {
   return `
     <div class="pc-dashboard">
 
-      <!-- Perpetual Window Controls -->
-      <div class="pc-window-controls">
-        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>
-        <div class="pc-window-label">${offsetLabel}</div>
-        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
-        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
-      </div>
-
       <!-- KPI Row -->
       <div class="pc-kpi-row">
         <div class="pc-kpi" style="border-left:4px solid var(--amber)">
@@ -103,8 +95,23 @@ function renderProdCapDashboard() {
       <!-- 2-Year Chart -->
       <div class="pc-card">
         <div class="pc-card-header">
-          <div class="pc-card-title">2-Year Production Load Forecast</div>
-          <div class="pc-card-sub">Demand stacked by product family · Capacity line = available staff hours</div>
+          <div>
+            <div class="pc-card-title">2-Year Production Load Forecast</div>
+            <div class="pc-card-sub">Demand stacked by product family · Capacity line = available staff hours</div>
+            <div
+              class="pc-card-sub"
+              title="Capacity formula: staff x working days x 8h. Working days are Mon-Fri and exclude UK bank holidays. This is a 40h/week baseline per person (5 x 8h), then adjusted by the utilization factor."
+              style="margin-top:4px;color:var(--blue);font-weight:600;cursor:help"
+            >
+              ⓘ How capacity is calculated
+            </div>
+          </div>
+          <div class="pc-window-controls" style="margin-bottom: 0; padding: 0; border: none; background: none;">
+            <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>
+            <div class="pc-window-label">${offsetLabel}</div>
+            <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
+            ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
+          </div>
         </div>
         <div class="pc-chart-wrap">
           <canvas id="prodCapDashChart" style="width:100%;height:320px"></canvas>
