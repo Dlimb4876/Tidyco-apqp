@@ -11,6 +11,27 @@ function esc(s) {
     .replace(/'/g, '&#039;');
 }
 
+// ── ID Generation ──────────────────────────────────────────────
+/**
+ * Generate a random ID with an optional prefix.
+ * Uses base36 encoding for readability and compactness.
+ *
+ * @param {string} prefix - Optional prefix (e.g., 'f_', 'e_', 'c_', 'r_', 'a_')
+ * @param {number} length - Length of random suffix (default: 9)
+ * @returns {string} - Random ID like 'f_x7k2m9p4q' or 'x7k2m9p4q'
+ *
+ * Common prefixes used in the codebase:
+ *   f_ = failure mode (PFMEA)
+ *   e_ = effect (PFMEA)
+ *   c_ = cause (PFMEA)
+ *   r_ = risk
+ *   a_ = action
+ */
+function generateId(prefix = '', length = 9) {
+  const randomPart = Math.random().toString(36).substr(2, length);
+  return prefix + randomPart;
+}
+
 function emptyState(icon, title, desc) {
   return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
 }

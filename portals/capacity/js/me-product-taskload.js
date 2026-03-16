@@ -57,13 +57,7 @@ window.meProductLoadClearFilters = function(department) {
   meProductLoadRefreshTable();
 };
 
-// HTML escape utility
-function esc(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+// HTML escape utility is provided globally by utils/js/helpers.js
 
 window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
   const department = typeof meGetDepartmentFromContext === 'function'

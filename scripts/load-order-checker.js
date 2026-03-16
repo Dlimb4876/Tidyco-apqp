@@ -49,9 +49,10 @@ const DEPENDENCIES = {
   'planning.js': ['production.js'],
   'families-data.js': ['db.js'],
   'family-templates-data.js': ['families-data.js'],
-  'products.js': ['db.js', 'families-data.js'],
-  'product-development.js': ['db.js', 'navigation.js'],
-  'product-management.js': ['products.js'],
+  'production/products.js': ['db.js', 'families-data.js'],
+  'product-management/products.js': ['db.js', 'families-data.js'],
+  'product-development/product-development.js': ['db.js', 'navigation.js'],
+  'product-management.js': ['product-management/products.js'],
   'npi-constants.js': [],
   'npi.js': ['npi-constants.js', 'family-templates-data.js'],
   'rpn-chart.js': ['npi.js'],
@@ -74,7 +75,16 @@ function extractScriptSrc(html) {
   while ((match = regex.exec(html)) !== null) {
     const src = match[1];
     const filename = path.basename(src);
-    scripts.push({ src, filename });
+    // Create a more intelligent key based on the path
+    let key = filename;
+    if (src.includes('production/js/')) {
+      key = 'production/' + filename;
+    } else if (src.includes('product-management/js/')) {
+      key = 'product-management/' + filename;
+    } else if (src.includes('product-development/js/') && !src.includes('npi/') && !src.includes('product-management/')) {
+      key = 'product-development/' + filename;
+    }
+    scripts.push({ src, filename, key });
   }
   return scripts;
 }
@@ -85,34 +95,39 @@ function checkLoadOrder() {
   const errors = [];
   const warnings = [];
 
-  // Map filename to position for dependency checking
+  // Map filename/key to position for dependency checking
   const positions = {};
   scripts.forEach((script, idx) => {
     positions[script.filename] = idx;
+    if (script.key !== script.filename) {
+      positions[script.key] = idx;
+    }
   });
 
-  // Check dependencies
+  // Check dependencies - try both filename and key
   scripts.forEach((script, idx) => {
-    const deps = DEPENDENCIES[script.filename];
+    const deps = DEPENDENCIES[script.key] || DEPENDENCIES[script.filename];
     if (!deps) return; // unknown script, skip
 
     deps.forEach(dep => {
       const depPos = positions[dep];
       if (depPos === undefined) {
-        errors.push(`❌ ${script.filename} depends on ${dep}, but ${dep} is not loaded`);
+        errors.push(`❌ ${script.key || script.filename} depends on ${dep}, but ${dep} is not loaded`);
       } else if (depPos > idx) {
-        errors.push(`❌ ${script.filename} depends on ${dep}, but ${dep} loads AFTER it (pos ${depPos} vs ${idx})`);
+        errors.push(`❌ ${script.key || script.filename} depends on ${dep}, but ${dep} loads AFTER it (pos ${depPos} vs ${idx})`);
       }
     });
   });
 
-  // Check for duplicates
-  const seen = new Set();
+  // Check for duplicates - use key for comparison to allow same filename in different directories
+  const seen = new Map();
   scripts.forEach((script, idx) => {
-    if (seen.has(script.filename)) {
-      errors.push(`❌ ${script.filename} is loaded twice (positions ${positions[script.filename]} and ${idx})`);
+    const identifier = script.key || script.filename;
+    if (seen.has(identifier)) {
+      errors.push(`❌ ${identifier} is loaded twice (positions ${seen.get(identifier)} and ${idx})`);
+    } else {
+      seen.set(identifier, idx);
     }
-    seen.add(script.filename);
   });
 
   // Verify core scripts load first
@@ -150,9 +165,9 @@ function main() {
 
   // Print load order with dependency info
   scripts.forEach((script, idx) => {
-    const deps = DEPENDENCIES[script.filename];
+    const deps = DEPENDENCIES[script.key] || DEPENDENCIES[script.filename];
     const depsStr = deps && deps.length > 0 ? ` (needs: ${deps.join(', ')})` : '';
-    console.log(`${String(idx + 1).padStart(2)}: ${script.filename}${depsStr}`);
+    console.log(`${String(idx + 1).padStart(2)}: ${script.key || script.filename}${depsStr}`);
   });
 
   if (errors.length > 0) {
