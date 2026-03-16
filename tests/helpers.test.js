@@ -69,6 +69,14 @@ describe('Helpers Module (helpers.js)', () => {
       expect(esc(42)).toBe('42');
     });
 
+    test('should render numeric zero as "0", not as empty string', () => {
+      expect(esc(0)).toBe('0');
+    });
+
+    test('should escape single quotes to &#039;', () => {
+      expect(esc("it's a test")).toBe("it&#039;s a test");
+    });
+
     test('should leave plain text unchanged', () => {
       expect(esc('Hello World')).toBe('Hello World');
     });
