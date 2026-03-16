@@ -594,6 +594,7 @@ npi.dashboard.renderDashboard = function() {
               <button onclick="npi.nav.navigate('timing')">📅 Timing</button>
               <button onclick="npi.nav.navigate('actions')">✅ Actions</button>
               <button onclick="npi.nav.navigate('risks')">🛡 Risks</button>
+              <button onclick="npi.nav.navigate('documents')">📄 Documents</button>
             </div>
           </div>
 

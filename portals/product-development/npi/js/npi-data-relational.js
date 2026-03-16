@@ -13,12 +13,136 @@
    Depends on: state.js (prog, progId, currentUser), auth.js (supa)
    ============================================================ */
 
+function npiRelLooksLikeUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
+}
+
+function npiRelFindProgramme(targetProgId) {
+  if (!targetProgId || !db || !Array.isArray(db.programmes)) return null;
+  return db.programmes.find(p => p && p.id === targetProgId) || null;
+}
+
+function npiRelIsHeaderStep(type) {
+  return type === 'header' || type === 'group';
+}
+
+function npiRelPersistedPfdStepNum(step, pfd) {
+  if (!step) return 0;
+  if (!npiRelIsHeaderStep(step.type)) return Number(step.stepNum) || 0;
+
+  const rows = Array.isArray(pfd) ? pfd : [];
+  const executableById = new Map(
+    rows
+      .filter(item => item && !npiRelIsHeaderStep(item.type))
+      .map(item => [item.id, item])
+  );
+
+  if (step.beforeStepId) {
+    const beforeAnchor = executableById.get(step.beforeStepId);
+    const beforeNum = beforeAnchor ? Number(beforeAnchor.stepNum) : NaN;
+    if (Number.isFinite(beforeNum)) return Math.max(0, beforeNum - 1);
+  }
+
+  if (step.afterStepId) {
+    const afterAnchor = executableById.get(step.afterStepId);
+    const afterNum = afterAnchor ? Number(afterAnchor.stepNum) : NaN;
+    if (Number.isFinite(afterNum)) return afterNum;
+  }
+
+  return 0;
+}
+
+function npiRelHydratePfdRows(rows) {
+  const source = Array.isArray(rows) ? rows : [];
+  const executableRows = source
+    .filter(row => !npiRelIsHeaderStep(row.step_type))
+    .sort((a, b) => (a.step_num || 0) - (b.step_num || 0));
+
+  const executable = executableRows.map(row => ({
+    id: row.id,
+    stepNum: row.step_num,
+    type: row.step_type || 'step',
+    op: row.op || '',
+    detail: row.detail || '',
+    ctqIds: row.ctq_ids || [],
+    bomRefs: row.bom_refs || [],
+    docRefs: row.doc_refs || []
+  }));
+
+  const firstExecutable = executableRows[0] || null;
+
+  const headers = source
+    .filter(row => npiRelIsHeaderStep(row.step_type))
+    .map(row => {
+      const stepNum = Number(row.step_num);
+      const header = {
+        id: row.id,
+        stepNum: null,
+        type: row.step_type || 'header',
+        op: row.op || '',
+        detail: row.detail || '',
+        ctqIds: row.ctq_ids || [],
+        bomRefs: row.bom_refs || [],
+        docRefs: row.doc_refs || []
+      };
+
+      if (firstExecutable && Number.isFinite(stepNum) && stepNum < Number(firstExecutable.step_num)) {
+        header.beforeStepId = firstExecutable.id;
+        header.isDefault = true;
+        return header;
+      }
+
+      let anchor = null;
+      executableRows.forEach(candidate => {
+        if (Number(candidate.step_num) <= stepNum) anchor = candidate;
+      });
+
+      if (anchor) header.afterStepId = anchor.id;
+      else if (firstExecutable) {
+        header.beforeStepId = firstExecutable.id;
+        header.isDefault = true;
+      }
+
+      return header;
+    });
+
+  return executable.concat(headers);
+}
+
+window.npiRelHydratePfdRows = npiRelHydratePfdRows;
+
+window.npiRelResolveProgrammeId = async function(targetProgId) {
+  if (!targetProgId) return null;
+  const programme = npiRelFindProgramme(targetProgId);
+  if (programme && programme.dbId) return programme.dbId;
+  if (npiRelLooksLikeUuid(targetProgId)) return targetProgId;
+
+  try {
+    const { data, error } = await supa
+      .from('programmes')
+      .select('id, prog_id')
+      .eq('prog_id', targetProgId)
+      .limit(1);
+    if (error) {
+      console.warn('npiRelResolveProgrammeId error:', error.message);
+      return null;
+    }
+    const resolved = data && data[0] ? data[0].id : null;
+    if (programme && resolved) programme.dbId = resolved;
+    return resolved;
+  } catch (err) {
+    console.warn('npiRelResolveProgrammeId exception:', err.message);
+    return null;
+  }
+};
+
 // ─────────────────────────────────────────────────────────────
 // LOAD — fetch all NPI tables for a programme into memory
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelLoad = async function(pid) {
-  if (!pid) return;
+  const programmeId = await window.npiRelResolveProgrammeId(pid);
+  if (!programmeId) return;
   const p = prog();
   if (!p) return;
 
@@ -26,23 +150,24 @@ window.npiRelLoad = async function(pid) {
     const [
       ctqRes, pfdRes, modesRes, effectsRes, causesRes, histRes,
       cpRes, bomRes, kitsRes, kitItemsRes, gatesRes, gateSigsRes,
-      actionsRes, risksRes, ganttRes
+      actionsRes, risksRes, ganttRes, docsRes
     ] = await Promise.all([
-      supa.from('npi_ctq').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_pfd_steps').select('*').eq('programme_id', pid).order('step_num'),
-      supa.from('npi_pfmea_modes').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_pfmea_effects').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_pfmea_causes').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_pfmea_history').select('*').eq('programme_id', pid),
-      supa.from('npi_control_plan').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_bom_items').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_bom_kits').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_bom_kit_items').select('*').eq('programme_id', pid),
-      supa.from('npi_gates').select('*').eq('programme_id', pid),
-      supa.from('npi_gate_sigs').select('*').eq('programme_id', pid),
-      supa.from('npi_actions').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_risks').select('*').eq('programme_id', pid).order('sort_order'),
-      supa.from('npi_gantt_rows').select('*').eq('programme_id', pid).order('sort_order')
+      supa.from('npi_ctq').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_pfd_steps').select('*').eq('programme_id', programmeId).order('step_num'),
+      supa.from('npi_pfmea_modes').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_pfmea_effects').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_pfmea_causes').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_pfmea_history').select('*').eq('programme_id', programmeId),
+      supa.from('npi_control_plan').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_bom_items').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_bom_kits').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_bom_kit_items').select('*').eq('programme_id', programmeId),
+      supa.from('npi_gates').select('*').eq('programme_id', programmeId),
+      supa.from('npi_gate_sigs').select('*').eq('programme_id', programmeId),
+      supa.from('npi_actions').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_risks').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_gantt_rows').select('*').eq('programme_id', programmeId).order('sort_order'),
+      supa.from('npi_documents').select('*').eq('programme_id', programmeId).order('sort_order')
     ]);
 
     // ── CTQ ──────────────────────────────────────────────────
@@ -60,15 +185,7 @@ window.npiRelLoad = async function(pid) {
 
     // ── PFD Steps ────────────────────────────────────────────
     if (!pfdRes.error) {
-      p.pfd = (pfdRes.data || []).map(r => ({
-        id: r.id,
-        stepNum: r.step_num,
-        type: r.step_type || 'step',
-        op: r.op || '',
-        detail: r.detail || '',
-        ctqIds: r.ctq_ids || [],
-        bomRefs: r.bom_refs || []
-      }));
+      p.pfd = npiRelHydratePfdRows(pfdRes.data || []);
     }
 
     // ── PFMEA (nested: modes → effects → causes + history) ──
@@ -271,6 +388,20 @@ window.npiRelLoad = async function(pid) {
       }));
     }
 
+    // ── Documents ────────────────────────────────────────────
+    if (!docsRes.error) {
+      p.docs = (docsRes.data || []).map(r => ({
+        id: r.id,
+        docNumber: r.doc_number || '',
+        title: r.doc_title || '',
+        type: r.doc_type || 'Other',
+        issue: r.issue_num || '',
+        owner: r.owner || '',
+        status: r.status || 'Draft',
+        notes: r.notes || ''
+      }));
+    }
+
   } catch (err) {
     console.warn('npiRelLoad exception:', err.message);
   }
@@ -281,11 +412,12 @@ window.npiRelLoad = async function(pid) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSaveCTQ = async function(item) {
-  if (!item || !item.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!item || !item.id || !programmeId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_ctq').upsert({
       id: item.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       sort_order: (prog().ctq || []).indexOf(item),
       req: item.req || '',
@@ -317,18 +449,21 @@ window.npiRelDeleteCTQ = async function(id) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSavePFDStep = async function(step) {
-  if (!step || !step.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!step || !step.id || !programmeId || !currentUser) return;
   try {
+    const persistedStepNum = npiRelPersistedPfdStepNum(step, prog().pfd || []);
     const { error } = await supa.from('npi_pfd_steps').upsert({
       id: step.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
-      step_num: step.stepNum,
+      step_num: persistedStepNum,
       step_type: step.type || 'step',
       op: step.op || '',
       detail: step.detail || '',
       ctq_ids: step.ctqIds || [],
       bom_refs: step.bomRefs || [],
+      doc_refs: step.docRefs || [],
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
     if (error) console.warn('npiRelSavePFDStep error:', error.message);
@@ -352,11 +487,12 @@ window.npiRelDeletePFDStep = async function(id) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSavePFMEAMode = async function(mode) {
-  if (!mode || !mode.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!mode || !mode.id || !programmeId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_pfmea_modes').upsert({
       id: mode.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       pfd_step_id: mode.pfdId || null,
       mode: mode.mode || '',
@@ -371,12 +507,13 @@ window.npiRelSavePFMEAMode = async function(mode) {
 };
 
 window.npiRelSavePFMEAEffect = async function(modeId, effect) {
-  if (!effect || !effect.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!effect || !effect.id || !programmeId || !currentUser) return;
   try {
     const mode = (prog().pfmea || []).find(m => m.id === modeId);
     const { error } = await supa.from('npi_pfmea_effects').upsert({
       id: effect.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       mode_id: modeId,
       effect: effect.effect || '',
@@ -391,7 +528,8 @@ window.npiRelSavePFMEAEffect = async function(modeId, effect) {
 };
 
 window.npiRelSavePFMEACause = async function(effectId, cause) {
-  if (!cause || !cause.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!cause || !cause.id || !programmeId || !currentUser) return;
   const act = cause.action || {};
   try {
     let effObj = null;
@@ -401,7 +539,7 @@ window.npiRelSavePFMEACause = async function(effectId, cause) {
     }
     const { error } = await supa.from('npi_pfmea_causes').upsert({
       id: cause.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       effect_id: effectId,
       cause: cause.cause || '',
@@ -425,13 +563,14 @@ window.npiRelSavePFMEACause = async function(effectId, cause) {
 };
 
 window.npiRelSavePFMEAHistory = async function(causeId, histEntry) {
-  if (!histEntry || !causeId || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!histEntry || !causeId || !programmeId || !currentUser) return;
   // History is append-only; assign a UUID if missing
   if (!histEntry.id) histEntry.id = crypto.randomUUID();
   try {
     const { error } = await supa.from('npi_pfmea_history').upsert({
       id: histEntry.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       cause_id: causeId,
       rpn: histEntry.rpn,
@@ -503,11 +642,12 @@ window.npiRelDeletePFMEACause = async function(cause) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSaveCP = async function(item) {
-  if (!item || !item.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!item || !item.id || !programmeId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_control_plan').upsert({
       id: item.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       pfmea_mode_id: item.pfmeaId || null,
       pfmea_effect_id: item.pfmeaEffectId || null,
@@ -545,11 +685,12 @@ window.npiRelDeleteCP = async function(id) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSaveBOMItem = async function(type, item) {
-  if (!item || !item.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!item || !item.id || !programmeId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_bom_items').upsert({
       id: item.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       bom_type: type,
       item_desc: item.desc || '',
@@ -642,11 +783,12 @@ window.npiRelDeleteABCCatalogueEntry = async function(id) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSaveBOMKit = async function(kit) {
-  if (!kit || !kit.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!kit || !kit.id || !programmeId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_bom_kits').upsert({
       id: kit.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       name: kit.name || '',
       sort_order: (prog().bom.kits || []).indexOf(kit),
@@ -671,7 +813,8 @@ window.npiRelDeleteBOMKit = async function(id) {
 
 // Save all kit items for a kit (delete-all then re-insert pattern)
 window.npiRelSaveKitItems = async function(kit) {
-  if (!kit || !kit.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!kit || !kit.id || !programmeId || !currentUser) return;
   try {
     await supa.from('npi_bom_kit_items').delete().eq('kit_id', kit.id);
     if (kit.items && kit.items.length > 0) {
@@ -679,7 +822,7 @@ window.npiRelSaveKitItems = async function(kit) {
         if (!item.id) item.id = crypto.randomUUID();
         return {
           id: item.id,
-          programme_id: progId,
+          programme_id: programmeId,
           user_id: currentUser.id,
           kit_id: kit.id,
           bom_item_id: item.itemId,
@@ -699,7 +842,8 @@ window.npiRelSaveKitItems = async function(kit) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSaveGate = async function(gateNum) {
-  if (!progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!programmeId || !currentUser) return;
   const p = prog();
   if (!p || !p.gates || !p.gates[gateNum]) return;
   const gate = p.gates[gateNum];
@@ -712,7 +856,7 @@ window.npiRelSaveGate = async function(gateNum) {
     } else {
       const { data, error } = await supa.from('npi_gates')
         .insert({
-          programme_id: progId,
+          programme_id: programmeId,
           user_id: currentUser.id,
           gate_num: gateNum,
           checks: gate.checks
@@ -730,7 +874,8 @@ window.npiRelSaveGate = async function(gateNum) {
 };
 
 window.npiRelSaveGateSig = async function(gateNum, sigIdx) {
-  if (!progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!programmeId || !currentUser) return;
   const p = prog();
   if (!p || !p.gates || !p.gates[gateNum]) return;
   const gate = p.gates[gateNum];
@@ -743,7 +888,7 @@ window.npiRelSaveGateSig = async function(gateNum, sigIdx) {
   if (!sig) return;
   try {
     const sigData = {
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       gate_id: gate._dbId,
       role: sig.role,
@@ -797,11 +942,12 @@ window.npiRelSaveGateSig = async function(gateNum, sigIdx) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSaveAction = async function(item) {
-  if (!item || !item.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!item || !item.id || !programmeId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_actions').upsert({
       id: item.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       description: item.desc || '',
       owner: item.owner || '',
@@ -834,11 +980,12 @@ window.npiRelDeleteAction = async function(id) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSaveRisk = async function(item) {
-  if (!item || !item.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!item || !item.id || !programmeId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_risks').upsert({
       id: item.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       description: item.desc || '',
       category: item.cat || 'Technical',
@@ -871,11 +1018,12 @@ window.npiRelDeleteRisk = async function(id) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelSaveGanttRow = async function(row) {
-  if (!row || !row.id || !progId || !currentUser) return;
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!row || !row.id || !programmeId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_gantt_rows').upsert({
       id: row.id,
-      programme_id: progId,
+      programme_id: programmeId,
       user_id: currentUser.id,
       task: row.task || '',
       section: row.section || 's1',
@@ -908,17 +1056,56 @@ window.npiRelDeleteGanttRow = async function(id) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelClearAll = async function(pid) {
-  if (!pid) return;
+  const programmeId = await window.npiRelResolveProgrammeId(pid);
+  if (!programmeId) return;
   const tables = [
     'npi_pfmea_history', 'npi_pfmea_causes', 'npi_pfmea_effects', 'npi_pfmea_modes',
     'npi_control_plan', 'npi_bom_kit_items', 'npi_bom_kits', 'npi_bom_items',
     'npi_gate_sigs', 'npi_gates', 'npi_gantt_rows', 'npi_actions', 'npi_risks',
-    'npi_pfd_steps', 'npi_ctq'
+    'npi_pfd_steps', 'npi_ctq', 'npi_documents'
   ];
   for (const table of tables) {
-    await supa.from(table).delete().eq('programme_id', pid);
+    await supa.from(table).delete().eq('programme_id', programmeId);
   }
 };
 
 // Task 2-C: Public alias used by deleteProject() to cascade-delete NPI relational data
 window.npiRelDeleteAllForProgramme = window.npiRelClearAll;
+
+// ─────────────────────────────────────────────────────────────
+// Documents
+// ─────────────────────────────────────────────────────────────
+
+window.npiRelSaveDoc = async function(item) {
+  const programmeId = await window.npiRelResolveProgrammeId(progId);
+  if (!item || !item.id || !programmeId || !currentUser) return;
+  try {
+    const { error } = await supa.from('npi_documents').upsert({
+      id: item.id,
+      programme_id: programmeId,
+      user_id: currentUser.id,
+      doc_number: item.docNumber || '',
+      doc_title: item.title || '',
+      doc_type: item.type || 'Other',
+      issue_num: item.issue || '',
+      owner: item.owner || '',
+      status: item.status || 'Draft',
+      notes: item.notes || '',
+      sort_order: (prog().docs || []).indexOf(item),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+    if (error) console.warn('npiRelSaveDoc error:', error.message);
+  } catch (err) {
+    console.warn('npiRelSaveDoc exception:', err.message);
+  }
+};
+
+window.npiRelDeleteDoc = async function(id) {
+  if (!id) return;
+  try {
+    const { error } = await supa.from('npi_documents').delete().eq('id', id);
+    if (error) console.warn('npiRelDeleteDoc error:', error.message);
+  } catch (err) {
+    console.warn('npiRelDeleteDoc exception:', err.message);
+  }
+};

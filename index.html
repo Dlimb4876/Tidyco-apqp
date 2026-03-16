@@ -201,14 +201,6 @@
       <input type="number" id="insertNum" min="1" step="1">
       <div style="font-size:11px;color:var(--muted);margin-top:3px" id="insertNumHint"></div>
     </div>
-    <div class="field">
-      <label>Step Type</label>
-      <select id="insertType">
-        <option value="step">Normal Step</option>
-        <option value="group">Sub-assembly Group Header</option>
-        <option value="sub">Sub-assembly Step</option>
-      </select>
-    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalInsert')">Cancel</button>
       <button class="btn btn-primary" onclick="npi.apqp.confirmInsert()">Insert</button>
@@ -237,6 +229,18 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalBomPick')">Cancel</button>
       <button class="btn btn-primary" onclick="npi.apqp.saveBomPick()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Document Picker for PFD step doc references -->
+<div class="modal-bg" id="modalDocPick" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Link Documents</div>
+    <div id="docPickList" style="display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalDocPick')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.pfd.saveDocPick()">Save</button>
     </div>
   </div>
 </div>
@@ -452,6 +456,20 @@
   </div>
 </div>
 
+<!-- PFMEA History Modal -->
+<div class="modal-bg" id="modalPfmeaHistory" style="display:none">
+  <div class="modal modal-lg pfmea-history-modal">
+    <div class="modal-head">
+      <div class="modal-title" id="pfmeaHistoryModalTitle">PFMEA History</div>
+      <button class="modal-close" onclick="closeModal('modalPfmeaHistory')" aria-label="Close PFMEA history">×</button>
+    </div>
+    <div id="pfmeaHistoryModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalPfmeaHistory')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════
      SCRIPTS — load order matters
      state → auth → db → helpers → navigation →
@@ -549,6 +567,7 @@
 <script src="portals/product-development/npi/js/bom-cclass.js"></script>
 <script src="portals/product-development/npi/js/timing.js"></script>
 <script src="portals/product-development/npi/js/trackers.js"></script>
+<script src="portals/product-development/npi/js/documents.js"></script>
 <script src="portals/product-development/npi/js/npi-orchestrator.js"></script>
 <script src="portals/product-development/npi/js/npi-events.js"></script>
 

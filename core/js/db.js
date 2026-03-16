@@ -16,7 +16,7 @@ let dirtyProgrammes = new Set();
 // 3-A: Shared column-selection strings for programme queries.
 // Kept in one place so loadRemote() and loadRemotePage() always query
 // exactly the same fields (DRY — change once, both functions benefit).
-const PROG_BASE_SELECT = 'prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
+const PROG_BASE_SELECT = 'id,prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
 const PROG_GATE_SELECT = PROG_BASE_SELECT + ',gate_selections,gate_selection_locked,gate_selection_locked_at,gate_selection_locked_by';
 
 function isGateScopeColumnError(err) {
@@ -122,7 +122,7 @@ async function saveRemote(attempt) {
         .from('programmes')
         .update(row)
         .eq('prog_id', p.id)
-        .select();
+        .select('id, prog_id');
 
       if (updErr && programmesGateScopeColumnsSupported && isGateScopeColumnError(updErr)) {
         programmesGateScopeColumnsSupported = false;
@@ -131,7 +131,7 @@ async function saveRemote(attempt) {
           .from('programmes')
           .update(row)
           .eq('prog_id', p.id)
-          .select());
+          .select('id, prog_id'));
       }
 
       if (updErr) {
@@ -142,22 +142,29 @@ async function saveRemote(attempt) {
         pendingSaves = Math.max(0, pendingSaves - 1);
         continue;
       }
+      if (updated && updated[0] && updated[0].id) {
+        p.dbId = updated[0].id;
+      }
       if (!updated || updated.length === 0) {
-        let { error: insErr } = await supa
+        let { data: inserted, error: insErr } = await supa
           .from('programmes')
-          .insert(row);
+          .insert(row)
+          .select('id, prog_id');
 
         if (insErr && programmesGateScopeColumnsSupported && isGateScopeColumnError(insErr)) {
           programmesGateScopeColumnsSupported = false;
           row = buildProgrammeRow(p, now, email);
-          ({ error: insErr } = await supa
+          ({ data: inserted, error: insErr } = await supa
             .from('programmes')
-            .insert(row));
+            .insert(row)
+            .select('id, prog_id'));
         }
 
         if (insErr) {
           console.error('Insert err', p.name, insErr);
           errors.push(p.name + ' (' + (insErr.message || 'unknown error') + ')');
+        } else if (inserted && inserted[0] && inserted[0].id) {
+          p.dbId = inserted[0].id;
         }
       }
       // 3-D: Decrement counter and update badge after each write completes.
@@ -207,6 +214,7 @@ async function loadRemote() {
   if (error) { console.error('Load error', error); return; }
   if (data && data.length > 0) {
     db.programmes = data.map(row => migrateprog({
+      dbId:           row.id || null,
       id:             row.prog_id,
       name:           row.name,
       customer:       row.customer          || '',
@@ -266,6 +274,7 @@ async function loadRemotePage(page, pageSize = 50) {
   if (error) { console.error('Load page error', error); return; }
 
   const rows = (data || []).map(row => migrateprog({
+    dbId:            row.id || null,
     id:              row.prog_id,
     name:            row.name,
     customer:        row.customer          || '',
@@ -330,6 +339,7 @@ function setSyncBadge(state, text) {
 // ── Migration ─────────────────────────────────────────────────
 function migrateprog(p) {
   if (!p) return newProgTemplate('Untitled', '', '', 'Other', '', '', new Date().toISOString().slice(0, 10));
+  if (!p.dbId) p.dbId = null;
   if (!p.product_id) p.product_id = null;
   if (p.gate_selections === undefined) p.gate_selections = null;
   if (typeof normalizeGateSelections === 'function') {
@@ -463,6 +473,7 @@ function subscribeProgrammesGlobally() {
     onInsert: (row) => {
       if (db.programmes.find(p => p.id === row.prog_id)) return; // already known
       const newProg = migrateprog({
+        dbId:            row.id || null,
         id:              row.prog_id,
         name:            row.name            || '',
         customer:        row.customer        || '',
@@ -500,6 +511,7 @@ function subscribeProgrammesGlobally() {
         showToast(`${row.updated_by.split('@')[0]} just updated this project's details`, 'info', 6000);
       }
       const p = db.programmes[idx];
+      p.dbId       = row.id              || p.dbId || null;
       p.name       = row.name            || p.name;
       p.customer   = row.customer        || '';
       p.unit       = row.unit_name       || '';

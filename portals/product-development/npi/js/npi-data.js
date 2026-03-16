@@ -7,12 +7,79 @@ npi.data = npi.data || {}
 
 npi.data.prog = function() { return prog() }
 
-npi.data.sortedPfd = function(pfd) { return [...(pfd || [])].sort((a, b) => a.stepNum - b.stepNum) }
+npi.data.pfdType = {
+  isHeader(type) {
+    return type === 'header' || type === 'group'
+  },
+  isExecutable(type) {
+    return !npi.data.pfdType.isHeader(type)
+  }
+}
+
+npi.data.firstExecutableStep = function(pfd) {
+  return [...(pfd || [])]
+    .filter(s => npi.data.pfdType.isExecutable(s.type))
+    .sort((a, b) => a.stepNum - b.stepNum)[0] || null
+}
+
+npi.data.sortedPfd = function(pfd) {
+  const rows = [...(pfd || [])]
+  const executable = rows
+    .filter(s => npi.data.pfdType.isExecutable(s.type))
+    .sort((a, b) => a.stepNum - b.stepNum)
+
+  const headersByBeforeAnchor = new Map()
+  const headersByAnchor = new Map()
+  const orphans = []
+
+  rows.forEach((step, sourceIndex) => {
+    if (!npi.data.pfdType.isHeader(step.type)) return
+    const bucket = step.beforeStepId
+      ? (headersByBeforeAnchor.get(step.beforeStepId) || [])
+      : step.afterStepId
+        ? (headersByAnchor.get(step.afterStepId) || [])
+        : orphans
+    bucket.push({ step, sourceIndex })
+    if (step.beforeStepId && !headersByBeforeAnchor.has(step.beforeStepId)) headersByBeforeAnchor.set(step.beforeStepId, bucket)
+    if (step.afterStepId && !headersByAnchor.has(step.afterStepId)) headersByAnchor.set(step.afterStepId, bucket)
+  })
+
+  const sorted = []
+  executable.forEach(step => {
+    const leading = headersByBeforeAnchor.get(step.id) || []
+    leading
+      .sort((a, b) => a.sourceIndex - b.sourceIndex)
+      .forEach(entry => sorted.push(entry.step))
+
+    sorted.push(step)
+    const attached = headersByAnchor.get(step.id) || []
+    attached
+      .sort((a, b) => a.sourceIndex - b.sourceIndex)
+      .forEach(entry => sorted.push(entry.step))
+  })
+
+  if (orphans.length > 0) {
+    orphans
+      .sort((a, b) => a.sourceIndex - b.sourceIndex)
+      .forEach(entry => sorted.push(entry.step))
+  }
+
+  return sorted
+}
 npi.data.nextMainStepNum = function(pfd) {
-  const tens = (pfd || []).filter(s => s.stepNum % 10 === 0).map(s => s.stepNum)
+  const tens = (pfd || [])
+    .filter(s => npi.data.pfdType.isExecutable(s.type))
+    .filter(s => Number.isFinite(s.stepNum) && s.stepNum % 10 === 0)
+    .map(s => s.stepNum)
   return tens.length ? Math.max(...tens) + 10 : 10
 }
-npi.data.stepNumConflict = function(pfd, num) { return (pfd || []).some(s => s.stepNum === num) }
+npi.data.stepNumConflict = function(pfd, num, opts) {
+  const includeHeaders = !!(opts && opts.includeHeaders)
+  return (pfd || []).some(s => {
+    if (!includeHeaders && !npi.data.pfdType.isExecutable(s.type)) return false
+    return s.stepNum === num
+  })
+}
 npi.data.ganttNewRow = function(section) {
   return {
     id: crypto.randomUUID(),
@@ -51,19 +118,89 @@ npi.data.ctq = {
 }
 
 npi.data.pfd = {
+  ensureLeadingHeader(notify = false) {
+    const p = prog()
+    const firstExecutable = npi.data.firstExecutableStep(p.pfd)
+    if (!firstExecutable) return null
+
+    const existing = p.pfd.find(step =>
+      npi.data.pfdType.isHeader(step.type) && step.beforeStepId === firstExecutable.id
+    )
+    if (existing) return existing
+
+    const step = {
+      id: crypto.randomUUID(),
+      stepNum: null,
+      beforeStepId: firstExecutable.id,
+      type: 'header',
+      isDefault: true,
+      op: '',
+      detail: '',
+      ctqIds: [],
+      bomRefs: [],
+      docRefs: []
+    }
+    p.pfd.push(step)
+    Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    if (notify) npi.notify('render')
+    return step
+  },
   addMainStep() {
     const p = prog()
-    const step = { id: crypto.randomUUID(), stepNum: npi.data.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }
+    const hadExecutable = p.pfd.some(s => npi.data.pfdType.isExecutable(s.type))
+    const step = { id: crypto.randomUUID(), stepNum: npi.data.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [] }
     p.pfd.push(step)
+    if (!hadExecutable) npi.data.pfd.ensureLeadingHeader()
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
     npi.notify('render')
     return step
   },
+  addSectionHeaderAfter(afterStepId) {
+    const p = prog()
+    const anchor = p.pfd.find(s => s.id === afterStepId && npi.data.pfdType.isExecutable(s.type))
+    if (!anchor) return { ok: false, error: 'Choose a process step first' }
+
+    const step = {
+      id: crypto.randomUUID(),
+      stepNum: null,
+      afterStepId: anchor.id,
+      type: 'header',
+      op: '',
+      detail: '',
+      ctqIds: [],
+      bomRefs: [],
+      docRefs: []
+    }
+    p.pfd.push(step)
+    Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
+    return { ok: true, step }
+  },
   insertStep(num, type) {
     const p = prog()
-    if (!num || num < 1) return { ok: false, error: 'Enter valid number' }
-    if (npi.data.stepNumConflict(p.pfd, num)) return { ok: false, error: `Step ${num} exists` }
-    const step = { id: crypto.randomUUID(), stepNum: num, type: type || 'step', op: '', detail: '', ctqIds: [], bomRefs: [] }
+    const nextType = type || 'step'
+    const isHeader = npi.data.pfdType.isHeader(nextType)
+
+    let nextNum = Number(num)
+    if (!Number.isFinite(nextNum) || nextNum < 1) {
+      if (!isHeader) return { ok: false, error: 'Enter valid number' }
+      nextNum = npi.data.nextMainStepNum(p.pfd)
+    }
+
+    if (npi.data.stepNumConflict(p.pfd, nextNum, { includeHeaders: false })) {
+      return { ok: false, error: `Step ${nextNum} exists` }
+    }
+
+    const step = {
+      id: crypto.randomUUID(),
+      stepNum: nextNum,
+      type: isHeader ? 'header' : 'step',
+      op: '',
+      detail: '',
+      ctqIds: [],
+      bomRefs: [],
+      docRefs: []
+    }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
     npi.notify('render')
@@ -73,8 +210,28 @@ npi.data.pfd = {
     const p = prog()
     const i = p.pfd.findIndex(s => s.id === sid)
     if (i < 0) return
+    const step = p.pfd[i]
+    collapsedGroups.delete(sid)
+    if (npi.data.pfdType.isExecutable(step.type)) {
+      const remainingExecutable = p.pfd
+        .filter(s => s.id !== sid && npi.data.pfdType.isExecutable(s.type))
+        .sort((a, b) => a.stepNum - b.stepNum)
+
+      p.pfd
+        .filter(s => npi.data.pfdType.isHeader(s.type) && s.beforeStepId === sid)
+        .forEach(header => {
+          if (remainingExecutable.length > 0) {
+            header.beforeStepId = remainingExecutable[0].id
+            Promise.resolve().then(() => npiRelSavePFDStep(header)).catch(err => console.error('[NPI] save PFD step failed:', err))
+          } else {
+            collapsedGroups.delete(header.id)
+            p.pfd = p.pfd.filter(item => item.id !== header.id)
+            Promise.resolve().then(() => npiRelDeletePFDStep(header.id)).catch(err => console.error('[NPI] delete PFD step failed:', err))
+          }
+        })
+    }
     p.pfmea.forEach(r => { if (r.pfdId === sid) { r.pfdId = ''; Promise.resolve().then(() => npiRelSavePFMEAMode(r)).catch(err => console.error('[NPI] save PFMEA mode failed:', err)) } })
-    p.pfd.splice(i, 1)
+    p.pfd = p.pfd.filter(item => item.id !== sid)
     Promise.resolve().then(() => npiRelDeletePFDStep(sid)).catch(err => console.error('[NPI] delete PFD step failed:', err))
     npi.notify('render')
   },
@@ -111,6 +268,13 @@ npi.data.pfd = {
       return { bomType: bt, itemId: id }
     })
     Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
+  },
+  saveDocPick(stepIndex, selectedIds) {
+    const step = prog().pfd[stepIndex]
+    if (!step) return
+    step.docRefs = [...selectedIds]
+    Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
     npi.notify('render')
   }
 }
@@ -451,6 +615,32 @@ npi.data.pfmea = {
     const ca = ef.causes[ci]
     ef.causes.splice(ci, 1)
     Promise.resolve().then(() => npiRelDeletePFMEACause(ca)).catch(err => console.error('[NPI] delete PFMEA cause failed:', err))
+    npi.notify('render')
+  }
+}
+
+npi.data.docs = {
+  add() {
+    const item = { id: crypto.randomUUID(), docNumber: '', title: '', type: 'Other', issue: '', owner: '', status: 'Draft', notes: '' }
+    const p = prog()
+    if (!p.docs) p.docs = []
+    p.docs.push(item)
+    Promise.resolve().then(() => npiRelSaveDoc(item)).catch(err => console.error('[NPI] save doc failed:', err))
+    npi.notify('render')
+    return item
+  },
+  upd(i, f, v) {
+    const p = prog()
+    if (!p.docs || !p.docs[i]) return
+    p.docs[i][f] = v
+    Promise.resolve().then(() => npiRelSaveDoc(p.docs[i])).catch(err => console.error('[NPI] save doc failed:', err))
+  },
+  del(i) {
+    const p = prog()
+    if (!p.docs || !p.docs[i]) return
+    const id = p.docs[i].id
+    p.docs.splice(i, 1)
+    Promise.resolve().then(() => npiRelDeleteDoc(id)).catch(err => console.error('[NPI] delete doc failed:', err))
     npi.notify('render')
   }
 }

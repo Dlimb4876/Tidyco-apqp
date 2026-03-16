@@ -45,37 +45,39 @@
 /* ── APQP Tabs Shell ────────────────────────────────────────── */
 .apqp-tabs-shell {
   display: flex;
+  gap: 8px;
+  padding: 12px 24px;
   background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: 8px 8px 0 0;
-  overflow: hidden;
-  border-bottom: none;
+  border-bottom: 2px solid var(--line);
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .apqp-tab-btn {
-  padding: 10px 20px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--muted);
+  padding: 8px 16px;
   background: transparent;
-  font-family: 'IBM Plex Sans', sans-serif;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mid);
+  cursor: pointer;
   transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'IBM Plex Sans', sans-serif;
   white-space: nowrap;
 }
 
 .apqp-tab-btn:hover {
-  color: var(--blue);
   background: var(--bg);
+  border-color: var(--line2);
 }
 
 .apqp-tab-btn.active {
-  color: var(--blue);
-  background: var(--blue-pale);
-  border-bottom-color: var(--blue);
-  font-weight: 600;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--white);
 }
 
 .apqp-tab-badge {

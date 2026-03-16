@@ -31,6 +31,10 @@
     width: 130px;
   }
 
+  .step-field.f-doc {
+    width: 160px;
+  }
+
   .flow-node {
     max-width: 100px;
   }
@@ -83,6 +87,11 @@
   .step-field.f-ctq {
     width: auto;
     min-width: 80px;
+  }
+
+  .step-field.f-doc {
+    width: auto;
+    min-width: 100px;
   }
 
   .step-field.f-pfmea {
@@ -211,7 +220,12 @@
 
   /* Tab buttons */
   .apqp-tab-btn {
-    padding: 8px 12px;
+    padding: 6px 12px;
     font-size: 11px;
+  }
+
+  .apqp-tabs-shell {
+    padding: 10px 16px;
+    gap: 6px;
   }
 }

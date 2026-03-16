@@ -32,5 +32,6 @@ npi._renderInner = function(section) {
   if (section === 'risks') return npi.tracker.renderRisks()
   if (section === 'bom') return npi.bom.renderBOM()
   if (section === 'timing') return npi.timing.renderTimingPlan()
+  if (section === 'documents') return npi.docs.render()
   return ''
 }

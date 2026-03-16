@@ -3,6 +3,7 @@
 // ═══════════════════════════════════
 
 function setOperationsTab(tab) {
+	const prevTab = operationsTab;
 	operationsTab = tab || 'overview';
 
 	const parts = [];
@@ -10,7 +11,12 @@ function setOperationsTab(tab) {
 	parts.push('s=operations');
 	if (operationsTab !== 'overview') parts.push('od=' + encodeURIComponent(operationsTab));
 
-	history.replaceState(null, '', '#' + parts.join('&'));
+	const hash = '#' + parts.join('&');
+	if (typeof writeNavigationHistory === 'function') {
+		writeNavigationHistory(hash, { push: prevTab !== operationsTab });
+	} else {
+		history.replaceState(null, '', hash);
+	}
 	render();
 }
 

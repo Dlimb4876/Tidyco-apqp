@@ -6,7 +6,12 @@ const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
 document.documentElement.innerHTML = html.toString();
 
 // Minimal globals required by pfmea.js
-global.npi = { pfmea: {} };
+global.npi = {
+  pfmea: {},
+  components: {
+    rpnBadge: (value) => `<span>${value}</span>`
+  }
+};
 global.RPN_HIGH = 100;
 global.RPN_CRITICAL = 200;
 global.PFMEA_SCORE_MIN = 1;
@@ -14,6 +19,8 @@ global.PFMEA_SCORE_MAX = 10;
 global.save = jest.fn();
 global.render = jest.fn();
 global.alert = jest.fn();
+global.showModal = jest.fn();
+global.closeModal = jest.fn();
 global.showToast = jest.fn();
 global.confirm = jest.fn(() => true);
 
@@ -38,7 +45,9 @@ describe('PFMEA core rules', () => {
     jest.clearAllMocks();
     activeProgramme = {
       cp: [],
-      pfd: [],
+      pfd: [
+        { id: 's1', stepNum: 10, op: 'Final assembly' }
+      ],
       ctq: [],
       pfmea: [
         {
@@ -135,5 +144,57 @@ describe('PFMEA core rules', () => {
     expect(showToast).toHaveBeenCalled();
     expect(save).not.toHaveBeenCalled();
     expect(render).not.toHaveBeenCalled();
+  });
+
+  test('opens centered PFMEA history modal from the history button', () => {
+    activeProgramme.pfmea[0].effects[0].causes[0].history = [
+      { rpn: 240, newRpn: 96, oldOcc: 5, newOcc: 3, oldDet: 6, newDet: 4, desc: 'Added check', date: '16 Mar 26' }
+    ];
+    document.body.innerHTML += [
+      '<div id="modalPfmeaHistory" style="display:none"></div>',
+      '<div id="pfmeaHistoryModalTitle"></div>',
+      '<div id="pfmeaHistoryModalBody"></div>'
+    ].join('');
+
+    const evt = {
+      stopPropagation: jest.fn()
+    };
+
+    npi.pfmea.pfShowHist(evt, 'c1');
+
+    expect(showModal).toHaveBeenCalledWith('modalPfmeaHistory');
+    expect(document.getElementById('pfmeaHistoryModalTitle').textContent).toBe('PFMEA History — Step 10');
+    expect(document.getElementById('pfmeaHistoryModalBody').textContent).toContain('Final assembly');
+    expect(document.getElementById('pfmeaHistoryModalBody').textContent).toContain('Added check');
+    expect(evt.stopPropagation).toHaveBeenCalled();
+  });
+
+  test('collects PFMEA history entries for the shared history tab', () => {
+    activeProgramme.pfmea[0].effects[0].causes[0].history = [
+      { rpn: 240, newRpn: 96, oldOcc: 5, newOcc: 3, oldDet: 6, newDet: 4, desc: 'Added check', date: '16 Mar 26' }
+    ];
+
+    const entries = npi.pfmea.collectHistoryEntries();
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].stepNum).toBe(10);
+    expect(entries[0].stepName).toBe('Final assembly');
+    expect(entries[0].mode).toBe('Seal failure');
+    expect(entries[0].oldRpn).toBe(240);
+    expect(entries[0].newRpn).toBe(96);
+  });
+
+  test('reveals live forecast badge when new PFMEA scores are entered', () => {
+    document.body.innerHTML += [
+      '<span id="forecast_wrap_0_0_0" style="display:inline-block;opacity:0">',
+      '<span id="forecast_0_0_0" class="rpn rpn-lo">—</span>',
+      '</span>'
+    ].join('');
+
+    npi.pfmea.pfLiveForecast(0, 0, 0);
+
+    expect(document.getElementById('forecast_0_0_0').textContent).toBe('96');
+    expect(document.getElementById('forecast_0_0_0').className).toBe('rpn rpn-lo');
+    expect(document.getElementById('forecast_wrap_0_0_0').style.opacity).toBe('1');
   });
 });

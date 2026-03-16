@@ -169,6 +169,11 @@ describe('DB Module (db.js)', () => {
       const result = migrateprog(prog);
       expect(result.ganttStart).toBe('2025-01-01');
     });
+
+    test('should preserve database UUID when present', () => {
+      const result = migrateprog({ id: '1', name: 'Test', dbId: '11111111-1111-4111-8111-111111111111' });
+      expect(result.dbId).toBe('11111111-1111-4111-8111-111111111111');
+    });
   });
 
   // ── load (localStorage) ──────────────────────────────────────
@@ -245,6 +250,7 @@ describe('DB Module (db.js)', () => {
         select: jest.fn(() => ({
           order: jest.fn().mockResolvedValue({
             data: [{
+              id: '11111111-1111-4111-8111-111111111111',
               prog_id: 'remote-1',
               name: 'Remote Project',
               updated_at: '2025-01-01T00:00:00Z',
@@ -257,6 +263,8 @@ describe('DB Module (db.js)', () => {
       }));
 
       await loadRemote();
+
+  expect(global.db.programmes[0].dbId).toBe('11111111-1111-4111-8111-111111111111');
 
       expect(global.db.programmes.length).toBe(1);
       expect(global.db.programmes[0].name).toBe('Remote Project');

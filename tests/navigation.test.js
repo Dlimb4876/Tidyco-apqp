@@ -40,6 +40,7 @@ global.currentSection = 'hub';
 global.npiTab = 'all';
 global.apqpTab = 'ctq';
 global.capacityTab = 'root';
+global.operationsTab = 'overview';
 global.productionTab = 'root';
 global.productDevelopmentTab = 'root';
 global.productsActiveTab = 'list';
@@ -128,6 +129,29 @@ const navScript = fs.readFileSync(
 );
 eval(navScript);
 
+const capacityScript = fs.readFileSync(
+  path.resolve(__dirname, '../portals/capacity/js/capacity.js'),
+  'utf8'
+);
+eval(capacityScript);
+
+const productDevelopmentScript = fs.readFileSync(
+  path.resolve(__dirname, '../portals/product-development/js/product-development.js'),
+  'utf8'
+);
+eval(productDevelopmentScript);
+
+async function waitFor(condition, timeoutMs = 200) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (condition()) return;
+    await new Promise(resolve => setTimeout(resolve, 5));
+  }
+
+  throw new Error('Timed out waiting for navigation state to update.');
+}
+
 // ─────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────
@@ -140,6 +164,7 @@ describe('Navigation Module (navigation.js)', () => {
     global.npiTab = 'all';
     global.apqpTab = 'ctq';
     global.capacityTab = 'root';
+    global.operationsTab = 'overview';
     global.productionTab = 'root';
     global.productDevelopmentTab = 'root';
     global.productsActiveTab = 'list';
@@ -437,6 +462,41 @@ describe('Navigation Module (navigation.js)', () => {
 
       window.dispatchEvent(event);
       expect(global.currentSection).toBe('project');
+    });
+
+    test('should return to the previous project screen from documents', async () => {
+      navigate('project');
+      navigate('documents');
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        bubbles: true,
+        cancelable: true
+      });
+
+      window.dispatchEvent(event);
+      await waitFor(() => global.currentSection === 'project' && window.location.hash === '#p=test-prog-1&s=project');
+
+      expect(global.currentSection).toBe('project');
+      expect(window.location.hash).toBe('#p=test-prog-1&s=project');
+    });
+
+    test('should return to the previous portal sub-screen when a tab changed', async () => {
+      navigate('capacity');
+      setCapacityTab('me');
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        bubbles: true,
+        cancelable: true
+      });
+
+      window.dispatchEvent(event);
+      await waitFor(() => global.currentSection === 'capacity' && global.capacityTab === 'root' && window.location.hash === '#p=test-prog-1&s=capacity');
+
+      expect(global.currentSection).toBe('capacity');
+      expect(global.capacityTab).toBe('root');
+      expect(window.location.hash).toBe('#p=test-prog-1&s=capacity');
     });
 
     test('should not navigate back when Backspace is pressed inside an input', () => {

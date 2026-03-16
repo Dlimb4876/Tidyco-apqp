@@ -19,6 +19,17 @@ npi.pfmea.setRpnFilter = function(nextFilter) {
   render()
 }
 
+npi.pfmea.getView = function() {
+  const cur = (globalThis.pfmeaView || 'worksheet').toString()
+  return ['worksheet', 'history'].includes(cur) ? cur : 'worksheet'
+}
+
+npi.pfmea.setView = function(nextView) {
+  const safe = (nextView || 'worksheet').toString()
+  globalThis.pfmeaView = ['worksheet', 'history'].includes(safe) ? safe : 'worksheet'
+  render()
+}
+
 npi.pfmea.rpnInFilter = function(rpn, filter) {
   const v = Number(rpn) || 0
   if (filter === 'high') return v >= RPN_HIGH
@@ -34,9 +45,180 @@ npi.pfmea.modeMatchesFilter = function(mode, filter) {
   return npi.pfmea.rpnInFilter(npi.pfmea.calcRPN(mode), filter)
 }
 
+npi.pfmea.parseHistoryDate = function(value) {
+  const parsed = Date.parse(value || '')
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+npi.pfmea.collectHistoryEntries = function() {
+  const p = prog()
+  const stepById = {}
+  ;(p?.pfd || []).forEach(step => { stepById[step.id] = step })
+
+  const entries = []
+  ;(p?.pfmea || []).forEach(mode => {
+    const step = stepById[mode.pfdId] || null
+    ;(mode.effects || []).forEach(ef => {
+      ;(ef.causes || []).forEach(ca => {
+        ;(ca.history || []).forEach((hist, index) => {
+          const oldRpn = Number(hist.rpn) || 0
+          const newRpn = Number(hist.newRpn) || ((ef.sev || 1) * (hist.newOcc ?? ca.occ ?? 1) * (hist.newDet ?? ca.det ?? 1))
+          entries.push({
+            causeId: ca.id,
+            historyIndex: index,
+            stepId: step?.id || '',
+            stepNum: step?.stepNum ?? '—',
+            stepName: step?.op || 'Unlinked step',
+            mode: mode.mode || '',
+            effect: ef.effect || '',
+            cause: ca.cause || '',
+            oldRpn,
+            newRpn,
+            oldOcc: hist.oldOcc ?? '',
+            newOcc: hist.newOcc ?? '',
+            oldDet: hist.oldDet ?? '',
+            newDet: hist.newDet ?? '',
+            desc: hist.desc || '',
+            date: hist.date || '',
+            currentRpn: (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
+          })
+        })
+      })
+    })
+  })
+
+  return entries.sort((a, b) => {
+    const dateDelta = npi.pfmea.parseHistoryDate(b.date) - npi.pfmea.parseHistoryDate(a.date)
+    if (dateDelta !== 0) return dateDelta
+    return (Number(a.stepNum) || 0) - (Number(b.stepNum) || 0)
+  })
+}
+
+npi.pfmea.findCauseContext = function(causeId) {
+  const p = prog()
+  const stepById = {}
+  ;(p?.pfd || []).forEach(step => { stepById[step.id] = step })
+
+  for (const mode of (p?.pfmea || [])) {
+    for (const ef of (mode.effects || [])) {
+      for (const ca of (ef.causes || [])) {
+        if (ca.id !== causeId) continue
+        const step = stepById[mode.pfdId] || null
+        return {
+          step,
+          mode,
+          effect: ef,
+          cause: ca,
+          currentRpn: (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+npi.pfmea.renderHistoryView = function(entries) {
+  if (!entries.length) {
+    return `<div class="card"><div style="padding:26px">${emptyState('🕘', 'No PFMEA history yet', 'Implement a recommended action to log PFMEA changes across all steps.')}</div></div>`
+  }
+
+  return `<div class="card">
+    <div class="card-head">
+      <span class="card-title">PFMEA Change History</span>
+      <span class="card-meta">All logged PFMEA changes across every step, newest first</span>
+    </div>
+    <div class="sticky-card-scroll">
+      <table class="tbl tbl--compact pfmea-history-table">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Failure Chain</th>
+            <th>RPN Change</th>
+            <th>OCC / DET</th>
+            <th>Action Logged</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${entries.map(entry => {
+            const rpnDown = entry.newRpn < entry.oldRpn
+            const occChanged = entry.oldOcc !== '' || entry.newOcc !== ''
+            const detChanged = entry.oldDet !== '' || entry.newDet !== ''
+            return `<tr>
+              <td>
+                <div class="pfmea-history-step">Step ${esc(entry.stepNum)}</div>
+                <div class="pfmea-history-step-name">${esc(entry.stepName)}</div>
+              </td>
+              <td>
+                <div class="pfmea-history-chain">${esc(entry.mode || '—')}</div>
+                <div class="pfmea-history-subchain">${esc(entry.effect || '—')}</div>
+                <div class="pfmea-history-subchain">Cause: ${esc(entry.cause || '—')}</div>
+              </td>
+              <td>
+                <div class="pfmea-history-rpn-change ${rpnDown ? 'improved' : 'raised'}">${entry.oldRpn} → ${entry.newRpn}</div>
+                <div class="pfmea-history-current">Current: ${npi.components.rpnBadge(entry.currentRpn)}</div>
+              </td>
+              <td>
+                <div class="pfmea-history-score">OCC ${entry.oldOcc === '' ? '—' : entry.oldOcc} → ${entry.newOcc === '' ? '—' : entry.newOcc}</div>
+                <div class="pfmea-history-score">DET ${entry.oldDet === '' ? '—' : entry.oldDet} → ${entry.newDet === '' ? '—' : entry.newDet}</div>
+              </td>
+              <td>${esc(entry.desc || 'Action implemented')}</td>
+              <td>${esc(entry.date || '—')}</td>
+            </tr>`
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`
+}
+
+npi.pfmea.renderHistoryModalBody = function(context) {
+  const hist = [...(context.cause.history || [])].reverse()
+  return `<div class="pfmea-history-modal-summary">
+    <div class="pfmea-history-modal-grid">
+      <div>
+        <div class="pfmea-history-label">Step</div>
+        <div class="pfmea-history-value">Step ${esc(context.step?.stepNum ?? '—')} · ${esc(context.step?.op || 'Unlinked step')}</div>
+      </div>
+      <div>
+        <div class="pfmea-history-label">Current RPN</div>
+        <div class="pfmea-history-value">${npi.components.rpnBadge(context.currentRpn)}</div>
+      </div>
+      <div>
+        <div class="pfmea-history-label">Failure Mode</div>
+        <div class="pfmea-history-value">${esc(context.mode.mode || '—')}</div>
+      </div>
+      <div>
+        <div class="pfmea-history-label">Effect</div>
+        <div class="pfmea-history-value">${esc(context.effect.effect || '—')}</div>
+      </div>
+      <div class="pfmea-history-modal-span">
+        <div class="pfmea-history-label">Cause</div>
+        <div class="pfmea-history-value">${esc(context.cause.cause || '—')}</div>
+      </div>
+    </div>
+  </div>
+  <div class="pfmea-history-modal-list">
+    ${hist.length ? hist.map(item => {
+      const oldRpn = Number(item.rpn) || 0
+      const newRpn = Number(item.newRpn) || oldRpn
+      const improved = newRpn < oldRpn
+      return `<div class="pfmea-history-event">
+        <div class="pfmea-history-event-head">
+          <span class="pfmea-history-rpn-change ${improved ? 'improved' : 'raised'}">${oldRpn} → ${newRpn}</span>
+          <span class="pfmea-history-date">${esc(item.date || '—')}</span>
+        </div>
+        <div class="pfmea-history-event-scores">OCC ${item.oldOcc ?? '—'} → ${item.newOcc ?? '—'} · DET ${item.oldDet ?? '—'} → ${item.newDet ?? '—'}</div>
+        <div class="pfmea-history-event-desc">${esc(item.desc || 'Action implemented')}</div>
+      </div>`
+    }).join('') : `<div style="padding:8px 0">${emptyState('🕘', 'No history yet', 'This cause has not logged any PFMEA changes yet.')}</div>`}
+  </div>`
+}
+
 npi.pfmea.renderPFMEA = function() {
   const p = prog()
-  const sorted = npi.data.sortedPfd(p.pfd).filter(s => s.type !== 'group')
+  const sorted = npi.data.sortedPfd(p.pfd).filter(s => npi.data.pfdType.isExecutable(s.type))
   if (sorted.length === 0) return emptyState('⚠️', 'No process steps', 'Add steps in Process Flow first.')
 
   // NOTE: PFMEA structure migration has been moved to migrateprog() in db.js
@@ -44,6 +226,8 @@ npi.pfmea.renderPFMEA = function() {
 
   const highRPN = p.pfmea.reduce((n, m) => n + (m.effects || []).reduce((en, ef) => en + (ef.causes || []).filter(ca => (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1) >= RPN_HIGH).length, 0), 0)
   const activeFilter = npi.pfmea.getRpnFilter()
+  const activeView = npi.pfmea.getView()
+  const historyEntries = npi.pfmea.collectHistoryEntries()
 
   const byStep = {}; sorted.forEach(s => { byStep[s.id] = [] }); byStep['__none'] = []
   p.pfmea.forEach(r => { const key = (r.pfdId && byStep[r.pfdId] !== undefined) ? r.pfdId : '__none'; byStep[key].push(r) })
@@ -210,10 +394,6 @@ npi.pfmea.renderPFMEA = function() {
             <td class="pfmea-score-cell">
               ${npi.components.rpnBadge(rpn, { id: `rpn_${mi}_${ei}_${ci}` })}
               ${hist.length > 0 ? `<button class="rpn-hist-btn" data-action="pfmea-show-hist" data-cause-id="${ca.id}">⏱${hist.length}</button>` : ''}
-              <div class="hist-popup" id="hist_${ca.id}" style="display:none;position:fixed;z-index:9999;background:white;border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.15);max-height:400px;overflow-y:auto">
-                <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">RPN History</div>
-                ${histRows}
-              </div>
             </td>
             <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? '#eff6ff' : ''};">${esc(act.desc || '')}</textarea></td>
             <td style="vertical-align:top"><textarea class="cell-edit" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>
@@ -228,7 +408,7 @@ npi.pfmea.renderPFMEA = function() {
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-det" data-allow-blank="1" data-fallback="" style="background:#eff6ff">
             </td>
             <td class="pfmea-score-cell">
-              <span style="opacity:${hasAction ? '1' : '0'}">${npi.components.rpnBadge(hasAction ? forecast : 0, { id: `forecast_${mi}_${ei}_${ci}`, emptyLabel: '—' })}</span>
+              <span id="forecast_wrap_${mi}_${ei}_${ci}" style="display:inline-block;opacity:${hasAction ? '1' : '0'}">${npi.components.rpnBadge(hasAction ? forecast : 0, { id: `forecast_${mi}_${ei}_${ci}`, emptyLabel: '—' })}</span>
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:4px">
               <button class="btn btn-sm btn-green" style="font-size:9px;padding:3px 6px;white-space:nowrap" data-action="pfmea-implement" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" title="Apply new OCC/DET and log to history">▶ Apply</button>
@@ -297,23 +477,41 @@ npi.pfmea.renderPFMEA = function() {
     activeFilter === 'r50_99' ? 'RPN 50-99' :
     activeFilter === 'r100_199' ? 'RPN 100-199' : 'RPN 200+'
 
+  const viewTabs = `<div class="pfmea-toolbar"><div class="pfmea-view-tabs">
+    <button class="pfmea-view-btn ${activeView === 'worksheet' ? 'active' : ''}" data-action="pfmea-set-view" data-view="worksheet">Worksheet</button>
+    <button class="pfmea-view-btn ${activeView === 'history' ? 'active' : ''}" data-action="pfmea-set-view" data-view="history">History${historyEntries.length ? ` <span class="pfmea-view-count">${historyEntries.length}</span>` : ''}</button>
+  </div>${activeView === 'worksheet'
+    ? `<div class="pfmea-filter-wrap">
+      <label class="pfmea-filter-label">RPN Filter
+        <select class="pfmea-filter-select" data-action="pfmea-filter">
+          <option value="all"${activeFilter === 'all' ? ' selected' : ''}>All</option>
+          <option value="high"${activeFilter === 'high' ? ' selected' : ''}>High only (>=${RPN_HIGH})</option>
+          <option value="r1_49"${activeFilter === 'r1_49' ? ' selected' : ''}>1-49</option>
+          <option value="r50_99"${activeFilter === 'r50_99' ? ' selected' : ''}>50-99</option>
+          <option value="r100_199"${activeFilter === 'r100_199' ? ' selected' : ''}>100-199</option>
+          <option value="r200_plus"${activeFilter === 'r200_plus' ? ' selected' : ''}>200+</option>
+        </select>
+      </label>
+      <span class="tag" style="align-self:center">${filterLabel}: ${visibleModeCount}/${totalModeCount} operations</span>
+      ${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high RPN ≥${RPN_HIGH}</span>` : ''}
+    </div>`
+    : `<div class="pfmea-history-summary"><span class="tag" style="align-self:center">${historyEntries.length} logged change${historyEntries.length === 1 ? '' : 's'}</span></div>`}
+  </div>`
+
+  if (activeView === 'history') {
+    return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div class="sec-title">PFMEA</div>
+    <div class="sec-desc">Failure history across all PFMEA steps in one place.</div></div>
+    <div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-pfmea')" title="User Guide">❓ Guide</button></div></div>
+    ${viewTabs}
+    ${npi.pfmea.renderHistoryView(historyEntries)}`
+  }
+
   return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div class="sec-title">PFMEA</div>
   <div class="sec-desc">Failure Mode → Effect (SEV) → Cause (OCC) → Controls Prevent / Detect (DET) → RPN. Actions and rescoring per cause.</div></div>
-  <div class="sec-actions pfmea-filter-wrap">
-    <label class="pfmea-filter-label">RPN Filter
-      <select class="pfmea-filter-select" data-action="pfmea-filter">
-        <option value="all"${activeFilter === 'all' ? ' selected' : ''}>All</option>
-        <option value="high"${activeFilter === 'high' ? ' selected' : ''}>High only (>=${RPN_HIGH})</option>
-        <option value="r1_49"${activeFilter === 'r1_49' ? ' selected' : ''}>1-49</option>
-        <option value="r50_99"${activeFilter === 'r50_99' ? ' selected' : ''}>50-99</option>
-        <option value="r100_199"${activeFilter === 'r100_199' ? ' selected' : ''}>100-199</option>
-        <option value="r200_plus"${activeFilter === 'r200_plus' ? ' selected' : ''}>200+</option>
-      </select>
-    </label>
-    <span class="tag" style="align-self:center">${filterLabel}: ${visibleModeCount}/${totalModeCount} operations</span>
-    ${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high RPN ≥${RPN_HIGH}</span>` : ''}
+  <div class="sec-actions">
     <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-pfmea')" title="User Guide">❓ Guide</button>
   </div></div>
+${viewTabs}
 <div class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
     <div class="card-head" style="padding:10px 14px">
       <span class="card-title">📉 RPN Burndown — Total Original vs Total Current</span>
@@ -325,24 +523,21 @@ npi.pfmea.renderPFMEA = function() {
 ${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" data-action="npi-set-apqp" data-tab="cp" style="color:var(--blue)">Control Plan →</a></div>` : ''}`
 }
 
-// ── History popup ─────────────────────────────────────────────
+// ── History modal ─────────────────────────────────────────────
 npi.pfmea.pfShowHist = function(evt, cid) {
-  document.querySelectorAll('.hist-popup').forEach(p => { if (p.id !== 'hist_' + cid) p.style.display = 'none' })
-  const el = document.getElementById('hist_' + cid)
-  if (!el) return
-  if (el.style.display === 'block') { el.style.display = 'none'; return }
-  const btn = evt.currentTarget
-  const r = btn.getBoundingClientRect()
-  el.style.display = 'block'
-  let top = r.bottom + 6
-  let left = r.left
-  if (left + 304 > window.innerWidth) left = window.innerWidth - 310
-  if (top + 400 > window.innerHeight) top = r.top - Math.min(400, top + 400 - window.innerHeight + 10)
-  el.style.top = top + 'px'
-  el.style.left = left + 'px'
-  evt.stopPropagation()
+  const context = npi.pfmea.findCauseContext(cid)
+  if (!context) return
+  const titleEl = document.getElementById('pfmeaHistoryModalTitle')
+  const bodyEl = document.getElementById('pfmeaHistoryModalBody')
+  if (titleEl) titleEl.textContent = `PFMEA History — Step ${context.step?.stepNum ?? '—'}`
+  if (bodyEl) bodyEl.innerHTML = npi.pfmea.renderHistoryModalBody(context)
+  if (typeof showModal === 'function') showModal('modalPfmeaHistory')
+  else {
+    const modal = document.getElementById('modalPfmeaHistory')
+    if (modal) modal.style.display = 'flex'
+  }
+  if (evt?.stopPropagation) evt.stopPropagation()
 }
-document.addEventListener('click', () => document.querySelectorAll('.hist-popup').forEach(p => p.style.display = 'none'))
 
 // ── PFMEA data mutators ───────────────────────────────────────
 npi.pfmea.pfAddMode = function(pfdId) { npi.data.pfmea.addMode(pfdId); render() }
@@ -420,7 +615,13 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   render()
 }
 npi.pfmea.pfDelCause = function(mi, ei, ci) { npi.data.pfmea.delCause(mi, ei, ci); render() }
-npi.pfmea.pfRefreshRPN = function() {}
+npi.pfmea.pfRefreshRPN = function() {
+  const card = Array.from(document.querySelectorAll('.card')).find(c => c.querySelector('.card-title')?.textContent?.includes('RPN Burndown'))
+  if (!card) return
+  const contentDiv = card.querySelector('div[style*="padding:14px 16px"]')
+  if (!contentDiv) return
+  contentDiv.innerHTML = renderRpnBurndown(false)
+}
 
 // Returns max RPN across all effects/causes of a failure mode row
 npi.pfmea.calcRPN = function(mode) {
@@ -474,9 +675,10 @@ npi.pfmea.pfLiveForecast = function(mi, ei, ci) {
   const forecast = sev * newOcc * newDet
   const hasAction = !!(act.newOcc || act.newDet)
   const el = document.getElementById(`forecast_${mi}_${ei}_${ci}`)
+  const wrap = document.getElementById(`forecast_wrap_${mi}_${ei}_${ci}`)
   if (el) {
     el.textContent = hasAction ? forecast : '—'
     el.className = 'rpn ' + (hasAction ? npi.pfmea.pfRpnClass(forecast) : 'rpn-lo')
-    el.style.opacity = hasAction ? '1' : '0'
   }
+  if (wrap) wrap.style.opacity = hasAction ? '1' : '0'
 }

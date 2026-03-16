@@ -50,7 +50,8 @@ npi.events._onClick = function(evt) {
   case 'cp-del': npi.cp.del(npiNum(el.getAttribute('data-idx'), -1)); break
 
   case 'pfd-add-main': npi.pfd.addMainStep(); break
-  case 'pfd-open-insert': npi.pfd.openInsert(el.getAttribute('data-after') === '' ? null : npiNum(el.getAttribute('data-after'), null), el.getAttribute('data-type') || undefined); break
+  case 'pfd-open-insert': npi.pfd.openInsert(el.getAttribute('data-after') === '' ? null : npiNum(el.getAttribute('data-after'), null)); break
+  case 'pfd-add-header-after': npi.pfd.addHeaderAfter(el.getAttribute('data-after-id')); break
   case 'pfd-confirm-insert': npi.pfd.confirmInsert(); break
   case 'pfd-del': npi.pfd.del(el.getAttribute('data-id')); break
   case 'pfd-scroll': npi.pfd.scrollTo(el.getAttribute('data-id')); break
@@ -62,6 +63,9 @@ npi.events._onClick = function(evt) {
   case 'pfd-del-bom-ref': npi.pfd.delBomRef(el.getAttribute('data-step-id'), el.getAttribute('data-bom-type'), el.getAttribute('data-item-id')); break
   case 'pfd-set-bom-filter': npi.pfd.setBomFilter(el.getAttribute('data-filter'), el.getAttribute('data-filter-id'), el.getAttribute('data-list-id')); break
   case 'pfd-toggle-bom-pick': npi.pfd.toggleBomPick(el.getAttribute('data-key'), el.closest('.bom-pick-item')); break
+  case 'pfd-open-doc-pick': npi.pfd.openDocPick(npiNum(el.getAttribute('data-idx'), -1)); break
+  case 'pfd-save-doc-pick': npi.pfd.saveDocPick(); break
+  case 'pfd-del-doc-ref': npi.pfd.delDocRef(el.getAttribute('data-step-id'), el.getAttribute('data-doc-id')); break
 
   case 'pfmea-add-mode': npi.pfmea.pfAddMode(el.getAttribute('data-step-id')); break
   case 'pfmea-add-effect': npi.pfmea.pfAddEffect(npiNum(el.getAttribute('data-mi'), -1)); break
@@ -69,6 +73,7 @@ npi.events._onClick = function(evt) {
   case 'pfmea-add-cause': npi.pfmea.pfAddCause(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1)); break
   case 'pfmea-del-effect': npi.pfmea.pfDelEffect(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1)); break
   case 'pfmea-del-cause': npi.pfmea.pfDelCause(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), npiNum(el.getAttribute('data-ci'), -1)); break
+  case 'pfmea-set-view': npi.pfmea.setView(el.getAttribute('data-view')); break
   case 'pfmea-show-hist': npi.pfmea.pfShowHist(evt, el.getAttribute('data-cause-id')); break
   case 'pfmea-implement': npi.pfmea.pfImplementAction(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), npiNum(el.getAttribute('data-ci'), -1)); break
   case 'pfmea-filter-all': evt.preventDefault(); npi.pfmea.setRpnFilter('all'); break
@@ -125,6 +130,7 @@ npi.events._onChange = function(evt) {
   case 'cp-upd': npi.cp.upd(npiNum(el.getAttribute('data-idx'), -1), el.getAttribute('data-field'), el.value); break
   case 'pfd-upd': npi.pfd.upd(el.getAttribute('data-id'), el.getAttribute('data-field'), el.value); break
   case 'pfd-toggle-ctq-pick': npi.pfd.toggleCtqPick(el.getAttribute('data-id'), !!el.checked); break
+  case 'pfd-toggle-doc-pick': npi.pfd.toggleDocPick(el.getAttribute('data-id'), !!el.checked); break
 
   case 'pfmea-upd-mode': npi.pfmea.pfUpdMode(npiNum(el.getAttribute('data-mi'), -1), el.getAttribute('data-field'), el.value); break
   case 'pfmea-upd-effect': npi.pfmea.pfUpdEffect(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), el.getAttribute('data-field'), el.value); break
@@ -206,18 +212,23 @@ npi.events._onInput = function(evt) {
     if (kind === 'effect-sev') {
       npi.pfmea.pfUpdEffect(mi, ei, 'sev', v, false)
       npi.pfmea.pfLiveRPN(mi, ei, -1)
+      npi.pfmea.pfRefreshRPN()
     } else if (kind === 'cause-occ') {
       npi.pfmea.pfUpdCause(mi, ei, ci, 'occ', v, false)
       npi.pfmea.pfLiveRPN(mi, ei, ci)
+      npi.pfmea.pfRefreshRPN()
     } else if (kind === 'cause-det') {
       npi.pfmea.pfUpdCause(mi, ei, ci, 'det', v, false)
       npi.pfmea.pfLiveRPN(mi, ei, ci)
+      npi.pfmea.pfRefreshRPN()
     } else if (kind === 'action-occ') {
       npi.pfmea.pfUpdCauseAction(mi, ei, ci, 'newOcc', v, false)
       npi.pfmea.pfLiveForecast(mi, ei, ci)
+      npi.pfmea.pfRefreshRPN()
     } else if (kind === 'action-det') {
       npi.pfmea.pfUpdCauseAction(mi, ei, ci, 'newDet', v, false)
       npi.pfmea.pfLiveForecast(mi, ei, ci)
+      npi.pfmea.pfRefreshRPN()
     }
     break
   }

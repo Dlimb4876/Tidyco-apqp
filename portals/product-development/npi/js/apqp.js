@@ -10,7 +10,7 @@ npi.apqp.renderAPQP = function() {
   const highRPN = p.pfmea.filter(r => npi.pfmea.calcRPN(r) >= RPN_HIGH).length
   const tabs = [
     { id: APQP_TABS.CTQ, label: 'CTQ Matrix', badge: p.ctq.length },
-    { id: APQP_TABS.PFD, label: 'Process Flow', badge: p.pfd.filter(s => s.type !== 'group').length },
+    { id: APQP_TABS.PFD, label: 'Process Flow', badge: p.pfd.filter(s => npi.data.pfdType.isExecutable(s.type)).length },
     { id: APQP_TABS.PFMEA, label: 'PFMEA', badge: p.pfmea.length, warn: highRPN > 0 },
     { id: APQP_TABS.CP, label: 'Control Plan', badge: p.cp.length }
   ]
@@ -53,6 +53,8 @@ npi.apqp.refreshBomPickModal = function(p, filterId, listId, activeFilter) { ret
 npi.apqp.setBomFilter = function(f, fid, lid) { return typeof npi.pfd?.setBomFilter === 'function' ? npi.pfd.setBomFilter(f, fid, lid) : undefined }
 npi.apqp.toggleBomPick = function(key, el) { return typeof npi.pfd?.toggleBomPick === 'function' ? npi.pfd.toggleBomPick(key, el) : undefined }
 npi.apqp.saveBomPick = function() { return typeof npi.pfd?.saveBomPick === 'function' ? npi.pfd.saveBomPick() : undefined }
+npi.apqp.openDocPick = function(oi) { return typeof npi.pfd?.openDocPick === 'function' ? npi.pfd.openDocPick(oi) : undefined }
+npi.apqp.saveDocPick = function() { return typeof npi.pfd?.saveDocPick === 'function' ? npi.pfd.saveDocPick() : undefined }
 
 npi.apqp.renderCP = function() { return typeof npi.cp?.render === 'function' ? npi.cp.render() : '' }
 npi.apqp.syncFromPFMEA = function() {

@@ -1,32 +1,70 @@
 // Product Development Portal Hub
 // Entry point for NPI and product development
 
+let productDevelopmentPortalDelegationContainer = null;
+
 function setProductDevelopmentTab(tab) {
+  const prevTab = productDevelopmentTab;
   productDevelopmentTab = tab;
   const parts = ['s=product-development'];
   if (tab !== 'root') parts.push('pdt=' + encodeURIComponent(tab));
-  history.replaceState(null, '', '#' + parts.join('&'));
+  const hash = '#' + parts.join('&');
+  if (typeof writeNavigationHistory === 'function') {
+    writeNavigationHistory(hash, { push: prevTab !== tab });
+  } else {
+    history.replaceState(null, '', hash);
+  }
   render();
 }
 
+function productDevelopmentNavBar() {
+  return `
+    <div class="prod-nav-bar">
+      <button class="prod-nav-item prod-nav-back" data-action="pd-nav-root">← Back</button>
+      <button class="prod-nav-item ${productDevelopmentTab === 'npi' ? 'active' : ''}" data-action="pd-nav-tab" data-tab="npi">📋 NPI</button>
+      <button class="prod-nav-item ${productDevelopmentTab === 'product-management' ? 'active' : ''}" data-action="pd-nav-tab" data-tab="product-management">📦 Products</button>
+      <button class="prod-nav-item ${productDevelopmentTab === 'product-family-db' ? 'active' : ''}" data-action="pd-nav-tab" data-tab="product-family-db">🏢 Families</button>
+      <button class="prod-nav-item ${productDevelopmentTab === 'parts-database' ? 'active' : ''}" data-action="pd-nav-tab" data-tab="parts-database">🔩 Parts</button>
+    </div>
+  `;
+}
+
 function renderProductDevelopment() {
-  if (productDevelopmentTab === 'npi') return npi.dashboard.renderProjects();
-  if (productDevelopmentTab === 'product-management') return renderProductManagement();
-  if (productDevelopmentTab === 'product-family-db') return renderProductFamilyDatabase();
-  if (productDevelopmentTab === 'parts-database') return renderPartsDatabase();
+  const nav = productDevelopmentNavBar();
+  if (productDevelopmentTab === 'npi') {
+    setTimeout(setupProductDevelopmentPortalDelegation, 0);
+    return `<div id="product-development-portal-container">${nav}${npi.dashboard.renderProjects()}</div>`;
+  }
+  if (productDevelopmentTab === 'product-management') {
+    setTimeout(setupProductDevelopmentPortalDelegation, 0);
+    return `<div id="product-development-portal-container">${nav}${renderProductManagement()}</div>`;
+  }
+  if (productDevelopmentTab === 'product-family-db') {
+    setTimeout(setupProductDevelopmentPortalDelegation, 0);
+    return `<div id="product-development-portal-container">${nav}${renderProductFamilyDatabase()}</div>`;
+  }
+  if (productDevelopmentTab === 'parts-database') {
+    setTimeout(setupProductDevelopmentPortalDelegation, 0);
+    return `<div id="product-development-portal-container">${nav}${renderPartsDatabase()}</div>`;
+  }
 
   // Root hub view
+  setTimeout(setupProductDevelopmentPortalDelegation, 0);
   return `
-    <div class="proj-home">
+    <div class="proj-home" id="product-development-portal-container">
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Product Development</div>
           <div class="proj-home-sub">New Product Introduction & Project Management</div>
         </div>
-        <button class="btn btn-ghost" onclick="navigate('hub')">← Back to Portal</button>
-        <button class="btn btn-ghost btn-sm" onclick="showGuide('product-development')" title="User Guide">❓ Guide</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-development" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost" data-action="pd-nav-hub">← Back to Portal</button>
+        </div>
       </div>
-        <div class="proj-card hub-card" onclick="setProductDevelopmentTab('npi')">
+
+      <div class="proj-cards hub-grid">
+        <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="npi">
           <div class="hub-card-content">
             <div class="hub-icon">📋</div>
             <div class="proj-card-name">NPI Projects</div>
@@ -34,7 +72,7 @@ function renderProductDevelopment() {
           </div>
         </div>
 
-        <div class="proj-card hub-card" onclick="setProductDevelopmentTab('product-management')">
+        <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="product-management">
           <div class="hub-card-content">
             <div class="hub-icon">📦</div>
             <div class="proj-card-name">Product Management</div>
@@ -42,7 +80,7 @@ function renderProductDevelopment() {
           </div>
         </div>
 
-        <div class="proj-card hub-card" onclick="setProductDevelopmentTab('product-family-db')">
+        <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="product-family-db">
           <div class="hub-card-content">
             <div class="hub-icon">🏢</div>
             <div class="proj-card-name">Product Family Database</div>
@@ -50,7 +88,7 @@ function renderProductDevelopment() {
           </div>
         </div>
 
-        <div class="proj-card hub-card" onclick="setProductDevelopmentTab('parts-database')">
+        <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="parts-database">
           <div class="hub-card-content">
             <div class="hub-icon">🔩</div>
             <div class="proj-card-name">Parts Database</div>
@@ -60,6 +98,99 @@ function renderProductDevelopment() {
       </div>
     </div>
   `;
+}
+
+function setupProductDevelopmentPortalDelegation() {
+  const container = document.getElementById('product-development-portal-container');
+  if (!container || productDevelopmentPortalDelegationContainer === container) return;
+
+  productDevelopmentPortalDelegationContainer = container;
+
+  container.addEventListener('click', (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl || !container.contains(actionEl)) return;
+
+    const action = actionEl.dataset.action;
+    if (action === 'pd-nav-tab' || action === 'pd-hub-tab') {
+      const tab = actionEl.dataset.tab;
+      if (tab) setProductDevelopmentTab(tab);
+      return;
+    }
+
+    if (action === 'pd-nav-root') {
+      setProductDevelopmentTab('root');
+      return;
+    }
+
+    if (action === 'pd-nav-hub') {
+      navigate('hub');
+      return;
+    }
+
+    if (action === 'show-guide') {
+      const key = actionEl.dataset.guideKey;
+      if (key && typeof showGuide === 'function') showGuide(key);
+      return;
+    }
+
+    // Product Development specific actions
+    if (action === 'pd-show-family-modal') {
+      const familyId = actionEl.dataset.familyId || null;
+      showFamilyModal(familyId);
+      return;
+    }
+
+    if (action === 'pd-family-edit') {
+      const familyId = actionEl.dataset.familyId;
+      const field = actionEl.dataset.field;
+      if (familyId && field) startFamilyEdit(familyId, field);
+      return;
+    }
+
+    if (action === 'pd-show-template-manager') {
+      const familyId = actionEl.dataset.familyId;
+      if (familyId) showTemplateManager(familyId);
+      return;
+    }
+
+    if (action === 'pd-delete-family') {
+      const familyId = actionEl.dataset.familyId;
+      if (familyId && confirm('Delete this family?')) familiesDataDeleteFamily(familyId);
+      return;
+    }
+
+    if (action === 'pd-close-family-modal') {
+      closeFamilyModal();
+      return;
+    }
+
+    if (action === 'pd-save-family-modal') {
+      saveFamilyModal();
+      return;
+    }
+
+    if (action === 'pd-close-template-manager') {
+      closeTemplateManager();
+      return;
+    }
+
+    if (action === 'pd-show-template-viewer') {
+      const templateName = actionEl.dataset.templateName;
+      if (templateName) showTemplateViewer(templateManagerState.familyId, templateName);
+      return;
+    }
+
+    if (action === 'pd-delete-template') {
+      const templateName = actionEl.dataset.templateName;
+      if (templateName && confirm('Delete template "' + templateName + '"?')) deleteTemplate(templateManagerState.familyId, templateName);
+      return;
+    }
+
+    if (action === 'pd-show-create-template-modal') {
+      showCreateTemplateModal(templateManagerState.familyId);
+      return;
+    }
+  });
 }
 
 function renderPartsDatabase() {
@@ -75,8 +206,10 @@ function renderPartsDatabase() {
           <div class="proj-home-title">Parts Database</div>
           <div class="proj-home-sub">A, B & C-Class central parts catalogue</div>
         </div>
-        <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
-        <button class="btn btn-ghost btn-sm" onclick="showGuide('parts-database')" title="User Guide">❓ Guide</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="parts-database" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost" data-action="pd-nav-root">← Back</button>
+        </div>
       </div>
       ${catalogueHTML}
     </div>
@@ -95,8 +228,8 @@ function renderProductFamilyDatabase() {
             <div class="proj-home-sub">Loading families...</div>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="showGuide('product-family-db')" title="User Guide">❓ Guide</button>
-            <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
+            <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-family-db" title="User Guide">❓ Guide</button>
+            <button class="btn btn-ghost" data-action="pd-nav-root">← Back</button>
           </div>
         </div>
         <div style="text-align:center;padding:80px 20px;color:var(--muted)">
@@ -120,9 +253,9 @@ function renderProductFamilyDatabase() {
             <div class="proj-home-sub">Manage product families, attributes, and configurations</div>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" onclick="showFamilyModal()">➕ Add Family</button>
-            <button class="btn btn-ghost btn-sm" onclick="showGuide('product-family-db')" title="User Guide">❓ Guide</button>
-            <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
+            <button class="btn btn-primary" data-action="pd-show-family-modal">➕ Add Family</button>
+            <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-family-db" title="User Guide">❓ Guide</button>
+            <button class="btn btn-ghost" data-action="pd-nav-root">← Back</button>
           </div>
         </div>
 
@@ -130,7 +263,7 @@ function renderProductFamilyDatabase() {
           <div style="font-size:48px;margin-bottom:16px">🏢</div>
           <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No Product Families</div>
           <div style="font-size:13px;margin-bottom:20px">Create your first product family to get started</div>
-          <button class="btn btn-primary" onclick="showFamilyModal()">➕ Add Family</button>
+          <button class="btn btn-primary" data-action="pd-show-family-modal">➕ Add Family</button>
         </div>
       </div>
     `;
@@ -140,13 +273,13 @@ function renderProductFamilyDatabase() {
     const stats = familyTemplatesGetStats(fam.id);
     return `
       <tr style="border-bottom:1px solid var(--line)">
-        <td style="padding:12px 16px;font-size:13px;font-weight:500;color:var(--ink);width:25%;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" id="fam-label-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'label')" title="Click to edit">${esc(fam.label)}</td>
-        <td style="padding:12px 16px;font-size:13px;color:var(--text);width:50%;max-width:400px;cursor:pointer" id="fam-desc-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'description')" title="Click to edit">${fam.description ? esc(fam.description) : '<span style="color:var(--muted)">No description</span>'}</td>
-        <td style="padding:12px 16px;font-size:24px;text-align:center;width:80px;cursor:pointer" id="fam-icon-${fam.id}" onclick="startFamilyEdit('${fam.id}', 'icon')" title="Click to edit">${fam.icon || '📋'}</td>
+        <td style="padding:12px 16px;font-size:13px;font-weight:500;color:var(--ink);width:25%;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="label" title="Click to edit">${esc(fam.label)}</td>
+        <td style="padding:12px 16px;font-size:13px;color:var(--text);width:50%;max-width:400px;cursor:pointer" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="description" title="Click to edit">${fam.description ? esc(fam.description) : '<span style="color:var(--muted)">No description</span>'}</td>
+        <td style="padding:12px 16px;font-size:24px;text-align:center;width:80px;cursor:pointer" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="icon" title="Click to edit">${fam.icon || '📋'}</td>
         <td style="padding:12px 16px;text-align:right;width:150px;white-space:nowrap">
           <span style="display:inline-flex;gap:6px;justify-content:flex-end;align-items:center">
-            <button class="btn btn-sm" onclick="showTemplateManager('${fam.id}')" title="Manage PFMEA Templates" style="font-size:11px;padding:4px 8px">📋 Templates</button>
-            <button class="btn btn-sm" onclick="if(confirm('Delete ${esc(fam.label)}?')) familiesDataDeleteFamily('${fam.id}')" title="Delete" style="font-size:11px;padding:4px 8px;color:var(--red);border-color:var(--red);background:transparent;min-width:auto">Delete</button>
+            <button class="btn btn-sm" data-action="pd-show-template-manager" data-family-id="${fam.id}" title="Manage PFMEA Templates" style="font-size:11px;padding:4px 8px">📋 Templates</button>
+            <button class="btn btn-sm" data-action="pd-delete-family" data-family-id="${fam.id}" title="Delete" style="font-size:11px;padding:4px 8px;color:var(--red);border-color:var(--red);background:transparent;min-width:auto">Delete</button>
           </span>
         </td>
       </tr>
@@ -161,9 +294,9 @@ function renderProductFamilyDatabase() {
           <div class="proj-home-sub">${families.length} product families defined</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="showFamilyModal()">➕ Add Family</button>
-          <button class="btn btn-ghost btn-sm" onclick="showGuide('product-family-db')" title="User Guide">❓ Guide</button>
-          <button class="btn btn-ghost" onclick="setProductDevelopmentTab('root')">← Back</button>
+          <button class="btn btn-primary" data-action="pd-show-family-modal">➕ Add Family</button>
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-family-db" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost" data-action="pd-nav-root">← Back</button>
         </div>
       </div>
 
@@ -240,8 +373,8 @@ function renderFamilyModal() {
   const isEdit = !!family;
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000" onclick="if(event.target === this) closeFamilyModal()">
-      <div style="background:var(--white);border-radius:8px;padding:24px;width:90%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.15)">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000" data-action="pd-close-family-modal">
+      <div style="background:var(--white);border-radius:8px;padding:24px;width:90%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.15)" onclick="event.stopPropagation()">
         <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:16px">
           ${isEdit ? 'Edit Family' : 'Add Family'}
         </div>
@@ -270,8 +403,8 @@ function renderFamilyModal() {
         </div>
 
         <div style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:16px">
-          <button class="btn btn-ghost" onclick="closeFamilyModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveFamilyModal()">Save</button>
+          <button class="btn btn-ghost" data-action="pd-close-family-modal">Cancel</button>
+          <button class="btn btn-primary" data-action="pd-save-family-modal">Save</button>
         </div>
       </div>
     </div>
@@ -304,15 +437,15 @@ function renderTemplateManager() {
   const templateNames = Object.keys(grouped).sort();
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto" onclick="if(event.target === this) closeTemplateManager()">
-      <div style="background:var(--white);border-radius:8px;width:90%;max-width:900px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.15);margin:20px 0">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto" data-action="pd-close-template-manager">
+      <div style="background:var(--white);border-radius:8px;width:90%;max-width:900px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.15);margin:20px 0" onclick="event.stopPropagation()">
         <!-- Header -->
         <div style="padding:20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--white)">
           <div>
             <div style="font-size:18px;font-weight:600;color:var(--ink)">${family.icon} PFMEA Templates for ${esc(family.label)}</div>
             <div style="font-size:12px;color:var(--muted);margin-top:4px">${templateNames.length} template(s) defined</div>
           </div>
-          <button onclick="closeTemplateManager()" style="border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--muted)">✕</button>
+          <button data-action="pd-close-template-manager" style="border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--muted)">✕</button>
         </div>
 
         <!-- Content -->
@@ -335,8 +468,8 @@ function renderTemplateManager() {
                         <div style="font-size:11px;color:var(--muted);margin-top:2px">${items.length} failure mode(s) · Avg RPN: ${(items.reduce((s, i) => s + i.severity * i.occurrence * i.detection, 0) / items.length).toFixed(0)}</div>
                       </div>
                       <div style="display:flex;gap:6px">
-                        <button class="btn btn-sm" onclick="showTemplateViewer('${templateManagerState.familyId}', '${templateName}')" style="font-size:11px;padding:6px 12px">📖 View</button>
-                        <button class="btn btn-sm" onclick="if(confirm('Delete template ${esc(templateName)}?')) deleteTemplate('${templateManagerState.familyId}', '${templateName}')" style="font-size:11px;padding:6px 12px;color:var(--red);border-color:var(--red);background:transparent">Delete</button>
+                        <button class="btn btn-sm" data-action="pd-show-template-viewer" data-template-name="${esc(templateName)}" style="font-size:11px;padding:6px 12px">📖 View</button>
+                        <button class="btn btn-sm" data-action="pd-delete-template" data-template-name="${esc(templateName)}" style="font-size:11px;padding:6px 12px;color:var(--red);border-color:var(--red);background:transparent">Delete</button>
                       </div>
                     </div>
                   </div>
@@ -348,8 +481,8 @@ function renderTemplateManager() {
 
         <!-- Footer -->
         <div style="padding:16px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--white)">
-          <button class="btn btn-ghost" onclick="closeTemplateManager()">Close</button>
-          <button class="btn btn-primary" onclick="showCreateTemplateModal('${templateManagerState.familyId}')">➕ Create Template</button>
+          <button class="btn btn-ghost" data-action="pd-close-template-manager">Close</button>
+          <button class="btn btn-primary" data-action="pd-show-create-template-modal">➕ Create Template</button>
         </div>
       </div>
     </div>

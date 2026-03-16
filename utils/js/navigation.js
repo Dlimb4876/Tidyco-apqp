@@ -30,8 +30,50 @@ const BACK_BUTTON_LABELS = {
   actions: '← Back to Project',
   risks: '← Back to Project',
   bom: '← Back to Project',
-  timing: '← Back to Project'
+  timing: '← Back to Project',
+  documents: '← Back to Project'
 };
+
+const APP_HISTORY_STATE_KEY = '__tidycoNav';
+
+function buildNavigationHistoryState(index, baseState = history.state) {
+  const safeBaseState = baseState && typeof baseState === 'object' ? baseState : {};
+  return {
+    ...safeBaseState,
+    [APP_HISTORY_STATE_KEY]: true,
+    index
+  };
+}
+
+function getNavigationHistoryIndex(state = history.state) {
+  if (!state || state[APP_HISTORY_STATE_KEY] !== true) return 0;
+  return Number.isInteger(state.index) ? state.index : 0;
+}
+
+function ensureNavigationHistoryState() {
+  if (typeof history === 'undefined') return;
+  if (history.state && history.state[APP_HISTORY_STATE_KEY] === true) return;
+  history.replaceState(buildNavigationHistoryState(0), '');
+}
+
+function writeNavigationHistory(hash, { push = false } = {}) {
+  ensureNavigationHistoryState();
+  const currentIndex = getNavigationHistoryIndex();
+  const nextIndex = push ? currentIndex + 1 : currentIndex;
+  const state = buildNavigationHistoryState(nextIndex);
+
+  if (push) {
+    history.pushState(state, '', hash);
+    return;
+  }
+
+  history.replaceState(state, '', hash);
+}
+
+function canNavigateBackInApp() {
+  ensureNavigationHistoryState();
+  return getNavigationHistoryIndex() > 0;
+}
 
 /**
  * Parses URL hash into key-value parameters
@@ -52,7 +94,7 @@ function parseHash() {
 function isNpiLiveSection(sec) {
   if (!sec) return false;
   if (sec.startsWith('gate_')) return true;
-  return ['projects', 'project', 'apqp', 'actions', 'risks', 'bom', 'timing'].includes(sec);
+  return ['projects', 'project', 'apqp', 'actions', 'risks', 'bom', 'timing', 'documents'].includes(sec);
 }
 
 /**
@@ -152,11 +194,7 @@ function navigate(sec, { pushHash = true } = {}) {
     if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
     if (sec === 'product-development' && productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(productDevelopmentTab));
     const hash = parts.length ? '#' + parts.join('&') : '#';
-    if (sec === prevSection) {
-      history.replaceState(null, '', hash);
-    } else {
-      history.pushState(null, '', hash);
-    }
+    writeNavigationHistory(hash, { push: sec !== prevSection });
   }
 
   // Show Return to Portal button on all feature pages (not hub, projects, or project home)
@@ -186,6 +224,11 @@ function goHome()     { navigate('project'); }
  * All other sections → hub
  */
 function navigateBack() {
+  if (canNavigateBackInApp()) {
+    history.back();
+    return;
+  }
+
   // Step back to portal root before going all the way to hub
   if (currentSection === 'capacity' && capacityTab !== 'root') {
     setCapacityTab('root');
@@ -203,7 +246,11 @@ function navigateBack() {
     setProductDevelopmentTab('root');
     return;
   }
-  const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing'];
+  if (currentSection === 'project') {
+    navigate('projects');
+    return;
+  }
+  const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing', 'documents'];
   if (npiSections.includes(currentSection) || currentSection.startsWith('gate_')) {
     navigate('project');
   } else {
@@ -216,10 +263,11 @@ function navigateBack() {
  * @param {string} t - Tab name (ctq, pfd, pfmea, cp)
  */
 function setApqpTab(t) {
+  const prevTab = apqpTab;
   apqpTab = t;
   const parts = ['p=' + encodeURIComponent(progId), 's=apqp'];
   if (t !== 'ctq') parts.push('t=' + encodeURIComponent(t));
-  history.replaceState(null, '', '#' + parts.join('&'));
+  writeNavigationHistory('#' + parts.join('&'), { push: prevTab !== t });
   render();
 }
 
@@ -395,3 +443,5 @@ window.addEventListener('keydown', (event) => {
   event.preventDefault();
   navigateBack();
 });
+
+ensureNavigationHistoryState();

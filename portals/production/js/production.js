@@ -4,10 +4,16 @@
 let productionPortalDelegationContainer = null;
 
 function setProductionTab(tab) {
+  const prevTab = productionTab;
   productionTab = tab;
   const parts = ['s=production'];
   if (tab !== 'root') parts.push('pt=' + encodeURIComponent(tab));
-  history.replaceState(null, '', '#' + parts.join('&'));
+  const hash = '#' + parts.join('&');
+  if (typeof writeNavigationHistory === 'function') {
+    writeNavigationHistory(hash, { push: prevTab !== tab });
+  } else {
+    history.replaceState(null, '', hash);
+  }
   render();
 }
 

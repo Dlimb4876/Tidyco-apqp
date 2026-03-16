@@ -17,6 +17,7 @@ window.npi = {
   timing: {}, // timing.js
   pfmea: {}, // pfmea.js
   apqp: {}, // apqp.js
+  docs: {}, // documents.js
   dashboard: {}, // dashboard.js
   events: {},     // npi-events.js
   init: null,
@@ -74,6 +75,7 @@ function upsertRealtimeProgramme(row) {
   if (!row.data) return false
 
   const incoming = migrateprog(row.data)
+  incoming.dbId = row.id || incoming.dbId || null
   incoming.id = row.prog_id
   if (row.name && !incoming.name) incoming.name = row.name
 
@@ -142,7 +144,8 @@ function npiDataInit() {
     'npi_ctq', 'npi_pfd_steps', 'npi_pfmea_modes', 'npi_pfmea_effects',
     'npi_pfmea_causes', 'npi_pfmea_history', 'npi_control_plan',
     'npi_bom_items', 'npi_bom_kits', 'npi_bom_kit_items',
-    'npi_gates', 'npi_gate_sigs', 'npi_actions', 'npi_risks', 'npi_gantt_rows'
+    'npi_gates', 'npi_gate_sigs', 'npi_actions', 'npi_risks', 'npi_gantt_rows',
+    'npi_documents'
   ]
   npiTables.forEach(table => {
     createRealtimeSubscription(table, NPI_TABLES_CHANNEL_PREFIX + table, {
