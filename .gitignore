@@ -32,3 +32,14 @@ check_onclick.js
 # then re-ignore the actual log files within it
 !.claude/agents/logs/
 .claude/agents/logs/*.log
+
+# Local Copilot customization artifacts
+.github/agents/
+.github/hooks/
+.github/instructions/
+.github/prompts/
+.github/skills/
+
+# Local assistant-generated docs/scripts
+QWEN.md
+scripts/pre-commit-quality-hook.js

@@ -91,9 +91,15 @@ window.familiesDataAddFamily = async function(name, label, icon, description) {
     if (error) throw error;
 
     if (data && data[0]) {
-      familiesState.families.push(data[0]);
+      const newFamily = data[0];
+      familiesState.families.push(newFamily);
       familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
-      return data[0];
+
+      if (typeof familyTemplatesEnsureDefaultForFamily === 'function') {
+        await familyTemplatesEnsureDefaultForFamily(newFamily);
+      }
+
+      return newFamily;
     }
   } catch (err) {
     console.error('Error adding family:', err);

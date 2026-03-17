@@ -300,6 +300,9 @@ function render() {
       if (templateManagerState?.isOpen && typeof renderTemplateManager === 'function') {
         pdContainer.insertAdjacentHTML('beforeend', renderTemplateManager());
       }
+      if (templateViewerState?.isOpen && typeof renderTemplateViewer === 'function') {
+        pdContainer.insertAdjacentHTML('beforeend', renderTemplateViewer());
+      }
     }
     return;
   }

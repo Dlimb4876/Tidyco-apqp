@@ -7,6 +7,103 @@ let familyTemplatesState = {
   error: null
 };
 
+const DEFAULT_FAMILY_TEMPLATE_NAME = 'Standard Family PFMEA';
+const DEFAULT_FAMILY_FAILURE_MODE = 'Define key family failure mode';
+
+function sortFamilyTemplatesState() {
+  familyTemplatesState.templates.sort((a, b) => {
+    const familyCompare = String(a.family_id || '').localeCompare(String(b.family_id || ''));
+    if (familyCompare !== 0) return familyCompare;
+    const nameCompare = String(a.template_name || '').localeCompare(String(b.template_name || ''));
+    if (nameCompare !== 0) return nameCompare;
+    return String(a.failure_mode || '').localeCompare(String(b.failure_mode || ''));
+  });
+}
+
+function buildDefaultFamilyTemplateItem(familyId, familyLabel) {
+  return {
+    user_id: currentUser.id,
+    family_id: familyId,
+    template_name: DEFAULT_FAMILY_TEMPLATE_NAME,
+    failure_mode: DEFAULT_FAMILY_FAILURE_MODE,
+    effect: familyLabel ? 'Initial PFMEA template for ' + familyLabel : 'Initial PFMEA template',
+    severity: 3,
+    cause: null,
+    occurrence: 3,
+    prevention_control: null,
+    detection_control: null,
+    detection: 3,
+    notes: 'Auto-created when product family is added'
+  };
+}
+
+window.familyTemplatesEnsureDefaultForFamily = async function(family) {
+  if (!family || !family.id || !currentUser?.id) return false;
+
+  const hasTemplate = familyTemplatesState.templates.some(t => t.family_id === family.id);
+  if (hasTemplate) return false;
+
+  try {
+    const item = buildDefaultFamilyTemplateItem(family.id, family.label);
+    const { data, error } = await supa.from('family_pfmea_templates')
+      .upsert([item], {
+        onConflict: 'user_id,family_id,template_name,failure_mode',
+        ignoreDuplicates: true
+      })
+      .select();
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      familyTemplatesState.templates.push(...data);
+      sortFamilyTemplatesState();
+      return true;
+    }
+
+    return false;
+  } catch (err) {
+    console.error('Error creating default family template:', err);
+    showToast('Family added, but default template setup failed: ' + err.message, 'warning');
+    return false;
+  }
+};
+
+async function familyTemplatesBackfillMissingFamilies() {
+  if (!currentUser?.id || !familiesState?.families?.length) return;
+
+  const familiesWithTemplates = new Set(
+    familyTemplatesState.templates.map(t => t.family_id)
+  );
+  const missingFamilies = familiesState.families
+    .filter(family => family?.id && !familiesWithTemplates.has(family.id));
+
+  if (missingFamilies.length === 0) return;
+
+  try {
+    const defaults = missingFamilies.map(family =>
+      buildDefaultFamilyTemplateItem(family.id, family.label)
+    );
+
+    const { data, error } = await supa.from('family_pfmea_templates')
+      .upsert(defaults, {
+        onConflict: 'user_id,family_id,template_name,failure_mode',
+        ignoreDuplicates: true
+      })
+      .select();
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      familyTemplatesState.templates.push(...data);
+      sortFamilyTemplatesState();
+      showToast('Backfilled default templates for ' + data.length + ' product family(s)', 'success');
+    }
+  } catch (err) {
+    console.error('Error backfilling missing family templates:', err);
+    showToast('Failed to backfill family templates: ' + err.message, 'warning');
+  }
+}
+
 // Initialize templates from Supabase
 async function familyTemplatesDataInit() {
   familyTemplatesState.loading = true;
@@ -20,6 +117,8 @@ async function familyTemplatesDataInit() {
     if (error) throw error;
 
     familyTemplatesState.templates = data || [];
+    await familyTemplatesBackfillMissingFamilies();
+    sortFamilyTemplatesState();
     familyTemplatesState.loading = false;
     familyTemplatesDataSubscribe();
     return familyTemplatesState.templates;

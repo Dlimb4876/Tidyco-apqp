@@ -111,6 +111,12 @@ function setupProductDevelopmentPortalDelegation() {
     if (!actionEl || !container.contains(actionEl)) return;
 
     const action = actionEl.dataset.action;
+    const isOverlayAction = actionEl.dataset.overlay === 'true';
+
+    if (isOverlayAction && actionEl !== event.target) {
+      return;
+    }
+
     if (action === 'pd-nav-tab' || action === 'pd-hub-tab') {
       const tab = actionEl.dataset.tab;
       if (tab) setProductDevelopmentTab(tab);
@@ -174,6 +180,11 @@ function setupProductDevelopmentPortalDelegation() {
       return;
     }
 
+    if (action === 'pd-close-template-viewer') {
+      closeTemplateViewer();
+      return;
+    }
+
     if (action === 'pd-show-template-viewer') {
       const templateName = actionEl.dataset.templateName;
       if (templateName) showTemplateViewer(templateManagerState.familyId, templateName);
@@ -183,11 +194,6 @@ function setupProductDevelopmentPortalDelegation() {
     if (action === 'pd-delete-template') {
       const templateName = actionEl.dataset.templateName;
       if (templateName && confirm('Delete template "' + templateName + '"?')) deleteTemplate(templateManagerState.familyId, templateName);
-      return;
-    }
-
-    if (action === 'pd-show-create-template-modal') {
-      showCreateTemplateModal(templateManagerState.familyId);
       return;
     }
   });
@@ -372,8 +378,8 @@ function renderFamilyModal() {
   const isEdit = !!family;
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000" data-action="pd-close-family-modal">
-      <div style="background:var(--white);border-radius:8px;padding:24px;width:90%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.15)" onclick="event.stopPropagation()">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000" data-action="pd-close-family-modal" data-overlay="true">
+      <div style="background:var(--white);border-radius:8px;padding:24px;width:90%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.15)">
         <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:16px">
           ${isEdit ? 'Edit Family' : 'Add Family'}
         </div>
@@ -415,6 +421,7 @@ function renderFamilyModal() {
 // ═══════════════════════════════════
 
 let templateManagerState = { isOpen: false, familyId: null };
+let templateViewerState = { isOpen: false, familyId: null, templateName: null };
 
 function showTemplateManager(familyId) {
   templateManagerState.isOpen = true;
@@ -425,7 +432,22 @@ function showTemplateManager(familyId) {
 function closeTemplateManager() {
   templateManagerState.isOpen = false;
   templateManagerState.familyId = null;
+  closeTemplateViewer(false);
   render();
+}
+
+function showTemplateViewer(familyId, templateName) {
+  templateViewerState.isOpen = true;
+  templateViewerState.familyId = familyId;
+  templateViewerState.templateName = templateName;
+  render();
+}
+
+function closeTemplateViewer(shouldRender = true) {
+  templateViewerState.isOpen = false;
+  templateViewerState.familyId = null;
+  templateViewerState.templateName = null;
+  if (shouldRender) render();
 }
 
 function renderTemplateManager() {
@@ -436,8 +458,8 @@ function renderTemplateManager() {
   const templateNames = Object.keys(grouped).sort();
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto" data-action="pd-close-template-manager">
-      <div style="background:var(--white);border-radius:8px;width:90%;max-width:900px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.15);margin:20px 0" onclick="event.stopPropagation()">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto" data-action="pd-close-template-manager" data-overlay="true">
+      <div style="background:var(--white);border-radius:8px;width:90%;max-width:900px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.15);margin:20px 0">
         <!-- Header -->
         <div style="padding:20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--white)">
           <div>
@@ -453,7 +475,7 @@ function renderTemplateManager() {
             <div style="text-align:center;padding:40px 20px;color:var(--muted)">
               <div style="font-size:32px;margin-bottom:8px">📋</div>
               <div style="font-size:14px;font-weight:600;color:var(--mid);margin-bottom:8px">No PFMEA Templates Yet</div>
-              <div style="font-size:12px;margin-bottom:20px">Create a template to speed up PFMEA creation for new products in this family</div>
+              <div style="font-size:12px;margin-bottom:20px">A default template is created automatically when a family is added</div>
             </div>
           ` : `
             <div style="display:flex;flex-direction:column;gap:16px">
@@ -481,29 +503,92 @@ function renderTemplateManager() {
         <!-- Footer -->
         <div style="padding:16px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--white)">
           <button class="btn btn-ghost" data-action="pd-close-template-manager">Close</button>
-          <button class="btn btn-primary" data-action="pd-show-create-template-modal">➕ Create Template</button>
         </div>
       </div>
     </div>
   `;
 }
 
-function showTemplateViewer(familyId, templateName) {
-  // Placeholder for detailed template viewer
-  showToast('Template viewer for "' + templateName + '" — coming soon', 'info');
+function renderTemplateViewer() {
+  if (!templateViewerState.isOpen) return '';
+
+  const family = familiesState.families.find(f => f.id === templateViewerState.familyId);
+  if (!family) return '';
+
+  const items = familyTemplatesGetByFamily(templateViewerState.familyId)
+    .filter(t => t.template_name === templateViewerState.templateName);
+
+  return `
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1001;overflow-y:auto" data-action="pd-close-template-viewer" data-overlay="true">
+      <div style="background:var(--white);border-radius:8px;width:92%;max-width:1100px;max-height:88vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2);margin:20px 0">
+        <div style="padding:20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;position:sticky;top:0;background:var(--white)">
+          <div>
+            <div style="font-size:18px;font-weight:600;color:var(--ink)">${esc(templateViewerState.templateName)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">${esc(family.label)} · ${items.length} failure mode(s)</div>
+          </div>
+          <button class="btn btn-ghost" data-action="pd-close-template-viewer">Close</button>
+        </div>
+
+        <div style="padding:20px">
+          ${items.length === 0 ? `
+            <div style="text-align:center;padding:40px 20px;color:var(--muted)">
+              <div style="font-size:32px;margin-bottom:8px">📋</div>
+              <div style="font-size:14px;font-weight:600;color:var(--mid);margin-bottom:8px">Template is empty</div>
+              <div style="font-size:12px">No PFMEA rows were found for this family template.</div>
+            </div>
+          ` : `
+            <div style="overflow-x:auto;border:1px solid var(--line);border-radius:6px">
+              <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <thead style="background:var(--bg);border-bottom:2px solid var(--line)">
+                  <tr>
+                    <th style="padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">Failure Mode</th>
+                    <th style="padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">Effect</th>
+                    <th style="padding:12px 14px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">SEV</th>
+                    <th style="padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">Cause</th>
+                    <th style="padding:12px 14px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">OCC</th>
+                    <th style="padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">Prevention</th>
+                    <th style="padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">Detection</th>
+                    <th style="padding:12px 14px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">DET</th>
+                    <th style="padding:12px 14px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">RPN</th>
+                    <th style="padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${items.map(item => {
+                    const severity = item.severity || 3;
+                    const occurrence = item.occurrence || 3;
+                    const detection = item.detection || 3;
+                    const rpn = severity * occurrence * detection;
+
+                    return `
+                      <tr style="border-bottom:1px solid var(--line)">
+                        <td style="padding:12px 14px;vertical-align:top;color:var(--ink);font-weight:500">${esc(item.failure_mode)}</td>
+                        <td style="padding:12px 14px;vertical-align:top">${item.effect ? esc(item.effect) : '<span style="color:var(--muted)">-</span>'}</td>
+                        <td style="padding:12px 14px;text-align:center;vertical-align:top">${severity}</td>
+                        <td style="padding:12px 14px;vertical-align:top">${item.cause ? esc(item.cause) : '<span style="color:var(--muted)">-</span>'}</td>
+                        <td style="padding:12px 14px;text-align:center;vertical-align:top">${occurrence}</td>
+                        <td style="padding:12px 14px;vertical-align:top">${item.prevention_control ? esc(item.prevention_control) : '<span style="color:var(--muted)">-</span>'}</td>
+                        <td style="padding:12px 14px;vertical-align:top">${item.detection_control ? esc(item.detection_control) : '<span style="color:var(--muted)">-</span>'}</td>
+                        <td style="padding:12px 14px;text-align:center;vertical-align:top">${detection}</td>
+                        <td style="padding:12px 14px;text-align:center;vertical-align:top;font-weight:600">${rpn}</td>
+                        <td style="padding:12px 14px;vertical-align:top">${item.notes ? esc(item.notes) : '<span style="color:var(--muted)">-</span>'}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function deleteTemplate(familyId, templateName) {
   familyTemplatesDeleteFamily(familyId, templateName).then(() => {
     render();
   });
-}
-
-function showCreateTemplateModal(familyId) {
-  // Placeholder for creating new template
-  const templateName = prompt('Enter template name (e.g., "Standard HVAC PFMEA")');
-  if (!templateName) return;
-  showToast('Template creation for "' + templateName + '" — coming soon', 'info');
 }
 
 // ═══════════════════════════════════

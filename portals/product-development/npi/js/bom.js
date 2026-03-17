@@ -15,7 +15,7 @@ npi.bom.renderBOM = function() {
   }</div>`
 
   const content = bomSubTab === 'kits' ? npi.bom.renderKits(p) : npi.bom.renderBomTable(bomSubTab, p)
-  return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-bom')" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="npi-go-home">← Dashboard</button></div></div>${tabHTML}${content}`
+  return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-bom" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="npi-go-home">← Dashboard</button></div></div>${tabHTML}${content}`
 }
 
 npi.bom.setBomTab = function(t) { bomSubTab = t; render() }

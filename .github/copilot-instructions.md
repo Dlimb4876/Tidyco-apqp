@@ -1,113 +1,71 @@
-# Tidyco APQP — Copilot Instructions
+# Tidyco APQP - Copilot Instructions
 
-## User Context
-**The primary user has zero coding experience.** Use plain language, no jargon. For any multi-step task always create a Todo list and tick off each step individually — never batch-complete.
+## Scope
+Use these rules for all work in this repository. Keep responses and changes in plain language because the primary user is non-technical.
 
-## Acronyms
-ME = Manufacturing Engineering · PM = Project Management · APQP = Advanced Product Quality Planning · RLS = Row Level Security · CTQ = Critical to Quality · PFMEA = Process Failure Mode & Effects Analysis · BOM = Bill of Materials · SPA = Single Page Application
+## Project Snapshot
+Tidyco APQP is a vanilla JavaScript SPA (no build pipeline). Files are served directly in the browser. Backend is Supabase (Auth + Postgres + Realtime).
 
-## What This Repo Does
-Tidyco APQP is a **vanilla JavaScript Single Page Application (SPA)** for managing APQP (Advanced Product Quality Planning) and Manufacturing Engineering workflows. It has no build pipeline — all files are static HTML/JS/CSS served directly in a browser. Backend is **Supabase** (PostgreSQL + Auth + RLS).
-
-## Tech Stack
-- **Language:** Plain ES6+ JavaScript (no TypeScript, no bundler)
-- **Runtime:** Browser (no Node.js runtime in production)
-- **Backend:** Supabase v2 (CDN), Chart.js v4.4.0 (CDN), IBM Plex Sans/Mono (Google Fonts)
-- **Tests:** Jest 30 + jest-environment-jsdom
-- **Lint:** ESLint 9 (NPI files only: `portals/product-development/npi/**/*.js`)
-- **Format:** Prettier (`singleQuote: true`, `semi: false`, `tabWidth: 2`, `printWidth: 100`)
-
-## Commands — Always Run in This Order
+## Build And Test
+Run commands in this order when validation is needed:
 
 ```bash
-npm install          # Always run first after cloning; installs jest + eslint devDeps
-npm test             # Run all tests (requires npm install first; jest is a local devDep)
-npm run check:all    # All quality checks — run before every commit
-npx eslint portals/product-development/npi/**/*.js   # Lint NPI files (warnings only; 0 errors expected)
-npx prettier --write portals/product-development/npi/**/*.js  # Auto-format NPI JS
+npm install
+npm test
+npm run check:all
 ```
 
-**Validated results:** `npm test` → 18 suites, 179 tests, all pass (~2.5 s). `npm test` will fail with "jest: not found" if `npm install` has not been run first. ESLint produces only warnings, never errors. There is no build step and no CI pipeline (no `.github/workflows/`).
+Optional focused checks:
 
-## Repository Layout
-
-```
-index.html              # App entry point — defines ALL script/CSS load order (source of truth)
-core/js/
-  state.js              # All global state variables and constants (GATE_DEFS, FAMILIES, BOM_TYPES)
-  auth.js               # Supabase client instantiation, login/logout
-  db.js                 # Data persistence, Supabase sync, migration
-  app.js                # App initialization — MUST load last
-core/css/
-  main.css              # CSS variables, typography, shell layout, responsive gutters
-  components.css        # Shared UI: modals, buttons, cards, tables
-utils/js/
-  helpers.js            # esc(), showModal(), closeModal(), emptyState()
-  navigation.js         # Hash routing, render() switchboard, navigate()
-  realtime.js           # createRealtimeSubscription(), removeRealtimeSubscription()
-portals/
-  hub/                  # Central operations dashboard
-  capacity/             # ME + Production + PM capacity planning
-  product-development/
-    npi/                # Core APQP: PFMEA, gates, BOM, CTQ, timing, trackers
-    product-management/ # Product registry with overhaul history
-  production/           # Production scheduling + Gantt
-  operations/           # Operations dashboard, forecast, metrics
-  feedback/             # Bug/feedback reports with real-time subscriptions
-tests/                  # Jest test files (*.test.js) — one per feature area
-jest.config.js          # testEnvironment: jsdom; setupFiles: ./jest.setup.js
-jest.setup.js           # Global mocks: supa, createRealtimeSubscription, currentUser, DOM
-eslint.config.js        # ESLint config (NPI files only; flat config format)
-.prettierrc             # Prettier config
+```bash
+npm run lint:npi
+npm run format:npi
 ```
 
-## Critical Rules
+Notes:
+- `npm install` must run first on a fresh clone or `npm test` can fail with `jest: not found`.
+- `check:all` currently runs: load order, syntax, subscriptions, mobile breakpoints, modal state, state variable tracking, and coverage checks.
 
-1. **Script load order in `index.html` is the source of truth.** When adding a JS file, add its `<script>` tag in the correct position. Dependencies must load before dependents. Layer order: `state.js → auth.js → db.js → helpers.js → navigation.js → realtime.js → [portals] → app.js`.
+## Architecture
+- `index.html` is the source of truth for JS/CSS load order.
+- Core dependency order is strict: `state.js -> auth.js -> db.js -> helpers.js -> navigation.js -> realtime.js -> portals -> app.js`.
+- `app.js` must load last.
+- Major boundaries:
+  - `core/js`: global state, auth, persistence, app bootstrap
+  - `utils/js`: shared helpers, routing, realtime subscription helpers
+  - `portals/*`: feature UIs and feature data/render modules
 
-2. **No duplicate `const` in same scope.** A SyntaxError silently prevents the entire file from loading — all functions in that file become `undefined` at runtime with no console warning about the file itself.
+## Critical Conventions
+1. Keep all global state in `core/js/state.js` with defaults (`let` for mutable state).
+2. Never add duplicate `const` declarations in the same scope. One syntax error can stop the full file from loading.
+3. Use `esc()` for any user-provided value interpolated into HTML strings.
+4. Use `navigate()` for route changes so realtime cleanup runs correctly.
+5. Keep ME/PM capacity parity: changes in `portals/capacity/` must be mirrored in PM capacity unless explicitly excluded.
+6. Follow auth-only RLS model: do not filter client queries by `user_id`.
+7. Respect save debounce behavior (about 800ms) when designing UX.
+8. Keep new docs/plans in `plans/`, not repository root.
+9. Use mobile-first CSS with both breakpoints:
+   - `@media (max-width: 767px)`
+   - `@media (min-width: 768px)`
 
-3. **All global state lives in `core/js/state.js`.** New state variables must be added there with a default value. Use `let` for mutable state.
+## Navigation And Patterns
+- Hash routing pattern: `#p=<uuid>&s=<section>&t=<tab>`.
+- Common helper patterns:
+  - `showModal('modalId')` / `closeModal('modalId')`
+  - `emptyState(title, subtitle)` for empty lists
+  - short prefixed IDs such as `f_`, `e_`, `c_`, `r_`, `a_`
 
-4. **Capacity parity rule:** Changes to ME Capacity (`portals/capacity/js/`) must be mirrored in PM Capacity (`portals/capacity/project-management/js/`) unless explicitly noted otherwise.
+## Troubleshooting Shortcut
+If a function appears undefined (`X is not a function`):
+1. Check the defining file for syntax errors (especially duplicate `const`).
+2. Confirm the defining script loads before callers in `index.html`.
+3. Re-run syntax/load-order checks.
 
-5. **RLS is auth-only.** All authenticated users see all data. Never filter Supabase queries by `user_id` on the client. New tables need an RLS policy: `CREATE POLICY "auth" ON table FOR ALL USING (auth.role() = 'authenticated')`.
-
-6. **Real-time subscriptions need cleanup.** Always store the reference and call `removeRealtimeSubscription(ref)` before navigating away, or use `navigate()` which handles cleanup automatically.
-
-7. **`esc()` for all user data in HTML strings.** Use `esc(value)` (from `helpers.js`) whenever interpolating user-supplied data into HTML to prevent XSS.
-
-8. **Saves debounce at 800–900 ms.** Data is not persisted to Supabase immediately after a UI edit.
-
-9. **Planning/architecture docs go in `plans/` folder**, never the repo root.
-
-10. **Mobile-first CSS.** New CSS must include `@media (max-width: 767px)` and `@media (min-width: 768px)` breakpoints.
-
-## Key Patterns
-
-```javascript
-// Short prefixed ID generation (5-char suffix; NOT a full UUID — used for in-array items)
-const id = 'f_' + Math.random().toString(36).substr(2, 5); // f_=mode, e_=effect, c_=cause, r_=risk, a_=action
-
-// Active project accessor
-prog()  // returns db.projects.find(p => p.id === progId)
-
-// Modal
-showModal('modalId'); closeModal('modalId');
-
-// Navigation (hash-based, handles subscription cleanup)
-navigate('capacity', { ct: 'me' });
-// Hash format: #p=<uuid>&s=<section>&t=<tab>
-
-// RPN formula
-// RPN = SEV × OCC × DET  (each 1–10; high threshold ≥ 100)
-// Forecast RPN = SEV × New OCC × New DET
-```
-
-## Bug Squashing: "X is not a function"
-1. Find defining file: `grep -rn "function X\|const X" portals/ utils/ core/`
-2. Read that file — look for duplicate `const`, unclosed brackets, missing commas (SyntaxError = whole file fails silently)
-3. Check `index.html` load order — defining file must load before caller
-4. Fix the syntax error; functions reappear once file parses cleanly
-
-Trust these instructions. Only search the codebase if information here is incomplete or appears incorrect.
+## Source References
+Use these as canonical detail docs instead of duplicating rules here:
+- `CLAUDE.md`
+- `.claude/rules/code-style.md`
+- `.claude/rules/security.md`
+- `.claude/rules/navigation.md`
+- `.claude/rules/realtime.md`
+- `.claude/rules/testing.md`

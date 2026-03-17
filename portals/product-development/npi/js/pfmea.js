@@ -501,7 +501,7 @@ npi.pfmea.renderPFMEA = function() {
   if (activeView === 'history') {
     return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div class="sec-title">PFMEA</div>
     <div class="sec-desc">Failure history across all PFMEA steps in one place.</div></div>
-    <div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-pfmea')" title="User Guide">❓ Guide</button></div></div>
+    <div class="sec-actions"><button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfmea" title="User Guide">❓ Guide</button></div></div>
     ${viewTabs}
     ${npi.pfmea.renderHistoryView(historyEntries)}`
   }
@@ -509,7 +509,7 @@ npi.pfmea.renderPFMEA = function() {
   return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div class="sec-title">PFMEA</div>
   <div class="sec-desc">Failure Mode → Effect (SEV) → Cause (OCC) → Controls Prevent / Detect (DET) → RPN. Actions and rescoring per cause.</div></div>
   <div class="sec-actions">
-    <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-pfmea')" title="User Guide">❓ Guide</button>
+    <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfmea" title="User Guide">❓ Guide</button>
   </div></div>
 ${viewTabs}
 <div class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
