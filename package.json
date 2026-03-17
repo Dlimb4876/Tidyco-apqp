@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/Dlimb4876/Tidyco-apqp#readme",
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "eslint": "^9.39.4",
     "globals": "^17.4.0",
     "jest": "^30.3.0",
