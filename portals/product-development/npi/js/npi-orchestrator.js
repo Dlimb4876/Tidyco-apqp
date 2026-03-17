@@ -30,8 +30,13 @@ npi._renderInner = function(section) {
 
   if (section === 'project') return npi.dashboard.renderDashboard()
 
-  if (isSubAssembly && section && section.startsWith('gate_')) {
-    return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Gates are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Sub-assemblies do not have standalone gates. Use the root project for gate reviews and sign-off.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('${section}')">Open Root Gate View</button></div></div>`
+  if (section && section.startsWith('gate_')) {
+    if (isSubAssembly) {
+      return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Gates are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Sub-assemblies do not have standalone gates. Use the root project for gate reviews and sign-off.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('${section}')">Open Root Gate View</button></div></div>`
+    }
+
+    const gateNum = Number(section.split('_')[1])
+    return Number.isFinite(gateNum) ? npi.gate.renderGatePage(gateNum) : ''
   }
 
   if (section === 'apqp') return npi.apqp.renderAPQP()
