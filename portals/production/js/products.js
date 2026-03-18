@@ -8,8 +8,8 @@ function renderProductMaster() {
 
   let rows = '';
 
-  // Quick-add empty row at the top
-  rows += `
+  // Quick-add empty row at the top (editors/admins only)
+  if (canEdit()) rows += `
     <tr class="row-new" id="prod-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
       <td class="w28 ctr">+</td>
       <td><input class="cell-edit" id="prod-new-name" placeholder="Product name" data-action="new-row-keydown" data-field="name"></td>
@@ -65,7 +65,7 @@ function renderProductMaster() {
           </select>
         </td>
         <td><textarea class="cell-edit" name="prod_${idx}_notes" data-action="update-product" data-idx="${idx}" data-field="notes" data-keydown="edit-row">${esc(prod.notes || '')}</textarea></td>
-        <td class="w28 ctr"><button class="btn-del" data-action="delete-product" data-idx="${idx}">✕</button></td>
+        <td class="w28 ctr">${canEdit() ? `<button class="btn-del" data-action="delete-product" data-idx="${idx}">✕</button>` : ''}</td>
       </tr>
     `;
   });
@@ -81,7 +81,7 @@ function renderProductMaster() {
           <div class="sec-desc">${activeCount} active products — Click cells to edit, Tab/Enter to navigate</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" data-action="focus-new-product">➕ Add Product</button>
+          ${canEdit() ? `<button class="btn btn-primary" data-action="focus-new-product">➕ Add Product</button>` : ''}
           <button class="btn btn-ghost" data-action="set-production-tab" data-tab="root">← Back</button>
         </div>
       </div>

@@ -21,7 +21,7 @@ npi.docs.render = function() {
     <td><input class="cell-edit" name="docs_${i}_owner" value="${esc(d.owner)}" onchange="npi.docs.upd(${i},'owner',this.value)" placeholder="Owner" style="width:100%"></td>
     <td><select class="cell-edit" name="docs_${i}_status" onchange="npi.docs.upd(${i},'status',this.value)" style="width:100%">${DOC_STATUSES.map(s => `<option${d.status === s ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select></td>
     <td><input class="cell-edit" name="docs_${i}_notes" value="${esc(d.notes)}" onchange="npi.docs.upd(${i},'notes',this.value)" placeholder="Notes" style="width:100%"></td>
-    <td style="text-align:center"><button class="del-btn" onclick="npi.docs.del(${i})">×</button></td>
+    <td style="text-align:center">${canEdit() ? `<button class="del-btn" onclick="npi.docs.del(${i})">×</button>` : ''}</td>
   </tr>`).join('')
 
   return `<div class="sec-head">
@@ -32,7 +32,7 @@ npi.docs.render = function() {
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0">
       <button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button>
-      <button class="btn btn-primary btn-sm" onclick="npi.docs.add()">＋ Add Document</button>
+      ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="npi.docs.add()">＋ Add Document</button>` : ''}
     </div>
   </div>
   ${liveUpdateBadge ? `<div style="margin:0 0 12px 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
@@ -68,7 +68,7 @@ npi.docs.render = function() {
           </tr></thead>
           <tbody>${rows}</tbody>
         </table></div>`}
-    <button class="add-row" onclick="npi.docs.add()">＋ Add Document</button>
+    ${canEdit() ? `<button class="add-row" onclick="npi.docs.add()">＋ Add Document</button>` : ''}
   </div>`
 }
 

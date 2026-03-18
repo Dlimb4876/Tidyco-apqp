@@ -351,10 +351,10 @@ npi.pfmea.renderPFMEA = function() {
           if (ei === 0 && ci === 0) {
             rowHtml += `<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
-              <div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">
+              ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
                 <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
-              </div>
+              </div>` : ''}
             </td>`
           }
 
@@ -362,10 +362,10 @@ npi.pfmea.renderPFMEA = function() {
           if (ci === 0) {
             rowHtml += `<td rowspan="${efRowspan}" style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_effect_${mi}_${ei}" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
-              <div style="margin-top:3px;display:flex;gap:3px">
+              ${canEdit() ? `<div style="margin-top:3px;display:flex;gap:3px">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
                 <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:9px">× Eff</button>
-              </div>
+              </div>` : ''}
             </td>
             <td rowspan="${efRowspan}" class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_sev_${mi}_${ei}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
@@ -411,9 +411,9 @@ npi.pfmea.renderPFMEA = function() {
               <span id="forecast_wrap_${mi}_${ei}_${ci}" style="display:inline-block;opacity:${hasAction ? '1' : '0'}">${npi.components.rpnBadge(hasAction ? forecast : 0, { id: `forecast_${mi}_${ei}_${ci}`, emptyLabel: '—' })}</span>
             </td>
             <td style="text-align:center;vertical-align:top;padding-top:4px">
-              <button class="btn btn-sm btn-green" style="font-size:9px;padding:3px 6px;white-space:nowrap" data-action="pfmea-implement" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" title="Apply new OCC/DET and log to history">▶ Apply</button>
+              ${canEdit() ? `<button class="btn btn-sm btn-green" style="font-size:9px;padding:3px 6px;white-space:nowrap" data-action="pfmea-implement" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" title="Apply new OCC/DET and log to history">▶ Apply</button>` : ''}
             </td>
-            <td style="text-align:center"><button class="del-btn" data-action="pfmea-del-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}">×</button></td>
+            <td style="text-align:center">${canEdit() ? `<button class="del-btn" data-action="pfmea-del-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}">×</button>` : ''}</td>
           </tr>`
           html += rowHtml
         })
@@ -424,18 +424,18 @@ npi.pfmea.renderPFMEA = function() {
           if (ei === 0) {
             rowHtml += `<td rowspan="1" class="pfmea-mode-cell" style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
-              <div style="margin-top:4px;display:flex;gap:3px">
+              ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
                 <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
-              </div>
+              </div>` : ''}
             </td>`
           }
           rowHtml += `<td style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_effect_${mi}_${ei}" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
-              <div style="margin-top:3px;display:flex;gap:3px">
+              ${canEdit() ? `<div style="margin-top:3px;display:flex;gap:3px">
                 <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
                 <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:9px">× Eff</button>
-              </div>
+              </div>` : ''}
             </td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_sev_${mi}_${ei}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
@@ -452,17 +452,17 @@ npi.pfmea.renderPFMEA = function() {
         html += `<tr class="pfmea-row-sub">
           <td class="pfmea-mode-cell" style="vertical-align:top">
             <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
-            <div style="margin-top:4px;display:flex;gap:3px">
+            ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px">
               <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
               <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
-            </div>
+            </div>` : ''}
           </td>
           <td colspan="17" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No effects yet — click ＋ Effect</td>
         </tr>`
       }
     })
 
-    html += `<tr><td colspan="18" style="padding:0"><div class="pfmea-add-row" data-action="pfmea-add-mode" data-step-id="${s.id}">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`
+    if (canEdit()) html += `<tr><td colspan="18" style="padding:0"><div class="pfmea-add-row" data-action="pfmea-add-mode" data-step-id="${s.id}">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`
   })
 
   if (visibleSteps.length === 0) {

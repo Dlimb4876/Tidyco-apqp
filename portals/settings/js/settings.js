@@ -181,7 +181,7 @@ function renderSettingsFamiliesTab() {
           </tr>
         </thead>
         <tbody>
-          <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+          ${canEdit() ? `<tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
             <td><input class="cell-edit" id="sfNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
             <td><input class="cell-edit" id="sfNew-id" placeholder="e.g. HVAC"></td>
             <td><input class="cell-edit" id="sfNew-label" placeholder="e.g. HVAC Systems"></td>
@@ -190,7 +190,7 @@ function renderSettingsFamiliesTab() {
             <td class="families-actions-col">
               <button class="btn-del" title="Add family" data-action="settings-families-add">✓</button>
             </td>
-          </tr>
+          </tr>` : ''}
           ${families.length === 0 ? `
             <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No families defined yet. Add one above.</td></tr>
           ` : families.map(f => {
@@ -217,8 +217,8 @@ function renderSettingsFamiliesTab() {
               <td>${esc(f.description || '—')}</td>
               <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
               <td class="families-actions-col">
-                <button class="btn-del" title="Edit" data-action="settings-families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
-                <button class="btn-del" title="Delete" data-action="settings-families-delete" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
+                ${canEdit() ? `<button class="btn-del" title="Edit" data-action="settings-families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
+                <button class="btn-del" title="Delete" data-action="settings-families-delete" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>` : '—'}
               </td>
             </tr>`;
           }).join('')}
@@ -333,13 +333,13 @@ function renderSettingsWorkAreasTab() {
           </tr>
         </thead>
         <tbody>
-          <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+          ${canEdit() ? `<tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
             <td><input class="cell-edit" id="waNew-name" placeholder="e.g. Unit 9"></td>
             <td><input class="cell-edit" id="waNew-desc" placeholder="Description (optional)"></td>
             <td class="families-actions-col">
               <button class="btn-del" title="Add work area" data-action="settings-wa-add">✓</button>
             </td>
-          </tr>
+          </tr>` : ''}
           ${areas.length === 0 ? `
             <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">No work areas defined yet. Add one above.</td></tr>
           ` : areas.map(w => {
@@ -359,7 +359,7 @@ function renderSettingsWorkAreasTab() {
               <td><strong>${esc(w.name)}</strong></td>
               <td>${esc(w.description || '—')}</td>
               <td class="families-actions-col">
-                <button class="btn-del" title="Rename" data-action="settings-wa-start-edit" data-wa-id="${esc(w.id)}">✏️</button>
+                ${canEdit() ? `<button class="btn-del" title="Rename" data-action="settings-wa-start-edit" data-wa-id="${esc(w.id)}">✏️</button>` : '—'}
               </td>
             </tr>`;
           }).join('')}
@@ -425,6 +425,31 @@ function settingsEmailToName(email) {
   return local.split(/[._-]/).map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
 }
 
+// ── Change a user's role ───────────────────────────────────────
+async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
+  if (!isAdmin()) { showToast('Only admins can change roles.', 'error'); return; }
+  if (!userId || !newRole) return;
+  if (isLastAdmin && newRole !== 'admin') {
+    showToast('Cannot remove the last admin. Promote another user to admin first.', 'warning');
+    settingsEnsurePermissionsData(true);
+    return;
+  }
+  try {
+    const { error } = await supa.from('profiles').update({ role: newRole }).eq('id', userId);
+    if (error) throw error;
+    // Update local cache so the UI stays consistent without a full reload
+    if (settingsPermissionsData) {
+      const rec = settingsPermissionsData.find(u => u.id === userId);
+      if (rec) rec.role = newRole;
+    }
+    showToast('Role updated. Change takes effect on that user\'s next login.', 'info');
+    renderSettingsPermissionsTab();
+  } catch (err) {
+    showToast('Failed to update role: ' + err.message, 'error');
+    settingsEnsurePermissionsData(true);
+  }
+}
+
 // ── Render permissions tab ─────────────────────────────────────
 function renderSettingsPermissionsTab() {
   const container = document.getElementById('settingsPermissionsTab');
@@ -438,6 +463,9 @@ function renderSettingsPermissionsTab() {
   const users = settingsPermissionsData || [];
   const currentEmail = currentUser?.email || '';
 
+  const adminCount = users.filter(u => (u.role || 'editor') === 'admin').length;
+  const viewerIsAdmin = isAdmin();
+
   let tableBody = '';
   if (users.length === 0 && !settingsPermissionsError) {
     tableBody = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">No user accounts found.</td></tr>`;
@@ -446,8 +474,19 @@ function renderSettingsPermissionsTab() {
       const isYou = u.email === currentEmail;
       const name = esc(u.full_name || settingsEmailToName(u.email));
       const email = esc(u.email || '—');
-      const role = esc(u.role || 'user');
+      const role = u.role || 'editor';
       const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB') : '—';
+      const isLastAdmin = role === 'admin' && adminCount <= 1;
+
+      // Admins see a dropdown; everyone else sees a read-only badge
+      const roleCell = viewerIsAdmin
+        ? `<select class="cell-edit" style="width:100px" data-action="settings-permissions-change-role" data-user-id="${esc(u.id)}" data-is-last-admin="${isLastAdmin}" ${isYou && isLastAdmin ? 'disabled title="Cannot remove your own admin role when you are the only admin"' : ''}>
+            <option value="admin"  ${role === 'admin'  ? 'selected' : ''}>Admin</option>
+            <option value="editor" ${role === 'editor' ? 'selected' : ''}>Editor</option>
+            <option value="viewer" ${role === 'viewer' ? 'selected' : ''}>Viewer</option>
+          </select>`
+        : `<span class="permissions-badge">${esc(role)}</span>`;
+
       return `
       <tr>
         <td>
@@ -455,7 +494,7 @@ function renderSettingsPermissionsTab() {
           ${isYou ? '<span class="permissions-badge you">You</span>' : ''}
         </td>
         <td>${email}</td>
-        <td><span class="permissions-badge">${role}</span></td>
+        <td>${roleCell}</td>
         <td>${joined}</td>
       </tr>`;
     }).join('');
@@ -468,10 +507,17 @@ function renderSettingsPermissionsTab() {
     </div>
   ` : '';
 
+  const adminNote = viewerIsAdmin
+    ? `<div class="permissions-notice" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.25)">
+        <strong>Admin tip:</strong> Use the dropdowns to change a user's role. Changes take effect on the user's next login.
+        <br><strong>Roles:</strong> <em>Admin</em> — full access + user management &nbsp;|&nbsp; <em>Editor</em> — full access to all content &nbsp;|&nbsp; <em>Viewer</em> — read-only across all portals.
+      </div>`
+    : `<div class="permissions-notice">Only admins can change roles. Your current role is <strong>${esc(currentUserRole || 'editor')}</strong>.</div>`;
+
   container.innerHTML = `
     <div class="settings-section-header">
       <h2>Permissions</h2>
-      <p class="settings-section-desc">All registered user accounts. Role-based access controls are planned for a future release.</p>
+      <p class="settings-section-desc">Role-based access control. Admins can assign roles to control what each user can do.</p>
     </div>
     ${errorBanner}
     <table class="prod-tbl" style="width:100%">
@@ -487,9 +533,7 @@ function renderSettingsPermissionsTab() {
         ${tableBody}
       </tbody>
     </table>
-    <div class="permissions-notice">
-      Role-based permissions are not yet active. All authenticated users currently have full access to the portal.
-    </div>
+    ${adminNote}
   `;
 }
 
@@ -542,5 +586,10 @@ function setupSettingsEventListeners() {
 
     // Permissions tab actions
     if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
+
+    if (action === 'settings-permissions-change-role') {
+      await settingsPermissionsChangeRole(actionEl.dataset.userId || '', actionEl.value, actionEl.dataset.isLastAdmin === 'true');
+      return;
+    }
   });
 }

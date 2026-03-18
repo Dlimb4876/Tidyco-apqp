@@ -51,7 +51,7 @@ window.meRenderTeamTab = function(teamArray) {
         <td><input name="cap_team_${rowIndex}_hoursPerWeek" type="number" value="${meGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" data-cap-action="cap-team-upd" data-field="hoursPerWeek"></td>
         <td><input name="cap_team_${rowIndex}_utilisation" type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" data-cap-action="cap-team-upd" data-field="utilisation"></td>
         <td style="font-weight: bold;">${effective}</td>
-        <td style="text-align: center;"><button class="me-del-btn" data-cap-action="cap-team-del">✕</button></td>
+        <td style="text-align: center;">${canEdit() ? `<button class="me-del-btn" data-cap-action="cap-team-del">✕</button>` : ''}</td>
       </tr>`;
   });
 
@@ -104,14 +104,14 @@ window.meRenderTeamTab = function(teamArray) {
               <tbody>
                 ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
                   <div style="color:var(--muted);margin-bottom:12px">No ${isPmContext ? 'managers' : 'engineers'} added yet</div>
-                  <button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add First ${isPmContext ? 'Manager' : 'Engineer'}</button>
+                  ${canEdit() ? `<button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add First ${isPmContext ? 'Manager' : 'Engineer'}</button>` : ''}
                 </div></td></tr>`}
               </tbody>
             </table>
           </div>
-          <div class="me-add-row">
+          ${canEdit() ? `<div class="me-add-row">
             <button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add ${isPmContext ? 'Manager' : 'Engineer'}</button>
-          </div>
+          </div>` : ''}
         </div>
       </div>
     </div>`;

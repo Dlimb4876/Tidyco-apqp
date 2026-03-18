@@ -38,7 +38,7 @@ npi.cp.render = function() {
       <td class="w70"><input class="cell-edit" name="cp_${i}_resp" value="${esc(r.resp)}" data-action="cp-upd" data-idx="${i}" data-field="resp" placeholder="Who"></td>
       <td><textarea class="cell-edit" name="cp_${i}_reaction" rows="2" data-action="cp-upd" data-idx="${i}" data-field="reaction" placeholder="Reaction plan">${esc(r.reaction)}</textarea></td>
       <td class="w50"><div style="display:flex;flex-wrap:wrap;gap:2px">${ctqs || '—'}</div></td>
-      <td class="w28 ctr"><button class="del-btn" data-action="cp-del" data-idx="${i}">×</button></td></tr>`
+      <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="cp-del" data-idx="${i}">×</button>` : ''}</td></tr>`
   }).join('')
 
   const syncBanner = miss.length > 0
@@ -46,12 +46,12 @@ npi.cp.render = function() {
     : ''
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Step 04</div><div class="sec-title">Control Plan</div><div class="sec-desc">Linked to PFMEA and PFD. Step numbers and CTQs carry through automatically.</div></div>
-  <div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-cp')" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="cp-sync">Sync from PFMEA</button><button class="btn btn-primary btn-sm" data-action="cp-add">＋ Add Row</button></div></div>
+  <div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-cp')" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-ghost btn-sm" data-action="cp-sync">Sync from PFMEA</button><button class="btn btn-primary btn-sm" data-action="cp-add">＋ Add Row</button>` : ''}</div></div>
   ${syncBanner}
   <div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">Control Plan</span><span class="card-meta">${p.cp.length} characteristics</span></div>
   ${p.cp.length === 0 ? emptyState('📊', 'No entries yet', miss.length > 0 ? 'Use "Sync from PFMEA" to auto-populate' : 'Complete PFMEA first') : `<div class="sticky-table-wrap"><table class="tbl" style="min-width:1100px">${npi.components.tableHeader([{label:'Step'},{label:'FMEA/RPN'},{label:'Characteristic'},{label:'Type'},{label:'Spec'},{label:'Method'},{label:'Freq'},{label:'Resp'},{label:'Reaction Plan'},{label:'CTQs'},{label:''}])}<tbody>${rows}</tbody></table></div>`}
-  <button class="add-row" data-action="cp-add">＋ Add Row</button></div>`
+  ${canEdit() ? `<button class="add-row" data-action="cp-add">＋ Add Row</button>` : ''}</div>`
 }
 
 npi.cp.syncFromPFMEA = function() { npi.data.cp.syncFromPFMEA() }

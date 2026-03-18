@@ -120,8 +120,8 @@ function renderSchedulingRow(batch, idx, activeBatches) {
       </td>
       <td><textarea class="cell-edit" name="batch_${batchIdx}_notes" data-field="notes">${esc(batch.notes || '')}</textarea></td>
       <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
-        <button class="btn-del" data-action="duplicate" title="Duplicate batch">⧉</button>
-        <button class="btn-del" data-action="delete" title="Delete batch">✕</button>
+        ${canEdit() ? `<button class="btn-del" data-action="duplicate" title="Duplicate batch">⧉</button>
+        <button class="btn-del" data-action="delete" title="Delete batch">✕</button>` : ''}
       </td>
     </tr>
   `;
@@ -167,7 +167,7 @@ function renderScheduling() {
   const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
   const activeBatches = getFilteredBatches();
 
-  let rows = renderSchedulingNewRow();
+  let rows = canEdit() ? renderSchedulingNewRow() : '';
 
   activeBatches.forEach((batch, idx) => {
     rows += renderSchedulingRow(batch, idx, activeBatches);

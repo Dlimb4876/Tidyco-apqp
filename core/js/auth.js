@@ -21,6 +21,17 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'Sign in';
   if (error) { showLoginErr(error.message); return; }
   currentUser = data.user;
+  // Load role from profiles table; default to 'editor' if no profile row found
+  try {
+    const { data: profile } = await supa
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+    currentUserRole = profile?.role || 'editor';
+  } catch (_) {
+    currentUserRole = 'editor';
+  }
   launchApp();
 }
 
@@ -32,6 +43,7 @@ function showLoginErr(msg) {
 async function doLogout() {
   await supa.auth.signOut();
   currentUser = null;
+  currentUserRole = null;
   db = { projects: [] }; progId = null;
   document.getElementById('appShell').style.display   = 'none';
   document.getElementById('loginScreen').style.display = 'flex';

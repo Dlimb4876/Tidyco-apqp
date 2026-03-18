@@ -134,14 +134,14 @@ npi.timing.renderTimingPlan = function() {
         <td class="gantt-rowlabel">Plan</td>
         ${planCells}
         <td class="gantt-notes-cell" rowspan="2"><input class="cell-edit" name="timing_${row.id}_notes" value="${esc(row.notes)}" onchange="npi.timing.ganttUpdNotes('${row.id}',this.value)" placeholder="Notes" style="width:100%;font-size:11px"></td>
-        <td style="text-align:center" rowspan="2"><button class="del-btn" onclick="npi.timing.ganttDelRow('${row.id}')">×</button></td>
+        <td style="text-align:center" rowspan="2">${canEdit() ? `<button class="del-btn" onclick="npi.timing.ganttDelRow('${row.id}')">×</button>` : ''}</td>
       </tr>
       <tr class="gantt-row gantt-act-row">
         <td class="gantt-rowlabel gantt-rowlabel-act">Actual</td>
         ${actCells}
       </tr>`
     })
-    body += `<tr class="gantt-add-row">
+    if (canEdit()) body += `<tr class="gantt-add-row">
       <td colspan="${visibleCols + 5}" style="padding:2px 8px">
         <button class="add-row" style="font-size:10px;padding:2px 10px" onclick="npi.timing.ganttAddRow('${sec.id}')">＋ Add ${sec.label} task</button>
       </td>
@@ -163,8 +163,8 @@ npi.timing.renderTimingPlan = function() {
     <div style="display:flex;gap:8px;flex-shrink:0">
       <button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button>
       <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-timing')" title="User Guide">❓ Guide</button>
-      <button class="btn btn-ghost btn-sm" onclick="npi.timing.ganttClear()">Clear All</button>
-      <button class="btn btn-primary btn-sm" onclick="npi.timing.ganttAddRow('s1')">＋ Add Task</button>
+      ${canEdit() ? `<button class="btn btn-ghost btn-sm" onclick="npi.timing.ganttClear()">Clear All</button>` : ''}
+      ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="npi.timing.ganttAddRow('s1')">＋ Add Task</button>` : ''}
     </div>
   </div>
   <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">

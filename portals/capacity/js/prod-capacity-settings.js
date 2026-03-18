@@ -162,10 +162,10 @@ function renderProdCapSettings() {
             <br>1 person = Mon-Fri working days (excluding UK bank holidays) x 8h = available capacity hours shown in grey below each cell.
           </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
+        ${canEdit() ? `<div style="display:flex;gap:8px;align-items:center">
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-settings-fill-forward">↠ Fill Forward</button>
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-settings-clear-all" style="color:var(--red)">✕ Clear All</button>
-        </div>
+        </div>` : ''}
       </div>
 
       <!-- Settings Grid -->

@@ -3,6 +3,7 @@
 // ═══════════════════════════════════
 
 let db = { projects: [] };
+let currentUserRole = null; // 'admin' | 'editor' | 'viewer' — loaded from profiles after login
 let progId = null;
 let currentSection = 'hub';
 let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp

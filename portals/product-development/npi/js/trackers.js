@@ -57,7 +57,7 @@ npi.tracker.renderActions = function() {
       <td><select class="cell-edit" name="tracker_action_${i}_source" onchange="npi.tracker.updAction(${i},'source',this.value)" style="width:100%">${['Gate', 'PFMEA', 'Risk', 'General'].map(s => `<option${a.source === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
       ${hasSubAsms ? `<td><select class="cell-edit" name="tracker_action_${i}_subAsm" onchange="npi.tracker.updAction(${i},'subAsm',this.value)" style="width:100%">${subAsmOpts.replace(`value="${a.subAsm || ''}"`, `value="${a.subAsm || ''}" selected`)}</select></td>` : ''}
       <td><input class="cell-edit" name="tracker_action_${i}_notes" value="${esc(a.notes)}" onchange="npi.tracker.updAction(${i},'notes',this.value)" placeholder="Notes" style="width:100%"></td>
-      <td style="text-align:center"><button class="del-btn" onclick="npi.tracker.delAction(${i})">×</button></td>
+      <td style="text-align:center">${canEdit() ? `<button class="del-btn" onclick="npi.tracker.delAction(${i})">×</button>` : ''}</td>
     </tr>`
   }).join('')
   const colgroup = hasSubAsms
@@ -67,7 +67,7 @@ npi.tracker.renderActions = function() {
     ? `<tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Sub-Asm</th><th>Notes</th><th></th></tr>`
     : `<tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Source</th><th>Notes</th><th></th></tr>`
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Action Tracker</div><div class="sec-desc">Central log of all actions. Overdue items highlighted. Edit all fields inline.</div></div>
-  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-actions')" title="User Guide">❓ Guide</button><button class="btn btn-primary btn-sm" onclick="npi.tracker.addAction()">＋ Add Action</button></div></div>
+  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-actions')" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="npi.tracker.addAction()">＋ Add Action</button>` : ''}</div></div>
   ${liveUpdateBadge ? `<div style="margin:0 0 12px 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
   <div style="display:flex;gap:10px;margin-bottom:16px">
     <div class="kpi-card" style="--kpi-color:var(--amber);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px">${open}</div><div class="kpi-label">Open</div></div>
@@ -82,7 +82,7 @@ npi.tracker.renderActions = function() {
     : visible.length === 0
     ? emptyState('✅', 'No actions match this filter', 'Try a different sub-assembly filter above')
     : `<div class="sticky-card-scroll"><table class="tbl act-tbl" style="table-layout:fixed;width:100%">${colgroup}<thead>${thead}</thead><tbody>${rows}</tbody></table></div>`}
-  <button class="add-row" onclick="npi.tracker.addAction()">＋ Add Action</button></div>`
+  ${canEdit() ? `<button class="add-row" onclick="npi.tracker.addAction()">＋ Add Action</button>` : ''}</div>`
 }
 npi.tracker.addAction = function() {
   npi.data.tracker.addAction()
@@ -146,7 +146,7 @@ npi.tracker.renderRisks = function() {
       <td style="text-align:center"><span class="rpn ${sc}" id="rs_${i}">${score}</span></td>
       <td><textarea class="cell-edit" name="tracker_risk_${i}_mit" rows="2" onchange="npi.tracker.updRisk(${i},'mit',this.value)" placeholder="Mitigation">${esc(r.mit)}</textarea></td>
       <td><select class="cell-edit" name="tracker_risk_${i}_status" onchange="npi.tracker.updRisk(${i},'status',this.value)" style="width:100%">${['Open', 'Mitigated', 'Closed'].map(s => `<option${r.status === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
-      <td style="text-align:center"><button class="del-btn" onclick="npi.tracker.delRisk(${i})">×</button></td>
+      <td style="text-align:center">${canEdit() ? `<button class="del-btn" onclick="npi.tracker.delRisk(${i})">×</button>` : ''}</td>
     </tr>`
   }).join('')
   const colgroup = hasSubAsms
@@ -156,7 +156,7 @@ npi.tracker.renderRisks = function() {
     ? `<tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>Sub-Asm</th><th title="Likelihood (1–5): How likely is this risk to occur?" style="line-height:1.3">L<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Likelihood</span></th><th title="Impact (1–5): How severe would the consequences be?" style="line-height:1.3">I<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Impact</span></th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr>`
     : `<tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th title="Likelihood (1–5): How likely is this risk to occur?" style="line-height:1.3">L<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Likelihood</span></th><th title="Impact (1–5): How severe would the consequences be?" style="line-height:1.3">I<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Impact</span></th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr>`
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Risk Register</div><div class="sec-desc">Project-level risks. Likelihood × Impact = Score. All fields editable inline. High risks ≥ 12.</div></div>
-  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showModal('modalRiskMatrix')">📊 Risk Matrix</button><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-risks')" title="User Guide">❓ Guide</button><button class="btn btn-primary btn-sm" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div></div>
+  <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showModal('modalRiskMatrix')">📊 Risk Matrix</button><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-risks')" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="npi.tracker.addRisk()">＋ Add Risk</button>` : ''}</div></div>
   ${liveUpdateBadge ? `<div style="margin:0 0 12px 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
   <div style="display:flex;gap:10px;margin-bottom:16px">
     <div class="kpi-card" style="--kpi-color:var(--red);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--red)">${hi}</div><div class="kpi-label">High ≥12</div></div>
@@ -172,7 +172,7 @@ npi.tracker.renderRisks = function() {
     : visible.length === 0
     ? emptyState('🛡', 'No risks match this filter', 'Try a different sub-assembly filter above')
     : `<div class="sticky-card-scroll"><table class="tbl risk-tbl" style="table-layout:fixed;width:100%">${colgroup}<thead>${thead}</thead><tbody>${rows}</tbody></table></div>`}
-  <button class="add-row" onclick="npi.tracker.addRisk()">＋ Add Risk</button></div>`
+  ${canEdit() ? `<button class="add-row" onclick="npi.tracker.addRisk()">＋ Add Risk</button>` : ''}</div>`
 }
 npi.tracker.addRisk = function() {
   npi.data.tracker.addRisk()

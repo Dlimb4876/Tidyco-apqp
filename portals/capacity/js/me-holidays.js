@@ -136,7 +136,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
         cellContent = 'H';
       }
 
-      const clickAttr = !isBank ? `data-cap-action="cap-me-toggle-holiday" data-member-id="${member.id}" data-date="${date}"` : '';
+      const clickAttr = !isBank && canEdit() ? `data-cap-action="cap-me-toggle-holiday" data-member-id="${member.id}" data-date="${date}"` : '';
       html += `<td class="${cellClass}" ${clickAttr} title="${date}">${cellContent}</td>`;
     });
 

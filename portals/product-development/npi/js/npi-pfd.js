@@ -33,14 +33,14 @@ function stepRowHTML(s, oi, p) {
     const item = bt.find(x => x.id === ref.itemId); if (!item) return ''
     const t = BOM_TYPES[ref.bomType]
     const name = item.desc || (item.pn || item.toolId || item.equipId || '?')
-    return `<span class="res-pill ${t.pc}" data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${ref.itemId}" title="Click to remove">${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}</span>`
+    return `<span class="res-pill ${t.pc}" ${canEdit() ? `data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${ref.itemId}" title="Click to remove"` : ''}>${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}</span>`
   }).join('')
   const docBadges = (s.docRefs || []).map(docId => {
     const doc = (p.docs || []).find(d => d.id === docId)
-    return doc ? `<span class="ctq-pick-item" data-action="pfd-del-doc-ref" data-step-id="${s.id}" data-doc-id="${docId}" title="Click to remove">${esc(doc.docNumber || 'Doc')} ${esc(doc.title || '')}</span>` : ''
+    return doc ? `<span class="ctq-pick-item" ${canEdit() ? `data-action="pfd-del-doc-ref" data-step-id="${s.id}" data-doc-id="${docId}" title="Click to remove"` : ''}>${esc(doc.docNumber || 'Doc')} ${esc(doc.title || '')}</span>` : ''
   }).join('')
 
-  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div><div style="display:flex;flex-direction:column;gap:2px"><button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button></div></div><div class="step-body"><div class="step-fields"><div class="step-field f-op"><input class="cell-edit" value="${esc(s.op)}" data-action="pfd-upd" data-id="${s.id}" data-field="op" placeholder="Operation" style="font-weight:600"></div><div class="step-field f-detail"><textarea class="cell-edit" rows="2" data-action="pfd-upd" data-id="${s.id}" data-field="detail" placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${(p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div></div></div></div><div class="step-resources">${pills}<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button></div></div>`
+  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div><div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields"><div class="step-field f-op"><input class="cell-edit" value="${esc(s.op)}" data-action="pfd-upd" data-id="${s.id}" data-field="op" placeholder="Operation" style="font-weight:600"></div><div class="step-field f-detail"><textarea class="cell-edit" rows="2" data-action="pfd-upd" data-id="${s.id}" data-field="detail" placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div></div></div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
 }
 
 function headerRowHTML(s, oi, meta) {
@@ -48,7 +48,7 @@ function headerRowHTML(s, oi, meta) {
   const collapsed = !!(meta && meta.collapsed)
   const stepCount = meta && Number.isFinite(meta.stepCount) ? meta.stepCount : 0
   const summary = stepCount === 1 ? '1 step' : `${stepCount} steps`
-  const actions = s.isDefault
+  const actions = s.isDefault || !canEdit()
     ? ''
     : `<div class="pfd-header-actions"><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button></div>`
   return `<div class="step-row pfd-header-row" id="pfd-row-${s.id}"><div class="pfd-header-main"><button class="pfd-header-toggle" data-action="pfd-toggle-group" data-key="${s.id}" aria-expanded="${collapsed ? 'false' : 'true'}" title="${collapsed ? 'Expand section' : 'Collapse section'}"><span class="pfd-header-toggle-icon">${collapsed ? '▸' : '▾'}</span></button><div class="pfd-header-title"><span class="pfd-header-chip">SECTION</span><input class="cell-edit pfd-header-input" value="${title}" data-action="pfd-upd" data-id="${s.id}" data-field="op" placeholder="Section title (e.g. STRIP DOWN UNIT)"></div><div class="pfd-header-meta">${collapsed ? `Hidden: ${summary}` : summary}</div>${actions}</div></div>`
@@ -97,16 +97,16 @@ npi.pfd.render = function() {
 
     if (!hideSectionRows) {
       body += stepRowHTML(s, oi, p)
-      body += `<div class="insert-row"><button class="insert-btn" data-action="pfd-open-insert" data-after="${oi}">＋ step after</button><button class="insert-btn" data-action="pfd-add-header-after" data-after-id="${s.id}">＋ section after</button></div>`
+      if (canEdit()) body += `<div class="insert-row"><button class="insert-btn" data-action="pfd-open-insert" data-after="${oi}">＋ step after</button><button class="insert-btn" data-action="pfd-add-header-after" data-after-id="${s.id}">＋ section after</button></div>`
     }
   })
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Step 02</div><div class="sec-title">Process Flow Diagram</div><div class="sec-desc">Steps numbered in 10s. Insert between steps. Numbers are permanent references in PFMEA and Control Plan.</div></div>
-  <div class="sec-actions"><button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button><button class="btn btn-primary btn-sm" data-action="pfd-add-main">＋ Add Step</button></div></div>
+  <div class="sec-actions"><button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="pfd-add-main">＋ Add Step</button>` : ''}</div></div>
   ${sorted.length > 0 ? `<div class="flow-ribbon">${ribbon}</div>` : ''}
   <div class="card"><div class="card-head"><span class="card-title">Process Steps</span><span class="card-meta">${executable.length} executable steps</span></div>
   ${p.pfd.length === 0 ? emptyState('🔄', 'No steps yet', 'Add your first process step') : `<div>${body}</div>`}
-  <button class="add-row" data-action="pfd-add-main">＋ Add Process Step</button></div>
+  ${canEdit() ? `<button class="add-row" data-action="pfd-add-main">＋ Add Process Step</button>` : ''}</div>
   ${p.pfd.length > 0 ? `<div class="info-banner">💡 Next: <a href="#" data-action="npi-set-apqp" data-tab="pfmea" style="color:var(--blue)">PFMEA →</a></div>` : ''}`
 }
 

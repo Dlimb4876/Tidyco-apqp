@@ -542,7 +542,7 @@ npi.dashboard.renderDashboard = function () {
         return `<div class="sub-asm-card" onclick="npi.nav.openProjectById('${sp.id}')">
         <div class="sub-asm-card-head">
           <span class="sub-asm-name">${esc(sp.name)}</span>
-          <button class="del-btn" style="font-size:10px" onclick="npi.nav.stopEvent(event);npi.dashboard.deleteSubAsm(${li})">× Delete</button>
+          ${canEdit() ? `<button class="del-btn" style="font-size:10px" onclick="npi.nav.stopEvent(event);npi.dashboard.deleteSubAsm(${li})">× Delete</button>` : ''}
         </div>
         ${sp.unit ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px">🚂 ${esc(sp.unit)}</div>` : ''}
         <div class="sub-asm-stats">
@@ -557,7 +557,7 @@ npi.dashboard.renderDashboard = function () {
       })
       .filter(Boolean)
       .join('')
-    const addCard = `<div class="sub-asm-add-card" onclick="npi.dashboard.createSubAsm()"><span style="font-size:16px">＋</span> Create sub-assembly</div>`
+    const addCard = canEdit() ? `<div class="sub-asm-add-card" onclick="npi.dashboard.createSubAsm()"><span style="font-size:16px">＋</span> Create sub-assembly</div>` : ''
     return `<div class="sub-asm-grid">${cards}${addCard}</div>`
   })()
 
@@ -714,7 +714,7 @@ npi.dashboard.renderDashboard = function () {
         <button class="btn btn-ghost" onclick="npi.nav.navigate('projects')">← Back</button>
         <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-dashboard')" title="User Guide">❓ Guide</button>
         <button class="btn btn-ghost" onclick="npi.dashboard.openGateScopeEditor()">Gate Scope</button>
-        <button class="btn btn-primary" onclick="npi.dashboard.showEditProject()">Edit Project</button>
+        ${canEdit() ? `<button class="btn btn-primary" onclick="npi.dashboard.showEditProject()">Edit Project</button>` : ''}
       </div>
     </div>
     ${liveUpdateBadge ? `<div class="live-row">${liveUpdateBadge}</div>` : ''}

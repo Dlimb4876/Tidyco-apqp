@@ -228,8 +228,8 @@ function renderProductsList() {
         </tr>
       </thead>
       <tbody>
-        <!-- New row -->
-        <tr class="row-new" id="productsNewRow" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+        <!-- New row (editors/admins only) -->
+        ${canEdit() ? `<tr class="row-new" id="productsNewRow" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
           <td><input class="cell-edit" id="pNew-name" placeholder="Product name"></td>
           <td><input class="cell-edit" id="pNew-partNumber" placeholder="Part number"></td>
           <td><select class="cell-edit" id="pNew-family">${buildFamilyOptions('')}</select></td>
@@ -243,11 +243,11 @@ function renderProductsList() {
           <td class="w28 ctr">
             <button class="btn-del" title="Add product" data-action="products-add-row">✓</button>
           </td>
-        </tr>
+        </tr>` : ''}
         ${filtered.length === 0 ? `
           <tr><td colspan="11" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No products found.</div>
-            <button class="btn btn-primary btn-sm" data-action="products-focus-add">＋ Add First Product</button>
+            ${canEdit() ? '<button class="btn btn-primary btn-sm" data-action="products-focus-add">＋ Add First Product</button>' : ''}
           </td></tr>
         ` : filtered.map(p => {
           const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || '—') : '—';
@@ -283,8 +283,8 @@ function renderProductsList() {
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td><span class="badge badge-scope-${esc(p.scope || 'overhaul')}">${(p.scope || 'overhaul').charAt(0).toUpperCase() + (p.scope || 'overhaul').slice(1)}</span></td>
             <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
-              <button class="btn-del" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
-              <button class="btn-del" title="Delete" data-action="products-delete-row" data-product-id="${esc(p.id)}" data-product-name="${esc(p.name)}">🗑️</button>
+              ${canEdit() ? `<button class="btn-del" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
+              <button class="btn-del" title="Delete" data-action="products-delete-row" data-product-id="${esc(p.id)}" data-product-name="${esc(p.name)}">🗑️</button>` : ''}
             </td>
           </tr>`;
         }).join('')}

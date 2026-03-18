@@ -2,6 +2,18 @@
 // helpers.js — Escaping, UI utils, and modal helpers
 // ═══════════════════════════════════
 
+// ── Permission helpers ─────────────────────────────────────────
+// Returns true if the current user can create, edit, or delete data.
+// Admins and editors can edit; viewers are read-only.
+function canEdit() {
+  return currentUserRole === 'admin' || currentUserRole === 'editor';
+}
+
+// Returns true only for admin users (e.g. role management in Settings).
+function isAdmin() {
+  return currentUserRole === 'admin';
+}
+
 function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')

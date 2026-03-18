@@ -191,7 +191,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
         <td><select name="cap_task_${taskIndex}_status" data-cap-action="cap-task-status-upd">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
         <td><input name="cap_task_${taskIndex}_totalHours" type="number" value="${task.totalHours || 0}" step="0.5" data-cap-action="cap-task-upd" data-field="totalHours"></td>
         <td style="text-align: center;">
-          <button class="me-del-btn" data-cap-action="cap-task-del">✕</button>
+          ${canEdit() ? `<button class="me-del-btn" data-cap-action="cap-task-del">✕</button>` : ''}
         </td>
       </tr>`;
   });
@@ -295,14 +295,14 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
             <tbody>
               ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
                   <div style="color:var(--muted);margin-bottom:12px">No tasks match the current filters</div>
-                  <button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>
+                  ${canEdit() ? `<button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>` : ''}
                 </div></td></tr>`}
             </tbody>
           </table>
         </div>
-        <div class="me-add-row">
+        ${canEdit() ? `<div class="me-add-row">
           <button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>
-        </div>
+        </div>` : ''}
       </div>
     </div>
     </div>`;
