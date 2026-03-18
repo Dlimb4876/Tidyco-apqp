@@ -41,5 +41,4 @@ check_onclick.js
 .github/skills/
 
 # Local assistant-generated docs/scripts
-QWEN.md
 scripts/pre-commit-quality-hook.js

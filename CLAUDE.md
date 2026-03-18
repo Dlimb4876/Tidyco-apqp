@@ -98,3 +98,22 @@ npm install          # First time only — installs jest + eslint devDeps
 npm test             # Run all tests (179 tests, ~2.5 s)
 npm run check:all    # All quality checks — run before every commit
 ```
+
+---
+
+## Changelog Rules
+
+**At the start of every session or instruction:** Read `CHANGELOG.md` to understand what has recently changed and why. This gives you context before touching any code.
+
+**After every change you implement:** Add a 2-line entry at the top of `CHANGELOG.md` (below the `---` line) using this exact format:
+
+```
+## YYYY-MM-DD | Short title of the change | Reason / what problem it solves
+
+```
+
+- Use today's date.
+- The title should be short (under 80 characters).
+- The reason should explain *why*, not just *what*.
+- One entry per logical change — not one per file edited.
+- Add the entry before committing so it is included in the same commit.
