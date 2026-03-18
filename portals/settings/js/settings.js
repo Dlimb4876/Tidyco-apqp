@@ -437,6 +437,8 @@ function renderSettingsPermissionsTab() {
 
   const users = settingsPermissionsData || [];
   const currentEmail = currentUser?.email || '';
+  const currentProfile = users.find(u => u.email === currentEmail);
+  const isCurrentUserAdmin = currentProfile?.role === 'admin';
 
   let tableBody = '';
   if (users.length === 0 && !settingsPermissionsError) {
@@ -446,8 +448,21 @@ function renderSettingsPermissionsTab() {
       const isYou = u.email === currentEmail;
       const name = esc(u.full_name || settingsEmailToName(u.email));
       const email = esc(u.email || '—');
-      const role = esc(u.role || 'user');
+      const currentRole = u.role || 'user';
       const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB') : '—';
+
+      let roleCell;
+      if (isYou || !isCurrentUserAdmin) {
+        roleCell = `<span class="permissions-badge">${esc(currentRole)}</span>`;
+      } else {
+        roleCell = `
+          <select class="permissions-role-select" data-action="settings-change-role" data-user-id="${esc(u.id)}">
+            <option value="admin"${currentRole === 'admin' ? ' selected' : ''}>admin</option>
+            <option value="editor"${currentRole === 'editor' ? ' selected' : ''}>editor</option>
+            <option value="user"${currentRole === 'user' ? ' selected' : ''}>user</option>
+          </select>`;
+      }
+
       return `
       <tr>
         <td>
@@ -455,7 +470,7 @@ function renderSettingsPermissionsTab() {
           ${isYou ? '<span class="permissions-badge you">You</span>' : ''}
         </td>
         <td>${email}</td>
-        <td><span class="permissions-badge">${role}</span></td>
+        <td>${roleCell}</td>
         <td>${joined}</td>
       </tr>`;
     }).join('');
@@ -471,7 +486,7 @@ function renderSettingsPermissionsTab() {
   container.innerHTML = `
     <div class="settings-section-header">
       <h2>Permissions</h2>
-      <p class="settings-section-desc">All registered user accounts. Role-based access controls are planned for a future release.</p>
+      <p class="settings-section-desc">All registered user accounts. Admins can change roles using the dropdown in each row.</p>
     </div>
     ${errorBanner}
     <table class="prod-tbl" style="width:100%">
@@ -491,6 +506,29 @@ function renderSettingsPermissionsTab() {
       Role-based permissions are not yet active. All authenticated users currently have full access to the portal.
     </div>
   `;
+}
+
+// ── Change a user's role ───────────────────────────────────────
+const SETTINGS_PERMITTED_ROLES = ['admin', 'editor', 'user'];
+
+async function settingsChangeRole(userId, newRole) {
+  if (!SETTINGS_PERMITTED_ROLES.includes(newRole)) {
+    showToast('Invalid role value.', 'error');
+    return;
+  }
+  try {
+    const { error } = await supa.from('profiles').update({ role: newRole }).eq('id', userId);
+    if (error) throw error;
+    if (settingsPermissionsData) {
+      const u = settingsPermissionsData.find(p => p.id === userId);
+      if (u) u.role = newRole;
+    }
+    showToast('Role updated.', 'success');
+    renderSettingsPermissionsTab();
+  } catch (err) {
+    showToast('Failed to update role: ' + (err?.message || 'Unknown error'), 'error');
+    renderSettingsPermissionsTab();
+  }
 }
 
 // ── Event listener setup ───────────────────────────────────────
@@ -542,5 +580,24 @@ function setupSettingsEventListeners() {
 
     // Permissions tab actions
     if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
+  });
+
+  root.addEventListener('change', async (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl || !root.contains(actionEl)) return;
+    const action = actionEl.dataset.action;
+
+    if (action === 'settings-change-role') {
+      const userId = actionEl.dataset.userId;
+      const newRole = actionEl.value;
+      const currentEmail = currentUser?.email || '';
+      const currentProfile = (settingsPermissionsData || []).find(u => u.email === currentEmail);
+      if (currentProfile?.role !== 'admin') {
+        showToast(`Only admins can change roles. Your current role is ${currentProfile?.role || 'user'}.`, 'error');
+        renderSettingsPermissionsTab();
+        return;
+      }
+      await settingsChangeRole(userId, newRole);
+    }
   });
 }

@@ -5,6 +5,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-18 | Fix admin role check: use profile data, not auth object, for role-change guard | currentUser is the Supabase auth object and has no profile role; checking currentUser.role always fails, causing admins to see "Only admins can change roles" incorrectly. Now reads role from profiles table data.
+
 ## 2026-03-18 | Fix load-order-checker false-positive duplicate on products.js | Checker used basename only so two different products.js files (production vs product-management portals) were flagged as duplicates, causing check:all to fail.
 
 ## 2026-03-18 | Add 328 new tests across 14 modules, raising suite from 179 to 507 | Coverage was ~36%; key areas (realtime, settings, families, production data, db helpers, ME team/tasks/components) had no tests. All 39 test suites now pass.

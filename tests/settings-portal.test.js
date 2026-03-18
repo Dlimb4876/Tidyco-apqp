@@ -310,6 +310,41 @@ describe('renderSettingsPermissionsTab()', () => {
     expect(container.innerHTML).toContain('You');
   });
 
+  it('shows role dropdown for other users when current user is admin', () => {
+    global.currentUser = { id: 'u1', email: 'alice@test.com' };
+    setInternal('settingsPermissionsData', [
+      { id: 'u1', email: 'alice@test.com', full_name: 'Alice Smith', role: 'admin', created_at: '2025-01-01T00:00:00Z' },
+      { id: 'u2', email: 'bob@test.com', full_name: 'Bob Jones', role: 'editor', created_at: '2025-02-01T00:00:00Z' }
+    ]);
+    renderSettingsPermissionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsPermissionsTab');
+    expect(container.innerHTML).toContain('permissions-role-select');
+    expect(container.innerHTML).toContain('data-user-id="u2"');
+  });
+
+  it('shows static badge (no dropdown) for own row even when admin', () => {
+    global.currentUser = { id: 'u1', email: 'alice@test.com' };
+    setInternal('settingsPermissionsData', [
+      { id: 'u1', email: 'alice@test.com', full_name: 'Alice Smith', role: 'admin', created_at: '2025-01-01T00:00:00Z' }
+    ]);
+    renderSettingsPermissionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsPermissionsTab');
+    // Own row should show badge, not select
+    expect(container.querySelector('select[data-user-id="u1"]')).toBeNull();
+    expect(container.innerHTML).toContain('permissions-badge');
+  });
+
+  it('shows static badges (no dropdowns) for non-admin current user', () => {
+    global.currentUser = { id: 'u2', email: 'bob@test.com' };
+    setInternal('settingsPermissionsData', [
+      { id: 'u1', email: 'alice@test.com', full_name: 'Alice Smith', role: 'admin', created_at: '2025-01-01T00:00:00Z' },
+      { id: 'u2', email: 'bob@test.com', full_name: 'Bob Jones', role: 'editor', created_at: '2025-02-01T00:00:00Z' }
+    ]);
+    renderSettingsPermissionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsPermissionsTab');
+    expect(container.innerHTML).not.toContain('permissions-role-select');
+  });
+
   it('shows error banner when settingsPermissionsError is set', () => {
     setInternal('settingsPermissionsData', []);
     setInternal('settingsPermissionsError', 'Permission denied');
@@ -317,5 +352,47 @@ describe('renderSettingsPermissionsTab()', () => {
     const container = document.getElementById('settingsPermissionsTab');
     expect(container.innerHTML).toContain('Could not load user accounts');
     expect(container.innerHTML).toContain('Permission denied');
+  });
+});
+
+describe('settingsChangeRole()', () => {
+  beforeEach(() => {
+    global.showToast = jest.fn();
+    setInternal('settingsPermissionsData', [
+      { id: 'u1', email: 'alice@test.com', full_name: 'Alice Smith', role: 'admin', created_at: '2025-01-01T00:00:00Z' },
+      { id: 'u2', email: 'bob@test.com', full_name: 'Bob Jones', role: 'user', created_at: '2025-02-01T00:00:00Z' }
+    ]);
+    if (!document.getElementById('settingsPermissionsTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsPermissionsTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('rejects invalid role values and shows an error toast', async () => {
+    await settingsChangeRole('u2', 'superuser'); // eslint-disable-line no-undef
+    expect(global.showToast).toHaveBeenCalledWith('Invalid role value.', 'error');
+  });
+
+  it('updates the local state and shows success toast on valid role change', async () => {
+    const mockEq = jest.fn().mockResolvedValue({ error: null });
+    const mockUpdate = jest.fn(() => ({ eq: mockEq }));
+    global.supa = { from: jest.fn(() => ({ update: mockUpdate, select: jest.fn(() => ({ order: jest.fn().mockResolvedValue({ data: [], error: null }) })) })) };
+
+    await settingsChangeRole('u2', 'editor'); // eslint-disable-line no-undef
+    expect(mockUpdate).toHaveBeenCalledWith({ role: 'editor' });
+    expect(mockEq).toHaveBeenCalledWith('id', 'u2');
+    const users = eval('settingsPermissionsData'); // eslint-disable-line no-eval
+    expect(users.find(u => u.id === 'u2').role).toBe('editor');
+    expect(global.showToast).toHaveBeenCalledWith('Role updated.', 'success');
+  });
+
+  it('shows an error toast when Supabase returns an error', async () => {
+    const mockEq = jest.fn().mockResolvedValue({ error: { message: 'DB error' } });
+    const mockUpdate = jest.fn(() => ({ eq: mockEq }));
+    global.supa = { from: jest.fn(() => ({ update: mockUpdate, select: jest.fn(() => ({ order: jest.fn().mockResolvedValue({ data: [], error: null }) })) })) };
+
+    await settingsChangeRole('u2', 'admin'); // eslint-disable-line no-undef
+    expect(global.showToast).toHaveBeenCalledWith(expect.stringContaining('DB error'), 'error');
   });
 });
