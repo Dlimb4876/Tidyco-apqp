@@ -29,6 +29,8 @@ function renderSettings() {
       } else if (tab === 'permissions') {
         renderSettingsPermissionsTab();
         settingsEnsurePermissionsData();
+      } else if (tab === 'role-definitions') {
+        renderSettingsRoleDefinitionsTab();
       }
     });
   });
@@ -52,11 +54,15 @@ function renderSettings() {
           <button class="settings-nav-item ${tab === 'permissions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="permissions">
             <span class="nav-icon">🔒</span> Permissions
           </button>
+          <button class="settings-nav-item ${tab === 'role-definitions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="role-definitions">
+            <span class="nav-icon">🔐</span> Role Definitions
+          </button>
         </nav>
         <div class="settings-content">
-          <div id="settingsFamiliesTab"   class="settings-tab-content ${tab === 'families'    ? 'active' : ''}"></div>
-          <div id="settingsWorkAreasTab"  class="settings-tab-content ${tab === 'work-areas'  ? 'active' : ''}"></div>
-          <div id="settingsPermissionsTab" class="settings-tab-content ${tab === 'permissions' ? 'active' : ''}"></div>
+          <div id="settingsFamiliesTab"        class="settings-tab-content ${tab === 'families'         ? 'active' : ''}"></div>
+          <div id="settingsWorkAreasTab"       class="settings-tab-content ${tab === 'work-areas'       ? 'active' : ''}"></div>
+          <div id="settingsPermissionsTab"     class="settings-tab-content ${tab === 'permissions'      ? 'active' : ''}"></div>
+          <div id="settingsRoleDefinitionsTab" class="settings-tab-content ${tab === 'role-definitions' ? 'active' : ''}"></div>
         </div>
       </div>
     </div>
@@ -513,7 +519,34 @@ function renderSettingsPermissionsTab() {
       </div>`
     : `<div class="permissions-notice">Only admins can change roles. Your current role is <strong>${esc(currentUserRole || 'editor')}</strong>.</div>`;
 
-  // Role definitions matrix — what each role can and cannot do
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Permissions</h2>
+      <p class="settings-section-desc">Role-based access control. Admins can assign roles to control what each user can do.</p>
+    </div>
+    ${errorBanner}
+    <table class="prod-tbl" style="width:100%">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Joined</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableBody}
+      </tbody>
+    </table>
+    ${adminNote}
+  `;
+}
+
+// ── Render role definitions tab ────────────────────────────────
+function renderSettingsRoleDefinitionsTab() {
+  const container = document.getElementById('settingsRoleDefinitionsTab');
+  if (!container) return;
+
   const roleMatrix = [
     { label: 'View all project data',            admin: true,  editor: true,  viewer: true  },
     { label: 'Edit projects, tasks & schedules', admin: true,  editor: true,  viewer: false },
@@ -539,28 +572,8 @@ function renderSettingsPermissionsTab() {
 
   container.innerHTML = `
     <div class="settings-section-header">
-      <h2>Permissions</h2>
-      <p class="settings-section-desc">Role-based access control. Admins can assign roles to control what each user can do.</p>
-    </div>
-    ${errorBanner}
-    <table class="prod-tbl" style="width:100%">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Role</th>
-          <th>Joined</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${tableBody}
-      </tbody>
-    </table>
-    ${adminNote}
-
-    <div class="settings-section-header" style="margin-top:32px">
       <h2>Role Definitions</h2>
-      <p class="settings-section-desc">What each role can do across the portal.</p>
+      <p class="settings-section-desc">What each role can do across the portal. Go to <strong>Permissions</strong> to assign roles to users.</p>
     </div>
     <table class="prod-tbl" style="width:100%;max-width:600px">
       <thead>
@@ -578,13 +591,18 @@ function renderSettingsPermissionsTab() {
   `;
 }
 
-// ── Event listener setup ───────────────────────────────────────
+
 function setupSettingsEventListeners() {
   const root = document.getElementById('settingsPortalRoot');
   if (!root || settingsEventListenerRoot === root) return;
   settingsEventListenerRoot = root;
 
   root.addEventListener('click', async (event) => {
+    // Skip native form controls — selects/inputs handle their own events via 'change'.
+    // Intercepting their click can cause the browser dropdown to close immediately.
+    const tag = event.target.tagName;
+    if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
+
     const actionEl = event.target.closest('[data-action]');
     if (!actionEl || !root.contains(actionEl)) return;
     const action = actionEl.dataset.action;
@@ -596,7 +614,12 @@ function setupSettingsEventListeners() {
       root.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
       root.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
       actionEl.classList.add('active');
-      const tabMap = { families: 'settingsFamiliesTab', 'work-areas': 'settingsWorkAreasTab', permissions: 'settingsPermissionsTab' };
+      const tabMap = {
+        families: 'settingsFamiliesTab',
+        'work-areas': 'settingsWorkAreasTab',
+        permissions: 'settingsPermissionsTab',
+        'role-definitions': 'settingsRoleDefinitionsTab',
+      };
       document.getElementById(tabMap[tab])?.classList.add('active');
       if (tab === 'families') {
         renderSettingsFamiliesTab();
@@ -607,6 +630,8 @@ function setupSettingsEventListeners() {
       } else if (tab === 'permissions') {
         renderSettingsPermissionsTab();
         settingsEnsurePermissionsData();
+      } else if (tab === 'role-definitions') {
+        renderSettingsRoleDefinitionsTab();
       }
       return;
     }
