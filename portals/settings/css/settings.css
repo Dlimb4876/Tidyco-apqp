@@ -2,14 +2,17 @@
    settings.css — Global Settings Portal
    ═══════════════════════════════════════════════════════════════ */
 
+/* ── Shell ──────────────────────────────────────────────────── */
 .settings-portal {
   padding: 12px 8px;
-  max-width: 960px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .settings-header {
   margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
 }
 
 .settings-header h1 {
@@ -25,33 +28,79 @@
   margin: 0;
 }
 
-.settings-tabs {
+/* ── Two-column layout ──────────────────────────────────────── */
+.settings-layout {
   display: flex;
-  gap: 4px;
-  border-bottom: 2px solid var(--line);
-  margin-bottom: 20px;
+  gap: 0;
+  min-height: 480px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--white);
 }
 
-.settings-tab-btn {
-  padding: 8px 20px;
-  background: none;
+/* ── Left sidebar ───────────────────────────────────────────── */
+.settings-sidebar {
+  width: 100%;
+  background: var(--surface, #f7f8fa);
+  border-bottom: 1px solid var(--line);
+  padding: 8px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.settings-nav-group-label {
+  display: none; /* hidden on mobile */
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 8px 10px 4px;
+  width: 100%;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
   border: none;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  font-size: 0.9rem;
+  background: none;
+  cursor: pointer;
+  font-size: 0.88rem;
   font-weight: 500;
   color: var(--mid);
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
 }
 
-.settings-tab-btn:hover {
+.settings-nav-item:hover {
+  background: var(--line);
   color: var(--ink);
 }
 
-.settings-tab-btn.active {
-  color: var(--brand);
-  border-bottom-color: var(--brand);
+.settings-nav-item.active {
+  background: var(--brand);
+  color: #fff;
+}
+
+.settings-nav-item .nav-icon {
+  font-size: 1em;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+/* ── Right content panel ────────────────────────────────────── */
+.settings-content {
+  flex: 1;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+  min-width: 0;
 }
 
 .settings-tab-content {
@@ -62,13 +111,7 @@
   display: block;
 }
 
-.settings-section {
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 16px;
-}
-
+/* ── Section inside content ─────────────────────────────────── */
 .settings-section-header {
   margin-bottom: 16px;
 }
@@ -86,6 +129,33 @@
   margin: 0;
 }
 
+/* ── Permissions table ──────────────────────────────────────── */
+.permissions-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--line);
+  color: var(--mid);
+}
+
+.permissions-badge.you {
+  background: rgba(59,130,246,0.12);
+  color: var(--brand);
+}
+
+.permissions-notice {
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: rgba(255,191,0,0.08);
+  border: 1px solid rgba(255,191,0,0.3);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--mid);
+}
+
+/* ── Desktop layout ─────────────────────────────────────────── */
 @media (min-width: 768px) {
   .settings-portal {
     padding: 20px 24px;
@@ -95,12 +165,35 @@
     font-size: 1.6rem;
   }
 
-  .settings-tab-btn {
-    padding: 10px 24px;
-    font-size: 0.95rem;
+  .settings-layout {
+    flex-direction: row;
   }
 
-  .settings-section {
-    padding: 20px;
+  .settings-sidebar {
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    flex-shrink: 0;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding: 12px 8px;
+    gap: 2px;
+    border-bottom: none;
+    border-right: 1px solid var(--line);
+  }
+
+  .settings-nav-group-label {
+    display: block;
+  }
+
+  .settings-nav-item {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 0.9rem;
+  }
+
+  .settings-content {
+    padding: 24px;
+    border-top: none;
   }
 }
