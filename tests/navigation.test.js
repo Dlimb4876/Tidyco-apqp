@@ -95,6 +95,7 @@ global.npi = {
 // Mock family/template modal state
 global.familyModalState = { isOpen: false };
 global.templateManagerState = { isOpen: false };
+global.templateViewerState = { isOpen: false };
 global.renderFamilyModal = jest.fn().mockReturnValue('');
 global.renderTemplateManager = jest.fn().mockReturnValue('');
 

@@ -3,6 +3,9 @@
 # Dependencies
 node_modules/
 
+# Auto-generated coverage reports
+coverage/
+
 # Logs
 logs
 *.log

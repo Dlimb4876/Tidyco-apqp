@@ -48,20 +48,27 @@ let readStatus = null
 let readBody = null
 let writeStatus = null
 
+// Helper: fetch with a hard timeout so we don't hang in sandboxed CI
+function fetchWithTimeout(url, options, timeoutMs = 5000) {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), timeoutMs)
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id))
+}
+
 beforeAll(async () => {
   // Probe: a cheap HEAD request to verify the host is reachable
   try {
-    const probe = await fetch(`${SUPA_URL}/rest/v1/`, { method: 'HEAD', headers: HEADERS })
+    const probe = await fetchWithTimeout(`${SUPA_URL}/rest/v1/`, { method: 'HEAD', headers: HEADERS })
     networkAvailable = probe.status < 600
   } catch {
-    // DNS failure or network error — mark as offline; tests will skip
+    // DNS failure, network error, or AbortError (timeout) — mark as offline; tests will skip
     networkAvailable = false
     return
   }
 
   // READ — GET user_feedback (anon, RLS returns empty array)
   try {
-    const res = await fetch(`${SUPA_URL}/rest/v1/user_feedback?select=id,status&limit=1`, {
+    const res = await fetchWithTimeout(`${SUPA_URL}/rest/v1/user_feedback?select=id,status&limit=1`, {
       method: 'GET',
       headers: HEADERS,
     })
@@ -75,7 +82,7 @@ beforeAll(async () => {
 
   // WRITE — POST to user_feedback (anon, RLS blocks insert)
   try {
-    const res = await fetch(`${SUPA_URL}/rest/v1/user_feedback`, {
+    const res = await fetchWithTimeout(`${SUPA_URL}/rest/v1/user_feedback`, {
       method: 'POST',
       headers: { ...HEADERS, Prefer: 'return=minimal' },
       body: JSON.stringify({

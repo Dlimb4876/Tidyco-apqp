@@ -106,13 +106,16 @@ function checkLoadOrder() {
     });
   });
 
-  // Check for duplicates
-  const seen = new Set();
+  // Check for duplicates — use full src path so two different files with the
+  // same base filename (e.g. portals/production/js/products.js vs
+  // portals/product-management/js/products.js) are not falsely flagged.
+  const seenSrc = new Map(); // src → first position
   scripts.forEach((script, idx) => {
-    if (seen.has(script.filename)) {
-      errors.push(`❌ ${script.filename} is loaded twice (positions ${positions[script.filename]} and ${idx})`);
+    if (seenSrc.has(script.src)) {
+      errors.push(`❌ ${script.src} is loaded twice (positions ${seenSrc.get(script.src) + 1} and ${idx + 1})`);
+    } else {
+      seenSrc.set(script.src, idx);
     }
-    seen.add(script.filename);
   });
 
   // Verify core scripts load first
