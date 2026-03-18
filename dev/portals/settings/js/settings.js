@@ -510,9 +510,32 @@ function renderSettingsPermissionsTab() {
   const adminNote = viewerIsAdmin
     ? `<div class="permissions-notice" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.25)">
         <strong>Admin tip:</strong> Use the dropdowns to change a user's role. Changes take effect on the user's next login.
-        <br><strong>Roles:</strong> <em>Admin</em> — full access + user management &nbsp;|&nbsp; <em>Editor</em> — full access to all content &nbsp;|&nbsp; <em>Viewer</em> — read-only across all portals.
       </div>`
     : `<div class="permissions-notice">Only admins can change roles. Your current role is <strong>${esc(currentUserRole || 'editor')}</strong>.</div>`;
+
+  // Role definitions matrix — what each role can and cannot do
+  const roleMatrix = [
+    { label: 'View all project data',            admin: true,  editor: true,  viewer: true  },
+    { label: 'Edit projects, tasks & schedules', admin: true,  editor: true,  viewer: false },
+    { label: 'Add & delete records',             admin: true,  editor: true,  viewer: false },
+    { label: 'Manage product families',          admin: true,  editor: true,  viewer: false },
+    { label: 'Manage work areas',                admin: true,  editor: true,  viewer: false },
+    { label: 'Manage capacity planning',         admin: true,  editor: true,  viewer: false },
+    { label: 'Change user roles',                admin: true,  editor: false, viewer: false },
+    { label: 'Access Settings page',             admin: true,  editor: false, viewer: false },
+  ];
+
+  const tick  = `<span style="color:var(--green,#22c55e);font-size:1.1em">✓</span>`;
+  const cross = `<span style="color:var(--muted,#aaa);font-size:1.1em">—</span>`;
+
+  const matrixRows = roleMatrix.map(r => `
+    <tr>
+      <td>${esc(r.label)}</td>
+      <td class="ctr">${r.admin  ? tick : cross}</td>
+      <td class="ctr">${r.editor ? tick : cross}</td>
+      <td class="ctr">${r.viewer ? tick : cross}</td>
+    </tr>
+  `).join('');
 
   container.innerHTML = `
     <div class="settings-section-header">
@@ -534,6 +557,24 @@ function renderSettingsPermissionsTab() {
       </tbody>
     </table>
     ${adminNote}
+
+    <div class="settings-section-header" style="margin-top:32px">
+      <h2>Role Definitions</h2>
+      <p class="settings-section-desc">What each role can do across the portal.</p>
+    </div>
+    <table class="prod-tbl" style="width:100%;max-width:600px">
+      <thead>
+        <tr>
+          <th>Permission</th>
+          <th class="ctr" style="width:80px">Admin</th>
+          <th class="ctr" style="width:80px">Editor</th>
+          <th class="ctr" style="width:80px">Viewer</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${matrixRows}
+      </tbody>
+    </table>
   `;
 }
 
@@ -586,6 +627,14 @@ function setupSettingsEventListeners() {
 
     // Permissions tab actions
     if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
+  });
+
+  // Role dropdowns fire 'change', not 'click' — handle separately to prevent the
+  // dropdown from closing the instant it opens (click fires before the user picks).
+  root.addEventListener('change', async (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl || !root.contains(actionEl)) return;
+    const action = actionEl.dataset.action;
 
     if (action === 'settings-permissions-change-role') {
       await settingsPermissionsChangeRole(actionEl.dataset.userId || '', actionEl.value, actionEl.dataset.isLastAdmin === 'true');
