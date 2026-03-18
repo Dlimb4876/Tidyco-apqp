@@ -252,7 +252,7 @@ body.compact-tables .prod-tbl th {
 
 .appearance-hint {
   font-size: 0.78rem;
-  color: var(--muted, #aaa);
+  color: var(--muted);
   width: 100%;
   padding-left: 172px;
 }

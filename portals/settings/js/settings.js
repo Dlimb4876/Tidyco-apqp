@@ -736,14 +736,14 @@ function renderSettingsAboutTab() {
   if (!container) return;
 
   const shortcuts = [
-    { key: '?  or  Ctrl + /',     desc: 'Show keyboard shortcuts help' },
-    { key: 'Ctrl + S',            desc: 'Save current work' },
-    { key: 'Ctrl + F',            desc: 'Focus search' },
-    { key: 'Ctrl + Enter',        desc: 'Save form / row' },
-    { key: 'Enter',               desc: 'Add item (in add-row inputs)' },
-    { key: 'Escape',              desc: 'Cancel edit / close modal' },
-    { key: 'Tab',                 desc: 'Move to next field' },
-    { key: 'Backspace',           desc: 'Navigate back (when not editing)' },
+    { key: '?  or  Ctrl / ⌘ + /',  desc: 'Show keyboard shortcuts help' },
+    { key: 'Ctrl / ⌘ + S',         desc: 'Save current work' },
+    { key: 'Ctrl / ⌘ + F',         desc: 'Focus search' },
+    { key: 'Ctrl / ⌘ + Enter',     desc: 'Save form / row' },
+    { key: 'Enter',                 desc: 'Add item (in add-row inputs)' },
+    { key: 'Escape',                desc: 'Cancel edit / close modal' },
+    { key: 'Tab',                   desc: 'Move to next field' },
+    { key: 'Backspace',             desc: 'Navigate back (when not editing)' },
   ];
 
   const shortcutRows = shortcuts.map(s => `
