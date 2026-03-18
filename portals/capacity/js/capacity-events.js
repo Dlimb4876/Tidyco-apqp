@@ -296,9 +296,9 @@ window.capacityEvents._onChange = function(evt) {
   }
 
   // ── Production Capacity ────────────────────────────────────
-  case 'cap-prod-detail-filter-status': if (window.prodCapDetailFilter) { window.prodCapDetailFilter.status = el.value; render() } break
-  case 'cap-prod-detail-filter-family': if (window.prodCapDetailFilter) { window.prodCapDetailFilter.family = el.value; render() } break
-  case 'cap-prod-detail-filter-workarea': if (window.prodCapDetailFilter) { window.prodCapDetailFilter.workArea = el.value; render() } break
+  case 'cap-prod-detail-filter-status': if (typeof prodCapDetailFilter !== 'undefined') { prodCapDetailFilter.status = el.value; render() } break
+  case 'cap-prod-detail-filter-family': if (typeof prodCapDetailFilter !== 'undefined') { prodCapDetailFilter.family = el.value; render() } break
+  case 'cap-prod-detail-filter-workarea': if (typeof prodCapDetailFilter !== 'undefined') { prodCapDetailFilter.workArea = el.value; render() } break
   case 'cap-prod-settings-capacity': {
     const wa = el.getAttribute('data-workarea')
     const year = capNum(el.getAttribute('data-year'), 0)
