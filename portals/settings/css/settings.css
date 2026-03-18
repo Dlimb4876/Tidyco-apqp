@@ -85,7 +85,7 @@
 }
 
 .settings-nav-item.active {
-  background: var(--brand);
+  background: var(--blue);
   color: #fff;
 }
 
@@ -141,8 +141,8 @@
 }
 
 .permissions-badge.you {
-  background: rgba(59,130,246,0.12);
-  color: var(--brand);
+  background: rgba(11,95,167,0.12);
+  color: var(--blue);
 }
 
 .permissions-notice {
