@@ -9,8 +9,11 @@ let settingsFamiliesEditingId = null;
 let settingsFamiliesLoading = false;
 let settingsFamiliesLoadError = null;
 let settingsWorkAreasEditingId = null;
+let settingsPermissionsLoading = false;
+let settingsPermissionsData = null;
+let settingsPermissionsError = null;
 
-// ── Main settings page render ─────────────────────────────────
+// ── Main settings page render ──────────────────────────────────
 function renderSettings() {
   const tab = settingsActiveTab || 'families';
 
@@ -20,30 +23,58 @@ function renderSettings() {
       if (tab === 'families') {
         renderSettingsFamiliesTab();
         settingsEnsureFamiliesData();
-      } else {
+      } else if (tab === 'work-areas') {
         renderSettingsWorkAreasTab();
         settingsEnsureWorkAreasData();
+      } else if (tab === 'permissions') {
+        renderSettingsPermissionsTab();
+        settingsEnsurePermissionsData();
       }
     });
   });
 
+  const sidebarItems = SETTINGS_CATEGORIES.map(cat => `
+    <button
+      class="settings-nav-item ${tab === cat.id ? 'active' : ''}"
+      data-action="settings-switch-tab"
+      data-tab="${cat.id}"
+    >
+      <span class="nav-icon">${cat.icon}</span>
+      ${cat.label}
+    </button>
+  `).join('');
+
   return `
     <div class="settings-portal" id="settingsPortalRoot">
       <div class="settings-header">
-        <h1>⚙️ Settings</h1>
+        <h1>Settings</h1>
         <p class="settings-header-desc">Global configuration for the operations portal.</p>
       </div>
-      <div class="settings-tabs">
-        <button class="settings-tab-btn ${tab === 'families' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="families">Product Families</button>
-        <button class="settings-tab-btn ${tab === 'work-areas' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="work-areas">Work Areas</button>
+      <div class="settings-layout">
+        <nav class="settings-sidebar" aria-label="Settings categories">
+          <span class="settings-nav-group-label">Configuration</span>
+          <button class="settings-nav-item ${tab === 'families' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="families">
+            <span class="nav-icon">📦</span> Product Families
+          </button>
+          <button class="settings-nav-item ${tab === 'work-areas' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="work-areas">
+            <span class="nav-icon">🏭</span> Work Areas
+          </button>
+          <span class="settings-nav-group-label" style="margin-top:8px">Access</span>
+          <button class="settings-nav-item ${tab === 'permissions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="permissions">
+            <span class="nav-icon">🔒</span> Permissions
+          </button>
+        </nav>
+        <div class="settings-content">
+          <div id="settingsFamiliesTab"   class="settings-tab-content ${tab === 'families'    ? 'active' : ''}"></div>
+          <div id="settingsWorkAreasTab"  class="settings-tab-content ${tab === 'work-areas'  ? 'active' : ''}"></div>
+          <div id="settingsPermissionsTab" class="settings-tab-content ${tab === 'permissions' ? 'active' : ''}"></div>
+        </div>
       </div>
-      <div id="settingsFamiliesTab" class="settings-tab-content ${tab === 'families' ? 'active' : ''}"></div>
-      <div id="settingsWorkAreasTab" class="settings-tab-content ${tab === 'work-areas' ? 'active' : ''}"></div>
     </div>
   `;
 }
 
-// ── Ensure families data is loaded ───────────────────────────
+// ── Ensure families data is loaded ────────────────────────────
 async function settingsEnsureFamiliesData(forceReload = false) {
   if (settingsFamiliesLoading) return;
   if (!forceReload && Array.isArray(familiesState?.families) && familiesState.families.length > 0) return;
@@ -66,7 +97,7 @@ async function settingsEnsureFamiliesData(forceReload = false) {
   }
 }
 
-// ── Ensure work areas data is loaded ─────────────────────────
+// ── Ensure work areas data is loaded ──────────────────────────
 async function settingsEnsureWorkAreasData() {
   if (workAreasState.loading) return;
   if (Array.isArray(workAreasState.workAreas) && workAreasState.workAreas.length > 0) return;
@@ -75,6 +106,28 @@ async function settingsEnsureWorkAreasData() {
     renderSettingsWorkAreasTab();
   } catch (err) {
     console.error('Failed to load work areas for settings:', err);
+  }
+}
+
+// ── Ensure permissions data is loaded ─────────────────────────
+async function settingsEnsurePermissionsData(forceReload = false) {
+  if (settingsPermissionsLoading) return;
+  if (!forceReload && settingsPermissionsData !== null) return;
+
+  settingsPermissionsLoading = true;
+  settingsPermissionsError = null;
+  renderSettingsPermissionsTab();
+
+  try {
+    const { data, error } = await supa.from('profiles').select('id, email, full_name, role, created_at').order('created_at', { ascending: true });
+    if (error) throw error;
+    settingsPermissionsData = data || [];
+  } catch (err) {
+    settingsPermissionsError = err?.message || 'Failed to load user accounts';
+    settingsPermissionsData = [];
+  } finally {
+    settingsPermissionsLoading = false;
+    renderSettingsPermissionsTab();
   }
 }
 
@@ -114,81 +167,79 @@ function renderSettingsFamiliesTab() {
   });
 
   container.innerHTML = `
-    <div class="settings-section">
-      <div class="settings-section-header">
-        <h2>Product Families</h2>
-        <p class="settings-section-desc">Define the product families used across all projects. Changes apply globally.</p>
-      </div>
-      <div class="families-table-wrap">
-        <table class="prod-tbl families-inline-table" style="table-layout:auto;width:100%">
-          <colgroup>
-            <col style="width:60px">
-            <col style="min-width:120px">
-            <col style="min-width:180px">
-            <col style="min-width:220px">
-            <col style="width:80px">
-            <col style="width:100px">
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="ctr">Icon</th>
-              <th>Family ID</th>
-              <th>Family Name</th>
-              <th>Description</th>
-              <th class="ctr">Projects</th>
-              <th class="families-actions-col">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
-              <td><input class="cell-edit" id="sfNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
-              <td><input class="cell-edit" id="sfNew-id" placeholder="e.g. HVAC"></td>
-              <td><input class="cell-edit" id="sfNew-label" placeholder="e.g. HVAC Systems"></td>
-              <td><input class="cell-edit" id="sfNew-desc" placeholder="Description…"></td>
-              <td class="ctr">—</td>
-              <td class="families-actions-col">
-                <button class="btn-del" title="Add family" data-action="settings-families-add">✓</button>
-              </td>
-            </tr>
-            ${families.length === 0 ? `
-              <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No families defined yet. Add one above.</td></tr>
-            ` : families.map(f => {
-              const usage = usageMap[f.id] || 0;
-              if (settingsFamiliesEditingId === f.id) {
-                return `
-                <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
-                  <td><input class="cell-edit" id="sfEdit-icon" value="${esc(f.icon || '📋')}" style="width:50px;text-align:center"></td>
-                  <td><input class="cell-edit" id="sfEdit-id" value="${esc(f.name || f.id)}"></td>
-                  <td><input class="cell-edit" id="sfEdit-label" value="${esc(f.label || '')}"></td>
-                  <td><input class="cell-edit" id="sfEdit-desc" value="${esc(f.description || '')}"></td>
-                  <td class="ctr">${usage}</td>
-                  <td class="families-actions-col">
-                    <button class="btn-del" title="Save" data-action="settings-families-save-edit" data-family-id="${esc(f.id)}">✓</button>
-                    <button class="btn-del" title="Cancel" data-action="settings-families-cancel-edit">✕</button>
-                  </td>
-                </tr>`;
-              }
+    <div class="settings-section-header">
+      <h2>Product Families</h2>
+      <p class="settings-section-desc">Define the product families used across all projects. Changes apply globally.</p>
+    </div>
+    <div class="families-table-wrap">
+      <table class="prod-tbl families-inline-table" style="table-layout:auto;width:100%">
+        <colgroup>
+          <col style="width:60px">
+          <col style="min-width:120px">
+          <col style="min-width:180px">
+          <col style="min-width:220px">
+          <col style="width:80px">
+          <col style="width:100px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="ctr">Icon</th>
+            <th>Family ID</th>
+            <th>Family Name</th>
+            <th>Description</th>
+            <th class="ctr">Projects</th>
+            <th class="families-actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+            <td><input class="cell-edit" id="sfNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
+            <td><input class="cell-edit" id="sfNew-id" placeholder="e.g. HVAC"></td>
+            <td><input class="cell-edit" id="sfNew-label" placeholder="e.g. HVAC Systems"></td>
+            <td><input class="cell-edit" id="sfNew-desc" placeholder="Description…"></td>
+            <td class="ctr">—</td>
+            <td class="families-actions-col">
+              <button class="btn-del" title="Add family" data-action="settings-families-add">✓</button>
+            </td>
+          </tr>
+          ${families.length === 0 ? `
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No families defined yet. Add one above.</td></tr>
+          ` : families.map(f => {
+            const usage = usageMap[f.id] || 0;
+            if (settingsFamiliesEditingId === f.id) {
               return `
-              <tr>
-                <td class="ctr" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
-                <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
-                <td><strong>${esc(f.label)}</strong></td>
-                <td>${esc(f.description || '—')}</td>
-                <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
+              <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+                <td><input class="cell-edit" id="sfEdit-icon" value="${esc(f.icon || '📋')}" style="width:50px;text-align:center"></td>
+                <td><input class="cell-edit" id="sfEdit-id" value="${esc(f.name || f.id)}"></td>
+                <td><input class="cell-edit" id="sfEdit-label" value="${esc(f.label || '')}"></td>
+                <td><input class="cell-edit" id="sfEdit-desc" value="${esc(f.description || '')}"></td>
+                <td class="ctr">${usage}</td>
                 <td class="families-actions-col">
-                  <button class="btn-del" title="Edit" data-action="settings-families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
-                  <button class="btn-del" title="Delete" data-action="settings-families-delete" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
+                  <button class="btn-del" title="Save" data-action="settings-families-save-edit" data-family-id="${esc(f.id)}">✓</button>
+                  <button class="btn-del" title="Cancel" data-action="settings-families-cancel-edit">✕</button>
                 </td>
               </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
+            }
+            return `
+            <tr>
+              <td class="ctr" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
+              <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
+              <td><strong>${esc(f.label)}</strong></td>
+              <td>${esc(f.description || '—')}</td>
+              <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
+              <td class="families-actions-col">
+                <button class="btn-del" title="Edit" data-action="settings-families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
+                <button class="btn-del" title="Delete" data-action="settings-families-delete" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
     </div>
   `;
 }
 
-// ── Families CRUD ─────────────────────────────────────────────
+// ── Families CRUD ──────────────────────────────────────────────
 async function settingsFamiliesAdd() {
   const icon = document.getElementById('sfNew-icon')?.value.trim() || '📋';
   const id = document.getElementById('sfNew-id')?.value.trim();
@@ -261,7 +312,7 @@ async function settingsFamiliesDelete(familyId, familyLabel) {
   }
 }
 
-// ── Render work areas tab ─────────────────────────────────────
+// ── Render work areas tab ──────────────────────────────────────
 function renderSettingsWorkAreasTab() {
   const container = document.getElementById('settingsWorkAreasTab');
   if (!container) return;
@@ -274,64 +325,62 @@ function renderSettingsWorkAreasTab() {
   const areas = typeof workAreasDataGetAll === 'function' ? workAreasDataGetAll() : [...workAreasState.workAreas];
 
   container.innerHTML = `
-    <div class="settings-section">
-      <div class="settings-section-header">
-        <h2>Work Areas</h2>
-        <p class="settings-section-desc">Manage the physical work areas used in capacity planning (e.g. Unit 2, Unit 3).</p>
-      </div>
-      <div class="families-table-wrap">
-        <table class="prod-tbl" style="table-layout:auto;width:100%;max-width:600px">
-          <colgroup>
-            <col style="min-width:200px">
-            <col>
-            <col style="width:100px">
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th class="families-actions-col">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
-              <td><input class="cell-edit" id="waNew-name" placeholder="e.g. Unit 9"></td>
-              <td><input class="cell-edit" id="waNew-desc" placeholder="Description (optional)"></td>
-              <td class="families-actions-col">
-                <button class="btn-del" title="Add work area" data-action="settings-wa-add">✓</button>
-              </td>
-            </tr>
-            ${areas.length === 0 ? `
-              <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">No work areas defined yet. Add one above.</td></tr>
-            ` : areas.map(w => {
-              if (settingsWorkAreasEditingId === w.id) {
-                return `
-                <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
-                  <td><input class="cell-edit" id="waEdit-name" value="${esc(w.name)}"></td>
-                  <td><input class="cell-edit" id="waEdit-desc" value="${esc(w.description || '')}"></td>
-                  <td class="families-actions-col">
-                    <button class="btn-del" title="Save" data-action="settings-wa-save-edit" data-wa-id="${esc(w.id)}">✓</button>
-                    <button class="btn-del" title="Cancel" data-action="settings-wa-cancel-edit">✕</button>
-                  </td>
-                </tr>`;
-              }
+    <div class="settings-section-header">
+      <h2>Work Areas</h2>
+      <p class="settings-section-desc">Manage the physical work areas used in capacity planning (e.g. Unit 2, Unit 3).</p>
+    </div>
+    <div class="families-table-wrap">
+      <table class="prod-tbl" style="table-layout:auto;width:100%;max-width:600px">
+        <colgroup>
+          <col style="min-width:200px">
+          <col>
+          <col style="width:100px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th class="families-actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+            <td><input class="cell-edit" id="waNew-name" placeholder="e.g. Unit 9"></td>
+            <td><input class="cell-edit" id="waNew-desc" placeholder="Description (optional)"></td>
+            <td class="families-actions-col">
+              <button class="btn-del" title="Add work area" data-action="settings-wa-add">✓</button>
+            </td>
+          </tr>
+          ${areas.length === 0 ? `
+            <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">No work areas defined yet. Add one above.</td></tr>
+          ` : areas.map(w => {
+            if (settingsWorkAreasEditingId === w.id) {
               return `
-              <tr>
-                <td><strong>${esc(w.name)}</strong></td>
-                <td>${esc(w.description || '—')}</td>
+              <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+                <td><input class="cell-edit" id="waEdit-name" value="${esc(w.name)}"></td>
+                <td><input class="cell-edit" id="waEdit-desc" value="${esc(w.description || '')}"></td>
                 <td class="families-actions-col">
-                  <button class="btn-del" title="Rename" data-action="settings-wa-start-edit" data-wa-id="${esc(w.id)}">✏️</button>
+                  <button class="btn-del" title="Save" data-action="settings-wa-save-edit" data-wa-id="${esc(w.id)}">✓</button>
+                  <button class="btn-del" title="Cancel" data-action="settings-wa-cancel-edit">✕</button>
                 </td>
               </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
+            }
+            return `
+            <tr>
+              <td><strong>${esc(w.name)}</strong></td>
+              <td>${esc(w.description || '—')}</td>
+              <td class="families-actions-col">
+                <button class="btn-del" title="Rename" data-action="settings-wa-start-edit" data-wa-id="${esc(w.id)}">✏️</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
     </div>
   `;
 }
 
-// ── Work Areas CRUD ───────────────────────────────────────────
+// ── Work Areas CRUD ────────────────────────────────────────────
 async function settingsWorkAreaAdd() {
   const name = document.getElementById('waNew-name')?.value.trim();
   const description = document.getElementById('waNew-desc')?.value.trim() || '';
@@ -379,7 +428,75 @@ function settingsWorkAreaCancelEdit() {
   renderSettingsWorkAreasTab();
 }
 
-// ── Event listener setup ──────────────────────────────────────
+// ── Render permissions tab ─────────────────────────────────────
+function renderSettingsPermissionsTab() {
+  const container = document.getElementById('settingsPermissionsTab');
+  if (!container) return;
+
+  if (settingsPermissionsLoading) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading user accounts…</div>';
+    return;
+  }
+
+  const users = settingsPermissionsData || [];
+  const currentEmail = currentUser?.email || '';
+
+  let tableBody = '';
+  if (users.length === 0 && !settingsPermissionsError) {
+    tableBody = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">No user accounts found.</td></tr>`;
+  } else {
+    tableBody = users.map(u => {
+      const isYou = u.email === currentEmail;
+      const name = esc(u.full_name || '—');
+      const email = esc(u.email || '—');
+      const role = esc(u.role || 'user');
+      const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB') : '—';
+      return `
+      <tr>
+        <td>
+          ${name}
+          ${isYou ? '<span class="permissions-badge you">You</span>' : ''}
+        </td>
+        <td>${email}</td>
+        <td><span class="permissions-badge">${role}</span></td>
+        <td>${joined}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const errorBanner = settingsPermissionsError ? `
+    <div style="margin-bottom:12px;padding:10px 14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-size:0.82rem;color:var(--red)">
+      Could not load user accounts: ${esc(settingsPermissionsError)}
+      <button class="btn btn-ghost" style="margin-left:12px;font-size:0.8rem;padding:2px 8px" data-action="settings-permissions-retry">Retry</button>
+    </div>
+  ` : '';
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Permissions</h2>
+      <p class="settings-section-desc">All registered user accounts. Role-based access controls are planned for a future release.</p>
+    </div>
+    ${errorBanner}
+    <table class="prod-tbl" style="width:100%">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Joined</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableBody}
+      </tbody>
+    </table>
+    <div class="permissions-notice">
+      Role-based permissions are not yet active. All authenticated users currently have full access to the portal.
+    </div>
+  `;
+}
+
+// ── Event listener setup ───────────────────────────────────────
 function setupSettingsEventListeners() {
   const root = document.getElementById('settingsPortalRoot');
   if (!root || settingsEventListenerRoot === root) return;
@@ -394,16 +511,20 @@ function setupSettingsEventListeners() {
       const tab = actionEl.dataset.tab;
       if (!tab) return;
       settingsActiveTab = tab;
-      document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+      root.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+      root.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
       actionEl.classList.add('active');
-      document.getElementById(tab === 'families' ? 'settingsFamiliesTab' : 'settingsWorkAreasTab')?.classList.add('active');
+      const tabMap = { families: 'settingsFamiliesTab', 'work-areas': 'settingsWorkAreasTab', permissions: 'settingsPermissionsTab' };
+      document.getElementById(tabMap[tab])?.classList.add('active');
       if (tab === 'families') {
         renderSettingsFamiliesTab();
         settingsEnsureFamiliesData();
-      } else {
+      } else if (tab === 'work-areas') {
         renderSettingsWorkAreasTab();
         settingsEnsureWorkAreasData();
+      } else if (tab === 'permissions') {
+        renderSettingsPermissionsTab();
+        settingsEnsurePermissionsData();
       }
       return;
     }
@@ -421,5 +542,8 @@ function setupSettingsEventListeners() {
     if (action === 'settings-wa-start-edit') { settingsWorkAreaStartEdit(actionEl.dataset.waId || ''); return; }
     if (action === 'settings-wa-save-edit') { await settingsWorkAreaSaveEdit(actionEl.dataset.waId || ''); return; }
     if (action === 'settings-wa-cancel-edit') { settingsWorkAreaCancelEdit(); return; }
+
+    // Permissions tab actions
+    if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
   });
 }
