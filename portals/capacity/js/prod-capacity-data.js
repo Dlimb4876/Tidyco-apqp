@@ -193,12 +193,15 @@ async function prodCapDataSetStaff(workArea, year, month, staffCount) {
         };
       }
     } else {
-      // Insert new record - don't use .select().single() to avoid RLS issues
-      const { error } = await supa.from('production_capacity')
-        .insert([{ user_id: currentUser.id, work_area: workArea, year, month, staff_count: count }]);
+      // Insert new record and retrieve the generated id so subsequent updates work correctly
+      const { data: insertedRow, error } = await supa.from('production_capacity')
+        .insert([{ user_id: currentUser.id, work_area: workArea, year, month, staff_count: count }])
+        .select('id')
+        .single();
       if (error) throw error;
-      // Add to local state with optimistic data
+      // Add to local state with the real id from Supabase
       prodCapState.capacityRecords.push({
+        id: insertedRow?.id,
         user_id: currentUser.id,
         work_area: workArea,
         year: year,
