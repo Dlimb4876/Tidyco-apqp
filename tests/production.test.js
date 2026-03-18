@@ -88,6 +88,45 @@ describe('Production Portal', () => {
       });
     });
 
+    describe('Date helpers', () => {
+      test('parseDisplayDate converts DD/MM/YYYY to YYYY-MM-DD correctly', () => {
+        // This is the exact format users enter dates — must not swap day/month
+        expect(parseDisplayDate('08/11/2027')).toBe('2027-11-08'); // 8 Nov, NOT 11 Aug
+        expect(parseDisplayDate('11/08/2027')).toBe('2027-08-11'); // 11 Aug
+        expect(parseDisplayDate('01/01/2026')).toBe('2026-01-01');
+        expect(parseDisplayDate('31/12/2025')).toBe('2025-12-31');
+      });
+
+      test('parseDisplayDate passes through ISO format unchanged', () => {
+        expect(parseDisplayDate('2027-11-08')).toBe('2027-11-08');
+        expect(parseDisplayDate('2026-01-01')).toBe('2026-01-01');
+      });
+
+      test('parseDisplayDate returns null for unrecognised formats', () => {
+        expect(parseDisplayDate('11-08-2027')).toBeNull();
+        expect(parseDisplayDate('2027/11/08')).toBeNull();
+      });
+
+      test('parseDisplayDate returns empty string for empty input', () => {
+        expect(parseDisplayDate('')).toBe('');
+        expect(parseDisplayDate(null)).toBe('');
+      });
+
+      test('formatDisplayDate converts YYYY-MM-DD to DD/MM/YYYY correctly', () => {
+        expect(formatDisplayDate('2027-11-08')).toBe('08/11/2027'); // 8 Nov
+        expect(formatDisplayDate('2027-08-11')).toBe('11/08/2027'); // 11 Aug
+        expect(formatDisplayDate('2026-01-01')).toBe('01/01/2026');
+      });
+
+      test('formatDisplayDate round-trips through parseDisplayDate without swapping', () => {
+        // The critical regression: entering 08/11/2027 must not become 11/08/2027
+        const userInput = '08/11/2027';
+        const iso = parseDisplayDate(userInput);
+        const displayed = formatDisplayDate(iso);
+        expect(displayed).toBe(userInput);
+      });
+    });
+
   describe('Plan by Work Area', () => {
     test('renderPlanByUnit keeps Unit 2/3/6 tabs and shows only active unit rows', () => {
       prodState.products = [

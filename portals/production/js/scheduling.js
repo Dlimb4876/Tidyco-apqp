@@ -136,6 +136,11 @@ function addSchedulingRowEventListeners(batch) {
   row.querySelectorAll('[data-field]').forEach(input => {
     input.addEventListener('change', (e) => {
       const field = e.target.getAttribute('data-field');
+      // Date fields are handled exclusively by the blur listener below,
+      // which converts DD/MM/YYYY → ISO before saving. Saving the raw
+      // display value here would cause PostgreSQL to mis-parse the date
+      // as MM/DD/YYYY, swapping day and month (e.g. 08/11 → August 11).
+      if (field === 'start_date' || field === 'due_date') return;
       const value = e.target.value;
       prodDataUpdateBatch(batchIdx, field, value);
       if (field === 'product_id') {
@@ -602,7 +607,11 @@ function smartDateFormat(fieldId, callback) {
   if (!input) return;
 
   const val = input.value.trim().toLowerCase();
-  if (!val) return; // Empty is OK
+  if (!val) {
+    // Empty is valid — save the cleared value so the date is removed from DB
+    if (callback) callback();
+    return;
+  }
 
   // Already in correct display format
   if (val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
