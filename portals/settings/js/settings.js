@@ -417,6 +417,14 @@ function settingsWorkAreaCancelEdit() {
   renderSettingsWorkAreasTab();
 }
 
+// ── Derive a display name from an email address prefix ────────
+// e.g. daniel.limb@tidyco.co.uk → "Daniel Limb"
+function settingsEmailToName(email) {
+  if (!email) return '—';
+  const local = email.split('@')[0];
+  return local.split(/[._-]/).map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+}
+
 // ── Render permissions tab ─────────────────────────────────────
 function renderSettingsPermissionsTab() {
   const container = document.getElementById('settingsPermissionsTab');
@@ -436,7 +444,7 @@ function renderSettingsPermissionsTab() {
   } else {
     tableBody = users.map(u => {
       const isYou = u.email === currentEmail;
-      const name = esc(u.full_name || '—');
+      const name = esc(u.full_name || settingsEmailToName(u.email));
       const email = esc(u.email || '—');
       const role = esc(u.role || 'user');
       const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB') : '—';
