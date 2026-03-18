@@ -1,0 +1,230 @@
+/* ============================================================
+   gantt.css — NPI Timing Plan: timeline bars, milestone markers,
+   row styles, month/week headers, and collapsed states
+   Tidyco APQP Quality Tool
+   ============================================================ */
+
+/* ── Base table ─────────────────────────────────────────────── */
+.gantt-tbl { border-collapse: collapse; }
+.gantt-tbl th,
+.gantt-tbl td { border: 1px solid rgba(255,255,255,.05); padding: 0; }
+
+/* ── Month header row ───────────────────────────────────────── */
+.gantt-month-row th {
+  background: var(--table-head-bg); color: var(--table-head-ink);
+  font-family: 'IBM Plex Mono', monospace; font-size: var(--table-head-font-size); font-weight: 600;
+  text-align: center; padding: 3px 5px; letter-spacing: .7px;
+  cursor: pointer; border: 1px solid rgba(255,255,255,.07);
+}
+.gantt-month-row th:hover { background: #dbe9f8; }
+
+/* ── Week header row ────────────────────────────────────────── */
+.gantt-week-row th {
+  background: #edf4fb; color: #667d95;
+  font-family: 'IBM Plex Mono', monospace; font-size: 8px;
+  text-align: center; padding: 2px 1px;
+  border: 1px solid rgba(255,255,255,.04);
+}
+
+/* ── Data rows ──────────────────────────────────────────────── */
+.gantt-row td     { border: 1px solid var(--line); vertical-align: middle; padding: 0; }
+.gantt-plan-row   { background: #f8fafc; }
+.gantt-act-row    { background: #fffbf5; }
+
+/* ── Cell types ─────────────────────────────────────────────── */
+.gantt-task-cell  { padding: 3px 6px !important;  vertical-align: top !important; min-width: 160px; }
+.gantt-role-cell  { padding: 3px 5px !important;  text-align: center; min-width: 56px; }
+.gantt-notes-cell { padding: 2px 5px !important;  min-width: 108px; vertical-align: middle !important; }
+.gantt-rowlabel   {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 700;
+  color: #6b7a99; padding: 2px 4px !important;
+  white-space: nowrap; text-align: right; border-right: 2px solid var(--line2) !important;
+}
+.gantt-rowlabel-act { color: #c2820a; }
+
+/* ── Cell inputs ────────────────────────────────────────────── */
+.gantt-task-cell input,
+.gantt-role-cell select,
+.gantt-notes-cell input { min-height: var(--table-input-min-h); }
+
+/* ── Timeline cells ─────────────────────────────────────────── */
+.gantt-cell,
+.gantt-actual-cell { min-width: 22px; height: 16px; }
+.gantt-filled      { cursor: pointer; }
+.gantt-wk          { border-left: 1px solid rgba(255,255,255,.08) !important; }
+
+/* ── Today highlight ────────────────────────────────────────── */
+.gantt-today-hdr { background: #1e3a5f !important; color: #93c5fd !important; }
+.gantt-today-col { outline: 2px solid var(--blue); outline-offset: -2px; }
+
+/* ── Collapsed month ────────────────────────────────────────── */
+.gantt-collapsed-cell { background: #f1f5f9; cursor: default; }
+.gantt-collapsed-wk   { background: #e2e8f0 !important; color: #94a3b8 !important; font-size: 10px !important; cursor: pointer; }
+
+/* ── Add row ────────────────────────────────────────────────── */
+.gantt-add-row td { padding: 0 !important; border-bottom: 2px solid var(--line2); }
+
+/* ── Column header alignment helpers ───────────────────────── */
+.gantt-th-left  { text-align: left !important;  padding: 4px 8px !important; color: white !important; }
+.gantt-th-notes { text-align: left !important;  padding: 3px 5px !important; color: var(--table-head-ink) !important; }
+.gantt-th-left  { color: var(--table-head-ink) !important; }
+
+/* ── Kit styles (BOM kit builder, lives near timing in nav) ─── */
+.kit-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.kit-card  { background: var(--white); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.kit-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-bottom: 1px solid var(--line); background: #fafbfd;
+}
+.kit-name-input {
+  flex: 1; border: none; background: transparent;
+  font-size: 14px; font-weight: 600; font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--ink); outline: none; padding: 2px 0;
+}
+.kit-body    { padding: 8px 14px; display: flex; flex-direction: column; gap: 4px; min-height: 40px; }
+.kit-empty   { font-size: 12px; color: var(--muted); padding: 8px 0; text-align: center; }
+.kit-item-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0; border-bottom: 1px solid var(--line);
+}
+.kit-item-row:last-child { border-bottom: none; }
+.kit-item-type { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.kit-item-name { flex: 1; font-size: 12px; color: var(--ink); }
+.kit-item-pn   { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+.kit-qty-input {
+  width: 52px; padding: 2px 5px; border: 1px solid var(--line2);
+  border-radius: 3px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+  text-align: center; outline: none;
+}
+.kit-qty-input:focus { border-color: var(--blue); }
+.kit-unit    { font-size: 11px; color: var(--muted); min-width: 24px; }
+.kit-summary { padding: 6px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); background: #fafbfd; }
+.kit-add-btn {
+  display: block; width: 100%; padding: 8px; border: none;
+  border-top: 1px dashed var(--line); background: transparent;
+  color: var(--blue); font-size: 12px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+}
+.kit-add-btn:hover { background: var(--blue-pale); }
+.new-kit-btn {
+  display: block; width: 100%; padding: 24px; border: 2px dashed var(--line2);
+  border-radius: 10px; background: transparent; color: var(--muted);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif; text-align: center;
+}
+.new-kit-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-pale); }
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Gantt table adjustments */
+  .gantt-month-row th {
+    padding: 3px 4px;
+    font-size: 9px;
+  }
+
+  .gantt-week-row th {
+    padding: 1px;
+    font-size: 8px;
+  }
+
+  .gantt-task-cell {
+    padding: 3px 6px !important;
+    min-width: 140px;
+    font-size: 12px;
+  }
+
+  .gantt-role-cell {
+    padding: 3px 4px !important;
+    min-width: 50px;
+    font-size: 11px;
+  }
+
+  .gantt-notes-cell {
+    padding: 2px 4px !important;
+    min-width: 100px;
+    font-size: 11px;
+  }
+
+  .gantt-rowlabel {
+    padding: 2px 4px !important;
+    font-size: 8px;
+  }
+
+  .gantt-cell,
+  .gantt-actual-cell {
+    min-width: 20px;
+    height: 16px;
+  }
+
+  /* Kit styles adjustments */
+  .kit-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .kit-header {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .kit-name-input {
+    font-size: 12px;
+  }
+
+  .kit-body {
+    padding: 6px 10px;
+    gap: 3px;
+  }
+
+  .kit-item-row {
+    padding: 3px 0;
+    gap: 6px;
+  }
+
+  .kit-item-type {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+
+  .kit-item-name {
+    font-size: 11px;
+  }
+
+  .kit-item-pn {
+    font-size: 10px;
+  }
+
+  .kit-qty-input {
+    width: 45px;
+    font-size: 11px;
+  }
+
+  .kit-unit {
+    font-size: 10px;
+  }
+
+  .kit-summary {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .kit-add-btn {
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .new-kit-btn {
+    padding: 16px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .kit-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gantt-task-cell {
+    min-width: 160px;
+  }
+}

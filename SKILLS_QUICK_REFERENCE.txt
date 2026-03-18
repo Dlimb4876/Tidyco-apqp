@@ -1,0 +1,119 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                  TIDYCO APQP DEVELOPMENT SKILLS QUICK REFERENCE                 ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+RUN ALL CHECKS:
+  npm run check:all
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INDIVIDUAL SKILLS:
+
+1️⃣  LOAD ORDER CHECKER
+   npm run check:load-order
+   ↳ Verifies script load order in index.html
+   ✓ Finds missing dependencies
+   ✓ Detects wrong positioning
+   ✓ Checks app.js loads last
+   When: After adding new JS file
+
+2️⃣  SYNTAX VALIDATOR
+   npm run check:syntax
+   ↳ Catches syntax errors that kill entire files
+   ✓ Duplicate const in same scope
+   ✓ Unclosed brackets/parentheses
+   ✓ Missing commas in objects
+   When: Before tests or if "not a function" error
+
+3️⃣  RLS POLICY CHECKER
+   npm run check:rls
+   ↳ Verifies Supabase RLS is enabled
+   ✓ Lists tables being queried
+   ✓ Provides RLS policy template
+   ✓ Manual verification checklist
+   When: After creating new Supabase table
+
+4️⃣  SUBSCRIPTION CLEANUP AUDITOR
+   npm run check:subscriptions
+   ↳ Finds memory leaks in real-time subscriptions
+   ✓ Detects unsubscribed channels
+   ✓ Shows auto-cleanup features
+   ✓ Prevents listener accumulation
+   When: After adding real-time feature
+
+5️⃣  MOBILE BREAKPOINT VERIFIER
+   npm run check:mobile
+   ↳ Scans CSS for responsive design
+   ✓ Checks mobile-first layout
+   ✓ Verifies @media queries
+   ✓ Tests at 375px, 768px, 1920px
+   When: After creating new CSS file
+
+6️⃣  MODAL STATE AUDITOR
+   npm run check:modals
+   ↳ Audits modal data cleanup
+   ✓ Finds showModal() without closeModal()
+   ✓ Detects state pollution
+   ✓ Verifies initialization checks
+   When: After adding new modal
+
+7️⃣  STATE VARIABLE TRACKER
+   npm run check:state
+   ↳ Tracks global state variables
+   ✓ Lists variables from state.js
+   ✓ Shows usage locations
+   ✓ Flags undeclared globals
+   When: Before creating new state variable
+
+8️⃣  TEST COVERAGE REPORTER
+   npm run check:coverage
+   ↳ Runs Jest and shows coverage
+   ✓ Identifies untested code
+   ✓ Recommends test scenarios
+   ✓ Shows coverage by file
+   When: Before committing
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COMMON BUG PATTERNS:
+
+Bug: "function is not a function"
+→ npm run check:syntax
+→ npm run check:load-order
+
+Bug: Empty data from Supabase query
+→ npm run check:rls
+
+Bug: App slowing down / memory issues
+→ npm run check:subscriptions
+
+Bug: Mobile layout broken
+→ npm run check:mobile
+
+Bug: Modal shows old data
+→ npm run check:modals
+
+Bug: Unexpected state behavior
+→ npm run check:state
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RECOMMENDED WORKFLOW:
+
+1. Edit code
+   ↓
+2. npm run check:all
+   ↓
+3. npm test
+   ↓
+4. Git commit (if all pass)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DOCUMENTATION:
+  - SKILLS_GUIDE.md        (detailed guide for each skill)
+  - CLAUDE.md              (architecture & conventions)
+  - TESTING_STRATEGY.md    (Jest patterns)
+  - README.md              (project overview)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

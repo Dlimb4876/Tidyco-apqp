@@ -1,0 +1,112 @@
+/* ============================================================
+	 me-capacity-chart.css — KPI and chart styles
+	 ============================================================ */
+
+/* ── KPI Strip ───────────────────────────────────────────────── */
+.me-kpi-strip {
+	display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 12px; margin-bottom: 24px;
+}
+.me-kpi {
+	background: var(--white); border: 1px solid var(--line); border-radius: 8px;
+	padding: 16px; transition: all 0.2s ease;
+}
+.me-kpi:hover {
+	border-color: var(--line2); box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.me-kpi-label {
+	font-size: 11px; font-weight: 700; letter-spacing: 1.1px;
+	text-transform: uppercase; color: var(--muted);
+	font-family: 'IBM Plex Mono', monospace; margin-bottom: 6px;
+}
+.me-kpi-value {
+	font-size: 28px; font-weight: 700; color: var(--ink); line-height: 1.1;
+}
+.me-kpi-month   { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+.me-kpi.warn  .me-kpi-value { color: var(--amber); }
+.me-kpi.over  .me-kpi-value { color: var(--red); }
+.me-kpi.ok    .me-kpi-value { color: var(--green); }
+
+/* ── Chart Container & Two-Column Lower Grid ─────────────────── */
+.me-chart-container {
+	display: flex; flex-direction: column; gap: 0;
+}
+.me-chart-lower-grid {
+	display: grid;
+	grid-template-columns: minmax(220px, 320px) 1fr;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+@media (max-width: 900px) {
+	.me-chart-lower-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Chart Card Controls ─────────────────────────────────────── */
+.me-chart-ctrl-left {
+	display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.me-chart-ctrl-left input[type="month"] {
+	padding: 4px 8px; border: 1px solid var(--line2); border-radius: 4px;
+	font-size: 12px; color: var(--ink); background: var(--white);
+	font-family: 'IBM Plex Sans', sans-serif; transition: border-color 0.2s;
+}
+.me-chart-ctrl-left input[type="month"]:focus {
+	outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px rgba(0,102,204,.08);
+}
+.me-chart-today-link {
+	font-size: 12px; color: var(--blue); text-decoration: none;
+	font-weight: 600; cursor: pointer; transition: all 0.15s;
+	padding: 4px 2px;
+}
+.me-chart-today-link:hover {
+	color: var(--blue-dark); text-decoration: underline;
+}
+
+/* Legacy aliases kept for backward-compat in case referenced elsewhere */
+.me-chart-wrap { padding: 16px; position: relative; }
+.me-chart-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+
+/* Legend */
+.me-legend {
+	display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+}
+.me-leg-item {
+	display: flex; align-items: center; gap: 5px;
+	font-size: 11px; color: var(--mid); white-space: nowrap;
+}
+.me-leg-swatch {
+	width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+}
+.me-leg-line {
+	width: 18px; height: 2px; border-radius: 1px; flex-shrink: 0;
+}
+
+/* Chart Legend (new) */
+.me-chart-legend {
+	display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
+	padding: 12px 0; margin-top: 12px; border-top: 1px solid var(--line);
+}
+.legend-item {
+	display: flex; align-items: center; gap: 8px;
+	font-size: 12px; color: var(--ink); white-space: nowrap;
+}
+.legend-color {
+	width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0;
+}
+.legend-line {
+	width: 20px; height: 2px; border-radius: 1px; flex-shrink: 0;
+}
+
+/* Canvas chart */
+.me-chart-canvas-wrap {
+	position: relative; width: 100%;
+}
+.me-chart-wrapper {
+	position: relative; width: 100%; height: 380px; margin: 16px 0;
+}
+#meChart {
+	width: 100% !important; height: 100% !important;
+}
+#meCapacityChart {
+	width: 100% !important; height: 340px !important;
+}

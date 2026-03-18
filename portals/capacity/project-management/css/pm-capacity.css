@@ -1,0 +1,34 @@
+/* ============================================================
+   pm-capacity.css — PM Capacity styles
+   ============================================================ */
+
+.pm-shell .me-topbar-title {
+  color: var(--navy);
+}
+
+.pm-dept-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  background: var(--navy);
+  color: var(--white);
+}
+
+@media (max-width: 767px) {
+  .pm-shell .me-body {
+    padding: 12px;
+  }
+
+  .pm-shell .me-kpi-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .pm-shell .me-body {
+    padding: 20px;
+  }
+}

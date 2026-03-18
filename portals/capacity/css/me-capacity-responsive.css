@@ -1,0 +1,131 @@
+/* ============================================================
+	 me-capacity-responsive.css — responsive overrides
+	 ============================================================ */
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 767px) {
+	.me-topbar {
+		padding: 10px 12px;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.me-nav {
+		padding: 0 12px;
+		overflow-x: auto;
+	}
+
+	.me-nav-btn {
+		padding: 8px 12px;
+		font-size: 12px;
+	}
+
+	.me-body {
+		padding: 12px;
+	}
+
+	.me-kpi-strip {
+		grid-template-columns: repeat(2, 1fr);
+		gap: 8px;
+	}
+
+	.me-kpi-value { font-size: 22px; }
+	.me-kpi-label { font-size: 9px; }
+	.me-chart-title { font-size: 14px; }
+	.me-chart-subtitle { font-size: 11px; }
+
+	.me-chart-controls {
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.me-chart-controls-left {
+		flex-direction: column;
+		width: 100%;
+	}
+
+	.me-chart-ctrl-group {
+		width: 100%;
+	}
+
+	.me-chart-ctrl-group input {
+		flex: 1;
+	}
+
+	.me-legend {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	.me-chart-legend {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	.me-chart-wrapper {
+		height: 280px;
+	}
+
+	#meCapacityChart {
+		height: 280px !important;
+	}
+
+	.me-heatmap-grid {
+		grid-template-columns: 100px repeat(auto-fit, 40px);
+	}
+
+	.me-heatmap-cell {
+		height: 40px;
+		width: 40px;
+		font-size: 12px;
+	}
+
+	.me-mini-heatmap-grid {
+		grid-template-columns: 80px repeat(auto-fit, 32px);
+	}
+
+	.me-mini-heatmap-cell {
+		height: 28px;
+		width: 32px;
+		font-size: 10px;
+	}
+
+	.me-dashboard-kpis {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.me-dashboard-grid {
+		grid-template-columns: 1fr;
+		gap: 12px;
+	}
+
+	.me-dashboard-mini-chart {
+		height: 200px;
+	}
+
+	.me-dashboard-mini-heatmap {
+		height: 200px;
+	}
+
+	.me-tbl td,
+	.me-tbl th {
+		padding: 4px 6px;
+		font-size: 11px;
+	}
+
+	.me-card {
+		margin-bottom: 12px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+	.me-kpi-strip {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	.me-dashboard-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
