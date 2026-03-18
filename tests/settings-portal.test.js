@@ -107,6 +107,12 @@ describe('renderSettings()', () => {
     expect(result).toContain('Permissions');
   });
 
+  it('contains Role Definitions nav item', () => {
+    const result = renderSettings(); // eslint-disable-line no-undef
+    expect(result).toContain('Role Definitions');
+    expect(result).toContain('data-tab="role-definitions"');
+  });
+
   it('marks the active tab with "active" class', () => {
     global.settingsActiveTab = 'families';
     const result = renderSettings(); // eslint-disable-line no-undef
@@ -120,11 +126,12 @@ describe('renderSettings()', () => {
     global.settingsActiveTab = 'families'; // reset
   });
 
-  it('includes all three tab content divs', () => {
+  it('includes all four tab content divs', () => {
     const result = renderSettings(); // eslint-disable-line no-undef
     expect(result).toContain('id="settingsFamiliesTab"');
     expect(result).toContain('id="settingsWorkAreasTab"');
     expect(result).toContain('id="settingsPermissionsTab"');
+    expect(result).toContain('id="settingsRoleDefinitionsTab"');
   });
 });
 
@@ -317,5 +324,53 @@ describe('renderSettingsPermissionsTab()', () => {
     const container = document.getElementById('settingsPermissionsTab');
     expect(container.innerHTML).toContain('Could not load user accounts');
     expect(container.innerHTML).toContain('Permission denied');
+  });
+
+  it('no longer embeds role matrix inside permissions tab', () => {
+    setInternal('settingsPermissionsData', []);
+    renderSettingsPermissionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsPermissionsTab');
+    expect(container.innerHTML).not.toContain('Role Definitions');
+  });
+});
+
+describe('renderSettingsRoleDefinitionsTab()', () => {
+  beforeEach(() => {
+    if (!document.getElementById('settingsRoleDefinitionsTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsRoleDefinitionsTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders the role matrix with all three role columns', () => {
+    renderSettingsRoleDefinitionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsRoleDefinitionsTab');
+    expect(container.innerHTML).toContain('Admin');
+    expect(container.innerHTML).toContain('Editor');
+    expect(container.innerHTML).toContain('Viewer');
+  });
+
+  it('renders role permission rows', () => {
+    renderSettingsRoleDefinitionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsRoleDefinitionsTab');
+    expect(container.innerHTML).toContain('View all project data');
+    expect(container.innerHTML).toContain('Change user roles');
+  });
+
+  it('renders the section heading', () => {
+    renderSettingsRoleDefinitionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsRoleDefinitionsTab');
+    expect(container.innerHTML).toContain('Role Definitions');
+  });
+
+  it('does nothing when container is missing', () => {
+    const existing = document.getElementById('settingsRoleDefinitionsTab');
+    if (existing) existing.remove();
+    expect(() => renderSettingsRoleDefinitionsTab()).not.toThrow(); // eslint-disable-line no-undef
+    // restore for other tests
+    const el = document.createElement('div');
+    el.id = 'settingsRoleDefinitionsTab';
+    document.body.appendChild(el);
   });
 });
