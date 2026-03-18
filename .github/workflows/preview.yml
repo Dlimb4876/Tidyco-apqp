@@ -1,0 +1,22 @@
+name: Deploy Preview
+on:
+  push:
+    branches: [main, dev] # Runs whenever you save to these branches
+
+permissions:
+  contents: write # Allows the action to "write" the website files
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: . # If your site is in a subfolder like 'dist', change this to 'dist'
+          target-folder: ${{ github.ref_name == 'dev' && 'dev' || '' }}
+          branch: gh-pages # This creates a hidden branch to hold the website
+          
