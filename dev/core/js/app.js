@@ -82,6 +82,17 @@ async function launchApp() {
   const { data: { session } } = await supa.auth.getSession();
   if (session) {
     currentUser = session.user;
+    // Load role from profiles table so isAdmin() works correctly on session restore
+    try {
+      const { data: profile } = await supa
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+      currentUserRole = profile?.role || 'editor';
+    } catch (_) {
+      currentUserRole = 'editor';
+    }
     launchApp();
   }
 })();
