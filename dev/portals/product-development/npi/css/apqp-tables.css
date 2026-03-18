@@ -1,0 +1,202 @@
+/* ============================================================
+   apqp-tables.css — Shared table base styling, inline form
+   elements, button suite, add-row affordance, and filter
+   toolbar used across all APQP sub-tabs.
+   Tidyco APQP Quality Tool
+   ============================================================ */
+
+/* ── Table Base Styling ────────────────────────────────────── */
+.apqp-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--table-cell-font-size);
+}
+
+.apqp-tbl thead {
+  background: var(--table-head-bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.apqp-tbl th {
+  padding: var(--table-head-py) var(--table-head-px);
+  text-align: left;
+  font-size: var(--table-head-font-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--table-head-ink);
+  border-bottom: 1px solid var(--table-border);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.apqp-tbl td {
+  padding: var(--table-cell-py) var(--table-cell-px);
+  border-bottom: 1px solid var(--table-border);
+  vertical-align: top;
+}
+
+.apqp-tbl tbody tr:hover {
+  background: var(--table-row-hover);
+}
+
+.ctq-tbl {
+  table-layout: fixed;
+  min-width: 960px;
+}
+
+.ctq-tbl td:nth-child(2) { min-width: 40px; }
+.ctq-tbl td:nth-child(3) { min-width: 160px; }
+.ctq-tbl td:nth-child(4) { min-width: 90px; }
+.ctq-tbl td:nth-child(5) { min-width: 110px; }
+.ctq-tbl td:nth-child(6) { min-width: 90px; }
+.ctq-tbl td:nth-child(7) { min-width: 110px; }
+.ctq-tbl td:nth-child(8) { min-width: 68px; text-align: center; }
+
+/* ── Form Elements ─────────────────────────────────────────── */
+.apqp-tbl input[type="text"],
+.apqp-tbl input[type="number"],
+.apqp-tbl textarea,
+.apqp-tbl select {
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: var(--table-cell-font-size);
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--white);
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: var(--table-input-min-h);
+}
+
+.apqp-tbl input[type="text"]:focus,
+.apqp-tbl input[type="number"]:focus,
+.apqp-tbl textarea:focus,
+.apqp-tbl select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+.apqp-tbl .cell-edit {
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: var(--table-cell-font-size);
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--white);
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: var(--table-input-min-h);
+}
+
+.apqp-tbl .cell-edit:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+/* ── Button Suite ──────────────────────────────────────────── */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'IBM Plex Sans', sans-serif;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background: var(--blue-dark);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--mid);
+  border: 1.5px solid var(--line);
+}
+
+.btn-ghost:hover {
+  background: var(--bg);
+  border-color: var(--line2);
+  color: var(--blue);
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.del-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  transition: color 0.15s;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.del-btn:hover {
+  color: var(--red);
+  background: var(--red-pale);
+}
+
+/* ── Add Row Button ────────────────────────────────────────── */
+.add-row {
+  display: block;
+  margin-top: 12px;
+  padding: 8px 16px;
+  font-size: 13px;
+  background: var(--blue-pale);
+  color: var(--blue);
+  border: 1.5px dashed var(--blue);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.add-row:hover {
+  background: var(--blue);
+  color: var(--white);
+  border-style: solid;
+}
+
+/* ── Filter Toolbar ────────────────────────────────────────── */
+.apqp-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

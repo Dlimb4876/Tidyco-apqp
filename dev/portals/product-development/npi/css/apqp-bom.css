@@ -1,0 +1,285 @@
+/* ============================================================
+   apqp-bom.css — Bill of Materials styles: sub-nav tabs,
+   register table column sizing, and BOM picker modal.
+   Tidyco APQP Quality Tool
+   ============================================================ */
+
+/* ── BOM Sub-Nav Tabs ──────────────────────────────────────── */
+.bom-subnav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+  background: var(--white);
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.bom-tab {
+  padding: 10px 18px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.bom-tab:hover {
+  color: var(--blue);
+  background: rgba(0, 102, 204, 0.05);
+}
+
+.bom-tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+  background: var(--blue-pale);
+  font-weight: 600;
+}
+
+/* ── BOM Register Layout & Column Sizing ─────────────────────── */
+.bom-register-wrap {
+  width: 100%;
+  margin: 0 auto;
+}
+
+td.w75 { width: 75px; }
+
+.bom-tbl td .cell-edit {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bom-tbl td.bom-col-desc  { width: 280px; }
+.bom-tbl td.bom-col-notes { width: 180px; }
+
+/* Compact ABC catalogue table for hundreds of rows */
+.abc-tbl-compact td { padding: 3px 6px !important; }
+.abc-tbl-compact .cell-edit { padding: 1px 3px; min-height: 20px; }
+
+.bom-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1;
+}
+
+/* ── BOM Picker (Modal List) ───────────────────────────────── */
+.bom-filter-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.bom-filter-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  border: 1px solid var(--line2);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.bom-filter-btn:hover {
+  border-color: var(--line);
+  background: var(--white);
+}
+
+.bom-filter-btn.active {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+  font-weight: 600;
+}
+
+.bom-pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.bom-pick-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--white);
+  transition: all 0.15s;
+}
+
+.bom-pick-item:hover {
+  border-color: var(--blue);
+  background: rgba(0, 102, 204, 0.03);
+}
+
+.bom-pick-item.selected {
+  background: var(--blue-pale);
+  border-color: var(--blue);
+  font-weight: 500;
+}
+
+.bom-pick-item--added {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.bom-pick-item--added:hover {
+  border-color: var(--line);
+  background: var(--white);
+}
+
+.bom-pick-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.bom-pick-meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── ABC Class Filter Bar ──────────────────────────────────── */
+.bom-abc-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.bom-abc-filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-right: 2px;
+  white-space: nowrap;
+}
+
+.bom-abc-chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1.5px solid var(--line2);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace;
+  transition: all 0.15s;
+}
+.bom-abc-chip:hover { border-color: var(--line); background: var(--white); }
+.bom-abc-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+.bom-abc-active-filter {
+  font-size: 11px;
+  color: var(--blue);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-left: 4px;
+}
+
+/* ── ABC Class Badge (inline in table rows and modals) ──────── */
+.abc-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  flex-shrink: 0;
+}
+.abc-A { background: var(--rose-pale);   color: var(--rose);   border: 1px solid var(--rose);   }
+.abc-B { background: var(--amber-pale);  color: var(--amber); border: 1px solid var(--amber); }
+.abc-C { background: var(--green-pale);  color: var(--green);  border: 1px solid var(--green); }
+.abc-none { background: var(--bg); color: var(--muted); border: 1px solid var(--line2); }
+
+/* ── ABC Class Select (dropdown in table cell) ───────────────── */
+.abc-class-select {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  cursor: pointer;
+  text-align: center;
+  padding: 2px 4px;
+  border-radius: 4px;
+  width: 100%;
+}
+select.abc-class-select.abc-A { background: var(--rose-pale);   color: var(--rose); }
+select.abc-class-select.abc-B { background: var(--amber-pale);  color: var(--amber); }
+select.abc-class-select.abc-C { background: var(--green-pale);  color: var(--green); }
+select.abc-class-select.abc-none { background: var(--bg); color: var(--muted); }
+
+/* ── ABC Info Modal Row ─────────────────────────────────────── */
+.abc-info-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.abc-info-row:last-child { border-bottom: none; }
+
+/* ── NPI Dashboard Tabs (Projects / C-Class Catalogue) ─────── */
+.npi-dash-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 20px;
+}
+.npi-dash-tab {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.npi-dash-tab:hover  { color: var(--blue); }
+.npi-dash-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+
+/* ── ABC Catalogue table (central management) ────────────────── */
+.abc-catalogue-tbl td.col-project {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── Responsive: ABC filter on mobile ───────────────────────── */
+@media (max-width: 767px) {
+  .bom-abc-filter-row { gap: 4px; }
+  .bom-abc-chip { padding: 4px 10px; font-size: 10px; }
+  .npi-dash-tab { padding: 8px 12px; font-size: 12px; }
+}

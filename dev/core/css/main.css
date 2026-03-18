@@ -1,0 +1,284 @@
+/* ============================================================
+   main.css — Global variables, reset, typography, and shell layout
+   Tidyco APQP Quality Tool
+   ============================================================ */
+
+:root {
+  --ink:#0f2135; --ink2:#1f3044; --mid:#455d73; --muted:#6f8397;
+  --line:#d7e2ec; --line2:#c2d2e0; --bg:#eef4f9; --white:#ffffff;
+  --bg-soft:#f8fbff; --surface:#ffffff;
+  --table-border: var(--line);
+  --table-head-bg: #e9f2fb;
+  --table-head-ink: #4f6478;
+  --table-row-hover: rgba(11,95,167,.06);
+  --table-head-py: 6px;
+  --table-head-px: 9px;
+  --table-cell-py: 4px;
+  --table-cell-px: 7px;
+  --table-head-font-size: 10px;
+  --table-cell-font-size: 13px;
+  --table-input-min-h: 28px;
+  --blue:#0b5fa7; --blue-dark:#0a4f8a; --blue-pale:#e7f1fb; --blue-mid:#b5cee7;
+  --green:#1a7a3c; --green-pale:#e6f4ec; --green-mid:#9ad6b2;
+  --amber:#b45309; --amber-pale:#fef3e2; --amber-mid:#f6c87a;
+  --red:#c0392b; --red-pale:#fdf0ee;
+  --purple:#4c7cae; --purple-pale:#eaf3ff;
+  --teal:#0a7566; --teal-pale:#e5f5f3;
+  --navy:#21496f; --navy-pale:#e8f0f8;
+  --rose:#9b1c4a; --rose-pale:#fce8f1;
+  --page-gutter-mobile: 4px;
+  --page-gutter-desktop: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(132, 181, 220, 0.16), transparent 35%),
+    radial-gradient(circle at 90% 0%, rgba(76, 168, 154, 0.12), transparent 28%),
+    var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Shell ─────────────────────────────────────────────────── */
+.shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* ── Topbar — z-index:100 keeps above sticky table headers ─── */
+.topbar {
+  height: 52px;
+  background: linear-gradient(135deg, #173752 0%, #1c4668 55%, #1f5878 100%);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0 20px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(165, 201, 231, .46);
+  gap: 12px;
+  position: relative;
+  z-index: 100;
+  box-shadow: 0 10px 28px rgba(15, 42, 66, .22);
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; min-width: 240px; }
+.brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; cursor: pointer; }
+.brand:hover .brand-name { color: #93c5fd; }
+.brand-hex {
+  width: 26px;
+  height: 26px;
+  background: var(--blue);
+  clip-path: polygon(50% 0%,93.3% 25%,93.3% 75%,50% 100%,6.7% 75%,6.7% 25%);
+}
+.brand-name { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #fff; letter-spacing: 1px; transition: color .15s; }
+.brand-sep  { color: #8fb4cf; margin: 0 2px; }
+.brand-sub  { font-size: 13px; color: #d7e8f6; font-weight: 500; }
+
+.back-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 4px;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  border: 1px solid rgba(188, 214, 235, .42);
+  background: rgba(255,255,255,.08);
+  color: #d4e8fa;
+  font-family: 'IBM Plex Sans', sans-serif; transition: all .12s; white-space: nowrap;
+}
+.back-btn:hover { background: rgba(255,255,255,.16); color: #ffffff; border-color: #d4e7f8; }
+
+.section-crumb { font-size: 12px; color: #a8c3d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.section-crumb strong { color: #f3f8fd; }
+
+.prog-selector { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.prog-select-wrap select {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(188, 214, 235, .42);
+  color: #e3f0fb;
+  padding: 5px 10px; border-radius: 4px; font-size: 12px;
+  font-family: 'IBM Plex Sans', sans-serif; outline: none; cursor: pointer;
+  appearance: none; max-width: 240px;
+}
+.prog-select-wrap select:focus { border-color: #d7eafc; }
+
+.topbar-center { display: flex; justify-content: center; align-items: center; min-width: 200px; }
+.bug-report-btn {
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(213, 231, 246, 0.45);
+  color: #edf6ff;
+  font-size: 13px; font-weight: 500; padding: 6px 16px;
+  border-radius: 6px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+  transition: all .12s; white-space: nowrap;
+  position: relative; z-index: 10;
+}
+.bug-report-btn:hover { background: rgba(255,255,255,0.22); color: #fff; border-color: rgba(237,246,255,.7); }
+.bug-report-btn:active { transform: scale(0.98); }
+
+.topbar-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.tbtn {
+  padding: 5px 11px; border-radius: 4px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border: none; font-family: 'IBM Plex Sans', sans-serif; transition: all .12s;
+}
+.tbtn-ghost { background: transparent; color: #8899bb; border: 1px solid #2d3f5e; }
+.tbtn-ghost { background: rgba(255,255,255,.08); color: #d4e8fa; border: 1px solid rgba(188, 214, 235, .42); }
+.tbtn-ghost:hover { background: rgba(255,255,255,.16); color: #fff; }
+
+
+/* ── Main content area ──────────────────────────────────────── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--page-gutter-mobile) var(--page-gutter-mobile);
+}
+.section-inner { padding: 24px 28px 60px; }
+
+/* Shared surface helper for feature layouts that need a neutral panel backdrop */
+.surface-shell {
+  background: linear-gradient(180deg, rgba(255,255,255,0.78) 0%, rgba(247,251,255,0.78) 100%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding: 0 var(--page-gutter-desktop) var(--page-gutter-desktop);
+  }
+}
+
+/* ── Login screen ───────────────────────────────────────────── */
+.login-shell {
+  display: flex; align-items: center; justify-content: center;
+  height: 100vh; background: var(--ink); font-family: 'IBM Plex Sans', sans-serif;
+}
+.login-box {
+  background: var(--white); border-radius: 12px; padding: 40px 44px;
+  width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+.login-logo { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 28px; }
+.login-logo-img {
+  width: 224px !important;
+  height: 224px !important;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+  max-width: 224px;
+  max-height: 224px;
+}
+.login-logo-sub   { font-size: 15px; font-weight: 500; color: var(--mid); margin-top: 4px; text-align: center; }
+.login-title      { font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.login-sub        { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.login-field      { margin-bottom: 16px; }
+.login-field label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--mid);
+  margin-bottom: 5px; letter-spacing: .4px; text-transform: uppercase;
+}
+.login-field input {
+  width: 100%; padding: 10px 13px; border: 1.5px solid var(--line2);
+  border-radius: 6px; font-size: 14px; font-family: 'IBM Plex Sans', sans-serif;
+  outline: none; transition: border-color .15s;
+}
+.login-field input:focus { border-color: var(--blue); }
+.login-btn {
+  width: 100%; padding: 11px; background: var(--blue); color: white;
+  border: none; border-radius: 6px; font-size: 14px; font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif; cursor: pointer; margin-top: 8px; transition: background .15s;
+}
+.login-btn:hover    { background: var(--blue-dark); }
+.login-btn:disabled { background: var(--muted); cursor: default; }
+.login-err {
+  background: var(--red-pale); color: var(--red);
+  border: 1px solid #f0b4ae; border-radius: 6px;
+  padding: 9px 12px; font-size: 13px; margin-bottom: 14px; display: none;
+}
+
+/* ── Sync badge ─────────────────────────────────────────────── */
+.sync-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--muted);
+  padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,.08);
+}
+.sync-badge.syncing { color: #93c5fd; }
+.sync-badge.saved   { color: #86efac; }
+.sync-badge.error   { color: #fca5a5; }
+
+/* ── Responsive Utilities ───────────────────────────────────── */
+.container { width: 100%; padding: 0 16px; margin: 0 auto; }
+@media (min-width: 768px) {
+  .container { padding: 0 24px; }
+}
+@media (min-width: 1200px) {
+  .container { padding: 0 28px; }
+}
+
+/* Responsive grid utilities */
+.grid-auto { display: grid; grid-auto-flow: dense; }
+.grid-2col { grid-template-columns: repeat(2, 1fr); }
+.grid-3col { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 767px) {
+  .grid-auto { grid-template-columns: 1fr; }
+  .grid-2col { grid-template-columns: 1fr; }
+  .grid-3col { grid-template-columns: 1fr; }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .grid-3col { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Responsive spacing */
+@media (max-width: 767px) {
+  .section-inner { padding: 16px 16px 60px; }
+  .topbar { padding: 0 12px; }
+
+  :root {
+    --table-head-py: 5px;
+    --table-head-px: 7px;
+    --table-cell-py: 3px;
+    --table-cell-px: 6px;
+    --table-head-font-size: 9px;
+    --table-cell-font-size: 12px;
+    --table-input-min-h: 26px;
+  }
+}
+
+/* Responsive typography */
+@media (max-width: 767px) {
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  h3 { font-size: 18px !important; }
+}
+
+/* MANUAL ADD
+/* Force everything to use the main font, overriding specific features */
+* {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+}
+
+/* Maintain font-family for icons/emojis if needed */
+.login-logo, .empty-icon, .section-card-icon {
+    font-family: sans-serif !important;
+}
+
+/* Coming Soon Container */
+.coming-soon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+}
+
+.coming-soon-content {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.coming-soon-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.coming-soon-content p {
+  color: var(--muted);
+  margin: 0;
+}
