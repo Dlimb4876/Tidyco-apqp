@@ -197,3 +197,124 @@
     border-top: none;
   }
 }
+
+/* ── Compact table density ──────────────────────────────────── */
+body.compact-tables .prod-tbl td,
+body.compact-tables .prod-tbl th {
+  padding: 4px 10px;
+}
+
+/* ── Appearance tab ─────────────────────────────────────────── */
+.appearance-group {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.appearance-group:last-of-type {
+  border-bottom: none;
+}
+
+.appearance-group-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.appearance-group-desc {
+  font-size: 0.82rem;
+  color: var(--mid);
+  margin: 0 0 14px;
+}
+
+.appearance-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.appearance-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink);
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.appearance-input {
+  min-width: 200px;
+  max-width: 320px;
+  flex: 1 1 200px;
+}
+
+.appearance-hint {
+  font-size: 0.78rem;
+  color: var(--muted, #aaa);
+  width: 100%;
+  padding-left: 172px;
+}
+
+.appearance-radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.appearance-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.88rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.appearance-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* ── About tab ──────────────────────────────────────────────── */
+.about-card {
+  background: var(--surface, #f7f8fa);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.about-app-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.about-app-desc {
+  font-size: 0.88rem;
+  color: var(--mid);
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+
+.about-shortcuts-table td:first-child {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.about-kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: var(--white, #fff);
+  font-family: var(--mono, monospace);
+  font-size: 0.8rem;
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+}
