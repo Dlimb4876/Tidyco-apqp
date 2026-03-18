@@ -33,17 +33,6 @@ function renderSettings() {
     });
   });
 
-  const sidebarItems = SETTINGS_CATEGORIES.map(cat => `
-    <button
-      class="settings-nav-item ${tab === cat.id ? 'active' : ''}"
-      data-action="settings-switch-tab"
-      data-tab="${cat.id}"
-    >
-      <span class="nav-icon">${cat.icon}</span>
-      ${cat.label}
-    </button>
-  `).join('');
-
   return `
     <div class="settings-portal" id="settingsPortalRoot">
       <div class="settings-header">
