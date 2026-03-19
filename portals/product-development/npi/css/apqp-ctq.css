@@ -5,6 +5,23 @@
    Tidyco APQP Quality Tool
    ============================================================ */
 
+/* ── CTQ Filter Bar ────────────────────────────────────────── */
+.ctq-filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.ctq-filter-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-end;
+  padding-bottom: 2px;
+}
+
 /* ── CTQ Agreement Styling ──────────────────────────────────── */
 .ctq-agreed {
   display: flex;

@@ -48,6 +48,7 @@ npi.events._onClick = function(evt) {
   switch (action) {
   case 'ctq-add': npi.ctq.add(); break
   case 'ctq-del': npi.ctq.del(npiNum(el.getAttribute('data-idx'), -1)); break
+  case 'ctq-filter-clear': evt.preventDefault(); npi.ctq.clearFilters(); break
 
   case 'cp-sync': npi.cp.syncFromPFMEA(); break
   case 'cp-add': npi.cp.add(); break
@@ -131,6 +132,9 @@ npi.events._onChange = function(evt) {
 
   switch (action) {
   case 'ctq-upd': npi.ctq.upd(npiNum(el.getAttribute('data-idx'), -1), el.getAttribute('data-field'), el.type === 'checkbox' ? el.checked : el.value); break
+  case 'ctq-filter-source': npi.ctq.setSourceFilter(el.value); break
+  case 'ctq-filter-oos': npi.ctq.setOosFilter(el.value); break
+  case 'ctq-filter-agreed': npi.ctq.setAgreedFilter(el.value); break
   case 'cp-upd': npi.cp.upd(npiNum(el.getAttribute('data-idx'), -1), el.getAttribute('data-field'), el.value); break
   case 'pfd-upd': npi.pfd.upd(el.getAttribute('data-id'), el.getAttribute('data-field'), el.value); break
   case 'pfd-toggle-ctq-pick': npi.pfd.toggleCtqPick(el.getAttribute('data-id'), !!el.checked); break
