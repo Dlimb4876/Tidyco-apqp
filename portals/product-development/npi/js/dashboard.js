@@ -398,6 +398,10 @@ npi.dashboard.renderNpiSlimCard = function (product, project) {
   }
   const hasHighRPN = project && (project.pfmea || []).some((r) => npi.pfmea.calcRPN(r) >= RPN_HIGH)
   const rpnBadge = hasHighRPN ? `<div class="npi-slim-rpn-badge">⚠ High RPN</div>` : ''
+  const subAsmCount = project && Array.isArray(project.subAssemblies) ? project.subAssemblies.length : 0
+  const subAsmBadge = subAsmCount > 0
+    ? `<div class="npi-slim-subasm-badge">🔩 ${subAsmCount} sub-assembl${subAsmCount === 1 ? 'y' : 'ies'}</div>`
+    : ''
   const targetProgId = project ? project.id : ''
   const productScope = product.scope || 'overhaul'
   const scopeIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
@@ -410,6 +414,7 @@ npi.dashboard.renderNpiSlimCard = function (product, project) {
     ${product.customer ? `<div class="npi-slim-card-meta">👤 ${esc(product.customer)}</div>` : ''}
     ${scopeBadge}
     ${gateScopeBadge}
+    ${subAsmBadge}
     ${rpnBadge}
     ${pipsHtml}
   </div>`

@@ -1393,6 +1393,17 @@
   padding: 1px 5px;
   margin-top: 4px;
 }
+.npi-slim-subasm-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-top: 4px;
+}
 
 @media (max-width: 768px) {
   .npi-projects-toolbar {
