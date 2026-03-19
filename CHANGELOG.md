@@ -5,6 +5,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-19 | Fix Action Centre "Open" → NPI Kanban misdirection | npi_actions.project_id stores the DB primary key UUID (dbId), not the app-level prog_id; actionCentreGoTo was setting progId to the DB PK so prog() could never find the project and fell back to the Kanban. Fixed by resolving DB PK → prog_id via db.projects before navigating. Also fixed scroll-to-item to retry after async NPI data loads.
+
 ## 2026-03-19 | Fix Action Centre "Open" button to navigate directly to the action | Clicking "Open" in the Action Centre was navigating to the entire Actions/PFMEA/Risks section without focusing on the specific action, forcing users to manually find it in the table. Now the button scrolls to and highlights the selected row with a pulse animation so it's immediately visible.
 
 ## 2026-03-19 | Fix Action Centre table layout and mobile responsiveness | The Action Centre table had fixed column widths that didn't accommodate mixed data types from three sources (NPI actions, PFMEA, risks); changed to flexible column sizing with proper min/max widths, improved mobile breakpoints for smaller screens, and better handling of missing data (risks have no due dates).

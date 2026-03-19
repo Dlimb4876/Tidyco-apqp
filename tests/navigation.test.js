@@ -44,6 +44,7 @@ global.operationsTab = 'overview';
 global.productionTab = 'root';
 global.productDevelopmentTab = 'root';
 global.productsActiveTab = 'list';
+global.npiLoadedProgId = null;    // state.js variable used by scrollToSelectedItem
 
 // Mock prog() accessor function
 global.prog = () => global.db.projects.find(p => p.id === global.progId) || null;
