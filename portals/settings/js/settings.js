@@ -19,6 +19,37 @@ let settingsTeamsEditingId = null;
 let settingsTeamsPermissionsEditingId = null;
 let settingsTeamsPermissionsData = {};
 
+// ── Appearance preferences (persisted to localStorage) ─────────
+const APPEARANCE_STORAGE_KEY = 'tidyco_prefs';
+
+function settingsLoadAppearancePrefs() {
+  try {
+    const raw = localStorage.getItem(APPEARANCE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function settingsSaveAppearancePrefs(prefs) {
+  try {
+    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(prefs));
+  } catch (_) { /* ignore storage errors */ }
+}
+
+function settingsApplyAppearance() {
+  const prefs = settingsLoadAppearancePrefs();
+
+  // Organisation / app name in topbar
+  const brandName = document.querySelector('.brand-name');
+  const brandSub  = document.querySelector('.brand-sub');
+  if (brandName) brandName.textContent = prefs.orgName   || 'TIDYCO';
+  if (brandSub)  brandSub.textContent  = prefs.appSubtitle || 'Operations Portal';
+
+  // Compact table density
+  document.body.classList.toggle('compact-tables', prefs.tableDensity === 'compact');
+}
+
 // ── Main settings page render ──────────────────────────────────
 function renderSettings() {
   const tab = settingsActiveTab || 'families';
@@ -40,6 +71,10 @@ function renderSettings() {
         settingsEnsurePermissionsData();
       } else if (tab === 'role-definitions') {
         renderSettingsRoleDefinitionsTab();
+      } else if (tab === 'appearance') {
+        renderSettingsAppearanceTab();
+      } else if (tab === 'about') {
+        renderSettingsAboutTab();
       }
     });
   });
@@ -69,6 +104,14 @@ function renderSettings() {
           <button class="settings-nav-item ${tab === 'role-definitions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="role-definitions">
             <span class="nav-icon">🔐</span> Role Definitions
           </button>
+          <span class="settings-nav-group-label" style="margin-top:8px">Preferences</span>
+          <button class="settings-nav-item ${tab === 'appearance' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="appearance">
+            <span class="nav-icon">🎨</span> Appearance
+          </button>
+          <span class="settings-nav-group-label" style="margin-top:8px">Help</span>
+          <button class="settings-nav-item ${tab === 'about' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="about">
+            <span class="nav-icon">ℹ️</span> About
+          </button>
         </nav>
         <div class="settings-content">
           <div id="settingsFamiliesTab"        class="settings-tab-content ${tab === 'families'         ? 'active' : ''}"></div>
@@ -76,6 +119,8 @@ function renderSettings() {
           <div id="settingsTeamsTab"           class="settings-tab-content ${tab === 'teams'            ? 'active' : ''}"></div>
           <div id="settingsPermissionsTab"     class="settings-tab-content ${tab === 'permissions'      ? 'active' : ''}"></div>
           <div id="settingsRoleDefinitionsTab" class="settings-tab-content ${tab === 'role-definitions' ? 'active' : ''}"></div>
+          <div id="settingsAppearanceTab"      class="settings-tab-content ${tab === 'appearance'       ? 'active' : ''}"></div>
+          <div id="settingsAboutTab"           class="settings-tab-content ${tab === 'about'            ? 'active' : ''}"></div>
         </div>
       </div>
     </div>
@@ -881,6 +926,161 @@ function renderSettingsRoleDefinitionsTab() {
   `;
 }
 
+// ── Render appearance tab ──────────────────────────────────────
+function renderSettingsAppearanceTab() {
+  const container = document.getElementById('settingsAppearanceTab');
+  if (!container) return;
+
+  const prefs = settingsLoadAppearancePrefs();
+  const orgName     = esc(prefs.orgName      || '');
+  const appSubtitle = esc(prefs.appSubtitle  || '');
+  const density     = prefs.tableDensity     || 'normal';
+  const toastDur    = prefs.toastDuration    || 'normal';
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Appearance</h2>
+      <p class="settings-section-desc">Personalise how the portal looks. These preferences are saved to this browser only.</p>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Branding</h3>
+      <p class="appearance-group-desc">Customise the name shown in the top-left corner of the portal.</p>
+      <div class="appearance-row">
+        <label class="appearance-label" for="ap-orgName">Organisation name</label>
+        <input class="cell-edit appearance-input" id="ap-orgName" placeholder="TIDYCO" maxlength="40" value="${orgName}">
+        <span class="appearance-hint">Shown as the main brand name. Leave blank for default.</span>
+      </div>
+      <div class="appearance-row">
+        <label class="appearance-label" for="ap-appSubtitle">App sub-title</label>
+        <input class="cell-edit appearance-input" id="ap-appSubtitle" placeholder="Operations Portal" maxlength="50" value="${appSubtitle}">
+        <span class="appearance-hint">Shown next to the organisation name. Leave blank for default.</span>
+      </div>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Tables</h3>
+      <div class="appearance-row">
+        <label class="appearance-label">Row density</label>
+        <div class="appearance-radio-group">
+          <label class="appearance-radio-label">
+            <input type="radio" name="ap-density" value="normal"  ${density === 'normal'  ? 'checked' : ''}> Normal
+          </label>
+          <label class="appearance-radio-label">
+            <input type="radio" name="ap-density" value="compact" ${density === 'compact' ? 'checked' : ''}> Compact
+          </label>
+        </div>
+        <span class="appearance-hint">Compact reduces row height to fit more rows on screen.</span>
+      </div>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Notifications</h3>
+      <div class="appearance-row">
+        <label class="appearance-label">Toast duration</label>
+        <div class="appearance-radio-group">
+          <label class="appearance-radio-label">
+            <input type="radio" name="ap-toast" value="short"  ${toastDur === 'short'  ? 'checked' : ''}> Short (2 s)
+          </label>
+          <label class="appearance-radio-label">
+            <input type="radio" name="ap-toast" value="normal" ${toastDur === 'normal' ? 'checked' : ''}> Normal (4 s)
+          </label>
+          <label class="appearance-radio-label">
+            <input type="radio" name="ap-toast" value="long"   ${toastDur === 'long'   ? 'checked' : ''}> Long (6 s)
+          </label>
+        </div>
+        <span class="appearance-hint">How long notification pop-ups stay on screen.</span>
+      </div>
+    </div>
+
+    <div class="appearance-actions">
+      <button class="btn btn-primary" data-action="settings-appearance-save">Save preferences</button>
+      <button class="btn btn-ghost" data-action="settings-appearance-reset">Reset to defaults</button>
+    </div>
+  `;
+}
+
+// ── Save / reset appearance preferences ───────────────────────
+function settingsAppearanceSave() {
+  const orgName     = document.getElementById('ap-orgName')?.value.trim()     || '';
+  const appSubtitle = document.getElementById('ap-appSubtitle')?.value.trim() || '';
+  const density     = document.querySelector('input[name="ap-density"]:checked')?.value || 'normal';
+  const toastDur    = document.querySelector('input[name="ap-toast"]:checked')?.value   || 'normal';
+
+  settingsSaveAppearancePrefs({ orgName, appSubtitle, tableDensity: density, toastDuration: toastDur });
+  settingsApplyAppearance();
+  showToast('Appearance preferences saved.', 'info');
+  renderSettingsAppearanceTab();
+}
+
+function settingsAppearanceReset() {
+  settingsSaveAppearancePrefs({});
+  settingsApplyAppearance();
+  showToast('Appearance reset to defaults.', 'info');
+  renderSettingsAppearanceTab();
+}
+
+// ── Render about tab ───────────────────────────────────────────
+function renderSettingsAboutTab() {
+  const container = document.getElementById('settingsAboutTab');
+  if (!container) return;
+
+  const shortcuts = [
+    { key: '?  or  Ctrl / ⌘ + /',  desc: 'Show keyboard shortcuts help' },
+    { key: 'Ctrl / ⌘ + S',         desc: 'Save current work' },
+    { key: 'Ctrl / ⌘ + F',         desc: 'Focus search' },
+    { key: 'Ctrl / ⌘ + Enter',     desc: 'Save form / row' },
+    { key: 'Enter',                 desc: 'Add item (in add-row inputs)' },
+    { key: 'Escape',                desc: 'Cancel edit / close modal' },
+    { key: 'Tab',                   desc: 'Move to next field' },
+    { key: 'Backspace',             desc: 'Navigate back (when not editing)' },
+  ];
+
+  const shortcutRows = shortcuts.map(s => `
+    <tr>
+      <td><kbd class="about-kbd">${esc(s.key)}</kbd></td>
+      <td>${esc(s.desc)}</td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>About</h2>
+      <p class="settings-section-desc">App information, keyboard shortcuts, and help resources.</p>
+    </div>
+
+    <div class="about-card">
+      <div class="about-app-name">Tidyco Operations Portal</div>
+      <p class="about-app-desc">
+        A web-based APQP quality tool covering NPI project management, capacity planning,
+        production scheduling, and operations oversight. Data is stored securely in Supabase
+        and shared in real time across all users in your organisation.
+      </p>
+      ${typeof showGuide === 'function' ? `
+        <button class="btn btn-primary" data-action="settings-about-open-guide">📖 Open User Guide</button>
+      ` : ''}
+    </div>
+
+    <div class="settings-section-header" style="margin-top:24px">
+      <h2 style="font-size:1rem">Keyboard Shortcuts</h2>
+    </div>
+    <table class="prod-tbl about-shortcuts-table" style="width:100%;max-width:560px">
+      <thead>
+        <tr><th>Keys</th><th>Action</th></tr>
+      </thead>
+      <tbody>${shortcutRows}</tbody>
+    </table>
+
+    <div class="settings-section-header" style="margin-top:24px">
+      <h2 style="font-size:1rem">Support</h2>
+    </div>
+    <p style="font-size:0.88rem;color:var(--mid)">
+      For help or to report issues, use the
+      <strong>💬 Feedback &amp; Bugs</strong> button in the top bar.
+    </p>
+  `;
+}
+
 
 function setupSettingsEventListeners() {
   const root = document.getElementById('settingsPortalRoot');
@@ -910,6 +1110,8 @@ function setupSettingsEventListeners() {
         teams: 'settingsTeamsTab',
         permissions: 'settingsPermissionsTab',
         'role-definitions': 'settingsRoleDefinitionsTab',
+        appearance: 'settingsAppearanceTab',
+        about: 'settingsAboutTab',
       };
       document.getElementById(tabMap[tab])?.classList.add('active');
       if (tab === 'families') {
@@ -926,6 +1128,10 @@ function setupSettingsEventListeners() {
         settingsEnsurePermissionsData();
       } else if (tab === 'role-definitions') {
         renderSettingsRoleDefinitionsTab();
+      } else if (tab === 'appearance') {
+        renderSettingsAppearanceTab();
+      } else if (tab === 'about') {
+        renderSettingsAboutTab();
       }
       return;
     }
@@ -955,6 +1161,16 @@ function setupSettingsEventListeners() {
 
     // Permissions tab actions
     if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
+
+    // Appearance tab actions
+    if (action === 'settings-appearance-save')  { settingsAppearanceSave();  return; }
+    if (action === 'settings-appearance-reset') { settingsAppearanceReset(); return; }
+
+    // About tab actions
+    if (action === 'settings-about-open-guide') {
+      if (typeof showGuide === 'function') showGuide('hub');
+      return;
+    }
   });
 
   // Role dropdowns and checkboxes fire 'change', not 'click' — handle separately to prevent the

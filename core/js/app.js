@@ -24,6 +24,10 @@ async function launchApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display   = 'flex';
   setSyncBadge('syncing', '● loading…');
+
+  // Apply saved appearance preferences immediately (before any renders)
+  if (typeof settingsApplyAppearance === 'function') settingsApplyAppearance();
+
   populateFamilySelects();
   await loadRemotePage(0);
   if (db.projects.length === 0) load();
