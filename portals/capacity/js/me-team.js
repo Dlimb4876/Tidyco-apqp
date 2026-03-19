@@ -8,16 +8,18 @@ window.meRenderTeamTab = function(teamArray) {
     : 'ME';
   const isPmContext = department === 'PM';
 
-  // Calculate monthly capacity (4.33 weeks per month average)
+  // Calculate monthly capacity (4.33 weeks per month average) — single pass
   const weeksPerMonth = 4.33;
-  const totalCapacity = teamArray.reduce((sum, member) => {
-    const hours = meGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100) * weeksPerMonth;
-    return sum + hours;
-  }, 0).toFixed(1);
-
-  // Calculate group availability
-  const npiCapacity = teamArray.filter(m => (m.group || '') === 'NPI').reduce((sum, m) => sum + (meGetHoursPerWeek(m.hoursPerWeek) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
-  const prodCapacity = teamArray.filter(m => (m.group || '') === 'Production').reduce((sum, m) => sum + (meGetHoursPerWeek(m.hoursPerWeek) * ((m.utilisation || 80) / 100) * weeksPerMonth), 0).toFixed(1);
+  const capTotals = teamArray.reduce((acc, member) => {
+    const c = meGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100) * weeksPerMonth;
+    acc.total += c;
+    if ((member.group || '') === 'NPI') acc.npi += c;
+    if ((member.group || '') === 'Production') acc.prod += c;
+    return acc;
+  }, { total: 0, npi: 0, prod: 0 });
+  const totalCapacity = capTotals.total.toFixed(1);
+  const npiCapacity = capTotals.npi.toFixed(1);
+  const prodCapacity = capTotals.prod.toFixed(1);
 
   // Calculate holidays this month
   const today = new Date();
