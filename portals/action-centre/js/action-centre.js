@@ -246,30 +246,29 @@ function renderActionCentre() {
     const goBtn = `<button class="btn btn-ghost btn-sm" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}')">→ Open</button>`;
 
     return `<tr class="${item._overdue ? 'row-overdue' : ''}">
-      <td><a class="ac-project-link" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}')">${esc(item.projectName)}</a></td>
-      <td>${typeChip}</td>
-      <td style="max-width:320px">${esc(item.description)}</td>
-      <td>${dueCell}</td>
-      <td>${statusCell}</td>
-      <td style="text-align:right">${goBtn}</td>
+      <td class="ac-col-project"><a class="ac-project-link" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}')">${esc(item.projectName)}</a></td>
+      <td class="ac-col-type">${typeChip}</td>
+      <td class="ac-col-desc">${esc(item.description)}</td>
+      <td class="ac-col-due">${dueCell}</td>
+      <td class="ac-col-status">${statusCell}</td>
+      <td class="ac-col-action">${goBtn}</td>
     </tr>`;
   }).join('');
 
   const tableOrEmpty = tabFiltered.length === 0
     ? emptyState('✅', 'All clear!',
         actionCentreStatusFilter === 'open' ? 'No open items assigned to you' : 'Nothing to show with this filter')
-    : `<div class="sticky-card-scroll">
-        <table class="tbl" style="width:100%;table-layout:fixed">
-          <colgroup>
-            <col style="width:180px">
-            <col style="width:80px">
-            <col>
-            <col style="width:110px">
-            <col style="width:120px">
-            <col style="width:90px">
-          </colgroup>
+    : `<div class="ac-table-wrap">
+        <table class="tbl ac-table">
           <thead>
-            <tr><th>Project</th><th>Type</th><th>Description</th><th>Due</th><th>Status</th><th></th></tr>
+            <tr>
+              <th class="ac-col-project">Project</th>
+              <th class="ac-col-type">Type</th>
+              <th class="ac-col-desc">Description</th>
+              <th class="ac-col-due">Due</th>
+              <th class="ac-col-status">Status</th>
+              <th class="ac-col-action"></th>
+            </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
