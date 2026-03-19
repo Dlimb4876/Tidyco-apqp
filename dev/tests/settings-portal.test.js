@@ -43,6 +43,18 @@ global.workAreasDataGetAll = jest.fn(() => global.workAreasState.workAreas);
 global.workAreasDataAddWorkArea = jest.fn().mockResolvedValue({});
 global.workAreasDataUpdateWorkArea = jest.fn().mockResolvedValue({});
 
+// Mock localStorage for Appearance tab tests
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: jest.fn((key) => store[key] ?? null),
+    setItem: jest.fn((key, val) => { store[key] = String(val); }),
+    removeItem: jest.fn((key) => { delete store[key]; }),
+    clear: jest.fn(() => { store = {}; }),
+  };
+})();
+Object.defineProperty(global, 'localStorage', { value: localStorageMock, writable: true });
+
 global.familiesState = {
   families: [
     { id: 'fam-1', name: 'HVAC', label: 'HVAC Systems', icon: '❄️', description: 'Heating and cooling' },
@@ -142,12 +154,26 @@ describe('renderSettings()', () => {
     global.settingsActiveTab = 'families'; // reset
   });
 
-  it('includes all four tab content divs', () => {
+  it('includes all tab content divs', () => {
     const result = renderSettings(); // eslint-disable-line no-undef
     expect(result).toContain('id="settingsFamiliesTab"');
     expect(result).toContain('id="settingsWorkAreasTab"');
     expect(result).toContain('id="settingsPermissionsTab"');
     expect(result).toContain('id="settingsRoleDefinitionsTab"');
+    expect(result).toContain('id="settingsAppearanceTab"');
+    expect(result).toContain('id="settingsAboutTab"');
+  });
+
+  it('contains Appearance nav item', () => {
+    const result = renderSettings(); // eslint-disable-line no-undef
+    expect(result).toContain('Appearance');
+    expect(result).toContain('data-tab="appearance"');
+  });
+
+  it('contains About nav item', () => {
+    const result = renderSettings(); // eslint-disable-line no-undef
+    expect(result).toContain('About');
+    expect(result).toContain('data-tab="about"');
   });
 });
 
@@ -533,5 +559,138 @@ describe('Teams Tab - Permissions Editor', () => {
     expect(html).toContain('Manage capacity');
     expect(html).toContain('Change user roles');
     expect(html).toContain('Access Settings page');
+  });
+});
+
+describe('renderSettingsAppearanceTab()', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    if (!document.getElementById('settingsAppearanceTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsAppearanceTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders the section heading', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('Appearance');
+  });
+
+  it('renders organisation name input with placeholder', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('ap-orgName');
+    expect(container.innerHTML).toContain('TIDYCO');
+  });
+
+  it('renders app sub-title input', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('ap-appSubtitle');
+  });
+
+  it('renders density radio buttons', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('ap-density');
+    expect(container.innerHTML).toContain('Normal');
+    expect(container.innerHTML).toContain('Compact');
+  });
+
+  it('renders toast duration radio buttons', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('ap-toast');
+    expect(container.innerHTML).toContain('Short');
+    expect(container.innerHTML).toContain('Long');
+  });
+
+  it('renders save and reset buttons', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('settings-appearance-save');
+    expect(container.innerHTML).toContain('settings-appearance-reset');
+  });
+
+  it('pre-fills saved preferences', () => {
+    localStorage.setItem('tidyco_prefs', JSON.stringify({ orgName: 'AcmeCo', tableDensity: 'compact' }));
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('AcmeCo');
+  });
+
+  it('does nothing when container is missing', () => {
+    const existing = document.getElementById('settingsAppearanceTab');
+    if (existing) existing.remove();
+    expect(() => renderSettingsAppearanceTab()).not.toThrow(); // eslint-disable-line no-undef
+    // restore
+    const el = document.createElement('div');
+    el.id = 'settingsAppearanceTab';
+    document.body.appendChild(el);
+  });
+});
+
+describe('settingsLoadAppearancePrefs() / settingsSaveAppearancePrefs()', () => {
+  beforeEach(() => { localStorage.clear(); });
+
+  it('returns empty object when no prefs stored', () => {
+    const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
+    expect(typeof prefs).toBe('object');
+  });
+
+  it('round-trips prefs through save and load', () => {
+    settingsSaveAppearancePrefs({ orgName: 'TestOrg', tableDensity: 'compact' }); // eslint-disable-line no-undef
+    const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
+    expect(prefs.orgName).toBe('TestOrg');
+    expect(prefs.tableDensity).toBe('compact');
+  });
+});
+
+describe('renderSettingsAboutTab()', () => {
+  beforeEach(() => {
+    if (!document.getElementById('settingsAboutTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsAboutTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders the section heading', () => {
+    renderSettingsAboutTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAboutTab');
+    expect(container.innerHTML).toContain('About');
+  });
+
+  it('renders the app name card', () => {
+    renderSettingsAboutTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAboutTab');
+    expect(container.innerHTML).toContain('Tidyco Operations Portal');
+  });
+
+  it('renders the keyboard shortcuts table', () => {
+    renderSettingsAboutTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAboutTab');
+    expect(container.innerHTML).toContain('Keyboard Shortcuts');
+    expect(container.innerHTML).toContain('Escape');
+    expect(container.innerHTML).toContain('Cancel edit');
+  });
+
+  it('renders the support section', () => {
+    renderSettingsAboutTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAboutTab');
+    expect(container.innerHTML).toContain('Support');
+    expect(container.innerHTML).toContain('Feedback');
+  });
+
+  it('does nothing when container is missing', () => {
+    const existing = document.getElementById('settingsAboutTab');
+    if (existing) existing.remove();
+    expect(() => renderSettingsAboutTab()).not.toThrow(); // eslint-disable-line no-undef
+    // restore
+    const el = document.createElement('div');
+    el.id = 'settingsAboutTab';
+    document.body.appendChild(el);
   });
 });

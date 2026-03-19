@@ -58,7 +58,7 @@ let abcEditTarget = null;           // index into abcCatalogueData during edit, 
 let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
 
 // Settings portal active tab
-let settingsActiveTab = 'families'; // 'families' | 'work-areas' | 'permissions' | 'role-definitions' | 'teams'
+let settingsActiveTab = 'families'; // 'families' | 'work-areas' | 'permissions' | 'role-definitions' | 'teams' | 'appearance' | 'about'
 
 // Teams management state
 let teamsState = {
