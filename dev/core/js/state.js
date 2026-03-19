@@ -58,7 +58,20 @@ let abcEditTarget = null;           // index into abcCatalogueData during edit, 
 let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
 
 // Settings portal active tab
-let settingsActiveTab = 'families'; // 'families' | 'work-areas' | 'permissions' | 'role-definitions'
+let settingsActiveTab = 'families'; // 'families' | 'work-areas' | 'permissions' | 'role-definitions' | 'teams'
+
+// Teams management state
+let teamsState = {
+  teams: [],
+  teamPermissions: {}, // { teamId: [{ permission, allowed }] }
+  loading: false,
+  error: null
+};
+let settingsTeamsEditingId = null;
+let settingsTeamsPermissionsEditingId = null;
+let settingsTeamsData = null;
+let settingsTeamsLoading = false;
+let settingsTeamsError = null;
 
 // Presence map: { [progId]: [{ email, ts }] }
 // Tracks other users currently viewing the same project (updated via Broadcast).

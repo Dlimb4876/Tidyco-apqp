@@ -63,6 +63,22 @@ global.workAreasState = {
   loading: false
 };
 
+// Teams data and mock functions
+global.teamsDataLoadAll = jest.fn().mockResolvedValue([
+  { id: 'team-1', name: 'Manufacturing', team_type: 'ME', description: 'Manufacturing Engineering', created_at: '2026-03-01T00:00:00Z', userCount: 2 },
+  { id: 'team-2', name: 'Project Mgmt', team_type: 'PM', description: 'Project Management', created_at: '2026-03-01T00:00:00Z', userCount: 1 },
+]);
+global.teamsDataGetUserCount = jest.fn().mockResolvedValue(0);
+global.teamsDataAdd = jest.fn().mockResolvedValue({ id: 'team-3', name: 'New Team', team_type: 'OPS', description: '', created_at: new Date().toISOString() });
+global.teamsDataUpdate = jest.fn().mockResolvedValue(true);
+global.teamsDataDelete = jest.fn().mockResolvedValue(true);
+global.teamsDataLoadPermissions = jest.fn().mockResolvedValue([
+  { permission: 'view_all_project_data', allowed: true },
+  { permission: 'edit_projects_tasks_schedules', allowed: true },
+  { permission: 'add_delete_records', allowed: false },
+]);
+global.teamPermissionsDataSave = jest.fn().mockResolvedValue(true);
+
 // Load settings.js — replace `let` with `var` so internal state variables
 // live in the module-level scope and can be modified from tests via eval()
 const src = fs.readFileSync(
@@ -372,5 +388,150 @@ describe('renderSettingsRoleDefinitionsTab()', () => {
     const el = document.createElement('div');
     el.id = 'settingsRoleDefinitionsTab';
     document.body.appendChild(el);
+  });
+});
+
+describe('renderSettingsTeamsTab()', () => {
+  beforeEach(() => {
+    if (!document.getElementById('settingsTeamsTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsTeamsTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders teams table when teams are loaded', async () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Manufacturing', team_type: 'ME', userCount: 2 },
+      { id: 'team-2', name: 'Project Mgmt', team_type: 'PM', userCount: 1 },
+    ]);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Manufacturing');
+    expect(container.innerHTML).toContain('Project Mgmt');
+    expect(container.innerHTML).toContain('Teams');
+  });
+
+  it('renders add team button', () => {
+    setInternal('settingsTeamsData', []);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Add Team');
+  });
+
+  it('shows loading state when teams are loading', () => {
+    setInternal('settingsTeamsLoading', true);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Loading teams');
+  });
+
+  it('shows error message when load fails', () => {
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', 'Database connection failed');
+    setInternal('settingsTeamsData', []);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Database connection failed');
+    expect(container.innerHTML).toContain('Retry');
+  });
+
+  it('displays user count for each team', () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Engineering', team_type: 'ME', userCount: 5 },
+      { id: 'team-2', name: 'Quality', team_type: 'OPS', userCount: 3 },
+    ]);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('<td style="text-align:center">5</td>');
+    expect(container.innerHTML).toContain('<td style="text-align:center">3</td>');
+  });
+
+  it('shows edit and delete buttons for each team', () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Engineering', team_type: 'ME', userCount: 2 },
+    ]);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('data-action="settings-teams-edit"');
+    expect(container.innerHTML).toContain('data-action="settings-teams-delete"');
+  });
+
+  it('shows suggestion for default teams when list is empty', () => {
+    setInternal('settingsTeamsData', []);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('No teams created yet');
+    expect(container.innerHTML).toContain('ME');
+    expect(container.innerHTML).toContain('PM');
+  });
+});
+
+describe('Teams Tab - Permissions Editor', () => {
+  beforeEach(() => {
+    if (!document.getElementById('settingsTeamsTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsTeamsTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders permissions editor when editing a team', () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Manufacturing', team_type: 'ME' },
+    ]);
+    setInternal('settingsTeamsPermissionsEditingId', 'team-1');
+    setInternal('settingsTeamsPermissionsData', {
+      'team-1': [
+        { permission: 'view_all_project_data', allowed: true },
+        { permission: 'edit_projects_tasks_schedules', allowed: true },
+        { permission: 'add_delete_records', allowed: false },
+      ]
+    });
+    renderSettingsTeamsPermissionsEditor(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Edit Permissions: Manufacturing');
+    expect(container.innerHTML).toContain('View all project data');
+    expect(container.innerHTML).toContain('Save');
+  });
+
+  it('renders all 8 permissions in editor', () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Test Team', team_type: 'ME' },
+    ]);
+    setInternal('settingsTeamsPermissionsEditingId', 'team-1');
+    setInternal('settingsTeamsPermissionsData', {
+      'team-1': [
+        { permission: 'view_all_project_data', allowed: true },
+        { permission: 'edit_projects_tasks_schedules', allowed: true },
+        { permission: 'add_delete_records', allowed: true },
+        { permission: 'manage_families', allowed: false },
+        { permission: 'manage_work_areas', allowed: false },
+        { permission: 'manage_capacity', allowed: false },
+        { permission: 'manage_user_roles', allowed: false },
+        { permission: 'access_settings', allowed: false },
+      ]
+    });
+    renderSettingsTeamsPermissionsEditor(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    const html = container.innerHTML;
+    expect(html).toContain('View all project data');
+    expect(html).toContain('Edit projects');
+    expect(html).toContain('Add &amp; delete records');  // HTML entities
+    expect(html).toContain('Manage product families');
+    expect(html).toContain('Manage work areas');
+    expect(html).toContain('Manage capacity');
+    expect(html).toContain('Change user roles');
+    expect(html).toContain('Access Settings page');
   });
 });
