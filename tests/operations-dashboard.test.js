@@ -62,7 +62,7 @@ global.renderCapacity = jest.fn().mockReturnValue('<div>Capacity</div>');
 global.renderMeCapacity = jest.fn().mockReturnValue('<div>ME Capacity</div>');
 global.renderProdCapacity = jest.fn().mockReturnValue('<div>Prod Capacity</div>');
 global.renderHub = jest.fn().mockReturnValue('<div>Hub</div>');
-global.renderProjects = jest.fn().mockReturnValue('<div>Projects</div>');
+global.hubInit = jest.fn();
 global.meDrawChartNow = jest.fn();
 global.autoResizeAll = jest.fn();
 

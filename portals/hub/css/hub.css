@@ -1,5 +1,101 @@
 /* css/hub.css */
 
+/* ── Hub Action Widget ─────────────────────────────────────────────────── */
+.hub-widget {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.hub-widget-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.hub-widget-avatar {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.hub-widget-user-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.hub-widget-greeting {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.hub-widget-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.hub-widget-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.hub-widget-summary {
+  flex: 1;
+}
+
+.hub-widget-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.hub-widget-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hub-widget-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.hub-widget-num.hub-widget-overdue {
+  color: var(--red, #ef4444);
+}
+
+.hub-widget-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.hub-widget-loading {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.hub-widget-cta {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 /* ── Hub Card ──────────────────────────────────────────────────────────── */
 .hub-card {
     min-height: 160px;
@@ -185,5 +281,38 @@
   .modal-dialog {
     width: 95%;
     max-width: 95%;
+  }
+
+  /* Widget mobile tweaks */
+  .hub-widget {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .hub-widget-sep {
+    width: 100%;
+    height: 1px;
+    align-self: auto;
+  }
+
+  .hub-widget-stats {
+    gap: 24px;
+  }
+
+  .hub-widget-cta {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .hub-widget-cta .btn {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .hub-widget-stats {
+    gap: 28px;
   }
 }

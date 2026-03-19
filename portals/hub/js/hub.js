@@ -1,7 +1,81 @@
 // js/features/hub.js
+
+// ─────────────────────────────────────────────────────────────
+// Hub widget helpers
+// ─────────────────────────────────────────────────────────────
+
+// Triggered after renderHub() paints the DOM so the action widget can
+// load data without blocking the initial paint.
+function hubInit() {
+  if (typeof actionCentreLoad === 'function' && !actionCentreLoading && !actionCentreData) {
+    actionCentreLoad();
+  }
+}
+
+// Builds the "logged in as / my actions summary" widget shown at the top
+// of the hub portal. Gracefully degrades when action data is not yet loaded.
+function renderHubActionWidget() {
+  const name = typeof actionCentreGetMyName === 'function'
+    ? actionCentreGetMyName()
+    : (typeof currentUser !== 'undefined' && currentUser
+        ? (typeof emailToDisplayName === 'function' ? emailToDisplayName(currentUser.email) : currentUser.email)
+        : '');
+
+  let summaryHTML = '';
+
+  if (actionCentreLoading) {
+    summaryHTML = `<span class="hub-widget-loading">Loading actions…</span>`;
+  } else if (actionCentreData && !actionCentreData.error) {
+    const { actions = [], pfmea = [], risks = [] } = actionCentreData;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    const totalOpen =
+      actions.filter(a => a.status !== 'Closed').length +
+      pfmea.filter(p => !p.action_taken).length +
+      risks.filter(r => r.status !== 'Closed').length;
+
+    const totalOverdue =
+      actions.filter(a => a.due_date && a.status !== 'Closed' && new Date(a.due_date) < today).length +
+      pfmea.filter(p => p.action_due && !p.action_taken && new Date(p.action_due) < today).length;
+
+    summaryHTML = `
+      <div class="hub-widget-stats">
+        <div class="hub-widget-stat">
+          <span class="hub-widget-num">${totalOpen}</span>
+          <span class="hub-widget-label">open</span>
+        </div>
+        <div class="hub-widget-stat">
+          <span class="hub-widget-num${totalOverdue > 0 ? ' hub-widget-overdue' : ''}">${totalOverdue}</span>
+          <span class="hub-widget-label">overdue</span>
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="hub-widget">
+      <div class="hub-widget-user">
+        <span class="hub-widget-avatar">👤</span>
+        <div class="hub-widget-user-text">
+          <div class="hub-widget-greeting">Logged in as</div>
+          <div class="hub-widget-name">${esc(name)}</div>
+        </div>
+      </div>
+      ${summaryHTML ? `<div class="hub-widget-sep"></div><div class="hub-widget-summary">${summaryHTML}</div>` : ''}
+      <div class="hub-widget-cta">
+        <button class="btn btn-primary btn-sm" onclick="navigate('action-centre')">✅ My Actions →</button>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Hub render
+// ─────────────────────────────────────────────────────────────
+
 function renderHub() {
   return `
     <div class="proj-home">
+      ${renderHubActionWidget()}
+
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Tidyco Operations Portal</div>
@@ -40,14 +114,6 @@ function renderHub() {
             <div class="hub-icon">🛰️</div>
             <div class="proj-card-name">OPERATIONS DASHBOARD</div>
             <div class="proj-card-meta">Unified overview of all operations, metrics, and risks</div>
-          </div>
-        </div>
-
-        <div class="proj-card hub-card" onclick="navigate('action-centre')">
-          <div class="hub-card-content">
-            <div class="hub-icon">✅</div>
-            <div class="proj-card-name">ACTION CENTRE</div>
-            <div class="proj-card-meta">All actions assigned to me, across every project</div>
           </div>
         </div>
       </div>
