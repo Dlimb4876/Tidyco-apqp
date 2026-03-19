@@ -78,7 +78,7 @@ npi.notify = function(key) {
 
 // ── Realtime sync for shared NPI projects ──────────────────
 let npiRealtimeActive = false
-let npiLoadedProgId = null
+// npiLoadedProgId is declared in state.js
 const NPI_PROJECTS_CHANNEL = 'npi_projects_channel'
 const NPI_TABLES_CHANNEL_PREFIX = 'npi_tables_'
 let npiLastRealtimeUpdateAt = 0

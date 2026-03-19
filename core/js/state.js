@@ -68,6 +68,7 @@ let actionCentreStatusFilter = 'open'; // 'open' | 'all' | 'closed'
 let selectedActionId = null;        // Action ID to scroll to when navigating from Action Centre
 let selectedPfmeaCauseId = null;    // PFMEA cause ID to scroll to when navigating from Action Centre
 let selectedRiskId = null;          // Risk ID to scroll to when navigating from Action Centre
+let npiLoadedProgId = null;         // prog_id of the NPI project whose relational data is currently loaded
 
 // Teams management state
 let teamsState = {
