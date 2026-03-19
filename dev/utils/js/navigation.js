@@ -375,6 +375,9 @@ function render() {
     requestAnimationFrame(() => {
       autoResizeAll();
       if (typeof npi?.events?.setup === 'function') npi.events.setup();
+
+      // Scroll to selected item when navigating from Action Centre
+      scrollToSelectedItem();
     });
   });
 }
@@ -391,6 +394,43 @@ function renderSection() {
   if (currentSection === 'bom') return npi.bom.renderBOM();
   if (currentSection === 'timing') return npi.timing.renderTimingPlan();
   return '';
+}
+
+/**
+ * Scrolls to a selected item when navigating from Action Centre
+ * Clears the selection state after scrolling
+ */
+function scrollToSelectedItem() {
+  if (currentSection === 'actions' && selectedActionId) {
+    const targetRow = document.querySelector(`tr[data-action-id="${selectedActionId}"]`);
+    if (targetRow) {
+      targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetRow.classList.add('pulse');
+      setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+    }
+    selectedActionId = null;
+  }
+
+  if (currentSection === 'risks' && selectedRiskId) {
+    const targetRow = document.querySelector(`tr[data-risk-id="${selectedRiskId}"]`);
+    if (targetRow) {
+      targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetRow.classList.add('pulse');
+      setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+    }
+    selectedRiskId = null;
+  }
+
+  if (currentSection === 'apqp' && selectedPfmeaCauseId) {
+    // For PFMEA, scroll to the row containing the cause
+    const targetRow = document.querySelector(`tr[data-cause-id="${selectedPfmeaCauseId}"]`);
+    if (targetRow) {
+      targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetRow.classList.add('pulse');
+      setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+    }
+    selectedPfmeaCauseId = null;
+  }
 }
 
 // ── Browser back/forward support ─────────────────────────────

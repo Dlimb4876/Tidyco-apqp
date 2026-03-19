@@ -47,7 +47,7 @@ npi.tracker.renderActions = function() {
     const subAsmLabel = hasSubAsms
       ? subAsms.find(s => s.id === a.subAsm)?.name || 'Root'
       : ''
-    return `<tr class="${overdue ? 'row-overdue' : ''}">
+    return `<tr class="${overdue ? 'row-overdue' : ''}" data-action-id="${esc(a.id || '')}">
       <td class="w28 ctr" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${vi + 1}</td>
       <td><textarea class="cell-edit" name="tracker_action_${i}_desc" rows="2" onchange="npi.tracker.updAction(${i},'desc',this.value)" placeholder="Action description">${esc(a.desc)}</textarea></td>
       <td><select class="cell-edit" name="tracker_action_${i}_owner" onchange="npi.tracker.updAction(${i},'owner',this.value)" style="width:100%">${ownerSelectOptions(a.owner)}</select></td>
@@ -135,7 +135,7 @@ npi.tracker.renderRisks = function() {
   const rows = visible.map(({ r, i }, vi) => {
     const score = r.lik * r.imp
     const sc    = score >= 12 ? 'rpn-hi' : score >= 6 ? 'rpn-md' : 'rpn-lo'
-    return `<tr class="${score >= 12 && r.status !== 'Closed' ? 'row-hi' : ''}">
+    return `<tr class="${score >= 12 && r.status !== 'Closed' ? 'row-hi' : ''}" data-risk-id="${esc(r.id || '')}">
       <td style="text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${vi + 1}</td>
       <td><textarea class="cell-edit" name="tracker_risk_${i}_desc" rows="2" onchange="npi.tracker.updRisk(${i},'desc',this.value)" placeholder="Risk description">${esc(r.desc)}</textarea></td>
       <td><select class="cell-edit" name="tracker_risk_${i}_cat" onchange="npi.tracker.updRisk(${i},'cat',this.value)" style="width:100%">${['Technical', 'Supply Chain', 'Schedule', 'Resource', 'Customer', 'Commercial'].map(s => `<option${r.cat === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
