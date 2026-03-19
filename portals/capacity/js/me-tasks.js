@@ -86,7 +86,11 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
   if (sortState.column) {
     const col = sortState.column;
     const dir = sortState.direction === 'asc' ? 1 : -1;
-    
+
+    // Build lookup Maps once so each sort comparison is O(1) instead of O(n)
+    const assigneeMap = new Map(teamArray.map(m => [m.id, m.name]));
+    const productMap = new Map(availableProducts.map(p => [p.id, p.name]));
+
     filteredTasks.sort((a, b) => {
       let valA, valB;
       
@@ -100,12 +104,12 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
           valB = (b.category || '').toLowerCase();
           break;
         case 'assignee':
-          valA = teamArray.find(m => m.id === a.assigneeId)?.name || '';
-          valB = teamArray.find(m => m.id === b.assigneeId)?.name || '';
+          valA = assigneeMap.get(a.assigneeId) || '';
+          valB = assigneeMap.get(b.assigneeId) || '';
           break;
         case 'product':
-          valA = availableProducts.find(p => p.id === a.productId)?.name || '';
-          valB = availableProducts.find(p => p.id === b.productId)?.name || '';
+          valA = productMap.get(a.productId) || '';
+          valB = productMap.get(b.productId) || '';
           break;
         case 'startDate':
           valA = a.startDate || '';
@@ -173,9 +177,9 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
     const catOpts = ME_CATS.map(c => `<option value="${c}" ${task.category === c ? 'selected' : ''}>${c}</option>`).join('');
     const memOpts = '<option value="">Unassigned</option>' + teamArray.map(m => `<option value="${m.id}" ${task.assigneeId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
     const prodOpts = '<option value="">— No Product</option>' + availableProducts.map(p => `<option value="${p.id}" ${task.productId === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
-    const statusOpts = '<option value="SCHEDULED" ' + (task.status === 'SCHEDULED' ? 'selected' : '') + '>Scheduled</option>' +
-      '<option value="STARTED" ' + (task.status === 'STARTED' ? 'selected' : '') + '>Started</option>' +
-      '<option value="COMPLETED" ' + (task.status === 'COMPLETED' ? 'selected' : '') + '>Completed</option>';
+    const statusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(s =>
+      `<option value="${s}"${task.status === s ? ' selected' : ''}>${s[0] + s.slice(1).toLowerCase()}</option>`
+    ).join('');
 
     const setTabFunc = isPM ? 'pmSetTab' : 'meSetTab';
     const debouncedSaveFunc = isPM ? 'pmDebouncedSave' : 'meDebouncedSave';

@@ -8,25 +8,28 @@
 // ══════════════════════════════════════
 // PFMEA — grouped by PFD step, multi-row per step
 // ══════════════════════════════════════
+const PFMEA_RPN_FILTERS = ['all', 'high', 'r1_49', 'r50_99', 'r100_199', 'r200_plus']
+const PFMEA_VIEWS = ['worksheet', 'history']
+
 npi.pfmea.getRpnFilter = function() {
   const cur = (globalThis.pfmeaRpnFilter || 'all').toString()
-  return ['all', 'high', 'r1_49', 'r50_99', 'r100_199', 'r200_plus'].includes(cur) ? cur : 'all'
+  return PFMEA_RPN_FILTERS.includes(cur) ? cur : 'all'
 }
 
 npi.pfmea.setRpnFilter = function(nextFilter) {
   const safe = (nextFilter || 'all').toString()
-  globalThis.pfmeaRpnFilter = ['all', 'high', 'r1_49', 'r50_99', 'r100_199', 'r200_plus'].includes(safe) ? safe : 'all'
+  globalThis.pfmeaRpnFilter = PFMEA_RPN_FILTERS.includes(safe) ? safe : 'all'
   render()
 }
 
 npi.pfmea.getView = function() {
   const cur = (globalThis.pfmeaView || 'worksheet').toString()
-  return ['worksheet', 'history'].includes(cur) ? cur : 'worksheet'
+  return PFMEA_VIEWS.includes(cur) ? cur : 'worksheet'
 }
 
 npi.pfmea.setView = function(nextView) {
   const safe = (nextView || 'worksheet').toString()
-  globalThis.pfmeaView = ['worksheet', 'history'].includes(safe) ? safe : 'worksheet'
+  globalThis.pfmeaView = PFMEA_VIEWS.includes(safe) ? safe : 'worksheet'
   render()
 }
 
