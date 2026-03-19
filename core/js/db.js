@@ -633,6 +633,142 @@ function getPresenceForProg(pid) {
   return presenceMap[pid];
 }
 
+// ── Teams Data Functions ───────────────────────────────────────
+// Team management: CRUD operations for teams and team permissions
+
+async function teamsDataLoadAll() {
+  if (!currentUser) return [];
+  try {
+    const { data, error } = await supa
+      .from('teams')
+      .select('id, name, team_type, description, created_at')
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('Failed to load teams:', err);
+    return [];
+  }
+}
+
+async function teamsDataLoadPermissions(teamId) {
+  if (!teamId || !currentUser) return [];
+  try {
+    const { data, error } = await supa
+      .from('team_permissions')
+      .select('permission, allowed')
+      .eq('team_id', teamId)
+      .order('permission', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('Failed to load team permissions:', err);
+    return [];
+  }
+}
+
+async function teamsDataGetUserCount(teamId) {
+  if (!teamId || !currentUser) return 0;
+  try {
+    const { count, error } = await supa
+      .from('profiles')
+      .select('id', { count: 'exact' })
+      .eq('team_id', teamId);
+    if (error) throw error;
+    return count || 0;
+  } catch (err) {
+    console.error('Failed to count team users:', err);
+    return 0;
+  }
+}
+
+async function teamsDataAdd(team) {
+  if (!currentUser || !team || !team.name || !team.team_type) {
+    console.error('teamsDataAdd: invalid team data');
+    return null;
+  }
+  try {
+    const { data, error } = await supa
+      .from('teams')
+      .insert([{
+        name: team.name,
+        team_type: team.team_type,
+        description: team.description || '',
+        created_by: currentUser.id
+      }])
+      .select('id, name, team_type, description, created_at');
+    if (error) throw error;
+    return data?.[0] || null;
+  } catch (err) {
+    console.error('Failed to create team:', err);
+    return null;
+  }
+}
+
+async function teamsDataUpdate(teamId, updates) {
+  if (!currentUser || !teamId || !updates) return false;
+  try {
+    const { error } = await supa
+      .from('teams')
+      .update({
+        ...updates,
+        updated_by: currentUser.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', teamId);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Failed to update team:', err);
+    return false;
+  }
+}
+
+async function teamsDataDelete(teamId) {
+  if (!currentUser || !teamId) return false;
+  try {
+    const { error } = await supa
+      .from('teams')
+      .delete()
+      .eq('id', teamId);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Failed to delete team:', err);
+    return false;
+  }
+}
+
+async function teamPermissionsDataSave(teamId, permissions) {
+  if (!currentUser || !teamId || !Array.isArray(permissions)) return false;
+  try {
+    // Delete all existing permissions for this team
+    const { error: deleteError } = await supa
+      .from('team_permissions')
+      .delete()
+      .eq('team_id', teamId);
+    if (deleteError) throw deleteError;
+
+    // Insert new permissions
+    if (permissions.length > 0) {
+      const records = permissions.map(p => ({
+        team_id: teamId,
+        permission: p.permission,
+        allowed: p.allowed,
+        updated_by: currentUser.id
+      }));
+      const { error: insertError } = await supa
+        .from('team_permissions')
+        .insert(records);
+      if (insertError) throw insertError;
+    }
+    return true;
+  } catch (err) {
+    console.error('Failed to save team permissions:', err);
+    return false;
+  }
+}
+
 // Expose for use in navigation.js and dashboard.js
 window.broadcastPresence    = broadcastPresence;
 window.stopPresenceBroadcast = stopPresenceBroadcast;
