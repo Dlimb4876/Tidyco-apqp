@@ -168,10 +168,10 @@ async function settingsEnsureTeamsData(forceReload = false) {
 
   try {
     settingsTeamsData = await teamsDataLoadAll();
-    // Load user counts for each team
-    for (const team of settingsTeamsData) {
+    // Load user counts for each team in parallel instead of sequentially
+    await Promise.all(settingsTeamsData.map(async (team) => {
       team.userCount = await teamsDataGetUserCount(team.id);
-    }
+    }));
   } catch (err) {
     settingsTeamsError = err?.message || 'Failed to load teams';
     settingsTeamsData = [];
