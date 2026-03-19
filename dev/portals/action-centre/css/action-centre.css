@@ -103,6 +103,64 @@
   text-decoration: underline;
 }
 
+/* ─── Table Layout ──────────────────────── */
+.ac-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.ac-table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+/* Column sizing */
+.ac-col-project {
+  width: 140px;
+  min-width: 120px;
+}
+
+.ac-col-type {
+  width: 70px;
+  min-width: 65px;
+}
+
+.ac-col-desc {
+  min-width: 200px;
+  width: auto;
+  flex-grow: 1;
+  word-break: break-word;
+}
+
+.ac-col-due {
+  width: 90px;
+  min-width: 80px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ac-col-status {
+  width: 100px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.ac-col-action {
+  width: 80px;
+  min-width: 75px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ac-table tbody tr:hover {
+  background-color: var(--bg-subtle, #f9fafb);
+}
+
+.row-overdue {
+  background-color: rgba(239, 68, 68, 0.04) !important;
+}
+
 /* ── Mobile ──────────────────────────────── */
 @media (max-width: 767px) {
   .ac-kpis {
@@ -118,11 +176,77 @@
   .ac-filter-group {
     justify-content: center;
   }
+
+  .ac-table {
+    font-size: 0.875rem;
+  }
+
+  .ac-col-project {
+    width: 100px;
+    min-width: 90px;
+    padding: 8px 6px !important;
+  }
+
+  .ac-col-type {
+    width: 60px;
+    min-width: 55px;
+    padding: 8px 4px !important;
+  }
+
+  .ac-col-desc {
+    min-width: 150px;
+    padding: 8px 6px !important;
+  }
+
+  .ac-col-due {
+    width: 70px;
+    min-width: 65px;
+    padding: 8px 4px !important;
+    font-size: 0.8rem;
+  }
+
+  .ac-col-status {
+    width: 80px;
+    min-width: 70px;
+    padding: 8px 4px !important;
+  }
+
+  .ac-col-action {
+    width: 60px;
+    min-width: 55px;
+    padding: 8px 4px !important;
+  }
+
+  .ac-type-chip {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+
+  .ac-table thead th {
+    font-size: 0.75rem;
+    padding: 8px 4px;
+  }
+
+  .ac-table tbody td {
+    padding: 8px 6px;
+  }
 }
 
 /* ── Desktop ─────────────────────────────── */
 @media (min-width: 768px) {
   .ac-kpi {
     min-width: 120px;
+  }
+
+  .ac-table thead th {
+    padding: 12px 10px;
+  }
+
+  .ac-table tbody td {
+    padding: 10px 10px;
+  }
+
+  .ac-project-link {
+    white-space: normal;
   }
 }
