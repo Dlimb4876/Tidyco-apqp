@@ -42,6 +42,14 @@ function renderHub() {
             <div class="proj-card-meta">Unified overview of all operations, metrics, and risks</div>
           </div>
         </div>
+
+        <div class="proj-card hub-card" onclick="navigate('action-centre')">
+          <div class="hub-card-content">
+            <div class="hub-icon">✅</div>
+            <div class="proj-card-name">ACTION CENTRE</div>
+            <div class="proj-card-meta">All actions assigned to me, across every project</div>
+          </div>
+        </div>
       </div>
     </div>`;
 }
