@@ -103,9 +103,22 @@ async function actionCentreLoad() {
 
 // Navigate to the project that owns a given DB project ID, then to `section`.
 // Optionally scroll to a specific item by ID.
+//
+// NPI sub-tables (npi_actions, npi_pfmea_causes, npi_risks) store the database
+// primary key UUID (projects.id, held as db.projects[i].dbId) as their project_id.
+// progId must be the application-level UUID (projects.prog_id, held as
+// db.projects[i].id), so we resolve the value through db.projects before navigating.
 function actionCentreGoTo(projectDbId, section, itemId) {
   if (!projectDbId) return;
-  progId = projectDbId;
+
+  // Resolve: look up by dbId first (DB PK UUID stored by npi sub-tables),
+  // then fall back to id match (in case they are identical in this deployment).
+  const project = db.projects.find(p => p.dbId === projectDbId || p.id === projectDbId);
+  if (!project) {
+    showToast('Project not found — please refresh the page', 'warning');
+    return;
+  }
+  progId = project.id;
 
   // Set the item to scroll to based on section type
   if (section === 'actions') selectedActionId = itemId;

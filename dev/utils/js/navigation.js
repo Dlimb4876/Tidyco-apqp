@@ -397,18 +397,29 @@ function renderSection() {
 }
 
 /**
- * Scrolls to a selected item when navigating from Action Centre
- * Clears the selection state after scrolling
+ * Scrolls to a selected item when navigating from Action Centre.
+ * NPI relational data loads asynchronously, so the first render after
+ * navigation may not yet have the row in the DOM.  The selected IDs are
+ * therefore kept in state until the row is actually found; they are cleared
+ * only on a successful scroll (or when the data is confirmed loaded but the
+ * row still cannot be found, meaning the item no longer exists).
  */
 function scrollToSelectedItem() {
+  // npiLoadedProgId (state.js) is set to progId when npiRelLoad completes.
+  const npiDataReady = npiLoadedProgId === progId;
+
   if (currentSection === 'actions' && selectedActionId) {
     const targetRow = document.querySelector(`tr[data-action-id="${selectedActionId}"]`);
     if (targetRow) {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       targetRow.classList.add('pulse');
       setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+      selectedActionId = null;
+    } else if (npiDataReady) {
+      // Data is loaded but row not found — item was deleted or ID is wrong; stop retrying.
+      selectedActionId = null;
     }
-    selectedActionId = null;
+    // If data not yet loaded, keep selectedActionId so the post-load render retries.
   }
 
   if (currentSection === 'risks' && selectedRiskId) {
@@ -417,8 +428,10 @@ function scrollToSelectedItem() {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       targetRow.classList.add('pulse');
       setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+      selectedRiskId = null;
+    } else if (npiDataReady) {
+      selectedRiskId = null;
     }
-    selectedRiskId = null;
   }
 
   if (currentSection === 'apqp' && selectedPfmeaCauseId) {
@@ -428,8 +441,10 @@ function scrollToSelectedItem() {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       targetRow.classList.add('pulse');
       setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+      selectedPfmeaCauseId = null;
+    } else if (npiDataReady) {
+      selectedPfmeaCauseId = null;
     }
-    selectedPfmeaCauseId = null;
   }
 }
 
