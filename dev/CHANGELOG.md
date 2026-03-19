@@ -5,6 +5,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-19 | Efficiency refactor: DRY helpers, null guard, O(n²) fix, parallel queries | Six targeted improvements found by code review: (1) db.js rowToProject() eliminates 3 identical 20-field row-mapping blocks so a new column only needs adding once; (2) state.js teamsState removed — declared but never read; (3) dashboard.js null guard added for prog() to prevent a crash when the selected project is deleted mid-session, plus apqpCompletionPct()/bomTotalItems() helpers replace 4 inline duplicates; (4) capacity-events.js capTaskFilters()/capTaskRefresh() helpers replace 12 repeated ME/PM dispatch blocks; (5) me-data.js O(n²) product sync loop replaced with a Map lookup and meNormalizeTaskRow() removes a duplicated 11-field object; (6) settings.js team user-count queries now run in parallel with Promise.all instead of sequentially.
+
 ## 2026-03-19 | Fix PFMEA actions wrongly marked as Done in Action Centre | Typing in the "Action Taken" field was setting status to Closed; Done should only occur when the action is formally implemented and logged to PFMEA history (at which point action_desc is cleared and the item no longer appears in the list). Status now shows "In Progress" when action_taken has content, and overdue detection no longer treats action_taken as a completion indicator.
 
 ## 2026-03-19 | Add product name display in topbar for project-specific pages | When navigating to project sections (APQP, capacity, production, etc.), the project name now appears in the topbar breadcrumb so users can immediately see which project they're working on, improving navigation clarity and reducing confusion.

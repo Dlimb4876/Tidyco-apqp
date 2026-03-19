@@ -74,12 +74,6 @@ let selectedRiskId = null;          // Risk ID to scroll to when navigating from
 let npiLoadedProgId = null;         // prog_id of the NPI project whose relational data is currently loaded
 
 // Teams management state
-let teamsState = {
-  teams: [],
-  teamPermissions: {}, // { teamId: [{ permission, allowed }] }
-  loading: false,
-  error: null
-};
 let settingsTeamsEditingId = null;
 let settingsTeamsPermissionsEditingId = null;
 let settingsTeamsData = null;

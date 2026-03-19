@@ -21,6 +21,17 @@ function capIsPM(el) {
   return ctx ? ctx.getAttribute('data-cap-context') === 'pm' : false
 }
 
+// Return the task-filters state object for the current ME or PM context.
+function capTaskFilters(isPM) {
+  return isPM ? window.pmTasksFilters : window.meTasksFilters
+}
+
+// Re-render the tasks tab for the current ME or PM context.
+function capTaskRefresh(isPM) {
+  if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
+  else meSetTab('tasks')
+}
+
 window.capacityEvents = {}
 
 window.capacityEvents.setup = function() {
@@ -90,8 +101,7 @@ window.capacityEvents._onClick = function(evt) {
     if (idx < 0) break
     if (confirm('Delete task?')) {
       meDataDeleteTask(idx); meOnSave()
-      if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-      else meSetTab('tasks')
+      capTaskRefresh(isPM)
     }
     break
   }
@@ -102,55 +112,49 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-task-clear-search': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.search = ''
+    const f = capTaskFilters(isPM)
+    if (f) f.search = ''
     const inp = document.querySelector('.me-filter-input')
     if (inp) inp.value = ''
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-clear-category': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.category = 'all'
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.category = 'all'
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-clear-assignee': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.assignee = 'all'
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.assignee = 'all'
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-clear-product': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.product = 'all'
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.product = 'all'
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-toggle-hide-completed': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
+    const f = capTaskFilters(isPM)
     const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
-    if (filterStateVar) {
-      filterStateVar.hideCompleted = !filterStateVar.hideCompleted
-      localStorage.setItem(storageKey, filterStateVar.hideCompleted)
+    if (f) {
+      f.hideCompleted = !f.hideCompleted
+      localStorage.setItem(storageKey, f.hideCompleted)
     }
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-clear-all-filters': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
+    const f = capTaskFilters(isPM)
     const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
-    const hideVal = filterStateVar ? filterStateVar.hideCompleted : false
-    if (filterStateVar) {
-      Object.assign(filterStateVar, { search: '', category: 'all', assignee: 'all', product: 'all', hideCompleted: hideVal })
+    const hideVal = f ? f.hideCompleted : false
+    if (f) {
+      Object.assign(f, { search: '', category: 'all', assignee: 'all', product: 'all', hideCompleted: hideVal })
     }
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    capTaskRefresh(isPM)
     break
   }
 
@@ -235,24 +239,21 @@ window.capacityEvents._onChange = function(evt) {
     break
   }
   case 'cap-task-filter-category': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.category = el.value
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.category = el.value
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-filter-assignee': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.assignee = el.value
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.assignee = el.value
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-filter-product': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.product = el.value
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.product = el.value
+    capTaskRefresh(isPM)
     break
   }
 
