@@ -420,9 +420,27 @@ npi.dashboard.renderNpiSlimCard = function (product, project) {
   </div>`
 }
 
+// ── Shared APQP completion helpers ───────────────────────────
+// Used by renderDashboard (main project), sub-assembly cards, and the
+// sub-assembly average completion reducer — defined once to avoid drift.
+function apqpCompletionPct(project) {
+  const done = ['ctq', 'pfd', 'pfmea', 'cp'].filter(
+    (k) => (project[k] || []).length > 0
+  ).length
+  return Math.round((done / 4) * 100)
+}
+
+function bomTotalItems(project) {
+  return Object.keys(BOM_TYPES).reduce(
+    (n, k) => n + ((project.bom && project.bom[k]) ? project.bom[k].length : 0),
+    0
+  )
+}
+
 // ── Dashboard ─────────────────────────────────────────────────
 npi.dashboard.renderDashboard = function () {
   const p = prog()
+  if (!p) return '<div class="mc-shell"><p style="padding:24px;color:var(--muted)">No project selected.</p></div>'
   const openAct = p.actions.filter((a) => a.status !== 'Closed').length
   const overdueAct = p.actions.filter(
     (a) => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()
@@ -438,11 +456,8 @@ npi.dashboard.renderDashboard = function () {
   const parentProg = p.parentId ? db.projects.find((x) => x.id === p.parentId) : null
 
   if (parentProg) {
-    const childBomItems = Object.keys(BOM_TYPES).reduce((n, k) => n + (p.bom[k] || []).length, 0)
-    const apqpSectionsDone = ['ctq', 'pfd', 'pfmea', 'cp'].filter(
-      (k) => (p[k] || []).length > 0
-    ).length
-    const apqpPct = Math.round((apqpSectionsDone / 4) * 100)
+    const childBomItems = bomTotalItems(p)
+    const apqpPct = apqpCompletionPct(p)
     const linkedInParent = (parentProg.subAssemblies || []).find((x) => x.id === p.id)
     const linkedKit = linkedInParent
       ? (parentProg.bom.kits || []).find((k) => k.id === linkedInParent.kitId)
@@ -489,7 +504,7 @@ npi.dashboard.renderDashboard = function () {
     </div>`
   }).join('')
 
-  const totalBomItems = Object.keys(BOM_TYPES).reduce((n, k) => n + p.bom[k].length, 0)
+  const totalBomItems = bomTotalItems(p)
   const sections = [
     {
       id: 'timing',
@@ -535,14 +550,8 @@ npi.dashboard.renderDashboard = function () {
       .map((link, li) => {
         const sp = db.projects.find((x) => x.id === link.id)
         if (!sp) return ''
-        const apqpSectionsDone = ['ctq', 'pfd', 'pfmea', 'cp'].filter(
-          (k) => (sp[k] || []).length > 0
-        ).length
-        const apqpPct = Math.round((apqpSectionsDone / 4) * 100)
-        const bomItemCount = Object.keys(BOM_TYPES).reduce(
-          (sum, k) => sum + (sp.bom && sp.bom[k] ? sp.bom[k].length : 0),
-          0
-        )
+        const apqpPct = apqpCompletionPct(sp)
+        const bomItemCount = bomTotalItems(sp)
         const linkedKit = (p.bom.kits || []).find((k) => k.id === link.kitId)
         return `<div class="sub-asm-card" onclick="npi.nav.openProjectById('${sp.id}')">
         <div class="sub-asm-card-head">
@@ -574,10 +583,7 @@ npi.dashboard.renderDashboard = function () {
           p.subAssemblies.reduce((sum, link) => {
             const sp = db.projects.find((x) => x.id === link.id)
             if (!sp) return sum
-            const apqpSectionsDone = ['ctq', 'pfd', 'pfmea', 'cp'].filter(
-              (k) => (sp[k] || []).length > 0
-            ).length
-            return sum + (apqpSectionsDone / 4) * 100
+            return sum + apqpCompletionPct(sp)
           }, 0) / subAsmCount
         )
       : 0

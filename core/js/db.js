@@ -58,6 +58,36 @@ function buildProjectRow(p, now, email) {
   return row;
 }
 
+// ── Row → in-memory project ────────────────────────────────────
+// Single source of truth for mapping a Supabase `projects` row to the
+// shape used throughout the app.  Used by loadRemote(), loadRemotePage(),
+// and the realtime onInsert handler so that adding a new column only
+// requires a change in one place.
+function rowToProject(row) {
+  return {
+    dbId:                     row.id || null,
+    id:                       row.prog_id,
+    name:                     row.name,
+    customer:                 row.customer                 || '',
+    unit:                     row.unit_name                || '',
+    family:                   row.family                   || '',
+    lead:                     row.lead                     || '',
+    pm:                       row.pm                       || '',
+    date:                     row.start_date               || '',
+    ganttStart:               row.gantt_start              || '',
+    ganttCollapsed:           row.gantt_collapsed          || [],
+    subAssemblies:            row.sub_assembly_ids         || [],
+    status:                   row.prog_status              || 'Active',
+    qNumber:                  row.q_number                 || '',
+    partNumber:               row.part_number              || '',
+    product_id:               row.product_id               || null,
+    gate_selections:          row.gate_selections          || null,
+    gate_selection_locked:    !!row.gate_selection_locked,
+    gate_selection_locked_at: row.gate_selection_locked_at || null,
+    gate_selection_locked_by: row.gate_selection_locked_by || null,
+  };
+}
+
 // ── Auto-resize textareas ─────────────────────────────────────
 function autoResizeAll() {
   document.querySelectorAll('textarea[data-autoresize]').forEach(el => {
@@ -213,28 +243,7 @@ async function loadRemote() {
 
   if (error) { console.error('Load error', error); return; }
   if (data && data.length > 0) {
-    db.projects = data.map(row => migrateprog({
-      dbId:           row.id || null,
-      id:             row.prog_id,
-      name:           row.name,
-      customer:       row.customer          || '',
-      unit:           row.unit_name         || '',
-      family:         row.family            || '',
-      lead:           row.lead              || '',
-      pm:             row.pm                || '',
-      date:           row.start_date        || '',
-      ganttStart:     row.gantt_start       || '',
-      ganttCollapsed: row.gantt_collapsed   || [],
-      subAssemblies:  row.sub_assembly_ids  || [],
-      status:         row.prog_status       || 'Active',
-      qNumber:        row.q_number          || '',
-      partNumber:     row.part_number       || '',
-      product_id:     row.product_id        || null,
-      gate_selections: row.gate_selections || null,
-      gate_selection_locked: !!row.gate_selection_locked,
-      gate_selection_locked_at: row.gate_selection_locked_at || null,
-      gate_selection_locked_by: row.gate_selection_locked_by || null,
-    }));
+    db.projects = data.map(row => migrateprog(rowToProject(row)));
     const last = data[0];
     if (last.updated_by) {
       const who  = last.updated_by.split('@')[0];
@@ -273,28 +282,7 @@ async function loadRemotePage(page, pageSize = 50) {
 
   if (error) { console.error('Load page error', error); return; }
 
-  const rows = (data || []).map(row => migrateprog({
-    dbId:            row.id || null,
-    id:              row.prog_id,
-    name:            row.name,
-    customer:        row.customer          || '',
-    unit:            row.unit_name         || '',
-    family:          row.family            || '',
-    lead:            row.lead              || '',
-    pm:              row.pm                || '',
-    date:            row.start_date        || '',
-    ganttStart:      row.gantt_start       || '',
-    ganttCollapsed:  row.gantt_collapsed   || [],
-    subAssemblies:   row.sub_assembly_ids  || [],
-    status:          row.prog_status       || 'Active',
-    qNumber:         row.q_number          || '',
-    partNumber:      row.part_number       || '',
-    product_id:      row.product_id        || null,
-    gate_selections:          row.gate_selections          || null,
-    gate_selection_locked:    !!row.gate_selection_locked,
-    gate_selection_locked_at: row.gate_selection_locked_at || null,
-    gate_selection_locked_by: row.gate_selection_locked_by || null,
-  }));
+  const rows = (data || []).map(row => migrateprog(rowToProject(row)));
 
   if (page === 0) {
     db.projects = rows;
@@ -472,28 +460,7 @@ function subscribeProjectsGlobally() {
   createRealtimeSubscription('projects', 'global_projects_channel', {
     onInsert: (row) => {
       if (db.projects.find(p => p.id === row.prog_id)) return; // already known
-      const newProg = migrateprog({
-        dbId:            row.id || null,
-        id:              row.prog_id,
-        name:            row.name            || '',
-        customer:        row.customer        || '',
-        unit:            row.unit_name       || '',
-        family:          row.family          || '',
-        lead:            row.lead            || '',
-        pm:              row.pm              || '',
-        date:            row.start_date      || '',
-        ganttStart:      row.gantt_start     || '',
-        ganttCollapsed:  row.gantt_collapsed || [],
-        subAssemblies:   row.sub_assembly_ids || [],
-        status:          row.prog_status     || 'Active',
-        qNumber:         row.q_number        || '',
-        partNumber:      row.part_number     || '',
-        product_id:      row.product_id      || null,
-        gate_selections:        row.gate_selections         || null,
-        gate_selection_locked:  !!row.gate_selection_locked,
-        gate_selection_locked_at: row.gate_selection_locked_at  || null,
-        gate_selection_locked_by: row.gate_selection_locked_by  || null,
-      });
+      const newProg = migrateprog(rowToProject(row));
       db.projects.unshift(newProg);
       try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
       if (currentSection === 'hub' || currentSection === 'projects') {

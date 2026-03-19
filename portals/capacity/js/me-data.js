@@ -300,12 +300,16 @@ function meDataAutoSyncDepartmentProducts(department) {
     if (p && p.id) dbMap[p.id] = p;
   });
 
-  // Update or create department-tagged products from the master products DB
+  // Update or create department-tagged products from the master products DB.
+  // Build a Map keyed by productDatabaseId so each lookup is O(1) instead of O(n).
+  const existingByDbId = new Map(
+    meDataState.products
+      .filter(meP => meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment && meP.productDatabaseId)
+      .map(meP => [meP.productDatabaseId, meP])
+  );
+
   dbProducts.forEach(dbProduct => {
-    const existing = meDataState.products.find(meP =>
-      meP.productDatabaseId === dbProduct.id &&
-      meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment
-    );
+    const existing = existingByDbId.get(dbProduct.id);
 
     if (existing) {
       existing.name = dbProduct.name;
@@ -660,6 +664,25 @@ function meUUID() {
 // Real-Time Sync (Generic System)
 // ─────────────────────────────────────────────────────────────
 
+// Maps a raw Supabase me_tasks row to the camelCase shape used in meDataState.
+// Single source of truth used by both the onInsert and onUpdate handlers.
+function meNormalizeTaskRow(row) {
+  return {
+    id: row.id,
+    name: row.name || '',
+    category: row.category || 'NPI',
+    type: row.type || 'standard',
+    department: meNormalizeDepartmentTag(row.department, 'ME'),
+    assigneeId: row.assignee_id || '',
+    productId: row.product_id || '',
+    startDate: row.start_date || '',
+    endDate: row.end_date || '',
+    totalHours: parseFloat(row.total_hours) || 0,
+    status: row.status || 'SCHEDULED',
+    createdAt: row.created_at || new Date().toISOString()
+  };
+}
+
 window.meDataSubscribe = function() {
   if (!currentUser) return;
   if (typeof render !== 'function') {
@@ -705,20 +728,7 @@ window.meDataSubscribe = function() {
     {
       table: 'me_tasks',
       onInsert: (newTask) => {
-        const normalizedTask = {
-          id: newTask.id,
-          name: newTask.name || '',
-          category: newTask.category || 'NPI',
-          type: newTask.type || 'standard',
-          department: meNormalizeDepartmentTag(newTask.department, 'ME'),
-          assigneeId: newTask.assignee_id || '',
-          productId: newTask.product_id || '',
-          startDate: newTask.start_date || '',
-          endDate: newTask.end_date || '',
-          totalHours: parseFloat(newTask.total_hours) || 0,
-          status: newTask.status || 'SCHEDULED',
-          createdAt: newTask.created_at || new Date().toISOString()
-        };
+        const normalizedTask = meNormalizeTaskRow(newTask);
         if (!meDataState.tasks.some(t => t.id === normalizedTask.id)) {
           meDataState.tasks.push(normalizedTask);
           if (isEditingInlineCell()) {
@@ -729,20 +739,7 @@ window.meDataSubscribe = function() {
         }
       },
       onUpdate: (updatedTask) => {
-        const normalizedTask = {
-          id: updatedTask.id,
-          name: updatedTask.name || '',
-          category: updatedTask.category || 'NPI',
-          type: updatedTask.type || 'standard',
-          department: meNormalizeDepartmentTag(updatedTask.department, 'ME'),
-          assigneeId: updatedTask.assignee_id || '',
-          productId: updatedTask.product_id || '',
-          startDate: updatedTask.start_date || '',
-          endDate: updatedTask.end_date || '',
-          totalHours: parseFloat(updatedTask.total_hours) || 0,
-          status: updatedTask.status || 'SCHEDULED',
-          createdAt: updatedTask.created_at || new Date().toISOString()
-        };
+        const normalizedTask = meNormalizeTaskRow(updatedTask);
 
         const idx = meDataState.tasks.findIndex(t => t.id === normalizedTask.id);
         if (idx < 0) {
