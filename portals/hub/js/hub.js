@@ -31,12 +31,12 @@ function renderHubActionWidget() {
 
     const totalOpen =
       actions.filter(a => a.status !== 'Closed').length +
-      pfmea.filter(p => !p.action_taken).length +
+      pfmea.length +
       risks.filter(r => r.status !== 'Closed').length;
 
     const totalOverdue =
       actions.filter(a => a.due_date && a.status !== 'Closed' && new Date(a.due_date) < today).length +
-      pfmea.filter(p => p.action_due && !p.action_taken && new Date(p.action_due) < today).length;
+      pfmea.filter(p => p.action_due && new Date(p.action_due) < today).length;
 
     summaryHTML = `
       <div class="hub-widget-stats">

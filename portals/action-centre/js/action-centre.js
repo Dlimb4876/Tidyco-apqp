@@ -200,10 +200,10 @@ function renderActionCentre() {
       project_id: p.project_id,
       description: p.action_desc,
       due: p.action_due,
-      status: p.action_taken ? 'Closed' : 'Open',
+      status: p.action_taken ? 'In Progress' : 'Open',
       priority: '—',
       source: 'PFMEA',
-      _overdue: p.action_due && !p.action_taken
+      _overdue: p.action_due
         ? (() => { const d = new Date(p.action_due); d.setHours(0,0,0,0); return d < today; })()
         : false
     })),

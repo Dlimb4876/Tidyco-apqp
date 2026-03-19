@@ -5,6 +5,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-19 | Fix PFMEA actions wrongly marked as Done in Action Centre | Typing in the "Action Taken" field was setting status to Closed; Done should only occur when the action is formally implemented and logged to PFMEA history (at which point action_desc is cleared and the item no longer appears in the list). Status now shows "In Progress" when action_taken has content, and overdue detection no longer treats action_taken as a completion indicator.
+
 ## 2026-03-19 | Add product name display in topbar for project-specific pages | When navigating to project sections (APQP, capacity, production, etc.), the project name now appears in the topbar breadcrumb so users can immediately see which project they're working on, improving navigation clarity and reducing confusion.
 
 ## 2026-03-19 | Fix CTQ/PFD/PFMEA/CP table width and add CTQ filter | Tables and cards were 48px narrower than the project/tab bars because the tab-content wrapper had 24px horizontal padding; removed it so all content aligns. Also added Source, Out-of-Spec Action and Customer Accepted filter dropdowns to the CTQ matrix so users can narrow down a long list of requirements.
