@@ -185,3 +185,41 @@ function isEditingInlineCell() {
   return (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA')
     && !!active.closest('table');
 }
+
+// ── Owner/person helpers ───────────────────────────────────────
+// Derives a display name from an email address prefix.
+// e.g. daniel.limb@tidyco.co.uk → "Daniel Limb"
+function emailToDisplayName(email) {
+  if (!email) return '';
+  const local = email.split('@')[0];
+  return local.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join(' ');
+}
+
+// Returns a list of user display names loaded from profiles.
+// Falls back gracefully when profiles haven't loaded yet.
+function getProfileNames() {
+  if (typeof settingsPermissionsData !== 'undefined' && Array.isArray(settingsPermissionsData)) {
+    return settingsPermissionsData.map(u => u.full_name || emailToDisplayName(u.email)).filter(Boolean);
+  }
+  return [];
+}
+
+// Builds <option> tags for an owner <select> from loaded profiles.
+// Always includes "— Unassigned —" and preserves any legacy free-text value.
+function ownerSelectOptions(currentOwner) {
+  const names = getProfileNames();
+  let opts = '<option value="">— Unassigned —</option>';
+  if (names.length === 0 && currentOwner) {
+    opts += `<option value="${esc(currentOwner)}" selected>${esc(currentOwner)}</option>`;
+    return opts;
+  }
+  names.forEach(name => {
+    const sel = name === currentOwner ? ' selected' : '';
+    opts += `<option value="${esc(name)}"${sel}>${esc(name)}</option>`;
+  });
+  // Preserve legacy free-text values that don't match any profile
+  if (currentOwner && !names.includes(currentOwner)) {
+    opts += `<option value="${esc(currentOwner)}" selected>${esc(currentOwner)}</option>`;
+  }
+  return opts;
+}

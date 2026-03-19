@@ -16,7 +16,8 @@ const SECTION_LABELS = {
   operations: 'Operations Mission Control',
   production: 'Production Planning',
   'product-development': 'Product Development',
-  feedback: 'Feedback & Bugs'
+  feedback: 'Feedback & Bugs',
+  'action-centre': 'Action Centre'
 };
 
 // 1.5 Back button labels — defined once at module level
@@ -26,6 +27,7 @@ const BACK_BUTTON_LABELS = {
   'product-development': '← Back to Product Development',
   operations: '← Back to Operations',
   feedback: '← Back to Feedback & Bugs',
+  'action-centre': '← Back to Hub',
   apqp: '← Back to Project',
   actions: '← Back to Project',
   risks: '← Back to Project',
@@ -320,6 +322,11 @@ function render() {
   }
   if (currentSection === 'settings') {
     mc.innerHTML = `<div class="section-inner">${renderSettings()}</div>`;
+    return;
+  }
+  if (currentSection === 'action-centre') {
+    mc.innerHTML = `<div class="section-inner">${renderActionCentre()}</div>`;
+    if (!actionCentreData && !actionCentreLoading) actionCentreLoad();
     return;
   }
   if (currentSection === 'capacity') {

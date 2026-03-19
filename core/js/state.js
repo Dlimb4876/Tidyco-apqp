@@ -60,6 +60,12 @@ let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
 // Settings portal active tab
 let settingsActiveTab = 'families'; // 'families' | 'work-areas' | 'permissions' | 'role-definitions' | 'teams' | 'appearance' | 'about'
 
+// Action Centre portal state
+let actionCentreData = null;        // null = unloaded; populated by actionCentreLoad()
+let actionCentreLoading = false;
+let actionCentreTab = 'all';        // 'all' | 'action' | 'pfmea' | 'risk'
+let actionCentreStatusFilter = 'open'; // 'open' | 'all' | 'closed'
+
 // Teams management state
 let teamsState = {
   teams: [],
