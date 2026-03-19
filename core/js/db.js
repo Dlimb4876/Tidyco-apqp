@@ -27,6 +27,41 @@ function isGateScopeColumnError(err) {
     msg.includes('gate_selection_locked_by');
 }
 
+// Maps a raw Supabase projects row to the app-level project object shape.
+// Used by both loadRemote() and loadRemotePage() so the mapping stays in one place.
+function mapRowToProject(row) {
+  return migrateprog({
+    dbId:                     row.id || null,
+    id:                       row.prog_id,
+    name:                     row.name,
+    customer:                 row.customer          || '',
+    unit:                     row.unit_name         || '',
+    family:                   row.family            || '',
+    lead:                     row.lead              || '',
+    pm:                       row.pm                || '',
+    date:                     row.start_date        || '',
+    ganttStart:               row.gantt_start       || '',
+    ganttCollapsed:           row.gantt_collapsed   || [],
+    subAssemblies:            row.sub_assembly_ids  || [],
+    status:                   row.prog_status       || 'Active',
+    qNumber:                  row.q_number          || '',
+    partNumber:               row.part_number       || '',
+    product_id:               row.product_id        || null,
+    gate_selections:          row.gate_selections          || null,
+    gate_selection_locked:    !!row.gate_selection_locked,
+    gate_selection_locked_at: row.gate_selection_locked_at || null,
+    gate_selection_locked_by: row.gate_selection_locked_by || null,
+  });
+}
+
+// Shows the "saved HH:MM · user" badge using metadata from the most-recently-updated row.
+function setSyncBadgeFromRow(row) {
+  if (!row || !row.updated_by) return;
+  const who  = row.updated_by.split('@')[0];
+  const when = new Date(row.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  setSyncBadge('saved', `● saved ${when} · ${who}`);
+}
+
 function buildProjectRow(p, now, email) {
   const row = {
     prog_id:          p.id,
@@ -213,34 +248,8 @@ async function loadRemote() {
 
   if (error) { console.error('Load error', error); return; }
   if (data && data.length > 0) {
-    db.projects = data.map(row => migrateprog({
-      dbId:           row.id || null,
-      id:             row.prog_id,
-      name:           row.name,
-      customer:       row.customer          || '',
-      unit:           row.unit_name         || '',
-      family:         row.family            || '',
-      lead:           row.lead              || '',
-      pm:             row.pm                || '',
-      date:           row.start_date        || '',
-      ganttStart:     row.gantt_start       || '',
-      ganttCollapsed: row.gantt_collapsed   || [],
-      subAssemblies:  row.sub_assembly_ids  || [],
-      status:         row.prog_status       || 'Active',
-      qNumber:        row.q_number          || '',
-      partNumber:     row.part_number       || '',
-      product_id:     row.product_id        || null,
-      gate_selections: row.gate_selections || null,
-      gate_selection_locked: !!row.gate_selection_locked,
-      gate_selection_locked_at: row.gate_selection_locked_at || null,
-      gate_selection_locked_by: row.gate_selection_locked_by || null,
-    }));
-    const last = data[0];
-    if (last.updated_by) {
-      const who  = last.updated_by.split('@')[0];
-      const when = new Date(last.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-      setSyncBadge('saved', `● saved ${when} · ${who}`);
-    }
+    db.projects = data.map(mapRowToProject);
+    setSyncBadgeFromRow(data[0]);
   }
 }
 
@@ -273,28 +282,7 @@ async function loadRemotePage(page, pageSize = 50) {
 
   if (error) { console.error('Load page error', error); return; }
 
-  const rows = (data || []).map(row => migrateprog({
-    dbId:            row.id || null,
-    id:              row.prog_id,
-    name:            row.name,
-    customer:        row.customer          || '',
-    unit:            row.unit_name         || '',
-    family:          row.family            || '',
-    lead:            row.lead              || '',
-    pm:              row.pm                || '',
-    date:            row.start_date        || '',
-    ganttStart:      row.gantt_start       || '',
-    ganttCollapsed:  row.gantt_collapsed   || [],
-    subAssemblies:   row.sub_assembly_ids  || [],
-    status:          row.prog_status       || 'Active',
-    qNumber:         row.q_number          || '',
-    partNumber:      row.part_number       || '',
-    product_id:      row.product_id        || null,
-    gate_selections:          row.gate_selections          || null,
-    gate_selection_locked:    !!row.gate_selection_locked,
-    gate_selection_locked_at: row.gate_selection_locked_at || null,
-    gate_selection_locked_by: row.gate_selection_locked_by || null,
-  }));
+  const rows = (data || []).map(mapRowToProject);
 
   if (page === 0) {
     db.projects = rows;
@@ -308,12 +296,7 @@ async function loadRemotePage(page, pageSize = 50) {
   projectsAllLoaded  = rows.length < pageSize;
 
   if (rows.length > 0) {
-    const last = data[0];
-    if (last.updated_by) {
-      const who  = last.updated_by.split('@')[0];
-      const when = new Date(last.updated_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-      setSyncBadge('saved', `● saved ${when} · ${who}`);
-    }
+    setSyncBadgeFromRow(data[0]);
   }
 
   try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}

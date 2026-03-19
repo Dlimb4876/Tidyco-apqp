@@ -18,16 +18,10 @@ window.meGetDailyHours = function(hoursPerWeek, utilisationPercent) {
 };
 
 // ── HTML Escape ────────────────────────────────────────────
+// Delegates to the global esc() from helpers.js (loaded before this file).
+// Kept as a named alias so capacity modules can call escapeHtml() without change.
 window.escapeHtml = function(text) {
-  if (!text) return '';
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, m => map[m]);
+  return esc(text);
 };
 
 // ── Utilisation Color Mapping ────────────────────────────

@@ -5,6 +5,10 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-19 | Refactor db.js: extract mapRowToProject + setSyncBadgeFromRow helpers | The 21-line row-to-project mapping and 4-line save-badge update were duplicated verbatim in loadRemote() and loadRemotePage(). Extracting them into shared helpers eliminates the duplication so any future field changes only need one edit.
+
+## 2026-03-19 | Refactor me-utils.js: replace escapeHtml implementation with esc() alias | escapeHtml() in the capacity portal duplicated the same HTML-escaping logic already in esc() from helpers.js. It now delegates to esc() so there is one escape implementation across the whole app.
+
 ## 2026-03-18 | Fix load-order-checker false-positive duplicate on products.js | Checker used basename only so two different products.js files (production vs product-management portals) were flagged as duplicates, causing check:all to fail.
 
 ## 2026-03-18 | Add 328 new tests across 14 modules, raising suite from 179 to 507 | Coverage was ~36%; key areas (realtime, settings, families, production data, db helpers, ME team/tasks/components) had no tests. All 39 test suites now pass.
