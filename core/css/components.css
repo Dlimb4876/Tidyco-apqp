@@ -551,3 +551,13 @@ kbd {
 @media (max-width: 767px) {
   .viewer-badge { font-size: 10px; padding: 2px 8px; }
 }
+
+/* ── Pulse animation for highlighted rows ─────────────────────── */
+@keyframes pulse {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(255, 193, 7, 0.2); }
+}
+
+.pulse {
+  animation: pulse 1s ease-in-out 1;
+}

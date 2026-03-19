@@ -65,6 +65,9 @@ let actionCentreData = null;        // null = unloaded; populated by actionCentr
 let actionCentreLoading = false;
 let actionCentreTab = 'all';        // 'all' | 'action' | 'pfmea' | 'risk'
 let actionCentreStatusFilter = 'open'; // 'open' | 'all' | 'closed'
+let selectedActionId = null;        // Action ID to scroll to when navigating from Action Centre
+let selectedPfmeaCauseId = null;    // PFMEA cause ID to scroll to when navigating from Action Centre
+let selectedRiskId = null;          // Risk ID to scroll to when navigating from Action Centre
 
 // Teams management state
 let teamsState = {

@@ -102,9 +102,16 @@ async function actionCentreLoad() {
 // ─────────────────────────────────────────────────────────────
 
 // Navigate to the project that owns a given DB project ID, then to `section`.
-function actionCentreGoTo(projectDbId, section) {
+// Optionally scroll to a specific item by ID.
+function actionCentreGoTo(projectDbId, section, itemId) {
   if (!projectDbId) return;
   progId = projectDbId;
+
+  // Set the item to scroll to based on section type
+  if (section === 'actions') selectedActionId = itemId;
+  else if (section === 'apqp') selectedPfmeaCauseId = itemId;
+  else if (section === 'risks') selectedRiskId = itemId;
+
   navigate(section);
 }
 
@@ -243,10 +250,10 @@ function renderActionCentre() {
       : `<span class="${statusClass}">${esc(item.status)}</span>`;
 
     const goSection = item._type === 'pfmea' ? 'apqp' : item._type === 'risk' ? 'risks' : 'actions';
-    const goBtn = `<button class="btn btn-ghost btn-sm" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}')">→ Open</button>`;
+    const goBtn = `<button class="btn btn-ghost btn-sm" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}','${esc(item.id)}')">→ Open</button>`;
 
     return `<tr class="${item._overdue ? 'row-overdue' : ''}">
-      <td class="ac-col-project"><a class="ac-project-link" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}')">${esc(item.projectName)}</a></td>
+      <td class="ac-col-project"><a class="ac-project-link" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}','${esc(item.id)}')">${esc(item.projectName)}</a></td>
       <td class="ac-col-type">${typeChip}</td>
       <td class="ac-col-desc">${esc(item.description)}</td>
       <td class="ac-col-due">${dueCell}</td>

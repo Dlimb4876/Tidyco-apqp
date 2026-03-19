@@ -345,7 +345,7 @@ npi.pfmea.renderPFMEA = function() {
             </div>`
           }).join('') : '<span style="font-size:10px;color:var(--muted);font-style:italic">No history yet</span>'
 
-          let rowHtml = `<tr class="pfmea-row-sub">`
+          let rowHtml = `<tr class="pfmea-row-sub" data-cause-id="${esc(ca.id || '')}">`
 
           // Mode cell — first effect, first cause only
           if (ei === 0 && ci === 0) {
