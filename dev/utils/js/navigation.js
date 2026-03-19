@@ -354,7 +354,7 @@ function render() {
     }
     return;
   }
-  if (currentSection === 'hub') { mc.innerHTML = renderHub(); return; }
+  if (currentSection === 'hub') { mc.innerHTML = renderHub(); hubInit(); return; }
 
   if (!prog()) { mc.innerHTML = npi.dashboard.renderProjects(); return; }
 

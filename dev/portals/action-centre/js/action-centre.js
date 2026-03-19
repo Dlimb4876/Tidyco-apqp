@@ -93,7 +93,7 @@ async function actionCentreLoad() {
     actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], error: err.message };
   } finally {
     actionCentreLoading = false;
-    if (currentSection === 'action-centre') render();
+    if (currentSection === 'action-centre' || currentSection === 'hub') render();
   }
 }
 
