@@ -12,11 +12,6 @@ let settingsWorkAreasEditingId = null;
 let settingsPermissionsLoading = false;
 let settingsPermissionsData = null;
 let settingsPermissionsError = null;
-let settingsTeamsLoading = false;
-let settingsTeamsData = null;
-let settingsTeamsError = null;
-let settingsTeamsEditingId = null;
-let settingsTeamsPermissionsEditingId = null;
 let settingsTeamsPermissionsData = {};
 
 // ── Appearance preferences (persisted to localStorage) ─────────
