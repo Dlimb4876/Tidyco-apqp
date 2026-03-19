@@ -88,6 +88,8 @@ body {
 .section-crumb { font-size: 12px; color: #a8c3d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .section-crumb strong { color: #f3f8fd; }
 
+.project-breadcrumb { font-size: 12px; color: #e3f0fb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+
 .prog-selector { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .prog-select-wrap select {
   background: rgba(255,255,255,.1);
@@ -141,6 +143,7 @@ body {
   .main {
     padding: 0 var(--page-gutter-desktop) var(--page-gutter-desktop);
   }
+  .project-breadcrumb { max-width: 250px; font-size: 13px; }
 }
 
 /* ── Login screen ───────────────────────────────────────────── */

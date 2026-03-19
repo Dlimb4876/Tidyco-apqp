@@ -211,7 +211,38 @@ function navigate(sec, { pushHash = true } = {}) {
   // 1.5 Dynamic back button text using module-level constant
   returnBtn.textContent = BACK_BUTTON_LABELS[sec] || '← Return to Portal';
 
+  // Update project name breadcrumb display
+  updateProjectBreadcrumb();
+
   render();
+}
+
+/**
+ * Update project name display in topbar breadcrumb
+ * Shows project name when inside a project-specific section
+ */
+function updateProjectBreadcrumb() {
+  const projectNameEl = document.getElementById('projectName');
+  if (!projectNameEl) return;
+
+  const p = prog();
+  const isProjectSection = progId && p && (
+    currentSection === 'project' ||
+    currentSection === 'apqp' ||
+    currentSection === 'actions' ||
+    currentSection === 'risks' ||
+    currentSection === 'bom' ||
+    currentSection === 'timing' ||
+    currentSection === 'documents' ||
+    currentSection.startsWith('gate_')
+  );
+
+  if (isProjectSection && p) {
+    projectNameEl.textContent = p.name;
+    projectNameEl.style.display = 'block';
+  } else {
+    projectNameEl.style.display = 'none';
+  }
 }
 
 /**
@@ -378,6 +409,9 @@ function render() {
 
       // Scroll to selected item when navigating from Action Centre
       scrollToSelectedItem();
+
+      // Update project name breadcrumb display
+      updateProjectBreadcrumb();
     });
   });
 }
