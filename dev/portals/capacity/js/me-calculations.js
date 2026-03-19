@@ -107,9 +107,6 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     }
   });
 
-  const adjustedCapacity = capacity;
-  const adjustedCapacityMax = capacityMax;
-
   // Calculate demand using network days proration (equivalent to NETWORKDAYS in Excel)
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
 
@@ -158,15 +155,15 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
 
   const totalDemand = npi + improvement + tendering + support + other;
   return {
-    capacity: adjustedCapacity,
-    capacityMax: adjustedCapacityMax,
+    capacity,
+    capacityMax,
     npi,
     improvement,
     tendering,
     support,
     other,
     totalDemand,
-    utilisation: adjustedCapacity > 0 ? Math.round((totalDemand / adjustedCapacity) * 100) : 0
+    utilisation: capacity > 0 ? Math.round((totalDemand / capacity) * 100) : 0
   };
 };
 
@@ -230,12 +227,16 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
 };
 
 // ── Work Days Calculation ───────────────────────────────────
+function isWeekday(date) {
+  const d = date.getDay();
+  return d !== 0 && d !== 6;
+}
+
 window.countWorkDaysInMonth = function(year, month) {
   const date = new Date(year, month - 1, 1);
   let workDays = 0;
   while (date.getMonth() === month - 1) {
-    const day = date.getDay();
-    if (day !== 0 && day !== 6) workDays++;
+    if (isWeekday(date)) workDays++;
     date.setDate(date.getDate() + 1);
   }
   return workDays;
@@ -249,8 +250,7 @@ window.countWorkDaysBetween = function(startDate, endDate) {
   end.setHours(23, 59, 59, 999);
 
   while (current <= end) {
-    const day = current.getDay();
-    if (day !== 0 && day !== 6) workDays++;
+    if (isWeekday(current)) workDays++;
     current.setDate(current.getDate() + 1);
   }
   return workDays;
@@ -265,8 +265,7 @@ window.countNetworkDaysBetween = function(startDate, endDate, bankHolSet) {
   end.setHours(23, 59, 59, 999);
 
   while (current <= end) {
-    const day = current.getDay();
-    if (day !== 0 && day !== 6) {
+    if (isWeekday(current)) {
       const dateStr = formatDateForHolidays(current);
       if (!bankHolSet || !bankHolSet.has(dateStr)) workDays++;
     }
