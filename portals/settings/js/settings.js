@@ -12,6 +12,12 @@ let settingsWorkAreasEditingId = null;
 let settingsPermissionsLoading = false;
 let settingsPermissionsData = null;
 let settingsPermissionsError = null;
+let settingsTeamsLoading = false;
+let settingsTeamsData = null;
+let settingsTeamsError = null;
+let settingsTeamsEditingId = null;
+let settingsTeamsPermissionsEditingId = null;
+let settingsTeamsPermissionsData = {};
 
 // ── Appearance preferences (persisted to localStorage) ─────────
 const APPEARANCE_STORAGE_KEY = 'tidyco_prefs';
@@ -57,6 +63,9 @@ function renderSettings() {
       } else if (tab === 'work-areas') {
         renderSettingsWorkAreasTab();
         settingsEnsureWorkAreasData();
+      } else if (tab === 'teams') {
+        renderSettingsTeamsTab();
+        settingsEnsureTeamsData();
       } else if (tab === 'permissions') {
         renderSettingsPermissionsTab();
         settingsEnsurePermissionsData();
@@ -86,6 +95,9 @@ function renderSettings() {
             <span class="nav-icon">🏭</span> Work Areas
           </button>
           <span class="settings-nav-group-label" style="margin-top:8px">Access</span>
+          <button class="settings-nav-item ${tab === 'teams' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="teams">
+            <span class="nav-icon">🏢</span> Teams
+          </button>
           <button class="settings-nav-item ${tab === 'permissions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="permissions">
             <span class="nav-icon">🔒</span> Permissions
           </button>
@@ -104,6 +116,7 @@ function renderSettings() {
         <div class="settings-content">
           <div id="settingsFamiliesTab"        class="settings-tab-content ${tab === 'families'         ? 'active' : ''}"></div>
           <div id="settingsWorkAreasTab"       class="settings-tab-content ${tab === 'work-areas'       ? 'active' : ''}"></div>
+          <div id="settingsTeamsTab"           class="settings-tab-content ${tab === 'teams'            ? 'active' : ''}"></div>
           <div id="settingsPermissionsTab"     class="settings-tab-content ${tab === 'permissions'      ? 'active' : ''}"></div>
           <div id="settingsRoleDefinitionsTab" class="settings-tab-content ${tab === 'role-definitions' ? 'active' : ''}"></div>
           <div id="settingsAppearanceTab"      class="settings-tab-content ${tab === 'appearance'       ? 'active' : ''}"></div>
@@ -146,6 +159,30 @@ async function settingsEnsureWorkAreasData() {
     renderSettingsWorkAreasTab();
   } catch (err) {
     console.error('Failed to load work areas for settings:', err);
+  }
+}
+
+// ── Ensure teams data is loaded ──────────────────────────────
+async function settingsEnsureTeamsData(forceReload = false) {
+  if (settingsTeamsLoading) return;
+  if (!forceReload && settingsTeamsData !== null) return;
+
+  settingsTeamsLoading = true;
+  settingsTeamsError = null;
+  renderSettingsTeamsTab();
+
+  try {
+    settingsTeamsData = await teamsDataLoadAll();
+    // Load user counts for each team
+    for (const team of settingsTeamsData) {
+      team.userCount = await teamsDataGetUserCount(team.id);
+    }
+  } catch (err) {
+    settingsTeamsError = err?.message || 'Failed to load teams';
+    settingsTeamsData = [];
+  } finally {
+    settingsTeamsLoading = false;
+    renderSettingsTeamsTab();
   }
 }
 
@@ -501,6 +538,259 @@ async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
   }
 }
 
+// ── Render teams tab ───────────────────────────────────────────
+function renderSettingsTeamsTab() {
+  const container = document.getElementById('settingsTeamsTab');
+  if (!container) return;
+
+  if (settingsTeamsLoading) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading teams…</div>';
+    return;
+  }
+
+  if (settingsTeamsError) {
+    container.innerHTML = `
+      <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
+        <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load teams</div>
+        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsTeamsError)}</div>
+        <button class="btn btn-ghost" data-action="settings-teams-retry">Retry</button>
+      </div>
+    `;
+    return;
+  }
+
+  const teams = settingsTeamsData || [];
+  const DEFAULT_TEAMS = ['ME', 'PM', 'OPS', 'Admin', 'ReadOnly'];
+
+  let tableBody = '';
+  if (teams.length === 0) {
+    // Show default teams as suggestions if none exist
+    tableBody = DEFAULT_TEAMS.map(type => `
+      <tr style="opacity:0.6">
+        <td>${type}</td>
+        <td>${type}</td>
+        <td style="text-align:center">0</td>
+        <td style="text-align:center;color:var(--muted)">—</td>
+      </tr>
+    `).join('');
+  } else {
+    tableBody = teams.map(t => `
+      <tr>
+        <td>${esc(t.name)}</td>
+        <td>${esc(t.team_type)}</td>
+        <td style="text-align:center">${t.userCount || 0}</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm btn-ghost" data-action="settings-teams-edit" data-team-id="${esc(t.id)}" title="Edit permissions">Edit</button>
+          <button class="btn btn-sm btn-ghost" data-action="settings-teams-delete" data-team-id="${esc(t.id)}" title="Delete team" style="color:var(--red)">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Teams</h2>
+      <p class="settings-section-desc">Organize users by department and manage group permissions.</p>
+    </div>
+    <div style="margin-bottom:16px">
+      <button class="btn btn-primary" data-action="settings-teams-add">+ Add Team</button>
+    </div>
+    <table class="prod-tbl" style="width:100%">
+      <thead>
+        <tr>
+          <th>Team Name</th>
+          <th>Type</th>
+          <th>Users</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableBody}
+      </tbody>
+    </table>
+    ${teams.length === 0 ? `
+      <div class="permissions-notice" style="margin-top:16px">
+        <strong>No teams created yet.</strong> Click "Add Team" to create your first team. Default types: ME, PM, OPS, Admin, ReadOnly.
+      </div>
+    ` : ''}
+  `;
+}
+
+// ── Team CRUD operations ────────────────────────────────────────
+async function settingsTeamsAdd() {
+  const name = prompt('Team name:');
+  if (!name || !name.trim()) return;
+
+  const type = prompt('Team type (ME, PM, OPS, Admin, ReadOnly):');
+  if (!type || !type.trim()) return;
+
+  const validTypes = ['ME', 'PM', 'OPS', 'Admin', 'ReadOnly'];
+  if (!validTypes.includes(type.trim())) {
+    showToast('Invalid team type. Use: ME, PM, OPS, Admin, or ReadOnly', 'error');
+    return;
+  }
+
+  const description = prompt('Team description (optional):');
+
+  try {
+    const newTeam = await teamsDataAdd({
+      name: name.trim(),
+      team_type: type.trim(),
+      description: description?.trim() || ''
+    });
+
+    if (!newTeam) {
+      showToast('Failed to create team', 'error');
+      return;
+    }
+
+    newTeam.userCount = 0;
+    settingsTeamsData.push(newTeam);
+    showToast('Team created successfully', 'success');
+    renderSettingsTeamsTab();
+  } catch (err) {
+    showToast('Error creating team: ' + err.message, 'error');
+  }
+}
+
+async function settingsTeamsDelete(teamId) {
+  if (!teamId) return;
+
+  const team = settingsTeamsData.find(t => t.id === teamId);
+  if (!team) return;
+
+  if (team.userCount && team.userCount > 0) {
+    showToast(`Cannot delete team with ${team.userCount} user(s). Reassign users first.`, 'warning');
+    return;
+  }
+
+  if (!confirm(`Delete team "${esc(team.name)}"? This cannot be undone.`)) return;
+
+  try {
+    const success = await teamsDataDelete(teamId);
+    if (!success) {
+      showToast('Failed to delete team', 'error');
+      return;
+    }
+
+    settingsTeamsData = settingsTeamsData.filter(t => t.id !== teamId);
+    showToast('Team deleted', 'success');
+    renderSettingsTeamsTab();
+  } catch (err) {
+    showToast('Error deleting team: ' + err.message, 'error');
+  }
+}
+
+async function settingsTeamsEdit(teamId) {
+  if (!teamId) return;
+
+  settingsTeamsPermissionsEditingId = teamId;
+  try {
+    settingsTeamsPermissionsData[teamId] = await teamsDataLoadPermissions(teamId);
+    renderSettingsTeamsPermissionsEditor();
+  } catch (err) {
+    showToast('Failed to load permissions: ' + err.message, 'error');
+  }
+}
+
+async function settingsTeamsPermissionsSave() {
+  const teamId = settingsTeamsPermissionsEditingId;
+  if (!teamId) return;
+
+  const permissions = settingsTeamsPermissionsData[teamId] || [];
+  try {
+    const success = await teamPermissionsDataSave(teamId, permissions);
+    if (!success) {
+      showToast('Failed to save permissions', 'error');
+      return;
+    }
+
+    showToast('Permissions saved', 'success');
+    settingsTeamsPermissionsEditingId = null;
+    settingsEnsureTeamsData(true);
+    renderSettingsTeamsTab();
+  } catch (err) {
+    showToast('Error saving permissions: ' + err.message, 'error');
+  }
+}
+
+function settingsTeamsPermissionsCancel() {
+  settingsTeamsPermissionsEditingId = null;
+  renderSettingsTeamsTab();
+}
+
+function settingsTeamsPermissionsToggle(teamId, permission) {
+  if (!settingsTeamsPermissionsData[teamId]) return;
+  const perm = settingsTeamsPermissionsData[teamId].find(p => p.permission === permission);
+  if (perm) {
+    perm.allowed = !perm.allowed;
+    renderSettingsTeamsPermissionsEditor();
+  }
+}
+
+// ── Render permissions editor ──────────────────────────────────
+function renderSettingsTeamsPermissionsEditor() {
+  const teamId = settingsTeamsPermissionsEditingId;
+  if (!teamId) return;
+
+  const team = settingsTeamsData.find(t => t.id === teamId);
+  if (!team) return;
+
+  const permissions = settingsTeamsPermissionsData[teamId] || [];
+  const PERMISSION_LABELS = {
+    'view_all_project_data': 'View all project data',
+    'edit_projects_tasks_schedules': 'Edit projects, tasks & schedules',
+    'add_delete_records': 'Add & delete records',
+    'manage_families': 'Manage product families',
+    'manage_work_areas': 'Manage work areas',
+    'manage_capacity': 'Manage capacity planning',
+    'manage_user_roles': 'Change user roles',
+    'access_settings': 'Access Settings page'
+  };
+
+  let permRows = '';
+  Object.entries(PERMISSION_LABELS).forEach(([permKey, label]) => {
+    const perm = permissions.find(p => p.permission === permKey);
+    const isAllowed = perm?.allowed || false;
+    permRows += `
+      <tr>
+        <td>${label}</td>
+        <td style="text-align:center">
+          <input type="checkbox" ${isAllowed ? 'checked' : ''}
+                 data-action="settings-teams-permission-toggle"
+                 data-permission="${esc(permKey)}"
+                 style="cursor:pointer;width:18px;height:18px">
+        </td>
+      </tr>
+    `;
+  });
+
+  const container = document.getElementById('settingsTeamsTab');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Edit Permissions: ${esc(team.name)}</h2>
+      <p class="settings-section-desc">Configure what this team can do in the system.</p>
+    </div>
+    <table class="prod-tbl" style="width:100%;margin-bottom:16px">
+      <thead>
+        <tr>
+          <th>Permission</th>
+          <th style="width:80px;text-align:center">Allowed</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${permRows}
+      </tbody>
+    </table>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" data-action="settings-teams-permissions-save">Save</button>
+      <button class="btn btn-ghost" data-action="settings-teams-permissions-cancel">Cancel</button>
+    </div>
+  `;
+}
+
 // ── Render permissions tab ─────────────────────────────────────
 function renderSettingsPermissionsTab() {
   const container = document.getElementById('settingsPermissionsTab');
@@ -817,6 +1107,7 @@ function setupSettingsEventListeners() {
       const tabMap = {
         families: 'settingsFamiliesTab',
         'work-areas': 'settingsWorkAreasTab',
+        teams: 'settingsTeamsTab',
         permissions: 'settingsPermissionsTab',
         'role-definitions': 'settingsRoleDefinitionsTab',
         appearance: 'settingsAppearanceTab',
@@ -829,6 +1120,9 @@ function setupSettingsEventListeners() {
       } else if (tab === 'work-areas') {
         renderSettingsWorkAreasTab();
         settingsEnsureWorkAreasData();
+      } else if (tab === 'teams') {
+        renderSettingsTeamsTab();
+        settingsEnsureTeamsData();
       } else if (tab === 'permissions') {
         renderSettingsPermissionsTab();
         settingsEnsurePermissionsData();
@@ -856,6 +1150,15 @@ function setupSettingsEventListeners() {
     if (action === 'settings-wa-save-edit') { await settingsWorkAreaSaveEdit(actionEl.dataset.waId || ''); return; }
     if (action === 'settings-wa-cancel-edit') { settingsWorkAreaCancelEdit(); return; }
 
+    // Teams tab actions
+    if (action === 'settings-teams-retry') { settingsEnsureTeamsData(true); return; }
+    if (action === 'settings-teams-add') { await settingsTeamsAdd(); return; }
+    if (action === 'settings-teams-edit') { await settingsTeamsEdit(actionEl.dataset.teamId || ''); return; }
+    if (action === 'settings-teams-delete') { await settingsTeamsDelete(actionEl.dataset.teamId || ''); return; }
+    if (action === 'settings-teams-permissions-save') { await settingsTeamsPermissionsSave(); return; }
+    if (action === 'settings-teams-permissions-cancel') { settingsTeamsPermissionsCancel(); return; }
+    if (action === 'settings-teams-permission-toggle') { settingsTeamsPermissionsToggle(settingsTeamsPermissionsEditingId, actionEl.dataset.permission || ''); return; }
+
     // Permissions tab actions
     if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
 
@@ -870,7 +1173,7 @@ function setupSettingsEventListeners() {
     }
   });
 
-  // Role dropdowns fire 'change', not 'click' — handle separately to prevent the
+  // Role dropdowns and checkboxes fire 'change', not 'click' — handle separately to prevent the
   // dropdown from closing the instant it opens (click fires before the user picks).
   root.addEventListener('change', async (event) => {
     const actionEl = event.target.closest('[data-action]');
@@ -879,6 +1182,11 @@ function setupSettingsEventListeners() {
 
     if (action === 'settings-permissions-change-role') {
       await settingsPermissionsChangeRole(actionEl.dataset.userId || '', actionEl.value, actionEl.dataset.isLastAdmin === 'true');
+      return;
+    }
+
+    if (action === 'settings-teams-permission-toggle') {
+      settingsTeamsPermissionsToggle(settingsTeamsPermissionsEditingId, actionEl.dataset.permission || '');
       return;
     }
   });
