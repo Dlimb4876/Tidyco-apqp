@@ -62,7 +62,7 @@ describe('MCS Overhaul History Integration', () => {
       const change = window.mcsList[0];
       const now = new Date().toISOString().split('T')[0];
 
-      const overhaul Entry = {
+      const overhaulEntry = {
         product_id: change.affected_product_id,
         time_impact_days: change.estimated_time_impact_days,
         schedule_impact_reason: change.time_impact_reason,
