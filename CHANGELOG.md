@@ -3,6 +3,9 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-20 | Fix ECR impact/time display; smarten approval chain and impact tags | Impact count showed 0 (used non-existent impacts_count field instead of impacts.length); time impact and target date were never rendered in the view modal; approval chain used position-based logic instead of each step's actual approval status; impact tags and approval steps now show approver names, dates, notes, and proper color-coded statuses.
+
+
 ---
 
 ## 2026-03-20 | Fix MCS database issues: wrong client, wrong tables, wrong field names, missing required fields | MCS was using the CDN global `supabase` object instead of the `supa` client for all DB queries (causing failures); `impacts` arrays and `timeline` arrays were being inserted into `mcs_changes` which has no such columns — they belong in `mcs_impacts` and `mcs_timeline`; update path used `type` instead of `change_type` and spread the full change object (including non-schema fields) into updates; `mcsLoadChanges` now joins `mcs_impacts`, `mcsViewChange` now loads timeline on demand; approval/reject/advance functions only send changed fields; `mcsCreateOverhaulHistoryEntry` was missing the required NOT NULL `effective_date` field; invalid `event_type` values in timeline inserts fixed; `mcs-pfmea.js` and `mcs-actions.js` added to `index.html`.
