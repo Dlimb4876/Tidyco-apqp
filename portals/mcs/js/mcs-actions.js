@@ -87,11 +87,11 @@ function mcsIntegrateWithActionCentre(actionCentreData) {
 }
 
 /**
- * Navigate to MCS change from Action Centre
+ * Navigate to MCS change from Action Centre.
+ * Uses mcsAutoViewId so renderMcs() opens the change only after the
+ * approver config and change list have finished loading — no race condition.
  */
 function mcsNavigateFromActionCentre(changeId) {
-  navigate('mcs', { pushHash: true });
-  setTimeout(() => {
-    mcsViewChange(changeId);
-  }, 300);
+  if (typeof mcsAutoViewId !== 'undefined') mcsAutoViewId = changeId;
+  navigate('mcs');
 }

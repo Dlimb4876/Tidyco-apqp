@@ -90,7 +90,7 @@ let projectsPage = 0;
 let projectsAllLoaded = false;
 
 // ── MCS (Manufacturing Change System) state ────────────────
-// Approver configuration (loaded from mcs_approver_settings table)
+// Approver configuration (loaded from global_settings table, keys: mcs_approver_approval1 / mcs_approver_approval2)
 let mcsApproverConfig = null;     // { approval1: [{user_id, user_name}], approval2: [] }
 let mcsApproverConfigLoading = false;
 let mcsAutoViewId = null;         // When set, MCS portal auto-opens this change on load
