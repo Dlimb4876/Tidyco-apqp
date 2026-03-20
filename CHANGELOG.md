@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-20 | Add pending MCS approvals to hub "Logged in as" widget | Approvers had no at-a-glance view of changes awaiting their sign-off; the widget now shows an amber pending approval count and a "Review Changes →" button whenever mcsApprovals has items in actionCentreData
+
 ## 2026-03-20 | Auto-add time impact to Overhaul Trends when MCO passes final approval | Engineering changes had no way to flow through to Product Management — the product dropdown was saving the product name (not its UUID) so overhaul_history entries had no product link, and the entry was missing overhaul_hours so the trends chart showed nothing; now saves affected_product_id from the dropdown, calculates new overhaul hours as current + delta, inserts a properly linked history record, and updates the product's current hours so the Overhaul Trends chart and KPIs update immediately on Approval 2
 
 ## 2026-03-20 | Fix MCS DB migration: expand status constraint, relax UUID columns, add global_settings | The mcs_changes status CHECK only allowed old 4-step values so updating to 'implementing' failed silently in the DB; eng_review_by/qa_review_by were UUID FK columns but app stores email strings; migration now includes global_settings idempotent setup and a health-check SELECT

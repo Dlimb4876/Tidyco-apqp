@@ -77,6 +77,10 @@
   color: var(--red, #ef4444);
 }
 
+.hub-widget-num.hub-widget-pending {
+  color: var(--amber);
+}
+
 .hub-widget-label {
   font-size: 11px;
   text-transform: uppercase;
@@ -92,8 +96,18 @@
 }
 
 .hub-widget-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
   margin-left: auto;
   flex-shrink: 0;
+}
+
+.hub-widget-approve-btn {
+  background: var(--amber-pale);
+  border: 1px solid var(--amber-mid);
+  color: var(--amber);
 }
 
 /* ── Hub Card ──────────────────────────────────────────────────────────── */
