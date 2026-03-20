@@ -335,6 +335,56 @@ function renderActionCentre() {
         </table>
       </div>`;
 
+  // Active approvals panel — shown only when the user has pending MCS approvals
+  const activeApprovalsPanel = mcsApprovals.length > 0 ? (() => {
+    const approvalRows = mcsApprovals.map(({ change, stepKey, stepLabel }) => {
+      const priorityColor = { critical: 'var(--red)', high: 'var(--orange)', medium: 'var(--accent)', low: 'var(--text3)' }[change.priority] || 'var(--text3)';
+      const target = change.target_implementation || '—';
+      const targetOverdue = change.target_implementation
+        ? (() => { const d = new Date(change.target_implementation); d.setHours(0,0,0,0); return d < today; })()
+        : false;
+      return `<tr>
+        <td class="ac-col-ecrid"><span class="ac-ecr-badge">${esc(change.id)}</span></td>
+        <td class="ac-col-desc" style="font-weight:500">${esc(change.title)}</td>
+        <td><span class="mcs-tag" style="font-size:11px">${esc(change.change_type || '—')}</span></td>
+        <td><span style="font-size:11px;font-weight:700;color:${priorityColor};text-transform:capitalize">${esc(change.priority || '—')}</span></td>
+        <td><span class="ac-approvals-step-badge">${esc(stepLabel)}</span></td>
+        <td style="font-family:var(--mono);font-size:12px;${targetOverdue ? 'color:var(--red);font-weight:600' : 'color:var(--text3)'}">${esc(target)}</td>
+        <td style="text-align:right"><button class="btn btn-primary btn-sm" onclick="actionCentreGoToMcs('${esc(change.id)}')">Review ECR →</button></td>
+      </tr>`;
+    }).join('');
+
+    return `
+      <div class="card ac-approvals-card">
+        <div class="card-head">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="ac-approvals-icon">🔔</span>
+            <div>
+              <span class="card-title">Pending Approvals</span>
+              <span class="card-meta">${mcsApprovals.length} ECR${mcsApprovals.length !== 1 ? 's' : ''} awaiting your sign-off</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('mcs')">View all ECRs →</button>
+        </div>
+        <div class="ac-table-wrap">
+          <table class="tbl ac-table ac-approvals-table">
+            <thead>
+              <tr>
+                <th class="ac-col-ecrid">ECR</th>
+                <th class="ac-col-desc">Title</th>
+                <th>Type</th>
+                <th>Priority</th>
+                <th>Your Step</th>
+                <th>Target</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>${approvalRows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  })() : '';
+
   return `
     <div class="sec-head">
       <div>
@@ -348,6 +398,8 @@ function renderActionCentre() {
     </div>
 
     ${error ? `<div style="margin-bottom:12px;padding:10px 14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-size:0.82rem;color:var(--red)">Failed to load: ${esc(error)}</div>` : ''}
+
+    ${activeApprovalsPanel}
 
     <div class="ac-kpis">
       <div class="kpi-card ac-kpi" style="--kpi-color:var(--amber)">
