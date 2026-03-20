@@ -91,7 +91,7 @@ let projectsAllLoaded = false;
 
 // ── MCS (Manufacturing Change System) state ────────────────
 // Approver configuration (loaded from mcs_approver_settings table)
-let mcsApproverConfig = null;     // { engineering: [{user_id, user_name}], qa: [], manufacturing: [], management: [] }
+let mcsApproverConfig = null;     // { approval1: [{user_id, user_name}], approval2: [] }
 let mcsApproverConfigLoading = false;
 let mcsAutoViewId = null;         // When set, MCS portal auto-opens this change on load
 
@@ -102,7 +102,7 @@ let settingsMcsError = null;
 // Core data and filters
 let mcsList = [];                                  // All MCS changes loaded from Supabase
 let mcsCurrentFilter = {
-  status: 'all',                                   // all | open | review | approved | implemented | rejected
+  status: 'all',                                   // all | open | review | implementing | final_review | implemented | closed
   priority: 'all',                                 // all | critical | high | medium | low
   type: 'all',                                     // all | Engineering | Process | Material | Tooling | Quality | Safety
   source: 'all'                                    // all | Manual | PFMEA | Risk | Customer | Quality | Supply Chain

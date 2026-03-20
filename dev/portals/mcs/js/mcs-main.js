@@ -50,16 +50,19 @@ async function renderMcs() {
             Open <span class="mcs-filter-count" id="mcs-fc-open">0</span>
           </button>
           <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'review', this)">
-            Under Review <span class="mcs-filter-count" id="mcs-fc-review">0</span>
+            Awaiting Approval 1 <span class="mcs-filter-count" id="mcs-fc-review">0</span>
           </button>
-          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'approved', this)">
-            Approved <span class="mcs-filter-count" id="mcs-fc-approved">0</span>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'implementing', this)">
+            Implementing <span class="mcs-filter-count" id="mcs-fc-implementing">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'final_review', this)">
+            Awaiting Approval 2 <span class="mcs-filter-count" id="mcs-fc-final_review">0</span>
           </button>
           <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'implemented', this)">
             Implemented <span class="mcs-filter-count" id="mcs-fc-implemented">0</span>
           </button>
-          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'rejected', this)">
-            Rejected <span class="mcs-filter-count" id="mcs-fc-rejected">0</span>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'closed', this)">
+            Closed <span class="mcs-filter-count" id="mcs-fc-closed">0</span>
           </button>
         </div>
         <div class="mcs-sidebar-section">
@@ -202,9 +205,11 @@ function mcsGetFiltered() {
       if (!searchText.includes(q)) return false;
     }
 
-    // Status filter
-    if (mcsCurrentFilter.status !== 'all' && change.status !== mcsCurrentFilter.status) {
-      return false;
+    // Status filter — 'closed' also matches legacy 'rejected'/'approved'
+    if (mcsCurrentFilter.status !== 'all') {
+      const matchClosed = mcsCurrentFilter.status === 'closed' &&
+        (change.status === 'closed' || change.status === 'rejected' || change.status === 'approved');
+      if (!matchClosed && change.status !== mcsCurrentFilter.status) return false;
     }
 
     // Priority filter
@@ -228,7 +233,7 @@ function mcsGetFiltered() {
   // Sort
   const sortKey = document.getElementById('mcs-sort-select')?.value || 'date-desc';
   const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-  const statusOrder = { open: 0, review: 1, approved: 2, implemented: 3, rejected: 4 };
+  const statusOrder = { open: 0, review: 1, implementing: 2, final_review: 3, implemented: 4, closed: 5, approved: 4, rejected: 5 };
 
   if (sortKey === 'date-desc') {
     filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -251,9 +256,10 @@ function mcsUpdateCounts() {
     all: mcsList.length,
     open: 0,
     review: 0,
-    approved: 0,
+    implementing: 0,
+    final_review: 0,
     implemented: 0,
-    rejected: 0,
+    closed: 0,
     critical: 0,
     high: 0,
     medium: 0,
@@ -262,15 +268,18 @@ function mcsUpdateCounts() {
 
   mcsList.forEach(change => {
     if (counts[change.status] !== undefined) counts[change.status]++;
+    // Legacy: treat old 'rejected'/'approved' statuses as 'closed'
+    if (change.status === 'rejected' || change.status === 'approved') counts.closed++;
     if (counts[change.priority] !== undefined) counts[change.priority]++;
   });
 
   document.getElementById('mcs-fc-all').textContent = counts.all;
   document.getElementById('mcs-fc-open').textContent = counts.open;
   document.getElementById('mcs-fc-review').textContent = counts.review;
-  document.getElementById('mcs-fc-approved').textContent = counts.approved;
+  document.getElementById('mcs-fc-implementing').textContent = counts.implementing;
+  document.getElementById('mcs-fc-final_review').textContent = counts.final_review;
   document.getElementById('mcs-fc-implemented').textContent = counts.implemented;
-  document.getElementById('mcs-fc-rejected').textContent = counts.rejected;
+  document.getElementById('mcs-fc-closed').textContent = counts.closed;
   document.getElementById('mcs-fc-critical').textContent = counts.critical;
   document.getElementById('mcs-fc-high').textContent = counts.high;
   document.getElementById('mcs-fc-medium').textContent = counts.medium;
@@ -294,7 +303,7 @@ function mcsRenderList() {
   if (filtered.length === 0) {
     const isFiltered = mcsCurrentFilter.status !== 'all' || mcsCurrentFilter.priority !== 'all' ||
       mcsCurrentFilter.type !== 'all' || mcsCurrentFilter.source !== 'all' ||
-      (document.getElementById('mcs-search-input')?.value || '') !== '';
+      (document.getElementById('mcs-search-input')?.value?.trim() || '') !== '';
     container.innerHTML = isFiltered
       ? `<div class="mcs-empty-state">
           <div class="mcs-empty-icon">🔍</div>
@@ -341,10 +350,14 @@ function mcsRenderList() {
 function mcStatusLabel(status) {
   const labels = {
     open: 'Open',
-    review: 'Under Review',
-    approved: 'Approved',
+    review: 'Awaiting Approval 1',
+    implementing: 'Implementing',
+    final_review: 'Awaiting Approval 2',
     implemented: 'Implemented',
-    rejected: 'Rejected'
+    closed: 'Closed',
+    // Legacy values from before the process rework
+    approved: 'Approved',
+    rejected: 'Closed'
   };
   return labels[status] || status;
 }
