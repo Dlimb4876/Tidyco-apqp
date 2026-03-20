@@ -1132,32 +1132,6 @@ function renderSettingsMcsTab() {
     return;
   }
 
-  // Table not set up yet
-  if (mcsApproverConfig && mcsApproverConfig._tableNotFound) {
-    container.innerHTML = `
-      <div class="settings-section-header">
-        <h2>Manufacturing Change Approvers</h2>
-        <p class="settings-section-desc">Assign users to each approval step in the MCS workflow.</p>
-      </div>
-      <div class="permissions-notice" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.3)">
-        <strong>One-time setup required.</strong> The <code>mcs_approver_settings</code> table does not exist yet.
-        Run the following SQL in your Supabase SQL editor to create it, then click Retry.
-      </div>
-      <pre style="background:#f5f5f5;border:1px solid var(--line);border-radius:6px;padding:16px;font-size:12px;overflow-x:auto;margin:16px 0">CREATE TABLE mcs_approver_settings (
-  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  step       text NOT NULL,
-  user_id    uuid NOT NULL,
-  user_name  text NOT NULL,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE mcs_approver_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "auth" ON mcs_approver_settings
-  FOR ALL USING (auth.role() = 'authenticated');</pre>
-      <button class="btn btn-primary" data-action="settings-mcs-retry">↺ Check Again</button>
-    `;
-    return;
-  }
-
   if (!mcsApproverConfig) {
     container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
     settingsEnsureMcsData(true);
@@ -1173,7 +1147,7 @@ CREATE POLICY "auth" ON mcs_approver_settings
     const availableUsers = users.filter(u => !approvers.some(a => a.user_id === u.id));
 
     const approverRows = approvers.length === 0
-      ? `<div style="color:var(--muted);font-size:13px;padding:8px 0">No approvers assigned — anyone can approve this step.</div>`
+      ? `<div style="color:var(--muted);font-size:13px;padding:8px 0">No specific approver assigned — any editor or admin can approve this step.</div>`
       : approvers.map(a => `
           <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
             <span style="flex:1;font-size:13px">${esc(a.user_name)}</span>
