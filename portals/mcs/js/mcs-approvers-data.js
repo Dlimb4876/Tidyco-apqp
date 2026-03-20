@@ -115,10 +115,21 @@ function mcsGetMyApproverSteps() {
     .filter(key => (mcsApproverConfig[key] || []).some(u => u.user_id === myId));
 }
 
-/** Returns true if the current user is an approver for the given step key. */
+/** Returns true if the current user is an approver for the given step key.
+ *  Falls back to any canEdit() user when no specific approvers are assigned
+ *  (consistent with the Settings UI text "anyone can approve this step"). */
 function mcsCanApproveStep(stepKey) {
-  if (!stepKey || !currentUser || !mcsApproverConfig) return false;
-  return (mcsApproverConfig[stepKey] || []).some(u => u.user_id === currentUser.id);
+  if (!stepKey || !currentUser) return false;
+  // If config hasn't loaded yet, fall back to role-based edit permission
+  if (!mcsApproverConfig || mcsApproverConfig._tableNotFound) {
+    return typeof canEdit === 'function' && canEdit();
+  }
+  const assigned = mcsApproverConfig[stepKey] || [];
+  // No approvers assigned → anyone who can edit may approve
+  if (assigned.length === 0) {
+    return typeof canEdit === 'function' && canEdit();
+  }
+  return assigned.some(u => u.user_id === currentUser.id);
 }
 
 /**
