@@ -76,7 +76,7 @@ function mcsShowCreateModal() {
   const productOptions = (window.productsState && window.productsState.products || [])
     .map(p => {
       const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name);
-      return `<option value="${esc(p.name)}">${display}</option>`;
+      return `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-part="${esc(p.part_number || '')}">${display}</option>`;
     }).join('');
 
   backdrop.innerHTML = `
@@ -403,12 +403,18 @@ async function mcsSaveChange() {
       const changeIdx = mcsList.findIndex(c => c.id === mcsEditingId);
       if (changeIdx === -1) return;
 
+      const partEl = document.getElementById('mcs-f-part');
+      const selectedPartOption = partEl?.options[partEl.selectedIndex];
+      const selectedProductId = partEl?.value || '';
+      const selectedProductName = selectedPartOption?.dataset.name || selectedPartOption?.text || partEl?.value || '';
+
       const updateFields = {
         title,
         change_type: type,
         priority,
         description,
-        part_drawing_no: document.getElementById('mcs-f-part')?.value,
+        affected_product_id: selectedProductId || null,
+        part_drawing_no: selectedProductName || null,
         target_implementation: document.getElementById('mcs-f-target')?.value,
         estimated_time_impact_days: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: document.getElementById('mcs-f-justification')?.value,
@@ -443,6 +449,11 @@ async function mcsSaveChange() {
 
       const nominatedApprover = document.getElementById('mcs-f-approver')?.value || '';
 
+      const partEl = document.getElementById('mcs-f-part');
+      const selectedPartOption = partEl?.options[partEl.selectedIndex];
+      const selectedProductId = partEl?.value || '';
+      const selectedProductName = selectedPartOption?.dataset.name || selectedPartOption?.text || partEl?.value || '';
+
       const newChange = {
         id,
         title,
@@ -450,7 +461,8 @@ async function mcsSaveChange() {
         priority,
         status: 'open',
         description,
-        part_drawing_no: document.getElementById('mcs-f-part')?.value,
+        affected_product_id: selectedProductId || null,
+        part_drawing_no: selectedProductName || null,
         initiated_by: initiatedBy,
         change_source: document.getElementById('mcs-f-source')?.value || 'Manual',
         created_at: now,
@@ -597,8 +609,8 @@ function mcsShowEditModal(change) {
   const productOptions = (window.productsState && window.productsState.products || [])
     .map(p => {
       const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name);
-      const selected = change.part_drawing_no === p.name ? 'selected' : '';
-      return `<option value="${esc(p.name)}" ${selected}>${display}</option>`;
+      const selected = (change.affected_product_id === p.id || change.part_drawing_no === p.name) ? 'selected' : '';
+      return `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-part="${esc(p.part_number || '')}" ${selected}>${display}</option>`;
     }).join('');
 
   backdrop.innerHTML = `

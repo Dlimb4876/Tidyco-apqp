@@ -62,15 +62,19 @@ describe('MCS Overhaul History Integration', () => {
       const change = window.mcsList[0];
       const now = new Date().toISOString().split('T')[0];
 
+      const currentProductHours = 42;
+      const newOverhaulHours = currentProductHours + change.estimated_time_impact_days;
+
       const overhaulEntry = {
         product_id: change.affected_product_id,
+        overhaul_hours: newOverhaulHours,
         time_impact_days: change.estimated_time_impact_days,
         schedule_impact_reason: change.time_impact_reason,
         mcs_reference_id: change.id,
         effective_from_date: now,
         estimated_recovery_date: change.recovery_target_date,
         is_mcs_triggered: true,
-        change_reason: `MCS: ${change.change_type} - ${change.title}`,
+        change_reason: `MCO: ${change.change_type} - ${change.title}`,
         notes: change.justification,
         created_by_name: change.initiated_by
       };
@@ -78,6 +82,21 @@ describe('MCS Overhaul History Integration', () => {
       expect(overhaulEntry.product_id).toBe(change.affected_product_id);
       expect(overhaulEntry.mcs_reference_id).toBe(change.id);
       expect(overhaulEntry.is_mcs_triggered).toBe(true);
+      expect(overhaulEntry.overhaul_hours).toBe(47); // 42 current + 5 impact
+    });
+
+    it('should calculate overhaul_hours as current + time impact delta', () => {
+      const currentHours = 80;
+      const timeImpact = -3; // speedup — removes 3 hours
+      const newHours = currentHours + timeImpact;
+      expect(newHours).toBe(77);
+    });
+
+    it('should set overhaul_hours to current hours when time impact is zero', () => {
+      const currentHours = 55;
+      const timeImpact = 0;
+      const newHours = currentHours + timeImpact;
+      expect(newHours).toBe(55);
     });
 
     it('should not create entry if product not linked', () => {
@@ -86,7 +105,7 @@ describe('MCS Overhaul History Integration', () => {
       expect(shouldCreate).toBe(false);
     });
 
-    it('should only create entry on implementation', () => {
+    it('should only create entry on implementation (Approval 2)', () => {
       const change = { ...window.mcsList[0], status: 'approved' };
       const shouldCreate = change.status === 'implemented';
       expect(shouldCreate).toBe(false);

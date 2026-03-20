@@ -169,16 +169,29 @@ async function mcsAddTimelineEntry(changeId, eventType, text, actor) {
  * Create overhaul_history entry on implementation.
  * Called automatically when Approval 2 is approved.
  * This links MCO changes to product timeline (Overhaul Trends).
+ *
+ * overhaul_hours is calculated as: current product hours + estimated_time_impact_days
+ * so the trends chart immediately reflects the new overhaul time.
  */
 async function mcsCreateOverhaulHistoryEntry(change) {
   try {
     const implDate = change.implementation_date || new Date().toISOString().split('T')[0];
+
+    // Calculate new overhaul hours: current hours + time impact delta
+    const currentProduct = window.productsState && window.productsState.products
+      ? window.productsState.products.find(p => p.id === change.affected_product_id)
+      : null;
+    const currentHours = currentProduct ? (currentProduct.current_overhaul_hours || 0) : 0;
+    const timeImpact = change.estimated_time_impact_days || 0;
+    const newOverhaulHours = currentHours + timeImpact;
+
     const { error } = await supa
       .from('overhaul_history')
       .insert([{
         product_id: change.affected_product_id,
+        overhaul_hours: newOverhaulHours,
         effective_date: implDate,
-        time_impact_days: change.estimated_time_impact_days || 0,
+        time_impact_days: timeImpact,
         schedule_impact_reason: change.time_impact_reason || '',
         mcs_reference_id: change.id,
         effective_from_date: implDate,
@@ -193,8 +206,16 @@ async function mcsCreateOverhaulHistoryEntry(change) {
 
     if (error) {
       console.error('Error creating overhaul entry:', error);
-    } else {
-      console.log('Overhaul Trends entry created for:', change.id);
+      return;
+    }
+
+    console.log('[MCS] Overhaul Trends entry created for:', change.id, '— new hours:', newOverhaulHours);
+
+    // Update the product's current_overhaul_hours to reflect the new value
+    if (currentProduct && typeof productsDataUpdateProduct === 'function') {
+      await productsDataUpdateProduct(change.affected_product_id, {
+        current_overhaul_hours: newOverhaulHours
+      });
     }
   } catch (err) {
     console.error('Overhaul creation error:', err);
