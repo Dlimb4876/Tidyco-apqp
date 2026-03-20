@@ -17,7 +17,8 @@ const SECTION_LABELS = {
   production: 'Production Planning',
   'product-development': 'Product Development',
   feedback: 'Feedback & Bugs',
-  'action-centre': 'Action Centre'
+  'action-centre': 'Action Centre',
+  mcs: 'Manufacturing Change System'
 };
 
 // 1.5 Back button labels — defined once at module level
@@ -28,6 +29,7 @@ const BACK_BUTTON_LABELS = {
   operations: '← Back to Operations',
   feedback: '← Back to Feedback & Bugs',
   'action-centre': '← Back to Hub',
+  mcs: '← Back to Hub',
   apqp: '← Back to Project',
   actions: '← Back to Project',
   risks: '← Back to Project',
@@ -147,6 +149,19 @@ function navigate(sec, { pushHash = true } = {}) {
     if (typeof meDataUnsubscribe === 'function') meDataUnsubscribe();
     if (typeof prodCapUnsubscribeUtilization === 'function') prodCapUnsubscribeUtilization();
     if (typeof workAreasDataUnsubscribe === 'function') workAreasDataUnsubscribe();
+  }
+
+  // Clean up MCS subscriptions when leaving MCS
+  if (currentSection === 'mcs' && sec !== 'mcs') {
+    if (typeof mcsCleanupRealtimeSubscriptions === 'function') mcsCleanupRealtimeSubscriptions();
+    if (typeof mcsStopPolling === 'function') mcsStopPolling();
+  }
+
+  // Setup MCS subscriptions when entering MCS
+  if (sec === 'mcs' && currentSection !== 'mcs') {
+    if (typeof mcsSetupRealtimeSubscriptions === 'function') {
+      setTimeout(() => mcsSetupRealtimeSubscriptions(), 100);
+    }
   }
 
   // Clean up subscriptions when leaving production
@@ -358,6 +373,11 @@ function render() {
   if (currentSection === 'action-centre') {
     mc.innerHTML = `<div class="section-inner">${renderActionCentre()}</div>`;
     if (!actionCentreData && !actionCentreLoading) actionCentreLoad();
+    return;
+  }
+  if (currentSection === 'mcs') {
+    renderMcs();
+    if (!mcsList || mcsList.length === 0) mcsLoadChanges();
     return;
   }
   if (currentSection === 'capacity') {
