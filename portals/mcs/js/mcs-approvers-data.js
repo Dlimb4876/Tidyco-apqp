@@ -5,11 +5,17 @@
  * Approvers see pending changes in their Action Centre and can approve/reject
  * their designated step from the MCS view modal.
  *
+ * MCO Process:
+ *   1. Open + Impact Assessment
+ *   2. Approval 1  → REJECT = Closed | APPROVE → Implementing
+ *   3. Implement
+ *   4. Approval 2  → REJECT = Back to Implementing | APPROVE → Implemented
+ *
  * Requires a Supabase table:
  *
  *   CREATE TABLE mcs_approver_settings (
  *     id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
- *     step       text NOT NULL,   -- engineering | qa | manufacturing | management
+ *     step       text NOT NULL,   -- approval1 | approval2
  *     user_id    uuid NOT NULL,
  *     user_name  text NOT NULL,
  *     created_at timestamptz DEFAULT now()
@@ -20,15 +26,13 @@
 
 // Canonical step definitions — order matters (sequential approval chain)
 const MCS_APPROVAL_STEPS = [
-  { key: 'engineering',   label: 'Engineering Review',     field: 'eng_review_status',          byField: 'eng_review_by',              atField: 'eng_review_at',              notesField: 'eng_review_notes' },
-  { key: 'qa',            label: 'Quality Assurance',      field: 'qa_review_status',           byField: 'qa_review_by',               atField: 'qa_review_at',               notesField: 'qa_review_notes' },
-  { key: 'manufacturing', label: 'Manufacturing Sign-off', field: 'mfg_signoff_status',         byField: 'mfg_signoff_by',             atField: 'mfg_signoff_at',             notesField: 'mfg_signoff_notes' },
-  { key: 'management',    label: 'Management Auth.',       field: 'auth_implementation_status', byField: 'auth_implementation_by',     atField: 'auth_implementation_at',     notesField: 'auth_implementation_notes' }
+  { key: 'approval1', label: 'Approval 1',  field: 'eng_review_status', byField: 'eng_review_by', atField: 'eng_review_at', notesField: 'eng_review_notes',  activeStatus: 'review' },
+  { key: 'approval2', label: 'Approval 2',  field: 'qa_review_status',  byField: 'qa_review_by',  atField: 'qa_review_at',  notesField: 'qa_review_notes',   activeStatus: 'final_review' }
 ];
 
 /**
  * Load all approver assignments.
- * Returns { engineering: [{user_id, user_name}], qa: [], manufacturing: [], management: [] }
+ * Returns { approval1: [{user_id, user_name}], approval2: [] }
  * Returns null if the table doesn't exist (shows setup prompt in Settings).
  */
 async function mcsApproversLoad() {
@@ -40,15 +44,28 @@ async function mcsApproversLoad() {
     if (error) {
       // Table does not exist yet — return a sentinel so Settings can show setup SQL
       if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        return { _tableNotFound: true, engineering: [], qa: [], manufacturing: [], management: [] };
+        return { _tableNotFound: true, approval1: [], approval2: [] };
       }
       throw error;
     }
 
-    const config = { engineering: [], qa: [], manufacturing: [], management: [] };
+    const config = { approval1: [], approval2: [] };
     (data || []).forEach(row => {
-      if (config[row.step]) config[row.step].push({ user_id: row.user_id, user_name: row.user_name });
+      // Support both old step keys (engineering/qa/manufacturing/management) and new keys
+      let key = row.step;
+      if (key === 'engineering' || key === 'manufacturing') key = 'approval1';
+      if (key === 'qa' || key === 'management') key = 'approval2';
+      if (config[key]) config[key].push({ user_id: row.user_id, user_name: row.user_name });
     });
+    // De-duplicate (old data may have mapped multiple old steps to same new key)
+    for (const k of ['approval1', 'approval2']) {
+      const seen = new Set();
+      config[k] = config[k].filter(u => {
+        if (seen.has(u.user_id)) return false;
+        seen.add(u.user_id);
+        return true;
+      });
+    }
     return config;
   } catch (err) {
     console.error('[MCS Approvers] Load failed:', err);
@@ -88,7 +105,7 @@ async function mcsApproversRemove(step, userId) {
 
 /**
  * Returns the step keys the current user is an approver for.
- * e.g. ['engineering', 'qa']
+ * e.g. ['approval1'] or ['approval1', 'approval2']
  */
 function mcsGetMyApproverSteps() {
   if (!mcsApproverConfig || !currentUser) return [];
@@ -105,17 +122,15 @@ function mcsCanApproveStep(stepKey) {
 }
 
 /**
- * Returns the active (first unapproved) step key for a change that is 'review',
- * or null if all steps are done.
+ * Returns the active step key for a change based on its current status.
+ * approval1 is active when status = 'review'
+ * approval2 is active when status = 'final_review'
  */
 function mcsGetActiveStepKey(change) {
-  if (!change || change.status !== 'review') return null;
-  for (const step of MCS_APPROVAL_STEPS) {
-    const s = change[step.field];
-    if (!s || s === 'pending') return step.key;
-    if (s === 'rejected') return null; // chain broken
-  }
-  return null; // all approved
+  if (!change) return null;
+  if (change.status === 'review') return 'approval1';
+  if (change.status === 'final_review') return 'approval2';
+  return null;
 }
 
 /**
@@ -129,17 +144,13 @@ async function mcsGetPendingApprovalsForMe() {
   const mySteps = mcsGetMyApproverSteps();
   if (mySteps.length === 0) return [];
 
-  // Helper: check if a change is pending approval at a given step (and prior steps done)
+  // Helper: check if a change is pending approval at a given step
   function isPendingAtStep(change, stepKey) {
-    if (change.status !== 'review') return false;
-    const stepIdx = MCS_APPROVAL_STEPS.findIndex(s => s.key === stepKey);
-    if (stepIdx === -1) return false;
-    // All prior steps must be approved
-    for (let i = 0; i < stepIdx; i++) {
-      if (MCS_APPROVAL_STEPS[i].field && change[MCS_APPROVAL_STEPS[i].field] !== 'approved') return false;
-    }
-    const stepField = MCS_APPROVAL_STEPS[stepIdx].field;
-    const s = change[stepField];
+    const stepDef = MCS_APPROVAL_STEPS.find(s => s.key === stepKey);
+    if (!stepDef) return false;
+    // Change must be in the active status for this step
+    if (change.status !== stepDef.activeStatus) return false;
+    const s = change[stepDef.field];
     return !s || s === 'pending';
   }
 
@@ -164,7 +175,7 @@ async function mcsGetPendingApprovalsForMe() {
     const { data, error } = await supa
       .from('mcs_changes')
       .select('*')
-      .eq('status', 'review');
+      .in('status', ['review', 'final_review']);
     if (error) throw error;
 
     const pending = [];

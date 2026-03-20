@@ -1,63 +1,29 @@
 /**
  * MCS Approval Workflow
- * Handles 4-step approval chain: Engineering → QA → Manufacturing → Management
+ *
+ * MCO Process:
+ *   open → review (Approval 1) → closed  [if rejected]
+ *                              → implementing → final_review (Approval 2) → implementing  [if rejected]
+ *                                                                          → implemented   [if approved → overhaul entry]
  */
 
 /**
- * Get approval status for a change
- */
-function mcsGetApprovalStatus(change) {
-  const steps = [
-    { field: 'eng_review_status', label: 'Engineering' },
-    { field: 'qa_review_status', label: 'Quality' },
-    { field: 'mfg_signoff_status', label: 'Manufacturing' },
-    { field: 'auth_implementation_status', label: 'Management' }
-  ];
-
-  return steps.map(step => ({
-    label: step.label,
-    status: change[step.field] || 'pending'
-  }));
-}
-
-/**
- * Get pending approvals for current user
- */
-function mcsGetUserPendingApprovals(userRole) {
-  return mcsList.filter(change => {
-    if (change.status !== 'review') return false;
-
-    // Check which step needs current user's approval
-    const roleSteps = {
-      'engineering': 'eng_review_status',
-      'qa': 'qa_review_status',
-      'manufacturing': 'mfg_signoff_status',
-      'management': 'auth_implementation_status'
-    };
-
-    const stepField = roleSteps[userRole];
-    if (!stepField) return false;
-
-    return change[stepField] === 'pending' || change[stepField] === null;
-  });
-}
-
-/**
- * Approve a step in the workflow
+ * Approve the active step for a change.
+ * approval1 approved → status becomes 'implementing'
+ * approval2 approved → status becomes 'implemented' + overhaul entry created
  */
 async function mcsApproveStep(changeId, step, notes) {
   const change = mcsList.find(c => c.id === changeId);
   if (!change) return false;
 
-  const stepMap = {
-    'engineering': { field: 'eng_review_status', byField: 'eng_review_by', atField: 'eng_review_at', notesField: 'eng_review_notes' },
-    'qa': { field: 'qa_review_status', byField: 'qa_review_by', atField: 'qa_review_at', notesField: 'qa_review_notes' },
-    'manufacturing': { field: 'mfg_signoff_status', byField: 'mfg_signoff_by', atField: 'mfg_signoff_at', notesField: 'mfg_signoff_notes' },
-    'management': { field: 'auth_implementation_status', byField: 'auth_implementation_by', atField: 'auth_implementation_at', notesField: 'auth_implementation_notes' }
-  };
+  const stepDef = MCS_APPROVAL_STEPS.find(s => s.key === step);
+  if (!stepDef) return false;
 
-  const stepInfo = stepMap[step];
-  if (!stepInfo) return false;
+  // Must be active step (correct status for this step)
+  if (change.status !== stepDef.activeStatus) {
+    console.warn('[MCS] Change status', change.status, 'does not match active status for step', step);
+    return false;
+  }
 
   // Check the current user is assigned as an approver for this step
   if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step)) {
@@ -65,39 +31,24 @@ async function mcsApproveStep(changeId, step, notes) {
     return false;
   }
 
-  // Guard: ensure all prior steps are approved (sequential chain enforcement)
-  if (typeof MCS_APPROVAL_STEPS !== 'undefined') {
-    const stepIdx = MCS_APPROVAL_STEPS.findIndex(s => s.key === step);
-    for (let i = 0; i < stepIdx; i++) {
-      const prior = MCS_APPROVAL_STEPS[i];
-      if (change[prior.field] !== 'approved') {
-        console.warn('[MCS] Cannot approve step', step, '— prior step', prior.key, 'not yet approved');
-        alert(`Cannot approve: ${prior.label} must be approved first.`);
-        return false;
-      }
-    }
-  }
-
   try {
     const now = new Date().toISOString();
     const user = (currentUser && currentUser.email) ? currentUser.email : (currentUserRole || 'Unknown');
 
+    // Determine next status
+    const nextStatus = step === 'approval1' ? 'implementing' : 'implemented';
+
     const updateData = {
-      [stepInfo.field]: 'approved',
-      [stepInfo.byField]: user,
-      [stepInfo.atField]: now,
-      [stepInfo.notesField]: notes || '',
+      [stepDef.field]: 'approved',
+      [stepDef.byField]: user,
+      [stepDef.atField]: now,
+      [stepDef.notesField]: notes || '',
+      status: nextStatus,
       updated_at: now
     };
 
-    // Auto-advance to next step when all three sign-offs are approved
-    const mergedChange = { ...change, ...updateData };
-    const allApproved = mergedChange.eng_review_status === 'approved' &&
-                        mergedChange.qa_review_status === 'approved' &&
-                        mergedChange.mfg_signoff_status === 'approved';
-
-    if (allApproved && change.status === 'review') {
-      updateData.status = 'approved';
+    if (nextStatus === 'implemented') {
+      updateData.implementation_date = now.split('T')[0];
     }
 
     const { error } = await supa
@@ -112,14 +63,16 @@ async function mcsApproveStep(changeId, step, notes) {
       mcsList[idx] = { ...mcsList[idx], ...updateData };
     }
 
-    // Log timeline entry — map step name to valid event_type
-    const stepEventTypes = {
-      engineering: 'eng_reviewed',
-      qa: 'qa_reviewed',
-      manufacturing: 'mfg_signed',
-      management: 'authorized'
-    };
-    await mcsAddTimelineEntry(changeId, stepEventTypes[step] || 'edited', `${step} review approved.`, user);
+    // Log timeline entry
+    const eventTypeMap = { approval1: 'eng_reviewed', approval2: 'authorized' };
+    const label = stepDef.label;
+    await mcsAddTimelineEntry(changeId, eventTypeMap[step] || 'edited', `${label} approved.`, user);
+
+    // Approval 2 approved → auto-create overhaul history entry
+    if (step === 'approval2' && change.affected_product_id) {
+      const mergedChange = { ...change, ...updateData };
+      await mcsCreateOverhaulHistoryEntry(mergedChange);
+    }
 
     return true;
   } catch (err) {
@@ -129,21 +82,22 @@ async function mcsApproveStep(changeId, step, notes) {
 }
 
 /**
- * Reject a step in the workflow
+ * Reject the active step for a change.
+ * approval1 rejected → status becomes 'closed' (MCO terminated)
+ * approval2 rejected → status returns to 'implementing' (try again)
  */
 async function mcsRejectStep(changeId, step, reason) {
   const change = mcsList.find(c => c.id === changeId);
   if (!change) return false;
 
-  const stepMap = {
-    'engineering': { field: 'eng_review_status', byField: 'eng_review_by', atField: 'eng_review_at', notesField: 'eng_review_notes' },
-    'qa': { field: 'qa_review_status', byField: 'qa_review_by', atField: 'qa_review_at', notesField: 'qa_review_notes' },
-    'manufacturing': { field: 'mfg_signoff_status', byField: 'mfg_signoff_by', atField: 'mfg_signoff_at', notesField: 'mfg_signoff_notes' },
-    'management': { field: 'auth_implementation_status', byField: 'auth_implementation_by', atField: 'auth_implementation_at', notesField: 'auth_implementation_notes' }
-  };
+  const stepDef = MCS_APPROVAL_STEPS.find(s => s.key === step);
+  if (!stepDef) return false;
 
-  const stepInfo = stepMap[step];
-  if (!stepInfo) return false;
+  // Must be active step
+  if (change.status !== stepDef.activeStatus) {
+    console.warn('[MCS] Change status', change.status, 'does not match active status for step', step);
+    return false;
+  }
 
   // Check the current user is assigned as an approver for this step
   if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step)) {
@@ -155,14 +109,25 @@ async function mcsRejectStep(changeId, step, reason) {
     const now = new Date().toISOString();
     const user = (currentUser && currentUser.email) ? currentUser.email : (currentUserRole || 'Unknown');
 
+    // approval1 rejected → closed (terminated); approval2 rejected → back to implementing
+    const nextStatus = step === 'approval1' ? 'closed' : 'implementing';
+
     const updateData = {
-      [stepInfo.field]: 'rejected',
-      [stepInfo.byField]: user,
-      [stepInfo.atField]: now,
-      [stepInfo.notesField]: reason || '',
-      status: 'rejected',
+      [stepDef.field]: 'rejected',
+      [stepDef.byField]: user,
+      [stepDef.atField]: now,
+      [stepDef.notesField]: reason || '',
+      status: nextStatus,
       updated_at: now
     };
+
+    // Reset approval2 fields when returning to implementing so it can be re-submitted
+    if (step === 'approval2') {
+      updateData.qa_review_status = 'pending';
+      updateData.qa_review_by = null;
+      updateData.qa_review_at = null;
+      updateData.qa_review_notes = null;
+    }
 
     const { error } = await supa
       .from('mcs_changes')
@@ -176,7 +141,11 @@ async function mcsRejectStep(changeId, step, reason) {
       mcsList[idx] = { ...mcsList[idx], ...updateData };
     }
 
-    await mcsAddTimelineEntry(changeId, 'rejected', `${step} review rejected. Reason: ${reason || 'No reason provided'}`, user);
+    const label = stepDef.label;
+    const msg = step === 'approval1'
+      ? `${label} rejected — MCO closed. Reason: ${reason || 'No reason provided'}`
+      : `${label} rejected — returned to implementation. Reason: ${reason || 'No reason provided'}`;
+    await mcsAddTimelineEntry(changeId, 'rejected', msg, user);
 
     return true;
   } catch (err) {
@@ -209,64 +178,9 @@ async function mcsAddTimelineEntry(changeId, eventType, text, actor) {
 }
 
 /**
- * Check if change can be marked as implemented
- */
-function mcsCanMarkImplemented(change) {
-  return change.status === 'approved' &&
-    change.eng_review_status === 'approved' &&
-    change.qa_review_status === 'approved' &&
-    change.mfg_signoff_status === 'approved';
-}
-
-/**
- * Mark change as implemented and create overhaul_history entry
- */
-async function mcsMarkImplemented(changeId) {
-  const change = mcsList.find(c => c.id === changeId);
-  if (!change || !mcsCanMarkImplemented(change)) {
-    alert('Change is not ready for implementation');
-    return false;
-  }
-
-  try {
-    const now = new Date().toISOString();
-    const implementationDate = now.split('T')[0];
-
-    const updateData = {
-      status: 'implemented',
-      implementation_date: implementationDate,
-      updated_at: now
-    };
-
-    const { error: updateError } = await supa
-      .from('mcs_changes')
-      .update(updateData)
-      .eq('id', changeId);
-
-    if (updateError) throw updateError;
-
-    const idx = mcsList.findIndex(c => c.id === changeId);
-    if (idx !== -1) {
-      mcsList[idx] = { ...mcsList[idx], ...updateData };
-    }
-
-    // Auto-create overhaul_history entry if product is linked
-    if (change.affected_product_id) {
-      await mcsCreateOverhaulHistoryEntry(change);
-    }
-
-    await mcsAddTimelineEntry(changeId, 'implemented', 'Change marked as implemented.', 'System');
-
-    return true;
-  } catch (err) {
-    console.error('Error marking implemented:', err);
-    return false;
-  }
-}
-
-/**
- * Create overhaul_history entry on implementation
- * This links MCS changes to product timeline
+ * Create overhaul_history entry on implementation.
+ * Called automatically when Approval 2 is approved.
+ * This links MCO changes to product timeline (Overhaul Trends).
  */
 async function mcsCreateOverhaulHistoryEntry(change) {
   try {
@@ -282,9 +196,9 @@ async function mcsCreateOverhaulHistoryEntry(change) {
         effective_from_date: implDate,
         estimated_recovery_date: change.recovery_target_date,
         is_mcs_triggered: true,
-        change_reason: `MCS: ${change.change_type} - ${change.title}`,
+        change_reason: `MCO: ${change.change_type} - ${change.title}`,
         notes: change.justification || '',
-        created_by_name: change.initiated_by || 'MCS System',
+        created_by_name: change.initiated_by || 'MCO System',
         user_id: change.initiated_by_user_id,
         created_at: new Date().toISOString()
       }]);
@@ -292,7 +206,7 @@ async function mcsCreateOverhaulHistoryEntry(change) {
     if (error) {
       console.error('Error creating overhaul entry:', error);
     } else {
-      console.log('Overhaul history entry created for:', change.id);
+      console.log('Overhaul Trends entry created for:', change.id);
     }
   } catch (err) {
     console.error('Overhaul creation error:', err);
