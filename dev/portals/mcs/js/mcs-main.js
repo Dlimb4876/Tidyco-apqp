@@ -19,80 +19,83 @@ async function renderMcs() {
 
   // Create portal shell
   container.innerHTML = `
-    <div class="mcs-portal">
-      <div class="mcs-toolbar">
-        <div class="mcs-toolbar-title">Change Register <span class="mcs-toolbar-count" id="mcs-list-count"></span></div>
-        <div class="mcs-toolbar-controls">
-          <span class="mcs-sort-label">SORT:</span>
-          <select class="mcs-sort-select" id="mcs-sort-select" onchange="mcsRenderList()">
-            <option value="date-desc">Newest First</option>
-            <option value="date-asc">Oldest First</option>
-            <option value="priority">Priority</option>
-            <option value="status">Status</option>
-          </select>
+    <div class="mcs-layout">
+      <div class="mcs-portal">
+        <div class="mcs-toolbar">
+          <div class="mcs-toolbar-title">Change Register <span class="mcs-toolbar-count" id="mcs-list-count"></span></div>
+          <div class="mcs-toolbar-controls">
+            <span class="mcs-sort-label">SORT:</span>
+            <select class="mcs-sort-select" id="mcs-sort-select" onchange="mcsRenderList()">
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="priority">Priority</option>
+              <option value="status">Status</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="mcsOpenNewChange()">+ Raise a Change</button>
+          </div>
         </div>
+        <div class="mcs-list" id="mcs-list-container"></div>
       </div>
-      <div class="mcs-list" id="mcs-list-container"></div>
-    </div>
 
-    <aside class="sidebar">
-      <div class="search-wrap">
-        <input class="mcs-search-input" placeholder="Search changes..." id="mcs-search-input" oninput="mcsRenderList()" />
-      </div>
-      <div class="sidebar-section" style="padding-top: 16px">
-        <div class="sidebar-label">Status</div>
-        <button class="mcs-filter-btn active" onclick="mcsSetFilter('status', 'all', this)">
-          All Changes <span class="mcs-filter-count" id="mcs-fc-all">0</span>
-        </button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'open', this)">
-          Open <span class="mcs-filter-count" id="mcs-fc-open">0</span>
-        </button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'review', this)">
-          Under Review <span class="mcs-filter-count" id="mcs-fc-review">0</span>
-        </button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'approved', this)">
-          Approved <span class="mcs-filter-count" id="mcs-fc-approved">0</span>
-        </button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'implemented', this)">
-          Implemented <span class="mcs-filter-count" id="mcs-fc-implemented">0</span>
-        </button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'rejected', this)">
-          Rejected <span class="mcs-filter-count" id="mcs-fc-rejected">0</span>
-        </button>
-      </div>
-      <div class="sidebar-section" style="padding-top: 16px">
-        <div class="sidebar-label">Priority</div>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('priority', 'critical', this)">
-          Critical <span class="mcs-filter-count" id="mcs-fc-critical">0</span>
-        </button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('priority', 'high', this)">
-          High <span class="mcs-filter-count" id="mcs-fc-high">0</span>
-        </button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('priority', 'medium', this)">
-          Medium <span class="mcs-filter-count" id="mcs-fc-medium">0</span>
-        </button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('priority', 'low', this)">
-          Low <span class="mcs-filter-count" id="mcs-fc-low">0</span>
-        </button>
-      </div>
-      <div class="sidebar-section" style="padding-top: 16px">
-        <div class="sidebar-label">Change Type</div>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Engineering', this)">Engineering</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Process', this)">Process</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Material', this)">Material</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Tooling', this)">Tooling</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Quality', this)">Quality</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Safety', this)">Safety</button>
-      </div>
-      <div class="sidebar-section" style="padding-top: 16px">
-        <div class="sidebar-label">Source</div>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'Manual', this)">Manual</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'PFMEA', this)">PFMEA</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'Risk', this)">Risk</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'Customer', this)">Customer</button>
-        <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'Quality', this)">Quality</button>
-      </div>
-    </aside>
+      <aside class="mcs-sidebar">
+        <div class="mcs-search-wrap">
+          <input class="mcs-search-input" placeholder="Search changes..." id="mcs-search-input" oninput="mcsRenderList()" />
+        </div>
+        <div class="mcs-sidebar-section">
+          <div class="mcs-sidebar-label">Status</div>
+          <button class="mcs-filter-btn active" onclick="mcsSetFilter('status', 'all', this)">
+            All Changes <span class="mcs-filter-count" id="mcs-fc-all">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'open', this)">
+            Open <span class="mcs-filter-count" id="mcs-fc-open">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'review', this)">
+            Under Review <span class="mcs-filter-count" id="mcs-fc-review">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'approved', this)">
+            Approved <span class="mcs-filter-count" id="mcs-fc-approved">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'implemented', this)">
+            Implemented <span class="mcs-filter-count" id="mcs-fc-implemented">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('status', 'rejected', this)">
+            Rejected <span class="mcs-filter-count" id="mcs-fc-rejected">0</span>
+          </button>
+        </div>
+        <div class="mcs-sidebar-section">
+          <div class="mcs-sidebar-label">Priority</div>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('priority', 'critical', this)">
+            Critical <span class="mcs-filter-count" id="mcs-fc-critical">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('priority', 'high', this)">
+            High <span class="mcs-filter-count" id="mcs-fc-high">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('priority', 'medium', this)">
+            Medium <span class="mcs-filter-count" id="mcs-fc-medium">0</span>
+          </button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('priority', 'low', this)">
+            Low <span class="mcs-filter-count" id="mcs-fc-low">0</span>
+          </button>
+        </div>
+        <div class="mcs-sidebar-section">
+          <div class="mcs-sidebar-label">Change Type</div>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Engineering', this)">Engineering</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Process', this)">Process</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Material', this)">Material</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Tooling', this)">Tooling</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Quality', this)">Quality</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('type', 'Safety', this)">Safety</button>
+        </div>
+        <div class="mcs-sidebar-section">
+          <div class="mcs-sidebar-label">Source</div>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'Manual', this)">Manual</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'PFMEA', this)">PFMEA</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'Risk', this)">Risk</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'Customer', this)">Customer</button>
+          <button class="mcs-filter-btn" onclick="mcsSetFilter('source', 'Quality', this)">Quality</button>
+        </div>
+      </aside>
+    </div>
   `;
 
   // Load changes from Supabase
@@ -259,12 +262,20 @@ function mcsRenderList() {
   countEl.textContent = `(${filtered.length})`;
 
   if (filtered.length === 0) {
-    container.innerHTML = `
-      <div class="mcs-empty-state">
-        <div class="mcs-empty-icon">🔍</div>
-        <div class="mcs-empty-text">No changes found</div>
-      </div>
-    `;
+    const isFiltered = mcsCurrentFilter.status !== 'all' || mcsCurrentFilter.priority !== 'all' ||
+      mcsCurrentFilter.type !== 'all' || mcsCurrentFilter.source !== 'all' ||
+      (document.getElementById('mcs-search-input')?.value || '') !== '';
+    container.innerHTML = isFiltered
+      ? `<div class="mcs-empty-state">
+          <div class="mcs-empty-icon">🔍</div>
+          <div class="mcs-empty-text">No changes match your filters</div>
+          <div class="mcs-empty-sub">Try adjusting the filters or search term</div>
+        </div>`
+      : `<div class="mcs-empty-state">
+          <div class="mcs-empty-icon">📋</div>
+          <div class="mcs-empty-text">No change requests yet</div>
+          <div class="mcs-empty-sub">Click <strong>+ Raise a Change</strong> in the toolbar to log your first engineering change request.</div>
+        </div>`;
     return;
   }
 

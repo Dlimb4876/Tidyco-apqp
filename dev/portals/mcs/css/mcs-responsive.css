@@ -3,6 +3,23 @@
 
 /* -- Mobile (≤767px) -- */
 @media (max-width: 767px) {
+  /* Layout - stack sidebar below list on mobile */
+  .mcs-layout {
+    flex-direction: column;
+  }
+
+  .mcs-portal {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mcs-sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 12px 12px;
+  }
+
   /* Modal - full screen on mobile */
   .mcs-modal {
     width: 100vw;
