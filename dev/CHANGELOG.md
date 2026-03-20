@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-20 | Fix duplicate ECR ID on Raise a Change | ID was generated from mcsList.length+1 which collides when records have been deleted or the local list is out of sync; now queries the DB for the highest existing ECR-YYYY-NNNN number and increments from there
+
 ## 2026-03-20 | Add pending MCS approvals to hub "Logged in as" widget | Approvers had no at-a-glance view of changes awaiting their sign-off; the widget now shows an amber pending approval count and a "Review Changes →" button whenever mcsApprovals has items in actionCentreData
 
 ## 2026-03-20 | Auto-add time impact to Overhaul Trends when MCO passes final approval | Engineering changes had no way to flow through to Product Management — the product dropdown was saving the product name (not its UUID) so overhaul_history entries had no product link, and the entry was missing overhaul_hours so the trends chart showed nothing; now saves affected_product_id from the dropdown, calculates new overhaul hours as current + delta, inserts a properly linked history record, and updates the product's current hours so the Overhaul Trends chart and KPIs update immediately on Approval 2
