@@ -5,6 +5,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-20 | Update change request form: remove affected area, product selector, auto-author, hours impact | Affected area removed as not needed; part/drawing no. is now a dropdown from the products database; initiated by auto-fills with the logged-in user so it can't be entered incorrectly; time impact is now in hours and labelled "Overhaul Time Impact"; drawing update, QC plan, and supplier approval removed from impact assessment as they are not applicable.
+
 ## 2026-03-20 | Review and update all .md files, agent files, and plans | Stale test counts, outdated portal lists, misplaced root docs, broken links, and missing status markers on completed plans all degraded the value of the documentation.
 ## 2026-03-20 | Fix MCS portal layout, sidebar CSS, and add Raise a Change button | The filter sidebar used class names (.sidebar, .sidebar-section, .sidebar-label, .search-wrap) that had no CSS definitions anywhere, so it appeared completely unstyled. The list and sidebar had no flex wrapper so they stacked vertically instead of side-by-side. The toolbar had no button to create new changes even though mcsOpenNewChange() existed — users had no way to raise a change. Empty state now guides users to use the Raise a Change button.
 

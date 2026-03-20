@@ -163,7 +163,6 @@ function mcsGetFiltered() {
       const searchText = (
         change.title + ' ' +
         change.id + ' ' +
-        (change.affected_area || '') + ' ' +
         (change.part_drawing_no || '') + ' ' +
         (change.initiated_by || '') + ' ' +
         change.change_type
@@ -286,7 +285,6 @@ function mcsRenderList() {
         <div class="mcs-card-title">${esc(change.title)}</div>
         <div class="mcs-card-meta">
           <span class="mcs-tag">${esc(change.change_type)}</span>
-          <span class="mcs-tag">${esc(change.affected_area || '—')}</span>
           <div class="mcs-priority-dot mcs-priority-${change.priority}" title="Priority: ${change.priority}"></div>
           <span style="font-size: 11px; color: var(--text3); text-transform: capitalize;">${change.priority}</span>
         </div>

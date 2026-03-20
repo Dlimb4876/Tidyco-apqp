@@ -40,14 +40,14 @@ describe('MCS Main Portal', () => {
 
     it('should search across multiple fields', () => {
       const changes = [
-        { id: 'ECR-2026-0001', title: 'Safety Valve Update', affected_area: 'Assembly' },
-        { id: 'ECR-2026-0002', title: 'Paint Spec Change', affected_area: 'Finishing' }
+        { id: 'ECR-2026-0001', title: 'Safety Valve Update', part_drawing_no: 'Valve Assembly' },
+        { id: 'ECR-2026-0002', title: 'Paint Spec Change', part_drawing_no: 'Paint Part' }
       ];
 
       window.mcsList = changes;
       const q = 'Safety';
       const results = changes.filter(c =>
-        (c.id + c.title + c.affected_area).toLowerCase().includes(q.toLowerCase())
+        (c.id + c.title + (c.part_drawing_no || '')).toLowerCase().includes(q.toLowerCase())
       );
 
       expect(results.length).toBe(1);
