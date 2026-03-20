@@ -5,6 +5,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-20 | Fix MCS portal button doing nothing | renderMcs() used getElementById('app-content') which doesn't exist; the correct element is 'mainContent', so the function returned early and nothing rendered.
+
 ## 2026-03-20 | Add MCS card to hub and fix mcs-overhaul-integration test syntax error | MCS portal was inaccessible because the hub had no navigation card for it; test suite had a parse error (space in variable name) preventing mcs-overhaul-integration tests from running.
 
 ## 2026-03-20 | Implement Manufacturing Change System (MCS) portal with multi-source trigger support and schedule impact tracking | Introduced a new Manufacturing Change System portal for centralized ECR management with 4-step approval workflow (Engineering → QA → Manufacturing → Management). MCS supports multiple trigger sources (manual creation, PFMEA, risks, customer feedback, quality issues, supply chain), real-time subscriptions, mobile-responsive UI, and schedule impact assessment. Auto-creates overhaul_history entries on implementation to feed product timeline KPIs. Integrates with Action Centre (approval tasks) and PFMEA history (change audit trail). Includes 5 comprehensive test files (mcs-main, mcs-approval, mcs-overhaul-integration, mcs-actions) covering filtering, approval chains, timeline logging, portfolio KPI calculations, and cross-portal workflows.
