@@ -14,7 +14,7 @@
  * Initialize MCS portal
  */
 async function renderMcs() {
-  const container = document.getElementById('app-content');
+  const container = document.getElementById('mainContent');
   if (!container) return;
 
   // Create portal shell
