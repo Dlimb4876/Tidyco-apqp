@@ -31,6 +31,7 @@ async function renderMcs() {
               <option value="priority">Priority</option>
               <option value="status">Status</option>
             </select>
+            <button class="btn btn-ghost btn-sm" onclick="showGuide('mcs')" title="User Guide">❓ Guide</button>
             <button class="btn btn-primary btn-sm" onclick="mcsOpenNewChange()">+ Raise a Change</button>
           </div>
         </div>
