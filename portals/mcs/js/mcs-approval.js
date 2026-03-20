@@ -26,7 +26,7 @@ async function mcsApproveStep(changeId, step, notes) {
   }
 
   // Check the current user is assigned as an approver for this step
-  if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step)) {
+  if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step, change)) {
     console.warn('[MCS] User is not assigned as an approver for step:', step);
     return false;
   }
@@ -100,7 +100,7 @@ async function mcsRejectStep(changeId, step, reason) {
   }
 
   // Check the current user is assigned as an approver for this step
-  if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step)) {
+  if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step, change)) {
     console.warn('[MCS] User is not assigned as an approver for step:', step);
     return false;
   }

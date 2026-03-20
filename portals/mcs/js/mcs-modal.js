@@ -29,6 +29,42 @@ function mcsRenderTimelineHtml(events) {
 }
 
 /**
+ * Build the "Select Approver" section for the create/edit form.
+ * Shows configured Approval 1 approvers as a dropdown so the submitter
+ * can nominate a specific reviewer. The nomination is stored in
+ * eng_review_notes as "nominated_approver:<email>" when the change is saved.
+ */
+function mcsApproverSelectionHtml(preselectedEmail) {
+  const step1Approvers = (mcsApproverConfig && mcsApproverConfig.approval1) || [];
+
+  if (step1Approvers.length === 0) {
+    return `
+      <div class="mcs-section-title">Approval 1 Reviewer</div>
+      <div style="font-size:12px;color:var(--text3);padding:4px 0 8px">
+        No specific approvers configured — any editor can approve.
+        <a href="#s=settings&tab=mcs-approvers" onclick="navigate('settings',{tab:'mcs-approvers'});mcsCloseModal('mcs-form-backdrop');return false;"
+           style="color:var(--accent);text-decoration:none;margin-left:4px">Configure in Settings →</a>
+      </div>`;
+  }
+
+  const options = step1Approvers.map(a => {
+    const email = a.user_email || '';
+    const selected = preselectedEmail && email && email === preselectedEmail ? 'selected' : '';
+    return `<option value="${esc(email)}" data-id="${esc(a.user_id)}" ${selected}>${esc(a.user_name)}${email ? ' — ' + esc(email) : ''}</option>`;
+  }).join('');
+
+  return `
+    <div class="mcs-section-title">Approval 1 Reviewer</div>
+    <div class="mcs-field-group">
+      <div class="mcs-field-label">Select who should review this change</div>
+      <select class="mcs-field-select" id="mcs-f-approver">
+        <option value="">Any configured approver</option>
+        ${options}
+      </select>
+    </div>`;
+}
+
+/**
  * Show create/new change modal
  */
 function mcsShowCreateModal() {
@@ -128,6 +164,8 @@ function mcsShowCreateModal() {
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" /><label for="mcs-imp-training">Training Required</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" /><label for="mcs-imp-customer">Customer Notification</label></div>
         </div>
+
+        ${mcsApproverSelectionHtml()}
       </div>
       <div class="mcs-modal-footer">
         <button class="mcs-btn mcs-btn-ghost" onclick="mcsCloseModal('mcs-form-backdrop')">Cancel</button>
@@ -401,6 +439,8 @@ async function mcsSaveChange() {
 
       const initiatedBy = document.getElementById('mcs-f-author')?.value || 'Unknown';
 
+      const nominatedApprover = document.getElementById('mcs-f-approver')?.value || '';
+
       const newChange = {
         id,
         title,
@@ -415,7 +455,9 @@ async function mcsSaveChange() {
         updated_at: now,
         target_implementation: document.getElementById('mcs-f-target')?.value,
         estimated_time_impact_days: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
-        justification: document.getElementById('mcs-f-justification')?.value
+        justification: document.getElementById('mcs-f-justification')?.value,
+        // Store nominated approver so mcsCanApproveStep can identify who was asked to review
+        eng_review_notes: nominatedApprover ? 'nominated_approver:' + nominatedApprover : null
       };
 
       const { error } = await supa
@@ -656,7 +698,7 @@ function mcsModalFooterButtons(change) {
 
   if (change.status === 'review') {
     // Waiting for Approval 1
-    const canApprove = typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('approval1');
+    const canApprove = typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('approval1', change);
     if (!canApprove) {
       return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting Approval 1</span>`;
     }
@@ -675,7 +717,7 @@ function mcsModalFooterButtons(change) {
 
   if (change.status === 'final_review') {
     // Waiting for Approval 2
-    const canApprove = typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('approval2');
+    const canApprove = typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('approval2', change);
     if (!canApprove) {
       return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting Approval 2</span>`;
     }
@@ -762,11 +804,15 @@ async function mcsAdvanceStatus(id) {
     };
 
     if (nextStatus === 'review') {
-      // Reset Approval 1 fields so the chain starts cleanly
+      // Reset Approval 1 fields so the chain starts cleanly.
+      // Preserve eng_review_notes only if it holds a nominated_approver marker.
       updateData.eng_review_status = 'pending';
       updateData.eng_review_by = null;
       updateData.eng_review_at = null;
-      updateData.eng_review_notes = null;
+      const existingNotes = change.eng_review_notes || '';
+      if (!existingNotes.startsWith('nominated_approver:')) {
+        updateData.eng_review_notes = null;
+      }
     } else if (nextStatus === 'final_review') {
       // Reset Approval 2 fields so approver sees a fresh request
       updateData.qa_review_status = 'pending';
