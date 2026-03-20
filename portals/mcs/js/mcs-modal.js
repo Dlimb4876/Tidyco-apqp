@@ -439,10 +439,22 @@ async function mcsSaveChange() {
       mcsList[changeIdx] = { ...mcsList[changeIdx], ...updateFields, impacts };
       mcsToast('Change updated successfully');
     } else {
-      // Create new
+      // Create new — query DB for highest existing ECR number this year to avoid duplicate key
       const year = new Date().getFullYear();
-      const nextNum = String(mcsList.length + 1).padStart(4, '0');
-      const id = `ECR-${year}-${nextNum}`;
+      const prefix = `ECR-${year}-`;
+      const { data: existingIds } = await supa
+        .from('mcs_changes')
+        .select('id')
+        .ilike('id', `${prefix}%`);
+      let maxNum = 0;
+      if (existingIds && existingIds.length > 0) {
+        existingIds.forEach(row => {
+          const num = parseInt(row.id.replace(prefix, ''), 10);
+          if (!isNaN(num) && num > maxNum) maxNum = num;
+        });
+      }
+      const nextNum = String(maxNum + 1).padStart(4, '0');
+      const id = `${prefix}${nextNum}`;
       const now = new Date().toISOString();
 
       const initiatedBy = document.getElementById('mcs-f-author')?.value || 'Unknown';
