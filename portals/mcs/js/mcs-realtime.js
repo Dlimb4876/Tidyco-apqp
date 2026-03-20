@@ -75,11 +75,14 @@ function handleMcsChangesUpdate(payload) {
     // Change updated
     const idx = mcsList.findIndex(c => c.id === newRecord.id);
     if (idx !== -1) {
-      mcsList[idx] = newRecord;
+      // Preserve client-side-only fields (impacts, timeline) that aren't in the DB row
+      const existing = mcsList[idx];
+      mcsList[idx] = { ...newRecord, impacts: existing.impacts || [], timeline: existing.timeline || [] };
 
-      // If we're viewing this change, update modal
-      if (mcsViewingId === newRecord.id) {
-        mcsShowViewModal(newRecord);
+      // Only refresh the open modal — don't auto-reopen a modal the user has closed.
+      // mcsViewingId is cleared by mcsCloseModal, so a null here means no modal is open.
+      if (mcsViewingId === newRecord.id && document.getElementById('mcs-view-backdrop')) {
+        mcsShowViewModal(mcsList[idx]);
       }
 
       mcsRenderList();

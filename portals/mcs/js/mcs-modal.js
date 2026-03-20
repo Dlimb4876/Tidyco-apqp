@@ -783,6 +783,11 @@ function mcsCloseModal(id) {
     el.classList.remove('open');
     setTimeout(() => el.remove(), 200);
   }
+  // Clear the viewing ID when the view modal is closed so the realtime
+  // subscription does not auto-reopen it after the user has dismissed it.
+  if (id === 'mcs-view-backdrop') {
+    mcsViewingId = null;
+  }
 }
 
 /**
