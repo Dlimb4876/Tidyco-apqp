@@ -6,6 +6,9 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 ---
 
 ## 2026-03-20 | Review and update all .md files, agent files, and plans | Stale test counts, outdated portal lists, misplaced root docs, broken links, and missing status markers on completed plans all degraded the value of the documentation.
+## 2026-03-20 | Fix MCS portal layout, sidebar CSS, and add Raise a Change button | The filter sidebar used class names (.sidebar, .sidebar-section, .sidebar-label, .search-wrap) that had no CSS definitions anywhere, so it appeared completely unstyled. The list and sidebar had no flex wrapper so they stacked vertically instead of side-by-side. The toolbar had no button to create new changes even though mcsOpenNewChange() existed — users had no way to raise a change. Empty state now guides users to use the Raise a Change button.
+
+## 2026-03-20 | Fix MCS portal button doing nothing | renderMcs() used getElementById('app-content') which doesn't exist; the correct element is 'mainContent', so the function returned early and nothing rendered.
 
 ## 2026-03-20 | Add MCS card to hub and fix mcs-overhaul-integration test syntax error | MCS portal was inaccessible because the hub had no navigation card for it; test suite had a parse error (space in variable name) preventing mcs-overhaul-integration tests from running.
 
