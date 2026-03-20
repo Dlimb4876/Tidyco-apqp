@@ -1,0 +1,793 @@
+/* MCS (Manufacturing Change System) Portal Styles */
+/* Integrated with Tidyco design language */
+
+/* -- MCS Specific Variables -- */
+:root {
+  --mcs-status-open: #2563eb;
+  --mcs-status-review: #d97706;
+  --mcs-status-approved: #16a34a;
+  --mcs-status-implemented: #9ca3af;
+  --mcs-status-rejected: #dc2626;
+}
+
+/* -- Portal Layout (inherited from main shell) -- */
+.mcs-portal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* -- Toolbar (status counts) -- */
+.mcs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 52px;
+  z-index: 50;
+}
+
+.mcs-toolbar-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.mcs-toolbar-count {
+  font-size: 13px;
+  color: var(--text3);
+  margin-left: 4px;
+}
+
+.mcs-toolbar-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mcs-sort-label {
+  font-size: 12px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.mcs-sort-select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: var(--body);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mcs-sort-select:hover {
+  border-color: var(--text2);
+}
+
+.mcs-sort-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* -- Change List -- */
+.mcs-list {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* -- Change Card -- */
+.mcs-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: start;
+  border-radius: 8px;
+}
+
+.mcs-card:hover {
+  border-color: var(--border2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.mcs-card.status-open {
+  border-left-color: var(--mcs-status-open);
+}
+
+.mcs-card.status-review {
+  border-left-color: var(--mcs-status-review);
+}
+
+.mcs-card.status-approved {
+  border-left-color: var(--mcs-status-approved);
+}
+
+.mcs-card.status-implemented {
+  border-left-color: var(--mcs-status-implemented);
+}
+
+.mcs-card.status-rejected {
+  border-left-color: var(--mcs-status-rejected);
+}
+
+.mcs-card-ref {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+.mcs-card-body {
+  min-width: 0;
+}
+
+.mcs-card-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mcs-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.mcs-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--surface3);
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+
+.mcs-priority-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mcs-priority-critical {
+  background: var(--red);
+}
+
+.mcs-priority-high {
+  background: var(--orange);
+}
+
+.mcs-priority-medium {
+  background: #2563eb;
+}
+
+.mcs-priority-low {
+  background: var(--text3);
+}
+
+.mcs-card-submeta {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text3);
+  flex-wrap: wrap;
+}
+
+.mcs-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mcs-status-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.mcs-status-open {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.mcs-status-review {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.mcs-status-approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.mcs-status-implemented {
+  background: var(--surface3);
+  color: var(--text3);
+}
+
+.mcs-status-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.mcs-card-impacts {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* -- Modal Styles (reuse from components) -- */
+.mcs-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 760px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 12px;
+  animation: slidein 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.mcs-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mcs-modal-ref-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface3);
+  color: var(--text3);
+  padding: 3px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+}
+
+.mcs-modal-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.mcs-modal-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.mcs-modal-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mcs-modal-close {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: all 0.1s;
+}
+
+.mcs-modal-close:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+.mcs-modal-body {
+  padding: 20px 24px;
+}
+
+.mcs-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.mcs-modal-grid.full {
+  grid-template-columns: 1fr;
+}
+
+.mcs-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mcs-field-group.full {
+  grid-column: 1 / -1;
+}
+
+.mcs-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+
+.mcs-field-input,
+.mcs-field-select,
+.mcs-field-textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  border-radius: 6px;
+  transition: all 0.15s;
+  width: 100%;
+}
+
+.mcs-field-input:focus,
+.mcs-field-select:focus,
+.mcs-field-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--surface);
+}
+
+.mcs-field-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: var(--body);
+}
+
+.mcs-field-select {
+  cursor: pointer;
+}
+
+.mcs-field-select option {
+  background: var(--surface);
+}
+
+/* -- Section Titles -- */
+.mcs-section-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  margin-top: 20px;
+}
+
+/* -- Approval Chain -- */
+.mcs-approval-chain {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+}
+
+.mcs-approval-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.mcs-approval-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.mcs-approval-step.done:not(:last-child)::after {
+  background: var(--green);
+}
+
+.mcs-approval-step.current:not(:last-child)::after {
+  background: linear-gradient(90deg, var(--orange), var(--border));
+}
+
+.mcs-approval-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  z-index: 1;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.mcs-approval-step.done .mcs-approval-circle {
+  border-color: var(--green);
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.mcs-approval-step.current .mcs-approval-circle {
+  border-color: var(--orange);
+  background: var(--orange-dim);
+  color: var(--orange);
+  animation: pulse 1.5s infinite;
+}
+
+.mcs-approval-step.rejected .mcs-approval-circle {
+  border-color: var(--red);
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+.mcs-approval-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  margin-top: 6px;
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mcs-approval-role {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+  text-align: center;
+}
+
+/* -- Impact Assessment Grid -- */
+.mcs-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mcs-impact-cell {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mcs-impact-cell input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.mcs-impact-cell label {
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* -- Timeline -- */
+.mcs-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-left: 2px solid var(--border);
+  margin-left: 8px;
+  padding-left: 20px;
+}
+
+.mcs-tl-event {
+  position: relative;
+  padding-bottom: 18px;
+}
+
+.mcs-tl-event::before {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface3);
+  border: 2px solid var(--border2);
+}
+
+.mcs-tl-event.accent::before {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.mcs-tl-event.warn::before {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.mcs-tl-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-bottom: 2px;
+}
+
+.mcs-tl-text {
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.mcs-tl-author {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* -- Modal Footer -- */
+.mcs-modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  border-radius: 0 0 12px 12px;
+}
+
+.mcs-btn {
+  font-family: var(--body);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 8px 18px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.mcs-btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.mcs-btn-primary:hover {
+  background: var(--accent2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.mcs-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+
+.mcs-btn-ghost:hover {
+  border-color: var(--text2);
+  color: var(--text);
+}
+
+.mcs-btn-danger {
+  background: transparent;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: var(--red);
+}
+
+.mcs-btn-danger:hover {
+  background: var(--red-dim);
+  border-color: var(--red);
+}
+
+/* -- Empty State -- */
+.mcs-empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text3);
+}
+
+.mcs-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.mcs-empty-text {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text3);
+}
+
+/* -- Toast -- */
+.mcs-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--surface);
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 500;
+  display: none;
+  animation: slideup 0.2s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.mcs-toast.show {
+  display: block;
+}
+
+@keyframes slideup {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* -- Modal Backdrop -- */
+.mcs-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: fadein 0.15s;
+}
+
+.mcs-modal-backdrop.open {
+  display: flex;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* -- Sidebar Filters (inherited layout) -- */
+.mcs-filter-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.1s;
+  text-align: left;
+  margin-bottom: 1px;
+}
+
+.mcs-filter-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.mcs-filter-btn.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.mcs-filter-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface3);
+  padding: 1px 7px;
+  border-radius: 10px;
+  color: var(--text3);
+}
+
+.mcs-filter-btn.active .mcs-filter-count {
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--accent);
+}
+
+/* -- Search Input (inherited from main) -- */
+.mcs-search-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  border-radius: 6px;
+  transition: border-color 0.15s;
+}
+
+.mcs-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.mcs-search-input::placeholder {
+  color: var(--text3);
+}

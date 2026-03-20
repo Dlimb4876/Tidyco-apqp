@@ -89,6 +89,19 @@ let presenceMap = {};
 let projectsPage = 0;
 let projectsAllLoaded = false;
 
+// ── MCS (Manufacturing Change System) state ────────────────
+// Core data and filters
+let mcsList = [];                                  // All MCS changes loaded from Supabase
+let mcsCurrentFilter = {
+  status: 'all',                                   // all | open | review | approved | implemented | rejected
+  priority: 'all',                                 // all | critical | high | medium | low
+  type: 'all',                                     // all | Engineering | Process | Material | Tooling | Quality | Safety
+  source: 'all'                                    // all | Manual | PFMEA | Risk | Customer | Quality | Supply Chain
+};
+let mcsViewingId = null;                           // ECR ID currently in view modal
+let mcsEditingId = null;                           // ECR ID currently being edited
+let mcsLoading = false;                            // true while loading from Supabase
+
 // ── Accessor ─────────────────────────────────────────────────
 function prog() { return db.projects.find(p => p.id === progId) || null; }
 
