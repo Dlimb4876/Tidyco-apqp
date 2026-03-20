@@ -124,46 +124,59 @@ function mcsShowViewModal(change) {
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-view-backdrop';
 
-  // Build approval chain HTML
+  // Build approval chain HTML — use each step's actual approval status
   const approvalSteps = [
-    { name: 'ENGINEERING', role: 'Eng. Review', status: change.eng_review_status },
-    { name: 'QUALITY', role: 'QA Approval', status: change.qa_review_status },
-    { name: 'MANUFACTURING', role: 'Mfg. Sign-off', status: change.mfg_signoff_status },
-    { name: 'MANAGEMENT', role: 'Auth. to Implement', status: change.auth_implementation_status }
+    { name: 'Engineering', role: 'Eng. Review', status: change.eng_review_status, byField: 'eng_review_by', atField: 'eng_review_at', notesField: 'eng_review_notes' },
+    { name: 'Quality', role: 'QA Approval', status: change.qa_review_status, byField: 'qa_review_by', atField: 'qa_review_at', notesField: 'qa_review_notes' },
+    { name: 'Manufacturing', role: 'Mfg. Sign-off', status: change.mfg_signoff_status, byField: 'mfg_signoff_by', atField: 'mfg_signoff_at', notesField: 'mfg_signoff_notes' },
+    { name: 'Management', role: 'Auth. to Implement', status: change.auth_implementation_status, byField: 'auth_implementation_by', atField: 'auth_implementation_at', notesField: 'auth_implementation_notes' }
   ];
-
-  const statusOrder = { open: 0, review: 1, approved: 2, implemented: 3, rejected: 4 };
-  const currentStatusIndex = statusOrder[change.status] || 0;
 
   const approvalChainHtml = approvalSteps.map((step, i) => {
     let cls = '';
-    const icons = { approved: '✓', rejected: '✗', pending: '•', null: i + 1 };
-    const iconValue = icons[step.status] || icons.null;
+    let icon = String(i + 1);
 
-    if (change.status === 'rejected') {
-      cls = i === 0 ? 'done' : i === 1 ? 'rejected' : '';
-    } else if (currentStatusIndex > i) {
+    if (step.status === 'approved') {
       cls = 'done';
-    } else if (currentStatusIndex === i) {
-      cls = 'current';
+      icon = '✓';
+    } else if (step.status === 'rejected') {
+      cls = 'rejected';
+      icon = '✗';
+    } else {
+      // Active if all prior steps are approved and change is in review
+      const allPriorApproved = approvalSteps.slice(0, i).every(s => s.status === 'approved');
+      if (allPriorApproved && change.status === 'review') cls = 'current';
     }
+
+    const approvedBy = change[step.byField] || '';
+    const approvedAt = change[step.atField] ? change[step.atField].split('T')[0] : '';
+    const notes = change[step.notesField] || '';
+    const stepStatus = step.status === 'approved' ? 'Approved' : step.status === 'rejected' ? 'Rejected' : cls === 'current' ? 'In Review' : 'Pending';
 
     return `
       <div class="mcs-approval-step ${cls}">
-        <div class="mcs-approval-circle">${iconValue}</div>
-        <div class="mcs-approval-name">${step.name}</div>
+        <div class="mcs-approval-circle">${icon}</div>
+        <div class="mcs-approval-name">${esc(step.name)}</div>
         <div class="mcs-approval-role">${step.role}</div>
+        <div class="mcs-approval-status-label">${stepStatus}</div>
+        ${approvedBy ? `<div class="mcs-approval-meta">${esc(approvedBy)}</div>` : ''}
+        ${approvedAt ? `<div class="mcs-approval-date">${approvedAt}</div>` : ''}
+        ${notes ? `<div class="mcs-approval-notes" title="${esc(notes)}">"${esc(notes.length > 40 ? notes.slice(0, 40) + '…' : notes)}"</div>` : ''}
       </div>
     `;
   }).join('');
 
-  // Build impacts HTML
-  const impactTypes = [
-    'BOM Change', 'Work Instructions', 'Tooling Change', 'Training Required', 'Customer Notification'
-  ];
+  // Build impacts HTML with icons per type
+  const impactIconMap = {
+    'BOM Change': '📋',
+    'Work Instructions': '📝',
+    'Tooling Change': '🔧',
+    'Training Required': '🎓',
+    'Customer Notification': '📣'
+  };
   const impactsHtml = (change.impacts || []).length > 0
-    ? (change.impacts || []).map(imp => `<span class="mcs-tag" style="background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(37,99,235,0.2)">✓ ${esc(imp)}</span>`).join('')
-    : '<span style="color: var(--text3); font-size: 12px;">None specified</span>';
+    ? (change.impacts || []).map(imp => `<span class="mcs-impact-tag">${impactIconMap[imp] || '•'} ${esc(imp)}</span>`).join('')
+    : '<span class="mcs-impact-none">No impact areas selected</span>';
 
   // Build timeline HTML
   const timelineHtml = (change.timeline || []).length > 0
@@ -209,6 +222,16 @@ function mcsShowViewModal(change) {
           <div class="mcs-field-group">
             <div class="mcs-field-label">Part / Drawing</div>
             <div style="font-family: var(--mono); font-size: 12px; color: var(--text2);">${esc(change.part_drawing_no || '—')}</div>
+          </div>
+          <div class="mcs-field-group">
+            <div class="mcs-field-label">Time Impact (hrs)</div>
+            <div class="mcs-time-impact-display ${change.estimated_time_impact_days > 0 ? 'has-impact' : ''}">
+              ${change.estimated_time_impact_days > 0 ? `<span class="mcs-time-impact-value">⏱ ${change.estimated_time_impact_days}h</span>` : '<span style="color:var(--text3);font-size:12px;">—</span>'}
+            </div>
+          </div>
+          <div class="mcs-field-group">
+            <div class="mcs-field-label">Target Implementation</div>
+            <div style="font-family: var(--mono); font-size: 12px; color: var(--text2);">${change.target_implementation || '—'}</div>
           </div>
           <div class="mcs-field-group mcs-modal-grid full">
             <div class="mcs-field-label">Description of Change</div>
