@@ -298,7 +298,7 @@ async function mcsSaveChange() {
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      const { error } = await supa
         .from('mcs_changes')
         .update(updated)
         .eq('id', mcsEditingId);
@@ -340,7 +340,7 @@ async function mcsSaveChange() {
         ]
       };
 
-      const { error } = await supabase
+      const { error } = await supa
         .from('mcs_changes')
         .insert([newChange]);
 
@@ -365,7 +365,7 @@ async function mcsDeleteChange(id) {
   if (!confirm('Permanently delete this change request?')) return;
 
   try {
-    const { error } = await supabase
+    const { error } = await supa
       .from('mcs_changes')
       .delete()
       .eq('id', id);
@@ -538,7 +538,7 @@ async function mcsAdvanceStatus(id) {
       updated.implementation_date = new Date().toISOString().split('T')[0];
     }
 
-    const { error } = await supabase
+    const { error } = await supa
       .from('mcs_changes')
       .update(updated)
       .eq('id', id);
