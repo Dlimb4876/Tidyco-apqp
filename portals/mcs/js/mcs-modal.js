@@ -3,6 +3,32 @@
  */
 
 /**
+ * Map raw mcs_timeline DB rows to display-friendly event objects
+ */
+function mcsFormatTimelineEvents(rows) {
+  return rows.map(ev => ({
+    time: new Date(ev.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    text: ev.event_text || '',
+    author: ev.actor_name || ev.actor_email || '',
+    type: ev.event_type
+  }));
+}
+
+/**
+ * Render timeline events array to HTML string
+ */
+function mcsRenderTimelineHtml(events) {
+  if (!events.length) return '<div style="color: var(--text3); font-size: 12px; padding: 8px 0;">No activity recorded.</div>';
+  return events.map(ev => `
+    <div class="mcs-tl-event ${ev.type || ''}">
+      <div class="mcs-tl-time">${ev.time || '—'}</div>
+      <div class="mcs-tl-text">${esc(ev.text || '')}</div>
+      <div class="mcs-tl-author">${esc(ev.author || '')}</div>
+    </div>
+  `).join('');
+}
+
+/**
  * Show create/new change modal
  */
 function mcsShowCreateModal() {
@@ -209,15 +235,7 @@ function mcsShowViewModal(change) {
     : '<span class="mcs-impact-none">No impact areas selected</span>';
 
   // Build timeline HTML
-  const timelineHtml = (change.timeline || []).length > 0
-    ? (change.timeline || []).map(ev => `
-      <div class="mcs-tl-event ${ev.type || ''}">
-        <div class="mcs-tl-time">${ev.time || '—'}</div>
-        <div class="mcs-tl-text">${esc(ev.text || '')}</div>
-        <div class="mcs-tl-author">${esc(ev.author || '')}</div>
-      </div>
-    `).join('')
-    : '<div style="color: var(--text3); font-size: 12px; padding: 8px 0;">No activity recorded.</div>';
+  const timelineHtml = mcsRenderTimelineHtml(change.timeline || []);
 
   backdrop.innerHTML = `
     <div class="mcs-modal" id="mcs-view-modal">
@@ -286,7 +304,18 @@ function mcsShowViewModal(change) {
         </div>
 
         <div class="mcs-section-title">Activity Log</div>
-        <div class="mcs-timeline">${timelineHtml}</div>
+        <div class="mcs-timeline" id="mcs-view-timeline">${timelineHtml}</div>
+
+        <div class="mcs-comment-form">
+          <div class="mcs-comment-form-row">
+            <select class="mcs-field-select mcs-comment-type" id="mcs-comment-type">
+              <option value="comment">💬 Comment</option>
+              <option value="progress_update">📈 Progress Update</option>
+            </select>
+            <button class="mcs-btn mcs-btn-primary mcs-comment-post-btn" onclick="mcsPostComment('${esc(change.id)}')">Post</button>
+          </div>
+          <textarea class="mcs-field-textarea mcs-comment-textarea" id="mcs-comment-text" placeholder="Add a comment or progress update..." rows="2"></textarea>
+        </div>
       </div>
       <div class="mcs-modal-footer">
         <button class="mcs-btn mcs-btn-danger" onclick="mcsDeleteChange('${esc(change.id)}')">Delete</button>
@@ -414,6 +443,60 @@ async function mcsSaveChange() {
   } catch (err) {
     console.error('Save error:', err);
     alert('Error saving change: ' + err.message);
+  }
+}
+
+/**
+ * Post a comment or progress update to the activity log
+ */
+async function mcsPostComment(changeId) {
+  const textEl = document.getElementById('mcs-comment-text');
+  const typeEl = document.getElementById('mcs-comment-type');
+  const text = textEl ? textEl.value.trim() : '';
+  const eventType = typeEl ? typeEl.value : 'comment';
+
+  if (!text) {
+    textEl && textEl.focus();
+    return;
+  }
+
+  const actor = (currentUser && (currentUser.user_metadata?.full_name || currentUser.email)) || 'Unknown';
+
+  try {
+    const { error } = await supa
+      .from('mcs_timeline')
+      .insert([{
+        change_id: changeId,
+        event_type: eventType,
+        event_text: text,
+        actor_name: actor
+      }]);
+
+    if (error) throw error;
+
+    if (textEl) textEl.value = '';
+
+    // Reload timeline and re-render in-place
+    const { data: timelineData } = await supa
+      .from('mcs_timeline')
+      .select('*')
+      .eq('change_id', changeId)
+      .order('created_at', { ascending: true });
+
+    const events = mcsFormatTimelineEvents(timelineData || []);
+
+    const timelineEl = document.getElementById('mcs-view-timeline');
+    if (timelineEl) {
+      timelineEl.innerHTML = mcsRenderTimelineHtml(events);
+    }
+
+    // Also update the in-memory change object
+    const change = mcsList.find(c => c.id === changeId);
+    if (change) change.timeline = events;
+
+  } catch (err) {
+    console.error('Error posting comment:', err);
+    alert('Error saving: ' + err.message);
   }
 }
 
