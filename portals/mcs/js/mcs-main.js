@@ -101,11 +101,13 @@ async function renderMcs() {
     </div>
   `;
 
-  // Load changes and approver config in parallel
+  // Load changes and approver config in parallel.
+  // Always reload the approver config so permission changes made in Settings
+  // take effect immediately without requiring a page refresh.
   await Promise.all([
     mcsLoadChanges(),
     (async () => {
-      if (typeof mcsApproversLoad === 'function' && mcsApproverConfig === null && !mcsApproverConfigLoading) {
+      if (typeof mcsApproversLoad === 'function' && !mcsApproverConfigLoading) {
         mcsApproverConfigLoading = true;
         mcsApproverConfig = await mcsApproversLoad();
         mcsApproverConfigLoading = false;
