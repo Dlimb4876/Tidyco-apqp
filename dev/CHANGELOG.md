@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-20 | MCS approval permissions: role-based approval steps + Action Centre integration | Each MCS approval step (Engineering, QA, Manufacturing, Management) now requires an assigned approver; admins assign approvers per step in Settings → Mfg. Changes; only the assigned approver(s) for the active step see Approve/Reject buttons in the change modal; all assigned approvers see pending changes in their Action Centre under a new MCS Approvals tab.
+
 ## 2026-03-20 | Fix ECR impact/time display; smarten approval chain and impact tags | Impact count showed 0 (used non-existent impacts_count field instead of impacts.length); time impact and target date were never rendered in the view modal; approval chain used position-based logic instead of each step's actual approval status; impact tags and approval steps now show approver names, dates, notes, and proper color-coded statuses.
 
 
