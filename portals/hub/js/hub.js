@@ -71,7 +71,6 @@ function renderHubActionWidget() {
       ${summaryHTML ? `<div class="hub-widget-sep"></div><div class="hub-widget-summary">${summaryHTML}</div>` : ''}
       <div class="hub-widget-cta">
         <button class="btn btn-primary btn-sm" onclick="navigate('action-centre')">✅ My Actions →</button>
-        ${pendingApprovalCount > 0 ? `<button class="btn btn-sm hub-widget-approve-btn" onclick="navigate('mcs')">🔧 Review Changes →</button>` : ''}
       </div>
     </div>`;
 }
