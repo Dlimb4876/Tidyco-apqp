@@ -90,6 +90,15 @@ let projectsPage = 0;
 let projectsAllLoaded = false;
 
 // ── MCS (Manufacturing Change System) state ────────────────
+// Approver configuration (loaded from mcs_approver_settings table)
+let mcsApproverConfig = null;     // { engineering: [{user_id, user_name}], qa: [], manufacturing: [], management: [] }
+let mcsApproverConfigLoading = false;
+let mcsAutoViewId = null;         // When set, MCS portal auto-opens this change on load
+
+// Settings MCS tab state
+let settingsMcsLoading = false;
+let settingsMcsError = null;
+
 // Core data and filters
 let mcsList = [];                                  // All MCS changes loaded from Supabase
 let mcsCurrentFilter = {

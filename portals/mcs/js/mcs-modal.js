@@ -261,9 +261,7 @@ function mcsShowViewModal(change) {
       <div class="mcs-modal-footer">
         <button class="mcs-btn mcs-btn-danger" onclick="mcsDeleteChange('${esc(change.id)}')">Delete</button>
         <button class="mcs-btn mcs-btn-ghost" onclick="mcsEditChange('${esc(change.id)}')">Edit</button>
-        <button class="mcs-btn mcs-btn-primary" id="mcs-advance-btn" onclick="mcsAdvanceStatus('${esc(change.id)}')" style="display: ${(change.status === 'open' || change.status === 'review' || change.status === 'approved') ? '' : 'none'};">
-          ${change.status === 'open' ? 'Send to Review →' : change.status === 'review' ? 'Approve →' : change.status === 'approved' ? 'Mark Implemented →' : 'Close'}
-        </button>
+        ${mcsModalFooterButtons(change)}
       </div>
     </div>
   `;
@@ -528,6 +526,89 @@ function mcsShowEditModal(change) {
   document.body.appendChild(backdrop);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop');
+  });
+}
+
+/**
+ * Build the correct footer action buttons based on the change status and
+ * whether the current user is an assigned approver for the active step.
+ */
+function mcsModalFooterButtons(change) {
+  if (change.status === 'open') {
+    // Anyone with edit access can send to review
+    return canEdit()
+      ? `<button class="mcs-btn mcs-btn-primary" onclick="mcsAdvanceStatus('${esc(change.id)}')">Send to Review →</button>`
+      : '';
+  }
+
+  if (change.status === 'review') {
+    const activeStepKey = typeof mcsGetActiveStepKey === 'function' ? mcsGetActiveStepKey(change) : null;
+    const canApprove = activeStepKey && typeof mcsCanApproveStep === 'function' && mcsCanApproveStep(activeStepKey);
+    if (!canApprove) {
+      // Show a greyed-out label so the user knows where approval sits
+      const stepDef = activeStepKey && typeof MCS_APPROVAL_STEPS !== 'undefined'
+        ? MCS_APPROVAL_STEPS.find(s => s.key === activeStepKey)
+        : null;
+      const waitingFor = stepDef ? stepDef.label : 'next approver';
+      return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting ${esc(waitingFor)}</span>`;
+    }
+    return `
+      <button class="mcs-btn mcs-btn-ghost" style="color:var(--red)" onclick="mcsRejectStepWithPrompt('${esc(change.id)}','${esc(activeStepKey)}')">Reject ✗</button>
+      <button class="mcs-btn mcs-btn-primary" onclick="mcsApproveStepWithPrompt('${esc(change.id)}','${esc(activeStepKey)}')">Approve ✓</button>
+    `;
+  }
+
+  if (change.status === 'approved') {
+    // Mark implemented — only management approvers or admins
+    const canImplement = isAdmin() ||
+      (typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('management'));
+    return canImplement
+      ? `<button class="mcs-btn mcs-btn-primary" onclick="mcsAdvanceStatus('${esc(change.id)}')">Mark Implemented →</button>`
+      : `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting implementation</span>`;
+  }
+
+  return '';
+}
+
+/**
+ * Prompt for approval notes then approve the active step.
+ */
+function mcsApproveStepWithPrompt(changeId, stepKey) {
+  const notes = prompt('Approval notes (optional):') || '';
+  mcsApproveStep(changeId, stepKey, notes).then(success => {
+    if (success) {
+      mcsToast('Step approved');
+      mcsCloseModal('mcs-view-backdrop');
+      mcsRenderList();
+      // Refresh action centre data so the item disappears from the list
+      if (typeof actionCentreData !== 'undefined') {
+        actionCentreData = null;
+        if (typeof actionCentreLoad === 'function') actionCentreLoad();
+      }
+    } else {
+      alert('Could not approve — you may not be assigned as an approver for this step.');
+    }
+  });
+}
+
+/**
+ * Prompt for a rejection reason then reject the active step.
+ */
+function mcsRejectStepWithPrompt(changeId, stepKey) {
+  const reason = prompt('Rejection reason (required):');
+  if (!reason || !reason.trim()) return;
+  mcsRejectStep(changeId, stepKey, reason).then(success => {
+    if (success) {
+      mcsToast('Step rejected');
+      mcsCloseModal('mcs-view-backdrop');
+      mcsRenderList();
+      if (typeof actionCentreData !== 'undefined') {
+        actionCentreData = null;
+        if (typeof actionCentreLoad === 'function') actionCentreLoad();
+      }
+    } else {
+      alert('Could not reject — you may not be assigned as an approver for this step.');
+    }
   });
 }
 

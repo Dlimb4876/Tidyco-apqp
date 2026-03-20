@@ -59,9 +59,15 @@ async function mcsApproveStep(changeId, step, notes) {
   const stepInfo = stepMap[step];
   if (!stepInfo) return false;
 
+  // Check the current user is assigned as an approver for this step
+  if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step)) {
+    console.warn('[MCS] User is not assigned as an approver for step:', step);
+    return false;
+  }
+
   try {
     const now = new Date().toISOString();
-    const user = currentUserRole || 'Unknown'; // Assumes currentUserRole is set in auth.js
+    const user = (currentUser && currentUser.email) ? currentUser.email : (currentUserRole || 'Unknown');
 
     const updateData = {
       [stepInfo.field]: 'approved',
@@ -126,9 +132,15 @@ async function mcsRejectStep(changeId, step, reason) {
   const stepInfo = stepMap[step];
   if (!stepInfo) return false;
 
+  // Check the current user is assigned as an approver for this step
+  if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step)) {
+    console.warn('[MCS] User is not assigned as an approver for step:', step);
+    return false;
+  }
+
   try {
     const now = new Date().toISOString();
-    const user = currentUserRole || 'Unknown';
+    const user = (currentUser && currentUser.email) ? currentUser.email : (currentUserRole || 'Unknown');
 
     const updateData = {
       [stepInfo.field]: 'rejected',
