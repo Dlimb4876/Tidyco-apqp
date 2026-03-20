@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-20 | Add guide buttons to Change Register and Action Centre | These two recently added pages were missing the ❓ Guide button that all other pages have; guide content added to guide.js and buttons added to each page header
+
 ## 2026-03-20 | Remove "Review Changes →" shortcut from hub widget | Button was redundant — pending MCS approvals are already visible in the Action Centre; removing it keeps the widget focused
 
 ## 2026-03-20 | Fix duplicate ECR ID on Raise a Change | ID was generated from mcsList.length+1 which collides when records have been deleted or the local list is out of sync; now queries the DB for the highest existing ECR-YYYY-NNNN number and increments from there

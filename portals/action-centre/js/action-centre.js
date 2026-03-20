@@ -393,6 +393,7 @@ function renderActionCentre() {
         <div class="sec-desc">All actions assigned to <strong>${esc(myName)}</strong> across every project.</div>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('action-centre')" title="User Guide">❓ Guide</button>
         <button class="btn btn-ghost btn-sm" onclick="actionCentreData=null;actionCentreLoading=false;actionCentreLoad()">↺ Refresh</button>
       </div>
     </div>

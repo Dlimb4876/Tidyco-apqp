@@ -752,6 +752,74 @@ const GUIDE_CONTENT = {
     `
   },
 
+  // ── MCS (Change Register) ────────────────────────────────────
+  mcs: {
+    title: '🔧 Change Register — User Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Change Register</strong> tracks all manufacturing, engineering, and process changes from initial request through to implementation. Each change follows a two-step approval process before it is marked as implemented.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Raising a Change</div>
+        <p>Click <strong>+ Raise a Change</strong> to open the form. Fill in the change type, description, affected product, priority, and any impact details. The system auto-assigns an ECR reference number.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Approval Process</div>
+        <ul class="guide-list">
+          <li><strong>Open</strong> — Change raised, awaiting submission for review.</li>
+          <li><strong>Awaiting Approval 1</strong> — Submitted for first sign-off. The nominated Approval 1 reviewer must approve or reject.</li>
+          <li><strong>Implementing</strong> — Approval 1 granted. Change is being carried out.</li>
+          <li><strong>Awaiting Approval 2</strong> — Implementation complete, awaiting final sign-off.</li>
+          <li><strong>Implemented</strong> — Fully approved and closed out. Overhaul Trends updated automatically.</li>
+          <li><strong>Closed</strong> — Change rejected or cancelled.</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Filters & Search</div>
+        <p>Use the sidebar to filter by Status, Priority, Change Type, or Source. Use the search box to find a change by keyword. The sort dropdown lets you order by date or priority.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Activity Log</div>
+        <p>Each change has a timeline showing all status changes, approvals, and comments. Anyone can post a <em>💬 Comment</em> or <em>📈 Progress Update</em> directly into the activity log.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Action Centre Integration</div>
+        <p>Changes awaiting your approval appear automatically in your <strong>Action Centre</strong> under Pending Approvals — no need to check the register manually.</p>
+      </div>
+    `
+  },
+
+  // ── Action Centre ─────────────────────────────────────────────
+  'action-centre': {
+    title: '✅ Action Centre — User Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Action Centre</strong> is your personal work queue — a single place to see every task, risk, and approval assigned to you across all NPI projects and the Change Register.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">What appears here</div>
+        <ul class="guide-list">
+          <li><strong>Actions</strong> — NPI project actions where you are the listed owner.</li>
+          <li><strong>PFMEA Actions</strong> — Corrective actions from PFMEA causes assigned to you.</li>
+          <li><strong>Risks</strong> — Project risks where you are the owner.</li>
+          <li><strong>Pending Approvals</strong> — Engineering changes awaiting your sign-off (amber panel, displayed only when you have pending approvals).</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Status indicators</div>
+        <p>Items are colour-coded: <strong>red</strong> = overdue (past due date), <strong>amber</strong> = due soon, <strong>green</strong> = on track. The KPI cards at the top summarise your open and overdue counts at a glance.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Navigating to items</div>
+        <p>Click <strong>Go to Project →</strong> on any action or risk to jump directly to the relevant NPI project section. Click <strong>Review ECR →</strong> on a pending approval to open the change in the Change Register.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Refreshing</div>
+        <p>Data loads automatically when you open the Action Centre. Use the <strong>↺ Refresh</strong> button to pull the latest changes at any time.</p>
+      </div>
+    `
+  },
+
   // ── Feedback ─────────────────────────────────────────────────
   feedback: {
     title: '💬 Feedback & Bugs — User Guide',
