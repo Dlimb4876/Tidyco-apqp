@@ -1,6 +1,7 @@
 # Plan: Role-Based Permissions System (v2 — Job Function Roles)
 
 **Date:** 2026-03-18
+**Status: 🔄 PARTIALLY IMPLEMENTED** — The basic 3-tier system (admin / editor / viewer) was implemented on 2026-03-18. The v2 job-function role matrix described below (ME Manager, Project Manager, Operations, etc.) is **pending**.
 **Replaces:** The earlier 3-tier plan (admin/editor/viewer)
 **Context:** The app currently gives every logged-in user full access to everything.
 A `profiles` table with a `role` column already exists. The Settings → Permissions

@@ -95,7 +95,7 @@ const id = 'f_' + Math.random().toString(36).substr(2, 5)  // Prefixed short ID
 ## Commands
 ```bash
 npm install          # First time only — installs jest + eslint devDeps
-npm test             # Run all tests (179 tests, ~2.5 s)
+npm test             # Run all tests (611 tests, 43 suites, ~4 s)
 npm run check:all    # All quality checks — run before every commit
 ```
 

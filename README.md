@@ -67,8 +67,11 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | **Capacity** | `capacity` | Load Capacity Management (Production & ME streams) |
 | **Product Development** | `product-development` | NPI (APQP) and Product Management |
 | **Production** | `production` | Production planning, scheduling, and plan views |
-| **Product Management** | `productmgmt` | Central product registry (in development) |
-| **Bug Reports** | `bugreports` | Bug and issue reporting (real-time) |
+| **Operations** | `operations` | Operations Dashboard and Forecast |
+| **Action Centre** | `action-centre` | Aggregated actions, PFMEA tasks, and risks across all projects |
+| **MCS** | `mcs` | Manufacturing Change System — ECR workflow and schedule impact tracking |
+| **Settings** | `settings` | User management, teams, permissions, appearance, work areas, and families |
+| **Feedback** | `feedback` | User feedback and bug reporting (real-time) |
 
 ---
 
@@ -145,20 +148,46 @@ This applies to UI, routing, shared data handling, and persistence changes so th
 │   │       ├── products.js           # Product master view
 │   │       ├── scheduling.js         # Schedule view
 │   │       └── planning.js           # Plan by Product / Plan by Unit views
-│   ├── /productmgmt                  # Central Product Management (in development)
-│   │   ├── /css/productmgmt.css
-│   │   └── /js/productmgmt.js
-│   └── /bugs                         # Bug Reports (real-time)
-│       ├── /css/bugs.css
+│   ├── /operations                   # Operations Dashboard
+│   │   ├── /css/operations.css
+│   │   └── /js
+│   │       ├── operations-dashboard-main.js   # Portal entry and orchestrator
+│   │       ├── operations-dashboard-state.js  # State and constants
+│   │       ├── operations-dashboard-metrics.js# KPI metric calculations
+│   │       ├── operations-dashboard-realtime.js # Real-time subscriptions
+│   │       ├── operations-dashboard-render-core.js # Core render functions
+│   │       ├── operations-dashboard-forecast-view.js # Forecast chart view
+│   │       └── operations-dashboard-forecast-actions.js # Forecast edit actions
+│   ├── /action-centre                # Aggregated Actions, PFMEA tasks, and risks
+│   │   ├── /css/action-centre.css
+│   │   └── /js/action-centre.js
+│   ├── /mcs                          # Manufacturing Change System (ECR workflow)
+│   │   ├── /css/mcs.css
+│   │   └── /js
+│   │       ├── mcs-data.js           # MCS data layer
+│   │       ├── mcs-approval.js       # Approval workflow
+│   │       └── mcs.js                # MCS portal UI
+│   ├── /settings                     # Settings (users, teams, permissions, appearance)
+│   │   ├── /css/settings.css
+│   │   └── /js
+│   │       ├── settings.js           # Settings portal and tab routing
+│   │       └── teams-data.js         # Teams CRUD data layer
+│   └── /feedback                     # User feedback and bug reporting (real-time)
+│       ├── /css/feedback.css
 │       └── /js
-│           ├── bugs-data.js          # Bug data layer and real-time subscriptions
-│           └── bugs.js               # Bug reports UI and interactions
+│           ├── feedback-constants.js # Types, statuses, icons, colours
+│           ├── feedback-data.js      # Supabase operations and real-time sync
+│           └── feedback.js           # Feedback UI and form handling
 ├── /utils                            # Shared utilities
 │   ├── /js
 │   │   ├── helpers.js                # Escaping, modal management, and UI utils
 │   │   ├── navigation.js             # Hash-based routing and render switchboard
 │   │   └── realtime.js               # Real-time subscription helpers
 │   └── /css
+├── /tests                            # Jest test files (*.test.js)
+├── /plans                            # Architecture docs and feature plans
+├── /scripts                          # Quality-check scripts (check:all)
+├── /supabase                         # SQL migrations and RLS policies
 ├── index.html                        # Main application entry point
 └── README.md
 ```
@@ -337,9 +366,10 @@ CSS files must be loaded in cascade order so feature overrides work correctly:
 main.css → components.css →
 dashboard.css → hub.css →
 capacity.css → me-capacity.css →
-production.css →
-products.css (product-dev) → productmgmt.css →
-pfmea.css → gantt.css → apqp.css → rpn-chart.css
+production.css → operations.css →
+products.css (product-dev) →
+pfmea.css → gantt.css → apqp.css → rpn-chart.css →
+action-centre.css → mcs.css → settings.css → feedback.css
 ```
 
 ---
@@ -354,47 +384,12 @@ pfmea.css → gantt.css → apqp.css → rpn-chart.css
 
 ---
 
-## Recent Updates (2026-03-13)
-
-### Documentation Improvements
-
-**Major improvements to CLAUDE.md and TESTING_STRATEGY.md to improve AI worker guidance:**
-
-- **CLAUDE.md**: Added "Common Mistakes" checklist (syntax errors, RLS failures, subscription leaks, modal state, debounce timing)
-- **CLAUDE.md**: Added "RLS Design Philosophy" explaining why all users see all data and implications
-- **CLAUDE.md**: Added complete "Feature Addition Checklist" (consolidated from multiple sections)
-- **CLAUDE.md**: Consolidated all state variables in single State Management table
-- **CLAUDE.md**: Clarified "About This Project" (no subagents, use bash directly)
-- **README.md**: Removed duplicate state/load order tables, added cross-references to CLAUDE.md
-- **TESTING_STRATEGY.md**: Added "Test Coverage Status" section
-- **TESTING_STRATEGY.md**: Added async testing patterns (debounce, subscriptions, cleanup)
-
-### Mobile-Friendly Responsive Design (2026-03-10)
-
-**New responsive CSS has been implemented across all portals** to provide a seamless experience on mobile devices, tablets, and desktops without changing the desktop design.
-
-#### Changes Made:
-- **13 CSS files updated** with comprehensive media queries
-- **Three-tier responsive strategy**: 480px (mobile), 768px (tablet), 1200px (desktop)
-- **No JavaScript changes** — purely CSS-based solution
-- **Progressive enhancement** — layouts scale from single-column (mobile) to multi-column (desktop)
-
-#### Key Features:
-✅ Desktop design **unchanged** — no visual differences on large screens
-✅ Mobile **single-column layouts** with optimized spacing and font sizes
-✅ Tablet **2-column layouts** where applicable for balanced readability
-✅ **Horizontal scroll preserved** for data-intensive tables on mobile
-✅ **Touch-friendly adjustments** — reduced padding, scalable components
-✅ **Chart responsiveness** — Chart.js maintains responsive: true configuration
-
----
-
 ## Getting Started as an AI Worker
 
 1. **Read CLAUDE.md first** — it's the primary reference for AI workers working on this project
-2. **Understand the architecture** — read "Core Architecture" and "RLS Design Philosophy" sections
-3. **Follow the Feature Addition Checklist** — it guides you through the complete process
-4. **Avoid common mistakes** — read the "Common Mistakes" section before coding
+2. **Read CHANGELOG.md** — see what has changed recently before touching any code
+3. **Follow the New Feature Checklist** — it guides you through the complete process
+4. **Avoid common mistakes** — duplicate `const`, wrong load order, missing RLS, subscription leaks
 5. **Write tests** — see TESTING_STRATEGY.md for patterns and guidelines
-6. **Update documentation** — when you make changes, update CLAUDE.md and README.md
+6. **Update CHANGELOG.md** — add a 2-line entry for every logical change you make
 

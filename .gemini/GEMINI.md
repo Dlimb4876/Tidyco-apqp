@@ -28,7 +28,7 @@ This document provides a summary of conventions, architecture, and workflows for
 Always run in this order:
 
 1.  `npm install`: (Run once) Installs Jest and ESLint dev dependencies.
-2.  `npm test`: Runs all Jest tests. Expect 18 suites, 179 tests, all passing.
+2.  `npm test`: Runs all Jest tests. Expect 43 suites, 611 tests, all passing.
 3.  `npm run check:all`: Runs all quality checks. **Run this before every commit.**
 4.  `npx eslint portals/product-development/npi/**/*.js`: Lints NPI files.
 5.  `npx prettier --write portals/product-development/npi/**/*.js`: Formats NPI files.
