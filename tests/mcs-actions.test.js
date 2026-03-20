@@ -1,6 +1,7 @@
 /**
  * MCS + Action Centre Integration Tests
  * Tests for extracting MCS approval tasks into Action Centre
+ * Updated to match the 2-step MCO approval system (approval1 / approval2).
  */
 
 describe('MCS Action Centre Integration', () => {
@@ -9,85 +10,118 @@ describe('MCS Action Centre Integration', () => {
       {
         id: 'ECR-2026-0001',
         title: 'Safety Valve Update',
-        status: 'review',
+        status: 'review',         // awaiting Approval 1
         priority: 'critical',
         description: 'Add locking mechanism',
         change_type: 'Safety',
         initiated_by: 'D. Clarke',
         target_implementation: '2026-03-25',
         eng_review_status: 'pending',
-        qa_review_status: null,
-        mfg_signoff_status: null
+        qa_review_status: null
       },
       {
         id: 'ECR-2026-0002',
         title: 'Material Substitution',
-        status: 'review',
+        status: 'final_review',   // awaiting Approval 2
         priority: 'high',
         description: 'Viton to EPDM',
         change_type: 'Material',
         initiated_by: 'S. Patel',
         target_implementation: '2026-03-15',
-        qa_review_status: 'pending',
         eng_review_status: 'approved',
-        mfg_signoff_status: null
+        qa_review_status: 'pending'
       },
       {
         id: 'ECR-2026-0003',
         title: 'Weld Geometry Fix',
-        status: 'approved',
+        status: 'implemented',
         priority: 'critical',
         eng_review_status: 'approved',
-        qa_review_status: 'approved',
-        mfg_signoff_status: 'approved'
+        qa_review_status: 'approved'
       }
     ];
-    window.currentUserRole = 'qa';
+
+    window.MCS_APPROVAL_STEPS = [
+      { key: 'approval1', label: 'Approval 1', field: 'eng_review_status', activeStatus: 'review' },
+      { key: 'approval2', label: 'Approval 2', field: 'qa_review_status',  activeStatus: 'final_review' }
+    ];
+
+    window.currentUser = { id: 'user-uuid-123', email: 'approver@example.com' };
+    window.mcsApproverConfig = {
+      approval1: [{ user_id: 'user-uuid-123', user_name: 'Approver', user_email: 'approver@example.com' }],
+      approval2: [{ user_id: 'user-uuid-123', user_name: 'Approver', user_email: 'approver@example.com' }]
+    };
   });
 
-  describe('Task Extraction', () => {
-    it('should extract pending approval tasks', () => {
-      const userRole = 'qa';
+  describe('Task Extraction (2-step system)', () => {
+    it('should extract Approval 1 pending task when user is assigned', () => {
+      // Simulate the logic from mcsExtractApproveTasks
       const tasks = [];
+      const myId = window.currentUser.id;
+      const myEmail = window.currentUser.email.toLowerCase();
 
-      window.mcsList.forEach(change => {
-        if (change.status === 'review' && change.qa_review_status === 'pending') {
-          tasks.push({
-            id: `mcs_${change.id}_${userRole}`,
-            type: 'mcs_approval',
-            title: `Review ECR-${change.id.split('-')[2]}: ${change.title}`,
-            priority: change.priority,
-            status: 'open'
-          });
-        }
+      window.MCS_APPROVAL_STEPS.forEach(stepDef => {
+        const assigned = window.mcsApproverConfig[stepDef.key] || [];
+        const isAssigned = assigned.some(u =>
+          (myId && u.user_id === myId) || (myEmail && u.user_email && u.user_email.toLowerCase() === myEmail)
+        );
+        if (!isAssigned) return;
+
+        window.mcsList.forEach(change => {
+          if (change.status !== stepDef.activeStatus) return;
+          const stepStatus = change[stepDef.field];
+          if (stepStatus && stepStatus !== 'pending') return;
+          tasks.push({ changeId: change.id, stepKey: stepDef.key });
+        });
       });
 
-      expect(tasks.length).toBe(1);
-      expect(tasks[0].id).toContain('ECR-2026-0002');
+      expect(tasks.length).toBe(2);
+      expect(tasks.some(t => t.changeId === 'ECR-2026-0001' && t.stepKey === 'approval1')).toBe(true);
+      expect(tasks.some(t => t.changeId === 'ECR-2026-0002' && t.stepKey === 'approval2')).toBe(true);
     });
 
-    it('should filter by current user role', () => {
-      window.currentUserRole = 'engineering';
-      const engTasks = window.mcsList.filter(
-        c => c.status === 'review' && c.eng_review_status === 'pending'
+    it('should not extract task for an implemented change', () => {
+      const change = window.mcsList.find(c => c.id === 'ECR-2026-0003');
+      const stepDef = window.MCS_APPROVAL_STEPS.find(s => s.key === 'approval1');
+      expect(change.status).not.toBe(stepDef.activeStatus);
+    });
+
+    it('should not extract tasks when user is not assigned', () => {
+      window.mcsApproverConfig = { approval1: [], approval2: [] };
+      const tasks = [];
+
+      window.MCS_APPROVAL_STEPS.forEach(stepDef => {
+        const assigned = window.mcsApproverConfig[stepDef.key] || [];
+        if (assigned.length === 0) return; // No assigned approvers
+        window.mcsList.forEach(change => {
+          if (change.status === stepDef.activeStatus) tasks.push(change);
+        });
+      });
+
+      expect(tasks.length).toBe(0);
+    });
+
+    it('should match approver by email as well as user_id', () => {
+      // Approver entry has ONLY email (no matching user_id)
+      window.mcsApproverConfig = {
+        approval1: [{ user_id: 'different-uuid', user_name: 'Approver', user_email: 'approver@example.com' }],
+        approval2: []
+      };
+      const myEmail = window.currentUser.email.toLowerCase();
+      const assigned = window.mcsApproverConfig.approval1;
+      const matched = assigned.some(u =>
+        u.user_email && u.user_email.toLowerCase() === myEmail
       );
-
-      expect(engTasks.length).toBe(1);
-      expect(engTasks[0].id).toBe('ECR-2026-0001');
-    });
-
-    it('should not extract approved or rejected changes', () => {
-      const tasks = window.mcsList.filter(c => c.status === 'approved' || c.status === 'rejected');
-      expect(tasks.length).toBe(1);
+      expect(matched).toBe(true);
     });
   });
 
   describe('Task Properties', () => {
     it('should populate task with correct metadata', () => {
-      const change = window.mcsList[1]; // ECR-2026-0002
+      const change = window.mcsList[1]; // ECR-2026-0002, final_review
       const task = {
-        id: `mcs_${change.id}_qa`,
-        title: `Review: ${change.title}`,
+        id: `mcs_${change.id}_approval2`,
+        title: `Review ${change.id}: ${change.title}`,
         priority: change.priority,
         dueDate: change.target_implementation,
         source: 'MCS',
@@ -99,149 +133,67 @@ describe('MCS Action Centre Integration', () => {
       expect(task.dueDate).toBe('2026-03-15');
     });
 
-    it('should include change description in task', () => {
+    it('should include change description in task notes', () => {
       const change = window.mcsList[0];
-      const task = {
-        notes: change.description
-      };
-
+      const task = { notes: change.description?.substring(0, 100) || '' };
       expect(task.notes).toContain('locking');
     });
 
     it('should set source as MCS', () => {
-      const task = { source: 'MCS' };
+      const task = { source: 'MCS', sourceIcon: '🔧' };
       expect(task.source).toBe('MCS');
     });
   });
 
   describe('Task Routing', () => {
-    it('should route to MCS portal on click', () => {
+    it('should route to MCS portal', () => {
+      const routeTarget = 'mcs';
+      expect(routeTarget).toBe('mcs');
+    });
+
+    it('should set mcsAutoViewId before navigating', () => {
       const changeId = 'ECR-2026-0001';
-      const routeTarget = `navigate('mcs')`;
-
-      expect(routeTarget).toContain('mcs');
-      expect(routeTarget).toContain('navigate');
-    });
-
-    it('should highlight change in MCS on navigation', () => {
-      const changeId = 'ECR-2026-0001';
-      const actionResult = {
-        targetPortal: 'mcs',
-        highlightedChangeId: changeId
-      };
-
-      expect(actionResult.targetPortal).toBe('mcs');
-      expect(actionResult.highlightedChangeId).toBe(changeId);
-    });
-  });
-
-  describe('Task Filtering', () => {
-    it('should filter tasks by status', () => {
-      const tasks = [
-        { status: 'open', type: 'mcs_approval' },
-        { status: 'completed', type: 'mcs_approval' }
-      ];
-
-      const openTasks = tasks.filter(t => t.status === 'open');
-      expect(openTasks.length).toBe(1);
-    });
-
-    it('should filter tasks by priority', () => {
-      const tasks = [
-        { priority: 'critical' },
-        { priority: 'high' },
-        { priority: 'low' }
-      ];
-
-      const criticalTasks = tasks.filter(t => t.priority === 'critical');
-      expect(criticalTasks.length).toBe(1);
-    });
-
-    it('should filter tasks by source', () => {
-      const tasks = [
-        { source: 'MCS' },
-        { source: 'NPI' },
-        { source: 'MCS' }
-      ];
-
-      const mcsTasks = tasks.filter(t => t.source === 'MCS');
-      expect(mcsTasks.length).toBe(2);
+      window.mcsAutoViewId = changeId;
+      expect(window.mcsAutoViewId).toBe(changeId);
     });
   });
 
   describe('Integration with Action Centre', () => {
-    it('should merge MCS tasks into action centre data', () => {
-      const actionCentreData = {
-        npi_actions: [],
-        pfmea_actions: [],
-        risks: []
-      };
+    it('should merge MCS approvals into action centre data', () => {
+      const actionCentreData = { actions: [], pfmea: [], risks: [] };
+      const mcsApprovals = window.mcsList
+        .filter(c => c.status === 'review' || c.status === 'final_review')
+        .map(c => ({ id: `mcs_${c.id}`, type: 'mcs_approval', source: 'MCS' }));
 
-      const mcsTasks = window.mcsList
-        .filter(c => c.status === 'review')
-        .map(c => ({
-          id: `mcs_${c.id}`,
-          type: 'mcs_approval',
-          title: c.title,
-          source: 'MCS'
-        }));
-
-      const merged = {
-        ...actionCentreData,
-        mcs_approvals: mcsTasks
-      };
-
-      expect(merged.mcs_approvals).toBeDefined();
-      expect(merged.mcs_approvals.length).toBeGreaterThan(0);
+      const merged = { ...actionCentreData, mcsApprovals };
+      expect(merged.mcsApprovals.length).toBe(2);
     });
 
-    it('should maintain separate task source identifiers', () => {
-      const tasks = [
-        { id: 'npi_act_123', source: 'NPI' },
-        { id: 'mcs_ECR-2026-0001_qa', source: 'MCS' }
-      ];
-
-      const mcsOnly = tasks.filter(t => t.source === 'MCS');
-      expect(mcsOnly[0].id).toContain('mcs_');
+    it('should use 2-step statuses for pending detection', () => {
+      const pendingAtApproval1 = window.mcsList.filter(c => c.status === 'review');
+      const pendingAtApproval2 = window.mcsList.filter(c => c.status === 'final_review');
+      expect(pendingAtApproval1.length).toBe(1);
+      expect(pendingAtApproval2.length).toBe(1);
     });
 
-    it('should update task list when MCS change status changes', () => {
-      const change = window.mcsList[0];
-      change.qa_review_status = 'approved';
-      change.status = 'approved';
-
-      const pendingTasks = window.mcsList.filter(
-        c => c.status === 'review' && c.qa_review_status === 'pending'
-      );
-
-      expect(pendingTasks.length).toBe(1); // Only ECR-2026-0002 remains pending
+    it('should not flag implemented changes as pending', () => {
+      const implemented = window.mcsList.filter(c => c.status === 'implemented');
+      expect(implemented.length).toBe(1);
+      expect(implemented[0].id).toBe('ECR-2026-0003');
     });
   });
 
-  describe('Task Notifications', () => {
-    it('should indicate new task assignment', () => {
-      const task = {
-        id: 'mcs_ECR-2026-0002_qa',
-        isNew: true,
-        createdAt: new Date().toISOString()
-      };
-
-      expect(task.isNew).toBe(true);
-    });
-
-    it('should indicate overdue tasks', () => {
+  describe('Overdue Detection', () => {
+    it('should detect overdue tasks', () => {
       const pastDate = '2026-02-01';
       const today = new Date().toISOString().split('T')[0];
-      const isOverdue = pastDate < today;
-
-      expect(isOverdue).toBe(true);
+      expect(pastDate < today).toBe(true);
     });
 
     it('should calculate days until due', () => {
       const dueDate = new Date('2026-03-25');
       const today = new Date('2026-03-20');
       const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-
       expect(daysUntilDue).toBe(5);
     });
   });

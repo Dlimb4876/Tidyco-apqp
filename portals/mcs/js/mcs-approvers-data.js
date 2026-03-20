@@ -139,13 +139,18 @@ async function mcsApproversRemove(stepKey, userId) {
 /**
  * Returns the step keys the current user is an approver for.
  * e.g. ['approval1'] or ['approval1', 'approval2']
+ * Checks both user_id and user_email to match how mcsCanApproveStep works.
  */
 function mcsGetMyApproverSteps() {
   if (!mcsApproverConfig || !currentUser) return [];
   const myId = currentUser.id;
+  const myEmail = (currentUser.email || '').toLowerCase();
   return MCS_APPROVAL_STEPS
     .map(s => s.key)
-    .filter(key => (mcsApproverConfig[key] || []).some(u => u.user_id === myId));
+    .filter(key => (mcsApproverConfig[key] || []).some(u =>
+      (myId && u.user_id && u.user_id === myId) ||
+      (myEmail && u.user_email && u.user_email.toLowerCase() === myEmail)
+    ));
 }
 
 /**
