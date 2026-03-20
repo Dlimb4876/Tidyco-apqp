@@ -25,12 +25,6 @@ async function mcsApproveStep(changeId, step, notes) {
     return false;
   }
 
-  // Check the current user is assigned as an approver for this step
-  if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step, change)) {
-    console.warn('[MCS] User is not assigned as an approver for step:', step);
-    return false;
-  }
-
   try {
     const now = new Date().toISOString();
     const user = (currentUser && currentUser.email) ? currentUser.email : (currentUserRole || 'Unknown');
@@ -96,12 +90,6 @@ async function mcsRejectStep(changeId, step, reason) {
   // Must be active step
   if (change.status !== stepDef.activeStatus) {
     console.warn('[MCS] Change status', change.status, 'does not match active status for step', step);
-    return false;
-  }
-
-  // Check the current user is assigned as an approver for this step
-  if (typeof mcsCanApproveStep === 'function' && !mcsCanApproveStep(step, change)) {
-    console.warn('[MCS] User is not assigned as an approver for step:', step);
     return false;
   }
 
