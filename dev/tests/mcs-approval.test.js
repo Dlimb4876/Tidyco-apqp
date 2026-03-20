@@ -249,3 +249,176 @@ describe('MCS Approval Workflow', () => {
     });
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// mcsCanApproveStep permission logic
+// ─────────────────────────────────────────────────────────────────────────────
+describe('mcsCanApproveStep', () => {
+  // Inline implementation matching the production function so tests run
+  // without requiring a browser DOM.
+  function mcsCanApproveStep(stepKey, change, currentUser, mcsApproverConfig) {
+    if (!stepKey || !currentUser) return false;
+    const myId = currentUser.id;
+    const myEmail = (currentUser.email || '').toLowerCase();
+
+    if (stepKey === 'approval1' && change && change.eng_review_notes) {
+      const notes = change.eng_review_notes;
+      if (notes.startsWith('nominated_approver:')) {
+        const nominatedEmail = notes.slice('nominated_approver:'.length).trim().toLowerCase();
+        if (nominatedEmail && myEmail && nominatedEmail === myEmail) return true;
+      }
+    }
+
+    if (!mcsApproverConfig) return false;
+    const assigned = mcsApproverConfig[stepKey] || [];
+    if (assigned.length === 0) return false;
+    return assigned.some(u =>
+      (myId && u.user_id && u.user_id === myId) ||
+      (myEmail && u.user_email && u.user_email.toLowerCase() === myEmail)
+    );
+  }
+
+  const USER = { id: 'uuid-bob', email: 'bob@example.com' };
+
+  describe('Config-based approval', () => {
+    it('returns true when user_id matches an assigned approver', () => {
+      const config = { approval1: [{ user_id: 'uuid-bob', user_name: 'Bob' }] };
+      expect(mcsCanApproveStep('approval1', {}, USER, config)).toBe(true);
+    });
+
+    it('returns true when user_email matches an assigned approver', () => {
+      const config = { approval1: [{ user_id: 'other-uuid', user_name: 'Bob', user_email: 'bob@example.com' }] };
+      expect(mcsCanApproveStep('approval1', {}, USER, config)).toBe(true);
+    });
+
+    it('returns true when both user_id and user_email match', () => {
+      const config = { approval1: [{ user_id: 'uuid-bob', user_name: 'Bob', user_email: 'bob@example.com' }] };
+      expect(mcsCanApproveStep('approval1', {}, USER, config)).toBe(true);
+    });
+
+    it('returns false when user is not in the assigned list', () => {
+      const config = { approval1: [{ user_id: 'other-uuid', user_name: 'Alice', user_email: 'alice@example.com' }] };
+      expect(mcsCanApproveStep('approval1', {}, USER, config)).toBe(false);
+    });
+
+    it('returns false when assigned list is empty', () => {
+      const config = { approval1: [] };
+      expect(mcsCanApproveStep('approval1', {}, USER, config)).toBe(false);
+    });
+
+    it('returns false when config has no entry for the step', () => {
+      const config = { approval2: [{ user_id: 'uuid-bob', user_name: 'Bob' }] };
+      expect(mcsCanApproveStep('approval1', {}, USER, config)).toBe(false);
+    });
+  });
+
+  describe('Nominated approver (approval1 only)', () => {
+    it('returns true for the nominated approver even if not in config list', () => {
+      const config = { approval1: [{ user_id: 'other-uuid', user_name: 'Alice', user_email: 'alice@example.com' }] };
+      const change = { eng_review_notes: 'nominated_approver:bob@example.com' };
+      expect(mcsCanApproveStep('approval1', change, USER, config)).toBe(true);
+    });
+
+    it('returns true for the nominated approver regardless of case', () => {
+      const config = { approval1: [] };
+      const change = { eng_review_notes: 'nominated_approver:BOB@EXAMPLE.COM' };
+      expect(mcsCanApproveStep('approval1', change, USER, config)).toBe(true);
+    });
+
+    it('does not grant approval for approval2 via nominated_approver in eng_review_notes', () => {
+      const config = { approval2: [] };
+      const change = { eng_review_notes: 'nominated_approver:bob@example.com' };
+      // nominated_approver check only applies to approval1
+      expect(mcsCanApproveStep('approval2', change, USER, config)).toBe(false);
+    });
+
+    it('falls through to config check when nominated email does not match', () => {
+      const config = { approval1: [{ user_id: 'uuid-bob', user_name: 'Bob', user_email: 'bob@example.com' }] };
+      const change = { eng_review_notes: 'nominated_approver:alice@example.com' };
+      // Bob is in config list so should still be able to approve
+      expect(mcsCanApproveStep('approval1', change, USER, config)).toBe(true);
+    });
+  });
+
+  describe('Guard conditions', () => {
+    it('returns false when stepKey is falsy', () => {
+      const config = { approval1: [{ user_id: 'uuid-bob' }] };
+      expect(mcsCanApproveStep('', {}, USER, config)).toBe(false);
+      expect(mcsCanApproveStep(null, {}, USER, config)).toBe(false);
+    });
+
+    it('returns false when currentUser is null', () => {
+      const config = { approval1: [{ user_id: 'uuid-bob' }] };
+      expect(mcsCanApproveStep('approval1', {}, null, config)).toBe(false);
+    });
+
+    it('returns false when mcsApproverConfig is null', () => {
+      expect(mcsCanApproveStep('approval1', {}, USER, null)).toBe(false);
+    });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// mcsGetMyApproverSteps — checks both user_id and user_email
+// ─────────────────────────────────────────────────────────────────────────────
+describe('mcsGetMyApproverSteps', () => {
+  const MCS_APPROVAL_STEPS = [
+    { key: 'approval1' },
+    { key: 'approval2' }
+  ];
+
+  function mcsGetMyApproverSteps(currentUser, mcsApproverConfig) {
+    if (!mcsApproverConfig || !currentUser) return [];
+    const myId = currentUser.id;
+    const myEmail = (currentUser.email || '').toLowerCase();
+    return MCS_APPROVAL_STEPS
+      .map(s => s.key)
+      .filter(key => (mcsApproverConfig[key] || []).some(u =>
+        (myId && u.user_id && u.user_id === myId) ||
+        (myEmail && u.user_email && u.user_email.toLowerCase() === myEmail)
+      ));
+  }
+
+  const USER = { id: 'uuid-bob', email: 'bob@example.com' };
+
+  it('returns matching steps when matched by user_id', () => {
+    const config = {
+      approval1: [{ user_id: 'uuid-bob', user_name: 'Bob' }],
+      approval2: []
+    };
+    expect(mcsGetMyApproverSteps(USER, config)).toEqual(['approval1']);
+  });
+
+  it('returns matching steps when matched by user_email', () => {
+    const config = {
+      approval1: [{ user_id: 'other-uuid', user_name: 'Bob', user_email: 'bob@example.com' }],
+      approval2: []
+    };
+    expect(mcsGetMyApproverSteps(USER, config)).toEqual(['approval1']);
+  });
+
+  it('returns both steps when user is assigned to both', () => {
+    const config = {
+      approval1: [{ user_id: 'uuid-bob', user_name: 'Bob', user_email: 'bob@example.com' }],
+      approval2: [{ user_id: 'uuid-bob', user_name: 'Bob', user_email: 'bob@example.com' }]
+    };
+    expect(mcsGetMyApproverSteps(USER, config)).toEqual(['approval1', 'approval2']);
+  });
+
+  it('returns empty array when user is not in any step', () => {
+    const config = {
+      approval1: [{ user_id: 'other-uuid', user_name: 'Alice', user_email: 'alice@example.com' }],
+      approval2: []
+    };
+    expect(mcsGetMyApproverSteps(USER, config)).toEqual([]);
+  });
+
+  it('returns empty array when config is null', () => {
+    expect(mcsGetMyApproverSteps(USER, null)).toEqual([]);
+  });
+
+  it('returns empty array when currentUser is null', () => {
+    const config = { approval1: [{ user_id: 'uuid-bob' }], approval2: [] };
+    expect(mcsGetMyApproverSteps(null, config)).toEqual([]);
+  });
+});

@@ -227,7 +227,9 @@ function mcsShowViewModal(change) {
 
     const approvedBy = step.byField ? (change[step.byField] || '') : '';
     const approvedAt = step.atField && change[step.atField] ? change[step.atField].split('T')[0] : '';
-    const notes = step.notesField ? (change[step.notesField] || '') : '';
+    // Filter out the internal nominated_approver: marker — it's not a user-facing note
+    const rawNotes = step.notesField ? (change[step.notesField] || '') : '';
+    const notes = rawNotes.startsWith('nominated_approver:') ? '' : rawNotes;
 
     let stepStatusLabel = '';
     if (!step.isApproval) {

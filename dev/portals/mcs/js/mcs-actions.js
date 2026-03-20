@@ -4,41 +4,42 @@
  */
 
 /**
- * Extract pending MCS approval tasks for current user
- * Returns array compatible with Action Centre format
+ * Extract pending MCS approval tasks for current user.
+ * Uses the 2-step MCO approval system (approval1 / approval2) and
+ * mcsApproverConfig to identify which steps the current user can act on.
+ * Returns array compatible with Action Centre format.
  */
 function mcsExtractApproveTasks() {
   if (!mcsList || mcsList.length === 0) return [];
+  if (!mcsApproverConfig || !currentUser) return [];
 
   const tasks = [];
 
-  // Get current user's role from auth (assuming it's set in auth.js)
-  const userRole = currentUserRole || 'Unknown';
+  // Get the steps this user is assigned to approve
+  const mySteps = typeof mcsGetMyApproverSteps === 'function'
+    ? mcsGetMyApproverSteps()
+    : [];
 
-  // Map role to approval step
-  const roleToStep = {
-    'engineering': { field: 'eng_review_status', label: 'Engineering Review', by: 'eng_review_by' },
-    'qa': { field: 'qa_review_status', label: 'QA Approval', by: 'qa_review_by' },
-    'quality': { field: 'qa_review_status', label: 'QA Approval', by: 'qa_review_by' },
-    'manufacturing': { field: 'mfg_signoff_status', label: 'Manufacturing Sign-off', by: 'mfg_signoff_by' },
-    'operations': { field: 'mfg_signoff_status', label: 'Manufacturing Sign-off', by: 'mfg_signoff_by' },
-    'management': { field: 'auth_implementation_status', label: 'Authorization to Implement', by: 'auth_implementation_by' }
-  };
+  if (mySteps.length === 0) return [];
 
-  const stepInfo = roleToStep[userRole?.toLowerCase()];
-  if (!stepInfo) return [];
-
-  // Find changes in review status with pending approval at this step
   mcsList.forEach(change => {
-    if (change.status !== 'review') return;
+    mySteps.forEach(stepKey => {
+      const stepDef = (typeof MCS_APPROVAL_STEPS !== 'undefined' ? MCS_APPROVAL_STEPS : [])
+        .find(s => s.key === stepKey);
+      if (!stepDef) return;
 
-    const stepStatus = change[stepInfo.field];
-    if (stepStatus === 'pending' || stepStatus === null) {
+      // Change must be at the correct stage for this step
+      if (change.status !== stepDef.activeStatus) return;
+
+      // Step must still be pending
+      const stepStatus = change[stepDef.field];
+      if (stepStatus && stepStatus !== 'pending') return;
+
       tasks.push({
-        id: `mcs_${change.id}_${userRole}`,
+        id: `mcs_${change.id}_${stepKey}`,
         type: 'mcs_approval',
-        title: `Review ECR-${change.id.split('-')[2]}: ${esc(change.title.substring(0, 50))}${change.title.length > 50 ? '…' : ''}`,
-        description: `${stepInfo.label} required for ${esc(change.change_type)} change`,
+        title: `Review ${change.id}: ${esc(change.title.substring(0, 50))}${change.title.length > 50 ? '…' : ''}`,
+        description: `${stepDef.label} required for ${esc(change.change_type)} change`,
         status: 'open',
         priority: change.priority,
         dueDate: change.target_implementation,
@@ -46,21 +47,19 @@ function mcsExtractApproveTasks() {
         source: 'MCS',
         sourceIcon: '🔧',
         sourceLink: () => {
-          navigate('mcs', { pushHash: true });
-          // Highlight the change in MCS view
-          mcsViewingId = change.id;
-          setTimeout(() => mcsViewChange(change.id), 200);
+          if (typeof mcsAutoViewId !== 'undefined') mcsAutoViewId = change.id;
+          navigate('mcs');
         },
         notes: change.description?.substring(0, 100) || '',
         createdAt: change.created_at,
         metadata: {
           changeId: change.id,
           changeType: change.change_type,
-          approvalStep: userRole,
-          area: change.affected_area
+          approvalStep: stepKey,
+          stepLabel: stepDef.label
         }
       });
-    }
+    });
   });
 
   return tasks;
