@@ -5,6 +5,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-20 | Fix MCS database issues: wrong client, wrong tables, wrong field names, missing required fields | MCS was using the CDN global `supabase` object instead of the `supa` client for all DB queries (causing failures); `impacts` arrays and `timeline` arrays were being inserted into `mcs_changes` which has no such columns — they belong in `mcs_impacts` and `mcs_timeline`; update path used `type` instead of `change_type` and spread the full change object (including non-schema fields) into updates; `mcsLoadChanges` now joins `mcs_impacts`, `mcsViewChange` now loads timeline on demand; approval/reject/advance functions only send changed fields; `mcsCreateOverhaulHistoryEntry` was missing the required NOT NULL `effective_date` field; invalid `event_type` values in timeline inserts fixed; `mcs-pfmea.js` and `mcs-actions.js` added to `index.html`.
+
 ## 2026-03-20 | Fix MCR submit button: add Supabase client and CSS color variable | MCS modal was calling undefined `supabase.from()` instead of `supa.from()`, causing "supabase.from is not a function" error on save; added missing `--accent` CSS variable so submit button displays with correct color.
 
 ## 2026-03-20 | Update change request form: remove affected area, product selector, auto-author, hours impact | Affected area removed as not needed; part/drawing no. is now a dropdown from the products database; initiated by auto-fills with the logged-in user so it can't be entered incorrectly; time impact is now in hours and labelled "Overhaul Time Impact"; drawing update, QC plan, and supplier approval removed from impact assessment as they are not applicable.

@@ -10,13 +10,13 @@ let mcsTimelineSubscription = null;
  * Setup MCS real-time subscriptions
  */
 function mcsSetupRealtimeSubscriptions() {
-  if (!supabase) {
+  if (!supa) {
     console.warn('Supabase not initialized for MCS realtime');
     return;
   }
 
   // Subscribe to mcs_changes table for INSERT/UPDATE/DELETE events
-  mcsChangesSubscription = supabase
+  mcsChangesSubscription = supa
     .channel('mcs_changes_channel')
     .on(
       'postgres_changes',
@@ -38,7 +38,7 @@ function mcsSetupRealtimeSubscriptions() {
     });
 
   // Subscribe to mcs_timeline for new activity log entries
-  mcsTimelineSubscription = supabase
+  mcsTimelineSubscription = supa
     .channel('mcs_timeline_channel')
     .on(
       'postgres_changes',
@@ -116,11 +116,11 @@ function handleMcsTimelineUpdate(payload) {
  */
 function mcsCleanupRealtimeSubscriptions() {
   if (mcsChangesSubscription) {
-    supabase.removeChannel(mcsChangesSubscription);
+    supa.removeChannel(mcsChangesSubscription);
     mcsChangesSubscription = null;
   }
   if (mcsTimelineSubscription) {
-    supabase.removeChannel(mcsTimelineSubscription);
+    supa.removeChannel(mcsTimelineSubscription);
     mcsTimelineSubscription = null;
   }
 }
@@ -136,7 +136,7 @@ function mcsStartPolling() {
 
   mcsPollInterval = setInterval(async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supa
         .from('mcs_changes')
         .select('*')
         .order('created_at', { ascending: false });
