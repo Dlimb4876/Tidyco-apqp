@@ -116,6 +116,14 @@ function renderHub() {
             <div class="proj-card-meta">Unified overview of all operations, metrics, and risks</div>
           </div>
         </div>
+
+        <div class="proj-card hub-card" onclick="navigate('mcs')">
+          <div class="hub-card-content">
+            <div class="hub-icon">🔧</div>
+            <div class="proj-card-name">MANUFACTURING CHANGE SYSTEM</div>
+            <div class="proj-card-meta">Engineering Change Requests & Approvals</div>
+          </div>
+        </div>
       </div>
     </div>`;
 }
