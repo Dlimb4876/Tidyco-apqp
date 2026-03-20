@@ -13,7 +13,7 @@ The **GATE_DEFS** constant defines the structure of all 6 APQP quality gates (0�
 - **Required signatories** — Roles that must sign off
 - **Gate number** (0–5)
 
-**Location:** `portals/product-development/npi/js/npi-constants.js`
+**Location:** `core/js/state.js` (defined at line ~180)
 
 ---
 

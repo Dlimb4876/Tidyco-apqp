@@ -1,5 +1,7 @@
 # NPI Tender Gate Scope Feature — Implementation Plan
 
+> **Status: 📋 PENDING — Not yet implemented. Ready for implementation.**
+
 ## Overview
 
 Feature goal: let the team manually choose, during tender, which standard NPI gate questions apply to a specific job.
