@@ -124,39 +124,56 @@ function mcsShowViewModal(change) {
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-view-backdrop';
 
-  // Build approval chain HTML — use each step's actual approval status
-  const approvalSteps = [
-    { name: 'Engineering', role: 'Eng. Review', status: change.eng_review_status, byField: 'eng_review_by', atField: 'eng_review_at', notesField: 'eng_review_notes' },
-    { name: 'Quality', role: 'QA Approval', status: change.qa_review_status, byField: 'qa_review_by', atField: 'qa_review_at', notesField: 'qa_review_notes' },
-    { name: 'Manufacturing', role: 'Mfg. Sign-off', status: change.mfg_signoff_status, byField: 'mfg_signoff_by', atField: 'mfg_signoff_at', notesField: 'mfg_signoff_notes' },
-    { name: 'Management', role: 'Auth. to Implement', status: change.auth_implementation_status, byField: 'auth_implementation_by', atField: 'auth_implementation_at', notesField: 'auth_implementation_notes' }
+  // Build approval chain HTML using the 2-step MCO flow
+  // Steps: Approval 1 (eng fields) and Approval 2 (qa fields)
+  // Visual flow: Open → Impact Assessment → [Approval 1] → Implementing → [Approval 2] → Implemented
+  const mcoFlowSteps = [
+    { name: 'Open / Impact Assessment', role: 'ME Assigned', isApproval: false },
+    { name: 'Approval 1', role: 'Sign-off required', isApproval: true, stepKey: 'approval1',
+      status: change.eng_review_status, byField: 'eng_review_by', atField: 'eng_review_at', notesField: 'eng_review_notes' },
+    { name: 'Implement', role: 'ME implements change', isApproval: false },
+    { name: 'Approval 2', role: 'Final sign-off', isApproval: true, stepKey: 'approval2',
+      status: change.qa_review_status, byField: 'qa_review_by', atField: 'qa_review_at', notesField: 'qa_review_notes' }
   ];
 
-  // Build approval chain using explicit connector elements so the line renders correctly
   const approvalChainParts = [];
-  approvalSteps.forEach((step, i) => {
+  mcoFlowSteps.forEach((step, i) => {
     let cls = '';
     let icon = String(i + 1);
 
-    if (step.status === 'approved') {
-      cls = 'done';
-      icon = '✓';
-    } else if (step.status === 'rejected') {
-      cls = 'rejected';
-      icon = '✗';
+    if (!step.isApproval) {
+      // Non-approval node: done if we've passed this stage, current if we're here
+      const pastStage =
+        (i === 0 && ['review','implementing','final_review','implemented','closed'].includes(change.status)) ||
+        (i === 2 && ['final_review','implemented'].includes(change.status));
+      const activeStage =
+        (i === 0 && change.status === 'open') ||
+        (i === 2 && change.status === 'implementing');
+      if (pastStage) { cls = 'done'; icon = '✓'; }
+      else if (activeStage) { cls = 'current'; icon = String(i + 1); }
     } else {
-      // Active if all prior steps are approved and change is in review
-      const allPriorApproved = approvalSteps.slice(0, i).every(s => s.status === 'approved');
-      if (allPriorApproved && change.status === 'review') cls = 'current';
+      // Approval node
+      if (step.status === 'approved') { cls = 'done'; icon = '✓'; }
+      else if (step.status === 'rejected') { cls = 'rejected'; icon = '✗'; }
+      else {
+        const isActive = change.status === (step.stepKey === 'approval1' ? 'review' : 'final_review');
+        if (isActive) cls = 'current';
+      }
     }
 
-    const approvedBy = change[step.byField] || '';
-    const approvedAt = change[step.atField] ? change[step.atField].split('T')[0] : '';
-    const notes = change[step.notesField] || '';
-    const stepStatus = step.status === 'approved' ? 'APPROVED'
-      : step.status === 'rejected' ? 'REJECTED'
-      : cls === 'current' ? 'IN REVIEW'
-      : 'PENDING';
+    const approvedBy = step.byField ? (change[step.byField] || '') : '';
+    const approvedAt = step.atField && change[step.atField] ? change[step.atField].split('T')[0] : '';
+    const notes = step.notesField ? (change[step.notesField] || '') : '';
+
+    let stepStatusLabel = '';
+    if (!step.isApproval) {
+      stepStatusLabel = cls === 'done' ? 'DONE' : cls === 'current' ? 'IN PROGRESS' : 'PENDING';
+    } else {
+      stepStatusLabel = step.status === 'approved' ? 'APPROVED'
+        : step.status === 'rejected' ? 'REJECTED'
+        : cls === 'current' ? 'AWAITING'
+        : 'PENDING';
+    }
 
     approvalChainParts.push(`
       <div class="mcs-approval-step ${cls}">
@@ -164,7 +181,7 @@ function mcsShowViewModal(change) {
         <div class="mcs-approval-step-body">
           <div class="mcs-approval-name">${esc(step.name)}</div>
           <div class="mcs-approval-role">${step.role}</div>
-          <div class="mcs-approval-status-label">${stepStatus}</div>
+          <div class="mcs-approval-status-label">${stepStatusLabel}</div>
           ${approvedBy ? `<div class="mcs-approval-meta" title="${esc(approvedBy)}">${esc(approvedBy.length > 18 ? approvedBy.slice(0, 18) + '…' : approvedBy)}</div>` : ''}
           ${approvedAt ? `<div class="mcs-approval-date">${approvedAt}</div>` : ''}
           ${notes ? `<div class="mcs-approval-notes" title="${esc(notes)}">"${esc(notes.length > 30 ? notes.slice(0, 30) + '…' : notes)}"</div>` : ''}
@@ -172,11 +189,8 @@ function mcsShowViewModal(change) {
       </div>
     `);
 
-    // Add a connector between steps (not after the last one)
-    if (i < approvalSteps.length - 1) {
-      const connectorCls = step.status === 'approved' ? 'done'
-        : cls === 'current' ? 'active'
-        : '';
+    if (i < mcoFlowSteps.length - 1) {
+      const connectorCls = cls === 'done' ? 'done' : cls === 'current' ? 'active' : '';
       approvalChainParts.push(`<div class="mcs-approval-connector ${connectorCls}"></div>`);
     }
   });
@@ -551,36 +565,41 @@ function mcsShowEditModal(change) {
  */
 function mcsModalFooterButtons(change) {
   if (change.status === 'open') {
-    // Anyone with edit access can send to review
+    // ME/editor sends to Approval 1
     return canEdit()
-      ? `<button class="mcs-btn mcs-btn-primary" onclick="mcsAdvanceStatus('${esc(change.id)}')">Send to Review →</button>`
+      ? `<button class="mcs-btn mcs-btn-primary" onclick="mcsAdvanceStatus('${esc(change.id)}')">Send to Approval 1 →</button>`
       : '';
   }
 
   if (change.status === 'review') {
-    const activeStepKey = typeof mcsGetActiveStepKey === 'function' ? mcsGetActiveStepKey(change) : null;
-    const canApprove = activeStepKey && typeof mcsCanApproveStep === 'function' && mcsCanApproveStep(activeStepKey);
+    // Waiting for Approval 1
+    const canApprove = typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('approval1');
     if (!canApprove) {
-      // Show a greyed-out label so the user knows where approval sits
-      const stepDef = activeStepKey && typeof MCS_APPROVAL_STEPS !== 'undefined'
-        ? MCS_APPROVAL_STEPS.find(s => s.key === activeStepKey)
-        : null;
-      const waitingFor = stepDef ? stepDef.label : 'next approver';
-      return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting ${esc(waitingFor)}</span>`;
+      return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting Approval 1</span>`;
     }
     return `
-      <button class="mcs-btn mcs-btn-ghost" style="color:var(--red)" onclick="mcsRejectStepWithPrompt('${esc(change.id)}','${esc(activeStepKey)}')">Reject ✗</button>
-      <button class="mcs-btn mcs-btn-primary" onclick="mcsApproveStepWithPrompt('${esc(change.id)}','${esc(activeStepKey)}')">Approve ✓</button>
+      <button class="mcs-btn mcs-btn-ghost" style="color:var(--red)" onclick="mcsRejectStepWithPrompt('${esc(change.id)}','approval1')">Reject ✗</button>
+      <button class="mcs-btn mcs-btn-primary" onclick="mcsApproveStepWithPrompt('${esc(change.id)}','approval1')">Approve ✓</button>
     `;
   }
 
-  if (change.status === 'approved') {
-    // Mark implemented — only management approvers or admins
-    const canImplement = isAdmin() ||
-      (typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('management'));
-    return canImplement
-      ? `<button class="mcs-btn mcs-btn-primary" onclick="mcsAdvanceStatus('${esc(change.id)}')">Mark Implemented →</button>`
-      : `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting implementation</span>`;
+  if (change.status === 'implementing') {
+    // ME submits for Approval 2 once implementation is done
+    return canEdit()
+      ? `<button class="mcs-btn mcs-btn-primary" onclick="mcsAdvanceStatus('${esc(change.id)}')">Submit for Approval 2 →</button>`
+      : `<span style="font-size:12px;color:var(--text3);align-self:center">Being implemented</span>`;
+  }
+
+  if (change.status === 'final_review') {
+    // Waiting for Approval 2
+    const canApprove = typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('approval2');
+    if (!canApprove) {
+      return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting Approval 2</span>`;
+    }
+    return `
+      <button class="mcs-btn mcs-btn-ghost" style="color:var(--red)" onclick="mcsRejectStepWithPrompt('${esc(change.id)}','approval2')">Reject ✗</button>
+      <button class="mcs-btn mcs-btn-primary" onclick="mcsApproveStepWithPrompt('${esc(change.id)}','approval2')">Approve ✓</button>
+    `;
   }
 
   return '';
@@ -646,7 +665,9 @@ async function mcsAdvanceStatus(id) {
   const change = mcsList.find(c => c.id === id);
   if (!change) return;
 
-  const statusFlow = { open: 'review', review: 'approved', approved: 'implemented' };
+  // open → review (send to Approval 1)
+  // implementing → final_review (submit for Approval 2)
+  const statusFlow = { open: 'review', implementing: 'final_review' };
   const nextStatus = statusFlow[change.status];
   if (!nextStatus) return;
 
@@ -658,13 +679,17 @@ async function mcsAdvanceStatus(id) {
     };
 
     if (nextStatus === 'review') {
-      // Reset all four step statuses so the chain starts cleanly from Engineering
+      // Reset Approval 1 fields so the chain starts cleanly
       updateData.eng_review_status = 'pending';
+      updateData.eng_review_by = null;
+      updateData.eng_review_at = null;
+      updateData.eng_review_notes = null;
+    } else if (nextStatus === 'final_review') {
+      // Reset Approval 2 fields so approver sees a fresh request
       updateData.qa_review_status = 'pending';
-      updateData.mfg_signoff_status = 'pending';
-      updateData.auth_implementation_status = 'pending';
-    } else if (nextStatus === 'implemented') {
-      updateData.implementation_date = new Date().toISOString().split('T')[0];
+      updateData.qa_review_by = null;
+      updateData.qa_review_at = null;
+      updateData.qa_review_notes = null;
     }
 
     const { error } = await supa
@@ -677,6 +702,13 @@ async function mcsAdvanceStatus(id) {
     const idx = mcsList.findIndex(c => c.id === id);
     if (idx !== -1) {
       mcsList[idx] = { ...mcsList[idx], ...updateData };
+    }
+
+    const actor = (currentUser && currentUser.email) ? currentUser.email : 'System';
+    if (nextStatus === 'review') {
+      await mcsAddTimelineEntry(id, 'raised', 'Submitted for Approval 1.', actor);
+    } else if (nextStatus === 'final_review') {
+      await mcsAddTimelineEntry(id, 'edited', 'Implementation complete — submitted for Approval 2.', actor);
     }
 
     mcsToast(`Status updated to: ${mcStatusLabel(nextStatus)}`);
