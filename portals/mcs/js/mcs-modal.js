@@ -132,7 +132,9 @@ function mcsShowViewModal(change) {
     { name: 'Management', role: 'Auth. to Implement', status: change.auth_implementation_status, byField: 'auth_implementation_by', atField: 'auth_implementation_at', notesField: 'auth_implementation_notes' }
   ];
 
-  const approvalChainHtml = approvalSteps.map((step, i) => {
+  // Build approval chain using explicit connector elements so the line renders correctly
+  const approvalChainParts = [];
+  approvalSteps.forEach((step, i) => {
     let cls = '';
     let icon = String(i + 1);
 
@@ -151,20 +153,34 @@ function mcsShowViewModal(change) {
     const approvedBy = change[step.byField] || '';
     const approvedAt = change[step.atField] ? change[step.atField].split('T')[0] : '';
     const notes = change[step.notesField] || '';
-    const stepStatus = step.status === 'approved' ? 'Approved' : step.status === 'rejected' ? 'Rejected' : cls === 'current' ? 'In Review' : 'Pending';
+    const stepStatus = step.status === 'approved' ? 'APPROVED'
+      : step.status === 'rejected' ? 'REJECTED'
+      : cls === 'current' ? 'IN REVIEW'
+      : 'PENDING';
 
-    return `
+    approvalChainParts.push(`
       <div class="mcs-approval-step ${cls}">
         <div class="mcs-approval-circle">${icon}</div>
-        <div class="mcs-approval-name">${esc(step.name)}</div>
-        <div class="mcs-approval-role">${step.role}</div>
-        <div class="mcs-approval-status-label">${stepStatus}</div>
-        ${approvedBy ? `<div class="mcs-approval-meta">${esc(approvedBy)}</div>` : ''}
-        ${approvedAt ? `<div class="mcs-approval-date">${approvedAt}</div>` : ''}
-        ${notes ? `<div class="mcs-approval-notes" title="${esc(notes)}">"${esc(notes.length > 40 ? notes.slice(0, 40) + '…' : notes)}"</div>` : ''}
+        <div class="mcs-approval-step-body">
+          <div class="mcs-approval-name">${esc(step.name)}</div>
+          <div class="mcs-approval-role">${step.role}</div>
+          <div class="mcs-approval-status-label">${stepStatus}</div>
+          ${approvedBy ? `<div class="mcs-approval-meta" title="${esc(approvedBy)}">${esc(approvedBy.length > 18 ? approvedBy.slice(0, 18) + '…' : approvedBy)}</div>` : ''}
+          ${approvedAt ? `<div class="mcs-approval-date">${approvedAt}</div>` : ''}
+          ${notes ? `<div class="mcs-approval-notes" title="${esc(notes)}">"${esc(notes.length > 30 ? notes.slice(0, 30) + '…' : notes)}"</div>` : ''}
+        </div>
       </div>
-    `;
-  }).join('');
+    `);
+
+    // Add a connector between steps (not after the last one)
+    if (i < approvalSteps.length - 1) {
+      const connectorCls = step.status === 'approved' ? 'done'
+        : cls === 'current' ? 'active'
+        : '';
+      approvalChainParts.push(`<div class="mcs-approval-connector ${connectorCls}"></div>`);
+    }
+  });
+  const approvalChainHtml = approvalChainParts.join('');
 
   // Build impacts HTML with icons per type
   const impactIconMap = {
@@ -642,9 +658,11 @@ async function mcsAdvanceStatus(id) {
     };
 
     if (nextStatus === 'review') {
+      // Reset all four step statuses so the chain starts cleanly from Engineering
       updateData.eng_review_status = 'pending';
-    } else if (nextStatus === 'approved') {
-      updateData.qa_review_status = 'approved';
+      updateData.qa_review_status = 'pending';
+      updateData.mfg_signoff_status = 'pending';
+      updateData.auth_implementation_status = 'pending';
     } else if (nextStatus === 'implemented') {
       updateData.implementation_date = new Date().toISOString().split('T')[0];
     }

@@ -65,6 +65,19 @@ async function mcsApproveStep(changeId, step, notes) {
     return false;
   }
 
+  // Guard: ensure all prior steps are approved (sequential chain enforcement)
+  if (typeof MCS_APPROVAL_STEPS !== 'undefined') {
+    const stepIdx = MCS_APPROVAL_STEPS.findIndex(s => s.key === step);
+    for (let i = 0; i < stepIdx; i++) {
+      const prior = MCS_APPROVAL_STEPS[i];
+      if (change[prior.field] !== 'approved') {
+        console.warn('[MCS] Cannot approve step', step, '— prior step', prior.key, 'not yet approved');
+        alert(`Cannot approve: ${prior.label} must be approved first.`);
+        return false;
+      }
+    }
+  }
+
   try {
     const now = new Date().toISOString();
     const user = (currentUser && currentUser.email) ? currentUser.email : (currentUserRole || 'Unknown');
