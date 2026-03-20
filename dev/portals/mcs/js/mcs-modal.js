@@ -9,6 +9,14 @@ function mcsShowCreateModal() {
   const backdrop = document.createElement('div');
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-form-backdrop';
+
+  const initiatedBy = (currentUser && currentUser.email) ? currentUser.email : '';
+  const productOptions = (window.productsState && window.productsState.products || [])
+    .map(p => {
+      const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name);
+      return `<option value="${esc(p.name)}">${display}</option>`;
+    }).join('');
+
   backdrop.innerHTML = `
     <div class="mcs-modal" id="mcs-form-modal">
       <div class="mcs-modal-header">
@@ -47,23 +55,11 @@ function mcsShowCreateModal() {
             </select>
           </div>
           <div class="mcs-field-group">
-            <div class="mcs-field-label">Affected Area</div>
-            <select class="mcs-field-select" id="mcs-f-area">
-              <option value="">Select area...</option>
-              <option>Assembly</option>
-              <option>Fabrication</option>
-              <option>Machining</option>
-              <option>Paint & Finish</option>
-              <option>Electrical</option>
-              <option>Testing & Inspection</option>
-              <option>Stores / Warehouse</option>
-              <option>Design Office</option>
-              <option>All Areas</option>
-            </select>
-          </div>
-          <div class="mcs-field-group">
             <div class="mcs-field-label">Part / Drawing No.</div>
-            <input class="mcs-field-input" id="mcs-f-part" placeholder="e.g. DRG-0042-A" style="font-family: var(--mono)" />
+            <select class="mcs-field-select" id="mcs-f-part">
+              <option value="">Select product...</option>
+              ${productOptions}
+            </select>
           </div>
           <div class="mcs-field-group">
             <div class="mcs-field-label">Source</div>
@@ -78,15 +74,15 @@ function mcsShowCreateModal() {
           </div>
           <div class="mcs-field-group">
             <div class="mcs-field-label">Initiated By</div>
-            <input class="mcs-field-input" id="mcs-f-author" placeholder="Name / email" />
+            <input class="mcs-field-input" id="mcs-f-author" value="${esc(initiatedBy)}" readonly style="background: var(--surface2); color: var(--text2);" />
           </div>
           <div class="mcs-field-group">
             <div class="mcs-field-label">Target Implementation</div>
             <input class="mcs-field-input" id="mcs-f-target" type="date" />
           </div>
           <div class="mcs-field-group">
-            <div class="mcs-field-label">Est. Time Impact (days)</div>
-            <input class="mcs-field-input" id="mcs-f-time-impact" type="number" placeholder="e.g. +5 or -2" />
+            <div class="mcs-field-label">Overhaul Time Impact (hours)</div>
+            <input class="mcs-field-input" id="mcs-f-time-impact" type="number" min="0" step="0.5" placeholder="e.g. 4.5" />
           </div>
           <div class="mcs-field-group mcs-modal-grid full">
             <div class="mcs-field-label">Description of Change *</div>
@@ -100,11 +96,8 @@ function mcsShowCreateModal() {
 
         <div class="mcs-section-title">Impact Assessment</div>
         <div class="mcs-impact-grid">
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-drawing" /><label for="mcs-imp-drawing">Drawing Update</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-bom" /><label for="mcs-imp-bom">BOM Change</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-proc" /><label for="mcs-imp-proc">Work Instructions</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-qual" /><label for="mcs-imp-qual">QC Plan Update</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-supplier" /><label for="mcs-imp-supplier">Supplier Approval</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-tooling" /><label for="mcs-imp-tooling">Tooling Change</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" /><label for="mcs-imp-training">Training Required</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" /><label for="mcs-imp-customer">Customer Notification</label></div>
@@ -166,8 +159,7 @@ function mcsShowViewModal(change) {
 
   // Build impacts HTML
   const impactTypes = [
-    'Drawing Update', 'BOM Change', 'Work Instructions', 'QC Plan Update',
-    'Supplier Approval', 'Tooling Change', 'Training Required', 'Customer Notification'
+    'BOM Change', 'Work Instructions', 'Tooling Change', 'Training Required', 'Customer Notification'
   ];
   const impactsHtml = (change.impacts || []).length > 0
     ? (change.impacts || []).map(imp => `<span class="mcs-tag" style="background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(37,99,235,0.2)">✓ ${esc(imp)}</span>`).join('')
@@ -192,7 +184,6 @@ function mcsShowViewModal(change) {
           <div class="mcs-modal-title">${esc(change.title)}</div>
           <div class="mcs-modal-tags">
             <span class="mcs-tag">${esc(change.change_type)}</span>
-            <span class="mcs-tag">${esc(change.affected_area || '—')}</span>
           </div>
         </div>
         <button class="mcs-modal-close" onclick="mcsCloseModal('mcs-view-backdrop')">&times;</button>
@@ -214,10 +205,6 @@ function mcsShowViewModal(change) {
           <div class="mcs-field-group">
             <div class="mcs-field-label">Date Raised</div>
             <div style="font-family: var(--mono); font-size: 12px; color: var(--text2);">${change.created_at ? change.created_at.split('T')[0] : '—'}</div>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Affected Area</div>
-            <div style="font-size: 13px; color: var(--text2);">${esc(change.affected_area || '—')}</div>
           </div>
           <div class="mcs-field-group">
             <div class="mcs-field-label">Part / Drawing</div>
@@ -279,11 +266,8 @@ async function mcsSaveChange() {
   }
 
   const impactMap = {
-    'mcs-imp-drawing': 'Drawing Update',
     'mcs-imp-bom': 'BOM Change',
     'mcs-imp-proc': 'Work Instructions',
-    'mcs-imp-qual': 'QC Plan Update',
-    'mcs-imp-supplier': 'Supplier Approval',
     'mcs-imp-tooling': 'Tooling Change',
     'mcs-imp-training': 'Training Required',
     'mcs-imp-customer': 'Customer Notification'
@@ -306,11 +290,10 @@ async function mcsSaveChange() {
         priority,
         description,
         impacts,
-        affected_area: document.getElementById('mcs-f-area')?.value,
         part_drawing_no: document.getElementById('mcs-f-part')?.value,
         initiated_by: document.getElementById('mcs-f-author')?.value,
         target_implementation: document.getElementById('mcs-f-target')?.value,
-        estimated_time_impact_days: parseInt(document.getElementById('mcs-f-time-impact')?.value) || 0,
+        estimated_time_impact_days: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: document.getElementById('mcs-f-justification')?.value,
         updated_at: new Date().toISOString()
       };
@@ -339,14 +322,13 @@ async function mcsSaveChange() {
         status: 'open',
         description,
         impacts,
-        affected_area: document.getElementById('mcs-f-area')?.value,
         part_drawing_no: document.getElementById('mcs-f-part')?.value,
         initiated_by: document.getElementById('mcs-f-author')?.value || 'Unknown',
         change_source: document.getElementById('mcs-f-source')?.value || 'Manual',
         created_at: now,
         updated_at: now,
         target_implementation: document.getElementById('mcs-f-target')?.value,
-        estimated_time_impact_days: parseInt(document.getElementById('mcs-f-time-impact')?.value) || 0,
+        estimated_time_impact_days: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: document.getElementById('mcs-f-justification')?.value,
         timeline: [
           {
@@ -424,6 +406,15 @@ function mcsShowEditModal(change) {
   const backdrop = document.createElement('div');
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-form-backdrop';
+
+  const initiatedBy = change.initiated_by || (currentUser && currentUser.email) || '';
+  const productOptions = (window.productsState && window.productsState.products || [])
+    .map(p => {
+      const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name);
+      const selected = change.part_drawing_no === p.name ? 'selected' : '';
+      return `<option value="${esc(p.name)}" ${selected}>${display}</option>`;
+    }).join('');
+
   backdrop.innerHTML = `
     <div class="mcs-modal">
       <div class="mcs-modal-header">
@@ -460,24 +451,23 @@ function mcsShowEditModal(change) {
             </select>
           </div>
           <div class="mcs-field-group">
-            <div class="mcs-field-label">Affected Area</div>
-            <input class="mcs-field-input" id="mcs-f-area" value="${esc(change.affected_area || '')}" />
-          </div>
-          <div class="mcs-field-group">
             <div class="mcs-field-label">Part / Drawing No.</div>
-            <input class="mcs-field-input" id="mcs-f-part" value="${esc(change.part_drawing_no || '')}" style="font-family: var(--mono)" />
+            <select class="mcs-field-select" id="mcs-f-part">
+              <option value="">Select product...</option>
+              ${productOptions}
+            </select>
           </div>
           <div class="mcs-field-group">
             <div class="mcs-field-label">Initiated By</div>
-            <input class="mcs-field-input" id="mcs-f-author" value="${esc(change.initiated_by || '')}" />
+            <input class="mcs-field-input" id="mcs-f-author" value="${esc(initiatedBy)}" readonly style="background: var(--surface2); color: var(--text2);" />
           </div>
           <div class="mcs-field-group">
             <div class="mcs-field-label">Target Implementation</div>
             <input class="mcs-field-input" id="mcs-f-target" type="date" value="${change.target_implementation || ''}" />
           </div>
           <div class="mcs-field-group">
-            <div class="mcs-field-label">Est. Time Impact (days)</div>
-            <input class="mcs-field-input" id="mcs-f-time-impact" type="number" value="${change.estimated_time_impact_days || 0}" />
+            <div class="mcs-field-label">Overhaul Time Impact (hours)</div>
+            <input class="mcs-field-input" id="mcs-f-time-impact" type="number" min="0" step="0.5" value="${change.estimated_time_impact_days || 0}" />
           </div>
           <div class="mcs-field-group mcs-modal-grid full">
             <div class="mcs-field-label">Description of Change *</div>
@@ -490,11 +480,8 @@ function mcsShowEditModal(change) {
         </div>
         <div class="mcs-section-title">Impact Assessment</div>
         <div class="mcs-impact-grid">
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-drawing" ${(change.impacts || []).includes('Drawing Update') ? 'checked' : ''} /><label for="mcs-imp-drawing">Drawing Update</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-bom" ${(change.impacts || []).includes('BOM Change') ? 'checked' : ''} /><label for="mcs-imp-bom">BOM Change</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-proc" ${(change.impacts || []).includes('Work Instructions') ? 'checked' : ''} /><label for="mcs-imp-proc">Work Instructions</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-qual" ${(change.impacts || []).includes('QC Plan Update') ? 'checked' : ''} /><label for="mcs-imp-qual">QC Plan Update</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-supplier" ${(change.impacts || []).includes('Supplier Approval') ? 'checked' : ''} /><label for="mcs-imp-supplier">Supplier Approval</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-tooling" ${(change.impacts || []).includes('Tooling Change') ? 'checked' : ''} /><label for="mcs-imp-tooling">Tooling Change</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" ${(change.impacts || []).includes('Training Required') ? 'checked' : ''} /><label for="mcs-imp-training">Training Required</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" ${(change.impacts || []).includes('Customer Notification') ? 'checked' : ''} /><label for="mcs-imp-customer">Customer Notification</label></div>
