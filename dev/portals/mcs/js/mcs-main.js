@@ -377,12 +377,7 @@ async function mcsViewChange(id) {
     .eq('change_id', id)
     .order('created_at', { ascending: true });
 
-  change.timeline = (timelineData || []).map(ev => ({
-    time: new Date(ev.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-    text: ev.event_text || '',
-    author: ev.actor_name || ev.actor_email || '',
-    type: ev.event_type
-  }));
+  change.timeline = mcsFormatTimelineEvents(timelineData || []);
 
   // Show modal (handled by mcs-modal.js)
   mcsShowViewModal(change);
