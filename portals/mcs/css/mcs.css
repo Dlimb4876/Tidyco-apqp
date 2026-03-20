@@ -459,9 +459,14 @@
 /* -- Approval Chain -- */
 .mcs-approval-chain {
   display: flex;
+  align-items: flex-start;
   gap: 0;
   margin-bottom: 28px;
-  padding: 20px 0 8px;
+  padding: 28px 20px 20px;
+  background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 .mcs-approval-step {
@@ -470,74 +475,86 @@
   flex-direction: column;
   align-items: center;
   position: relative;
-  padding: 0 4px;
+  min-width: 0;
+  padding: 0 2px;
 }
 
-.mcs-approval-step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  width: 100%;
-  height: 2px;
+/* Connector rendered as explicit sibling element in JS */
+.mcs-approval-connector {
+  flex: 1;
+  height: 3px;
+  min-width: 16px;
+  border-radius: 2px;
   background: var(--border2);
-  z-index: 0;
+  align-self: flex-start;
+  margin-top: 24px; /* half of 48px circle */
+  transition: background 0.3s;
 }
 
-.mcs-approval-step.done:not(:last-child)::after {
+.mcs-approval-connector.done {
   background: var(--green);
 }
 
-.mcs-approval-step.current:not(:last-child)::after {
-  background: linear-gradient(90deg, var(--orange), var(--border2));
+.mcs-approval-connector.active {
+  background: linear-gradient(90deg, var(--green), var(--orange));
 }
 
 .mcs-approval-circle {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: 2px solid var(--border2);
-  background: var(--surface2);
+  border: 2.5px solid var(--border2);
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   z-index: 1;
   position: relative;
-  transition: all 0.2s;
+  transition: all 0.25s;
   color: var(--text3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .mcs-approval-step.done .mcs-approval-circle {
   border-color: var(--green);
-  background: var(--green-dim);
+  background: var(--green-dim, #dcfce7);
   color: var(--green);
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12), 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .mcs-approval-step.current .mcs-approval-circle {
   border-color: var(--orange);
-  background: var(--orange-dim);
+  background: var(--orange-dim, #fef3c7);
   color: var(--orange);
-  animation: pulse 1.5s infinite;
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+  animation: mcs-pulse-ring 1.8s ease-in-out infinite;
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.12), 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .mcs-approval-step.rejected .mcs-approval-circle {
   border-color: var(--red);
-  background: var(--red-dim);
+  background: var(--red-dim, #fee2e2);
   color: var(--red);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12), 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Step label block */
+.mcs-approval-step-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+  gap: 3px;
 }
 
 .mcs-approval-name {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text2);
-  margin-top: 8px;
   text-align: center;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .mcs-approval-step.done .mcs-approval-name {
@@ -555,38 +572,49 @@
 .mcs-approval-role {
   font-size: 10px;
   color: var(--text3);
-  margin-top: 2px;
   text-align: center;
+  white-space: nowrap;
 }
 
+/* Status badge pill */
 .mcs-approval-status-label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   margin-top: 4px;
-  text-align: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border2);
   color: var(--text3);
+  background: var(--surface2);
+  white-space: nowrap;
 }
 
 .mcs-approval-step.done .mcs-approval-status-label {
   color: var(--green);
+  border-color: rgba(22,163,74,0.35);
+  background: var(--green-dim, #dcfce7);
 }
 
 .mcs-approval-step.current .mcs-approval-status-label {
   color: var(--orange);
+  border-color: rgba(217,119,6,0.35);
+  background: var(--orange-dim, #fef3c7);
 }
 
 .mcs-approval-step.rejected .mcs-approval-status-label {
   color: var(--red);
+  border-color: rgba(220,38,38,0.35);
+  background: var(--red-dim, #fee2e2);
 }
 
 .mcs-approval-meta {
   font-size: 10px;
   color: var(--text3);
-  margin-top: 4px;
+  margin-top: 3px;
   text-align: center;
-  max-width: 90px;
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -605,10 +633,15 @@
   font-style: italic;
   text-align: center;
   margin-top: 2px;
-  max-width: 90px;
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@keyframes mcs-pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.12), 0 2px 8px rgba(0,0,0,0.08); }
+  50%       { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0.20), 0 2px 8px rgba(0,0,0,0.08); }
 }
 
 /* -- Impact Tags (view mode) -- */
@@ -853,15 +886,7 @@
   }
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
+/* pulse animation removed — replaced with mcs-pulse-ring above */
 
 /* -- Modal Backdrop -- */
 .mcs-modal-backdrop {
