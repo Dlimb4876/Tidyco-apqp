@@ -1161,7 +1161,7 @@ function renderSettingsMcsTab() {
       <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
         <select class="cell-edit" id="mcs-add-user-${esc(step.key)}" style="flex:1">
           <option value="">Select user to add…</option>
-          ${availableUsers.map(u => `<option value="${esc(u.id)}" data-name="${esc(u.full_name || settingsEmailToName(u.email))}">${esc(u.full_name || settingsEmailToName(u.email))}</option>`).join('')}
+          ${availableUsers.map(u => `<option value="${esc(u.id)}" data-name="${esc(u.full_name || settingsEmailToName(u.email))}" data-email="${esc(u.email || '')}">${esc(u.full_name || settingsEmailToName(u.email))}</option>`).join('')}
         </select>
         <button class="btn btn-sm btn-primary"
           data-action="settings-mcs-add-approver"
@@ -1204,13 +1204,16 @@ async function settingsMcsAddApprover(stepKey) {
   const userId = select.value;
   const option = select.querySelector(`option[value="${userId}"]`);
   const userName = option?.dataset.name || option?.textContent || userId;
+  const userEmail = option?.dataset.email || '';
 
-  const ok = await mcsApproversAdd(stepKey, userId, userName);
+  const ok = await mcsApproversAdd(stepKey, userId, userName, userEmail);
   if (!ok) { showToast('Failed to add approver', 'error'); return; }
 
   // Update local state
   if (mcsApproverConfig && mcsApproverConfig[stepKey]) {
-    mcsApproverConfig[stepKey].push({ user_id: userId, user_name: userName });
+    const entry = { user_id: userId, user_name: userName };
+    if (userEmail) entry.user_email = userEmail;
+    mcsApproverConfig[stepKey].push(entry);
   }
   showToast(`${esc(userName)} added as ${stepKey} approver`, 'success');
   renderSettingsMcsTab();

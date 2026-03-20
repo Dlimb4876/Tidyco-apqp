@@ -50,13 +50,25 @@ async function mcsApproversLoad() {
       .in('setting_key', Object.values(MCS_APPROVER_SETTING_KEYS));
 
     if (!error) {
+      const foundKeys = new Set();
       (data || []).forEach(row => {
         const key = row.setting_key === MCS_APPROVER_SETTING_KEYS.approval1 ? 'approval1' : 'approval2';
         config[key] = _mcsParseSetting(row.setting_value);
+        foundKeys.add(row.setting_key);
       });
-      // Cache to localStorage for offline / table-missing fallback
-      localStorage.setItem(MCS_APPROVER_SETTING_KEYS.approval1, JSON.stringify(config.approval1));
-      localStorage.setItem(MCS_APPROVER_SETTING_KEYS.approval2, JSON.stringify(config.approval2));
+      // Only overwrite localStorage for keys that were actually returned from Supabase.
+      // If a key is missing from the DB response, the localStorage copy (which may have
+      // been saved earlier) is preserved as the source of truth.
+      if (foundKeys.has(MCS_APPROVER_SETTING_KEYS.approval1)) {
+        localStorage.setItem(MCS_APPROVER_SETTING_KEYS.approval1, JSON.stringify(config.approval1));
+      } else {
+        config.approval1 = _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS.approval1));
+      }
+      if (foundKeys.has(MCS_APPROVER_SETTING_KEYS.approval2)) {
+        localStorage.setItem(MCS_APPROVER_SETTING_KEYS.approval2, JSON.stringify(config.approval2));
+      } else {
+        config.approval2 = _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS.approval2));
+      }
       return config;
     }
   } catch (err) {
@@ -100,14 +112,16 @@ async function _mcsSaveApproverList(stepKey, list) {
 }
 
 /** Add a user as an approver for a step. */
-async function mcsApproversAdd(stepKey, userId, userName) {
+async function mcsApproversAdd(stepKey, userId, userName, userEmail) {
   const current = (mcsApproverConfig && mcsApproverConfig[stepKey]) ||
     _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS[stepKey]));
 
   // Skip duplicates
   if (current.some(u => u.user_id === userId)) return true;
 
-  const newList = [...current, { user_id: userId, user_name: userName }];
+  const entry = { user_id: userId, user_name: userName };
+  if (userEmail) entry.user_email = userEmail;
+  const newList = [...current, entry];
   await _mcsSaveApproverList(stepKey, newList);
   return true;
 }
@@ -134,10 +148,32 @@ function mcsGetMyApproverSteps() {
     .filter(key => (mcsApproverConfig[key] || []).some(u => u.user_id === myId));
 }
 
-/** Returns true if the current user is an approver for the given step key.
- *  Falls back to any canEdit() user when no specific approvers are assigned. */
-function mcsCanApproveStep(stepKey) {
+/**
+ * Returns true if the current user is an approver for the given step key.
+ * Falls back to any canEdit() user when no specific approvers are assigned.
+ * Checks both user_id (UUID) and user_email to handle any ID/email mismatch.
+ * Also honours per-change nominated approvers stored in eng_review_notes.
+ *
+ * @param {string} stepKey - 'approval1' | 'approval2'
+ * @param {object} [change] - The specific change being viewed (optional).
+ *   When provided, also checks if the current user was nominated for this change.
+ */
+function mcsCanApproveStep(stepKey, change) {
   if (!stepKey || !currentUser) return false;
+
+  const myId = currentUser.id;
+  const myEmail = (currentUser.email || '').toLowerCase();
+
+  // Check per-change nominated approver (only applies to approval1 step).
+  // Stored in eng_review_notes as "nominated_approver:<email>" when raising.
+  if (stepKey === 'approval1' && change && change.eng_review_notes) {
+    const notes = change.eng_review_notes;
+    if (notes.startsWith('nominated_approver:')) {
+      const nominatedEmail = notes.slice('nominated_approver:'.length).trim().toLowerCase();
+      if (nominatedEmail && myEmail && nominatedEmail === myEmail) return true;
+    }
+  }
+
   // Config not loaded yet — fall back to role-based edit permission
   if (!mcsApproverConfig) {
     return typeof canEdit === 'function' && canEdit();
@@ -147,7 +183,10 @@ function mcsCanApproveStep(stepKey) {
   if (assigned.length === 0) {
     return typeof canEdit === 'function' && canEdit();
   }
-  return assigned.some(u => u.user_id === currentUser.id);
+  return assigned.some(u =>
+    (myId && u.user_id && u.user_id === myId) ||
+    (myEmail && u.user_email && u.user_email.toLowerCase() === myEmail)
+  );
 }
 
 /**
