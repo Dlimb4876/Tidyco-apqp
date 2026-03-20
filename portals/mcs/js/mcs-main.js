@@ -98,9 +98,26 @@ async function renderMcs() {
     </div>
   `;
 
-  // Load changes from Supabase
-  await mcsLoadChanges();
+  // Load changes and approver config in parallel
+  await Promise.all([
+    mcsLoadChanges(),
+    (async () => {
+      if (typeof mcsApproversLoad === 'function' && mcsApproverConfig === null && !mcsApproverConfigLoading) {
+        mcsApproverConfigLoading = true;
+        mcsApproverConfig = await mcsApproversLoad();
+        mcsApproverConfigLoading = false;
+      }
+    })()
+  ]);
+
   mcsRenderList();
+
+  // Auto-open a specific change if requested (e.g. from Action Centre)
+  if (mcsAutoViewId) {
+    const autoId = mcsAutoViewId;
+    mcsAutoViewId = null;
+    mcsViewChange(autoId);
+  }
 }
 
 /**

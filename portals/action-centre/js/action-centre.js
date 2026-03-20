@@ -34,8 +34,15 @@ async function actionCentreLoad() {
 
     const myName = actionCentreGetMyName();
     if (!myName || !currentUser) {
-      actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], error: null };
+      actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], mcsApprovals: [], error: null };
       return;
+    }
+
+    // Ensure MCS approver config is loaded so we know which steps this user approves
+    if (typeof mcsApproversLoad === 'function' && mcsApproverConfig === null && !mcsApproverConfigLoading) {
+      mcsApproverConfigLoading = true;
+      mcsApproverConfig = await mcsApproversLoad();
+      mcsApproverConfigLoading = false;
     }
 
     // Fetch all action types assigned to the current user in parallel
@@ -72,6 +79,14 @@ async function actionCentreLoad() {
 
     const getProjectName = id => projectMap[id] || 'Unknown Project';
 
+    // Load pending MCS approvals for this user's approver role(s)
+    let mcsApprovals = [];
+    if (typeof mcsGetPendingApprovalsForMe === 'function' && mcsApproverConfig && !mcsApproverConfig._tableNotFound) {
+      try {
+        mcsApprovals = await mcsGetPendingApprovalsForMe();
+      } catch (_) { /* non-fatal — MCS table may not exist */ }
+    }
+
     actionCentreData = {
       myName,
       error: null,
@@ -86,15 +101,22 @@ async function actionCentreLoad() {
       risks: (riskRes.data || []).map(r => ({
         ...r,
         projectName: getProjectName(r.project_id)
-      }))
+      })),
+      mcsApprovals
     };
   } catch (err) {
     console.error('[ActionCentre] Load failed:', err);
-    actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], error: err.message };
+    actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], mcsApprovals: [], error: err.message };
   } finally {
     actionCentreLoading = false;
     if (currentSection === 'action-centre' || currentSection === 'hub') render();
   }
+}
+
+/** Navigate to MCS and auto-open a specific change. */
+function actionCentreGoToMcs(changeId) {
+  if (changeId) mcsAutoViewId = changeId;
+  navigate('mcs');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -169,7 +191,7 @@ function renderActionCentre() {
       ${emptyState('✅', 'Nothing here yet', 'Loading…')}`;
   }
 
-  const { myName, actions, pfmea, risks, error } = actionCentreData;
+  const { myName, actions, pfmea, risks, mcsApprovals = [], error } = actionCentreData;
   const today = new Date(); today.setHours(0, 0, 0, 0);
 
   const isOpen = item => item.status !== 'Closed';
@@ -218,14 +240,29 @@ function renderActionCentre() {
       priority: '—',
       source: 'Risk',
       _overdue: false
+    })),
+    ...mcsApprovals.map(({ change, stepLabel }) => ({
+      id: change.id,
+      _type: 'mcs-approval',
+      _mcsChange: change,
+      projectName: 'Mfg. Change System',
+      project_id: null,
+      description: change.title,
+      due: change.target_implementation || null,
+      status: 'Pending Approval',
+      priority: change.priority || '—',
+      source: `MCS — ${stepLabel}`,
+      _overdue: change.target_implementation
+        ? (() => { const d = new Date(change.target_implementation); d.setHours(0,0,0,0); return d < today; })()
+        : false
     }))
   ];
 
-  // Status filter
+  // Status filter (MCS approvals are always 'pending' — shown in open/all, not closed)
   const statusFiltered = actionCentreStatusFilter === 'open'
     ? allItems.filter(i => i.status !== 'Closed')
     : actionCentreStatusFilter === 'closed'
-    ? allItems.filter(i => i.status === 'Closed')
+    ? allItems.filter(i => i.status === 'Closed' && i._type !== 'mcs-approval')
     : allItems;
 
   // Type tab filter
@@ -244,6 +281,8 @@ function renderActionCentre() {
       ? '<span class="ac-type-chip ac-chip-pfmea">PFMEA</span>'
       : item._type === 'risk'
       ? '<span class="ac-type-chip ac-chip-risk">Risk</span>'
+      : item._type === 'mcs-approval'
+      ? '<span class="ac-type-chip ac-chip-mcs">MCS</span>'
       : '<span class="ac-type-chip ac-chip-action">Action</span>';
 
     const dueCell = item.due
@@ -255,7 +294,7 @@ function renderActionCentre() {
     else if (item.status === 'In Progress') statusClass = 'ac-status-progress';
     else if (item.status === 'Blocked') statusClass = 'ac-status-blocked';
 
-    // Only NPI actions support inline status change from here
+    // Only NPI actions support inline status change from here; MCS items show a fixed badge
     const statusCell = item._type === 'action'
       ? `<select class="cell-edit" style="width:100%" onchange="actionCentreUpdateActionStatus('${esc(item.id)}',this.value)">
           ${['Open','In Progress','Closed','Blocked'].map(s => `<option${item.status===s?' selected':''}>${s}</option>`).join('')}
@@ -263,7 +302,9 @@ function renderActionCentre() {
       : `<span class="${statusClass}">${esc(item.status)}</span>`;
 
     const goSection = item._type === 'pfmea' ? 'apqp' : item._type === 'risk' ? 'risks' : 'actions';
-    const goBtn = `<button class="btn btn-ghost btn-sm" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}','${esc(item.id)}')">→ Open</button>`;
+    const goBtn = item._type === 'mcs-approval'
+      ? `<button class="btn btn-ghost btn-sm" onclick="actionCentreGoToMcs('${esc(item.id)}')">→ Review</button>`
+      : `<button class="btn btn-ghost btn-sm" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}','${esc(item.id)}')">→ Open</button>`;
 
     return `<tr class="${item._overdue ? 'row-overdue' : ''}">
       <td class="ac-col-project"><a class="ac-project-link" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}','${esc(item.id)}')">${esc(item.projectName)}</a></td>
@@ -332,7 +373,7 @@ function renderActionCentre() {
           </button>`).join('')}
       </div>
       <div class="ac-filter-group">
-        ${[['all','All types'],['action','Actions'],['pfmea','PFMEA'],['risk','Risks']].map(([t,l]) => `
+        ${[['all','All types'],['action','Actions'],['pfmea','PFMEA'],['risk','Risks'],['mcs-approval', 'MCS Approvals']].map(([t,l]) => `
           <button class="btn btn-sm ${actionCentreTab === t ? 'btn-primary' : 'btn-ghost'}"
             onclick="actionCentreTab='${t}';render()">
             ${esc(l)}

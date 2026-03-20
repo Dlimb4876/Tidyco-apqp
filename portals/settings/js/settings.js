@@ -66,6 +66,9 @@ function renderSettings() {
         settingsEnsurePermissionsData();
       } else if (tab === 'role-definitions') {
         renderSettingsRoleDefinitionsTab();
+      } else if (tab === 'mcs-approvers') {
+        renderSettingsMcsTab();
+        settingsEnsureMcsData();
       } else if (tab === 'appearance') {
         renderSettingsAppearanceTab();
       } else if (tab === 'about') {
@@ -99,6 +102,9 @@ function renderSettings() {
           <button class="settings-nav-item ${tab === 'role-definitions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="role-definitions">
             <span class="nav-icon">🔐</span> Role Definitions
           </button>
+          <button class="settings-nav-item ${tab === 'mcs-approvers' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="mcs-approvers">
+            <span class="nav-icon">🔩</span> Mfg. Changes
+          </button>
           <span class="settings-nav-group-label" style="margin-top:8px">Preferences</span>
           <button class="settings-nav-item ${tab === 'appearance' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="appearance">
             <span class="nav-icon">🎨</span> Appearance
@@ -114,6 +120,7 @@ function renderSettings() {
           <div id="settingsTeamsTab"           class="settings-tab-content ${tab === 'teams'            ? 'active' : ''}"></div>
           <div id="settingsPermissionsTab"     class="settings-tab-content ${tab === 'permissions'      ? 'active' : ''}"></div>
           <div id="settingsRoleDefinitionsTab" class="settings-tab-content ${tab === 'role-definitions' ? 'active' : ''}"></div>
+          <div id="settingsMcsTab"            class="settings-tab-content ${tab === 'mcs-approvers'    ? 'active' : ''}"></div>
           <div id="settingsAppearanceTab"      class="settings-tab-content ${tab === 'appearance'       ? 'active' : ''}"></div>
           <div id="settingsAboutTab"           class="settings-tab-content ${tab === 'about'            ? 'active' : ''}"></div>
         </div>
@@ -1077,6 +1084,182 @@ function renderSettingsAboutTab() {
 }
 
 
+// ── Ensure MCS approver data is loaded ────────────────────────
+async function settingsEnsureMcsData(forceReload = false) {
+  if (settingsMcsLoading) return;
+  if (!forceReload && mcsApproverConfig !== null) {
+    await settingsEnsurePermissionsData();
+    renderSettingsMcsTab();
+    return;
+  }
+
+  settingsMcsLoading = true;
+  settingsMcsError = null;
+  renderSettingsMcsTab();
+
+  try {
+    await settingsEnsurePermissionsData();
+    mcsApproverConfig = await mcsApproversLoad();
+    if (!mcsApproverConfig) {
+      settingsMcsError = 'Failed to load approver config';
+      mcsApproverConfig = null;
+    }
+  } catch (err) {
+    settingsMcsError = err?.message || 'Failed to load';
+  } finally {
+    settingsMcsLoading = false;
+    renderSettingsMcsTab();
+  }
+}
+
+// ── Render MCS approvers tab ───────────────────────────────────
+function renderSettingsMcsTab() {
+  const container = document.getElementById('settingsMcsTab');
+  if (!container) return;
+
+  if (settingsMcsLoading) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
+    return;
+  }
+
+  if (settingsMcsError) {
+    container.innerHTML = `
+      <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
+        <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load MCS approver config</div>
+        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsMcsError)}</div>
+        <button class="btn btn-ghost" data-action="settings-mcs-retry">Retry</button>
+      </div>`;
+    return;
+  }
+
+  // Table not set up yet
+  if (mcsApproverConfig && mcsApproverConfig._tableNotFound) {
+    container.innerHTML = `
+      <div class="settings-section-header">
+        <h2>Manufacturing Change Approvers</h2>
+        <p class="settings-section-desc">Assign users to each approval step in the MCS workflow.</p>
+      </div>
+      <div class="permissions-notice" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.3)">
+        <strong>One-time setup required.</strong> The <code>mcs_approver_settings</code> table does not exist yet.
+        Run the following SQL in your Supabase SQL editor to create it, then click Retry.
+      </div>
+      <pre style="background:#f5f5f5;border:1px solid var(--line);border-radius:6px;padding:16px;font-size:12px;overflow-x:auto;margin:16px 0">CREATE TABLE mcs_approver_settings (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  step       text NOT NULL,
+  user_id    uuid NOT NULL,
+  user_name  text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE mcs_approver_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "auth" ON mcs_approver_settings
+  FOR ALL USING (auth.role() = 'authenticated');</pre>
+      <button class="btn btn-primary" data-action="settings-mcs-retry">↺ Check Again</button>
+    `;
+    return;
+  }
+
+  if (!mcsApproverConfig) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
+    settingsEnsureMcsData(true);
+    return;
+  }
+
+  const users = settingsPermissionsData || [];
+
+  const stepsHtml = MCS_APPROVAL_STEPS.map(step => {
+    const approvers = mcsApproverConfig[step.key] || [];
+
+    // Users not yet assigned to this step
+    const availableUsers = users.filter(u => !approvers.some(a => a.user_id === u.id));
+
+    const approverRows = approvers.length === 0
+      ? `<div style="color:var(--muted);font-size:13px;padding:8px 0">No approvers assigned — anyone can approve this step.</div>`
+      : approvers.map(a => `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
+            <span style="flex:1;font-size:13px">${esc(a.user_name)}</span>
+            ${isAdmin() ? `<button class="btn btn-sm btn-ghost" style="color:var(--red)"
+              data-action="settings-mcs-remove-approver"
+              data-step="${esc(step.key)}"
+              data-user-id="${esc(a.user_id)}">Remove</button>` : ''}
+          </div>`).join('');
+
+    const addRow = isAdmin() && availableUsers.length > 0 ? `
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <select class="cell-edit" id="mcs-add-user-${esc(step.key)}" style="flex:1">
+          <option value="">Select user to add…</option>
+          ${availableUsers.map(u => `<option value="${esc(u.id)}" data-name="${esc(u.full_name || settingsEmailToName(u.email))}">${esc(u.full_name || settingsEmailToName(u.email))}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm btn-primary"
+          data-action="settings-mcs-add-approver"
+          data-step="${esc(step.key)}">+ Add</button>
+      </div>` : '';
+
+    return `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <span class="card-title">${esc(step.label)}</span>
+          <span class="card-meta">${approvers.length} approver${approvers.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div style="padding:0 16px 12px">
+          ${approverRows}
+          ${addRow}
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Manufacturing Change Approvers</h2>
+      <p class="settings-section-desc">
+        Assign users to each step in the MCS approval chain.
+        Assigned users will see pending changes in their Action Centre and can approve or reject their step.
+        Each step can have multiple approvers — all of them will see the pending approval.
+      </p>
+    </div>
+    ${!isAdmin() ? `<div class="permissions-notice">Only admins can change approver assignments. Your current role is <strong>${esc(currentUserRole || 'editor')}</strong>.</div>` : ''}
+    ${stepsHtml}
+  `;
+}
+
+// ── MCS approver CRUD ─────────────────────────────────────────
+async function settingsMcsAddApprover(stepKey) {
+  if (!isAdmin()) { showToast('Only admins can change approvers.', 'error'); return; }
+  const select = document.getElementById(`mcs-add-user-${stepKey}`);
+  if (!select || !select.value) return;
+
+  const userId = select.value;
+  const option = select.querySelector(`option[value="${userId}"]`);
+  const userName = option?.dataset.name || option?.textContent || userId;
+
+  const ok = await mcsApproversAdd(stepKey, userId, userName);
+  if (!ok) { showToast('Failed to add approver', 'error'); return; }
+
+  // Update local state
+  if (mcsApproverConfig && mcsApproverConfig[stepKey]) {
+    mcsApproverConfig[stepKey].push({ user_id: userId, user_name: userName });
+  }
+  showToast(`${esc(userName)} added as ${stepKey} approver`, 'success');
+  renderSettingsMcsTab();
+}
+
+async function settingsMcsRemoveApprover(stepKey, userId) {
+  if (!isAdmin()) { showToast('Only admins can change approvers.', 'error'); return; }
+
+  const approver = (mcsApproverConfig?.[stepKey] || []).find(a => a.user_id === userId);
+  const name = approver?.user_name || userId;
+
+  if (!confirm(`Remove ${name} as an approver for ${stepKey}?`)) return;
+
+  const ok = await mcsApproversRemove(stepKey, userId);
+  if (!ok) { showToast('Failed to remove approver', 'error'); return; }
+
+  if (mcsApproverConfig && mcsApproverConfig[stepKey]) {
+    mcsApproverConfig[stepKey] = mcsApproverConfig[stepKey].filter(a => a.user_id !== userId);
+  }
+  showToast('Approver removed', 'info');
+  renderSettingsMcsTab();
+}
+
 function setupSettingsEventListeners() {
   const root = document.getElementById('settingsPortalRoot');
   if (!root || settingsEventListenerRoot === root) return;
@@ -1105,6 +1288,7 @@ function setupSettingsEventListeners() {
         teams: 'settingsTeamsTab',
         permissions: 'settingsPermissionsTab',
         'role-definitions': 'settingsRoleDefinitionsTab',
+        'mcs-approvers': 'settingsMcsTab',
         appearance: 'settingsAppearanceTab',
         about: 'settingsAboutTab',
       };
@@ -1123,6 +1307,9 @@ function setupSettingsEventListeners() {
         settingsEnsurePermissionsData();
       } else if (tab === 'role-definitions') {
         renderSettingsRoleDefinitionsTab();
+      } else if (tab === 'mcs-approvers') {
+        renderSettingsMcsTab();
+        settingsEnsureMcsData();
       } else if (tab === 'appearance') {
         renderSettingsAppearanceTab();
       } else if (tab === 'about') {
@@ -1156,6 +1343,11 @@ function setupSettingsEventListeners() {
 
     // Permissions tab actions
     if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
+
+    // MCS approvers tab actions
+    if (action === 'settings-mcs-retry') { settingsEnsureMcsData(true); return; }
+    if (action === 'settings-mcs-add-approver') { await settingsMcsAddApprover(actionEl.dataset.step || ''); return; }
+    if (action === 'settings-mcs-remove-approver') { await settingsMcsRemoveApprover(actionEl.dataset.step || '', actionEl.dataset.userId || ''); return; }
 
     // Appearance tab actions
     if (action === 'settings-appearance-save')  { settingsAppearanceSave();  return; }
