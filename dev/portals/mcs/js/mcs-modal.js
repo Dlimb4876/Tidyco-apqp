@@ -283,15 +283,12 @@ async function mcsSaveChange() {
       const changeIdx = mcsList.findIndex(c => c.id === mcsEditingId);
       if (changeIdx === -1) return;
 
-      const updated = {
-        ...mcsList[changeIdx],
+      const updateFields = {
         title,
-        type,
+        change_type: type,
         priority,
         description,
-        impacts,
         part_drawing_no: document.getElementById('mcs-f-part')?.value,
-        initiated_by: document.getElementById('mcs-f-author')?.value,
         target_implementation: document.getElementById('mcs-f-target')?.value,
         estimated_time_impact_days: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: document.getElementById('mcs-f-justification')?.value,
@@ -300,12 +297,20 @@ async function mcsSaveChange() {
 
       const { error } = await supa
         .from('mcs_changes')
-        .update(updated)
+        .update(updateFields)
         .eq('id', mcsEditingId);
 
       if (error) throw error;
 
-      mcsList[changeIdx] = updated;
+      // Replace impacts: delete old rows, insert new ones
+      await supa.from('mcs_impacts').delete().eq('change_id', mcsEditingId);
+      if (impacts.length > 0) {
+        const impactRows = impacts.map(impact_type => ({ change_id: mcsEditingId, impact_type }));
+        const { error: impErr } = await supa.from('mcs_impacts').insert(impactRows);
+        if (impErr) console.error('Error saving impacts:', impErr);
+      }
+
+      mcsList[changeIdx] = { ...mcsList[changeIdx], ...updateFields, impacts };
       mcsToast('Change updated successfully');
     } else {
       // Create new
@@ -314,6 +319,8 @@ async function mcsSaveChange() {
       const id = `ECR-${year}-${nextNum}`;
       const now = new Date().toISOString();
 
+      const initiatedBy = document.getElementById('mcs-f-author')?.value || 'Unknown';
+
       const newChange = {
         id,
         title,
@@ -321,23 +328,14 @@ async function mcsSaveChange() {
         priority,
         status: 'open',
         description,
-        impacts,
         part_drawing_no: document.getElementById('mcs-f-part')?.value,
-        initiated_by: document.getElementById('mcs-f-author')?.value || 'Unknown',
+        initiated_by: initiatedBy,
         change_source: document.getElementById('mcs-f-source')?.value || 'Manual',
         created_at: now,
         updated_at: now,
         target_implementation: document.getElementById('mcs-f-target')?.value,
         estimated_time_impact_days: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
-        justification: document.getElementById('mcs-f-justification')?.value,
-        timeline: [
-          {
-            time: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-            text: 'Change request submitted.',
-            author: document.getElementById('mcs-f-author')?.value || 'User',
-            type: 'accent'
-          }
-        ]
+        justification: document.getElementById('mcs-f-justification')?.value
       };
 
       const { error } = await supa
@@ -346,7 +344,17 @@ async function mcsSaveChange() {
 
       if (error) throw error;
 
-      mcsList.unshift(newChange);
+      // Save impact checkboxes to mcs_impacts table
+      if (impacts.length > 0) {
+        const impactRows = impacts.map(impact_type => ({ change_id: id, impact_type }));
+        const { error: impErr } = await supa.from('mcs_impacts').insert(impactRows);
+        if (impErr) console.error('Error saving impacts:', impErr);
+      }
+
+      // Log the initial timeline entry to mcs_timeline
+      await mcsAddTimelineEntry(id, 'raised', 'Change request submitted.', initiatedBy);
+
+      mcsList.unshift({ ...newChange, impacts, timeline: [] });
       mcsToast(`Created: ${id}`);
     }
 
@@ -524,30 +532,29 @@ async function mcsAdvanceStatus(id) {
 
   try {
     const now = new Date().toISOString();
-    const updated = {
-      ...change,
+    const updateData = {
       status: nextStatus,
       updated_at: now
     };
 
     if (nextStatus === 'review') {
-      updated.eng_review_status = 'pending';
+      updateData.eng_review_status = 'pending';
     } else if (nextStatus === 'approved') {
-      updated.qa_review_status = 'approved';
+      updateData.qa_review_status = 'approved';
     } else if (nextStatus === 'implemented') {
-      updated.implementation_date = new Date().toISOString().split('T')[0];
+      updateData.implementation_date = new Date().toISOString().split('T')[0];
     }
 
     const { error } = await supa
       .from('mcs_changes')
-      .update(updated)
+      .update(updateData)
       .eq('id', id);
 
     if (error) throw error;
 
     const idx = mcsList.findIndex(c => c.id === id);
     if (idx !== -1) {
-      mcsList[idx] = updated;
+      mcsList[idx] = { ...mcsList[idx], ...updateData };
     }
 
     mcsToast(`Status updated to: ${mcStatusLabel(nextStatus)}`);

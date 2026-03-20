@@ -9,10 +9,10 @@
  */
 async function mcsLinkToPfmeaCause(changeId, pfmeaCauseId) {
   const change = mcsList.find(c => c.id === changeId);
-  if (!change || !supabase) return false;
+  if (!change || !supa) return false;
 
   try {
-    const { error } = await supabase
+    const { error } = await supa
       .from('mcs_changes')
       .update({ related_pfmea_cause_id: pfmeaCauseId })
       .eq('id', changeId);
@@ -41,7 +41,7 @@ async function mcsLogToPfmeaHistory(changeId) {
   const change = mcsList.find(c => c.id === changeId);
   if (!change || !change.related_pfmea_cause_id) return false;
 
-  if (!supabase) return false;
+  if (!supa) return false;
 
   try {
     const now = new Date().toISOString();
@@ -50,7 +50,7 @@ async function mcsLogToPfmeaHistory(changeId) {
     // Create timeline entry in mcs_timeline (if not already done)
     await mcsAddTimelineEntry(
       changeId,
-      'linked_to_pfmea',
+      'linked_product',
       `Linked to PFMEA cause for historical tracking`,
       'System'
     );
@@ -71,12 +71,12 @@ async function mcsLogToPfmeaHistory(changeId) {
  * Populates a dropdown for users to link changes to causes
  */
 async function mcsGetPfmeaCausesForLinking() {
-  if (!supabase) return [];
+  if (!supa) return [];
 
   try {
     // Query PFMEA causes (this assumes npi-related queries are available)
     // For now, return empty array - actual implementation depends on NPI module structure
-    const { data, error } = await supabase
+    const { data, error } = await supa
       .from('npi_pfmea_causes')
       .select('id, description')
       .limit(100);

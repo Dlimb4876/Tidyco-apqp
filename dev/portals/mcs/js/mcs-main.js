@@ -109,13 +109,13 @@ async function renderMcs() {
 async function mcsLoadChanges() {
   mcsLoading = true;
   try {
-    if (!supabase) {
+    if (!supa) {
       console.error('Supabase not initialized');
       mcsList = [];
       return;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supa
       .from('mcs_changes')
       .select('*')
       .order('created_at', { ascending: false });
@@ -126,7 +126,21 @@ async function mcsLoadChanges() {
       return;
     }
 
-    mcsList = data || [];
+    // Load all impacts and group by change_id
+    const { data: impactsData } = await supa
+      .from('mcs_impacts')
+      .select('change_id, impact_type');
+
+    const impactsByChange = {};
+    (impactsData || []).forEach(imp => {
+      if (!impactsByChange[imp.change_id]) impactsByChange[imp.change_id] = [];
+      impactsByChange[imp.change_id].push(imp.impact_type);
+    });
+
+    mcsList = (data || []).map(change => ({
+      ...change,
+      impacts: impactsByChange[change.id] || []
+    }));
   } catch (err) {
     console.error('MCS load error:', err);
     mcsList = [];
@@ -320,10 +334,24 @@ function mcStatusLabel(status) {
 /**
  * View change details
  */
-function mcsViewChange(id) {
+async function mcsViewChange(id) {
   mcsViewingId = id;
   const change = mcsList.find(c => c.id === id);
   if (!change) return;
+
+  // Load timeline from mcs_timeline table
+  const { data: timelineData } = await supa
+    .from('mcs_timeline')
+    .select('*')
+    .eq('change_id', id)
+    .order('created_at', { ascending: true });
+
+  change.timeline = (timelineData || []).map(ev => ({
+    time: new Date(ev.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    text: ev.event_text || '',
+    author: ev.actor_name || ev.actor_email || '',
+    type: ev.event_type
+  }));
 
   // Show modal (handled by mcs-modal.js)
   mcsShowViewModal(change);

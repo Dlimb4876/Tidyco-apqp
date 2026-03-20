@@ -63,8 +63,7 @@ async function mcsApproveStep(changeId, step, notes) {
     const now = new Date().toISOString();
     const user = currentUserRole || 'Unknown'; // Assumes currentUserRole is set in auth.js
 
-    const updated = {
-      ...change,
+    const updateData = {
       [stepInfo.field]: 'approved',
       [stepInfo.byField]: user,
       [stepInfo.atField]: now,
@@ -72,29 +71,36 @@ async function mcsApproveStep(changeId, step, notes) {
       updated_at: now
     };
 
-    // Auto-advance to next step
-    const allApproved = updated.eng_review_status === 'approved' &&
-                       updated.qa_review_status === 'approved' &&
-                       updated.mfg_signoff_status === 'approved';
+    // Auto-advance to next step when all three sign-offs are approved
+    const mergedChange = { ...change, ...updateData };
+    const allApproved = mergedChange.eng_review_status === 'approved' &&
+                        mergedChange.qa_review_status === 'approved' &&
+                        mergedChange.mfg_signoff_status === 'approved';
 
-    if (allApproved && updated.status === 'review') {
-      updated.status = 'approved';
+    if (allApproved && change.status === 'review') {
+      updateData.status = 'approved';
     }
 
-    const { error } = await supabase
+    const { error } = await supa
       .from('mcs_changes')
-      .update(updated)
+      .update(updateData)
       .eq('id', changeId);
 
     if (error) throw error;
 
     const idx = mcsList.findIndex(c => c.id === changeId);
     if (idx !== -1) {
-      mcsList[idx] = updated;
+      mcsList[idx] = { ...mcsList[idx], ...updateData };
     }
 
-    // Log timeline entry
-    await mcsAddTimelineEntry(changeId, `${step}_reviewed`, `${step} review approved.`, user);
+    // Log timeline entry — map step name to valid event_type
+    const stepEventTypes = {
+      engineering: 'eng_reviewed',
+      qa: 'qa_reviewed',
+      manufacturing: 'mfg_signed',
+      management: 'authorized'
+    };
+    await mcsAddTimelineEntry(changeId, stepEventTypes[step] || 'edited', `${step} review approved.`, user);
 
     return true;
   } catch (err) {
@@ -124,8 +130,7 @@ async function mcsRejectStep(changeId, step, reason) {
     const now = new Date().toISOString();
     const user = currentUserRole || 'Unknown';
 
-    const updated = {
-      ...change,
+    const updateData = {
       [stepInfo.field]: 'rejected',
       [stepInfo.byField]: user,
       [stepInfo.atField]: now,
@@ -134,16 +139,16 @@ async function mcsRejectStep(changeId, step, reason) {
       updated_at: now
     };
 
-    const { error } = await supabase
+    const { error } = await supa
       .from('mcs_changes')
-      .update(updated)
+      .update(updateData)
       .eq('id', changeId);
 
     if (error) throw error;
 
     const idx = mcsList.findIndex(c => c.id === changeId);
     if (idx !== -1) {
-      mcsList[idx] = updated;
+      mcsList[idx] = { ...mcsList[idx], ...updateData };
     }
 
     await mcsAddTimelineEntry(changeId, 'rejected', `${step} review rejected. Reason: ${reason || 'No reason provided'}`, user);
@@ -160,7 +165,7 @@ async function mcsRejectStep(changeId, step, reason) {
  */
 async function mcsAddTimelineEntry(changeId, eventType, text, actor) {
   try {
-    const { error } = await supabase
+    const { error } = await supa
       .from('mcs_timeline')
       .insert([{
         change_id: changeId,
@@ -202,23 +207,22 @@ async function mcsMarkImplemented(changeId) {
     const now = new Date().toISOString();
     const implementationDate = now.split('T')[0];
 
-    const updated = {
-      ...change,
+    const updateData = {
       status: 'implemented',
       implementation_date: implementationDate,
       updated_at: now
     };
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supa
       .from('mcs_changes')
-      .update(updated)
+      .update(updateData)
       .eq('id', changeId);
 
     if (updateError) throw updateError;
 
     const idx = mcsList.findIndex(c => c.id === changeId);
     if (idx !== -1) {
-      mcsList[idx] = updated;
+      mcsList[idx] = { ...mcsList[idx], ...updateData };
     }
 
     // Auto-create overhaul_history entry if product is linked
@@ -241,14 +245,16 @@ async function mcsMarkImplemented(changeId) {
  */
 async function mcsCreateOverhaulHistoryEntry(change) {
   try {
-    const { error } = await supabase
+    const implDate = change.implementation_date || new Date().toISOString().split('T')[0];
+    const { error } = await supa
       .from('overhaul_history')
       .insert([{
         product_id: change.affected_product_id,
+        effective_date: implDate,
         time_impact_days: change.estimated_time_impact_days || 0,
         schedule_impact_reason: change.time_impact_reason || '',
         mcs_reference_id: change.id,
-        effective_from_date: change.implementation_date || new Date().toISOString().split('T')[0],
+        effective_from_date: implDate,
         estimated_recovery_date: change.recovery_target_date,
         is_mcs_triggered: true,
         change_reason: `MCS: ${change.change_type} - ${change.title}`,
