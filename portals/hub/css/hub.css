@@ -150,6 +150,98 @@
     color: var(--muted);
 }
 
+/* ── Hub User Widget ────────────────────────────────────────── */
+.hub-user-widget {
+  margin-bottom: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  overflow: hidden;
+}
+
+.hub-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.hub-user-avatar {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.hub-user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.hub-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hub-user-email {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hub-pending-approvals {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  width: 100%;
+  background: rgba(245, 158, 11, 0.08);
+  border: none;
+  border-top: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 0;
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.hub-pending-approvals:hover {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.hub-approvals-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: var(--amber, #f59e0b);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  flex-shrink: 0;
+}
+
+.hub-approvals-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.hub-approvals-arrow {
+  font-size: 14px;
+  color: #92400e;
+  flex-shrink: 0;
+}
+
 /* ── Responsive Design ──────────────────────────────────────── */
 @media (max-width: 1199px) {
   .hub-grid {
@@ -185,5 +277,19 @@
   .modal-dialog {
     width: 95%;
     max-width: 95%;
+  }
+
+  .hub-user-widget {
+    margin-bottom: 16px;
+  }
+
+  .hub-approvals-label {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .hub-user-widget {
+    max-width: 480px;
   }
 }

@@ -20,6 +20,17 @@ function populateFamilySelects() {
   });
 }
 
+// ── Load current user's profile from Supabase ─────────────────
+async function loadCurrentUserProfile() {
+  if (!currentUser) return;
+  try {
+    const { data } = await supa.from('profiles').select('id, email, full_name, role').eq('id', currentUser.id).maybeSingle();
+    currentUserProfile = data || null;
+  } catch {
+    currentUserProfile = null;
+  }
+}
+
 async function launchApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display   = 'flex';
@@ -55,6 +66,9 @@ async function launchApp() {
 
   // Load Work Areas (work_areas table)
   await workAreasDataInit();
+
+  // Load current user's profile (for role-based features like pending approvals)
+  await loadCurrentUserProfile();
 
   // Restore previous page state from URL hash (e.g. after a page refresh)
   const h = parseHash();
