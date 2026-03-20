@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-20 | Fix MCS approver assignment: use global_settings instead of missing table | The mcs_approver_settings table did not exist so the Settings page showed a SQL setup wall and no one could assign approvers; switched storage to the existing global_settings key-value table (same pattern as Production Capacity utilization) with localStorage fallback — no SQL setup needed; Settings → Mfg Changes now shows the add/remove dropdowns immediately; removed misleading "no approvers = anyone can approve" message.
+
 ## 2026-03-20 | Fix change register toolbar overlap and approval button not showing | Toolbar used top:52px inside .main which already starts below the 52px topbar — corrected to top:0 so sticky doesn't push content down; approver config was cached and never refreshed on re-entry so new assignments were ignored — now reloads every visit; mcsCanApproveStep returned false when no approvers were assigned despite Settings saying "anyone can approve" — now falls back to canEdit() when the list is empty or the table isn't set up.
 
 ## 2026-03-20 | Add comments and progress updates to engineering change activity log | Users had no way to add notes or status updates to a change after it was raised; new comment form in the view modal lets anyone post a 💬 Comment or 📈 Progress Update directly to the activity log, saved to mcs_timeline and shown immediately.

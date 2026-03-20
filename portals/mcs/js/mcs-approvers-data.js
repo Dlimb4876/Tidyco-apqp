@@ -1,27 +1,17 @@
 /**
  * MCS Approver Configuration — Data Layer
  *
- * Manages which users are assigned as approvers for each MCS approval step.
- * Approvers see pending changes in their Action Centre and can approve/reject
- * their designated step from the MCS view modal.
+ * Stores approver assignments in the existing global_settings table
+ * (setting_key: 'mcs_approver_approval1' / 'mcs_approver_approval2',
+ *  setting_value: JSON array of {user_id, user_name}).
+ * Falls back to localStorage when global_settings is not available.
+ * No separate table setup required.
  *
  * MCO Process:
  *   1. Open + Impact Assessment
  *   2. Approval 1  → REJECT = Closed | APPROVE → Implementing
  *   3. Implement
  *   4. Approval 2  → REJECT = Back to Implementing | APPROVE → Implemented
- *
- * Requires a Supabase table:
- *
- *   CREATE TABLE mcs_approver_settings (
- *     id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
- *     step       text NOT NULL,   -- approval1 | approval2
- *     user_id    uuid NOT NULL,
- *     user_name  text NOT NULL,
- *     created_at timestamptz DEFAULT now()
- *   );
- *   CREATE POLICY "auth" ON mcs_approver_settings
- *     FOR ALL USING (auth.role() = 'authenticated');
  */
 
 // Canonical step definitions — order matters (sequential approval chain)
@@ -30,77 +20,106 @@ const MCS_APPROVAL_STEPS = [
   { key: 'approval2', label: 'Approval 2',  field: 'qa_review_status',  byField: 'qa_review_by',  atField: 'qa_review_at',  notesField: 'qa_review_notes',   activeStatus: 'final_review' }
 ];
 
+const MCS_APPROVER_SETTING_KEYS = {
+  approval1: 'mcs_approver_approval1',
+  approval2: 'mcs_approver_approval2'
+};
+
+/** Parse a JSON setting_value safely, returning [] on failure. */
+function _mcsParseSetting(value) {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
 /**
- * Load all approver assignments.
+ * Load approver assignments.
+ * Reads from global_settings, falls back to localStorage.
  * Returns { approval1: [{user_id, user_name}], approval2: [] }
- * Returns null if the table doesn't exist (shows setup prompt in Settings).
  */
 async function mcsApproversLoad() {
+  const config = { approval1: [], approval2: [] };
+
   try {
     const { data, error } = await supa
-      .from('mcs_approver_settings')
-      .select('step, user_id, user_name');
+      .from('global_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', Object.values(MCS_APPROVER_SETTING_KEYS));
 
-    if (error) {
-      // Table does not exist yet — return a sentinel so Settings can show setup SQL
-      if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        return { _tableNotFound: true, approval1: [], approval2: [] };
-      }
-      throw error;
-    }
-
-    const config = { approval1: [], approval2: [] };
-    (data || []).forEach(row => {
-      // Support both old step keys (engineering/qa/manufacturing/management) and new keys
-      let key = row.step;
-      if (key === 'engineering' || key === 'manufacturing') key = 'approval1';
-      if (key === 'qa' || key === 'management') key = 'approval2';
-      if (config[key]) config[key].push({ user_id: row.user_id, user_name: row.user_name });
-    });
-    // De-duplicate (old data may have mapped multiple old steps to same new key)
-    for (const k of ['approval1', 'approval2']) {
-      const seen = new Set();
-      config[k] = config[k].filter(u => {
-        if (seen.has(u.user_id)) return false;
-        seen.add(u.user_id);
-        return true;
+    if (!error) {
+      (data || []).forEach(row => {
+        const key = row.setting_key === MCS_APPROVER_SETTING_KEYS.approval1 ? 'approval1' : 'approval2';
+        config[key] = _mcsParseSetting(row.setting_value);
       });
+      // Cache to localStorage for offline / table-missing fallback
+      localStorage.setItem(MCS_APPROVER_SETTING_KEYS.approval1, JSON.stringify(config.approval1));
+      localStorage.setItem(MCS_APPROVER_SETTING_KEYS.approval2, JSON.stringify(config.approval2));
+      return config;
     }
-    return config;
   } catch (err) {
-    console.error('[MCS Approvers] Load failed:', err);
-    return null;
+    console.debug('[MCS Approvers] global_settings unavailable, using localStorage');
+  }
+
+  // Fallback: localStorage
+  config.approval1 = _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS.approval1));
+  config.approval2 = _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS.approval2));
+  return config;
+}
+
+/** Persist a step's approver list to global_settings (+ localStorage). */
+async function _mcsSaveApproverList(stepKey, list) {
+  const settingKey = MCS_APPROVER_SETTING_KEYS[stepKey];
+  const json = JSON.stringify(list);
+
+  // Always write localStorage so it works even without global_settings
+  localStorage.setItem(settingKey, json);
+
+  try {
+    const { data: existing } = await supa
+      .from('global_settings')
+      .select('id')
+      .eq('setting_key', settingKey)
+      .maybeSingle();
+
+    if (existing) {
+      await supa
+        .from('global_settings')
+        .update({ setting_value: json, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+    } else {
+      await supa
+        .from('global_settings')
+        .insert([{ setting_key: settingKey, setting_value: json }]);
+    }
+  } catch (err) {
+    console.debug('[MCS Approvers] Could not save to global_settings, localStorage used');
   }
 }
 
 /** Add a user as an approver for a step. */
-async function mcsApproversAdd(step, userId, userName) {
-  try {
-    const { error } = await supa
-      .from('mcs_approver_settings')
-      .insert([{ step, user_id: userId, user_name: userName }]);
-    if (error) throw error;
-    return true;
-  } catch (err) {
-    console.error('[MCS Approvers] Add failed:', err);
-    return false;
-  }
+async function mcsApproversAdd(stepKey, userId, userName) {
+  const current = (mcsApproverConfig && mcsApproverConfig[stepKey]) ||
+    _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS[stepKey]));
+
+  // Skip duplicates
+  if (current.some(u => u.user_id === userId)) return true;
+
+  const newList = [...current, { user_id: userId, user_name: userName }];
+  await _mcsSaveApproverList(stepKey, newList);
+  return true;
 }
 
 /** Remove a user as an approver for a step. */
-async function mcsApproversRemove(step, userId) {
-  try {
-    const { error } = await supa
-      .from('mcs_approver_settings')
-      .delete()
-      .eq('step', step)
-      .eq('user_id', userId);
-    if (error) throw error;
-    return true;
-  } catch (err) {
-    console.error('[MCS Approvers] Remove failed:', err);
-    return false;
-  }
+async function mcsApproversRemove(stepKey, userId) {
+  const current = (mcsApproverConfig && mcsApproverConfig[stepKey]) ||
+    _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS[stepKey]));
+
+  const newList = current.filter(u => u.user_id !== userId);
+  await _mcsSaveApproverList(stepKey, newList);
+  return true;
 }
 
 /**
@@ -116,12 +135,11 @@ function mcsGetMyApproverSteps() {
 }
 
 /** Returns true if the current user is an approver for the given step key.
- *  Falls back to any canEdit() user when no specific approvers are assigned
- *  (consistent with the Settings UI text "anyone can approve this step"). */
+ *  Falls back to any canEdit() user when no specific approvers are assigned. */
 function mcsCanApproveStep(stepKey) {
   if (!stepKey || !currentUser) return false;
-  // If config hasn't loaded yet, fall back to role-based edit permission
-  if (!mcsApproverConfig || mcsApproverConfig._tableNotFound) {
+  // Config not loaded yet — fall back to role-based edit permission
+  if (!mcsApproverConfig) {
     return typeof canEdit === 'function' && canEdit();
   }
   const assigned = mcsApproverConfig[stepKey] || [];
@@ -155,17 +173,14 @@ async function mcsGetPendingApprovalsForMe() {
   const mySteps = mcsGetMyApproverSteps();
   if (mySteps.length === 0) return [];
 
-  // Helper: check if a change is pending approval at a given step
   function isPendingAtStep(change, stepKey) {
     const stepDef = MCS_APPROVAL_STEPS.find(s => s.key === stepKey);
     if (!stepDef) return false;
-    // Change must be in the active status for this step
     if (change.status !== stepDef.activeStatus) return false;
     const s = change[stepDef.field];
     return !s || s === 'pending';
   }
 
-  // Use mcsList if it's been populated
   const source = Array.isArray(mcsList) && mcsList.length > 0 ? mcsList : null;
 
   if (source) {
