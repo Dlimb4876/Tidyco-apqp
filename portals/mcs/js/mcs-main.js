@@ -311,7 +311,8 @@ function mcsRenderList() {
       </div>
       <div class="mcs-card-right">
         <span class="mcs-status-pill mcs-status-${change.status}">${mcStatusLabel(change.status)}</span>
-        <div class="mcs-card-impacts">${change.impacts_count || 0} impacts</div>
+        <div class="mcs-card-impacts">${(change.impacts || []).length > 0 ? (change.impacts || []).length + ' impact' + ((change.impacts || []).length !== 1 ? 's' : '') : 'No impacts'}</div>
+        ${change.estimated_time_impact_days ? `<div class="mcs-card-time-impact">⏱ ${change.estimated_time_impact_days}h</div>` : ''}
       </div>
     </div>
   `).join('');

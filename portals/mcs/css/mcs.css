@@ -292,6 +292,13 @@
   color: var(--text3);
 }
 
+.mcs-card-time-impact {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--orange);
+  font-weight: 600;
+}
+
 /* -- Modal Styles (reuse from components) -- */
 .mcs-modal {
   background: var(--surface);
@@ -453,7 +460,8 @@
 .mcs-approval-chain {
   display: flex;
   gap: 0;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
+  padding: 20px 0 8px;
 }
 
 .mcs-approval-step {
@@ -462,16 +470,17 @@
   flex-direction: column;
   align-items: center;
   position: relative;
+  padding: 0 4px;
 }
 
 .mcs-approval-step:not(:last-child)::after {
   content: '';
   position: absolute;
-  top: 16px;
+  top: 18px;
   left: 50%;
   width: 100%;
   height: 2px;
-  background: var(--border);
+  background: var(--border2);
   z-index: 0;
 }
 
@@ -480,28 +489,31 @@
 }
 
 .mcs-approval-step.current:not(:last-child)::after {
-  background: linear-gradient(90deg, var(--orange), var(--border));
+  background: linear-gradient(90deg, var(--orange), var(--border2));
 }
 
 .mcs-approval-circle {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 2px solid var(--border2);
   background: var(--surface2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   z-index: 1;
   position: relative;
   transition: all 0.2s;
+  color: var(--text3);
 }
 
 .mcs-approval-step.done .mcs-approval-circle {
   border-color: var(--green);
   background: var(--green-dim);
   color: var(--green);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
 .mcs-approval-step.current .mcs-approval-circle {
@@ -509,29 +521,131 @@
   background: var(--orange-dim);
   color: var(--orange);
   animation: pulse 1.5s infinite;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
 .mcs-approval-step.rejected .mcs-approval-circle {
   border-color: var(--red);
   background: var(--red-dim);
   color: var(--red);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .mcs-approval-name {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text3);
-  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  margin-top: 8px;
   text-align: center;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.mcs-approval-step.done .mcs-approval-name {
+  color: var(--green);
+}
+
+.mcs-approval-step.current .mcs-approval-name {
+  color: var(--orange);
+}
+
+.mcs-approval-step.rejected .mcs-approval-name {
+  color: var(--red);
 }
 
 .mcs-approval-role {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text3);
   margin-top: 2px;
   text-align: center;
+}
+
+.mcs-approval-status-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+  text-align: center;
+  color: var(--text3);
+}
+
+.mcs-approval-step.done .mcs-approval-status-label {
+  color: var(--green);
+}
+
+.mcs-approval-step.current .mcs-approval-status-label {
+  color: var(--orange);
+}
+
+.mcs-approval-step.rejected .mcs-approval-status-label {
+  color: var(--red);
+}
+
+.mcs-approval-meta {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 4px;
+  text-align: center;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcs-approval-date {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-align: center;
+}
+
+.mcs-approval-notes {
+  font-size: 10px;
+  color: var(--text3);
+  font-style: italic;
+  text-align: center;
+  margin-top: 2px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -- Impact Tags (view mode) -- */
+.mcs-impact-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.mcs-impact-none {
+  font-size: 12px;
+  color: var(--text3);
+  font-style: italic;
+}
+
+/* -- Time Impact display (view mode) -- */
+.mcs-time-impact-display {
+  display: flex;
+  align-items: center;
+}
+
+.mcs-time-impact-value {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--orange);
+  background: var(--orange-dim);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  padding: 3px 10px;
+  border-radius: 6px;
 }
 
 /* -- Impact Assessment Grid -- */
