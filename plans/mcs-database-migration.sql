@@ -108,7 +108,8 @@ CREATE TABLE mcs_timeline (
   change_id TEXT NOT NULL REFERENCES mcs_changes(id) ON DELETE CASCADE,
   event_type TEXT NOT NULL CHECK (event_type IN (
     'raised', 'submitted_review', 'eng_reviewed', 'qa_reviewed', 'mfg_signed', 'authorized',
-    'implemented', 'rejected', 'edited', 'impact_updated', 'linked_product', 'approved_impact'
+    'implemented', 'rejected', 'edited', 'impact_updated', 'linked_product', 'approved_impact',
+    'comment', 'progress_update'
   )),
   event_text TEXT,
   actor_user_id UUID REFERENCES auth.users(id),
