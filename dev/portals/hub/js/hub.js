@@ -22,11 +22,12 @@ function renderHubActionWidget() {
         : '');
 
   let summaryHTML = '';
+  let pendingApprovalCount = 0;
 
   if (actionCentreLoading) {
     summaryHTML = `<span class="hub-widget-loading">Loading actions…</span>`;
   } else if (actionCentreData && !actionCentreData.error) {
-    const { actions = [], pfmea = [], risks = [] } = actionCentreData;
+    const { actions = [], pfmea = [], risks = [], mcsApprovals = [] } = actionCentreData;
     const today = new Date(); today.setHours(0, 0, 0, 0);
 
     const totalOpen =
@@ -38,6 +39,8 @@ function renderHubActionWidget() {
       actions.filter(a => a.due_date && a.status !== 'Closed' && new Date(a.due_date) < today).length +
       pfmea.filter(p => p.action_due && new Date(p.action_due) < today).length;
 
+    pendingApprovalCount = mcsApprovals.length;
+
     summaryHTML = `
       <div class="hub-widget-stats">
         <div class="hub-widget-stat">
@@ -48,6 +51,11 @@ function renderHubActionWidget() {
           <span class="hub-widget-num${totalOverdue > 0 ? ' hub-widget-overdue' : ''}">${totalOverdue}</span>
           <span class="hub-widget-label">overdue</span>
         </div>
+        ${pendingApprovalCount > 0 ? `
+        <div class="hub-widget-stat">
+          <span class="hub-widget-num hub-widget-pending">${pendingApprovalCount}</span>
+          <span class="hub-widget-label">pending approval</span>
+        </div>` : ''}
       </div>`;
   }
 
@@ -63,6 +71,7 @@ function renderHubActionWidget() {
       ${summaryHTML ? `<div class="hub-widget-sep"></div><div class="hub-widget-summary">${summaryHTML}</div>` : ''}
       <div class="hub-widget-cta">
         <button class="btn btn-primary btn-sm" onclick="navigate('action-centre')">✅ My Actions →</button>
+        ${pendingApprovalCount > 0 ? `<button class="btn btn-sm hub-widget-approve-btn" onclick="navigate('mcs')">🔧 Review Changes →</button>` : ''}
       </div>
     </div>`;
 }
