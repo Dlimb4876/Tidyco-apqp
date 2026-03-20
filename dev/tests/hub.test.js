@@ -177,7 +177,7 @@ describe('renderHubActionWidget()', () => {
     expect(html).not.toContain('hub-widget-overdue');
   });
 
-  it('shows pending approval count and Review Changes button when mcsApprovals has items', () => {
+  it('shows pending approval count when mcsApprovals has items', () => {
     global.actionCentreData = {
       actions: [],
       pfmea: [],
@@ -192,11 +192,10 @@ describe('renderHubActionWidget()', () => {
     expect(html).toContain('hub-widget-pending');
     expect(html).toContain('2');
     expect(html).toContain('pending approval');
-    expect(html).toContain("navigate('mcs')");
-    expect(html).toContain('Review Changes');
+    expect(html).not.toContain('Review Changes');
   });
 
-  it('does not show pending approval stat or Review Changes button when mcsApprovals is empty', () => {
+  it('does not show pending approval stat when mcsApprovals is empty', () => {
     global.actionCentreData = {
       actions: [],
       pfmea: [],
@@ -207,7 +206,6 @@ describe('renderHubActionWidget()', () => {
     const html = renderHubActionWidget(); // eslint-disable-line no-undef
     expect(html).not.toContain('hub-widget-pending');
     expect(html).not.toContain('pending approval');
-    expect(html).not.toContain("navigate('mcs')");
   });
 
   it('does not show pending approval stat when mcsApprovals is absent from data', () => {
