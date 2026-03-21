@@ -313,8 +313,8 @@ function mcsShowViewModal(change) {
           </div>
           <div class="mcs-field-group">
             <div class="mcs-field-label">Time Impact (hrs)</div>
-            <div class="mcs-time-impact-display ${change.estimated_time_impact_days > 0 ? 'has-impact' : ''}">
-              ${change.estimated_time_impact_days > 0 ? `<span class="mcs-time-impact-value">⏱ ${change.estimated_time_impact_days}h</span>` : '<span style="color:var(--text3);font-size:12px;">—</span>'}
+            <div class="mcs-time-impact-display ${change.estimated_time_impact_hours !== 0 ? 'has-impact' : ''}">
+              ${change.estimated_time_impact_hours !== 0 ? `<span class="mcs-time-impact-value">⏱ ${change.estimated_time_impact_hours > 0 ? '+' : ''}${change.estimated_time_impact_hours}h</span>` : '<span style="color:var(--text3);font-size:12px;">—</span>'}
             </div>
           </div>
           <div class="mcs-field-group">
@@ -416,7 +416,7 @@ async function mcsSaveChange() {
         affected_product_id: selectedProductId || null,
         part_drawing_no: selectedProductName || null,
         target_implementation: document.getElementById('mcs-f-target')?.value,
-        estimated_time_impact_days: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
+        estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: document.getElementById('mcs-f-justification')?.value,
         updated_at: new Date().toISOString()
       };
@@ -480,7 +480,7 @@ async function mcsSaveChange() {
         created_at: now,
         updated_at: now,
         target_implementation: document.getElementById('mcs-f-target')?.value,
-        estimated_time_impact_days: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
+        estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: document.getElementById('mcs-f-justification')?.value,
         // Store nominated approver so mcsCanApproveStep can identify who was asked to review
         eng_review_notes: nominatedApprover ? 'nominated_approver:' + nominatedApprover : null
@@ -676,8 +676,11 @@ function mcsShowEditModal(change) {
             <input class="mcs-field-input" id="mcs-f-target" type="date" value="${change.target_implementation || ''}" />
           </div>
           <div class="mcs-field-group">
-            <div class="mcs-field-label">Overhaul Time Impact (hours)</div>
-            <input class="mcs-field-input" id="mcs-f-time-impact" type="number" min="0" step="0.5" value="${change.estimated_time_impact_days || 0}" />
+            <div class="mcs-field-label">
+              Overhaul Time Impact (hours)
+              <span class="field-tooltip" title="Enter the change in overhaul hours this MCO will cause. Use a negative number if this change reduces overhaul time (an improvement), e.g. −2 means 2 hours saved. Use a positive number if it adds time.">ⓘ</span>
+            </div>
+            <input class="mcs-field-input" id="mcs-f-time-impact" type="number" step="0.5" value="${change.estimated_time_impact_hours || 0}" />
           </div>
           <div class="mcs-field-group mcs-modal-grid full">
             <div class="mcs-field-label">Description of Change *</div>

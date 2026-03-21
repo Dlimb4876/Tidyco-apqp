@@ -170,7 +170,7 @@ async function mcsAddTimelineEntry(changeId, eventType, text, actor) {
  * Called automatically when Approval 2 is approved.
  * This links MCO changes to product timeline (Overhaul Trends).
  *
- * overhaul_hours is calculated as: current product hours + estimated_time_impact_days
+ * overhaul_hours is calculated as: current product hours + estimated_time_impact_hours
  * so the trends chart immediately reflects the new overhaul time.
  */
 async function mcsCreateOverhaulHistoryEntry(change) {
@@ -182,7 +182,7 @@ async function mcsCreateOverhaulHistoryEntry(change) {
       ? window.productsState.products.find(p => p.id === change.affected_product_id)
       : null;
     const currentHours = currentProduct ? (currentProduct.current_overhaul_hours || 0) : 0;
-    const timeImpact = change.estimated_time_impact_days || 0;
+    const timeImpact = change.estimated_time_impact_hours || 0;
     const newOverhaulHours = currentHours + timeImpact;
 
     const { error } = await supa
@@ -191,7 +191,7 @@ async function mcsCreateOverhaulHistoryEntry(change) {
         product_id: change.affected_product_id,
         overhaul_hours: newOverhaulHours,
         effective_date: implDate,
-        time_impact_days: timeImpact,
+        time_impact_hours: timeImpact,
         schedule_impact_reason: change.time_impact_reason || '',
         mcs_reference_id: change.id,
         effective_from_date: implDate,

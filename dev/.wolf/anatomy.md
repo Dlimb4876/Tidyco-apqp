@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T13:08:34.213Z
-> Files: 265 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T13:48:40.879Z
+> Files: 266 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -9,7 +9,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~8005 tok)
+- `CHANGELOG.md` — Changelog (~8161 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~490 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -240,10 +240,10 @@
 ## portals/mcs/js/
 
 - `mcs-actions.js` — MCS Integration with Action Centre (~911 tok)
-- `mcs-approval.js` — MCS Approval Workflow (~2184 tok)
+- `mcs-approval.js` — MCS Approval Workflow (~2185 tok)
 - `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~2862 tok)
-- `mcs-main.js` — MCS (Manufacturing Change System) - Main Portal (~7310 tok)
-- `mcs-modal.js` — MCS Modal Handlers - Create, Edit, View (~11149 tok)
+- `mcs-main.js` — MCS (Manufacturing Change System) - Main Portal (~7325 tok)
+- `mcs-modal.js` — MCS Modal Handlers - Create, Edit, View (~11247 tok)
 - `mcs-pfmea.js` — MCS Integration with PFMEA History (~1134 tok)
 - `mcs-realtime.js` — MCS Real-time Subscriptions (~1278 tok)
 
@@ -317,9 +317,9 @@
 
 ## portals/product-development/product-management/js/
 
-- `products-data.js` — Products Data Layer (~4722 tok)
-- `products.js` — Products Management Portal (~7078 tok)
-- `trends-chart.js` — Overhaul Trends Chart & KPI visualization (~7084 tok)
+- `products-data.js` — Products Data Layer (~5129 tok)
+- `products.js` — Products Management Portal (~7086 tok)
+- `trends-chart.js` — Overhaul Trends Chart & KPI visualization (~7295 tok)
 
 ## portals/production/css/
 
@@ -360,6 +360,7 @@
 - `mcs_timeline_comment_types.sql` — MCS Timeline: add 'comment' and 'progress_update' event types (~248 tok)
 - `operations_forecast_opportunities.sql` — Operations forecast opportunities table for the Operations dashboard forecast layer. (~473 tok)
 - `overhaul_history_mcs_columns.sql` — overhaul_history — Add MCS integration columns (~760 tok)
+- `overhaul_hours_rename_and_backfill.sql` — ============================================================================ (~811 tok)
 - `phase3_optimisations.sql` — ════════════════════════════════════════════════════════════════════ (~1551 tok)
 - `realtime_missing_tables.sql` — Enable realtime publication for tables missing subscriptions (~72 tok)
 - `remove_legacy_me_pert_subtasks.sql` — Remove legacy ME/PM capacity PERT and subtask tables. (~185 tok)
@@ -384,7 +385,7 @@
 - `mcs-actions.test.js` — MCS + Action Centre Integration Tests (~2194 tok)
 - `mcs-approval.test.js` — MCS Approval Workflow Tests (~4856 tok)
 - `mcs-main.test.js` — MCS Main Portal Tests (~1662 tok)
-- `mcs-overhaul-integration.test.js` — MCS + Overhaul History Integration Tests (~2261 tok)
+- `mcs-overhaul-integration.test.js` — MCS + Overhaul History Integration Tests (~2273 tok)
 - `me-calculations.test.js` — Declares fs (~1362 tok)
 - `me-chart.test.js` — Declares fs (~1154 tok)
 - `me-components.test.js` — me-components.test.js — Tests for portals/capacity/js/me-components.js (~2337 tok)

@@ -11,7 +11,7 @@ describe('MCS Overhaul History Integration', () => {
         title: 'Rail Bracket Weld Revision',
         status: 'approved',
         affected_product_id: 'prod-123',
-        estimated_time_impact_days: 5,
+        estimated_time_impact_hours: 5,
         time_impact_reason: 'New welding fixture required',
         recovery_target_date: '2026-04-15',
         change_type: 'Engineering',
@@ -25,13 +25,13 @@ describe('MCS Overhaul History Integration', () => {
   describe('Time Impact Fields', () => {
     it('should store estimated time impact', () => {
       const change = window.mcsList[0];
-      expect(change.estimated_time_impact_days).toBe(5);
+      expect(change.estimated_time_impact_hours).toBe(5);
     });
 
     it('should handle negative time impacts (speedups)', () => {
       const change = window.mcsList[0];
-      change.estimated_time_impact_days = -2; // Speedup
-      expect(change.estimated_time_impact_days).toBeLessThan(0);
+      change.estimated_time_impact_hours = -2; // improvement — negative hours
+      expect(change.estimated_time_impact_hours).toBeLessThan(0);
     });
 
     it('should store recovery target date', () => {
@@ -63,12 +63,12 @@ describe('MCS Overhaul History Integration', () => {
       const now = new Date().toISOString().split('T')[0];
 
       const currentProductHours = 42;
-      const newOverhaulHours = currentProductHours + change.estimated_time_impact_days;
+      const newOverhaulHours = currentProductHours + change.estimated_time_impact_hours;
 
       const overhaulEntry = {
         product_id: change.affected_product_id,
         overhaul_hours: newOverhaulHours,
-        time_impact_days: change.estimated_time_impact_days,
+        time_impact_hours: change.estimated_time_impact_hours,
         schedule_impact_reason: change.time_impact_reason,
         mcs_reference_id: change.id,
         effective_from_date: now,
@@ -115,12 +115,12 @@ describe('MCS Overhaul History Integration', () => {
   describe('Portfolio KPI Impact', () => {
     it('should calculate total schedule delay', () => {
       const changes = [
-        { estimated_time_impact_days: 5 },
-        { estimated_time_impact_days: 3 },
-        { estimated_time_impact_days: -1 } // speedup
+        { estimated_time_impact_hours: 5 },
+        { estimated_time_impact_hours: 3 },
+        { estimated_time_impact_hours: -1 } // improvement
       ];
 
-      const totalDelay = changes.reduce((sum, c) => sum + (c.estimated_time_impact_days || 0), 0);
+      const totalDelay = changes.reduce((sum, c) => sum + (c.estimated_time_impact_hours || 0), 0);
       expect(totalDelay).toBe(7);
     });
 
@@ -140,13 +140,13 @@ describe('MCS Overhaul History Integration', () => {
 
     it('should calculate average impact per change', () => {
       const changes = [
-        { estimated_time_impact_days: 6 },
-        { estimated_time_impact_days: 4 },
-        { estimated_time_impact_days: 2 }
+        { estimated_time_impact_hours: 6 },
+        { estimated_time_impact_hours: 4 },
+        { estimated_time_impact_hours: 2 }
       ];
 
       const avg =
-        changes.reduce((sum, c) => sum + (c.estimated_time_impact_days || 0), 0) / changes.length;
+        changes.reduce((sum, c) => sum + (c.estimated_time_impact_hours || 0), 0) / changes.length;
 
       expect(avg).toBe(4);
     });
@@ -189,12 +189,12 @@ describe('MCS Overhaul History Integration', () => {
 
     it('should handle multiple overhaul history entries per product', () => {
       const entries = [
-        { product_id: 'prod-1', time_impact_days: 3, effective_from_date: '2026-02-01' },
-        { product_id: 'prod-1', time_impact_days: -1, effective_from_date: '2026-03-01' }
+        { product_id: 'prod-1', time_impact_hours: 3, effective_from_date: '2026-02-01' },
+        { product_id: 'prod-1', time_impact_hours: -1, effective_from_date: '2026-03-01' }
       ];
 
       const productEntries = entries.filter(e => e.product_id === 'prod-1');
-      const totalImpact = productEntries.reduce((sum, e) => sum + e.time_impact_days, 0);
+      const totalImpact = productEntries.reduce((sum, e) => sum + e.time_impact_hours, 0);
 
       expect(productEntries.length).toBe(2);
       expect(totalImpact).toBe(2);

@@ -259,7 +259,7 @@ function renderProductsList() {
               <td><select class="cell-edit" id="pEdit-family">${buildFamilyOptions(p.family || '')}</select></td>
               <td><select class="cell-edit" id="pEdit-location">${buildLocationOptions(p.work_location || '')}</select></td>
               <td><input class="cell-edit" id="pEdit-customer" value="${esc(p.customer || '')}"></td>
-              <td><input class="cell-edit cell-num" id="pEdit-hours" type="number" min="0" step="0.5" value="${p.current_overhaul_hours || 0}"></td>
+              <td><span class="cell-display" style="font-variant-numeric:tabular-nums;" title="Overhaul time is maintained automatically via MCS changes and the Overhaul Trends history. Edit is disabled.">${(p.current_overhaul_hours || 0).toFixed(1)} h</span></td>
               <td><input class="cell-edit cell-num" id="pEdit-turnaround" type="number" min="0" step="1" value="${p.turnaround_days || ''}"></td>
               <td><input class="cell-edit" id="pEdit-notes" value="${esc(p.notes || '')}"></td>
               <td><select class="cell-edit" id="pEdit-status">${buildStatusOptions(p.status || 'Tender')}</select></td>
@@ -373,7 +373,7 @@ async function productsSaveEdit(productId) {
     family: document.getElementById('pEdit-family')?.value || '',
     work_location: document.getElementById('pEdit-location')?.value || null,
     customer: document.getElementById('pEdit-customer')?.value.trim() || '',
-    current_overhaul_hours: parseFloat(document.getElementById('pEdit-hours')?.value) || 0,
+
     turnaround_days: parseFloat(document.getElementById('pEdit-turnaround')?.value) || null,
     notes: document.getElementById('pEdit-notes')?.value.trim() || '',
     status: document.getElementById('pEdit-status')?.value || 'Tender',

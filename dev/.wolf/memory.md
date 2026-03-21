@@ -5,6 +5,8 @@
 
 | 2026-03-21 | Started hybrid permissions implementation (role baseline + team grants) | core/js/state.js, core/js/auth.js, utils/js/helpers.js, utils/js/navigation.js, portals/settings/js/settings.js, portals/settings/js/teams-data.js, supabase/hybrid_permissions_role_team_grants.sql, tests/permissions-helpers.test.js, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Added effective permission resolution at login, section access guard rendering, team assignment in Settings permissions table, normalized permission definitions in team editor, and migration/test scaffolding | ~1800 tok |
 
+| 2026-03-21 | Make top bar colors theme-aware | core/css/main.css, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Replaced hardcoded topbar blue palette with Light/Dark/Terminal theme tokens so header background, text, and control states change with theme | ~260 tok |
+
 | 12:50 | Executed MCS_LAYOUT_IMPROVEMENT_PLAN.md (all 6 phases) | state.js, portals/mcs/css/mcs.css, portals/mcs/css/mcs-responsive.css, portals/mcs/js/mcs-main.js | success — 83 MCS tests pass | ~12k |
 
 | 2026-03-21 | Add reporting date changer to Operations Mission Control | portals/operations/js/operations-dashboard-state.js, portals/operations/js/operations-dashboard-metrics.js, portals/operations/js/operations-dashboard-main.js, portals/operations/js/operations-dashboard-render-core.js, portals/operations/css/operations-dashboard.css, tests/operations-dashboard.test.js, CHANGELOG.md, .wolf/buglog.json | Added selectable reporting date and as-of labels so dashboard metrics clearly show snapshot context and can be shifted by date | ~950 tok |
@@ -340,3 +342,29 @@
 |------|--------|---------|---------|--------|
 | 13:07 | Edited portals/mcs/js/mcs-approval.js | 3→3 lines | ~47 |
 | 13:08 | Edited CHANGELOG.md | 1→3 lines | ~80 |
+| 13:44 | Created supabase/overhaul_hours_rename_and_backfill.sql | — | ~811 |
+| 13:44 | Edited portals/mcs/js/mcs-approval.js | 2→2 lines | ~44 |
+| 13:44 | Edited portals/mcs/js/mcs-approval.js | inline fix | ~18 |
+| 13:45 | Edited portals/mcs/js/mcs-approval.js | inline fix | ~11 |
+| 13:45 | Edited portals/mcs/js/mcs-modal.js | inline fix | ~31 |
+| 13:45 | Edited portals/mcs/js/mcs-modal.js | 4→7 lines | ~162 |
+| 13:45 | Edited portals/mcs/js/mcs-modal.js | 2→2 lines | ~107 |
+| 13:46 | Edited portals/mcs/js/mcs-main.js | 3→3 lines | ~60 |
+| 13:46 | Edited portals/product-development/product-management/js/products-data.js | added 3 condition(s) | ~313 |
+| 13:46 | Edited portals/product-development/product-management/js/products-data.js | modified productsDataAddHistory() | ~496 |
+| 13:46 | Edited portals/product-development/product-management/js/products.js | "cell-edit cell-num" → "cell-display" | ~76 |
+| 13:46 | Edited portals/product-development/product-management/js/products.js | removed 2 lines | ~1 |
+| 13:47 | Edited portals/product-development/product-management/js/trends-chart.js | Time() → Change() | ~530 |
+| 13:47 | Edited portals/product-development/product-management/js/trends-chart.js | modified if() | ~198 |
+| 13:47 | Edited portals/product-development/product-management/js/trends-chart.js | 8→9 lines | ~77 |
+| 13:47 | Edited portals/product-development/product-management/js/trends-chart.js | expanded (+7 lines) | ~286 |
+| 13:48 | Edited tests/mcs-overhaul-integration.test.js | inline fix | ~8 |
+| 13:48 | Edited tests/mcs-overhaul-integration.test.js | inline fix | ~5 |
+| 13:48 | Edited tests/mcs-overhaul-integration.test.js | inline fix | ~23 |
+| 13:48 | Edited tests/mcs-overhaul-integration.test.js | inline fix | ~17 |
+| 13:48 | Edited CHANGELOG.md | 1→3 lines | ~126 |
+
+## Session: 2026-03-21 14:00
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
