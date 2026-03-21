@@ -33,8 +33,7 @@
 - `npm run check:all`
 
 ## Changelog Rule
-- Read `CHANGELOG.md` at the start of each task.
-- Add one entry per logical change near the top using:
+- After each logical change, add one entry near the top of `CHANGELOG.md` using:
 	`## YYYY-MM-DD | Short title | Reason`
 
 ## Scoped Detail Owners
