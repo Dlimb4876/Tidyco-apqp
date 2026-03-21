@@ -5,6 +5,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-21 | Mobile topbar: hide keyboard shortcuts button, add icon shortcuts for Actions and Feedback | Keyboard shortcuts are irrelevant on mobile; quick-access buttons for My Actions and Feedback & Bugs are now shown as icon-only (✅/💬) in the topbar action strip on mobile
+
 ## 2026-03-21 | Migrate Operations dashboard shell controls to delegated actions | Removed inline handlers from operations-dashboard-main.js header/tab controls, routed through data-action delegation, and added regression checks in operations-dashboard.test.js
 
 ## 2026-03-21 | Implement global Ctrl+S/Ctrl+F/Escape shortcuts and enforce docs-sync rule | Shortcuts modal now matches live behavior (save, focus search, close modal), helper tests were added, and explicit rule added to keep README.md and TESTING_STRATEGY.md updated when affected

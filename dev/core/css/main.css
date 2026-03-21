@@ -406,6 +406,7 @@ body {
 .bug-report-btn:active { transform: scale(0.98); }
 
 .topbar-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.mobile-quick-btn { display: none; }
 .tbtn {
   padding: 5px 11px; border-radius: 4px; font-size: 11px; font-weight: 500;
   cursor: pointer; border: none; font-family: 'IBM Plex Sans', sans-serif; transition: all .12s;
@@ -533,6 +534,12 @@ body {
   /* Hide "My Actions" and "Feedback & Bugs" centre buttons on mobile.
      They remain accessible from the Hub. */
   .topbar-center { display: none; }
+
+  /* Hide keyboard shortcuts button — not useful on mobile (no physical keyboard) */
+  .shortcuts-btn { display: none; }
+
+  /* Show compact icon-only shortcut buttons in the action strip */
+  .mobile-quick-btn { display: flex; align-items: center; }
 
   /* Trim brand text so it doesn't overflow */
   .brand-sub, .brand-sep { display: none; }
