@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-21 | Fix dark mode: project dashboard text invisible on dark background | Hardcoded dark navy hex colours (#0f1f33, #112238, #25384f etc.) in mc-shell dashboard were invisible against dark backgrounds; added :root[data-theme="dark"] overrides so project name, KPI numbers, gate circles and focus text render in legible light colours
+
 ## 2026-03-21 | Fix mobile topbar overlap and restore settings access on mobile | Topbar min-width constraints (240px left, 200px centre) exceeded 375px screen width causing all buttons to collide; collapsed centre strip on mobile, removed min-widths, switched topbar to 2-col grid; also fixed settings layout defaulting to flex-row instead of flex-column on mobile
 
 ## 2026-03-21 | Finish dark mode: fix hardcoded colours in operations, capacity, PFMEA, PFD, action centre | Phase 2–4 of DARK_MODE_FIX_PLAN — eliminated all remaining hardcoded #fff/white/light-hex values in CSS and JS render functions so every portal renders correctly in dark theme
