@@ -17,9 +17,37 @@ function opsTodayIso() {
 	return `${yyyy}-${mm}-${dd}`;
 }
 
-function opsCurrentMonthKey() {
-	const now = new Date();
-	return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+function opsParseIsoDateOnly(raw) {
+	if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(String(raw))) return null;
+	const parsed = new Date(String(raw) + 'T00:00:00');
+	if (Number.isNaN(parsed.getTime())) return null;
+	return parsed;
+}
+
+function opsResolveReportingDateIso() {
+	const parsed = opsParseIsoDateOnly(opsReportingDateIso);
+	if (parsed) return opsReportingDateIso;
+	return opsTodayIso();
+}
+
+function opsSetReportingDate(rawIso) {
+	const parsed = opsParseIsoDateOnly(rawIso);
+	opsReportingDateIso = parsed
+		? `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`
+		: '';
+	return opsResolveReportingDateIso();
+}
+
+function opsFormatReportingDate(rawIso) {
+	const parsed = opsParseIsoDateOnly(rawIso) || opsParseIsoDateOnly(opsTodayIso());
+	return parsed
+		? parsed.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+		: rawIso;
+}
+
+function opsCurrentMonthKey(baseDate = null) {
+	const d = baseDate instanceof Date && !Number.isNaN(baseDate.getTime()) ? baseDate : new Date();
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 function opsToNumber(value, fallback = 0) {
@@ -83,8 +111,8 @@ function opsCalcGateHealth(projects, dependencies = {}) {
 	return { doneChecks, totalChecks, percentage };
 }
 
-function opsCalcActionHealth(projects) {
-	const today = opsTodayIso();
+function opsCalcActionHealth(projects, reportDateIso = opsTodayIso()) {
+	const today = reportDateIso || opsTodayIso();
 	let totalOpen = 0;
 	let overdue = 0;
 
@@ -134,14 +162,14 @@ function opsCalcRiskHealth(projects) {
 	return { highRisks, highRpn };
 }
 
-function opsCalcBugHealth(dependencies = {}) {
+function opsCalcBugHealth(dependencies = {}, reportDate = new Date()) {
 	const deps = opsMetricsDependencies(dependencies);
 	const rows = deps.feedback;
 	const closedStatuses = new Set(['completed', 'declined', 'squashed']);
 
 	let open = 0;
 	let closed7d = 0;
-	const now = new Date();
+	const now = reportDate instanceof Date && !Number.isNaN(reportDate.getTime()) ? reportDate : new Date();
 	const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
 
 	rows.forEach(report => {
@@ -159,13 +187,13 @@ function opsCalcBugHealth(dependencies = {}) {
 	return { open, closed7d };
 }
 
-function opsCalcDepartmentCapacity(department, dependencies = {}) {
+function opsCalcDepartmentCapacity(department, dependencies = {}, monthKeyOverride = '') {
 	const deps = opsMetricsDependencies(dependencies);
 	if (typeof deps.meCalculateMonthData !== 'function' || !deps.meDataState) {
 		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
 	}
 
-	const monthKey = opsCurrentMonthKey();
+	const monthKey = monthKeyOverride || opsCurrentMonthKey();
 	const team = Array.isArray(deps.meDataState.team) ? deps.meDataState.team : [];
 	const tasks = Array.isArray(deps.meDataState.tasks) ? deps.meDataState.tasks : [];
 	const products = Array.isArray(deps.meDataState.products) ? deps.meDataState.products : [];
@@ -199,12 +227,66 @@ function opsCalcDepartmentCapacity(department, dependencies = {}) {
 	};
 }
 
-function opsCalcMeCapacity(dependencies = {}) {
-	return opsCalcDepartmentCapacity('ME', dependencies);
+function opsCalcMeCapacity(dependencies = {}, monthKeyOverride = '') {
+	return opsCalcDepartmentCapacity('ME', dependencies, monthKeyOverride);
 }
 
-function opsCalcPmCapacity(dependencies = {}) {
-	return opsCalcDepartmentCapacity('PM', dependencies);
+function opsCalcPmCapacity(dependencies = {}, monthKeyOverride = '') {
+	return opsCalcDepartmentCapacity('PM', dependencies, monthKeyOverride);
+}
+
+function opsCalcOperationsUnitCapacity(workArea, monthKeyOverride = '') {
+	if (
+		typeof window.prodCapGet24MonthKeys !== 'function' ||
+		typeof window.prodCapGetWorkAreas !== 'function' ||
+		typeof window.prodCapCalcDemandMatrix !== 'function' ||
+		typeof window.prodCapCalcSupplyMatrix !== 'function'
+	) {
+		return {
+			ready: false,
+			workArea,
+			utilisation: 0,
+			headroom: 0,
+			demand: 0,
+			capacity: 0
+		};
+	}
+
+	const monthKey = monthKeyOverride || opsCurrentMonthKey();
+	const monthKeys = window.prodCapGet24MonthKeys();
+	const workAreas = window.prodCapGetWorkAreas();
+	if (!monthKeys.includes(monthKey) || !workAreas.includes(workArea)) {
+		return {
+			ready: false,
+			workArea,
+			utilisation: 0,
+			headroom: 0,
+			demand: 0,
+			capacity: 0
+		};
+	}
+
+	const demandMx = window.prodCapCalcDemandMatrix(monthKeys);
+	const supplyMx = window.prodCapCalcSupplyMatrix(monthKeys, workAreas);
+	const demand = opsToNumber(demandMx[monthKey]?.[workArea], 0);
+	const capacity = opsToNumber(supplyMx[monthKey]?.[workArea], 0);
+	const utilFn = typeof window.prodCapUtil === 'function'
+		? window.prodCapUtil
+		: (demandHours, supplyHours) => (supplyHours <= 0 ? (demandHours > 0 ? 999 : 0) : Math.round((demandHours / supplyHours) * 100));
+
+	return {
+		ready: true,
+		workArea,
+		utilisation: Math.max(0, Math.round(opsToNumber(utilFn(demand, capacity), 0))),
+		headroom: Math.round(capacity - demand),
+		demand: Math.round(demand),
+		capacity: Math.round(capacity)
+	};
+}
+
+function opsCalcOperationsUnits(monthKeyOverride = '') {
+	const unitOrder = ['Unit 2', 'Unit 3', 'Unit 6'];
+	return unitOrder.map(unit => opsCalcOperationsUnitCapacity(unit, monthKeyOverride));
 }
 
 function opsCalcProductionFlow() {
@@ -306,12 +388,16 @@ function opsCalcProjectFlow(projects) {
 function opsBuildMetrics() {
 	const projects = Array.isArray(db?.projects) ? db.projects : [];
 	const deps = opsMetricsDependencies();
+	const reportingDateIso = opsResolveReportingDateIso();
+	const reportingDate = opsParseIsoDateOnly(reportingDateIso) || new Date();
+	const reportingMonthKey = opsCurrentMonthKey(reportingDate);
 	const gate = opsCalcGateHealth(projects, deps);
-	const actions = opsCalcActionHealth(projects);
+	const actions = opsCalcActionHealth(projects, reportingDateIso);
 	const risk = opsCalcRiskHealth(projects);
-	const bugs = opsCalcBugHealth(deps);
-	const me = opsCalcMeCapacity(deps);
-	const pm = opsCalcPmCapacity(deps);
+	const bugs = opsCalcBugHealth(deps, reportingDate);
+	const me = opsCalcMeCapacity(deps, reportingMonthKey);
+	const pm = opsCalcPmCapacity(deps, reportingMonthKey);
+	const operationsUnits = opsCalcOperationsUnits(reportingMonthKey);
 	const production = opsCalcProductionFlow();
 	const forecast = opsCalcForecastProduction();
 	const projectsFlow = opsCalcProjectFlow(projects);
@@ -335,10 +421,18 @@ function opsBuildMetrics() {
 		bugs,
 		me,
 		pm,
+		operationsUnits,
 		production,
 		forecast,
 		projectsFlow,
 		healthScore,
+		reportingDateIso,
+		reportingDateLabel: opsFormatReportingDate(reportingDateIso),
+		reportingMonthKey,
 		generatedAt: new Date()
 	};
 }
+
+window.opsSetReportingDate = opsSetReportingDate;
+window.opsResolveReportingDateIso = opsResolveReportingDateIso;
+window.opsFormatReportingDate = opsFormatReportingDate;

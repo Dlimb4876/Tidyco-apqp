@@ -78,18 +78,13 @@
     flex: 1;
   }
 
-  /* Card layout - simplified on mobile */
-  .mcs-card {
-    grid-template-columns: 1fr;
-    gap: 8px;
+  /* Card layout - already flex-column, adjust for mobile */
+  .mcs-card-meta {
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
-  .mcs-card-ref {
-    order: -1;
-  }
-
-  .mcs-card-right {
-    align-items: flex-start;
+  .mcs-card-meta-right {
     width: 100%;
   }
 
@@ -180,11 +175,27 @@
   }
 }
 
+@media (max-width: 767px) {
+  /* KPI bar - 2x2 grid on mobile */
+  .mcs-kpi-bar {
+    flex-wrap: wrap;
+  }
+
+  .mcs-kpi-card {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .mcs-kpi-value {
+    font-size: 18px;
+  }
+}
+
 /* -- Tablet/Desktop (≥768px) -- */
 @media (min-width: 768px) {
   /* Modal - centered dialog */
   .mcs-modal {
-    width: 760px;
+    width: 900px;
   }
 
   .mcs-modal-grid {
@@ -195,7 +206,7 @@
   .mcs-approval-chain {
     flex-direction: row;
     gap: 0;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
   .mcs-approval-step:not(:last-child)::after {
@@ -306,7 +317,7 @@
   }
 
   .mcs-modal {
-    width: 800px;
+    width: 900px;
   }
 }
 

@@ -3,12 +3,12 @@
 
 /* -- MCS Specific Variables -- */
 :root {
-  --mcs-status-open: #2563eb;
-  --mcs-status-review: #d97706;
-  --mcs-status-approved: #16a34a;
-  --mcs-status-implemented: #9ca3af;
-  --mcs-status-rejected: #dc2626;
-  --mcs-sidebar-width: 220px;
+  --mcs-status-open: var(--blue);
+  --mcs-status-review: var(--amber);
+  --mcs-status-approved: var(--green);
+  --mcs-status-implemented: var(--muted, #9ca3af);
+  --mcs-status-rejected: var(--red);
+  --mcs-sidebar-width: 200px;
 }
 
 /* -- Top-level layout: list on left, filter sidebar on right -- */
@@ -140,10 +140,9 @@
   padding: 14px 16px;
   cursor: pointer;
   transition: all 0.15s;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 14px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   border-radius: 8px;
 }
 
@@ -173,16 +172,19 @@
   border-left-color: var(--mcs-status-rejected);
 }
 
+/* Card header row: ref on left, status pill on right */
+.mcs-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .mcs-card-ref {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--text3);
   white-space: nowrap;
-  padding-top: 2px;
-}
-
-.mcs-card-body {
-  min-width: 0;
 }
 
 .mcs-card-title {
@@ -190,18 +192,37 @@
   font-weight: 600;
   font-size: 14px;
   color: var(--text);
-  margin-bottom: 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Meta row: type+priority on left, impacts on right */
 .mcs-card-meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+}
+
+.mcs-card-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 6px;
+}
+
+.mcs-card-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Separator between meta and submeta */
+.mcs-card-sep {
+  height: 1px;
+  background: var(--border);
 }
 
 .mcs-tag {
@@ -214,43 +235,48 @@
   border: 1px solid var(--border);
 }
 
-.mcs-priority-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
+/* Priority badge (replaces dot) */
+.mcs-priority-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: capitalize;
+  white-space: nowrap;
 }
 
-.mcs-priority-critical {
-  background: var(--red);
+.mcs-priority-badge.mcs-priority-critical {
+  background: var(--red-dim, #fee2e2);
+  color: var(--red);
 }
 
-.mcs-priority-high {
-  background: var(--orange);
+.mcs-priority-badge.mcs-priority-high {
+  background: var(--orange-dim, #fef3c7);
+  color: var(--orange);
 }
 
-.mcs-priority-medium {
-  background: #2563eb;
+.mcs-priority-badge.mcs-priority-medium {
+  background: var(--accent-dim);
+  color: var(--accent);
 }
 
-.mcs-priority-low {
-  background: var(--text3);
+.mcs-priority-badge.mcs-priority-low {
+  background: var(--surface3);
+  color: var(--text3);
 }
 
 .mcs-card-submeta {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   font-size: 12px;
   color: var(--text3);
   flex-wrap: wrap;
+  align-items: center;
 }
 
-.mcs-card-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  flex-shrink: 0;
+.mcs-overdue-date {
+  color: var(--red);
+  font-weight: 600;
 }
 
 .mcs-status-pill {
@@ -262,18 +288,28 @@
 }
 
 .mcs-status-open {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--status-blue-bg, #dbeafe);
+  color: var(--status-blue-text, #1d4ed8);
 }
 
 .mcs-status-review {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--status-amber-bg, #fef3c7);
+  color: var(--status-amber-text, #92400e);
+}
+
+.mcs-status-implementing {
+  background: var(--status-blue-bg, #dbeafe);
+  color: var(--status-blue-text, #1d4ed8);
+}
+
+.mcs-status-final_review {
+  background: var(--status-amber-bg, #fef3c7);
+  color: var(--status-amber-text, #92400e);
 }
 
 .mcs-status-approved {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--status-green-bg, #dcfce7);
+  color: var(--status-green-text, #15803d);
 }
 
 .mcs-status-implemented {
@@ -281,9 +317,10 @@
   color: var(--text3);
 }
 
-.mcs-status-rejected {
-  background: #fee2e2;
-  color: #b91c1c;
+.mcs-status-rejected,
+.mcs-status-closed {
+  background: var(--surface3);
+  color: var(--text3);
 }
 
 .mcs-card-impacts {
@@ -303,7 +340,7 @@
 .mcs-modal {
   background: var(--surface);
   border: 1px solid var(--border);
-  width: 760px;
+  width: 900px;
   max-width: 95vw;
   max-height: 90vh;
   overflow-y: auto;
@@ -461,11 +498,11 @@
   display: flex;
   align-items: flex-start;
   gap: 0;
-  margin-bottom: 28px;
-  padding: 28px 20px 20px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
   background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 10px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
@@ -487,7 +524,7 @@
   border-radius: 2px;
   background: var(--border2);
   align-self: flex-start;
-  margin-top: 24px; /* half of 48px circle */
+  margin-top: 20px; /* half of 40px circle */
   transition: background 0.3s;
 }
 
@@ -500,15 +537,15 @@
 }
 
 .mcs-approval-circle {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 2.5px solid var(--border2);
   background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   z-index: 1;
   position: relative;
@@ -1036,4 +1073,169 @@
 
 .mcs-search-input::placeholder {
   color: var(--text3);
+}
+
+/* -- KPI Dashboard Bar -- */
+.mcs-kpi-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.mcs-kpi-card {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 0;
+}
+
+.mcs-kpi-card:hover {
+  border-color: var(--border2);
+  background: var(--surface3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.mcs-kpi-value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.mcs-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+
+.mcs-kpi-card.kpi-open .mcs-kpi-value { color: var(--blue); }
+.mcs-kpi-card.kpi-review .mcs-kpi-value { color: var(--amber); }
+.mcs-kpi-card.kpi-overdue .mcs-kpi-value { color: var(--red); }
+.mcs-kpi-card.kpi-week .mcs-kpi-value { color: var(--green); }
+
+/* -- Accordion Filter Sections -- */
+.mcs-filter-section {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+.mcs-filter-section:last-child {
+  border-bottom: none;
+}
+
+.mcs-section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  transition: color 0.1s;
+}
+
+.mcs-section-toggle:hover {
+  color: var(--text2);
+}
+
+.mcs-toggle-icon {
+  font-size: 9px;
+  transition: transform 0.15s;
+}
+
+.mcs-section-body {
+  padding: 0 0 8px;
+}
+
+/* -- Quick Filters (checkboxes) -- */
+.mcs-quick-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.1s;
+  user-select: none;
+  margin-bottom: 1px;
+}
+
+.mcs-quick-filter-label:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.mcs-quick-filter-label input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* -- Date Range Select -- */
+.mcs-date-range-select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: var(--body);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0 0 8px;
+}
+
+.mcs-date-range-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* -- Clear Filters Button -- */
+.mcs-clear-filters {
+  width: 100%;
+  padding: 7px 10px;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text3);
+  font-family: var(--body);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+  text-align: center;
+}
+
+.mcs-clear-filters:hover {
+  border-color: var(--text2);
+  color: var(--text2);
+}
+
+/* -- Dark Mode Overrides -- */
+:root[data-theme="dark"] {
+  --mcs-kpi-bg: var(--surface2);
+  --mcs-card-hover-bg: rgba(255,255,255,0.03);
 }

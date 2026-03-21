@@ -14,6 +14,79 @@ function opsMetricCard(label, value, detail, tone = 'good', dest = '') {
 		</article>`;
 }
 
+function opsRenderUnitKpis(unitMetrics) {
+	if (!Array.isArray(unitMetrics) || unitMetrics.length === 0) {
+		return '';
+	}
+
+	const unitCards = unitMetrics.map(unit => {
+		const tone = !unit.ready ? 'watch' : unit.utilisation > 100 ? 'critical' : unit.utilisation > 85 ? 'watch' : 'good';
+		const statusLabel = !unit.ready ? 'Not Ready' : `${unit.utilisation}%`;
+		const detailText = !unit.ready
+			? 'Open Capacity once to initialize'
+			: `${Math.round(unit.capacity)}h capacity / ${Math.round(unit.demand)}h demand (${Math.round(unit.headroom)}h headroom)`;
+		return opsMetricCard(`${unit.workArea} Utilisation`, statusLabel, detailText, tone, 'capacity');
+	}).join('');
+
+	return `
+		<section class="ops-section">
+			<div class="ops-section-head">
+				<h3>Operations Capacity by Unit</h3>
+				<span>Unit 2, 3, and 6 utilisation and headroom</span>
+			</div>
+			<div class="ops-metrics-grid">
+				${unitCards}
+			</div>
+		</section>`;
+}
+
+function opsRenderPeopleUnitPanels(unitMetrics) {
+	if (!Array.isArray(unitMetrics) || unitMetrics.length === 0) {
+		return '';
+	}
+
+	const panels = unitMetrics.map(unit => {
+		const utilTone = !unit.ready
+			? 'watch'
+			: unit.utilisation > 90
+				? 'critical'
+				: unit.utilisation > 80
+					? 'watch'
+					: 'good';
+		const headroomTone = !unit.ready
+			? 'watch'
+			: unit.headroom < 0
+				? 'critical'
+				: 'good';
+
+		return `
+			<section class="ops-panel">
+				<div class="ops-panel-head">
+					<h3>${esc(unit.workArea)} Load</h3>
+					<span>Capacity pressure and breathing room</span>
+				</div>
+				<div class="ops-metrics-grid">
+					${opsMetricCard(
+						`${unit.workArea} Utilisation`,
+						unit.ready ? `${unit.utilisation}%` : 'Not Ready',
+						unit.ready ? `${unit.capacity}h capacity / ${unit.demand}h demand` : 'Open Capacity once to initialize',
+						utilTone,
+						'capacity'
+					)}
+					${opsMetricCard(
+						`${unit.workArea} Headroom`,
+						unit.ready ? `${unit.headroom}h` : 'Not Ready',
+						'Current month available room',
+						headroomTone,
+						'capacity'
+					)}
+				</div>
+			</section>`;
+	});
+
+	return panels.join('');
+}
+
 function opsBuildPulseRows(metrics) {
 	const rows = [];
 
@@ -58,7 +131,7 @@ function opsRenderPulseFeed(metrics) {
 		<section class="ops-panel">
 			<div class="ops-panel-head">
 				<h3>Live Pulse Feed</h3>
-				<span>Updated ${metrics.generatedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+				<span>As of ${esc(metrics.reportingDateLabel)} · Updated ${metrics.generatedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
 			</div>
 			<div class="ops-feed-list">
 				${rows.map(row => `
@@ -144,6 +217,8 @@ function opsRenderOverview(metrics) {
 				${opsMetricCard('Active Batches', String(metrics.production.active), 'Live production work packets', metrics.production.active > 0 ? 'watch' : 'good', 'production')}
 			</section>
 
+			${opsRenderUnitKpis(metrics.operationsUnits)}
+
 			<section class="ops-columns">
 				${opsRenderPulseFeed(metrics)}
 				${opsRenderRiskRadar(metrics)}
@@ -207,6 +282,8 @@ function opsRenderPeopleView(metrics) {
 					${opsMetricCard('PM Headroom', metrics.pm.ready ? `${metrics.pm.headroom}h` : 'Not Ready', 'Current month available room', metrics.pm.ready && metrics.pm.headroom < 0 ? 'critical' : 'good')}
 				</div>
 			</section>
+
+			${opsRenderPeopleUnitPanels(metrics.operationsUnits)}
 			
 			${opsRenderQuickActions()}
 		</div>`;

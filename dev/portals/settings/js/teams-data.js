@@ -84,6 +84,50 @@ async function teamsDataLoadPermissions(teamId) {
   return data || [];
 }
 
+// ── Load user-to-team assignments ───────────────────────────────
+async function teamsDataLoadUserTeamMap() {
+  const { data, error } = await supa
+    .from('team_members')
+    .select('user_id, team_id, teams(name)')
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+
+  const map = {};
+  (data || []).forEach((row) => {
+    if (!row.user_id) return;
+    // Single-team assignment policy: keep first row only if duplicates exist.
+    if (map[row.user_id]) return;
+    map[row.user_id] = {
+      teamId: row.team_id || '',
+      teamName: row.teams?.name || ''
+    };
+  });
+
+  return map;
+}
+
+// ── Set a user's team assignment (single team) ─────────────────
+async function teamsDataSetUserTeam(userId, teamId) {
+  if (!userId) return false;
+
+  const { error: deleteError } = await supa
+    .from('team_members')
+    .delete()
+    .eq('user_id', userId);
+
+  if (deleteError) throw deleteError;
+
+  if (!teamId) return true;
+
+  const { error: insertError } = await supa
+    .from('team_members')
+    .insert([{ user_id: userId, team_id: teamId }]);
+
+  if (insertError) throw insertError;
+  return true;
+}
+
 // ── Save (upsert) permissions for a team ─────────────────────────
 async function teamPermissionsDataSave(teamId, permissions) {
   if (!teamId || !Array.isArray(permissions)) return false;

@@ -12,6 +12,7 @@ let settingsWorkAreasEditingId = null;
 let settingsPermissionsLoading = false;
 let settingsPermissionsData = null;
 let settingsPermissionsError = null;
+let settingsPermissionsTeams = [];
 let settingsTeamsPermissionsData = {};
 
 // ── Appearance preferences (persisted to localStorage) ─────────
@@ -61,6 +62,17 @@ function settingsAppearanceSetTheme(theme) {
   const prefs = settingsLoadAppearancePrefs();
   settingsSaveAppearancePrefs({ ...prefs, theme: nextTheme });
   settingsApplyAppearance();
+}
+
+function settingsAppearanceSetDensityCard(root, density) {
+  if (!root) return;
+  root
+    .querySelectorAll('.density-card')
+    .forEach((card) => card.classList.remove('selected'));
+  const next = root.querySelector(`.density-card input[name="ap-density"][value="${density}"]`);
+  if (!next) return;
+  next.checked = true;
+  next.closest('.density-card')?.classList.add('selected');
 }
 
 settingsApplyAppearance();
@@ -218,12 +230,27 @@ async function settingsEnsurePermissionsData(forceReload = false) {
   renderSettingsPermissionsTab();
 
   try {
-    const { data, error } = await supa.from('profiles').select('id, email, full_name, role, created_at').order('created_at', { ascending: true });
+    const [{ data: profiles, error }, teams, teamMap] = await Promise.all([
+      supa.from('profiles').select('id, email, full_name, role, created_at').order('created_at', { ascending: true }),
+      typeof teamsDataLoadAll === 'function' ? teamsDataLoadAll() : Promise.resolve([]),
+      typeof teamsDataLoadUserTeamMap === 'function' ? teamsDataLoadUserTeamMap() : Promise.resolve({})
+    ]);
+
     if (error) throw error;
-    settingsPermissionsData = data || [];
+
+    settingsPermissionsTeams = Array.isArray(teams) ? teams : [];
+    settingsPermissionsData = (profiles || []).map((user) => {
+      const assignment = teamMap?.[user.id] || null;
+      return {
+        ...user,
+        team_id: assignment?.teamId || '',
+        team_name: assignment?.teamName || ''
+      };
+    });
   } catch (err) {
     settingsPermissionsError = err?.message || 'Failed to load user accounts';
     settingsPermissionsData = [];
+    settingsPermissionsTeams = [];
   } finally {
     settingsPermissionsLoading = false;
     renderSettingsPermissionsTab();
@@ -560,6 +587,36 @@ async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
   }
 }
 
+// ── Change a user's team assignment ────────────────────────────
+async function settingsPermissionsChangeTeam(userId, teamId) {
+  if (!isAdmin()) { showToast('Only admins can change team assignments.', 'error'); return; }
+  if (!userId || typeof teamsDataSetUserTeam !== 'function') return;
+
+  try {
+    const nextTeamId = teamId || '';
+    const success = await teamsDataSetUserTeam(userId, nextTeamId);
+    if (!success) {
+      showToast('Failed to update team assignment', 'error');
+      return;
+    }
+
+    if (settingsPermissionsData) {
+      const rec = settingsPermissionsData.find((u) => u.id === userId);
+      const teamRec = settingsPermissionsTeams.find((t) => t.id === nextTeamId);
+      if (rec) {
+        rec.team_id = nextTeamId;
+        rec.team_name = teamRec?.name || '';
+      }
+    }
+
+    showToast('Team assignment updated.', 'success');
+    renderSettingsPermissionsTab();
+  } catch (err) {
+    showToast('Failed to update team assignment: ' + err.message, 'error');
+    settingsEnsurePermissionsData(true);
+  }
+}
+
 // ── Render teams tab ───────────────────────────────────────────
 function renderSettingsTeamsTab() {
   const container = document.getElementById('settingsTeamsTab');
@@ -746,8 +803,31 @@ function settingsTeamsPermissionsToggle(teamId, permission) {
   const perm = settingsTeamsPermissionsData[teamId].find(p => p.permission === permission);
   if (perm) {
     perm.allowed = !perm.allowed;
-    renderSettingsTeamsPermissionsEditor();
+  } else {
+    settingsTeamsPermissionsData[teamId].push({ permission, allowed: true });
   }
+  renderSettingsTeamsPermissionsEditor();
+}
+
+function settingsGetTeamPermissionDefinitions() {
+  if (typeof getPermissionDefinitions === 'function') {
+    return getPermissionDefinitions().map((def) => ({
+      key: def.key,
+      label: def.label,
+      group: def.group || 'Other'
+    }));
+  }
+
+  return [
+    { key: 'view_all_project_data', label: 'View all project data', group: 'Legacy' },
+    { key: 'edit_projects_tasks_schedules', label: 'Edit projects, tasks & schedules', group: 'Legacy' },
+    { key: 'add_delete_records', label: 'Add & delete records', group: 'Legacy' },
+    { key: 'manage_families', label: 'Manage product families', group: 'Legacy' },
+    { key: 'manage_work_areas', label: 'Manage work areas', group: 'Legacy' },
+    { key: 'manage_capacity', label: 'Manage capacity planning', group: 'Legacy' },
+    { key: 'manage_user_roles', label: 'Change user roles', group: 'Legacy' },
+    { key: 'access_settings', label: 'Access Settings page', group: 'Legacy' }
+  ];
 }
 
 // ── Render permissions editor ──────────────────────────────────
@@ -759,28 +839,29 @@ function renderSettingsTeamsPermissionsEditor() {
   if (!team) return;
 
   const permissions = settingsTeamsPermissionsData[teamId] || [];
-  const PERMISSION_LABELS = {
-    'view_all_project_data': 'View all project data',
-    'edit_projects_tasks_schedules': 'Edit projects, tasks & schedules',
-    'add_delete_records': 'Add & delete records',
-    'manage_families': 'Manage product families',
-    'manage_work_areas': 'Manage work areas',
-    'manage_capacity': 'Manage capacity planning',
-    'manage_user_roles': 'Change user roles',
-    'access_settings': 'Access Settings page'
-  };
+  const definitions = settingsGetTeamPermissionDefinitions();
 
   let permRows = '';
-  Object.entries(PERMISSION_LABELS).forEach(([permKey, label]) => {
-    const perm = permissions.find(p => p.permission === permKey);
+  let activeGroup = '';
+  definitions.forEach(({ key, label, group }) => {
+    if (group !== activeGroup) {
+      activeGroup = group;
+      permRows += `
+        <tr>
+          <td colspan="2" style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;background:var(--bg-alt)">${esc(group)}</td>
+        </tr>
+      `;
+    }
+
+    const perm = permissions.find(p => p.permission === key);
     const isAllowed = perm?.allowed || false;
     permRows += `
       <tr>
-        <td>${label}</td>
+        <td>${esc(label)}</td>
         <td style="text-align:center">
           <input type="checkbox" ${isAllowed ? 'checked' : ''}
                  data-action="settings-teams-permission-toggle"
-                 data-permission="${esc(permKey)}"
+                 data-permission="${esc(key)}"
                  style="cursor:pointer;width:18px;height:18px">
         </td>
       </tr>
@@ -824,6 +905,7 @@ function renderSettingsPermissionsTab() {
   }
 
   const users = settingsPermissionsData || [];
+  const teams = settingsPermissionsTeams || [];
   const currentEmail = currentUser?.email || '';
 
   const adminCount = users.filter(u => (u.role || 'editor') === 'admin').length;
@@ -840,6 +922,15 @@ function renderSettingsPermissionsTab() {
       const role = u.role || 'editor';
       const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB') : '—';
       const isLastAdmin = role === 'admin' && adminCount <= 1;
+      const teamId = u.team_id || '';
+      const teamName = u.team_name || 'Unassigned';
+
+      const teamCell = viewerIsAdmin
+        ? `<select class="cell-edit" style="width:180px" data-action="settings-permissions-change-team" data-user-id="${esc(u.id)}">
+            <option value="">Unassigned</option>
+            ${teams.map((team) => `<option value="${esc(team.id)}" ${team.id === teamId ? 'selected' : ''}>${esc(team.name)}</option>`).join('')}
+          </select>`
+        : `<span class="permissions-badge">${esc(teamName)}</span>`;
 
       // Admins see a dropdown; everyone else sees a read-only badge
       const roleCell = viewerIsAdmin
@@ -858,6 +949,7 @@ function renderSettingsPermissionsTab() {
         </td>
         <td>${email}</td>
         <td>${roleCell}</td>
+        <td>${teamCell}</td>
         <td>${joined}</td>
       </tr>`;
     }).join('');
@@ -872,7 +964,7 @@ function renderSettingsPermissionsTab() {
 
   const adminNote = viewerIsAdmin
     ? `<div class="permissions-notice" style="background:var(--status-blue-bg);border-color:var(--blue)">
-        <strong>Admin tip:</strong> Use the dropdowns to change a user's role. Changes take effect on the user's next login.
+        <strong>Admin tip:</strong> Use the dropdowns to assign role and team grants. Role changes take effect on next login, team grants apply immediately.
       </div>`
     : `<div class="permissions-notice">Only admins can change roles. Your current role is <strong>${esc(currentUserRole || 'editor')}</strong>.</div>`;
 
@@ -888,6 +980,7 @@ function renderSettingsPermissionsTab() {
           <th>Name</th>
           <th>Email</th>
           <th>Role</th>
+          <th>Team</th>
           <th>Joined</th>
         </tr>
       </thead>
@@ -1311,6 +1404,13 @@ function setupSettingsEventListeners() {
   settingsEventListenerRoot = root;
 
   root.addEventListener('click', async (event) => {
+    const densityCard = event.target.closest('.density-card');
+    if (densityCard && root.contains(densityCard)) {
+      const densityInput = densityCard.querySelector('input[name="ap-density"]');
+      if (densityInput) settingsAppearanceSetDensityCard(root, densityInput.value);
+      return;
+    }
+
     // Skip native form controls — selects/inputs handle their own events via 'change'.
     // Intercepting their click can cause the browser dropdown to close immediately.
     const tag = event.target.tagName;
@@ -1418,11 +1518,21 @@ function setupSettingsEventListeners() {
       return;
     }
 
+    if (event.target.name === 'ap-density') {
+      settingsAppearanceSetDensityCard(root, event.target.value);
+      return;
+    }
+
     if (!actionEl || !root.contains(actionEl)) return;
     const action = actionEl.dataset.action;
 
     if (action === 'settings-permissions-change-role') {
       await settingsPermissionsChangeRole(actionEl.dataset.userId || '', actionEl.value, actionEl.dataset.isLastAdmin === 'true');
+      return;
+    }
+
+    if (action === 'settings-permissions-change-team') {
+      await settingsPermissionsChangeTeam(actionEl.dataset.userId || '', actionEl.value || '');
       return;
     }
 

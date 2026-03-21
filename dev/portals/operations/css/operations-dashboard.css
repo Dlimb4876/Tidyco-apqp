@@ -17,6 +17,41 @@
   align-items: center;
 }
 
+.ops-reporting-date {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-soft);
+}
+
+.ops-reporting-date label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.ops-reporting-date-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ops-reporting-date input[type="date"] {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: 32px;
+  padding: 0 8px;
+  background: var(--white);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
 .ops-tabs {
   display: flex;
   flex-wrap: wrap;

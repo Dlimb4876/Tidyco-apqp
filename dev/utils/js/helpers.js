@@ -3,15 +3,171 @@
 // ═══════════════════════════════════
 
 // ── Permission helpers ─────────────────────────────────────────
-// Returns true if the current user can create, edit, or delete data.
-// Admins and editors can edit; viewers are read-only.
-function canEdit() {
-  return currentUserRole === 'admin' || currentUserRole === 'editor';
+const HYBRID_PERMISSION_DEFINITIONS = [
+  { key: 'portal_hub_view', label: 'Access Hub', group: 'Portal access' },
+  { key: 'portal_projects_view', label: 'Access Projects and APQP pages', group: 'Portal access' },
+  { key: 'portal_capacity_view', label: 'Access Capacity portal', group: 'Portal access' },
+  { key: 'portal_operations_view', label: 'Access Operations portal', group: 'Portal access' },
+  { key: 'portal_production_view', label: 'Access Production portal', group: 'Portal access' },
+  { key: 'portal_product_development_view', label: 'Access Product Development portal', group: 'Portal access' },
+  { key: 'portal_action_centre_view', label: 'Access Action Centre', group: 'Portal access' },
+  { key: 'portal_feedback_view', label: 'Access Feedback portal', group: 'Portal access' },
+  { key: 'portal_mcs_view', label: 'Access Manufacturing Change System', group: 'Portal access' },
+  { key: 'portal_settings_view', label: 'Access Settings portal', group: 'Portal access' },
+  { key: 'feature_view_all_project_data', label: 'View all project data', group: 'Features' },
+  { key: 'feature_edit_projects_tasks_schedules', label: 'Edit projects, tasks and schedules', group: 'Features' },
+  { key: 'feature_add_delete_records', label: 'Add and delete records', group: 'Features' },
+  { key: 'feature_manage_families', label: 'Manage product families', group: 'Features' },
+  { key: 'feature_manage_work_areas', label: 'Manage work areas', group: 'Features' },
+  { key: 'feature_manage_capacity', label: 'Manage capacity planning', group: 'Features' },
+  { key: 'feature_manage_user_roles', label: 'Change user roles and team assignments', group: 'Features' },
+  { key: 'feature_access_settings', label: 'Edit Settings content', group: 'Features' },
+  { key: 'feature_mcs_approve', label: 'Approve or reject manufacturing changes', group: 'Features' },
+  { key: 'field_settings_permissions_edit', label: 'Edit role and team assignment fields', group: 'Field-level' },
+  { key: 'data_scope_global', label: 'Global data scope', group: 'Data scope' }
+];
+
+const LEGACY_TEAM_PERMISSION_MAP = {
+  view_all_project_data: 'feature_view_all_project_data',
+  edit_projects_tasks_schedules: 'feature_edit_projects_tasks_schedules',
+  add_delete_records: 'feature_add_delete_records',
+  manage_families: 'feature_manage_families',
+  manage_work_areas: 'feature_manage_work_areas',
+  manage_capacity: 'feature_manage_capacity',
+  manage_user_roles: 'feature_manage_user_roles',
+  access_settings: 'feature_access_settings'
+};
+
+const SECTION_VIEW_PERMISSION_MAP = {
+  hub: 'portal_hub_view',
+  projects: 'portal_projects_view',
+  project: 'portal_projects_view',
+  apqp: 'portal_projects_view',
+  actions: 'portal_projects_view',
+  risks: 'portal_projects_view',
+  bom: 'portal_projects_view',
+  timing: 'portal_projects_view',
+  documents: 'portal_projects_view',
+  capacity: 'portal_capacity_view',
+  operations: 'portal_operations_view',
+  production: 'portal_production_view',
+  'product-development': 'portal_product_development_view',
+  'action-centre': 'portal_action_centre_view',
+  feedback: 'portal_feedback_view',
+  mcs: 'portal_mcs_view',
+  settings: 'portal_settings_view'
+};
+
+const SECTION_EDIT_PERMISSION_MAP = {
+  settings: 'feature_access_settings',
+  capacity: 'feature_manage_capacity',
+  mcs: 'feature_mcs_approve',
+  project: 'feature_edit_projects_tasks_schedules',
+  apqp: 'feature_edit_projects_tasks_schedules',
+  actions: 'feature_edit_projects_tasks_schedules',
+  risks: 'feature_edit_projects_tasks_schedules',
+  bom: 'feature_edit_projects_tasks_schedules',
+  timing: 'feature_edit_projects_tasks_schedules',
+  documents: 'feature_edit_projects_tasks_schedules'
+};
+
+function getPermissionDefinitions() {
+  return HYBRID_PERMISSION_DEFINITIONS.slice();
 }
 
-// Returns true only for admin users (e.g. role management in Settings).
+function normalizePermissionKey(permissionKey) {
+  if (!permissionKey) return '';
+  return LEGACY_TEAM_PERMISSION_MAP[permissionKey] || permissionKey;
+}
+
+function getRoleBaselinePermissions(role) {
+  const viewer = {
+    portal_hub_view: true,
+    portal_projects_view: true,
+    portal_capacity_view: true,
+    portal_operations_view: true,
+    portal_production_view: true,
+    portal_product_development_view: true,
+    portal_action_centre_view: true,
+    portal_feedback_view: true,
+    portal_mcs_view: true,
+    feature_view_all_project_data: true,
+    data_scope_global: true
+  };
+
+  const editor = {
+    ...viewer,
+    portal_settings_view: true,
+    feature_edit_projects_tasks_schedules: true,
+    feature_add_delete_records: true,
+    feature_manage_families: true,
+    feature_manage_work_areas: true,
+    feature_manage_capacity: true,
+    feature_access_settings: true,
+    feature_mcs_approve: true,
+    field_settings_permissions_edit: true
+  };
+
+  if (role === 'viewer') return viewer;
+  if (role === 'admin') {
+    return {
+      ...editor,
+      feature_manage_user_roles: true
+    };
+  }
+
+  // Default legacy behavior remains editor-capable to avoid lockouts.
+  return editor;
+}
+
+function getEffectivePermissionMap() {
+  const baseline = getRoleBaselinePermissions(typeof currentUserRole === 'undefined' ? null : currentUserRole);
+  const resolved = { ...baseline };
+  const source = (typeof currentUserPermissions === 'object' && currentUserPermissions) ? currentUserPermissions : null;
+  if (!source) return resolved;
+
+  Object.keys(source).forEach((rawKey) => {
+    const key = normalizePermissionKey(rawKey);
+    resolved[key] = !!source[rawKey];
+  });
+
+  return resolved;
+}
+
 function isAdmin() {
-  return currentUserRole === 'admin';
+  return typeof currentUserRole !== 'undefined' && currentUserRole === 'admin';
+}
+
+function hasPermission(permissionKey) {
+  const key = normalizePermissionKey(permissionKey);
+  if (!key) return false;
+  if (isAdmin()) return true;
+  const resolved = getEffectivePermissionMap();
+  return !!resolved[key];
+}
+
+function canViewSection(sectionKey) {
+  const permissionKey = SECTION_VIEW_PERMISSION_MAP[sectionKey];
+  if (!permissionKey) return true;
+  return hasPermission(permissionKey);
+}
+
+// Returns true if the current user can create, edit, or delete data.
+// Backward-compatible: canEdit() with no argument keeps legacy behavior.
+function canEdit(scopeKey = '') {
+  if (!scopeKey) {
+    return (typeof currentUserRole !== 'undefined') && (currentUserRole === 'admin' || currentUserRole === 'editor');
+  }
+
+  if (SECTION_EDIT_PERMISSION_MAP[scopeKey]) {
+    return hasPermission(SECTION_EDIT_PERMISSION_MAP[scopeKey]);
+  }
+
+  if (scopeKey.startsWith('feature_') || scopeKey.startsWith('field_') || scopeKey.startsWith('portal_')) {
+    return hasPermission(scopeKey);
+  }
+
+  return (typeof currentUserRole !== 'undefined') && (currentUserRole === 'admin' || currentUserRole === 'editor');
 }
 
 function esc(s) {

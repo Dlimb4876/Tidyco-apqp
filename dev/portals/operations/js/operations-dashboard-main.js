@@ -78,10 +78,18 @@ function renderOperationsDashboard() {
 			<div class="proj-home-header ops-headline">
 				<div>
 					<div class="proj-home-title">Operations Mission Control</div>
-					<div class="proj-home-sub">Command surface with live operational signals</div>
+					<div class="proj-home-sub">Command surface with live operational signals as of ${esc(metrics.reportingDateLabel)}</div>
 				</div>
 				<div class="ops-headline-actions">
+					<div class="ops-reporting-date">
+						<label for="opsReportingDate">Reporting Date</label>
+						<div class="ops-reporting-date-controls">
+							<input id="opsReportingDate" type="date" value="${esc(metrics.reportingDateIso)}" onchange="opsSetReportingDateAndRefresh(this.value)" />
+							<button class="btn btn-ghost btn-sm" onclick="opsResetReportingDate()">Today</button>
+						</div>
+					</div>
 					<button class="btn btn-ghost btn-sm" onclick="navigate('hub')">← Back to Portal</button>
+					<button class="btn btn-ghost btn-sm" onclick="opsGenerateInfographic()" title="Generate capacity infographic">📊 Infographic</button>
 					<button class="btn btn-ghost btn-sm" onclick="showGuide('operations')" title="User Guide">❓ Guide</button>
 				</div>
 			</div>
@@ -99,6 +107,16 @@ function renderOperationsDashboard() {
 		</div>`;
 }
 
+function opsSetReportingDateAndRefresh(rawIso) {
+	if (typeof opsSetReportingDate === 'function') opsSetReportingDate(rawIso);
+	render();
+}
+
+function opsResetReportingDate() {
+	if (typeof opsSetReportingDate === 'function') opsSetReportingDate('');
+	render();
+}
+
 window.renderOperationsDashboard = renderOperationsDashboard;
 window.setOperationsTab = setOperationsTab;
 window.opsBuildMetrics = opsBuildMetrics;
@@ -113,3 +131,5 @@ window.opsForecastStartInlineEdit = opsForecastStartInlineEdit;
 window.opsForecastCancelInline = opsForecastCancelInline;
 window.opsForecastSaveInline = opsForecastSaveInline;
 window.opsForecastInlineKeydown = opsForecastInlineKeydown;
+window.opsSetReportingDateAndRefresh = opsSetReportingDateAndRefresh;
+window.opsResetReportingDate = opsResetReportingDate;

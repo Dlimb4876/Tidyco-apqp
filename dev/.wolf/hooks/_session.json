@@ -1,66 +1,72 @@
 {
-  "session_id": "session-2026-03-21-1143",
-  "started": "2026-03-21T11:43:30.724Z",
+  "session_id": "session-2026-03-21-1255",
+  "started": "2026-03-21T12:55:35.161Z",
   "files_read": {
     "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/anatomy.md": {
-      "count": 2,
+      "count": 1,
       "tokens": 0,
-      "first_read": "2026-03-21T11:44:15.972Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-chart.js": {
-      "count": 2,
-      "tokens": 5974,
-      "first_read": "2026-03-21T11:45:05.361Z"
+      "first_read": "2026-03-21T12:57:22.533Z"
     },
     "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
-      "count": 1,
-      "tokens": 6973,
-      "first_read": "2026-03-21T11:45:44.240Z"
+      "count": 3,
+      "tokens": 7835,
+      "first_read": "2026-03-21T12:57:23.162Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/prod-capacity-dashboard.js": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/mcs/js/mcs-approval.js": {
+      "count": 1,
+      "tokens": 2181,
+      "first_read": "2026-03-21T12:57:29.272Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/product-management/js/trends-chart.js": {
+      "count": 1,
+      "tokens": 7084,
+      "first_read": "2026-03-21T12:57:30.291Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/supabase/overhaul_history_mcs_columns.sql": {
+      "count": 1,
+      "tokens": 760,
+      "first_read": "2026-03-21T12:57:30.335Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/product-management/js/products-data.js": {
+      "count": 1,
+      "tokens": 4722,
+      "first_read": "2026-03-21T12:57:47.381Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/mcs-overhaul-integration.test.js": {
+      "count": 1,
+      "tokens": 2261,
+      "first_read": "2026-03-21T12:57:47.399Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/mcs/js/mcs-approvers-data.js": {
+      "count": 1,
+      "tokens": 2862,
+      "first_read": "2026-03-21T12:58:13.847Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/buglog.json": {
       "count": 2,
       "tokens": 0,
-      "first_read": "2026-03-21T11:51:09.060Z"
+      "first_read": "2026-03-21T13:07:41.194Z"
     }
   },
   "files_written": [
     {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-chart.js",
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/mcs/js/mcs-approval.js",
       "action": "edit",
-      "tokens": 147,
-      "at": "2026-03-21T11:45:18.780Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-chart.js",
-      "action": "edit",
-      "tokens": 193,
-      "at": "2026-03-21T11:45:37.660Z"
+      "tokens": 47,
+      "at": "2026-03-21T13:07:34.355Z"
     },
     {
       "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
       "action": "edit",
-      "tokens": 115,
-      "at": "2026-03-21T11:45:52.792Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/prod-capacity-dashboard.js",
-      "action": "edit",
-      "tokens": 79,
-      "at": "2026-03-21T11:51:36.940Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
-      "action": "edit",
-      "tokens": 92,
-      "at": "2026-03-21T11:51:43.822Z"
+      "tokens": 86,
+      "at": "2026-03-21T13:08:34.301Z"
     }
   ],
   "edit_counts": {
-    "portals/capacity/js/me-chart.js": 2,
-    "CHANGELOG.md": 2,
-    "portals/capacity/js/prod-capacity-dashboard.js": 1
+    "portals/mcs/js/mcs-approval.js": 1,
+    "CHANGELOG.md": 1
   },
-  "anatomy_hits": 2,
+  "anatomy_hits": 7,
   "anatomy_misses": 2,
   "repeated_reads_warned": 3,
   "cerebrum_warnings": 0,

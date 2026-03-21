@@ -200,6 +200,15 @@
 }
 
 /* ── Compact table density ──────────────────────────────────── */
+body.compact-tables {
+  --table-head-py: 5px;
+  --table-head-px: 8px;
+  --table-cell-py: 3px;
+  --table-cell-px: 6px;
+  --table-cell-font-size: 12px;
+  --table-input-min-h: 24px;
+}
+
 body.compact-tables .prod-tbl td,
 body.compact-tables .prod-tbl th {
   padding: 4px 10px;

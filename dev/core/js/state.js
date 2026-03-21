@@ -4,6 +4,8 @@
 
 let db = { projects: [] };
 let currentUserRole = null; // 'admin' | 'editor' | 'viewer' — loaded from profiles after login
+let currentUserPermissions = {}; // Effective permissions resolved at login (role baseline + team grants)
+let currentUserTeams = []; // Team IDs assigned to the current user (single-team today, multi-team ready)
 let progId = null;
 let currentSection = 'hub';
 let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
@@ -105,7 +107,11 @@ let mcsCurrentFilter = {
   status: 'all',                                   // all | open | review | implementing | final_review | implemented | closed
   priority: 'all',                                 // all | critical | high | medium | low
   type: 'all',                                     // all | Engineering | Process | Material | Tooling | Quality | Safety
-  source: 'all'                                    // all | Manual | PFMEA | Risk | Customer | Quality | Supply Chain
+  source: 'all',                                   // all | Manual | PFMEA | Risk | Customer | Quality | Supply Chain
+  myChanges: false,                                // true = show only changes initiated by current user
+  overdueOnly: false,                              // true = show only overdue open changes
+  highPriority: false,                             // true = show only critical + high priority
+  dateRange: 'all'                                 // all | today | week | month | quarter
 };
 let mcsViewingId = null;                           // ECR ID currently in view modal
 let mcsEditingId = null;                           // ECR ID currently being edited

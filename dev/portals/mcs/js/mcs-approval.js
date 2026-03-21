@@ -200,7 +200,7 @@ async function mcsCreateOverhaulHistoryEntry(change) {
         change_reason: `MCO: ${change.change_type} - ${change.title}`,
         notes: change.justification || '',
         created_by_name: change.initiated_by || 'MCO System',
-        user_id: change.initiated_by_user_id,
+        user_id: (currentUser && currentUser.id) || null,
         created_at: new Date().toISOString()
       }]);
 
