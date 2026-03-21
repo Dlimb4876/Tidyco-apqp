@@ -328,6 +328,19 @@ function setApqpTab(t) {
   render();
 }
 
+function renderAccessDenied(sectionKey) {
+  const label = SECTION_LABELS[sectionKey] || sectionKey || 'this section';
+  return `
+    <div class="section-inner">
+      <div class="card" style="padding:20px;max-width:760px;margin:20px auto">
+        <h2 style="margin-top:0">Access denied</h2>
+        <p>You do not currently have permission to view ${esc(label)}.</p>
+        <p style="color:var(--muted);font-size:13px">Ask an admin to update your role or team grants in Settings.</p>
+      </div>
+    </div>
+  `;
+}
+
 /**
  * Main UI render switchboard - clears and repaints #mainContent
  * Routes to appropriate render function based on currentSection
@@ -340,6 +353,11 @@ function setApqpTab(t) {
  */
 function render() {
   const mc = document.getElementById('mainContent');
+  if (typeof canViewSection === 'function' && !canViewSection(currentSection)) {
+    mc.innerHTML = renderAccessDenied(currentSection);
+    return;
+  }
+
   if (currentSection === 'projects') { mc.innerHTML = npi.dashboard.renderProjects(); return; }
   if (currentSection === 'product-development') {
     mc.innerHTML = `<div class="section-inner">${renderProductDevelopment()}</div>`;

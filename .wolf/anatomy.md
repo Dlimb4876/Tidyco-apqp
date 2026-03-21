@@ -1,13 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T12:10:22.425Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T13:08:34.213Z
 > Files: 265 tracked | Anatomy hits: 0 | Misses: 0
-
-## Session Notes
-
-- 2026-03-21: Settings row density cards now update checked and selected state immediately on click/change, fixing compact option selection UX.
-- 2026-03-21: Settings row density now applies globally to shared .tbl tables by overriding compact table spacing variables.
-- 2026-03-21: Operations Mission Control reporting date selector added and wired into date-sensitive KPI calculations.
 
 ## ./
 
@@ -15,7 +9,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~7445 tok)
+- `CHANGELOG.md` — Changelog (~8005 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~490 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -112,6 +106,9 @@
 
 - `QWEN.md` — Qwen Assistant Guide for Tidyco APQP Project (~1441 tok)
 
+## Session Notes
+
+
 ## core/css/
 
 - `components.css` — Styles: 85 rules (~5686 tok)
@@ -123,7 +120,7 @@
 - `auth.js` — ═══════════════════════════════════ (~725 tok)
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~697 tok)
 - `db.js` — ═══════════════════════════════════ (~8342 tok)
-- `state.js` — ═══════════════════════════════════ (~4311 tok)
+- `state.js` — ═══════════════════════════════════ (~4422 tok)
 
 ## docs/
 
@@ -237,15 +234,15 @@
 
 ## portals/mcs/css/
 
-- `mcs-responsive.css` — Styles: 7 rules, 7 media queries (~1865 tok)
-- `mcs.css` — Styles: 86 rules, 6 vars (~5807 tok)
+- `mcs-responsive.css` — Styles: 8 rules (~1919 tok)
+- `mcs.css` — Styles: 86 rules, 6 vars (~7129 tok)
 
 ## portals/mcs/js/
 
 - `mcs-actions.js` — MCS Integration with Action Centre (~911 tok)
-- `mcs-approval.js` — MCS Approval Workflow (~2181 tok)
+- `mcs-approval.js` — MCS Approval Workflow (~2184 tok)
 - `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~2862 tok)
-- `mcs-main.js` — MCS (Manufacturing Change System) - Main Portal (~4522 tok)
+- `mcs-main.js` — MCS (Manufacturing Change System) - Main Portal (~7310 tok)
 - `mcs-modal.js` — MCS Modal Handlers - Create, Edit, View (~11149 tok)
 - `mcs-pfmea.js` — MCS Integration with PFMEA History (~1134 tok)
 - `mcs-realtime.js` — MCS Real-time Subscriptions (~1278 tok)

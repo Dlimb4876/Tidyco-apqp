@@ -5,6 +5,12 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-21 | Fix MCS Approval 2 overhaul history insert: user_id not-null violation | mcsCreateOverhaulHistoryEntry passed change.initiated_by_user_id (undefined → null) but overhaul_history.user_id is NOT NULL; replaced with currentUser.id
+
+## 2026-03-21 | Start hybrid permissions implementation (role baseline + team grants) | Replaces disconnected permissions behavior with working effective access resolution: login now composes role baseline with additive team grants, navigation denies unauthorized sections, Settings Permissions now supports team assignment, team permission toggles can create missing rows, and seed SQL added for normalized role/permission tables
+
+## 2026-03-21 | MCS layout improvement: KPI bar, accordion sidebar, card redesign, new filters | Plan MCS_LAYOUT_IMPROVEMENT_PLAN.md — Phases 1–6: added clickable KPI dashboard, collapsible accordion sidebar sections, priority badge replacing dot, icon-annotated card submeta, overdue date highlighting, My Changes/Overdue/High Priority quick filters, date range filter, clear all filters, compact approval chain, wider modal (900px), all hardcoded status/priority hex colors replaced with CSS variables
+
 ## 2026-03-21 | Fix compact row selection in Settings Appearance | Density cards had no interaction handler feedback, making compact appear unselectable; card click/change now updates checked state and selected styling immediately
 
 ## 2026-03-21 | Fix Settings row density not affecting most tables | Compact density only targeted .prod-tbl so standard .tbl rows were unchanged; compact mode now updates shared table spacing variables

@@ -8,6 +8,52 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const supa     = supabase.createClient(SUPA_URL, SUPA_KEY);
 let   currentUser = null;
 
+async function authLoadEffectivePermissions(userId, roleSlug) {
+  const baseline = typeof getRoleBaselinePermissions === 'function'
+    ? getRoleBaselinePermissions(roleSlug)
+    : {};
+  const resolved = { ...baseline };
+  const assignedTeamIds = [];
+
+  try {
+    const { data: memberships, error: membershipsError } = await supa
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', userId);
+
+    if (!membershipsError && Array.isArray(memberships) && memberships.length > 0) {
+      memberships
+        .map((row) => row.team_id)
+        .filter(Boolean)
+        .forEach((teamId) => {
+          if (!assignedTeamIds.includes(teamId)) assignedTeamIds.push(teamId);
+        });
+    }
+
+    if (assignedTeamIds.length > 0) {
+      const { data: grants, error: grantsError } = await supa
+        .from('team_permissions')
+        .select('permission, allowed')
+        .in('team_id', assignedTeamIds)
+        .eq('allowed', true);
+
+      if (!grantsError && Array.isArray(grants)) {
+        grants.forEach((grant) => {
+          const key = typeof normalizePermissionKey === 'function'
+            ? normalizePermissionKey(grant.permission)
+            : grant.permission;
+          if (key) resolved[key] = true;
+        });
+      }
+    }
+  } catch (_) {
+    // Keep baseline-only permissions if team tables are not yet available.
+  }
+
+  if (typeof currentUserPermissions !== 'undefined') currentUserPermissions = resolved;
+  if (typeof currentUserTeams !== 'undefined') currentUserTeams = assignedTeamIds;
+}
+
 async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -32,6 +78,8 @@ async function doLogin() {
   } catch (_) {
     currentUserRole = 'editor';
   }
+
+  await authLoadEffectivePermissions(data.user.id, currentUserRole);
   launchApp();
 }
 
@@ -43,6 +91,8 @@ function showLoginErr(msg) {
 async function doLogout() {
   currentUser = null;     // set null before signOut so onAuthStateChange guard doesn't re-enter
   currentUserRole = null;
+  if (typeof currentUserPermissions !== 'undefined') currentUserPermissions = {};
+  if (typeof currentUserTeams !== 'undefined') currentUserTeams = [];
   await supa.auth.signOut();
   db = { projects: [] }; progId = null;
   document.getElementById('appShell').style.display   = 'none';

@@ -3,6 +3,10 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+| 2026-03-21 | Started hybrid permissions implementation (role baseline + team grants) | core/js/state.js, core/js/auth.js, utils/js/helpers.js, utils/js/navigation.js, portals/settings/js/settings.js, portals/settings/js/teams-data.js, supabase/hybrid_permissions_role_team_grants.sql, tests/permissions-helpers.test.js, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Added effective permission resolution at login, section access guard rendering, team assignment in Settings permissions table, normalized permission definitions in team editor, and migration/test scaffolding | ~1800 tok |
+
+| 12:50 | Executed MCS_LAYOUT_IMPROVEMENT_PLAN.md (all 6 phases) | state.js, portals/mcs/css/mcs.css, portals/mcs/css/mcs-responsive.css, portals/mcs/js/mcs-main.js | success — 83 MCS tests pass | ~12k |
+
 | 2026-03-21 | Add reporting date changer to Operations Mission Control | portals/operations/js/operations-dashboard-state.js, portals/operations/js/operations-dashboard-metrics.js, portals/operations/js/operations-dashboard-main.js, portals/operations/js/operations-dashboard-render-core.js, portals/operations/css/operations-dashboard.css, tests/operations-dashboard.test.js, CHANGELOG.md, .wolf/buglog.json | Added selectable reporting date and as-of labels so dashboard metrics clearly show snapshot context and can be shifted by date | ~950 tok |
 
 | 2026-03-21 | Fix Settings table row density behavior | portals/settings/css/settings.css, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Compact row density now updates shared table spacing variables so standard .tbl rows visibly tighten across pages | ~180 tok |
@@ -303,3 +307,36 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 12:42
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:45 | Edited core/js/state.js | 6→10 lines | ~249 |
+| 12:46 | Edited portals/mcs/css/mcs.css | 9→9 lines | ~78 |
+| 12:46 | Edited portals/mcs/css/mcs.css | CSS: flex-direction | ~81 |
+| 12:46 | Edited portals/mcs/css/mcs.css | expanded (+22 lines) | ~262 |
+| 12:46 | Edited portals/mcs/css/mcs.css | expanded (+7 lines) | ~174 |
+| 12:46 | Edited portals/mcs/css/mcs.css | CSS: font-weight | ~57 |
+| 12:46 | Edited portals/mcs/css/mcs.css | expanded (+11 lines) | ~219 |
+| 12:46 | Edited portals/mcs/css/mcs.css | 6→6 lines | ~46 |
+| 12:46 | Edited portals/mcs/css/mcs.css | 12→12 lines | ~97 |
+| 12:47 | Edited portals/mcs/css/mcs.css | 11→11 lines | ~82 |
+| 12:47 | Edited portals/mcs/css/mcs.css | 11→11 lines | ~72 |
+| 12:47 | Edited portals/mcs/css/mcs.css | expanded (+165 lines) | ~961 |
+| 12:48 | Edited portals/mcs/js/mcs-main.js | expanded (+77 lines) | ~2621 |
+| 12:48 | Edited portals/mcs/js/mcs-main.js | added 4 condition(s) | ~524 |
+| 12:48 | Edited portals/mcs/js/mcs-main.js | added 13 condition(s) | ~823 |
+| 12:49 | Edited portals/mcs/js/mcs-main.js | expanded (+18 lines) | ~521 |
+| 12:49 | Edited portals/mcs/js/mcs-main.js | added 11 condition(s) | ~914 |
+| 12:49 | Edited portals/mcs/css/mcs-responsive.css | CSS: flex-wrap | ~54 |
+| 12:49 | Edited portals/mcs/css/mcs-responsive.css | modified media() | ~157 |
+| 12:49 | Edited portals/mcs/css/mcs-responsive.css | modified media() | ~66 |
+| 12:50 | Edited CHANGELOG.md | 1→3 lines | ~196 |
+
+## Session: 2026-03-21 12:55
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 13:07 | Edited portals/mcs/js/mcs-approval.js | 3→3 lines | ~47 |
+| 13:08 | Edited CHANGELOG.md | 1→3 lines | ~80 |

@@ -1,12 +1,74 @@
 {
-  "session_id": "session-2026-03-21-1235",
-  "started": "2026-03-21T12:35:06.624Z",
-  "files_read": {},
-  "files_written": [],
-  "edit_counts": {},
-  "anatomy_hits": 0,
-  "anatomy_misses": 0,
-  "repeated_reads_warned": 0,
+  "session_id": "session-2026-03-21-1255",
+  "started": "2026-03-21T12:55:35.161Z",
+  "files_read": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/anatomy.md": {
+      "count": 1,
+      "tokens": 0,
+      "first_read": "2026-03-21T12:57:22.533Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
+      "count": 3,
+      "tokens": 7835,
+      "first_read": "2026-03-21T12:57:23.162Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/mcs/js/mcs-approval.js": {
+      "count": 1,
+      "tokens": 2181,
+      "first_read": "2026-03-21T12:57:29.272Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/product-management/js/trends-chart.js": {
+      "count": 1,
+      "tokens": 7084,
+      "first_read": "2026-03-21T12:57:30.291Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/supabase/overhaul_history_mcs_columns.sql": {
+      "count": 1,
+      "tokens": 760,
+      "first_read": "2026-03-21T12:57:30.335Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/product-management/js/products-data.js": {
+      "count": 1,
+      "tokens": 4722,
+      "first_read": "2026-03-21T12:57:47.381Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/mcs-overhaul-integration.test.js": {
+      "count": 1,
+      "tokens": 2261,
+      "first_read": "2026-03-21T12:57:47.399Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/mcs/js/mcs-approvers-data.js": {
+      "count": 1,
+      "tokens": 2862,
+      "first_read": "2026-03-21T12:58:13.847Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/buglog.json": {
+      "count": 2,
+      "tokens": 0,
+      "first_read": "2026-03-21T13:07:41.194Z"
+    }
+  },
+  "files_written": [
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/mcs/js/mcs-approval.js",
+      "action": "edit",
+      "tokens": 47,
+      "at": "2026-03-21T13:07:34.355Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
+      "action": "edit",
+      "tokens": 86,
+      "at": "2026-03-21T13:08:34.301Z"
+    }
+  ],
+  "edit_counts": {
+    "portals/mcs/js/mcs-approval.js": 1,
+    "CHANGELOG.md": 1
+  },
+  "anatomy_hits": 7,
+  "anatomy_misses": 2,
+  "repeated_reads_warned": 3,
   "cerebrum_warnings": 0,
   "stop_count": 0
 }
