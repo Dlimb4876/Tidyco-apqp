@@ -28,7 +28,6 @@ Run in this order when needed:
 3. `npm run check:all`
 
 ## Changelog
-- Read `CHANGELOG.md` before starting a task.
 - After each logical change, add a single entry near the top using:
   `## YYYY-MM-DD | Short title | Reason`
 
