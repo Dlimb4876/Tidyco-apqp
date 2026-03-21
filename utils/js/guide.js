@@ -749,6 +749,20 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">Forecast</div>
         <p>Forward-looking entries manually added in this view (not pulled from other portals). Use to record agreed commercial forecasts, delivery commitments, or outlook notes.</p>
       </div>
+      <div class="guide-section">
+        <div class="guide-section-title">How System Health % is calculated</div>
+        <p>The headline <strong>System Health %</strong> score is the average of seven signals, each scored from 0 to 100:</p>
+        <ul class="guide-list">
+          <li><strong>Overdue Actions</strong> — starts at 100, minus 10 for every overdue action (floor 0).</li>
+          <li><strong>High RPN Causes</strong> — starts at 100, minus 2 for every PFMEA cause with an RPN of 100 or above (floor 0).</li>
+          <li><strong>Gate Completion</strong> — the percentage of gate checks ticked across all active NPI projects.</li>
+          <li><strong>Open Bugs</strong> — starts at 100, minus 4 for every open bug report (floor 0).</li>
+          <li><strong>ME Capacity</strong> — 100 when utilisation is 85% or under; each percentage point above 85% deducts 2 points. Shows 70 if capacity data has not yet been loaded.</li>
+          <li><strong>Production Completion</strong> — the percentage of tracked production batches that have been completed.</li>
+          <li><strong>Forecast Utilisation</strong> — same formula as ME Capacity, applied to the 24-month weighted forecast load. Shows 70 if forecast data is not yet ready.</li>
+        </ul>
+        <p>The seven scores are added together and divided by seven (rounded). Colour bands: <strong>85% and above</strong> = green (good), <strong>65–84%</strong> = amber (watch), <strong>below 65%</strong> = red (critical).</p>
+      </div>
     `
   },
 

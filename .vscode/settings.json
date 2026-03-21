@@ -24,5 +24,6 @@
             "path": "pwsh",
             "icon": "terminal-powershell"
         }
-    }
+    },
+    "claudeCode.allowDangerouslySkipPermissions": true
 }

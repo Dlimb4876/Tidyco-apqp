@@ -14,6 +14,7 @@ let opsForecastSortDir = 'asc';
 let opsForecastFilterStatus = '';
 let opsForecastFilterText = '';
 let opsPendingRealTimeUpdate = false;
+let opsReportingDateIso = '';
 
 function opsForecastDomKey(id) {
 	return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_');

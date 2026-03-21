@@ -5,6 +5,20 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-21 | Fix compact row selection in Settings Appearance | Density cards had no interaction handler feedback, making compact appear unselectable; card click/change now updates checked state and selected styling immediately
+
+## 2026-03-21 | Fix Settings row density not affecting most tables | Compact density only targeted .prod-tbl so standard .tbl rows were unchanged; compact mode now updates shared table spacing variables
+
+## 2026-03-21 | Add reporting date changer to Operations Mission Control | Dashboard now makes the data snapshot date explicit and lets users shift the as-of date for clearer interpretation
+
+## 2026-03-21 | Add System Health % explanation to Operations guide modal | User asked how the score is calculated — added a plain-language breakdown of all seven signals and colour thresholds
+
+## 2026-03-21 | Add Unit 2/3/6 cards to Operations People tab | People view now mirrors ME/PM capacity pattern with utilisation and headroom cards for Operations Units 2, 3, and 6
+
+## 2026-03-21 | Add capacity infographic generator to Operations dashboard | User requested a printable visual summary of all capacity data (ME, PM, production units, flow, risk) via a new 📊 Infographic button
+
+## 2026-03-21 | Add Unit 2/3/6 capacity KPIs to operations overview | Operations dashboard overview now shows per-unit utilisation and headroom using production capacity demand/supply matrices
+
 ## 2026-03-21 | Deduplicate domain rule docs for lower token usage | Compressed agents/code-style/security/database rules by removing repeated core policy text and keeping canonical owner pointers
 
 ## 2026-03-21 | Compress core instruction files for lower token overhead | Reduced CLAUDE.md and copilot-instructions.md to router-style guardrails with pointers to scoped rule owners
@@ -181,3 +195,7 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
    (blank line)
 3. Most recent entry always goes at the top, just below the dashes
 -->
+
+## 2026-03-21 | Fix misleading 0% coverage output in check:coverage | Coverage script now detects empty Jest coverage artifacts and reports coverage as unavailable instead of implying real 0% source coverage
+
+## 2026-03-21 | Split Operations unit cards into separate boxes in People and Infographic views | Unit 2, Unit 3, and Unit 6 are now rendered as individual cards/panels for clearer side-by-side comparison

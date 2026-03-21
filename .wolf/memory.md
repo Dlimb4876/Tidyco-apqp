@@ -3,6 +3,12 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+| 2026-03-21 | Add reporting date changer to Operations Mission Control | portals/operations/js/operations-dashboard-state.js, portals/operations/js/operations-dashboard-metrics.js, portals/operations/js/operations-dashboard-main.js, portals/operations/js/operations-dashboard-render-core.js, portals/operations/css/operations-dashboard.css, tests/operations-dashboard.test.js, CHANGELOG.md, .wolf/buglog.json | Added selectable reporting date and as-of labels so dashboard metrics clearly show snapshot context and can be shifted by date | ~950 tok |
+
+| 2026-03-21 | Fix Settings table row density behavior | portals/settings/css/settings.css, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Compact row density now updates shared table spacing variables so standard .tbl rows visibly tighten across pages | ~180 tok |
+
+| 2026-03-21 | Fix compact row selection UX in Appearance | portals/settings/js/settings.js, tests/settings-portal.test.js, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Density cards now set checked and selected state immediately on click/change so compact is clearly selectable | ~220 tok |
+
 | 2026-03-21 | Stage 2 domain-rule deduplication | .claude/rules/agents.md, .claude/rules/code-style.md, .claude/rules/security.md, .claude/rules/database.md, CHANGELOG.md, .wolf/anatomy.md | Removed repeated core policy text from domain docs and retained canonical owner pointers to cut instruction payload | ~1200 tok |
 
 | 2026-03-21 | Stage 1 instruction compression | CLAUDE.md, .github/copilot-instructions.md, CHANGELOG.md, .wolf/anatomy.md | Reduced always-on instruction payload by converting duplicated guidance into compact router-style guardrails with scoped references | ~900 tok |
@@ -218,6 +224,7 @@
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
 | 11:17 | Edited core/css/main.css | expanded (+80 lines) | ~1032 |
+| 12:08 | Finished Operations People tab parity for Unit 2/3/6 | portals/operations/js/operations-dashboard-render-core.js, tests/operations-dashboard.test.js, CHANGELOG.md, .wolf/buglog.json | Added unit utilisation/headroom cards in People view and passing regression test coverage | ~320 |
 | 11:17 | Edited portals/settings/css/settings.css | expanded (+35 lines) | ~236 |
 | 11:17 | Edited portals/settings/js/settings.js | modified settingsApplyAppearance() | ~152 |
 | 11:18 | Edited portals/settings/js/settings.js | modified settingsAppearanceSetTheme() | ~80 |
@@ -247,3 +254,52 @@
 | 11:45 | Edited CHANGELOG.md | 4→8 lines | ~108 |
 | 11:51 | Edited portals/capacity/js/prod-capacity-dashboard.js | 8→9 lines | ~79 |
 | 11:51 | Edited CHANGELOG.md | 1→3 lines | ~86 |
+
+## Session: 2026-03-21 11:57
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 12:00
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 12:00
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:03 | Edited portals/operations/js/operations-dashboard-render-core.js | removed 36 lines | ~21 |
+| 12:03 | Created portals/operations/js/operations-infographic.js | — | ~2283 |
+| 12:04 | Edited portals/operations/js/operations-dashboard-main.js | 4→5 lines | ~113 |
+| 12:04 | Edited index.html | 2→3 lines | ~63 |
+| 12:04 | Edited CHANGELOG.md | 1→3 lines | ~75 |
+| 12:15 | Split Operations units into one-box-per-unit layout in People + Infographic | portals/operations/js/operations-dashboard-render-core.js, portals/operations/js/operations-infographic.js, tests/operations-dashboard.test.js, CHANGELOG.md, .wolf/cerebrum.md, .wolf/buglog.json | Unit 2/3/6 now render as separate boxes; targeted operations suite still passes | ~360 |
+| 12:22 | Fixed misleading 0% coverage output in check:coverage | scripts/test-coverage-reporter.js, CHANGELOG.md, .wolf/buglog.json, .wolf/cerebrum.md | Reporter now prints explicit coverage-unavailable status when coverage map is empty; check:coverage and check:all pass | ~280 |
+
+## Session: 2026-03-21 12:08
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 12:09
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:10 | Edited utils/js/guide.js | expanded (+14 lines) | ~518 |
+| 12:10 | Edited CHANGELOG.md | 1→3 lines | ~68 |
+
+## Session: 2026-03-21 12:14
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 12:35
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 12:35
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

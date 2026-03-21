@@ -63,6 +63,17 @@ function settingsAppearanceSetTheme(theme) {
   settingsApplyAppearance();
 }
 
+function settingsAppearanceSetDensityCard(root, density) {
+  if (!root) return;
+  root
+    .querySelectorAll('.density-card')
+    .forEach((card) => card.classList.remove('selected'));
+  const next = root.querySelector(`.density-card input[name="ap-density"][value="${density}"]`);
+  if (!next) return;
+  next.checked = true;
+  next.closest('.density-card')?.classList.add('selected');
+}
+
 settingsApplyAppearance();
 
 // ── Main settings page render ──────────────────────────────────
@@ -1311,6 +1322,13 @@ function setupSettingsEventListeners() {
   settingsEventListenerRoot = root;
 
   root.addEventListener('click', async (event) => {
+    const densityCard = event.target.closest('.density-card');
+    if (densityCard && root.contains(densityCard)) {
+      const densityInput = densityCard.querySelector('input[name="ap-density"]');
+      if (densityInput) settingsAppearanceSetDensityCard(root, densityInput.value);
+      return;
+    }
+
     // Skip native form controls — selects/inputs handle their own events via 'change'.
     // Intercepting their click can cause the browser dropdown to close immediately.
     const tag = event.target.tagName;
@@ -1415,6 +1433,11 @@ function setupSettingsEventListeners() {
         .querySelectorAll('.appearance-theme-card')
         .forEach((card) => card.classList.remove('selected'));
       event.target.closest('.appearance-theme-card')?.classList.add('selected');
+      return;
+    }
+
+    if (event.target.name === 'ap-density') {
+      settingsAppearanceSetDensityCard(root, event.target.value);
       return;
     }
 

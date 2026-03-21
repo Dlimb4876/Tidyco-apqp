@@ -687,6 +687,26 @@ describe('settingsLoadAppearancePrefs() / settingsSaveAppearancePrefs()', () => 
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(document.body.classList.contains('theme-dark')).toBe(true);
   });
+
+  it('selects compact density card on click', () => {
+    document.getElementById('settingsAppearanceTab')?.remove();
+    document.getElementById('settingsPortalRoot')?.remove();
+
+    const root = document.body.appendChild(document.createElement('div'));
+    root.id = 'settingsPortalRoot';
+    root.innerHTML = renderSettings(); // eslint-disable-line no-undef
+    setupSettingsEventListeners(); // eslint-disable-line no-undef
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+
+    const compactCard = root.querySelector('.density-card input[name="ap-density"][value="compact"]')?.closest('.density-card');
+    expect(compactCard).toBeTruthy();
+
+    compactCard.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    const checked = root.querySelector('input[name="ap-density"]:checked');
+    expect(checked?.value).toBe('compact');
+    expect(compactCard.classList.contains('selected')).toBe(true);
+  });
 });
 
 describe('renderSettingsAboutTab()', () => {

@@ -112,6 +112,7 @@ describe('Operations Dashboard', () => {
     capacityTab = 'root';
     productDevelopmentTab = 'root';
     window.location.hash = '';
+    if (typeof opsSetReportingDate === 'function') opsSetReportingDate('');
   });
 
   test('setOperationsTab updates hash and section tab state', () => {
@@ -187,6 +188,70 @@ describe('Operations Dashboard', () => {
     expect(metrics.me.utilisation).toBe(75);
     expect(metrics.production.total).toBe(2);
     expect(metrics.production.completed).toBe(1);
+  });
+
+  test('reporting date controls overdue action calculations', () => {
+    db.projects = [{
+      id: 'prog-date-1',
+      product_id: 'prod-npi-1',
+      status: 'Active',
+      gates: [],
+      actions: [
+        { status: 'Open', due: '2026-01-01' },
+        { status: 'Open', due: '2026-01-02' }
+      ],
+      risks: [],
+      pfmea: []
+    }];
+
+    productsState.products = [{ id: 'prod-npi-1', status: 'NPI' }];
+    feedbackDataManager.state.feedback = [];
+
+    meDataState = { team: [], tasks: [], products: [], holidays: [] };
+    global.meFilterByDepartment = (arr) => arr;
+    global.meCalculateMonthData = jest.fn().mockReturnValue({
+      capacity: 100,
+      totalDemand: 50,
+      utilisation: 50
+    });
+
+    opsSetReportingDate('2026-01-01');
+    const metrics = opsBuildMetrics();
+
+    expect(metrics.reportingDateIso).toBe('2026-01-01');
+    expect(metrics.actions.totalOpen).toBe(2);
+    expect(metrics.actions.overdue).toBe(0);
+  });
+
+  test('reporting date month key drives unit capacity snapshot month', () => {
+    opsSetReportingDate('2027-03-15');
+
+    global.prodCapGet24MonthKeys = jest.fn().mockReturnValue(['2027-03']);
+    global.prodCapGetWorkAreas = jest.fn().mockReturnValue(['Unit 2', 'Unit 3', 'Unit 6']);
+    global.prodCapCalcDemandMatrix = jest.fn().mockReturnValue({
+      '2027-03': {
+        'Unit 2': 110,
+        'Unit 3': 55,
+        'Unit 6': 44
+      }
+    });
+    global.prodCapCalcSupplyMatrix = jest.fn().mockReturnValue({
+      '2027-03': {
+        'Unit 2': 100,
+        'Unit 3': 110,
+        'Unit 6': 88
+      }
+    });
+    global.prodCapUtil = jest.fn((demand, supply) => Math.round((demand / supply) * 100));
+
+    const metrics = opsBuildMetrics();
+
+    expect(metrics.reportingMonthKey).toBe('2027-03');
+    expect(metrics.operationsUnits[0].workArea).toBe('Unit 2');
+    expect(metrics.operationsUnits[0].utilisation).toBe(110);
+    expect(metrics.operationsUnits[0].headroom).toBe(-10);
+    expect(metrics.operationsUnits[1].utilisation).toBe(50);
+    expect(metrics.operationsUnits[2].utilisation).toBe(50);
   });
 
   test('dependency-injected metric functions prefer provided data over globals', () => {
@@ -425,6 +490,84 @@ describe('Operations Dashboard', () => {
 
     saveSpy.mockRestore();
     cancelSpy.mockRestore();
+  });
+
+  test('overview includes Unit 2/3/6 operations capacity KPIs', () => {
+    const monthKey = opsCurrentMonthKey();
+
+    global.prodCapGet24MonthKeys = jest.fn().mockReturnValue([monthKey]);
+    global.prodCapGetWorkAreas = jest.fn().mockReturnValue(['Unit 2', 'Unit 3', 'Unit 6']);
+    global.prodCapCalcDemandMatrix = jest.fn().mockReturnValue({
+      [monthKey]: {
+        'Unit 2': 80,
+        'Unit 3': 50,
+        'Unit 6': 120
+      }
+    });
+    global.prodCapCalcSupplyMatrix = jest.fn().mockReturnValue({
+      [monthKey]: {
+        'Unit 2': 100,
+        'Unit 3': 100,
+        'Unit 6': 100
+      }
+    });
+    global.prodCapUtil = jest.fn((demand, supply) => Math.round((demand / supply) * 100));
+
+    currentSection = 'operations';
+    operationsTab = 'overview';
+
+    const html = renderOperationsDashboard();
+
+    expect(html).toContain('Operations Capacity by Unit');
+    expect(html).toContain('Unit 2 Utilisation');
+    expect(html).toContain('Unit 3 Utilisation');
+    expect(html).toContain('Unit 6 Utilisation');
+    expect(html).toContain('80%');
+    expect(html).toContain('50%');
+    expect(html).toContain('120%');
+    expect(html).toContain('100h capacity / 80h demand (20h headroom)');
+    expect(html).toContain('100h capacity / 120h demand (-20h headroom)');
+  });
+
+  test('people tab includes Unit 2/3/6 utilisation and headroom cards', () => {
+    const monthKey = opsCurrentMonthKey();
+
+    global.prodCapGet24MonthKeys = jest.fn().mockReturnValue([monthKey]);
+    global.prodCapGetWorkAreas = jest.fn().mockReturnValue(['Unit 2', 'Unit 3', 'Unit 6']);
+    global.prodCapCalcDemandMatrix = jest.fn().mockReturnValue({
+      [monthKey]: {
+        'Unit 2': 80,
+        'Unit 3': 50,
+        'Unit 6': 120
+      }
+    });
+    global.prodCapCalcSupplyMatrix = jest.fn().mockReturnValue({
+      [monthKey]: {
+        'Unit 2': 100,
+        'Unit 3': 100,
+        'Unit 6': 100
+      }
+    });
+    global.prodCapUtil = jest.fn((demand, supply) => Math.round((demand / supply) * 100));
+
+    currentSection = 'operations';
+    operationsTab = 'people';
+
+    const html = renderOperationsDashboard();
+
+    expect(html).toContain('Unit 2 Load');
+    expect(html).toContain('Unit 3 Load');
+    expect(html).toContain('Unit 6 Load');
+    expect(html).toContain('Unit 2 Utilisation');
+    expect(html).toContain('Unit 3 Utilisation');
+    expect(html).toContain('Unit 6 Utilisation');
+    expect(html).toContain('Unit 2 Headroom');
+    expect(html).toContain('Unit 3 Headroom');
+    expect(html).toContain('Unit 6 Headroom');
+    expect(html).toContain('100h capacity / 80h demand');
+    expect(html).toContain('100h capacity / 120h demand');
+    expect(html).toContain('20h');
+    expect(html).toContain('-20h');
   });
 
   test('overview metric cards use delegated data-action attributes', () => {
