@@ -582,4 +582,23 @@ describe('Operations Dashboard', () => {
     expect(html).not.toMatch(/<article class="ops-metric[^>]*onclick=/);
   });
 
+  test('operations header and tabs use delegated actions (no inline handlers)', () => {
+    currentSection = 'operations';
+    operationsTab = 'overview';
+
+    const html = renderOperationsDashboard();
+
+    expect(html).toContain('id="opsReportingDate"');
+    expect(html).toContain('data-action="ops-set-reporting-date"');
+    expect(html).toContain('data-action="ops-reset-reporting-date"');
+    expect(html).toContain('data-action="ops-nav-hub"');
+    expect(html).toContain('data-action="ops-generate-infographic"');
+    expect(html).toContain('data-action="ops-show-guide"');
+    expect(html).toContain('data-action="ops-set-tab" data-tab="overview"');
+    expect(html).toContain('data-action="ops-set-tab" data-tab="forecast"');
+
+    expect(html).not.toMatch(/id="opsReportingDate"[^>]*onchange=/);
+    expect(html).not.toMatch(/class="ops-tab[^>]*onclick=/);
+  });
+
 });

@@ -264,10 +264,47 @@ function isInputFocused() {
 }
 
 document.addEventListener('keydown', function(e) {
+  const key = String(e.key || '').toLowerCase();
+  const hasModifier = !!(e.ctrlKey || e.metaKey);
+
   if ((e.key === '?' && !isInputFocused()) ||
-      (e.ctrlKey && e.key === '/')) {
+      (hasModifier && key === '/')) {
     e.preventDefault();
     showModal('shortcutsModal');
+    return;
+  }
+
+  // Save current work when supported by the active screen.
+  if (hasModifier && key === 's') {
+    e.preventDefault();
+    if (typeof save === 'function') {
+      save();
+    } else {
+      document.dispatchEvent(new CustomEvent('app:save'));
+    }
+    return;
+  }
+
+  // Focus the most relevant search input in the current view.
+  if (hasModifier && key === 'f') {
+    const search = document.querySelector(
+      'input[type="search"], input[id*="search" i], input[name*="search" i], input[placeholder*="search" i], .search-input'
+    );
+    if (search) {
+      e.preventDefault();
+      search.focus();
+      if (typeof search.select === 'function') search.select();
+    }
+    return;
+  }
+
+  // Close any visible modal with Escape.
+  if (key === 'escape') {
+    const openModal = document.querySelector('.modal-bg[style*="display: flex"], .modal-bg[style*="display:flex"], .modal-bg[style*="display: block"], .modal-bg[style*="display:block"]');
+    if (openModal && openModal.id) {
+      e.preventDefault();
+      closeModal(openModal.id);
+    }
   }
 });
 

@@ -5,6 +5,16 @@
 
 | 2026-03-21 | Started hybrid permissions implementation (role baseline + team grants) | core/js/state.js, core/js/auth.js, utils/js/helpers.js, utils/js/navigation.js, portals/settings/js/settings.js, portals/settings/js/teams-data.js, supabase/hybrid_permissions_role_team_grants.sql, tests/permissions-helpers.test.js, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Added effective permission resolution at login, section access guard rendering, team assignment in Settings permissions table, normalized permission definitions in team editor, and migration/test scaffolding | ~1800 tok |
 
+| 2026-03-21 | Cleared all plan files for full planning reset | plans/, CHANGELOG.md, .wolf/anatomy.md | Deleted all files from plans folder to remove stale implementation plans before drafting new ones | ~120 tok |
+
+| 2026-03-21 | Created fresh 3-file planning baseline from live code state | plans/master-current-state.md, plans/next-implementation-sprint.md, plans/risk-and-regression-checklist.md, CHANGELOG.md, .wolf/anatomy.md | Replaced stale planning set with current-state baseline, next sprint queue, and regression checklist | ~220 tok |
+
+| 2026-03-21 | Synced README and TESTING_STRATEGY with current baseline | README.md, TESTING_STRATEGY.md, CHANGELOG.md, .wolf/anatomy.md | Updated planning references and corrected outdated test coverage claims to match current passing suite totals | ~200 tok |
+
+| 2026-03-21 | Added Ctrl+S/Ctrl+F/Escape shortcuts and docs-sync enforcement | utils/js/helpers.js, tests/helpers.test.js, README.md, TESTING_STRATEGY.md, plans/risk-and-regression-checklist.md, CHANGELOG.md, .wolf/anatomy.md | Implemented advertised shortcuts, added regression tests, and codified requirement to update README.md + TESTING_STRATEGY.md when behavior changes | ~320 tok |
+
+| 2026-03-21 | Harden Operations main shell to delegated actions | portals/operations/js/operations-dashboard-main.js, tests/operations-dashboard.test.js, plans/next-implementation-sprint.md, CHANGELOG.md, .wolf/anatomy.md | Replaced inline handlers for reporting-date controls/header actions/tab navigation with data-action delegation and added regression assertions | ~260 tok |
+
 | 2026-03-21 | Make top bar colors theme-aware | core/css/main.css, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Replaced hardcoded topbar blue palette with Light/Dark/Terminal theme tokens so header background, text, and control states change with theme | ~260 tok |
 
 | 12:50 | Executed MCS_LAYOUT_IMPROVEMENT_PLAN.md (all 6 phases) | state.js, portals/mcs/css/mcs.css, portals/mcs/css/mcs-responsive.css, portals/mcs/js/mcs-main.js | success — 83 MCS tests pass | ~12k |
