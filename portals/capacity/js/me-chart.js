@@ -309,37 +309,11 @@ window.meDrawChartNow = function() {
 
   // Resolve CSS custom properties for Chart.js (getComputedStyle required — Chart.js cannot use var())
   const style = getComputedStyle(document.documentElement);
-  const colorBlue       = style.getPropertyValue('--chart-blue').trim();
-  const colorBlueLt     = style.getPropertyValue('--chart-blue-lt').trim();
-  const colorGreen      = style.getPropertyValue('--chart-green').trim();
-  const colorGreenLt    = style.getPropertyValue('--chart-green-lt').trim();
-  const colorAmber      = style.getPropertyValue('--chart-amber').trim();
-  const colorAmberLt    = style.getPropertyValue('--chart-amber-lt').trim();
-  const colorPink       = style.getPropertyValue('--chart-pink').trim();
-  const colorPinkLt     = style.getPropertyValue('--chart-pink-lt').trim();
-  const colorPurple     = style.getPropertyValue('--chart-purple').trim();
-  const colorPurpleLt   = style.getPropertyValue('--chart-purple-lt').trim();
-
-  // Create gradient colors for bars
-  const gradientNPI = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientNPI.addColorStop(0, colorBlue);
-  gradientNPI.addColorStop(1, colorBlueLt);
-
-  const gradientImprovement = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientImprovement.addColorStop(0, colorGreen);
-  gradientImprovement.addColorStop(1, colorGreenLt);
-
-  const gradientTendering = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientTendering.addColorStop(0, colorAmber);
-  gradientTendering.addColorStop(1, colorAmberLt);
-
-  const gradientSupport = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientSupport.addColorStop(0, colorPink);
-  gradientSupport.addColorStop(1, colorPinkLt);
-
-  const gradientOther = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientOther.addColorStop(0, colorPurple);
-  gradientOther.addColorStop(1, colorPurpleLt);
+  const colorBlue   = style.getPropertyValue('--chart-blue').trim();
+  const colorGreen  = style.getPropertyValue('--chart-green').trim();
+  const colorAmber  = style.getPropertyValue('--chart-amber').trim();
+  const colorPink   = style.getPropertyValue('--chart-pink').trim();
+  const colorPurple = style.getPropertyValue('--chart-purple').trim();
 
   // Calculate total demand for each month (for tooltip percentages)
   const totalDemandByMonth = monthKeys.map((_, idx) =>
@@ -402,11 +376,11 @@ window.meDrawChartNow = function() {
     data: {
       labels: monthLabels,
       datasets: [
-        { label: 'NPI', data: npiData, backgroundColor: gradientNPI, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
-        { label: 'Improvement', data: improvementData, backgroundColor: gradientImprovement, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
-        { label: 'Tendering', data: tenderingData, backgroundColor: gradientTendering, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
-        { label: 'Support', data: supportData, backgroundColor: gradientSupport, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
-        { label: 'Other', data: otherData, backgroundColor: gradientOther, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'NPI', data: npiData, backgroundColor: colorBlue, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Improvement', data: improvementData, backgroundColor: colorGreen, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Tendering', data: tenderingData, backgroundColor: colorAmber, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Support', data: supportData, backgroundColor: colorPink, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Other', data: otherData, backgroundColor: colorPurple, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
         { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 3, type: 'line', fill: false, pointRadius: 5, pointBackgroundColor: '#fff', pointBorderColor: '#ef4444', pointBorderWidth: 2, tension: 0.3, order: 1, pointHoverRadius: 6 }
       ]
     },

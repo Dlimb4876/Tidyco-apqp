@@ -218,6 +218,7 @@ function prodCapDrawDashChart() {
     stack: 'demand',
     borderWidth: 0,
     borderRadius: 2,
+    order: 1,
   }));
 
   // Capacity line

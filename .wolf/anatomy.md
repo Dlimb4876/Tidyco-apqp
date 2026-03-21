@@ -1,11 +1,12 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T10:57:46.517Z
-> Files: 27 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T11:51:43.708Z
+> Files: 35 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
-- `CHANGELOG.md` — Changelog (~6542 tok)
+- `CHANGELOG.md` — Changelog (~7198 tok)
+- `CLAUDE.md` — Core router instructions for non-technical workflow and guardrails (~430 tok)
 - `index.html` — Tidyco Operations Portal (~9267 tok)
 
 ## .claude/
@@ -22,12 +23,17 @@
 
 ## .claude/rules/
 
+- `agents.md` — Lightweight project agent workflows and output contract (~402 tok)
+- `code-style.md` — Style-only conventions and ID/naming patterns (~206 tok)
+- `database.md` — Supabase query, persistence, and auth-only RLS guidance (~426 tok)
+- `security.md` — XSS, validation, and sensitive-data handling rules (~385 tok)
 
 ## .gemini/
 
 
 ## .github/
 
+- `copilot-instructions.md` — Core Copilot non-negotiables and scoped owner pointers (~360 tok)
 
 ## .github/workflows/
 
@@ -37,7 +43,7 @@
 
 ## core/css/
 
-- `main.css` — Styles: 29 rules, 229 vars (~5157 tok)
+- `main.css` — Styles: 2 rules, 342 vars (~6235 tok)
 
 ## core/js/
 
@@ -57,6 +63,10 @@
 
 ## plans/
 
+- `INSTRUCTION_CORE_MINIMAL_SPEC.md` — Compact always-on instruction baseline with ownership routing (~520 tok)
+- `INSTRUCTION_MIGRATION_PLAN.md` — Staged, low-risk rollout plan for instruction token reduction (~760 tok)
+- `INSTRUCTION_OWNERSHIP_MAP.md` — Canonical rule ownership map to remove duplicate policy text (~580 tok)
+- `REFACTORING_OPPORTUNITIES.md` — Refactor backlog with safe-first Phase 1/2/3 checklists, risk, and effort notes (~2550 tok)
 
 ## portals/action-centre/css/
 
@@ -76,10 +86,11 @@
 
 ## portals/capacity/js/
 
-- `me-chart.js` — Declares department (~6340 tok)
+- `me-chart.js` — Declares department (~5967 tok)
 - `me-dashboard.js` — Draw mini 6-month capacity chart on dashboard (~2606 tok)
 - `me-heatmap.js` — monthLabel: meRenderDetailPanel (~2626 tok)
 - `me-holidays.js` — Declares y (~2042 tok)
+- `prod-capacity-dashboard.js` — ═══════════════════════════════════════════════════════════════ (~3193 tok)
 
 ## portals/capacity/project-management/css/
 
@@ -129,6 +140,7 @@
 
 ## portals/product-development/product-management/css/
 
+- `products.css` — Styles: 110 rules (~3852 tok)
 
 ## portals/product-development/product-management/js/
 
@@ -145,11 +157,11 @@
 
 ## portals/settings/css/
 
-- `settings.css` — Styles: 69 rules (~2850 tok)
+- `settings.css` — Styles: 72 rules (~3067 tok)
 
 ## portals/settings/js/
 
-- `settings.js` — ═══════════════════════════════════════════════════════════════ (~17598 tok)
+- `settings.js` — ═══════════════════════════════════════════════════════════════ (~17749 tok)
 
 ## scripts/
 

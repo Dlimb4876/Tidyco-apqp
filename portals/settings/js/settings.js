@@ -17,6 +17,11 @@ let settingsTeamsPermissionsData = {};
 // ── Appearance preferences (persisted to localStorage) ─────────
 const APPEARANCE_STORAGE_KEY = 'tidyco_prefs';
 
+function settingsLoadingState(msg) {
+  if (typeof loadingState === 'function') return loadingState(msg);
+  return `<div style="padding:40px;text-align:center;color:var(--muted)">${esc(msg)}</div>`;
+}
+
 function settingsLoadAppearancePrefs() {
   try {
     const raw = localStorage.getItem(APPEARANCE_STORAGE_KEY);
@@ -34,13 +39,13 @@ function settingsSaveAppearancePrefs(prefs) {
 
 function settingsApplyAppearance() {
   const prefs = settingsLoadAppearancePrefs();
-  const theme = prefs.theme === 'dark' ? 'dark' : 'light';
+  const theme = prefs.theme === 'dark' ? 'dark' : prefs.theme === 'terminal' ? 'terminal' : 'light';
 
   document.documentElement.dataset.theme = theme;
-  document.documentElement.style.colorScheme = theme;
+  document.documentElement.style.colorScheme = theme === 'terminal' ? 'dark' : theme;
 
   if (document.body) {
-    document.body.classList.toggle('theme-dark', theme === 'dark');
+    document.body.classList.toggle('theme-dark', theme === 'dark' || theme === 'terminal');
     document.body.classList.toggle('compact-tables', prefs.tableDensity === 'compact');
   }
 
@@ -52,7 +57,7 @@ function settingsApplyAppearance() {
 }
 
 function settingsAppearanceSetTheme(theme) {
-  const nextTheme = theme === 'dark' ? 'dark' : 'light';
+  const nextTheme = theme === 'dark' ? 'dark' : theme === 'terminal' ? 'terminal' : 'light';
   const prefs = settingsLoadAppearancePrefs();
   settingsSaveAppearancePrefs({ ...prefs, theme: nextTheme });
   settingsApplyAppearance();
@@ -231,7 +236,7 @@ function renderSettingsFamiliesTab() {
   if (!container) return;
 
   if (settingsFamiliesLoading || familiesState.loading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families…</div>';
+    container.innerHTML = settingsLoadingState('Loading families…');
     return;
   }
 
@@ -247,7 +252,7 @@ function renderSettingsFamiliesTab() {
   }
 
   if (!familiesState || !Array.isArray(familiesState.families)) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families…</div>';
+    container.innerHTML = settingsLoadingState('Loading families…');
     settingsEnsureFamiliesData(true);
     return;
   }
@@ -412,7 +417,7 @@ function renderSettingsWorkAreasTab() {
   if (!container) return;
 
   if (workAreasState.loading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading work areas…</div>';
+    container.innerHTML = settingsLoadingState('Loading work areas…');
     return;
   }
 
@@ -561,7 +566,7 @@ function renderSettingsTeamsTab() {
   if (!container) return;
 
   if (settingsTeamsLoading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading teams…</div>';
+    container.innerHTML = settingsLoadingState('Loading teams…');
     return;
   }
 
@@ -814,7 +819,7 @@ function renderSettingsPermissionsTab() {
   if (!container) return;
 
   if (settingsPermissionsLoading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading user accounts…</div>';
+    container.innerHTML = settingsLoadingState('Loading user accounts…');
     return;
   }
 
@@ -949,7 +954,7 @@ function renderSettingsAppearanceTab() {
   if (!container) return;
 
   const prefs = settingsLoadAppearancePrefs();
-  const theme       = prefs.theme            === 'dark' ? 'dark' : 'light';
+  const theme       = prefs.theme === 'dark' ? 'dark' : prefs.theme === 'terminal' ? 'terminal' : 'light';
   const orgName     = esc(prefs.orgName      || '');
   const appSubtitle = esc(prefs.appSubtitle  || '');
   const density     = prefs.tableDensity     || 'normal';
@@ -979,6 +984,14 @@ function renderSettingsAppearanceTab() {
           <span class="appearance-theme-copy">
             <strong>Dark</strong>
             <span>Lower-glare workspace for darker environments.</span>
+          </span>
+        </label>
+        <label class="appearance-theme-card ${theme === 'terminal' ? 'selected' : ''}">
+          <input type="radio" name="ap-theme" value="terminal" ${theme === 'terminal' ? 'checked' : ''}>
+          <span class="appearance-theme-swatch appearance-theme-swatch-terminal" aria-hidden="true"></span>
+          <span class="appearance-theme-copy">
+            <strong>Terminal</strong>
+            <span>Phosphor-green on black. Classic.</span>
           </span>
         </label>
       </div>
@@ -1173,7 +1186,7 @@ function renderSettingsMcsTab() {
   if (!container) return;
 
   if (settingsMcsLoading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
+    container.innerHTML = settingsLoadingState('Loading…');
     return;
   }
 
@@ -1188,7 +1201,7 @@ function renderSettingsMcsTab() {
   }
 
   if (!mcsApproverConfig) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
+    container.innerHTML = settingsLoadingState('Loading…');
     settingsEnsureMcsData(true);
     return;
   }

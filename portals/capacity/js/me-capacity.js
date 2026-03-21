@@ -291,14 +291,6 @@ window.meInit = async function() {
   }
 };
 
-// ── Utility Functions ──────────────────────────────────────
-function esc(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
 // Auto-init
 meInit().catch(err => console.error('ME init failed:', err));
 

@@ -11,6 +11,11 @@
 const PFMEA_RPN_FILTERS = ['all', 'high', 'r1_49', 'r50_99', 'r100_199', 'r200_plus']
 const PFMEA_VIEWS = ['worksheet', 'history']
 
+npi.pfmea.calcCauseRpn = function(sev, occ, det) {
+  if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })
+  return (sev || 1) * (occ || 1) * (det || 1)
+}
+
 npi.pfmea.getRpnFilter = function() {
   const cur = (globalThis.pfmeaRpnFilter || 'all').toString()
   return PFMEA_RPN_FILTERS.includes(cur) ? cur : 'all'
@@ -83,7 +88,7 @@ npi.pfmea.collectHistoryEntries = function() {
             newDet: hist.newDet ?? '',
             desc: hist.desc || '',
             date: hist.date || '',
-            currentRpn: (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
+            currentRpn: npi.pfmea.calcCauseRpn(ef.sev, ca.occ, ca.det)
           })
         })
       })
@@ -112,7 +117,7 @@ npi.pfmea.findCauseContext = function(causeId) {
           mode,
           effect: ef,
           cause: ca,
-          currentRpn: (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
+          currentRpn: npi.pfmea.calcCauseRpn(ef.sev, ca.occ, ca.det)
         }
       }
     }
@@ -227,7 +232,7 @@ npi.pfmea.renderPFMEA = function() {
   // NOTE: PFMEA structure migration has been moved to migrateprog() in db.js
   // and now runs once per load rather than on every render.
 
-  const highRPN = p.pfmea.reduce((n, m) => n + (m.effects || []).reduce((en, ef) => en + (ef.causes || []).filter(ca => (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1) >= RPN_HIGH).length, 0), 0)
+  const highRPN = p.pfmea.reduce((n, m) => n + (m.effects || []).reduce((en, ef) => en + (ef.causes || []).filter(ca => npi.pfmea.calcCauseRpn(ef.sev, ca.occ, ca.det) >= RPN_HIGH).length, 0), 0)
   const activeFilter = npi.pfmea.getRpnFilter()
   const activeView = npi.pfmea.getView()
   const historyEntries = npi.pfmea.collectHistoryEntries()
@@ -585,7 +590,7 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   const mode = p.pfmea[mi]; const ef = mode.effects[ei]; const ca = ef.causes[ci]
   const act = ca.action || {}
   if (!act.desc && !act.newOcc && !act.newDet) { showToast('Add an action and/or new scores before implementing.', 'warning'); return }
-  const oldRpn = (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
+  const oldRpn = npi.pfmea.calcCauseRpn(ef.sev, ca.occ, ca.det)
   const newOcc = act.newOcc ? +act.newOcc : ca.occ
   const newDet = act.newDet ? +act.newDet : ca.det
   if (!confirm(`Implement action?\n\nThis will:\n• Update OCC: ${ca.occ} → ${newOcc}\n• Update DET: ${ca.det} → ${newDet}\n• New RPN: ${(ef.sev || 1) * newOcc * newDet}\n• Log old RPN (${oldRpn}) to history\n• Clear the action fields`)) return
@@ -598,7 +603,7 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   }
 
   // Legacy fallback for isolated test loads where npi-data.js is not loaded.
-  const newRpn = (ef.sev || 1) * newOcc * newDet
+  const newRpn = npi.pfmea.calcCauseRpn(ef.sev, newOcc, newDet)
   if (!ca.history) ca.history = []
   const histEntry = {
     rpn: oldRpn,

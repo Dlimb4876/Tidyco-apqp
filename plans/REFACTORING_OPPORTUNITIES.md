@@ -340,29 +340,36 @@ function taskMatchesFilters(task, filters) {
 | `me-product-taskload.js` | 246-line function, duplicate esc() | 🟡 | 1-2 hours |
 | `bom.js` | 30 inline styles, table widths | 🟡 | 1 hour |
 | `me-capacity.js` | Duplicate esc() | 🟢 | 15 minutes |
-| `me-utils.js` | Duplicate escapeHtml() | 🟢 | 15 minutes |
+| `me-utils.js` | `escapeHtml()` is still used by capacity callers; migrate or alias safely | 🟢 | 15-30 minutes |
 
 ---
 
 ## Implementation Checklist
 
-### Phase 1: Quick Wins (1-2 hours)
-- [ ] Remove duplicate `esc()` from 3 files
-- [ ] Replace RPN calculations with `calcRPN()` helper
-- [ ] Create `loadingState()` helper in helpers.js
-- [ ] Add CSS utility classes to components.css
+### Phase 1: Safe-First Quick Wins (1-2 hours)
+- [ ] Remove the local `esc()` helpers in `me-product-taskload.js` and `me-capacity.js` only after confirming `helpers.js` still loads before both files
+- [ ] Do **not** delete `me-utils.js` `escapeHtml()` outright; either keep it as a compatibility alias to `esc()` or migrate every current caller in the same change
+- [ ] Replace only flat cause-level RPN formulas with `calcRPN({ sev, occ, det })`; keep mode-level max-RPN logic and history fallback logic separate unless tests are added first
+- [ ] Add a `loadingState()` helper only for the repeated Settings loading banners, then verify the rendered copy still matches current UX text
+- [ ] Skip new table width helper classes in this phase; `w28`, `w44`, `w50`, `w60`, `w80`, `w100`, `w110`, `w120`, and `w140` already exist in `components.css`
+- [ ] After each item, run `npm test` plus the touched focused suite before moving to the next quick win
 
-### Phase 2: Structural Refactors (4-6 hours)
-- [ ] Split `npi.pfmea.renderPFMEA()` into 5+ functions
-- [ ] Refactor `renderSettings()` family
-- [ ] Split capacity tab render functions
-- [ ] Replace inline styles with CSS classes
+### Phase 2: Safe Structural Refactors (4-6 hours)
+- [ ] PFMEA first pass: extract **pure helpers only** (`countHighRPNCauses`, row-span calculators, small cell renderers) while keeping event wiring and `data-action` attributes unchanged
+- [ ] PFMEA second pass: split `renderPFMEA()` into section builders (`renderPFMEAHeader`, `renderPFMEAStepBlock`, `renderPFMEARow`) and snapshot-test representative HTML output before/after
+- [ ] Settings pass: factor repeated loading/error/table fragments into local render helpers without changing tab IDs, event delegation roots, or action names
+- [ ] Capacity pass: split `me-tasks.js` and `me-product-taskload.js` into `filter`, `sort`, and `render` helpers but preserve shared ME/PM behavior and current filter state keys
+- [ ] Inline-style migration pass: move only duplicated style strings to existing shared classes first; avoid one-off class creation unless reused in at least 3 places
+- [ ] After each file-level refactor, run focused suites (`tests/pfmea.test.js`, `tests/settings-portal.test.js`, `tests/me-tasks-sort.test.js`, `tests/me-components.test.js`) before moving on
+- [ ] After each module pass (PFMEA, Settings, Capacity), run `npm test` and `npm run check:all` before starting the next module
 
-### Phase 3: Optimizations (2-3 hours)
-- [ ] Add constants to `npi-constants.js`
-- [ ] Optimize nested loops
-- [ ] Cache DOM queries
-- [ ] Simplify verbose conditionals
+### Phase 3: Safe Optimizations (2-3 hours)
+- [ ] Constants pass: move only repeated static labels/status values used in 3+ places to `npi-constants.js`; do not move dynamic UI copy or values used by only one module
+- [ ] Loop pass: optimize only proven hot paths (PFMEA deep traversal and repeated filter/sort scans) and keep the output shape identical to current renderers
+- [ ] DOM-query pass: cache repeated `getElementById` / selector lookups only within a single render cycle; avoid cross-render global caches unless invalidation is explicit
+- [ ] Conditional pass: extract predicate helpers (`taskMatchesFilters`, status guards) only where the same branch logic appears multiple times and unit tests can assert equivalence
+- [ ] For each optimization item, require a before/after behavior check on unchanged fixtures or snapshots to prove no output drift
+- [ ] Run focused suites for touched areas first, then run `npm test` and `npm run check:all` after completing Phase 3
 
 ---
 
@@ -380,13 +387,15 @@ npm run check:load-order    # Verify script dependencies
 ## Risk Mitigation
 
 **Low Risk:**
-- Removing duplicate functions (use existing helpers)
-- Extracting CSS classes from inline styles
-- Moving strings to constants
+- Replacing only the two redundant local `esc()` helpers that already duplicate `helpers.js`
+- Extracting CSS classes from inline styles where matching shared utilities already exist
+- Moving repeated strings or labels to constants when there is no behavioral branching
 
 **Medium Risk:**
-- Splitting large functions (ensure all code paths covered)
-- Optimizing loops (verify calculations match)
+- Splitting large functions with event delegation, rowspans, or shared ME/PM behavior
+- Replacing `escapeHtml()` without migrating current capacity callers in the same change
+- Converting every RPN formula to one helper without separating flat calculations from mode/history logic
+- Moving inline styles to classes without preserving current dark-theme variable usage
 
 **Rollback:**
 ```bash

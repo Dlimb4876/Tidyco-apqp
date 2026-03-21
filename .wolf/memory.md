@@ -3,6 +3,12 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+| 2026-03-21 | Stage 2 domain-rule deduplication | .claude/rules/agents.md, .claude/rules/code-style.md, .claude/rules/security.md, .claude/rules/database.md, CHANGELOG.md, .wolf/anatomy.md | Removed repeated core policy text from domain docs and retained canonical owner pointers to cut instruction payload | ~1200 tok |
+
+| 2026-03-21 | Stage 1 instruction compression | CLAUDE.md, .github/copilot-instructions.md, CHANGELOG.md, .wolf/anatomy.md | Reduced always-on instruction payload by converting duplicated guidance into compact router-style guardrails with scoped references | ~900 tok |
+
+| 2026-03-21 | Instruction token optimization package | plans/INSTRUCTION_CORE_MINIMAL_SPEC.md, plans/INSTRUCTION_OWNERSHIP_MAP.md, plans/INSTRUCTION_MIGRATION_PLAN.md, CHANGELOG.md, .wolf/anatomy.md | Added minimal core spec, deduplicated rule ownership map, and safe migration plan with compliance logging updates | ~1100 tok |
+
 | 2026-03-21 | Docs filename normalization | docs/, docs/README.md, plans/MASTER_PLAN.md, QWEN.md | Renamed live docs to lowercase kebab-case and repaired active references and indexes | ~1800 tok |
 
 | 2026-03-21 | Docs folder reorganization | docs/, plans/MASTER_PLAN.md, docs/reference/, docs/guides/, docs/setup/ | Moved live guide/reference files out of `plans/` and trimmed stale future-only sections from surviving docs | ~2600 tok |
@@ -78,6 +84,7 @@
 | 08:32 | Edited portals/operations/css/operations-dashboard.css | 20→20 lines | ~113 |
 | 08:32 | Edited portals/operations/css/operations-dashboard.css | 25→25 lines | ~140 |
 | 08:32 | Edited portals/operations/css/operations-dashboard.css | 3→3 lines | ~13 |
+| 13:05 | Hardened refactoring Phase 1 checklist | plans/REFACTORING_OPPORTUNITIES.md, CHANGELOG.md, .wolf/anatomy.md | Rewrote quick wins to avoid deleting active helpers or applying unsafe blanket RPN refactors | ~900 tok |
 | 08:32 | Edited portals/operations/css/operations-dashboard.css | 16→16 lines | ~90 |
 | 08:32 | Edited portals/operations/css/operations-dashboard.css | 11→11 lines | ~72 |
 | 08:32 | Edited portals/operations/css/operations-dashboard.css | 10→10 lines | ~59 |
@@ -199,5 +206,44 @@
 | 10:57 | Edited portals/product-development/js/product-development.js | "position:fixed;top:0;left" → "position:fixed;top:0;left" | ~62 |
 | 10:57 | Edited portals/product-development/js/product-development.js | "position:fixed;top:0;left" → "position:fixed;top:0;left" | ~68 |
 | 10:57 | Edited portals/product-development/js/product-development.js | "position:fixed;top:0;left" → "position:fixed;top:0;left" | ~67 |
+| 13:14 | Rewrote Phase 2 into safe structural sequence with test gates | plans/REFACTORING_OPPORTUNITIES.md, CHANGELOG.md, .wolf/anatomy.md | Phase 2 now staged by module with focused suites and full-check gates to reduce regressions | ~700 tok |
 | 10:57 | Edited CHANGELOG.md | 1→3 lines | ~110 |
 | 10:57 | Replaced remaining hardcoded rgba/hex inline colors with CSS vars | products.js, me-heatmap.js, me-chart.js, action-centre.js, product-development.js | theme-aware colors in all portals | ~800 |
+| 11:08 | Created portals/product-development/product-management/css/products.css | — | ~3852 |
+| 11:09 | Edited CHANGELOG.md | 1→3 lines | ~115 |
+| 13:22 | Rewrote Phase 3 into safe optimization sequence | plans/REFACTORING_OPPORTUNITIES.md, CHANGELOG.md, .wolf/anatomy.md | Phase 3 now includes scoped optimization rules plus behavior-preserving test gates | ~650 tok |
+
+## Session: 2026-03-21 11:14
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:17 | Edited core/css/main.css | expanded (+80 lines) | ~1032 |
+| 11:17 | Edited portals/settings/css/settings.css | expanded (+35 lines) | ~236 |
+| 11:17 | Edited portals/settings/js/settings.js | modified settingsApplyAppearance() | ~152 |
+| 11:18 | Edited portals/settings/js/settings.js | modified settingsAppearanceSetTheme() | ~80 |
+| 11:18 | Edited portals/settings/js/settings.js | 3→3 lines | ~59 |
+| 11:18 | Edited portals/settings/js/settings.js | expanded (+8 lines) | ~481 |
+| 11:18 | Edited CHANGELOG.md | 1→3 lines | ~120 |
+| 11:19 | Implemented Phase 1 safe refactor + full validation | utils/js/helpers.js, core/css/components.css, portals/capacity/js/me-capacity.js, portals/capacity/js/me-product-taskload.js, portals/product-development/npi/js/pfmea.js, portals/product-development/npi/js/npi-data.js, portals/product-development/npi/js/npi-cp.js, portals/settings/js/settings.js, CHANGELOG.md | Focused suites + full `npm test` + `npm run check:all` passed; added local helper fallbacks for isolated Jest contexts | ~2200 |
+| 11:19 | Added Terminal theme (phosphor-green on black) | main.css, settings.css, settings.js | completed | ~600 |
+
+## Session: 2026-03-21 11:20
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:21 | Edited core/css/main.css | inline fix | ~32 |
+| 11:21 | Edited core/css/main.css | inline fix | ~33 |
+| 11:21 | Edited core/css/main.css | inline fix | ~33 |
+| 11:22 | Edited CHANGELOG.md | 1→3 lines | ~66 |
+| 11:39 | Edited core/css/main.css | 8→8 lines | ~194 |
+| 11:39 | Edited CHANGELOG.md | 1→3 lines | ~74 |
+
+## Session: 2026-03-21 11:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:45 | Edited portals/capacity/js/me-chart.js | reduced (-26 lines) | ~147 |
+| 11:45 | Edited portals/capacity/js/me-chart.js | 5→5 lines | ~193 |
+| 11:45 | Edited CHANGELOG.md | 4→8 lines | ~108 |
+| 11:51 | Edited portals/capacity/js/prod-capacity-dashboard.js | 8→9 lines | ~79 |
+| 11:51 | Edited CHANGELOG.md | 1→3 lines | ~86 |

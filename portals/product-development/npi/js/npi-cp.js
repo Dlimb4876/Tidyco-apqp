@@ -5,6 +5,11 @@
 
 npi.cp = npi.cp || {}
 
+npi.cp.calcCauseRpn = function(sev, occ, det) {
+  if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })
+  return (sev || 1) * (occ || 1) * (det || 1)
+}
+
 npi.cp.render = function() {
   const p = prog()
   const cpCauseKeys = new Set(p.cp.map(r => r.pfmeaCauseId || r.pfmeaEffectId || r.pfmeaId))
@@ -25,7 +30,7 @@ npi.cp.render = function() {
       const ci = p.ctq.findIndex(c => c.id === cid)
       return ci >= 0 ? `<span class="tag tag-ctq" style="font-size:9px">C${ci + 1}</span>` : ''
     }).join('')
-    const rpn = ca && ef ? (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1) : 0
+    const rpn = ca && ef ? npi.cp.calcCauseRpn(ef.sev, ca.occ, ca.det) : 0
     const rpnBadge = rpn ? npi.components.rpnBadge(rpn) : ''
 
     return `<tr><td class="w100"><span class="tag tag-step" style="font-size:10px">${sl}</span></td>

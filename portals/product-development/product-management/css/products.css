@@ -20,7 +20,7 @@
 
 .products-header h1 {
   margin: 0 0 20px 0;
-  color: #2c3e50;
+  color: var(--ink);
   font-size: 2em;
 }
 
@@ -34,16 +34,17 @@
   flex: 1;
   min-width: 250px;
   padding: 10px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--line);
   border-radius: 4px;
   font-size: 1em;
   background: var(--surface);
+  color: var(--ink);
 }
 
 .search-input:focus {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  box-shadow: 0 0 0 3px var(--chart-green-pale);
 }
 
 /* Tab Navigation */
@@ -51,7 +52,7 @@
   display: flex;
   gap: 5px;
   margin-bottom: 20px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--line);
 }
 
 .products-tab-btn {
@@ -59,7 +60,7 @@
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
-  color: #666;
+  color: var(--muted);
   font-size: 1em;
   font-weight: 500;
   cursor: pointer;
@@ -197,18 +198,19 @@
 .products-inline-table .cell-edit {
   width: 100%;
   padding: 4px 6px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--line);
   border-radius: 3px;
   font-size: 0.9em;
   font-family: inherit;
   background: var(--surface);
+  color: var(--ink);
   box-sizing: border-box;
 }
 
 .products-inline-table .cell-edit:focus {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.15);
+  box-shadow: 0 0 0 2px var(--chart-green-pale);
 }
 
 .products-inline-table .cell-num {
@@ -234,17 +236,17 @@
 .empty-state-cell {
   padding: 30px 20px;
   text-align: center;
-  color: #999;
+  color: var(--muted);
 }
 
 /* Empty State */
 .empty-state {
   padding: 40px 20px;
   text-align: center;
-  color: #999;
+  color: var(--muted);
   background: var(--surface);
   border-radius: 4px;
-  border: 1px dashed #ddd;
+  border: 1px dashed var(--line);
 }
 
 /* Products & Families Table Wrappers */
@@ -297,7 +299,7 @@
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--ink);
 }
 
 .form-group input,
@@ -305,10 +307,12 @@
 .form-group select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--line);
   border-radius: 4px;
   font-size: 1em;
   font-family: inherit;
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .form-group input:focus,
@@ -316,14 +320,14 @@
 .form-group select:focus {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  box-shadow: 0 0 0 3px var(--chart-green-pale);
 }
 
 .modal-actions {
   display: flex;
   gap: 10px;
   padding: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--line);
   background: var(--bg-soft);
   justify-content: flex-end;
 }
@@ -340,7 +344,7 @@
   padding: 15px;
   background: var(--green-pale);
   border-radius: 4px;
-  border: 1px solid #d0e8d0;
+  border: 1px solid var(--chart-green-lt);
 }
 
 .summary-item {
@@ -349,14 +353,14 @@
 
 .summary-label {
   font-size: 0.9em;
-  color: #666;
+  color: var(--muted);
   margin-bottom: 4px;
 }
 
 .summary-value {
   font-size: 1.5em;
   font-weight: 600;
-  color: #2e7d32;
+  color: var(--green-dark);
 }
 
 /* ─────────────────────────────────────────────────────────────────────
@@ -380,7 +384,7 @@
 
 .trends-header h3 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--ink);
   font-size: 1.5em;
 }
 
@@ -388,7 +392,7 @@
 .trend-tabs {
   display: flex;
   gap: 5px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--line);
 }
 
 .trend-tab-btn {
@@ -396,7 +400,7 @@
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
-  color: #666;
+  color: var(--muted);
   font-size: 0.95em;
   font-weight: 500;
   cursor: pointer;
@@ -429,10 +433,11 @@
 
 .trend-select {
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--line);
   border-radius: 4px;
   font-size: 1em;
   background: var(--surface);
+  color: var(--ink);
   cursor: pointer;
   min-width: 250px;
 }
@@ -440,7 +445,7 @@
 .trend-select:focus {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  box-shadow: 0 0 0 3px var(--chart-green-pale);
 }
 
 /* ─── KPI Cards Grid ─────────────────────────────────────────────── */
@@ -454,23 +459,23 @@
 
 .kpi-card {
   background: linear-gradient(135deg, var(--bg-soft) 0%, var(--surface) 100%);
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 16px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px var(--overlay-light);
   transition: all 0.2s;
 }
 
 .kpi-card:hover {
   border-color: var(--green);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.1);
+  box-shadow: 0 4px 12px var(--chart-green-pale);
   transform: translateY(-2px);
 }
 
 .kpi-label {
   font-size: 0.85em;
-  color: #666;
+  color: var(--muted);
   margin-bottom: 8px;
   font-weight: 500;
   text-transform: uppercase;
@@ -480,13 +485,13 @@
 .kpi-value {
   font-size: 1.8em;
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--ink);
   margin-bottom: 4px;
 }
 
 .kpi-unit {
   font-size: 0.8em;
-  color: #999;
+  color: var(--muted);
 }
 
 /* ─── Comparison Grid ─────────────────────────────────────────────── */
@@ -499,22 +504,22 @@
 
 .comparison-card {
   background: var(--surface);
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px var(--overlay-medium);
   transition: all 0.3s;
 }
 
 .comparison-card:hover {
   border-color: var(--green);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.15);
+  box-shadow: 0 6px 20px var(--chart-green-lt);
   transform: translateY(-4px);
 }
 
 .card-header {
-  background: linear-gradient(135deg, var(--green) 0%, #45a049 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+  color: var(--white);
   padding: 16px;
   display: flex;
   justify-content: space-between;
@@ -545,7 +550,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--line);
 }
 
 .mini-kpi:last-child {
@@ -554,14 +559,14 @@
 
 .mini-label {
   font-size: 0.85em;
-  color: #666;
+  color: var(--muted);
   font-weight: 500;
 }
 
 .mini-value {
   font-size: 1.1em;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--ink);
 }
 
 /* Chart Container — height driven by content now */
@@ -583,7 +588,7 @@
 
 .portfolio-kpis-section {
   background: var(--surface);
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 28px;
@@ -601,7 +606,7 @@
 .portfolio-kpis-header h3 {
   margin: 0;
   font-size: 1.1em;
-  color: #2c3e50;
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -613,7 +618,7 @@
 
 .year-selector-wrap label {
   font-size: 0.9em;
-  color: #666;
+  color: var(--muted);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -622,7 +627,7 @@
 
 .trends-detail-section {
   background: var(--surface);
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 20px;
 }
@@ -632,7 +637,7 @@
 .history-inline-section {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid var(--line);
 }
 
 .history-inline-header {
@@ -646,7 +651,7 @@
 .history-inline-header h4 {
   margin: 0;
   font-size: 1em;
-  color: #2c3e50;
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -654,7 +659,7 @@
 
 .inline-add-form {
   background: var(--bg-soft);
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--line);
   border-radius: 6px;
   padding: 16px;
   margin-top: 8px;
