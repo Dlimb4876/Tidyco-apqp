@@ -866,19 +866,16 @@ Ordered by user impact. Each item is self-contained.
 
 ## Support Documentation Index
 
-These documents are maintained as reference material. **Do not delete them.**
+These documents are maintained as active reference material.
 
 | Document | Purpose |
 |---|---|
 | `plans/NPI_TENDERING_FEATURE_PLAN.md` | Full 7-phase implementation spec for the NPI tender gate scope feature |
-| `plans/GATE_DEFINITIONS_GUIDE.md` | Technical reference for GATE_DEFS structure, all 6 gates, checklist items, and gate selection indexing |
-| `plans/NPI_PROJECT_FLOW_GUIDE.md` | NPI project lifecycle, gate workflow, and integration patterns for AI developers |
-| `plans/PRODUCT_MANAGEMENT_GUIDE.md` | Product Management portal: data model, CRUD workflow, RLS, real-time sync |
-| `plans/PRODUCT_FLOW_DIAGRAM.md` | Visual diagram of product lifecycle (before tendering feature) |
-| `plans/ME_DATABASE_ANALYSIS.md` | ME Capacity relational DB schema, field mappings, PERT estimation, known issues |
-| `plans/FAMILY_TEMPLATES_ARCHITECTURE.md` | Family PFMEA template system: DB schema, data flow, security |
-| `plans/FAMILY_TEMPLATES_GUIDE.md` | User guide for creating and applying family PFMEA templates |
-| `plans/FEEDBACK_SETUP.md` | Setup guide for the Feedback & Bugs portal (DB table creation, RLS policies) |
+| `docs/reference/gate-definitions-guide.md` | Technical reference for GATE_DEFS structure, all 6 gates, checklist items, and gate selection indexing |
+| `docs/reference/npi-project-flow-guide.md` | NPI project lifecycle, gate workflow, and integration patterns for AI developers |
+| `docs/reference/family-templates-architecture.md` | Family PFMEA template system: DB schema, data flow, security |
+| `docs/guides/family-templates-guide.md` | User guide for creating and managing family PFMEA templates |
+| `docs/setup/feedback-setup.md` | Setup guide for the Feedback & Bugs portal (DB table creation, RLS policies) |
 | `TESTING_STRATEGY.md` | Jest testing framework, patterns, and coverage goals |
 | `CLAUDE.md` | Project conventions, architecture, script load order, state management |
 | `README.md` | Project overview, portal structure, navigation API, responsive design |

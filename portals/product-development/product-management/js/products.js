@@ -229,7 +229,7 @@ function renderProductsList() {
       </thead>
       <tbody>
         <!-- New row (editors/admins only) -->
-        ${canEdit() ? `<tr class="row-new" id="productsNewRow" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+        ${canEdit() ? `<tr class="row-new" id="productsNewRow" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--chart-blue-lt)">
           <td><input class="cell-edit" id="pNew-name" placeholder="Product name"></td>
           <td><input class="cell-edit" id="pNew-partNumber" placeholder="Part number"></td>
           <td><select class="cell-edit" id="pNew-family">${buildFamilyOptions('')}</select></td>
@@ -253,7 +253,7 @@ function renderProductsList() {
           const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || '—') : '—';
           if (productsEditingId === p.id) {
             return `
-            <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+            <tr class="row-new" style="background-color:var(--row-highlight-amber);border-top:2px solid var(--chart-amber-lt)">
               <td><input class="cell-edit" id="pEdit-name" value="${esc(p.name || '')}"></td>
               <td><input class="cell-edit" id="pEdit-partNumber" value="${esc(p.part_number || '')}"></td>
               <td><select class="cell-edit" id="pEdit-family">${buildFamilyOptions(p.family || '')}</select></td>
@@ -340,7 +340,7 @@ async function productsAddRow() {
     // Brief highlight on add row
     const newRow = document.getElementById('productsNewRow');
     if (newRow) {
-      newRow.style.backgroundColor = 'rgba(59,130,246,0.12)';
+      newRow.style.backgroundColor = 'var(--field-highlight)';
       setTimeout(() => { newRow.style.backgroundColor = ''; }, 500);
     }
   } catch (err) {

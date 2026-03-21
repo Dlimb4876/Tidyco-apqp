@@ -142,15 +142,15 @@
 }
 
 .permissions-badge.you {
-  background: rgba(11,95,167,0.12);
+  background: var(--row-highlight-blue);
   color: var(--blue);
 }
 
 .permissions-notice {
   margin-top: 16px;
   padding: 10px 14px;
-  background: rgba(255,191,0,0.08);
-  border: 1px solid rgba(255,191,0,0.3);
+  background: var(--row-highlight-amber);
+  border: 1px solid var(--amber-mid);
   border-radius: 6px;
   font-size: 0.82rem;
   color: var(--mid);

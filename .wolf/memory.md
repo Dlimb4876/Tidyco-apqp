@@ -3,6 +3,12 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+| 2026-03-21 | Docs filename normalization | docs/, docs/README.md, plans/MASTER_PLAN.md, QWEN.md | Renamed live docs to lowercase kebab-case and repaired active references and indexes | ~1800 tok |
+
+| 2026-03-21 | Docs folder reorganization | docs/, plans/MASTER_PLAN.md, docs/reference/, docs/guides/, docs/setup/ | Moved live guide/reference files out of `plans/` and trimmed stale future-only sections from surviving docs | ~2600 tok |
+
+| 2026-03-21 | Plans folder cleanup | plans/, plans/MASTER_PLAN.md, plans/NPI_PROJECT_FLOW_GUIDE.md, supabase/mcs_changes_2step_migration.sql | Removed stale completed plan/archive files and kept only active reference docs in `plans/` | ~2200 tok |
+
 | 2026-03-21 | Dark mode accessibility audit + fixes | core/css/components.css, core/css/main.css, portals/settings/css/settings.css | Fixed 2 WCAG AA contrast failures and 8 hardcoded light-palette colours | ~3500 tok |
 
 | 2026-03-21 | Fix tab URL memory for ME/ProdCap/PM capacity sub-tabs | me-capacity.js, prod-capacity.js, pm-capacity.js, navigation.js, app.js | meSetTab/setProdCapTab/pmSetTab now write met=/pct=/pmt= to URL; app.js+popstate restore them on refresh | ~400 tok |
@@ -104,3 +110,94 @@
 |------|--------|---------|---------|--------|
 | 10:13 | Edited portals/product-development/npi/css/dashboard.css | modified not() | ~274 |
 | 10:14 | Edited CHANGELOG.md | 1→3 lines | ~114 |
+
+## Session: 2026-03-21 10:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 10:29 | Edited core/css/main.css | expanded (+28 lines) | ~375 |
+| 10:29 | Edited core/css/main.css | CSS: --green-dark | ~36 |
+| 10:29 | Edited core/css/main.css | expanded (+29 lines) | ~420 |
+| 10:30 | Edited portals/action-centre/css/action-centre.css | 55→55 lines | ~308 |
+| 10:30 | Edited portals/settings/css/settings.css | 14→14 lines | ~86 |
+| 10:31 | Edited portals/feedback/css/feedback.css | 16→16 lines | ~93 |
+| 10:31 | Edited portals/capacity/css/me-capacity-dashboard.css | 5→5 lines | ~50 |
+| 10:32 | Edited portals/capacity/css/me-capacity-dashboard.css | 23→23 lines | ~176 |
+| 10:32 | Edited portals/capacity/css/me-capacity-dashboard.css | 24→24 lines | ~276 |
+| 10:32 | Edited portals/capacity/css/me-capacity-dashboard.css | 7→7 lines | ~99 |
+| 10:32 | Edited portals/capacity/css/me-capacity-heatmap.css | 16→16 lines | ~173 |
+| 10:32 | Edited portals/capacity/css/me-capacity-heatmap.css | 9→9 lines | ~106 |
+| 10:33 | Edited portals/capacity/css/me-capacity-heatmap.css | 15→15 lines | ~86 |
+| 10:33 | Edited portals/capacity/css/me-capacity-heatmap.css | 6→6 lines | ~63 |
+| 10:33 | Edited portals/capacity/css/me-capacity-heatmap.css | 4→4 lines | ~34 |
+| 10:33 | Edited portals/capacity/css/me-capacity-shell.css | 5→5 lines | ~53 |
+| 10:33 | Edited portals/capacity/css/me-capacity-tables.css | 5→5 lines | ~42 |
+| 10:33 | Edited portals/capacity/css/me-capacity-holidays.css | 3→3 lines | ~36 |
+| 10:33 | Edited portals/capacity/css/me-capacity-holidays.css | 3→3 lines | ~22 |
+| 10:34 | Edited portals/capacity/css/me-capacity-holidays.css | 7→7 lines | ~74 |
+| 10:34 | Edited portals/capacity/css/me-capacity-holidays.css | 4→4 lines | ~48 |
+| 10:34 | Edited portals/production/css/production.css | 3→3 lines | ~25 |
+| 10:34 | Edited portals/production/css/production.css | 15→15 lines | ~85 |
+| 10:34 | Edited portals/production/css/production.css | 4→4 lines | ~33 |
+| 10:34 | Edited portals/production/css/production.css | 17→17 lines | ~84 |
+| 10:34 | Edited portals/production/css/production.css | 3→3 lines | ~20 |
+| 10:34 | Edited portals/production/css/production.css | 3→3 lines | ~16 |
+| 10:34 | Edited portals/production/css/production.css | 6→6 lines | ~34 |
+| 10:35 | Edited portals/production/css/production.css | 11→11 lines | ~75 |
+| 10:35 | Edited portals/production/css/production.css | 9→9 lines | ~52 |
+| 10:35 | Edited portals/production/css/production.css | 11→11 lines | ~76 |
+| 10:35 | Edited portals/production/css/production.css | 21→21 lines | ~130 |
+| 10:36 | Edited portals/settings/js/settings.js | 2→2 lines | ~75 |
+| 10:36 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~77 |
+| 10:36 | Edited portals/settings/js/settings.js | 2→2 lines | ~74 |
+| 10:36 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~50 |
+| 10:36 | Edited portals/settings/js/settings.js | "background:#f0f0f0;paddin" → "background:var(--code-bg)" | ~36 |
+| 10:36 | Edited portals/product-development/npi/js/pfmea.js | 3→3 lines | ~82 |
+| 10:36 | Edited portals/settings/js/settings.js | 2→2 lines | ~63 |
+| 10:36 | Edited portals/settings/js/settings.js | 2→2 lines | ~61 |
+| 10:36 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~111 |
+| 10:36 | Edited portals/settings/js/settings.js | "margin-bottom:12px;paddin" → "margin-bottom:12px;paddin" | ~48 |
+| 10:36 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~56 |
+| 10:36 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~56 |
+| 10:36 | Edited portals/settings/js/settings.js | 2→2 lines | ~40 |
+| 10:36 | Edited portals/settings/js/settings.js | 2→2 lines | ~44 |
+| 10:36 | Edited portals/product-development/npi/js/gates.js | inline fix | ~48 |
+| 10:36 | Edited utils/js/helpers.js | "#ecfdf5" → "var(--green-pale)" | ~18 |
+| 10:36 | Edited portals/product-development/npi/js/gates.js | 2→2 lines | ~318 |
+| 10:36 | Edited portals/capacity/js/me-holidays.js | "display: flex; align-item" → "display: flex; align-item" | ~45 |
+| 10:37 | Edited portals/product-development/npi/js/gates.js | "padding:12px 16px;border-" → "padding:12px 16px;border-" | ~47 |
+| 10:37 | Edited portals/capacity/js/me-holidays.js | "text-align: center; font-" → "text-align: center; font-" | ~28 |
+| 10:38 | Edited portals/capacity/js/me-dashboard.js | inline fix | ~24 |
+| 10:38 | Edited portals/capacity/js/me-dashboard.js | 30→33 lines | ~247 |
+| 10:38 | Edited portals/capacity/js/me-dashboard.js | modified if() | ~104 |
+| 10:38 | Edited portals/production/js/scheduling.js | inline fix | ~37 |
+| 10:38 | Edited portals/production/js/products.js | inline fix | ~36 |
+| 10:38 | Edited utils/js/guide.js | 2→2 lines | ~119 |
+| 10:39 | Edited portals/capacity/js/me-chart.js | 2→2 lines | ~35 |
+| 10:39 | Edited portals/capacity/js/me-chart.js | 2→2 lines | ~50 |
+| 10:40 | Edited portals/capacity/js/me-chart.js | 5→5 lines | ~193 |
+| 10:40 | Edited portals/capacity/js/me-chart.js | expanded (+13 lines) | ~516 |
+| 10:40 | Edited portals/product-development/product-management/js/trends-chart.js | 2→2 lines | ~65 |
+| 10:40 | Edited portals/product-development/product-management/js/trends-chart.js | 2→2 lines | ~51 |
+| 10:40 | Edited portals/product-development/product-management/js/trends-chart.js | expanded (+8 lines) | ~779 |
+| 10:41 | Edited portals/product-development/product-management/js/trends-chart.js | inline fix | ~37 |
+| 10:41 | Edited portals/product-development/product-management/js/trends-chart.js | 2→2 lines | ~57 |
+| 10:41 | Edited core/css/main.css | 7→8 lines | ~178 |
+| 10:42 | Edited core/css/main.css | 7→8 lines | ~182 |
+| 10:42 | Created core/js/chart-theme.js | — | ~697 |
+| 10:42 | Edited index.html | 5→6 lines | ~56 |
+| 10:42 | Edited CHANGELOG.md | 4→6 lines | ~123 |
+| 10:43 | Theme remediation plan executed: ~200 hardcoded colors replaced with CSS vars across 20+ CSS/JS files | main.css, action-centre.css, settings.css, feedback.css, production.css, capacity CSS/JS, product-dev JS, ChartTheme utility | All 639 tests pass | ~8000 |
+
+## Session: 2026-03-21 10:51
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 10:56 | Edited portals/capacity/js/me-heatmap.js | 4→4 lines | ~164 |
+| 10:56 | Edited portals/action-centre/js/action-centre.js | inline fix | ~20 |
+| 10:57 | Edited portals/capacity/js/me-chart.js | "background:#ef4444;" → "background:var(--chart-re" | ~11 |
+| 10:57 | Edited portals/product-development/js/product-development.js | "position:fixed;top:0;left" → "position:fixed;top:0;left" | ~62 |
+| 10:57 | Edited portals/product-development/js/product-development.js | "position:fixed;top:0;left" → "position:fixed;top:0;left" | ~68 |
+| 10:57 | Edited portals/product-development/js/product-development.js | "position:fixed;top:0;left" → "position:fixed;top:0;left" | ~67 |
+| 10:57 | Edited CHANGELOG.md | 1→3 lines | ~110 |
+| 10:57 | Replaced remaining hardcoded rgba/hex inline colors with CSS vars | products.js, me-heatmap.js, me-chart.js, action-centre.js, product-development.js | theme-aware colors in all portals | ~800 |

@@ -52,7 +52,7 @@ npi.gate.renderGatePage = function(gateNum) {
       : `⏸ Not yet started — ${total} checklist items`
 
   const checklist = checklistItems.map(row => `
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);${row.checked ? 'background:#f7fffe;' : ''}">
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);${row.checked ? 'background:var(--bg-soft);' : ''}">
       <input type="checkbox" id="gc_${gateNum}_${row.sourceIndex}" ${row.checked ? 'checked' : ''} onchange="npi.gate.toggleCheck(${gateNum},${row.sourceIndex},this.checked)" style="width:15px;height:15px;accent-color:var(--blue);flex-shrink:0;margin-top:3px;cursor:pointer">
       <label for="gc_${gateNum}_${row.sourceIndex}" style="font-size:13px;color:${row.checked ? 'var(--muted)' : 'var(--ink)'};cursor:pointer;flex:1;${row.checked ? 'text-decoration:line-through;' : ''}">${esc(row.text)}</label>
     </div>`).join('')
@@ -64,8 +64,8 @@ npi.gate.renderGatePage = function(gateNum) {
         <span style="font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:4px;${sig.signed ? 'background:var(--green);color:white' : 'background:var(--line);color:var(--muted)'}">${sig.signed ? '✓ SIGNED' : 'PENDING'}</span>
       </div>
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
-        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Name</label><input name="gate_${gateNum}_sig_${si}_name" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:#f0faf4;border-color:var(--green-mid)' : ''}" value="${esc(sig.name)}" placeholder="Full name" onchange="npi.gate.updSig(${gateNum},${si},'name',this.value)"></div>
-        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Date</label><input type="date" name="gate_${gateNum}_sig_${si}_date" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:#f0faf4;border-color:var(--green-mid)' : ''}" value="${sig.date || ''}" onchange="npi.gate.updSig(${gateNum},${si},'date',this.value)"></div>
+        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Name</label><input name="gate_${gateNum}_sig_${si}_name" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:var(--green-pale);border-color:var(--green-mid)' : ''}" value="${esc(sig.name)}" placeholder="Full name" onchange="npi.gate.updSig(${gateNum},${si},'name',this.value)"></div>
+        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Date</label><input type="date" name="gate_${gateNum}_sig_${si}_date" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:var(--green-pale);border-color:var(--green-mid)' : ''}" value="${sig.date || ''}" onchange="npi.gate.updSig(${gateNum},${si},'date',this.value)"></div>
         ${!sig.signed
           ? `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;${sig.name ? 'background:var(--blue);color:white' : 'background:var(--line);color:var(--muted);cursor:not-allowed'}" onclick="${sig.name ? `npi.gate.signOff(${gateNum},${si})` : 'npi.nav.alertEnterNameFirst()'}">${sig.name ? 'Sign Off' : 'Enter name to sign'}</button>`
           : `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;background:var(--green);color:white;cursor:default;font-family:'IBM Plex Sans',sans-serif">✓ Signed</button>
@@ -100,7 +100,7 @@ npi.gate.renderGatePage = function(gateNum) {
     <div style="padding:11px 16px;border-radius:8px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:16px;background:${bannerBg};color:${bannerCol};border:1px solid ${bannerBorder}">${bannerText}</div>
     <div style="display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start">
       <div style="background:var(--white);border:1px solid var(--line);border-radius:8px;overflow:hidden">
-        <div style="padding:12px 16px;border-bottom:1px solid var(--line);background:#fafbfd;display:flex;align-items:center;justify-content:space-between">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg-soft);display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:13px;font-weight:600">Checklist</span>
           <span style="font-size:12px;color:var(--muted)">${checked}/${total} complete</span>
         </div>

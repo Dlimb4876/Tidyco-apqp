@@ -192,4 +192,4 @@ portals/operations/js/operations-dashboard-render-core.js  # Updated button
 
 ---
 
-**Questions?** Check `plans/FEEDBACK_SETUP.md` for setup details, or `CHANGELOG.md` for implementation history.
+**Questions?** Check `docs/setup/FEEDBACK_SETUP.md` for setup details, or `CHANGELOG.md` for implementation history.

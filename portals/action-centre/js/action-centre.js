@@ -398,7 +398,7 @@ function renderActionCentre() {
       </div>
     </div>
 
-    ${error ? `<div style="margin-bottom:12px;padding:10px 14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-size:0.82rem;color:var(--red)">Failed to load: ${esc(error)}</div>` : ''}
+    ${error ? `<div style="margin-bottom:12px;padding:10px 14px;background:var(--status-red-bg);border:1px solid var(--chart-red-pale);border-radius:6px;font-size:0.82rem;color:var(--red)">Failed to load: ${esc(error)}</div>` : ''}
 
     ${activeApprovalsPanel}
 

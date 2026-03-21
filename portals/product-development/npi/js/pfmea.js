@@ -301,7 +301,7 @@ npi.pfmea.renderPFMEA = function() {
       return ci >= 0 ? `<span class="tag tag-ctq" style="font-size:9px">C${ci + 1}</span>` : ''
     }).join(' ')
 
-    html += `<tr><td colspan="18" style="padding:0;border-top:3px solid #6b7280"><div class="pfmea-step-header"><span class="pfmea-step-label">Step ${s.stepNum} — ${esc(s.op || '(unnamed)')}</span><div class="pfmea-step-ctqs">${ctqBadges}</div></div></td></tr>`
+    html += `<tr><td colspan="18" style="padding:0;border-top:3px solid var(--gray-500)"><div class="pfmea-step-header"><span class="pfmea-step-label">Step ${s.stepNum} — ${esc(s.op || '(unnamed)')}</span><div class="pfmea-step-ctqs">${ctqBadges}</div></div></td></tr>`
 
     if (modes.length === 0 && activeFilter === 'all') {
       html += `<tr class="pfmea-row-sub"><td colspan="17" style="padding:8px 14px;color:var(--muted);font-size:12px;font-style:italic">No failure modes yet</td><td></td></tr>`
@@ -336,13 +336,13 @@ npi.pfmea.renderPFMEA = function() {
             const detDown = (h.newDet ?? h.oldDet) < (h.oldDet ?? h.newDet)
             return `<div style="border-bottom:1px solid var(--line);padding:5px 0;margin-bottom:4px">
               <div style="display:flex;align-items:center;gap:6px">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:${rpnDown ? '#16a34a' : '#dc2626'}">${h.rpn}→${h.newRpn}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:${rpnDown ? 'var(--green)' : 'var(--red)'}">${h.rpn}→${h.newRpn}</span>
                 <span style="color:var(--muted);font-size:9px;margin-left:auto">${h.date}</span>
               </div>
               ${(h.oldOcc || h.oldDet) ? `<div style="color:var(--muted);font-size:9px;margin-top:2px">
-                OCC <b>${h.oldOcc ?? '—'}</b>→<b style="color:${occDown ? '#16a34a' : '#dc2626'}">${h.newOcc ?? '—'}</b>
+                OCC <b>${h.oldOcc ?? '—'}</b>→<b style="color:${occDown ? 'var(--green)' : 'var(--red)'}">${h.newOcc ?? '—'}</b>
                 &nbsp;·&nbsp;
-                DET <b>${h.oldDet ?? '—'}</b>→<b style="color:${detDown ? '#16a34a' : '#dc2626'}">${h.newDet ?? '—'}</b>
+                DET <b>${h.oldDet ?? '—'}</b>→<b style="color:${detDown ? 'var(--green)' : 'var(--red)'}">${h.newDet ?? '—'}</b>
               </div>` : ''}
               <div style="color:var(--mid);font-size:10px;margin-top:3px;font-style:italic">"${esc(h.desc)}"</div>
             </div>`
@@ -398,17 +398,17 @@ npi.pfmea.renderPFMEA = function() {
               ${npi.components.rpnBadge(rpn, { id: `rpn_${mi}_${ei}_${ci}` })}
               ${hist.length > 0 ? `<button class="rpn-hist-btn" data-action="pfmea-show-hist" data-cause-id="${ca.id}">⏱${hist.length}</button>` : ''}
             </td>
-            <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? '#eff6ff' : ''};">${esc(act.desc || '')}</textarea></td>
+            <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea></td>
             <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_taken_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>
             <td><select class="cell-edit" name="pfmea_action_owner_${mi}_${ei}_${ci}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" style="width:100%">${ownerSelectOptions(act.owner || '')}</select></td>
             <td><input type="date" class="cell-edit mono" name="pfmea_action_due_${mi}_${ei}_${ci}" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_action_occ_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newOcc || ''}" placeholder="${occ}"
-                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-occ" data-allow-blank="1" data-fallback="" style="background:#eff6ff">
+                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-occ" data-allow-blank="1" data-fallback="" style="background:var(--field-highlight)">
             </td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_action_det_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newDet || ''}" placeholder="${det}"
-                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-det" data-allow-blank="1" data-fallback="" style="background:#eff6ff">
+                data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-det" data-allow-blank="1" data-fallback="" style="background:var(--field-highlight)">
             </td>
             <td class="pfmea-score-cell">
               <span id="forecast_wrap_${mi}_${ei}_${ci}" style="display:inline-block;opacity:${hasAction ? '1' : '0'}">${npi.components.rpnBadge(hasAction ? forecast : 0, { id: `forecast_${mi}_${ei}_${ci}`, emptyLabel: '—' })}</span>

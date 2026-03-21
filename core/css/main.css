@@ -57,8 +57,38 @@
   --teal:#0a7566; --teal-pale:#e5f5f3;
   --navy:#21496f; --navy-pale:#e8f0f8;
   --rose:#9b1c4a; --rose-pale:#fce8f1;
+  --green-dark: #145e2e;
   --page-gutter-mobile: 4px;
   --page-gutter-desktop: 14px;
+
+  /* Chart & Visualization Colors */
+  --chart-blue: #1e40af; --chart-blue-pale: rgba(30,64,175,0.12); --chart-blue-lt: rgba(30,64,175,0.15);
+  --chart-green: #15803d; --chart-green-pale: rgba(21,128,61,0.12); --chart-green-lt: rgba(21,128,61,0.15);
+  --chart-amber: #ea580c; --chart-amber-pale: rgba(234,88,12,0.12); --chart-amber-lt: rgba(234,88,12,0.15);
+  --chart-rose: #be185d; --chart-rose-pale: rgba(190,24,93,0.12);
+  --chart-pink: #be185d; --chart-pink-lt: rgba(190,24,93,0.15);
+  --chart-purple: #7c3aed; --chart-purple-pale: rgba(124,58,237,0.12);
+  --chart-red: #ef4444; --chart-red-pale: rgba(239,68,68,0.12);
+
+  /* Gray Scale */
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+  --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+  --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+
+  /* Utility Background Colors */
+  --code-bg: #f0f0f0;
+  --field-highlight: #eff6ff;
+  --row-highlight-blue: rgba(59,130,246,0.05);
+  --row-highlight-amber: rgba(255,191,0,0.05);
+  --overlay-light: rgba(0,0,0,0.02);
+  --overlay-medium: rgba(0,0,0,0.1);
+
+  /* Status Colors */
+  --status-green-bg: #d1fae5; --status-green-text: #065f46;
+  --status-blue-bg: #dbeafe; --status-blue-text: #1e40af;
+  --status-amber-bg: #fef3c7; --status-amber-text: #92400e;
+  --status-purple-bg: #ede9fe; --status-purple-text: #5b21b6;
+  --status-red-bg: #fee2e2; --status-red-text: #991b1b;
 }
 
 :root[data-theme="dark"] {
@@ -109,6 +139,36 @@
   --teal:#58c2af; --teal-pale:rgba(88,194,175,.15);
   --navy:#9fc1e4; --navy-pale:rgba(159,193,228,.14);
   --rose:#f29aba; --rose-pale:rgba(242,154,186,.15);
+  --green-dark: #34a85a;
+
+  /* Chart & Visualization Colors - Dark */
+  --chart-blue: #3b82f6; --chart-blue-pale: rgba(59,130,246,0.15); --chart-blue-lt: rgba(59,130,246,0.2);
+  --chart-green: #4ade80; --chart-green-pale: rgba(74,222,128,0.15); --chart-green-lt: rgba(74,222,128,0.2);
+  --chart-amber: #fb923c; --chart-amber-pale: rgba(251,146,60,0.15); --chart-amber-lt: rgba(251,146,60,0.2);
+  --chart-rose: #f472b6; --chart-rose-pale: rgba(244,114,182,0.15);
+  --chart-pink: #f472b6; --chart-pink-lt: rgba(244,114,182,0.2);
+  --chart-purple: #a78bfa; --chart-purple-pale: rgba(167,139,250,0.15);
+  --chart-red: #ef4444; --chart-red-pale: rgba(239,68,68,0.15);
+
+  /* Gray Scale - Dark (inverted) */
+  --gray-50: #1f2937; --gray-100: #374151; --gray-200: #4b5563;
+  --gray-300: #6b7280; --gray-400: #9ca3af; --gray-500: #d1d5db;
+  --gray-600: #e5e7eb; --gray-700: #f3f4f6; --gray-800: #f9fafb; --gray-900: #ffffff;
+
+  /* Utility Background Colors - Dark */
+  --code-bg: #1f2937;
+  --field-highlight: rgba(59,130,246,0.15);
+  --row-highlight-blue: rgba(59,130,246,0.08);
+  --row-highlight-amber: rgba(234,88,12,0.08);
+  --overlay-light: rgba(255,255,255,0.02);
+  --overlay-medium: rgba(255,255,255,0.08);
+
+  /* Status Colors - Dark */
+  --status-green-bg: rgba(16,185,129,0.15); --status-green-text: #6ee7b7;
+  --status-blue-bg: rgba(59,130,246,0.15); --status-blue-text: #93c5fd;
+  --status-amber-bg: rgba(245,158,11,0.15); --status-amber-text: #fcd34d;
+  --status-purple-bg: rgba(139,92,246,0.15); --status-purple-text: #c4b5fd;
+  --status-red-bg: rgba(239,68,68,0.15); --status-red-text: #fca5a5;
 }
 
 :root[data-theme="light"] {

@@ -18,10 +18,10 @@ window.meRenderHeatmapPanel = function(monthKey) {
         </div>
 
         <div class="me-chart-legend" style="margin-top: 12px;">
-          <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Underutilized (&lt;80%)</span></div>
-          <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>At Capacity (80–100%)</span></div>
-          <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>Overloaded (&gt;100%)</span></div>
-          <div class="legend-item"><div class="legend-color" style="background: #e5e7eb;"></div><span>No capacity</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:var(--chart-green);"></div><span>Underutilized (&lt;80%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:var(--chart-amber);"></div><span>At Capacity (80–100%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:var(--chart-red);"></div><span>Overloaded (&gt;100%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:var(--gray-200);"></div><span>No capacity</span></div>
         </div>
       </div>
     </div>

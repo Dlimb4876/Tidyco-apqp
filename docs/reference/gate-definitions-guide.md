@@ -599,8 +599,8 @@ describe('Gate Selection Rendering', () => {
 ## 🔗 Related Documentation
 
 - **CLAUDE.md** — Constants, state management
-- **NPI_PROJECT_FLOW_GUIDE.md** — Gate workflow in practice
-- **NPI_TENDERING_FEATURE_PLAN.md** — How gate customization works
+- **docs/reference/npi-project-flow-guide.md** — Gate workflow in practice
+- **plans/NPI_TENDERING_FEATURE_PLAN.md** — How gate customization works
 - **TESTING_STRATEGY.md** — Jest testing patterns
 
 ---
@@ -627,6 +627,6 @@ A: Typically 6-15. More items = more thorough but slower. Balance completeness w
 
 ---
 
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-03-21
 **Status:** Technical reference for GATE_DEFS structure
 **Audience:** AI assistants, developers, APQP process owners

@@ -63,7 +63,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
         <span class="me-card-title">HOLIDAY PLANNER</span>
         <span style="font-size:11px;color:var(--muted)">5-day work week · Click cells: working → full day → half day → remove · Blue = bank holidays (read-only)</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border);">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--overlay-light); border-bottom: 1px solid var(--border);">
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-prev-month">← Prev</button>
         <input type="month" name="cap_me_holidays_month" value="${selectedMonth}" data-cap-action="cap-me-month-change" style="padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;">
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-next-month">Next →</button>
@@ -84,7 +84,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
       if (currentMonth !== null) {
         const monthLabel = meGetMonthLabel(currentMonth);
         const colspan = idx - monthStart;
-        html += `<th colspan="${colspan}" style="text-align: center; font-weight: bold; font-size: 13px; background: rgba(0,0,0,0.02);">${monthLabel}</th>`;
+        html += `<th colspan="${colspan}" style="text-align: center; font-weight: bold; font-size: 13px; background: var(--overlay-light);">${monthLabel}</th>`;
       }
       currentMonth = monthKey;
       monthStart = idx;
@@ -94,7 +94,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
   if (currentMonth !== null) {
     const monthLabel = meGetMonthLabel(currentMonth);
     const colspan = dates.length - monthStart;
-    html += `<th colspan="${colspan}" style="text-align: center; font-weight: bold; font-size: 13px; background: rgba(0,0,0,0.02);">${monthLabel}</th>`;
+    html += `<th colspan="${colspan}" style="text-align: center; font-weight: bold; font-size: 13px; background: var(--overlay-light);">${monthLabel}</th>`;
   }
 
   html += `</tr>

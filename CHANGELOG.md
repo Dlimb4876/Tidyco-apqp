@@ -3,6 +3,16 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-21 | Fix remaining hardcoded inline colors across portals | products.js, me-heatmap.js, me-chart.js, action-centre.js, product-development.js still had rgba/hex values; replaced with CSS variables so all portals fully respect light/dark theme
+
+## 2026-03-21 | Normalize docs filenames | Renames `docs/` files to lowercase kebab-case so links are predictable and the documentation tree stays consistent
+
+## 2026-03-21 | Move live guides into docs folder | Separates durable reference/setup docs from true plans so `plans/` stays focused on pending work and `docs/` holds current guidance
+
+## 2026-03-21 | Prune stale plan documents | Removes completed or outdated one-off plans from `plans/` so the folder only keeps active specs, guides, and unfinished work
+
+## 2026-03-21 | Theme remediation: replace ~200 hardcoded colors with CSS variables | Enables proper light/dark mode support across all portals; adds --chart-*, --status-*, --gray-*, --code-bg, --row-highlight-* variables, ChartTheme utility, and fixes all CSS/JS files to use theme-aware colors
+
 ## 2026-03-21 | Fix dark mode: project dashboard text invisible on dark background | Hardcoded dark navy hex colours (#0f1f33, #112238, #25384f etc.) in mc-shell dashboard were invisible against dark backgrounds; added :root[data-theme="dark"] overrides so project name, KPI numbers, gate circles and focus text render in legible light colours
 
 ## 2026-03-21 | Fix mobile topbar overlap and restore settings access on mobile | Topbar min-width constraints (240px left, 200px centre) exceeded 375px screen width causing all buttons to collide; collapsed centre strip on mobile, removed min-widths, switched topbar to 2-col grid; also fixed settings layout defaulting to flex-row instead of flex-column on mobile

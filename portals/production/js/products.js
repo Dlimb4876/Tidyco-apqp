@@ -10,7 +10,7 @@ function renderProductMaster() {
 
   // Quick-add empty row at the top (editors/admins only)
   if (canEdit()) rows += `
-    <tr class="row-new" id="prod-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+    <tr class="row-new" id="prod-new-row" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
       <td class="w28 ctr">+</td>
       <td><input class="cell-edit" id="prod-new-name" placeholder="Product name" data-action="new-row-keydown" data-field="name"></td>
       <td><input class="cell-edit" id="prod-new-code" placeholder="Part Number" data-action="new-row-keydown" data-field="code"></td>

@@ -4,7 +4,7 @@
 --
 -- WHY THIS SCRIPT EXISTS
 -- ----------------------
--- The original mcs_changes table (plans/mcs-database-migration.sql) was built
+-- The original mcs_changes table was built
 -- for a 4-step approval workflow.  The app now uses a 2-step MCO workflow with
 -- different status values and stores approver names as email text (not UUIDs).
 -- Without this migration the DB rejects any approve/reject action with a

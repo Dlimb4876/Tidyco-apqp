@@ -49,7 +49,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
       <td style="text-align:right;">${currentMonthData.other.toFixed(1)} h</td>
       <td style="text-align:right;">${pct(currentMonthData.other)}</td>
     </tr>
-    <tr style="border-top:2px solid var(--line);font-weight:700;background:#fafbfd;">
+    <tr style="border-top:2px solid var(--line);font-weight:700;background:var(--bg-soft);">
       <td>Total Demand</td>
       <td style="text-align:right;">${currentMonthData.totalDemand.toFixed(1)} h</td>
       <td style="text-align:right;">100%</td>
@@ -140,7 +140,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
 
   const memberCapacityTableBody = memberCapacityRows.length
     ? memberCapacityRows.join('') + `
-      <tr style="border-top:2px solid var(--line);font-weight:700;background:#fafbfd;">
+      <tr style="border-top:2px solid var(--line);font-weight:700;background:var(--bg-soft);">
         <td colspan="5">Total Available (after holidays &amp; utilisation)</td>
         <td style="text-align:right;">${teamCapacityTotal.toFixed(1)} h</td>
       </tr>
@@ -203,12 +203,12 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
             <canvas id="meChart" height="300"></canvas>
           </div>
           <div class="me-chart-legend">
-            <div class="legend-item"><div class="legend-color" style="background:#1e40af;"></div><span>NPI</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#15803d;"></div><span>Improvement</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#ea580c;"></div><span>Tendering</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#be185d;"></div><span>Support</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#7c3aed;"></div><span>Other</span></div>
-            <div class="legend-item" style="margin-left:24px;"><div class="legend-line" style="background:#ef4444;"></div><span>Team Capacity</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-blue);"></div><span>NPI</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-green);"></div><span>Improvement</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-amber);"></div><span>Tendering</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-pink);"></div><span>Support</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-purple);"></div><span>Other</span></div>
+            <div class="legend-item" style="margin-left:24px;"><div class="legend-line" style="background:var(--chart-red);"></div><span>Team Capacity</span></div>
           </div>
         </div>
       </div>
@@ -307,26 +307,39 @@ window.meDrawChartNow = function() {
 
   const ctx = canvas.getContext('2d');
 
+  // Resolve CSS custom properties for Chart.js (getComputedStyle required — Chart.js cannot use var())
+  const style = getComputedStyle(document.documentElement);
+  const colorBlue       = style.getPropertyValue('--chart-blue').trim();
+  const colorBlueLt     = style.getPropertyValue('--chart-blue-lt').trim();
+  const colorGreen      = style.getPropertyValue('--chart-green').trim();
+  const colorGreenLt    = style.getPropertyValue('--chart-green-lt').trim();
+  const colorAmber      = style.getPropertyValue('--chart-amber').trim();
+  const colorAmberLt    = style.getPropertyValue('--chart-amber-lt').trim();
+  const colorPink       = style.getPropertyValue('--chart-pink').trim();
+  const colorPinkLt     = style.getPropertyValue('--chart-pink-lt').trim();
+  const colorPurple     = style.getPropertyValue('--chart-purple').trim();
+  const colorPurpleLt   = style.getPropertyValue('--chart-purple-lt').trim();
+
   // Create gradient colors for bars
   const gradientNPI = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientNPI.addColorStop(0, '#1e40af');
-  gradientNPI.addColorStop(1, '#3b82f6');
+  gradientNPI.addColorStop(0, colorBlue);
+  gradientNPI.addColorStop(1, colorBlueLt);
 
   const gradientImprovement = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientImprovement.addColorStop(0, '#15803d');
-  gradientImprovement.addColorStop(1, '#4ade80');
+  gradientImprovement.addColorStop(0, colorGreen);
+  gradientImprovement.addColorStop(1, colorGreenLt);
 
   const gradientTendering = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientTendering.addColorStop(0, '#ea580c');
-  gradientTendering.addColorStop(1, '#fb923c');
+  gradientTendering.addColorStop(0, colorAmber);
+  gradientTendering.addColorStop(1, colorAmberLt);
 
   const gradientSupport = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientSupport.addColorStop(0, '#be185d');
-  gradientSupport.addColorStop(1, '#ec4899');
+  gradientSupport.addColorStop(0, colorPink);
+  gradientSupport.addColorStop(1, colorPinkLt);
 
   const gradientOther = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientOther.addColorStop(0, '#7c3aed');
-  gradientOther.addColorStop(1, '#a78bfa');
+  gradientOther.addColorStop(0, colorPurple);
+  gradientOther.addColorStop(1, colorPurpleLt);
 
   // Calculate total demand for each month (for tooltip percentages)
   const totalDemandByMonth = monthKeys.map((_, idx) =>

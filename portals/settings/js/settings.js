@@ -286,7 +286,7 @@ function renderSettingsFamiliesTab() {
           </tr>
         </thead>
         <tbody>
-          ${canEdit() ? `<tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+          ${canEdit() ? `<tr class="row-new" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
             <td><input class="cell-edit" id="sfNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
             <td><input class="cell-edit" id="sfNew-id" placeholder="e.g. HVAC"></td>
             <td><input class="cell-edit" id="sfNew-label" placeholder="e.g. HVAC Systems"></td>
@@ -302,7 +302,7 @@ function renderSettingsFamiliesTab() {
             const usage = usageMap[f.id] || 0;
             if (settingsFamiliesEditingId === f.id) {
               return `
-              <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+              <tr class="row-new" style="background-color:var(--row-highlight-amber);border-top:2px solid var(--amber)">
                 <td><input class="cell-edit" id="sfEdit-icon" value="${esc(f.icon || '📋')}" style="width:50px;text-align:center"></td>
                 <td><input class="cell-edit" id="sfEdit-id" value="${esc(f.name || f.id)}"></td>
                 <td><input class="cell-edit" id="sfEdit-label" value="${esc(f.label || '')}"></td>
@@ -317,7 +317,7 @@ function renderSettingsFamiliesTab() {
             return `
             <tr>
               <td class="ctr" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
-              <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
+              <td><code style="background:var(--code-bg);padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
               <td><strong>${esc(f.label)}</strong></td>
               <td>${esc(f.description || '—')}</td>
               <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
@@ -438,7 +438,7 @@ function renderSettingsWorkAreasTab() {
           </tr>
         </thead>
         <tbody>
-          ${canEdit() ? `<tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+          ${canEdit() ? `<tr class="row-new" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
             <td><input class="cell-edit" id="waNew-name" placeholder="e.g. Unit 9"></td>
             <td><input class="cell-edit" id="waNew-desc" placeholder="Description (optional)"></td>
             <td class="families-actions-col">
@@ -450,7 +450,7 @@ function renderSettingsWorkAreasTab() {
           ` : areas.map(w => {
             if (settingsWorkAreasEditingId === w.id) {
               return `
-              <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+              <tr class="row-new" style="background-color:var(--row-highlight-amber);border-top:2px solid var(--amber)">
                 <td><input class="cell-edit" id="waEdit-name" value="${esc(w.name)}"></td>
                 <td><input class="cell-edit" id="waEdit-desc" value="${esc(w.description || '')}"></td>
                 <td class="families-actions-col">
@@ -859,14 +859,14 @@ function renderSettingsPermissionsTab() {
   }
 
   const errorBanner = settingsPermissionsError ? `
-    <div style="margin-bottom:12px;padding:10px 14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-size:0.82rem;color:var(--red)">
+    <div style="margin-bottom:12px;padding:10px 14px;background:var(--status-red-bg);border:1px solid var(--red);border-radius:6px;font-size:0.82rem;color:var(--red)">
       Could not load user accounts: ${esc(settingsPermissionsError)}
       <button class="btn btn-ghost" style="margin-left:12px;font-size:0.8rem;padding:2px 8px" data-action="settings-permissions-retry">Retry</button>
     </div>
   ` : '';
 
   const adminNote = viewerIsAdmin
-    ? `<div class="permissions-notice" style="background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.25)">
+    ? `<div class="permissions-notice" style="background:var(--status-blue-bg);border-color:var(--blue)">
         <strong>Admin tip:</strong> Use the dropdowns to change a user's role. Changes take effect on the user's next login.
       </div>`
     : `<div class="permissions-notice">Only admins can change roles. Your current role is <strong>${esc(currentUserRole || 'editor')}</strong>.</div>`;
@@ -910,8 +910,8 @@ function renderSettingsRoleDefinitionsTab() {
     { label: 'Access Settings page',             admin: true,  editor: false, viewer: false },
   ];
 
-  const tick  = `<span style="color:var(--green,#22c55e);font-size:1.1em">✓</span>`;
-  const cross = `<span style="color:var(--muted,#aaa);font-size:1.1em">—</span>`;
+  const tick  = `<span style="color:var(--green);font-size:1.1em">✓</span>`;
+  const cross = `<span style="color:var(--muted);font-size:1.1em">—</span>`;
 
   const matrixRows = roleMatrix.map(r => `
     <tr>

@@ -165,7 +165,7 @@ function setupSmartDateInputs() {
       const parsed = parseSmartDate(e.target.value);
       if (parsed) {
         e.target.value = parsed;
-        e.target.style.backgroundColor = '#ecfdf5';
+        e.target.style.backgroundColor = 'var(--green-pale)';
         setTimeout(() => { e.target.style.backgroundColor = ''; }, 1000);
       }
     });

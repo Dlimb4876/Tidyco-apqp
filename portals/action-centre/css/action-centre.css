@@ -41,28 +41,28 @@
 }
 
 .ac-chip-action {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--status-green-bg);
+  color: var(--status-green-text);
 }
 
 .ac-chip-pfmea {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--status-blue-bg);
+  color: var(--status-blue-text);
 }
 
 .ac-chip-risk {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--status-amber-bg);
+  color: var(--status-amber-text);
 }
 
 .ac-chip-mcs {
-  background: #ede9fe;
-  color: #5b21b6;
+  background: var(--status-purple-bg);
+  color: var(--status-purple-text);
 }
 
 .ac-status-open {
-  background: rgba(251, 191, 36, 0.15);
-  color: #92400e;
+  background: var(--status-amber-bg);
+  color: var(--status-amber-text);
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 11px;
@@ -70,8 +70,8 @@
 }
 
 .ac-status-progress {
-  background: rgba(59, 130, 246, 0.12);
-  color: #1e40af;
+  background: var(--status-blue-bg);
+  color: var(--status-blue-text);
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 11px;
@@ -79,8 +79,8 @@
 }
 
 .ac-status-closed {
-  background: rgba(16, 185, 129, 0.12);
-  color: #065f46;
+  background: var(--status-green-bg);
+  color: var(--status-green-text);
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 11px;
@@ -88,8 +88,8 @@
 }
 
 .ac-status-blocked {
-  background: rgba(239, 68, 68, 0.1);
-  color: #991b1b;
+  background: var(--status-red-bg);
+  color: var(--status-red-text);
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 11px;

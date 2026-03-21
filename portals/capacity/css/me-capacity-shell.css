@@ -43,7 +43,7 @@
 }
 .me-card-head {
 	padding: 10px 16px; border-bottom: 1px solid var(--line);
-	background: #fafbfd; display: flex; align-items: center;
+	background: var(--bg-soft); display: flex; align-items: center;
 	justify-content: space-between; gap: 12px;
 }
 .me-card-title {
