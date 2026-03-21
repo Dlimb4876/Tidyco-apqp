@@ -89,7 +89,7 @@
 }
 
 .pfd-header-row {
-  background: #f5f8ff;
+  background: var(--blue-pale);
 }
 
 .pfd-header-main {
@@ -100,9 +100,9 @@
 .pfd-header-toggle {
   width: 28px;
   height: 28px;
-  border: 1px solid #b7d1f7;
+  border: 1px solid var(--blue-mid);
   border-radius: 999px;
-  background: #fff;
+  background: var(--white);
   color: var(--blue);
   display: inline-flex;
   align-items: center;
@@ -112,7 +112,7 @@
 }
 
 .pfd-header-toggle:hover {
-  background: #eaf3ff;
+  background: var(--blue-pale);
 }
 
 .pfd-header-title {
@@ -134,16 +134,16 @@
   font-weight: 600;
   letter-spacing: 0.4px;
   color: var(--blue);
-  border: 1px solid #b7d1f7;
-  background: #eaf3ff;
+  border: 1px solid var(--blue-mid);
+  background: var(--blue-pale);
   border-radius: 999px;
   padding: 2px 8px;
 }
 
 .pfd-header-input {
   font-weight: 600;
-  color: #0f386a;
-  background: #fff;
+  color: var(--ink);
+  background: var(--white);
 }
 
 .pfd-header-actions {
