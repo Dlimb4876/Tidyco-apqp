@@ -205,7 +205,7 @@
 }
 
 .ac-table tbody tr:hover {
-  background-color: var(--bg-subtle, #f9fafb);
+  background-color: var(--bg-soft);
 }
 
 .row-overdue {

@@ -1,11 +1,11 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T07:45:06.474Z
-> Files: 11 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T08:34:25.581Z
+> Files: 18 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
-- `CHANGELOG.md` — Changelog (~6022 tok)
+- `CHANGELOG.md` — Changelog (~6059 tok)
 
 ## .claude/
 
@@ -48,12 +48,14 @@
 
 ## portals/action-centre/css/
 
+- `action-centre.css` — Styles: 33 rules (~1431 tok)
 
 ## portals/action-centre/js/
 
 
 ## portals/capacity/css/
 
+- `capacity.css` — Styles: 58 rules (~2107 tok)
 - `prod-capacity.css` — Styles: 76 rules (~3602 tok)
 
 ## portals/capacity/js/
@@ -91,6 +93,7 @@
 
 ## portals/operations/css/
 
+- `operations-dashboard.css` — Styles: 70 rules (~2345 tok)
 
 ## portals/operations/js/
 
@@ -100,9 +103,13 @@
 
 ## portals/product-development/npi/css/
 
+- `apqp-ctq.css` — Styles: 40 rules (~1540 tok)
+- `apqp-pfd.css` — Styles: 45 rules (~1730 tok)
 
 ## portals/product-development/npi/js/
 
+- `dashboard.js` — ═══════════════════════════════════ (~13717 tok)
+- `pfmea.js` — Declares PFMEA_RPN_FILTERS (~10864 tok)
 
 ## portals/product-development/product-management/css/
 

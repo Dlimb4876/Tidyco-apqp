@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-21 | Finish dark mode: fix hardcoded colours in operations, capacity, PFMEA, PFD, action centre | Phase 2–4 of DARK_MODE_FIX_PLAN — eliminated all remaining hardcoded #fff/white/light-hex values in CSS and JS render functions so every portal renders correctly in dark theme
+
 ## 2026-03-21 | Dark mode accessibility fixes — contrast & hardcoded colour overrides | Audit found WCAG AA contrast failures (info-banner ~4.1:1, alert-blue ~3.2:1) and 8 hardcoded light-palette hex values (flag borders, tag borders, density swatches) that did not adapt in dark mode
 
 ## 2026-03-21 | Make dark mode activate immediately on selection | Users expected the dark theme card click to switch the UI instantly instead of waiting for the Save button

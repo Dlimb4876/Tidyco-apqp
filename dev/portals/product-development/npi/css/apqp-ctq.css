@@ -149,7 +149,7 @@
 }
 
 .res-pill-equip:hover {
-  background: #f5d89f;
+  background: var(--amber-pale);
   border-color: var(--amber);
 }
 
