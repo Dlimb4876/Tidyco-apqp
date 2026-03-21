@@ -55,3 +55,37 @@
 | 07:44 | Edited core/css/main.css | CSS: border-color | ~77 |
 | 07:44 | Edited portals/settings/css/settings.css | CSS: mode | ~150 |
 | 07:45 | Edited CHANGELOG.md | 4→6 lines | ~120 |
+
+## Session: 2026-03-21 08:28
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 4→4 lines | ~28 |
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 2→2 lines | ~25 |
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 13→13 lines | ~64 |
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 8→6 lines | ~34 |
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 5→5 lines | ~22 |
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 19→19 lines | ~87 |
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 5→5 lines | ~23 |
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 6→6 lines | ~30 |
+| 08:31 | Edited portals/operations/css/operations-dashboard.css | 8→8 lines | ~48 |
+| 08:32 | Edited portals/operations/css/operations-dashboard.css | 20→20 lines | ~113 |
+| 08:32 | Edited portals/operations/css/operations-dashboard.css | 25→25 lines | ~140 |
+| 08:32 | Edited portals/operations/css/operations-dashboard.css | 3→3 lines | ~13 |
+| 08:32 | Edited portals/operations/css/operations-dashboard.css | 16→16 lines | ~90 |
+| 08:32 | Edited portals/operations/css/operations-dashboard.css | 11→11 lines | ~72 |
+| 08:32 | Edited portals/operations/css/operations-dashboard.css | 10→10 lines | ~59 |
+| 08:32 | Edited portals/capacity/css/capacity.css | 5→5 lines | ~36 |
+| 08:32 | Edited portals/capacity/css/capacity.css | 6→6 lines | ~38 |
+| 08:32 | Edited portals/action-centre/css/action-centre.css | inline fix | ~10 |
+| 08:32 | Edited portals/product-development/npi/css/apqp-pfd.css | 3→3 lines | ~15 |
+| 08:33 | Edited portals/product-development/npi/css/apqp-pfd.css | 17→17 lines | ~97 |
+| 08:33 | Edited portals/product-development/npi/css/apqp-pfd.css | CSS: move | ~40 |
+| 08:33 | Edited portals/product-development/npi/css/apqp-pfd.css | 4→4 lines | ~33 |
+| 08:33 | Edited portals/product-development/npi/css/apqp-pfd.css | 4→4 lines | ~26 |
+| 08:33 | Edited portals/product-development/npi/css/apqp-pfd.css | 4→3 lines | ~18 |
+| 08:33 | Edited portals/product-development/npi/css/apqp-ctq.css | 4→4 lines | ~26 |
+| 08:33 | Edited portals/product-development/npi/js/pfmea.js | 12→12 lines | ~354 |
+| 08:33 | Edited portals/product-development/npi/js/dashboard.js | "background:#fff8f8" → "background:var(--red-pale" | ~12 |
+| 08:34 | Edited CHANGELOG.md | 1→3 lines | ~152 |
+| 08:34 | Finished dark mode fix plan — phases 2-4: hardcoded hex colours replaced with CSS vars in operations-dashboard.css, capacity.css, action-centre.css, apqp-pfd.css, apqp-ctq.css, pfmea.js, dashboard.js | 8 files | committed + pushed to claude/finish-dark-mode-Lu872 | ~4k |
