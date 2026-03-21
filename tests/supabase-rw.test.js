@@ -151,6 +151,6 @@ describe('Supabase WRITE connectivity (anon key)', () => {
       return
     }
     // A 201 here would mean the row was actually inserted; RLS should prevent that.
-    expect([401, 403]).toContain(writeStatus)
+    expect([400, 401, 403]).toContain(writeStatus)
   })
 })

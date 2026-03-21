@@ -3,6 +3,14 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-21 | Dark mode accessibility fixes — contrast & hardcoded colour overrides | Audit found WCAG AA contrast failures (info-banner ~4.1:1, alert-blue ~3.2:1) and 8 hardcoded light-palette hex values (flag borders, tag borders, density swatches) that did not adapt in dark mode
+
+## 2026-03-21 | Make dark mode activate immediately on selection | Users expected the dark theme card click to switch the UI instantly instead of waiting for the Save button
+
+## 2026-03-21 | Visual density preview in Settings appearance tab | Users had no way to see the difference between Normal and Compact row density before saving
+
+## 2026-03-21 | Add dark mode in Settings appearance | Lets users switch the portal to a darker colour scheme from the existing browser-saved appearance preferences
+
 ## 2026-03-21 | Fix tab URL memory in ME, Production Load, and PM Capacity | meSetTab/setProdCapTab/pmSetTab were swapping DOM content without updating the URL, so refresh always jumped back to the first tab
 
 ## 2026-03-21 | Remove stray up/down arrows from prod capacity tab bar | overflow-x: auto implicitly sets overflow-y: auto; adding overflow-y: hidden prevents the vertical scrollbar from appearing

@@ -91,6 +91,8 @@ async function launchApp() {
 
 // ── Kick off on page load if session exists ───────────────────
 (async () => {
+  if (typeof settingsApplyAppearance === 'function') settingsApplyAppearance();
+
   const { data: { session }, error } = await supa.auth.getSession();
   if (error) {
     // Stale/invalidated refresh token in localStorage — clear it and show login

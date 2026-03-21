@@ -12,8 +12,12 @@
 
 - **Project:** tidyco-apqp
 - **Description:** A Manufacturing Engineering tool for rail overhaul, managing APQP Gates 0–5 and broader operational workflows. Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and Supabase for persistence.
+- Appearance preferences are browser-local in `tidyco_prefs`; `settingsApplyAppearance()` is the global hook that applies them during startup and should be extended for app-wide theming changes.
+- Theme selection UX should apply immediately on `ap-theme` radio change in Settings so users get instant visual feedback without requiring Save.
 
 ## Do-Not-Repeat
+
+<!-- [2026-03-21] Dark mode colour overrides: never rely on hardcoded hex values for borders/backgrounds in shared components (tags, flags, alerts). Any colour used in a component that renders against --surface or --bg must either use a CSS variable or have an explicit :root[data-theme="dark"] override. --blue-dark (#3f8ded) is NOT legible on dark blue backgrounds — use --blue (#5aa5ff) instead for dark mode text. -->
 
 <!-- Mistakes made and corrected. Each entry prevents the same mistake recurring. -->
 <!-- Format: [YYYY-MM-DD] Description of what went wrong and what to do instead. -->
@@ -21,3 +25,4 @@
 ## Decision Log
 
 <!-- Significant technical decisions with rationale. Why X was chosen over Y. -->
+- [2026-03-21] Dark mode was added through the existing browser-local Appearance preferences flow rather than a DB/global setting, because the Settings page already defines these preferences as device-specific and startup already applies them before render.

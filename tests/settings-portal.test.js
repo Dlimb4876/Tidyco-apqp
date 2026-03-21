@@ -565,6 +565,9 @@ describe('Teams Tab - Permissions Editor', () => {
 describe('renderSettingsAppearanceTab()', () => {
   beforeEach(() => {
     localStorage.clear();
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.style.colorScheme = 'light';
+    document.body.classList.remove('theme-dark', 'compact-tables');
     if (!document.getElementById('settingsAppearanceTab')) {
       const el = document.createElement('div');
       el.id = 'settingsAppearanceTab';
@@ -576,6 +579,14 @@ describe('renderSettingsAppearanceTab()', () => {
     renderSettingsAppearanceTab(); // eslint-disable-line no-undef
     const container = document.getElementById('settingsAppearanceTab');
     expect(container.innerHTML).toContain('Appearance');
+  });
+
+  it('renders light and dark theme options', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('name="ap-theme"');
+    expect(container.innerHTML).toContain('Bright workspace with dark text.');
+    expect(container.innerHTML).toContain('Lower-glare workspace for darker environments.');
   });
 
   it('renders organisation name input with placeholder', () => {
@@ -615,10 +626,11 @@ describe('renderSettingsAppearanceTab()', () => {
   });
 
   it('pre-fills saved preferences', () => {
-    localStorage.setItem('tidyco_prefs', JSON.stringify({ orgName: 'AcmeCo', tableDensity: 'compact' }));
+    localStorage.setItem('tidyco_prefs', JSON.stringify({ theme: 'dark', orgName: 'AcmeCo', tableDensity: 'compact' }));
     renderSettingsAppearanceTab(); // eslint-disable-line no-undef
     const container = document.getElementById('settingsAppearanceTab');
     expect(container.innerHTML).toContain('AcmeCo');
+    expect(container.querySelector('input[name="ap-theme"][value="dark"]')?.checked).toBe(true);
   });
 
   it('does nothing when container is missing', () => {
@@ -645,6 +657,35 @@ describe('settingsLoadAppearancePrefs() / settingsSaveAppearancePrefs()', () => 
     const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
     expect(prefs.orgName).toBe('TestOrg');
     expect(prefs.tableDensity).toBe('compact');
+  });
+
+  it('saves and applies a dark theme selection', () => {
+    const container = document.getElementById('settingsAppearanceTab') || document.body.appendChild(document.createElement('div'));
+    container.id = 'settingsAppearanceTab';
+
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+
+    document.querySelector('input[name="ap-theme"][value="dark"]').checked = true;
+    document.querySelector('input[name="ap-density"][value="compact"]').checked = true;
+
+    settingsAppearanceSave(); // eslint-disable-line no-undef
+
+    const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
+    expect(prefs.theme).toBe('dark');
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(document.body.classList.contains('theme-dark')).toBe(true);
+    expect(document.body.classList.contains('compact-tables')).toBe(true);
+  });
+
+  it('applies dark theme immediately when theme is changed', () => {
+    settingsSaveAppearancePrefs({ orgName: 'Acme' }); // eslint-disable-line no-undef
+    settingsAppearanceSetTheme('dark'); // eslint-disable-line no-undef
+
+    const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
+    expect(prefs.theme).toBe('dark');
+    expect(prefs.orgName).toBe('Acme');
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(document.body.classList.contains('theme-dark')).toBe(true);
   });
 });
 

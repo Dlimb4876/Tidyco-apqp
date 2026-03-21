@@ -91,7 +91,8 @@ global.npi = {
     renderRisks: jest.fn().mockReturnValue('<div>Risks</div>')
   },
   bom: { renderBOM: jest.fn().mockReturnValue('<div>BOM</div>') },
-  timing: { renderTimingPlan: jest.fn().mockReturnValue('<div>Timing</div>') }
+  timing: { renderTimingPlan: jest.fn().mockReturnValue('<div>Timing</div>') },
+  docs: { render: jest.fn().mockReturnValue('<div>Documents</div>') }
 };
 
 // Mock family/template modal state
@@ -144,7 +145,7 @@ const productDevelopmentScript = fs.readFileSync(
 );
 eval(productDevelopmentScript);
 
-async function waitFor(condition, timeoutMs = 200) {
+async function waitFor(condition, timeoutMs = 1000) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {

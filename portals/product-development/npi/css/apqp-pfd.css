@@ -31,7 +31,7 @@
   justify-content: flex-start;
   padding: 10px 5px 7px;
   border-right: 1px solid var(--line);
-  background: #fafbfd;
+  background: var(--bg-soft);
   gap: 3px;
 }
 
@@ -80,7 +80,7 @@
 
 .step-resources {
   border-top: 1px solid var(--line);
-  background: #f9fbfd;
+  background: var(--bg-soft);
   padding: 6px 8px 6px 62px;
   display: flex;
   flex-wrap: wrap;

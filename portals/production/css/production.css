@@ -10,24 +10,24 @@
   display: inline-block;
 }
 .batch-overdue {
-  color: #991b1b;
-  background: #fee2e2;
-  border: 1px solid #f87171;
+  color: var(--red);
+  background: var(--red-pale);
+  border: 1px solid var(--red-pale);
 }
 .batch-due-soon {
-  color: #92400e;
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
+  color: var(--amber);
+  background: var(--amber-pale);
+  border: 1px solid var(--amber-pale);
 }
-tr.batch-row-overdue { background: #fff5f5; }
-tr.batch-row-due-soon { background: #fffbeb; }
+tr.batch-row-overdue { background: var(--red-pale); }
+tr.batch-row-due-soon { background: var(--amber-pale); }
 
 /* Top Navigation Bar */
 .prod-nav-bar {
   display: flex;
   gap: 8px;
   padding: 12px 24px;
-  background: var(--white);
+  background: var(--surface);
   border-bottom: 2px solid var(--line);
   align-items: center;
 }
@@ -80,7 +80,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: 10px;
   padding: 40px !important;
@@ -144,7 +144,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   border: 1.5px solid var(--line2);
   border-radius: 5px;
   font-size: 13px;
-  background: var(--white);
+  background: var(--surface);
   cursor: pointer;
 }
 
@@ -160,7 +160,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 
 /* Product Tables & Scrollable Wrapper */
 .scheduling-table-wrap {
-  background: var(--white);
+  background: var(--surface);
   border-radius: 6px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -240,7 +240,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 
 .prod-tbl .cell-edit:focus {
   border-color: var(--blue);
-  background: var(--white);
+  background: var(--surface);
   outline: none;
 }
 
@@ -278,7 +278,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   padding: 6px 8px;
   border: 1px solid var(--line);
   border-radius: 3px;
-  background: var(--white);
+  background: var(--surface);
   color: var(--red);
   font-weight: 600;
   cursor: pointer;
@@ -295,7 +295,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   padding: 4px 8px;
   border: 1px solid var(--line);
   border-radius: 3px;
-  background: var(--white);
+  background: var(--surface);
   color: var(--mid);
   font-weight: 600;
   font-size: 11px;
@@ -329,7 +329,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   padding: 12px;
   border: 1.5px solid var(--line);
   border-radius: 8px;
-  background: var(--white);
+  background: var(--surface);
 }
 
 .prod-product-toolbar .filter-group {
@@ -357,7 +357,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 }
 
 .product-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -392,7 +392,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 .product-meta span {
   font-size: 11px;
   color: var(--mid);
-  background: var(--white);
+  background: var(--surface);
   padding: 2px 6px;
   border-radius: 3px;
 }
@@ -472,7 +472,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 }
 
 .unit-tab.active {
-  background: var(--white);
+  background: var(--surface);
   border-color: var(--amber);
   border-bottom-color: var(--amber);
   color: var(--ink);
@@ -495,7 +495,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 
 /* Timeline View - OLD (kept for backwards compatibility) */
 .unit-timeline {
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: 8px;
   padding: 20px;
@@ -545,7 +545,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 }
 
 .timeline-batch:hover {
-  background: var(--white);
+  background: var(--surface);
   border-color: var(--amber);
 }
 
@@ -591,7 +591,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   border-bottom: 3px solid var(--line);
   padding-bottom: 0;
   align-items: stretch;
-  background: var(--white);
+  background: var(--surface);
   margin-bottom: 0;
 }
 
@@ -900,7 +900,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
 }
 
 .modal {
-  background: var(--white);
+  background: var(--surface);
   border-radius: 8px;
   max-width: 600px;
   width: 90%;
@@ -1100,14 +1100,14 @@ tr.batch-row-due-soon { background: #fffbeb; }
   top: 5px;
   transform: translateX(-50%);
   font-size: 11px;
-  color: #000;
+  color: var(--ink);
   font-family: 'IBM Plex Mono';
   font-weight: 600;
   white-space: nowrap;
 }
 
 .compact-two-month .gantt-day-marker.month-end {
-  color: #000;
+  color: var(--ink);
   font-weight: 700;
 }
 
@@ -1129,7 +1129,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   font-weight: 700;
   color: var(--red);
   font-family: 'IBM Plex Mono';
-  background: var(--white);
+  background: var(--surface);
   padding: 0 4px;
   border-radius: 3px;
 }
@@ -1263,14 +1263,14 @@ tr.batch-row-due-soon { background: #fffbeb; }
 
 .six-month-product-view .gantt-week-marker-name {
   font-size: 10px;
-  color: #000;
+  color: var(--ink);
   font-family: 'IBM Plex Mono';
   font-weight: 700;
 }
 
 .six-month-product-view .gantt-week-marker-date {
   font-size: 10px;
-  color: #000;
+  color: var(--ink);
   font-family: 'IBM Plex Mono';
   font-weight: 600;
 }
@@ -1293,7 +1293,7 @@ tr.batch-row-due-soon { background: #fffbeb; }
   font-weight: 700;
   color: var(--red);
   font-family: 'IBM Plex Mono';
-  background: var(--white);
+  background: var(--surface);
   padding: 0 4px;
   border-radius: 3px;
 }

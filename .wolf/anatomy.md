@@ -1,11 +1,11 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T06:44:33.802Z
-> Files: 7 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T07:45:06.474Z
+> Files: 11 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
-- `CHANGELOG.md` — Changelog (~5823 tok)
+- `CHANGELOG.md` — Changelog (~6022 tok)
 
 ## .claude/
 
@@ -36,6 +36,8 @@
 
 ## core/css/
 
+- `components.css` — Styles: 85 rules (~5661 tok)
+- `main.css` — Styles: 49 rules, 141 vars (~3998 tok)
 
 ## core/js/
 
@@ -116,9 +118,11 @@
 
 ## portals/settings/css/
 
+- `settings.css` — Styles: 69 rules (~2922 tok)
 
 ## portals/settings/js/
 
+- `settings.js` — ═══════════════════════════════════════════════════════════════ (~17441 tok)
 
 ## scripts/
 
