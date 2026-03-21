@@ -93,7 +93,9 @@
       <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()" style="display:none">⬆ Import</button>
       <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
       <button class="tbtn tbtn-ghost" onclick="navigate('settings')" title="Settings" style="opacity:0.6">⚙️</button>
-      <button class="tbtn tbtn-ghost" onclick="showModal('shortcutsModal')" title="Keyboard shortcuts (?)">⌨️</button>
+      <button class="tbtn tbtn-ghost shortcuts-btn" onclick="showModal('shortcutsModal')" title="Keyboard shortcuts (?)">⌨️</button>
+      <button class="tbtn tbtn-ghost mobile-quick-btn" onclick="navigate('action-centre')" title="My Actions">✅</button>
+      <button class="tbtn tbtn-ghost mobile-quick-btn" onclick="navigate('feedback')" title="Feedback & Bugs">💬</button>
       <button class="tbtn tbtn-ghost" onclick="doLogout()" title="Sign out" style="margin-left:4px">⏻</button>
     </div>
   </div>
