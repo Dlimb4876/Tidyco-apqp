@@ -3,6 +3,14 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-21 | Fix tab URL memory in ME, Production Load, and PM Capacity | meSetTab/setProdCapTab/pmSetTab were swapping DOM content without updating the URL, so refresh always jumped back to the first tab
+
+## 2026-03-21 | Remove stray up/down arrows from prod capacity tab bar | overflow-x: auto implicitly sets overflow-y: auto; adding overflow-y: hidden prevents the vertical scrollbar from appearing
+
+## 2026-03-21 | Move date adjustment bar on capacity settings page | Improves user experience by placing the month navigation controls directly above the table they manipulate.
+
+## 2026-03-21 | Fix Invalid Refresh Token auth error on startup | Stale refresh token in localStorage caused a console error every page load; getSession() now clears the bad token and an onAuthStateChange listener handles mid-session expiry
+
 ## 2026-03-20 | Gitignore OpenWolf runtime files | cron-state, token-ledger, buglog, suggestions auto-update each session and should not be committed
 
 ## 2026-03-20 | Initialize OpenWolf v1.0.4 | Adds AI workflow tooling with hooks, anatomy scan, and memory system to improve Claude Code sessions

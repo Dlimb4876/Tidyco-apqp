@@ -41,11 +41,19 @@ function showLoginErr(msg) {
 }
 
 async function doLogout() {
-  await supa.auth.signOut();
-  currentUser = null;
+  currentUser = null;     // set null before signOut so onAuthStateChange guard doesn't re-enter
   currentUserRole = null;
+  await supa.auth.signOut();
   db = { projects: [] }; progId = null;
   document.getElementById('appShell').style.display   = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginPassword').value = '';
 }
+
+// If the refresh token expires mid-session, Supabase emits SIGNED_OUT.
+// Redirect to the login screen automatically.
+supa.auth.onAuthStateChange((event, _session) => {
+  if (event === 'SIGNED_OUT' && currentUser !== null) {
+    doLogout();
+  }
+});

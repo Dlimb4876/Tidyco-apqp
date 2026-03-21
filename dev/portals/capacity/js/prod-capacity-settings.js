@@ -117,14 +117,6 @@ function renderProdCapSettings() {
   return `
     <div class="pc-settings">
 
-      <!-- Perpetual Window Controls -->
-      <div class="pc-window-controls">
-        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>
-        <div class="pc-window-label">${offsetLabel}</div>
-        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
-        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
-      </div>
-
       <!-- Utilization Factor Slider -->
       <div class="pc-card" style="margin-bottom:16px">
         <div class="pc-card-header">
@@ -152,6 +144,14 @@ function renderProdCapSettings() {
             At ${utilPercent}% utilization, scheduled workload can be up to ${utilPercent}% of total staff capacity.
           </div>
         </div>
+      </div>
+
+      <!-- Perpetual Window Controls -->
+      <div class="pc-window-controls" style="margin-bottom: 16px">
+        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>
+        <div class="pc-window-label">${offsetLabel}</div>
+        <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
+        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
       </div>
 
       <div class="pc-card-header" style="margin-bottom:16px">
@@ -267,20 +267,33 @@ async function prodCapSettingsFillForward() {
 
   const monthKeys = prodCapGet24MonthKeys();
   const workAreas = prodCapGetWorkAreas();
+  let filled = 0;
 
-  for (const wa of workAreas) {
-    let lastVal = 0;
-    for (const key of monthKeys) {
-      const { year, month } = prodCapParseKey(key);
-      const current = prodCapDataGetStaff(wa, year, month);
-      if (current > 0) {
-        lastVal = current;
-      } else if (lastVal > 0) {
-        await prodCapDataSetStaff(wa, year, month, lastVal);
+  try {
+    for (const wa of workAreas) {
+      let lastVal = 0;
+      for (const key of monthKeys) {
+        const { year, month } = prodCapParseKey(key);
+        const current = prodCapDataGetStaff(wa, year, month);
+        if (current > 0) {
+          lastVal = current;
+        } else if (lastVal > 0) {
+          await prodCapDataSetStaff(wa, year, month, lastVal);
+          filled++;
+        }
       }
     }
+    if (filled > 0) {
+      showToast(`Filled ${filled} cell${filled === 1 ? '' : 's'} forward.`, 'success');
+    } else {
+      showToast('No empty cells to fill — enter a value in the first month of each row first.', 'info');
+    }
+  } catch (err) {
+    console.error('Fill forward error:', err);
+    showToast('Fill forward failed: ' + (err.message || String(err)), 'error');
+  } finally {
+    render();
   }
-  render();
 }
 
 // ── Clear all capacity records for confirmation ───────────────

@@ -213,6 +213,9 @@ function navigate(sec, { pushHash = true } = {}) {
     if (sec === 'projects' && npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab));
     if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
     if (sec === 'capacity' && capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(capacityTab));
+    if (sec === 'capacity' && capacityTab === 'me' && typeof meTab !== 'undefined' && meTab !== 'chart') parts.push('met=' + encodeURIComponent(meTab));
+    if (sec === 'capacity' && capacityTab === 'production' && prodCapTab !== 'dashboard') parts.push('pct=' + encodeURIComponent(prodCapTab));
+    if (sec === 'capacity' && capacityTab === 'projects' && typeof pmTab !== 'undefined' && pmTab !== 'chart') parts.push('pmt=' + encodeURIComponent(pmTab));
     if (sec === 'operations' && operationsTab !== 'overview') parts.push('od=' + encodeURIComponent(operationsTab));
     if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
     if (sec === 'product-development' && productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(productDevelopmentTab));
@@ -517,6 +520,9 @@ window.addEventListener('popstate', () => {
   operationsTab        = h.od  || 'overview';
   productionTab        = h.pt  || 'root';
   productDevelopmentTab = h.pdt || 'root';
+  if (h.met && typeof meTab !== 'undefined') meTab = h.met;
+  if (h.pct) prodCapTab = h.pct;
+  if (h.pmt && typeof pmTab !== 'undefined') pmTab = h.pmt;
   if (h.t) apqpTab = h.t;
   if (h.p && db.projects.find(p => p.id === h.p)) {
     progId = h.p;
