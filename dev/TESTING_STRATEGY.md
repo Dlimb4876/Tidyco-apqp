@@ -58,6 +58,7 @@ npm test -- --coverage
 - Helpers/utilities (including modal and escaping helpers)
 - Capacity modules (ME/PM/Production paths)
 - Product Development/NPI data and rendering paths
+- NPI gate signoff role-permission enforcement
 - MCS workflow and integration paths
 - Operations dashboard and forecast flows
 - Feedback and Action Centre behavior

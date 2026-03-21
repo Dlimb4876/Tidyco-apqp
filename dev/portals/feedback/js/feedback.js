@@ -223,22 +223,22 @@ function feedbackRenderSubmitTab() {
         </div>
 
         <div class="field">
-          <label>Submitted By</label>
-          <input type="text" name="feedback_submitted_by" value="${esc(email)}" readonly class="feedback-readonly-field">
+          <label for="feedbackSubmittedBy">Submitted By</label>
+          <input type="text" id="feedbackSubmittedBy" name="feedback_submitted_by" value="${esc(email)}" readonly class="feedback-readonly-field">
         </div>
 
         <div class="field">
-          <label>Date</label>
-          <input type="text" name="feedback_submitted_date" value="${today}" readonly class="feedback-readonly-field">
+          <label for="feedbackSubmittedDate">Date</label>
+          <input type="text" id="feedbackSubmittedDate" name="feedback_submitted_date" value="${today}" readonly class="feedback-readonly-field">
         </div>
 
         <div class="field">
-          <label>Page / Area</label>
+          <label for="feedbackInlinePage">Page / Area</label>
           <input type="text" id="feedbackInlinePage" placeholder="e.g. PFMEA, Capacity Planning, Production Scheduling…">
         </div>
 
         <div class="field">
-          <label>Title *</label>
+          <label for="feedbackInlineTitle">Title *</label>
           <input type="text" id="feedbackInlineTitle" placeholder="Brief summary of your feedback">
         </div>
 
@@ -261,7 +261,7 @@ function feedbackRenderSubmitTab() {
         </div>
 
         <div class="field">
-          <label>Description *</label>
+          <label for="feedbackInlineDesc">Description *</label>
           <textarea id="feedbackInlineDesc" placeholder="Describe your feedback in detail…" rows="6" style="resize:vertical"></textarea>
         </div>
 
@@ -281,8 +281,8 @@ function feedbackRenderBrowseTab(feedback) {
   return `
     <div class="feedback-filters">
       <div class="feedback-filter-group">
-        <label>Type</label>
-        <select class="feedback-filter-select" name="feedback_filter_type" onchange="feedbackApp.setFilter('type', this.value)">
+        <label for="feedbackFilterType">Type</label>
+        <select id="feedbackFilterType" class="feedback-filter-select" name="feedback_filter_type" onchange="feedbackApp.setFilter('type', this.value)">
           <option value="all" ${filter.type === 'all' ? 'selected' : ''}>All Types</option>
           <option value="bug" ${filter.type === 'bug' ? 'selected' : ''}>🐛 Bugs</option>
           <option value="usability" ${filter.type === 'usability' ? 'selected' : ''}>💡 Usability</option>
@@ -291,8 +291,8 @@ function feedbackRenderBrowseTab(feedback) {
         </select>
       </div>
       <div class="feedback-filter-group">
-        <label>Status</label>
-        <select class="feedback-filter-select" name="feedback_filter_status" onchange="feedbackApp.setFilter('status', this.value)">
+        <label for="feedbackFilterStatus">Status</label>
+        <select id="feedbackFilterStatus" class="feedback-filter-select" name="feedback_filter_status" onchange="feedbackApp.setFilter('status', this.value)">
           <option value="all" ${filter.status === 'all' ? 'selected' : ''}>All Status</option>
           <option value="open" ${filter.status === 'open' ? 'selected' : ''}>Open</option>
           <option value="in_review" ${filter.status === 'in_review' ? 'selected' : ''}>In Review</option>
@@ -304,8 +304,8 @@ function feedbackRenderBrowseTab(feedback) {
         </select>
       </div>
       <div class="feedback-filter-group feedback-filter-search">
-        <label>Search</label>
-        <input type="text" class="feedback-search-input" placeholder="Search title, description, page…" 
+        <label for="feedbackSearch">Search</label>
+        <input type="text" id="feedbackSearch" class="feedback-search-input" placeholder="Search title, description, page…" 
                value="${esc(filter.search || '')}" 
                oninput="feedbackApp.setFilter('search', this.value)">
       </div>

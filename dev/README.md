@@ -90,6 +90,18 @@ This applies to UI, routing, shared data handling, and persistence changes so th
 
 ---
 
+## NPI Gate Signoff Permissions
+
+NPI gate signoff now supports named-role permissions. A user must have the matching permission key to sign, unsign, or edit signatory fields for that role.
+
+- `feature_npi_signoff_me_manager`
+- `feature_npi_signoff_operations_director`
+- `feature_npi_signoff_sales_director`
+
+Assign these from **Settings → Teams → Edit permissions**. Admin users can still sign off all roles.
+
+---
+
 ## Project Structure
 
 ```

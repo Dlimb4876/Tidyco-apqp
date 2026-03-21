@@ -108,13 +108,13 @@ describe('npi.timing.fmtWeekDate()', () => {
 
 describe('npi.timing.buildMonthGroups()', () => {
   it('returns an array of month groups', () => {
-    const groups = npi.timing.buildMonthGroups('2025-01-06');
+    const groups = npi.timing.buildMonthGroups('2025-01-06', global.GANTT_WEEKS);
     expect(Array.isArray(groups)).toBe(true);
     expect(groups.length).toBeGreaterThan(0);
   });
 
   it('each group has label, mo, and weeks fields', () => {
-    const groups = npi.timing.buildMonthGroups('2025-01-06');
+    const groups = npi.timing.buildMonthGroups('2025-01-06', global.GANTT_WEEKS);
     groups.forEach(g => {
       expect(g).toHaveProperty('label');
       expect(g).toHaveProperty('mo');
@@ -124,13 +124,13 @@ describe('npi.timing.buildMonthGroups()', () => {
   });
 
   it('total weeks across all groups equals GANTT_WEEKS', () => {
-    const groups = npi.timing.buildMonthGroups('2025-01-06');
+    const groups = npi.timing.buildMonthGroups('2025-01-06', global.GANTT_WEEKS);
     const totalWeeks = groups.reduce((sum, g) => sum + g.weeks.length, 0);
     expect(totalWeeks).toBe(global.GANTT_WEEKS);
   });
 
   it('weeks within a group are consecutive integers', () => {
-    const groups = npi.timing.buildMonthGroups('2025-01-06');
+    const groups = npi.timing.buildMonthGroups('2025-01-06', global.GANTT_WEEKS);
     let expectedWeek = 0;
     groups.forEach(g => {
       g.weeks.forEach(w => {
@@ -140,12 +140,12 @@ describe('npi.timing.buildMonthGroups()', () => {
   });
 
   it('returns at least 12 groups for a 52-week period', () => {
-    const groups = npi.timing.buildMonthGroups('2025-01-06');
+    const groups = npi.timing.buildMonthGroups('2025-01-06', global.GANTT_WEEKS);
     expect(groups.length).toBeGreaterThanOrEqual(12);
   });
 
   it('returns a fallback label when startStr is missing', () => {
-    const groups = npi.timing.buildMonthGroups(null);
+    const groups = npi.timing.buildMonthGroups(null, global.GANTT_WEEKS);
     // Should still return groups (with M1, M2 etc labels)
     expect(Array.isArray(groups)).toBe(true);
   });

@@ -69,6 +69,79 @@
 .gantt-th-notes { text-align: left !important;  padding: 3px 5px !important; color: var(--table-head-ink) !important; }
 .gantt-th-left  { color: var(--table-head-ink) !important; }
 
+/* ── Section header rows ────────────────────────────────────── */
+.gantt-section-hdr td {
+  padding: 5px 10px !important;
+  user-select: none;
+  border-top: 2px solid var(--line2) !important;
+}
+.gantt-section-hdr:first-child td { border-top: none !important; }
+.gantt-section-hdr:hover td { filter: brightness(1.08); }
+
+/* ── Milestone row ──────────────────────────────────────────── */
+.gantt-milestone-row th,
+.gantt-milestone-row td {
+  background: #f5f0ff;
+  height: 14px;
+  padding: 0;
+  border: 1px solid rgba(124,58,237,.08);
+}
+
+/* ── Milestone cells ────────────────────────────────────────── */
+.gantt-ms-cell {
+  text-align: center;
+  font-size: 9px;
+  color: transparent;
+  cursor: pointer;
+  height: 14px;
+}
+.gantt-ms-cell:not(.gantt-ms-set):not(.gantt-collapsed-cell):hover {
+  background: #ede9fe !important;
+  color: #c4b5fd !important;
+  content: '◆';
+}
+.gantt-ms-set {
+  color: #7c3aed;
+  font-weight: 700;
+}
+.gantt-ms-set:hover { background: #fee2e2 !important; color: #dc2626 !important; }
+
+/* ── Row action buttons (↑ ↓ ×) ────────────────────────────── */
+.gantt-actions-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 2px !important;
+}
+.gantt-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.gantt-row-actions .del-btn { font-size: 10px; padding: 1px 5px; line-height: 1.4; }
+.gantt-row-actions .del-btn:disabled { opacity: .2; cursor: default; }
+
+/* ── Print / PDF export ─────────────────────────────────────── */
+@media print {
+  .sec-head, .btn, .add-row, .del-btn, .gantt-row-actions { display: none !important; }
+  #gantt-scroll-container {
+    overflow: visible !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  .cell-edit {
+    border: none !important;
+    background: transparent !important;
+    pointer-events: none;
+  }
+  .gantt-tbl { font-size: 8px !important; }
+  .gantt-cell, .gantt-actual-cell { min-width: 14px !important; height: 12px !important; }
+  .gantt-task-cell  { min-width: 120px !important; }
+  .gantt-notes-cell { min-width: 80px !important; }
+  .gantt-ms-cell    { display: none !important; }
+  .gantt-milestone-row { display: none !important; }
+}
+
 /* ── Kit styles (BOM kit builder, lives near timing in nav) ─── */
 .kit-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
 .kit-card  { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }

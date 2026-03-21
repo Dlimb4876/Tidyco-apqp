@@ -98,13 +98,16 @@ function renderProdCapDashboard() {
           <div>
             <div class="pc-card-title">2-Year Production Load Forecast</div>
             <div class="pc-card-sub">Demand stacked by product family · Capacity line = available staff hours</div>
-            <div
+            <button
+              type="button"
               class="pc-card-sub"
+              data-cap-action="cap-prod-capacity-help"
               title="Capacity formula: staff x working days x 8h. Working days are Mon-Fri and exclude UK bank holidays. This is a 40h/week baseline per person (5 x 8h), then adjusted by the utilization factor."
-              style="margin-top:4px;color:var(--blue);font-weight:600;cursor:help"
+              style="margin-top:4px;color:var(--blue);font-weight:600;cursor:pointer;background:none;border:none;padding:0;text-align:left"
+              aria-label="Show how production capacity is calculated"
             >
               ⓘ How capacity is calculated
-            </div>
+            </button>
           </div>
           <div class="pc-window-controls" style="margin-bottom: 0; padding: 0; border: none; background: none;">
             <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>

@@ -21,8 +21,15 @@
 - **ChartTheme utility** (`core/js/chart-theme.js`) is loaded after `db.js` in index.html and provides `ChartTheme.getColors()`, `ChartTheme.getPalette(n)`, `ChartTheme.getDefaultOptions()` — use for all new Chart.js code instead of hardcoding colors.
 - `--bg-soft` (`#f8fbff` light / `#101a24` dark) replaces `#fafbfd`/`#f7fbff` subtle surface tints. `--table-head-bg` replaces `#f4f6fa` header backgrounds. `--overlay-bg` replaces `rgba(0,0,0,0.5)` modal backdrops.
 - Some Jest suites evaluate modules in isolation (without full script load order), so refactors that replace inline logic with global helpers must include local fallback wrappers to avoid `ReferenceError` in tests.
+- For script files loaded via eval in Jest, function declarations may not be directly visible in test scope; export needed functions through `globalThis` inside the eval string to make tests deterministic.
+- In eval-loaded browser scripts, mocking `global.<fnName>` may not intercept same-scope function calls inside the module; prefer asserting DOM/state outcomes rather than expecting mocked invocation counts for internal function calls.
 - Coverage reporting note: many suites load source files via eval(), which means Jest can pass all tests but still emit an empty source coverage map.
 - Operations dashboard parity expectation: the People tab must include Unit 2/3/6 capacity cards alongside ME and PM, not only on Overview.
+- Capacity info affordances in dashboard cards must be interactive controls (button or delegated action), not static `div` text with only a `title` tooltip.
+
+## User Preferences (continued)
+
+- **OpenWolf protocol is non-negotiable, even mid-flow.** User expects cerebrum.md, buglog.json, anatomy.md, and memory.md to be updated automatically — not only when reminded. A fast-moving session (bug → fix → feature sprint with no pause) is not an excuse to skip the protocol. Treat the protocol steps as mandatory checkpoints, not optional wrap-up.
 
 ## Do-Not-Repeat
 

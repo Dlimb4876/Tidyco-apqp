@@ -57,21 +57,31 @@ npi.gate.renderGatePage = function(gateNum) {
       <label for="gc_${gateNum}_${row.sourceIndex}" style="font-size:13px;color:${row.checked ? 'var(--muted)' : 'var(--ink)'};cursor:pointer;flex:1;${row.checked ? 'text-decoration:line-through;' : ''}">${esc(row.text)}</label>
     </div>`).join('')
 
-  const sigCards = (gd.sigs || []).map((sig, si) => `
+  const sigCards = (gd.sigs || []).map((sig, si) => {
+    const canSignRole = !(npi.data && npi.data.gate && typeof npi.data.gate.canCurrentUserSignRole === 'function')
+      ? true
+      : npi.data.gate.canCurrentUserSignRole(sig.role)
+    const roleNotice = canSignRole
+      ? ''
+      : `<div style="font-size:11px;color:var(--red);background:var(--red-pale);border:1px solid var(--red-mid);border-radius:5px;padding:6px 8px">Only authorised users can sign off as ${esc(sig.role)}.</div>`
+
+    return `
     <div style="background:var(--white);border:1px solid ${sig.signed ? 'var(--green-mid)' : 'var(--line)'};border-radius:8px;overflow:hidden;${sig.signed ? 'background:var(--green-pale);' : ''}">
       <div style="padding:10px 14px;border-bottom:1px solid ${sig.signed ? 'var(--green-mid)' : 'var(--line)'};display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span style="font-size:12px;font-weight:700;color:var(--ink)">${esc(sig.role)}</span>
         <span style="font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:4px;${sig.signed ? 'background:var(--green);color:white' : 'background:var(--line);color:var(--muted)'}">${sig.signed ? '✓ SIGNED' : 'PENDING'}</span>
       </div>
       <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
-        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Name</label><input name="gate_${gateNum}_sig_${si}_name" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:var(--green-pale);border-color:var(--green-mid)' : ''}" value="${esc(sig.name)}" placeholder="Full name" onchange="npi.gate.updSig(${gateNum},${si},'name',this.value)"></div>
-        <div><label style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Date</label><input type="date" name="gate_${gateNum}_sig_${si}_date" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:var(--green-pale);border-color:var(--green-mid)' : ''}" value="${sig.date || ''}" onchange="npi.gate.updSig(${gateNum},${si},'date',this.value)"></div>
+        ${roleNotice}
+        <div><label for="gate_${gateNum}_sig_${si}_name" style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Name</label><input id="gate_${gateNum}_sig_${si}_name" name="gate_${gateNum}_sig_${si}_name" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:var(--green-pale);border-color:var(--green-mid)' : ''}" value="${esc(sig.name)}" placeholder="Full name" ${canSignRole ? '' : 'disabled'} onchange="npi.gate.updSig(${gateNum},${si},'name',this.value)"></div>
+        <div><label for="gate_${gateNum}_sig_${si}_date" style="display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Date</label><input type="date" id="gate_${gateNum}_sig_${si}_date" name="gate_${gateNum}_sig_${si}_date" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;${sig.signed ? 'background:var(--green-pale);border-color:var(--green-mid)' : ''}" value="${sig.date || ''}" ${canSignRole ? '' : 'disabled'} onchange="npi.gate.updSig(${gateNum},${si},'date',this.value)"></div>
         ${!sig.signed
-          ? `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;${sig.name ? 'background:var(--blue);color:white' : 'background:var(--line);color:var(--muted);cursor:not-allowed'}" onclick="${sig.name ? `npi.gate.signOff(${gateNum},${si})` : 'npi.nav.alertEnterNameFirst()'}">${sig.name ? 'Sign Off' : 'Enter name to sign'}</button>`
+          ? `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;${!canSignRole || !sig.name ? 'background:var(--line);color:var(--muted);cursor:not-allowed' : 'background:var(--blue);color:white'}" ${!canSignRole ? 'disabled' : ''} onclick="${canSignRole ? (sig.name ? `npi.gate.signOff(${gateNum},${si})` : 'npi.nav.alertEnterNameFirst()') : ''}">${canSignRole ? (sig.name ? 'Sign Off' : 'Enter name to sign') : 'Not authorised'}</button>`
           : `<button style="width:100%;padding:8px;border:none;border-radius:5px;font-size:13px;font-weight:600;background:var(--green);color:white;cursor:default;font-family:'IBM Plex Sans',sans-serif">✓ Signed</button>
-             <button onclick="npi.gate.unsign(${gateNum},${si})" style="font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'IBM Plex Sans',sans-serif;padding:0;margin-top:2px">Undo sign-off</button>`}
+             ${canSignRole ? `<button onclick="npi.gate.unsign(${gateNum},${si})" style="font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:'IBM Plex Sans',sans-serif;padding:0;margin-top:2px">Undo sign-off</button>` : ''}`}
       </div>
-    </div>`).join('')
+    </div>`
+  }).join('')
 
   const prevGate = gateNum > 0 ? gateNum - 1 : null
   const nextGate = gateNum < 5 ? gateNum + 1 : null

@@ -23,6 +23,9 @@ const HYBRID_PERMISSION_DEFINITIONS = [
   { key: 'feature_manage_user_roles', label: 'Change user roles and team assignments', group: 'Features' },
   { key: 'feature_access_settings', label: 'Edit Settings content', group: 'Features' },
   { key: 'feature_mcs_approve', label: 'Approve or reject manufacturing changes', group: 'Features' },
+  { key: 'feature_npi_signoff_me_manager', label: 'Sign off NPI gates as ME Manager', group: 'Features' },
+  { key: 'feature_npi_signoff_operations_director', label: 'Sign off NPI gates as Operations Director', group: 'Features' },
+  { key: 'feature_npi_signoff_sales_director', label: 'Sign off NPI gates as Sales Director', group: 'Features' },
   { key: 'field_settings_permissions_edit', label: 'Edit role and team assignment fields', group: 'Field-level' },
   { key: 'data_scope_global', label: 'Global data scope', group: 'Data scope' }
 ];
