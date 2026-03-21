@@ -1439,3 +1439,42 @@
     display: none;
   }
 }
+
+/* ── Dark mode overrides for mc-shell (project dashboard) ──── */
+:root[data-theme="dark"] .mc-shell .dash-prog-name {
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .mc-shell .eyebrow {
+  color: #5bc8e2;
+}
+
+:root[data-theme="dark"] .mc-shell .cmd-big {
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .mc-shell .next-box h3 {
+  color: #5bc8e2;
+}
+
+:root[data-theme="dark"] .mc-shell .next-box li {
+  color: var(--ink2);
+}
+
+:root[data-theme="dark"] .mc-shell .gate.done {
+  border-color: rgba(66, 179, 110, 0.5);
+  color: #42b36e;
+  background: rgba(66, 179, 110, 0.15);
+}
+
+:root[data-theme="dark"] .mc-shell .gate.active {
+  border-color: rgba(91, 200, 226, 0.5);
+  color: #5bc8e2;
+  background: rgba(91, 200, 226, 0.12);
+}
+
+:root[data-theme="dark"] .mc-shell .chips button:hover {
+  border-color: #42b36e;
+  color: #42b36e;
+  background: rgba(66, 179, 110, 0.12);
+}

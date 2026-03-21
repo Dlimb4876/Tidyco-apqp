@@ -1,11 +1,11 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T08:56:32.383Z
-> Files: 18 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-21T10:14:10.435Z
+> Files: 19 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
-- `CHANGELOG.md` — Changelog (~6150 tok)
+- `CHANGELOG.md` — Changelog (~6237 tok)
 
 ## .claude/
 
@@ -105,6 +105,7 @@
 
 - `apqp-ctq.css` — Styles: 40 rules (~1540 tok)
 - `apqp-pfd.css` — Styles: 45 rules (~1730 tok)
+- `dashboard.css` — Styles: 89 rules (~7951 tok)
 
 ## portals/product-development/npi/js/
 
