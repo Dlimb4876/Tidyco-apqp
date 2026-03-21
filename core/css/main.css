@@ -355,11 +355,11 @@ body {
 .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 240px; }
 .brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; cursor: pointer; }
 .brand:hover .brand-name { color: var(--topbar-brand-hover); }
-.brand-hex {
-  width: 26px;
-  height: 26px;
-  background: var(--blue);
-  clip-path: polygon(50% 0%,93.3% 25%,93.3% 75%,50% 100%,6.7% 75%,6.7% 25%);
+.brand-logo {
+  height: 34px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  display: block;
 }
 .brand-name { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: var(--topbar-brand); letter-spacing: 1px; transition: color .15s; }
 .brand-sep  { color: var(--topbar-brand-sep); margin: 0 2px; }

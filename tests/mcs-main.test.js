@@ -1,176 +1,178 @@
-/**
- * MCS Main Portal Tests
- * Tests for list rendering, filtering, sorting, and core functionality
- */
+const fs = require('fs');
+const path = require('path');
+
+const script = fs.readFileSync(
+  path.resolve(__dirname, '../portals/mcs/js/mcs-main.js'),
+  'utf8'
+);
 
 describe('MCS Main Portal', () => {
   beforeEach(() => {
-    // Mock global state
-    window.mcsList = [];
-    window.mcsCurrentFilter = { status: 'all', priority: 'all', type: 'all', source: 'all' };
-    window.mcsLoading = false;
+    document.body.innerHTML = `
+      <input id="mcs-search-input" value="" />
+      <select id="mcs-sort-select">
+        <option value="date-desc">Newest First</option>
+        <option value="date-asc">Oldest First</option>
+        <option value="priority">Priority</option>
+        <option value="status">Status</option>
+      </select>
+      <select id="mcs-date-range"><option value="all">All</option></select>
+      <input type="checkbox" id="mcs-qf-mychanges" />
+      <input type="checkbox" id="mcs-qf-overdue" />
+      <input type="checkbox" id="mcs-qf-highpri" />
+      <div id="mcs-list-container"></div>
+      <span id="mcs-list-count"></span>
+      <button class="mcs-filter-btn active" onclick="mcsSetFilter('status', 'all', this)">All</button>
+      <span id="mcs-fc-all"></span>
+      <span id="mcs-fc-open"></span>
+      <span id="mcs-fc-review"></span>
+      <span id="mcs-fc-implementing"></span>
+      <span id="mcs-fc-final_review"></span>
+      <span id="mcs-fc-implemented"></span>
+      <span id="mcs-fc-closed"></span>
+      <span id="mcs-fc-critical"></span>
+      <span id="mcs-fc-high"></span>
+      <span id="mcs-fc-medium"></span>
+      <span id="mcs-fc-low"></span>
+      <span id="mcs-kpi-open"></span>
+      <span id="mcs-kpi-review"></span>
+      <span id="mcs-kpi-overdue"></span>
+      <span id="mcs-kpi-week"></span>
+    `;
+
+    global.esc = (v) => String(v ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    global.currentUser = { email: 'owner@test.com' };
+    global.mcsList = [
+      {
+        id: 'ECR-1',
+        title: 'Valve update',
+        status: 'open',
+        priority: 'critical',
+        change_type: 'Engineering',
+        change_source: 'Manual',
+        initiated_by: 'owner@test.com',
+        description: 'Improve sealing ring',
+        created_at: '2026-03-10T10:00:00Z',
+        target_implementation: '2099-01-01',
+      },
+      {
+        id: 'ECR-2',
+        title: 'Paint spec',
+        status: 'review',
+        priority: 'high',
+        change_type: 'Process',
+        change_source: 'Customer',
+        initiated_by: 'other@test.com',
+        description: 'Change coating',
+        created_at: '2026-03-12T09:00:00Z',
+        target_implementation: '2099-01-02',
+      },
+      {
+        id: 'ECR-3',
+        title: 'Legacy approved',
+        status: 'approved',
+        priority: 'low',
+        change_type: 'Material',
+        change_source: 'Manual',
+        initiated_by: 'other@test.com',
+        description: 'Legacy closure',
+        created_at: '2026-03-01T09:00:00Z',
+        target_implementation: '2025-01-01',
+      },
+    ];
+
+    global.mcsCurrentFilter = {
+      status: 'all',
+      priority: 'all',
+      type: 'all',
+      source: 'all',
+      myChanges: false,
+      overdueOnly: false,
+      highPriority: false,
+      dateRange: 'all',
+    };
+
+    eval(`${script}\n;globalThis.__mcsMain = { mcsGetFiltered, mcStatusLabel, mcsIsOverdue, mcsClearFilters, mcsToggleQuickFilter };`); // eslint-disable-line no-eval
   });
 
-  describe('Filter Logic', () => {
-    it('should filter changes by status', () => {
-      const changes = [
-        { id: 'ECR-2026-0001', status: 'open', priority: 'high', change_type: 'Engineering' },
-        { id: 'ECR-2026-0002', status: 'review', priority: 'medium', change_type: 'Process' },
-        { id: 'ECR-2026-0003', status: 'approved', priority: 'low', change_type: 'Material' }
-      ];
+  it('filters by status and includes legacy approved/rejected when closed is selected', () => {
+    global.mcsCurrentFilter.status = 'closed';
+    const filtered = globalThis.__mcsMain.mcsGetFiltered();
 
-      window.mcsList = changes;
-      window.mcsCurrentFilter = { status: 'open', priority: 'all', type: 'all', source: 'all' };
-
-      const filtered = window.mcsGetFiltered ? window.mcsGetFiltered() : [];
-      // Would test actual filtering logic if function exists
-      expect(changes.length).toBe(3);
-    });
-
-    it('should filter changes by priority', () => {
-      const changes = [
-        { id: 'ECR-2026-0001', priority: 'critical' },
-        { id: 'ECR-2026-0002', priority: 'high' },
-        { id: 'ECR-2026-0003', priority: 'low' }
-      ];
-
-      window.mcsList = changes;
-      expect(changes.filter(c => c.priority === 'critical').length).toBe(1);
-    });
-
-    it('should search across multiple fields', () => {
-      const changes = [
-        { id: 'ECR-2026-0001', title: 'Safety Valve Update', part_drawing_no: 'Valve Assembly' },
-        { id: 'ECR-2026-0002', title: 'Paint Spec Change', part_drawing_no: 'Paint Part' }
-      ];
-
-      window.mcsList = changes;
-      const q = 'Safety';
-      const results = changes.filter(c =>
-        (c.id + c.title + (c.part_drawing_no || '')).toLowerCase().includes(q.toLowerCase())
-      );
-
-      expect(results.length).toBe(1);
-      expect(results[0].id).toBe('ECR-2026-0001');
-    });
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].id).toBe('ECR-3');
   });
 
-  describe('Sort Logic', () => {
-    it('should sort by date descending', () => {
-      const changes = [
-        { id: 'ECR-2026-0001', created_at: '2026-02-01T00:00:00Z' },
-        { id: 'ECR-2026-0002', created_at: '2026-03-01T00:00:00Z' },
-        { id: 'ECR-2026-0003', created_at: '2026-01-01T00:00:00Z' }
-      ];
+  it('filters by search text across title and description', () => {
+    document.getElementById('mcs-search-input').value = 'sealing ring';
+    const filtered = globalThis.__mcsMain.mcsGetFiltered();
 
-      const sorted = [...changes].sort((a, b) =>
-        new Date(b.created_at) - new Date(a.created_at)
-      );
-
-      expect(sorted[0].id).toBe('ECR-2026-0002');
-      expect(sorted[2].id).toBe('ECR-2026-0003');
-    });
-
-    it('should sort by priority', () => {
-      const changes = [
-        { id: 'ECR-2026-0001', priority: 'low' },
-        { id: 'ECR-2026-0002', priority: 'critical' },
-        { id: 'ECR-2026-0003', priority: 'high' }
-      ];
-
-      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-      const sorted = [...changes].sort((a, b) =>
-        priorityOrder[a.priority] - priorityOrder[b.priority]
-      );
-
-      expect(sorted[0].priority).toBe('critical');
-      expect(sorted[2].priority).toBe('low');
-    });
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].id).toBe('ECR-1');
   });
 
-  describe('Count Calculations', () => {
-    it('should count changes by status', () => {
-      const changes = [
-        { status: 'open' },
-        { status: 'open' },
-        { status: 'review' },
-        { status: 'approved' }
-      ];
+  it('sorts by priority order critical > high > medium > low', () => {
+    document.getElementById('mcs-sort-select').value = 'priority';
+    const filtered = globalThis.__mcsMain.mcsGetFiltered();
 
-      window.mcsList = changes;
-      const counts = {
-        open: changes.filter(c => c.status === 'open').length,
-        review: changes.filter(c => c.status === 'review').length,
-        approved: changes.filter(c => c.status === 'approved').length
-      };
-
-      expect(counts.open).toBe(2);
-      expect(counts.review).toBe(1);
-      expect(counts.approved).toBe(1);
-    });
-
-    it('should count changes by priority', () => {
-      const changes = [
-        { priority: 'critical' },
-        { priority: 'critical' },
-        { priority: 'high' },
-        { priority: 'low' }
-      ];
-
-      window.mcsList = changes;
-      const counts = {
-        critical: changes.filter(c => c.priority === 'critical').length,
-        high: changes.filter(c => c.priority === 'high').length,
-        low: changes.filter(c => c.priority === 'low').length
-      };
-
-      expect(counts.critical).toBe(2);
-      expect(counts.high).toBe(1);
-    });
+    expect(filtered[0].priority).toBe('critical');
+    expect(filtered[1].priority).toBe('high');
+    expect(filtered[2].priority).toBe('low');
   });
 
-  describe('ID Generation', () => {
-    it('should generate valid ECR IDs', () => {
-      const year = new Date().getFullYear();
-      const id = `ECR-${year}-0001`;
+  it('detects overdue only for non-closed statuses', () => {
+    const openOverdue = { status: 'open', target_implementation: '2020-01-01' };
+    const closedOverdue = { status: 'implemented', target_implementation: '2020-01-01' };
 
-      expect(id).toMatch(/^ECR-\d{4}-\d{4}$/);
-      expect(id).toContain(String(year));
-    });
+    expect(globalThis.__mcsMain.mcsIsOverdue(openOverdue)).toBe(true);
+    expect(globalThis.__mcsMain.mcsIsOverdue(closedOverdue)).toBe(false);
   });
 
-  describe('Status Labels', () => {
-    it('should translate status codes to labels', () => {
-      const statusMap = {
-        'open': 'Open',
-        'review': 'Under Review',
-        'approved': 'Approved',
-        'implemented': 'Implemented',
-        'rejected': 'Rejected'
-      };
-
-      Object.entries(statusMap).forEach(([code, label]) => {
-        expect(label).toBeTruthy();
-        expect(label.length).toBeGreaterThan(0);
-      });
-    });
+  it('maps statuses to expected display labels', () => {
+    expect(globalThis.__mcsMain.mcStatusLabel('review')).toBe('Awaiting Approval 1');
+    expect(globalThis.__mcsMain.mcStatusLabel('final_review')).toBe('Awaiting Approval 2');
+    expect(globalThis.__mcsMain.mcStatusLabel('rejected')).toBe('Closed');
   });
 
-  describe('Empty State', () => {
-    it('should handle empty changes list', () => {
-      window.mcsList = [];
-      expect(window.mcsList.length).toBe(0);
-    });
+  it('clear filters resets quick filters, search and sort', () => {
+    document.getElementById('mcs-search-input').value = 'abc';
+    document.getElementById('mcs-sort-select').value = 'priority';
+    document.getElementById('mcs-qf-mychanges').checked = true;
+    document.getElementById('mcs-qf-overdue').checked = true;
+    document.getElementById('mcs-qf-highpri').checked = true;
+    global.mcsCurrentFilter = {
+      status: 'review',
+      priority: 'high',
+      type: 'Engineering',
+      source: 'Manual',
+      myChanges: true,
+      overdueOnly: true,
+      highPriority: true,
+      dateRange: 'week',
+    };
 
-    it('should handle no matches after filtering', () => {
-      window.mcsList = [
-        { id: 'ECR-2026-0001', status: 'open' },
-        { id: 'ECR-2026-0002', status: 'review' }
-      ];
+    globalThis.__mcsMain.mcsClearFilters();
 
-      window.mcsCurrentFilter = { status: 'implemented', priority: 'all', type: 'all', source: 'all' };
-      // In real test, would verify empty state UI renders
-      expect(window.mcsList.length).toBeGreaterThan(0); // Data exists but filtered out
-    });
+    expect(global.mcsCurrentFilter.status).toBe('all');
+    expect(global.mcsCurrentFilter.priority).toBe('all');
+    expect(global.mcsCurrentFilter.myChanges).toBe(false);
+    expect(document.getElementById('mcs-search-input').value).toBe('');
+    expect(document.getElementById('mcs-sort-select').value).toBe('date-desc');
+    expect(document.getElementById('mcs-qf-mychanges').checked).toBe(false);
+    expect(document.getElementById('mcs-list-count').textContent).toBe('(3)');
+  });
+
+  it('toggle quick filter updates state and checkbox sync', () => {
+    globalThis.__mcsMain.mcsToggleQuickFilter('overdueOnly', true);
+
+    expect(global.mcsCurrentFilter.overdueOnly).toBe(true);
+    expect(document.getElementById('mcs-qf-overdue').checked).toBe(true);
+    expect(document.getElementById('mcs-list-count').textContent).toBe('(0)');
   });
 });

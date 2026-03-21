@@ -328,8 +328,8 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
           <table class="me-tbl">
             <thead><tr>
               <th style="width:200px">Product Name</th>
-              <th style="width:150px">Family</th>
-              <th style="width:130px">Status</th>
+              <th style="width:150px">Product Family</th>
+              <th style="width:130px">Product Status</th>
               <th style="width:120px">Support From</th>
               <th style="width:120px">Support Until</th>
               <th style="width:120px">Hours/Week</th>

@@ -177,6 +177,10 @@ window.capacityEvents._onClick = function(evt) {
   case 'cap-prod-prev-month': if (typeof prodCapShiftMonth === 'function') prodCapShiftMonth('prev'); break
   case 'cap-prod-next-month': if (typeof prodCapShiftMonth === 'function') prodCapShiftMonth('next'); break
   case 'cap-prod-reset-month': if (typeof prodCapResetMonthOffset === 'function') prodCapResetMonthOffset(); break
+  case 'cap-prod-capacity-help': {
+    if (typeof showModal === 'function') showModal('modalProdCapacityFormula')
+    break
+  }
   case 'cap-prod-set-workarea': {
     const wa = el.getAttribute('data-workarea')
     if (typeof window.prodCapSetWorkArea === 'function') {

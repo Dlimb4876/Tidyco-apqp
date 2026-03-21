@@ -3,6 +3,21 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+| 2026-03-21 | Add role-based NPI gate signoff permissions | utils/js/helpers.js, portals/product-development/npi/js/npi-data.js, portals/product-development/npi/js/gates.js, tests/npi-gate-permissions.test.js, README.md, TESTING_STRATEGY.md, CHANGELOG.md, .wolf/anatomy.md | Added named signoff-role permission keys and enforced them in NPI gate sign/unsign/signatory editing paths with UI lockout messaging and focused Jest coverage | ~540 tok |
+| 2026-03-21 | Fix Production Capacity formula help action | portals/capacity/js/prod-capacity-dashboard.js, portals/capacity/js/capacity-events.js, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Converted static help text into a clickable delegated action and surfaced formula details via info toast so the control now responds to clicks | ~180 tok |
+| 2026-03-21 | Upgrade Production Capacity help to modal | portals/capacity/js/capacity-events.js, index.html, CHANGELOG.md, .wolf/anatomy.md | Replaced toast response with a dedicated modal so users can read the full capacity formula without timeout pressure | ~150 tok |
+| 2026-03-21 | Hardened test coverage for chart theme, operations infographic, and MCS approval core | tests/chart-theme.test.js, tests/operations-infographic.test.js, tests/mcs-approval-core.test.js, tests/timing-core.test.js, CHANGELOG.md, .wolf/anatomy.md, .wolf/buglog.json | Added behavior-focused Jest suites for previously untested modules, fixed timing-core test contract mismatch, and resolved eval-scope access failures via globalThis wrappers | ~780 tok |
+| 2026-03-21 | Replaced simulated MCS suites with real module-behavior tests | tests/mcs-main.test.js, tests/mcs-actions.test.js, tests/mcs-approval.test.js, CHANGELOG.md, .wolf/buglog.json | Rewrote placeholder assertions to execute real mcs-main, mcs-actions, and mcs-approvers-data functions and validate filtering, routing, and approval permissions | ~640 tok |
+
+## 2026-03-21 — NPI Timing Plan bug fix + overhaul
+- **Bug fixed**: `timing.js` early `return` on line 105 (`if (rows.length === 0 && p.gantt.length > 0) return`) caused all sections except the first one with tasks to lose their "Add task" button. Removed the early return.
+- **Features added to timing.js**: section header rows (G0–G5 colored dividers with task count), section collapse/expand (saved per-project), row reorder (↑↓ within section), milestone markers (◆ row in thead, per-week, named, saved per-project), configurable timeline length (24–72 weeks, stored in localStorage independent of project), PDF export (`window.print()`), removed top-bar "Add Task" button that hardcoded section s1.
+- **npi-data.js**: added `moveRow`, `addMilestone`, `delMilestone` to `npi.data.timing`.
+- **gantt.css**: added section header, milestone row, row-actions, and `@media print` styles.
+- **OpenWolf compliance gap**: anatomy.md, cerebrum.md, and buglog.json were not updated during the session — caught up at end of session.
+
+| 2026-03-21 | Switched VS Code GitHub MCP server from Docker to remote HTTP | .vscode/mcp.json, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Replaced the Docker-based GitHub MCP launch config with the hosted GitHub endpoint to eliminate `spawn docker ENOENT` startup failures in VS Code | ~160 tok |
+
 | 2026-03-21 | Started hybrid permissions implementation (role baseline + team grants) | core/js/state.js, core/js/auth.js, utils/js/helpers.js, utils/js/navigation.js, portals/settings/js/settings.js, portals/settings/js/teams-data.js, supabase/hybrid_permissions_role_team_grants.sql, tests/permissions-helpers.test.js, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Added effective permission resolution at login, section access guard rendering, team assignment in Settings permissions table, normalized permission definitions in team editor, and migration/test scaffolding | ~1800 tok |
 
 | 2026-03-21 | Cleared all plan files for full planning reset | plans/, CHANGELOG.md, .wolf/anatomy.md | Deleted all files from plans folder to remove stale implementation plans before drafting new ones | ~120 tok |
@@ -378,3 +393,138 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 20:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 20:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 20:28 | Edited portals/capacity/js/me-products.js | 2→2 lines | ~33 |
+| 20:28 | Edited CHANGELOG.md | 4→6 lines | ~76 |
+
+## Session: 2026-03-21 20:28
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 20:34
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 20:34
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 20:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 20:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 20:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 20:51 | Created .mcp.json | — | ~81 |
+| 20:51 | Edited .vscode/mcp.json | 12→11 lines | ~61 |
+| 20:52 | Edited .mcp.json | expanded (+15 lines) | ~105 |
+
+## Session: 2026-03-21 20:55
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 20:55
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 21:01
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:04 | Edited portals/product-development/npi/js/timing.js | 4→3 lines | ~28 |
+| 21:04 | Edited CHANGELOG.md | 1→5 lines | ~75 |
+| 21:19 | Created portals/product-development/npi/js/timing.js | — | ~4714 |
+| 21:19 | Edited portals/product-development/npi/js/npi-data.js | added 4 condition(s) | ~320 |
+| 21:19 | Edited portals/product-development/npi/css/gantt.css | modified not() | ~647 |
+| 21:19 | Edited CHANGELOG.md | 1→5 lines | ~96 |
+
+## Session: 2026-03-21 21:28
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:33 | Edited portals/product-development/npi/js/timing.js | added error handling | ~3650 |
+| 21:34 | Edited CHANGELOG.md | 1→3 lines | ~133 |
+
+## Session: 2026-03-21 21:36
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:37 | Edited index.html | 6→5 lines | ~69 |
+| 21:37 | Edited core/css/main.css | CSS: filter, display | ~29 |
+| 21:37 | Edited CHANGELOG.md | 4→6 lines | ~71 |
+| 21:44 | Edited core/css/main.css | inline fix | ~5 |
+
+## Session: 2026-03-21 21:46
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:50 | Edited index.html | 2→2 lines | ~23 |
+| 21:50 | Edited index.html | 2→2 lines | ~26 |
+| 21:50 | Edited index.html | inline fix | ~23 |
+| 21:50 | Edited index.html | 2→2 lines | ~51 |
+| 21:50 | Edited index.html | 2→2 lines | ~30 |
+| 21:50 | Edited index.html | 2→2 lines | ~48 |
+| 21:50 | Edited index.html | 4→4 lines | ~88 |
+| 21:50 | Edited index.html | inline fix | ~25 |
+| 21:50 | Edited index.html | inline fix | ~24 |
+| 21:51 | Edited index.html | 2→2 lines | ~28 |
+| 21:51 | Edited index.html | inline fix | ~28 |
+| 21:51 | Edited index.html | 2→2 lines | ~48 |
+| 21:51 | Edited index.html | inline fix | ~23 |
+| 21:51 | Edited index.html | 2→2 lines | ~24 |
+| 21:51 | Edited index.html | 2→2 lines | ~26 |
+| 21:51 | Edited index.html | 2→2 lines | ~25 |
+| 21:51 | Edited index.html | 2→2 lines | ~28 |
+| 21:51 | Edited index.html | 2→2 lines | ~24 |
+| 21:51 | Edited index.html | 2→2 lines | ~27 |
+| 21:51 | Edited index.html | 2→2 lines | ~24 |
+| 21:51 | Edited index.html | 2→2 lines | ~32 |
+| 21:51 | Edited index.html | 2→2 lines | ~32 |
+| 21:52 | Edited index.html | 3→3 lines | ~47 |
+| 21:52 | Edited portals/feedback/js/feedback.js | 2→2 lines | ~60 |
+| 21:52 | Edited portals/feedback/js/feedback.js | 2→2 lines | ~58 |
+| 21:52 | Edited portals/feedback/js/feedback.js | 2→2 lines | ~33 |
+| 21:52 | Edited portals/feedback/js/feedback.js | 2→2 lines | ~32 |
+| 21:52 | Edited portals/feedback/js/feedback.js | 2→2 lines | ~31 |
+| 21:52 | Edited portals/feedback/js/feedback.js | 2→2 lines | ~44 |
+| 21:52 | Edited portals/feedback/js/feedback.js | 2→2 lines | ~46 |
+| 21:52 | Edited portals/feedback/js/feedback.js | 2→2 lines | ~37 |
+| 21:53 | Edited portals/product-development/js/product-development.js | 2→2 lines | ~72 |
+| 21:53 | Edited portals/product-development/js/product-development.js | 2→2 lines | ~73 |
+| 21:53 | Edited portals/product-development/js/product-development.js | 2→2 lines | ~70 |
+| 21:53 | Edited portals/product-development/js/product-development.js | 2→2 lines | ~69 |
+| 21:53 | Edited portals/product-development/npi/js/gates.js | "display:block;font-size:1" → "gate_${gateNum}_sig_${si}" | ~82 |
+| 21:53 | Edited portals/product-development/npi/js/gates.js | "display:block;font-size:1" → "gate_${gateNum}_sig_${si}" | ~85 |
+| 21:53 | Edited portals/capacity/js/prod-capacity-detail.js | 2→2 lines | ~45 |
+| 21:54 | Edited portals/capacity/js/prod-capacity-detail.js | 2→2 lines | ~45 |
+| 21:54 | Edited portals/capacity/js/prod-capacity-detail.js | 2→2 lines | ~48 |
+| 21:54 | Edited CHANGELOG.md | 1→3 lines | ~68 |
+
+## Session: 2026-03-21 21:58
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:00 | Edited portals/operations/css/operations-dashboard.css | expanded (+41 lines) | ~368 |
+| 22:00 | Edited CHANGELOG.md | 4→6 lines | ~83 |

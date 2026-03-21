@@ -55,11 +55,11 @@
     <div class="login-title">Sign in</div>
     <div class="login-err" id="loginErr"></div>
     <div class="login-field">
-      <label>Email</label>
+      <label for="loginEmail">Email</label>
       <input type="email" id="loginEmail" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="login-field">
-      <label>Password</label>
+      <label for="loginPassword">Password</label>
       <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign in</button>
@@ -75,8 +75,7 @@
   <div class="topbar">
     <div class="topbar-left">
       <div class="brand" onclick="navigate('hub')" style="cursor:pointer">
-        <div class="brand-hex"></div>
-        <span class="brand-name">TIDYCO</span>
+        <img src="Tidyco logo-blue.png" alt="Tidyco" class="brand-logo">
         <span class="brand-sep">|</span>
         <span class="brand-sub">Operations Portal</span>
       </div>
@@ -128,6 +127,30 @@
   </div>
 </div>
 
+<!-- Production Capacity Formula Modal -->
+<div class="modal-bg" id="modalProdCapacityFormula" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">How Capacity Is Calculated</div>
+    <div style="display:grid;gap:10px;font-size:13px;color:var(--text)">
+      <div>
+        <strong>Formula</strong>
+        <div style="margin-top:4px">Capacity = Staff x Working Days x 8 hours x Utilization Factor</div>
+      </div>
+      <div>
+        <strong>Working Days</strong>
+        <div style="margin-top:4px">Working days include Monday to Friday and exclude UK bank holidays.</div>
+      </div>
+      <div>
+        <strong>Baseline</strong>
+        <div style="margin-top:4px">The baseline is 40 hours per person per week (5 days x 8 hours), then adjusted by the utilization factor set in Capacity Settings.</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalProdCapacityFormula')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════
      MODALS
      ═══════════════════════════════════ -->
@@ -136,24 +159,24 @@
 <div class="modal-bg" id="modalNewProj" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">New Project</div>
-    <div class="field"><label>Project Name *</label><input id="np_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
+    <div class="field"><label for="np_name">Project Name *</label><input id="np_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
     <div class="field-row">
-      <div class="field"><label>Customer</label><input id="np_customer"></div>
-      <div class="field"><label>Unit / Product</label><input id="np_unit"></div>
+      <div class="field"><label for="np_customer">Customer</label><input id="np_customer"></div>
+      <div class="field"><label for="np_unit">Unit / Product</label><input id="np_unit"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Product Family</label>
+      <div class="field"><label for="np_family">Product Family</label>
         <select id="np_family"></select>
       </div>
     </div>
     <div class="field-row">
-      <div class="field"><label>ME Lead</label><input id="np_lead"></div>
-      <div class="field"><label>Project Manager</label><input id="np_pm"></div>
+      <div class="field"><label for="np_lead">ME Lead</label><input id="np_lead"></div>
+      <div class="field"><label for="np_pm">Project Manager</label><input id="np_pm"></div>
     </div>
-    <div class="field"><label>Start Date</label><input type="date" id="np_date"></div>
+    <div class="field"><label for="np_date">Start Date</label><input type="date" id="np_date"></div>
     <div class="field-row">
-      <div class="field"><label>Q Number</label><input id="np_qNumber"></div>
-      <div class="field"><label>Part Number</label><input id="np_partNumber"></div>
+      <div class="field"><label for="np_qNumber">Q Number</label><input id="np_qNumber"></div>
+      <div class="field"><label for="np_partNumber">Part Number</label><input id="np_partNumber"></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button>
@@ -166,8 +189,8 @@
 <div class="modal-bg" id="modalNewSubAsm" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">New Sub-Assembly</div>
-    <div class="field"><label>Sub-Assembly Name *</label><input id="nsa_name" placeholder="e.g. Gearbox Sub-Assembly"></div>
-    <div class="field"><label>Unit (optional)</label><input id="nsa_unit" placeholder="e.g. Unit 158001"></div>
+    <div class="field"><label for="nsa_name">Sub-Assembly Name *</label><input id="nsa_name" placeholder="e.g. Gearbox Sub-Assembly"></div>
+    <div class="field"><label for="nsa_unit">Unit (optional)</label><input id="nsa_unit" placeholder="e.g. Unit 158001"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalNewSubAsm')">Cancel</button>
       <button class="btn btn-primary" onclick="npi.dashboard.saveNewSubAsm()">Create</button>
@@ -189,20 +212,20 @@
       </div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Project Status</label>
+      <div class="field"><label for="ep_status">Project Status</label>
         <select id="ep_status">
           <option value="Active">Active</option>
           <option value="Tender">Tender</option>
           <option value="Archive">Archive</option>
         </select>
       </div>
-      <div class="field"><label>Start Date</label><input type="date" id="ep_date"></div>
+      <div class="field"><label for="ep_date">Start Date</label><input type="date" id="ep_date"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>ME Lead</label><input id="ep_lead"></div>
-      <div class="field"><label>Project Manager</label><input id="ep_pm"></div>
+      <div class="field"><label for="ep_lead">ME Lead</label><input id="ep_lead"></div>
+      <div class="field"><label for="ep_pm">Project Manager</label><input id="ep_pm"></div>
     </div>
-    <div class="field"><label>Q Number</label><input id="ep_qNumber" placeholder="e.g. Q-1234"></div>
+    <div class="field"><label for="ep_qNumber">Q Number</label><input id="ep_qNumber" placeholder="e.g. Q-1234"></div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
       <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="npi.dashboard.deleteProject()">Delete Project</button>
       <div style="display:flex;gap:8px">
@@ -218,7 +241,7 @@
   <div class="modal modal-sm">
     <div class="modal-title">Insert Step</div>
     <div class="field">
-      <label>Step Number</label>
+      <label for="insertNum">Step Number</label>
       <input type="number" id="insertNum" min="1" step="1">
       <div style="font-size:11px;color:var(--muted);margin-top:3px" id="insertNumHint"></div>
     </div>
@@ -343,26 +366,26 @@
   <div class="modal">
     <div class="modal-title">📦 Parts Database Entry</div>
     <div class="field">
-      <label>Tidyco Part Number *</label>
+      <label for="abcEditForm_pn">Tidyco Part Number *</label>
       <input id="abcEditForm_pn" class="cell-edit" placeholder="e.g. FAS-001" style="font-family:'IBM Plex Mono',monospace">
     </div>
     <div class="field">
-      <label>Description *</label>
+      <label for="abcEditForm_desc">Description *</label>
       <input id="abcEditForm_desc" class="cell-edit" placeholder="e.g. M6 × 20mm Bolt">
     </div>
     <div class="field">
-      <label>Supplier PN</label>
+      <label for="abcEditForm_supplierPn">Supplier PN</label>
       <input id="abcEditForm_supplierPn" class="cell-edit" placeholder="e.g. ABC-123456" style="font-family:'IBM Plex Mono',monospace">
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Unit</label>
+        <label for="abcEditForm_unit">Unit</label>
         <input id="abcEditForm_unit" class="cell-edit" value="ea" placeholder="ea">
       </div>
     </div>
     <div class="field-row">
       <div class="field">
-        <label>ABC Class *</label>
+        <label for="abcEditForm_class">ABC Class *</label>
         <select id="abcEditForm_class">
           <option value="A">A — Critical</option>
           <option value="B">B — Important</option>
@@ -377,22 +400,22 @@
       </div>
     </div>
     <div class="field">
-      <label>Notes</label>
+      <label for="abcEditForm_notes">Notes</label>
       <textarea id="abcEditForm_notes" class="cell-edit" placeholder="Optional notes about this part…" rows="3" style="resize:vertical"></textarea>
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Manufacturer (OEM)</label>
+        <label for="abcEditForm_manufacturer">Manufacturer (OEM)</label>
         <input id="abcEditForm_manufacturer" class="cell-edit" placeholder="e.g. Bossard">
       </div>
       <div class="field">
-        <label>Manufacturer PN</label>
+        <label for="abcEditForm_manufacturerPn">Manufacturer PN</label>
         <input id="abcEditForm_manufacturerPn" class="cell-edit" placeholder="e.g. MPN-0042" style="font-family:'IBM Plex Mono',monospace">
       </div>
     </div>
     <div class="field-row">
       <div class="field">
-        <label>Datasheet URL</label>
+        <label for="abcEditForm_datasheetUrl">Datasheet URL</label>
         <div style="display:flex;gap:8px;align-items:center">
           <input id="abcEditForm_datasheetUrl" class="cell-edit" type="url" placeholder="https://…" style="flex:1">
           <button type="button" id="abcEditForm_openDatasheetBtn" class="btn btn-secondary" onclick="npi.bom.openABCDatasheetLink()">Open Link</button>

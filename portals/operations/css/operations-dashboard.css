@@ -517,3 +517,44 @@
   min-width: 80px;
   text-align: center;
 }
+
+/* ── Theme overrides: ops-hero banner ── */
+:root[data-theme="light"] .ops-hero {
+  color: #0d2035;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(255, 255, 255, .30), transparent 42%),
+    linear-gradient(135deg, #c9e4f5 0%, #a8d5ea 50%, #9fd8cc 100%);
+  border-color: #9acde3;
+}
+
+:root[data-theme="light"] .ops-hero-copy h2,
+:root[data-theme="light"] .ops-kicker,
+:root[data-theme="light"] .ops-hero-copy p {
+  color: #0d2035;
+}
+
+:root[data-theme="light"] .ops-tab.active {
+  background: linear-gradient(135deg, #c2dff5 0%, #9fd8cc 100%);
+  color: #0d2035;
+  border-color: #80c4d8;
+}
+
+:root[data-theme="terminal"] .ops-hero {
+  color: #00ff41;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(0, 255, 65, .08), transparent 42%),
+    linear-gradient(135deg, #000000 0%, #021a06 50%, #031a0a 100%);
+  border-color: #006618;
+}
+
+:root[data-theme="terminal"] .ops-hero-copy h2,
+:root[data-theme="terminal"] .ops-kicker,
+:root[data-theme="terminal"] .ops-hero-copy p {
+  color: #00ff41;
+}
+
+:root[data-theme="terminal"] .ops-tab.active {
+  background: linear-gradient(135deg, #021a06 0%, #031a0a 100%);
+  color: #00ff41;
+  border-color: #006618;
+}

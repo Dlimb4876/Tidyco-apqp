@@ -3,6 +3,38 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-21 | Fix production capacity formula help click action | "How capacity is calculated" was static text with no bound action; it now opens a clear in-app modal with the formula details
+
+## 2026-03-21 | Operations Mission Control banner theme support | Banner had hardcoded dark colours that did not respond to light or terminal themes
+
+## 2026-03-21 | Fix label accessibility across all forms | Associate all <label> elements with their fields via for/id to resolve 28 console warnings and meet WCAG 2.1 Level A
+
+## 2026-03-21 | Replace simulated MCS tests with real module behavior checks | Strengthen regression safety by asserting actual mcs-main, mcs-actions, and mcs-approvers-data functions instead of hand-simulated logic
+
+## 2026-03-21 | Expand robustness tests for ChartTheme, operations infographic, and MCS approval core | Close high-risk test gaps with real module behavior checks and align timing-core tests with current buildMonthGroups signature
+
+## 2026-03-21 | Add company logo to top bar | Replace text-based brand mark with the Tidyco logo image
+
+## 2026-03-21 | NPI Timing Plan — professional customer-facing export | Replace window.print() with an infographic-style standalone HTML document: Tidyco logo, project meta (customer, part no., family), summary stats, full Gantt table, milestone labels, and Print/Save PDF button; A3 landscape print optimised
+
+## 2026-03-21 | Add role-based permissions for NPI gate signoff | Gate signoff now enforces named-role permissions so only authorised users can sign, unsign, or edit each signatory role
+
+---
+
+## 2026-03-21 | NPI Timing Plan overhaul — section headers, section collapse, row reorder, milestones, configurable timeline, PDF export | Improve usability and add key planning features
+
+---
+
+## 2026-03-21 | Switch VS Code GitHub MCP server to remote HTTP | Workspace MCP config required Docker, causing startup failure on machines without `docker` on PATH
+
+---
+
+## 2026-03-21 | Fix NPI Timing Plan: adding to one section blocked all others | Early return skipped the Add button for empty sections once any row existed
+
+---
+
+## 2026-03-21 | Rename ME products table columns | "Family" → "Product Family", "Status" → "Product Status" for clarity
+
 ---
 
 ## 2026-03-21 | Mobile topbar: hide keyboard shortcuts button, add icon shortcuts for Actions and Feedback | Keyboard shortcuts are irrelevant on mobile; quick-access buttons for My Actions and Feedback & Bugs are now shown as icon-only (✅/💬) in the topbar action strip on mobile
