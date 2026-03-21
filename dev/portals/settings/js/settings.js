@@ -34,16 +34,31 @@ function settingsSaveAppearancePrefs(prefs) {
 
 function settingsApplyAppearance() {
   const prefs = settingsLoadAppearancePrefs();
+  const theme = prefs.theme === 'dark' ? 'dark' : 'light';
+
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+
+  if (document.body) {
+    document.body.classList.toggle('theme-dark', theme === 'dark');
+    document.body.classList.toggle('compact-tables', prefs.tableDensity === 'compact');
+  }
 
   // Organisation / app name in topbar
   const brandName = document.querySelector('.brand-name');
   const brandSub  = document.querySelector('.brand-sub');
   if (brandName) brandName.textContent = prefs.orgName   || 'TIDYCO';
   if (brandSub)  brandSub.textContent  = prefs.appSubtitle || 'Operations Portal';
-
-  // Compact table density
-  document.body.classList.toggle('compact-tables', prefs.tableDensity === 'compact');
 }
+
+function settingsAppearanceSetTheme(theme) {
+  const nextTheme = theme === 'dark' ? 'dark' : 'light';
+  const prefs = settingsLoadAppearancePrefs();
+  settingsSaveAppearancePrefs({ ...prefs, theme: nextTheme });
+  settingsApplyAppearance();
+}
+
+settingsApplyAppearance();
 
 // ── Main settings page render ──────────────────────────────────
 function renderSettings() {
@@ -934,6 +949,7 @@ function renderSettingsAppearanceTab() {
   if (!container) return;
 
   const prefs = settingsLoadAppearancePrefs();
+  const theme       = prefs.theme            === 'dark' ? 'dark' : 'light';
   const orgName     = esc(prefs.orgName      || '');
   const appSubtitle = esc(prefs.appSubtitle  || '');
   const density     = prefs.tableDensity     || 'normal';
@@ -943,6 +959,29 @@ function renderSettingsAppearanceTab() {
     <div class="settings-section-header">
       <h2>Appearance</h2>
       <p class="settings-section-desc">Personalise how the portal looks. These preferences are saved to this browser only.</p>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Colour theme</h3>
+      <p class="appearance-group-desc">Choose whether the portal uses a light or dark colour scheme.</p>
+      <div class="appearance-theme-grid">
+        <label class="appearance-theme-card ${theme === 'light' ? 'selected' : ''}">
+          <input type="radio" name="ap-theme" value="light" ${theme === 'light' ? 'checked' : ''}>
+          <span class="appearance-theme-swatch appearance-theme-swatch-light" aria-hidden="true"></span>
+          <span class="appearance-theme-copy">
+            <strong>Light</strong>
+            <span>Bright workspace with dark text.</span>
+          </span>
+        </label>
+        <label class="appearance-theme-card ${theme === 'dark' ? 'selected' : ''}">
+          <input type="radio" name="ap-theme" value="dark" ${theme === 'dark' ? 'checked' : ''}>
+          <span class="appearance-theme-swatch appearance-theme-swatch-dark" aria-hidden="true"></span>
+          <span class="appearance-theme-copy">
+            <strong>Dark</strong>
+            <span>Lower-glare workspace for darker environments.</span>
+          </span>
+        </label>
+      </div>
     </div>
 
     <div class="appearance-group">
@@ -964,15 +1003,30 @@ function renderSettingsAppearanceTab() {
       <h3 class="appearance-group-title">Tables</h3>
       <div class="appearance-row">
         <label class="appearance-label">Row density</label>
-        <div class="appearance-radio-group">
-          <label class="appearance-radio-label">
-            <input type="radio" name="ap-density" value="normal"  ${density === 'normal'  ? 'checked' : ''}> Normal
+        <div class="density-picker">
+          <label class="density-card ${density === 'normal' ? 'selected' : ''}">
+            <input type="radio" name="ap-density" value="normal" ${density === 'normal' ? 'checked' : ''}>
+            <div class="density-preview">
+              <div class="dp-header"><div class="dp-cell dp-cell--wide"></div><div class="dp-cell"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--normal"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--normal"><div class="dp-cell dp-cell--wide dp-cell--text dp-cell--dim"></div><div class="dp-cell dp-cell--badge dp-cell--green"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--normal"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge dp-cell--amber"></div><div class="dp-cell"></div></div>
+            </div>
+            <span class="density-card-label">Normal</span>
           </label>
-          <label class="appearance-radio-label">
-            <input type="radio" name="ap-density" value="compact" ${density === 'compact' ? 'checked' : ''}> Compact
+          <label class="density-card ${density === 'compact' ? 'selected' : ''}">
+            <input type="radio" name="ap-density" value="compact" ${density === 'compact' ? 'checked' : ''}>
+            <div class="density-preview">
+              <div class="dp-header"><div class="dp-cell dp-cell--wide"></div><div class="dp-cell"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text dp-cell--dim"></div><div class="dp-cell dp-cell--badge dp-cell--green"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge dp-cell--amber"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text dp-cell--dim"></div><div class="dp-cell dp-cell--badge"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge dp-cell--green"></div><div class="dp-cell"></div></div>
+            </div>
+            <span class="density-card-label">Compact</span>
           </label>
         </div>
-        <span class="appearance-hint">Compact reduces row height to fit more rows on screen.</span>
       </div>
     </div>
 
@@ -1004,12 +1058,13 @@ function renderSettingsAppearanceTab() {
 
 // ── Save / reset appearance preferences ───────────────────────
 function settingsAppearanceSave() {
+  const theme       = document.querySelector('input[name="ap-theme"]:checked')?.value       || 'light';
   const orgName     = document.getElementById('ap-orgName')?.value.trim()     || '';
   const appSubtitle = document.getElementById('ap-appSubtitle')?.value.trim() || '';
   const density     = document.querySelector('input[name="ap-density"]:checked')?.value || 'normal';
   const toastDur    = document.querySelector('input[name="ap-toast"]:checked')?.value   || 'normal';
 
-  settingsSaveAppearancePrefs({ orgName, appSubtitle, tableDensity: density, toastDuration: toastDur });
+  settingsSaveAppearancePrefs({ theme, orgName, appSubtitle, tableDensity: density, toastDuration: toastDur });
   settingsApplyAppearance();
   showToast('Appearance preferences saved.', 'info');
   renderSettingsAppearanceTab();
@@ -1341,6 +1396,15 @@ function setupSettingsEventListeners() {
   // dropdown from closing the instant it opens (click fires before the user picks).
   root.addEventListener('change', async (event) => {
     const actionEl = event.target.closest('[data-action]');
+    if (event.target.name === 'ap-theme') {
+      settingsAppearanceSetTheme(event.target.value);
+      root
+        .querySelectorAll('.appearance-theme-card')
+        .forEach((card) => card.classList.remove('selected'));
+      event.target.closest('.appearance-theme-card')?.classList.add('selected');
+      return;
+    }
+
     if (!actionEl || !root.contains(actionEl)) return;
     const action = actionEl.dataset.action;
 

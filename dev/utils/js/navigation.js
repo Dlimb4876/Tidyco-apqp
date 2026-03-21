@@ -450,6 +450,7 @@ function renderSection() {
   if (currentSection === 'risks') return npi.tracker.renderRisks();
   if (currentSection === 'bom') return npi.bom.renderBOM();
   if (currentSection === 'timing') return npi.timing.renderTimingPlan();
+  if (currentSection === 'documents') return npi.docs.render();
   return '';
 }
 
