@@ -10,7 +10,13 @@
 // Tab state lives in state.js: let prodCapTab = 'dashboard'
 
 function setProdCapTab(tab) {
+  const prevPct = prodCapTab;
   prodCapTab = tab;
+  const pctParts = ['s=capacity', 'ct=production'];
+  if (tab !== 'dashboard') pctParts.push('pct=' + encodeURIComponent(tab));
+  if (typeof writeNavigationHistory === 'function') {
+    writeNavigationHistory('#' + pctParts.join('&'), { push: prevPct !== tab });
+  }
   render();
 }
 

@@ -77,6 +77,9 @@ async function launchApp() {
     if (h.od)  operationsTab         = h.od;
     if (h.pt)  productionTab         = h.pt;
     if (h.pdt) productDevelopmentTab = h.pdt;
+    if (h.met) meTab                 = h.met;
+    if (h.pct) prodCapTab            = h.pct;
+    if (h.pmt) pmTab                 = h.pmt;
     navigate(h.s, { pushHash: false });
   } else {
     navigate('hub', { pushHash: false });
@@ -88,7 +91,12 @@ async function launchApp() {
 
 // ── Kick off on page load if session exists ───────────────────
 (async () => {
-  const { data: { session } } = await supa.auth.getSession();
+  const { data: { session }, error } = await supa.auth.getSession();
+  if (error) {
+    // Stale/invalidated refresh token in localStorage — clear it and show login
+    await supa.auth.signOut();
+    return;
+  }
   if (session) {
     currentUser = session.user;
     // Load role from profiles table so isAdmin() works correctly on session restore

@@ -96,8 +96,16 @@ window.meSetTab = function(tab) {
   }
 
   if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart';
+  const prevMeTab = meTab;
   meTab = tab;
   if (tab === 'chart') meChartDirty = false;
+
+  // Update URL so refresh restores this tab
+  const meParts = ['s=capacity', 'ct=me'];
+  if (tab !== 'chart') meParts.push('met=' + encodeURIComponent(tab));
+  if (typeof writeNavigationHistory === 'function') {
+    writeNavigationHistory('#' + meParts.join('&'), { push: prevMeTab !== tab });
+  }
 
   // Update nav button active states
   document.querySelectorAll('.me-nav-btn').forEach(btn => {
