@@ -10,6 +10,9 @@ This document outlines the comprehensive testing strategy for the Tidyco APQP ap
 - Keep tests fast, isolated, and deterministic
 - Prioritize critical paths and complex logic
 
+**Documentation Sync Rule:**
+- If a change affects behavior, workflow, or test status, update both `README.md` and `TESTING_STRATEGY.md` in the same logical change.
+
 ---
 
 ## Test Framework
@@ -43,40 +46,29 @@ npm test -- --coverage
 
 ## Test Coverage Status (March 2026)
 
-### ✅ Fully Tested (Production-Ready)
-- **`navigation.test.js`** — 38 tests, 85% coverage
-  - Hash parsing with various formats
-  - Navigation to each section
-  - Subscription cleanup on section changes
-  - Tab reset behavior
-  - Return button visibility
-  - Back navigation logic
-  - popstate event handling
+### ✅ Current Baseline (Verified)
+- Test suites: **44 passing / 44 total**
+- Tests: **648 passing / 648 total**
+- Last verified command: `npm test -- --runInBand --silent`
 
-- **`production.test.js`** — Tests for production portal CRUD and calculations
+### High-Confidence Areas
+- Routing and hash-state behavior (navigation)
+- Authentication/session behavior
+- Persistence and migration behavior (db)
+- Helpers/utilities (including modal and escaping helpers)
+- Capacity modules (ME/PM/Production paths)
+- Product Development/NPI data and rendering paths
+- MCS workflow and integration paths
+- Operations dashboard and forecast flows
+- Feedback and Action Centre behavior
 
-- **`bugs.test.js`** — Tests for bug reports real-time subscriptions and data layer
+### Current Priority Gaps
+- Expand integration tests for multi-module workflows, especially:
+  - Product status -> linked NPI tender gate scope flow
+  - Gate scope lock/unlock lifecycle with filtered gate rendering
+  - Keyboard shortcut behavior parity with shortcuts modal
 
-### 🚧 Partially Tested or TODO
-- **`auth.test.js`** — 0 tests; login/logout flows need coverage
-  - Login with valid/invalid credentials
-  - Login with empty fields
-  - Logout functionality
-  - Session restoration
-
-- **`db.test.js`** — 0 tests; save/load/migrate functions need coverage
-  - Remote data loading
-  - Local storage sync
-  - Save debouncing
-  - Data migration
-  - Error recovery
-
-- **`helpers.test.js`** — 0 tests; utilities need coverage
-  - HTML escaping (esc function)
-  - Modal management functions
-  - UI utility functions
-
-**When writing new tests, prioritize completing the TODO items above.**
+**When writing new tests, prioritize cross-module regression protection before adding broad new feature suites.**
 
 ---
 
@@ -84,12 +76,14 @@ npm test -- --coverage
 
 ```
 /tests/
-├── navigation.test.js      # Hash routing and render switchboard (38 tests)
-├── production.test.js      # Production portal functionality
-├── bugs.test.js           # Bug reports data module
-├── auth.test.js           # Authentication (TODO)
-├── db.test.js             # Data persistence (TODO)
-├── helpers.test.js        # Utility functions (TODO)
+├── navigation.test.js      # Hash routing and render switchboard
+├── auth.test.js            # Authentication and session behavior
+├── db.test.js              # Data persistence and migration behavior
+├── helpers.test.js         # Utility helpers and modal behavior
+├── operations-dashboard.test.js
+├── mcs-main.test.js
+├── product-development.test.js
+├── capacity-events.test.js
 └── ...
 ```
 

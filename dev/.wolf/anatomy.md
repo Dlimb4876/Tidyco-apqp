@@ -108,6 +108,12 @@
 
 ## Session Notes
 
+- 2026-03-21: Deleted all files under plans/ for full planning reset; new plans to be recreated from current code state.
+- 2026-03-21: Added new baseline planning docs in plans/: master-current-state.md, next-implementation-sprint.md, risk-and-regression-checklist.md.
+- 2026-03-21: Synced README.md and TESTING_STRATEGY.md to live baseline (current plans set + verified test totals).
+- 2026-03-21: Implemented global Ctrl+S/Ctrl+F/Escape shortcut behavior in helpers.js with test coverage, and added explicit README.md + TESTING_STRATEGY.md sync rule.
+- 2026-03-21: Migrated operations-dashboard-main.js shell controls to delegated data-action handlers and updated operations dashboard tests.
+
 
 ## core/css/
 

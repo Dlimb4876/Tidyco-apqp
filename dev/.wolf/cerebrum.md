@@ -8,6 +8,7 @@
 
 <!-- How the user likes things done. Code style, tools, patterns, communication. -->
 - For Operations dashboard unit capacity displays, user prefers one box per unit (not grouped into a single shared unit panel/card).
+- User expects README.md and TESTING_STRATEGY.md to be updated in the same logical change whenever implementation changes affect behavior, workflow, or test reality.
 
 ## Key Learnings
 

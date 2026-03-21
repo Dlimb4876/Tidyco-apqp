@@ -23,6 +23,13 @@ Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and
 
 **Writing tests?** See **TESTING_STRATEGY.md** for patterns and module guides.
 
+**Documentation maintenance rule:** If a change affects behavior, user workflow, or test reality, update **README.md** and **TESTING_STRATEGY.md** in the same logical change.
+
+**Looking for current planning docs?** See `plans/`:
+- `master-current-state.md` — verified live baseline
+- `next-implementation-sprint.md` — active near-term execution queue
+- `risk-and-regression-checklist.md` — pre-merge safety checklist
+
 ---
 
 ## Responsive Design
@@ -185,7 +192,7 @@ This applies to UI, routing, shared data handling, and persistence changes so th
 │   │   └── realtime.js               # Real-time subscription helpers
 │   └── /css
 ├── /tests                            # Jest test files (*.test.js)
-├── /plans                            # Architecture docs and feature plans
+├── /plans                            # Live planning baseline (current state, next sprint, risk checklist)
 ├── /scripts                          # Quality-check scripts (check:all)
 ├── /supabase                         # SQL migrations and RLS policies
 ├── index.html                        # Main application entry point

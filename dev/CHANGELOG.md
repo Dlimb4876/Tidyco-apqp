@@ -5,6 +5,16 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-21 | Migrate Operations dashboard shell controls to delegated actions | Removed inline handlers from operations-dashboard-main.js header/tab controls, routed through data-action delegation, and added regression checks in operations-dashboard.test.js
+
+## 2026-03-21 | Implement global Ctrl+S/Ctrl+F/Escape shortcuts and enforce docs-sync rule | Shortcuts modal now matches live behavior (save, focus search, close modal), helper tests were added, and explicit rule added to keep README.md and TESTING_STRATEGY.md updated when affected
+
+## 2026-03-21 | Sync README and testing strategy with live baseline | Removed stale testing claims, added verified suite/test counts, and updated planning references to the new 3-file plans baseline
+
+## 2026-03-21 | Rebuild plans baseline with live-state docs after full reset | Added a fresh 3-file planning set (`master-current-state.md`, `next-implementation-sprint.md`, `risk-and-regression-checklist.md`) grounded in current structure/features to replace deleted stale plans
+
+## 2026-03-21 | Remove all files from plans folder for planning reset | Existing plans may be stale against recent code changes; cleared plan documents to allow rebuilding fresh, current implementation plans
+
 ## 2026-03-21 | Overhaul hours accumulation: baseline on product add, additive history, read-only edit, column rename _days→_hours | Overhaul time was not tracked as an accumulating chain; products had no baseline history entry; manual estimations overwrote instead of adding; time impact columns were named in days but stored hours; edit form allowed overwriting current_overhaul_hours directly
 
 ## 2026-03-21 | Make top bar theme-aware across Light, Dark, and Terminal | Top bar used hardcoded blue colors so it stayed visually constant across themes; moved top bar gradients/text/button states to theme CSS variables
