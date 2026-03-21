@@ -314,7 +314,42 @@ body {
 /* Responsive spacing */
 @media (max-width: 767px) {
   .section-inner { padding: 16px 16px 60px; }
-  .topbar { padding: 0 12px; }
+
+  /* ── Mobile topbar: 2-col layout, hide centre strip ────────── */
+  .topbar {
+    grid-template-columns: 1fr auto;
+    padding: 0 10px;
+    gap: 6px;
+  }
+  .topbar-left {
+    min-width: 0;
+    overflow: hidden;
+  }
+  /* Hide "My Actions" and "Feedback & Bugs" centre buttons on mobile.
+     They remain accessible from the Hub. */
+  .topbar-center { display: none; }
+
+  /* Trim brand text so it doesn't overflow */
+  .brand-sub, .brand-sep { display: none; }
+
+  /* Condense back button */
+  .back-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Hide project breadcrumb to keep topbar tight */
+  .project-breadcrumb { display: none !important; }
+
+  /* Hide sync badge — too much clutter on mobile */
+  .sync-badge { display: none; }
+
+  /* Tighten action button strip */
+  .topbar-actions { gap: 2px; }
+  .tbtn { padding: 5px 8px; font-size: 11px; }
 
   :root {
     --table-head-py: 5px;

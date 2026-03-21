@@ -89,3 +89,11 @@
 | 08:33 | Edited portals/product-development/npi/js/dashboard.js | "background:#fff8f8" → "background:var(--red-pale" | ~12 |
 | 08:34 | Edited CHANGELOG.md | 1→3 lines | ~152 |
 | 08:34 | Finished dark mode fix plan — phases 2-4: hardcoded hex colours replaced with CSS vars in operations-dashboard.css, capacity.css, action-centre.css, apqp-pfd.css, apqp-ctq.css, pfmea.js, dashboard.js | 8 files | committed + pushed to claude/finish-dark-mode-Lu872 | ~4k |
+
+## Session: 2026-03-21 08:54
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:55 | Edited core/css/main.css | modified media() | ~351 |
+| 08:56 | Edited portals/settings/css/settings.css | CSS: flex-direction, mobile | ~89 |
+| 08:56 | Edited CHANGELOG.md | 1→3 lines | ~174 |
