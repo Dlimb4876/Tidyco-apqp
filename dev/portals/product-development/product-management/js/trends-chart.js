@@ -129,8 +129,8 @@ function calculatePortfolioKPIs(year) {
 
 function renderPortfolioKpiGridHtml(kpis, year) {
   const avgChangeHtml = kpis.avgChange !== null
-    ? `<span style="color:${kpis.avgChange < 0 ? '#2e7d32' : kpis.avgChange > 0 ? '#c62828' : '#666'}">${kpis.avgChange > 0 ? '+' : ''}${kpis.avgChange}%</span>`
-    : '<span style="color:#888">—</span>';
+    ? `<span style="color:${kpis.avgChange < 0 ? 'var(--green)' : kpis.avgChange > 0 ? 'var(--red)' : 'var(--muted)'}">${kpis.avgChange > 0 ? '+' : ''}${kpis.avgChange}%</span>`
+    : '<span style="color:var(--mid)">—</span>';
 
   const mostImprovedVal = kpis.mostImproved ? esc(kpis.mostImproved.name) : '—';
   const mostImprovedUnit = kpis.mostImproved
@@ -195,8 +195,8 @@ function renderKPICards(kpis) {
                         kpis.changeDirection === 'worsening' ? '📉' : '→';
   const directionText = kpis.changeDirection === 'improvement' ? 'Improved' :
                         kpis.changeDirection === 'worsening' ? 'Increased' : 'Stable';
-  const directionColor = kpis.changeDirection === 'improvement' ? '#2e7d32' :
-                         kpis.changeDirection === 'worsening' ? '#c62828' : '#666';
+  const directionColor = kpis.changeDirection === 'improvement' ? 'var(--green)' :
+                         kpis.changeDirection === 'worsening' ? 'var(--red)' : 'var(--muted)';
 
   return `
     <div class="kpi-grid">
@@ -253,6 +253,14 @@ function renderLineChart(productId, history) {
   const reasons = sorted.map(h => h.change_reason || '—');
   const average = data.reduce((a, b) => a + b, 0) / data.length;
 
+  // Resolve CSS custom properties for Chart.js (getComputedStyle required — Chart.js cannot use var())
+  const chartStyle = getComputedStyle(document.documentElement);
+  const cGreen  = chartStyle.getPropertyValue('--green').trim();
+  const cAmber  = chartStyle.getPropertyValue('--amber').trim();
+  const cLine   = chartStyle.getPropertyValue('--line').trim();
+  const cMuted  = chartStyle.getPropertyValue('--muted').trim();
+  const cWhite  = chartStyle.getPropertyValue('--white').trim();
+
   trendsChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
@@ -261,22 +269,22 @@ function renderLineChart(productId, history) {
         {
           label: 'Overhaul Time (hours)',
           data,
-          borderColor: '#4CAF50',
-          backgroundColor: 'rgba(76, 175, 80, 0.05)',
+          borderColor: cGreen,
+          backgroundColor: cLine,
           borderWidth: 3,
           fill: true,
           tension: 0.4,
           pointRadius: 6,
-          pointBackgroundColor: '#4CAF50',
-          pointBorderColor: '#fff',
+          pointBackgroundColor: cGreen,
+          pointBorderColor: cWhite,
           pointBorderWidth: 2,
           pointHoverRadius: 8,
-          pointHoverBackgroundColor: '#45a049'
+          pointHoverBackgroundColor: cGreen
         },
         {
           label: 'Average (' + average.toFixed(1) + 'h)',
           data: Array(labels.length).fill(average),
-          borderColor: '#FF9800',
+          borderColor: cAmber,
           borderDash: [5, 5],
           borderWidth: 2,
           fill: false,
@@ -307,13 +315,13 @@ function renderLineChart(productId, history) {
       },
       scales: {
         x: {
-          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-          ticks: { font: { size: 11 }, color: '#666' }
+          grid: { color: cLine, drawBorder: false },
+          ticks: { font: { size: 11 }, color: cMuted }
         },
         y: {
           beginAtZero: false,
-          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-          ticks: { font: { size: 11 }, color: '#666' },
+          grid: { color: cLine, drawBorder: false },
+          ticks: { font: { size: 11 }, color: cMuted },
           title: { display: true, text: 'Overhaul Time (hours)', font: { weight: 'bold' } }
         }
       }
@@ -341,7 +349,7 @@ function renderProductDetail(productId) {
   const today = new Date().toISOString().split('T')[0];
 
   const historyTableHtml = sorted.length === 0
-    ? '<p style="color:#888;font-size:0.9em;margin:0 0 12px;">No history records yet. Add the first estimation below.</p>'
+    ? '<p style="color:var(--mid);font-size:0.9em;margin:0 0 12px;">No history records yet. Add the first estimation below.</p>'
     : `<div style="overflow-x:auto;margin-bottom:16px;">
         <table class="data-table">
           <thead>
@@ -499,7 +507,7 @@ function renderAllProductsTrends() {
                     </div>
                     <div class="mini-kpi">
                       <span class="mini-label">Trend</span>
-                      <span class="mini-value" style="color:${pt.kpis.changeDirection === 'improvement' ? '#2e7d32' : pt.kpis.changeDirection === 'worsening' ? '#c62828' : '#666'};">
+                      <span class="mini-value" style="color:${pt.kpis.changeDirection === 'improvement' ? 'var(--green)' : pt.kpis.changeDirection === 'worsening' ? 'var(--red)' : 'var(--muted)'};">
                         ${pt.kpis.changeDirection === 'improvement' ? '📈' : pt.kpis.changeDirection === 'worsening' ? '📉' : '→'}
                         ${Math.abs(pt.kpis.changePercent)}%
                       </span>

@@ -27,6 +27,10 @@ function emptyState(icon, title, desc) {
   return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
 }
 
+function loadingState(msg = 'Loading...') {
+  return `<div class="loading-state">${esc(msg)}</div>`;
+}
+
 function closeModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -165,7 +169,7 @@ function setupSmartDateInputs() {
       const parsed = parseSmartDate(e.target.value);
       if (parsed) {
         e.target.value = parsed;
-        e.target.style.backgroundColor = '#ecfdf5';
+        e.target.style.backgroundColor = 'var(--green-pale)';
         setTimeout(() => { e.target.style.backgroundColor = ''; }, 1000);
       }
     });

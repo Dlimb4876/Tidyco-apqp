@@ -413,9 +413,6 @@ portals/product-development/npi/js/
 │
 ├── dashboard.js              # NPI dashboard + project CRUD
 ├── npi-orchestrator.js       # Main coordinator (init, render dispatch)
-│
-└── family-gates-data.js      # Family gate templates (Phase 1)
-    (and family-gates-manager.js for template UI)
 ```
 
 ### Data Layer Functions
@@ -569,28 +566,11 @@ Verify:
 
 ---
 
-## 🚀 Integration Checklist
-
-### For tendering feature (Phase 0–4 of NPI_TENDERING_FEATURE_PLAN.md):
-
-- [ ] products-data.js: Add status change hook
-- [ ] products-data.js: Call productTenderStatusTriggered() on "Tender"
-- [ ] dashboard.js: Accept tenderedProductContext in new project modal
-- [ ] dashboard.js: Pre-fill name, customer, family from product
-- [ ] family-gates-data.js: Data layer created and initialized
-- [ ] family-gates-manager.js: Family gate template admin UI
-- [ ] npi-gates-editor.js: Gate question selector modal
-- [ ] npi-data.js: Add gate.updateSelection() mutation
-- [ ] gates.js: Filter checklist using gate_selections
-- [ ] state.js: Add getSelectedGateItems() helper
-
----
-
 ## 📚 Related Documentation
 
 - **CLAUDE.md** — Core architecture, state management
 - **NPI_TENDERING_FEATURE_PLAN.md** — Multi-phase implementation plan
-- **FAMILY_TEMPLATES_ARCHITECTURE.md** — Family PFMEA templates (similar pattern)
+- **docs/reference/family-templates-architecture.md** — Family PFMEA templates (similar pattern)
 - **TESTING_STRATEGY.md** — Jest testing framework & patterns
 
 ---
@@ -617,6 +597,6 @@ A: `checks[]` = completion status (true/false per item). `gate_selections` = whi
 
 ---
 
-**Last Updated:** 2026-03-14
-**Status:** Reference guide for NPI project workflow & gate tendering integration
+**Last Updated:** 2026-03-21
+**Status:** Reference guide for current NPI workflow and gate-scope behaviour
 **Audience:** AI assistants, developers, system integrators

@@ -5,6 +5,11 @@
 
 npi.data = npi.data || {}
 
+npi.data.calcCauseRpn = function(sev, occ, det) {
+  if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })
+  return (sev || 1) * (occ || 1) * (det || 1)
+}
+
 npi.data.prog = function() { return prog() }
 
 npi.data.pfdType = {
@@ -596,10 +601,10 @@ npi.data.pfmea = {
     const mode = p.pfmea[mi]; const ef = mode.effects[ei]; const ca = ef.causes[ci]
     const act = ca.action || {}
     if (!act.desc && !act.newOcc && !act.newDet) return { ok: false, error: 'missing-action' }
-    const oldRpn = (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
+    const oldRpn = npi.data.calcCauseRpn(ef.sev, ca.occ, ca.det)
     const newOcc = act.newOcc ? +act.newOcc : ca.occ
     const newDet = act.newDet ? +act.newDet : ca.det
-    const newRpn = (ef.sev || 1) * newOcc * newDet
+    const newRpn = npi.data.calcCauseRpn(ef.sev, newOcc, newDet)
     if (!ca.history) ca.history = []
     const histEntry = {
       rpn: oldRpn,

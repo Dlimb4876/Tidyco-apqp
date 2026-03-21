@@ -223,7 +223,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
 }
 
 .prod-tbl .row-new:hover {
-  background-color: rgba(59, 130, 246, 0.08) !important;
+  background-color: var(--row-highlight-blue) !important;
 }
 
 .prod-tbl .cell-edit {
@@ -674,24 +674,24 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
 }
 
 .gantt-week-col[data-week="0"] {
-  background: rgba(59, 130, 246, 0.03);
+  background: var(--row-highlight-blue);
 }
 
 .gantt-week-col[data-week="1"] {
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--overlay-light);
 }
 
 .gantt-week-col[data-week="2"] {
-  background: rgba(59, 130, 246, 0.03);
+  background: var(--row-highlight-blue);
 }
 
 .gantt-week-col[data-week="3"] {
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--overlay-light);
 }
 
 /* Today highlighting in month view */
 .gantt-today-header {
-  background: rgba(239, 68, 68, 0.12) !important;
+  background: var(--status-red-bg) !important;
   border: 2px solid var(--red) !important;
 }
 
@@ -702,7 +702,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
 }
 
 .today-col {
-  background: rgba(239, 68, 68, 0.08);
+  background: var(--status-red-bg);
 }
 
 /* Day cells in batch rows */
@@ -712,11 +712,11 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
 }
 
 .gantt-day-cell.current-week-cell {
-  background: rgba(239, 68, 68, 0.08);
+  background: var(--status-red-bg);
 }
 
 .gantt-day-cell.today-cell {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-red-bg);
 }
 
 .gantt-today-line {
@@ -747,7 +747,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
 }
 
 .gantt-batch-row:hover {
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--row-highlight-blue);
 }
 
 .gantt-batch-row:last-child {
@@ -792,7 +792,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
   transition: all 0.15s;
   cursor: pointer;
   position: relative;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--line);
   min-height: 28px;
 }
 
@@ -892,7 +892,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1154,7 +1154,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
     to right,
     transparent,
     transparent calc(100% / 61 - 1px),
-    rgba(126, 140, 162, 0.14) calc(100% / 61),
+    var(--line) calc(100% / 61),
     transparent calc(100% / 61)
   );
 }
@@ -1173,7 +1173,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
   top: 5px;
   bottom: 5px;
   width: 2px;
-  background: rgba(239, 68, 68, 0.55);
+  background: var(--chart-red);
   z-index: 5;
   pointer-events: none;
 }
@@ -1246,7 +1246,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
     to right,
     transparent,
     transparent calc(100% / 26 - 1px),
-    rgba(126, 140, 162, 0.2) calc(100% / 26),
+    var(--line2) calc(100% / 26),
     transparent calc(100% / 26)
   );
 }
@@ -1310,7 +1310,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
     to right,
     transparent,
     transparent calc(100% / 26 - 1px),
-    rgba(126, 140, 162, 0.14) calc(100% / 26),
+    var(--line) calc(100% / 26),
     transparent calc(100% / 26)
   );
 }
@@ -1320,7 +1320,7 @@ tr.batch-row-due-soon { background: var(--amber-pale); }
   top: 5px;
   bottom: 5px;
   width: 2px;
-  background: rgba(239, 68, 68, 0.55);
+  background: var(--chart-red);
   z-index: 5;
   pointer-events: none;
 }

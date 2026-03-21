@@ -506,8 +506,8 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">Colour Legend</div>
         <ul class="guide-list">
-          <li><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#4ade80;margin-right:6px;vertical-align:middle"></span><strong>Green</strong> — Planned weeks</li>
-          <li><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fb923c;margin-right:6px;vertical-align:middle"></span><strong>Orange hatched</strong> — Actual weeks</li>
+          <li><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:var(--green);margin-right:6px;vertical-align:middle"></span><strong>Green</strong> — Planned weeks</li>
+          <li><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:var(--amber);margin-right:6px;vertical-align:middle"></span><strong>Orange hatched</strong> — Actual weeks</li>
         </ul>
       </div>
       <div class="guide-section">

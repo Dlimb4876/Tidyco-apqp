@@ -243,6 +243,12 @@ td.ctr  { text-align: center; }
 .empty-title  { font-size: 14px; font-weight: 600; color: var(--mid); }
 .empty-desc   { font-size: 12px; margin-top: 3px; }
 
+.loading-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+}
+
 /* ── Alert items ────────────────────────────────────────────── */
 .alert-row  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
 .alert-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 6px; font-size: 13px; }

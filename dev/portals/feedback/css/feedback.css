@@ -540,19 +540,19 @@
 
 /* ── Row Type Colors (subtle backgrounds) ────────────────── */
 .feedback-row-bug {
-  background: rgba(239, 68, 68, 0.03);
+  background: var(--status-red-bg);
 }
 
 .feedback-row-usability {
-  background: rgba(59, 130, 246, 0.03);
+  background: var(--status-blue-bg);
 }
 
 .feedback-row-feature {
-  background: rgba(168, 85, 247, 0.03);
+  background: var(--status-purple-bg);
 }
 
 .feedback-row-improvement {
-  background: rgba(34, 197, 94, 0.03);
+  background: var(--status-green-bg);
 }
 
 /* ── Responsive Design ───────────────────────────────────── */

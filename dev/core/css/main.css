@@ -57,8 +57,38 @@
   --teal:#0a7566; --teal-pale:#e5f5f3;
   --navy:#21496f; --navy-pale:#e8f0f8;
   --rose:#9b1c4a; --rose-pale:#fce8f1;
+  --green-dark: #145e2e;
   --page-gutter-mobile: 4px;
   --page-gutter-desktop: 14px;
+
+  /* Chart & Visualization Colors */
+  --chart-blue: #1e40af; --chart-blue-pale: rgba(30,64,175,0.12); --chart-blue-lt: rgba(30,64,175,0.15);
+  --chart-green: #15803d; --chart-green-pale: rgba(21,128,61,0.12); --chart-green-lt: rgba(21,128,61,0.15);
+  --chart-amber: #ea580c; --chart-amber-pale: rgba(234,88,12,0.12); --chart-amber-lt: rgba(234,88,12,0.15);
+  --chart-rose: #be185d; --chart-rose-pale: rgba(190,24,93,0.12);
+  --chart-pink: #be185d; --chart-pink-lt: rgba(190,24,93,0.15);
+  --chart-purple: #7c3aed; --chart-purple-pale: rgba(124,58,237,0.12); --chart-purple-lt: rgba(124,58,237,0.15);
+  --chart-red: #ef4444; --chart-red-pale: rgba(239,68,68,0.12);
+
+  /* Gray Scale */
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+  --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+  --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+
+  /* Utility Background Colors */
+  --code-bg: #f0f0f0;
+  --field-highlight: #eff6ff;
+  --row-highlight-blue: rgba(59,130,246,0.05);
+  --row-highlight-amber: rgba(255,191,0,0.05);
+  --overlay-light: rgba(0,0,0,0.02);
+  --overlay-medium: rgba(0,0,0,0.1);
+
+  /* Status Colors */
+  --status-green-bg: #d1fae5; --status-green-text: #065f46;
+  --status-blue-bg: #dbeafe; --status-blue-text: #1e40af;
+  --status-amber-bg: #fef3c7; --status-amber-text: #92400e;
+  --status-purple-bg: #ede9fe; --status-purple-text: #5b21b6;
+  --status-red-bg: #fee2e2; --status-red-text: #991b1b;
 }
 
 :root[data-theme="dark"] {
@@ -109,10 +139,120 @@
   --teal:#58c2af; --teal-pale:rgba(88,194,175,.15);
   --navy:#9fc1e4; --navy-pale:rgba(159,193,228,.14);
   --rose:#f29aba; --rose-pale:rgba(242,154,186,.15);
+  --green-dark: #34a85a;
+
+  /* Chart & Visualization Colors - Dark */
+  --chart-blue: #3b82f6; --chart-blue-pale: rgba(59,130,246,0.15); --chart-blue-lt: rgba(59,130,246,0.2);
+  --chart-green: #4ade80; --chart-green-pale: rgba(74,222,128,0.15); --chart-green-lt: rgba(74,222,128,0.2);
+  --chart-amber: #fb923c; --chart-amber-pale: rgba(251,146,60,0.15); --chart-amber-lt: rgba(251,146,60,0.2);
+  --chart-rose: #f472b6; --chart-rose-pale: rgba(244,114,182,0.15);
+  --chart-pink: #f472b6; --chart-pink-lt: rgba(244,114,182,0.2);
+  --chart-purple: #a78bfa; --chart-purple-pale: rgba(167,139,250,0.15); --chart-purple-lt: rgba(167,139,250,0.2);
+  --chart-red: #ef4444; --chart-red-pale: rgba(239,68,68,0.15);
+
+  /* Gray Scale - Dark (inverted) */
+  --gray-50: #1f2937; --gray-100: #374151; --gray-200: #4b5563;
+  --gray-300: #6b7280; --gray-400: #9ca3af; --gray-500: #d1d5db;
+  --gray-600: #e5e7eb; --gray-700: #f3f4f6; --gray-800: #f9fafb; --gray-900: #ffffff;
+
+  /* Utility Background Colors - Dark */
+  --code-bg: #1f2937;
+  --field-highlight: rgba(59,130,246,0.15);
+  --row-highlight-blue: rgba(59,130,246,0.08);
+  --row-highlight-amber: rgba(234,88,12,0.08);
+  --overlay-light: rgba(255,255,255,0.02);
+  --overlay-medium: rgba(255,255,255,0.08);
+
+  /* Status Colors - Dark */
+  --status-green-bg: rgba(16,185,129,0.15); --status-green-text: #6ee7b7;
+  --status-blue-bg: rgba(59,130,246,0.15); --status-blue-text: #93c5fd;
+  --status-amber-bg: rgba(245,158,11,0.15); --status-amber-text: #fcd34d;
+  --status-purple-bg: rgba(139,92,246,0.15); --status-purple-text: #c4b5fd;
+  --status-red-bg: rgba(239,68,68,0.15); --status-red-text: #fca5a5;
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
+}
+
+:root[data-theme="terminal"] {
+  color-scheme: dark;
+  --ink:#00ff41; --ink2:#00dd38; --mid:#00aa2b; --muted:#006618;
+  --line:#002209; --line2:#003311; --bg:#000000; --white:#0a0f0a;
+  --bg-soft:#050d05; --surface:#0a0f0a;
+  --body-glow-primary: rgba(0, 255, 65, 0.10);
+  --body-glow-secondary: rgba(0, 220, 50, 0.06);
+  --table-border: var(--line);
+  --table-head-bg: #041204;
+  --table-head-ink: #00cc33;
+  --table-row-hover: rgba(0,255,65,.06);
+  --surface-gradient-start:#0a0f0a;
+  --surface-gradient-end:#050d05;
+  --surface-head-start:#0d140d;
+  --surface-head-end:#080d08;
+  --modal-gradient-start:#0a0f0a;
+  --modal-gradient-end:#050a05;
+  --section-gradient-start:rgba(10,15,10,.96);
+  --section-gradient-end:rgba(5,10,5,.96);
+  --info-gradient-start:#041404;
+  --info-gradient-end:#031003;
+  --surface-shell-start:rgba(10,15,10,.92);
+  --surface-shell-end:rgba(5,10,5,.92);
+  --ghost-bg:rgba(10,15,10,.92);
+  --ghost-border-hover:#005518;
+  --field-bg:#030903;
+  --field-shadow-focus:rgba(0,255,65,.18);
+  --card-shadow:0 12px 28px rgba(0, 0, 0, 0.6);
+  --card-shadow-hover:0 10px 24px rgba(0, 0, 0, 0.5);
+  --modal-shadow:0 28px 80px rgba(0, 0, 0, 0.7);
+  --overlay-bg:rgba(0,3,0,.85);
+  --shortcut-bg:#030903;
+  --kbd-bg:#041204;
+  --kbd-border:#003311;
+  --skeleton-start:#050d05;
+  --skeleton-mid:#0a140a;
+  --filter-clear-bg:rgba(0,255,65,0.06);
+  --filter-clear-bg-hover:rgba(0,255,65,0.12);
+  --login-shell-bg:#000000;
+  --blue:#00ff41; --blue-dark:#00cc33; --blue-pale:rgba(0,255,65,.14); --blue-mid:#004d15;
+  --accent:#00ff41; --accent2:#00cc33;
+  --green:#00ff41; --green-pale:rgba(0,255,65,.14); --green-mid:#004d15;
+  --amber:#ffcc00; --amber-pale:rgba(255,204,0,.14); --amber-mid:#664f00;
+  --red:#ff4444; --red-pale:rgba(255,68,68,.14);
+  --purple:#cc77ff; --purple-pale:rgba(204,119,255,.12);
+  --teal:#00ffcc; --teal-pale:rgba(0,255,204,.12);
+  --navy:#00ccff; --navy-pale:rgba(0,204,255,.12);
+  --rose:#ff44aa; --rose-pale:rgba(255,68,170,.12);
+  --green-dark: #00cc33;
+
+  /* Chart & Visualization Colors - Terminal (neon) */
+  --chart-blue: #00eeff; --chart-blue-pale: rgba(0,238,255,0.25); --chart-blue-lt: rgba(0,238,255,0.35);
+  --chart-green: #00ff41; --chart-green-pale: rgba(0,255,65,0.25); --chart-green-lt: rgba(0,255,65,0.35);
+  --chart-amber: #ffaa00; --chart-amber-pale: rgba(255,170,0,0.25); --chart-amber-lt: rgba(255,170,0,0.35);
+  --chart-rose: #ff00cc; --chart-rose-pale: rgba(255,0,204,0.25);
+  --chart-pink: #ff00cc; --chart-pink-lt: rgba(255,0,204,0.35);
+  --chart-purple: #cc00ff; --chart-purple-pale: rgba(204,0,255,0.25); --chart-purple-lt: rgba(204,0,255,0.35);
+  --chart-red: #ff2222; --chart-red-pale: rgba(255,34,34,0.25);
+
+  /* Gray Scale - Terminal */
+  --gray-50: #050d05; --gray-100: #0a140a; --gray-200: #0f1a0f;
+  --gray-300: #1a2a1a; --gray-400: #2a4a2a; --gray-500: #4a7a4a;
+  --gray-600: #6aaa6a; --gray-700: #00aa2b; --gray-800: #00cc33; --gray-900: #00ff41;
+
+  /* Utility Background Colors - Terminal */
+  --code-bg: #030903;
+  --field-highlight: rgba(0,255,65,0.08);
+  --row-highlight-blue: rgba(0,204,255,0.06);
+  --row-highlight-amber: rgba(255,204,0,0.06);
+  --overlay-light: rgba(0,255,65,0.02);
+  --overlay-medium: rgba(0,255,65,0.08);
+
+  /* Status Colors - Terminal */
+  --status-green-bg: rgba(0,255,65,0.12); --status-green-text: #00ff41;
+  --status-blue-bg: rgba(0,204,255,0.12); --status-blue-text: #00ccff;
+  --status-amber-bg: rgba(255,204,0,0.12); --status-amber-text: #ffcc00;
+  --status-purple-bg: rgba(204,119,255,0.12); --status-purple-text: #cc77ff;
+  --status-red-bg: rgba(255,68,68,0.12); --status-red-text: #ff4444;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

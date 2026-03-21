@@ -1,5 +1,8 @@
 # Security Rules
 
+## Scope
+This file owns security-specific behavior (XSS, validation, sensitive data handling). Database query and RLS policy details are canonical in `.claude/rules/database.md`.
+
 ## XSS Prevention
 **Always use `esc()` for all user data in HTML strings.**
 
@@ -16,18 +19,7 @@ html += `<div>${userInput}</div>`;
 ```
 
 ## Row-Level Security (RLS)
-RLS in this project provides **authentication only**, not authorization:
-- All authenticated users see all data
-- **Never** filter Supabase queries by `user_id`
-- New tables require this RLS policy:
-
-```sql
-CREATE POLICY "auth" ON table_name
-FOR ALL
-USING (auth.role() = 'authenticated');
-```
-
-**RLS = Authentication Gate**: Use it to verify the user is logged in, not to restrict data visibility.
+RLS behavior is auth-only in this project. For canonical policy details and examples, use `.claude/rules/database.md`.
 
 ## Authentication Pattern
 - Supabase client lives in `core/js/auth.js`

@@ -3,6 +3,41 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+---
+
+## 2026-03-21 | Deduplicate domain rule docs for lower token usage | Compressed agents/code-style/security/database rules by removing repeated core policy text and keeping canonical owner pointers
+
+## 2026-03-21 | Compress core instruction files for lower token overhead | Reduced CLAUDE.md and copilot-instructions.md to router-style guardrails with pointers to scoped rule owners
+
+## 2026-03-21 | Fix production capacity dashboard: capacity line now renders on top of bars | Bar datasets had no order property (defaulting to 0, same as the line), making draw order ambiguous; added order:1 to bars so line (order:0) always renders on top
+
+## 2026-03-21 | Fix capacity chart bar colours to match legend | Bars used gradient fills that faded to near-transparent, making colours inconsistent with the solid legend dots; replaced with solid colours from the same CSS variables.
+
+## 2026-03-21 | Boost terminal theme chart colours to full neon saturation | Pale/lt variants were too transparent on dark backgrounds; solid colours pushed to max saturation for phosphor effect
+
+## 2026-03-21 | Fix me-chart.js crash: --chart-purple-lt CSS variable missing | addColorStop threw SyntaxError when the variable resolved to empty string in all three themes
+
+## 2026-03-21 | Add Terminal colour theme (phosphor-green on black) | User requested a third theme alongside light and dark; adds full CSS variable set, chart colours, status colours, and theme card in Appearance settings
+
+## 2026-03-21 | Rewrite refactoring plan Phase 3 as safe optimization sequence | The previous optimization list was too generic; replaced it with scoped rules and behavior-preserving test gates to avoid accidental logic drift
+## 2026-03-21 | Implement refactor Phase 1 safely with test gates | Removes duplicate capacity esc helpers, centralizes settings loading banners, and standardizes flat RPN formulas while preserving behavior through focused and full regression checks
+
+## 2026-03-21 | Rewrite refactoring plan Phase 2 as safe structural sequence | The old Phase 2 list was too broad for high-risk files; replaced it with staged module passes and explicit test gates to reduce regression risk
+
+## 2026-03-21 | Harden refactoring opportunities Phase 1 plan | The original quick-win checklist could be misread as safe search-and-replace work; updated it to call out current helper dependencies, stale items, and safer sequencing
+
+## 2026-03-21 | Fix hardcoded colors in products.css | ~25 hex values (#2c3e50, #666, #ddd, etc.) made text and borders invisible in dark mode; replaced all with CSS variables
+
+## 2026-03-21 | Fix remaining hardcoded inline colors across portals | products.js, me-heatmap.js, me-chart.js, action-centre.js, product-development.js still had rgba/hex values; replaced with CSS variables so all portals fully respect light/dark theme
+
+## 2026-03-21 | Normalize docs filenames | Renames `docs/` files to lowercase kebab-case so links are predictable and the documentation tree stays consistent
+
+## 2026-03-21 | Move live guides into docs folder | Separates durable reference/setup docs from true plans so `plans/` stays focused on pending work and `docs/` holds current guidance
+
+## 2026-03-21 | Prune stale plan documents | Removes completed or outdated one-off plans from `plans/` so the folder only keeps active specs, guides, and unfinished work
+
+## 2026-03-21 | Theme remediation: replace ~200 hardcoded colors with CSS variables | Enables proper light/dark mode support across all portals; adds --chart-*, --status-*, --gray-*, --code-bg, --row-highlight-* variables, ChartTheme utility, and fixes all CSS/JS files to use theme-aware colors
+
 ## 2026-03-21 | Fix dark mode: project dashboard text invisible on dark background | Hardcoded dark navy hex colours (#0f1f33, #112238, #25384f etc.) in mc-shell dashboard were invisible against dark backgrounds; added :root[data-theme="dark"] overrides so project name, KPI numbers, gate circles and focus text render in legible light colours
 
 ## 2026-03-21 | Fix mobile topbar overlap and restore settings access on mobile | Topbar min-width constraints (240px left, 200px centre) exceeded 375px screen width causing all buttons to collide; collapsed centre strip on mobile, removed min-widths, switched topbar to 2-col grid; also fixed settings layout defaulting to flex-row instead of flex-column on mobile
@@ -63,6 +98,8 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 
 ---
+
+## 2026-03-21 | Add instruction token optimization package | Defines a minimal core instruction set, deduplicated rule ownership, and a staged migration plan to reduce prompt cost without losing safeguards
 
 ## 2026-03-20 | Fix MCS database issues: wrong client, wrong tables, wrong field names, missing required fields | MCS was using the CDN global `supabase` object instead of the `supa` client for all DB queries (causing failures); `impacts` arrays and `timeline` arrays were being inserted into `mcs_changes` which has no such columns — they belong in `mcs_impacts` and `mcs_timeline`; update path used `type` instead of `change_type` and spread the full change object (including non-schema fields) into updates; `mcsLoadChanges` now joins `mcs_impacts`, `mcsViewChange` now loads timeline on demand; approval/reject/advance functions only send changed fields; `mcsCreateOverhaulHistoryEntry` was missing the required NOT NULL `effective_date` field; invalid `event_type` values in timeline inserts fixed; `mcs-pfmea.js` and `mcs-actions.js` added to `index.html`.
 

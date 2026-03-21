@@ -407,6 +407,5 @@ CREATE TABLE project_template_applications (
 
 ## 📚 Related Documents
 
-- **User Guide:** `FAMILY_TEMPLATES_GUIDE.md`
-- **Project Memory:** `MEMORY.md` (Product Families section)
-- **Database:** Supabase project, `eihxvmzsfnpdaizggsvs`
+- **User Guide:** `docs/guides/family-templates-guide.md`
+- **Project Memory:** OpenWolf memory and repo notes for product families

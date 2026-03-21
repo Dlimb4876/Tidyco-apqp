@@ -378,7 +378,7 @@ function renderFamilyModal() {
   const isEdit = !!family;
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000" data-action="pd-close-family-modal" data-overlay="true">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-bg);display:flex;align-items:center;justify-content:center;z-index:1000" data-action="pd-close-family-modal" data-overlay="true">
       <div style="background:var(--white);border-radius:8px;padding:24px;width:90%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.15)">
         <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:16px">
           ${isEdit ? 'Edit Family' : 'Add Family'}
@@ -458,7 +458,7 @@ function renderTemplateManager() {
   const templateNames = Object.keys(grouped).sort();
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto" data-action="pd-close-template-manager" data-overlay="true">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-bg);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto" data-action="pd-close-template-manager" data-overlay="true">
       <div style="background:var(--white);border-radius:8px;width:90%;max-width:900px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.15);margin:20px 0">
         <!-- Header -->
         <div style="padding:20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--white)">
@@ -519,7 +519,7 @@ function renderTemplateViewer() {
     .filter(t => t.template_name === templateViewerState.templateName);
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1001;overflow-y:auto" data-action="pd-close-template-viewer" data-overlay="true">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-bg);display:flex;align-items:center;justify-content:center;z-index:1001;overflow-y:auto" data-action="pd-close-template-viewer" data-overlay="true">
       <div style="background:var(--white);border-radius:8px;width:92%;max-width:1100px;max-height:88vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2);margin:20px 0">
         <div style="padding:20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;position:sticky;top:0;background:var(--white)">
           <div>

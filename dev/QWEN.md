@@ -130,10 +130,14 @@ tidyco-apqp/
 │   ├── state-variable-tracker.js
 │   └── test-coverage-reporter.js
 │
-├── plans/                      # Architecture docs and feature plans
+├── plans/                      # Pending plans and active implementation specs
 │   ├── MASTER_PLAN.md
-│   ├── FAMILY_TEMPLATES_ARCHITECTURE.md
 │   └── ...
+│
+├── docs/                       # Durable guides, setup docs, and references
+│   ├── reference/
+│   ├── guides/
+│   └── setup/
 │
 └── coverage/                   # Test coverage reports (generated)
 ```

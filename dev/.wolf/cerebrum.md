@@ -12,12 +12,20 @@
 
 - **Project:** tidyco-apqp
 - **Description:** A Manufacturing Engineering tool for rail overhaul, managing APQP Gates 0–5 and broader operational workflows. Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and Supabase for persistence.
+- The repo now splits documentation by purpose: `plans/` for pending work/specs, `docs/reference/` for current technical references, `docs/guides/` for how-to docs, and `docs/setup/` for setup instructions.
+- Docs filenames under `docs/` now use lowercase kebab-case for consistency and easier linking.
 - Appearance preferences are browser-local in `tidyco_prefs`; `settingsApplyAppearance()` is the global hook that applies them during startup and should be extended for app-wide theming changes.
 - Theme selection UX should apply immediately on `ap-theme` radio change in Settings so users get instant visual feedback without requiring Save.
+- **ChartTheme utility** (`core/js/chart-theme.js`) is loaded after `db.js` in index.html and provides `ChartTheme.getColors()`, `ChartTheme.getPalette(n)`, `ChartTheme.getDefaultOptions()` — use for all new Chart.js code instead of hardcoding colors.
+- `--bg-soft` (`#f8fbff` light / `#101a24` dark) replaces `#fafbfd`/`#f7fbff` subtle surface tints. `--table-head-bg` replaces `#f4f6fa` header backgrounds. `--overlay-bg` replaces `rgba(0,0,0,0.5)` modal backdrops.
+- Some Jest suites evaluate modules in isolation (without full script load order), so refactors that replace inline logic with global helpers must include local fallback wrappers to avoid `ReferenceError` in tests.
 
 ## Do-Not-Repeat
 
 <!-- [2026-03-21] Dark mode colour overrides: never rely on hardcoded hex values for borders/backgrounds in shared components (tags, flags, alerts). Any colour used in a component that renders against --surface or --bg must either use a CSS variable or have an explicit :root[data-theme="dark"] override. --blue-dark (#3f8ded) is NOT legible on dark blue backgrounds — use --blue (#5aa5ff) instead for dark mode text. -->
+
+<!-- [2026-03-21] Theme remediation complete: all ~200 hardcoded colors now use CSS variables. New variables added to main.css: --chart-blue/green/amber/pink/purple/red (+ -pale/-lt variants), --status-green/blue/amber/purple/red (-bg/-text), --gray-50..900, --code-bg, --field-highlight, --row-highlight-blue/amber, --overlay-light/medium, --green-dark. ChartTheme utility at core/js/chart-theme.js provides getColors(), getPalette(), getDefaultOptions() for all Chart.js usage. -->
+<!-- [2026-03-21] Refactor gotcha: do not assume helpers.js globals are always available in tests. When replacing inline formulas/UI snippets with shared helpers in NPI/Settings modules, add local wrappers that call the helper when defined and fall back to equivalent inline behavior. -->
 
 <!-- Mistakes made and corrected. Each entry prevents the same mistake recurring. -->
 <!-- Format: [YYYY-MM-DD] Description of what went wrong and what to do instead. -->

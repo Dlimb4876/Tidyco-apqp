@@ -45,7 +45,7 @@
 .me-add-row {
 	display: flex; align-items: center; gap: 8px;
 	padding: 8px 12px; border-top: 1px solid var(--line);
-	background: #fafbfd;
+	background: var(--bg-soft);
 }
 .me-add-row button {
 	font-size: 12px; padding: 5px 12px;

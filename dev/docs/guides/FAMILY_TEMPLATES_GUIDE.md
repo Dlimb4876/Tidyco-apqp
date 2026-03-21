@@ -60,31 +60,16 @@ updated_at       TIMESTAMP     (Auto)
 7. Click **Add Item** to add more failure modes
 8. Click **Save Template**
 
-### Step 2: Build Templates from Existing Projects
+### Current Scope
 
-You can copy PFMEA data from a completed project into a family template:
+This guide covers the features that exist today:
 
-1. Open completed NPI project (e.g., "Class 158 Motor")
-2. Review the PFMEA (Step 03)
-3. Click **Create Family Template** (coming soon)
-4. Select which failure modes to include
-5. Save as template for reuse in similar projects
+1. Create templates per family
+2. View grouped template items
+3. Edit and delete individual template rows
+4. Copy a full template to another family
 
-### Step 3: Apply Template to New Project
-
-1. Click **➕ New Project**
-2. Fill in project details (name, customer, unit, etc.)
-3. Select **Product Family** (e.g., "HVAC")
-4. When creating the project:
-   - Prompt: **"Apply PFMEA template?"**
-   - Select **"Standard HVAC PFMEA"** template
-   - Click **Apply**
-5. PFMEA automatically populates with 15-20 standard failure modes
-6. Customize for your specific product:
-   - Delete irrelevant failure modes
-   - Add product-specific items
-   - Adjust RPN numbers based on design
-   - Update controls based on your approach
+Template creation from completed projects and automatic application during new-project setup are not part of the current UI yet.
 
 ---
 
@@ -153,40 +138,6 @@ Use consistent scales:
 
 ---
 
-## 🎯 Integration with NPI Projects
-
-### On Project Creation
-```
-1. Select Product Family → "HVAC"
-2. Prompt: "Apply PFMEA template?"
-3. Choose: "Standard HVAC PFMEA"
-4. Auto-populate with 18 failure modes
-5. Start with 80% of PFMEA complete
-```
-
-### Post-Application
-- All template items appear in **Step 03 — Process Design & Dev**
-- Grouped under "Template Items" section
-- Can be edited, deleted, or supplemented
-- Project-specific changes don't affect template
-
-### Locking & Versioning (future)
-- Templates can be "locked" to preserve history
-- Projects track which template version was used
-- Allows "PFMEA Template v2.1 applied" audit trail
-
----
-
-## 📈 Metrics & Reporting
-
-Track template usage:
-- How many projects use each template?
-- Average time to complete PFMEA with template
-- RPN distribution (how many items are high-risk?)
-- Template coverage by family
-
----
-
 ## ⚙️ Technical Details
 
 ### Data Layer Functions
@@ -204,12 +155,6 @@ familyTemplatesAddItem(...)          // Add failure mode to template
 familyTemplatesUpdateItem(...)        // Edit item
 familyTemplatesDeleteItem(...)        // Delete single item
 familyTemplatesDeleteFamily(...)      // Delete entire template
-```
-
-**Apply to project:**
-```javascript
-familyTemplatesApplyToProject(familyId, templateName)
-// Returns array of PFMEA objects ready to add to prog.pfmea
 ```
 
 ### RLS & Security
@@ -233,11 +178,16 @@ familyTemplatesApplyToProject(familyId, templateName)
 
 ## 📞 Troubleshooting
 
-**Q: Template not appearing in new project?**
-A: Make sure you selected the same product family. Templates are family-specific.
+**Q: Why don't templates auto-appear in the new project modal?**
+A: Automatic application is planned but not part of the current product flow. Templates are currently managed as reusable family data.
 
 **Q: Can I use a template from Family X on Family Y?**
 A: Copy it! Use the "Copy to Family" function to duplicate and customize.
+
+---
+
+**Last Updated:** 2026-03-21
+**Status:** User guide for current family template management features
 
 **Q: I accidentally deleted a template. Can I recover it?**
 A: No — deletions are permanent. Restore from backup or recreate from notes.

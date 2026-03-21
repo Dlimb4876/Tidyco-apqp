@@ -9,7 +9,7 @@ function renderSchedulingNewRow() {
   const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
   
   return `
-    <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+    <tr class="row-new" id="batch-new-row" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
       <td class="w28 ctr">+</td>
       <td>
         <select class="cell-edit" id="batch-new-product" data-field="product">
