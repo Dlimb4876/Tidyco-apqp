@@ -355,7 +355,8 @@ function renderProductDetail(productId) {
           <thead>
             <tr>
               <th>Effective Date</th>
-              <th>Overhaul (hrs)</th>
+              <th>Total (hrs)</th>
+              <th>Change (hrs)</th>
               <th>Change Reason</th>
               <th>Notes</th>
               <th>Created By</th>
@@ -363,10 +364,17 @@ function renderProductDetail(productId) {
             </tr>
           </thead>
           <tbody>
-            ${sorted.map(h => `
+            ${sorted.map(h => {
+              const delta = h.time_impact_hours;
+              const deltaStr = delta == null ? '—'
+                : delta > 0 ? `<span style="color:var(--red)">+${delta.toFixed(1)}</span>`
+                : delta < 0 ? `<span style="color:var(--green)">${delta.toFixed(1)}</span>`
+                : '0.0';
+              return `
               <tr>
                 <td><strong>${esc(h.effective_date)}</strong></td>
                 <td class="numeric">${h.overhaul_hours.toFixed(1)}</td>
+                <td class="numeric">${deltaStr}</td>
                 <td>${esc(h.change_reason || '—')}</td>
                 <td>${esc(h.notes || '—')}</td>
                 <td>${esc(h.created_by_name || '—')}</td>
@@ -374,8 +382,8 @@ function renderProductDetail(productId) {
                   <button class="btn-icon" data-action="del-history"
                     data-history-id="${h.id}" data-product-id="${productId}" title="Delete">🗑️</button>
                 </td>
-              </tr>
-            `).join('')}
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>`;
@@ -401,8 +409,11 @@ function renderProductDetail(productId) {
             <input type="date" id="inlineHistoryDate" value="${today}">
           </div>
           <div class="form-group">
-            <label>Overhaul Time (hours) *</label>
-            <input type="number" id="inlineHistoryHours" min="0" step="0.5" placeholder="0.0">
+            <label>
+              Time Change (hours) *
+              <span class="field-tooltip" title="Enter how many hours this change adds or removes. Use a negative number for an improvement — e.g. −2 means the overhaul now takes 2 hours less. The new total will be calculated automatically from the current value.">ⓘ</span>
+            </label>
+            <input type="number" id="inlineHistoryDelta" step="0.5" placeholder="e.g. −2 or +3">
           </div>
           <div class="form-group">
             <label>Change Reason</label>
@@ -422,7 +433,7 @@ function renderProductDetail(productId) {
           </div>
         </div>
         <div class="inline-form-actions">
-          <button class="btn btn-primary" data-action="save-history" data-product-id="${productId}">Save Estimation</button>
+          <button class="btn btn-primary" data-action="save-history" data-product-id="${productId}">Save</button>
           <button class="btn btn-secondary" data-action="cancel-add-form">Cancel</button>
         </div>
       </div>
@@ -590,16 +601,16 @@ function renderAllProductsTrends() {
     if (action === 'save-history') {
       const productId = btn.dataset.productId;
       const date = document.getElementById('inlineHistoryDate')?.value;
-      const hoursVal = document.getElementById('inlineHistoryHours')?.value;
-      const hours = parseFloat(hoursVal);
+      const deltaVal = document.getElementById('inlineHistoryDelta')?.value;
+      const delta = parseFloat(deltaVal);
 
-      if (!date || !hoursVal || isNaN(hours)) {
-        showToast('Please enter a date and overhaul hours.', 'warning');
+      if (!date || deltaVal === '' || isNaN(delta)) {
+        showToast('Please enter a date and a time change (hours).', 'warning');
         return;
       }
 
       const historyData = {
-        overhaul_hours: hours,
+        time_impact_hours: delta,
         effective_date: date,
         change_reason: document.getElementById('inlineHistoryReason')?.value || '',
         notes: document.getElementById('inlineHistoryNotes')?.value || ''

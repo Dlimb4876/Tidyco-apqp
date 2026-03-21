@@ -5,6 +5,10 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ---
 
+## 2026-03-21 | Overhaul hours accumulation: baseline on product add, additive history, read-only edit, column rename _days→_hours | Overhaul time was not tracked as an accumulating chain; products had no baseline history entry; manual estimations overwrote instead of adding; time impact columns were named in days but stored hours; edit form allowed overwriting current_overhaul_hours directly
+
+## 2026-03-21 | Make top bar theme-aware across Light, Dark, and Terminal | Top bar used hardcoded blue colors so it stayed visually constant across themes; moved top bar gradients/text/button states to theme CSS variables
+
 ## 2026-03-21 | Fix MCS Approval 2 overhaul history insert: user_id not-null violation | mcsCreateOverhaulHistoryEntry passed change.initiated_by_user_id (undefined → null) but overhaul_history.user_id is NOT NULL; replaced with currentUser.id
 
 ## 2026-03-21 | Start hybrid permissions implementation (role baseline + team grants) | Replaces disconnected permissions behavior with working effective access resolution: login now composes role baseline with additive team grants, navigation denies unauthorized sections, Settings Permissions now supports team assignment, team permission toggles can create missing rows, and seed SQL added for normalized role/permission tables

@@ -468,8 +468,8 @@ function mcsRenderList() {
     const partStr = change.part_drawing_no
       ? `<span>📦 ${esc(change.part_drawing_no)}</span>`
       : '';
-    const timeStr = change.estimated_time_impact_days
-      ? `<div class="mcs-card-time-impact">⏱ ${change.estimated_time_impact_days}h</div>`
+    const timeStr = change.estimated_time_impact_hours
+      ? `<div class="mcs-card-time-impact">⏱ ${change.estimated_time_impact_hours > 0 ? '+' : ''}${change.estimated_time_impact_hours}h</div>`
       : '';
 
     return `
