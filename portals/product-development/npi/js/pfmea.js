@@ -277,18 +277,18 @@ npi.pfmea.renderPFMEA = function() {
       <th rowspan="2">Controls — Detect</th>
       <th rowspan="2" title="Detection rating">DET</th>
       <th rowspan="2">RPN</th>
-      <th colspan="8" style="background:#dbeafe;color:#1e40af;letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>
+      <th colspan="8" style="background:var(--blue-pale);color:var(--blue);letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>
       <th rowspan="2"></th>
     </tr>
     <tr>
-      <th style="background:#dbeafe;color:#1e40af;white-space:normal;line-height:1.3;padding:3px 4px">Recommended<br>Action</th>
-      <th style="background:#dbeafe;color:#1e40af;white-space:normal;line-height:1.3;padding:3px 4px">Action<br>Taken</th>
-      <th style="background:#dbeafe;color:#1e40af;white-space:normal;line-height:1.3;padding:3px 4px">Owner</th>
-      <th style="background:#dbeafe;color:#1e40af;white-space:normal;line-height:1.3;padding:3px 4px">Due</th>
-      <th style="background:#dbeafe;color:#1e40af;white-space:normal;line-height:1.3;padding:3px 4px">New<br>OCC</th>
-      <th style="background:#dbeafe;color:#1e40af;white-space:normal;line-height:1.3;padding:3px 4px">New<br>DET</th>
-      <th style="background:#dbeafe;color:#1e40af;white-space:normal;line-height:1.3;padding:3px 4px">Forecast<br>RPN</th>
-      <th style="background:#dbeafe;color:#1e40af;white-space:normal;line-height:1.3;padding:3px 4px">Implement</th>
+      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Recommended<br>Action</th>
+      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Action<br>Taken</th>
+      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Owner</th>
+      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Due</th>
+      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">New<br>OCC</th>
+      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">New<br>DET</th>
+      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Forecast<br>RPN</th>
+      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Implement</th>
     </tr>
   </thead>
   <tbody>`
