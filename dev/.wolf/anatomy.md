@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T11:16:53.632Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T11:24:24.431Z
 > Files: 281 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
@@ -24,7 +24,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~10045 tok)
+- `CHANGELOG.md` — Changelog (~10133 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~484 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -141,7 +141,7 @@
 ## core/css/
 
 - `components.css` — Styles: 86 rules (~5841 tok)
-- `main.css` — Styles: 368 vars (~7902 tok)
+- `main.css` — Styles: 368 vars (~7976 tok)
 
 ## core/js/
 
