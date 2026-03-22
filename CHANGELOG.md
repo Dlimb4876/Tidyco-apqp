@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | Rename Manufacturing Change System to Manufacturing Change | Updated all references to the MCS portal across documentation, labels, and code comments for clearer naming
+
 ## 2026-03-22 | Fix capacity hub cards not appearing clickable | Added cursor: pointer to .hub-card CSS and created comprehensive tests to prevent regression on interactive hub cards
 
 ## 2026-03-22 | Fix mobile topbar button order | Actions and Feedback buttons were appearing to the right of Logout; moved them before Settings so they sit on the left side as expected

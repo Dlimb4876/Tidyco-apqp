@@ -52,3 +52,4 @@ scripts/pre-commit-quality-hook.js
 .wolf/daemon.log
 .wolf/buglog.json
 .wolf/suggestions.json
+.wolf/hooks/_session.json

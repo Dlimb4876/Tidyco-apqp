@@ -67,10 +67,15 @@ function mcsApproverSelectionHtml(preselectedEmail) {
 /**
  * Show create/new change modal
  */
-function mcsShowCreateModal() {
+async function mcsShowCreateModal() {
   const backdrop = document.createElement('div');
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-form-backdrop';
+
+  // Fetch PFMEA causes for linking
+  const pfmeaCauses = await mcsGetPfmeaCausesForLinking();
+  const emptyChange = { related_pfmea_cause_id: null };
+  const pfmeaLinkingHtml = mcsBuildPfmeaLinkingSection(emptyChange, pfmeaCauses);
 
   const initiatedBy = (currentUser && currentUser.email) ? currentUser.email : '';
   const productOptions = (window.productsState && window.productsState.products || [])
@@ -163,6 +168,10 @@ function mcsShowCreateModal() {
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-tooling" /><label for="mcs-imp-tooling">Tooling Change</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" /><label for="mcs-imp-training">Training Required</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" /><label for="mcs-imp-customer">Customer Notification</label></div>
+        </div>
+
+        <div class="mcs-modal-grid">
+          ${pfmeaLinkingHtml}
         </div>
 
         ${mcsApproverSelectionHtml()}
@@ -397,6 +406,9 @@ async function mcsSaveChange() {
     .filter(([id]) => document.getElementById(id)?.checked)
     .map(([, label]) => label);
 
+  // Get selected PFMEA cause
+  const selectedPfmeaCauseId = document.getElementById('mcs-f-pfmea-cause')?.value || null;
+
   try {
     if (mcsEditingId) {
       // Update existing
@@ -436,7 +448,19 @@ async function mcsSaveChange() {
         if (impErr) console.error('Error saving impacts:', impErr);
       }
 
-      mcsList[changeIdx] = { ...mcsList[changeIdx], ...updateFields, impacts };
+      // Handle PFMEA linking if changed
+      const oldLink = mcsList[changeIdx].related_pfmea_cause_id;
+      if (selectedPfmeaCauseId !== oldLink) {
+        if (selectedPfmeaCauseId) {
+          await mcsLinkToPfmeaCause(mcsEditingId, selectedPfmeaCauseId);
+        } else if (oldLink) {
+          // Unlink: clear both sides
+          await supa.from('mcs_changes').update({ related_pfmea_cause_id: null }).eq('id', mcsEditingId);
+          await supa.from('npi_pfmea_causes').update({ action_related_ecr_id: null }).eq('id', oldLink);
+        }
+      }
+
+      mcsList[changeIdx] = { ...mcsList[changeIdx], ...updateFields, impacts, related_pfmea_cause_id: selectedPfmeaCauseId };
       mcsToast('Change updated successfully');
     } else {
       // Create new — query DB for highest existing ECR number this year to avoid duplicate key
@@ -483,7 +507,8 @@ async function mcsSaveChange() {
         estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: document.getElementById('mcs-f-justification')?.value,
         // Store nominated approver so mcsCanApproveStep can identify who was asked to review
-        eng_review_notes: nominatedApprover ? 'nominated_approver:' + nominatedApprover : null
+        eng_review_notes: nominatedApprover ? 'nominated_approver:' + nominatedApprover : null,
+        related_pfmea_cause_id: selectedPfmeaCauseId || null
       };
 
       const { error } = await supa
@@ -501,6 +526,11 @@ async function mcsSaveChange() {
 
       // Log the initial timeline entry to mcs_timeline
       await mcsAddTimelineEntry(id, 'raised', 'Change request submitted.', initiatedBy);
+
+      // If PFMEA link selected, link it now
+      if (selectedPfmeaCauseId) {
+        await mcsLinkToPfmeaCause(id, selectedPfmeaCauseId);
+      }
 
       mcsList.unshift({ ...newChange, impacts, timeline: [] });
       mcsToast(`Created: ${id}`);
@@ -595,7 +625,7 @@ async function mcsDeleteChange(id) {
 /**
  * Edit change
  */
-function mcsEditChange(id) {
+async function mcsEditChange(id) {
   const change = mcsList.find(c => c.id === id);
   if (!change) return;
 
@@ -603,19 +633,22 @@ function mcsEditChange(id) {
   mcsCloseModal('mcs-view-backdrop');
 
   // Close and reopen with form
-  setTimeout(() => {
-    mcsShowEditModal(change);
+  setTimeout(async () => {
+    await mcsShowEditModal(change);
   }, 100);
 }
 
 /**
  * Show edit modal
  */
-function mcsShowEditModal(change) {
+async function mcsShowEditModal(change) {
   // Similar to create but pre-filled
   const backdrop = document.createElement('div');
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-form-backdrop';
+
+  // Fetch PFMEA causes for linking
+  const pfmeaCauses = await mcsGetPfmeaCausesForLinking();
 
   const initiatedBy = change.initiated_by || (currentUser && currentUser.email) || '';
   const productOptions = (window.productsState && window.productsState.products || [])
@@ -624,6 +657,8 @@ function mcsShowEditModal(change) {
       const selected = (change.affected_product_id === p.id || change.part_drawing_no === p.name) ? 'selected' : '';
       return `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-part="${esc(p.part_number || '')}" ${selected}>${display}</option>`;
     }).join('');
+
+  const pfmeaLinkingHtml = mcsBuildPfmeaLinkingSection(change, pfmeaCauses);
 
   backdrop.innerHTML = `
     <div class="mcs-modal">
@@ -698,6 +733,9 @@ function mcsShowEditModal(change) {
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-tooling" ${(change.impacts || []).includes('Tooling Change') ? 'checked' : ''} /><label for="mcs-imp-tooling">Tooling Change</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" ${(change.impacts || []).includes('Training Required') ? 'checked' : ''} /><label for="mcs-imp-training">Training Required</label></div>
           <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" ${(change.impacts || []).includes('Customer Notification') ? 'checked' : ''} /><label for="mcs-imp-customer">Customer Notification</label></div>
+        </div>
+        <div class="mcs-modal-grid">
+          ${pfmeaLinkingHtml}
         </div>
       </div>
       <div class="mcs-modal-footer">
