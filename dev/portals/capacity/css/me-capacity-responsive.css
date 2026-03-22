@@ -73,7 +73,7 @@
 	}
 
 	.me-heatmap-grid {
-		grid-template-columns: 100px repeat(auto-fit, 40px);
+		grid-template-columns: 100px repeat(20, 40px);
 	}
 
 	.me-heatmap-cell {

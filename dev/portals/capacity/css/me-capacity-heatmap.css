@@ -8,18 +8,18 @@
 }
 
 .me-heatmap-wrapper {
-	flex: 1; overflow: hidden; border: 1px solid var(--line);
+	overflow: auto; border: 1px solid var(--line);
 	border-radius: 8px; background: var(--white);
-	margin: 16px 0;
+	margin: 16px 0; max-height: 520px;
+	-webkit-overflow-scrolling: touch;
 }
 
 .me-heatmap-grid {
 	display: grid;
-	grid-template-columns: 140px repeat(auto-fit, 52px);
+	grid-template-columns: 140px repeat(20, 52px);
 	gap: 0; background: var(--white);
 	padding: 0;
-	overflow: auto;
-	height: 100%;
+	min-width: max-content;
 }
 
 .me-heatmap-person-header {

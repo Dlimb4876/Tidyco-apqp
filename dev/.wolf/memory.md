@@ -692,3 +692,11 @@
 |------|--------|---------|---------|--------|
 | 11:10 | Edited core/css/main.css | CSS: theme, background | ~124 |
 | 11:10 | Edited CHANGELOG.md | 1→3 lines | ~87 |
+
+## Session: 2026-03-22 11:14
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:16 | Edited portals/capacity/css/me-capacity-heatmap.css | CSS: max-height, -webkit-overflow-scrolling, min-width | ~100 |
+| 11:16 | Edited portals/capacity/css/me-capacity-responsive.css | 13→13 lines | ~66 |
+| 11:16 | Edited CHANGELOG.md | 1→3 lines | ~93 |
