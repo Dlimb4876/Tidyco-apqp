@@ -111,6 +111,11 @@
       "count": 2,
       "tokens": 12134,
       "first_read": "2026-03-22T18:47:35.192Z"
+    },
+    "/home/user/Tidyco-apqp/core/js/db.js": {
+      "count": 1,
+      "tokens": 8516,
+      "first_read": "2026-03-22T18:47:48.602Z"
     }
   },
   "files_written": [
@@ -209,7 +214,7 @@
     "utils/js/helpers.js": 1,
     "CHANGELOG.md": 1
   },
-  "anatomy_hits": 22,
+  "anatomy_hits": 23,
   "anatomy_misses": 0,
   "repeated_reads_warned": 25,
   "cerebrum_warnings": 0,
