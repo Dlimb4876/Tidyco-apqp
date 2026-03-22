@@ -130,6 +130,8 @@
       <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>S</kbd><span>Save current work</span></div>
       <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Focus search</span></div>
       <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>Enter</kbd><span>Save form / row</span></div>
+      <div class="shortcut-item"><kbd>1</kbd> - <kbd>5</kbd><span>Open cards on current hub page</span></div>
+      <div class="shortcut-item"><kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd><span>Capacity, Product Development, Production (main hub)</span></div>
       <div class="shortcut-item"><kbd>Enter</kbd><span>Add item (in add-row inputs)</span></div>
       <div class="shortcut-item"><kbd>Escape</kbd><span>Cancel edit / Close modal</span></div>
       <div class="shortcut-item"><kbd>Tab</kbd><span>Move to next field</span></div>
@@ -529,6 +531,20 @@
     <div class="guide-modal-body" id="guideModalBody"></div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="closeModal('modalGuide')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- PFMEA Validation Warnings Modal -->
+<div class="modal-bg" id="modalPfmeaWarnings" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Validation Warnings</div>
+      <button class="modal-close" onclick="closeModal('modalPfmeaWarnings')" aria-label="Close">×</button>
+    </div>
+    <ul id="pfmeaWarningList" class="pf-warning-list"></ul>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalPfmeaWarnings')">Dismiss</button>
     </div>
   </div>
 </div>

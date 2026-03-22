@@ -110,8 +110,91 @@
   color: var(--amber);
 }
 
+/* ── Hub Favourites ───────────────────────────────────────────────────── */
+.hub-favs-panel {
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.hub-favs-head {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.hub-favs-lane {
+  margin-top: 8px;
+}
+
+.hub-favs-lane-title {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.hub-favs-pages,
+.hub-favs-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hub-fav-page,
+.hub-fav-product {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hub-fav-page {
+  padding: 6px 10px;
+}
+
+.hub-fav-product {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  min-width: 180px;
+  max-width: 240px;
+}
+
+.hub-fav-product-name {
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.hub-fav-product-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hub-fav-page:hover,
+.hub-fav-product:hover {
+  border-color: var(--blue);
+  background: var(--bg-soft);
+}
+
+.hub-favs-empty {
+  font-size: 13px;
+  color: var(--muted);
+}
+
 /* ── Hub Card ──────────────────────────────────────────────────────────── */
 .hub-card {
+    position: relative;
     min-height: 160px;
     display: flex;
     align-items: center;
@@ -156,6 +239,123 @@
     font-size: 14px;
     color: var(--muted);
     margin-top: 8px;
+}
+
+.hub-fav-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 15px;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 2;
+}
+
+.hub-fav-toggle:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+}
+
+.hub-fav-toggle.is-active {
+    color: var(--amber);
+    border-color: var(--amber);
+    background: var(--amber-pale);
+}
+
+/* ── Hub Desktop Compact Mode (Phase 1) ───────────────────── */
+@media (min-width: 768px) {
+  .hub-home {
+    padding: 16px 22px;
+  }
+
+  .hub-home .hub-widget {
+    gap: 14px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+
+  .hub-home .hub-widget-stats {
+    gap: 16px;
+  }
+
+  .hub-home .hub-widget-num {
+    font-size: 20px;
+  }
+
+  .hub-home .hub-favs-panel {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+  }
+
+  .hub-home .hub-favs-head {
+    margin-bottom: 8px;
+  }
+
+  .hub-home .proj-home-header {
+    margin-bottom: 12px;
+  }
+
+  .hub-home .proj-home-title {
+    font-size: 22px;
+  }
+
+  .hub-home .proj-home-sub {
+    font-size: 12px;
+  }
+
+  .hub-home .hub-grid {
+    gap: 12px !important;
+  }
+
+  .hub-home .hub-card {
+    min-height: 118px;
+    padding: 16px 20px !important;
+  }
+
+  .hub-home .hub-icon {
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+
+  .hub-home .hub-card .proj-card-name {
+    font-size: 15px;
+  }
+
+  .hub-home .hub-card .proj-card-meta {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hub-home .hub-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .hub-favs-products {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .hub-fav-product {
+    min-width: 170px;
+  }
+
+  .hub-fav-toggle {
+    width: 26px;
+    height: 26px;
+    top: 8px;
+    right: 8px;
+  }
 }
 
 /* Product Development Menu Modal */

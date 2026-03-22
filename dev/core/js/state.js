@@ -111,7 +111,8 @@ let mcsCurrentFilter = {
   myChanges: false,                                // true = show only changes initiated by current user
   overdueOnly: false,                              // true = show only overdue open changes
   highPriority: false,                             // true = show only critical + high priority
-  dateRange: 'all'                                 // all | today | week | month | quarter
+  dateRange: 'all',                                // all | today | week | month | quarter
+  product: 'all'                                   // all | <product name>
 };
 let mcsViewingId = null;                           // ECR ID currently in view modal
 let mcsEditingId = null;                           // ECR ID currently being edited

@@ -12,6 +12,13 @@
 - For NPI PFD flowchart UX, user expects the preview to stay compact even for very large maps (100+ steps), not just moderate-size flows.
 - For NPI PFD flowchart readability, user prefers fixed 211% zoom (220% bigger than prior 66%, not adaptive 45%), permanent left-to-right layout, and strong visual distinction between process and decision nodes.
 - For NPI PFD flowchart visuals, user expects a professional polished look (clean edge labels, restrained palette, and non-scruffy rendering) in addition to readability.
+- For MCS staged modals, user prefers a wider dialog with bordered collapsible stage cards and a fixed title banner that remains visible during scroll.
+- For MCS stage headings, user prefers clear color-coded visual hierarchy (not monochrome black-and-white section labels).
+- For MCS modals, status is a global state and should appear in the top bar, not inside Stage 1 content.
+- For MCS approvals, Stage 1 Impact Assessment needs its own estimated time impact separate from the Stage 3 implementation time impact.
+- On MCS main cards, user wants explicit label text (`Change Type: ...`) rather than only the raw type value.
+- For favourites UX, user expects star toggles on all hub-style cards (main hub and section root hubs), not only on the main portal hub.
+- For layout/design feedback, user expects recommendations to be based on direct inspection of the current implementation before suggesting changes.
 
 ## Key Learnings
 

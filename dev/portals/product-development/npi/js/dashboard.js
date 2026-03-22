@@ -356,6 +356,9 @@ npi.dashboard.renderProjects = function () {
 
 // ── Slim card for a product + its linked project ────────────
 npi.dashboard.renderNpiSlimCard = function (product, project) {
+  const isFavourite = typeof hubIsProductFavourite === 'function'
+    ? hubIsProductFavourite(product.id)
+    : false
   let pipsHtml = ''
   let gateScopeBadge = ''
   if (project) {
@@ -409,6 +412,14 @@ npi.dashboard.renderNpiSlimCard = function (product, project) {
   const scopeLabel = productScope.charAt(0).toUpperCase() + productScope.slice(1)
   const scopeBadge = `<div class="npi-slim-card-meta" style="margin-top:4px">${scopeIcon} ${esc(scopeLabel)}</div>`
   return `<div class="npi-slim-card" onclick="npi.dashboard.openProjectOrRender('${targetProgId}')">
+    <button
+      class="npi-slim-fav-toggle${isFavourite ? ' is-active' : ''}"
+      type="button"
+      title="${isFavourite ? 'Remove from favourites' : 'Add to favourites'}"
+      data-product-id="${esc(product.id || '')}"
+      onclick="npi.nav.stopEvent(event);hubToggleProductFavourite(this.dataset.productId, event)">
+      ${isFavourite ? '★' : '☆'}
+    </button>
     <div class="npi-slim-card-name">${esc(product.name)}</div>
     ${product.code ? `<div class="npi-slim-card-code">${esc(product.code)}</div>` : ''}
     ${product.customer ? `<div class="npi-slim-card-meta">👤 ${esc(product.customer)}</div>` : ''}

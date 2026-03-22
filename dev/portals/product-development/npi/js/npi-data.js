@@ -676,8 +676,8 @@ npi.data.timing = {
 npi.data.pfmea = {
   addMode(pfdId) {
     const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
-    const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
-    const mode = { id: crypto.randomUUID(), _type: 'mode', pfdId, mode: '', ctqIds: [], effects: [ef] }
+    const ef = { id: crypto.randomUUID(), effect: '', sev: 1, specialChar: null, causes: [ca] }
+    const mode = { id: crypto.randomUUID(), _type: 'mode', pfdId, function: '', mode: '', ctqIds: [], effects: [ef] }
     prog().pfmea.push(mode)
     Promise.resolve().then(async () => {
       await npiRelSavePFMEAMode(mode)
@@ -699,7 +699,7 @@ npi.data.pfmea = {
   addEffect(mi) {
     const mode = prog().pfmea[mi]
     const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
-    const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
+    const ef = { id: crypto.randomUUID(), effect: '', sev: 1, specialChar: null, causes: [ca] }
     mode.effects.push(ef)
     Promise.resolve().then(async () => {
       await npiRelSavePFMEAEffect(mode.id, ef)

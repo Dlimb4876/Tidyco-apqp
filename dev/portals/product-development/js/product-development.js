@@ -50,6 +50,10 @@ function renderProductDevelopment() {
 
   // Root hub view
   setTimeout(setupProductDevelopmentPortalDelegation, 0);
+  const favNpi = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::npi');
+  const favProductManagement = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::product-management');
+  const favProductFamilies = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::product-family-db');
+  const favPartsDatabase = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::parts-database');
   return `
     <div class="proj-home" id="product-development-portal-container">
       <div class="proj-home-header">
@@ -65,6 +69,13 @@ function renderProductDevelopment() {
 
       <div class="proj-cards hub-grid">
         <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="npi">
+          <button
+            class="hub-fav-toggle${favNpi ? ' is-active' : ''}"
+            type="button"
+            title="${favNpi ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('product-development::npi', event)">
+            ${favNpi ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">📋</div>
             <div class="proj-card-name">NPI Projects</div>
@@ -73,6 +84,13 @@ function renderProductDevelopment() {
         </div>
 
         <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="product-management">
+          <button
+            class="hub-fav-toggle${favProductManagement ? ' is-active' : ''}"
+            type="button"
+            title="${favProductManagement ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('product-development::product-management', event)">
+            ${favProductManagement ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">📦</div>
             <div class="proj-card-name">Product Management</div>
@@ -81,6 +99,13 @@ function renderProductDevelopment() {
         </div>
 
         <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="product-family-db">
+          <button
+            class="hub-fav-toggle${favProductFamilies ? ' is-active' : ''}"
+            type="button"
+            title="${favProductFamilies ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('product-development::product-family-db', event)">
+            ${favProductFamilies ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">🏢</div>
             <div class="proj-card-name">Product Family Database</div>
@@ -89,6 +114,13 @@ function renderProductDevelopment() {
         </div>
 
         <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="parts-database">
+          <button
+            class="hub-fav-toggle${favPartsDatabase ? ' is-active' : ''}"
+            type="button"
+            title="${favPartsDatabase ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('product-development::parts-database', event)">
+            ${favPartsDatabase ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">🔩</div>
             <div class="proj-card-name">Parts Database</div>

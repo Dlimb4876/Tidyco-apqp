@@ -243,6 +243,7 @@ window.npiRelLoad = async function(pid) {
           id: ef.id,
           effect: ef.effect || '',
           sev: ef.sev || 1,
+          specialChar: ef.special_char || null,
           causes: causesByEff[ef.id] || []
         });
       });
@@ -251,6 +252,7 @@ window.npiRelLoad = async function(pid) {
         id: m.id,
         _type: 'mode',
         pfdId: m.pfd_step_id || '',
+        function: m.function || '',
         mode: m.mode || '',
         ctqIds: m.ctq_ids || [],
         effects: effsByMode[m.id] || []
@@ -509,6 +511,7 @@ window.npiRelSavePFMEAMode = async function(mode) {
       project_id: projectId,
       user_id: currentUser.id,
       pfd_step_id: mode.pfdId || null,
+      function: mode.function || '',
       mode: mode.mode || '',
       ctq_ids: mode.ctqIds || [],
       sort_order: (prog().pfmea || []).indexOf(mode),
@@ -532,6 +535,7 @@ window.npiRelSavePFMEAEffect = async function(modeId, effect) {
       mode_id: modeId,
       effect: effect.effect || '',
       sev: effect.sev || 1,
+      special_char: effect.specialChar || null,
       sort_order: mode ? (mode.effects || []).indexOf(effect) : 0,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
