@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | Mobile UI accessibility and UX improvements | Increased touch targets to 44px (WCAG compliant), improved table scroll discoverability with gradient indicators, increased mobile gutter from 4px to 10px for better readability, fixed sticky header z-index, and improved modal/card styling on mobile devices
+
 ## 2026-03-22 | Mobile hub portal grid: 2-column layout with compact cards | Reduced mobile scrolling by switching from single-column to 2-column grid with smaller buttons, tighter spacing, and reduced padding
 
 ## 2026-03-22 | PFD top ribbon switched to section navigator | Large flows were harder to navigate step-by-step, so the top ribbon now jumps by section with step-count/range context
