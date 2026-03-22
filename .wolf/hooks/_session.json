@@ -1,39 +1,61 @@
 {
-  "session_id": "session-2026-03-22-1107",
-  "started": "2026-03-22T11:07:50.957Z",
+  "session_id": "session-2026-03-22-1114",
+  "started": "2026-03-22T11:14:36.971Z",
   "files_read": {
-    "/home/user/Tidyco-apqp/core/css/main.css": {
-      "count": 4,
-      "tokens": 7902,
-      "first_read": "2026-03-22T11:09:03.487Z"
+    "/home/user/Tidyco-apqp/portals/capacity/css/me-capacity-heatmap.css": {
+      "count": 1,
+      "tokens": 1465,
+      "first_read": "2026-03-22T11:15:08.825Z"
+    },
+    "/home/user/Tidyco-apqp/portals/capacity/js/me-heatmap.js": {
+      "count": 1,
+      "tokens": 2626,
+      "first_read": "2026-03-22T11:15:09.043Z"
+    },
+    "/home/user/Tidyco-apqp/portals/capacity/project-management/css/pm-capacity.css": {
+      "count": 1,
+      "tokens": 195,
+      "first_read": "2026-03-22T11:15:13.246Z"
+    },
+    "/home/user/Tidyco-apqp/portals/capacity/css/me-capacity-responsive.css": {
+      "count": 1,
+      "tokens": 625,
+      "first_read": "2026-03-22T11:15:26.628Z"
     },
     "/home/user/Tidyco-apqp/CHANGELOG.md": {
       "count": 1,
-      "tokens": 9906,
-      "first_read": "2026-03-22T11:10:33.140Z"
+      "tokens": 9973,
+      "first_read": "2026-03-22T11:16:49.385Z"
     }
   },
   "files_written": [
     {
-      "file": "/home/user/Tidyco-apqp/core/css/main.css",
+      "file": "/home/user/Tidyco-apqp/portals/capacity/css/me-capacity-heatmap.css",
       "action": "edit",
-      "tokens": 124,
-      "at": "2026-03-22T11:10:14.697Z"
+      "tokens": 100,
+      "at": "2026-03-22T11:16:42.639Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/portals/capacity/css/me-capacity-responsive.css",
+      "action": "edit",
+      "tokens": 66,
+      "at": "2026-03-22T11:16:47.313Z"
     },
     {
       "file": "/home/user/Tidyco-apqp/CHANGELOG.md",
       "action": "edit",
-      "tokens": 93,
-      "at": "2026-03-22T11:10:37.479Z"
+      "tokens": 100,
+      "at": "2026-03-22T11:16:53.641Z"
     }
   ],
   "edit_counts": {
-    "core/css/main.css": 1,
+    "portals/capacity/css/me-capacity-heatmap.css": 1,
+    "portals/capacity/css/me-capacity-responsive.css": 1,
     "CHANGELOG.md": 1
   },
-  "anatomy_hits": 2,
+  "anatomy_hits": 5,
   "anatomy_misses": 0,
-  "repeated_reads_warned": 3,
+  "repeated_reads_warned": 0,
   "cerebrum_warnings": 0,
   "stop_count": 0
 }

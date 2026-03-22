@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T11:10:37.466Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T11:16:53.632Z
 > Files: 281 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
@@ -24,7 +24,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~9973 tok)
+- `CHANGELOG.md` — Changelog (~10045 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~484 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -194,9 +194,9 @@
 - `capacity.css` — Styles: 58 rules, 2 media queries (~2226 tok)
 - `me-capacity-chart.css` — Styles: 31 rules, 1 media queries (~1086 tok)
 - `me-capacity-dashboard.css` — Styles: 41 rules (~1729 tok)
-- `me-capacity-heatmap.css` — Styles: 35 rules, 1 animations (~1465 tok)
+- `me-capacity-heatmap.css` — Styles: 35 rules (~1420 tok)
 - `me-capacity-holidays.css` — Styles: 23 rules (~977 tok)
-- `me-capacity-responsive.css` — Styles: 2 rules, 2 media queries (~625 tok)
+- `me-capacity-responsive.css` — Styles: 2 rules (~586 tok)
 - `me-capacity-shell.css` — Styles: 14 rules (~617 tok)
 - `me-capacity-tables.css` — Styles: 32 rules (~1156 tok)
 - `prod-capacity.css` — Styles: 76 rules (~3602 tok)
