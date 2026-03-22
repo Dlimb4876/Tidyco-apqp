@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | Professional top bar button redesign | Top bar buttons looked cramped and unprofessional — increased button size (11→13px font, 5px 11px→8px 14px padding), improved spacing (5px→8px gap), added subtle hover shadows, updated logout emoji from ⏻ to 🚪, and ensured consistent 36px min height for better touch targets and visual balance
+
 ## 2026-03-22 | Fix heatmap mobile horizontal scroll | Heatmap spread across multiple lines on mobile; changed wrapper to overflow:auto scroll container, fixed column template from auto-fit (which compresses) to repeat(20, ...) so the table scrolls horizontally with a sticky person column
 
 ## 2026-03-22 | Fix bottom bar visibility in light theme | Bottombar gradient blended into pale page background; added explicit light-theme background using --line/--line2 vars and darkened default status indicator colors so they are readable on light backgrounds
