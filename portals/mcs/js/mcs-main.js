@@ -40,9 +40,13 @@ async function renderMcs() {
             <div class="mcs-kpi-value" id="mcs-kpi-open">0</div>
             <div class="mcs-kpi-label">Open</div>
           </div>
-          <div class="mcs-kpi-card kpi-review" onclick="mcsKpiFilterAwaiting()" title="Filter: Awaiting Approval">
-            <div class="mcs-kpi-value" id="mcs-kpi-review">0</div>
-            <div class="mcs-kpi-label">Awaiting Approval</div>
+          <div class="mcs-kpi-card kpi-review" onclick="mcsKpiFilterApproval1()" title="Filter: Awaiting Engineering Review">
+            <div class="mcs-kpi-value" id="mcs-kpi-approval1">0</div>
+            <div class="mcs-kpi-label">Approval 1</div>
+          </div>
+          <div class="mcs-kpi-card kpi-final-review" onclick="mcsKpiFilterApproval2()" title="Filter: Awaiting Final Review">
+            <div class="mcs-kpi-value" id="mcs-kpi-approval2">0</div>
+            <div class="mcs-kpi-label">Approval 2</div>
           </div>
           <div class="mcs-kpi-card kpi-overdue" onclick="mcsToggleQuickFilter('overdueOnly', true)" title="Filter: Overdue">
             <div class="mcs-kpi-value" id="mcs-kpi-overdue">0</div>
@@ -194,6 +198,11 @@ async function renderMcs() {
   ]);
 
   mcsRenderList();
+
+  // Setup real-time subscriptions for live updates
+  if (typeof mcsSetupRealtimeSubscriptions === 'function') {
+    mcsSetupRealtimeSubscriptions();
+  }
 
   // Auto-open a specific change if requested (e.g. from Action Centre)
   if (mcsAutoViewId) {
@@ -417,9 +426,10 @@ function mcsUpdateCounts() {
   setEl('mcs-fc-medium', counts.medium);
   setEl('mcs-fc-low', counts.low);
 
-  // KPI bar counts
+  // KPI bar counts (separate approval stages)
   setEl('mcs-kpi-open', counts.open);
-  setEl('mcs-kpi-review', counts.review + counts.final_review);
+  setEl('mcs-kpi-approval1', counts.review);
+  setEl('mcs-kpi-approval2', counts.final_review);
   setEl('mcs-kpi-overdue', overdueCount);
   setEl('mcs-kpi-week', thisWeekCount);
 }
@@ -595,14 +605,24 @@ function mcsSetDateRange(value) {
 }
 
 /**
- * KPI click: filter to awaiting approval (review + final_review combined)
- * Uses 'review' as the status filter — both approval stages show as "review" equivalent
+ * KPI click: filter to Approval 1 (engineering review)
+ */
+function mcsKpiFilterApproval1() {
+  mcsSetFilter('status', 'review', document.querySelector('[onclick*="mcsSetFilter(\'status\', \'review\'"]'));
+}
+
+/**
+ * KPI click: filter to Approval 2 (final review)
+ */
+function mcsKpiFilterApproval2() {
+  mcsSetFilter('status', 'final_review', document.querySelector('[onclick*="mcsSetFilter(\'status\', \'final_review\'"]'));
+}
+
+/**
+ * Legacy: KPI click for combined awaiting approval (kept for backward compatibility)
  */
 function mcsKpiFilterAwaiting() {
-  // Reset status filter to show all awaiting changes; highlight via search not possible,
-  // so we filter 'review' and show a combined view by filtering both in mcsGetFiltered.
-  // For simplicity, set status to 'review' (Awaiting Approval 1).
-  mcsSetFilter('status', 'review', document.querySelector('[onclick*="mcsSetFilter(\'status\', \'review\'"]'));
+  mcsKpiFilterApproval1();
 }
 
 /**

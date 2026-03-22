@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T18:36:53.405Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T18:44:51.359Z
 > Files: 277 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
@@ -243,14 +243,14 @@
 ## portals/mcs/css/
 
 - `mcs-responsive.css` — Styles: 8 rules, 8 media queries (~1919 tok)
-- `mcs.css` — Styles: 89 rules, 6 vars (~6772 tok)
+- `mcs.css` — Styles: 89 rules, 6 vars (~6793 tok)
 
 ## portals/mcs/js/
 
 - `mcs-actions.js` — MCS Integration with Action Centre (~911 tok)
 - `mcs-approval.js` — MCS Approval Workflow (~2185 tok)
 - `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~4140 tok)
-- `mcs-main.js` — MCS (Manufacturing Change) - Main Portal (~7134 tok)
+- `mcs-main.js` — MCS (Manufacturing Change) - Main Portal (~7281 tok)
 - `mcs-modal.js` — MCS Modal Handlers - Create, Edit, View (~11247 tok)
 - `mcs-pfmea.js` — MCS Integration with PFMEA History (~1134 tok)
 - `mcs-realtime.js` — MCS Real-time Subscriptions (~1278 tok)

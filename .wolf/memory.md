@@ -788,3 +788,8 @@
 | 18:36 | Edited utils/js/navigation.js | "Manufacturing Change Syst" → "Manufacturing Change" | ~9 |
 | 18:36 | Edited utils/js/helpers.js | inline fix | ~26 |
 | 18:36 | Edited CHANGELOG.md | 4→6 lines | ~139 |
+| 18:44 | Edited portals/mcs/js/mcs-main.js | added 1 condition(s) | ~104 |
+| 18:44 | Edited portals/mcs/js/mcs-main.js | 18→22 lines | ~378 |
+| 18:44 | Edited portals/mcs/js/mcs-main.js | 6→7 lines | ~76 |
+| 18:44 | Edited portals/mcs/js/mcs-main.js | modified mcsKpiFilterApproval1() | ~169 |
+| 18:44 | Edited portals/mcs/css/mcs.css | 4→5 lines | ~93 |

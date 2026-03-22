@@ -1120,6 +1120,7 @@
 
 .mcs-kpi-card.kpi-open .mcs-kpi-value { color: var(--blue); }
 .mcs-kpi-card.kpi-review .mcs-kpi-value { color: var(--amber); }
+.mcs-kpi-card.kpi-final-review .mcs-kpi-value { color: var(--orange); }
 .mcs-kpi-card.kpi-overdue .mcs-kpi-value { color: var(--red); }
 .mcs-kpi-card.kpi-week .mcs-kpi-value { color: var(--green); }
 
