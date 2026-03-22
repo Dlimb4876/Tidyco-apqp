@@ -80,7 +80,7 @@
   --navy:#21496f; --navy-pale:#e8f0f8;
   --rose:#9b1c4a; --rose-pale:#fce8f1;
   --green-dark: #145e2e;
-  --page-gutter-mobile: 4px;
+  --page-gutter-mobile: 10px;
   --page-gutter-desktop: 14px;
 
   /* Chart & Visualization Colors */
@@ -376,10 +376,23 @@ body {
 }
 .back-btn:hover { background: var(--topbar-control-bg-hover); color: var(--topbar-control-text-hover); border-color: var(--topbar-control-border-hover); }
 
-.section-crumb { font-size: 12px; color: var(--topbar-crumb); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.section-crumb {
+  font-size: 12px;
+  color: var(--topbar-crumb);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .section-crumb strong { color: var(--topbar-crumb-strong); }
 
-.project-breadcrumb { font-size: 12px; color: var(--topbar-project-crumb); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+.project-breadcrumb {
+  font-size: 12px;
+  color: var(--topbar-project-crumb);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
 
 .prog-selector { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .prog-select-wrap select {
@@ -670,7 +683,15 @@ body {
 
   /* Tighten action button strip */
   .topbar-actions { gap: 2px; }
-  .tbtn { padding: 5px 8px; font-size: 11px; }
+  .tbtn {
+    padding: 8px 12px;
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
 
   :root {
     --table-head-py: 5px;
