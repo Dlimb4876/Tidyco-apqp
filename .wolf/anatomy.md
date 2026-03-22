@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T12:01:22.525Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T14:24:53.039Z
 > Files: 276 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
@@ -10,11 +10,11 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Change log (~10374 tok)
+- `CHANGELOG.md` — Changelog (~10345 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
-- `index.html` — Tidyco Operations Portal (~9936 tok)
+- `index.html` — Tidyco Operations Portal (~9757 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~328 tok)
 - `mcs-updated-2.html` (~13058 tok)
