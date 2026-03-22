@@ -78,6 +78,7 @@
     ]
   },
   "permissions": {
+    "defaultMode": "bypassPermissions",
     "allow": [
       "Bash(ls ./*.md)",
       "Bash(grep -rn \"TODO\" ./)",
