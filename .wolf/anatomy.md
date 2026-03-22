@@ -61,6 +61,14 @@
 
 ## Manual Update 2026-03-22
 
+- `portals/production/js/production.js` — Production hub favourites now use delegated `data-action` handling instead of inline `onclick`, aligning root-card interactions with delegation test expectations.
+
+- `portals/capacity/js/me-calculations.js` — Product support demand now uses production schedule batch overlap count multiplied by editable per-product support value.
+- `portals/capacity/js/me-products.js` — Products tab support KPI switched to schedule-driven monthly load and relabeled support input to Hours/Batch semantics.
+- `portals/capacity/js/me-product-taskload.js` — Product Load support/total columns switched from weekly multiplier to batch-count monthly support.
+- `tests/me-calculations.test.js` / `tests/me-products-filters.test.js` — Added regression coverage for batch-based support calculations and updated load/support copy assertions.
+- `CHANGELOG.md` — Added entry for schedule-driven ME/PM product support change.
+
 - `portals/product-development/npi/css/dashboard.css` — Added terminal-theme `mc-shell` overrides so Mission Control heading and KPI text no longer inherit unreadable light-theme hardcoded colors.
 - `portals/product-development/npi/css/dashboard.css` — Increased terminal contrast in Gate Trajectory area for helper text, inactive gate circles, and connector lines.
 - `portals/settings/css/settings.css` — Added terminal-only high-contrast placeholder styling for inline Product Families and Work Areas table inputs.

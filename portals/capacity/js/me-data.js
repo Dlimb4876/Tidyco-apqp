@@ -227,14 +227,12 @@ window.meDataGetTasks = function() {
 // PRODUCT CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek, notes, productDatabaseId, department) {
+window.meDataAddProduct = function(name, hoursPerWeek, notes, productDatabaseId, department) {
   if (!name || name.trim().length === 0) return false;
   const product = {
     id: meUUID(),
     name: name.trim(),
     department: meGetDepartmentFromContext(department),
-    supportFrom: supportFrom,
-    supportUntil: supportUntil,
     hoursPerWeek: parseFloat(hoursPerWeek) || 5,
     notes: notes ? notes.trim() : '',
     productDatabaseId: productDatabaseId || '',
@@ -250,12 +248,6 @@ window.meDataUpdateProduct = function(idx, field, value) {
   switch (field) {
     case 'name':
       product.name = value.trim();
-      break;
-    case 'supportFrom':
-      product.supportFrom = value;
-      break;
-    case 'supportUntil':
-      product.supportUntil = value;
       break;
     case 'hoursPerWeek':
       product.hoursPerWeek = parseFloat(value) || 0;
@@ -789,8 +781,6 @@ window.meDataSubscribe = function() {
           id: newProduct.id,
           name: newProduct.name || '(Unknown Product)',
           productDatabaseId: newProduct.product_database_id || '',
-          supportFrom: newProduct.support_from || '',
-          supportUntil: newProduct.support_until || '',
           hoursPerWeek: parseFloat(newProduct.hours_per_week) || 0,
           department: meNormalizeDepartmentTag(newProduct.department, 'ME'),
           notes: newProduct.notes || '',

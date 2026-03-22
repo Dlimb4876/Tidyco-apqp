@@ -73,7 +73,8 @@ function renderProduction() {
             class="hub-fav-toggle${favScheduling ? ' is-active' : ''}"
             type="button"
             title="${favScheduling ? 'Remove from favourites' : 'Add to favourites'}"
-            onclick="hubTogglePageFavourite('production::scheduling', event)">
+            data-action="prod-fav-toggle"
+            data-section="production::scheduling">
             ${favScheduling ? '★' : '☆'}
           </button>
           <div class="hub-card-content">
@@ -88,7 +89,8 @@ function renderProduction() {
             class="hub-fav-toggle${favByProduct ? ' is-active' : ''}"
             type="button"
             title="${favByProduct ? 'Remove from favourites' : 'Add to favourites'}"
-            onclick="hubTogglePageFavourite('production::by-product', event)">
+            data-action="prod-fav-toggle"
+            data-section="production::by-product">
             ${favByProduct ? '★' : '☆'}
           </button>
           <div class="hub-card-content">
@@ -103,7 +105,8 @@ function renderProduction() {
             class="hub-fav-toggle${favByUnit ? ' is-active' : ''}"
             type="button"
             title="${favByUnit ? 'Remove from favourites' : 'Add to favourites'}"
-            onclick="hubTogglePageFavourite('production::by-unit', event)">
+            data-action="prod-fav-toggle"
+            data-section="production::by-unit">
             ${favByUnit ? '★' : '☆'}
           </button>
           <div class="hub-card-content">
@@ -141,6 +144,16 @@ function setupProductionPortalDelegation() {
 
     if (action === 'prod-nav-hub') {
       navigate('hub');
+      return;
+    }
+
+    if (action === 'prod-fav-toggle') {
+      event.preventDefault();
+      event.stopPropagation();
+      const section = actionEl.dataset.section;
+      if (section && typeof hubTogglePageFavourite === 'function') {
+        hubTogglePageFavourite(section, event);
+      }
       return;
     }
 

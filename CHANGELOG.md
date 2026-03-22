@@ -3,6 +3,11 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | Fix Production hub favourite buttons to delegated actions | Removed inline onclick handlers from Production hub cards and routed favourite toggles through container delegation so delegation tests and quality checks pass
+## 2026-03-22 | Remove redundant Support From / Support Until date fields from ME/PM products | Product support date range was redundant — support load is now calculated entirely from production schedule batch dates, removing the manual override from data model, UI table, persistence, and calculations
+
+## 2026-03-22 | Make ME/PM product support schedule-driven by batch count | Product support/load now uses production schedule batches for monthly demand instead of week multipliers, while preserving editable per-product support values
+
 ## 2026-03-22 | Fix Settings Product Families/Work Areas placeholder contrast in terminal theme | Inline add/edit row placeholders were too dim against dark table backgrounds, making field guidance hard to read
 
 ## 2026-03-22 | Boost Gate Trajectory contrast in terminal theme | Follow-up APQP Mission Control fix to make trajectory helper text, inactive gate circles, and connector lines clearly visible in terminal mode
