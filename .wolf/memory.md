@@ -630,3 +630,24 @@
 | 08:32 | Edited CHANGELOG.md | 1→3 lines | ~151 |
 | 08:33 | Session end: 17 writes across 7 files (cheerful-frolicking-ember.md, npi-data.js, npi-pfd.js, npi-events.js, apqp-pfd.css) | 17 reads | ~86055 tok |
 | 08:33 | Session end: 17 writes across 7 files (cheerful-frolicking-ember.md, npi-data.js, npi-pfd.js, npi-events.js, apqp-pfd.css) | 18 reads | ~86055 tok |
+
+## Session: 2026-03-22 10:11
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 10:11 | Created ../../../root/.claude/plans/keen-wibbling-island.md | — | ~609 |
+| 10:15 | Edited ../../../root/.claude/plans/keen-wibbling-island.md | modified 1() | ~623 |
+
+## Session: 2026-03-22 10:22
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 10:22 | Edited ../../../root/.claude/plans/keen-wibbling-island.md | added 5 condition(s) | ~1741 |
+| 10:24 | Edited index.html | expanded (+15 lines) | ~210 |
+| 10:24 | Edited core/css/main.css | modified media() | ~749 |
+| 10:24 | Edited core/js/db.js | added 1 condition(s) | ~138 |
+| 10:24 | Edited core/js/db.js | added 2 condition(s) | ~253 |
+| 10:25 | Edited utils/js/realtime.js | added 1 condition(s) | ~131 |
+| 10:25 | Edited utils/js/realtime.js | 3→4 lines | ~51 |
+| 10:25 | Edited utils/js/realtime.js | modified removeRealtimeSubscription() | ~109 |
+| 10:25 | Edited utils/js/realtime.js | modified removeRealtimeSubscriptionsMatching() | ~104 |

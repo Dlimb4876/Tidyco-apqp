@@ -1,9 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T08:32:54.487Z
-> Files: 278 tracked | Anatomy hits: 0 | Misses: 0
-
-> Manual note: 2026-03-22 — PFD top navigator now uses section-level jumps in `portals/product-development/npi/js/npi-pfd.js`.
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T10:25:15.421Z
+> Files: 279 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
 
@@ -13,6 +11,10 @@
 ## ../../../.serena/
 
 - `serena_config.yml` — the language backend to use for code understanding and manipulation. (~2285 tok)
+
+## ../../../root/.claude/plans/
+
+- `keen-wibbling-island.md` — Bottom Bar Design Exploration (~2607 tok)
 
 ## ./
 
@@ -25,7 +27,7 @@
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~484 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
-- `index.html` — Tidyco Operations Portal (~9798 tok)
+- `index.html` — Tidyco Operations Portal (~9801 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~328 tok)
 - `mcs-updated-2.html` (~13058 tok)
@@ -138,14 +140,14 @@
 ## core/css/
 
 - `components.css` — Styles: 85 rules (~5686 tok)
-- `main.css` — Styles: 361 vars (~7173 tok)
+- `main.css` — Styles: 368 vars (~7690 tok)
 
 ## core/js/
 
 - `app.js` — ═══════════════════════════════════ (~1221 tok)
 - `auth.js` — ═══════════════════════════════════ (~1240 tok)
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~697 tok)
-- `db.js` — ═══════════════════════════════════ (~8342 tok)
+- `db.js` — ═══════════════════════════════════ (~8297 tok)
 - `state.js` — ═══════════════════════════════════ (~4483 tok)
 
 ## docs/
@@ -446,4 +448,4 @@
 - `guide.js` — ═══════════════════════════════════ (~15334 tok)
 - `helpers.js` — Shared utility to calculate RPN (Risk Priority Number). (~4511 tok)
 - `navigation.js` — Section labels for UI display (reserved for future use) (~6778 tok)
-- `realtime.js` — Subscribe to real-time changes on a table (~1781 tok)
+- `realtime.js` — Subscribe to real-time changes on a table (~1873 tok)
