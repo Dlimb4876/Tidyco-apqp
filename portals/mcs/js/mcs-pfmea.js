@@ -12,12 +12,21 @@ async function mcsLinkToPfmeaCause(changeId, pfmeaCauseId) {
   if (!change || !supa) return false;
 
   try {
-    const { error } = await supa
+    // 1. Link the MCS change to the PFMEA cause
+    const { error: mcsError } = await supa
       .from('mcs_changes')
       .update({ related_pfmea_cause_id: pfmeaCauseId })
       .eq('id', changeId);
 
-    if (error) throw error;
+    if (mcsError) throw mcsError;
+
+    // 2. Store ECR reference in PFMEA cause's action field
+    const { error: pfmeaError } = await supa
+      .from('npi_pfmea_causes')
+      .update({ action_related_ecr_id: changeId })
+      .eq('id', pfmeaCauseId);
+
+    if (pfmeaError) throw pfmeaError;
 
     // Update local list
     const idx = mcsList.findIndex(c => c.id === changeId);
@@ -38,32 +47,11 @@ async function mcsLinkToPfmeaCause(changeId, pfmeaCauseId) {
  * Called when change reaches 'approved' or 'implemented' status
  */
 async function mcsLogToPfmeaHistory(changeId) {
-  const change = mcsList.find(c => c.id === changeId);
-  if (!change || !change.related_pfmea_cause_id) return false;
-
-  if (!supa) return false;
-
-  try {
-    const now = new Date().toISOString();
-    const eventText = `ECR ${change.id} approved. Change: ${change.title}. Status: ${change.status}`;
-
-    // Create timeline entry in mcs_timeline (if not already done)
-    await mcsAddTimelineEntry(
-      changeId,
-      'linked_product',
-      `Linked to PFMEA cause for historical tracking`,
-      'System'
-    );
-
-    // Note: Full PFMEA history logging would be done via npi-data-relational.js
-    // This function hooks the MCS approval into the PFMEA audit trail
-
-    console.log('MCS approval logged to PFMEA history:', changeId);
-    return true;
-  } catch (err) {
-    console.error('Error logging to PFMEA:', err);
-    return false;
-  }
+  // DEPRECATED: PFMEA history is logged manually by the user
+  // after they assess the change impact and determine new OCC/DET ratings.
+  // The history entry includes related_ecr_id for traceability.
+  console.log('PFMEA history logging is now manual. Link ECR via mcsLinkToPfmeaCause instead.');
+  return false;
 }
 
 /**
@@ -94,6 +82,39 @@ async function mcsGetPfmeaCausesForLinking() {
  * Show PFMEA link badge in MCS change view
  * Returns HTML badge if change is linked to PFMEA cause
  */
+/**
+ * Build PFMEA linking section HTML for MCS modal
+ * Shows current link status and allows user to link to a PFMEA cause
+ */
+function mcsBuildPfmeaLinkingSection(change, pfmeaCauses) {
+  const currentLink = change.related_pfmea_cause_id ? 
+    pfmeaCauses.find(c => c.id === change.related_pfmea_cause_id) : null;
+  
+  const causesOptions = pfmeaCauses
+    .map(c => `<option value="${esc(c.id)}" ${change.related_pfmea_cause_id === c.id ? 'selected' : ''}>${esc(c.description)}</option>`)
+    .join('');
+
+  return `
+    <div class="mcs-section-title">PFMEA Linking</div>
+    <div style="margin-bottom: 12px; padding: 8px 12px; background: var(--surface2); border-radius: 6px; border-left: 3px solid var(--accent); font-size: 13px;">
+      Link this change to a PFMEA cause to track impact. After the change is implemented, manually log the new ratings to PFMEA history.
+    </div>
+    <div class="mcs-field-group mcs-modal-grid full">
+      <div class="mcs-field-label">Select PFMEA Cause to Address</div>
+      <select class="mcs-field-select" id="mcs-f-pfmea-cause">
+        <option value="">— No link —</option>
+        ${causesOptions}
+      </select>
+    </div>
+    ${currentLink ? `
+    <div style="margin-top: 8px; padding: 8px; background: var(--accent-dim); border-radius: 4px; border: 1px solid var(--accent); font-size: 12px;">
+      <strong>Currently linked to:</strong> ${esc(currentLink.description)}
+      <button style="margin-left: 8px; padding: 2px 8px; background: transparent; border: 1px solid var(--accent); border-radius: 3px; cursor: pointer; font-size: 11px;" onclick="document.getElementById('mcs-f-pfmea-cause').value = ''; mcsToast('Link cleared. Save to apply.');">Clear link</button>
+    </div>
+    ` : ''}
+  `;
+}
+
 function mcsBuildPfmeaLinkBadge(change) {
   if (!change.related_pfmea_cause_id) return '';
 

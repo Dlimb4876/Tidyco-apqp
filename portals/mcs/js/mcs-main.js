@@ -552,9 +552,9 @@ async function mcsViewChange(id) {
 /**
  * New change button handler
  */
-function mcsOpenNewChange() {
+async function mcsOpenNewChange() {
   mcsEditingId = null;
-  mcsShowCreateModal();
+  await mcsShowCreateModal();
 }
 
 /**

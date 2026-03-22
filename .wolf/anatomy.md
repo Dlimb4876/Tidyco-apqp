@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T18:49:21.491Z
-> Files: 277 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T19:19:12.925Z
+> Files: 278 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -314,7 +314,7 @@
 - `npi-orchestrator.js` — ═══════════════════════════════════ (~1190 tok)
 - `npi-pfd.js` — ═══════════════════════════════════ (~10240 tok)
 - `npi.js` — ═══════════════════════════════════ (~2312 tok)
-- `pfmea.js` — Declares PFMEA_RPN_FILTERS (~11138 tok)
+- `pfmea.js` — Declares PFMEA_RPN_FILTERS (~11025 tok)
 - `rpn-chart.js` — portals/npi/js/rpn-chart.js (~1068 tok)
 - `timing.js` — ═══════════════════════════════════ (~8346 tok)
 - `trackers.js` — ═══════════════════════════════════ (~5599 tok)
@@ -371,6 +371,7 @@
 - `operations_forecast_opportunities.sql` — Operations forecast opportunities table for the Operations dashboard forecast layer. (~473 tok)
 - `overhaul_history_mcs_columns.sql` — overhaul_history — Add MCS integration columns (~760 tok)
 - `overhaul_hours_rename_and_backfill.sql` — Overhaul Hours: rename _days columns to _hours + backfill baselines (~869 tok)
+- `pfmea_mcs_linking.sql` — ════════════════════════════════════════════════════════════════════ (~278 tok)
 - `phase3_optimisations.sql` — ════════════════════════════════════════════════════════════════════ (~1551 tok)
 - `realtime_missing_tables.sql` — Enable realtime publication for tables missing subscriptions (~72 tok)
 - `remove_legacy_me_pert_subtasks.sql` — Remove legacy ME/PM capacity PERT and subtask tables. (~185 tok)

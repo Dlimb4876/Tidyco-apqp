@@ -403,7 +403,7 @@ npi.pfmea.renderPFMEA = function() {
               ${npi.components.rpnBadge(rpn, { id: `rpn_${mi}_${ei}_${ci}` })}
               ${hist.length > 0 ? `<button class="rpn-hist-btn" data-action="pfmea-show-hist" data-cause-id="${ca.id}">⏱${hist.length}</button>` : ''}
             </td>
-            <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea></td>
+            <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea>${ca.action_related_ecr_id ? `<div style="margin-top:4px;padding:4px 6px;background:var(--accent-dim);border-radius:3px;border-left:2px solid var(--accent);font-size:10px;font-weight:600;cursor:pointer;text-align:center" onclick="navigate('mcs');">🔗 ${esc(ca.action_related_ecr_id)}</div>` : ''}</td>
             <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_taken_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>
             <td><select class="cell-edit" name="pfmea_action_owner_${mi}_${ei}_${ci}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" style="width:100%">${ownerSelectOptions(act.owner || '')}</select></td>
             <td><input type="date" class="cell-edit mono" name="pfmea_action_due_${mi}_${ei}_${ci}" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>
@@ -593,7 +593,7 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   const oldRpn = npi.pfmea.calcCauseRpn(ef.sev, ca.occ, ca.det)
   const newOcc = act.newOcc ? +act.newOcc : ca.occ
   const newDet = act.newDet ? +act.newDet : ca.det
-  if (!confirm(`Implement action?\n\nThis will:\n• Update OCC: ${ca.occ} → ${newOcc}\n• Update DET: ${ca.det} → ${newDet}\n• New RPN: ${(ef.sev || 1) * newOcc * newDet}\n• Log old RPN (${oldRpn}) to history\n• Clear the action fields`)) return
+  if (!confirm(`Implement action?\\n\\nThis will:\\n• Update OCC: ${ca.occ} → ${newOcc}\\n• Update DET: ${ca.det} → ${newDet}\\n• New RPN: ${(ef.sev || 1) * newOcc * newDet}\\n• Log old RPN (${oldRpn}) to history\\n• Clear the action fields`)) return
 
   if (typeof npi.data?.pfmea?.implementAction === 'function') {
     const result = npi.data.pfmea.implementAction(mi, ei, ci)
@@ -611,7 +611,8 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
     date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
     desc: act.taken || act.desc || 'Action implemented',
     oldOcc: ca.occ, oldDet: ca.det,
-    newOcc, newDet
+    newOcc, newDet,
+    relatedEcrId: ca.action_related_ecr_id || null
   }
   ca.history.push(histEntry)
   ca.occ = newOcc
