@@ -36,6 +36,11 @@
       "count": 1,
       "tokens": 0,
       "first_read": "2026-03-22T10:58:07.888Z"
+    },
+    "/home/user/Tidyco-apqp/CHANGELOG.md": {
+      "count": 1,
+      "tokens": 9826,
+      "first_read": "2026-03-22T11:00:06.441Z"
     }
   },
   "files_written": [
@@ -92,14 +97,21 @@
       "action": "edit",
       "tokens": 122,
       "at": "2026-03-22T10:59:37.091Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/CHANGELOG.md",
+      "action": "edit",
+      "tokens": 198,
+      "at": "2026-03-22T11:00:14.238Z"
     }
   ],
   "edit_counts": {
     "../../../root/.claude/plans/zippy-chasing-ritchie.md": 1,
     "core/css/components.css": 5,
-    "core/css/main.css": 3
+    "core/css/main.css": 3,
+    "CHANGELOG.md": 1
   },
-  "anatomy_hits": 6,
+  "anatomy_hits": 7,
   "anatomy_misses": 1,
   "repeated_reads_warned": 13,
   "cerebrum_warnings": 0,
