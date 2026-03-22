@@ -1,214 +1,119 @@
 {
-  "session_id": "session-2026-03-22-0811",
-  "started": "2026-03-22T08:11:01.805Z",
+  "session_id": "session-2026-03-22-1022",
+  "started": "2026-03-22T10:22:09.086Z",
   "files_read": {
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/core/js/state.js": {
-      "count": 1,
-      "tokens": 4483,
-      "first_read": "2026-03-22T08:12:19.868Z"
-    },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js": {
-      "count": 4,
-      "tokens": 8578,
-      "first_read": "2026-03-22T08:12:24.457Z"
-    },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/supabase/npi_pfd_flowchart_columns.sql": {
-      "count": 1,
-      "tokens": 127,
-      "first_read": "2026-03-22T08:12:24.542Z"
-    },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/css/apqp-pfd.css": {
-      "count": 1,
-      "tokens": 2946,
-      "first_read": "2026-03-22T08:14:27.510Z"
-    },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-constants.js": {
-      "count": 1,
-      "tokens": 442,
-      "first_read": "2026-03-22T08:14:35.659Z"
-    },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data.js": {
-      "count": 1,
-      "tokens": 9312,
-      "first_read": "2026-03-22T08:14:36.011Z"
-    },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/supabase": {
-      "count": 1,
-      "tokens": 0,
-      "first_read": "2026-03-22T08:14:43.042Z"
-    },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/supabase/phase3_optimisations.sql": {
-      "count": 1,
-      "tokens": 1551,
-      "first_read": "2026-03-22T08:14:47.053Z"
-    },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data-relational.js": {
+    "/home/user/Tidyco-apqp/core/css/main.css": {
       "count": 2,
-      "tokens": 12134,
-      "first_read": "2026-03-22T08:14:51.412Z"
+      "tokens": 7173,
+      "first_read": "2026-03-22T10:22:32.593Z"
     },
-    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/npi-pfd-flowchart.test.js": {
-      "count": 1,
-      "tokens": 1165,
-      "first_read": "2026-03-22T08:15:00.021Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js": {
-      "count": 13,
-      "tokens": 9707,
-      "first_read": "2026-03-22T08:15:42.978Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-constants.js": {
-      "count": 1,
-      "tokens": 442,
-      "first_read": "2026-03-22T08:15:43.436Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data.js": {
-      "count": 3,
-      "tokens": 9389,
-      "first_read": "2026-03-22T08:15:56.878Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-events.js": {
-      "count": 1,
-      "tokens": 4308,
-      "first_read": "2026-03-22T08:30:14.635Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/css/apqp-pfd.css": {
-      "count": 1,
-      "tokens": 2946,
-      "first_read": "2026-03-22T08:31:13.870Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/npi-pfd-flowchart.test.js": {
-      "count": 1,
-      "tokens": 1165,
-      "first_read": "2026-03-22T08:31:41.756Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
+    "/home/user/Tidyco-apqp/core/js/db.js": {
       "count": 2,
-      "tokens": 9728,
-      "first_read": "2026-03-22T08:32:44.007Z"
+      "tokens": 8342,
+      "first_read": "2026-03-22T10:22:36.446Z"
     },
-    "C:/Users/Tidyco/AppData/Local/Temp/claude/c--Users-Tidyco-Documents-VScode-Tidyco-apqp/5d09dba6-30cf-442b-bec3-21014223e475/tasks/byd7r37ix.output": {
+    "/home/user/Tidyco-apqp/index.html": {
+      "count": 5,
+      "tokens": 9801,
+      "first_read": "2026-03-22T10:24:28.139Z"
+    },
+    "/home/user/Tidyco-apqp/utils/js/realtime.js": {
       "count": 1,
-      "tokens": 0,
-      "first_read": "2026-03-22T08:33:18.769Z"
+      "tokens": 1781,
+      "first_read": "2026-03-22T10:24:56.929Z"
+    },
+    "/home/user/Tidyco-apqp/core/js/app.js": {
+      "count": 1,
+      "tokens": 1221,
+      "first_read": "2026-03-22T10:28:43.215Z"
     }
   },
   "files_written": [
     {
-      "file": "C:/Users/Tidyco/.claude/plans/cheerful-frolicking-ember.md",
+      "file": "/root/.claude/plans/keen-wibbling-island.md",
+      "action": "edit",
+      "tokens": 1865,
+      "at": "2026-03-22T10:22:54.578Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/index.html",
+      "action": "edit",
+      "tokens": 225,
+      "at": "2026-03-22T10:24:32.789Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/core/css/main.css",
+      "action": "edit",
+      "tokens": 749,
+      "at": "2026-03-22T10:24:42.269Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/core/js/db.js",
+      "action": "edit",
+      "tokens": 138,
+      "at": "2026-03-22T10:24:51.166Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/core/js/db.js",
+      "action": "edit",
+      "tokens": 253,
+      "at": "2026-03-22T10:24:55.688Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/utils/js/realtime.js",
+      "action": "edit",
+      "tokens": 131,
+      "at": "2026-03-22T10:25:00.889Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/utils/js/realtime.js",
+      "action": "edit",
+      "tokens": 51,
+      "at": "2026-03-22T10:25:03.670Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/utils/js/realtime.js",
+      "action": "edit",
+      "tokens": 109,
+      "at": "2026-03-22T10:25:11.727Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/utils/js/realtime.js",
+      "action": "edit",
+      "tokens": 104,
+      "at": "2026-03-22T10:25:15.431Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/core/js/network.js",
       "action": "create",
-      "tokens": 1816,
-      "at": "2026-03-22T08:24:14.691Z"
+      "tokens": 739,
+      "at": "2026-03-22T10:28:18.713Z"
     },
     {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data.js",
+      "file": "/home/user/Tidyco-apqp/index.html",
       "action": "edit",
-      "tokens": 188,
-      "at": "2026-03-22T08:27:01.343Z"
+      "tokens": 77,
+      "at": "2026-03-22T10:28:39.927Z"
     },
     {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
+      "file": "/home/user/Tidyco-apqp/core/js/app.js",
       "action": "edit",
-      "tokens": 1090,
-      "at": "2026-03-22T08:27:35.673Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data.js",
-      "action": "edit",
-      "tokens": 44,
-      "at": "2026-03-22T08:27:57.160Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 1568,
-      "at": "2026-03-22T08:28:53.214Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 42,
-      "at": "2026-03-22T08:29:11.219Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 135,
-      "at": "2026-03-22T08:29:37.313Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 88,
-      "at": "2026-03-22T08:29:43.957Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 305,
-      "at": "2026-03-22T08:29:52.965Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 85,
-      "at": "2026-03-22T08:30:05.980Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-events.js",
-      "action": "edit",
-      "tokens": 32,
-      "at": "2026-03-22T08:30:19.690Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 137,
-      "at": "2026-03-22T08:30:41.819Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 66,
-      "at": "2026-03-22T08:30:47.416Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
-      "action": "edit",
-      "tokens": 81,
-      "at": "2026-03-22T08:30:55.607Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/css/apqp-pfd.css",
-      "action": "edit",
-      "tokens": 566,
-      "at": "2026-03-22T08:31:29.951Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/npi-pfd-flowchart.test.js",
-      "action": "edit",
-      "tokens": 1228,
-      "at": "2026-03-22T08:32:03.414Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
-      "action": "edit",
-      "tokens": 161,
-      "at": "2026-03-22T08:32:54.503Z"
+      "tokens": 74,
+      "at": "2026-03-22T10:28:46.606Z"
     }
   ],
   "edit_counts": {
-    "../../../.claude/plans/cheerful-frolicking-ember.md": 1,
-    "portals/product-development/npi/js/npi-data.js": 2,
-    "portals/product-development/npi/js/npi-pfd.js": 10,
-    "portals/product-development/npi/js/npi-events.js": 1,
-    "portals/product-development/npi/css/apqp-pfd.css": 1,
-    "tests/npi-pfd-flowchart.test.js": 1,
-    "CHANGELOG.md": 1
+    "../../../root/.claude/plans/keen-wibbling-island.md": 1,
+    "index.html": 2,
+    "core/css/main.css": 1,
+    "core/js/db.js": 2,
+    "utils/js/realtime.js": 4,
+    "core/js/network.js": 1,
+    "core/js/app.js": 1
   },
-  "anatomy_hits": 16,
-  "anatomy_misses": 2,
-  "repeated_reads_warned": 19,
+  "anatomy_hits": 5,
+  "anatomy_misses": 0,
+  "repeated_reads_warned": 6,
   "cerebrum_warnings": 0,
-  "stop_count": 2
+  "stop_count": 0
 }
