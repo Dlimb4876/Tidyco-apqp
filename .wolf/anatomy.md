@@ -1,11 +1,11 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T18:44:51.359Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T18:49:21.491Z
 > Files: 277 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
-- `.gitignore` — Git ignore rules (~298 tok)
+- `.gitignore` — Git ignore rules (~291 tok)
 - `.mcp.json` (~179 tok)
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)

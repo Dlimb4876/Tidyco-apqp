@@ -793,3 +793,4 @@
 | 18:44 | Edited portals/mcs/js/mcs-main.js | 6→7 lines | ~76 |
 | 18:44 | Edited portals/mcs/js/mcs-main.js | modified mcsKpiFilterApproval1() | ~169 |
 | 18:44 | Edited portals/mcs/css/mcs.css | 4→5 lines | ~93 |
+| 18:49 | Edited .gitignore | 6→7 lines | ~53 |
