@@ -43,6 +43,13 @@
   box-shadow: var(--card-shadow);
   transition: all 0.2s ease-in-out;
 }
+
+@media (max-width: 767px) {
+  .card {
+    margin-bottom: 14px;
+    border-radius: 10px;
+  }
+}
 .card:hover {
   transform: translateY(-2px);
   box-shadow: var(--card-shadow-hover);
@@ -80,9 +87,27 @@
 
 /* Sticky table headers */
 .sticky-table-wrap { overflow-x: auto; max-width: 100%; }
-.sticky-table-wrap thead th { position: sticky; top: 0; z-index: 20; background: var(--table-head-bg); }
+.sticky-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background: var(--table-head-bg);
+}
 .sticky-card-scroll { overflow-y: auto; max-height: 65vh; overflow-x: auto; }
-.sticky-card-scroll thead th { position: sticky; top: 0 !important; z-index: 10; background: var(--table-head-bg); }
+.sticky-card-scroll thead th {
+  position: sticky;
+  top: 0 !important;
+  z-index: 15;
+  background: var(--table-head-bg);
+}
+
+@media (max-width: 767px) {
+  /* On mobile, add a slight bottom shadow to sticky headers for visual depth */
+  .sticky-table-wrap thead th,
+  .sticky-card-scroll thead th {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+}
 
 /* Table column width helpers */
 td.w28  { width: 28px; }  td.w36  { width: 36px; }  td.w44  { width: 44px; }
@@ -268,11 +293,21 @@ td.ctr  { text-align: center; }
 
 /* ── Responsive Component Adjustments ──────────────────────────── */
 @media (max-width: 767px) {
+  /* Increase button touch targets on mobile (WCAG 44px minimum) */
+  .btn {
+    padding: 12px 16px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   /* Modal adjustments */
   .modal {
     width: 90vw;
     max-width: 90vw;
-    padding: 20px;
+    padding: 24px;
+    border-radius: 12px;
     border-radius: 8px;
   }
   .modal-sm {
@@ -321,6 +356,32 @@ td.ctr  { text-align: center; }
   /* Sticky table wrapper adjustments */
   .sticky-card-scroll {
     max-height: 50vh;
+  }
+
+  /* Increase form field touch targets on mobile */
+  .field input,
+  .field select,
+  .field textarea {
+    min-height: 44px;
+    padding: 12px 12px;
+  }
+
+  /* Add gradient scroll indicator for horizontal scrolling tables */
+  .sticky-table-wrap {
+    position: relative;
+  }
+
+  .sticky-table-wrap::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 20px;
+    height: 100%;
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.08), transparent);
+    pointer-events: none;
+    z-index: 15;
+    border-radius: 0 8px 8px 0;
   }
 }
 

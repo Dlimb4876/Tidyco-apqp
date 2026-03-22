@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T10:44:48.434Z
-> Files: 280 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T10:59:37.077Z
+> Files: 281 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
 
@@ -15,6 +15,7 @@
 ## ../../../root/.claude/plans/
 
 - `keen-wibbling-island.md` — Bottom Bar Design Exploration (~2607 tok)
+- `zippy-chasing-ritchie.md` — Mobile UI Review & Recommendations (~991 tok)
 
 ## ./
 
@@ -139,8 +140,8 @@
 
 ## core/css/
 
-- `components.css` — Styles: 85 rules (~5686 tok)
-- `main.css` — Styles: 368 vars (~7798 tok)
+- `components.css` — Styles: 86 rules (~5841 tok)
+- `main.css` — Styles: 368 vars (~7843 tok)
 
 ## core/js/
 
