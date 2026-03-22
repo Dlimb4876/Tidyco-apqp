@@ -87,15 +87,13 @@
       <button class="bug-report-btn" onclick="navigate('feedback')">💬 Feedback & Bugs</button>
     </div>
     <div class="topbar-actions">
-      <span class="sync-badge" id="syncBadge">● saved</span>
       <button class="tbtn tbtn-ghost" onclick="exportJSON()" style="display:none">⬇ Export</button>
       <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()" style="display:none">⬆ Import</button>
       <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
-      <button class="tbtn tbtn-ghost" onclick="navigate('settings')" title="Settings" style="opacity:0.6">⚙️</button>
-      <button class="tbtn tbtn-ghost shortcuts-btn" onclick="showModal('shortcutsModal')" title="Keyboard shortcuts (?)">⌨️</button>
+      <button class="tbtn tbtn-primary" onclick="navigate('settings')" title="Settings">⚙️ Settings</button>
+      <button class="tbtn tbtn-primary" onclick="doLogout()" title="Sign out">⏻ Logout</button>
       <button class="tbtn tbtn-ghost mobile-quick-btn" onclick="navigate('action-centre')" title="My Actions">✅</button>
       <button class="tbtn tbtn-ghost mobile-quick-btn" onclick="navigate('feedback')" title="Feedback & Bugs">💬</button>
-      <button class="tbtn tbtn-ghost" onclick="doLogout()" title="Sign out" style="margin-left:4px">⏻</button>
     </div>
   </div>
 
