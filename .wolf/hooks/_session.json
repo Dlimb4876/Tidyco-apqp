@@ -18,8 +18,8 @@
       "first_read": "2026-03-22T18:36:00.302Z"
     },
     "/home/user/Tidyco-apqp/portals/mcs/js/mcs-main.js": {
-      "count": 9,
-      "tokens": 7134,
+      "count": 10,
+      "tokens": 7281,
       "first_read": "2026-03-22T18:36:00.706Z"
     },
     "/home/user/Tidyco-apqp/core/js/state.js": {
@@ -53,7 +53,7 @@
       "first_read": "2026-03-22T18:38:31.542Z"
     },
     "/home/user/Tidyco-apqp/portals/mcs/js/mcs-actions.js": {
-      "count": 1,
+      "count": 2,
       "tokens": 911,
       "first_read": "2026-03-22T18:38:34.132Z"
     },
@@ -103,7 +103,7 @@
       "first_read": "2026-03-22T18:46:57.208Z"
     },
     "/home/user/Tidyco-apqp/supabase/mcs_changes_2step_migration.sql": {
-      "count": 1,
+      "count": 2,
       "tokens": 1552,
       "first_read": "2026-03-22T18:47:03.653Z"
     },
@@ -211,7 +211,7 @@
   },
   "anatomy_hits": 22,
   "anatomy_misses": 0,
-  "repeated_reads_warned": 22,
+  "repeated_reads_warned": 25,
   "cerebrum_warnings": 0,
   "stop_count": 0
 }
