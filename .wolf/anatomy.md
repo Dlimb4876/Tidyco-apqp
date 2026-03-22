@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T14:24:53.039Z
-> Files: 276 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T15:13:26.834Z
+> Files: 277 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -10,7 +10,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~10345 tok)
+- `CHANGELOG.md` — Changelog (~10391 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -234,7 +234,7 @@
 
 ## portals/hub/css/
 
-- `hub.css` — Styles: 40 rules, 3 media queries (~1689 tok)
+- `hub.css` — Styles: 40 rules (~1600 tok)
 
 ## portals/hub/js/
 
@@ -385,6 +385,7 @@
 - `auth.test.js` — Declares fs (~2546 tok)
 - `bank-holidays.test.js` — Declares fs (~430 tok)
 - `capacity-events.test.js` — Declares fs (~252 tok)
+- `capacity-hub.test.js` — capacity-hub.test.js — Tests for portals/capacity/js/capacity.js (hub view) (~2404 tok)
 - `chart-theme.test.js` — API routes: GET (1 endpoints) (~743 tok)
 - `db-gaps.test.js` — db-gaps.test.js — Additional tests for core/js/db.js (~3555 tok)
 - `db.test.js` — fs: makeTestProg (~3232 tok)

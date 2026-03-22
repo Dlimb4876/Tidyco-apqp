@@ -762,3 +762,15 @@
 |------|--------|---------|---------|--------|
 | 14:24 | Edited index.html | 4→4 lines | ~120 |
 | 14:24 | Edited CHANGELOG.md | 1→3 lines | ~66 |
+
+## Session: 2026-03-22 15:10
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:11 | Edited portals/hub/css/hub.css | CSS: cursor | ~91 |
+| 15:12 | Created tests/capacity-hub.test.js | — | ~2344 |
+| 15:12 | Edited tests/capacity-hub.test.js | 6→7 lines | ~96 |
+| 15:12 | Edited tests/capacity-hub.test.js | modified expect() | ~222 |
+| 15:12 | Edited tests/capacity-hub.test.js | 9→9 lines | ~75 |
+| 15:12 | Edited tests/capacity-hub.test.js | modified const() | ~300 |
+| 15:13 | Edited CHANGELOG.md | 6→8 lines | ~142 |

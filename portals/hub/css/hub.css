@@ -119,6 +119,7 @@
     text-align: center;
     padding: 28px 32px !important;
     transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
 }
 
 .hub-card:hover {
