@@ -542,11 +542,17 @@ body {
   white-space: nowrap;
 }
 
-.bottombar-status.saved { color: #86efac; }
-.bottombar-status.unsaved { color: #fbbf24; }
-.bottombar-status.syncing { color: #93c5fd; }
-.bottombar-status.error { color: #fca5a5; }
-.bottombar-status.offline { color: #fca5a5; }
+.bottombar-status.saved { color: #15803d; }
+.bottombar-status.unsaved { color: #b45309; }
+.bottombar-status.syncing { color: #1d4ed8; }
+.bottombar-status.error { color: #b91c1c; }
+.bottombar-status.offline { color: #b91c1c; }
+
+/* Light theme: give bottombar visible contrast against pale page bg */
+:root .bottombar,
+:root[data-theme="light"] .bottombar {
+  background: linear-gradient(180deg, var(--line) 0%, var(--line2) 100%);
+}
 
 :root[data-theme="dark"] .bottombar-status.saved { color: #10b981; }
 :root[data-theme="dark"] .bottombar-status.unsaved { color: #f59e0b; }
