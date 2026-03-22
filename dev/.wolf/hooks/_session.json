@@ -1,49 +1,117 @@
 {
-  "session_id": "session-2026-03-21-2158",
-  "started": "2026-03-21T21:58:28.259Z",
+  "session_id": "session-2026-03-22-0759",
+  "started": "2026-03-22T07:59:30.718Z",
   "files_read": {
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/operations/js/operations-dashboard-render-core.js": {
+    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/css/apqp-pfd.css": {
       "count": 1,
-      "tokens": 3883,
-      "first_read": "2026-03-21T21:59:22.105Z"
+      "tokens": 2243,
+      "first_read": "2026-03-22T08:00:24.894Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/operations/css/operations-dashboard.css": {
-      "count": 7,
-      "tokens": 2677,
-      "first_read": "2026-03-21T21:59:25.796Z"
+    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js": {
+      "count": 2,
+      "tokens": 6547,
+      "first_read": "2026-03-22T08:00:24.953Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/core/css/main.css": {
+    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data-relational.js": {
+      "count": 2,
+      "tokens": 12134,
+      "first_read": "2026-03-22T08:00:25.225Z"
+    },
+    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/supabase/npi_pfd_flowchart_columns.sql": {
       "count": 1,
-      "tokens": 7173,
-      "first_read": "2026-03-21T21:59:40.644Z"
+      "tokens": 127,
+      "first_read": "2026-03-22T08:00:34.012Z"
+    },
+    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/npi-pfd-flowchart.test.js": {
+      "count": 1,
+      "tokens": 1165,
+      "first_read": "2026-03-22T08:00:34.555Z"
+    },
+    "/c/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data.js": {
+      "count": 1,
+      "tokens": 9312,
+      "first_read": "2026-03-22T08:00:37.922Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js": {
+      "count": 8,
+      "tokens": 8696,
+      "first_read": "2026-03-22T08:01:19.289Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/css/apqp-pfd.css": {
+      "count": 2,
+      "tokens": 2243,
+      "first_read": "2026-03-22T08:01:19.449Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/npi-pfd-flowchart.test.js": {
+      "count": 1,
+      "tokens": 1165,
+      "first_read": "2026-03-22T08:06:59.601Z"
     },
     "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
       "count": 1,
-      "tokens": 9021,
-      "first_read": "2026-03-21T22:00:17.475Z"
+      "tokens": 9554,
+      "first_read": "2026-03-22T08:08:13.944Z"
     }
   },
   "files_written": [
     {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/operations/css/operations-dashboard.css",
+      "file": "C:/Users/Tidyco/.claude/plans/valiant-puzzling-origami.md",
+      "action": "create",
+      "tokens": 1654,
+      "at": "2026-03-22T08:02:56.850Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/css/apqp-pfd.css",
       "action": "edit",
-      "tokens": 368,
-      "at": "2026-03-21T22:00:14.072Z"
+      "tokens": 362,
+      "at": "2026-03-22T08:05:00.339Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/css/apqp-pfd.css",
+      "action": "edit",
+      "tokens": 34,
+      "at": "2026-03-22T08:05:05.539Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
+      "action": "edit",
+      "tokens": 126,
+      "at": "2026-03-22T08:05:24.408Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
+      "action": "edit",
+      "tokens": 965,
+      "at": "2026-03-22T08:06:29.889Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
+      "action": "edit",
+      "tokens": 56,
+      "at": "2026-03-22T08:06:46.044Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-pfd.js",
+      "action": "edit",
+      "tokens": 36,
+      "at": "2026-03-22T08:06:51.718Z"
     },
     {
       "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
       "action": "edit",
-      "tokens": 89,
-      "at": "2026-03-21T22:00:22.429Z"
+      "tokens": 132,
+      "at": "2026-03-22T08:08:20.481Z"
     }
   ],
   "edit_counts": {
-    "portals/operations/css/operations-dashboard.css": 1,
+    "../../../.claude/plans/valiant-puzzling-origami.md": 1,
+    "portals/product-development/npi/css/apqp-pfd.css": 2,
+    "portals/product-development/npi/js/npi-pfd.js": 4,
     "CHANGELOG.md": 1
   },
-  "anatomy_hits": 4,
+  "anatomy_hits": 10,
   "anatomy_misses": 0,
-  "repeated_reads_warned": 6,
+  "repeated_reads_warned": 10,
   "cerebrum_warnings": 0,
-  "stop_count": 0
+  "stop_count": 1
 }

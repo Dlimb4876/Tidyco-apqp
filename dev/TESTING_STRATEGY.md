@@ -47,9 +47,9 @@ npm test -- --coverage
 ## Test Coverage Status (March 2026)
 
 ### ✅ Current Baseline (Verified)
-- Test suites: **44 passing / 44 total**
-- Tests: **648 passing / 648 total**
-- Last verified command: `npm test -- --runInBand --silent`
+- Test suites: **49 passing / 49 total**
+- Tests: **639 passing / 639 total**
+- Last verified command: `npm test`
 
 ### High-Confidence Areas
 - Routing and hash-state behavior (navigation)
@@ -58,6 +58,7 @@ npm test -- --coverage
 - Helpers/utilities (including modal and escaping helpers)
 - Capacity modules (ME/PM/Production paths)
 - Product Development/NPI data and rendering paths
+- NPI PFD flowchart generation and persistence mapping
 - NPI gate signoff role-permission enforcement
 - MCS workflow and integration paths
 - Operations dashboard and forecast flows

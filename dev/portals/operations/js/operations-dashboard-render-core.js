@@ -179,8 +179,8 @@ function opsRenderQuickActions() {
 			<div class="ops-actions-grid">
 				<button class="btn btn-ghost" onclick="navigate('capacity'); setCapacityTab('me')">Open ME Capacity</button>
 				<button class="btn btn-ghost" onclick="navigate('capacity'); setCapacityTab('projects')">Open PM Capacity</button>
-				<button class="btn btn-ghost" onclick="navigate('production')">Open Production Planner</button>
-				<button class="btn btn-ghost" onclick="navigate('product-development')">Open NPI Workspace</button>
+				<button class="btn btn-ghost" onclick="navigate('production'); setProductionTab('scheduling')">Open Production Planner</button>
+				<button class="btn btn-ghost" onclick="navigate('product-development'); setProductDevelopmentTab('npi')">Open NPI Workspace</button>
 				<button class="btn btn-ghost" onclick="navigate('feedback')">Open Feedback & Bugs</button>
 			</div>
 		</section>`;
@@ -260,7 +260,7 @@ function opsRenderRiskView(metrics) {
 
 function opsRenderPeopleView(metrics) {
 	return `
-		<div class="ops-shell">
+		<div class="ops-shell ops-shell-people">
 			<section class="ops-panel">
 				<div class="ops-panel-head">
 					<h3>ME Load</h3>
@@ -298,9 +298,9 @@ function opsRenderActionsView(metrics) {
 					<span>What needs intervention right now</span>
 				</div>
 				<div class="ops-actions-grid">
-					<button class="btn btn-primary" onclick="navigate('product-development')">Resolve Overdue Actions (${metrics.actions.overdue})</button>
-					<button class="btn btn-primary" onclick="navigate('product-development')">Review High RPN (${metrics.risk.highRpn})</button>
-					<button class="btn btn-primary" onclick="navigate('capacity')">Balance Capacity (${metrics.me.ready ? metrics.me.utilisation + '%' : 'Pending'})</button>
+				<button class="btn btn-primary" onclick="navigate('action-centre')">Resolve Overdue Actions (${metrics.actions.overdue})</button>
+				<button class="btn btn-primary" onclick="navigate('product-development'); setProductDevelopmentTab('npi')">Review High RPN (${metrics.risk.highRpn})</button>
+				<button class="btn btn-primary" onclick="navigate('capacity'); setCapacityTab('me')">Balance Capacity (${metrics.me.ready ? metrics.me.utilisation + '%' : 'Pending'})</button>
 				</div>
 			</section>
 			${opsRenderPulseFeed(metrics)}

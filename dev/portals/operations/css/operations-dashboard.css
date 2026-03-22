@@ -472,6 +472,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .ops-shell-people .ops-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .ops-columns {
     grid-template-columns: 1.2fr .8fr;
   }
@@ -492,6 +496,10 @@
 @media (min-width: 1200px) {
   .ops-metrics-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ops-shell-people .ops-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ops-forecast-form {

@@ -18,7 +18,20 @@ npi.data.pfdType = {
   },
   isExecutable(type) {
     return !npi.data.pfdType.isHeader(type)
-  }
+  },
+  isDecision(type) {
+    return type === 'Decision'
+  },
+  normalize(type) {
+    return npi.data.pfdType.isDecision(type) ? npi.data.pfdType.Decision : npi.data.pfdType.Process
+  },
+  Process: 'Process',
+  Decision: 'Decision'
+}
+
+npi.data.normalizePfdLink = function(value) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
 npi.data.firstExecutableStep = function(pfd) {
@@ -143,7 +156,11 @@ npi.data.pfd = {
       detail: '',
       ctqIds: [],
       bomRefs: [],
-      docRefs: []
+      docRefs: [],
+      pfd_type: null,
+      nextStepId: null,
+      nextStepId_yes: null,
+      nextStepId_no: null
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -153,7 +170,7 @@ npi.data.pfd = {
   addMainStep() {
     const p = prog()
     const hadExecutable = p.pfd.some(s => npi.data.pfdType.isExecutable(s.type))
-    const step = { id: crypto.randomUUID(), stepNum: npi.data.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [] }
+    const step = { id: crypto.randomUUID(), stepNum: npi.data.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [], pfd_type: npi.data.pfdType.Process, nextStepId: null, nextStepId_yes: null, nextStepId_no: null }
     p.pfd.push(step)
     if (!hadExecutable) npi.data.pfd.ensureLeadingHeader()
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -174,7 +191,11 @@ npi.data.pfd = {
       detail: '',
       ctqIds: [],
       bomRefs: [],
-      docRefs: []
+      docRefs: [],
+      pfd_type: null,
+      nextStepId: null,
+      nextStepId_yes: null,
+      nextStepId_no: null
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -204,7 +225,11 @@ npi.data.pfd = {
       detail: '',
       ctqIds: [],
       bomRefs: [],
-      docRefs: []
+      docRefs: [],
+      pfd_type: npi.data.pfdType.Process,
+      nextStepId: null,
+      nextStepId_yes: null,
+      nextStepId_no: null
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -243,7 +268,20 @@ npi.data.pfd = {
   upd(sid, f, v) {
     const s = prog().pfd.find(x => x.id === sid)
     if (!s) return
-    s[f] = v
+
+    if (f === 'pfd_type') {
+      s.pfd_type = npi.data.pfdType.normalize(v)
+      if (npi.data.pfdType.isDecision(s.pfd_type)) s.nextStepId = null
+      else {
+        s.nextStepId_yes = null
+        s.nextStepId_no = null
+      }
+    } else if (f === 'nextStepId' || f === 'nextStepId_yes' || f === 'nextStepId_no') {
+      s[f] = npi.data.normalizePfdLink(v)
+    } else {
+      s[f] = v
+    }
+
     Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
   },
   toggleGroup(collapsedGroups, key) {

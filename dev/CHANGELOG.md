@@ -3,6 +3,30 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | PFD flowchart professionalism improvements | Flowchart looked unprofessional and was not useful — added START/END terminators, section subgraphs, wider spacing, stronger decision node colour, centred SVG, column headers in table view, removed fragile arrowhead DOM hack
+
+## 2026-03-22 | PFD flowchart: TD layout, tall canvas, click-to-expand, smaller arrowheads | User feedback — chart was small, horizontal, and showed no extra detail on nodes
+
+## 2026-03-22 | PFD flowchart visual polish — thin borders, smaller text, rename Preview | Zoom scale (2.11→1.15), stroke-width (1.5/1.7→0.8px), font-size (11→13px) reduced; "Flowchart Preview" renamed to "Process Flowchart"
+
+## 2026-03-22 | Polish NPI PFD flowchart visual design | Flowchart scale was acceptable but appeared visually rough; refined Mermaid theme, edge labels, and node styling for a cleaner professional finish
+
+## 2026-03-22 | Harden production product sorting against null names | Prevent runtime add/update failures when backend product rows contain missing or malformed `name` values
+
+## 2026-03-22 | Finalize NPI PFD flowchart readability defaults | Replaced adaptive zoom with fixed 211% zoom (220% bigger than prior 66%), kept LR layout permanent, and refreshed process vs decision colors for stronger visual separation
+
+## 2026-03-21 | Finish NPI PFD flowchart foundations | The PFD flowchart work was only partially wired in; step type and destinations now save, reload, and drive a graphical preview from the existing table
+
+## 2026-03-21 | Add OpenWolf instructions to Gemini guide | Gemini-facing repo guidance was missing the OpenWolf workflow, so the assistant config could drift from the enforced protocol
+
+## 2026-03-21 | Fix operations dashboard rapid actions going to portal hub pages | Actions were navigating to portal root views instead of directly to the relevant sub-section
+
+## 2026-03-21 | Redesign operations infographic with visual encoding | Previous version was just a printable table — same data, same format, no visual storytelling. Replaced with SVG ring gauges for utilisation, a pipeline flow layout for production, severity heat bars for risk, and a gate step tracker.
+
+## 2026-03-21 | Operations People KPIs fixed to 2-column layout | Prevent oversized desktop KPI spread and improve readability in the People tab
+
+## 2026-03-21 | Add company logo to capacity infographic export | All exportable items should carry the Tidyco brand mark
+
 ## 2026-03-21 | Fix production capacity formula help click action | "How capacity is calculated" was static text with no bound action; it now opens a clear in-app modal with the formula details
 
 ## 2026-03-21 | Operations Mission Control banner theme support | Banner had hardcoded dark colours that did not respond to light or terminal themes

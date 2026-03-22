@@ -3,7 +3,22 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+## 2026-03-21
+- Updated `.gemini/GEMINI.md` to include the repo's OpenWolf workflow and explicit `openwolf designqc` usage guidance so Gemini-side instructions match the enforced protocol.
+- Redesigned `portals/operations/js/operations-infographic.js` — replaced table-style printout with a proper infographic layout: SVG ring gauges for utilisation (ME, PM, each ops unit), hero ring for health score, pipeline flow for production stages, severity heat bars for risk, gate step tracker (G0–G5) for NPI gate completion. All 6 tests still pass. Kept `opsInfographicBar`, `opsInfographicTone`, `opsInfographicUnitCards` signatures for test compatibility.
+- Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
+
+## 2026-03-22
+- Reduced NPI PFD flowchart preview scale by tightening Mermaid spacing and constraining the preview canvas in `apqp-pfd.css` so large diagrams render in a compact, scrollable viewport.
+- Added adaptive compact mode for NPI PFD flowcharts in `npi-pfd.js` + `apqp-pfd.css`: auto-zoom by step count, LR direction for larger graphs, tighter Mermaid spacing/font sizing, and zoom-wrapped SVG rendering to keep 100+ step flows usable.
+- Finalized NPI PFD flowchart readability defaults: fixed zoom at 55%, permanent LR graph direction, and Mermaid class-based colors so process and decision nodes are clearly differentiated.
+- Increased fixed NPI PFD flowchart zoom to 66% (120% of 55%) and refreshed node palette to higher-contrast blue process vs pink decision styling for better readability.
+- Hardened production backend data handling in `portals/production/js/data.js` by replacing raw `name.localeCompare(...)` sorting with null-safe normalization and added regression coverage in `tests/production-data.test.js` for legacy rows missing `name`.
+- Increased fixed NPI PFD flowchart zoom again to 211% (220% bigger than 66%) per user request while preserving permanent LR layout and the existing process/decision color differentiation.
+- Polished NPI PFD flowchart visuals for a more professional finish: toned node palette, cleaner edge-label rendering, updated Mermaid base theme variables, and improved preview canvas presentation.
+
 | 2026-03-21 | Add role-based NPI gate signoff permissions | utils/js/helpers.js, portals/product-development/npi/js/npi-data.js, portals/product-development/npi/js/gates.js, tests/npi-gate-permissions.test.js, README.md, TESTING_STRATEGY.md, CHANGELOG.md, .wolf/anatomy.md | Added named signoff-role permission keys and enforced them in NPI gate sign/unsign/signatory editing paths with UI lockout messaging and focused Jest coverage | ~540 tok |
+| 2026-03-21 | Force Operations People KPI cards into 2 columns | portals/operations/js/operations-dashboard-render-core.js, portals/operations/css/operations-dashboard.css, CHANGELOG.md, .wolf/anatomy.md, .wolf/buglog.json | Added a People-shell class and breakpoint-specific grid override so People tab KPI cards stay 2 columns on tablet/desktop for cleaner readability | ~140 tok |
 | 2026-03-21 | Fix Production Capacity formula help action | portals/capacity/js/prod-capacity-dashboard.js, portals/capacity/js/capacity-events.js, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Converted static help text into a clickable delegated action and surfaced formula details via info toast so the control now responds to clicks | ~180 tok |
 | 2026-03-21 | Upgrade Production Capacity help to modal | portals/capacity/js/capacity-events.js, index.html, CHANGELOG.md, .wolf/anatomy.md | Replaced toast response with a dedicated modal so users can read the full capacity formula without timeout pressure | ~150 tok |
 | 2026-03-21 | Hardened test coverage for chart theme, operations infographic, and MCS approval core | tests/chart-theme.test.js, tests/operations-infographic.test.js, tests/mcs-approval-core.test.js, tests/timing-core.test.js, CHANGELOG.md, .wolf/anatomy.md, .wolf/buglog.json | Added behavior-focused Jest suites for previously untested modules, fixed timing-core test contract mismatch, and resolved eval-scope access failures via globalThis wrappers | ~780 tok |
@@ -528,3 +543,65 @@
 |------|--------|---------|---------|--------|
 | 22:00 | Edited portals/operations/css/operations-dashboard.css | expanded (+41 lines) | ~368 |
 | 22:00 | Edited CHANGELOG.md | 4→6 lines | ~83 |
+
+## Session: 2026-03-21 22:08
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:09 | Edited portals/operations/js/operations-infographic.js | added error handling | ~327 |
+| 22:10 | Edited portals/operations/js/operations-infographic.js | 9→14 lines | ~250 |
+| 22:10 | Edited tests/operations-infographic.test.js | 45→47 lines | ~517 |
+| 22:10 | Edited CHANGELOG.md | 1→3 lines | ~51 |
+
+## Session: 2026-03-21 22:13
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:20 | Created portals/operations/js/operations-infographic.js | — | ~5115 |
+| 22:21 | Edited CHANGELOG.md | 4→6 lines | ~125 |
+
+## Session: 2026-03-21 22:29
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-21 23:02
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-22 07:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-22 07:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-22 07:42
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-22 07:47
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 07:47 | Edited ../../../.serena/serena_config.yml | inline fix | ~10 |
+| 07:47 | Session end: 1 writes across 1 files (serena_config.yml) | 2 reads | ~10 tok |
+
+## Session: 2026-03-22 07:59
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:02 | Created ../../../.claude/plans/valiant-puzzling-origami.md | — | ~1544 |
+| 08:05 | Edited portals/product-development/npi/css/apqp-pfd.css | modified media() | ~362 |
+| 08:05 | Edited portals/product-development/npi/css/apqp-pfd.css | CSS: max-width | ~34 |
+| 08:05 | Edited portals/product-development/npi/js/npi-pfd.js | inline fix | ~126 |
+| 08:06 | Edited portals/product-development/npi/js/npi-pfd.js | added 6 condition(s) | ~965 |
+| 08:06 | Edited portals/product-development/npi/js/npi-pfd.js | 7→7 lines | ~56 |
+| 08:06 | Edited portals/product-development/npi/js/npi-pfd.js | reduced (-7 lines) | ~36 |
+| 08:08 | Edited CHANGELOG.md | 1→3 lines | ~123 |
+| 08:08 | Session end: 8 writes across 4 files (valiant-puzzling-origami.md, apqp-pfd.css, npi-pfd.js, CHANGELOG.md) | 10 reads | ~56551 tok |

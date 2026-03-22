@@ -1,0 +1,9 @@
+- No build pipeline; files are served directly.
+- Preserve script load order: state.js -> auth.js -> db.js -> helpers.js -> navigation.js -> realtime.js -> portal scripts -> app.js.
+- Keep mutable global state in core/js/state.js.
+- Use esc() for user data rendered into HTML.
+- Use navigate() for route changes so realtime cleanup runs.
+- Maintain ME/PM capacity parity unless explicitly excluded.
+- Auth-only RLS model: do not filter client queries by user_id.
+- Mobile-first CSS with breakpoints max-width:767px and min-width:768px.
+- JS style: single quotes, no semicolons, 2-space indent, no trailing commas.
