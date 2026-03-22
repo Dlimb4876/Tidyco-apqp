@@ -87,14 +87,42 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
   const tasks = tasksArray || meDataGetTasks();
   const allProducts = typeof meDataGetProducts === 'function' ? meDataGetProducts() : updated;
 
-  const weeksPerMonth = 4.33;
-  const totalLoadWeekly = updated.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0).toFixed(1);
-  const totalLoadMonthly = (totalLoadWeekly * weeksPerMonth).toFixed(1);
+  const totalLoadPerBatch = updated.reduce((sum, p) => sum + (Number(p.hoursPerWeek) || 0), 0);
   const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const countBatchesForProductInRange = (product, rangeStart, rangeEnd) => {
+    if (!product || !rangeStart || !rangeEnd) return 0;
+    if (typeof window.meGetProductBatchCountInRange === 'function') {
+      return window.meGetProductBatchCountInRange(product, rangeStart, rangeEnd);
+    }
+
+    const productDbId = product.productDatabaseId || product.product_database_id || null;
+    if (!productDbId) return 0;
+
+    const batches = (window.prodState && Array.isArray(window.prodState.batches))
+      ? window.prodState.batches
+      : [];
+
+    let count = 0;
+    batches.forEach(batch => {
+      if (!batch || batch.product_id !== productDbId) return;
+      if (!batch.start_date || !batch.due_date) return;
+
+      const batchStart = new Date(batch.start_date);
+      const batchEnd = new Date(batch.due_date);
+      if (Number.isNaN(batchStart.getTime()) || Number.isNaN(batchEnd.getTime())) return;
+      if (batchStart <= rangeEnd && batchEnd >= rangeStart) count += 1;
+    });
+    return count;
+  };
+  const totalLoadMonthly = updated.reduce((sum, product) => {
+    const batchCount = countBatchesForProductInRange(product, monthStart, monthEnd);
+    const supportPerBatch = Number(product.hoursPerWeek) || 0;
+    return sum + (supportPerBatch * batchCount);
+  }, 0);
   const activeProducts = updated.filter(p => {
-    const from = new Date(p.supportFrom);
-    const until = new Date(p.supportUntil);
-    return from <= today && today <= until;
+    return countBatchesForProductInRange(p, monthStart, monthEnd) > 0;
   }).length;
 
   // Calculate total demand (hours from tasks) for each product
@@ -174,8 +202,6 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       familyLabel,
       status: statusLabel,
       name: (product.name || '').toString(),
-      supportFrom: (product.supportFrom || '').toString(),
-      supportUntil: (product.supportUntil || '').toString(),
       hoursPerWeek: Number(product.hoursPerWeek) || 0,
       notes: (product.notes || '').toString()
     };
@@ -237,8 +263,6 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
         <td>${esc(product.name)}</td>
         <td>${esc(row.familyLabel)}</td>
         <td>${typeof renderStatusBadge === 'function' ? renderStatusBadge(row.status) : esc(row.status)}</td>
-        <td><input name="cap_products_${rowIndex}_supportFrom" type="date" value="${product.supportFrom || ''}" data-cap-action="cap-products-upd" data-field="supportFrom"></td>
-        <td><input name="cap_products_${rowIndex}_supportUntil" type="date" value="${product.supportUntil || ''}" data-cap-action="cap-products-upd" data-field="supportUntil"></td>
         <td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${product.hoursPerWeek || 0}" step="0.1" data-cap-action="cap-products-upd" data-field="hoursPerWeek"></td>
         <td><input name="cap_products_${rowIndex}_notes" value="${esc(product.notes || '')}" data-cap-action="cap-products-upd" data-field="notes"></td>
       </tr>`;
@@ -248,9 +272,9 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
     <div style="display: flex; flex-direction: column; gap: 16px;">
       <div class="me-kpi-strip">
         <div class="me-kpi" style="border-left: 4px solid var(--green);">
-          <div class="me-kpi-value">${totalLoadMonthly}</div>
+          <div class="me-kpi-value">${totalLoadMonthly.toFixed(1)}</div>
           <div class="me-kpi-label">Support Load</div>
-          <div class="me-kpi-month">h/month</div>
+          <div class="me-kpi-month">h/month (schedule)</div>
         </div>
         <div class="me-kpi" style="border-left: 4px solid var(--blue);">
           <div class="me-kpi-value">${activeProducts}</div>
@@ -267,7 +291,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       <div class="me-card">
         <div class="me-card-head">
           <span class="me-card-title">PRODUCTS / ONGOING SUPPORT</span>
-          <span style="font-size:12px;color:var(--muted)">${totalLoadWeekly} h/wk · Showing ${visibleRows.length}/${preparedRows.length}</span>
+          <span style="font-size:12px;color:var(--muted)">${totalLoadPerBatch.toFixed(1)} h/batch · Showing ${visibleRows.length}/${preparedRows.length}</span>
         </div>
       <div class="me-card-body">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
@@ -295,9 +319,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
             <option value="name" ${state.sortBy === 'name' ? 'selected' : ''}>Sort: Product</option>
             <option value="family" ${state.sortBy === 'family' ? 'selected' : ''}>Sort: Family</option>
             <option value="status" ${state.sortBy === 'status' ? 'selected' : ''}>Sort: Status</option>
-            <option value="hours" ${state.sortBy === 'hours' ? 'selected' : ''}>Sort: Hours/Week</option>
-            <option value="supportFrom" ${state.sortBy === 'supportFrom' ? 'selected' : ''}>Sort: Support From</option>
-            <option value="supportUntil" ${state.sortBy === 'supportUntil' ? 'selected' : ''}>Sort: Support Until</option>
+            <option value="hours" ${state.sortBy === 'hours' ? 'selected' : ''}>Sort: Hours/Batch</option>
           </select>
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-sort-dir" data-dept="${department}" title="Toggle sort direction">
             ${state.sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
@@ -330,18 +352,16 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
               <th style="width:200px">Product Name</th>
               <th style="width:150px">Product Family</th>
               <th style="width:130px">Product Status</th>
-              <th style="width:120px">Support From</th>
-              <th style="width:120px">Support Until</th>
-              <th style="width:120px">Hours/Week</th>
+              <th style="width:120px">Hours/Batch</th>
               <th style="width:200px">Notes</th>
             </tr></thead>
             <tbody>
-              ${rows || `<tr><td colspan="7"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
+              ${rows || `<tr><td colspan="5"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
             </tbody>
           </table>
         </div>
         <div style="font-size: 12px; color: var(--muted); padding: 12px 0;">
-          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. Edit support dates and hours per week as needed for capacity planning.
+          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. Edit support dates and hours per batch; monthly support load is calculated from scheduled production batches.
         </div>
       </div>
     </div>

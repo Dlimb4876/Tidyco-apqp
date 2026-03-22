@@ -8,6 +8,10 @@ eval(utilsScript);
 eval(calculationsScript);
 
 describe('ME monthly capacity calculations', () => {
+  beforeEach(() => {
+    global.prodState = { batches: [] };
+  });
+
   test('returns implicit subtask when task has assigneeId', () => {
     const task = { assigneeId: 'p1', totalHours: 24, name: 'Task A' };
     expect(getEffectiveSubtasks(task)).toEqual([
@@ -98,6 +102,68 @@ describe('ME monthly capacity calculations', () => {
     const expectedNpi = 100 * (overlapDays / taskDays);
 
     expect(result.npi).toBeCloseTo(expectedNpi, 6);
+  });
+
+  test('calculates product support from overlapping batch count in month', () => {
+    const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
+    const products = [{
+      id: 'me-prod-1',
+      productDatabaseId: 'db-prod-1',
+      supportFrom: '2026-01-01',
+      supportUntil: '2026-01-31',
+      hoursPerWeek: 3
+    }];
+
+    global.prodState = {
+      batches: [
+        { product_id: 'db-prod-1', start_date: '2026-01-02', due_date: '2026-01-05' },
+        { product_id: 'db-prod-1', start_date: '2026-01-20', due_date: '2026-01-22' },
+        { product_id: 'db-prod-2', start_date: '2026-01-10', due_date: '2026-01-11' }
+      ]
+    };
+
+    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    expect(result.support).toBeCloseTo(6, 6);
+  });
+
+  test('counts cross-month batch when it overlaps target month', () => {
+    const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
+    const products = [{
+      id: 'me-prod-1',
+      productDatabaseId: 'db-prod-1',
+      supportFrom: '2026-01-01',
+      supportUntil: '2026-01-31',
+      hoursPerWeek: 2
+    }];
+
+    global.prodState = {
+      batches: [
+        { product_id: 'db-prod-1', start_date: '2025-12-30', due_date: '2026-01-03' }
+      ]
+    };
+
+    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    expect(result.support).toBeCloseTo(2, 6);
+  });
+
+  test('returns zero product support when no production batches overlap', () => {
+    const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
+    const products = [{
+      id: 'me-prod-1',
+      productDatabaseId: 'db-prod-1',
+      supportFrom: '2026-01-01',
+      supportUntil: '2026-01-31',
+      hoursPerWeek: 5
+    }];
+
+    global.prodState = {
+      batches: [
+        { product_id: 'db-prod-1', start_date: '2026-02-01', due_date: '2026-02-03' }
+      ]
+    };
+
+    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    expect(result.support).toBeCloseTo(0, 6);
   });
 
   test('returns zero utilisation when person does not exist in team', () => {

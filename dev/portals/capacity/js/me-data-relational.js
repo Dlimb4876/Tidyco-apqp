@@ -88,8 +88,6 @@ window.meLoadRelationalProducts = async function(userId) {
       id: mp.id,
       name: mp.name || '(Unknown Product)',
       productDatabaseId: mp.product_database_id,
-      supportFrom: mp.support_from || '',
-      supportUntil: mp.support_until || '',
       hoursPerWeek: mp.hours_per_week,
       department: meNormalizeDepartmentTag(mp.department, 'ME'),
       notes: mp.notes,
@@ -203,8 +201,6 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
 window.meSaveProductRelational = async function(userId, product) {
   try {
     const department = meNormalizeDepartmentTag(product.department, 'ME');
-    const supportFrom = product.supportFrom || product.support_from || null;
-    const supportUntil = product.supportUntil || product.support_until || null;
     const productId = product.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
 
     const payload = {
@@ -212,8 +208,6 @@ window.meSaveProductRelational = async function(userId, product) {
       user_id: userId,
       name: product.name || '',
       product_database_id: product.productDatabaseId || null,
-      support_from: supportFrom || null,
-      support_until: supportUntil || null,
       hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
       department,
       notes: product.notes || null,

@@ -61,6 +61,29 @@ window.meGetHolidayDaysInRange = function(memberId, rangeStart, rangeEnd, holida
   return holidayDays;
 };
 
+window.meGetProductBatchCountInRange = function(product, rangeStart, rangeEnd) {
+  if (!product || !rangeStart || !rangeEnd) return 0;
+  const productDbId = product.productDatabaseId || product.product_database_id || null;
+  if (!productDbId) return 0;
+
+  const batches = (window.prodState && Array.isArray(window.prodState.batches))
+    ? window.prodState.batches
+    : [];
+
+  let count = 0;
+  batches.forEach(batch => {
+    if (!batch || batch.product_id !== productDbId) return;
+    if (!batch.start_date || !batch.due_date) return;
+
+    const batchStart = new Date(batch.start_date);
+    const batchEnd = new Date(batch.due_date);
+    if (Number.isNaN(batchStart.getTime()) || Number.isNaN(batchEnd.getTime())) return;
+    if (batchStart <= rangeEnd && batchEnd >= rangeStart) count += 1;
+  });
+
+  return count;
+};
+
 // ── Month Capacity & Demand Calculation ─────────────────────
 window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const [year, month] = monthKey.split('-').map(Number);
@@ -138,19 +161,11 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     }
   });
 
-  // Product support using network days
+  // Product support from production schedule batches (support value is per batch)
   productsArray.forEach(product => {
-    if (!product.supportFrom || !product.supportUntil) return;
-
-    const prodStart = new Date(product.supportFrom);
-    const prodEnd = new Date(product.supportUntil);
-
-    if (prodStart <= monthEnd && prodEnd >= monthStart) {
-      const overlapStart = new Date(Math.max(prodStart.getTime(), monthStart.getTime()));
-      const overlapEnd = new Date(Math.min(prodEnd.getTime(), monthEnd.getTime()));
-      const netDays = window.countNetworkDaysBetween(overlapStart, overlapEnd, bankHolSet);
-      support += (product.hoursPerWeek || 0) * (netDays / 5);
-    }
+    const supportPerBatch = Number(product.hoursPerWeek) || 0;
+    const batchCount = window.meGetProductBatchCountInRange(product, monthStart, monthEnd);
+    support += supportPerBatch * batchCount;
   });
 
   const totalDemand = npi + improvement + tendering + support + other;

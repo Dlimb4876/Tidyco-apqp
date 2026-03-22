@@ -116,6 +116,19 @@ describe('ME/PM Product table filtering and sorting', () => {
       { id: 't4', productId: 'me-3', totalHours: 12 }
     ];
 
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const toIso = (date) => date.toISOString().slice(0, 10);
+
+    global.prodState = {
+      batches: [
+        { product_id: 'db-1', start_date: toIso(monthStart), due_date: toIso(monthEnd) },
+        { product_id: 'db-2', start_date: toIso(monthStart), due_date: toIso(monthEnd) },
+        { product_id: 'db-2', start_date: toIso(monthStart), due_date: toIso(monthEnd) }
+      ]
+    };
+
     global.meDataGetProducts = jest.fn(() => currentDepartment === 'PM' ? pmProducts : meProducts);
 
     const supportScript = fs.readFileSync(
@@ -212,5 +225,19 @@ describe('ME/PM Product table filtering and sorting', () => {
     const pmHtml = meRenderProductTaskLoadTab(pmTasks, pmProducts);
     expect(pmHtml).toContain('Alpha Pump');
     expect(pmHtml).not.toContain('Beta Fan');
+  });
+
+  test('Product Support and Product Load use schedule-driven monthly support', () => {
+    meProductsClearFilters('ME');
+    meProductLoadClearFilters('ME');
+
+    const supportHtml = renderSupportTable();
+    expect(supportHtml).toContain('20.0');
+    expect(supportHtml).toContain('h/month (schedule)');
+    expect(supportHtml).toContain('Hours/Batch');
+
+    const loadHtml = renderLoadTable();
+    expect(loadHtml).toContain('h/month');
+    expect(loadHtml).toContain('Support/Month = support hours per batch');
   });
 });

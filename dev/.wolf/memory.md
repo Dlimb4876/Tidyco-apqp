@@ -7,6 +7,10 @@
 - Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
 
 ## 2026-03-22
+- Fixed production hub delegation regression in `portals/production/js/production.js` by replacing inline favourite `onclick` handlers with delegated `data-action` handling (`prod-fav-toggle`), then validated with targeted production tests.
+- Re-ran full validation after delegation fix: `npm test` and `npm run check:all` both pass (50 suites, 682 tests).
+- Implemented schedule-driven ME/PM product support calculations: support/load tabs and monthly demand now use production batch count per month times editable product support value, with updated labels and tests in capacity modules.
+- Ran validation for capacity change: focused suites passed (`tests/me-calculations.test.js`, `tests/me-products-filters.test.js`); full suite still has one unrelated pre-existing failure in `tests/production.test.js` (onclick delegation assertion).
 - Fixed terminal readability in Settings Product Families/Work Areas by styling inline table input placeholders (`.cell-edit::placeholder`) with high-contrast terminal tokens in `portals/settings/css/settings.css`.
 - Improved APQP Mission Control Gate Trajectory visibility in terminal theme by adding higher-contrast `mc-shell` overrides for helper text (`.panel-head span`), inactive gates, and connector lines in `portals/product-development/npi/css/dashboard.css`.
 - Fixed APQP Mission Control terminal readability in `portals/product-development/npi/css/dashboard.css` by adding a terminal-specific `mc-shell` override block for heading/KPI/gate text colors that were still inheriting light-theme hardcoded values.

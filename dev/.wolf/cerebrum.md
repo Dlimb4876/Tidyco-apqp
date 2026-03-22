@@ -19,6 +19,7 @@
 - On MCS main cards, user wants explicit label text (`Change Type: ...`) rather than only the raw type value.
 - For favourites UX, user expects star toggles on all hub-style cards (main hub and section root hubs), not only on the main portal hub.
 - For layout/design feedback, user expects recommendations to be based on direct inspection of the current implementation before suggesting changes.
+- For ME/PM product support planning, user wants per-product editable support values to stay product-specific, but monthly support/load must be driven by production schedule batch counts (batch multiplier) rather than fixed weeks-per-month multipliers.
 
 ## Key Learnings
 
