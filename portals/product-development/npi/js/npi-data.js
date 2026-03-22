@@ -22,11 +22,21 @@ npi.data.pfdType = {
   isDecision(type) {
     return type === 'Decision'
   },
+  isInspection(type) {
+    return type === 'Inspection'
+  },
+  isTwoPath(type) {
+    return type === 'Decision' || type === 'Inspection'
+  },
   normalize(type) {
-    return npi.data.pfdType.isDecision(type) ? npi.data.pfdType.Decision : npi.data.pfdType.Process
+    const known = ['Process', 'Decision', 'Inspection', 'Rework', 'Transport']
+    return known.includes(type) ? type : npi.data.pfdType.Process
   },
   Process: 'Process',
-  Decision: 'Decision'
+  Decision: 'Decision',
+  Inspection: 'Inspection',
+  Rework: 'Rework',
+  Transport: 'Transport'
 }
 
 npi.data.normalizePfdLink = function(value) {
@@ -271,7 +281,7 @@ npi.data.pfd = {
 
     if (f === 'pfd_type') {
       s.pfd_type = npi.data.pfdType.normalize(v)
-      if (npi.data.pfdType.isDecision(s.pfd_type)) s.nextStepId = null
+      if (npi.data.pfdType.isTwoPath(s.pfd_type)) s.nextStepId = null
       else {
         s.nextStepId_yes = null
         s.nextStepId_no = null

@@ -9,6 +9,7 @@
 - Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
 
 ## 2026-03-22
+- Switched the PFD top navigator in `portals/product-development/npi/js/npi-pfd.js` from per-step nodes to per-section nodes so large flows can be navigated by section header with step count/range context.
 - Reduced NPI PFD flowchart preview scale by tightening Mermaid spacing and constraining the preview canvas in `apqp-pfd.css` so large diagrams render in a compact, scrollable viewport.
 - Added adaptive compact mode for NPI PFD flowcharts in `npi-pfd.js` + `apqp-pfd.css`: auto-zoom by step count, LR direction for larger graphs, tighter Mermaid spacing/font sizing, and zoom-wrapped SVG rendering to keep 100+ step flows usable.
 - Finalized NPI PFD flowchart readability defaults: fixed zoom at 55%, permanent LR graph direction, and Mermaid class-based colors so process and decision nodes are clearly differentiated.
@@ -605,3 +606,27 @@
 | 08:06 | Edited portals/product-development/npi/js/npi-pfd.js | reduced (-7 lines) | ~36 |
 | 08:08 | Edited CHANGELOG.md | 1→3 lines | ~123 |
 | 08:08 | Session end: 8 writes across 4 files (valiant-puzzling-origami.md, apqp-pfd.css, npi-pfd.js, CHANGELOG.md) | 10 reads | ~56551 tok |
+
+## Session: 2026-03-22 08:11
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:24 | Created ../../../.claude/plans/cheerful-frolicking-ember.md | — | ~1695 |
+| 08:27 | Edited portals/product-development/npi/js/npi-data.js | modified isHeader() | ~188 |
+| 08:27 | Edited portals/product-development/npi/js/npi-pfd.js | expanded (+7 lines) | ~1090 |
+| 08:27 | Edited portals/product-development/npi/js/npi-data.js | isDecision() → isTwoPath() | ~44 |
+| 08:28 | Edited portals/product-development/npi/js/npi-pfd.js | added 10 condition(s) | ~1568 |
+| 08:29 | Edited portals/product-development/npi/js/npi-pfd.js | 2→3 lines | ~42 |
+| 08:29 | Edited portals/product-development/npi/js/npi-pfd.js | 2→4 lines | ~135 |
+| 08:29 | Edited portals/product-development/npi/js/npi-pfd.js | inline fix | ~88 |
+| 08:29 | Edited portals/product-development/npi/js/npi-pfd.js | 1→2 lines | ~305 |
+| 08:30 | Edited portals/product-development/npi/js/npi-pfd.js | modified function() | ~85 |
+| 08:30 | Edited portals/product-development/npi/js/npi-events.js | 1→2 lines | ~32 |
+| 08:30 | Edited portals/product-development/npi/js/npi-pfd.js | 3→7 lines | ~137 |
+| 08:30 | Edited portals/product-development/npi/js/npi-pfd.js | 1→2 lines | ~66 |
+| 08:30 | Edited portals/product-development/npi/js/npi-pfd.js | inline fix | ~81 |
+| 08:31 | Edited portals/product-development/npi/css/apqp-pfd.css | expanded (+54 lines) | ~566 |
+| 08:32 | Edited tests/npi-pfd-flowchart.test.js | expanded (+114 lines) | ~1228 |
+| 08:32 | Edited CHANGELOG.md | 1→3 lines | ~151 |
+| 08:33 | Session end: 17 writes across 7 files (cheerful-frolicking-ember.md, npi-data.js, npi-pfd.js, npi-events.js, apqp-pfd.css) | 17 reads | ~86055 tok |
+| 08:33 | Session end: 17 writes across 7 files (cheerful-frolicking-ember.md, npi-data.js, npi-pfd.js, npi-events.js, apqp-pfd.css) | 18 reads | ~86055 tok |
