@@ -318,10 +318,32 @@ async function loadMoreProjects() {
 
 function setSyncBadge(state, text) {
   const b = document.getElementById('syncBadge');
-  if (!b) return;
-  b.className   = 'sync-badge ' + state;
-  b.textContent = text;
-  b.title       = text; // Tooltip for long error messages
+  if (b) {
+    b.className   = 'sync-badge ' + state;
+    b.textContent = text;
+    b.title       = text; // Tooltip for long error messages
+  }
+
+  // Also update bottombar
+  const bottombarSync = document.getElementById('bottombarSync');
+  if (bottombarSync) {
+    bottombarSync.className = 'bottombar-status ' + state;
+    bottombarSync.textContent = text;
+    bottombarSync.title = text;
+  }
+}
+
+function setUnsavedIndicator(count) {
+  const el = document.getElementById('bottombarUnsaved');
+  if (!el) return;
+
+  if (count > 0) {
+    el.style.display = 'inline-flex';
+    el.textContent = `✎ ${count} unsaved`;
+    el.title = `${count} unsaved change(s) — press Ctrl+S to save`;
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 // ── Migration ─────────────────────────────────────────────────

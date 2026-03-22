@@ -495,6 +495,113 @@ body {
 .sync-badge.saved   { color: #86efac; }
 .sync-badge.error   { color: #fca5a5; }
 
+/* ── Bottom Status Bar ───────────────────────────────────────── */
+.bottombar {
+  height: 40px;
+  background: var(--bg-soft);
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 14px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  z-index: 99;
+}
+
+.bottombar-left,
+.bottombar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bottombar-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.bottombar-status.saved { color: #86efac; }
+.bottombar-status.unsaved { color: #fbbf24; }
+.bottombar-status.syncing { color: #93c5fd; }
+.bottombar-status.error { color: #fca5a5; }
+.bottombar-status.offline { color: #fca5a5; }
+
+:root[data-theme="dark"] .bottombar-status.saved { color: #10b981; }
+:root[data-theme="dark"] .bottombar-status.unsaved { color: #f59e0b; }
+:root[data-theme="dark"] .bottombar-status.syncing { color: #3b82f6; }
+:root[data-theme="dark"] .bottombar-status.error { color: #ef7f78; }
+
+:root[data-theme="terminal"] .bottombar-status.saved { color: #00ff41; }
+:root[data-theme="terminal"] .bottombar-status.unsaved { color: #ffcc00; }
+:root[data-theme="terminal"] .bottombar-status.syncing { color: #00eeff; }
+:root[data-theme="terminal"] .bottombar-status.error { color: #ff4444; }
+
+.bottombar-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  transition: all 0.12s;
+}
+
+.bottombar-btn:hover {
+  background: var(--overlay-light);
+  color: var(--mid);
+  border-color: var(--mid);
+}
+
+.bottombar-btn:active {
+  transform: scale(0.98);
+}
+
+/* Adjust shell layout to accommodate bottombar */
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--page-gutter-mobile) var(--page-gutter-mobile);
+  padding-bottom: 40px;
+}
+
+/* Hide realtime subscription count on desktop */
+@media (min-width: 768px) {
+  #bottombarRealtime {
+    display: none;
+  }
+}
+
+/* Simplify bottombar on mobile */
+@media (max-width: 767px) {
+  .bottombar-right {
+    display: none;
+  }
+
+  .bottombar {
+    padding: 0 10px;
+  }
+
+  .main {
+    padding-bottom: 40px;
+  }
+}
+
 /* ── Responsive Utilities ───────────────────────────────────── */
 .container { width: 100%; padding: 0 16px; margin: 0 auto; }
 @media (min-width: 768px) {

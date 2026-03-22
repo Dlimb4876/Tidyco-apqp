@@ -104,6 +104,21 @@
 
 </div><!-- end appShell -->
 
+<!-- ═══════════════════════════════════
+     BOTTOM STATUS BAR
+     ═══════════════════════════════════ -->
+<div class="bottombar" id="bottombar">
+  <div class="bottombar-left">
+    <span class="bottombar-status" id="bottombarSync">● saved</span>
+    <span class="bottombar-status" id="bottombarUnsaved" style="display:none">✎ unsaved</span>
+    <span class="bottombar-status" id="bottombarRealtime">⟳ 0 subscriptions</span>
+  </div>
+  <div class="bottombar-right">
+    <span class="bottombar-status" id="bottombarNetwork">📡 online</span>
+    <button class="bottombar-btn" onclick="showModal('shortcutsModal')" title="Keyboard shortcuts">[?]</button>
+  </div>
+</div>
+
 <!-- Toast container (1.3) -->
 <div id="toastContainer" class="toast-container"></div>
 
@@ -551,6 +566,7 @@
 <script src="utils/js/guide.js"></script>
 <script src="utils/js/navigation.js"></script>
 <script src="utils/js/realtime.js"></script>
+<script src="core/js/network.js"></script>
 
 <script src="portals/hub/js/hub.js"></script>
 <script src="portals/operations/js/operations-forecast-data.js"></script>

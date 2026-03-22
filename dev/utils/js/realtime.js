@@ -64,6 +64,7 @@ function createRealtimeSubscription(tableName, channelName, callbacks = {}, opti
 
     // Store subscription reference for cleanup
     realtimeSubscriptions[channelName] = subscription;
+    updateRealtimeIndicator(); // Update bottombar
     return subscription;
   } catch (err) {
     console.debug(`⚠️ Could not set up real-time subscription for "${channelName}":`, err);
@@ -81,6 +82,7 @@ function removeRealtimeSubscription(channelName) {
   try {
     supa.removeChannel(realtimeSubscriptions[channelName]);
     delete realtimeSubscriptions[channelName];
+    updateRealtimeIndicator(); // Update bottombar
   } catch (err) {
     console.debug(`Could not unsubscribe from "${channelName}":`, err);
   }
@@ -98,6 +100,7 @@ function removeRealtimeSubscriptionsMatching(pattern) {
       removeRealtimeSubscription(channelName);
     }
   });
+  updateRealtimeIndicator(); // Update bottombar once after all removals
 }
 
 /**
@@ -105,6 +108,16 @@ function removeRealtimeSubscriptionsMatching(pattern) {
  */
 function getActiveRealtimeSubscriptions() {
   return Object.keys(realtimeSubscriptions);
+}
+
+/**
+ * Update the bottombar realtime subscription counter
+ */
+function updateRealtimeIndicator() {
+  const el = document.getElementById('bottombarRealtime');
+  if (!el) return;
+  const count = Object.keys(realtimeSubscriptions).length;
+  el.textContent = `⟳ ${count} subscription${count !== 1 ? 's' : ''}`;
 }
 
 // ── 3-B: Multi-table channel helper ──────────────────────────
