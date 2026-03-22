@@ -584,9 +584,85 @@ function hasActiveTextSelection() {
 }
 
 /**
+ * Returns true when any modal overlay is currently visible.
+ * @returns {boolean}
+ */
+function hasVisibleModal() {
+  return !!document.querySelector(
+    '.modal-bg[style*="display: flex"], .modal-bg[style*="display:flex"], .modal-bg[style*="display: block"], .modal-bg[style*="display:block"]'
+  );
+}
+
+/**
+ * Resolves a hub shortcut key (1-5) to a navigation action.
+ * Returns null when the current page is not a supported hub/root view.
+ * @param {string} key
+ * @returns {Function|null}
+ */
+function getHubKeyAction(key) {
+  if (currentSection === 'hub') {
+    const hubRoutes = {
+      '1': () => navigate('capacity'),
+      '2': () => navigate('product-development'),
+      '3': () => navigate('production'),
+      '4': () => navigate('operations'),
+      '5': () => navigate('mcs')
+    };
+    return hubRoutes[key] || null;
+  }
+
+  if (currentSection === 'capacity' && capacityTab === 'root') {
+    const capacityRoutes = {
+      '1': () => setCapacityTab('production'),
+      '2': () => setCapacityTab('me'),
+      '3': () => setCapacityTab('projects')
+    };
+    return capacityRoutes[key] || null;
+  }
+
+  if (currentSection === 'product-development' && productDevelopmentTab === 'root') {
+    const productDevelopmentRoutes = {
+      '1': () => setProductDevelopmentTab('npi'),
+      '2': () => setProductDevelopmentTab('product-management'),
+      '3': () => setProductDevelopmentTab('product-family-db'),
+      '4': () => setProductDevelopmentTab('parts-database')
+    };
+    return productDevelopmentRoutes[key] || null;
+  }
+
+  if (currentSection === 'production' && productionTab === 'root') {
+    const productionRoutes = {
+      '1': () => setProductionTab('scheduling'),
+      '2': () => setProductionTab('by-product'),
+      '3': () => setProductionTab('by-unit')
+    };
+    return productionRoutes[key] || null;
+  }
+
+  return null;
+}
+
+/**
  * Backspace acts as app-level back navigation when not typing/editing.
  */
 window.addEventListener('keydown', (event) => {
+  const isHubNumberShortcut = /^[1-5]$/.test(event.key || '');
+  if (isHubNumberShortcut) {
+    if (event.defaultPrevented) return;
+    if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+
+    const activeEl = document.activeElement;
+    if (isEditableElement(event.target) || isEditableElement(activeEl)) return;
+    if (hasVisibleModal()) return;
+
+    const action = getHubKeyAction(event.key);
+    if (!action) return;
+
+    event.preventDefault();
+    action();
+    return;
+  }
+
   const isBackspace = event.key === 'Backspace' || event.keyCode === 8;
   if (!isBackspace) return;
   if (event.defaultPrevented) return;

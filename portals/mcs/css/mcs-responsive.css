@@ -32,10 +32,40 @@
     grid-template-columns: 1fr;
   }
 
+  .mcs-staged-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .mcs-stage-toggle {
+    padding: 12px;
+  }
+
+  .mcs-stage-content {
+    padding: 0 12px 12px;
+  }
+
   /* Approval chain - stack vertically on mobile */
   .mcs-approval-chain {
     flex-direction: column;
     gap: 16px;
+  }
+
+  .mcs-flow-rail.mcs-approval-chain {
+    flex-direction: column;
+    gap: 0;
+    padding: 12px;
+    position: static;
+    order: 2;
+  }
+
+  .mcs-flow-step {
+    grid-template-columns: 28px 1fr;
+    padding-bottom: 12px;
+  }
+
+  .mcs-flow-step:not(:last-child)::after {
+    left: 13px;
   }
 
   .mcs-approval-step:not(:last-child)::after {
@@ -57,6 +87,10 @@
   /* Impact grid - 2 columns on mobile */
   .mcs-impact-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mcs-impact-tags-wrap {
+    margin-bottom: 4px;
   }
 
   /* Toolbar - stack controls */
@@ -195,11 +229,16 @@
 @media (min-width: 768px) {
   /* Modal - centered dialog */
   .mcs-modal {
-    width: 900px;
+    width: 1140px;
   }
 
   .mcs-modal-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .mcs-staged-layout {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    align-items: start;
   }
 
   /* Approval chain - horizontal */
@@ -207,6 +246,15 @@
     flex-direction: row;
     gap: 0;
     margin-bottom: 16px;
+  }
+
+  .mcs-flow-rail.mcs-approval-chain {
+    display: block;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 0;
+    position: sticky;
+    top: 0;
   }
 
   .mcs-approval-step:not(:last-child)::after {

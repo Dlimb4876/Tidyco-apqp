@@ -1349,6 +1349,7 @@
 
 /* ── Slim product card ───────────────────────────────────────── */
 .npi-slim-card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -1403,6 +1404,33 @@
   border-radius: 3px;
   padding: 1px 5px;
   margin-top: 4px;
+}
+
+.npi-slim-fav-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+  z-index: 2;
+}
+
+.npi-slim-fav-toggle:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.npi-slim-fav-toggle.is-active {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-pale);
 }
 
 @media (max-width: 768px) {
@@ -1477,4 +1505,65 @@
   border-color: #42b36e;
   color: #42b36e;
   background: rgba(66, 179, 110, 0.12);
+}
+
+/* ── Terminal mode overrides for mc-shell (project dashboard) ─ */
+:root[data-theme="terminal"] .mc-shell .dash-prog-name {
+  color: var(--ink);
+}
+
+:root[data-theme="terminal"] .mc-shell .eyebrow {
+  color: var(--blue);
+}
+
+:root[data-theme="terminal"] .mc-shell .cmd-big {
+  color: var(--ink);
+}
+
+:root[data-theme="terminal"] .mc-shell .next-box h3 {
+  color: var(--blue);
+}
+
+:root[data-theme="terminal"] .mc-shell .next-box li {
+  color: var(--ink2);
+}
+
+:root[data-theme="terminal"] .mc-shell .panel-head span {
+  color: var(--ink2);
+}
+
+:root[data-theme="terminal"] .mc-shell .gate {
+  border-color: rgba(0, 255, 65, 0.35);
+  color: var(--ink);
+  background: var(--surface);
+}
+
+:root[data-theme="terminal"] .mc-shell .gate.done {
+  border-color: rgba(0, 255, 65, 0.5);
+  color: var(--green);
+  background: var(--green-pale);
+}
+
+:root[data-theme="terminal"] .mc-shell .gate.active {
+  border-color: rgba(0, 204, 255, 0.5);
+  color: var(--navy);
+  background: var(--navy-pale);
+}
+
+:root[data-theme="terminal"] .mc-shell .connector {
+  background: rgba(0, 255, 65, 0.3);
+}
+
+:root[data-theme="terminal"] .mc-shell .connector.done {
+  background: rgba(0, 255, 65, 0.6);
+}
+
+:root[data-theme="terminal"] .mc-shell .connector.active {
+  background: linear-gradient(90deg, rgba(0, 255, 65, 0.8), rgba(0, 204, 255, 0.8));
+}
+
+:root[data-theme="terminal"] .mc-shell .chips button:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-pale);
 }

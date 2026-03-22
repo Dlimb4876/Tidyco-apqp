@@ -561,3 +561,10 @@ body.compact-tables .prod-tbl th {
   color: var(--ink);
   box-shadow: 0 1px 2px rgba(0,0,0,0.07);
 }
+
+/* ── Terminal readability: settings inline table placeholders ─ */
+:root[data-theme="terminal"] .families-inline-table .cell-edit::placeholder,
+:root[data-theme="terminal"] #settingsWorkAreasTab .cell-edit::placeholder {
+  color: var(--ink2);
+  opacity: 0.95;
+}

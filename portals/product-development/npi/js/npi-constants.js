@@ -31,3 +31,11 @@ window.GANTT_SECTIONS = [
 ]
 window.PLAN_COLOR = '#16a34a' // green — planned
 window.ACT_COLOR = '#d97706' // orange — actual
+
+// ── Special Characteristics ────────────────────────────────────
+// Used in PFMEA for safety/critical/major classification (AIAG-VDA Step 3)
+window.SPECIAL_CHARS = {
+  SAFETY:   { id: 'safety',   label: 'Safety',   symbol: '🦺', color: 'var(--red)' },
+  CRITICAL: { id: 'critical', label: 'Critical', symbol: '❗', color: 'var(--amber)' },
+  MAJOR:    { id: 'major',    label: 'Major',    symbol: '⚠️', color: 'var(--blue)' }
+}

@@ -28,6 +28,7 @@ eval(src); // eslint-disable-line no-eval
 
 describe('renderHub()', () => {
   beforeEach(() => {
+    localStorage.clear();
     // Reset action centre state before each test
     global.actionCentreLoading = false;
     global.actionCentreData = null;
@@ -101,6 +102,22 @@ describe('renderHub()', () => {
     const html = renderHub(); // eslint-disable-line no-undef
     const matches = (html.match(/hub-card/g) || []).length;
     expect(matches).toBeGreaterThanOrEqual(4);
+  });
+
+  it('shows empty favourites message when no favourites are saved', () => {
+    const html = renderHub(); // eslint-disable-line no-undef
+    expect(html).toContain('No favourites yet. Star pages or NPI products for quick access.');
+  });
+
+  it('shows favourited page in favourites panel for current user', () => {
+    global.currentUser = { email: 'fav.user@example.com' };
+    localStorage.setItem('tidyco_favourites_v1_fav.user@example.com', JSON.stringify({
+      version: 1,
+      pages: ['capacity'],
+      products: []
+    }));
+    const html = renderHub(); // eslint-disable-line no-undef
+    expect(html).toContain('📊 Capacity');
   });
 });
 
@@ -244,5 +261,61 @@ describe('hubInit()', () => {
     global.actionCentreLoad = jest.fn();
     hubInit(); // eslint-disable-line no-undef
     expect(global.actionCentreLoad).not.toHaveBeenCalled();
+  });
+});
+
+describe('hub favourites storage', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    global.currentUser = { email: 'star.user@example.com' };
+    global.render = jest.fn();
+    global.currentSection = 'hub';
+    global.setCapacityTab = undefined;
+    global.setProductDevelopmentTab = undefined;
+    global.setProductionTab = undefined;
+    global.navigate = jest.fn();
+  });
+
+  it('toggles page favourites in localStorage', () => {
+    hubTogglePageFavourite('capacity'); // eslint-disable-line no-undef
+    let raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.pages).toContain('capacity');
+
+    hubTogglePageFavourite('capacity'); // eslint-disable-line no-undef
+    raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.pages).not.toContain('capacity');
+  });
+
+  it('toggles product favourites in localStorage', () => {
+    hubToggleProductFavourite('prod_1'); // eslint-disable-line no-undef
+    let raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.products).toContain('prod_1');
+
+    hubToggleProductFavourite('prod_1'); // eslint-disable-line no-undef
+    raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.products).not.toContain('prod_1');
+  });
+
+  it('caps stored page favourites to four items', () => {
+    hubTogglePageFavourite('capacity'); // eslint-disable-line no-undef
+    hubTogglePageFavourite('product-development'); // eslint-disable-line no-undef
+    hubTogglePageFavourite('production'); // eslint-disable-line no-undef
+    hubTogglePageFavourite('operations'); // eslint-disable-line no-undef
+    hubTogglePageFavourite('mcs'); // eslint-disable-line no-undef
+
+    const raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.pages).toHaveLength(4);
+    expect(raw.pages).not.toContain('mcs');
+  });
+
+  it('returns false for unknown product favourite', () => {
+    expect(hubIsProductFavourite('missing')).toBe(false); // eslint-disable-line no-undef
+  });
+
+  it('opens sub-hub favourites by navigating section then setting tab', () => {
+    global.setCapacityTab = jest.fn();
+    hubOpenFavouritePage('capacity::me'); // eslint-disable-line no-undef
+    expect(global.navigate).toHaveBeenCalledWith('capacity');
+    expect(global.setCapacityTab).toHaveBeenCalledWith('me');
   });
 });

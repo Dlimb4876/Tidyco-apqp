@@ -4,11 +4,28 @@
 > Old sessions are consolidated by the daemon weekly.
 
 ## 2026-03-21
-- Updated `.gemini/GEMINI.md` to include the repo's OpenWolf workflow and explicit `openwolf designqc` usage guidance so Gemini-side instructions match the enforced protocol.
-- Redesigned `portals/operations/js/operations-infographic.js` — replaced table-style printout with a proper infographic layout: SVG ring gauges for utilisation (ME, PM, each ops unit), hero ring for health score, pipeline flow for production stages, severity heat bars for risk, gate step tracker (G0–G5) for NPI gate completion. All 6 tests still pass. Kept `opsInfographicBar`, `opsInfographicTone`, `opsInfographicUnitCards` signatures for test compatibility.
 - Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
 
 ## 2026-03-22
+- Fixed terminal readability in Settings Product Families/Work Areas by styling inline table input placeholders (`.cell-edit::placeholder`) with high-contrast terminal tokens in `portals/settings/css/settings.css`.
+- Improved APQP Mission Control Gate Trajectory visibility in terminal theme by adding higher-contrast `mc-shell` overrides for helper text (`.panel-head span`), inactive gates, and connector lines in `portals/product-development/npi/css/dashboard.css`.
+- Fixed APQP Mission Control terminal readability in `portals/product-development/npi/css/dashboard.css` by adding a terminal-specific `mc-shell` override block for heading/KPI/gate text colors that were still inheriting light-theme hardcoded values.
+- Fixed project dashboard text readability in terminal/dark themes by increasing `--muted` contrast tokens in `core/css/main.css` (terminal `#006618 -> #39c95a`, dark `#8296aa -> #96abbe`) and logged changelog/bug entry.
+- Removed the Hub favourites scrollbar and lowered favourites storage caps to 4 pages + 4 products in `portals/hub/js/hub.js` / `portals/hub/css/hub.css`; added a Jest regression test in `tests/hub.test.js` and revalidated with `npm test -- tests/hub.test.js tests/capacity-hub.test.js` (56/56 passing).
+- Implemented Hub Phase 1 compact landing layout in `portals/hub/js/hub.js` + `portals/hub/css/hub.css`: added `hub-home` scope class, tightened desktop spacing, reduced hub card height, constrained favourites panel with internal scroll, and moved wide desktop hub grid to 3 columns to reduce laptop page scrolling; validated with `npm test -- tests/hub.test.js tests/capacity-hub.test.js` (55/55 passing).
+- Fixed favourites shortcut navigation for sub-hub entries (`capacity::me`, `product-development::npi`, etc.): `hubOpenFavouritePage` now navigates to the section first, then applies the tab setter, and `tests/hub.test.js` now asserts this flow.
+- Fixed favourites rollout gap: added star toggles to Capacity, Product Development, and Production root hub cards (not only main hub cards), expanded hub favourites routes to include sub-hub tabs, and added routing coverage in `tests/hub.test.js`.
+- Implemented Phase 1 local favourites for portal pages and NPI products: added per-user localStorage favourites model in `portals/hub/js/hub.js`, rendered a new Hub favourites panel, added star toggles on Hub cards and NPI slim product cards, and added matching styles in `portals/hub/css/hub.css` and `portals/product-development/npi/css/dashboard.css`.
+- Added favourites regression coverage in `tests/hub.test.js` and validated with `npm test -- tests/hub.test.js` plus full `npm test` (676/676 passing).
+- Updated MCS main list card metadata label from raw type value to explicit text format (`Change Type: <type>`) for clearer readability. File: `portals/mcs/js/mcs-main.js`.
+- Implemented 5-feature PFMEA improvement plan (AIAG-VDA compliance + UX): (1) Function field on modes — data, save, load, render; (2) Special characteristics ∇△◇ dropdown on effects — constants, save, load; (3) Validation warnings badges + modal (SEV≥9, RPN≥200, OCC≥8, overdue); (4) Collapsible column views (Compact/Standard/Full) with view toggle buttons; (5) Advanced filtering (owner, overdue, special char, text search, RPN). Files: `npi-constants.js`, `npi-data.js`, `npi-data-relational.js`, `pfmea.js`, `pfmea.css`, `npi-events.js`, `index.html`. Supabase schema requires two ALTER TABLE migrations (ADD COLUMN function TEXT to npi_pfmea_modes, ADD COLUMN special_char VARCHAR(20) to npi_pfmea_effects). All 671 tests pass.
+- Added hub keyboard navigation shortcuts: keys 1-5 now open cards on hub root pages (main hub, Capacity hub, Product Development hub, Production hub), with matching help text in the Keyboard Shortcuts modal. Files: `utils/js/navigation.js`, `index.html`, `CHANGELOG.md`.
+- Added a distinct Stage 1 `Impact Assessment Estimate (hours)` field in MCS create/edit/view and surfaced it in Approval 1 context; kept it separate from Stage 3 overhaul implementation time impact. Data is persisted via structured justification metadata markers. File: `portals/mcs/js/mcs-modal.js`.
+- Refined MCS modal information hierarchy: moved status pill from Stage 1 body into modal top bar (view/edit) so status is shown as global state context. File: `portals/mcs/js/mcs-modal.js`.
+- Refined MCS staged modal per follow-up UX request: switched to true accordion behavior (single expanded stage), merged Impact Assessment into Stage 1, added new freeform fields for Documents Affected and Knock-on Effect for Other Products, and introduced color-coded stage headings for clearer visual separation. Files: `portals/mcs/js/mcs-modal.js`, `portals/mcs/css/mcs.css`, `portals/mcs/css/mcs-responsive.css`, `CHANGELOG.md`.
+- Tweaked MCS staged modal UX: widened desktop modal (1140px), reduced right workflow rail width, converted stage cards to bordered collapsible sections (Open + active stage expanded by default), and made the modal title banner sticky while only modal body content scrolls. Files: `portals/mcs/js/mcs-modal.js`, `portals/mcs/css/mcs.css`, `portals/mcs/css/mcs-responsive.css`, `CHANGELOG.md`.
+- Implemented first-pass staged engineering change modal flow in `portals/mcs/js/mcs-modal.js`: Create/Edit/View now use stage blocks (Open, Impact Assessment, Approval 1, Implement, Approval 2) with a shared vertical workflow rail rendered on the right.
+- Added matching layout and responsive styles in `portals/mcs/css/mcs.css` and `portals/mcs/css/mcs-responsive.css` so the rail aligns to stage blocks on desktop and stacks beneath on mobile.
 - Switched the PFD top navigator in `portals/product-development/npi/js/npi-pfd.js` from per-step nodes to per-section nodes so large flows can be navigated by section header with step count/range context.
 - Reduced NPI PFD flowchart preview scale by tightening Mermaid spacing and constraining the preview canvas in `apqp-pfd.css` so large diagrams render in a compact, scrollable viewport.
 - Added adaptive compact mode for NPI PFD flowcharts in `npi-pfd.js` + `apqp-pfd.css`: auto-zoom by step count, LR direction for larger graphs, tighter Mermaid spacing/font sizing, and zoom-wrapped SVG rendering to keep 100+ step flows usable.
@@ -806,3 +823,75 @@
 |------|--------|---------|---------|--------|
 | 19:12 | Created supabase/pfmea_mcs_linking.sql | — | ~278 |
 | 19:19 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~196 |
+| 20:02 | Edited core/js/state.js | 2→3 lines | ~48 |
+| 20:04 | Edited portals/mcs/js/mcs-main.js | expanded (+11 lines) | ~209 |
+| 20:04 | Edited portals/mcs/js/mcs-main.js | 3→4 lines | ~86 |
+| 20:04 | Edited CHANGELOG.md | 4→6 lines | ~66 |
+| 20:04 | Session end: 6 writes across 5 files (pfmea_mcs_linking.sql, pfmea.js, state.js, mcs-main.js, CHANGELOG.md) | 9 reads | ~46018 tok |
+
+## Session: 2026-03-22 20:13
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 20:17 | Edited plans/pfMEA-improvements-plan.md | modified field() | ~79 |
+| 20:17 | Edited plans/pfMEA-improvements-plan.md | modified delegation() | ~160 |
+| 20:17 | Edited plans/pfMEA-improvements-plan.md | modified column() | ~121 |
+| 20:18 | Edited plans/pfMEA-improvements-plan.md | modified object() | ~79 |
+| 20:18 | Edited plans/pfMEA-improvements-plan.md | modified delegation() | ~172 |
+| 20:18 | Edited plans/pfMEA-improvements-plan.md | 7→7 lines | ~157 |
+| 20:18 | Edited plans/pfMEA-improvements-plan.md | 32→31 lines | ~309 |
+| 20:18 | Edited plans/pfMEA-improvements-plan.md | 20→17 lines | ~187 |
+| 20:19 | Edited plans/pfMEA-improvements-plan.md | modified pfmeaInit() | ~454 |
+| 20:19 | Edited plans/pfMEA-improvements-plan.md | modified js() | ~71 |
+| 20:19 | Edited plans/pfMEA-improvements-plan.md | 4→3 lines | ~59 |
+| 20:19 | Edited plans/pfMEA-improvements-plan.md | modified js() | ~145 |
+| 20:19 | Edited plans/pfMEA-improvements-plan.md | 4→3 lines | ~55 |
+| 20:20 | Session end: 13 writes across 1 files (pfMEA-improvements-plan.md) | 2 reads | ~2193 tok |
+
+## Session: 2026-03-22 20:30
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 20:36 | Edited portals/product-development/npi/js/npi-data-relational.js | 6→7 lines | ~64 |
+| 20:36 | Edited portals/product-development/npi/js/npi-data-relational.js | 8→9 lines | ~79 |
+| 20:36 | Edited portals/product-development/npi/js/npi-constants.js | expanded (+8 lines) | ~150 |
+| 20:42 | Edited portals/product-development/npi/js/pfmea.js | added error handling | ~1912 |
+| 20:44 | Edited index.html | expanded (+14 lines) | ~155 |
+| 20:44 | Edited portals/product-development/npi/js/npi-events.js | 1→2 lines | ~17 |
+| 20:45 | Edited portals/product-development/npi/js/npi-events.js | 4→7 lines | ~202 |
+| 20:45 | Edited portals/product-development/npi/js/npi-events.js | 5→9 lines | ~356 |
+| 20:45 | Edited portals/product-development/npi/js/npi-events.js | modified switch() | ~68 |
+| 20:46 | Edited portals/product-development/npi/css/pfmea.css | modified media() | ~1012 |
+| 20:46 | Edited portals/product-development/npi/css/pfmea.css | modified media() | ~94 |
+| 20:47 | Edited CHANGELOG.md | 1→3 lines | ~120 |
+| 20:48 | Session end: 12 writes across 7 files (npi-data-relational.js, npi-constants.js, pfmea.js, index.html, npi-events.js) | 11 reads | ~30910 tok |
+
+## Session: 2026-03-22 20:58
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:01 | Edited portals/product-development/npi/js/npi-events.js | added 1 condition(s) | ~103 |
+| 21:01 | Edited portals/product-development/npi/js/npi-constants.js | 5→5 lines | ~82 |
+| 21:01 | Edited portals/product-development/npi/js/pfmea.js | 4→4 lines | ~100 |
+| 21:02 | Edited portals/product-development/npi/js/pfmea.js | 4→4 lines | ~104 |
+| 21:02 | Edited portals/product-development/npi/js/pfmea.js | 2→3 lines | ~128 |
+| 21:02 | Edited portals/product-development/npi/css/pfmea.css | expanded (+9 lines) | ~132 |
+| 21:03 | Edited utils/js/guide.js | expanded (+19 lines) | ~696 |
+| 21:03 | Edited CHANGELOG.md | 1→3 lines | ~126 |
+| 21:03 | Session end: 8 writes across 6 files (npi-events.js, npi-constants.js, pfmea.js, pfmea.css, guide.js) | 8 reads | ~34608 tok |
+| 21:14 | Edited portals/product-development/npi/js/pfmea.js | 4→4 lines | ~94 |
+| 21:15 | Session end: 9 writes across 6 files (npi-events.js, npi-constants.js, pfmea.js, pfmea.css, guide.js) | 8 reads | ~34748 tok |
+
+## Session: 2026-03-22 21:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:21 | Edited portals/product-development/npi/js/pfmea.js | "width:44px" → "width:60px" | ~12 |
+| 21:21 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~28 |
+| 21:21 | Edited CHANGELOG.md | 4→6 lines | ~104 |
+| 21:21 | Session end: 3 writes across 2 files (pfmea.js, CHANGELOG.md) | 3 reads | ~30298 tok |
+
+## Session: 2026-03-22 21:33
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

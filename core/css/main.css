@@ -115,7 +115,7 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --ink:#e6eef5; --ink2:#d0dce8; --mid:#a6b8c9; --muted:#8296aa;
+  --ink:#e6eef5; --ink2:#d0dce8; --mid:#a6b8c9; --muted:#96abbe;
   --line:#2a3b4a; --line2:#3a4d5f; --bg:#0c141c; --white:#13202c;
   --bg-soft:#101a24; --surface:#162432;
   --body-glow-primary: rgba(90, 165, 255, 0.18);
@@ -221,7 +221,7 @@
 
 :root[data-theme="terminal"] {
   color-scheme: dark;
-  --ink:#00ff41; --ink2:#00dd38; --mid:#00aa2b; --muted:#006618;
+  --ink:#00ff41; --ink2:#00dd38; --mid:#00aa2b; --muted:#39c95a;
   --line:#002209; --line2:#003311; --bg:#000000; --white:#0a0f0a;
   --bg-soft:#050d05; --surface:#0a0f0a;
   --body-glow-primary: rgba(0, 255, 65, 0.10);

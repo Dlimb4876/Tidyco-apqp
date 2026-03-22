@@ -406,6 +406,174 @@ td.pfmea-cause-text { border-left: 2px solid #94a3b8 !important; }
   min-height: var(--table-input-min-h);
 }
 
+/* ── Feature 4: Column view toggles (Compact / Standard / Full) ───────────── */
+.pf-col-view-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.pf-col-btn {
+  border: none;
+  background: transparent;
+  color: var(--mid);
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.pf-col-btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink);
+}
+
+.pf-col-btn.active {
+  background: var(--surface);
+  color: var(--blue-dark);
+  box-shadow: 0 2px 8px rgba(15, 34, 53, .08);
+}
+
+/* ── Feature 2: Special characteristics ───────────────────────────────────── */
+.pf-sc-select {
+  display: block;
+  margin-top: 4px;
+  width: 100%;
+  height: 26px;
+  font-size: 13px;
+  text-align: center;
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  background: var(--bg-soft);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pf-sc-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pf-sc-safety   { background: var(--red-pale);   color: var(--red);   border: 1px solid var(--red); }
+.pf-sc-critical { background: var(--amber-pale);  color: var(--amber); border: 1px solid var(--amber); }
+.pf-sc-major    { background: var(--blue-pale);   color: var(--blue);  border: 1px solid var(--blue); }
+
+.pf-sc-legend {
+  width: 100%;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+}
+
+/* ── Feature 3: Validation warning badges ─────────────────────────────────── */
+.pf-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  margin: 2px auto 0;
+  animation: pf-pulse 2s ease-in-out infinite;
+}
+
+.pf-warning-critical {
+  background: var(--red-pale);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+
+.pf-warning-warning {
+  background: var(--amber-pale);
+  color: var(--amber);
+  border: 1px solid var(--amber);
+}
+
+@keyframes pf-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* Warnings modal list */
+.pf-warning-list {
+  list-style: none;
+  padding: 12px 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.pf-warning-item {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-left: 4px solid;
+  font-size: 13px;
+}
+
+.pf-warning-item-critical {
+  background: var(--red-pale);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.pf-warning-item-warning {
+  background: var(--amber-pale);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* Toolbar summary badge (red) */
+.pf-warn-summary {
+  background: var(--red-pale) !important;
+  color: var(--red) !important;
+  border: 1px solid var(--red) !important;
+}
+
+/* ── Feature 5: Extra filter controls ─────────────────────────────────────── */
+.pf-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.pf-text-search {
+  padding: 4px 8px;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  min-height: 30px;
+}
+
+.pf-text-search:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(11, 95, 167, 0.15);
+}
+
 /* ── Responsive Design ──────────────────────────────────────── */
 @media (max-width: 767px) {
   .pfmea-filter-wrap {
@@ -480,5 +648,26 @@ td.pfmea-cause-text { border-left: 2px solid #94a3b8 !important; }
 
   .cell-edit[data-autoresize] {
     min-height: 28px;
+  }
+
+  .pf-col-view-tabs {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .pf-col-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .pf-text-search {
+    flex: 1;
+    min-width: 100px;
+  }
+}
+
+@media (min-width: 768px) {
+  .pf-text-search {
+    min-width: 140px;
   }
 }

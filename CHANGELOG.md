@@ -3,6 +3,46 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | Fix Settings Product Families/Work Areas placeholder contrast in terminal theme | Inline add/edit row placeholders were too dim against dark table backgrounds, making field guidance hard to read
+
+## 2026-03-22 | Boost Gate Trajectory contrast in terminal theme | Follow-up APQP Mission Control fix to make trajectory helper text, inactive gate circles, and connector lines clearly visible in terminal mode
+
+## 2026-03-22 | Fix APQP Mission Control text readability in terminal theme | Mission Control dashboard used light-theme hardcoded text colors without terminal overrides, causing title and KPI numerals to render as unreadable dark blue
+
+## 2026-03-22 | Remove Hub favourites scrollbar and tighten favourites cap | Limit hub favourites to four pages and four products so the favourites panel stays compact without an internal scrollbar
+
+## 2026-03-22 | Improve terminal/dark dashboard text contrast | Secondary dashboard text used muted theme color that was too dim, making project dashboard labels hard to read in terminal (and low contrast in dark)
+
+## 2026-03-22 | Hub Phase 1 compact landing layout | Reduce laptop scrolling by compressing hub desktop spacing, shortening cards, capping favourites panel height with internal scroll, and using a denser wide-screen grid
+
+## 2026-03-22 | Fix PFMEA SC dropdown persistence and display | special_char column was missing from npi_pfmea_effects (data lost on refresh); SEV column widened from 44px to 60px so emoji fits in the select without clipping
+
+## 2026-03-22 | Fix favourites shortcuts for sub-hub cards | Capacity ME / NPI favourites were setting sub-tabs without switching section first, so shortcuts appeared unresponsive from Hub
+
+## 2026-03-22 | Fix PFMEA/PFD guide buttons and add emoji Special Characteristic reference | Guide buttons were broken (missing show-guide handler in npi-events); SC symbols changed from ∇△◇ to 🦺❗⚠️ with inline legend and guide section
+
+## 2026-03-22 | Add favourite stars to Capacity/Product Development/Production hub cards | Ensure all hub-style cards can be starred, not just the main portal hub, and allow quick-open from favourites panel into specific sub-hub tabs
+
+## 2026-03-22 | Add local favourites for portal pages and NPI products | Give users quick one-click access by starring key hub pages and NPI product cards, persisted per user in browser local storage without database changes
+
+## 2026-03-22 | PFMEA improvements — AIAG-VDA compliance & UX | Add Function field (AIAG-VDA Step 3), special characteristics (∇△◇), real-time validation warnings, collapsible column views (Compact/Standard/Full), and advanced filtering (owner, overdue, special char, text search)
+
+## 2026-03-22 | MCS card change-type label clarified | Main MCS cards now show `Change Type: <type>` instead of only the raw type value for clearer at-a-glance context
+
+## 2026-03-22 | Add 1-5 key navigation for hub pages | Improve keyboard-first navigation across main hub, Capacity hub, Product Development hub, and Production hub with matching shortcut help text
+
+## 2026-03-22 | Separate Stage 1 impact estimate for approvals | Added a dedicated Impact Assessment estimate field in Stage 1 that is independent from Stage 3 implementation time impact so approvers can evaluate early impact context
+
+## 2026-03-22 | MCS status moved to modal top bar | Treat status as global change state by displaying it in the header and removing duplicate Stage 1 status content
+
+## 2026-03-22 | MCS accordion stages, clearer heading colors, and Stage 1 impact merge | Make stage navigation clearer by enforcing one-open-at-a-time accordion behavior, improving stage heading visual distinction, and consolidating impact capture into Stage 1 with new freeform context fields
+
+## 2026-03-22 | MCS modal width, collapsible stage cards, and fixed title banner | Improve staged-form readability by widening the modal, reducing stage vertical sprawl with collapsible bordered sections, and keeping the header visible while scrolling modal content
+
+## 2026-03-22 | MCS product filter | Allow filtering the change register by product
+
+## 2026-03-22 | Stage-based engineering change form with right-side workflow chart | Reworked MCS Create/Edit/View modals into visual stage blocks and aligned a vertical workflow rail to improve flow clarity and data capture context
+
 ## 2026-03-22 | Rename Manufacturing Change System to Manufacturing Change | Updated all references to the MCS portal across documentation, labels, and code comments for clearer naming
 
 ## 2026-03-22 | Fix capacity hub cards not appearing clickable | Added cursor: pointer to .hub-card CSS and created comprehensive tests to prevent regression on interactive hub cards

@@ -340,10 +340,12 @@
 .mcs-modal {
   background: var(--surface);
   border: 1px solid var(--border);
-  width: 900px;
+  width: 1140px;
   max-width: 95vw;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border-radius: 12px;
   animation: slidein 0.2s cubic-bezier(0.2, 0, 0, 1);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
@@ -355,6 +357,10 @@
   gap: 16px;
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--surface);
 }
 
 .mcs-modal-ref-badge {
@@ -411,6 +417,337 @@
 
 .mcs-modal-body {
   padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.mcs-staged-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 18px;
+  align-items: start;
+}
+
+.mcs-stage-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mcs-stage-block {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--border2);
+  border-radius: 10px;
+  padding: 0;
+}
+
+.mcs-stage-block[data-stage='open'] {
+  border-left-color: var(--blue);
+}
+
+.mcs-stage-block[data-stage='approval1'] {
+  border-left-color: var(--orange);
+}
+
+.mcs-stage-block[data-stage='implement'] {
+  border-left-color: var(--green);
+}
+
+.mcs-stage-block[data-stage='approval2'] {
+  border-left-color: var(--red);
+}
+
+.mcs-stage-block:focus-within {
+  border-color: var(--blue);
+}
+
+.mcs-stage-toggle {
+  width: 100%;
+  border: 0;
+  background: var(--surface2);
+  color: inherit;
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.mcs-stage-toggle:hover {
+  background: var(--surface3);
+}
+
+.mcs-stage-toggle:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+  border-radius: 10px 10px 0 0;
+}
+
+.mcs-stage-toggle-text {
+  min-width: 0;
+}
+
+.mcs-stage-chevron {
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1;
+  margin-top: 2px;
+  transition: transform 0.15s ease;
+}
+
+.mcs-stage-content {
+  padding: 0 14px 14px;
+}
+
+.mcs-stage-block.is-collapsed .mcs-stage-content {
+  display: none;
+}
+
+.mcs-stage-block.is-collapsed .mcs-stage-chevron {
+  transform: rotate(-90deg);
+}
+
+.mcs-stage-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text2);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mcs-stage-title::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border2);
+}
+
+.mcs-stage-subtitle {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.mcs-stage-block[data-stage='open'] .mcs-stage-title,
+.mcs-stage-block[data-stage='open'] .mcs-stage-chevron {
+  color: var(--blue);
+}
+
+.mcs-stage-block[data-stage='open'] .mcs-stage-title::before {
+  background: var(--blue);
+}
+
+.mcs-stage-block[data-stage='approval1'] .mcs-stage-title,
+.mcs-stage-block[data-stage='approval1'] .mcs-stage-chevron {
+  color: var(--orange);
+}
+
+.mcs-stage-block[data-stage='approval1'] .mcs-stage-title::before {
+  background: var(--orange);
+}
+
+.mcs-stage-block[data-stage='implement'] .mcs-stage-title,
+.mcs-stage-block[data-stage='implement'] .mcs-stage-chevron {
+  color: var(--green);
+}
+
+.mcs-stage-block[data-stage='implement'] .mcs-stage-title::before {
+  background: var(--green);
+}
+
+.mcs-stage-block[data-stage='approval2'] .mcs-stage-title,
+.mcs-stage-block[data-stage='approval2'] .mcs-stage-chevron {
+  color: var(--red);
+}
+
+.mcs-stage-block[data-stage='approval2'] .mcs-stage-title::before {
+  background: var(--red);
+}
+
+.mcs-stage-note {
+  font-size: 12px;
+  color: var(--text3);
+  padding: 10px 12px;
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.mcs-stage-readonly {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+  background: var(--surface);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.mcs-stage-readonly-inline {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.mcs-impact-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mcs-flow-rail.mcs-approval-chain {
+  display: block;
+  margin: 0;
+  padding: 14px 12px;
+  position: sticky;
+  top: 0;
+}
+
+.mcs-flow-rail-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+}
+
+.mcs-flow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.mcs-flow-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  column-gap: 10px;
+  padding: 0 0 14px;
+}
+
+.mcs-flow-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--border2);
+}
+
+.mcs-flow-step.done:not(:last-child)::after {
+  background: var(--green);
+}
+
+.mcs-flow-step.current:not(:last-child)::after {
+  background: linear-gradient(180deg, var(--orange), var(--border2));
+}
+
+.mcs-flow-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: var(--surface);
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.mcs-flow-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mcs-flow-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.mcs-flow-role,
+.mcs-flow-meta,
+.mcs-flow-note {
+  font-size: 10px;
+  color: var(--text3);
+  line-height: 1.3;
+}
+
+.mcs-flow-state {
+  display: inline-flex;
+  width: fit-content;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  background: var(--surface);
+}
+
+.mcs-flow-step.done .mcs-flow-dot {
+  border-color: var(--green);
+  background: var(--green-dim, #dcfce7);
+  color: var(--green);
+}
+
+.mcs-flow-step.done .mcs-flow-name,
+.mcs-flow-step.done .mcs-flow-state {
+  color: var(--green);
+}
+
+.mcs-flow-step.done .mcs-flow-state {
+  border-color: rgba(22, 163, 74, 0.35);
+  background: var(--green-dim, #dcfce7);
+}
+
+.mcs-flow-step.current .mcs-flow-dot {
+  border-color: var(--orange);
+  background: var(--orange-dim, #fef3c7);
+  color: var(--orange);
+}
+
+.mcs-flow-step.current .mcs-flow-name,
+.mcs-flow-step.current .mcs-flow-state {
+  color: var(--orange);
+}
+
+.mcs-flow-step.current .mcs-flow-state {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: var(--orange-dim, #fef3c7);
+}
+
+.mcs-flow-step.rejected .mcs-flow-dot {
+  border-color: var(--red);
+  background: var(--red-dim, #fee2e2);
+  color: var(--red);
+}
+
+.mcs-flow-step.rejected .mcs-flow-name,
+.mcs-flow-step.rejected .mcs-flow-state {
+  color: var(--red);
+}
+
+.mcs-flow-step.rejected .mcs-flow-state {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: var(--red-dim, #fee2e2);
 }
 
 .mcs-modal-grid {

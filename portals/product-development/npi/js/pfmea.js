@@ -229,73 +229,99 @@ npi.pfmea.renderPFMEA = function() {
   const sorted = npi.data.sortedPfd(p.pfd).filter(s => npi.data.pfdType.isExecutable(s.type))
   if (sorted.length === 0) return emptyState('⚠️', 'No process steps', 'Add steps in Process Flow first.')
 
-  // NOTE: PFMEA structure migration has been moved to migrateprog() in db.js
-  // and now runs once per load rather than on every render.
-
   const highRPN = p.pfmea.reduce((n, m) => n + (m.effects || []).reduce((en, ef) => en + (ef.causes || []).filter(ca => npi.pfmea.calcCauseRpn(ef.sev, ca.occ, ca.det) >= RPN_HIGH).length, 0), 0)
   const activeFilter = npi.pfmea.getRpnFilter()
   const activeView = npi.pfmea.getView()
   const historyEntries = npi.pfmea.collectHistoryEntries()
+  const vis = npi.pfmea.getColumnView()
+  const xf = npi.pfmea.pfGetExtraFilters()
 
   const byStep = {}; sorted.forEach(s => { byStep[s.id] = [] }); byStep['__none'] = []
   p.pfmea.forEach(r => { const key = (r.pfdId && byStep[r.pfdId] !== undefined) ? r.pfdId : '__none'; byStep[key].push(r) })
 
+  const hasExtraFilters = !!(xf.owner || xf.overdueOnly || xf.specialChar || xf.searchText)
   const visibleSteps = sorted.reduce((acc, step) => {
     const stepModes = byStep[step.id] || []
-    const filteredModes = stepModes.filter(mode => npi.pfmea.modeMatchesFilter(mode, activeFilter))
-    if (activeFilter === 'all' || filteredModes.length > 0) acc.push({ step, modes: activeFilter === 'all' ? stepModes : filteredModes })
+    const filteredModes = stepModes.filter(mode =>
+      npi.pfmea.modeMatchesFilter(mode, activeFilter) &&
+      npi.pfmea.pfModeMatchesExtraFilters(mode, xf)
+    )
+    const noFilters = activeFilter === 'all' && !hasExtraFilters
+    if (noFilters || filteredModes.length > 0) acc.push({ step, modes: noFilters ? stepModes : filteredModes })
     return acc
   }, [])
 
   const totalModeCount = p.pfmea.length
   const visibleModeCount = visibleSteps.reduce((sum, block) => sum + block.modes.length, 0)
 
-  let html = `<div class="pfmea-wrap" style="-webkit-overflow-scrolling:touch"><table class="tbl tbl--compact pfmea-tbl" style="table-layout:fixed;min-width:1808px;width:100%">
-  <colgroup>
+  // Compute total validation warnings for toolbar badge
+  let totalWarnings = 0
+  p.pfmea.forEach(mode => (mode.effects || []).forEach(ef => (ef.causes || []).forEach(ca => {
+    totalWarnings += npi.pfmea.pfValidateCause(ca, ef).length
+  })))
+
+  // Column geometry
+  const spanAll = npi.pfmea.pfColCount(vis)
+  const spanNoEffects = spanAll - (vis.function ? 2 : 1)
+  const spanNoCauses  = spanAll - (vis.function ? 4 : 3)
+  const actionGroupSpan = (vis.action ? 2 : 0) + (vis.owner ? 1 : 0) + (vis.due ? 1 : 0) +
+    (vis.newOcc ? 1 : 0) + (vis.newDet ? 1 : 0) + (vis.forecast ? 1 : 0) + (vis.implement ? 1 : 0)
+
+  // Build colgroup
+  const colgroup = `<colgroup>
+    ${vis.function  ? '<col style="width:200px"><!-- function -->' : ''}
     <col style="width:180px"><!-- failure mode -->
     <col style="width:180px"><!-- effect -->
-    <col style="width:44px"> <!-- SEV -->
+    <col style="width:60px"> <!-- SEV -->
     <col style="width:180px"><!-- cause -->
     <col style="width:44px"> <!-- OCC -->
-    <col style="width:180px"><!-- prevent -->
-    <col style="width:180px"><!-- detect -->
+    ${vis.prevent   ? '<col style="width:180px"><!-- prevent -->' : ''}
+    ${vis.detect    ? '<col style="width:180px"><!-- detect -->'  : ''}
     <col style="width:44px"> <!-- DET -->
     <col style="width:60px"> <!-- RPN -->
-    <col style="width:150px"><!-- recommended action -->
-    <col style="width:150px"><!-- action taken -->
-    <col style="width:80px"> <!-- owner -->
-    <col style="width:100px"><!-- due -->
-    <col style="width:44px"> <!-- new OCC -->
-    <col style="width:44px"> <!-- new DET -->
-    <col style="width:60px"> <!-- forecast -->
-    <col style="width:60px"> <!-- implement -->
+    ${vis.action    ? '<col style="width:150px"><!-- action desc -->' : ''}
+    ${vis.action    ? '<col style="width:150px"><!-- action taken -->' : ''}
+    ${vis.owner     ? '<col style="width:80px"> <!-- owner -->'   : ''}
+    ${vis.due       ? '<col style="width:100px"><!-- due -->'     : ''}
+    ${vis.newOcc    ? '<col style="width:44px"> <!-- new OCC -->' : ''}
+    ${vis.newDet    ? '<col style="width:44px"> <!-- new DET -->' : ''}
+    ${vis.forecast  ? '<col style="width:60px"> <!-- forecast -->' : ''}
+    ${vis.implement ? '<col style="width:60px"> <!-- implement -->' : ''}
     <col style="width:28px"> <!-- del -->
-  </colgroup>
-  <thead>
-    <tr>
-      <th rowspan="2">Failure Mode</th>
-      <th rowspan="2">Effect</th>
-      <th rowspan="2" title="Severity of effect">SEV</th>
-      <th rowspan="2">Cause</th>
-      <th rowspan="2" title="Occurrence of cause">OCC</th>
-      <th rowspan="2">Controls — Prevent</th>
-      <th rowspan="2">Controls — Detect</th>
-      <th rowspan="2" title="Detection rating">DET</th>
-      <th rowspan="2">RPN</th>
-      <th colspan="8" style="background:var(--blue-pale);color:var(--blue);letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>
-      <th rowspan="2"></th>
-    </tr>
-    <tr>
-      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Recommended<br>Action</th>
-      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Action<br>Taken</th>
-      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Owner</th>
-      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Due</th>
-      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">New<br>OCC</th>
-      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">New<br>DET</th>
-      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Forecast<br>RPN</th>
-      <th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Implement</th>
-    </tr>
-  </thead>
+  </colgroup>`
+
+  // Build header
+  let thead = `<thead><tr>
+    ${vis.function ? '<th rowspan="2">Function</th>' : ''}
+    <th rowspan="2">Failure Mode</th>
+    <th rowspan="2">Effect</th>
+    <th rowspan="2" title="Severity of effect">SEV</th>
+    <th rowspan="2">Cause</th>
+    <th rowspan="2" title="Occurrence of cause">OCC</th>
+    ${vis.prevent   ? '<th rowspan="2">Controls — Prevent</th>' : ''}
+    ${vis.detect    ? '<th rowspan="2">Controls — Detect</th>'  : ''}
+    <th rowspan="2" title="Detection rating">DET</th>
+    <th rowspan="2">RPN</th>
+    ${actionGroupSpan > 0 ? `<th colspan="${actionGroupSpan}" style="background:var(--blue-pale);color:var(--blue);letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>` : ''}
+    <th rowspan="${actionGroupSpan > 0 ? 2 : 1}"></th>
+  </tr>`
+  if (actionGroupSpan > 0) {
+    thead += `<tr>
+      ${vis.action    ? `<th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Recommended<br>Action</th>` : ''}
+      ${vis.action    ? `<th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Action<br>Taken</th>` : ''}
+      ${vis.owner     ? `<th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Owner</th>` : ''}
+      ${vis.due       ? `<th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Due</th>` : ''}
+      ${vis.newOcc    ? `<th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">New<br>OCC</th>` : ''}
+      ${vis.newDet    ? `<th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">New<br>DET</th>` : ''}
+      ${vis.forecast  ? `<th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Forecast<br>RPN</th>` : ''}
+      ${vis.implement ? `<th style="background:var(--blue-pale);color:var(--blue);white-space:normal;line-height:1.3;padding:3px 4px">Implement</th>` : ''}
+    </tr>`
+  }
+  thead += '</thead>'
+
+  let html = `<div class="pfmea-wrap" style="-webkit-overflow-scrolling:touch"><table class="tbl tbl--compact pfmea-tbl" style="table-layout:fixed;min-width:${npi.pfmea.pfColMinWidth(vis)}px;width:100%">
+  ${colgroup}
+  ${thead}
   <tbody>`
 
   visibleSteps.forEach(block => {
@@ -306,10 +332,10 @@ npi.pfmea.renderPFMEA = function() {
       return ci >= 0 ? `<span class="tag tag-ctq" style="font-size:9px">C${ci + 1}</span>` : ''
     }).join(' ')
 
-    html += `<tr><td colspan="18" style="padding:0;border-top:3px solid var(--gray-500)"><div class="pfmea-step-header"><span class="pfmea-step-label">Step ${s.stepNum} — ${esc(s.op || '(unnamed)')}</span><div class="pfmea-step-ctqs">${ctqBadges}</div></div></td></tr>`
+    html += `<tr><td colspan="${spanAll}" style="padding:0;border-top:3px solid var(--gray-500)"><div class="pfmea-step-header"><span class="pfmea-step-label">Step ${s.stepNum} — ${esc(s.op || '(unnamed)')}</span><div class="pfmea-step-ctqs">${ctqBadges}</div></div></td></tr>`
 
-    if (modes.length === 0 && activeFilter === 'all') {
-      html += `<tr class="pfmea-row-sub"><td colspan="17" style="padding:8px 14px;color:var(--muted);font-size:12px;font-style:italic">No failure modes yet</td><td></td></tr>`
+    if (modes.length === 0 && !hasExtraFilters && activeFilter === 'all') {
+      html += `<tr class="pfmea-row-sub"><td colspan="${spanAll - 1}" style="padding:8px 14px;color:var(--muted);font-size:12px;font-style:italic">No failure modes yet</td><td></td></tr>`
     }
 
     modes.forEach(mode => {
@@ -322,18 +348,23 @@ npi.pfmea.renderPFMEA = function() {
         const causes = ef.causes || []
         const efRowspan = Math.max(1, causes.length)
         const sev = ef.sev || 1
+        const scKey = ef.specialChar || null
+        const scDef = scKey ? (SPECIAL_CHARS[scKey.toUpperCase()] || null) : null
 
         causes.forEach((ca, ci) => {
           const occ = ca.occ || 1, det = ca.det || 1
           const rpn = sev * occ * det
-          const rpnCls = rpn >= RPN_CRITICAL ? 'rpn-hi' : rpn >= RPN_HIGH ? 'rpn-md' : 'rpn-lo'
           const act = ca.action || {}
           const hist = ca.history || []
           const hasAction = !!(act.newOcc || act.newDet)
           const newOcc = act.newOcc ? +act.newOcc : occ
           const newDet = act.newDet ? +act.newDet : det
           const forecast = sev * newOcc * newDet
-          const fCls = forecast >= RPN_CRITICAL ? 'rpn-hi' : forecast >= RPN_HIGH ? 'rpn-md' : 'rpn-lo'
+
+          const warnings = npi.pfmea.pfValidateCause(ca, ef)
+          const warnBadges = warnings.length > 0
+            ? warnings.map(w => `<span class="pf-warning-badge pf-warning-${w.severity}" title="${esc(w.message)}" data-action="pfmea-show-warnings" data-warnings="${esc(JSON.stringify(warnings))}">⚠</span>`).join('')
+            : ''
 
           const histRows = hist.length > 0 ? hist.map(h => {
             const rpnDown = h.newRpn < h.rpn
@@ -355,8 +386,13 @@ npi.pfmea.renderPFMEA = function() {
 
           let rowHtml = `<tr class="pfmea-row-sub" data-cause-id="${esc(ca.id || '')}">`
 
-          // Mode cell — first effect, first cause only
+          // Function + Mode cell — first effect, first cause only
           if (ei === 0 && ci === 0) {
+            if (vis.function) {
+              rowHtml += `<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top">
+                <textarea class="cell-edit" name="pfmea_fn_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="function" placeholder="Intended function…" style="width:100%">${esc(mode.function || '')}</textarea>
+              </td>`
+            }
             rowHtml += `<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">
@@ -378,6 +414,12 @@ npi.pfmea.renderPFMEA = function() {
             <td rowspan="${efRowspan}" class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_sev_${mi}_${ei}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="effect-sev" data-fallback="${sev}">
+              ${canEdit() ? `<select class="pf-sc-select" data-action="pfmea-special-char" data-mi="${mi}" data-ei="${ei}" title="Special characteristic">
+                <option value="">—</option>
+                <option value="safety"   ${scKey === 'safety'   ? 'selected' : ''}>🦺</option>
+                <option value="critical" ${scKey === 'critical' ? 'selected' : ''}>❗</option>
+                <option value="major"    ${scKey === 'major'    ? 'selected' : ''}>⚠️</option>
+              </select>` : (scDef ? `<span class="pf-sc-badge pf-sc-${scKey}" title="${scDef.label}">${scDef.symbol}</span>` : '')}
             </td>`
           }
 
@@ -389,38 +431,39 @@ npi.pfmea.renderPFMEA = function() {
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_occ_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${occ}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="cause-occ" data-fallback="${occ}">
             </td>
-            <td style="vertical-align:top">
+            ${vis.prevent ? `<td style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_prevent_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="prevent" placeholder="Prevention controls" style="width:100%">${esc(ca.prevent || '')}</textarea>
-            </td>
-            <td style="vertical-align:top">
+            </td>` : ''}
+            ${vis.detect ? `<td style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_detect_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="detect" placeholder="Detection controls" style="width:100%">${esc(ca.detect || '')}</textarea>
-            </td>
+            </td>` : ''}
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_det_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${det}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="cause-det" data-fallback="${det}">
             </td>
             <td class="pfmea-score-cell">
               ${npi.components.rpnBadge(rpn, { id: `rpn_${mi}_${ei}_${ci}` })}
+              ${warnBadges}
               ${hist.length > 0 ? `<button class="rpn-hist-btn" data-action="pfmea-show-hist" data-cause-id="${ca.id}">⏱${hist.length}</button>` : ''}
             </td>
-            <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea>${ca.action_related_ecr_id ? `<div style="margin-top:4px;padding:4px 6px;background:var(--accent-dim);border-radius:3px;border-left:2px solid var(--accent);font-size:10px;font-weight:600;cursor:pointer;text-align:center" onclick="navigate('mcs');">🔗 ${esc(ca.action_related_ecr_id)}</div>` : ''}</td>
-            <td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_taken_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>
-            <td><select class="cell-edit" name="pfmea_action_owner_${mi}_${ei}_${ci}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" style="width:100%">${ownerSelectOptions(act.owner || '')}</select></td>
-            <td><input type="date" class="cell-edit mono" name="pfmea_action_due_${mi}_${ei}_${ci}" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>
-            <td class="pfmea-score-cell">
+            ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea>${ca.action_related_ecr_id ? `<div style="margin-top:4px;padding:4px 6px;background:var(--accent-dim);border-radius:3px;border-left:2px solid var(--accent);font-size:10px;font-weight:600;cursor:pointer;text-align:center" onclick="navigate('mcs');">🔗 ${esc(ca.action_related_ecr_id)}</div>` : ''}</td>` : ''}
+            ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_taken_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>` : ''}
+            ${vis.owner ? `<td><select class="cell-edit" name="pfmea_action_owner_${mi}_${ei}_${ci}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" style="width:100%">${ownerSelectOptions(act.owner || '')}</select></td>` : ''}
+            ${vis.due ? `<td><input type="date" class="cell-edit mono" name="pfmea_action_due_${mi}_${ei}_${ci}" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>` : ''}
+            ${vis.newOcc ? `<td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_action_occ_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newOcc || ''}" placeholder="${occ}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-occ" data-allow-blank="1" data-fallback="" style="background:var(--field-highlight)">
-            </td>
-            <td class="pfmea-score-cell">
+            </td>` : ''}
+            ${vis.newDet ? `<td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_action_det_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newDet || ''}" placeholder="${det}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-det" data-allow-blank="1" data-fallback="" style="background:var(--field-highlight)">
-            </td>
-            <td class="pfmea-score-cell">
+            </td>` : ''}
+            ${vis.forecast ? `<td class="pfmea-score-cell">
               <span id="forecast_wrap_${mi}_${ei}_${ci}" style="display:inline-block;opacity:${hasAction ? '1' : '0'}">${npi.components.rpnBadge(hasAction ? forecast : 0, { id: `forecast_${mi}_${ei}_${ci}`, emptyLabel: '—' })}</span>
-            </td>
-            <td style="text-align:center;vertical-align:top;padding-top:4px">
+            </td>` : ''}
+            ${vis.implement ? `<td style="text-align:center;vertical-align:top;padding-top:4px">
               ${canEdit() ? `<button class="btn btn-sm btn-green" style="font-size:9px;padding:3px 6px;white-space:nowrap" data-action="pfmea-implement" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" title="Apply new OCC/DET and log to history">▶ Apply</button>` : ''}
-            </td>
+            </td>` : ''}
             <td style="text-align:center">${canEdit() ? `<button class="del-btn" data-action="pfmea-del-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}">×</button>` : ''}</td>
           </tr>`
           html += rowHtml
@@ -430,6 +473,11 @@ npi.pfmea.renderPFMEA = function() {
         if (causes.length === 0) {
           let rowHtml = `<tr class="pfmea-row-sub">`
           if (ei === 0) {
+            if (vis.function) {
+              rowHtml += `<td rowspan="1" class="pfmea-mode-cell" style="vertical-align:top">
+                <textarea class="cell-edit" name="pfmea_fn_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="function" placeholder="Intended function…" style="width:100%">${esc(mode.function || '')}</textarea>
+              </td>`
+            }
             rowHtml += `<td rowspan="1" class="pfmea-mode-cell" style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px">
@@ -449,7 +497,7 @@ npi.pfmea.renderPFMEA = function() {
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_sev_${mi}_${ei}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="-1" data-kind="effect-sev" data-fallback="${sev}">
             </td>
-            <td colspan="15" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No causes yet — click ＋ Cause</td>
+            <td colspan="${spanNoCauses}" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No causes yet — click ＋ Cause</td>
           </tr>`
           html += rowHtml
         }
@@ -457,53 +505,89 @@ npi.pfmea.renderPFMEA = function() {
 
       // Mode with no effects
       if (effects.length === 0) {
-        html += `<tr class="pfmea-row-sub">
-          <td class="pfmea-mode-cell" style="vertical-align:top">
+        let noEffHtml = `<tr class="pfmea-row-sub">`
+        if (vis.function) {
+          noEffHtml += `<td class="pfmea-mode-cell" style="vertical-align:top">
+            <textarea class="cell-edit" name="pfmea_fn_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="function" placeholder="Intended function…" style="width:100%">${esc(mode.function || '')}</textarea>
+          </td>`
+        }
+        noEffHtml += `<td class="pfmea-mode-cell" style="vertical-align:top">
             <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
             ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px">
               <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
               <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
             </div>` : ''}
           </td>
-          <td colspan="17" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No effects yet — click ＋ Effect</td>
+          <td colspan="${spanNoEffects}" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No effects yet — click ＋ Effect</td>
         </tr>`
+        html += noEffHtml
       }
     })
 
-    if (canEdit()) html += `<tr><td colspan="18" style="padding:0"><div class="pfmea-add-row" data-action="pfmea-add-mode" data-step-id="${s.id}">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`
+    if (canEdit()) html += `<tr><td colspan="${spanAll}" style="padding:0"><div class="pfmea-add-row" data-action="pfmea-add-mode" data-step-id="${s.id}">＋ Add failure mode for Step ${s.stepNum}</div></td></tr>`
   })
 
   if (visibleSteps.length === 0) {
-    html += `<tr class="pfmea-row-sub"><td colspan="18" style="padding:14px;color:var(--muted);font-size:12px;font-style:italic;text-align:center">No operations match this RPN filter. <a href="#" data-action="pfmea-filter-all" style="color:var(--blue)">Show all</a></td></tr>`
+    html += `<tr class="pfmea-row-sub"><td colspan="${spanAll}" style="padding:14px;color:var(--muted);font-size:12px;font-style:italic;text-align:center">No operations match this filter. <a href="#" data-action="pfmea-filter-all" style="color:var(--blue)">Show all</a></td></tr>`
   }
 
   html += '</tbody></table></div>'
 
   const filterLabel = activeFilter === 'all' ? 'All RPN' :
-    activeFilter === 'high' ? `High RPN (>=${RPN_HIGH})` :
+    activeFilter === 'high' ? `High RPN (≥${RPN_HIGH})` :
     activeFilter === 'r1_49' ? 'RPN 1-49' :
     activeFilter === 'r50_99' ? 'RPN 50-99' :
     activeFilter === 'r100_199' ? 'RPN 100-199' : 'RPN 200+'
 
-  const viewTabs = `<div class="pfmea-toolbar"><div class="pfmea-view-tabs">
-    <button class="pfmea-view-btn ${activeView === 'worksheet' ? 'active' : ''}" data-action="pfmea-set-view" data-view="worksheet">Worksheet</button>
-    <button class="pfmea-view-btn ${activeView === 'history' ? 'active' : ''}" data-action="pfmea-set-view" data-view="history">History${historyEntries.length ? ` <span class="pfmea-view-count">${historyEntries.length}</span>` : ''}</button>
-  </div>${activeView === 'worksheet'
-    ? `<div class="pfmea-filter-wrap">
-      <label class="pfmea-filter-label">RPN Filter
-        <select class="pfmea-filter-select" name="pfmea_filter" data-action="pfmea-filter">
-          <option value="all"${activeFilter === 'all' ? ' selected' : ''}>All</option>
-          <option value="high"${activeFilter === 'high' ? ' selected' : ''}>High only (>=${RPN_HIGH})</option>
-          <option value="r1_49"${activeFilter === 'r1_49' ? ' selected' : ''}>1-49</option>
-          <option value="r50_99"${activeFilter === 'r50_99' ? ' selected' : ''}>50-99</option>
-          <option value="r100_199"${activeFilter === 'r100_199' ? ' selected' : ''}>100-199</option>
-          <option value="r200_plus"${activeFilter === 'r200_plus' ? ' selected' : ''}>200+</option>
-        </select>
-      </label>
-      <span class="tag" style="align-self:center">${filterLabel}: ${visibleModeCount}/${totalModeCount} operations</span>
-      ${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high RPN ≥${RPN_HIGH}</span>` : ''}
-    </div>`
-    : `<div class="pfmea-history-summary"><span class="tag" style="align-self:center">${historyEntries.length} logged change${historyEntries.length === 1 ? '' : 's'}</span></div>`}
+  const uniqueOwners = npi.pfmea.pfGetUniqueOwners(p)
+
+  const viewTabs = `<div class="pfmea-toolbar">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="pfmea-view-tabs">
+        <button class="pfmea-view-btn ${activeView === 'worksheet' ? 'active' : ''}" data-action="pfmea-set-view" data-view="worksheet">Worksheet</button>
+        <button class="pfmea-view-btn ${activeView === 'history' ? 'active' : ''}" data-action="pfmea-set-view" data-view="history">History${historyEntries.length ? ` <span class="pfmea-view-count">${historyEntries.length}</span>` : ''}</button>
+      </div>
+      ${activeView === 'worksheet' ? `<div class="pf-col-view-tabs">
+        <button class="pf-col-btn ${vis.name === 'compact'  ? 'active' : ''}" data-action="pfmea-set-col-view" data-col-view="compact"  title="Core columns only">Compact</button>
+        <button class="pf-col-btn ${vis.name === 'standard' ? 'active' : ''}" data-action="pfmea-set-col-view" data-col-view="standard" title="Standard PFMEA view">Standard</button>
+        <button class="pf-col-btn ${vis.name === 'full'     ? 'active' : ''}" data-action="pfmea-set-col-view" data-col-view="full"     title="All columns">Full</button>
+      </div>` : ''}
+    </div>
+    ${activeView === 'worksheet'
+      ? `<div class="pfmea-filter-wrap">
+        <label class="pfmea-filter-label">RPN
+          <select class="pfmea-filter-select" name="pfmea_filter" data-action="pfmea-filter">
+            <option value="all"${activeFilter === 'all' ? ' selected' : ''}>All</option>
+            <option value="high"${activeFilter === 'high' ? ' selected' : ''}>High only (≥${RPN_HIGH})</option>
+            <option value="r1_49"${activeFilter === 'r1_49' ? ' selected' : ''}>1-49</option>
+            <option value="r50_99"${activeFilter === 'r50_99' ? ' selected' : ''}>50-99</option>
+            <option value="r100_199"${activeFilter === 'r100_199' ? ' selected' : ''}>100-199</option>
+            <option value="r200_plus"${activeFilter === 'r200_plus' ? ' selected' : ''}>200+</option>
+          </select>
+        </label>
+        ${uniqueOwners.length > 0 ? `<label class="pfmea-filter-label">Owner
+          <select class="pfmea-filter-select" data-action="pfmea-owner-filter">
+            <option value="">All</option>
+            ${uniqueOwners.map(o => `<option value="${esc(o)}"${xf.owner === o ? ' selected' : ''}>${esc(emailToDisplayName(o))}</option>`).join('')}
+          </select>
+        </label>` : ''}
+        <label class="pfmea-filter-label pf-checkbox-label"><input type="checkbox" data-action="pfmea-overdue-filter" ${xf.overdueOnly ? 'checked' : ''}> Overdue</label>
+        <label class="pfmea-filter-label">SC
+          <select class="pfmea-filter-select" data-action="pfmea-sc-filter">
+            <option value="">All</option>
+            <option value="safety"   ${xf.specialChar === 'safety'   ? 'selected' : ''}>🦺 Safety</option>
+            <option value="critical" ${xf.specialChar === 'critical' ? 'selected' : ''}>❗ Critical</option>
+            <option value="major"    ${xf.specialChar === 'major'    ? 'selected' : ''}>⚠️ Major</option>
+          </select>
+        </label>
+        <input type="text" class="pfmea-filter-select pf-text-search" data-action="pfmea-text-search" placeholder="Search…" value="${esc(xf.searchText)}" style="min-width:120px">
+        ${hasExtraFilters ? `<button class="btn btn-ghost btn-sm" data-action="pfmea-clear-extra-filters">✕ Clear</button>` : ''}
+        <span class="tag" style="align-self:center">${filterLabel}: ${visibleModeCount}/${totalModeCount}</span>
+        ${highRPN > 0 ? `<span class="tag tag-amber" style="align-self:center">⚠ ${highRPN} high ≥${RPN_HIGH}</span>` : ''}
+        ${totalWarnings > 0 ? `<span class="tag tag-red pf-warn-summary" style="align-self:center;cursor:pointer" title="Click any ⚠ badge in the table for details">⚠ ${totalWarnings} warning${totalWarnings > 1 ? 's' : ''}</span>` : ''}
+        <div class="pf-sc-legend">SC: 🦺 Safety — safety or regulatory impact &nbsp;·&nbsp; ❗ Critical — non-conformance reaches customer &nbsp;·&nbsp; ⚠️ Major — significant quality impact</div>
+      </div>`
+      : `<div class="pfmea-history-summary"><span class="tag" style="align-self:center">${historyEntries.length} logged change${historyEntries.length === 1 ? '' : 's'}</span></div>`}
   </div>`
 
   if (activeView === 'history') {
@@ -690,4 +774,166 @@ npi.pfmea.pfLiveForecast = function(mi, ei, ci) {
     el.className = 'rpn ' + (hasAction ? npi.pfmea.pfRpnClass(forecast) : 'rpn-lo')
   }
   if (wrap) wrap.style.opacity = hasAction ? '1' : '0'
+}
+
+// ── Feature 4: Column view (Compact / Standard / Full) ────────────────────────
+const PFMEA_COLUMN_VIEWS = ['compact', 'standard', 'full']
+const COLUMN_VISIBILITY = {
+  compact:  { name: 'compact',  function: false, prevent: false, detect: false, action: false, owner: false, due: false, newOcc: false, newDet: false, forecast: false, implement: false },
+  standard: { name: 'standard', function: true,  prevent: true,  detect: true,  action: true,  owner: false, due: false, newOcc: false, newDet: false, forecast: false, implement: true  },
+  full:     { name: 'full',     function: true,  prevent: true,  detect: true,  action: true,  owner: true,  due: true,  newOcc: true,  newDet: true,  forecast: true,  implement: true  }
+}
+
+npi.pfmea.getColumnView = function() {
+  const cur = (globalThis.pfmeaColumnView || 'standard').toString()
+  return COLUMN_VISIBILITY[PFMEA_COLUMN_VIEWS.includes(cur) ? cur : 'standard']
+}
+
+npi.pfmea.setColumnView = function(v) {
+  globalThis.pfmeaColumnView = PFMEA_COLUMN_VIEWS.includes(v) ? v : 'standard'
+  render()
+}
+
+// Total visible column count (used for colspan calculations)
+npi.pfmea.pfColCount = function(vis) {
+  let cols = 8 // always: mode + effect + sev + cause + occ + det + rpn + del
+  if (vis.function)  cols++
+  if (vis.prevent)   cols++
+  if (vis.detect)    cols++
+  if (vis.action)    cols += 2 // desc + taken
+  if (vis.owner)     cols++
+  if (vis.due)       cols++
+  if (vis.newOcc)    cols++
+  if (vis.newDet)    cols++
+  if (vis.forecast)  cols++
+  if (vis.implement) cols++
+  return cols
+}
+
+// Approximate min-width in px for horizontal scroll container
+npi.pfmea.pfColMinWidth = function(vis) {
+  let w = 776 // base: mode(180)+effect(180)+sev(60)+cause(180)+occ(44)+det(44)+rpn(60)+del(28)
+  if (vis.function)  w += 200
+  if (vis.prevent)   w += 180
+  if (vis.detect)    w += 180
+  if (vis.action)    w += 300 // desc(150)+taken(150)
+  if (vis.owner)     w += 80
+  if (vis.due)       w += 100
+  if (vis.newOcc)    w += 44
+  if (vis.newDet)    w += 44
+  if (vis.forecast)  w += 60
+  if (vis.implement) w += 60
+  return w
+}
+
+// ── Feature 5: Extra filters (owner / overdue / special char / text search) ──
+npi.pfmea.pfGetExtraFilters = function() {
+  return {
+    owner:       globalThis.pfmeaOwnerFilter    || null,
+    overdueOnly: globalThis.pfmeaOverdueFilter  || false,
+    specialChar: globalThis.pfmeaScFilter       || null,
+    searchText:  globalThis.pfmeaSearchFilter   || ''
+  }
+}
+
+npi.pfmea.pfSetExtraFilter = function(key, val) {
+  if (key === 'owner')       globalThis.pfmeaOwnerFilter   = val || null
+  if (key === 'overdueOnly') globalThis.pfmeaOverdueFilter = !!val
+  if (key === 'specialChar') globalThis.pfmeaScFilter      = val || null
+  if (key === 'searchText')  globalThis.pfmeaSearchFilter  = val || ''
+  render()
+}
+
+npi.pfmea.pfClearExtraFilters = function() {
+  globalThis.pfmeaOwnerFilter   = null
+  globalThis.pfmeaOverdueFilter = false
+  globalThis.pfmeaScFilter      = null
+  globalThis.pfmeaSearchFilter  = ''
+  render()
+}
+
+npi.pfmea.pfModeMatchesExtraFilters = function(mode, xf) {
+  const effects = mode.effects || []
+
+  if (xf.owner) {
+    const has = effects.some(ef => (ef.causes || []).some(ca => ca.action && ca.action.owner === xf.owner))
+    if (!has) return false
+  }
+
+  if (xf.overdueOnly) {
+    const now = Date.now()
+    const has = effects.some(ef => (ef.causes || []).some(ca => {
+      const due = ca.action && ca.action.due
+      return due && new Date(due).getTime() < now
+    }))
+    if (!has) return false
+  }
+
+  if (xf.specialChar) {
+    const has = effects.some(ef => ef.specialChar === xf.specialChar)
+    if (!has) return false
+  }
+
+  if (xf.searchText) {
+    const q = xf.searchText.toLowerCase()
+    const matchesText =
+      (mode.function || '').toLowerCase().includes(q) ||
+      (mode.mode || '').toLowerCase().includes(q) ||
+      effects.some(ef =>
+        (ef.effect || '').toLowerCase().includes(q) ||
+        (ef.causes || []).some(ca => (ca.cause || '').toLowerCase().includes(q))
+      )
+    if (!matchesText) return false
+  }
+
+  return true
+}
+
+npi.pfmea.pfGetUniqueOwners = function(p) {
+  const owners = new Set()
+  ;(p.pfmea || []).forEach(mode => (mode.effects || []).forEach(ef => (ef.causes || []).forEach(ca => {
+    if (ca.action && ca.action.owner) owners.add(ca.action.owner)
+  })))
+  return [...owners].sort()
+}
+
+// ── Feature 3: Validation warnings ───────────────────────────────────────────
+npi.pfmea.pfValidateCause = function(ca, ef) {
+  const warnings = []
+  const sev = ef.sev || 1
+  const occ = ca.occ || 1
+  const det = ca.det || 1
+  const rpn = sev * occ * det
+  const act = ca.action || {}
+
+  if (sev >= 9 && !act.desc) {
+    warnings.push({ type: 'high-severity-no-action', message: 'SEV ≥ 9 without a recommended action', severity: 'critical' })
+  }
+  if (rpn >= 200 && !act.desc) {
+    warnings.push({ type: 'critical-rpn-no-plan', message: 'RPN ≥ 200 without an action plan', severity: 'critical' })
+  }
+  if (occ >= 8 && !(ca.prevent || '').trim()) {
+    warnings.push({ type: 'high-occ-no-prevention', message: 'OCC ≥ 8 without prevention controls', severity: 'warning' })
+  }
+  if (act.due && new Date(act.due).getTime() < Date.now()) {
+    warnings.push({ type: 'overdue-action', message: 'Action is overdue', severity: 'warning' })
+  }
+  return warnings
+}
+
+npi.pfmea.pfShowWarnings = function(warningsJson) {
+  let warnings = []
+  try { warnings = JSON.parse(warningsJson) } catch (e) { return }
+  const list = document.getElementById('pfmeaWarningList')
+  if (list) {
+    list.innerHTML = warnings.map(w =>
+      `<li class="pf-warning-item pf-warning-item-${w.severity}">${esc(w.message)}</li>`
+    ).join('')
+  }
+  if (typeof showModal === 'function') showModal('modalPfmeaWarnings')
+}
+
+// ── Feature 2: Special characteristic update ─────────────────────────────────
+npi.pfmea.pfUpdSpecialChar = function(mi, ei, val) {
+  npi.data.pfmea.updEffect(mi, ei, 'specialChar', val || null)
 }

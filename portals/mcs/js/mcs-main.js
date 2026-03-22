@@ -141,6 +141,17 @@ async function renderMcs() {
           </div>
         </div>
 
+        <div class="mcs-filter-section" id="mcs-section-product">
+          <button class="mcs-section-toggle" onclick="mcsToggleSection('product')">
+            <span>Product</span><span class="mcs-toggle-icon" id="mcs-icon-product">▶</span>
+          </button>
+          <div class="mcs-section-body" id="mcs-body-product" style="display:none">
+            <select class="mcs-date-range-select" id="mcs-product-filter" onchange="mcsSetFilter('product', this.value, null)">
+              <option value="all">All Products</option>
+            </select>
+          </div>
+        </div>
+
         <div class="mcs-filter-section" id="mcs-section-quick">
           <button class="mcs-section-toggle" onclick="mcsToggleSection('quick')">
             <span>Quick Filters</span><span class="mcs-toggle-icon" id="mcs-icon-quick">▼</span>
@@ -317,6 +328,11 @@ function mcsGetFiltered() {
       return false;
     }
 
+    // Product filter
+    if (mcsCurrentFilter.product !== 'all' && change.part_drawing_no !== mcsCurrentFilter.product) {
+      return false;
+    }
+
     // Quick filter: My Changes
     if (mcsCurrentFilter.myChanges) {
       const email = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.email : null;
@@ -432,6 +448,17 @@ function mcsUpdateCounts() {
   setEl('mcs-kpi-approval2', counts.final_review);
   setEl('mcs-kpi-overdue', overdueCount);
   setEl('mcs-kpi-week', thisWeekCount);
+
+  // Populate product filter select with unique products from loaded changes
+  const productSelect = document.getElementById('mcs-product-filter');
+  if (productSelect) {
+    const currentProduct = mcsCurrentFilter.product;
+    const products = [...new Set(
+      mcsList.filter(c => c.part_drawing_no).map(c => c.part_drawing_no)
+    )].sort();
+    productSelect.innerHTML = '<option value="all">All Products</option>' +
+      products.map(p => `<option value="${esc(p)}"${currentProduct === p ? ' selected' : ''}>${esc(p)}</option>`).join('');
+  }
 }
 
 /**
@@ -451,6 +478,7 @@ function mcsRenderList() {
   if (filtered.length === 0) {
     const isFiltered = mcsCurrentFilter.status !== 'all' || mcsCurrentFilter.priority !== 'all' ||
       mcsCurrentFilter.type !== 'all' || mcsCurrentFilter.source !== 'all' ||
+      mcsCurrentFilter.product !== 'all' ||
       (document.getElementById('mcs-search-input')?.value?.trim() || '') !== '';
     container.innerHTML = isFiltered
       ? `<div class="mcs-empty-state">
@@ -491,7 +519,7 @@ function mcsRenderList() {
       <div class="mcs-card-title">${esc(change.title)}</div>
       <div class="mcs-card-meta">
         <div class="mcs-card-meta-left">
-          <span class="mcs-tag">${esc(change.change_type)}</span>
+          <span class="mcs-tag">Change Type: ${esc(change.change_type || 'Not set')}</span>
           <span class="mcs-priority-badge mcs-priority-${change.priority}">${change.priority}</span>
         </div>
         <div class="mcs-card-meta-right">
@@ -634,6 +662,7 @@ function mcsClearFilters() {
     priority: 'all',
     type: 'all',
     source: 'all',
+    product: 'all',
     myChanges: false,
     overdueOnly: false,
     highPriority: false,
@@ -651,6 +680,10 @@ function mcsClearFilters() {
   // Reset date range select
   const dateRange = document.getElementById('mcs-date-range');
   if (dateRange) dateRange.value = 'all';
+
+  // Reset product filter select
+  const productFilter = document.getElementById('mcs-product-filter');
+  if (productFilter) productFilter.value = 'all';
 
   // Reset quick filter checkboxes
   ['mcs-qf-mychanges', 'mcs-qf-overdue', 'mcs-qf-highpri'].forEach(id => {

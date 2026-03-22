@@ -34,27 +34,28 @@ function mcsRenderTimelineHtml(events) {
  * can nominate a specific reviewer. The nomination is stored in
  * eng_review_notes as "nominated_approver:<email>" when the change is saved.
  */
-function mcsApproverSelectionHtml(preselectedEmail) {
+function mcsApproverSelectionHtml(preselectedEmail, includeTitle = true) {
   const step1Approvers = (mcsApproverConfig && mcsApproverConfig.approval1) || [];
+  const titleHtml = includeTitle ? '<div class="mcs-section-title">Approval 1 Reviewer</div>' : '';
 
   if (step1Approvers.length === 0) {
     return `
-      <div class="mcs-section-title">Approval 1 Reviewer</div>
+      ${titleHtml}
       <div style="font-size:12px;color:var(--text3);padding:4px 0 8px">
-        No specific approvers configured — any editor can approve.
+        No specific approvers configured - any editor can approve.
         <a href="#s=settings&tab=mcs-approvers" onclick="navigate('settings',{tab:'mcs-approvers'});mcsCloseModal('mcs-form-backdrop');return false;"
-           style="color:var(--accent);text-decoration:none;margin-left:4px">Configure in Settings →</a>
+           style="color:var(--accent);text-decoration:none;margin-left:4px">Configure in Settings -&gt;</a>
       </div>`;
   }
 
   const options = step1Approvers.map(a => {
     const email = a.user_email || '';
     const selected = preselectedEmail && email && email === preselectedEmail ? 'selected' : '';
-    return `<option value="${esc(email)}" data-id="${esc(a.user_id)}" ${selected}>${esc(a.user_name)}${email ? ' — ' + esc(email) : ''}</option>`;
+    return `<option value="${esc(email)}" data-id="${esc(a.user_id)}" ${selected}>${esc(a.user_name)}${email ? ' - ' + esc(email) : ''}</option>`;
   }).join('');
 
   return `
-    <div class="mcs-section-title">Approval 1 Reviewer</div>
+    ${titleHtml}
     <div class="mcs-field-group">
       <div class="mcs-field-label">Select who should review this change</div>
       <select class="mcs-field-select" id="mcs-f-approver">
@@ -62,6 +63,239 @@ function mcsApproverSelectionHtml(preselectedEmail) {
         ${options}
       </select>
     </div>`;
+}
+
+function mcsExtractNominatedApprover(notesValue) {
+  if (!notesValue || typeof notesValue !== 'string') return '';
+  if (!notesValue.startsWith('nominated_approver:')) return '';
+  return notesValue.replace('nominated_approver:', '').trim();
+}
+
+function mcsParseExtendedJustification(rawValue) {
+  const raw = String(rawValue || '');
+  const impactMarker = '[ImpactAssessmentHours]';
+  const docsMarker = '[DocumentsAffected]';
+  const knockMarker = '[KnockOnEffect]';
+
+  const markers = [
+    { key: 'impactAssessmentHours', token: impactMarker, idx: raw.indexOf(impactMarker) },
+    { key: 'documentsAffected', token: docsMarker, idx: raw.indexOf(docsMarker) },
+    { key: 'knockOnEffect', token: knockMarker, idx: raw.indexOf(knockMarker) }
+  ].filter(item => item.idx !== -1).sort((a, b) => a.idx - b.idx);
+
+  if (markers.length === 0) {
+    return {
+      core: raw,
+      impactAssessmentHours: '',
+      documentsAffected: '',
+      knockOnEffect: ''
+    };
+  }
+
+  const parsed = {
+    core: raw.slice(0, markers[0].idx).trimEnd(),
+    impactAssessmentHours: '',
+    documentsAffected: '',
+    knockOnEffect: ''
+  };
+
+  markers.forEach((marker, index) => {
+    const start = marker.idx + marker.token.length;
+    const end = index < markers.length - 1 ? markers[index + 1].idx : raw.length;
+    parsed[marker.key] = raw.slice(start, end).trim();
+  });
+
+  return parsed;
+}
+
+function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockOnEffectValue, impactAssessmentHoursValue) {
+  const core = String(coreValue || '').trim();
+  const documentsAffected = String(documentsAffectedValue || '').trim();
+  const knockOnEffect = String(knockOnEffectValue || '').trim();
+  const impactAssessmentHours = String(impactAssessmentHoursValue || '').trim();
+
+  if (!documentsAffected && !knockOnEffect && !impactAssessmentHours) {
+    return core;
+  }
+
+  const parts = [];
+  if (core) parts.push(core);
+  if (impactAssessmentHours) parts.push(`[ImpactAssessmentHours]\n${impactAssessmentHours}`);
+  if (documentsAffected) parts.push(`[DocumentsAffected]\n${documentsAffected}`);
+  if (knockOnEffect) parts.push(`[KnockOnEffect]\n${knockOnEffect}`);
+  return parts.join('\n\n').trim();
+}
+
+function mcsBuildWorkflowRail(stages) {
+  const flowHtml = stages.map((stage, index) => {
+    const cls = stage.status || '';
+    const badge = stage.badge || String(index + 1);
+    const noteHtml = stage.note ? `<div class="mcs-flow-note">${esc(stage.note)}</div>` : '';
+    const metaHtml = stage.meta ? `<div class="mcs-flow-meta">${esc(stage.meta)}</div>` : '';
+
+    return `
+      <div class="mcs-flow-step ${cls}">
+        <div class="mcs-flow-dot">${badge}</div>
+        <div class="mcs-flow-content">
+          <div class="mcs-flow-name">${esc(stage.name)}</div>
+          ${stage.role ? `<div class="mcs-flow-role">${esc(stage.role)}</div>` : ''}
+          <div class="mcs-flow-state">${esc(stage.stateLabel || 'PENDING')}</div>
+          ${metaHtml}
+          ${noteHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <aside class="mcs-flow-rail mcs-approval-chain" aria-label="Workflow chart">
+      <div class="mcs-flow-rail-title">Workflow Chart</div>
+      <div class="mcs-flow-list">${flowHtml}</div>
+    </aside>
+  `;
+}
+
+function mcsBuildViewWorkflowStages(change) {
+  const openState = change.status === 'open' ? 'current' : 'done';
+
+  let approval1State = 'pending';
+  if (change.eng_review_status === 'approved') approval1State = 'done';
+  else if (change.eng_review_status === 'rejected') approval1State = 'rejected';
+  else if (change.status === 'review') approval1State = 'current';
+
+  const implementState = ['final_review', 'implemented', 'closed'].includes(change.status)
+    ? 'done'
+    : (change.status === 'implementing' ? 'current' : 'pending');
+
+  let approval2State = 'pending';
+  if (change.qa_review_status === 'approved') approval2State = 'done';
+  else if (change.qa_review_status === 'rejected') approval2State = 'rejected';
+  else if (change.status === 'final_review') approval2State = 'current';
+
+  const approval1By = change.eng_review_by || '';
+  const approval1At = change.eng_review_at ? change.eng_review_at.split('T')[0] : '';
+  const approval1RawNotes = change.eng_review_notes || '';
+  const approval1Notes = approval1RawNotes.startsWith('nominated_approver:') ? '' : approval1RawNotes;
+
+  const approval2By = change.qa_review_by || '';
+  const approval2At = change.qa_review_at ? change.qa_review_at.split('T')[0] : '';
+  const approval2Notes = change.qa_review_notes || '';
+
+  return [
+    {
+      name: 'Open + Impact',
+      role: 'Capture request and impacted scope',
+      status: openState,
+      badge: openState === 'done' ? 'OK' : '1',
+      stateLabel: openState === 'done' ? 'DONE' : 'IN PROGRESS'
+    },
+    {
+      name: 'Approval 1',
+      role: 'Initial sign-off',
+      status: approval1State,
+      badge: approval1State === 'done' ? 'OK' : approval1State === 'rejected' ? 'NO' : '2',
+      stateLabel: approval1State === 'done' ? 'APPROVED' : approval1State === 'rejected' ? 'REJECTED' : approval1State === 'current' ? 'AWAITING' : 'PENDING',
+      meta: approval1By ? `${approval1By}${approval1At ? ' | ' + approval1At : ''}` : '',
+      note: approval1Notes || ''
+    },
+    {
+      name: 'Implement',
+      role: 'Apply the approved change',
+      status: implementState,
+      badge: implementState === 'done' ? 'OK' : '3',
+      stateLabel: implementState === 'done' ? 'DONE' : implementState === 'current' ? 'IN PROGRESS' : 'PENDING'
+    },
+    {
+      name: 'Approval 2',
+      role: 'Final sign-off',
+      status: approval2State,
+      badge: approval2State === 'done' ? 'OK' : approval2State === 'rejected' ? 'NO' : '4',
+      stateLabel: approval2State === 'done' ? 'APPROVED' : approval2State === 'rejected' ? 'REJECTED' : approval2State === 'current' ? 'AWAITING' : 'PENDING',
+      meta: approval2By ? `${approval2By}${approval2At ? ' | ' + approval2At : ''}` : '',
+      note: approval2Notes || ''
+    }
+  ];
+}
+
+function mcsToggleStageBlock(stageBlock, expand) {
+  if (!stageBlock) return;
+  stageBlock.classList.toggle('is-collapsed', !expand);
+
+  const toggle = stageBlock.querySelector('.mcs-stage-toggle');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', expand ? 'true' : 'false');
+  }
+
+  const content = stageBlock.querySelector('.mcs-stage-content');
+  if (content) {
+    content.hidden = !expand;
+  }
+}
+
+function mcsInitStageCollapsibles(container, expandedStages) {
+  if (!container) return;
+
+  const expandedOrder = (expandedStages || ['open']).map(String);
+  const blocks = container.querySelectorAll('.mcs-stage-block');
+  const expandedKey = expandedOrder.find(key => container.querySelector(`.mcs-stage-block[data-stage="${key}"]`)) ||
+    (blocks[0] ? (blocks[0].getAttribute('data-stage') || 'open') : 'open');
+
+  blocks.forEach((block, index) => {
+    if (block.dataset.collapsibleInit === '1') return;
+
+    const titleEl = block.querySelector(':scope > .mcs-stage-title');
+    if (!titleEl) return;
+    const subtitleEl = block.querySelector(':scope > .mcs-stage-subtitle');
+
+    const stageKey = block.getAttribute('data-stage') || `stage-${index + 1}`;
+    const contentId = `mcs-stage-content-${stageKey}-${index}`;
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'mcs-stage-toggle';
+    toggle.setAttribute('aria-controls', contentId);
+
+    const textWrap = document.createElement('span');
+    textWrap.className = 'mcs-stage-toggle-text';
+    textWrap.appendChild(titleEl.cloneNode(true));
+    if (subtitleEl) textWrap.appendChild(subtitleEl.cloneNode(true));
+
+    const chevron = document.createElement('span');
+    chevron.className = 'mcs-stage-chevron';
+    chevron.innerHTML = '&#9662;';
+    chevron.setAttribute('aria-hidden', 'true');
+
+    toggle.appendChild(textWrap);
+    toggle.appendChild(chevron);
+
+    const content = document.createElement('div');
+    content.className = 'mcs-stage-content';
+    content.id = contentId;
+
+    Array.from(block.children).forEach(child => {
+      if (child !== titleEl && child !== subtitleEl) content.appendChild(child);
+    });
+
+    titleEl.remove();
+    if (subtitleEl) subtitleEl.remove();
+
+    block.prepend(toggle);
+    block.appendChild(content);
+
+    mcsToggleStageBlock(block, stageKey === expandedKey);
+
+    toggle.addEventListener('click', () => {
+      const isCollapsed = block.classList.contains('is-collapsed');
+      if (!isCollapsed) return;
+
+      blocks.forEach(otherBlock => {
+        if (otherBlock !== block) mcsToggleStageBlock(otherBlock, false);
+      });
+      mcsToggleStageBlock(block, true);
+    });
+
+    block.dataset.collapsibleInit = '1';
+  });
 }
 
 /**
@@ -72,7 +306,6 @@ async function mcsShowCreateModal() {
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-form-backdrop';
 
-  // Fetch PFMEA causes for linking
   const pfmeaCauses = await mcsGetPfmeaCausesForLinking();
   const emptyChange = { related_pfmea_cause_id: null };
   const pfmeaLinkingHtml = mcsBuildPfmeaLinkingSection(emptyChange, pfmeaCauses);
@@ -84,6 +317,13 @@ async function mcsShowCreateModal() {
       return `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-part="${esc(p.part_number || '')}">${display}</option>`;
     }).join('');
 
+  const workflowHtml = mcsBuildWorkflowRail([
+    { name: 'Open + Impact', role: 'Capture request and impacted scope', status: 'current', badge: '1', stateLabel: 'IN PROGRESS' },
+    { name: 'Approval 1', role: 'Initial sign-off', status: 'pending', badge: '2', stateLabel: 'PENDING' },
+    { name: 'Implement', role: 'Apply the approved change', status: 'pending', badge: '3', stateLabel: 'PENDING' },
+    { name: 'Approval 2', role: 'Final sign-off', status: 'pending', badge: '4', stateLabel: 'PENDING' }
+  ]);
+
   backdrop.innerHTML = `
     <div class="mcs-modal" id="mcs-form-modal">
       <div class="mcs-modal-header">
@@ -94,87 +334,122 @@ async function mcsShowCreateModal() {
         <button class="mcs-modal-close" onclick="mcsCloseModal('mcs-form-backdrop')">&times;</button>
       </div>
       <div class="mcs-modal-body">
-        <div class="mcs-modal-grid">
-          <div class="mcs-field-group mcs-modal-grid full">
-            <div class="mcs-field-label">Change Title *</div>
-            <input class="mcs-field-input" id="mcs-f-title" placeholder="Brief, descriptive title..." />
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Change Type *</div>
-            <select class="mcs-field-select" id="mcs-f-type">
-              <option value="">Select type...</option>
-              <option>Engineering</option>
-              <option>Process</option>
-              <option>Material</option>
-              <option>Tooling</option>
-              <option>Quality</option>
-              <option>Safety</option>
-            </select>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Priority *</div>
-            <select class="mcs-field-select" id="mcs-f-priority">
-              <option value="">Select priority...</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Part / Drawing No.</div>
-            <select class="mcs-field-select" id="mcs-f-part">
-              <option value="">Select product...</option>
-              ${productOptions}
-            </select>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Source</div>
-            <select class="mcs-field-select" id="mcs-f-source">
-              <option value="Manual">Manual</option>
-              <option value="PFMEA">PFMEA</option>
-              <option value="Risk">Risk</option>
-              <option value="Customer">Customer</option>
-              <option value="Quality">Quality</option>
-              <option value="Supply Chain">Supply Chain</option>
-            </select>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Initiated By</div>
-            <input class="mcs-field-input" id="mcs-f-author" value="${esc(initiatedBy)}" readonly style="background: var(--surface2); color: var(--text2);" />
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Target Implementation</div>
-            <input class="mcs-field-input" id="mcs-f-target" type="date" />
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Overhaul Time Impact (hours)</div>
-            <input class="mcs-field-input" id="mcs-f-time-impact" type="number" min="0" step="0.5" placeholder="e.g. 4.5" />
-          </div>
-          <div class="mcs-field-group mcs-modal-grid full">
-            <div class="mcs-field-label">Description of Change *</div>
-            <textarea class="mcs-field-textarea" id="mcs-f-description" placeholder="Describe exactly what is changing..." rows="4"></textarea>
-          </div>
-          <div class="mcs-field-group mcs-modal-grid full">
-            <div class="mcs-field-label">Justification / Root Cause</div>
-            <textarea class="mcs-field-textarea" id="mcs-f-justification" placeholder="Why is this change necessary?..." rows="3"></textarea>
-          </div>
-        </div>
+        <div class="mcs-staged-layout">
+          <div class="mcs-stage-blocks">
+            <section class="mcs-stage-block" data-stage="open">
+              <div class="mcs-stage-title">Stage 1: Open + Impact</div>
+              <div class="mcs-stage-subtitle">Capture the request details and all downstream impacts.</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Change Title *</div>
+                  <input class="mcs-field-input" id="mcs-f-title" placeholder="Brief, descriptive title..." />
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Change Type *</div>
+                  <select class="mcs-field-select" id="mcs-f-type">
+                    <option value="">Select type...</option>
+                    <option>Engineering</option>
+                    <option>Process</option>
+                    <option>Material</option>
+                    <option>Tooling</option>
+                    <option>Quality</option>
+                    <option>Safety</option>
+                  </select>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Priority *</div>
+                  <select class="mcs-field-select" id="mcs-f-priority">
+                    <option value="">Select priority...</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Part / Drawing No.</div>
+                  <select class="mcs-field-select" id="mcs-f-part">
+                    <option value="">Select product...</option>
+                    ${productOptions}
+                  </select>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Source</div>
+                  <select class="mcs-field-select" id="mcs-f-source">
+                    <option value="Manual">Manual</option>
+                    <option value="PFMEA">PFMEA</option>
+                    <option value="Risk">Risk</option>
+                    <option value="Customer">Customer</option>
+                    <option value="Quality">Quality</option>
+                    <option value="Supply Chain">Supply Chain</option>
+                  </select>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Initiated By</div>
+                  <input class="mcs-field-input" id="mcs-f-author" value="${esc(initiatedBy)}" readonly style="background: var(--surface2); color: var(--text2);" />
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Description of Change *</div>
+                  <textarea class="mcs-field-textarea" id="mcs-f-description" placeholder="Describe exactly what is changing..." rows="4"></textarea>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Justification / Root Cause</div>
+                  <textarea class="mcs-field-textarea" id="mcs-f-justification" placeholder="Why is this change necessary?..." rows="3"></textarea>
+                </div>
+              </div>
+              <div class="mcs-impact-grid">
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-bom" /><label for="mcs-imp-bom">BOM Change</label></div>
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-proc" /><label for="mcs-imp-proc">Work Instructions</label></div>
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-tooling" /><label for="mcs-imp-tooling">Tooling Change</label></div>
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" /><label for="mcs-imp-training">Training Required</label></div>
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" /><label for="mcs-imp-customer">Customer Notification</label></div>
+              </div>
+              <div class="mcs-modal-grid">${pfmeaLinkingHtml}</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Impact Assessment Estimate (hours)</div>
+                  <input class="mcs-field-input" id="mcs-f-impact-estimate" type="number" min="0" step="0.5" placeholder="e.g. 2.0" />
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Documents Affected</div>
+                  <textarea class="mcs-field-textarea" id="mcs-f-docs-affected" placeholder="List drawings, SOPs, work instructions, control plans, or customer docs impacted by this change..." rows="3"></textarea>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Knock-on Effect for Other Products</div>
+                  <textarea class="mcs-field-textarea" id="mcs-f-knock-on" placeholder="Describe potential side effects for other products, assemblies, or programmes..." rows="3"></textarea>
+                </div>
+              </div>
+            </section>
 
-        <div class="mcs-section-title">Impact Assessment</div>
-        <div class="mcs-impact-grid">
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-bom" /><label for="mcs-imp-bom">BOM Change</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-proc" /><label for="mcs-imp-proc">Work Instructions</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-tooling" /><label for="mcs-imp-tooling">Tooling Change</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" /><label for="mcs-imp-training">Training Required</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" /><label for="mcs-imp-customer">Customer Notification</label></div>
-        </div>
+            <section class="mcs-stage-block" data-stage="approval1">
+              <div class="mcs-stage-title">Stage 2: Approval 1</div>
+              <div class="mcs-stage-subtitle">Nominate the initial reviewer before submitting.</div>
+              ${mcsApproverSelectionHtml('', false)}
+            </section>
 
-        <div class="mcs-modal-grid">
-          ${pfmeaLinkingHtml}
-        </div>
+            <section class="mcs-stage-block" data-stage="implement">
+              <div class="mcs-stage-title">Stage 3: Implement</div>
+              <div class="mcs-stage-subtitle">Capture implementation target and expected time impact.</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Target Implementation</div>
+                  <input class="mcs-field-input" id="mcs-f-target" type="date" />
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Overhaul Time Impact (hours)</div>
+                  <input class="mcs-field-input" id="mcs-f-time-impact" type="number" min="0" step="0.5" placeholder="e.g. 4.5" />
+                </div>
+              </div>
+            </section>
 
-        ${mcsApproverSelectionHtml()}
+            <section class="mcs-stage-block" data-stage="approval2">
+              <div class="mcs-stage-title">Stage 4: Approval 2</div>
+              <div class="mcs-stage-subtitle">Final sign-off happens after implementation is complete.</div>
+              <div class="mcs-stage-note">No extra data entry is required here during request creation.</div>
+            </section>
+          </div>
+          ${workflowHtml}
+        </div>
       </div>
       <div class="mcs-modal-footer">
         <button class="mcs-btn mcs-btn-ghost" onclick="mcsCloseModal('mcs-form-backdrop')">Cancel</button>
@@ -184,6 +459,7 @@ async function mcsShowCreateModal() {
   `;
 
   document.body.appendChild(backdrop);
+  mcsInitStageCollapsibles(backdrop, ['open']);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop');
   });
@@ -197,94 +473,25 @@ function mcsShowViewModal(change) {
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-view-backdrop';
 
-  // Build approval chain HTML using the 2-step MCO flow
-  // Steps: Approval 1 (eng fields) and Approval 2 (qa fields)
-  // Visual flow: Open → Impact Assessment → [Approval 1] → Implementing → [Approval 2] → Implemented
-  const mcoFlowSteps = [
-    { name: 'Open / Impact Assessment', role: 'ME Assigned', isApproval: false },
-    { name: 'Approval 1', role: 'Sign-off required', isApproval: true, stepKey: 'approval1',
-      status: change.eng_review_status, byField: 'eng_review_by', atField: 'eng_review_at', notesField: 'eng_review_notes' },
-    { name: 'Implement', role: 'ME implements change', isApproval: false },
-    { name: 'Approval 2', role: 'Final sign-off', isApproval: true, stepKey: 'approval2',
-      status: change.qa_review_status, byField: 'qa_review_by', atField: 'qa_review_at', notesField: 'qa_review_notes' }
-  ];
+  const workflowHtml = mcsBuildWorkflowRail(mcsBuildViewWorkflowStages(change));
 
-  const approvalChainParts = [];
-  mcoFlowSteps.forEach((step, i) => {
-    let cls = '';
-    let icon = String(i + 1);
-
-    if (!step.isApproval) {
-      // Non-approval node: done if we've passed this stage, current if we're here
-      const pastStage =
-        (i === 0 && ['review','implementing','final_review','implemented','closed'].includes(change.status)) ||
-        (i === 2 && ['final_review','implemented'].includes(change.status));
-      const activeStage =
-        (i === 0 && change.status === 'open') ||
-        (i === 2 && change.status === 'implementing');
-      if (pastStage) { cls = 'done'; icon = '✓'; }
-      else if (activeStage) { cls = 'current'; icon = String(i + 1); }
-    } else {
-      // Approval node
-      if (step.status === 'approved') { cls = 'done'; icon = '✓'; }
-      else if (step.status === 'rejected') { cls = 'rejected'; icon = '✗'; }
-      else {
-        const isActive = change.status === (step.stepKey === 'approval1' ? 'review' : 'final_review');
-        if (isActive) cls = 'current';
-      }
-    }
-
-    const approvedBy = step.byField ? (change[step.byField] || '') : '';
-    const approvedAt = step.atField && change[step.atField] ? change[step.atField].split('T')[0] : '';
-    // Filter out the internal nominated_approver: marker — it's not a user-facing note
-    const rawNotes = step.notesField ? (change[step.notesField] || '') : '';
-    const notes = rawNotes.startsWith('nominated_approver:') ? '' : rawNotes;
-
-    let stepStatusLabel = '';
-    if (!step.isApproval) {
-      stepStatusLabel = cls === 'done' ? 'DONE' : cls === 'current' ? 'IN PROGRESS' : 'PENDING';
-    } else {
-      stepStatusLabel = step.status === 'approved' ? 'APPROVED'
-        : step.status === 'rejected' ? 'REJECTED'
-        : cls === 'current' ? 'AWAITING'
-        : 'PENDING';
-    }
-
-    approvalChainParts.push(`
-      <div class="mcs-approval-step ${cls}">
-        <div class="mcs-approval-circle">${icon}</div>
-        <div class="mcs-approval-step-body">
-          <div class="mcs-approval-name">${esc(step.name)}</div>
-          <div class="mcs-approval-role">${step.role}</div>
-          <div class="mcs-approval-status-label">${stepStatusLabel}</div>
-          ${approvedBy ? `<div class="mcs-approval-meta" title="${esc(approvedBy)}">${esc(approvedBy.length > 18 ? approvedBy.slice(0, 18) + '…' : approvedBy)}</div>` : ''}
-          ${approvedAt ? `<div class="mcs-approval-date">${approvedAt}</div>` : ''}
-          ${notes ? `<div class="mcs-approval-notes" title="${esc(notes)}">"${esc(notes.length > 30 ? notes.slice(0, 30) + '…' : notes)}"</div>` : ''}
-        </div>
-      </div>
-    `);
-
-    if (i < mcoFlowSteps.length - 1) {
-      const connectorCls = cls === 'done' ? 'done' : cls === 'current' ? 'active' : '';
-      approvalChainParts.push(`<div class="mcs-approval-connector ${connectorCls}"></div>`);
-    }
-  });
-  const approvalChainHtml = approvalChainParts.join('');
-
-  // Build impacts HTML with icons per type
   const impactIconMap = {
-    'BOM Change': '📋',
-    'Work Instructions': '📝',
-    'Tooling Change': '🔧',
-    'Training Required': '🎓',
-    'Customer Notification': '📣'
+    'BOM Change': '[BOM]',
+    'Work Instructions': '[WI]',
+    'Tooling Change': '[TL]',
+    'Training Required': '[TR]',
+    'Customer Notification': '[CN]'
   };
+
   const impactsHtml = (change.impacts || []).length > 0
-    ? (change.impacts || []).map(imp => `<span class="mcs-impact-tag">${impactIconMap[imp] || '•'} ${esc(imp)}</span>`).join('')
+    ? (change.impacts || []).map(imp => `<span class="mcs-impact-tag">${impactIconMap[imp] || '[*]'} ${esc(imp)}</span>`).join('')
     : '<span class="mcs-impact-none">No impact areas selected</span>';
 
-  // Build timeline HTML
+  const extendedJustification = mcsParseExtendedJustification(change.justification || '');
+
   const timelineHtml = mcsRenderTimelineHtml(change.timeline || []);
+  const approval1Notes = (change.eng_review_notes || '').startsWith('nominated_approver:') ? '' : (change.eng_review_notes || '');
+  const approval2Notes = change.qa_review_notes || '';
 
   backdrop.innerHTML = `
     <div class="mcs-modal" id="mcs-view-modal">
@@ -293,63 +500,130 @@ function mcsShowViewModal(change) {
         <div class="mcs-modal-titles">
           <div class="mcs-modal-title">${esc(change.title)}</div>
           <div class="mcs-modal-tags">
+            <span class="mcs-status-pill mcs-status-${change.status}">${mcStatusLabel(change.status)}</span>
             <span class="mcs-tag">${esc(change.change_type)}</span>
           </div>
         </div>
         <button class="mcs-modal-close" onclick="mcsCloseModal('mcs-view-backdrop')">&times;</button>
       </div>
       <div class="mcs-modal-body">
-        <div class="mcs-modal-grid">
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Status</div>
-            <div><span class="mcs-status-pill mcs-status-${change.status}">${mcStatusLabel(change.status)}</span></div>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Priority</div>
-            <div style="font-family: var(--mono); font-size: 12px; color: var(--text2); text-transform: capitalize;">• ${change.priority}</div>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Initiated By</div>
-            <div style="font-size: 13px; color: var(--text2);">${esc(change.initiated_by || '—')}</div>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Date Raised</div>
-            <div style="font-family: var(--mono); font-size: 12px; color: var(--text2);">${change.created_at ? change.created_at.split('T')[0] : '—'}</div>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Part / Drawing</div>
-            <div style="font-family: var(--mono); font-size: 12px; color: var(--text2);">${esc(change.part_drawing_no || '—')}</div>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Time Impact (hrs)</div>
-            <div class="mcs-time-impact-display ${change.estimated_time_impact_hours !== 0 ? 'has-impact' : ''}">
-              ${change.estimated_time_impact_hours !== 0 ? `<span class="mcs-time-impact-value">⏱ ${change.estimated_time_impact_hours > 0 ? '+' : ''}${change.estimated_time_impact_hours}h</span>` : '<span style="color:var(--text3);font-size:12px;">—</span>'}
-            </div>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Target Implementation</div>
-            <div style="font-family: var(--mono); font-size: 12px; color: var(--text2);">${change.target_implementation || '—'}</div>
-          </div>
-          <div class="mcs-field-group mcs-modal-grid full">
-            <div class="mcs-field-label">Description of Change</div>
-            <div style="font-size: 13px; color: var(--text2); line-height: 1.6; background: var(--surface2); padding: 12px; border-radius: 6px; border: 1px solid var(--border);">
-              ${esc(change.description || '')}
-            </div>
-          </div>
-          <div class="mcs-field-group mcs-modal-grid full">
-            <div class="mcs-field-label">Justification / Root Cause</div>
-            <div style="font-size: 13px; color: var(--text2); line-height: 1.6; background: var(--surface2); padding: 12px; border-radius: 6px; border: 1px solid var(--border);">
-              ${esc(change.justification || 'Not specified.')}
-            </div>
-          </div>
-        </div>
+        <div class="mcs-staged-layout">
+          <div class="mcs-stage-blocks">
+            <section class="mcs-stage-block" data-stage="open">
+              <div class="mcs-stage-title">Stage 1: Open + Impact</div>
+              <div class="mcs-stage-subtitle">Baseline request, impacted scope, and downstream effects.</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Priority</div>
+                  <div style="font-family: var(--mono); font-size: 12px; color: var(--text2); text-transform: capitalize;">${esc(change.priority || 'n/a')}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Initiated By</div>
+                  <div style="font-size: 13px; color: var(--text2);">${esc(change.initiated_by || '—')}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Date Raised</div>
+                  <div style="font-family: var(--mono); font-size: 12px; color: var(--text2);">${change.created_at ? change.created_at.split('T')[0] : '—'}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Part / Drawing</div>
+                  <div style="font-family: var(--mono); font-size: 12px; color: var(--text2);">${esc(change.part_drawing_no || '—')}</div>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Description of Change</div>
+                  <div class="mcs-stage-readonly">${esc(change.description || '')}</div>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Justification / Root Cause</div>
+                  <div class="mcs-stage-readonly">${esc(extendedJustification.core || 'Not specified.')}</div>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Selected Impact Areas</div>
+                  <div class="mcs-impact-tags-wrap">${impactsHtml}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Impact Assessment Estimate (hours)</div>
+                  <div class="mcs-stage-readonly-inline">${esc(extendedJustification.impactAssessmentHours || 'Not specified.')}</div>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Documents Affected</div>
+                  <div class="mcs-stage-readonly">${esc(extendedJustification.documentsAffected || 'Not specified.')}</div>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Knock-on Effect for Other Products</div>
+                  <div class="mcs-stage-readonly">${esc(extendedJustification.knockOnEffect || 'Not specified.')}</div>
+                </div>
+              </div>
+            </section>
 
-        <div class="mcs-section-title">Approval Chain</div>
-        <div class="mcs-approval-chain">${approvalChainHtml}</div>
+            <section class="mcs-stage-block" data-stage="approval1">
+              <div class="mcs-stage-title">Stage 2: Approval 1</div>
+              <div class="mcs-stage-subtitle">Initial approval decision and notes.</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Approval 1 Status</div>
+                  <div class="mcs-stage-readonly-inline">${esc((change.eng_review_status || 'pending').toUpperCase())}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Reviewed By</div>
+                  <div class="mcs-stage-readonly-inline">${esc(change.eng_review_by || '—')}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Reviewed Date</div>
+                  <div class="mcs-stage-readonly-inline">${change.eng_review_at ? change.eng_review_at.split('T')[0] : '—'}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Impact Assessment Estimate (hrs)</div>
+                  <div class="mcs-stage-readonly-inline">${esc(extendedJustification.impactAssessmentHours || 'Not specified.')}</div>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Review Notes</div>
+                  <div class="mcs-stage-readonly">${esc(approval1Notes || 'No notes recorded.')}</div>
+                </div>
+              </div>
+            </section>
 
-        <div class="mcs-section-title">Impact Assessment</div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
-          ${impactsHtml}
+            <section class="mcs-stage-block" data-stage="implement">
+              <div class="mcs-stage-title">Stage 3: Implement</div>
+              <div class="mcs-stage-subtitle">Implementation target and overhaul impact.</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Target Implementation</div>
+                  <div class="mcs-stage-readonly-inline">${change.target_implementation || '—'}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Time Impact (hrs)</div>
+                  <div class="mcs-time-impact-display ${change.estimated_time_impact_hours !== 0 ? 'has-impact' : ''}">
+                    ${change.estimated_time_impact_hours !== 0 ? `<span class="mcs-time-impact-value">${change.estimated_time_impact_hours > 0 ? '+' : ''}${change.estimated_time_impact_hours}h</span>` : '<span class="mcs-stage-readonly-inline">—</span>'}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="mcs-stage-block" data-stage="approval2">
+              <div class="mcs-stage-title">Stage 4: Approval 2</div>
+              <div class="mcs-stage-subtitle">Final approval outcome and notes.</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Approval 2 Status</div>
+                  <div class="mcs-stage-readonly-inline">${esc((change.qa_review_status || 'pending').toUpperCase())}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Reviewed By</div>
+                  <div class="mcs-stage-readonly-inline">${esc(change.qa_review_by || '—')}</div>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Reviewed Date</div>
+                  <div class="mcs-stage-readonly-inline">${change.qa_review_at ? change.qa_review_at.split('T')[0] : '—'}</div>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Review Notes</div>
+                  <div class="mcs-stage-readonly">${esc(approval2Notes || 'No notes recorded.')}</div>
+                </div>
+              </div>
+            </section>
+          </div>
+          ${workflowHtml}
         </div>
 
         <div class="mcs-section-title">Activity Log</div>
@@ -358,8 +632,8 @@ function mcsShowViewModal(change) {
         <div class="mcs-comment-form">
           <div class="mcs-comment-form-row">
             <select class="mcs-field-select mcs-comment-type" id="mcs-comment-type">
-              <option value="comment">💬 Comment</option>
-              <option value="progress_update">📈 Progress Update</option>
+              <option value="comment">Comment</option>
+              <option value="progress_update">Progress Update</option>
             </select>
             <button class="mcs-btn mcs-btn-primary mcs-comment-post-btn" onclick="mcsPostComment('${esc(change.id)}')">Post</button>
           </div>
@@ -375,6 +649,15 @@ function mcsShowViewModal(change) {
   `;
 
   document.body.appendChild(backdrop);
+  const activeViewStage = {
+    open: 'open',
+    review: 'approval1',
+    implementing: 'implement',
+    final_review: 'approval2',
+    implemented: 'approval2',
+    closed: 'approval2'
+  }[change.status] || 'open';
+  mcsInitStageCollapsibles(backdrop, [activeViewStage]);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) mcsCloseModal('mcs-view-backdrop');
   });
@@ -408,6 +691,15 @@ async function mcsSaveChange() {
 
   // Get selected PFMEA cause
   const selectedPfmeaCauseId = document.getElementById('mcs-f-pfmea-cause')?.value || null;
+  const impactAssessmentEstimate = document.getElementById('mcs-f-impact-estimate')?.value || '';
+  const documentsAffected = document.getElementById('mcs-f-docs-affected')?.value || '';
+  const knockOnEffect = document.getElementById('mcs-f-knock-on')?.value || '';
+  const combinedJustification = mcsBuildExtendedJustification(
+    document.getElementById('mcs-f-justification')?.value,
+    documentsAffected,
+    knockOnEffect,
+    impactAssessmentEstimate
+  );
 
   try {
     if (mcsEditingId) {
@@ -429,7 +721,7 @@ async function mcsSaveChange() {
         part_drawing_no: selectedProductName || null,
         target_implementation: document.getElementById('mcs-f-target')?.value,
         estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
-        justification: document.getElementById('mcs-f-justification')?.value,
+        justification: combinedJustification,
         updated_at: new Date().toISOString()
       };
 
@@ -505,7 +797,7 @@ async function mcsSaveChange() {
         updated_at: now,
         target_implementation: document.getElementById('mcs-f-target')?.value,
         estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
-        justification: document.getElementById('mcs-f-justification')?.value,
+        justification: combinedJustification,
         // Store nominated approver so mcsCanApproveStep can identify who was asked to review
         eng_review_notes: nominatedApprover ? 'nominated_approver:' + nominatedApprover : null,
         related_pfmea_cause_id: selectedPfmeaCauseId || null
@@ -642,15 +934,15 @@ async function mcsEditChange(id) {
  * Show edit modal
  */
 async function mcsShowEditModal(change) {
-  // Similar to create but pre-filled
   const backdrop = document.createElement('div');
   backdrop.className = 'mcs-modal-backdrop open';
   backdrop.id = 'mcs-form-backdrop';
 
-  // Fetch PFMEA causes for linking
   const pfmeaCauses = await mcsGetPfmeaCausesForLinking();
-
   const initiatedBy = change.initiated_by || (currentUser && currentUser.email) || '';
+  const preselectedApprover = mcsExtractNominatedApprover(change.eng_review_notes || '');
+  const extendedJustification = mcsParseExtendedJustification(change.justification || '');
+
   const productOptions = (window.productsState && window.productsState.products || [])
     .map(p => {
       const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name);
@@ -659,6 +951,7 @@ async function mcsShowEditModal(change) {
     }).join('');
 
   const pfmeaLinkingHtml = mcsBuildPfmeaLinkingSection(change, pfmeaCauses);
+  const workflowHtml = mcsBuildWorkflowRail(mcsBuildViewWorkflowStages(change));
 
   backdrop.innerHTML = `
     <div class="mcs-modal">
@@ -666,76 +959,119 @@ async function mcsShowEditModal(change) {
         <div class="mcs-modal-ref-badge">${esc(change.id)}</div>
         <div class="mcs-modal-titles">
           <div class="mcs-modal-title">Edit Change Request</div>
+          <div class="mcs-modal-tags">
+            <span class="mcs-status-pill mcs-status-${change.status}">${mcStatusLabel(change.status)}</span>
+            <span class="mcs-tag">${esc(change.change_type || 'Change')}</span>
+          </div>
         </div>
         <button class="mcs-modal-close" onclick="mcsCloseModal('mcs-form-backdrop')">&times;</button>
       </div>
       <div class="mcs-modal-body">
-        <div class="mcs-modal-grid">
-          <div class="mcs-field-group mcs-modal-grid full">
-            <div class="mcs-field-label">Change Title *</div>
-            <input class="mcs-field-input" id="mcs-f-title" value="${esc(change.title)}" />
+        <div class="mcs-staged-layout">
+          <div class="mcs-stage-blocks">
+            <section class="mcs-stage-block" data-stage="open">
+              <div class="mcs-stage-title">Stage 1: Open + Impact</div>
+              <div class="mcs-stage-subtitle">Update request details, impacts, and downstream effects.</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Change Title *</div>
+                  <input class="mcs-field-input" id="mcs-f-title" value="${esc(change.title)}" />
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Change Type *</div>
+                  <select class="mcs-field-select" id="mcs-f-type">
+                    <option value="Engineering" ${change.change_type === 'Engineering' ? 'selected' : ''}>Engineering</option>
+                    <option value="Process" ${change.change_type === 'Process' ? 'selected' : ''}>Process</option>
+                    <option value="Material" ${change.change_type === 'Material' ? 'selected' : ''}>Material</option>
+                    <option value="Tooling" ${change.change_type === 'Tooling' ? 'selected' : ''}>Tooling</option>
+                    <option value="Quality" ${change.change_type === 'Quality' ? 'selected' : ''}>Quality</option>
+                    <option value="Safety" ${change.change_type === 'Safety' ? 'selected' : ''}>Safety</option>
+                  </select>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Priority *</div>
+                  <select class="mcs-field-select" id="mcs-f-priority">
+                    <option value="critical" ${change.priority === 'critical' ? 'selected' : ''}>Critical</option>
+                    <option value="high" ${change.priority === 'high' ? 'selected' : ''}>High</option>
+                    <option value="medium" ${change.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                    <option value="low" ${change.priority === 'low' ? 'selected' : ''}>Low</option>
+                  </select>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Part / Drawing No.</div>
+                  <select class="mcs-field-select" id="mcs-f-part">
+                    <option value="">Select product...</option>
+                    ${productOptions}
+                  </select>
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Initiated By</div>
+                  <input class="mcs-field-input" id="mcs-f-author" value="${esc(initiatedBy)}" readonly style="background: var(--surface2); color: var(--text2);" />
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Description of Change *</div>
+                  <textarea class="mcs-field-textarea" id="mcs-f-description" rows="4">${esc(change.description || '')}</textarea>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Justification / Root Cause</div>
+                  <textarea class="mcs-field-textarea" id="mcs-f-justification" rows="3">${esc(extendedJustification.core || '')}</textarea>
+                </div>
+              </div>
+              <div class="mcs-impact-grid">
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-bom" ${(change.impacts || []).includes('BOM Change') ? 'checked' : ''} /><label for="mcs-imp-bom">BOM Change</label></div>
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-proc" ${(change.impacts || []).includes('Work Instructions') ? 'checked' : ''} /><label for="mcs-imp-proc">Work Instructions</label></div>
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-tooling" ${(change.impacts || []).includes('Tooling Change') ? 'checked' : ''} /><label for="mcs-imp-tooling">Tooling Change</label></div>
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" ${(change.impacts || []).includes('Training Required') ? 'checked' : ''} /><label for="mcs-imp-training">Training Required</label></div>
+                <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" ${(change.impacts || []).includes('Customer Notification') ? 'checked' : ''} /><label for="mcs-imp-customer">Customer Notification</label></div>
+              </div>
+              <div class="mcs-modal-grid">${pfmeaLinkingHtml}</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Impact Assessment Estimate (hours)</div>
+                  <input class="mcs-field-input" id="mcs-f-impact-estimate" type="number" min="0" step="0.5" value="${esc(extendedJustification.impactAssessmentHours || '')}" />
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Documents Affected</div>
+                  <textarea class="mcs-field-textarea" id="mcs-f-docs-affected" rows="3">${esc(extendedJustification.documentsAffected || '')}</textarea>
+                </div>
+                <div class="mcs-field-group mcs-modal-grid full">
+                  <div class="mcs-field-label">Knock-on Effect for Other Products</div>
+                  <textarea class="mcs-field-textarea" id="mcs-f-knock-on" rows="3">${esc(extendedJustification.knockOnEffect || '')}</textarea>
+                </div>
+              </div>
+            </section>
+
+            <section class="mcs-stage-block" data-stage="approval1">
+              <div class="mcs-stage-title">Stage 2: Approval 1</div>
+              <div class="mcs-stage-subtitle">Confirm the nominated initial reviewer.</div>
+              ${mcsApproverSelectionHtml(preselectedApprover, false)}
+            </section>
+
+            <section class="mcs-stage-block" data-stage="implement">
+              <div class="mcs-stage-title">Stage 3: Implement</div>
+              <div class="mcs-stage-subtitle">Update implementation target and overhaul time impact.</div>
+              <div class="mcs-modal-grid">
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">Target Implementation</div>
+                  <input class="mcs-field-input" id="mcs-f-target" type="date" value="${change.target_implementation || ''}" />
+                </div>
+                <div class="mcs-field-group">
+                  <div class="mcs-field-label">
+                    Overhaul Time Impact (hours)
+                    <span class="field-tooltip" title="Enter the change in overhaul hours this MCO will cause. Use a negative number if this change reduces overhaul time (an improvement), for example -2 means 2 hours saved. Use a positive number if it adds time.">i</span>
+                  </div>
+                  <input class="mcs-field-input" id="mcs-f-time-impact" type="number" step="0.5" value="${change.estimated_time_impact_hours || 0}" />
+                </div>
+              </div>
+            </section>
+
+            <section class="mcs-stage-block" data-stage="approval2">
+              <div class="mcs-stage-title">Stage 4: Approval 2</div>
+              <div class="mcs-stage-subtitle">Final sign-off is captured in the review flow after implementation.</div>
+              <div class="mcs-stage-note">Use the View modal actions when this change reaches Approval 2.</div>
+            </section>
           </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Change Type *</div>
-            <select class="mcs-field-select" id="mcs-f-type">
-              <option value="Engineering" ${change.change_type === 'Engineering' ? 'selected' : ''}>Engineering</option>
-              <option value="Process" ${change.change_type === 'Process' ? 'selected' : ''}>Process</option>
-              <option value="Material" ${change.change_type === 'Material' ? 'selected' : ''}>Material</option>
-              <option value="Tooling" ${change.change_type === 'Tooling' ? 'selected' : ''}>Tooling</option>
-              <option value="Quality" ${change.change_type === 'Quality' ? 'selected' : ''}>Quality</option>
-              <option value="Safety" ${change.change_type === 'Safety' ? 'selected' : ''}>Safety</option>
-            </select>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Priority *</div>
-            <select class="mcs-field-select" id="mcs-f-priority">
-              <option value="critical" ${change.priority === 'critical' ? 'selected' : ''}>Critical</option>
-              <option value="high" ${change.priority === 'high' ? 'selected' : ''}>High</option>
-              <option value="medium" ${change.priority === 'medium' ? 'selected' : ''}>Medium</option>
-              <option value="low" ${change.priority === 'low' ? 'selected' : ''}>Low</option>
-            </select>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Part / Drawing No.</div>
-            <select class="mcs-field-select" id="mcs-f-part">
-              <option value="">Select product...</option>
-              ${productOptions}
-            </select>
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Initiated By</div>
-            <input class="mcs-field-input" id="mcs-f-author" value="${esc(initiatedBy)}" readonly style="background: var(--surface2); color: var(--text2);" />
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">Target Implementation</div>
-            <input class="mcs-field-input" id="mcs-f-target" type="date" value="${change.target_implementation || ''}" />
-          </div>
-          <div class="mcs-field-group">
-            <div class="mcs-field-label">
-              Overhaul Time Impact (hours)
-              <span class="field-tooltip" title="Enter the change in overhaul hours this MCO will cause. Use a negative number if this change reduces overhaul time (an improvement), e.g. −2 means 2 hours saved. Use a positive number if it adds time.">ⓘ</span>
-            </div>
-            <input class="mcs-field-input" id="mcs-f-time-impact" type="number" step="0.5" value="${change.estimated_time_impact_hours || 0}" />
-          </div>
-          <div class="mcs-field-group mcs-modal-grid full">
-            <div class="mcs-field-label">Description of Change *</div>
-            <textarea class="mcs-field-textarea" id="mcs-f-description" rows="4">${esc(change.description || '')}</textarea>
-          </div>
-          <div class="mcs-field-group mcs-modal-grid full">
-            <div class="mcs-field-label">Justification / Root Cause</div>
-            <textarea class="mcs-field-textarea" id="mcs-f-justification" rows="3">${esc(change.justification || '')}</textarea>
-          </div>
-        </div>
-        <div class="mcs-section-title">Impact Assessment</div>
-        <div class="mcs-impact-grid">
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-bom" ${(change.impacts || []).includes('BOM Change') ? 'checked' : ''} /><label for="mcs-imp-bom">BOM Change</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-proc" ${(change.impacts || []).includes('Work Instructions') ? 'checked' : ''} /><label for="mcs-imp-proc">Work Instructions</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-tooling" ${(change.impacts || []).includes('Tooling Change') ? 'checked' : ''} /><label for="mcs-imp-tooling">Tooling Change</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-training" ${(change.impacts || []).includes('Training Required') ? 'checked' : ''} /><label for="mcs-imp-training">Training Required</label></div>
-          <div class="mcs-impact-cell"><input type="checkbox" id="mcs-imp-customer" ${(change.impacts || []).includes('Customer Notification') ? 'checked' : ''} /><label for="mcs-imp-customer">Customer Notification</label></div>
-        </div>
-        <div class="mcs-modal-grid">
-          ${pfmeaLinkingHtml}
+          ${workflowHtml}
         </div>
       </div>
       <div class="mcs-modal-footer">
@@ -746,6 +1082,15 @@ async function mcsShowEditModal(change) {
   `;
 
   document.body.appendChild(backdrop);
+  const activeEditStage = {
+    open: 'open',
+    review: 'approval1',
+    implementing: 'implement',
+    final_review: 'approval2',
+    implemented: 'approval2',
+    closed: 'approval2'
+  }[change.status] || 'open';
+  mcsInitStageCollapsibles(backdrop, [activeEditStage]);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop');
   });

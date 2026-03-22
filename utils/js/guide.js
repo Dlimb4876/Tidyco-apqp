@@ -346,6 +346,25 @@ const GUIDE_CONTENT = {
         </ul>
       </div>
       <div class="guide-section">
+        <div class="guide-section-title">Special Characteristics (SC)</div>
+        <p>Each <strong>Effect</strong> can be flagged with a Special Characteristic to indicate it requires enhanced controls beyond standard process monitoring.</p>
+        <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13px">
+          <tr style="border-bottom:1px solid var(--line)">
+            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">🦺 Safety</td>
+            <td style="padding:6px 0;color:var(--mid)">Failure could injure an operator, end-user, or violate a regulatory requirement. These must have documented prevention and detection controls.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--line)">
+            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">❗ Critical</td>
+            <td style="padding:6px 0;color:var(--mid)">Non-conformance is very likely to reach the customer without detection. Requires robust 100% inspection or process control.</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">⚠️ Major</td>
+            <td style="padding:6px 0;color:var(--mid)">Significant impact on product quality or function. Needs formal monitoring but may not require 100% inspection.</td>
+          </tr>
+        </table>
+        <p style="margin-top:8px">Use the <strong>SC filter</strong> in the toolbar to view only steps with a particular characteristic.</p>
+      </div>
+      <div class="guide-section">
         <div class="guide-section-title">Used By</div>
         <p>PFMEA causes can be synced directly into the <strong>Control Plan</strong> using the <em>Sync from PFMEA</em> button. High-RPN causes are surfaced in the <strong>Project Dashboard</strong> and <strong>Operations Risk</strong> view.</p>
       </div>
