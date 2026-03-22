@@ -13,13 +13,13 @@
       "first_read": "2026-03-22T18:36:00.061Z"
     },
     "/home/user/Tidyco-apqp/portals/mcs/css/mcs.css": {
-      "count": 1,
-      "tokens": 7129,
+      "count": 2,
+      "tokens": 6772,
       "first_read": "2026-03-22T18:36:00.302Z"
     },
     "/home/user/Tidyco-apqp/portals/mcs/js/mcs-main.js": {
-      "count": 2,
-      "tokens": 7325,
+      "count": 3,
+      "tokens": 7134,
       "first_read": "2026-03-22T18:36:00.706Z"
     },
     "/home/user/Tidyco-apqp/core/js/state.js": {
@@ -41,6 +41,61 @@
       "count": 2,
       "tokens": 10391,
       "first_read": "2026-03-22T18:36:45.274Z"
+    },
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-approval.js": {
+      "count": 1,
+      "tokens": 2185,
+      "first_read": "2026-03-22T18:38:31.396Z"
+    },
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-modal.js": {
+      "count": 4,
+      "tokens": 11247,
+      "first_read": "2026-03-22T18:38:31.542Z"
+    },
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-actions.js": {
+      "count": 1,
+      "tokens": 911,
+      "first_read": "2026-03-22T18:38:34.132Z"
+    },
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-approvers-data.js": {
+      "count": 1,
+      "tokens": 4140,
+      "first_read": "2026-03-22T18:38:34.406Z"
+    },
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-realtime.js": {
+      "count": 1,
+      "tokens": 1278,
+      "first_read": "2026-03-22T18:38:36.598Z"
+    },
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-pfmea.js": {
+      "count": 1,
+      "tokens": 1134,
+      "first_read": "2026-03-22T18:38:37.040Z"
+    },
+    "/home/user/Tidyco-apqp/tests/mcs-main.test.js": {
+      "count": 1,
+      "tokens": 1904,
+      "first_read": "2026-03-22T18:38:38.744Z"
+    },
+    "/home/user/Tidyco-apqp/tests/mcs-approval.test.js": {
+      "count": 1,
+      "tokens": 929,
+      "first_read": "2026-03-22T18:38:38.964Z"
+    },
+    "/home/user/Tidyco-apqp/tests/mcs-approval-core.test.js": {
+      "count": 1,
+      "tokens": 1226,
+      "first_read": "2026-03-22T18:38:39.000Z"
+    },
+    "/home/user/Tidyco-apqp/tests/mcs-actions.test.js": {
+      "count": 1,
+      "tokens": 1217,
+      "first_read": "2026-03-22T18:38:40.973Z"
+    },
+    "/home/user/Tidyco-apqp/tests/mcs-overhaul-integration.test.js": {
+      "count": 1,
+      "tokens": 2273,
+      "first_read": "2026-03-22T18:38:41.225Z"
     }
   },
   "files_written": [
@@ -109,9 +164,9 @@
     "utils/js/helpers.js": 1,
     "CHANGELOG.md": 1
   },
-  "anatomy_hits": 8,
+  "anatomy_hits": 19,
   "anatomy_misses": 0,
-  "repeated_reads_warned": 4,
+  "repeated_reads_warned": 9,
   "cerebrum_warnings": 0,
   "stop_count": 0
 }
