@@ -3,6 +3,10 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | PFD top ribbon switched to section navigator | Large flows were harder to navigate step-by-step, so the top ribbon now jumps by section with step-count/range context
+
+## 2026-03-22 | PFD new step types + flowchart improvements | Added Inspection (circle, Pass/Fail), Rework (parallelogram), Transport (stadium) step types; flowchart layout toggle (TD/LR), step type legend, high-RPN risk indicators (⚑), and per-type colour chips in table view
+
 ## 2026-03-22 | PFD flowchart professionalism improvements | Flowchart looked unprofessional and was not useful — added START/END terminators, section subgraphs, wider spacing, stronger decision node colour, centred SVG, column headers in table view, removed fragile arrowhead DOM hack
 
 ## 2026-03-22 | PFD flowchart: TD layout, tall canvas, click-to-expand, smaller arrowheads | User feedback — chart was small, horizontal, and showed no extra detail on nodes

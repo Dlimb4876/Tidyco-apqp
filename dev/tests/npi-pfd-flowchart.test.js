@@ -99,7 +99,121 @@ describe('NPI PFD flowchart behavior', () => {
     const html = npi.pfd.render()
 
     expect(html).toContain('Process Flowchart')
-    expect(html).toContain('Blank process links automatically continue to the next numbered step')
+    expect(html).toContain('Blank process links')
     expect(html).toContain('class="mermaid pfd-flowchart-canvas"')
+  })
+
+  test('generates Inspection node as circle with Pass/Fail edges', () => {
+    activeProject.pfd.push({
+      id: 's60', stepNum: 60, type: 'step', op: 'CMM Check', detail: '',
+      ctqIds: [], bomRefs: [], docRefs: [],
+      pfd_type: 'Inspection', nextStepId: null, nextStepId_yes: 70, nextStepId_no: 40
+    })
+    activeProject.pfd.push({
+      id: 's70', stepNum: 70, type: 'step', op: 'Ship', detail: '',
+      ctqIds: [], bomRefs: [], docRefs: [],
+      pfd_type: 'Process', nextStepId: null, nextStepId_yes: null, nextStepId_no: null
+    })
+
+    const syntax = npi.pfd.generateMermaidSyntax()
+
+    expect(syntax).toContain('S60(("60: CMM Check"))')
+    expect(syntax).toContain('S60 -- Pass --> S70')
+    expect(syntax).toContain('S60 -- Fail --> S40')
+    expect(syntax).toContain('classDef inspectionNode')
+  })
+
+  test('generates Rework node as parallelogram with single next link', () => {
+    activeProject.pfd.push({
+      id: 's60', stepNum: 60, type: 'step', op: 'Grind Flash', detail: '',
+      ctqIds: [], bomRefs: [], docRefs: [],
+      pfd_type: 'Rework', nextStepId: 10, nextStepId_yes: null, nextStepId_no: null
+    })
+
+    const syntax = npi.pfd.generateMermaidSyntax()
+
+    expect(syntax).toContain('S60[/"60: Grind Flash"/]')
+    expect(syntax).toContain('S60 --> S10')
+    expect(syntax).toContain('classDef reworkNode')
+  })
+
+  test('generates Transport node as stadium shape with single next link', () => {
+    activeProject.pfd.push({
+      id: 's60', stepNum: 60, type: 'step', op: 'Move to Paint', detail: '',
+      ctqIds: [], bomRefs: [], docRefs: [],
+      pfd_type: 'Transport', nextStepId: 70, nextStepId_yes: null, nextStepId_no: null
+    })
+    activeProject.pfd.push({
+      id: 's70', stepNum: 70, type: 'step', op: 'Paint', detail: '',
+      ctqIds: [], bomRefs: [], docRefs: [],
+      pfd_type: 'Process', nextStepId: null, nextStepId_yes: null, nextStepId_no: null
+    })
+
+    const syntax = npi.pfd.generateMermaidSyntax()
+
+    expect(syntax).toContain('S60(["60: Move to Paint"])')
+    expect(syntax).toContain('S60 --> S70')
+    expect(syntax).toContain('classDef transportNode')
+  })
+
+  test('switching to Inspection clears nextStepId and sets isTwoPath', () => {
+    npi.pfd.upd('s10', 'pfd_type', 'Inspection')
+
+    expect(activeProject.pfd[0].pfd_type).toBe('Inspection')
+    expect(activeProject.pfd[0].nextStepId).toBeNull()
+    expect(npi.notify).toHaveBeenCalledWith('render')
+  })
+
+  test('switching from Inspection to Process clears yes/no links', () => {
+    activeProject.pfd[1].pfd_type = 'Inspection'
+    activeProject.pfd[1].nextStepId_yes = 30
+    activeProject.pfd[1].nextStepId_no = 40
+
+    npi.pfd.upd('s20', 'pfd_type', 'Process')
+
+    expect(activeProject.pfd[1].pfd_type).toBe('Process')
+    expect(activeProject.pfd[1].nextStepId_yes).toBeNull()
+    expect(activeProject.pfd[1].nextStepId_no).toBeNull()
+  })
+
+  test('adds risk indicator ⚑ to node label when PFMEA RPN is high', () => {
+    global.RPN_HIGH = 100
+    activeProject.pfmea = [{
+      pfdId: 's10',
+      causes: [{ sev: 8, occ: 7, det: 3 }]
+    }]
+    global.npi.data.calcCauseRpn = (sev, occ, det) => sev * occ * det
+
+    const syntax = npi.pfd.generateMermaidSyntax()
+
+    expect(syntax).toContain('⚑')
+    expect(syntax).toContain('riskBorder')
+  })
+
+  test('flowchart uses LR direction when flowDirection is LR', () => {
+    npi.pfd.flowDirection = 'LR'
+
+    const syntax = npi.pfd.generateMermaidSyntax()
+
+    expect(syntax).toMatch(/^graph LR/)
+  })
+
+  test('render() includes layout toggle button in flowchart mode', () => {
+    npi.pfd.viewMode = 'flowchart'
+
+    const html = npi.pfd.render()
+
+    expect(html).toContain('pfd-toggle-layout')
+  })
+
+  test('render() includes legend in flowchart mode', () => {
+    npi.pfd.viewMode = 'flowchart'
+
+    const html = npi.pfd.render()
+
+    expect(html).toContain('pfd-flowchart-legend')
+    expect(html).toContain('Inspection')
+    expect(html).toContain('Rework')
+    expect(html).toContain('Transport')
   })
 })

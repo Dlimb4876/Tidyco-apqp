@@ -5,6 +5,7 @@
 
 npi.pfd = npi.pfd || {}
 npi.pfd.viewMode = 'table' // 'table' or 'flowchart'
+npi.pfd.flowDirection = 'TD' // 'TD' (top-down) or 'LR' (left-right)
 
 function pfdStepType(step) {
   return npi.data.pfdType.normalize(step && step.pfd_type)
@@ -64,21 +65,28 @@ function stepRowHTML(s, oi, p) {
 
   const stepType = pfdStepType(s)
   const isDecision = npi.data.pfdType.isDecision(stepType)
+  const isInspection = npi.data.pfdType.isInspection(stepType)
+  const isTwoPath = npi.data.pfdType.isTwoPath(stepType)
+  const typeChipMap = { Process: 'PROC', Decision: 'DEC', Inspection: 'INSP', Rework: 'RWK', Transport: 'TRN' }
+  const typeChip = `<span class="pfd-type-chip pfd-type-chip--${stepType.toLowerCase()}">${typeChipMap[stepType] || stepType}</span>`
   const flowControlHTML = `<div class="step-field f-flow">
     <div class="flow-control-group">
       <label>Type</label>
       <select class="cell-edit" data-action="pfd-upd" data-id="${s.id}" data-field="pfd_type">
-        <option value="Process" ${stepType === npi.data.pfdType.Process ? 'selected' : ''}>Process</option>
-        <option value="Decision" ${stepType === npi.data.pfdType.Decision ? 'selected' : ''}>Decision</option>
+        <option value="Process" ${stepType === 'Process' ? 'selected' : ''}>Process</option>
+        <option value="Decision" ${stepType === 'Decision' ? 'selected' : ''}>Decision</option>
+        <option value="Inspection" ${stepType === 'Inspection' ? 'selected' : ''}>Inspection</option>
+        <option value="Rework" ${stepType === 'Rework' ? 'selected' : ''}>Rework</option>
+        <option value="Transport" ${stepType === 'Transport' ? 'selected' : ''}>Transport</option>
       </select>
     </div>
-    ${isDecision
+    ${isTwoPath
     ? `<div class="flow-control-group">
-          <label>Next (Yes)</label>
+          <label>Next (${isInspection ? 'Pass' : 'Yes'})</label>
           <input type="number" class="cell-edit" min="1" step="1" value="${esc(pfdLinkValue(s.nextStepId_yes) || '')}" data-action="pfd-upd" data-id="${s.id}" data-field="nextStepId_yes" placeholder="Step #">
         </div>
         <div class="flow-control-group">
-          <label>Next (No)</label>
+          <label>Next (${isInspection ? 'Fail' : 'No'})</label>
           <input type="number" class="cell-edit" min="1" step="1" value="${esc(pfdLinkValue(s.nextStepId_no) || '')}" data-action="pfd-upd" data-id="${s.id}" data-field="nextStepId_no" placeholder="Step #">
         </div>`
     : `<div class="flow-control-group">
@@ -88,7 +96,7 @@ function stepRowHTML(s, oi, p) {
     }
   </div>`
 
-  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div><div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields"><div class="step-field f-op"><input class="cell-edit" value="${esc(s.op)}" data-action="pfd-upd" data-id="${s.id}" data-field="op" placeholder="Operation" style="font-weight:600"></div><div class="step-field f-detail"><textarea class="cell-edit" rows="2" data-action="pfd-upd" data-id="${s.id}" data-field="detail" placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div></div>${canEdit() ? flowControlHTML : ''}</div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
+  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div>${typeChip}<div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields"><div class="step-field f-op"><input class="cell-edit" value="${esc(s.op)}" data-action="pfd-upd" data-id="${s.id}" data-field="op" placeholder="Operation" style="font-weight:600"></div><div class="step-field f-detail"><textarea class="cell-edit" rows="2" data-action="pfd-upd" data-id="${s.id}" data-field="detail" placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div></div>${canEdit() ? flowControlHTML : ''}</div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
 }
 
 function headerRowHTML(s, oi, meta) {
@@ -138,8 +146,12 @@ npi.pfd._showDetail = function(s, p, anchorEl, canvasEl) {
   }
 
   const stepType = pfdStepType(s)
-  const isDecision = npi.data.pfdType.isDecision(stepType)
+  const typeTagClass = { Process: '', Decision: 'tag-amber', Inspection: 'tag-teal', Rework: 'tag-orange', Transport: 'tag-purple' }[stepType] || ''
   const pfCnt = p.pfmea.filter(r => r.pfdId === s.id).length
+  const maxRpn = (p.pfmea || []).filter(r => r.pfdId === s.id).reduce((max, row) => {
+    const rpn = (row.causes || []).reduce((m, c) => Math.max(m, npi.data.calcCauseRpn(c.sev, c.occ, c.det)), 0)
+    return Math.max(max, rpn)
+  }, 0)
 
   const ctqItems = (s.ctqIds || []).map(cid => {
     const ci = p.ctq.findIndex(c => c.id === cid)
@@ -169,14 +181,15 @@ npi.pfd._showDetail = function(s, p, anchorEl, canvasEl) {
       <div class="pfd-detail-header">
         <span class="step-num-badge">${s.stepNum}</span>
         <span class="pfd-detail-title">${esc(s.op || 'Untitled Step')}</span>
-        <span class="tag ${isDecision ? 'tag-amber' : ''}" style="flex-shrink:0">${esc(stepType)}</span>
+        <span class="tag ${typeTagClass}" style="flex-shrink:0">${esc(stepType)}</span>
+        ${maxRpn >= (window.RPN_HIGH || 100) ? `<span class="tag tag-red" style="flex-shrink:0;font-size:10px">⚑ RPN ${maxRpn}</span>` : ''}
         <button class="mini-btn pfd-detail-close" style="margin-left:auto">✕</button>
       </div>
       ${s.detail ? `<div class="pfd-detail-notes">${esc(s.detail)}</div>` : ''}
       ${ctqItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">CTQs</div><ul class="pfd-detail-list">${listHTML(ctqItems)}</ul></div>` : ''}
       ${docItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Documents</div><ul class="pfd-detail-list">${listHTML(docItems)}</ul></div>` : ''}
       ${resItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Resources</div><div style="display:flex;flex-wrap:wrap;gap:4px">${resItems.join('')}</div></div>` : ''}
-      ${pfCnt > 0 ? `<div class="pfd-detail-section"><div class="pfd-detail-label">PFMEA</div><span class="tag tag-amber">${pfCnt} failure mode${pfCnt > 1 ? 's' : ''}</span></div>` : ''}
+      ${pfCnt > 0 ? `<div class="pfd-detail-section"><div class="pfd-detail-label">PFMEA</div><span class="tag ${maxRpn >= (window.RPN_HIGH || 100) ? 'tag-red' : 'tag-amber'}">${pfCnt} failure mode${pfCnt > 1 ? 's' : ''}${maxRpn > 0 ? ` · max RPN ${maxRpn}` : ''}</span></div>` : ''}
       ${ctqItems.length === 0 && docItems.length === 0 && resItems.length === 0 && pfCnt === 0 && !s.detail ? '<p style="color:var(--muted);font-size:13px;margin:0">No additional details recorded for this step.</p>' : ''}
     </div>`
 
@@ -220,6 +233,20 @@ npi.pfd.generateMermaidSyntax = function() {
   const stepMap = new Map(executable.map(s => [s.stepNum, s]))
   const processNodeIds = []
   const decisionNodeIds = []
+  const inspectionNodeIds = []
+  const reworkNodeIds = []
+  const transportNodeIds = []
+
+  // Build set of high-risk step numbers (PFMEA RPN >= RPN_HIGH)
+  const highRiskStepIds = new Set()
+  ;(p.pfmea || []).forEach(row => {
+    const rpn = (row.causes || []).reduce((max, c) => Math.max(max, npi.data.calcCauseRpn(c.sev, c.occ, c.det)), 0)
+    if (rpn >= (window.RPN_HIGH || 100) && row.pfdId) {
+      const step = p.pfd.find(s => s.id === row.pfdId)
+      if (step && step.stepNum) highRiskStepIds.add(step.stepNum)
+    }
+  })
+  const riskNodeIds = []
 
   // Group steps by preceding section header for subgraph blocks
   const sections = []
@@ -237,7 +264,8 @@ npi.pfd.generateMermaidSyntax = function() {
     }
   })
 
-  let syntax = 'graph TD\n'
+  const direction = npi.pfd.flowDirection || 'TD'
+  let syntax = `graph ${direction}\n`
   syntax += '  PFDSTART([START])\n'
 
   // Declare nodes inside subgraph blocks (skip empty sections)
@@ -250,14 +278,27 @@ npi.pfd.generateMermaidSyntax = function() {
     }
     sec.steps.forEach(s => {
       const nodeId = pfdStepNodeId(s.stepNum)
-      const nodeLabel = `${s.stepNum}: ${pfdMermaidLabel(s)}`
-      if (npi.data.pfdType.isDecision(pfdStepType(s))) {
+      const isRisk = highRiskStepIds.has(s.stepNum)
+      const riskMark = isRisk ? ' ⚑' : ''
+      const nodeLabel = `${s.stepNum}: ${pfdMermaidLabel(s)}${riskMark}`
+      const type = pfdStepType(s)
+      if (npi.data.pfdType.isDecision(type)) {
         syntax += `    ${nodeId}{"${nodeLabel}"}\n`
         decisionNodeIds.push(nodeId)
+      } else if (npi.data.pfdType.isInspection(type)) {
+        syntax += `    ${nodeId}(("${nodeLabel}"))\n`
+        inspectionNodeIds.push(nodeId)
+      } else if (type === 'Rework') {
+        syntax += `    ${nodeId}[/"${nodeLabel}"/]\n`
+        reworkNodeIds.push(nodeId)
+      } else if (type === 'Transport') {
+        syntax += `    ${nodeId}(["${nodeLabel}"])\n`
+        transportNodeIds.push(nodeId)
       } else {
         syntax += `    ${nodeId}["${nodeLabel}"]\n`
         processNodeIds.push(nodeId)
       }
+      if (isRisk) riskNodeIds.push(nodeId)
     })
     if (useSubgraph) syntax += '  end\n'
   })
@@ -267,14 +308,18 @@ npi.pfd.generateMermaidSyntax = function() {
   // Edges: START → first step
   syntax += `  PFDSTART --> ${pfdStepNodeId(executable[0].stepNum)}\n`
 
-  // Edges: between steps, terminal process steps → END
+  // Edges: between steps
   executable.forEach((s, index) => {
     const nodeId = pfdStepNodeId(s.stepNum)
-    if (npi.data.pfdType.isDecision(pfdStepType(s))) {
+    const type = pfdStepType(s)
+    if (npi.data.pfdType.isTwoPath(type)) {
+      const isInsp = npi.data.pfdType.isInspection(type)
+      const yesLabel = isInsp ? 'Pass' : 'Yes'
+      const noLabel = isInsp ? 'Fail' : 'No'
       const yesTarget = pfdLinkValue(s.nextStepId_yes)
       const noTarget = pfdLinkValue(s.nextStepId_no)
-      if (yesTarget && stepMap.has(yesTarget)) syntax += `  ${nodeId} -- Yes --> ${pfdStepNodeId(yesTarget)}\n`
-      if (noTarget && stepMap.has(noTarget)) syntax += `  ${nodeId} -- No --> ${pfdStepNodeId(noTarget)}\n`
+      if (yesTarget && stepMap.has(yesTarget)) syntax += `  ${nodeId} -- ${yesLabel} --> ${pfdStepNodeId(yesTarget)}\n`
+      if (noTarget && stepMap.has(noTarget)) syntax += `  ${nodeId} -- ${noLabel} --> ${pfdStepNodeId(noTarget)}\n`
     } else {
       const fallbackNext = executable[index + 1] ? executable[index + 1].stepNum : null
       const nextTarget = pfdLinkValue(s.nextStepId) || fallbackNext
@@ -288,10 +333,18 @@ npi.pfd.generateMermaidSyntax = function() {
 
   syntax += '  classDef processNode fill:#eef4ff,stroke:#2b5da8,color:#173d73,stroke-width:1.2px\n'
   syntax += '  classDef decisionNode fill:#fef3c7,stroke:#d97706,color:#78350f,stroke-width:1.5px\n'
+  syntax += '  classDef inspectionNode fill:#d1fae5,stroke:#059669,color:#064e3b,stroke-width:1.5px\n'
+  syntax += '  classDef reworkNode fill:#ffedd5,stroke:#ea580c,color:#7c2d12,stroke-width:1.5px\n'
+  syntax += '  classDef transportNode fill:#ede9fe,stroke:#7c3aed,color:#2e1065,stroke-width:1.5px\n'
   syntax += '  classDef termNode fill:#f3f4f6,stroke:#6b7280,color:#374151,stroke-width:1.5px\n'
+  syntax += '  classDef riskBorder stroke:#dc2626,stroke-width:2.5px\n'
   if (processNodeIds.length > 0) syntax += `  class ${processNodeIds.join(',')} processNode\n`
   if (decisionNodeIds.length > 0) syntax += `  class ${decisionNodeIds.join(',')} decisionNode\n`
+  if (inspectionNodeIds.length > 0) syntax += `  class ${inspectionNodeIds.join(',')} inspectionNode\n`
+  if (reworkNodeIds.length > 0) syntax += `  class ${reworkNodeIds.join(',')} reworkNode\n`
+  if (transportNodeIds.length > 0) syntax += `  class ${transportNodeIds.join(',')} transportNode\n`
   syntax += '  class PFDSTART,PFDEND termNode\n'
+  if (riskNodeIds.length > 0) syntax += `  class ${riskNodeIds.join(',')} riskBorder\n`
 
   return syntax
 }
@@ -303,10 +356,12 @@ npi.pfd.render = function() {
   const executable = sorted.filter(isExecutableStep)
 
   const showFlowchart = npi.pfd.viewMode === 'table'
+  const isLR = npi.pfd.flowDirection === 'LR'
   const viewToggleButton = `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-view">${showFlowchart ? 'Show Flowchart' : 'Show Table'}</button>`
+  const layoutToggleButton = !showFlowchart ? `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-layout" title="Toggle flowchart orientation">${isLR ? '↕ Vertical' : '↔ Horizontal'}</button>` : ''
 
-  const header = `<div class="sec-head"><div><div class="sec-eyebrow">Step 02</div><div class="sec-title">Process Flow Diagram</div><div class="sec-desc">Steps numbered in 10s. Insert between steps. Numbers are permanent references in PFMEA and Control Plan.</div></div>
-  <div class="sec-actions">${viewToggleButton}<button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="pfd-add-main">＋ Add Step</button>` : ''}</div></div>`
+  const header = `<div class="sec-head"><div><div class="sec-eyebrow">Step 02</div><div class="sec-title">Process Flow Diagram</div><div class="sec-desc">Section navigator at top for fast jumps in large flows. Steps stay numbered in 10s, and those numbers remain permanent PFMEA and Control Plan references.</div></div>
+  <div class="sec-actions">${viewToggleButton}${layoutToggleButton}<button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="pfd-add-main">＋ Add Step</button>` : ''}</div></div>`
 
   if (npi.pfd.viewMode === 'flowchart') {
     const syntax = npi.pfd.generateMermaidSyntax()
@@ -376,13 +431,57 @@ npi.pfd.render = function() {
         el.innerHTML = '<div class="info-banner">Flowchart could not be rendered. Check that linked step numbers point to existing steps.</div>'
       }
     }, 50)
-    return `${header}<div class="card pfd-flowchart-shell"><div class="card-head"><span class="card-title">Process Flowchart</span><span class="card-meta">Click any step to see its details. Process steps use Next Step; decision steps use Next (Yes) / Next (No).</span></div><div class="pfd-flowchart-help">Blank process links automatically continue to the next numbered step so straight-line flows still render without extra setup.</div><div class="mermaid pfd-flowchart-canvas"></div></div>`
+    const legend = `<div class="pfd-flowchart-legend"><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--process"></span>Process</span><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--decision"></span>Decision</span><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--inspection"></span>Inspection</span><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--rework"></span>Rework</span><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--transport"></span>Transport</span><span class="pfd-legend-item"><span class="pfd-legend-risk-icon">⚑</span>High RPN</span></div>`
+    return `${header}<div class="card pfd-flowchart-shell"><div class="card-head"><span class="card-title">Process Flowchart</span><span class="card-meta">Click any step to see its details.</span></div><div class="pfd-flowchart-help">Blank process links auto-continue to the next numbered step. ⚑ = high RPN in PFMEA.</div><div class="mermaid pfd-flowchart-canvas"></div>${legend}</div>`
   }
 
   // Table view (default)
-  const ribbon = executable.map((s, i, arr) =>
-    `<div class="flow-node" data-action="pfd-scroll" data-id="${s.id}"><div class="flow-node-num">${s.stepNum}</div><div class="flow-node-name">${esc(s.op) || '—'}</div></div>${i < arr.length - 1 ? '<div class="flow-arrow">→</div>' : ''}`
-  ).join('')
+  const sectionNavigator = []
+  let activeSection = null
+  sorted.forEach(s => {
+    if (isHeaderStep(s)) {
+      if (activeSection) sectionNavigator.push(activeSection)
+      activeSection = {
+        id: s.id,
+        title: esc(s.op) || 'Section',
+        count: 0,
+        firstStepNum: null,
+        lastStepNum: null
+      }
+      return
+    }
+
+    if (!isExecutableStep(s)) return
+
+    if (!activeSection) {
+      activeSection = {
+        id: s.id,
+        title: 'Main Flow',
+        count: 0,
+        firstStepNum: null,
+        lastStepNum: null
+      }
+    }
+
+    activeSection.count++
+    const stepNum = Number(s.stepNum)
+    if (Number.isFinite(stepNum)) {
+      if (activeSection.firstStepNum == null) activeSection.firstStepNum = stepNum
+      activeSection.lastStepNum = stepNum
+    }
+  })
+  if (activeSection) sectionNavigator.push(activeSection)
+
+  const ribbon = sectionNavigator.map((section, i, arr) => {
+    const countLabel = section.count === 1 ? '1 step' : `${section.count} steps`
+    const rangeLabel = section.firstStepNum == null
+      ? ''
+      : (section.firstStepNum === section.lastStepNum
+        ? ` · ${section.firstStepNum}`
+        : ` · ${section.firstStepNum}-${section.lastStepNum}`)
+
+    return `<div class="flow-node" data-action="pfd-scroll" data-id="${section.id}"><div class="flow-node-num">${countLabel}${rangeLabel}</div><div class="flow-node-name">${section.title || 'Section'}</div></div>${i < arr.length - 1 ? '<div class="flow-arrow">→</div>' : ''}`
+  }).join('')
 
   let body = ''
   let activeSectionId = null
@@ -416,6 +515,12 @@ npi.pfd.render = function() {
 
 npi.pfd.toggleView = function() {
   npi.pfd.viewMode = npi.pfd.viewMode === 'table' ? 'flowchart' : 'table'
+  npi.notify('render')
+}
+
+npi.pfd.toggleLayout = function() {
+  npi.pfd.flowDirection = npi.pfd.flowDirection === 'TD' ? 'LR' : 'TD'
+  npi.pfd._mermaidReady = false
   npi.notify('render')
 }
 

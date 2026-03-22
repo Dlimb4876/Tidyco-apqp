@@ -72,6 +72,7 @@ npi.events._onClick = function(evt) {
   case 'pfd-save-doc-pick': npi.pfd.saveDocPick(); break
   case 'pfd-del-doc-ref': npi.pfd.delDocRef(el.getAttribute('data-step-id'), el.getAttribute('data-doc-id')); break
   case 'pfd-toggle-view': npi.pfd.toggleView(); break
+  case 'pfd-toggle-layout': npi.pfd.toggleLayout(); break
 
   case 'pfmea-add-mode': npi.pfmea.pfAddMode(el.getAttribute('data-step-id')); break
   case 'pfmea-add-effect': npi.pfmea.pfAddEffect(npiNum(el.getAttribute('data-mi'), -1)); break

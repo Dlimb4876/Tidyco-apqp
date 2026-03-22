@@ -1,10 +1,13 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T08:08:20.438Z
-> Files: 277 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T08:32:54.487Z
+> Files: 278 tracked | Anatomy hits: 0 | Misses: 0
+
+> Manual note: 2026-03-22 — PFD top navigator now uses section-level jumps in `portals/product-development/npi/js/npi-pfd.js`.
 
 ## ../../../.claude/plans/
 
+- `cheerful-frolicking-ember.md` — PFD & Flowchart Improvements (~1589 tok)
 - `valiant-puzzling-origami.md` — Plan: PFD Flowchart Visual Improvements (~1448 tok)
 
 ## ../../../.serena/
@@ -18,7 +21,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~9728 tok)
+- `CHANGELOG.md` — Changelog (~9798 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~484 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -293,7 +296,7 @@
 
 - `apqp-bom.css` — Styles: 43 rules, 1 vars, 1 media queries (~2038 tok)
 - `apqp-ctq.css` — Styles: 40 rules (~1619 tok)
-- `apqp-pfd.css` — Styles: 75 rules, 1 vars (~2946 tok)
+- `apqp-pfd.css` — Styles: 85 rules, 1 vars (~3492 tok)
 - `apqp-responsive.css` — Styles: 3 rules, 3 media queries (~1083 tok)
 - `apqp-shell.css` — Styles: 22 rules (~1040 tok)
 - `apqp-tables.css` — Styles: 35 rules (~1372 tok)
@@ -315,11 +318,11 @@
 - `npi-cp.js` — ═══════════════════════════════════ (~1613 tok)
 - `npi-ctq.js` — ═══════════════════════════════════ (~2294 tok)
 - `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydratePfdRows (~12134 tok)
-- `npi-data.js` — ═══════════════════════════════════ (~9312 tok)
-- `npi-events.js` — ═══════════════════════════════════ (~4308 tok)
+- `npi-data.js` — ═══════════════════════════════════ (~9389 tok)
+- `npi-events.js` — ═══════════════════════════════════ (~4325 tok)
 - `npi-gates-editor.js` — ═══════════════════════════════════ (~3071 tok)
 - `npi-orchestrator.js` — ═══════════════════════════════════ (~1190 tok)
-- `npi-pfd.js` — ═══════════════════════════════════ (~8578 tok)
+- `npi-pfd.js` — ═══════════════════════════════════ (~9865 tok)
 - `npi.js` — ═══════════════════════════════════ (~2239 tok)
 - `pfmea.js` — Declares PFMEA_RPN_FILTERS (~11138 tok)
 - `rpn-chart.js` — portals/npi/js/rpn-chart.js (~1068 tok)
@@ -416,7 +419,7 @@
 - `navigation.test.js` — fs: waitFor (~5721 tok)
 - `npi-data-relational.test.js` — Declares fs (~1638 tok)
 - `npi-gate-permissions.test.js` — Declares fs (~933 tok)
-- `npi-pfd-flowchart.test.js` — Declares fs (~1165 tok)
+- `npi-pfd-flowchart.test.js` — Declares fs (~2326 tok)
 - `npi-pfd-headers.test.js` — Declares fs (~1146 tok)
 - `operations-dashboard.test.js` — Declares fs (~6290 tok)
 - `operations-forecast-data.test.js` — Declares fs (~955 tok)
