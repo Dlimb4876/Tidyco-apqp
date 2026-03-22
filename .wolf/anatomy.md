@@ -1,21 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T11:24:24.431Z
-> Files: 281 tracked | Anatomy hits: 0 | Misses: 0
-
-## ../../../.claude/plans/
-
-- `cheerful-frolicking-ember.md` — PFD & Flowchart Improvements (~1589 tok)
-- `valiant-puzzling-origami.md` — Plan: PFD Flowchart Visual Improvements (~1448 tok)
-
-## ../../../.serena/
-
-- `serena_config.yml` — the language backend to use for code understanding and manipulation. (~2285 tok)
-
-## ../../../root/.claude/plans/
-
-- `keen-wibbling-island.md` — Bottom Bar Design Exploration (~2607 tok)
-- `zippy-chasing-ritchie.md` — Mobile UI Review & Recommendations (~991 tok)
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T12:01:22.525Z
+> Files: 276 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -24,11 +10,11 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~10133 tok)
+- `CHANGELOG.md` — Change log (~10374 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
-- `CLAUDE.md` — Tidyco APQP Core Router (~484 tok)
+- `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
-- `index.html` — Tidyco Operations Portal (~9755 tok)
+- `index.html` — Tidyco Operations Portal (~9936 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~328 tok)
 - `mcs-updated-2.html` (~13058 tok)
@@ -52,7 +38,7 @@
 - `README.md` — Project documentation (~1459 tok)
 - `serve.ps1` — .claude/serve.ps1 - start a simple HTTP file server from the repo root (~586 tok)
 - `serve.sh` — .claude/serve.sh — start MCP helper servers declared in mcp.json (POSIX / Linux / macOS / WSL) (~936 tok)
-- `settings.json` — /*.js)", (~655 tok)
+- `settings.json` — /*.js)", (~694 tok)
 - `settings.local.json` — /*.css)", (~1937 tok)
 
 ## .claude/agents/
@@ -140,16 +126,16 @@
 
 ## core/css/
 
-- `components.css` — Styles: 86 rules (~5841 tok)
-- `main.css` — Styles: 368 vars (~7976 tok)
+- `components.css` — Styles: 84 rules, 2 media queries (~6028 tok)
+- `main.css` — Styles: 361 vars (~8101 tok)
 
 ## core/js/
 
-- `app.js` — ═══════════════════════════════════ (~1234 tok)
+- `app.js` — ═══════════════════════════════════ (~1268 tok)
 - `auth.js` — ═══════════════════════════════════ (~1240 tok)
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~697 tok)
-- `db.js` — ═══════════════════════════════════ (~8297 tok)
-- `network.js` — Check if Supabase is reachable with a minimal query (~739 tok)
+- `db.js` — ═══════════════════════════════════ (~8516 tok)
+- `network.js` — Check if Supabase is reachable with a minimal query (~766 tok)
 - `state.js` — ═══════════════════════════════════ (~4483 tok)
 
 ## docs/
@@ -194,9 +180,9 @@
 - `capacity.css` — Styles: 58 rules, 2 media queries (~2226 tok)
 - `me-capacity-chart.css` — Styles: 31 rules, 1 media queries (~1086 tok)
 - `me-capacity-dashboard.css` — Styles: 41 rules (~1729 tok)
-- `me-capacity-heatmap.css` — Styles: 35 rules (~1420 tok)
+- `me-capacity-heatmap.css` — Styles: 35 rules, 1 animations (~1474 tok)
 - `me-capacity-holidays.css` — Styles: 23 rules (~977 tok)
-- `me-capacity-responsive.css` — Styles: 2 rules (~586 tok)
+- `me-capacity-responsive.css` — Styles: 2 rules, 2 media queries (~623 tok)
 - `me-capacity-shell.css` — Styles: 14 rules (~617 tok)
 - `me-capacity-tables.css` — Styles: 32 rules (~1156 tok)
 - `prod-capacity.css` — Styles: 76 rules (~3602 tok)
@@ -248,7 +234,7 @@
 
 ## portals/hub/css/
 
-- `hub.css` — Styles: 40 rules (~1594 tok)
+- `hub.css` — Styles: 40 rules, 3 media queries (~1689 tok)
 
 ## portals/hub/js/
 
@@ -263,7 +249,7 @@
 
 - `mcs-actions.js` — MCS Integration with Action Centre (~911 tok)
 - `mcs-approval.js` — MCS Approval Workflow (~2185 tok)
-- `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~2862 tok)
+- `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~4140 tok)
 - `mcs-main.js` — MCS (Manufacturing Change System) - Main Portal (~7325 tok)
 - `mcs-modal.js` — MCS Modal Handlers - Create, Edit, View (~11247 tok)
 - `mcs-pfmea.js` — MCS Integration with PFMEA History (~1134 tok)
@@ -300,7 +286,7 @@
 
 - `apqp-bom.css` — Styles: 43 rules, 1 vars, 1 media queries (~2038 tok)
 - `apqp-ctq.css` — Styles: 40 rules (~1619 tok)
-- `apqp-pfd.css` — Styles: 85 rules, 1 vars (~3492 tok)
+- `apqp-pfd.css` — Styles: 85 rules, 1 vars, 3 media queries (~3492 tok)
 - `apqp-responsive.css` — Styles: 3 rules, 3 media queries (~1083 tok)
 - `apqp-shell.css` — Styles: 22 rules (~1040 tok)
 - `apqp-tables.css` — Styles: 35 rules (~1372 tok)
@@ -322,12 +308,12 @@
 - `npi-cp.js` — ═══════════════════════════════════ (~1613 tok)
 - `npi-ctq.js` — ═══════════════════════════════════ (~2294 tok)
 - `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydratePfdRows (~12134 tok)
-- `npi-data.js` — ═══════════════════════════════════ (~9389 tok)
+- `npi-data.js` — ═══════════════════════════════════ (~9663 tok)
 - `npi-events.js` — ═══════════════════════════════════ (~4325 tok)
 - `npi-gates-editor.js` — ═══════════════════════════════════ (~3071 tok)
 - `npi-orchestrator.js` — ═══════════════════════════════════ (~1190 tok)
-- `npi-pfd.js` — ═══════════════════════════════════ (~9865 tok)
-- `npi.js` — ═══════════════════════════════════ (~2239 tok)
+- `npi-pfd.js` — ═══════════════════════════════════ (~10240 tok)
+- `npi.js` — ═══════════════════════════════════ (~2312 tok)
 - `pfmea.js` — Declares PFMEA_RPN_FILTERS (~11138 tok)
 - `rpn-chart.js` — portals/npi/js/rpn-chart.js (~1068 tok)
 - `timing.js` — ═══════════════════════════════════ (~8346 tok)
@@ -361,7 +347,7 @@
 
 ## portals/settings/js/
 
-- `settings.js` — ═══════════════════════════════════════════════════════════════ (~19000 tok)
+- `settings.js` — ═══════════════════════════════════════════════════════════════ (~20462 tok)
 - `teams-data.js` — ═══════════════════════════════════════════════════════════════ (~1400 tok)
 
 ## scripts/
@@ -450,4 +436,4 @@
 - `guide.js` — ═══════════════════════════════════ (~15334 tok)
 - `helpers.js` — Shared utility to calculate RPN (Risk Priority Number). (~4511 tok)
 - `navigation.js` — Section labels for UI display (reserved for future use) (~6778 tok)
-- `realtime.js` — Subscribe to real-time changes on a table (~1873 tok)
+- `realtime.js` — Subscribe to real-time changes on a table (~1923 tok)

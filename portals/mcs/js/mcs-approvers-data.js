@@ -263,3 +263,113 @@ async function mcsGetPendingApprovalsForMe() {
     return [];
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NPI Gate Signoff Assignments
+// Stores individual user assignments for each gate signoff role in global_settings.
+// Setting keys: gate_signoff_me_manager / gate_signoff_operations_director / gate_signoff_sales_director
+// Falls back to localStorage when global_settings is not available.
+// If no individuals are assigned to a role, the check falls back to team permissions.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const NPI_GATE_SIGNOFF_ROLES = [
+  { key: 'me_manager',          label: 'ME Manager' },
+  { key: 'operations_director', label: 'Operations Director' },
+  { key: 'sales_director',      label: 'Sales Director' },
+];
+
+const NPI_GATE_SIGNOFF_SETTING_KEYS = {
+  me_manager:          'gate_signoff_me_manager',
+  operations_director: 'gate_signoff_operations_director',
+  sales_director:      'gate_signoff_sales_director',
+};
+
+let npiGateSignoffConfig = null;
+
+/**
+ * Load gate signoff assignments from global_settings (falls back to localStorage).
+ * Returns { me_manager: [{user_id, user_name, user_email?}], operations_director: [], sales_director: [] }
+ */
+async function npiGateSignoffLoad() {
+  const config = {};
+  NPI_GATE_SIGNOFF_ROLES.forEach(r => { config[r.key] = []; });
+
+  try {
+    const { data, error } = await supa
+      .from('global_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', Object.values(NPI_GATE_SIGNOFF_SETTING_KEYS));
+
+    if (!error) {
+      const foundKeys = new Set();
+      (data || []).forEach(row => {
+        const role = NPI_GATE_SIGNOFF_ROLES.find(r => NPI_GATE_SIGNOFF_SETTING_KEYS[r.key] === row.setting_key);
+        if (role) {
+          config[role.key] = _mcsParseSetting(row.setting_value);
+          foundKeys.add(row.setting_key);
+        }
+      });
+      NPI_GATE_SIGNOFF_ROLES.forEach(r => {
+        const sk = NPI_GATE_SIGNOFF_SETTING_KEYS[r.key];
+        if (foundKeys.has(sk)) {
+          localStorage.setItem(sk, JSON.stringify(config[r.key]));
+        } else {
+          config[r.key] = _mcsParseSetting(localStorage.getItem(sk));
+        }
+      });
+      return config;
+    }
+  } catch (err) {
+    console.debug('[Gate Signoffs] global_settings unavailable, using localStorage');
+  }
+
+  NPI_GATE_SIGNOFF_ROLES.forEach(r => {
+    config[r.key] = _mcsParseSetting(localStorage.getItem(NPI_GATE_SIGNOFF_SETTING_KEYS[r.key]));
+  });
+  return config;
+}
+
+/** Persist a role's assignee list to global_settings (+ localStorage). */
+async function _npiGateSignoffSaveList(roleKey, list) {
+  const settingKey = NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey];
+  const json = JSON.stringify(list);
+  localStorage.setItem(settingKey, json);
+  try {
+    const { data: existing } = await supa
+      .from('global_settings')
+      .select('id')
+      .eq('setting_key', settingKey)
+      .maybeSingle();
+    if (existing) {
+      await supa.from('global_settings')
+        .update({ setting_value: json, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+    } else {
+      await supa.from('global_settings')
+        .insert([{ setting_key: settingKey, setting_value: json }]);
+    }
+  } catch (err) {
+    console.debug('[Gate Signoffs] Could not save to global_settings, localStorage used');
+  }
+}
+
+/** Add a user as an assignee for a gate signoff role. */
+async function npiGateSignoffAdd(roleKey, userId, userName, userEmail) {
+  if (!NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey]) return false;
+  const current = (npiGateSignoffConfig && npiGateSignoffConfig[roleKey]) ||
+    _mcsParseSetting(localStorage.getItem(NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey]));
+  if (current.some(u => u.user_id === userId)) return true;
+  const entry = { user_id: userId, user_name: userName };
+  if (userEmail) entry.user_email = userEmail;
+  await _npiGateSignoffSaveList(roleKey, [...current, entry]);
+  return true;
+}
+
+/** Remove a user as an assignee for a gate signoff role. */
+async function npiGateSignoffRemove(roleKey, userId) {
+  if (!NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey]) return false;
+  const current = (npiGateSignoffConfig && npiGateSignoffConfig[roleKey]) ||
+    _mcsParseSetting(localStorage.getItem(NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey]));
+  await _npiGateSignoffSaveList(roleKey, current.filter(u => u.user_id !== userId));
+  return true;
+}

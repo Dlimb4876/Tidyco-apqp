@@ -140,6 +140,11 @@ function npiScheduleReload() {
 function npiDataInit() {
   if (typeof createRealtimeSubscription !== 'function') return
 
+  // Load gate signoff config once so canCurrentUserSignRole can check individual assignments
+  if (npiGateSignoffConfig === null && typeof npiGateSignoffLoad === 'function') {
+    npiGateSignoffLoad().then(cfg => { npiGateSignoffConfig = cfg })
+  }
+
   // Load relational data when switching to a new project
   if (npiLoadedProgId !== progId && progId && typeof npiRelLoad === 'function') {
     npiLoadedProgId = progId

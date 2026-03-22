@@ -525,6 +525,29 @@ npi.data.gate = {
     return ROLE_PERMISSION_MAP[roleLabel] || ''
   },
   canCurrentUserSignRole(role) {
+    const roleLabel = String(role || '').trim().toLowerCase()
+    const ROLE_KEY_MAP = {
+      'me manager':          'me_manager',
+      'operations director': 'operations_director',
+      'sales director':      'sales_director',
+    }
+    const roleKey = ROLE_KEY_MAP[roleLabel]
+
+    // Check individual assignment config first (if loaded and has entries for this role)
+    if (roleKey && typeof npiGateSignoffConfig !== 'undefined' && npiGateSignoffConfig !== null) {
+      const assigned = npiGateSignoffConfig[roleKey] || []
+      if (assigned.length > 0) {
+        if (!currentUser) return false
+        const myId = currentUser.id
+        const myEmail = (currentUser.email || '').toLowerCase()
+        return assigned.some(u =>
+          (myId && u.user_id && u.user_id === myId) ||
+          (myEmail && u.user_email && u.user_email.toLowerCase() === myEmail)
+        )
+      }
+    }
+
+    // Fall back to team permission check
     const permissionKey = npi.data.gate.rolePermissionKey(role)
     if (!permissionKey) return true
     if (typeof hasPermission === 'function') return hasPermission(permissionKey)
