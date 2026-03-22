@@ -1,5 +1,5 @@
 /**
- * MCS (Manufacturing Change System) - Main Portal
+ * MCS (Manufacturing Change) - Main Portal
  * Handles list rendering, filtering, sorting, and user interactions
  */
 

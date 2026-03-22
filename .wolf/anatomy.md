@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T15:13:26.834Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T18:36:53.405Z
 > Files: 277 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
@@ -10,18 +10,18 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~10391 tok)
+- `CHANGELOG.md` — Changelog (~10438 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
-- `index.html` — Tidyco Operations Portal (~9757 tok)
+- `index.html` — Tidyco Operations Portal (~9755 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~328 tok)
 - `mcs-updated-2.html` (~13058 tok)
 - `package-lock.json` — npm lock file (~61736 tok)
 - `package.json` — Node.js package manifest (~490 tok)
 - `QWEN.md` — QWEN.md — Tidyco APQP Quality Tool (~3321 tok)
-- `README.md` — Project documentation (~4834 tok)
+- `README.md` — Project documentation (~4723 tok)
 - `SKILLS_GUIDE.md` — Tidyco APQP Development Skills Guide (~2715 tok)
 - `SKILLS_QUICK_REFERENCE.txt` — Declares in (~847 tok)
 - `SKILLS_SUMMARY.md` — Tidyco APQP Development Skills — Summary (~1594 tok)
@@ -136,7 +136,7 @@
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~697 tok)
 - `db.js` — ═══════════════════════════════════ (~8516 tok)
 - `network.js` — Check if Supabase is reachable with a minimal query (~766 tok)
-- `state.js` — ═══════════════════════════════════ (~4483 tok)
+- `state.js` — ═══════════════════════════════════ (~4402 tok)
 
 ## docs/
 
@@ -243,14 +243,14 @@
 ## portals/mcs/css/
 
 - `mcs-responsive.css` — Styles: 8 rules, 8 media queries (~1919 tok)
-- `mcs.css` — Styles: 86 rules, 6 vars (~7129 tok)
+- `mcs.css` — Styles: 89 rules, 6 vars (~6772 tok)
 
 ## portals/mcs/js/
 
 - `mcs-actions.js` — MCS Integration with Action Centre (~911 tok)
 - `mcs-approval.js` — MCS Approval Workflow (~2185 tok)
 - `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~4140 tok)
-- `mcs-main.js` — MCS (Manufacturing Change System) - Main Portal (~7325 tok)
+- `mcs-main.js` — MCS (Manufacturing Change) - Main Portal (~7134 tok)
 - `mcs-modal.js` — MCS Modal Handlers - Create, Edit, View (~11247 tok)
 - `mcs-pfmea.js` — MCS Integration with PFMEA History (~1134 tok)
 - `mcs-realtime.js` — MCS Real-time Subscriptions (~1278 tok)
@@ -435,6 +435,6 @@
 ## utils/js/
 
 - `guide.js` — ═══════════════════════════════════ (~15334 tok)
-- `helpers.js` — Shared utility to calculate RPN (Risk Priority Number). (~4511 tok)
-- `navigation.js` — Section labels for UI display (reserved for future use) (~6778 tok)
+- `helpers.js` — Shared utility to calculate RPN (Risk Priority Number). (~4388 tok)
+- `navigation.js` — Section labels for UI display (reserved for future use) (~6604 tok)
 - `realtime.js` — Subscribe to real-time changes on a table (~1923 tok)

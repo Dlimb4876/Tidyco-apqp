@@ -1,90 +1,117 @@
 {
-  "session_id": "session-2026-03-22-1510",
-  "started": "2026-03-22T15:10:16.193Z",
+  "session_id": "session-2026-03-22-1834",
+  "started": "2026-03-22T18:34:28.390Z",
   "files_read": {
-    "/home/user/Tidyco-apqp/portals/hub/css/hub.css": {
+    "/home/user/Tidyco-apqp/README.md": {
+      "count": 1,
+      "tokens": 4834,
+      "first_read": "2026-03-22T18:35:59.836Z"
+    },
+    "/home/user/Tidyco-apqp/index.html": {
       "count": 2,
-      "tokens": 1689,
-      "first_read": "2026-03-22T15:11:28.969Z"
+      "tokens": 9757,
+      "first_read": "2026-03-22T18:36:00.061Z"
     },
-    "/home/user/Tidyco-apqp/portals/product-development/npi/css/dashboard.css": {
+    "/home/user/Tidyco-apqp/portals/mcs/css/mcs.css": {
       "count": 1,
-      "tokens": 8374,
-      "first_read": "2026-03-22T15:11:37.636Z"
+      "tokens": 7129,
+      "first_read": "2026-03-22T18:36:00.302Z"
     },
-    "/home/user/Tidyco-apqp/portals/capacity/css/capacity.css": {
-      "count": 1,
-      "tokens": 2226,
-      "first_read": "2026-03-22T15:11:42.464Z"
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-main.js": {
+      "count": 2,
+      "tokens": 7325,
+      "first_read": "2026-03-22T18:36:00.706Z"
     },
-    "/home/user/Tidyco-apqp/tests/hub.test.js": {
-      "count": 1,
-      "tokens": 2559,
-      "first_read": "2026-03-22T15:12:02.394Z"
+    "/home/user/Tidyco-apqp/core/js/state.js": {
+      "count": 2,
+      "tokens": 4483,
+      "first_read": "2026-03-22T18:36:00.797Z"
     },
-    "/home/user/Tidyco-apqp/tests/capacity-events.test.js": {
+    "/home/user/Tidyco-apqp/utils/js/navigation.js": {
       "count": 1,
-      "tokens": 252,
-      "first_read": "2026-03-22T15:12:07.108Z"
+      "tokens": 6778,
+      "first_read": "2026-03-22T18:36:05.970Z"
+    },
+    "/home/user/Tidyco-apqp/utils/js/helpers.js": {
+      "count": 1,
+      "tokens": 4511,
+      "first_read": "2026-03-22T18:36:06.167Z"
     },
     "/home/user/Tidyco-apqp/CHANGELOG.md": {
-      "count": 1,
-      "tokens": 10345,
-      "first_read": "2026-03-22T15:13:23.803Z"
+      "count": 2,
+      "tokens": 10391,
+      "first_read": "2026-03-22T18:36:45.274Z"
     }
   },
   "files_written": [
     {
-      "file": "/home/user/Tidyco-apqp/portals/hub/css/hub.css",
+      "file": "/home/user/Tidyco-apqp/README.md",
       "action": "edit",
-      "tokens": 91,
-      "at": "2026-03-22T15:11:51.056Z"
+      "tokens": 25,
+      "at": "2026-03-22T18:36:11.509Z"
     },
     {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
-      "action": "create",
-      "tokens": 2344,
-      "at": "2026-03-22T15:12:23.495Z"
+      "file": "/home/user/Tidyco-apqp/README.md",
+      "action": "edit",
+      "tokens": 22,
+      "at": "2026-03-22T18:36:11.895Z"
     },
     {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
+      "file": "/home/user/Tidyco-apqp/index.html",
       "action": "edit",
-      "tokens": 96,
-      "at": "2026-03-22T15:12:36.687Z"
+      "tokens": 10,
+      "at": "2026-03-22T18:36:14.039Z"
     },
     {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
+      "file": "/home/user/Tidyco-apqp/portals/mcs/css/mcs.css",
       "action": "edit",
-      "tokens": 222,
-      "at": "2026-03-22T15:12:40.718Z"
+      "tokens": 14,
+      "at": "2026-03-22T18:36:14.859Z"
     },
     {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
+      "file": "/home/user/Tidyco-apqp/portals/mcs/js/mcs-main.js",
       "action": "edit",
-      "tokens": 75,
-      "at": "2026-03-22T15:12:43.972Z"
+      "tokens": 35,
+      "at": "2026-03-22T18:36:37.103Z"
     },
     {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
+      "file": "/home/user/Tidyco-apqp/core/js/state.js",
       "action": "edit",
-      "tokens": 300,
-      "at": "2026-03-22T15:12:55.751Z"
+      "tokens": 16,
+      "at": "2026-03-22T18:36:39.198Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/utils/js/navigation.js",
+      "action": "edit",
+      "tokens": 9,
+      "at": "2026-03-22T18:36:39.869Z"
+    },
+    {
+      "file": "/home/user/Tidyco-apqp/utils/js/helpers.js",
+      "action": "edit",
+      "tokens": 26,
+      "at": "2026-03-22T18:36:40.489Z"
     },
     {
       "file": "/home/user/Tidyco-apqp/CHANGELOG.md",
       "action": "edit",
-      "tokens": 152,
-      "at": "2026-03-22T15:13:26.846Z"
+      "tokens": 148,
+      "at": "2026-03-22T18:36:53.414Z"
     }
   ],
   "edit_counts": {
-    "portals/hub/css/hub.css": 1,
-    "tests/capacity-hub.test.js": 5,
+    "README.md": 2,
+    "index.html": 1,
+    "portals/mcs/css/mcs.css": 1,
+    "portals/mcs/js/mcs-main.js": 1,
+    "core/js/state.js": 1,
+    "utils/js/navigation.js": 1,
+    "utils/js/helpers.js": 1,
     "CHANGELOG.md": 1
   },
-  "anatomy_hits": 6,
+  "anatomy_hits": 8,
   "anatomy_misses": 0,
-  "repeated_reads_warned": 1,
+  "repeated_reads_warned": 4,
   "cerebrum_warnings": 0,
   "stop_count": 0
 }
