@@ -1,57 +1,12 @@
 {
-  "session_id": "session-2026-03-22-1121",
-  "started": "2026-03-22T11:21:33.802Z",
-  "files_read": {
-    "/home/user/Tidyco-apqp/core/css/main.css": {
-      "count": 4,
-      "tokens": 7976,
-      "first_read": "2026-03-22T11:23:13.900Z"
-    },
-    "/home/user/Tidyco-apqp/index.html": {
-      "count": 1,
-      "tokens": 9755,
-      "first_read": "2026-03-22T11:23:17.227Z"
-    },
-    "/home/user/Tidyco-apqp/CHANGELOG.md": {
-      "count": 1,
-      "tokens": 10045,
-      "first_read": "2026-03-22T11:24:18.446Z"
-    }
-  },
-  "files_written": [
-    {
-      "file": "/home/user/Tidyco-apqp/core/css/main.css",
-      "action": "edit",
-      "tokens": 331,
-      "at": "2026-03-22T11:23:35.082Z"
-    },
-    {
-      "file": "/home/user/Tidyco-apqp/index.html",
-      "action": "edit",
-      "tokens": 28,
-      "at": "2026-03-22T11:23:40.345Z"
-    },
-    {
-      "file": "/home/user/Tidyco-apqp/core/css/main.css",
-      "action": "edit",
-      "tokens": 71,
-      "at": "2026-03-22T11:23:46.941Z"
-    },
-    {
-      "file": "/home/user/Tidyco-apqp/CHANGELOG.md",
-      "action": "edit",
-      "tokens": 226,
-      "at": "2026-03-22T11:24:24.441Z"
-    }
-  ],
-  "edit_counts": {
-    "core/css/main.css": 2,
-    "index.html": 1,
-    "CHANGELOG.md": 1
-  },
-  "anatomy_hits": 3,
+  "session_id": "session-2026-03-22-1209",
+  "started": "2026-03-22T12:09:56.066Z",
+  "files_read": {},
+  "files_written": [],
+  "edit_counts": {},
+  "anatomy_hits": 0,
   "anatomy_misses": 0,
-  "repeated_reads_warned": 3,
+  "repeated_reads_warned": 0,
   "cerebrum_warnings": 0,
   "stop_count": 0
 }

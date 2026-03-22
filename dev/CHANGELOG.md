@@ -3,6 +3,12 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | Generic Approvals settings with individual gate sign-off assignment | "Mfg. Changes" tab renamed to "Approvals"; NPI gate sign-off roles (ME Manager, Operations Director, Sales Director) can now be assigned to named individuals rather than relying solely on team permissions
+
+## 2026-03-22 | Fix mobile-only buttons showing on desktop | .tbtn display:flex was overriding .mobile-quick-btn display:none due to cascade order; raised specificity to .tbtn.mobile-quick-btn
+
+## 2026-03-22 | Fix double scroll bar on desktop | Bottombar was outside .shell causing body + .main to both scroll; moved it inside .shell and removed redundant CSS overrides
+
 ## 2026-03-22 | Professional top bar button redesign | Top bar buttons looked cramped and unprofessional — increased button size (11→13px font, 5px 11px→8px 14px padding), improved spacing (5px→8px gap), added subtle hover shadows, updated logout emoji from ⏻ to 🚪, and ensured consistent 36px min height for better touch targets and visual balance
 
 ## 2026-03-22 | Fix heatmap mobile horizontal scroll | Heatmap spread across multiple lines on mobile; changed wrapper to overflow:auto scroll container, fixed column template from auto-fit (which compresses) to repeat(20, ...) so the table scrolls horizontally with a sticky person column
