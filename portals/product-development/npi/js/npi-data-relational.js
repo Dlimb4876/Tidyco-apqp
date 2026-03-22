@@ -66,7 +66,11 @@ function npiRelHydratePfdRows(rows) {
     detail: row.detail || '',
     ctqIds: row.ctq_ids || [],
     bomRefs: row.bom_refs || [],
-    docRefs: row.doc_refs || []
+    docRefs: row.doc_refs || [],
+    pfd_type: row.pfd_type || 'Process',
+    nextStepId: row.next_step_num != null ? row.next_step_num : null,
+    nextStepId_yes: row.next_step_num_yes != null ? row.next_step_num_yes : null,
+    nextStepId_no: row.next_step_num_no != null ? row.next_step_num_no : null
   }));
 
   const firstExecutable = executableRows[0] || null;
@@ -83,7 +87,11 @@ function npiRelHydratePfdRows(rows) {
         detail: row.detail || '',
         ctqIds: row.ctq_ids || [],
         bomRefs: row.bom_refs || [],
-        docRefs: row.doc_refs || []
+        docRefs: row.doc_refs || [],
+        pfd_type: null,
+        nextStepId: null,
+        nextStepId_yes: null,
+        nextStepId_no: null
       };
 
       if (firstExecutable && Number.isFinite(stepNum) && stepNum < Number(firstExecutable.step_num)) {
@@ -466,6 +474,10 @@ window.npiRelSavePFDStep = async function(step) {
       ctq_ids: step.ctqIds || [],
       bom_refs: step.bomRefs || [],
       doc_refs: step.docRefs || [],
+      pfd_type: npiRelIsHeaderStep(step.type) ? null : (step.pfd_type || 'Process'),
+      next_step_num: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId != null ? step.nextStepId : null),
+      next_step_num_yes: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId_yes != null ? step.nextStepId_yes : null),
+      next_step_num_no: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId_no != null ? step.nextStepId_no : null),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
     if (error) console.warn('npiRelSavePFDStep error:', error.message);

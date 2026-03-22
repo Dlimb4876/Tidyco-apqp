@@ -41,7 +41,8 @@ describe('operations infographic', () => {
     expect(globalThis.__opsInfographic.opsInfographicUnitCards([])).toBe('');
   });
 
-  it('opens a popup and writes the infographic html', () => {
+  it('opens a popup and writes the infographic html', async () => {
+    global.fetch = jest.fn(() => Promise.reject(new Error('no logo')));
     global.opsBuildMetrics = jest.fn(() => ({
       healthScore: 88,
       projectsFlow: { active: 7 },
@@ -60,14 +61,15 @@ describe('operations infographic', () => {
     const close = jest.fn();
     window.open = jest.fn(() => ({ document: { write, close } }));
 
-    window.opsGenerateInfographic();
+    await window.opsGenerateInfographic();
 
     expect(window.open).toHaveBeenCalled();
     expect(write).toHaveBeenCalled();
     expect(String(write.mock.calls[0][0])).toContain('Capacity Infographic');
   });
 
-  it('alerts user when popup is blocked', () => {
+  it('alerts user when popup is blocked', async () => {
+    global.fetch = jest.fn(() => Promise.reject(new Error('no logo')));
     global.opsBuildMetrics = jest.fn(() => ({
       healthScore: 50,
       projectsFlow: { active: 1 },
@@ -82,7 +84,7 @@ describe('operations infographic', () => {
 
     window.open = jest.fn(() => null);
 
-    window.opsGenerateInfographic();
+    await window.opsGenerateInfographic();
 
     expect(global.alert).toHaveBeenCalled();
   });

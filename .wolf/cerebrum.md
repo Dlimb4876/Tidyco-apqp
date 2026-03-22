@@ -9,6 +9,9 @@
 <!-- How the user likes things done. Code style, tools, patterns, communication. -->
 - For Operations dashboard unit capacity displays, user prefers one box per unit (not grouped into a single shared unit panel/card).
 - User expects README.md and TESTING_STRATEGY.md to be updated in the same logical change whenever implementation changes affect behavior, workflow, or test reality.
+- For NPI PFD flowchart UX, user expects the preview to stay compact even for very large maps (100+ steps), not just moderate-size flows.
+- For NPI PFD flowchart readability, user prefers fixed 211% zoom (220% bigger than prior 66%, not adaptive 45%), permanent left-to-right layout, and strong visual distinction between process and decision nodes.
+- For NPI PFD flowchart visuals, user expects a professional polished look (clean edge labels, restrained palette, and non-scruffy rendering) in addition to readability.
 
 ## Key Learnings
 
@@ -26,6 +29,8 @@
 - Coverage reporting note: many suites load source files via eval(), which means Jest can pass all tests but still emit an empty source coverage map.
 - Operations dashboard parity expectation: the People tab must include Unit 2/3/6 capacity cards alongside ME and PM, not only on Overview.
 - Capacity info affordances in dashboard cards must be interactive controls (button or delegated action), not static `div` text with only a `title` tooltip.
+- `.gemini/GEMINI.md` is a separate assistant-facing guide and must be kept aligned with the repo's OpenWolf protocol when workflow requirements change.
+- NPI PFD flowchart links are stored as step numbers, not row ids; blank Process links should fall through to the next numbered step so legacy straight-line PFDs still render without manual rewiring.
 
 ## User Preferences (continued)
 

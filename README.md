@@ -102,6 +102,19 @@ Assign these from **Settings → Teams → Edit permissions**. Admin users can s
 
 ---
 
+## NPI PFD Flowchart View
+
+The NPI Process Flow Diagram now supports a graphical flowchart view as well as the existing table view.
+
+- Each executable step has a **Type**: `Process` or `Decision`
+- `Process` steps can store one **Next Step** step number
+- `Decision` steps can store **Next (Yes)** and **Next (No)** step numbers
+- In the flowchart preview, blank process links automatically continue to the next numbered step so straight-line flows still render without extra setup
+
+These links are edited directly in the PFD table and used to build the graphical preview.
+
+---
+
 ## Project Structure
 
 ```
@@ -217,7 +230,7 @@ Assign these from **Settings → Teams → Edit permissions**. Admin users can s
 
 - **Project**: Root object containing metadata (customer, unit, family) and child arrays.
 - **CTQ**: Critical-to-Quality requirements (id, req, spec, testMethod).
-- **PFD**: Process Flow steps. Includes `bomRefs` and `ctqIds`.
+- **PFD**: Process Flow steps. Includes `bomRefs`, `ctqIds`, `pfd_type`, and optional next-step links for flowchart rendering.
 - **PFMEA**: Nested structure: Failure Mode → Effects → Causes (with RPN/Action history).
 - **BOM**: Categorised into `parts`, `tools`, `equip`, `mat`, `cons`, and `kits`.
 

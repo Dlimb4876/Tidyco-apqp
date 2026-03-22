@@ -33,6 +33,20 @@ Always run in this order:
 4.  `npx eslint portals/product-development/npi/**/*.js`: Lints NPI files.
 5.  `npx prettier --write portals/product-development/npi/**/*.js`: Formats NPI files.
 
+### OpenWolf commands and workflow
+
+Gemini must also follow the OpenWolf protocol used by this repository.
+
+1.  Read `.wolf/anatomy.md` before reading project files.
+2.  Read `.wolf/cerebrum.md` before generating or changing code.
+3.  Read `.wolf/buglog.json` before fixing a bug, test failure, or reported problem.
+4.  Use `openwolf designqc` when asked to review or improve UI design. This saves screenshots to `.wolf/designqc-captures/` for inspection.
+5.  After significant work, append a one-line entry to `.wolf/memory.md`.
+6.  After creating, deleting, renaming, or materially changing tracked files, update `.wolf/anatomy.md`.
+7.  After a bug fix or failed test/build investigation, append an entry to `.wolf/buglog.json`.
+
+If Gemini is unsure about OpenWolf behavior, the source of truth is `.wolf/OPENWOLF.md`.
+
 ---
 
 ## 4. Critical Rules
@@ -149,3 +163,10 @@ Always run in this order:
 -   The reason should explain *why*, not just *what*.
 -   One entry per logical change — not one per file edited.
 -   Add the entry before committing so it is included in the same commit.
+
+---
+
+## 13. OpenWolf source of truth
+
+-   Repo-level OpenWolf instructions live in `.wolf/OPENWOLF.md` and `.claude/rules/openwolf.md`.
+-   Gemini guidance in this file must stay aligned with those files so Gemini does not miss required OpenWolf steps.
