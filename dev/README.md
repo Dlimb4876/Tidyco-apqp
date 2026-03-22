@@ -76,7 +76,7 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | **Production** | `production` | Production planning, scheduling, and plan views |
 | **Operations** | `operations` | Operations Dashboard and Forecast |
 | **Action Centre** | `action-centre` | Aggregated actions, PFMEA tasks, and risks across all projects |
-| **MCS** | `mcs` | Manufacturing Change System — ECR workflow and schedule impact tracking |
+| **MCS** | `mcs` | Manufacturing Change — ECR workflow and schedule impact tracking |
 | **Settings** | `settings` | User management, teams, permissions, appearance, work areas, and families |
 | **Feedback** | `feedback` | User feedback and bug reporting (real-time) |
 
@@ -193,7 +193,7 @@ These links are edited directly in the PFD table and used to build the graphical
 │   ├── /action-centre                # Aggregated Actions, PFMEA tasks, and risks
 │   │   ├── /css/action-centre.css
 │   │   └── /js/action-centre.js
-│   ├── /mcs                          # Manufacturing Change System (ECR workflow)
+│   ├── /mcs                          # Manufacturing Change (ECR workflow)
 │   │   ├── /css/mcs.css
 │   │   └── /js
 │   │       ├── mcs-data.js           # MCS data layer

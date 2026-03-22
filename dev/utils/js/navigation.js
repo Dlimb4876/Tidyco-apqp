@@ -18,7 +18,7 @@ const SECTION_LABELS = {
   'product-development': 'Product Development',
   feedback: 'Feedback & Bugs',
   'action-centre': 'Action Centre',
-  mcs: 'Manufacturing Change System'
+  mcs: 'Manufacturing Change'
 };
 
 // 1.5 Back button labels — defined once at module level

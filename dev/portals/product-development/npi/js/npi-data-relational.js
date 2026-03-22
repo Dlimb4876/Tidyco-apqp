@@ -584,7 +584,7 @@ window.npiRelSavePFMEACause = async function(effectId, cause) {
   }
 };
 
-window.npiRelSavePFMEAHistory = async function(causeId, histEntry) {
+window.npiRelSavePFMEAHistory = window.npiRelSavePFMEAHistory = async function(causeId, histEntry) {
   const projectId = await window.npiRelResolveProjectId(progId);
   if (!histEntry || !causeId || !projectId || !currentUser) return;
   // History is append-only; assign a UUID if missing
@@ -602,13 +602,14 @@ window.npiRelSavePFMEAHistory = async function(causeId, histEntry) {
       new_occ: histEntry.newOcc != null ? histEntry.newOcc : null,
       new_det: histEntry.newDet != null ? histEntry.newDet : null,
       description: histEntry.desc || '',
-      event_date: histEntry.date || ''
+      event_date: histEntry.date || '',
+      related_ecr_id: histEntry.relatedEcrId || null
     }, { onConflict: 'id' });
     if (error) console.warn('npiRelSavePFMEAHistory error:', error.message);
   } catch (err) {
     console.warn('npiRelSavePFMEAHistory exception:', err.message);
   }
-};
+};;
 
 window.npiRelDeletePFMEAMode = async function(mode) {
   if (!mode || !mode.id) return;

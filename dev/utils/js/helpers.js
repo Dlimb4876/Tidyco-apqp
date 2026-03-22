@@ -12,7 +12,7 @@ const HYBRID_PERMISSION_DEFINITIONS = [
   { key: 'portal_product_development_view', label: 'Access Product Development portal', group: 'Portal access' },
   { key: 'portal_action_centre_view', label: 'Access Action Centre', group: 'Portal access' },
   { key: 'portal_feedback_view', label: 'Access Feedback portal', group: 'Portal access' },
-  { key: 'portal_mcs_view', label: 'Access Manufacturing Change System', group: 'Portal access' },
+  { key: 'portal_mcs_view', label: 'Access Manufacturing Change', group: 'Portal access' },
   { key: 'portal_settings_view', label: 'Access Settings portal', group: 'Portal access' },
   { key: 'feature_view_all_project_data', label: 'View all project data', group: 'Features' },
   { key: 'feature_edit_projects_tasks_schedules', label: 'Edit projects, tasks and schedules', group: 'Features' },

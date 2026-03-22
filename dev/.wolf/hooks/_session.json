@@ -1,90 +1,54 @@
 {
-  "session_id": "session-2026-03-22-1510",
-  "started": "2026-03-22T15:10:16.193Z",
+  "session_id": "session-2026-03-22-1910",
+  "started": "2026-03-22T19:10:08.772Z",
   "files_read": {
-    "/home/user/Tidyco-apqp/portals/hub/css/hub.css": {
+    "/home/user/Tidyco-apqp/supabase/phase3_optimisations.sql": {
+      "count": 1,
+      "tokens": 1551,
+      "first_read": "2026-03-22T19:11:41.129Z"
+    },
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-pfmea.js": {
+      "count": 1,
+      "tokens": 1134,
+      "first_read": "2026-03-22T19:11:52.250Z"
+    },
+    "/home/user/Tidyco-apqp/portals/product-development/npi/js/npi-data-relational.js": {
       "count": 2,
-      "tokens": 1689,
-      "first_read": "2026-03-22T15:11:28.969Z"
+      "tokens": 12134,
+      "first_read": "2026-03-22T19:12:00.222Z"
     },
-    "/home/user/Tidyco-apqp/portals/product-development/npi/css/dashboard.css": {
-      "count": 1,
-      "tokens": 8374,
-      "first_read": "2026-03-22T15:11:37.636Z"
+    "/home/user/Tidyco-apqp/portals/mcs/js/mcs-modal.js": {
+      "count": 3,
+      "tokens": 11247,
+      "first_read": "2026-03-22T19:12:53.888Z"
     },
-    "/home/user/Tidyco-apqp/portals/capacity/css/capacity.css": {
-      "count": 1,
-      "tokens": 2226,
-      "first_read": "2026-03-22T15:11:42.464Z"
-    },
-    "/home/user/Tidyco-apqp/tests/hub.test.js": {
-      "count": 1,
-      "tokens": 2559,
-      "first_read": "2026-03-22T15:12:02.394Z"
-    },
-    "/home/user/Tidyco-apqp/tests/capacity-events.test.js": {
-      "count": 1,
-      "tokens": 252,
-      "first_read": "2026-03-22T15:12:07.108Z"
-    },
-    "/home/user/Tidyco-apqp/CHANGELOG.md": {
-      "count": 1,
-      "tokens": 10345,
-      "first_read": "2026-03-22T15:13:23.803Z"
+    "/home/user/Tidyco-apqp/portals/product-development/npi/js/pfmea.js": {
+      "count": 3,
+      "tokens": 11138,
+      "first_read": "2026-03-22T19:18:49.103Z"
     }
   },
   "files_written": [
     {
-      "file": "/home/user/Tidyco-apqp/portals/hub/css/hub.css",
-      "action": "edit",
-      "tokens": 91,
-      "at": "2026-03-22T15:11:51.056Z"
-    },
-    {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
+      "file": "/home/user/Tidyco-apqp/supabase/pfmea_mcs_linking.sql",
       "action": "create",
-      "tokens": 2344,
-      "at": "2026-03-22T15:12:23.495Z"
+      "tokens": 298,
+      "at": "2026-03-22T19:12:08.415Z"
     },
     {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
+      "file": "/home/user/Tidyco-apqp/portals/product-development/npi/js/pfmea.js",
       "action": "edit",
-      "tokens": 96,
-      "at": "2026-03-22T15:12:36.687Z"
-    },
-    {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
-      "action": "edit",
-      "tokens": 222,
-      "at": "2026-03-22T15:12:40.718Z"
-    },
-    {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
-      "action": "edit",
-      "tokens": 75,
-      "at": "2026-03-22T15:12:43.972Z"
-    },
-    {
-      "file": "/home/user/Tidyco-apqp/tests/capacity-hub.test.js",
-      "action": "edit",
-      "tokens": 300,
-      "at": "2026-03-22T15:12:55.751Z"
-    },
-    {
-      "file": "/home/user/Tidyco-apqp/CHANGELOG.md",
-      "action": "edit",
-      "tokens": 152,
-      "at": "2026-03-22T15:13:26.846Z"
+      "tokens": 196,
+      "at": "2026-03-22T19:19:12.935Z"
     }
   ],
   "edit_counts": {
-    "portals/hub/css/hub.css": 1,
-    "tests/capacity-hub.test.js": 5,
-    "CHANGELOG.md": 1
+    "supabase/pfmea_mcs_linking.sql": 1,
+    "portals/product-development/npi/js/pfmea.js": 1
   },
-  "anatomy_hits": 6,
+  "anatomy_hits": 5,
   "anatomy_misses": 0,
-  "repeated_reads_warned": 1,
+  "repeated_reads_warned": 5,
   "cerebrum_warnings": 0,
   "stop_count": 0
 }
