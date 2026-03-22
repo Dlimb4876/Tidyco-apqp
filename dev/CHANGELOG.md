@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-22 | Fix mobile topbar button order | Actions and Feedback buttons were appearing to the right of Logout; moved them before Settings so they sit on the left side as expected
+
 ## 2026-03-22 | Generic Approvals settings with individual gate sign-off assignment | "Mfg. Changes" tab renamed to "Approvals"; NPI gate sign-off roles (ME Manager, Operations Director, Sales Director) can now be assigned to named individuals rather than relying solely on team permissions
 
 ## 2026-03-22 | Fix mobile-only buttons showing on desktop | .tbtn display:flex was overriding .mobile-quick-btn display:none due to cascade order; raised specificity to .tbtn.mobile-quick-btn
