@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T10:28:46.596Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T10:36:16.006Z
 > Files: 280 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
@@ -27,7 +27,7 @@
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~484 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
-- `index.html` — Tidyco Operations Portal (~9813 tok)
+- `index.html` — Tidyco Operations Portal (~9755 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~328 tok)
 - `mcs-updated-2.html` (~13058 tok)
@@ -140,7 +140,7 @@
 ## core/css/
 
 - `components.css` — Styles: 85 rules (~5686 tok)
-- `main.css` — Styles: 368 vars (~7690 tok)
+- `main.css` — Styles: 368 vars (~7798 tok)
 
 ## core/js/
 
