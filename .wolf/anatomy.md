@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T10:25:15.421Z
-> Files: 279 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-22T10:28:46.596Z
+> Files: 280 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
 
@@ -27,7 +27,7 @@
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~484 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
-- `index.html` — Tidyco Operations Portal (~9801 tok)
+- `index.html` — Tidyco Operations Portal (~9813 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~328 tok)
 - `mcs-updated-2.html` (~13058 tok)
@@ -144,10 +144,11 @@
 
 ## core/js/
 
-- `app.js` — ═══════════════════════════════════ (~1221 tok)
+- `app.js` — ═══════════════════════════════════ (~1234 tok)
 - `auth.js` — ═══════════════════════════════════ (~1240 tok)
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~697 tok)
 - `db.js` — ═══════════════════════════════════ (~8297 tok)
+- `network.js` — Check if Supabase is reachable with a minimal query (~739 tok)
 - `state.js` — ═══════════════════════════════════ (~4483 tok)
 
 ## docs/

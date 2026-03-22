@@ -87,6 +87,11 @@ async function launchApp() {
 
   // 1.11 Smart date inputs — init after page renders
   setTimeout(setupSmartDateInputs, 200);
+
+  // Network detection (browser online/offline + Supabase health checks)
+  if (typeof setupNetworkDetection === 'function') {
+    setupNetworkDetection();
+  }
 }
 
 // ── Kick off on page load if session exists ───────────────────
