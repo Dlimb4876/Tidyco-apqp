@@ -14,10 +14,35 @@ function opsMetricCard(label, value, detail, tone = 'good', dest = '') {
 		</article>`;
 }
 
-function opsRenderUnitKpis(unitMetrics) {
-	if (!Array.isArray(unitMetrics) || unitMetrics.length === 0) {
+function opsRenderUnitKpis(metrics) {
+	const unitMetrics = Array.isArray(metrics && metrics.operationsUnits) ? metrics.operationsUnits : [];
+	const hasDepartmentMetrics = !!(metrics && metrics.me && metrics.pm);
+	if (!hasDepartmentMetrics && unitMetrics.length === 0) {
 		return '';
 	}
+
+	const meTone = !metrics.me.ready ? 'watch' : metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good';
+	const pmTone = !metrics.pm.ready ? 'watch' : metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good';
+	const areaCards = [
+		opsMetricCard(
+			'ME Utilisation',
+			metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready',
+			metrics.me.ready
+				? `${Math.round(metrics.me.capacity)}h capacity / ${Math.round(metrics.me.demand)}h demand (${Math.round(metrics.me.headroom)}h headroom)`
+				: 'Open Capacity once to initialize',
+			meTone,
+			'capacity'
+		),
+		opsMetricCard(
+			'PM Utilisation',
+			metrics.pm.ready ? `${metrics.pm.utilisation}%` : 'Not Ready',
+			metrics.pm.ready
+				? `${Math.round(metrics.pm.capacity)}h capacity / ${Math.round(metrics.pm.demand)}h demand (${Math.round(metrics.pm.headroom)}h headroom)`
+				: 'Open Capacity once to initialize',
+			pmTone,
+			'capacity'
+		)
+	];
 
 	const unitCards = unitMetrics.map(unit => {
 		const tone = !unit.ready ? 'watch' : unit.utilisation > 100 ? 'critical' : unit.utilisation > 85 ? 'watch' : 'good';
@@ -31,10 +56,11 @@ function opsRenderUnitKpis(unitMetrics) {
 	return `
 		<section class="ops-section">
 			<div class="ops-section-head">
-				<h3>Operations Capacity by Unit</h3>
-				<span>Unit 2, 3, and 6 utilisation and headroom</span>
+				<h3>Operations Capacity by Area</h3>
+				<span>ME, PM, Unit 2, Unit 3, and Unit 6 utilisation and headroom</span>
 			</div>
 			<div class="ops-metrics-grid">
+				${areaCards.join('')}
 				${unitCards}
 			</div>
 		</section>`;
@@ -188,8 +214,6 @@ function opsRenderQuickActions() {
 
 function opsRenderOverview(metrics) {
 	const scoreTone = opsStatusTone(metrics.healthScore);
-	const meTone = metrics.me.ready ? (metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good') : 'watch';
-	const pmTone = metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch';
 	const actionTone = metrics.actions.overdue > 0 ? 'critical' : 'good';
 
 	return `
@@ -209,15 +233,13 @@ function opsRenderOverview(metrics) {
 			<section class="ops-metrics-grid">
 				${opsMetricCard('Active Projects', String(metrics.projectsFlow.active), `${metrics.projectsFlow.archived} archived`, 'good', 'product-development')}
 				${opsMetricCard('Gate Completion', `${metrics.gate.percentage}%`, `${metrics.gate.doneChecks}/${metrics.gate.totalChecks} checks done`, metrics.gate.percentage < 65 ? 'critical' : metrics.gate.percentage < 85 ? 'watch' : 'good', 'product-development')}
-				${opsMetricCard('ME Utilisation', metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready', metrics.me.ready ? `${metrics.me.headroom}h headroom this month` : 'Open Capacity once to initialize', meTone, 'capacity')}
-				${opsMetricCard('PM Utilisation', metrics.pm.ready ? `${metrics.pm.utilisation}%` : 'Not Ready', metrics.pm.ready ? `${metrics.pm.headroom}h headroom this month` : 'Open Capacity once to initialize', pmTone, 'capacity')}
 				${opsMetricCard('Overdue Actions', String(metrics.actions.overdue), `${metrics.actions.totalOpen} actions open`, actionTone, 'product-development')}
 				${opsMetricCard('High RPN Causes', String(metrics.risk.highRpn), `${metrics.risk.highRisks} high-risk tracker items`, metrics.risk.highRpn > 0 ? 'critical' : 'good', 'product-development')}
 				${opsMetricCard('Production Completion', `${metrics.production.completionRate}%`, `${metrics.production.completed}/${metrics.production.total} batches complete`, metrics.production.completionRate < 40 ? 'critical' : metrics.production.completionRate < 70 ? 'watch' : 'good', 'production')}
 				${opsMetricCard('Active Batches', String(metrics.production.active), 'Live production work packets', metrics.production.active > 0 ? 'watch' : 'good', 'production')}
 			</section>
 
-			${opsRenderUnitKpis(metrics.operationsUnits)}
+			${opsRenderUnitKpis(metrics)}
 
 			<section class="ops-columns">
 				${opsRenderPulseFeed(metrics)}

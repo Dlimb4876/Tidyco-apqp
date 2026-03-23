@@ -37,6 +37,7 @@
 - Coverage reporting note: many suites load source files via eval(), which means Jest can pass all tests but still emit an empty source coverage map.
 - Operations dashboard parity expectation: the People tab must include Unit 2/3/6 capacity cards alongside ME and PM, not only on Overview.
 - Capacity info affordances in dashboard cards must be interactive controls (button or delegated action), not static `div` text with only a `title` tooltip.
+- The `supabase/` folder is a loose set of setup and incremental SQL scripts, not a managed migration chain; keep files that a fresh environment still needs, and only delete one-off cleanup scripts once they have no remaining setup value.
 - `.gemini/GEMINI.md` is a separate assistant-facing guide and must be kept aligned with the repo's OpenWolf protocol when workflow requirements change.
 - NPI PFD flowchart links are stored as step numbers, not row ids; blank Process links should fall through to the next numbered step so legacy straight-line PFDs still render without manual rewiring.
 
@@ -50,6 +51,9 @@
 
 <!-- [2026-03-21] Theme remediation complete: all ~200 hardcoded colors now use CSS variables. New variables added to main.css: --chart-blue/green/amber/pink/purple/red (+ -pale/-lt variants), --status-green/blue/amber/purple/red (-bg/-text), --gray-50..900, --code-bg, --field-highlight, --row-highlight-blue/amber, --overlay-light/medium, --green-dark. ChartTheme utility at core/js/chart-theme.js provides getColors(), getPalette(), getDefaultOptions() for all Chart.js usage. -->
 <!-- [2026-03-21] Refactor gotcha: do not assume helpers.js globals are always available in tests. When replacing inline formulas/UI snippets with shared helpers in NPI/Settings modules, add local wrappers that call the helper when defined and fall back to equivalent inline behavior. -->
+
+<!-- [2026-03-23] Capacity persistence gotcha: `public.me_holidays` is the live source of truth and `public.me_capacity` does not exist in production. Do not reintroduce a client query to `me_capacity`, and never delete all `me_holidays` rows globally during save — delete only the current user's rows before reinserting replacements. -->
+<!-- [2026-03-23] Capacity task delete gotcha: removing a task from `meDataState.tasks` is not enough. Any delete path must also persist a relational delete (or queue ids for deletion in `meDataSave`) so `me_tasks` rows do not come back on refresh. -->
 
 <!-- Mistakes made and corrected. Each entry prevents the same mistake recurring. -->
 <!-- Format: [YYYY-MM-DD] Description of what went wrong and what to do instead. -->

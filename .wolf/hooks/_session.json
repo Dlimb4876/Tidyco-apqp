@@ -1,12 +1,87 @@
 {
-  "session_id": "session-2026-03-22-2133",
-  "started": "2026-03-22T21:33:51.339Z",
-  "files_read": {},
-  "files_written": [],
-  "edit_counts": {},
-  "anatomy_hits": 0,
-  "anatomy_misses": 0,
-  "repeated_reads_warned": 0,
+  "session_id": "session-2026-03-23-1038",
+  "started": "2026-03-23T10:38:28.247Z",
+  "files_read": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/cerebrum.md": {
+      "count": 1,
+      "tokens": 0,
+      "first_read": "2026-03-23T10:39:35.067Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/anatomy.md": {
+      "count": 1,
+      "tokens": 0,
+      "first_read": "2026-03-23T10:39:35.677Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-data.js": {
+      "count": 1,
+      "tokens": 8318,
+      "first_read": "2026-03-23T10:39:44.212Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-holidays.js": {
+      "count": 1,
+      "tokens": 2042,
+      "first_read": "2026-03-23T10:39:44.426Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-data-relational.js": {
+      "count": 1,
+      "tokens": 3794,
+      "first_read": "2026-03-23T10:40:39.671Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/buglog.json": {
+      "count": 2,
+      "tokens": 0,
+      "first_read": "2026-03-23T10:40:39.916Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-capacity.js": {
+      "count": 1,
+      "tokens": 0,
+      "first_read": "2026-03-23T10:42:08.553Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/capacity-events.js": {
+      "count": 1,
+      "tokens": 5118,
+      "first_read": "2026-03-23T10:42:09.024Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
+      "count": 1,
+      "tokens": 11947,
+      "first_read": "2026-03-23T10:43:59.578Z"
+    }
+  },
+  "files_written": [
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-data.js",
+      "action": "edit",
+      "tokens": 30,
+      "at": "2026-03-23T10:43:35.449Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-data.js",
+      "action": "edit",
+      "tokens": 59,
+      "at": "2026-03-23T10:43:42.307Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-capacity.js",
+      "action": "edit",
+      "tokens": 144,
+      "at": "2026-03-23T10:43:50.440Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
+      "action": "edit",
+      "tokens": 143,
+      "at": "2026-03-23T10:44:06.568Z"
+    }
+  ],
+  "edit_counts": {
+    "portals/capacity/js/me-data.js": 2,
+    "portals/capacity/js/me-capacity.js": 1,
+    "CHANGELOG.md": 1
+  },
+  "anatomy_hits": 6,
+  "anatomy_misses": 2,
+  "repeated_reads_warned": 1,
   "cerebrum_warnings": 0,
-  "stop_count": 0
+  "stop_count": 1
 }

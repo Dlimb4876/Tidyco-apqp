@@ -3,6 +3,18 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-23 | Guard holiday auto-sync save behind meDataInitialized flag | renderMeCapacity triggered meDataSave 1s after render; if meDataInit had not yet completed the save fired with empty holidays and deleted all DB rows — guard now blocks that save until init is confirmed complete
+
+## 2026-03-23 | Persist ME/PM capacity task deletions | Deleting a task only removed it from in-memory state; save now also deletes queued task IDs from `me_tasks` so removed tasks do not reappear after refresh
+
+## 2026-03-23 | Stop dead legacy holiday lookup and harden holiday saves | Removed the `me_capacity` fallback that caused 404 console errors in production and changed holiday replacement to delete only the current user's rows so one empty save cannot wipe shared holidays
+
+## 2026-03-23 | Production schedule: performance, usability and bulk actions | Improve speed and usability of the scheduling page
+
+## 2026-03-23 | Prune obsolete Supabase cleanup script | Audited supabase folder and removed only the legacy ME PERT/subtask drop script because current app setup still depends on the remaining SQL files
+
+## 2026-03-23 | Operations dashboard capacity section grouped by area | Renamed "Operations Capacity by Unit" to "Operations Capacity by Area" and moved ME/PM utilisation KPIs into the same area-capacity block as Unit 2/3/6
+
 ## 2026-03-22 | Fix Production hub favourite buttons to delegated actions | Removed inline onclick handlers from Production hub cards and routed favourite toggles through container delegation so delegation tests and quality checks pass
 ## 2026-03-22 | Remove redundant Support From / Support Until date fields from ME/PM products | Product support date range was redundant — support load is now calculated entirely from production schedule batch dates, removing the manual override from data model, UI table, persistence, and calculations
 
