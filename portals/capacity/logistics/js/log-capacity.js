@@ -69,6 +69,15 @@ function logGetTabContent() {
 window.logRenderCapacity = function() {
   window.meCurrentDepartmentContext = 'LOG';
 
+  if (typeof meDataAutoSyncLogProducts === 'function') {
+    const synced = meDataAutoSyncLogProducts();
+    if (synced && window.meDataInitialized) {
+      setTimeout(() => {
+        if (typeof meDataSave === 'function') meDataSave(false);
+      }, 1000);
+    }
+  }
+
   const html = `
     <div class="log-shell me-shell" data-cap-context="log">
       <div class="me-topbar">

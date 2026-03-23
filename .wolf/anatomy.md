@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-23T19:29:08.117Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-23T21:01:06.871Z
 > Files: 287 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
@@ -14,7 +14,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~12900 tok)
+- `CHANGELOG.md` — Changelog (~14019 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -210,7 +210,7 @@
 - `me-components.js` — Declares color (~1714 tok)
 - `me-dashboard.js` — Draw mini 6-month capacity chart on dashboard (~2606 tok)
 - `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeIsoDate, meNormalizeDateRange (~4536 tok)
-- `me-data.js` — meNormalizeDepartmentTag: meNormalizeHolidayRecord, meNormalizeAndDedupeHolidays, meNormalizeDateOnl (~12157 tok)
+- `me-data.js` — meNormalizeDepartmentTag: meNormalizeHolidayRecord, meNormalizeAndDedupeHolidays, meNormalizeDateOnl (~12334 tok)
 - `me-heatmap.js` — monthLabel: meRenderDetailPanel (~2627 tok)
 - `me-holidays.js` — Declares y (~2042 tok)
 - `me-product-taskload.js` — meProductLoadTableState: meProductLoadGetState, meProductLoadRefreshTable, resolveFamilyLabel, resolveFamilyLabelForProduct (~3912 tok)
@@ -228,7 +228,7 @@
 
 ## portals/capacity/logistics/js/
 
-- `log-capacity.js` — logFilterByDepartment: logGetCurrentMonthKey, logGetData, logGetTabContent (~2256 tok)
+- `log-capacity.js` — logFilterByDepartment: logGetCurrentMonthKey, logGetData, logGetTabContent (~2333 tok)
 
 ## portals/capacity/project-management/css/
 
@@ -241,7 +241,7 @@
 
 ## portals/capacity/unit6/js/
 
-- `unit6-capacity.js` — unit6FilterByDepartment: unit6GetCurrentMonthKey, unit6GetData, unit6GetTabContent (~2314 tok)
+- `unit6-capacity.js` — unit6FilterByDepartment: unit6GetCurrentMonthKey, unit6GetData, unit6GetTabContent (~2392 tok)
 
 ## portals/feedback/css/
 
@@ -433,7 +433,7 @@
 - `me-tasks-sort.test.js` — me-tasks-sort.test.js — Tests for portals/capacity/js/me-tasks.js (~2384 tok)
 - `me-team-render.test.js` — me-team-render.test.js — Tests for portals/capacity/js/me-team.js (~1520 tok)
 - `navigation.test.js` — fs: waitFor (~5721 tok)
-- `npi-data-relational.test.js` — Declares fs (~1638 tok)
+- `npi-data-relational.test.js` — fs: makeCapturingSupa (~2295 tok)
 - `npi-gate-permissions.test.js` — Declares fs (~933 tok)
 - `npi-pfd-flowchart.test.js` — Declares fs (~2326 tok)
 - `npi-pfd-headers.test.js` — Declares fs (~1146 tok)

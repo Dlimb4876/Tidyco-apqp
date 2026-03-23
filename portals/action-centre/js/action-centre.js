@@ -70,10 +70,10 @@ async function actionCentreLoad() {
     if (projectIds.size > 0) {
       const { data: projects } = await supa
         .from('projects')
-        .select('id, name')
-        .in('id', [...projectIds]);
+        .select('prog_id, name')
+        .in('prog_id', [...projectIds]);
       if (projects) {
-        projects.forEach(p => { projectMap[p.id] = p.name; });
+        projects.forEach(p => { projectMap[p.prog_id] = p.name; });
       }
     }
 
@@ -123,19 +123,18 @@ function actionCentreGoToMcs(changeId) {
 // Navigation helpers
 // ─────────────────────────────────────────────────────────────
 
-// Navigate to the project that owns a given DB project ID, then to `section`.
+// Navigate to the project that owns a given action/risk/pfmea item, then to `section`.
 // Optionally scroll to a specific item by ID.
 //
-// NPI sub-tables (npi_actions, npi_pfmea_causes, npi_risks) store the database
-// primary key UUID (projects.id, held as db.projects[i].dbId) as their project_id.
-// progId must be the application-level UUID (projects.prog_id, held as
-// db.projects[i].id), so we resolve the value through db.projects before navigating.
-function actionCentreGoTo(projectDbId, section, itemId) {
-  if (!projectDbId) return;
+// NPI sub-tables (npi_actions, npi_pfmea_causes, npi_risks) store prog_id
+// as their project_id (the application-level UUID held as db.projects[i].id).
+// This function will find the matching project and navigate to it.
+function actionCentreGoTo(projectProgId, section, itemId) {
+  if (!projectProgId) return;
 
-  // Resolve: look up by dbId first (DB PK UUID stored by npi sub-tables),
-  // then fall back to id match (in case they are identical in this deployment).
-  const project = db.projects.find(p => p.dbId === projectDbId || p.id === projectDbId);
+  // Resolve: look up by progId (prog_id from NPI tables, stored as project.id in cache),
+  // then fall back to dbId match (database primary key, for compatibility).
+  const project = db.projects.find(p => p.id === projectProgId || p.dbId === projectProgId);
   if (!project) {
     showToast('Project not found — please refresh the page', 'warning');
     return;

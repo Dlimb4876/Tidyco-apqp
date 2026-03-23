@@ -17,6 +17,52 @@ let settingsTeamsPermissionsData = {};
 
 // ── Appearance preferences (persisted to localStorage) ─────────
 const APPEARANCE_STORAGE_KEY = 'tidyco_prefs';
+const SETTINGS_CORE_STATE_KEYS = new Set([
+  'settingsFamiliesEditingId',
+  'settingsFamiliesLoading',
+  'settingsFamiliesLoadError',
+  'settingsWorkAreasEditingId',
+  'settingsPermissionsLoading',
+  'settingsPermissionsData',
+  'settingsPermissionsError',
+  'settingsPermissionsTeams',
+  'settingsTeamsPermissionsData',
+]);
+
+function settingsSetCoreState(partial) {
+  if (!partial || typeof partial !== 'object') return;
+  Object.keys(partial).forEach((key) => {
+    if (!SETTINGS_CORE_STATE_KEYS.has(key)) return;
+    if (key === 'settingsFamiliesEditingId') settingsFamiliesEditingId = partial[key];
+    else if (key === 'settingsFamiliesLoading') settingsFamiliesLoading = partial[key];
+    else if (key === 'settingsFamiliesLoadError') settingsFamiliesLoadError = partial[key];
+    else if (key === 'settingsWorkAreasEditingId') settingsWorkAreasEditingId = partial[key];
+    else if (key === 'settingsPermissionsLoading') settingsPermissionsLoading = partial[key];
+    else if (key === 'settingsPermissionsData') settingsPermissionsData = partial[key];
+    else if (key === 'settingsPermissionsError') settingsPermissionsError = partial[key];
+    else if (key === 'settingsPermissionsTeams') settingsPermissionsTeams = partial[key];
+    else if (key === 'settingsTeamsPermissionsData') settingsTeamsPermissionsData = partial[key];
+  });
+}
+
+function settingsGetCoreState() {
+  return {
+    settingsFamiliesEditingId,
+    settingsFamiliesLoading,
+    settingsFamiliesLoadError,
+    settingsWorkAreasEditingId,
+    settingsPermissionsLoading,
+    settingsPermissionsData,
+    settingsPermissionsError,
+    settingsPermissionsTeams,
+    settingsTeamsPermissionsData,
+  };
+}
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.settingsSetCoreState = settingsSetCoreState;
+  globalThis.settingsGetCoreState = settingsGetCoreState;
+}
 
 function settingsLoadingState(msg) {
   if (typeof loadingState === 'function') return loadingState(msg);

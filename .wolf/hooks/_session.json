@@ -1,37 +1,65 @@
 {
-  "session_id": "session-2026-03-23-1927",
-  "started": "2026-03-23T19:27:32.949Z",
+  "session_id": "session-2026-03-23-2003",
+  "started": "2026-03-23T20:03:12.924Z",
   "files_read": {
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-data.js": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data-relational.js": {
+      "count": 5,
+      "tokens": 12209,
+      "first_read": "2026-03-23T20:52:25.593Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi.js": {
+      "count": 1,
+      "tokens": 2312,
+      "first_read": "2026-03-23T20:53:18.804Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
+      "count": 1,
+      "tokens": 13390,
+      "first_read": "2026-03-23T20:55:30.701Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.github/instructions/testing.instructions.md": {
+      "count": 1,
+      "tokens": 225,
+      "first_read": "2026-03-23T20:58:14.971Z"
+    },
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/npi-data-relational.test.js": {
       "count": 2,
-      "tokens": 12048,
-      "first_read": "2026-03-23T19:28:15.695Z"
+      "tokens": 1638,
+      "first_read": "2026-03-23T20:58:15.112Z"
     },
     "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-data-relational.js": {
       "count": 1,
       "tokens": 4536,
-      "first_read": "2026-03-23T19:29:18.120Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
-      "count": 1,
-      "tokens": 12900,
-      "first_read": "2026-03-23T19:29:36.683Z"
+      "first_read": "2026-03-23T21:04:02.159Z"
     }
   },
   "files_written": [
     {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-data.js",
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
       "action": "edit",
-      "tokens": 82,
-      "at": "2026-03-23T19:29:08.156Z"
+      "tokens": 131,
+      "at": "2026-03-23T20:55:38.656Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/tests/npi-data-relational.test.js",
+      "action": "edit",
+      "tokens": 566,
+      "at": "2026-03-23T21:00:49.767Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
+      "action": "edit",
+      "tokens": 86,
+      "at": "2026-03-23T21:01:06.888Z"
     }
   ],
   "edit_counts": {
-    "portals/capacity/js/me-data.js": 1
+    "CHANGELOG.md": 2,
+    "tests/npi-data-relational.test.js": 1
   },
-  "anatomy_hits": 3,
+  "anatomy_hits": 5,
   "anatomy_misses": 0,
-  "repeated_reads_warned": 1,
+  "repeated_reads_warned": 5,
   "cerebrum_warnings": 0,
-  "stop_count": 1
+  "stop_count": 2
 }

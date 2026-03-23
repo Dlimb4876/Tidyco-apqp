@@ -69,6 +69,15 @@ function unit6GetTabContent() {
 window.unit6RenderCapacity = function() {
   window.meCurrentDepartmentContext = 'UNIT6';
 
+  if (typeof meDataAutoSyncUnit6Products === 'function') {
+    const synced = meDataAutoSyncUnit6Products();
+    if (synced && window.meDataInitialized) {
+      setTimeout(() => {
+        if (typeof meDataSave === 'function') meDataSave(false);
+      }, 1000);
+    }
+  }
+
   const html = `
     <div class="unit6-shell me-shell" data-cap-context="unit6">
       <div class="me-topbar">

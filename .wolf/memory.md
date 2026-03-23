@@ -7,12 +7,18 @@
 - Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
 
 ## 2026-03-23
+- Fixed Product Support duplicate values caused by legacy manual `me_products` rows (null `product_database_id`) surviving alongside synced DB-linked rows of the same name: patched `meDataAutoSyncDepartmentProducts` to drop stale manual duplicates, added regression test in `tests/me-data-core.test.js`, and deleted 19 duplicate manual rows from Supabase.
+- Normalized overgrown live Supabase RLS policies across 14 public tables to the auth-only model (single `auth` policy each), removing overlapping permissive policies and broad `allow all` drift; added rollback SQL at `supabase/rollback_normalize_rls_to_single_auth_policy.sql`; validated with `npm test` (53/53 suites, 705/705 tests) and `npm run check:all` (EXIT:0).
+- Fixed cascading ME relational save failures in `portals/capacity/js/me-data-relational.js`: product saves now resolve existing `me_products.id` by `product_database_id` before upsert and persist only ME/PM product departments, eliminating `uq_me_product_database_id` and `me_products_department_check` save errors; added regression in `tests/me-data-core.test.js` and verified full `npm test` (53 suites, 705 tests).
+- Reduced settings portal test brittleness tied to high-churn `settings.js`: added explicit core-state test hooks (`settingsSetCoreState` / `settingsGetCoreState`) and removed the test-time `let`→`var` source rewrite from `tests/settings-portal.test.js`; settings modules are now loaded in one eval context and full Jest suite still passes.
+- Added focused Logistics (LOG) and Unit 6 (UNIT6) portal coverage in new suites `tests/log-capacity.test.js` and `tests/unit6-capacity.test.js`, asserting render shell output, department-filtered tab content, URL tab history keys, and debounced save rerender behavior.
 - Fixed outdated Capacity Hub Jest expectation in `tests/capacity-hub.test.js`: card count now asserts 5 (Production, ME, PM, Logistics, Unit 6) with explicit Logistics/Unit 6 action and icon checks; revalidated with `npm test` and `npm run check:all` (both passing).
 - Split `portals/settings/js/settings.js` into focused modules by moving Teams/Permissions logic to `portals/settings/js/settings-teams.js` and MCS approvals logic to `portals/settings/js/settings-mcs.js`; updated `index.html` script order and adjusted `tests/settings-portal.test.js` to eval the new modules.
 - Updated Production Capacity by Work Area KPIs in `portals/capacity/js/prod-capacity-workarea.js`: added a new `1-Yr Headroom` card and rounded `2-Yr Headroom` to whole hours so Unit 2/3/6 KPI tiles are easier to scan.
 - Split `mcs-modal.js` (16k tokens) into four focused files: `mcs-modal-shared.js` (helpers + close), `mcs-modal-create.js`, `mcs-modal-view.js`, `mcs-modal-edit.js`. Updated `index.html` load order and deleted original file.
 - Added Logistics (LOG) and Unit 6 (UNIT6) capacity plans to Capacity Hub: created `portals/capacity/logistics/js/log-capacity.js` and `portals/capacity/unit6/js/unit6-capacity.js` following the PM pattern; expanded `meNormalizeDepartmentTag` in both `me-data.js` and `me-data-relational.js` to pass through LOG and UNIT6 tags; added context redirects to `me-capacity.js` shared functions; wired up hub cards, nav bar items, routing, and events in `capacity.js` and `capacity-events.js`; added script tags to `index.html`.
 - Finalized robust MCS stage-number rendering in `portals/mcs/js/mcs-modal.js` by injecting explicit `.mcs-stage-badge` elements during stage-toggle build (instead of relying only on pseudo-elements), with matching fallback-safe color styling and stronger footer/button contrast updates in `portals/mcs/css/mcs.css`.
+- Fixed NPI action FK violations (409 Conflict on save): `npi_actions`, `npi_pfmea_causes`, and `npi_risks` foreign keys reference `projects(prog_id)` but `npiRelResolveProjectId` was returning `project.dbId` (the DB primary key) instead of `project.id` (which holds prog_id). Changed function to return prog_id values; updated tests in `tests/npi-data-relational.test.js` to verify correct FK behavior; all 706 tests pass.
 - Applied MCS modal follow-up styling in `portals/mcs/css/mcs.css`: hard-forced Stage 2 badge rendering (`content: '2' !important`) and lightened the modal footer with higher-contrast action button styles so controls stand out.
 - Fixed NPI Kanban search churn in `portals/product-development/npi/js/dashboard.js` and `portals/product-development/npi/js/npi-events.js` by restoring focus/caret after each search-triggered re-render; added regression coverage in `tests/npi-dashboard-search.test.js`.
 - Polished the MCS staged modal visuals in `portals/mcs/css/mcs.css` + `portals/mcs/css/mcs-responsive.css`: added explicit numbered stage bullets (including Stage 2), a colored header bar treatment, and a left-side stage separator guide line with node markers so stage transitions are easier to identify.
@@ -1111,3 +1117,37 @@
 |------|--------|---------|---------|--------|
 | 19:29 | Edited portals/capacity/js/me-data.js | 8→9 lines | ~82 |
 | 19:29 | Session end: 1 writes across 1 files (me-data.js) | 3 reads | ~29566 tok |
+
+## Session: 2026-03-23 19:31
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 19:33
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:37 | Edited portals/capacity/js/me-data.js | modified if() | ~221 |
+| 19:37 | Edited CHANGELOG.md | 4→6 lines | ~86 |
+| 19:37 | Session end: 2 writes across 2 files (me-data.js, CHANGELOG.md) | 4 reads | ~29906 tok |
+
+## Session: 2026-03-23 19:40
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:47 | Edited portals/capacity/js/me-data.js | inline fix | ~28 |
+| 19:47 | Edited portals/capacity/js/me-data.js | modified function() | ~169 |
+| 19:47 | Edited portals/capacity/logistics/js/log-capacity.js | added 3 condition(s) | ~106 |
+| 19:47 | Edited portals/capacity/unit6/js/unit6-capacity.js | added 3 condition(s) | ~108 |
+| 19:47 | Edited CHANGELOG.md | 4→6 lines | ~116 |
+| 19:47 | Session end: 5 writes across 4 files (me-data.js, log-capacity.js, unit6-capacity.js, CHANGELOG.md) | 8 reads | ~38970 tok |
+
+## Session: 2026-03-23 20:03
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 20:55 | Edited CHANGELOG.md | 1→3 lines | ~123 |
+| 20:56 | Session end: 1 writes across 1 files (CHANGELOG.md) | 3 reads | ~28042 tok |
+| 21:00 | Edited tests/npi-data-relational.test.js | added 1 condition(s) | ~566 |
+| 21:01 | Edited CHANGELOG.md | 1→3 lines | ~81 |
+| 21:01 | Session end: 3 writes across 2 files (CHANGELOG.md, npi-data-relational.test.js) | 5 reads | ~30557 tok |

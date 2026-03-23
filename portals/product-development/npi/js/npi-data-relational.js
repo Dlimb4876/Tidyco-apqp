@@ -122,7 +122,8 @@ window.npiRelHydratePfdRows = npiRelHydratePfdRows;
 window.npiRelResolveProjectId = async function(targetProgId) {
   if (!targetProgId) return null;
   const project = npiRelFindProject(targetProgId);
-  if (project && project.dbId) return project.dbId;
+  // Foreign key relationships reference projects(prog_id), which is stored as project.id
+  if (project && project.id) return project.id;
   if (npiRelLooksLikeUuid(targetProgId)) return targetProgId;
 
   try {
@@ -135,8 +136,8 @@ window.npiRelResolveProjectId = async function(targetProgId) {
       console.warn('npiRelResolveProjectId error:', error.message);
       return null;
     }
-    const resolved = data && data[0] ? data[0].id : null;
-    if (project && resolved) project.dbId = resolved;
+    // Return prog_id from the database row (not the database pk id)
+    const resolved = data && data[0] ? data[0].prog_id : null;
     return resolved;
   } catch (err) {
     console.warn('npiRelResolveProjectId exception:', err.message);

@@ -91,12 +91,11 @@ global.teamsDataLoadPermissions = jest.fn().mockResolvedValue([
 ]);
 global.teamPermissionsDataSave = jest.fn().mockResolvedValue(true);
 
-// Load settings modules — replace `let` with `var` in settings.js so internal
-// state variables live in module-level scope and can be modified via eval().
+// Load settings modules.
 const settingsCoreSrc = fs.readFileSync(
   path.resolve(__dirname, '../portals/settings/js/settings.js'),
   'utf8'
-).replace(/\blet /g, 'var ');
+);
 const settingsTeamsSrc = fs.readFileSync(
   path.resolve(__dirname, '../portals/settings/js/settings-teams.js'),
   'utf8'
@@ -105,13 +104,28 @@ const settingsMcsSrc = fs.readFileSync(
   path.resolve(__dirname, '../portals/settings/js/settings-mcs.js'),
   'utf8'
 );
-eval(settingsCoreSrc); // eslint-disable-line no-eval
-eval(settingsTeamsSrc); // eslint-disable-line no-eval
-eval(settingsMcsSrc); // eslint-disable-line no-eval
+eval([settingsCoreSrc, settingsTeamsSrc, settingsMcsSrc].join('\n')); // eslint-disable-line no-eval
 
-// Helper to set an internal settings.js state variable from test scope
+const settingsCoreKeys = new Set([
+  'settingsFamiliesEditingId',
+  'settingsFamiliesLoading',
+  'settingsFamiliesLoadError',
+  'settingsWorkAreasEditingId',
+  'settingsPermissionsLoading',
+  'settingsPermissionsData',
+  'settingsPermissionsError',
+  'settingsPermissionsTeams',
+  'settingsTeamsPermissionsData',
+]);
+
+// Helper to set state from test scope without relying on eval variable assignment.
 function setInternal(name, value) {
-  eval(`${name} = value`); // eslint-disable-line no-eval
+  if (settingsCoreKeys.has(name) && typeof settingsSetCoreState === 'function') { // eslint-disable-line no-undef
+    settingsSetCoreState({ [name]: value }); // eslint-disable-line no-undef
+    return;
+  }
+  global.__settingsTestValue = value;
+  eval(`${name} = global.__settingsTestValue`); // eslint-disable-line no-eval
 }
 
 // ─────────────────────────────────────────────────────────────

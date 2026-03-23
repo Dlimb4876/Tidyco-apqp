@@ -17,6 +17,7 @@
 - For layout/design feedback, recommendations must be based on direct inspection of the current implementation before suggesting changes.
 - For ME/PM product support planning, monthly support/load must be driven by production schedule batch counts (batch multiplier), not fixed weeks-per-month multipliers.
 - For Product Support effective-dated edits, user expects explicit intent controls (not auto-save on field change), with clear in-context change history at the point of editing.
+- For settings portal work, user prioritizes reducing churn in `settings.js`; avoid broad rewrites and stabilize tests with explicit hooks/contracts to prevent scope collisions and brittle `settings-portal.test.js` coupling.
 
 ## Key Learnings
 
@@ -40,6 +41,7 @@
 <!-- [2026-03-23] Capacity task delete: removing from `meDataState.tasks` is not enough — always persist a relational delete (or queue ids in `meDataSave`) so `me_tasks` rows don't return on refresh. -->
 <!-- [2026-03-23] NPI dashboard search: if search triggers `render()` on each keystroke, the input is replaced and focus/caret is lost. Capture selection before render and restore focus + selection on the replacement input. -->
 <!-- [2026-03-23] OpenWolf cron: `openwolf cron run <ai-task>` only works when `claude` CLI is on PATH; daemon records failure even if CLI wrapper reports success. -->
+<!-- [2026-03-23] Settings test stability: do not use blanket `let`→`var` rewrites of `settings.js` in Jest. Prefer explicit state hooks (`settingsSetCoreState`) and stable load contracts to avoid eval-scope collisions across split settings modules. -->
 
 ## Decision Log
 

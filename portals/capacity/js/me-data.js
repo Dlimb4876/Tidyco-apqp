@@ -495,8 +495,11 @@ function meDataAutoSyncDepartmentProducts(department) {
 
   // Build a map of DB products by ID for quick lookup
   const dbMap = {};
+  const dbNameSet = new Set();
   dbProducts.forEach(p => {
     if (p && p.id) dbMap[p.id] = p;
+    const normalizedName = (p && p.name ? String(p.name) : '').trim().toLowerCase();
+    if (normalizedName) dbNameSet.add(normalizedName);
   });
 
   // Update or create department-tagged products from the master products DB.
@@ -518,7 +521,7 @@ function meDataAutoSyncDepartmentProducts(department) {
       // Temporarily set context so meDataAddProduct tags the product correctly
       const savedContext = window.meCurrentDepartmentContext;
       window.meCurrentDepartmentContext = targetDepartment;
-      meDataAddProduct(dbProduct.name, '', '', 0, dbProduct.notes || '', dbProduct.id, targetDepartment);
+      meDataAddProduct(dbProduct.name, 0, dbProduct.notes || '', dbProduct.id, targetDepartment);
       window.meCurrentDepartmentContext = savedContext;
     }
   });
@@ -532,8 +535,10 @@ function meDataAutoSyncDepartmentProducts(department) {
     }
 
     if (!meP.productDatabaseId) {
-      // For manual entries (no DB ID), de-dup by name
+      // For manual entries (no DB ID), remove stale rows once a DB-linked row exists
+      // for the same product name, then de-dup remaining manual rows by name.
       const manualName = (meP.name || '').trim().toLowerCase();
+      if (manualName && dbNameSet.has(manualName)) return false;
       if (seenNames.has(manualName)) return false;
       seenNames.add(manualName);
       return true;
@@ -559,6 +564,20 @@ window.meDataAutoSyncProductionProducts = function() {
  */
 window.meDataAutoSyncPMProducts = function() {
   return meDataAutoSyncDepartmentProducts('PM');
+};
+
+/**
+ * Auto-sync products from product management database for the Logistics capacity stream.
+ */
+window.meDataAutoSyncLogProducts = function() {
+  return meDataAutoSyncDepartmentProducts('LOG');
+};
+
+/**
+ * Auto-sync products from product management database for the Unit 6 capacity stream.
+ */
+window.meDataAutoSyncUnit6Products = function() {
+  return meDataAutoSyncDepartmentProducts('UNIT6');
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -746,8 +765,12 @@ window.meDataSave = async function(showAlert) {
         // 1-B. Save support history rows once products have stable IDs.
         if (typeof meSaveProductSupportHistoryRelational === 'function') {
           meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
-          if (meDataState.productSupportHistory.length > 0) {
-            const supportSaveOk = await meSaveProductSupportHistoryRelational(currentUser.id, meDataState.productSupportHistory);
+          // Filter out rows referencing products not in DB (prevents FK violation)
+          const validHistory = meDataState.productSupportHistory.filter(
+            row => row && row.productId && validProductIds.has(row.productId)
+          );
+          if (validHistory.length > 0) {
+            const supportSaveOk = await meSaveProductSupportHistoryRelational(currentUser.id, validHistory);
             if (!supportSaveOk) {
               relationalSuccess = false;
             }
