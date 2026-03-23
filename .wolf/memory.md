@@ -7,6 +7,10 @@
 - Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
 
 ## 2026-03-23
+- Fixed ME/PM Capacity Chart KPI month mismatch by switching KPI/breakdown calculations in `portals/capacity/js/me-chart.js` from calendar-month to selected chart month (`monthKey`); added regression coverage in `tests/me-chart.test.js` and validated with `npm test` + `npm run check:all`.
+- Fixed ME/PM Capacity tasks search input churn in `portals/capacity/js/capacity-events.js` by restoring focus and caret after delegated tab re-render on each keystroke; added regression coverage in `tests/capacity-events.test.js`.
+- Updated Product Support edit UX to intent-based history changes: hours/effective-date edits no longer persist automatically; users must click Apply Change with a reason, and each row now has a View History toggle showing dated support-rate records inline.
+- Implemented effective-dated ME/PM product support history in capacity: added support history state + relational persistence + dated-rate lookup in monthly batch support calculations, added Product Support effective-date column/edit flow, added migration script `supabase/me_product_support_history.sql`, and validated with `npm test` and `npm run check:all` (both passing).
 - Audited `supabase/` against live code, docs, and tests; kept all setup-relevant SQL files and deleted only `remove_legacy_me_pert_subtasks.sql` because it was a completed one-off cleanup with no remaining runtime or onboarding value.
 - Removed the dead `me_capacity` fallback from `portals/capacity/js/me-data.js` after confirming the live project has no such table, and changed holiday saves to delete only the current user's `me_holidays` rows before insert; added focused regression coverage in `tests/me-data-core.test.js`.
 - Fixed ME/PM capacity task delete persistence in `portals/capacity/js/me-data.js` by queueing deleted task IDs and deleting them from `me_tasks` during save; added regression coverage in `tests/me-data-core.test.js` to prevent refresh resurrection.
@@ -958,3 +962,47 @@
 | 10:43 | Edited portals/capacity/js/me-capacity.js | modified if() | ~144 |
 | 10:44 | Edited CHANGELOG.md | 1→3 lines | ~134 |
 | 10:44 | Session end: 4 writes across 3 files (me-data.js, me-capacity.js, CHANGELOG.md) | 9 reads | ~31595 tok |
+
+## Session: 2026-03-23 10:56
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:06 | Edited CHANGELOG.md | 1→3 lines | ~69 |
+| 11:06 | Session end: 1 writes across 1 files (CHANGELOG.md) | 1 reads | ~12216 tok |
+
+## Session: 2026-03-23 11:25
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 11:46
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:48 | Edited portals/capacity/css/me-capacity-heatmap.css | 20 → 52 | ~14 |
+| 11:48 | Edited portals/capacity/js/me-heatmap.js | inline fix | ~23 |
+| 11:48 | Edited portals/capacity/js/me-heatmap.js | 20 → 52 | ~13 |
+| 11:48 | Edited CHANGELOG.md | 2→4 lines | ~72 |
+| 11:48 | Session end: 4 writes across 3 files (me-capacity-heatmap.css, me-heatmap.js, CHANGELOG.md) | 4 reads | ~16415 tok |
+
+## Session: 2026-03-23 12:06
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:09 | Edited portals/capacity/js/me-tasks.js | 16→18 lines | ~114 |
+| 12:09 | Edited portals/capacity/js/me-tasks.js | added 4 condition(s) | ~236 |
+| 12:09 | Edited portals/capacity/js/me-tasks.js | added 3 condition(s) | ~397 |
+| 12:10 | Edited portals/capacity/js/me-tasks.js | expanded (+7 lines) | ~334 |
+| 12:10 | Edited portals/capacity/js/capacity-events.js | added 1 condition(s) | ~78 |
+| 12:10 | Edited portals/capacity/js/capacity-events.js | added 1 condition(s) | ~80 |
+| 12:10 | Edited portals/capacity/js/capacity-events.js | inline fix | ~36 |
+| 12:10 | Edited CHANGELOG.md | 4→6 lines | ~80 |
+| 12:11 | Session end: 8 writes across 3 files (me-tasks.js, capacity-events.js, CHANGELOG.md) | 3 reads | ~23423 tok |
+
+## Session: 2026-03-23 12:36
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:39 | Edited portals/capacity/js/me-calculations.js | added 4 condition(s) | ~292 |
+| 12:39 | Edited CHANGELOG.md | 1→3 lines | ~66 |
+| 12:40 | Session end: 2 writes across 2 files (me-calculations.js, CHANGELOG.md) | 4 reads | ~18893 tok |

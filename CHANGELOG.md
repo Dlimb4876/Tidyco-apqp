@@ -3,6 +3,22 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-23 | Align ME/PM chart KPIs to selected month | Capacity chart KPI cards and breakdown were using the current calendar month, causing mismatch when viewing other months
+
+## 2026-03-23 | Keep ME/PM task search focused while typing | Task list search re-rendered the tab on each keystroke and dropped input focus/caret, forcing users to re-click the field for every character
+
+## 2026-03-23 | Gray heatmap tiles outside person start/end dates | Weeks outside a team member's active employment period now show as gray (no capacity), consistent with full-week holiday tiles
+
+## 2026-03-23 | Month filter for ME & PM task lists | Filter tasks that overlap a selected month (starts in, ends in, or spans across)
+
+## 2026-03-23 | Require explicit Apply for dated support-rate edits and add row history view | Prevent accidental backdated changes and make Product Support history visible where edits happen
+
+## 2026-03-23 | Add effective-dated ME/PM product support history | Preserve historical capacity accuracy when hours-per-batch changes over time by resolving support per batch using dated rates
+
+## 2026-03-23 | Heatmap extended to full year (52 weeks) | User requested full-year view for ME & PM capacity heat map
+
+## 2026-03-23 | Holiday Planner shows 2 months + Today button | Better visibility across month boundaries; Today button jumps back to current month and is disabled when already there
+
 ## 2026-03-23 | Guard holiday auto-sync save behind meDataInitialized flag | renderMeCapacity triggered meDataSave 1s after render; if meDataInit had not yet completed the save fired with empty holidays and deleted all DB rows — guard now blocks that save until init is confirmed complete
 
 ## 2026-03-23 | Persist ME/PM capacity task deletions | Deleting a task only removed it from in-memory state; save now also deletes queued task IDs from `me_tasks` so removed tasks do not reappear after refresh

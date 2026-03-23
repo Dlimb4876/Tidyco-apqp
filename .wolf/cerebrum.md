@@ -20,6 +20,7 @@
 - For favourites UX, user expects star toggles on all hub-style cards (main hub and section root hubs), not only on the main portal hub.
 - For layout/design feedback, user expects recommendations to be based on direct inspection of the current implementation before suggesting changes.
 - For ME/PM product support planning, user wants per-product editable support values to stay product-specific, but monthly support/load must be driven by production schedule batch counts (batch multiplier) rather than fixed weeks-per-month multipliers.
+- For Product Support effective-dated edits, user expects explicit intent controls (not auto-save on field change), with clear in-context visibility of change history at the point of editing.
 
 ## Key Learnings
 

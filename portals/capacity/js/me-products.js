@@ -3,14 +3,14 @@
    ============================================================ */
 
 const meProductsTableState = {
-  ME: { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [] },
-  PM: { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [] }
+  ME: { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [], historyOpenProductIds: [] },
+  PM: { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [], historyOpenProductIds: [] }
 };
 
 function meProductsGetState(department) {
   const key = department === 'PM' ? 'PM' : 'ME';
   if (!meProductsTableState[key]) {
-    meProductsTableState[key] = { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [] };
+    meProductsTableState[key] = { search: '', family: 'all', sortBy: 'name', sortDir: 'asc', hiddenStatuses: [], historyOpenProductIds: [] };
   }
   return meProductsTableState[key];
 }
@@ -54,6 +54,7 @@ window.meProductsClearFilters = function(department) {
   state.sortBy = 'name';
   state.sortDir = 'asc';
   state.hiddenStatuses = [];
+  state.historyOpenProductIds = [];
   meProductsRefreshTable();
 };
 
@@ -73,6 +74,16 @@ window.meProductsToggleStatusFilter = function(status, isEnabled, department) {
     hidden.add(label);
   }
   state.hiddenStatuses = Array.from(hidden);
+  meProductsRefreshTable();
+};
+
+window.meProductsToggleHistory = function(productId, department) {
+  if (!productId) return;
+  const state = meProductsGetState(department);
+  const current = new Set(Array.isArray(state.historyOpenProductIds) ? state.historyOpenProductIds : []);
+  if (current.has(productId)) current.delete(productId);
+  else current.add(productId);
+  state.historyOpenProductIds = Array.from(current);
   meProductsRefreshTable();
 };
 
@@ -117,9 +128,18 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
     return count;
   };
   const totalLoadMonthly = updated.reduce((sum, product) => {
+    const fallbackSupportPerBatch = Number(product.hoursPerWeek) || 0;
+
+    if (typeof window.meGetProductBatchesInRange === 'function' && typeof window.meGetProductSupportHoursForBatch === 'function') {
+      const overlappingBatches = window.meGetProductBatchesInRange(product, monthStart, monthEnd);
+      const productMonthlyHours = overlappingBatches.reduce((running, batch) => {
+        return running + window.meGetProductSupportHoursForBatch(product, batch, monthStart, fallbackSupportPerBatch);
+      }, 0);
+      return sum + productMonthlyHours;
+    }
+
     const batchCount = countBatchesForProductInRange(product, monthStart, monthEnd);
-    const supportPerBatch = Number(product.hoursPerWeek) || 0;
-    return sum + (supportPerBatch * batchCount);
+    return sum + (fallbackSupportPerBatch * batchCount);
   }, 0);
   const activeProducts = updated.filter(p => {
     return countBatchesForProductInRange(p, monthStart, monthEnd) > 0;
@@ -203,6 +223,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       status: statusLabel,
       name: (product.name || '').toString(),
       hoursPerWeek: Number(product.hoursPerWeek) || 0,
+      supportEffectiveDate: (product.supportEffectiveDate || '').toString(),
       notes: (product.notes || '').toString()
     };
   });
@@ -221,6 +242,28 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
 
   const hiddenStatuses = Array.isArray(state.hiddenStatuses) ? state.hiddenStatuses : [];
   const hiddenStatusSet = new Set(hiddenStatuses);
+  const historyOpenSet = new Set(Array.isArray(state.historyOpenProductIds) ? state.historyOpenProductIds : []);
+
+  const supportHistory = typeof window.meDataGetProductSupportHistory === 'function'
+    ? window.meDataGetProductSupportHistory()
+    : [];
+
+  function getProductHistoryRows(product) {
+    if (!product || !product.id || !Array.isArray(supportHistory)) return [];
+    const departmentTag = typeof meGetDepartmentFromContext === 'function'
+      ? meGetDepartmentFromContext(product.department)
+      : (product.department || 'ME');
+
+    return supportHistory
+      .filter(entry => entry && entry.productId === product.id && String(entry.department || 'ME').toUpperCase() === String(departmentTag || 'ME').toUpperCase())
+      .slice()
+      .sort((a, b) => {
+        const aDate = String(a.effectiveDate || '');
+        const bDate = String(b.effectiveDate || '');
+        if (aDate === bDate) return 0;
+        return aDate > bDate ? -1 : 1;
+      });
+  }
 
   const searchNeedle = state.search.trim().toLowerCase();
   let visibleRows = preparedRows.filter(row => {
@@ -244,10 +287,8 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
         return (a.hoursPerWeek - b.hoursPerWeek) * dir;
       case 'status':
         return a.status.localeCompare(b.status) * dir;
-      case 'supportFrom':
-        return a.supportFrom.localeCompare(b.supportFrom) * dir;
-      case 'supportUntil':
-        return a.supportUntil.localeCompare(b.supportUntil) * dir;
+      case 'effectiveDate':
+        return a.supportEffectiveDate.localeCompare(b.supportEffectiveDate) * dir;
       case 'name':
       default:
         return a.name.localeCompare(b.name) * dir;
@@ -258,14 +299,51 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
   visibleRows.forEach(row => {
     const product = row.product;
     const rowIndex = row.rowIndex;
+    const historyRows = getProductHistoryRows(product);
+    const historyIsOpen = historyOpenSet.has(product.id);
+    const historyBody = historyRows.length > 0
+      ? historyRows.map(entry => `
+        <tr>
+          <td>${esc(entry.effectiveDate || '')}</td>
+          <td>${esc(entry.endDate || 'Current')}</td>
+          <td>${Number(entry.hoursPerWeek || 0).toFixed(2)}</td>
+          <td>${esc(entry.changeReason || '')}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="4" style="color:var(--muted)">No support history entries yet.</td></tr>`;
+
     rows += `
       <tr data-product-idx="${rowIndex}">
         <td>${esc(product.name)}</td>
         <td>${esc(row.familyLabel)}</td>
         <td>${typeof renderStatusBadge === 'function' ? renderStatusBadge(row.status) : esc(row.status)}</td>
-        <td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${product.hoursPerWeek || 0}" step="0.5" data-cap-action="cap-products-upd" data-field="hoursPerWeek"></td>
+        <td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${product.hoursPerWeek || 0}" step="0.5" data-field="hoursPerWeek"></td>
+        <td><input name="cap_products_${rowIndex}_supportEffectiveDate" type="date" value="${esc(row.supportEffectiveDate || '')}" data-field="supportEffectiveDate"></td>
+        <td><input name="cap_products_${rowIndex}_supportChangeReason" type="text" placeholder="Reason for change" data-field="supportChangeReason"></td>
         <td><input name="cap_products_${rowIndex}_notes" value="${esc(product.notes || '')}" data-cap-action="cap-products-upd" data-field="notes"></td>
-      </tr>`;
+        <td>
+          <button class="btn btn-primary btn-sm" data-cap-action="cap-products-apply-hours">Apply Change</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-toggle-history" data-product-id="${esc(product.id || '')}" data-dept="${department}">${historyIsOpen ? 'Hide History' : 'View History'}</button>
+        </td>
+      </tr>
+      ${historyIsOpen ? `
+      <tr>
+        <td colspan="8" style="background:var(--bg-soft)">
+          <div style="padding:10px 12px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px">Support History</div>
+            <table class="me-tbl" style="margin:0">
+              <thead>
+                <tr>
+                  <th style="width:130px">Effective</th>
+                  <th style="width:130px">Until</th>
+                  <th style="width:120px">Hours/Batch</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>${historyBody}</tbody>
+            </table>
+          </div>
+        </td>
+      </tr>` : ''}`;
   });
 
   return `
@@ -320,6 +398,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
             <option value="family" ${state.sortBy === 'family' ? 'selected' : ''}>Sort: Family</option>
             <option value="status" ${state.sortBy === 'status' ? 'selected' : ''}>Sort: Status</option>
             <option value="hours" ${state.sortBy === 'hours' ? 'selected' : ''}>Sort: Hours/Batch</option>
+            <option value="effectiveDate" ${state.sortBy === 'effectiveDate' ? 'selected' : ''}>Sort: Effective Date</option>
           </select>
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-sort-dir" data-dept="${department}" title="Toggle sort direction">
             ${state.sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
@@ -353,15 +432,18 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
               <th style="width:150px">Product Family</th>
               <th style="width:130px">Product Status</th>
               <th style="width:120px">Hours/Batch</th>
+              <th style="width:150px">Effective Date</th>
+              <th style="width:180px">Change Reason</th>
               <th style="width:200px">Notes</th>
+              <th style="width:180px">Actions</th>
             </tr></thead>
             <tbody>
-              ${rows || `<tr><td colspan="5"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
+              ${rows || `<tr><td colspan="8"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
             </tbody>
           </table>
         </div>
         <div style="font-size: 12px; color: var(--muted); padding: 12px 0;">
-          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. Edit support dates and hours per batch; monthly support load is calculated from scheduled production batches.
+          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. To avoid accidental history edits, support rate changes only save when you click Apply Change with an effective date and reason. Use View History on each row to audit past rates.
         </div>
       </div>
     </div>

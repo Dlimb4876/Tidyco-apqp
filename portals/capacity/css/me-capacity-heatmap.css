@@ -16,7 +16,7 @@
 
 .me-heatmap-grid {
 	display: grid;
-	grid-template-columns: 140px repeat(20, 52px);
+	grid-template-columns: 140px repeat(52, 52px);
 	gap: 0; background: var(--white);
 	padding: 0;
 	min-width: max-content;

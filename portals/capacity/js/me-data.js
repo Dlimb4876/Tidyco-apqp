@@ -12,7 +12,8 @@ window.meDataState = {
   team: [],
   tasks: [],
   products: [],
-  holidays: []
+  holidays: [],
+  productSupportHistory: []
 };
 
 window.meDataPendingDeletes = {
@@ -80,6 +81,102 @@ function meNormalizeAndDedupeHolidays(holidays) {
   });
 
   return Array.from(byPersonDate.values());
+}
+
+function meNormalizeDateOnly(value) {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString().split('T')[0];
+}
+
+function meGetDateMinusOneDay(dateValue) {
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return '';
+  parsed.setDate(parsed.getDate() - 1);
+  return parsed.toISOString().split('T')[0];
+}
+
+function meNormalizeSupportHistoryRecord(record, fallbackDepartment = 'ME') {
+  if (!record || typeof record !== 'object') return null;
+
+  const productId = record.productId || record.product_id;
+  const effectiveDate = meNormalizeDateOnly(record.effectiveDate || record.effective_date);
+  if (!productId || !effectiveDate) return null;
+
+  return {
+    id: record.id || meUUID(),
+    productId,
+    hoursPerWeek: Number(record.hoursPerWeek ?? record.hours_per_week ?? 0) || 0,
+    effectiveDate,
+    endDate: meNormalizeDateOnly(record.endDate || record.end_date) || '',
+    changeReason: record.changeReason || record.change_reason || '',
+    notes: record.notes || '',
+    department: meNormalizeDepartmentTag(record.department, fallbackDepartment),
+    createdAt: record.createdAt || record.created_at || new Date().toISOString(),
+    updatedAt: record.updatedAt || record.updated_at || ''
+  };
+}
+
+function meSortSupportHistoryByDate(historyRows) {
+  return (historyRows || []).slice().sort((a, b) => {
+    const aDate = meNormalizeDateOnly(a.effectiveDate || a.effective_date);
+    const bDate = meNormalizeDateOnly(b.effectiveDate || b.effective_date);
+    if (aDate === bDate) return 0;
+    return aDate < bDate ? -1 : 1;
+  });
+}
+
+function meNormalizeAndDedupeSupportHistory(rows) {
+  if (!Array.isArray(rows)) return [];
+
+  const deduped = new Map();
+  rows.forEach(raw => {
+    const normalized = meNormalizeSupportHistoryRecord(raw);
+    if (!normalized) return;
+    const key = `${normalized.productId}|${normalized.effectiveDate}|${normalized.department}`;
+    deduped.set(key, normalized);
+  });
+
+  return meSortSupportHistoryByDate(Array.from(deduped.values()));
+}
+
+function meGetProductSupportHistoryRows(productId, department) {
+  if (!Array.isArray(meDataState.productSupportHistory)) return [];
+  const targetDepartment = meNormalizeDepartmentTag(department, 'ME');
+  return meSortSupportHistoryByDate(
+    meDataState.productSupportHistory.filter(row =>
+      row &&
+      row.productId === productId &&
+      meNormalizeDepartmentTag(row.department, targetDepartment) === targetDepartment
+    )
+  );
+}
+
+function meEnsureProductSupportHistoryBaseline(product) {
+  if (!product || !product.id) return;
+  const department = meNormalizeDepartmentTag(product.department, 'ME');
+  const existing = meGetProductSupportHistoryRows(product.id, department);
+  if (existing.length > 0) return;
+
+  const baselineDate = meNormalizeDateOnly(product.createdAt || product.created_at) || meNormalizeDateOnly(new Date());
+  meDataState.productSupportHistory.push({
+    id: meUUID(),
+    productId: product.id,
+    hoursPerWeek: Number(product.hoursPerWeek || 0) || 0,
+    effectiveDate: baselineDate,
+    endDate: '',
+    changeReason: 'Baseline from product support value',
+    notes: '',
+    department,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+}
+
+function meEnsureAllProductSupportHistoryBaselines() {
+  meDataState.products.forEach(product => meEnsureProductSupportHistoryBaseline(product));
+  meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
 }
 
 // Initialize missing date fields on backward compatibility
@@ -254,10 +351,11 @@ window.meDataAddProduct = function(name, hoursPerWeek, notes, productDatabaseId,
     createdAt: new Date().toISOString()
   };
   meDataState.products.push(product);
+  meEnsureProductSupportHistoryBaseline(product);
   return true;
 };
 
-window.meDataUpdateProduct = function(idx, field, value) {
+window.meDataUpdateProduct = function(idx, field, value, metadata) {
   if (idx < 0 || idx >= meDataState.products.length) return false;
   const product = meDataState.products[idx];
   switch (field) {
@@ -266,6 +364,27 @@ window.meDataUpdateProduct = function(idx, field, value) {
       break;
     case 'hoursPerWeek':
       product.hoursPerWeek = parseFloat(value) || 0;
+
+      // Maintain effective-dated support history so past capacity can be reproduced.
+      if (typeof window.meDataAddProductSupportHistory === 'function') {
+        const effectiveDate = metadata && metadata.effectiveDate
+          ? metadata.effectiveDate
+          : meNormalizeDateOnly(new Date());
+        window.meDataAddProductSupportHistory(
+          product.id,
+          product.hoursPerWeek,
+          effectiveDate,
+          metadata && metadata.changeReason ? metadata.changeReason : '',
+          metadata && metadata.notes ? metadata.notes : '',
+          product.department
+        );
+      }
+      product.supportEffectiveDate = metadata && metadata.effectiveDate
+        ? meNormalizeDateOnly(metadata.effectiveDate)
+        : (product.supportEffectiveDate || meNormalizeDateOnly(new Date()));
+      break;
+    case 'supportEffectiveDate':
+      product.supportEffectiveDate = meNormalizeDateOnly(value) || product.supportEffectiveDate || '';
       break;
     case 'notes':
       product.notes = value ? value.trim() : '';
@@ -287,6 +406,75 @@ window.meDataDeleteProduct = function(idx) {
 
 window.meDataGetProducts = function() {
   return meDataState.products;
+};
+
+window.meDataGetProductSupportHistory = function() {
+  meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+  return meDataState.productSupportHistory;
+};
+
+window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effectiveDate, changeReason, notes, department) {
+  if (!productId) return false;
+
+  const normalizedDate = meNormalizeDateOnly(effectiveDate) || meNormalizeDateOnly(new Date());
+  const targetDepartment = meNormalizeDepartmentTag(department, 'ME');
+  const existingRows = meGetProductSupportHistoryRows(productId, targetDepartment);
+  const sameDateRow = existingRows.find(row => row.effectiveDate === normalizedDate);
+  if (sameDateRow) {
+    sameDateRow.hoursPerWeek = Number(hoursPerWeek) || 0;
+    sameDateRow.changeReason = changeReason || sameDateRow.changeReason || '';
+    sameDateRow.notes = notes || sameDateRow.notes || '';
+    sameDateRow.updatedAt = new Date().toISOString();
+    meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+    return true;
+  }
+
+  const priorRows = existingRows.filter(row => row.effectiveDate < normalizedDate);
+  if (priorRows.length > 0) {
+    const prior = priorRows[priorRows.length - 1];
+    prior.endDate = meGetDateMinusOneDay(normalizedDate);
+    prior.updatedAt = new Date().toISOString();
+  }
+
+  meDataState.productSupportHistory.push({
+    id: meUUID(),
+    productId,
+    hoursPerWeek: Number(hoursPerWeek) || 0,
+    effectiveDate: normalizedDate,
+    endDate: '',
+    changeReason: changeReason || '',
+    notes: notes || '',
+    department: targetDepartment,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+
+  meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+  return true;
+};
+
+window.meDataGetProductSupportRateForDate = function(productId, targetDate, fallbackHoursPerWeek, department) {
+  const normalizedTargetDate = meNormalizeDateOnly(targetDate);
+  const rows = meGetProductSupportHistoryRows(productId, department);
+  if (!normalizedTargetDate || rows.length === 0) {
+    return Number(fallbackHoursPerWeek || 0) || 0;
+  }
+
+  const matches = rows.filter(row => {
+    if (!row.effectiveDate || row.effectiveDate > normalizedTargetDate) return false;
+    if (!row.endDate) return true;
+    return row.endDate >= normalizedTargetDate;
+  });
+
+  if (matches.length === 0) return Number(fallbackHoursPerWeek || 0) || 0;
+  const latestMatch = matches[matches.length - 1];
+  return Number(latestMatch.hoursPerWeek || 0) || 0;
+};
+
+window.meDataGetProductLatestSupportEffectiveDate = function(productId, department, fallbackDate) {
+  const rows = meGetProductSupportHistoryRows(productId, department);
+  if (rows.length === 0) return meNormalizeDateOnly(fallbackDate) || '';
+  return rows[rows.length - 1].effectiveDate || meNormalizeDateOnly(fallbackDate) || '';
 };
 
 /**
@@ -439,7 +627,8 @@ window.meDataInit = async function() {
         team: [],
         tasks: [],
         products: [],
-        holidays: []
+        holidays: [],
+        productSupportHistory: []
       };
 
       // Load from relational tables first.
@@ -449,7 +638,10 @@ window.meDataInit = async function() {
             team: await meLoadRelationalTeams(currentUser.id) || [],
             tasks: await meLoadRelationalTasks(currentUser.id) || [],
             products: await meLoadRelationalProducts(currentUser.id) || [],
-            holidays: meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays(currentUser.id))
+            holidays: meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays(currentUser.id)),
+            productSupportHistory: typeof meLoadRelationalProductSupportHistory === 'function'
+              ? (await meLoadRelationalProductSupportHistory(currentUser.id) || [])
+              : []
           };
         } catch (relErr) {
           console.warn('ME relational load failed:', relErr.message);
@@ -460,7 +652,8 @@ window.meDataInit = async function() {
         team: relState.team,
         tasks: relState.tasks,
         products: relState.products,
-        holidays: relState.holidays
+        holidays: relState.holidays,
+        productSupportHistory: meNormalizeAndDedupeSupportHistory(relState.productSupportHistory)
       };
 
       // Ensure all data has backward-compatible fields
@@ -481,6 +674,17 @@ window.meDataInit = async function() {
       meDataState.products.forEach(product => {
         if (!('productDatabaseId' in product)) product.productDatabaseId = '';
         if (!('department' in product)) product.department = 'ME';
+      });
+
+      meEnsureAllProductSupportHistoryBaselines();
+      meDataState.products.forEach(product => {
+        if (!('supportEffectiveDate' in product)) {
+          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(
+            product.id,
+            product.department,
+            product.createdAt
+          );
+        }
       });
 
       meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays || []);
@@ -534,6 +738,17 @@ window.meDataSave = async function(showAlert) {
 
         // Build set of valid product IDs now in DB
         const validProductIds = new Set(meDataState.products.map(p => p.id).filter(Boolean));
+
+        // 1-B. Save support history rows once products have stable IDs.
+        if (typeof meSaveProductSupportHistoryRelational === 'function') {
+          meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+          if (meDataState.productSupportHistory.length > 0) {
+            const supportSaveOk = await meSaveProductSupportHistoryRelational(currentUser.id, meDataState.productSupportHistory);
+            if (!supportSaveOk) {
+              relationalSuccess = false;
+            }
+          }
+        }
 
         // 2. Save team members
         for (let i = 0; i < meDataState.team.length; i++) {
@@ -674,7 +889,8 @@ window.meDataReset = function() {
     team: [],
     tasks: [],
     products: [],
-    holidays: []
+    holidays: [],
+    productSupportHistory: []
   };
   window.meDataState = meDataState;
   window.meDataPendingDeletes = { tasks: [] };
@@ -689,6 +905,7 @@ function meEnsureStructure() {
   if (!meDataState.tasks) meDataState.tasks = [];
   if (!meDataState.products) meDataState.products = [];
   if (!meDataState.holidays) meDataState.holidays = [];
+  if (!meDataState.productSupportHistory) meDataState.productSupportHistory = [];
 }
 
 function meUUID() {
@@ -846,6 +1063,46 @@ window.meDataSubscribe = function() {
       onUpdate: () => { /* no-op — local state already up to date */ },
       onDelete: (deleted) => {
         meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
+        if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
+        meCapSmartRender();
+      }
+    },
+    {
+      table: 'me_product_support_history',
+      onInsert: (newEntry) => {
+        const normalized = meNormalizeSupportHistoryRecord(newEntry);
+        if (!normalized) return;
+        const existingIdx = meDataState.productSupportHistory.findIndex(h => h.id === normalized.id);
+        if (existingIdx >= 0) {
+          meDataState.productSupportHistory[existingIdx] = normalized;
+        } else {
+          meDataState.productSupportHistory.push(normalized);
+        }
+        meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+        const product = meDataState.products.find(p => p.id === normalized.productId);
+        if (product) {
+          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(product.id, product.department, product.createdAt);
+        }
+        if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
+        meCapSmartRender();
+      },
+      onUpdate: (updatedEntry) => {
+        const normalized = meNormalizeSupportHistoryRecord(updatedEntry);
+        if (!normalized) return;
+        const existingIdx = meDataState.productSupportHistory.findIndex(h => h.id === normalized.id);
+        if (existingIdx >= 0) {
+          meDataState.productSupportHistory[existingIdx] = normalized;
+        } else {
+          meDataState.productSupportHistory.push(normalized);
+        }
+        meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+        const product = meDataState.products.find(p => p.id === normalized.productId);
+        if (product) {
+          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(product.id, product.department, product.createdAt);
+        }
+      },
+      onDelete: (deleted) => {
+        meDataState.productSupportHistory = meDataState.productSupportHistory.filter(h => h.id !== deleted.id);
         if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
         meCapSmartRender();
       }
