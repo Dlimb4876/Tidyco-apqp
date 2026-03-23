@@ -32,6 +32,46 @@ function capTaskRefresh(isPM) {
   else meSetTab('tasks')
 }
 
+function capPreserveSearchContinuity(inputEl, replacementSelector, rerenderFn) {
+  const contextRoot = inputEl && typeof inputEl.closest === 'function'
+    ? inputEl.closest('[data-cap-context]')
+    : null
+  const contextType = contextRoot ? contextRoot.getAttribute('data-cap-context') : ''
+
+  if (typeof preserveInputCaretAfterRender === 'function') {
+    preserveInputCaretAfterRender(inputEl, rerenderFn, {
+      replacementSelector,
+      scopeResolver: function() {
+        return contextType
+          ? document.querySelector('[data-cap-context="' + contextType + '"]')
+          : document
+      }
+    })
+    return
+  }
+
+  const caretStart = inputEl && typeof inputEl.selectionStart === 'number' ? inputEl.selectionStart : null
+  const caretEnd = inputEl && typeof inputEl.selectionEnd === 'number' ? inputEl.selectionEnd : caretStart
+  rerenderFn()
+  setTimeout(function() {
+    const scope = contextType
+      ? document.querySelector('[data-cap-context="' + contextType + '"]')
+      : document
+    const replacement = scope && typeof scope.querySelector === 'function'
+      ? scope.querySelector(replacementSelector)
+      : null
+    if (!replacement) return
+
+    replacement.focus()
+    if (caretStart !== null && typeof replacement.setSelectionRange === 'function') {
+      const len = (replacement.value || '').length
+      const start = Math.min(caretStart, len)
+      const end = Math.min(caretEnd === null ? start : caretEnd, len)
+      replacement.setSelectionRange(start, end)
+    }
+  }, 0)
+}
+
 window.capacityEvents = {}
 
 window.capacityEvents.setup = function() {
@@ -178,22 +218,25 @@ window.capacityEvents._onClick = function(evt) {
     if (idx < 0) break
 
     const hoursEl = row?.querySelector('input[data-field="hoursPerWeek"]')
-    const kittingEl = row?.querySelector('input[data-field="kittingTimeBookingHours"]')
+    const kittingEl = row?.querySelector('input[data-field="kittingHours"]')
+    const bookingInOutEl = row?.querySelector('input[data-field="bookingInOutHours"]')
     const movementEl = row?.querySelector('input[data-field="productMovementHours"]')
     const effectiveDateEl = row?.querySelector('input[data-field="supportEffectiveDate"]')
     const reasonEl = row?.querySelector('input[data-field="supportChangeReason"]')
-    const hasSplitFields = !!kittingEl || !!movementEl
+    const hasSplitFields = !!kittingEl || !!bookingInOutEl || !!movementEl
     const kittingValue = kittingEl ? Number(kittingEl.value) : 0
+    const bookingInOutValue = bookingInOutEl ? Number(bookingInOutEl.value) : 0
     const movementValue = movementEl ? Number(movementEl.value) : 0
     const hoursValue = hasSplitFields
-      ? ((Number.isFinite(kittingValue) ? kittingValue : NaN) + (Number.isFinite(movementValue) ? movementValue : NaN))
+      ? ((Number.isFinite(kittingValue) ? kittingValue : NaN) + (Number.isFinite(bookingInOutValue) ? bookingInOutValue : NaN) + (Number.isFinite(movementValue) ? movementValue : NaN))
       : (hoursEl ? Number(hoursEl.value) : NaN)
     const effectiveDate = (effectiveDateEl?.value || '').trim()
     const changeReason = (reasonEl?.value || '').trim()
 
-    if (hasSplitFields && (!Number.isFinite(kittingValue) || kittingValue < 0 || !Number.isFinite(movementValue) || movementValue < 0)) {
-      alert('Enter valid non-negative values for Kitting Booking In/Out and Product Movement before applying.')
+    if (hasSplitFields && (!Number.isFinite(kittingValue) || kittingValue < 0 || !Number.isFinite(bookingInOutValue) || bookingInOutValue < 0 || !Number.isFinite(movementValue) || movementValue < 0)) {
+      alert('Enter valid non-negative values for Kitting, Booking In/Out, and Product Movement before applying.')
       if (kittingEl && (!Number.isFinite(kittingValue) || kittingValue < 0)) kittingEl.focus()
+      else if (bookingInOutEl && (!Number.isFinite(bookingInOutValue) || bookingInOutValue < 0)) bookingInOutEl.focus()
       else if (movementEl) movementEl.focus()
       break
     }
@@ -228,7 +271,8 @@ window.capacityEvents._onClick = function(evt) {
     meDataUpdateProduct(idx, 'hoursPerWeek', String(hoursValue), {
       effectiveDate,
       changeReason,
-      kittingTimeBookingHours: hasSplitFields ? kittingValue : undefined,
+      kittingHours: hasSplitFields ? kittingValue : undefined,
+      bookingInOutHours: hasSplitFields ? bookingInOutValue : undefined,
       productMovementHours: hasSplitFields ? movementValue : undefined
     })
 
@@ -364,14 +408,16 @@ window.capacityEvents._onChange = function(evt) {
     const idx = capNum(row?.getAttribute('data-product-idx'), -1)
     if (idx < 0) break
     const field = el.getAttribute('data-field')
-    if (field === 'kittingTimeBookingHours' || field === 'productMovementHours') {
+    if (field === 'kittingHours' || field === 'bookingInOutHours' || field === 'productMovementHours') {
       const hoursEl = row?.querySelector('input[data-field="hoursPerWeek"]')
-      const kittingEl = row?.querySelector('input[data-field="kittingTimeBookingHours"]')
+      const kittingEl = row?.querySelector('input[data-field="kittingHours"]')
+      const bookingInOutEl = row?.querySelector('input[data-field="bookingInOutHours"]')
       const movementEl = row?.querySelector('input[data-field="productMovementHours"]')
       const kittingValue = kittingEl ? Number(kittingEl.value) : 0
+      const bookingInOutValue = bookingInOutEl ? Number(bookingInOutEl.value) : 0
       const movementValue = movementEl ? Number(movementEl.value) : 0
       if (hoursEl) {
-        const total = Math.max(0, Number.isFinite(kittingValue) ? kittingValue : 0) + Math.max(0, Number.isFinite(movementValue) ? movementValue : 0)
+        const total = Math.max(0, Number.isFinite(kittingValue) ? kittingValue : 0) + Math.max(0, Number.isFinite(bookingInOutValue) ? bookingInOutValue : 0) + Math.max(0, Number.isFinite(movementValue) ? movementValue : 0)
         hoursEl.value = String(total)
       }
       break
@@ -439,47 +485,28 @@ window.capacityEvents._onInput = function(evt) {
   if (!el) return
   const action = el.getAttribute('data-cap-action')
   const isPM = capIsPM(el)
-  const contextRoot = el.closest('[data-cap-context]')
 
   switch (action) {
   case 'cap-task-search': {
     const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    const caretStart = typeof el.selectionStart === 'number' ? el.selectionStart : null
-    const caretEnd = typeof el.selectionEnd === 'number' ? el.selectionEnd : caretStart
-    const contextType = contextRoot ? contextRoot.getAttribute('data-cap-context') : ''
-
-    if (filterStateVar) filterStateVar.search = el.value
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
-
-    // Keep typing uninterrupted when the tasks tab is re-rendered.
-    setTimeout(function() {
-      const scope = contextType
-        ? document.querySelector('[data-cap-context="' + contextType + '"]')
-        : document
-      const replacement = scope && typeof scope.querySelector === 'function'
-        ? scope.querySelector('[data-cap-action="cap-task-search"]')
-        : null
-      if (!replacement) return
-
-      replacement.focus()
-      if (caretStart !== null && typeof replacement.setSelectionRange === 'function') {
-        const len = (replacement.value || '').length
-        const start = Math.min(caretStart, len)
-        const end = Math.min(caretEnd === null ? start : caretEnd, len)
-        replacement.setSelectionRange(start, end)
-      }
-    }, 0)
+    capPreserveSearchContinuity(el, '[data-cap-action="cap-task-search"]', function() {
+      if (filterStateVar) filterStateVar.search = el.value
+      capTaskRefresh(isPM)
+    })
     break
   }
   case 'cap-products-search': {
     const dept = el.getAttribute('data-dept')
-    if (typeof meProductsSetSearch === 'function') meProductsSetSearch(el.value, dept)
+    capPreserveSearchContinuity(el, '[data-cap-action="cap-products-search"]', function() {
+      if (typeof meProductsSetSearch === 'function') meProductsSetSearch(el.value, dept)
+    })
     break
   }
   case 'cap-product-load-search': {
     const dept = el.getAttribute('data-dept')
-    if (typeof meProductLoadSetSearch === 'function') meProductLoadSetSearch(el.value, dept)
+    capPreserveSearchContinuity(el, '[data-cap-action="cap-product-load-search"]', function() {
+      if (typeof meProductLoadSetSearch === 'function') meProductLoadSetSearch(el.value, dept)
+    })
     break
   }
   default: break

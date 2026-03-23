@@ -1,0 +1,112 @@
+[
+  {
+    "id": "getting-started",
+    "icon": "🏠",
+    "title": "Getting Started",
+    "topics": [
+      { "file": "00-overview", "title": "Overview" }
+    ]
+  },
+  {
+    "id": "capacity",
+    "icon": "📊",
+    "title": "Capacity",
+    "topics": [
+      { "file": "00-overview", "title": "Capacity Overview" },
+      { "file": "10-capacity-hub", "title": "Capacity Hub" },
+      { "file": "20-me-capacity", "title": "ME Capacity" },
+      { "file": "30-pm-capacity", "title": "PM Capacity" },
+      { "file": "40-logistics-capacity", "title": "Logistics Capacity" },
+      { "file": "50-unit6-capacity", "title": "Unit 6 Capacity" },
+      { "file": "80-product-support", "title": "Product Support" }
+    ]
+  },
+  {
+    "id": "product-development",
+    "icon": "🚀",
+    "title": "Product Development",
+    "topics": [
+      { "file": "00-overview", "title": "Product Development Overview" },
+      { "file": "10-npi-projects", "title": "NPI Projects" },
+      { "file": "30-ctq", "title": "CTQ Matrix" },
+      { "file": "40-pfd", "title": "Process Flow Diagram" },
+      { "file": "50-pfmea", "title": "PFMEA" },
+      { "file": "60-control-plan", "title": "Control Plan" },
+      { "file": "70-actions", "title": "Action Tracker" },
+      { "file": "80-risks", "title": "Risk Register" },
+      { "file": "90-bom", "title": "Bill of Materials" },
+      { "file": "100-timing", "title": "Timing Plan" },
+      { "file": "110-gates", "title": "APQP Gates" }
+    ]
+  },
+  {
+    "id": "product-management",
+    "icon": "📦",
+    "title": "Product Management",
+    "topics": [
+      { "file": "00-overview", "title": "Product Management Overview" },
+      { "file": "10-product-catalogue", "title": "Product Catalogue" },
+      { "file": "20-overhaul-trends", "title": "Overhaul Trends" },
+      { "file": "30-product-families", "title": "Product Families" },
+      { "file": "40-parts-database", "title": "Parts Database" }
+    ]
+  },
+  {
+    "id": "production",
+    "icon": "🏭",
+    "title": "Production",
+    "topics": [
+      { "file": "00-overview", "title": "Production Overview" },
+      { "file": "10-schedule", "title": "Schedule" },
+      { "file": "20-plan-by-product", "title": "Plan by Product" },
+      { "file": "30-plan-by-work-area", "title": "Plan by Work Area" }
+    ]
+  },
+  {
+    "id": "operations",
+    "icon": "🛰️",
+    "title": "Operations",
+    "topics": [
+      { "file": "00-overview", "title": "Operations Overview" },
+      { "file": "10-overview-tab", "title": "Overview Tab" },
+      { "file": "20-flow-tab", "title": "Flow Tab" },
+      { "file": "30-risk-tab", "title": "Risk Tab" },
+      { "file": "40-people-tab", "title": "People Tab" },
+      { "file": "50-actions-tab", "title": "Actions Tab" },
+      { "file": "60-forecast-tab", "title": "Forecast Tab" }
+    ]
+  },
+  {
+    "id": "mcs",
+    "icon": "🔧",
+    "title": "MCS",
+    "topics": [
+      { "file": "00-overview", "title": "MCS Overview" },
+      { "file": "30-approval-workflow", "title": "Approval Workflow" }
+    ]
+  },
+  {
+    "id": "action-centre",
+    "icon": "✅",
+    "title": "Action Centre",
+    "topics": [
+      { "file": "00-overview", "title": "Action Centre Overview" }
+    ]
+  },
+  {
+    "id": "feedback-and-bugs",
+    "icon": "💬",
+    "title": "Feedback and Bugs",
+    "topics": [
+      { "file": "00-overview", "title": "Feedback Overview" }
+    ]
+  },
+  {
+    "id": "settings",
+    "icon": "⚙️",
+    "title": "Settings",
+    "topics": [
+      { "file": "00-overview", "title": "Settings Overview" }
+    ]
+  }
+]

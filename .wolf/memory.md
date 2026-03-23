@@ -5,6 +5,18 @@
 
 ## 2026-03-21
 ## 2026-03-23
+- Rewrote all standalone wiki content pages (`wiki/content/**/*.md`, 40 files) from template-style technical wording into human-facing guides focused on purpose, day-to-day usage, key calculations where relevant, and links to connected areas; rebuilt wiki search index and validated with `npm run wiki:check` (40 entries indexed, token audit clean, 0 broken links).
+- Renamed wiki header/title to `Operations Portal Wiki` and removed the wiki subtext line in `wiki/index.html`; updated changelog entry for the branding tweak.
+- Aligned standalone wiki styling to match main portal visual language (`wiki/assets/css/wiki.css`) and added top-left Tidyco logo + IBM Plex font link in `wiki/index.html`; validated with `npm run wiki:check` (build index, token audit, link check all passed).
+- Hardened search typing continuity across re-rendering flows: added shared `preserveInputCaretAfterRender` helper (`utils/js/helpers.js`), reused it in Capacity task/product/product-load handlers, NPI dashboard and PFMEA text search, and feedback browse search; added regressions `tests/capacity-events.test.js`, `tests/npi-events-search.test.js`, `tests/feedback-search-focus.test.js`; validated with focused Jest suite (4/4 passing, 8 tests).
+- Added second-wave standalone wiki APQP topics (CTQ, Control Plan, Action Tracker, Risk Register, BOM, Timing Plan, APQP Gates), expanded Product Development navigation in `wiki/content/_meta/areas.json`, rebuilt `wiki/content/_meta/search-index.json` to 27 entries, and revalidated with `npm run wiki:check` (all green).
+- Added first-pass high-priority standalone wiki content set: 10 topic files across Capacity/Product Development/MCS, expanded `wiki/content/_meta/areas.json` topic navigation, rebuilt `wiki/content/_meta/search-index.json` to 20 entries, and revalidated with `npm run wiki:check` (all green).
+- Scaffolded standalone guide wiki preview under `wiki/` (index page, runtime JS modules, area-based starter content, and metadata files), added wiki maintenance scripts (`wiki-build-search-index`, `wiki-token-audit`, `wiki-link-check`), validated with `npm run wiki:check`, and intentionally left portal navigation unchanged so review is URL-only.
+- Reviewed and fully reframed `plans/guide-system-implementation-plan.md` to a standalone wiki strategy: separate `wiki/index.html` entrypoint, by-area content folders, and strict token/file-size guardrails for future audits and low-churn updates.
+- Fixed Capacity Product Support search focus churn: `cap-products-search` now restores focus/caret after re-render in `capacity-events.js` so typing continues uninterrupted; added regression in `tests/capacity-events.test.js` and verified the suite passes.
+- Corrected the Logistics Product Support split to use three distinct component fields (`Kitting`, `Booking In/Out`, `Product Movement`) with read-only `Hours/Batch` as the computed sum; updated shared render/events/state/relational/calculation paths, extended migration + applied SQL (`kitting_hours`, `booking_in_out_hours`), and revalidated with focused Jest plus full `npm test` (55 suites, 749 tests).
+- Applied the Logistics product-support split migration to Supabase (`me_product_support_history` now has `kitting_time_booking_hours` and `product_movement_hours`) and updated the Product Support history panel to show both component values plus Hours/Batch; revalidated with focused Jest, full `npm test` (55 suites, 749 tests), and `npm run check:all`.
+- Split Logistics Product Support hours into `Kitting Booking In/Out` and `Product Movement` in the shared capacity product-support flow: updated `me-data.js`, `me-products.js`, `capacity-events.js`, `me-data-relational.js`, `me-calculations.js`, and `me-product-taskload.js`; added support-history migration `supabase/logistics_product_support_history_split.sql`; validated with focused Jest coverage plus full `npm test` (55 suites, 748 tests) and `npm run check:all`.
 - Updated shared Capacity wording for Logistics and Unit 6 so user-facing team labels no longer default to engineer-only text: `capacity-events.js`, `me-team.js`, `me-chart.js`, and `me-holidays.js` now show `Logistics Technician` for LOG and `Technician` for UNIT6; added focused regressions in `tests/me-team-render.test.js` and `tests/me-chart.test.js`; full Jest suite passes (55 suites, 737 tests).
 - Verified the user's correction on capacity headers: no further code change made after checking the current router/render paths; recorded that broader header-removal suggestions must be verified first.
 - Removed the shared Capacity route-switcher bar from the Logistics and Unit 6 pages in `portals/capacity/js/capacity.js` because those views already have their own local header/back controls; added regression coverage in `tests/capacity-hub.test.js`.
@@ -1172,3 +1184,32 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+| 21:55 | Edited utils/js/guide.js | 2→2 lines | ~75 |
+| 21:56 | Edited utils/js/guide.js | expanded (+8 lines) | ~450 |
+| 21:56 | Edited utils/js/guide.js | inline fix | ~92 |
+| 21:56 | Edited utils/js/guide.js | 12→16 lines | ~440 |
+| 21:56 | Edited utils/js/guide.js | inline fix | ~119 |
+| 21:57 | Edited utils/js/guide.js | expanded (+70 lines) | ~1204 |
+| 21:57 | Edited CHANGELOG.md | 4→6 lines | ~115 |
+| 21:57 | Session end: 7 writes across 2 files (guide.js, CHANGELOG.md) | 4 reads | ~32397 tok |
+| 21:59 | Edited utils/js/guide.js | 18→22 lines | ~475 |
+| 22:00 | Edited CHANGELOG.md | inline fix | ~78 |
+| 22:00 | Session end: 9 writes across 2 files (guide.js, CHANGELOG.md) | 4 reads | ~34636 tok |
+
+## Session: 2026-03-23 22:05
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 22:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:18 | Edited index.html | 3→4 lines | ~95 |
+| 22:18 | Edited core/css/main.css | CSS: opacity, wiki-btn, opacity | ~228 |
+| 22:19 | Edited CHANGELOG.md | 6→8 lines | ~186 |
+| 22:20 | Session end: 3 writes across 3 files (index.html, main.css, CHANGELOG.md) | 4 reads | ~33599 tok |
+| 22:25 | Edited index.html | 2→1 lines | ~26 |
+| 22:25 | Edited index.html | inline fix | ~24 |
+| 22:25 | Edited CHANGELOG.md | 4→6 lines | ~82 |
+| 22:25 | Session end: 7 writes across 4 files (index.html, main.css, CHANGELOG.md, app.js) | 5 reads | ~35603 tok |

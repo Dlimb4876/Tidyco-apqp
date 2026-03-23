@@ -88,6 +88,27 @@ When changing the ME Capacity plan, make the equivalent change in the PM Capacit
 
 This applies to UI, routing, shared data handling, and persistence changes so the two capacity plans do not drift apart.
 
+Logistics Product Support now captures `Kitting`, `Booking In/Out`, and `Product Movement` separately, with `Hours/Batch` shown as the computed sum of those component values when a support change is applied. The row history view shows all component values as well as the total.
+
+---
+
+## Standalone Guide Wiki (Preview)
+
+A standalone guide wiki scaffold now exists under `wiki/` and is intentionally **not** linked from the main portal yet.
+
+- Local review URL: `http://localhost:8000/wiki/index.html`
+- Entry file: `wiki/index.html`
+- Area metadata: `wiki/content/_meta/areas.json`
+
+Validation commands:
+
+```bash
+npm run wiki:build-index
+npm run wiki:audit-tokens
+npm run wiki:check-links
+npm run wiki:check
+```
+
 ---
 
 ## NPI Gate Signoff Permissions

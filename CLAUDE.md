@@ -26,6 +26,7 @@
 9. Use mobile-first CSS with both breakpoints:
 	 - `@media (max-width: 767px)`
 	 - `@media (min-width: 768px)`
+10. When adding or changing a feature on any content page, update the matching entry in `GUIDE_CONTENT` inside `utils/js/guide.js` to reflect the change.
 
 ## Validation Commands
 - `npm install` (fresh clone only)

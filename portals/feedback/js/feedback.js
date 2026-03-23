@@ -16,6 +16,20 @@ window.feedbackApp = {
     feedbackDataManager.setFilter(key, value);
   },
 
+  setSearchFilterFromInput(inputEl) {
+    const value = inputEl ? inputEl.value : '';
+    if (!inputEl || typeof preserveInputCaretAfterRender !== 'function') {
+      feedbackDataManager.setFilter('search', value);
+      return;
+    }
+
+    preserveInputCaretAfterRender(inputEl, () => {
+      feedbackDataManager.setFilter('search', value);
+    }, {
+      replacementSelector: '#feedbackSearch'
+    });
+  },
+
   getSelectedType() {
     const selected = document.querySelector('input[name="feedbackTypeSelect"]:checked');
     return selected ? selected.value : window.FEEDBACK_TYPES.USABILITY;
@@ -307,7 +321,7 @@ function feedbackRenderBrowseTab(feedback) {
         <label for="feedbackSearch">Search</label>
         <input type="text" id="feedbackSearch" class="feedback-search-input" placeholder="Search title, description, page…" 
                value="${esc(filter.search || '')}" 
-               oninput="feedbackApp.setFilter('search', this.value)">
+               oninput="feedbackApp.setSearchFilterFromInput(this)">
       </div>
     </div>
 

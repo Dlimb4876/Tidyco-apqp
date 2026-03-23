@@ -10,11 +10,11 @@ const GUIDE_CONTENT = {
     title: '🏠 Tidyco Operations Portal — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Operations Portal</strong> is the central hub for all Tidyco quality planning, capacity management, and production operations. Select any of the four modules to get started.</p>
+        <p>The <strong>Operations Portal</strong> is the central hub for all Tidyco quality planning, capacity management, and production operations. Select any of the five modules to get started.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity</div>
-        <p>Plan and monitor workload for Manufacturing Engineering, Project Management, and Production. Tracks team capacity against live task data.</p>
+        <p>Plan and monitor workload across five departments: Manufacturing Engineering (ME), Project Management (PM), Production, Logistics, and Unit 6. Tracks team capacity against live task data.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚀 Product Development</div>
@@ -28,6 +28,10 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">🛰️ Operations Dashboard</div>
         <p>Director-level overview drawing live data from all portals — capacity utilisation, overdue actions, high-risk items, and production flow in one place.</p>
       </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🔧 Manufacturing Change</div>
+        <p>Raise and track Engineering Change Requests (ECRs). Changes go through a two-step approval workflow. Approved changes are logged in the activity timeline and can be linked to PFMEA corrective actions.</p>
+      </div>
     `
   },
 
@@ -36,7 +40,7 @@ const GUIDE_CONTENT = {
     title: '📊 Capacity Management — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Capacity Management</strong> portal lets you plan and monitor workload across three operational streams. Select a stream to view its loading plan.</p>
+        <p>The <strong>Capacity Management</strong> portal lets you plan and monitor workload across five operational streams. Select a stream to view its loading plan.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Production Capacity</div>
@@ -50,6 +54,14 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">📅 Project Management (PM)</div>
         <p>Same structure as ME Capacity but filtered to the PM department. Shares the same underlying data table, separated by department tag.</p>
       </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🚚 Logistics</div>
+        <p>Same structure as ME Capacity but for the Logistics department. Tracks kitting and product movement workload alongside team tasks and product support hours.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🏭 Unit 6</div>
+        <p>Same structure as ME Capacity but for the Unit 6 department. Tracks team loading, tasks, and product support for that work area.</p>
+      </div>
     `
   },
 
@@ -58,7 +70,7 @@ const GUIDE_CONTENT = {
     title: '🧑‍🔧 ME Load Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>ME Capacity</strong> plan tracks Manufacturing Engineering workload against available hours. Data is shared in real time across all logged-in users.</p>
+        <p>The <strong>ME Capacity</strong> plan tracks Manufacturing Engineering workload against available hours. Data is shared in real time across all logged-in users. The Logistics and Unit 6 departments use the same tab structure — their data is stored in the same underlying tables, separated by department tag.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
@@ -302,12 +314,16 @@ const GUIDE_CONTENT = {
         </ul>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">Sub-assemblies</div>
-        <p>Use <em>＋ Sub-assembly</em> to insert a group header that collapses a set of steps. Useful for organising complex processes.</p>
+        <div class="guide-section-title">Section Headers</div>
+        <p>Click <em>＋ section after</em> (visible below each step) to insert a collapsible section header. Sections group steps under a named heading — click the toggle arrow to collapse or expand the group. Useful for organising complex processes into phases (e.g. STRIP DOWN UNIT, INSPECTION, REASSEMBLY).</p>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">Flow Mini-Map</div>
-        <p>The numbered ribbon at the top shows all steps in sequence. Click any node to jump to that step in the table below.</p>
+        <div class="guide-section-title">Flowchart View</div>
+        <p>Click <em>Show Flowchart</em> to switch from the table to a visual flow diagram. Each step appears as a node; Decision and Inspection steps show Yes/Pass and No/Fail branches. Step types are: <strong>Process</strong>, <strong>Decision</strong>, <strong>Inspection</strong>, <strong>Rework</strong>, and <strong>Transport</strong>. Steps with a high PFMEA RPN are marked ⚑. Click any node to see its details. Use <em>↔ Horizontal / ↕ Vertical</em> to change the layout direction.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Section Navigator</div>
+        <p>The ribbon at the top shows each section with its step range. Click a section to scroll the table to that group.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Inserting Steps</div>
@@ -366,7 +382,7 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Used By</div>
-        <p>PFMEA causes can be synced directly into the <strong>Control Plan</strong> using the <em>Sync from PFMEA</em> button. High-RPN causes are surfaced in the <strong>Project Dashboard</strong> and <strong>Operations Risk</strong> view.</p>
+        <p>PFMEA causes can be synced directly into the <strong>Control Plan</strong> using the <em>Sync from PFMEA</em> button. High-RPN causes are surfaced in the <strong>Project Dashboard</strong> and <strong>Operations Risk</strong> view. If a corrective action is linked to a Manufacturing Change request, a badge appears on that action row — click it to open the related entry in the Change Register (MCS).</p>
       </div>
     `
   },
@@ -849,6 +865,76 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">Refreshing</div>
         <p>Data loads automatically when you open the Action Centre. Use the <strong>↺ Refresh</strong> button to pull the latest changes at any time.</p>
+      </div>
+    `
+  },
+
+  // ── Logistics Capacity ────────────────────────────────────────
+  'capacity-logistics': {
+    title: '🚚 Logistics Load Capacity — User Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Logistics Capacity</strong> plan tracks the Logistics department's workload against available hours. It uses the same tab structure as ME Capacity, with data separated by department tag.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📊 Capacity Chart</div>
+        <p>Bar chart showing total allocated hours vs available capacity per month. Bars turn amber above 80% utilisation and red above 100%.</p>
+        <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">👷 Team</div>
+        <p>Add and manage Logistics team members. Set each person's hours per day and department tag. Team members appear as rows in the capacity calculations.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📋 Tasks</div>
+        <p>Log ongoing tasks. Each task uses 3-point PERT estimation (optimistic, most likely, pessimistic) and contributes to the capacity chart across its assigned month range.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🚂 Product Support</div>
+        <p>Assign Logistics effort to specific products — for example, kitting preparation time and product movement hours per batch.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📦 Product Load</div>
+        <p>View the total Logistics hours attributed to each product, broken down by task and product support entries.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🏖️ Holiday Planner</div>
+        <p>Record approved annual leave for each team member by month. Holidays reduce available capacity on the chart. UK bank holidays are automatically deducted.</p>
+      </div>
+    `
+  },
+
+  // ── Unit 6 Capacity ───────────────────────────────────────────
+  'capacity-unit6': {
+    title: '🏭 Unit 6 Load Capacity — User Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Unit 6 Capacity</strong> plan tracks the Unit 6 department's workload against available hours. It uses the same tab structure as ME Capacity, with data separated by department tag.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📊 Capacity Chart</div>
+        <p>Bar chart showing total allocated hours vs available capacity per month. Bars turn amber above 80% utilisation and red above 100%.</p>
+        <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">👷 Team</div>
+        <p>Add and manage Unit 6 team members. Set each person's hours per day and department tag.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📋 Tasks</div>
+        <p>Log ongoing tasks using 3-point PERT estimation. Tasks contribute to the capacity chart across their assigned month range.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🚂 Product Support</div>
+        <p>Assign Unit 6 effort to specific products for recurring support work separate from project tasks.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📦 Product Load</div>
+        <p>View the total Unit 6 hours attributed to each product, broken down by task and product support entries.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🏖️ Holiday Planner</div>
+        <p>Record approved annual leave for each team member by month. UK bank holidays are automatically deducted.</p>
       </div>
     `
   },

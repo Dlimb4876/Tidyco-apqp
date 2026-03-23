@@ -90,3 +90,79 @@ describe('capacity events task search', () => {
     expect(global.meSetTab).not.toHaveBeenCalled()
   })
 })
+
+describe('capacity events product search', () => {
+  beforeAll(() => {
+    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
+    eval(script)
+  })
+
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    global.meProductsSetSearch = jest.fn()
+  })
+
+  test('cap-products-search keeps focus and caret after Product Support re-render', async () => {
+    document.body.innerHTML = `
+      <div data-cap-context="me">
+        <input type="text" data-cap-action="cap-products-search" data-dept="ME" value="">
+      </div>
+    `
+
+    global.meProductsSetSearch = jest.fn((value) => {
+      document.body.innerHTML = `
+        <div data-cap-context="me">
+          <input type="text" data-cap-action="cap-products-search" data-dept="ME" value="${value}">
+        </div>
+      `
+    })
+
+    const input = document.querySelector('[data-cap-action="cap-products-search"]')
+    input.value = 'pump'
+    input.focus()
+    input.setSelectionRange(4, 4)
+
+    window.capacityEvents._onInput({ target: input })
+
+    expect(global.meProductsSetSearch).toHaveBeenCalledWith('pump', 'ME')
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    const replacement = document.querySelector('[data-cap-action="cap-products-search"]')
+    expect(document.activeElement).toBe(replacement)
+    expect(replacement.selectionStart).toBe(4)
+    expect(replacement.selectionEnd).toBe(4)
+  })
+
+  test('cap-product-load-search keeps focus and caret after Product Load re-render', async () => {
+    document.body.innerHTML = `
+      <div data-cap-context="me">
+        <input type="text" data-cap-action="cap-product-load-search" data-dept="ME" value="">
+      </div>
+    `
+
+    global.meProductLoadSetSearch = jest.fn((value) => {
+      document.body.innerHTML = `
+        <div data-cap-context="me">
+          <input type="text" data-cap-action="cap-product-load-search" data-dept="ME" value="${value}">
+        </div>
+      `
+    })
+
+    const input = document.querySelector('[data-cap-action="cap-product-load-search"]')
+    input.value = 'pump'
+    input.focus()
+    input.setSelectionRange(3, 3)
+
+    window.capacityEvents._onInput({ target: input })
+
+    expect(global.meProductLoadSetSearch).toHaveBeenCalledWith('pump', 'ME')
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    const replacement = document.querySelector('[data-cap-action="cap-product-load-search"]')
+    expect(document.activeElement).toBe(replacement)
+    expect(replacement.selectionStart).toBe(3)
+    expect(replacement.selectionEnd).toBe(3)
+  })
+})

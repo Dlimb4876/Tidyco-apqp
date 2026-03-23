@@ -465,4 +465,52 @@ describe('meDataAutoSyncDepartmentProducts()', () => {
     expect(meProducts.map(p => p.name)).toEqual(expect.arrayContaining(['Widget', 'Custom Fixture']));
     expect(meProducts.filter(p => p.name === 'Widget')).toHaveLength(1);
   });
+
+  it('restores latest logistics support breakdown from support history', () => {
+    global.productsState = {
+      products: [
+        { id: 'db-prod-1', name: 'Widget', notes: '' }
+      ]
+    };
+
+    window.meDataState.products = [
+      {
+        id: 'persisted-product',
+        name: 'Widget',
+        department: 'ME',
+        hoursPerWeek: 5,
+        notes: '',
+        productDatabaseId: 'db-prod-1',
+        createdAt: '2026-03-01T00:00:00.000Z'
+      }
+    ];
+    window.meDataState.productSupportHistory = [
+      {
+        id: 'log-hist-1',
+        productId: 'persisted-product',
+        department: 'LOG',
+        hoursPerWeek: 2.25,
+        kittingHours: 1.25,
+        bookingInOutHours: 0.25,
+        productMovementHours: 0.75,
+        effectiveDate: '2026-03-05',
+        endDate: '',
+        changeReason: 'Split logistics work',
+        notes: ''
+      }
+    ];
+
+    const synced = window.meDataAutoSyncLogProducts();
+
+    expect(synced).toBe(true);
+    const logProduct = window.meDataState.products.find(p => p.department === 'LOG');
+    expect(logProduct).toBeTruthy();
+    expect(logProduct.id).toBe('persisted-product');
+    expect(logProduct.hoursPerWeek).toBeCloseTo(2.25, 6);
+    expect(logProduct.kittingHours).toBeCloseTo(1.25, 6);
+    expect(logProduct.bookingInOutHours).toBeCloseTo(0.25, 6);
+    expect(logProduct.kittingTimeBookingHours).toBeCloseTo(1.25, 6);
+    expect(logProduct.productMovementHours).toBeCloseTo(0.75, 6);
+    expect(logProduct.supportEffectiveDate).toBe('2026-03-05');
+  });
 });
