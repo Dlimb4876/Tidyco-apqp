@@ -1,0 +1,673 @@
+/* ============================================================
+   pfmea.css — PFMEA table styles
+   Loaded by index.html
+   ============================================================ */
+
+/* ── RPN badges ──────────────────────────────────────────────── */
+.rpn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  border: 1px solid;
+  transition: all 0.15s;
+}
+
+.rpn-lo {
+  background: var(--green-pale);
+  color: var(--green);
+  border-color: #9ad6b2;
+}
+
+.rpn-md {
+  background: var(--amber-pale);
+  color: var(--amber);
+  border-color: #f6c87a;
+}
+
+.rpn-hi {
+  background: var(--red-pale);
+  color: var(--red);
+  border-color: #f0b4ae;
+}
+
+/* ── RPN History Trigger Button ──────────────────────────────── */
+.rpn-hist-btn {
+  display: inline-block;
+  margin: 3px auto 0;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  color: var(--blue);
+  background: var(--blue-pale);
+  border: 1.5px solid var(--blue-mid);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: all 0.15s;
+  position: relative;
+  z-index: 10;
+}
+
+.rpn-hist-btn:hover {
+  background: var(--blue);
+  color: var(--white);
+  border-color: var(--blue);
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.15);
+}
+
+/* ── Step Group Headers ────────────────────────────────────── */
+.pfmea-step-group {
+  margin-bottom: 0;
+}
+
+.pfmea-step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--table-head-bg);
+  border-bottom: 1px solid var(--table-border);
+  border-top: 1px solid var(--table-border);
+  transition: all 0.15s;
+  font-weight: 600;
+}
+
+.pfmea-step-header:first-child { border-top: none; }
+
+.pfmea-step-header:hover {
+  background: rgba(0, 102, 204, 0.05);
+  border-bottom-color: var(--line2);
+}
+
+.pfmea-step-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.3px;
+}
+
+.pfmea-step-ctqs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pfmea-filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pfmea-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+
+.pfmea-view-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 100%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.pfmea-view-btn {
+  border: none;
+  background: transparent;
+  color: var(--mid);
+  padding: 8px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.pfmea-view-btn.active {
+  background: var(--surface);
+  color: var(--blue-dark);
+  box-shadow: 0 6px 14px rgba(15, 34, 53, .08);
+}
+
+.pfmea-view-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  padding: 1px 6px;
+  margin-left: 5px;
+  border-radius: 999px;
+  background: var(--blue-pale);
+  color: var(--blue-dark);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+}
+
+.pfmea-history-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pfmea-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--mid);
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pfmea-filter-select {
+  min-height: 30px;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.pfmea-filter-select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(11, 95, 167, 0.15);
+}
+
+/* ── Add-Row Affordance ────────────────────────────────────── */
+.pfmea-add-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: rgba(0, 102, 204, 0.02);
+  border-top: 1px dashed var(--table-border);
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.pfmea-add-row:hover {
+  color: var(--blue);
+  background: var(--blue-pale);
+  border-top-color: var(--blue);
+  border-top-style: solid;
+}
+
+/* ── Table cell types ────────────────────────────────────────── */
+.pfmea-mode-cell {
+  background: var(--blue-pale);
+  border-right: 2px solid #7a8aa1 !important;
+}
+.pfmea-effect-cell {
+  background: var(--bg-soft);
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+.pfmea-cause-cell { background: var(--amber-pale); }
+
+/* ── Cause row separators ────────────────────────────────────── */
+tr.pfmea-row-sub td {
+  border-bottom: 1px solid #9fb0c4 !important;
+  border-top: 1px solid #e2e8f0;
+}
+td.pfmea-cause-text { border-left: 2px solid #94a3b8 !important; }
+
+/* ── Horizontal scroll wrapper ───────────────────────────────── */
+.pfmea-wrap {
+  max-height: 70vh;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.pfmea-tbl td {
+  line-height: 1.3;
+}
+
+.pfmea-tbl .cell-edit {
+  padding: 2px 4px;
+  min-height: var(--table-input-min-h);
+}
+
+/* Keep compact score values readable in narrow PFMEA number columns. */
+.pfmea-tbl input[type="number"].cell-edit.mono {
+  width: 36px !important;
+  min-width: 36px;
+  padding: 1px 0 !important;
+  text-align: center;
+  line-height: 1.2;
+  -moz-appearance: textfield;
+}
+
+.pfmea-tbl input[type="number"].cell-edit.mono::-webkit-outer-spin-button,
+.pfmea-tbl input[type="number"].cell-edit.mono::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pfmea-score-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.pfmea-score-input {
+  width: 36px !important;
+  min-width: 36px;
+  min-height: var(--table-input-min-h);
+  padding: 2px 0 !important;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ── History view + modal ────────────────────────────────────── */
+.pfmea-history-modal {
+  width: 860px;
+}
+
+.pfmea-history-modal-summary {
+  background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 100%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.pfmea-history-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+}
+
+.pfmea-history-modal-span {
+  grid-column: 1 / -1;
+}
+
+.pfmea-history-label {
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.pfmea-history-value {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pfmea-history-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pfmea-history-event {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 12px 14px;
+}
+
+.pfmea-history-event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.pfmea-history-date {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.pfmea-history-event-scores,
+.pfmea-history-event-desc,
+.pfmea-history-step-name,
+.pfmea-history-subchain,
+.pfmea-history-current,
+.pfmea-history-score {
+  font-size: 11px;
+  color: var(--mid);
+}
+
+.pfmea-history-event-desc {
+  margin-top: 6px;
+  color: var(--ink);
+}
+
+.pfmea-history-step {
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--navy);
+  font-size: 11px;
+}
+
+.pfmea-history-chain {
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.pfmea-history-rpn-change {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pfmea-history-rpn-change.improved {
+  background: var(--green-pale);
+  color: var(--green);
+}
+
+.pfmea-history-rpn-change.raised {
+  background: var(--red-pale);
+  color: var(--red);
+}
+
+.pfmea-history-table td {
+  vertical-align: top;
+}
+
+/* ── Auto-expanding textareas ────────────────────────────────── */
+.cell-edit[data-autoresize] {
+  overflow: hidden;
+  resize: none;
+  min-height: var(--table-input-min-h);
+}
+
+/* ── Feature 4: Column view toggles (Compact / Standard / Full) ───────────── */
+.pf-col-view-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.pf-col-btn {
+  border: none;
+  background: transparent;
+  color: var(--mid);
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.pf-col-btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink);
+}
+
+.pf-col-btn.active {
+  background: var(--surface);
+  color: var(--blue-dark);
+  box-shadow: 0 2px 8px rgba(15, 34, 53, .08);
+}
+
+/* ── Feature 2: Special characteristics ───────────────────────────────────── */
+.pf-sc-select {
+  display: block;
+  margin-top: 4px;
+  width: 100%;
+  height: 26px;
+  font-size: 13px;
+  text-align: center;
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  background: var(--bg-soft);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pf-sc-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pf-sc-safety   { background: var(--red-pale);   color: var(--red);   border: 1px solid var(--red); }
+.pf-sc-critical { background: var(--amber-pale);  color: var(--amber); border: 1px solid var(--amber); }
+.pf-sc-major    { background: var(--blue-pale);   color: var(--blue);  border: 1px solid var(--blue); }
+
+.pf-sc-legend {
+  width: 100%;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+}
+
+/* ── Feature 3: Validation warning badges ─────────────────────────────────── */
+.pf-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  margin: 2px auto 0;
+  animation: pf-pulse 2s ease-in-out infinite;
+}
+
+.pf-warning-critical {
+  background: var(--red-pale);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+
+.pf-warning-warning {
+  background: var(--amber-pale);
+  color: var(--amber);
+  border: 1px solid var(--amber);
+}
+
+@keyframes pf-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* Warnings modal list */
+.pf-warning-list {
+  list-style: none;
+  padding: 12px 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.pf-warning-item {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-left: 4px solid;
+  font-size: 13px;
+}
+
+.pf-warning-item-critical {
+  background: var(--red-pale);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.pf-warning-item-warning {
+  background: var(--amber-pale);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* Toolbar summary badge (red) */
+.pf-warn-summary {
+  background: var(--red-pale) !important;
+  color: var(--red) !important;
+  border: 1px solid var(--red) !important;
+}
+
+/* ── Feature 5: Extra filter controls ─────────────────────────────────────── */
+.pf-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.pf-text-search {
+  padding: 4px 8px;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  min-height: 30px;
+}
+
+.pf-text-search:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(11, 95, 167, 0.15);
+}
+
+/* ── Responsive Design ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .pfmea-filter-wrap {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .pfmea-toolbar {
+    align-items: stretch;
+  }
+
+  .pfmea-view-tabs,
+  .pfmea-history-summary {
+    width: 100%;
+  }
+
+  .pfmea-view-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .pfmea-filter-label {
+    width: 100%;
+  }
+
+  .pfmea-filter-select {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .rpn {
+    font-size: 11px;
+    min-width: 30px;
+    padding: 2px 4px;
+  }
+
+  .rpn-hist-btn {
+    padding: 1px 4px;
+    font-size: 8px;
+  }
+
+  .pfmea-step-header {
+    gap: 8px;
+    padding: 6px 10px;
+  }
+
+  .pfmea-step-label {
+    font-size: 10px;
+  }
+
+  .pfmea-step-ctqs {
+    gap: 3px;
+  }
+
+  .pfmea-add-row {
+    gap: 4px;
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .pfmea-wrap {
+    overflow-x: auto;
+  }
+
+  .pfmea-history-modal {
+    width: min(96vw, 860px);
+  }
+
+  .pfmea-history-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cell-edit[data-autoresize] {
+    min-height: 28px;
+  }
+
+  .pf-col-view-tabs {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .pf-col-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .pf-text-search {
+    flex: 1;
+    min-width: 100px;
+  }
+}
+
+@media (min-width: 768px) {
+  .pf-text-search {
+    min-width: 140px;
+  }
+}

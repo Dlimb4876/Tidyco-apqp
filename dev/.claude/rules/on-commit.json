@@ -1,0 +1,13 @@
+{
+  "name": "on-commit",
+  "description": "On each commit, run quick quality checks via the testing agent.",
+  "trigger": "on-commit",
+  "agents": ["testing"],
+  "steps": [
+    {
+      "agent": "testing",
+      "command": "node .claude/agents/testing.js",
+      "description": "Run npm test and annotate failures immediately"
+    }
+  ]
+}
