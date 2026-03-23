@@ -34,9 +34,11 @@ window.renderMeCapacity = function() {
   window.meCurrentDepartmentContext = 'ME';
 
   // Auto-sync ME products from Product Management database (all statuses).
+  // Guard: only save if meDataInit has completed so holidays are loaded.
+  // Saving before init completes would delete all holidays from the DB.
   if (typeof meDataAutoSyncProductionProducts === 'function') {
     const synced = meDataAutoSyncProductionProducts();
-    if (synced) {
+    if (synced && window.meDataInitialized) {
       setTimeout(() => {
         if (typeof meDataSave === 'function') meDataSave(false);
       }, 1000);

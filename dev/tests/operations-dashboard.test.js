@@ -492,7 +492,7 @@ describe('Operations Dashboard', () => {
     cancelSpy.mockRestore();
   });
 
-  test('overview includes Unit 2/3/6 operations capacity KPIs', () => {
+  test('overview includes operations capacity KPIs by area', () => {
     const monthKey = opsCurrentMonthKey();
 
     global.prodCapGet24MonthKeys = jest.fn().mockReturnValue([monthKey]);
@@ -518,7 +518,9 @@ describe('Operations Dashboard', () => {
 
     const html = renderOperationsDashboard();
 
-    expect(html).toContain('Operations Capacity by Unit');
+    expect(html).toContain('Operations Capacity by Area');
+    expect(html).toContain('ME Utilisation');
+    expect(html).toContain('PM Utilisation');
     expect(html).toContain('Unit 2 Utilisation');
     expect(html).toContain('Unit 3 Utilisation');
     expect(html).toContain('Unit 6 Utilisation');

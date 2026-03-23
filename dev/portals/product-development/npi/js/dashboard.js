@@ -762,7 +762,7 @@ npi.dashboard.renderDashboard = function () {
       <section class="layout">
         <div class="panel gate-panel">
           <div class="panel-head">
-            <h2>Gate Trajectory</h2>
+            <h2>Gate Progress</h2>
             <span>Click a gate to open detail</span>
           </div>
           <div class="trajectory">${trajectoryHTML}</div>

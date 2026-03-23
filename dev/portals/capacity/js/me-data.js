@@ -15,8 +15,13 @@ window.meDataState = {
   holidays: []
 };
 
+window.meDataPendingDeletes = {
+  tasks: []
+};
+
 window.meDataSaveInProgress = false;
 window.meDataSaveQueued = false;
+window.meDataInitialized = false;
 
 function meNormalizeDepartmentTag(value, fallback = 'ME') {
   const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
@@ -215,7 +220,17 @@ window.meDataUpdateTask = function(idx, field, value) {
 
 window.meDataDeleteTask = function(idx) {
   if (idx < 0 || idx >= meDataState.tasks.length) return false;
+  const removedTask = meDataState.tasks[idx];
   meDataState.tasks.splice(idx, 1);
+  if (removedTask && removedTask.id) {
+    const pending = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.tasks)
+      ? window.meDataPendingDeletes.tasks
+      : [];
+    if (!pending.includes(removedTask.id)) {
+      pending.push(removedTask.id);
+    }
+    window.meDataPendingDeletes = { tasks: pending };
+  }
   return true;
 };
 
@@ -420,23 +435,33 @@ window.meDataInit = async function() {
       return;
     }
 
-      // Load from relational tables
+      let relState = {
+        team: [],
+        tasks: [],
+        products: [],
+        holidays: []
+      };
+
+      // Load from relational tables first.
       if (typeof meLoadRelationalTeams === 'function') {
         try {
-          const relTeam     = await meLoadRelationalTeams(currentUser.id);
-          const relTasks    = await meLoadRelationalTasks(currentUser.id);
-          const relProducts = await meLoadRelationalProducts(currentUser.id);
-          const relHolidays = meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays(currentUser.id));
-          meDataState = {
-            team:     relTeam     || [],
-            tasks:    relTasks    || [],
-            products: relProducts || [],
-            holidays: relHolidays || []
+          relState = {
+            team: await meLoadRelationalTeams(currentUser.id) || [],
+            tasks: await meLoadRelationalTasks(currentUser.id) || [],
+            products: await meLoadRelationalProducts(currentUser.id) || [],
+            holidays: meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays(currentUser.id))
           };
         } catch (relErr) {
           console.warn('ME relational load failed:', relErr.message);
         }
       }
+
+      meDataState = {
+        team: relState.team,
+        tasks: relState.tasks,
+        products: relState.products,
+        holidays: relState.holidays
+      };
 
       // Ensure all data has backward-compatible fields
       meDataState.team.forEach(member => {
@@ -461,6 +486,7 @@ window.meDataInit = async function() {
       meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays || []);
 
       window.meDataState = meDataState;
+      window.meDataPendingDeletes = { tasks: [] };
 
       // Set up real-time sync
       meDataSubscribe();
@@ -468,6 +494,7 @@ window.meDataInit = async function() {
     console.warn('Supabase load exception, using defaults:', err);
   }
   meEnsureStructure();
+  window.meDataInitialized = true;
 };
 
 window.meDataSave = async function(showAlert) {
@@ -538,10 +565,32 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // 4. Save holidays: delete ALL rows then re-insert current state
-        // Shared-data model: all users share one dataset, so delete globally to avoid
-        // stale rows from other user_ids causing duplicate key violations on insert.
-        // Deduplicate by (person_id, date) in case load returned multi-user duplicates.
+        // 3-B. Persist queued task deletions so refresh does not resurrect removed rows.
+        const queuedTaskDeletes = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.tasks)
+          ? window.meDataPendingDeletes.tasks.slice()
+          : [];
+
+        if (queuedTaskDeletes.length > 0) {
+          if (typeof meDeleteTaskRelational === 'function') {
+            const failedTaskDeletes = [];
+            for (let i = 0; i < queuedTaskDeletes.length; i++) {
+              const taskId = queuedTaskDeletes[i];
+              const deleted = await meDeleteTaskRelational(taskId);
+              if (!deleted) {
+                failedTaskDeletes.push(taskId);
+                relationalSuccess = false;
+              }
+            }
+            window.meDataPendingDeletes.tasks = failedTaskDeletes;
+          } else {
+            console.warn('Task deletes queued but meDeleteTaskRelational is unavailable');
+            relationalSuccess = false;
+          }
+        }
+
+        // 4. Save holidays for the current user only, then reload as shared data.
+        // The table's unique key is (user_id, person_id, date), so global deletes are
+        // destructive and can wipe other users' rows if one user saves an empty state.
         const _holSeen = new Set();
         meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays);
         const holidayData = (meDataState.holidays || [])
@@ -566,7 +615,7 @@ window.meDataSave = async function(showAlert) {
         const { error: delHolErr } = await supa
           .from('me_holidays')
           .delete()
-          .not('person_id', 'is', null);
+          .eq('user_id', currentUser.id);
 
         if (delHolErr) {
           console.warn('Failed to clear holidays:', delHolErr.message);
@@ -628,6 +677,7 @@ window.meDataReset = function() {
     holidays: []
   };
   window.meDataState = meDataState;
+  window.meDataPendingDeletes = { tasks: [] };
 };
 
 // ─────────────────────────────────────────────────────────────

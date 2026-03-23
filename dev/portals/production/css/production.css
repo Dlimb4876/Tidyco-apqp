@@ -21,6 +21,32 @@
 }
 tr.batch-row-overdue { background: var(--red-pale); }
 tr.batch-row-due-soon { background: var(--amber-pale); }
+tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
+
+/* ── Cell save flash ──────────────────────────────────────────── */
+.cell-saved {
+  outline: 2px solid var(--green, #22c55e) !important;
+  transition: outline 0.9s ease-out;
+}
+
+/* ── Bulk action toolbar ──────────────────────────────────────── */
+.bulk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  background: var(--blue-pale, #e8f0fe);
+  border: 1px solid var(--blue, #3b82f6);
+  border-radius: 6px;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+.bulk-toolbar #bulk-count {
+  font-weight: 600;
+  margin-right: 4px;
+}
+.bulk-toolbar.hidden { display: none; }
 
 /* Top Navigation Bar */
 .prod-nav-bar {

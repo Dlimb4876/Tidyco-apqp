@@ -6,6 +6,11 @@
 ## 2026-03-21
 - Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
 
+## 2026-03-23
+- Audited `supabase/` against live code, docs, and tests; kept all setup-relevant SQL files and deleted only `remove_legacy_me_pert_subtasks.sql` because it was a completed one-off cleanup with no remaining runtime or onboarding value.
+- Removed the dead `me_capacity` fallback from `portals/capacity/js/me-data.js` after confirming the live project has no such table, and changed holiday saves to delete only the current user's `me_holidays` rows before insert; added focused regression coverage in `tests/me-data-core.test.js`.
+- Fixed ME/PM capacity task delete persistence in `portals/capacity/js/me-data.js` by queueing deleted task IDs and deleting them from `me_tasks` during save; added regression coverage in `tests/me-data-core.test.js` to prevent refresh resurrection.
+
 ## 2026-03-22
 - Fixed production hub delegation regression in `portals/production/js/production.js` by replacing inline favourite `onclick` handlers with delegated `data-action` handling (`prod-fav-toggle`), then validated with targeted production tests.
 - Re-ran full validation after delegation fix: `npm test` and `npm run check:all` both pass (50 suites, 682 tests).
@@ -24,6 +29,7 @@
 - Updated MCS main list card metadata label from raw type value to explicit text format (`Change Type: <type>`) for clearer readability. File: `portals/mcs/js/mcs-main.js`.
 - Implemented 5-feature PFMEA improvement plan (AIAG-VDA compliance + UX): (1) Function field on modes — data, save, load, render; (2) Special characteristics ∇△◇ dropdown on effects — constants, save, load; (3) Validation warnings badges + modal (SEV≥9, RPN≥200, OCC≥8, overdue); (4) Collapsible column views (Compact/Standard/Full) with view toggle buttons; (5) Advanced filtering (owner, overdue, special char, text search, RPN). Files: `npi-constants.js`, `npi-data.js`, `npi-data-relational.js`, `pfmea.js`, `pfmea.css`, `npi-events.js`, `index.html`. Supabase schema requires two ALTER TABLE migrations (ADD COLUMN function TEXT to npi_pfmea_modes, ADD COLUMN special_char VARCHAR(20) to npi_pfmea_effects). All 671 tests pass.
 - Added hub keyboard navigation shortcuts: keys 1-5 now open cards on hub root pages (main hub, Capacity hub, Product Development hub, Production hub), with matching help text in the Keyboard Shortcuts modal. Files: `utils/js/navigation.js`, `index.html`, `CHANGELOG.md`.
+- Updated Operations dashboard overview capacity grouping in `portals/operations/js/operations-dashboard-render-core.js`: renamed the section to "Operations Capacity by Area" and moved ME/PM utilisation KPIs into the same area-capacity block as Unit 2/3/6; updated `tests/operations-dashboard.test.js` and added changelog entry.
 - Added a distinct Stage 1 `Impact Assessment Estimate (hours)` field in MCS create/edit/view and surfaced it in Approval 1 context; kept it separate from Stage 3 overhaul implementation time impact. Data is persisted via structured justification metadata markers. File: `portals/mcs/js/mcs-modal.js`.
 - Refined MCS modal information hierarchy: moved status pill from Stage 1 body into modal top bar (view/edit) so status is shown as global state context. File: `portals/mcs/js/mcs-modal.js`.
 - Refined MCS staged modal per follow-up UX request: switched to true accordion behavior (single expanded stage), merged Impact Assessment into Stage 1, added new freeform fields for Documents Affected and Knock-on Effect for Other Products, and introduced color-coded stage headings for clearer visual separation. Files: `portals/mcs/js/mcs-modal.js`, `portals/mcs/css/mcs.css`, `portals/mcs/css/mcs-responsive.css`, `CHANGELOG.md`.
@@ -899,3 +905,56 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 06:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 06:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 06:30 | Created ../../../.claude/plans/polymorphic-waddling-shell.md | — | ~1370 |
+| 06:35 | Edited portals/production/js/scheduling.js | 1→2 lines | ~37 |
+| 06:37 | Edited portals/production/css/production.css | expanded (+26 lines) | ~228 |
+| 06:38 | Edited CHANGELOG.md | 2→4 lines | ~75 |
+| 06:38 | Session end: 4 writes across 4 files (polymorphic-waddling-shell.md, scheduling.js, production.css, CHANGELOG.md) | 11 reads | ~65814 tok |
+| 16:02 | Edited portals/capacity/js/me-data.js | removed dead me_capacity fallback and scoped holiday delete to current user | ~365 |
+| 16:03 | Edited tests/me-data-core.test.js | replaced fallback regression with init/save protection tests | ~170 |
+| 16:05 | Edited CHANGELOG.md | updated holiday persistence entry | ~46 |
+
+## Session: 2026-03-23 10:24
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 10:35
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 10:36
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 10:37
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 10:38
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 10:38
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 10:43 | Edited portals/capacity/js/me-data.js | 2→3 lines | ~30 |
+| 10:43 | Edited portals/capacity/js/me-data.js | modified catch() | ~59 |
+| 10:43 | Edited portals/capacity/js/me-capacity.js | modified if() | ~144 |
+| 10:44 | Edited CHANGELOG.md | 1→3 lines | ~134 |
+| 10:44 | Session end: 4 writes across 3 files (me-data.js, me-capacity.js, CHANGELOG.md) | 9 reads | ~31595 tok |
