@@ -34,10 +34,15 @@ global.esc = (v) => String(v ?? '')
 let activeProject;
 global.prog = () => activeProject;
 
+const stateScript = fs.readFileSync(
+  path.resolve(__dirname, '../portals/product-development/npi/js/pfmea-state.js'),
+  'utf8'
+);
 const script = fs.readFileSync(
   path.resolve(__dirname, '../portals/product-development/npi/js/pfmea.js'),
   'utf8'
 );
+eval(stateScript);
 eval(script);
 
 describe('PFMEA core rules', () => {

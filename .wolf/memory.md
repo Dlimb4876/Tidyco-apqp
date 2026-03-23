@@ -7,7 +7,11 @@
 - Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
 
 ## 2026-03-23
+- Fixed outdated Capacity Hub Jest expectation in `tests/capacity-hub.test.js`: card count now asserts 5 (Production, ME, PM, Logistics, Unit 6) with explicit Logistics/Unit 6 action and icon checks; revalidated with `npm test` and `npm run check:all` (both passing).
+- Split `portals/settings/js/settings.js` into focused modules by moving Teams/Permissions logic to `portals/settings/js/settings-teams.js` and MCS approvals logic to `portals/settings/js/settings-mcs.js`; updated `index.html` script order and adjusted `tests/settings-portal.test.js` to eval the new modules.
 - Updated Production Capacity by Work Area KPIs in `portals/capacity/js/prod-capacity-workarea.js`: added a new `1-Yr Headroom` card and rounded `2-Yr Headroom` to whole hours so Unit 2/3/6 KPI tiles are easier to scan.
+- Split `mcs-modal.js` (16k tokens) into four focused files: `mcs-modal-shared.js` (helpers + close), `mcs-modal-create.js`, `mcs-modal-view.js`, `mcs-modal-edit.js`. Updated `index.html` load order and deleted original file.
+- Added Logistics (LOG) and Unit 6 (UNIT6) capacity plans to Capacity Hub: created `portals/capacity/logistics/js/log-capacity.js` and `portals/capacity/unit6/js/unit6-capacity.js` following the PM pattern; expanded `meNormalizeDepartmentTag` in both `me-data.js` and `me-data-relational.js` to pass through LOG and UNIT6 tags; added context redirects to `me-capacity.js` shared functions; wired up hub cards, nav bar items, routing, and events in `capacity.js` and `capacity-events.js`; added script tags to `index.html`.
 - Finalized robust MCS stage-number rendering in `portals/mcs/js/mcs-modal.js` by injecting explicit `.mcs-stage-badge` elements during stage-toggle build (instead of relying only on pseudo-elements), with matching fallback-safe color styling and stronger footer/button contrast updates in `portals/mcs/css/mcs.css`.
 - Applied MCS modal follow-up styling in `portals/mcs/css/mcs.css`: hard-forced Stage 2 badge rendering (`content: '2' !important`) and lightened the modal footer with higher-contrast action button styles so controls stand out.
 - Fixed NPI Kanban search churn in `portals/product-development/npi/js/dashboard.js` and `portals/product-development/npi/js/npi-events.js` by restoring focus/caret after each search-triggered re-render; added regression coverage in `tests/npi-dashboard-search.test.js`.
@@ -19,6 +23,7 @@
 - Audited `supabase/` against live code, docs, and tests; kept all setup-relevant SQL files and deleted only `remove_legacy_me_pert_subtasks.sql` because it was a completed one-off cleanup with no remaining runtime or onboarding value.
 - Removed the dead `me_capacity` fallback from `portals/capacity/js/me-data.js` after confirming the live project has no such table, and changed holiday saves to delete only the current user's `me_holidays` rows before insert; added focused regression coverage in `tests/me-data-core.test.js`.
 - Fixed ME/PM capacity task delete persistence in `portals/capacity/js/me-data.js` by queueing deleted task IDs and deleting them from `me_tasks` during save; added regression coverage in `tests/me-data-core.test.js` to prevent refresh resurrection.
+- Split PFMEA worksheet state out of `portals/product-development/npi/js/pfmea.js` into new `portals/product-development/npi/js/pfmea-state.js` (RPN/view/column/extra-filter state + column geometry helpers), updated `index.html` script order to load it before `pfmea.js`, and updated `tests/pfmea.test.js` to eval the new state module before PFMEA core.
 
 ## 2026-03-22
 - Fixed production hub delegation regression in `portals/production/js/production.js` by replacing inline favourite `onclick` handlers with delegated `data-action` handling (`prod-fav-toggle`), then validated with targeted production tests.
@@ -1016,3 +1021,93 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+| 18:31 | Edited portals/capacity/js/me-data-relational.js | added 3 condition(s) | ~82 |
+| 18:31 | Edited portals/capacity/js/me-data.js | added 3 condition(s) | ~82 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~134 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~153 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~142 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~154 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~141 |
+| 18:32 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~141 |
+| 18:32 | Created portals/capacity/logistics/js/log-capacity.js | — | ~2256 |
+| 18:33 | Created portals/capacity/unit6/js/unit6-capacity.js | — | ~2314 |
+| 18:33 | Edited portals/capacity/js/capacity.js | modified capacityNavBar() | ~261 |
+| 18:33 | Edited portals/capacity/js/capacity.js | added 2 condition(s) | ~156 |
+| 18:34 | Edited portals/capacity/js/capacity.js | 5→7 lines | ~170 |
+| 18:34 | Edited portals/capacity/js/capacity.js | expanded (+30 lines) | ~580 |
+| 18:34 | Edited portals/capacity/js/capacity-events.js | added 2 condition(s) | ~196 |
+| 18:34 | Edited portals/capacity/js/capacity-events.js | 4→5 lines | ~92 |
+| 18:34 | Edited portals/capacity/js/capacity-events.js | added 4 condition(s) | ~485 |
+| 18:35 | Edited index.html | 3→5 lines | ~97 |
+| 18:35 | Edited core/js/state.js | inline fix | ~21 |
+| 18:35 | Edited CHANGELOG.md | 1→3 lines | ~139 |
+| 18:36 | Session end: 20 writes across 10 files (me-data-relational.js, me-data.js, me-capacity.js, log-capacity.js, unit6-capacity.js) | 13 reads | ~61105 tok |
+| 18:36 | Diagnosed OpenWolf cerebrum-reflection cron failure | .wolf/cron-state.json, .wolf/daemon.log, .wolf/config.json, C:/Users/Tidyco/AppData/Roaming/npm/node_modules/openwolf/dist/src/daemon/cron-engine.js | confirmed AI cron tasks fail when `claude` CLI is missing from PATH | ~1800 tok |
+| 18:48 | Installed Claude Code and verified OpenWolf cron recovery | .wolf/cron-state.json, .wolf/daemon.log | installed Claude Code 2.1.81 via winget, verified `claude -p`, restarted daemon with updated PATH, and confirmed `cerebrum-reflection` succeeded | ~2200 tok |
+
+## Session: 2026-03-23 18:45
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 18:46
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 18:48
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 18:53
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 18:55
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:00 | Created portals/mcs/js/mcs-modal-shared.js | — | ~3486 |
+| 19:00 | Created portals/mcs/js/mcs-modal-create.js | — | ~2728 |
+| 19:01 | Created portals/mcs/js/mcs-modal-view.js | — | ~5331 |
+| 19:02 | Created portals/mcs/js/mcs-modal-edit.js | — | ~4964 |
+| 19:03 | Edited index.html | 1→4 lines | ~62 |
+| 19:03 | Edited CHANGELOG.md | 4→6 lines | ~94 |
+| 19:03 | Session end: 6 writes across 6 files (mcs-modal-shared.js, mcs-modal-create.js, mcs-modal-view.js, mcs-modal-edit.js, index.html) | 3 reads | ~56393 tok |
+| 19:04 | Session end: 6 writes across 6 files (mcs-modal-shared.js, mcs-modal-create.js, mcs-modal-view.js, mcs-modal-edit.js, index.html) | 3 reads | ~56393 tok |
+
+## Session: 2026-03-23 19:05
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 19:07
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 19:08
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 19:08
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:12 | Edited .mcp.json | 12→14 lines | ~83 |
+| 19:12 | Session end: 1 writes across 1 files (.mcp.json) | 2 reads | ~262 tok |
+
+## Session: 2026-03-23 19:16
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 19:27
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:29 | Edited portals/capacity/js/me-data.js | 8→9 lines | ~82 |
+| 19:29 | Session end: 1 writes across 1 files (me-data.js) | 3 reads | ~29566 tok |

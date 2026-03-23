@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-23T12:39:59.822Z
-> Files: 281 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-23T19:29:08.117Z
+> Files: 287 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
 
@@ -10,15 +10,15 @@
 ## ./
 
 - `.gitignore` — Git ignore rules (~305 tok)
-- `.mcp.json` (~179 tok)
+- `.mcp.json` (~189 tok)
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~12401 tok)
+- `CHANGELOG.md` — Changelog (~12900 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
-- `index.html` — Tidyco Operations Portal (~10154 tok)
+- `index.html` — Tidyco Operations Portal (~10240 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~328 tok)
 - `mcs-updated-2.html` (~13058 tok)
@@ -130,22 +130,8 @@
 
 ## Manual Update 2026-03-23
 
-- Updated Production Capacity by Work Area KPI cards in `portals/capacity/js/prod-capacity-workarea.js` to add `1-Yr Headroom` and round `2-Yr Headroom` to integer hours for Unit 2/3/6 views.
-
-- Robustified MCS stage numbering in `portals/mcs/js/mcs-modal.js` by rendering explicit `.mcs-stage-badge` nodes in the stage toggle builder (Stage 2 no longer depends on pseudo-element content); paired with fallback-safe stage colors and brighter footer/button contrast in `portals/mcs/css/mcs.css`.
-- Follow-up MCS modal polish in `portals/mcs/css/mcs.css`: forced Stage 2 badge content visibility and brightened footer/action button contrast for clearer call-to-action controls.
-- Fixed NPI Kanban search focus/caret churn in `portals/product-development/npi/js/dashboard.js` and aligned delegated path in `portals/product-development/npi/js/npi-events.js`.
-- Added focused regression coverage in `tests/npi-dashboard-search.test.js`.
-- Improved MCS staged modal visual hierarchy in `portals/mcs/css/mcs.css` and `portals/mcs/css/mcs-responsive.css`: explicit numbered stage bullets (1-4, including Stage 2), color-treated header bar, and stage-separator guide line markers.
-- Aligned ME/PM Capacity Chart KPI and breakdown month context to follow selected chart month in `portals/capacity/js/me-chart.js`; added regression coverage in `tests/me-chart.test.js` and changelog entry.
-- Updated task-search focus behavior in `portals/capacity/js/capacity-events.js`.
-- Added regression coverage in `tests/capacity-events.test.js`.
-- Added release note in `CHANGELOG.md`.
-
 
 ## Manual Update Notes
-
-- ME and PM both route through delegated `cap-task-search`; fix applied centrally to preserve parity.
 
 
 ## core/css/
@@ -160,7 +146,7 @@
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~697 tok)
 - `db.js` — ═══════════════════════════════════ (~8516 tok)
 - `network.js` — Check if Supabase is reachable with a minimal query (~766 tok)
-- `state.js` — ═══════════════════════════════════ (~4502 tok)
+- `state.js` — ═══════════════════════════════════ (~4507 tok)
 
 ## docs/
 
@@ -216,15 +202,15 @@
 
 ## portals/capacity/js/
 
-- `capacity-events.js` — capActionTarget: capNum, capIsPM, capTaskFilters, capTaskRefresh (~5862 tok)
-- `capacity.js` — Capacity Management Portal Hub (~1687 tok)
+- `capacity-events.js` — capActionTarget: capNum, capIsPM, capTaskFilters, capTaskRefresh (~6477 tok)
+- `capacity.js` — Capacity Management Portal Hub (~2319 tok)
 - `me-calculations.js` — Declares dateOnly (~4247 tok)
-- `me-capacity.js` — Main render function for ME Capacity Portal (~3300 tok)
+- `me-capacity.js` — Main render function for ME Capacity Portal (~3850 tok)
 - `me-chart.js` — Declares department (~5967 tok)
 - `me-components.js` — Declares color (~1714 tok)
 - `me-dashboard.js` — Draw mini 6-month capacity chart on dashboard (~2606 tok)
-- `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeIsoDate, meNormalizeDateRange (~3794 tok)
-- `me-data.js` — Auto-sync products from product management database into a department stream. (~8794 tok)
+- `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeIsoDate, meNormalizeDateRange (~4536 tok)
+- `me-data.js` — meNormalizeDepartmentTag: meNormalizeHolidayRecord, meNormalizeAndDedupeHolidays, meNormalizeDateOnl (~12157 tok)
 - `me-heatmap.js` — monthLabel: meRenderDetailPanel (~2627 tok)
 - `me-holidays.js` — Declares y (~2042 tok)
 - `me-product-taskload.js` — meProductLoadTableState: meProductLoadGetState, meProductLoadRefreshTable, resolveFamilyLabel, resolveFamilyLabelForProduct (~3912 tok)
@@ -240,6 +226,10 @@
 - `prod-capacity.js` — ═══════════════════════════════════════════════════════════════ (~1128 tok)
 - `work-areas-data.js` — ═══════════════════════════════════════════════════════════════ (~1453 tok)
 
+## portals/capacity/logistics/js/
+
+- `log-capacity.js` — logFilterByDepartment: logGetCurrentMonthKey, logGetData, logGetTabContent (~2256 tok)
+
 ## portals/capacity/project-management/css/
 
 - `pm-capacity.css` — Styles: 4 rules, 2 media queries (~195 tok)
@@ -248,6 +238,10 @@
 
 - `pm-capacity-data.js` — Declares allTeam (~328 tok)
 - `pm-capacity.js` — pmFilterByDepartment: pmGetCurrentMonthKey, pmGetData, pmGetTabContent (~2470 tok)
+
+## portals/capacity/unit6/js/
+
+- `unit6-capacity.js` — unit6FilterByDepartment: unit6GetCurrentMonthKey, unit6GetData, unit6GetTabContent (~2314 tok)
 
 ## portals/feedback/css/
 
@@ -278,6 +272,10 @@
 - `mcs-approval.js` — MCS Approval Workflow (~2185 tok)
 - `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~4140 tok)
 - `mcs-main.js` — MCS (Manufacturing Change) - Main Portal (~7926 tok)
+- `mcs-modal-create.js` — MCS Modal — Create (~2728 tok)
+- `mcs-modal-edit.js` — MCS Modal — Edit & Save (~4964 tok)
+- `mcs-modal-shared.js` — MCS Modal Shared Helpers (~3486 tok)
+- `mcs-modal-view.js` — MCS Modal — View (~5331 tok)
 - `mcs-modal.js` — MCS Modal Handlers - Create, Edit, View (~16675 tok)
 - `mcs-pfmea.js` — MCS Integration with PFMEA History (~1581 tok)
 - `mcs-realtime.js` — MCS Real-time Subscriptions (~1278 tok)

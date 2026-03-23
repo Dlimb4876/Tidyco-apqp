@@ -26,7 +26,10 @@ window.meDataInitialized = false;
 
 function meNormalizeDepartmentTag(value, fallback = 'ME') {
   const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
-  return normalized === 'PM' ? 'PM' : 'ME';
+  if (normalized === 'PM') return 'PM';
+  if (normalized === 'LOG') return 'LOG';
+  if (normalized === 'UNIT6') return 'UNIT6';
+  return 'ME';
 }
 
 window.meGetDepartmentFromContext = function(explicitDepartment) {
@@ -62,6 +65,7 @@ function meNormalizeHolidayRecord(holiday) {
 
   return {
     id: holiday.id || meUUID(),
+    userId: holiday.userId || holiday.user_id || null,
     personId,
     date,
     type,
@@ -810,6 +814,10 @@ window.meDataSave = async function(showAlert) {
         meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays);
         const holidayData = (meDataState.holidays || [])
           .filter(h => {
+            // Only save holidays owned by the current user — other users' holidays
+            // are loaded for display (shared data) but must not be re-inserted here
+            // as their DB rows were not deleted, which would cause a PK conflict.
+            if (h.userId && h.userId !== currentUser.id) return false;
             const key = h.personId + '_' + h.date;
             if (_holSeen.has(key)) return false;
             _holSeen.add(key);

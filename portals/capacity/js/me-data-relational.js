@@ -19,7 +19,10 @@ function getTodayDateString() {
 
 function meNormalizeDepartmentTag(value, fallback = 'ME') {
   const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
-  return normalized === 'PM' ? 'PM' : 'ME';
+  if (normalized === 'PM') return 'PM';
+  if (normalized === 'LOG') return 'LOG';
+  if (normalized === 'UNIT6') return 'UNIT6';
+  return 'ME';
 }
 
 function meNormalizeIsoDate(dateValue, fallbackDate) {
@@ -142,6 +145,7 @@ window.meLoadRelationalHolidays = async function(userId) {
 
     return (data || []).map(h => ({
       id: h.id,
+      userId: h.user_id,
       personId: h.person_id,
       date: h.date,
       type: h.type,
