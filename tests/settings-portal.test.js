@@ -43,6 +43,18 @@ global.workAreasDataGetAll = jest.fn(() => global.workAreasState.workAreas);
 global.workAreasDataAddWorkArea = jest.fn().mockResolvedValue({});
 global.workAreasDataUpdateWorkArea = jest.fn().mockResolvedValue({});
 
+// Mock localStorage for Appearance tab tests
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: jest.fn((key) => store[key] ?? null),
+    setItem: jest.fn((key, val) => { store[key] = String(val); }),
+    removeItem: jest.fn((key) => { delete store[key]; }),
+    clear: jest.fn(() => { store = {}; }),
+  };
+})();
+Object.defineProperty(global, 'localStorage', { value: localStorageMock, writable: true });
+
 global.familiesState = {
   families: [
     { id: 'fam-1', name: 'HVAC', label: 'HVAC Systems', icon: '❄️', description: 'Heating and cooling' },
@@ -62,6 +74,22 @@ global.workAreasState = {
   ],
   loading: false
 };
+
+// Teams data and mock functions
+global.teamsDataLoadAll = jest.fn().mockResolvedValue([
+  { id: 'team-1', name: 'Manufacturing', team_type: 'ME', description: 'Manufacturing Engineering', created_at: '2026-03-01T00:00:00Z', userCount: 2 },
+  { id: 'team-2', name: 'Project Mgmt', team_type: 'PM', description: 'Project Management', created_at: '2026-03-01T00:00:00Z', userCount: 1 },
+]);
+global.teamsDataGetUserCount = jest.fn().mockResolvedValue(0);
+global.teamsDataAdd = jest.fn().mockResolvedValue({ id: 'team-3', name: 'New Team', team_type: 'OPS', description: '', created_at: new Date().toISOString() });
+global.teamsDataUpdate = jest.fn().mockResolvedValue(true);
+global.teamsDataDelete = jest.fn().mockResolvedValue(true);
+global.teamsDataLoadPermissions = jest.fn().mockResolvedValue([
+  { permission: 'view_all_project_data', allowed: true },
+  { permission: 'edit_projects_tasks_schedules', allowed: true },
+  { permission: 'add_delete_records', allowed: false },
+]);
+global.teamPermissionsDataSave = jest.fn().mockResolvedValue(true);
 
 // Load settings.js — replace `let` with `var` so internal state variables
 // live in the module-level scope and can be modified from tests via eval()
@@ -107,6 +135,12 @@ describe('renderSettings()', () => {
     expect(result).toContain('Permissions');
   });
 
+  it('contains Role Definitions nav item', () => {
+    const result = renderSettings(); // eslint-disable-line no-undef
+    expect(result).toContain('Role Definitions');
+    expect(result).toContain('data-tab="role-definitions"');
+  });
+
   it('marks the active tab with "active" class', () => {
     global.settingsActiveTab = 'families';
     const result = renderSettings(); // eslint-disable-line no-undef
@@ -120,11 +154,26 @@ describe('renderSettings()', () => {
     global.settingsActiveTab = 'families'; // reset
   });
 
-  it('includes all three tab content divs', () => {
+  it('includes all tab content divs', () => {
     const result = renderSettings(); // eslint-disable-line no-undef
     expect(result).toContain('id="settingsFamiliesTab"');
     expect(result).toContain('id="settingsWorkAreasTab"');
     expect(result).toContain('id="settingsPermissionsTab"');
+    expect(result).toContain('id="settingsRoleDefinitionsTab"');
+    expect(result).toContain('id="settingsAppearanceTab"');
+    expect(result).toContain('id="settingsAboutTab"');
+  });
+
+  it('contains Appearance nav item', () => {
+    const result = renderSettings(); // eslint-disable-line no-undef
+    expect(result).toContain('Appearance');
+    expect(result).toContain('data-tab="appearance"');
+  });
+
+  it('contains About nav item', () => {
+    const result = renderSettings(); // eslint-disable-line no-undef
+    expect(result).toContain('About');
+    expect(result).toContain('data-tab="about"');
   });
 });
 
@@ -317,5 +366,392 @@ describe('renderSettingsPermissionsTab()', () => {
     const container = document.getElementById('settingsPermissionsTab');
     expect(container.innerHTML).toContain('Could not load user accounts');
     expect(container.innerHTML).toContain('Permission denied');
+  });
+
+  it('no longer embeds role matrix inside permissions tab', () => {
+    setInternal('settingsPermissionsData', []);
+    renderSettingsPermissionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsPermissionsTab');
+    expect(container.innerHTML).not.toContain('Role Definitions');
+  });
+});
+
+describe('renderSettingsRoleDefinitionsTab()', () => {
+  beforeEach(() => {
+    if (!document.getElementById('settingsRoleDefinitionsTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsRoleDefinitionsTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders the role matrix with all three role columns', () => {
+    renderSettingsRoleDefinitionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsRoleDefinitionsTab');
+    expect(container.innerHTML).toContain('Admin');
+    expect(container.innerHTML).toContain('Editor');
+    expect(container.innerHTML).toContain('Viewer');
+  });
+
+  it('renders role permission rows', () => {
+    renderSettingsRoleDefinitionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsRoleDefinitionsTab');
+    expect(container.innerHTML).toContain('View all project data');
+    expect(container.innerHTML).toContain('Change user roles');
+  });
+
+  it('renders the section heading', () => {
+    renderSettingsRoleDefinitionsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsRoleDefinitionsTab');
+    expect(container.innerHTML).toContain('Role Definitions');
+  });
+
+  it('does nothing when container is missing', () => {
+    const existing = document.getElementById('settingsRoleDefinitionsTab');
+    if (existing) existing.remove();
+    expect(() => renderSettingsRoleDefinitionsTab()).not.toThrow(); // eslint-disable-line no-undef
+    // restore for other tests
+    const el = document.createElement('div');
+    el.id = 'settingsRoleDefinitionsTab';
+    document.body.appendChild(el);
+  });
+});
+
+describe('renderSettingsTeamsTab()', () => {
+  beforeEach(() => {
+    if (!document.getElementById('settingsTeamsTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsTeamsTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders teams table when teams are loaded', async () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Manufacturing', team_type: 'ME', userCount: 2 },
+      { id: 'team-2', name: 'Project Mgmt', team_type: 'PM', userCount: 1 },
+    ]);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Manufacturing');
+    expect(container.innerHTML).toContain('Project Mgmt');
+    expect(container.innerHTML).toContain('Teams');
+  });
+
+  it('renders add team button', () => {
+    setInternal('settingsTeamsData', []);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Add Team');
+  });
+
+  it('shows loading state when teams are loading', () => {
+    setInternal('settingsTeamsLoading', true);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Loading teams');
+  });
+
+  it('shows error message when load fails', () => {
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', 'Database connection failed');
+    setInternal('settingsTeamsData', []);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Database connection failed');
+    expect(container.innerHTML).toContain('Retry');
+  });
+
+  it('displays user count for each team', () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Engineering', team_type: 'ME', userCount: 5 },
+      { id: 'team-2', name: 'Quality', team_type: 'OPS', userCount: 3 },
+    ]);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('<td style="text-align:center">5</td>');
+    expect(container.innerHTML).toContain('<td style="text-align:center">3</td>');
+  });
+
+  it('shows edit and delete buttons for each team', () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Engineering', team_type: 'ME', userCount: 2 },
+    ]);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('data-action="settings-teams-edit"');
+    expect(container.innerHTML).toContain('data-action="settings-teams-delete"');
+  });
+
+  it('shows suggestion for default teams when list is empty', () => {
+    setInternal('settingsTeamsData', []);
+    setInternal('settingsTeamsLoading', false);
+    setInternal('settingsTeamsError', null);
+    renderSettingsTeamsTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('No teams created yet');
+    expect(container.innerHTML).toContain('ME');
+    expect(container.innerHTML).toContain('PM');
+  });
+});
+
+describe('Teams Tab - Permissions Editor', () => {
+  beforeEach(() => {
+    if (!document.getElementById('settingsTeamsTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsTeamsTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders permissions editor when editing a team', () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Manufacturing', team_type: 'ME' },
+    ]);
+    setInternal('settingsTeamsPermissionsEditingId', 'team-1');
+    setInternal('settingsTeamsPermissionsData', {
+      'team-1': [
+        { permission: 'view_all_project_data', allowed: true },
+        { permission: 'edit_projects_tasks_schedules', allowed: true },
+        { permission: 'add_delete_records', allowed: false },
+      ]
+    });
+    renderSettingsTeamsPermissionsEditor(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    expect(container.innerHTML).toContain('Edit Permissions: Manufacturing');
+    expect(container.innerHTML).toContain('View all project data');
+    expect(container.innerHTML).toContain('Save');
+  });
+
+  it('renders all 8 permissions in editor', () => {
+    setInternal('settingsTeamsData', [
+      { id: 'team-1', name: 'Test Team', team_type: 'ME' },
+    ]);
+    setInternal('settingsTeamsPermissionsEditingId', 'team-1');
+    setInternal('settingsTeamsPermissionsData', {
+      'team-1': [
+        { permission: 'view_all_project_data', allowed: true },
+        { permission: 'edit_projects_tasks_schedules', allowed: true },
+        { permission: 'add_delete_records', allowed: true },
+        { permission: 'manage_families', allowed: false },
+        { permission: 'manage_work_areas', allowed: false },
+        { permission: 'manage_capacity', allowed: false },
+        { permission: 'manage_user_roles', allowed: false },
+        { permission: 'access_settings', allowed: false },
+      ]
+    });
+    renderSettingsTeamsPermissionsEditor(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsTeamsTab');
+    const html = container.innerHTML;
+    expect(html).toContain('View all project data');
+    expect(html).toContain('Edit projects');
+    expect(html).toContain('Add &amp; delete records');  // HTML entities
+    expect(html).toContain('Manage product families');
+    expect(html).toContain('Manage work areas');
+    expect(html).toContain('Manage capacity');
+    expect(html).toContain('Change user roles');
+    expect(html).toContain('Access Settings page');
+  });
+});
+
+describe('renderSettingsAppearanceTab()', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.style.colorScheme = 'light';
+    document.body.classList.remove('theme-dark', 'compact-tables');
+    if (!document.getElementById('settingsAppearanceTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsAppearanceTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders the section heading', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('Appearance');
+  });
+
+  it('renders light and dark theme options', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('name="ap-theme"');
+    expect(container.innerHTML).toContain('Bright workspace with dark text.');
+    expect(container.innerHTML).toContain('Lower-glare workspace for darker environments.');
+  });
+
+  it('renders organisation name input with placeholder', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('ap-orgName');
+    expect(container.innerHTML).toContain('TIDYCO');
+  });
+
+  it('renders app sub-title input', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('ap-appSubtitle');
+  });
+
+  it('renders density radio buttons', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('ap-density');
+    expect(container.innerHTML).toContain('Normal');
+    expect(container.innerHTML).toContain('Compact');
+  });
+
+  it('renders toast duration radio buttons', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('ap-toast');
+    expect(container.innerHTML).toContain('Short');
+    expect(container.innerHTML).toContain('Long');
+  });
+
+  it('renders save and reset buttons', () => {
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('settings-appearance-save');
+    expect(container.innerHTML).toContain('settings-appearance-reset');
+  });
+
+  it('pre-fills saved preferences', () => {
+    localStorage.setItem('tidyco_prefs', JSON.stringify({ theme: 'dark', orgName: 'AcmeCo', tableDensity: 'compact' }));
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAppearanceTab');
+    expect(container.innerHTML).toContain('AcmeCo');
+    expect(container.querySelector('input[name="ap-theme"][value="dark"]')?.checked).toBe(true);
+  });
+
+  it('does nothing when container is missing', () => {
+    const existing = document.getElementById('settingsAppearanceTab');
+    if (existing) existing.remove();
+    expect(() => renderSettingsAppearanceTab()).not.toThrow(); // eslint-disable-line no-undef
+    // restore
+    const el = document.createElement('div');
+    el.id = 'settingsAppearanceTab';
+    document.body.appendChild(el);
+  });
+});
+
+describe('settingsLoadAppearancePrefs() / settingsSaveAppearancePrefs()', () => {
+  beforeEach(() => { localStorage.clear(); });
+
+  it('returns empty object when no prefs stored', () => {
+    const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
+    expect(typeof prefs).toBe('object');
+  });
+
+  it('round-trips prefs through save and load', () => {
+    settingsSaveAppearancePrefs({ orgName: 'TestOrg', tableDensity: 'compact' }); // eslint-disable-line no-undef
+    const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
+    expect(prefs.orgName).toBe('TestOrg');
+    expect(prefs.tableDensity).toBe('compact');
+  });
+
+  it('saves and applies a dark theme selection', () => {
+    const container = document.getElementById('settingsAppearanceTab') || document.body.appendChild(document.createElement('div'));
+    container.id = 'settingsAppearanceTab';
+
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+
+    document.querySelector('input[name="ap-theme"][value="dark"]').checked = true;
+    document.querySelector('input[name="ap-density"][value="compact"]').checked = true;
+
+    settingsAppearanceSave(); // eslint-disable-line no-undef
+
+    const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
+    expect(prefs.theme).toBe('dark');
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(document.body.classList.contains('theme-dark')).toBe(true);
+    expect(document.body.classList.contains('compact-tables')).toBe(true);
+  });
+
+  it('applies dark theme immediately when theme is changed', () => {
+    settingsSaveAppearancePrefs({ orgName: 'Acme' }); // eslint-disable-line no-undef
+    settingsAppearanceSetTheme('dark'); // eslint-disable-line no-undef
+
+    const prefs = settingsLoadAppearancePrefs(); // eslint-disable-line no-undef
+    expect(prefs.theme).toBe('dark');
+    expect(prefs.orgName).toBe('Acme');
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(document.body.classList.contains('theme-dark')).toBe(true);
+  });
+
+  it('selects compact density card on click', () => {
+    document.getElementById('settingsAppearanceTab')?.remove();
+    document.getElementById('settingsPortalRoot')?.remove();
+
+    const root = document.body.appendChild(document.createElement('div'));
+    root.id = 'settingsPortalRoot';
+    root.innerHTML = renderSettings(); // eslint-disable-line no-undef
+    setupSettingsEventListeners(); // eslint-disable-line no-undef
+    renderSettingsAppearanceTab(); // eslint-disable-line no-undef
+
+    const compactCard = root.querySelector('.density-card input[name="ap-density"][value="compact"]')?.closest('.density-card');
+    expect(compactCard).toBeTruthy();
+
+    compactCard.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    const checked = root.querySelector('input[name="ap-density"]:checked');
+    expect(checked?.value).toBe('compact');
+    expect(compactCard.classList.contains('selected')).toBe(true);
+  });
+});
+
+describe('renderSettingsAboutTab()', () => {
+  beforeEach(() => {
+    if (!document.getElementById('settingsAboutTab')) {
+      const el = document.createElement('div');
+      el.id = 'settingsAboutTab';
+      document.body.appendChild(el);
+    }
+  });
+
+  it('renders the section heading', () => {
+    renderSettingsAboutTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAboutTab');
+    expect(container.innerHTML).toContain('About');
+  });
+
+  it('renders the app name card', () => {
+    renderSettingsAboutTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAboutTab');
+    expect(container.innerHTML).toContain('Tidyco Operations Portal');
+  });
+
+  it('renders the keyboard shortcuts table', () => {
+    renderSettingsAboutTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAboutTab');
+    expect(container.innerHTML).toContain('Keyboard Shortcuts');
+    expect(container.innerHTML).toContain('Escape');
+    expect(container.innerHTML).toContain('Cancel edit');
+  });
+
+  it('renders the support section', () => {
+    renderSettingsAboutTab(); // eslint-disable-line no-undef
+    const container = document.getElementById('settingsAboutTab');
+    expect(container.innerHTML).toContain('Support');
+    expect(container.innerHTML).toContain('Feedback');
+  });
+
+  it('does nothing when container is missing', () => {
+    const existing = document.getElementById('settingsAboutTab');
+    if (existing) existing.remove();
+    expect(() => renderSettingsAboutTab()).not.toThrow(); // eslint-disable-line no-undef
+    // restore
+    const el = document.createElement('div');
+    el.id = 'settingsAboutTab';
+    document.body.appendChild(el);
   });
 });

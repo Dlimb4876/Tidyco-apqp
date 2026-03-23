@@ -30,9 +30,38 @@ function setupOpsPulseFeed() {
 		if (!el || !container.contains(el)) return;
 
 		const action = el.dataset.action;
+		if (action === 'ops-set-tab') {
+			setOperationsTab(el.dataset.tab || 'overview');
+			return;
+		}
+		if (action === 'ops-reset-reporting-date') {
+			opsResetReportingDate();
+			return;
+		}
+		if (action === 'ops-nav-hub') {
+			navigate('hub');
+			return;
+		}
+		if (action === 'ops-generate-infographic') {
+			opsGenerateInfographic();
+			return;
+		}
+		if (action === 'ops-show-guide') {
+			showGuide('operations');
+			return;
+		}
 		if (action === 'pulse-navigate' || action === 'metric-navigate') {
 			const dest = el.dataset.dest;
 			if (dest) navigate(dest);
+		}
+	});
+
+	container.addEventListener('change', (event) => {
+		const el = event.target.closest('[data-action]');
+		if (!el || !container.contains(el)) return;
+
+		if (el.dataset.action === 'ops-set-reporting-date') {
+			opsSetReportingDateAndRefresh(el.value);
 		}
 	});
 
@@ -78,25 +107,43 @@ function renderOperationsDashboard() {
 			<div class="proj-home-header ops-headline">
 				<div>
 					<div class="proj-home-title">Operations Mission Control</div>
-					<div class="proj-home-sub">Command surface with live operational signals</div>
+					<div class="proj-home-sub">Command surface with live operational signals as of ${esc(metrics.reportingDateLabel)}</div>
 				</div>
 				<div class="ops-headline-actions">
-					<button class="btn btn-ghost btn-sm" onclick="navigate('hub')">← Back to Portal</button>
-					<button class="btn btn-ghost btn-sm" onclick="showGuide('operations')" title="User Guide">❓ Guide</button>
+					<div class="ops-reporting-date">
+						<label for="opsReportingDate">Reporting Date</label>
+						<div class="ops-reporting-date-controls">
+							<input id="opsReportingDate" type="date" value="${esc(metrics.reportingDateIso)}" data-action="ops-set-reporting-date" />
+							<button class="btn btn-ghost btn-sm" data-action="ops-reset-reporting-date">Today</button>
+						</div>
+					</div>
+					<button class="btn btn-ghost btn-sm" data-action="ops-nav-hub">← Back to Portal</button>
+					<button class="btn btn-ghost btn-sm" data-action="ops-generate-infographic" title="Generate capacity infographic">📊 Infographic</button>
+					<button class="btn btn-ghost btn-sm" data-action="ops-show-guide" title="User Guide">❓ Guide</button>
 				</div>
 			</div>
 
 			<nav class="ops-tabs" aria-label="Operations dashboard views">
-				<button class="ops-tab ${tab === 'overview' ? 'active' : ''}" onclick="setOperationsTab('overview')">Overview</button>
-				<button class="ops-tab ${tab === 'flow' ? 'active' : ''}" onclick="setOperationsTab('flow')">Flow</button>
-				<button class="ops-tab ${tab === 'risk' ? 'active' : ''}" onclick="setOperationsTab('risk')">Risk</button>
-				<button class="ops-tab ${tab === 'people' ? 'active' : ''}" onclick="setOperationsTab('people')">People</button>
-				<button class="ops-tab ${tab === 'actions' ? 'active' : ''}" onclick="setOperationsTab('actions')">Actions</button>
-				<button class="ops-tab ${tab === 'forecast' ? 'active' : ''}" onclick="setOperationsTab('forecast')">Forecast</button>
+				<button class="ops-tab ${tab === 'overview' ? 'active' : ''}" data-action="ops-set-tab" data-tab="overview">Overview</button>
+				<button class="ops-tab ${tab === 'flow' ? 'active' : ''}" data-action="ops-set-tab" data-tab="flow">Flow</button>
+				<button class="ops-tab ${tab === 'risk' ? 'active' : ''}" data-action="ops-set-tab" data-tab="risk">Risk</button>
+				<button class="ops-tab ${tab === 'people' ? 'active' : ''}" data-action="ops-set-tab" data-tab="people">People</button>
+				<button class="ops-tab ${tab === 'actions' ? 'active' : ''}" data-action="ops-set-tab" data-tab="actions">Actions</button>
+				<button class="ops-tab ${tab === 'forecast' ? 'active' : ''}" data-action="ops-set-tab" data-tab="forecast">Forecast</button>
 			</nav>
 
 			${body}
 		</div>`;
+}
+
+function opsSetReportingDateAndRefresh(rawIso) {
+	if (typeof opsSetReportingDate === 'function') opsSetReportingDate(rawIso);
+	render();
+}
+
+function opsResetReportingDate() {
+	if (typeof opsSetReportingDate === 'function') opsSetReportingDate('');
+	render();
 }
 
 window.renderOperationsDashboard = renderOperationsDashboard;
@@ -113,3 +160,5 @@ window.opsForecastStartInlineEdit = opsForecastStartInlineEdit;
 window.opsForecastCancelInline = opsForecastCancelInline;
 window.opsForecastSaveInline = opsForecastSaveInline;
 window.opsForecastInlineKeydown = opsForecastInlineKeydown;
+window.opsSetReportingDateAndRefresh = opsSetReportingDateAndRefresh;
+window.opsResetReportingDate = opsResetReportingDate;

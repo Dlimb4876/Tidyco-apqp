@@ -8,6 +8,52 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const supa     = supabase.createClient(SUPA_URL, SUPA_KEY);
 let   currentUser = null;
 
+async function authLoadEffectivePermissions(userId, roleSlug) {
+  const baseline = typeof getRoleBaselinePermissions === 'function'
+    ? getRoleBaselinePermissions(roleSlug)
+    : {};
+  const resolved = { ...baseline };
+  const assignedTeamIds = [];
+
+  try {
+    const { data: memberships, error: membershipsError } = await supa
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', userId);
+
+    if (!membershipsError && Array.isArray(memberships) && memberships.length > 0) {
+      memberships
+        .map((row) => row.team_id)
+        .filter(Boolean)
+        .forEach((teamId) => {
+          if (!assignedTeamIds.includes(teamId)) assignedTeamIds.push(teamId);
+        });
+    }
+
+    if (assignedTeamIds.length > 0) {
+      const { data: grants, error: grantsError } = await supa
+        .from('team_permissions')
+        .select('permission, allowed')
+        .in('team_id', assignedTeamIds)
+        .eq('allowed', true);
+
+      if (!grantsError && Array.isArray(grants)) {
+        grants.forEach((grant) => {
+          const key = typeof normalizePermissionKey === 'function'
+            ? normalizePermissionKey(grant.permission)
+            : grant.permission;
+          if (key) resolved[key] = true;
+        });
+      }
+    }
+  } catch (_) {
+    // Keep baseline-only permissions if team tables are not yet available.
+  }
+
+  if (typeof currentUserPermissions !== 'undefined') currentUserPermissions = resolved;
+  if (typeof currentUserTeams !== 'undefined') currentUserTeams = assignedTeamIds;
+}
+
 async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -21,6 +67,19 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'Sign in';
   if (error) { showLoginErr(error.message); return; }
   currentUser = data.user;
+  // Load role from profiles table; default to 'editor' if no profile row found
+  try {
+    const { data: profile } = await supa
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+    currentUserRole = profile?.role || 'editor';
+  } catch (_) {
+    currentUserRole = 'editor';
+  }
+
+  await authLoadEffectivePermissions(data.user.id, currentUserRole);
   launchApp();
 }
 
@@ -30,10 +89,21 @@ function showLoginErr(msg) {
 }
 
 async function doLogout() {
+  currentUser = null;     // set null before signOut so onAuthStateChange guard doesn't re-enter
+  currentUserRole = null;
+  if (typeof currentUserPermissions !== 'undefined') currentUserPermissions = {};
+  if (typeof currentUserTeams !== 'undefined') currentUserTeams = [];
   await supa.auth.signOut();
-  currentUser = null;
   db = { projects: [] }; progId = null;
   document.getElementById('appShell').style.display   = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginPassword').value = '';
 }
+
+// If the refresh token expires mid-session, Supabase emits SIGNED_OUT.
+// Redirect to the login screen automatically.
+supa.auth.onAuthStateChange((event, _session) => {
+  if (event === 'SIGNED_OUT' && currentUser !== null) {
+    doLogout();
+  }
+});

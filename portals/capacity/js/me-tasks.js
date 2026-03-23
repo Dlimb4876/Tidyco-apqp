@@ -9,6 +9,7 @@ window.meTasksFilters = {
   category: 'all',
   assignee: 'all',
   product: 'all',
+  month: 'all',
   hideCompleted: localStorage.getItem('meTasksHideCompleted') === 'true'
 };
 
@@ -17,6 +18,7 @@ window.pmTasksFilters = {
   category: 'all',
   assignee: 'all',
   product: 'all',
+  month: 'all',
   hideCompleted: localStorage.getItem('pmTasksHideCompleted') === 'true'
 };
 
@@ -67,6 +69,8 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
     const product = filters.product || 'all';
     const hideCompleted = filters.hideCompleted || false;
 
+    const month = filters.month || 'all';
+
     // Search filter
     if (search && !t.name.toLowerCase().includes(search)) return false;
     // Category filter
@@ -75,6 +79,14 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
     if (assignee !== 'all' && t.assigneeId !== assignee) return false;
     // Product filter
     if (product !== 'all' && t.productId !== product) return false;
+    // Month filter — include task if it overlaps the selected month
+    if (month !== 'all') {
+      const monthStart = month + '-01';
+      const monthEnd = month + '-31';
+      if (!t.startDate || !t.endDate) return false;
+      if (t.startDate > monthEnd) return false;
+      if (t.endDate < monthStart) return false;
+    }
     // Hide Completed filter
     if (hideCompleted && t.status === 'COMPLETED') return false;
 
@@ -86,7 +98,11 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
   if (sortState.column) {
     const col = sortState.column;
     const dir = sortState.direction === 'asc' ? 1 : -1;
-    
+
+    // Build lookup Maps once so each sort comparison is O(1) instead of O(n)
+    const assigneeMap = new Map(teamArray.map(m => [m.id, m.name]));
+    const productMap = new Map(availableProducts.map(p => [p.id, p.name]));
+
     filteredTasks.sort((a, b) => {
       let valA, valB;
       
@@ -100,12 +116,12 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
           valB = (b.category || '').toLowerCase();
           break;
         case 'assignee':
-          valA = teamArray.find(m => m.id === a.assigneeId)?.name || '';
-          valB = teamArray.find(m => m.id === b.assigneeId)?.name || '';
+          valA = assigneeMap.get(a.assigneeId) || '';
+          valB = assigneeMap.get(b.assigneeId) || '';
           break;
         case 'product':
-          valA = availableProducts.find(p => p.id === a.productId)?.name || '';
-          valB = availableProducts.find(p => p.id === b.productId)?.name || '';
+          valA = productMap.get(a.productId) || '';
+          valB = productMap.get(b.productId) || '';
           break;
         case 'startDate':
           valA = a.startDate || '';
@@ -173,9 +189,9 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
     const catOpts = ME_CATS.map(c => `<option value="${c}" ${task.category === c ? 'selected' : ''}>${c}</option>`).join('');
     const memOpts = '<option value="">Unassigned</option>' + teamArray.map(m => `<option value="${m.id}" ${task.assigneeId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
     const prodOpts = '<option value="">— No Product</option>' + availableProducts.map(p => `<option value="${p.id}" ${task.productId === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
-    const statusOpts = '<option value="SCHEDULED" ' + (task.status === 'SCHEDULED' ? 'selected' : '') + '>Scheduled</option>' +
-      '<option value="STARTED" ' + (task.status === 'STARTED' ? 'selected' : '') + '>Started</option>' +
-      '<option value="COMPLETED" ' + (task.status === 'COMPLETED' ? 'selected' : '') + '>Completed</option>';
+    const statusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(s =>
+      `<option value="${s}"${task.status === s ? ' selected' : ''}>${s[0] + s.slice(1).toLowerCase()}</option>`
+    ).join('');
 
     const setTabFunc = isPM ? 'pmSetTab' : 'meSetTab';
     const debouncedSaveFunc = isPM ? 'pmDebouncedSave' : 'meDebouncedSave';
@@ -191,7 +207,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
         <td><select name="cap_task_${taskIndex}_status" data-cap-action="cap-task-status-upd">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
         <td><input name="cap_task_${taskIndex}_totalHours" type="number" value="${task.totalHours || 0}" step="0.5" data-cap-action="cap-task-upd" data-field="totalHours"></td>
         <td style="text-align: center;">
-          <button class="me-del-btn" data-cap-action="cap-task-del">✕</button>
+          ${canEdit() ? `<button class="me-del-btn" data-cap-action="cap-task-del">✕</button>` : ''}
         </td>
       </tr>`;
   });
@@ -201,6 +217,31 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
   const filterPrefix = isPM ? 'pm' : 'me';
   const filterStateVar = isPM ? 'window.pmTasksFilters' : 'window.meTasksFilters';
   
+  // Build month options from the full unfiltered task list date ranges
+  const _monthSet = new Set();
+  pageTasks.forEach(t => {
+    if (t.startDate) _monthSet.add(t.startDate.substring(0, 7));
+    if (t.endDate) _monthSet.add(t.endDate.substring(0, 7));
+  });
+  const _monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const _monthsSorted = Array.from(_monthSet).sort();
+  let _allMonths = [];
+  if (_monthsSorted.length) {
+    let _cur = _monthsSorted[0];
+    const _max = _monthsSorted[_monthsSorted.length - 1];
+    while (_cur <= _max) {
+      _allMonths.push(_cur);
+      const [_y, _m] = _cur.split('-').map(Number);
+      _cur = _m === 12 ? `${_y + 1}-01` : `${_y}-${String(_m + 1).padStart(2, '0')}`;
+    }
+  }
+  const monthOpts = '<option value="all" ' + (currentFilters.month === 'all' ? 'selected' : '') + '>All Months</option>' +
+    _allMonths.map(ym => {
+      const [_y, _m] = ym.split('-');
+      const label = _monthNames[parseInt(_m, 10) - 1] + ' ' + _y;
+      return `<option value="${ym}" ${currentFilters.month === ym ? 'selected' : ''}>${label}</option>`;
+    }).join('');
+
   const catOpts = '<option value="all" ' + ((currentFilters.category === 'all') ? 'selected' : '') + '>All Categories</option>' +
     ME_CATS.map(c => `<option value="${c}" ${currentFilters.category === c ? 'selected' : ''}>${c}</option>`).join('');
 
@@ -274,6 +315,13 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
               </select>
               ${currentFilters.product && currentFilters.product !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-product" title="Clear product filter">×</button>` : ''}
             </div>
+            <div class="filter-chip">
+              <select class="me-filter-select" data-cap-action="cap-task-filter-month"
+                style="min-width:120px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
+                ${monthOpts}
+              </select>
+              ${currentFilters.month && currentFilters.month !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-month" title="Clear month filter">×</button>` : ''}
+            </div>
             <button class="btn ${currentFilters.hideCompleted ? 'btn-primary' : 'btn-ghost'} btn-sm" data-cap-action="cap-task-toggle-hide-completed"
               style="padding:6px 10px;font-size:13px;" title="Show or hide completed tasks">${currentFilters.hideCompleted ? 'Show Completed' : 'Hide Completed'}</button>
             <button class="btn btn-ghost btn-sm" data-cap-action="cap-task-clear-all-filters"
@@ -295,14 +343,14 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
             <tbody>
               ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
                   <div style="color:var(--muted);margin-bottom:12px">No tasks match the current filters</div>
-                  <button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>
+                  ${canEdit() ? `<button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>` : ''}
                 </div></td></tr>`}
             </tbody>
           </table>
         </div>
-        <div class="me-add-row">
+        ${canEdit() ? `<div class="me-add-row">
           <button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>
-        </div>
+        </div>` : ''}
       </div>
     </div>
     </div>`;

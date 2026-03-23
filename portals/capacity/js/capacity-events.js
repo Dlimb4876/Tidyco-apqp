@@ -21,6 +21,17 @@ function capIsPM(el) {
   return ctx ? ctx.getAttribute('data-cap-context') === 'pm' : false
 }
 
+// Return the task-filters state object for the current ME or PM context.
+function capTaskFilters(isPM) {
+  return isPM ? window.pmTasksFilters : window.meTasksFilters
+}
+
+// Re-render the tasks tab for the current ME or PM context.
+function capTaskRefresh(isPM) {
+  if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
+  else meSetTab('tasks')
+}
+
 window.capacityEvents = {}
 
 window.capacityEvents.setup = function() {
@@ -90,8 +101,7 @@ window.capacityEvents._onClick = function(evt) {
     if (idx < 0) break
     if (confirm('Delete task?')) {
       meDataDeleteTask(idx); meOnSave()
-      if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-      else meSetTab('tasks')
+      capTaskRefresh(isPM)
     }
     break
   }
@@ -102,59 +112,113 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-task-clear-search': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.search = ''
+    const f = capTaskFilters(isPM)
+    if (f) f.search = ''
     const inp = document.querySelector('.me-filter-input')
     if (inp) inp.value = ''
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-clear-category': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.category = 'all'
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.category = 'all'
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-clear-assignee': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.assignee = 'all'
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.assignee = 'all'
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-clear-product': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.product = 'all'
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.product = 'all'
+    capTaskRefresh(isPM)
+    break
+  }
+  case 'cap-task-clear-month': {
+    const f = capTaskFilters(isPM)
+    if (f) f.month = 'all'
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-toggle-hide-completed': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
+    const f = capTaskFilters(isPM)
     const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
-    if (filterStateVar) {
-      filterStateVar.hideCompleted = !filterStateVar.hideCompleted
-      localStorage.setItem(storageKey, filterStateVar.hideCompleted)
+    if (f) {
+      f.hideCompleted = !f.hideCompleted
+      localStorage.setItem(storageKey, f.hideCompleted)
     }
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-clear-all-filters': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
+    const f = capTaskFilters(isPM)
     const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
-    const hideVal = filterStateVar ? filterStateVar.hideCompleted : false
-    if (filterStateVar) {
-      Object.assign(filterStateVar, { search: '', category: 'all', assignee: 'all', product: 'all', hideCompleted: hideVal })
+    const hideVal = f ? f.hideCompleted : false
+    if (f) {
+      Object.assign(f, { search: '', category: 'all', assignee: 'all', product: 'all', month: 'all', hideCompleted: hideVal })
     }
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    capTaskRefresh(isPM)
     break
   }
 
   // ── ME Products ───────────────────────────────────────────
+  case 'cap-products-apply-hours': {
+    const row = el.closest('[data-product-idx]')
+    const idx = capNum(row?.getAttribute('data-product-idx'), -1)
+    if (idx < 0) break
+
+    const hoursEl = row?.querySelector('input[data-field="hoursPerWeek"]')
+    const effectiveDateEl = row?.querySelector('input[data-field="supportEffectiveDate"]')
+    const reasonEl = row?.querySelector('input[data-field="supportChangeReason"]')
+    const hoursValue = hoursEl ? Number(hoursEl.value) : NaN
+    const effectiveDate = (effectiveDateEl?.value || '').trim()
+    const changeReason = (reasonEl?.value || '').trim()
+
+    if (!Number.isFinite(hoursValue) || hoursValue < 0) {
+      alert('Enter a valid Hours/Batch value before applying.')
+      if (hoursEl) hoursEl.focus()
+      break
+    }
+
+    if (!effectiveDate) {
+      alert('Choose an Effective Date before applying the support change.')
+      if (effectiveDateEl) effectiveDateEl.focus()
+      break
+    }
+
+    if (changeReason.length < 3) {
+      alert('Add a short reason so this change is intentional and traceable.')
+      if (reasonEl) reasonEl.focus()
+      break
+    }
+
+    const products = typeof meDataGetProducts === 'function' ? meDataGetProducts() : []
+    const product = products[idx]
+    const currentEffectiveDate = (product && product.supportEffectiveDate) ? String(product.supportEffectiveDate) : ''
+
+    if (currentEffectiveDate && effectiveDate < currentEffectiveDate) {
+      const confirmBackdate = confirm('You are backdating this support change before the current effective date. Continue intentionally?')
+      if (!confirmBackdate) break
+    }
+
+    meDataUpdateProduct(idx, 'hoursPerWeek', String(hoursValue), {
+      effectiveDate,
+      changeReason
+    })
+
+    if (typeof meRefreshCurrentTab === 'function') meRefreshCurrentTab()
+    meDebouncedSave()
+    break
+  }
+  case 'cap-products-toggle-history': {
+    if (typeof meProductsToggleHistory === 'function') {
+      meProductsToggleHistory(el.getAttribute('data-product-id'), el.getAttribute('data-dept'))
+    }
+    break
+  }
   case 'cap-products-sort-dir': if (typeof meProductsToggleSortDir === 'function') meProductsToggleSortDir(el.getAttribute('data-dept')); break
   case 'cap-products-clear-filters': if (typeof meProductsClearFilters === 'function') meProductsClearFilters(el.getAttribute('data-dept')); break
 
@@ -173,6 +237,10 @@ window.capacityEvents._onClick = function(evt) {
   case 'cap-prod-prev-month': if (typeof prodCapShiftMonth === 'function') prodCapShiftMonth('prev'); break
   case 'cap-prod-next-month': if (typeof prodCapShiftMonth === 'function') prodCapShiftMonth('next'); break
   case 'cap-prod-reset-month': if (typeof prodCapResetMonthOffset === 'function') prodCapResetMonthOffset(); break
+  case 'cap-prod-capacity-help': {
+    if (typeof showModal === 'function') showModal('modalProdCapacityFormula')
+    break
+  }
   case 'cap-prod-set-workarea': {
     const wa = el.getAttribute('data-workarea')
     if (typeof window.prodCapSetWorkArea === 'function') {
@@ -235,24 +303,27 @@ window.capacityEvents._onChange = function(evt) {
     break
   }
   case 'cap-task-filter-category': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.category = el.value
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.category = el.value
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-filter-assignee': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.assignee = el.value
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.assignee = el.value
+    capTaskRefresh(isPM)
     break
   }
   case 'cap-task-filter-product': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    if (filterStateVar) filterStateVar.product = el.value
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
+    const f = capTaskFilters(isPM)
+    if (f) f.product = el.value
+    capTaskRefresh(isPM)
+    break
+  }
+  case 'cap-task-filter-month': {
+    const f = capTaskFilters(isPM)
+    if (f) f.month = el.value
+    capTaskRefresh(isPM)
     break
   }
 
@@ -262,6 +333,11 @@ window.capacityEvents._onChange = function(evt) {
     const idx = capNum(row?.getAttribute('data-product-idx'), -1)
     if (idx < 0) break
     const field = el.getAttribute('data-field')
+    if (field === 'hoursPerWeek' || field === 'supportEffectiveDate') {
+      // Intent-based flow: dated support changes are only persisted via cap-products-apply-hours.
+      break
+    }
+
     meDataUpdateProduct(idx, field, el.value)
     meDebouncedSave()
     break
@@ -320,13 +396,37 @@ window.capacityEvents._onInput = function(evt) {
   if (!el) return
   const action = el.getAttribute('data-cap-action')
   const isPM = capIsPM(el)
+  const contextRoot = el.closest('[data-cap-context]')
 
   switch (action) {
   case 'cap-task-search': {
     const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
+    const caretStart = typeof el.selectionStart === 'number' ? el.selectionStart : null
+    const caretEnd = typeof el.selectionEnd === 'number' ? el.selectionEnd : caretStart
+    const contextType = contextRoot ? contextRoot.getAttribute('data-cap-context') : ''
+
     if (filterStateVar) filterStateVar.search = el.value
     if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
     else meSetTab('tasks')
+
+    // Keep typing uninterrupted when the tasks tab is re-rendered.
+    setTimeout(function() {
+      const scope = contextType
+        ? document.querySelector('[data-cap-context="' + contextType + '"]')
+        : document
+      const replacement = scope && typeof scope.querySelector === 'function'
+        ? scope.querySelector('[data-cap-action="cap-task-search"]')
+        : null
+      if (!replacement) return
+
+      replacement.focus()
+      if (caretStart !== null && typeof replacement.setSelectionRange === 'function') {
+        const len = (replacement.value || '').length
+        const start = Math.min(caretStart, len)
+        const end = Math.min(caretEnd === null ? start : caretEnd, len)
+        replacement.setSelectionRange(start, end)
+      }
+    }, 0)
     break
   }
   case 'cap-products-search': {

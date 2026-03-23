@@ -24,6 +24,10 @@ async function launchApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appShell').style.display   = 'flex';
   setSyncBadge('syncing', '● loading…');
+
+  // Apply saved appearance preferences immediately (before any renders)
+  if (typeof settingsApplyAppearance === 'function') settingsApplyAppearance();
+
   populateFamilySelects();
   await loadRemotePage(0);
   if (db.projects.length === 0) load();
@@ -37,6 +41,11 @@ async function launchApp() {
 
   // Load ME Capacity data (separate Supabase table, silent if table absent)
   await meDataInit();
+
+  // Load user profiles for owner dropdowns (non-blocking, used across portals)
+  if (typeof settingsEnsurePermissionsData === 'function') {
+    settingsEnsurePermissionsData().catch(() => {});
+  }
 
   // Load Production Planning data (separate Supabase tables, silent if tables absent)
   await prodDataInit();
@@ -68,6 +77,9 @@ async function launchApp() {
     if (h.od)  operationsTab         = h.od;
     if (h.pt)  productionTab         = h.pt;
     if (h.pdt) productDevelopmentTab = h.pdt;
+    if (h.met) meTab                 = h.met;
+    if (h.pct) prodCapTab            = h.pct;
+    if (h.pmt) pmTab                 = h.pmt;
     navigate(h.s, { pushHash: false });
   } else {
     navigate('hub', { pushHash: false });
@@ -75,13 +87,36 @@ async function launchApp() {
 
   // 1.11 Smart date inputs — init after page renders
   setTimeout(setupSmartDateInputs, 200);
+
+  // Network detection (browser online/offline + Supabase health checks)
+  if (typeof setupNetworkDetection === 'function') {
+    setupNetworkDetection();
+  }
 }
 
 // ── Kick off on page load if session exists ───────────────────
 (async () => {
-  const { data: { session } } = await supa.auth.getSession();
+  if (typeof settingsApplyAppearance === 'function') settingsApplyAppearance();
+
+  const { data: { session }, error } = await supa.auth.getSession();
+  if (error) {
+    // Stale/invalidated refresh token in localStorage — clear it and show login
+    await supa.auth.signOut();
+    return;
+  }
   if (session) {
     currentUser = session.user;
+    // Load role from profiles table so isAdmin() works correctly on session restore
+    try {
+      const { data: profile } = await supa
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+      currentUserRole = profile?.role || 'editor';
+    } catch (_) {
+      currentUserRole = 'editor';
+    }
     launchApp();
   }
 })();

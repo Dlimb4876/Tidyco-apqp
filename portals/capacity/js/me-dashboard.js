@@ -45,7 +45,7 @@ window.meRenderDashboardTab = function(monthKey, teamArray, tasksArray, products
           <div class="me-dashboard-kpi-label">Capacity (h)</div>
           <div class="me-dashboard-kpi-sub">${monthLabel.join(' ')}</div>
         </div>
-        <div class="me-dashboard-kpi" style="border-left: 4px solid #f59e0b;">
+        <div class="me-dashboard-kpi" style="border-left: 4px solid var(--amber);">
           <div class="me-dashboard-kpi-value">${demand}</div>
           <div class="me-dashboard-kpi-label">Demand (h)</div>
           <div class="me-dashboard-kpi-sub">${monthLabel.join(' ')}</div>
@@ -140,6 +140,9 @@ window.meDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray,
     demandData.push(data.totalDemand);
   });
 
+  const styles = getComputedStyle(document.documentElement);
+  const clr = (v) => styles.getPropertyValue(v).trim();
+
   const ctx = canvas.getContext('2d');
   window.meMiniChartInst = new Chart(ctx, {
     type: 'bar',
@@ -149,8 +152,8 @@ window.meDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray,
         {
           label: 'Demand',
           data: demandData,
-          backgroundColor: '#ef4444',
-          borderColor: '#dc2626',
+          backgroundColor: clr('--red'),
+          borderColor: clr('--red'),
           borderWidth: 1,
           borderRadius: 3,
           barPercentage: 0.7,
@@ -160,10 +163,10 @@ window.meDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray,
           label: 'Capacity',
           data: capacityData,
           type: 'line',
-          borderColor: '#1e40af',
+          borderColor: clr('--chart-blue'),
           borderWidth: 2,
           pointRadius: 4,
-          pointBackgroundColor: '#1e40af',
+          pointBackgroundColor: clr('--chart-blue'),
           fill: false,
           tension: 0.3,
           order: 1
@@ -226,9 +229,10 @@ window.meDashboardDrawMiniHeatmap = function(teamArray, tasksArray, holidaysArra
       const data = meCalcWeekUtilisation(person.id, start, end, tasksArray, holidaysArray);
       const util = data.capacity > 0 ? Math.round((data.demand / data.capacity) * 100) : 0;
 
-      let bgColor = '#e5e7eb';
+      const heatStyles = getComputedStyle(document.documentElement);
+      let bgColor = heatStyles.getPropertyValue('--gray-200').trim();
       if (data.capacity > 0) {
-        bgColor = util < 80 ? '#10b981' : util < 100 ? '#f59e0b' : '#ef4444';
+        bgColor = util < 80 ? heatStyles.getPropertyValue('--green').trim() : util < 100 ? heatStyles.getPropertyValue('--amber').trim() : heatStyles.getPropertyValue('--red').trim();
       }
 
       html += `<div class="me-mini-heatmap-cell" style="background: ${bgColor}; title="${util}%">${util}%</div>`;

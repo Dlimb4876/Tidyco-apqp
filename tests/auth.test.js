@@ -17,7 +17,8 @@ global.supa = {
     signOut: jest.fn().mockResolvedValue({}),
     getSession: jest.fn().mockResolvedValue({
       data: { session: { user: { id: 'test-user', email: 'test@test.com' } } }
-    })
+    }),
+    onAuthStateChange: jest.fn()
   }
 };
 

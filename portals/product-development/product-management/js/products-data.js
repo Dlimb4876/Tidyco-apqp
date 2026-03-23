@@ -277,6 +277,25 @@ async function productsDataAddProduct(product) {
     productsState.products.sort((a, b) => a.name.localeCompare(b.name));
     productsDataTriggerKanbanRefresh();
 
+    // Auto-create baseline overhaul_history entry so the trends chain starts here
+    if (data.current_overhaul_hours > 0) {
+      const baseline = {
+        user_id: currentUser.id,
+        product_id: data.id,
+        overhaul_hours: data.current_overhaul_hours,
+        time_impact_hours: data.current_overhaul_hours,
+        effective_date: new Date().toISOString().split('T')[0],
+        change_reason: 'Baseline',
+        notes: 'Initial overhaul time recorded at product creation.',
+        created_by_name: currentUser.email || 'Unknown'
+      };
+      const bResult = await supa.from('overhaul_history').insert([baseline]).select().single();
+      if (!bResult.error) {
+        if (!productsState.history[data.id]) productsState.history[data.id] = [];
+        productsState.history[data.id].push(bResult.data);
+      }
+    }
+
     return data;
   } catch (err) {
     console.error('❌ Error adding product:', err);
@@ -421,15 +440,25 @@ async function productsDataDeleteProduct(productId) {
 window.productsDataGetRelatedDataCounts = productsDataGetRelatedDataCounts;
 
 /**
- * Add overhaul history record (new estimation)
+ * Add overhaul history record (additive — caller passes a delta in hours).
+ * historyRecord.time_impact_hours: positive = more time, negative = improvement.
+ * The new absolute overhaul_hours is calculated as: current + delta.
+ * current_overhaul_hours on the product is updated to the new absolute value.
  */
 async function productsDataAddHistory(productId, historyRecord) {
   if (!currentUser) return;
   try {
+    // Resolve current total from product state
+    const product = productsState.products.find(p => p.id === productId);
+    const currentHours = product ? (product.current_overhaul_hours || 0) : 0;
+    const delta = historyRecord.time_impact_hours || 0;
+    const newHours = Math.max(0, currentHours + delta);
+
     const newRecord = {
       user_id: currentUser.id,
       product_id: productId,
-      overhaul_hours: historyRecord.overhaul_hours,
+      overhaul_hours: newHours,
+      time_impact_hours: delta,
       effective_date: historyRecord.effective_date,  // YYYY-MM-DD
       change_reason: historyRecord.change_reason || '',
       notes: historyRecord.notes || '',
@@ -440,15 +469,15 @@ async function productsDataAddHistory(productId, historyRecord) {
     if (result.error) throw result.error;
     const data = result.data;
 
-    // Add to state and sort by effective_date (newest first)
+    // Add to state (newest first)
     if (!productsState.history[productId]) {
       productsState.history[productId] = [];
     }
     productsState.history[productId].unshift(data);
 
-    // Update current_overhaul_hours on product
+    // Keep current_overhaul_hours in sync with the new running total
     await productsDataUpdateProduct(productId, {
-      current_overhaul_hours: historyRecord.overhaul_hours
+      current_overhaul_hours: newHours
     });
 
     return data;

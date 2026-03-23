@@ -50,6 +50,10 @@ function renderProductDevelopment() {
 
   // Root hub view
   setTimeout(setupProductDevelopmentPortalDelegation, 0);
+  const favNpi = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::npi');
+  const favProductManagement = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::product-management');
+  const favProductFamilies = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::product-family-db');
+  const favPartsDatabase = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::parts-database');
   return `
     <div class="proj-home" id="product-development-portal-container">
       <div class="proj-home-header">
@@ -65,6 +69,13 @@ function renderProductDevelopment() {
 
       <div class="proj-cards hub-grid">
         <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="npi">
+          <button
+            class="hub-fav-toggle${favNpi ? ' is-active' : ''}"
+            type="button"
+            title="${favNpi ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('product-development::npi', event)">
+            ${favNpi ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">📋</div>
             <div class="proj-card-name">NPI Projects</div>
@@ -73,6 +84,13 @@ function renderProductDevelopment() {
         </div>
 
         <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="product-management">
+          <button
+            class="hub-fav-toggle${favProductManagement ? ' is-active' : ''}"
+            type="button"
+            title="${favProductManagement ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('product-development::product-management', event)">
+            ${favProductManagement ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">📦</div>
             <div class="proj-card-name">Product Management</div>
@@ -81,6 +99,13 @@ function renderProductDevelopment() {
         </div>
 
         <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="product-family-db">
+          <button
+            class="hub-fav-toggle${favProductFamilies ? ' is-active' : ''}"
+            type="button"
+            title="${favProductFamilies ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('product-development::product-family-db', event)">
+            ${favProductFamilies ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">🏢</div>
             <div class="proj-card-name">Product Family Database</div>
@@ -89,6 +114,13 @@ function renderProductDevelopment() {
         </div>
 
         <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="parts-database">
+          <button
+            class="hub-fav-toggle${favPartsDatabase ? ' is-active' : ''}"
+            type="button"
+            title="${favPartsDatabase ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('product-development::parts-database', event)">
+            ${favPartsDatabase ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">🔩</div>
             <div class="proj-card-name">Parts Database</div>
@@ -378,7 +410,7 @@ function renderFamilyModal() {
   const isEdit = !!family;
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000" data-action="pd-close-family-modal" data-overlay="true">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-bg);display:flex;align-items:center;justify-content:center;z-index:1000" data-action="pd-close-family-modal" data-overlay="true">
       <div style="background:var(--white);border-radius:8px;padding:24px;width:90%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.15)">
         <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:16px">
           ${isEdit ? 'Edit Family' : 'Add Family'}
@@ -386,23 +418,23 @@ function renderFamilyModal() {
 
         <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
           <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Name (ID)*</label>
+            <label for="family-modal-name" style="display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Name (ID)*</label>
             <input type="text" id="family-modal-name" placeholder="e.g., HVAC" value="${family?.name || ''}" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px" ${isEdit ? 'disabled' : ''}>
             <div style="font-size:11px;color:var(--muted);margin-top:4px">Unique identifier (cannot be changed)</div>
           </div>
 
           <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Display Label*</label>
+            <label for="family-modal-label" style="display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Display Label*</label>
             <input type="text" id="family-modal-label" placeholder="e.g., HVAC Systems" value="${family?.label || ''}" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px">
           </div>
 
           <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Icon</label>
+            <label for="family-modal-icon" style="display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Icon</label>
             <input type="text" id="family-modal-icon" placeholder="e.g., ❄️" value="${family?.icon || '📋'}" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;max-width:100px">
           </div>
 
           <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Description</label>
+            <label for="family-modal-desc" style="display:block;font-size:12px;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px">Description</label>
             <textarea id="family-modal-desc" placeholder="Brief description of this product family..." style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px">${family?.description || ''}</textarea>
           </div>
         </div>
@@ -458,7 +490,7 @@ function renderTemplateManager() {
   const templateNames = Object.keys(grouped).sort();
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto" data-action="pd-close-template-manager" data-overlay="true">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-bg);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto" data-action="pd-close-template-manager" data-overlay="true">
       <div style="background:var(--white);border-radius:8px;width:90%;max-width:900px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.15);margin:20px 0">
         <!-- Header -->
         <div style="padding:20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--white)">
@@ -519,7 +551,7 @@ function renderTemplateViewer() {
     .filter(t => t.template_name === templateViewerState.templateName);
 
   return `
-    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1001;overflow-y:auto" data-action="pd-close-template-viewer" data-overlay="true">
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-bg);display:flex;align-items:center;justify-content:center;z-index:1001;overflow-y:auto" data-action="pd-close-template-viewer" data-overlay="true">
       <div style="background:var(--white);border-radius:8px;width:92%;max-width:1100px;max-height:88vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2);margin:20px 0">
         <div style="padding:20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;position:sticky;top:0;background:var(--white)">
           <div>

@@ -27,7 +27,7 @@ npi.apqp.renderAPQP = function() {
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div><div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-apqp')" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button></div></div>
   ${tabNav}
   <div style="background:var(--white);border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;padding:24px 0 0"></div>
-  <div class="apqp-tab-content" style="padding:24px">${inner}</div>`
+  <div class="apqp-tab-content" style="padding:24px 0">${inner}</div>`
 }
 
 // Backward compatibility aliases for existing inline handlers.

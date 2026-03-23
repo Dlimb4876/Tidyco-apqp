@@ -51,6 +51,9 @@ function renderProduction() {
 
   // Root hub view
   setTimeout(setupProductionPortalDelegation, 0);
+  const favScheduling = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('production::scheduling');
+  const favByProduct = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('production::by-product');
+  const favByUnit = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('production::by-unit');
   return `
     <div class="proj-home" id="production-portal-container">
       <div class="proj-home-header">
@@ -66,6 +69,14 @@ function renderProduction() {
 
       <div class="proj-cards hub-grid">
         <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="scheduling">
+          <button
+            class="hub-fav-toggle${favScheduling ? ' is-active' : ''}"
+            type="button"
+            title="${favScheduling ? 'Remove from favourites' : 'Add to favourites'}"
+            data-action="prod-fav-toggle"
+            data-section="production::scheduling">
+            ${favScheduling ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">📅</div>
             <div class="proj-card-name">Schedule</div>
@@ -74,6 +85,14 @@ function renderProduction() {
         </div>
 
         <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="by-product">
+          <button
+            class="hub-fav-toggle${favByProduct ? ' is-active' : ''}"
+            type="button"
+            title="${favByProduct ? 'Remove from favourites' : 'Add to favourites'}"
+            data-action="prod-fav-toggle"
+            data-section="production::by-product">
+            ${favByProduct ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">📋</div>
             <div class="proj-card-name">Plan by Product</div>
@@ -82,6 +101,14 @@ function renderProduction() {
         </div>
 
         <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="by-unit">
+          <button
+            class="hub-fav-toggle${favByUnit ? ' is-active' : ''}"
+            type="button"
+            title="${favByUnit ? 'Remove from favourites' : 'Add to favourites'}"
+            data-action="prod-fav-toggle"
+            data-section="production::by-unit">
+            ${favByUnit ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">🏭</div>
             <div class="proj-card-name">Plan by Work Area</div>
@@ -117,6 +144,16 @@ function setupProductionPortalDelegation() {
 
     if (action === 'prod-nav-hub') {
       navigate('hub');
+      return;
+    }
+
+    if (action === 'prod-fav-toggle') {
+      event.preventDefault();
+      event.stopPropagation();
+      const section = actionEl.dataset.section;
+      if (section && typeof hubTogglePageFavourite === 'function') {
+        hubTogglePageFavourite(section, event);
+      }
       return;
     }
 

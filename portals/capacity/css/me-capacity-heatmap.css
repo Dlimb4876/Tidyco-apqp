@@ -8,30 +8,30 @@
 }
 
 .me-heatmap-wrapper {
-	flex: 1; overflow: hidden; border: 1px solid var(--line);
+	overflow: auto; border: 1px solid var(--line);
 	border-radius: 8px; background: var(--white);
-	margin: 16px 0;
+	margin: 16px 0; max-height: 520px;
+	-webkit-overflow-scrolling: touch;
 }
 
 .me-heatmap-grid {
 	display: grid;
-	grid-template-columns: 140px repeat(auto-fit, 52px);
+	grid-template-columns: 140px repeat(52, 52px);
 	gap: 0; background: var(--white);
 	padding: 0;
-	overflow: auto;
-	height: 100%;
+	min-width: max-content;
 }
 
 .me-heatmap-person-header {
 	grid-column: 1; position: sticky; top: 0; left: 0;
-	background: #f4f6fa; border-bottom: 1px solid var(--line);
+	background: var(--table-head-bg); border-bottom: 1px solid var(--line);
 	border-right: 2px solid var(--line); z-index: 3;
 	height: 60px;
 }
 
 .me-heatmap-person-label {
 	grid-column: 1; position: sticky; left: 0;
-	background: #fafbfd; border-bottom: 1px solid var(--line);
+	background: var(--bg-soft); border-bottom: 1px solid var(--line);
 	border-right: 2px solid var(--line); z-index: 2;
 	padding: 8px 10px; font-weight: 500; color: var(--ink);
 	white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -41,7 +41,7 @@
 
 .me-heatmap-week-header {
 	position: sticky; top: 0; background: var(--white);
-	border-bottom: 1px solid #d1d5db; border-right: none;
+	border-bottom: 1px solid var(--line); border-right: none;
 	display: flex; align-items: center; justify-content: center;
 	z-index: 2; min-height: 48px; font-size: 12px;
 	text-align: center; color: var(--ink);
@@ -66,26 +66,26 @@
 }
 
 .me-heatmap-util-low {
-	background: #10b981; color: var(--white);
+	background: var(--green); color: var(--white);
 }
 
 .me-heatmap-util-mid {
-	background: #f59e0b; color: var(--white);
+	background: var(--amber); color: var(--white);
 }
 
 .me-heatmap-util-high {
-	background: #ef4444; color: var(--white);
+	background: var(--red); color: var(--white);
 }
 
 .me-heatmap-no-capacity {
-	background: #e5e7eb; color: var(--muted);
+	background: var(--gray-200); color: var(--muted);
 }
 
 /* ── Detail Modal ────────────────────────────────────────── */
 .me-detail-modal {
 	position: fixed; top: 0; left: 0; right: 0; bottom: 0;
 	display: flex; align-items: center; justify-content: center;
-	z-index: 1000; background: rgba(0,0,0,0.5);
+	z-index: 1000; background: var(--overlay-bg);
 	animation: fadeIn .15s ease-out;
 }
 
@@ -146,7 +146,7 @@
 }
 
 .me-detail-task-row {
-	padding: 10px; background: #fafbfd; border: 1px solid var(--line);
+	padding: 10px; background: var(--bg-soft); border: 1px solid var(--line);
 	border-radius: 6px;
 }
 

@@ -12,11 +12,17 @@ window.meDataState = {
   team: [],
   tasks: [],
   products: [],
-  holidays: []
+  holidays: [],
+  productSupportHistory: []
+};
+
+window.meDataPendingDeletes = {
+  tasks: []
 };
 
 window.meDataSaveInProgress = false;
 window.meDataSaveQueued = false;
+window.meDataInitialized = false;
 
 function meNormalizeDepartmentTag(value, fallback = 'ME') {
   const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
@@ -75,6 +81,102 @@ function meNormalizeAndDedupeHolidays(holidays) {
   });
 
   return Array.from(byPersonDate.values());
+}
+
+function meNormalizeDateOnly(value) {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toISOString().split('T')[0];
+}
+
+function meGetDateMinusOneDay(dateValue) {
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return '';
+  parsed.setDate(parsed.getDate() - 1);
+  return parsed.toISOString().split('T')[0];
+}
+
+function meNormalizeSupportHistoryRecord(record, fallbackDepartment = 'ME') {
+  if (!record || typeof record !== 'object') return null;
+
+  const productId = record.productId || record.product_id;
+  const effectiveDate = meNormalizeDateOnly(record.effectiveDate || record.effective_date);
+  if (!productId || !effectiveDate) return null;
+
+  return {
+    id: record.id || meUUID(),
+    productId,
+    hoursPerWeek: Number(record.hoursPerWeek ?? record.hours_per_week ?? 0) || 0,
+    effectiveDate,
+    endDate: meNormalizeDateOnly(record.endDate || record.end_date) || '',
+    changeReason: record.changeReason || record.change_reason || '',
+    notes: record.notes || '',
+    department: meNormalizeDepartmentTag(record.department, fallbackDepartment),
+    createdAt: record.createdAt || record.created_at || new Date().toISOString(),
+    updatedAt: record.updatedAt || record.updated_at || ''
+  };
+}
+
+function meSortSupportHistoryByDate(historyRows) {
+  return (historyRows || []).slice().sort((a, b) => {
+    const aDate = meNormalizeDateOnly(a.effectiveDate || a.effective_date);
+    const bDate = meNormalizeDateOnly(b.effectiveDate || b.effective_date);
+    if (aDate === bDate) return 0;
+    return aDate < bDate ? -1 : 1;
+  });
+}
+
+function meNormalizeAndDedupeSupportHistory(rows) {
+  if (!Array.isArray(rows)) return [];
+
+  const deduped = new Map();
+  rows.forEach(raw => {
+    const normalized = meNormalizeSupportHistoryRecord(raw);
+    if (!normalized) return;
+    const key = `${normalized.productId}|${normalized.effectiveDate}|${normalized.department}`;
+    deduped.set(key, normalized);
+  });
+
+  return meSortSupportHistoryByDate(Array.from(deduped.values()));
+}
+
+function meGetProductSupportHistoryRows(productId, department) {
+  if (!Array.isArray(meDataState.productSupportHistory)) return [];
+  const targetDepartment = meNormalizeDepartmentTag(department, 'ME');
+  return meSortSupportHistoryByDate(
+    meDataState.productSupportHistory.filter(row =>
+      row &&
+      row.productId === productId &&
+      meNormalizeDepartmentTag(row.department, targetDepartment) === targetDepartment
+    )
+  );
+}
+
+function meEnsureProductSupportHistoryBaseline(product) {
+  if (!product || !product.id) return;
+  const department = meNormalizeDepartmentTag(product.department, 'ME');
+  const existing = meGetProductSupportHistoryRows(product.id, department);
+  if (existing.length > 0) return;
+
+  const baselineDate = meNormalizeDateOnly(product.createdAt || product.created_at) || meNormalizeDateOnly(new Date());
+  meDataState.productSupportHistory.push({
+    id: meUUID(),
+    productId: product.id,
+    hoursPerWeek: Number(product.hoursPerWeek || 0) || 0,
+    effectiveDate: baselineDate,
+    endDate: '',
+    changeReason: 'Baseline from product support value',
+    notes: '',
+    department,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+}
+
+function meEnsureAllProductSupportHistoryBaselines() {
+  meDataState.products.forEach(product => meEnsureProductSupportHistoryBaseline(product));
+  meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
 }
 
 // Initialize missing date fields on backward compatibility
@@ -215,7 +317,17 @@ window.meDataUpdateTask = function(idx, field, value) {
 
 window.meDataDeleteTask = function(idx) {
   if (idx < 0 || idx >= meDataState.tasks.length) return false;
+  const removedTask = meDataState.tasks[idx];
   meDataState.tasks.splice(idx, 1);
+  if (removedTask && removedTask.id) {
+    const pending = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.tasks)
+      ? window.meDataPendingDeletes.tasks
+      : [];
+    if (!pending.includes(removedTask.id)) {
+      pending.push(removedTask.id);
+    }
+    window.meDataPendingDeletes = { tasks: pending };
+  }
   return true;
 };
 
@@ -227,38 +339,52 @@ window.meDataGetTasks = function() {
 // PRODUCT CRUD
 // ─────────────────────────────────────────────────────────────
 
-window.meDataAddProduct = function(name, supportFrom, supportUntil, hoursPerWeek, notes, productDatabaseId, department) {
+window.meDataAddProduct = function(name, hoursPerWeek, notes, productDatabaseId, department) {
   if (!name || name.trim().length === 0) return false;
   const product = {
     id: meUUID(),
     name: name.trim(),
     department: meGetDepartmentFromContext(department),
-    supportFrom: supportFrom,
-    supportUntil: supportUntil,
     hoursPerWeek: parseFloat(hoursPerWeek) || 5,
     notes: notes ? notes.trim() : '',
     productDatabaseId: productDatabaseId || '',
     createdAt: new Date().toISOString()
   };
   meDataState.products.push(product);
+  meEnsureProductSupportHistoryBaseline(product);
   return true;
 };
 
-window.meDataUpdateProduct = function(idx, field, value) {
+window.meDataUpdateProduct = function(idx, field, value, metadata) {
   if (idx < 0 || idx >= meDataState.products.length) return false;
   const product = meDataState.products[idx];
   switch (field) {
     case 'name':
       product.name = value.trim();
       break;
-    case 'supportFrom':
-      product.supportFrom = value;
-      break;
-    case 'supportUntil':
-      product.supportUntil = value;
-      break;
     case 'hoursPerWeek':
       product.hoursPerWeek = parseFloat(value) || 0;
+
+      // Maintain effective-dated support history so past capacity can be reproduced.
+      if (typeof window.meDataAddProductSupportHistory === 'function') {
+        const effectiveDate = metadata && metadata.effectiveDate
+          ? metadata.effectiveDate
+          : meNormalizeDateOnly(new Date());
+        window.meDataAddProductSupportHistory(
+          product.id,
+          product.hoursPerWeek,
+          effectiveDate,
+          metadata && metadata.changeReason ? metadata.changeReason : '',
+          metadata && metadata.notes ? metadata.notes : '',
+          product.department
+        );
+      }
+      product.supportEffectiveDate = metadata && metadata.effectiveDate
+        ? meNormalizeDateOnly(metadata.effectiveDate)
+        : (product.supportEffectiveDate || meNormalizeDateOnly(new Date()));
+      break;
+    case 'supportEffectiveDate':
+      product.supportEffectiveDate = meNormalizeDateOnly(value) || product.supportEffectiveDate || '';
       break;
     case 'notes':
       product.notes = value ? value.trim() : '';
@@ -282,6 +408,75 @@ window.meDataGetProducts = function() {
   return meDataState.products;
 };
 
+window.meDataGetProductSupportHistory = function() {
+  meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+  return meDataState.productSupportHistory;
+};
+
+window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effectiveDate, changeReason, notes, department) {
+  if (!productId) return false;
+
+  const normalizedDate = meNormalizeDateOnly(effectiveDate) || meNormalizeDateOnly(new Date());
+  const targetDepartment = meNormalizeDepartmentTag(department, 'ME');
+  const existingRows = meGetProductSupportHistoryRows(productId, targetDepartment);
+  const sameDateRow = existingRows.find(row => row.effectiveDate === normalizedDate);
+  if (sameDateRow) {
+    sameDateRow.hoursPerWeek = Number(hoursPerWeek) || 0;
+    sameDateRow.changeReason = changeReason || sameDateRow.changeReason || '';
+    sameDateRow.notes = notes || sameDateRow.notes || '';
+    sameDateRow.updatedAt = new Date().toISOString();
+    meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+    return true;
+  }
+
+  const priorRows = existingRows.filter(row => row.effectiveDate < normalizedDate);
+  if (priorRows.length > 0) {
+    const prior = priorRows[priorRows.length - 1];
+    prior.endDate = meGetDateMinusOneDay(normalizedDate);
+    prior.updatedAt = new Date().toISOString();
+  }
+
+  meDataState.productSupportHistory.push({
+    id: meUUID(),
+    productId,
+    hoursPerWeek: Number(hoursPerWeek) || 0,
+    effectiveDate: normalizedDate,
+    endDate: '',
+    changeReason: changeReason || '',
+    notes: notes || '',
+    department: targetDepartment,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+
+  meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+  return true;
+};
+
+window.meDataGetProductSupportRateForDate = function(productId, targetDate, fallbackHoursPerWeek, department) {
+  const normalizedTargetDate = meNormalizeDateOnly(targetDate);
+  const rows = meGetProductSupportHistoryRows(productId, department);
+  if (!normalizedTargetDate || rows.length === 0) {
+    return Number(fallbackHoursPerWeek || 0) || 0;
+  }
+
+  const matches = rows.filter(row => {
+    if (!row.effectiveDate || row.effectiveDate > normalizedTargetDate) return false;
+    if (!row.endDate) return true;
+    return row.endDate >= normalizedTargetDate;
+  });
+
+  if (matches.length === 0) return Number(fallbackHoursPerWeek || 0) || 0;
+  const latestMatch = matches[matches.length - 1];
+  return Number(latestMatch.hoursPerWeek || 0) || 0;
+};
+
+window.meDataGetProductLatestSupportEffectiveDate = function(productId, department, fallbackDate) {
+  const rows = meGetProductSupportHistoryRows(productId, department);
+  if (rows.length === 0) return meNormalizeDateOnly(fallbackDate) || '';
+  return rows[rows.length - 1].effectiveDate || meNormalizeDateOnly(fallbackDate) || '';
+};
+
 /**
  * Auto-sync products from product management database into a department stream.
  * Includes all product statuses so capacity planners can filter in the UI.
@@ -300,12 +495,16 @@ function meDataAutoSyncDepartmentProducts(department) {
     if (p && p.id) dbMap[p.id] = p;
   });
 
-  // Update or create department-tagged products from the master products DB
+  // Update or create department-tagged products from the master products DB.
+  // Build a Map keyed by productDatabaseId so each lookup is O(1) instead of O(n).
+  const existingByDbId = new Map(
+    meDataState.products
+      .filter(meP => meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment && meP.productDatabaseId)
+      .map(meP => [meP.productDatabaseId, meP])
+  );
+
   dbProducts.forEach(dbProduct => {
-    const existing = meDataState.products.find(meP =>
-      meP.productDatabaseId === dbProduct.id &&
-      meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment
-    );
+    const existing = existingByDbId.get(dbProduct.id);
 
     if (existing) {
       existing.name = dbProduct.name;
@@ -424,23 +623,38 @@ window.meDataInit = async function() {
       return;
     }
 
-      // Load from relational tables
+      let relState = {
+        team: [],
+        tasks: [],
+        products: [],
+        holidays: [],
+        productSupportHistory: []
+      };
+
+      // Load from relational tables first.
       if (typeof meLoadRelationalTeams === 'function') {
         try {
-          const relTeam     = await meLoadRelationalTeams(currentUser.id);
-          const relTasks    = await meLoadRelationalTasks(currentUser.id);
-          const relProducts = await meLoadRelationalProducts(currentUser.id);
-          const relHolidays = meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays(currentUser.id));
-          meDataState = {
-            team:     relTeam     || [],
-            tasks:    relTasks    || [],
-            products: relProducts || [],
-            holidays: relHolidays || []
+          relState = {
+            team: await meLoadRelationalTeams(currentUser.id) || [],
+            tasks: await meLoadRelationalTasks(currentUser.id) || [],
+            products: await meLoadRelationalProducts(currentUser.id) || [],
+            holidays: meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays(currentUser.id)),
+            productSupportHistory: typeof meLoadRelationalProductSupportHistory === 'function'
+              ? (await meLoadRelationalProductSupportHistory(currentUser.id) || [])
+              : []
           };
         } catch (relErr) {
           console.warn('ME relational load failed:', relErr.message);
         }
       }
+
+      meDataState = {
+        team: relState.team,
+        tasks: relState.tasks,
+        products: relState.products,
+        holidays: relState.holidays,
+        productSupportHistory: meNormalizeAndDedupeSupportHistory(relState.productSupportHistory)
+      };
 
       // Ensure all data has backward-compatible fields
       meDataState.team.forEach(member => {
@@ -462,9 +676,21 @@ window.meDataInit = async function() {
         if (!('department' in product)) product.department = 'ME';
       });
 
+      meEnsureAllProductSupportHistoryBaselines();
+      meDataState.products.forEach(product => {
+        if (!('supportEffectiveDate' in product)) {
+          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(
+            product.id,
+            product.department,
+            product.createdAt
+          );
+        }
+      });
+
       meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays || []);
 
       window.meDataState = meDataState;
+      window.meDataPendingDeletes = { tasks: [] };
 
       // Set up real-time sync
       meDataSubscribe();
@@ -472,6 +698,7 @@ window.meDataInit = async function() {
     console.warn('Supabase load exception, using defaults:', err);
   }
   meEnsureStructure();
+  window.meDataInitialized = true;
 };
 
 window.meDataSave = async function(showAlert) {
@@ -512,6 +739,17 @@ window.meDataSave = async function(showAlert) {
         // Build set of valid product IDs now in DB
         const validProductIds = new Set(meDataState.products.map(p => p.id).filter(Boolean));
 
+        // 1-B. Save support history rows once products have stable IDs.
+        if (typeof meSaveProductSupportHistoryRelational === 'function') {
+          meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+          if (meDataState.productSupportHistory.length > 0) {
+            const supportSaveOk = await meSaveProductSupportHistoryRelational(currentUser.id, meDataState.productSupportHistory);
+            if (!supportSaveOk) {
+              relationalSuccess = false;
+            }
+          }
+        }
+
         // 2. Save team members
         for (let i = 0; i < meDataState.team.length; i++) {
           const success = await meSaveTeamRelational(currentUser.id, meDataState.team[i]);
@@ -542,10 +780,32 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // 4. Save holidays: delete ALL rows then re-insert current state
-        // Shared-data model: all users share one dataset, so delete globally to avoid
-        // stale rows from other user_ids causing duplicate key violations on insert.
-        // Deduplicate by (person_id, date) in case load returned multi-user duplicates.
+        // 3-B. Persist queued task deletions so refresh does not resurrect removed rows.
+        const queuedTaskDeletes = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.tasks)
+          ? window.meDataPendingDeletes.tasks.slice()
+          : [];
+
+        if (queuedTaskDeletes.length > 0) {
+          if (typeof meDeleteTaskRelational === 'function') {
+            const failedTaskDeletes = [];
+            for (let i = 0; i < queuedTaskDeletes.length; i++) {
+              const taskId = queuedTaskDeletes[i];
+              const deleted = await meDeleteTaskRelational(taskId);
+              if (!deleted) {
+                failedTaskDeletes.push(taskId);
+                relationalSuccess = false;
+              }
+            }
+            window.meDataPendingDeletes.tasks = failedTaskDeletes;
+          } else {
+            console.warn('Task deletes queued but meDeleteTaskRelational is unavailable');
+            relationalSuccess = false;
+          }
+        }
+
+        // 4. Save holidays for the current user only, then reload as shared data.
+        // The table's unique key is (user_id, person_id, date), so global deletes are
+        // destructive and can wipe other users' rows if one user saves an empty state.
         const _holSeen = new Set();
         meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays);
         const holidayData = (meDataState.holidays || [])
@@ -570,7 +830,7 @@ window.meDataSave = async function(showAlert) {
         const { error: delHolErr } = await supa
           .from('me_holidays')
           .delete()
-          .not('person_id', 'is', null);
+          .eq('user_id', currentUser.id);
 
         if (delHolErr) {
           console.warn('Failed to clear holidays:', delHolErr.message);
@@ -629,9 +889,11 @@ window.meDataReset = function() {
     team: [],
     tasks: [],
     products: [],
-    holidays: []
+    holidays: [],
+    productSupportHistory: []
   };
   window.meDataState = meDataState;
+  window.meDataPendingDeletes = { tasks: [] };
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -643,6 +905,7 @@ function meEnsureStructure() {
   if (!meDataState.tasks) meDataState.tasks = [];
   if (!meDataState.products) meDataState.products = [];
   if (!meDataState.holidays) meDataState.holidays = [];
+  if (!meDataState.productSupportHistory) meDataState.productSupportHistory = [];
 }
 
 function meUUID() {
@@ -659,6 +922,25 @@ function meUUID() {
 // ─────────────────────────────────────────────────────────────
 // Real-Time Sync (Generic System)
 // ─────────────────────────────────────────────────────────────
+
+// Maps a raw Supabase me_tasks row to the camelCase shape used in meDataState.
+// Single source of truth used by both the onInsert and onUpdate handlers.
+function meNormalizeTaskRow(row) {
+  return {
+    id: row.id,
+    name: row.name || '',
+    category: row.category || 'NPI',
+    type: row.type || 'standard',
+    department: meNormalizeDepartmentTag(row.department, 'ME'),
+    assigneeId: row.assignee_id || '',
+    productId: row.product_id || '',
+    startDate: row.start_date || '',
+    endDate: row.end_date || '',
+    totalHours: parseFloat(row.total_hours) || 0,
+    status: row.status || 'SCHEDULED',
+    createdAt: row.created_at || new Date().toISOString()
+  };
+}
 
 window.meDataSubscribe = function() {
   if (!currentUser) return;
@@ -705,20 +987,7 @@ window.meDataSubscribe = function() {
     {
       table: 'me_tasks',
       onInsert: (newTask) => {
-        const normalizedTask = {
-          id: newTask.id,
-          name: newTask.name || '',
-          category: newTask.category || 'NPI',
-          type: newTask.type || 'standard',
-          department: meNormalizeDepartmentTag(newTask.department, 'ME'),
-          assigneeId: newTask.assignee_id || '',
-          productId: newTask.product_id || '',
-          startDate: newTask.start_date || '',
-          endDate: newTask.end_date || '',
-          totalHours: parseFloat(newTask.total_hours) || 0,
-          status: newTask.status || 'SCHEDULED',
-          createdAt: newTask.created_at || new Date().toISOString()
-        };
+        const normalizedTask = meNormalizeTaskRow(newTask);
         if (!meDataState.tasks.some(t => t.id === normalizedTask.id)) {
           meDataState.tasks.push(normalizedTask);
           if (isEditingInlineCell()) {
@@ -729,20 +998,7 @@ window.meDataSubscribe = function() {
         }
       },
       onUpdate: (updatedTask) => {
-        const normalizedTask = {
-          id: updatedTask.id,
-          name: updatedTask.name || '',
-          category: updatedTask.category || 'NPI',
-          type: updatedTask.type || 'standard',
-          department: meNormalizeDepartmentTag(updatedTask.department, 'ME'),
-          assigneeId: updatedTask.assignee_id || '',
-          productId: updatedTask.product_id || '',
-          startDate: updatedTask.start_date || '',
-          endDate: updatedTask.end_date || '',
-          totalHours: parseFloat(updatedTask.total_hours) || 0,
-          status: updatedTask.status || 'SCHEDULED',
-          createdAt: updatedTask.created_at || new Date().toISOString()
-        };
+        const normalizedTask = meNormalizeTaskRow(updatedTask);
 
         const idx = meDataState.tasks.findIndex(t => t.id === normalizedTask.id);
         if (idx < 0) {
@@ -792,8 +1048,6 @@ window.meDataSubscribe = function() {
           id: newProduct.id,
           name: newProduct.name || '(Unknown Product)',
           productDatabaseId: newProduct.product_database_id || '',
-          supportFrom: newProduct.support_from || '',
-          supportUntil: newProduct.support_until || '',
           hoursPerWeek: parseFloat(newProduct.hours_per_week) || 0,
           department: meNormalizeDepartmentTag(newProduct.department, 'ME'),
           notes: newProduct.notes || '',
@@ -809,6 +1063,46 @@ window.meDataSubscribe = function() {
       onUpdate: () => { /* no-op — local state already up to date */ },
       onDelete: (deleted) => {
         meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
+        if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
+        meCapSmartRender();
+      }
+    },
+    {
+      table: 'me_product_support_history',
+      onInsert: (newEntry) => {
+        const normalized = meNormalizeSupportHistoryRecord(newEntry);
+        if (!normalized) return;
+        const existingIdx = meDataState.productSupportHistory.findIndex(h => h.id === normalized.id);
+        if (existingIdx >= 0) {
+          meDataState.productSupportHistory[existingIdx] = normalized;
+        } else {
+          meDataState.productSupportHistory.push(normalized);
+        }
+        meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+        const product = meDataState.products.find(p => p.id === normalized.productId);
+        if (product) {
+          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(product.id, product.department, product.createdAt);
+        }
+        if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
+        meCapSmartRender();
+      },
+      onUpdate: (updatedEntry) => {
+        const normalized = meNormalizeSupportHistoryRecord(updatedEntry);
+        if (!normalized) return;
+        const existingIdx = meDataState.productSupportHistory.findIndex(h => h.id === normalized.id);
+        if (existingIdx >= 0) {
+          meDataState.productSupportHistory[existingIdx] = normalized;
+        } else {
+          meDataState.productSupportHistory.push(normalized);
+        }
+        meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+        const product = meDataState.products.find(p => p.id === normalized.productId);
+        if (product) {
+          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(product.id, product.department, product.createdAt);
+        }
+      },
+      onDelete: (deleted) => {
+        meDataState.productSupportHistory = meDataState.productSupportHistory.filter(h => h.id !== deleted.id);
         if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
         meCapSmartRender();
       }

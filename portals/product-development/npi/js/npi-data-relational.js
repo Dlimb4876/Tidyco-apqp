@@ -66,7 +66,11 @@ function npiRelHydratePfdRows(rows) {
     detail: row.detail || '',
     ctqIds: row.ctq_ids || [],
     bomRefs: row.bom_refs || [],
-    docRefs: row.doc_refs || []
+    docRefs: row.doc_refs || [],
+    pfd_type: row.pfd_type || 'Process',
+    nextStepId: row.next_step_num != null ? row.next_step_num : null,
+    nextStepId_yes: row.next_step_num_yes != null ? row.next_step_num_yes : null,
+    nextStepId_no: row.next_step_num_no != null ? row.next_step_num_no : null
   }));
 
   const firstExecutable = executableRows[0] || null;
@@ -83,7 +87,11 @@ function npiRelHydratePfdRows(rows) {
         detail: row.detail || '',
         ctqIds: row.ctq_ids || [],
         bomRefs: row.bom_refs || [],
-        docRefs: row.doc_refs || []
+        docRefs: row.doc_refs || [],
+        pfd_type: null,
+        nextStepId: null,
+        nextStepId_yes: null,
+        nextStepId_no: null
       };
 
       if (firstExecutable && Number.isFinite(stepNum) && stepNum < Number(firstExecutable.step_num)) {
@@ -235,6 +243,7 @@ window.npiRelLoad = async function(pid) {
           id: ef.id,
           effect: ef.effect || '',
           sev: ef.sev || 1,
+          specialChar: ef.special_char || null,
           causes: causesByEff[ef.id] || []
         });
       });
@@ -243,6 +252,7 @@ window.npiRelLoad = async function(pid) {
         id: m.id,
         _type: 'mode',
         pfdId: m.pfd_step_id || '',
+        function: m.function || '',
         mode: m.mode || '',
         ctqIds: m.ctq_ids || [],
         effects: effsByMode[m.id] || []
@@ -466,6 +476,10 @@ window.npiRelSavePFDStep = async function(step) {
       ctq_ids: step.ctqIds || [],
       bom_refs: step.bomRefs || [],
       doc_refs: step.docRefs || [],
+      pfd_type: npiRelIsHeaderStep(step.type) ? null : (step.pfd_type || 'Process'),
+      next_step_num: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId != null ? step.nextStepId : null),
+      next_step_num_yes: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId_yes != null ? step.nextStepId_yes : null),
+      next_step_num_no: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId_no != null ? step.nextStepId_no : null),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
     if (error) console.warn('npiRelSavePFDStep error:', error.message);
@@ -497,6 +511,7 @@ window.npiRelSavePFMEAMode = async function(mode) {
       project_id: projectId,
       user_id: currentUser.id,
       pfd_step_id: mode.pfdId || null,
+      function: mode.function || '',
       mode: mode.mode || '',
       ctq_ids: mode.ctqIds || [],
       sort_order: (prog().pfmea || []).indexOf(mode),
@@ -520,6 +535,7 @@ window.npiRelSavePFMEAEffect = async function(modeId, effect) {
       mode_id: modeId,
       effect: effect.effect || '',
       sev: effect.sev || 1,
+      special_char: effect.specialChar || null,
       sort_order: mode ? (mode.effects || []).indexOf(effect) : 0,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
@@ -572,7 +588,7 @@ window.npiRelSavePFMEACause = async function(effectId, cause) {
   }
 };
 
-window.npiRelSavePFMEAHistory = async function(causeId, histEntry) {
+window.npiRelSavePFMEAHistory = window.npiRelSavePFMEAHistory = async function(causeId, histEntry) {
   const projectId = await window.npiRelResolveProjectId(progId);
   if (!histEntry || !causeId || !projectId || !currentUser) return;
   // History is append-only; assign a UUID if missing
@@ -590,13 +606,14 @@ window.npiRelSavePFMEAHistory = async function(causeId, histEntry) {
       new_occ: histEntry.newOcc != null ? histEntry.newOcc : null,
       new_det: histEntry.newDet != null ? histEntry.newDet : null,
       description: histEntry.desc || '',
-      event_date: histEntry.date || ''
+      event_date: histEntry.date || '',
+      related_ecr_id: histEntry.relatedEcrId || null
     }, { onConflict: 'id' });
     if (error) console.warn('npiRelSavePFMEAHistory error:', error.message);
   } catch (err) {
     console.warn('npiRelSavePFMEAHistory exception:', err.message);
   }
-};
+};;
 
 window.npiRelDeletePFMEAMode = async function(mode) {
   if (!mode || !mode.id) return;

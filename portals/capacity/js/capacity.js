@@ -45,6 +45,9 @@ function renderCapacity() {
 
   // Root hub view
   setTimeout(setupCapacityPortalDelegation, 0);
+  const favProduction = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('capacity::production');
+  const favMe = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('capacity::me');
+  const favProjects = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('capacity::projects');
   return `
     <div class="proj-home" id="capacity-portal-container">
       <div class="proj-home-header">
@@ -60,6 +63,13 @@ function renderCapacity() {
 
       <div class="proj-cards hub-grid">
         <div class="proj-card hub-card" data-action="cap-hub-tab" data-tab="production">
+          <button
+            class="hub-fav-toggle${favProduction ? ' is-active' : ''}"
+            type="button"
+            title="${favProduction ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('capacity::production', event)">
+            ${favProduction ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">🚂</div>
             <div class="proj-card-name">Production</div>
@@ -68,6 +78,13 @@ function renderCapacity() {
         </div>
 
         <div class="proj-card hub-card" data-action="cap-hub-tab" data-tab="me">
+          <button
+            class="hub-fav-toggle${favMe ? ' is-active' : ''}"
+            type="button"
+            title="${favMe ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('capacity::me', event)">
+            ${favMe ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">🧑‍🔧</div>
             <div class="proj-card-name">Manufacturing Engineering</div>
@@ -76,6 +93,13 @@ function renderCapacity() {
         </div>
 
         <div class="proj-card hub-card" data-action="cap-hub-tab" data-tab="projects">
+          <button
+            class="hub-fav-toggle${favProjects ? ' is-active' : ''}"
+            type="button"
+            title="${favProjects ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('capacity::projects', event)">
+            ${favProjects ? '★' : '☆'}
+          </button>
           <div class="hub-card-content">
             <div class="hub-icon">📅</div>
             <div class="proj-card-name">Project Management</div>

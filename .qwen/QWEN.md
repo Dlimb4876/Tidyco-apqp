@@ -48,7 +48,7 @@ This document provides conventions, architecture, and workflows for the Tidyco A
 Always run in this order:
 
 1. `npm install` — Run once; installs Jest and ESLint dev dependencies.
-2. `npm test` — Runs all Jest tests. Expect ~179 tests, all passing.
+2. `npm test` — Runs all Jest tests. Expect ~611 tests, all passing.
 3. `npm run check:all` — Runs all quality checks. **Run this before every commit.**
 
 ---

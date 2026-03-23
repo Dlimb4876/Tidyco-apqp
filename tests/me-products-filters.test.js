@@ -48,6 +48,26 @@ describe('ME/PM Product table filtering and sorting', () => {
     global.render = jest.fn();
     global.meDataUpdateProduct = jest.fn();
     global.meDebouncedSave = jest.fn();
+    global.meDataGetProductSupportHistory = jest.fn(() => [
+      {
+        id: 'hist-1',
+        productId: 'me-1',
+        department: 'ME',
+        effectiveDate: '2026-01-01',
+        endDate: '2026-01-31',
+        hoursPerWeek: 2,
+        changeReason: 'Initial planning'
+      },
+      {
+        id: 'hist-2',
+        productId: 'me-1',
+        department: 'ME',
+        effectiveDate: '2026-02-01',
+        endDate: '',
+        hoursPerWeek: 1,
+        changeReason: 'Support improvement'
+      }
+    ]);
 
     allDbProducts = [
       { id: 'db-1', name: 'Alpha Pump', family: 'fam-a' },
@@ -62,6 +82,7 @@ describe('ME/PM Product table filtering and sorting', () => {
         id: 'me-1',
         name: 'Alpha Pump',
         productDatabaseId: 'db-1',
+        supportEffectiveDate: '2026-01-01',
         supportFrom: '2026-01-01',
         supportUntil: '2026-12-31',
         hoursPerWeek: 2,
@@ -71,6 +92,7 @@ describe('ME/PM Product table filtering and sorting', () => {
         id: 'me-2',
         name: 'Beta Fan',
         productDatabaseId: 'db-2',
+        supportEffectiveDate: '2026-01-01',
         supportFrom: '2026-01-01',
         supportUntil: '2026-12-31',
         hoursPerWeek: 9,
@@ -81,6 +103,7 @@ describe('ME/PM Product table filtering and sorting', () => {
         // legacy row without productDatabaseId, should resolve by name fallback
         name: 'Gamma Valve',
         productDatabaseId: '',
+        supportEffectiveDate: '2026-02-01',
         supportFrom: '2026-02-01',
         supportUntil: '2026-12-31',
         hoursPerWeek: 4,
@@ -93,6 +116,7 @@ describe('ME/PM Product table filtering and sorting', () => {
         id: 'pm-1',
         name: 'Alpha Pump',
         productDatabaseId: 'db-1',
+        supportEffectiveDate: '2026-01-01',
         supportFrom: '2026-01-01',
         supportUntil: '2026-12-31',
         hoursPerWeek: 5,
@@ -102,6 +126,7 @@ describe('ME/PM Product table filtering and sorting', () => {
         id: 'pm-2',
         name: 'Beta Fan',
         productDatabaseId: 'db-2',
+        supportEffectiveDate: '2026-01-01',
         supportFrom: '2026-01-01',
         supportUntil: '2026-12-31',
         hoursPerWeek: 1,
@@ -115,6 +140,19 @@ describe('ME/PM Product table filtering and sorting', () => {
       { id: 't3', productId: 'me-2', totalHours: 30 },
       { id: 't4', productId: 'me-3', totalHours: 12 }
     ];
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const toIso = (date) => date.toISOString().slice(0, 10);
+
+    global.prodState = {
+      batches: [
+        { product_id: 'db-1', start_date: toIso(monthStart), due_date: toIso(monthEnd) },
+        { product_id: 'db-2', start_date: toIso(monthStart), due_date: toIso(monthEnd) },
+        { product_id: 'db-2', start_date: toIso(monthStart), due_date: toIso(monthEnd) }
+      ]
+    };
 
     global.meDataGetProducts = jest.fn(() => currentDepartment === 'PM' ? pmProducts : meProducts);
 
@@ -212,5 +250,37 @@ describe('ME/PM Product table filtering and sorting', () => {
     const pmHtml = meRenderProductTaskLoadTab(pmTasks, pmProducts);
     expect(pmHtml).toContain('Alpha Pump');
     expect(pmHtml).not.toContain('Beta Fan');
+  });
+
+  test('Product Support and Product Load use schedule-driven monthly support', () => {
+    meProductsClearFilters('ME');
+    meProductLoadClearFilters('ME');
+
+    const supportHtml = renderSupportTable();
+    expect(supportHtml).toContain('20.0');
+    expect(supportHtml).toContain('h/month (schedule)');
+    expect(supportHtml).toContain('Hours/Batch');
+    expect(supportHtml).toContain('Effective Date');
+    expect(supportHtml).toContain('2026-01-01');
+    expect(supportHtml).toContain('Apply Change');
+    expect(supportHtml).toContain('View History');
+
+    const loadHtml = renderLoadTable();
+    expect(loadHtml).toContain('h/month');
+    expect(loadHtml).toContain('Support/Month = support hours per batch');
+  });
+
+  test('Product Support shows history rows after toggling a product history panel', () => {
+    meProductsClearFilters('ME');
+
+    let html = renderSupportTable();
+    expect(html).not.toContain('Support History');
+
+    meProductsToggleHistory('me-1', 'ME');
+    html = renderSupportTable();
+    expect(html).toContain('Support History');
+    expect(html).toContain('Initial planning');
+    expect(html).toContain('Support improvement');
+    expect(html).toContain('Hide History');
   });
 });

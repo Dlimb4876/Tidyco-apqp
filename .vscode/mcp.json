@@ -3,7 +3,20 @@
 		"supabase": {
 			"type": "http",
 			"url": "https://mcp.supabase.com/mcp?project_ref=eihxvmzsfnpdaizggsvs"
+		},
+		"oraios/serena": {
+			"type": "stdio",
+			"command": "uvx",
+			"args": [
+				"--from",
+				"git+https://github.com/oraios/serena",
+				"serena",
+				"start-mcp-server",
+				"--context",
+				"claude-code"
+			],
+			"gallery": "https://api.mcp.github.com",
+			"version": "1.0.0"
 		}
-	},
-	"inputs": []
+	}
 }

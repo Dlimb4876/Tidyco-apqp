@@ -6,6 +6,7 @@
 npi.events = npi.events || {}
 
 let _npiEventsContainer = null
+let _pfmeaSearchTimer = null
 
 function npiActionTarget(evt) {
   return evt && evt.target ? evt.target.closest('[data-action]') : null
@@ -48,6 +49,7 @@ npi.events._onClick = function(evt) {
   switch (action) {
   case 'ctq-add': npi.ctq.add(); break
   case 'ctq-del': npi.ctq.del(npiNum(el.getAttribute('data-idx'), -1)); break
+  case 'ctq-filter-clear': evt.preventDefault(); npi.ctq.clearFilters(); break
 
   case 'cp-sync': npi.cp.syncFromPFMEA(); break
   case 'cp-add': npi.cp.add(); break
@@ -70,6 +72,8 @@ npi.events._onClick = function(evt) {
   case 'pfd-open-doc-pick': npi.pfd.openDocPick(npiNum(el.getAttribute('data-idx'), -1)); break
   case 'pfd-save-doc-pick': npi.pfd.saveDocPick(); break
   case 'pfd-del-doc-ref': npi.pfd.delDocRef(el.getAttribute('data-step-id'), el.getAttribute('data-doc-id')); break
+  case 'pfd-toggle-view': npi.pfd.toggleView(); break
+  case 'pfd-toggle-layout': npi.pfd.toggleLayout(); break
 
   case 'pfmea-add-mode': npi.pfmea.pfAddMode(el.getAttribute('data-step-id')); break
   case 'pfmea-add-effect': npi.pfmea.pfAddEffect(npiNum(el.getAttribute('data-mi'), -1)); break
@@ -78,9 +82,12 @@ npi.events._onClick = function(evt) {
   case 'pfmea-del-effect': npi.pfmea.pfDelEffect(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1)); break
   case 'pfmea-del-cause': npi.pfmea.pfDelCause(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), npiNum(el.getAttribute('data-ci'), -1)); break
   case 'pfmea-set-view': npi.pfmea.setView(el.getAttribute('data-view')); break
+  case 'pfmea-set-col-view': npi.pfmea.setColumnView(el.getAttribute('data-col-view')); break
   case 'pfmea-show-hist': npi.pfmea.pfShowHist(evt, el.getAttribute('data-cause-id')); break
+  case 'pfmea-show-warnings': npi.pfmea.pfShowWarnings(el.getAttribute('data-warnings')); break
   case 'pfmea-implement': npi.pfmea.pfImplementAction(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), npiNum(el.getAttribute('data-ci'), -1)); break
   case 'pfmea-filter-all': evt.preventDefault(); npi.pfmea.setRpnFilter('all'); break
+  case 'pfmea-clear-extra-filters': npi.pfmea.pfClearExtraFilters(); break
 
   case 'gate-sign': npi.gate.signOff(npiNum(el.getAttribute('data-gi'), -1), npiNum(el.getAttribute('data-si'), -1)); break
   case 'gate-unsign': npi.gate.unsign(npiNum(el.getAttribute('data-gi'), -1), npiNum(el.getAttribute('data-si'), -1)); break
@@ -110,6 +117,8 @@ npi.events._onClick = function(evt) {
   case 'gantt-del-row': npi.timing.ganttDelRow(el.getAttribute('data-id')); break
   case 'gantt-clear': npi.timing.ganttClear(); break
 
+  case 'show-guide': { const key = el.getAttribute('data-guide'); if (key && typeof showGuide === 'function') showGuide(key); break }
+
   case 'npi-go-home': npi.nav.goHome(); break
   case 'npi-navigate': npi.nav.navigate(el.getAttribute('data-target')); break
   case 'npi-set-apqp': evt.preventDefault(); npi.nav.setApqpTab(el.getAttribute('data-tab')); break
@@ -131,6 +140,9 @@ npi.events._onChange = function(evt) {
 
   switch (action) {
   case 'ctq-upd': npi.ctq.upd(npiNum(el.getAttribute('data-idx'), -1), el.getAttribute('data-field'), el.type === 'checkbox' ? el.checked : el.value); break
+  case 'ctq-filter-source': npi.ctq.setSourceFilter(el.value); break
+  case 'ctq-filter-oos': npi.ctq.setOosFilter(el.value); break
+  case 'ctq-filter-agreed': npi.ctq.setAgreedFilter(el.value); break
   case 'cp-upd': npi.cp.upd(npiNum(el.getAttribute('data-idx'), -1), el.getAttribute('data-field'), el.value); break
   case 'pfd-upd': npi.pfd.upd(el.getAttribute('data-id'), el.getAttribute('data-field'), el.value); break
   case 'pfd-toggle-ctq-pick': npi.pfd.toggleCtqPick(el.getAttribute('data-id'), !!el.checked); break
@@ -141,6 +153,10 @@ npi.events._onChange = function(evt) {
   case 'pfmea-upd-cause': npi.pfmea.pfUpdCause(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), npiNum(el.getAttribute('data-ci'), -1), el.getAttribute('data-field'), el.value); break
   case 'pfmea-upd-cause-action': npi.pfmea.pfUpdCauseAction(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), npiNum(el.getAttribute('data-ci'), -1), el.getAttribute('data-field'), el.value); break
   case 'pfmea-filter': npi.pfmea.setRpnFilter(el.value); break
+  case 'pfmea-special-char': npi.pfmea.pfUpdSpecialChar(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), el.value); break
+  case 'pfmea-owner-filter': npi.pfmea.pfSetExtraFilter('owner', el.value || null); break
+  case 'pfmea-overdue-filter': npi.pfmea.pfSetExtraFilter('overdueOnly', el.checked); break
+  case 'pfmea-sc-filter': npi.pfmea.pfSetExtraFilter('specialChar', el.value || null); break
 
   case 'pfmea-score': {
     const mi = npiNum(el.getAttribute('data-mi'), -1)
@@ -203,6 +219,14 @@ npi.events._onInput = function(evt) {
   const action = el.getAttribute('data-action')
 
   switch (action) {
+  case 'pfmea-text-search': {
+    clearTimeout(_pfmeaSearchTimer)
+    _pfmeaSearchTimer = setTimeout(() => {
+      npi.pfmea.pfSetExtraFilter('searchText', el.value)
+    }, 300)
+    break
+  }
+
   case 'pfmea-score': {
     const mi = npiNum(el.getAttribute('data-mi'), -1)
     const ei = npiNum(el.getAttribute('data-ei'), -1)
@@ -247,7 +271,7 @@ npi.events._onInput = function(evt) {
     break
   }
 
-  case 'dash-search': npi.dashboard.setProjectsSearch(el.value); break
+  case 'dash-search': npi.dashboard.setProjectsSearchFromInput(el); break
 
   default: break
   }

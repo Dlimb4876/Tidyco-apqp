@@ -3,6 +3,9 @@
 // ═══════════════════════════════════
 
 let db = { projects: [] };
+let currentUserRole = null; // 'admin' | 'editor' | 'viewer' — loaded from profiles after login
+let currentUserPermissions = {}; // Effective permissions resolved at login (role baseline + team grants)
+let currentUserTeams = []; // Team IDs assigned to the current user (single-team today, multi-team ready)
 let progId = null;
 let currentSection = 'hub';
 let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
@@ -16,6 +19,9 @@ let operationsTab = 'overview'; // overview|flow|risk|people|actions|forecast
 let npiTab = 'all'; // 'all' | family id — active tab on the NPI project selection screen
 let pfmeaRpnFilter = 'all'; // all|high|r1_49|r50_99|r100_199|r200_plus
 let pfmeaView = 'worksheet'; // worksheet|history
+let ctqSourceFilter = 'all'; // all | Customer Spec | OEM Data | Internal Standard | Regulatory | Drawing
+let ctqOosFilter = 'all'; // all | Repair | Replace | Scrap | Review | TBD
+let ctqAgreedFilter = 'all'; // all | yes | no
 let trackerSubAsmFilter = 'all'; // all|root|<sub-assembly-id>
 let prodPlanMonthOffset = 0; // Month offset from current month
 let meStartOffset = 0; // Months from today
@@ -57,7 +63,24 @@ let abcEditTarget = null;           // index into abcCatalogueData during edit, 
 let npiDashboardTab = 'projects'; // 'projects' | 'abc-catalogue'
 
 // Settings portal active tab
-let settingsActiveTab = 'families'; // 'families' | 'work-areas' | 'permissions'
+let settingsActiveTab = 'families'; // 'families' | 'work-areas' | 'permissions' | 'role-definitions' | 'teams' | 'appearance' | 'about'
+
+// Action Centre portal state
+let actionCentreData = null;        // null = unloaded; populated by actionCentreLoad()
+let actionCentreLoading = false;
+let actionCentreTab = 'all';        // 'all' | 'action' | 'pfmea' | 'risk'
+let actionCentreStatusFilter = 'open'; // 'open' | 'all' | 'closed'
+let selectedActionId = null;        // Action ID to scroll to when navigating from Action Centre
+let selectedPfmeaCauseId = null;    // PFMEA cause ID to scroll to when navigating from Action Centre
+let selectedRiskId = null;          // Risk ID to scroll to when navigating from Action Centre
+let npiLoadedProgId = null;         // prog_id of the NPI project whose relational data is currently loaded
+
+// Teams management state
+let settingsTeamsEditingId = null;
+let settingsTeamsPermissionsEditingId = null;
+let settingsTeamsData = null;
+let settingsTeamsLoading = false;
+let settingsTeamsError = null;
 
 // Presence map: { [progId]: [{ email, ts }] }
 // Tracks other users currently viewing the same project (updated via Broadcast).
@@ -67,6 +90,33 @@ let presenceMap = {};
 // Tracks the current page loaded and whether all pages have been fetched.
 let projectsPage = 0;
 let projectsAllLoaded = false;
+
+// ── MCS (Manufacturing Change) state ────────────────
+// Approver configuration (loaded from global_settings table, keys: mcs_approver_approval1 / mcs_approver_approval2)
+let mcsApproverConfig = null;     // { approval1: [{user_id, user_name}], approval2: [] }
+let mcsApproverConfigLoading = false;
+let mcsAutoViewId = null;         // When set, MCS portal auto-opens this change on load
+
+// Settings MCS tab state
+let settingsMcsLoading = false;
+let settingsMcsError = null;
+
+// Core data and filters
+let mcsList = [];                                  // All MCS changes loaded from Supabase
+let mcsCurrentFilter = {
+  status: 'all',                                   // all | open | review | implementing | final_review | implemented | closed
+  priority: 'all',                                 // all | critical | high | medium | low
+  type: 'all',                                     // all | Engineering | Process | Material | Tooling | Quality | Safety
+  source: 'all',                                   // all | Manual | PFMEA | Risk | Customer | Quality | Supply Chain
+  myChanges: false,                                // true = show only changes initiated by current user
+  overdueOnly: false,                              // true = show only overdue open changes
+  highPriority: false,                             // true = show only critical + high priority
+  dateRange: 'all',                                // all | today | week | month | quarter
+  product: 'all'                                   // all | <product name>
+};
+let mcsViewingId = null;                           // ECR ID currently in view modal
+let mcsEditingId = null;                           // ECR ID currently being edited
+let mcsLoading = false;                            // true while loading from Supabase
 
 // ── Accessor ─────────────────────────────────────────────────
 function prog() { return db.projects.find(p => p.id === progId) || null; }

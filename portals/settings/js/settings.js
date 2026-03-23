@@ -12,6 +12,70 @@ let settingsWorkAreasEditingId = null;
 let settingsPermissionsLoading = false;
 let settingsPermissionsData = null;
 let settingsPermissionsError = null;
+let settingsPermissionsTeams = [];
+let settingsTeamsPermissionsData = {};
+
+// ── Appearance preferences (persisted to localStorage) ─────────
+const APPEARANCE_STORAGE_KEY = 'tidyco_prefs';
+
+function settingsLoadingState(msg) {
+  if (typeof loadingState === 'function') return loadingState(msg);
+  return `<div style="padding:40px;text-align:center;color:var(--muted)">${esc(msg)}</div>`;
+}
+
+function settingsLoadAppearancePrefs() {
+  try {
+    const raw = localStorage.getItem(APPEARANCE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function settingsSaveAppearancePrefs(prefs) {
+  try {
+    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(prefs));
+  } catch (_) { /* ignore storage errors */ }
+}
+
+function settingsApplyAppearance() {
+  const prefs = settingsLoadAppearancePrefs();
+  const theme = prefs.theme === 'dark' ? 'dark' : prefs.theme === 'terminal' ? 'terminal' : 'light';
+
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme === 'terminal' ? 'dark' : theme;
+
+  if (document.body) {
+    document.body.classList.toggle('theme-dark', theme === 'dark' || theme === 'terminal');
+    document.body.classList.toggle('compact-tables', prefs.tableDensity === 'compact');
+  }
+
+  // Organisation / app name in topbar
+  const brandName = document.querySelector('.brand-name');
+  const brandSub  = document.querySelector('.brand-sub');
+  if (brandName) brandName.textContent = prefs.orgName   || 'TIDYCO';
+  if (brandSub)  brandSub.textContent  = prefs.appSubtitle || 'Operations Portal';
+}
+
+function settingsAppearanceSetTheme(theme) {
+  const nextTheme = theme === 'dark' ? 'dark' : theme === 'terminal' ? 'terminal' : 'light';
+  const prefs = settingsLoadAppearancePrefs();
+  settingsSaveAppearancePrefs({ ...prefs, theme: nextTheme });
+  settingsApplyAppearance();
+}
+
+function settingsAppearanceSetDensityCard(root, density) {
+  if (!root) return;
+  root
+    .querySelectorAll('.density-card')
+    .forEach((card) => card.classList.remove('selected'));
+  const next = root.querySelector(`.density-card input[name="ap-density"][value="${density}"]`);
+  if (!next) return;
+  next.checked = true;
+  next.closest('.density-card')?.classList.add('selected');
+}
+
+settingsApplyAppearance();
 
 // ── Main settings page render ──────────────────────────────────
 function renderSettings() {
@@ -26,9 +90,21 @@ function renderSettings() {
       } else if (tab === 'work-areas') {
         renderSettingsWorkAreasTab();
         settingsEnsureWorkAreasData();
+      } else if (tab === 'teams') {
+        renderSettingsTeamsTab();
+        settingsEnsureTeamsData();
       } else if (tab === 'permissions') {
         renderSettingsPermissionsTab();
         settingsEnsurePermissionsData();
+      } else if (tab === 'role-definitions') {
+        renderSettingsRoleDefinitionsTab();
+      } else if (tab === 'mcs-approvers') {
+        renderSettingsMcsTab();
+        settingsEnsureMcsData();
+      } else if (tab === 'appearance') {
+        renderSettingsAppearanceTab();
+      } else if (tab === 'about') {
+        renderSettingsAboutTab();
       }
     });
   });
@@ -49,14 +125,36 @@ function renderSettings() {
             <span class="nav-icon">🏭</span> Work Areas
           </button>
           <span class="settings-nav-group-label" style="margin-top:8px">Access</span>
+          <button class="settings-nav-item ${tab === 'teams' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="teams">
+            <span class="nav-icon">🏢</span> Teams
+          </button>
           <button class="settings-nav-item ${tab === 'permissions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="permissions">
             <span class="nav-icon">🔒</span> Permissions
           </button>
+          <button class="settings-nav-item ${tab === 'role-definitions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="role-definitions">
+            <span class="nav-icon">🔐</span> Role Definitions
+          </button>
+          <button class="settings-nav-item ${tab === 'mcs-approvers' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="mcs-approvers">
+            <span class="nav-icon">✅</span> Approvals
+          </button>
+          <span class="settings-nav-group-label" style="margin-top:8px">Preferences</span>
+          <button class="settings-nav-item ${tab === 'appearance' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="appearance">
+            <span class="nav-icon">🎨</span> Appearance
+          </button>
+          <span class="settings-nav-group-label" style="margin-top:8px">Help</span>
+          <button class="settings-nav-item ${tab === 'about' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="about">
+            <span class="nav-icon">ℹ️</span> About
+          </button>
         </nav>
         <div class="settings-content">
-          <div id="settingsFamiliesTab"   class="settings-tab-content ${tab === 'families'    ? 'active' : ''}"></div>
-          <div id="settingsWorkAreasTab"  class="settings-tab-content ${tab === 'work-areas'  ? 'active' : ''}"></div>
-          <div id="settingsPermissionsTab" class="settings-tab-content ${tab === 'permissions' ? 'active' : ''}"></div>
+          <div id="settingsFamiliesTab"        class="settings-tab-content ${tab === 'families'         ? 'active' : ''}"></div>
+          <div id="settingsWorkAreasTab"       class="settings-tab-content ${tab === 'work-areas'       ? 'active' : ''}"></div>
+          <div id="settingsTeamsTab"           class="settings-tab-content ${tab === 'teams'            ? 'active' : ''}"></div>
+          <div id="settingsPermissionsTab"     class="settings-tab-content ${tab === 'permissions'      ? 'active' : ''}"></div>
+          <div id="settingsRoleDefinitionsTab" class="settings-tab-content ${tab === 'role-definitions' ? 'active' : ''}"></div>
+          <div id="settingsMcsTab"            class="settings-tab-content ${tab === 'mcs-approvers'    ? 'active' : ''}"></div>
+          <div id="settingsAppearanceTab"      class="settings-tab-content ${tab === 'appearance'       ? 'active' : ''}"></div>
+          <div id="settingsAboutTab"           class="settings-tab-content ${tab === 'about'            ? 'active' : ''}"></div>
         </div>
       </div>
     </div>
@@ -98,6 +196,30 @@ async function settingsEnsureWorkAreasData() {
   }
 }
 
+// ── Ensure teams data is loaded ──────────────────────────────
+async function settingsEnsureTeamsData(forceReload = false) {
+  if (settingsTeamsLoading) return;
+  if (!forceReload && settingsTeamsData !== null) return;
+
+  settingsTeamsLoading = true;
+  settingsTeamsError = null;
+  renderSettingsTeamsTab();
+
+  try {
+    settingsTeamsData = await teamsDataLoadAll();
+    // Load user counts for each team in parallel instead of sequentially
+    await Promise.all(settingsTeamsData.map(async (team) => {
+      team.userCount = await teamsDataGetUserCount(team.id);
+    }));
+  } catch (err) {
+    settingsTeamsError = err?.message || 'Failed to load teams';
+    settingsTeamsData = [];
+  } finally {
+    settingsTeamsLoading = false;
+    renderSettingsTeamsTab();
+  }
+}
+
 // ── Ensure permissions data is loaded ─────────────────────────
 async function settingsEnsurePermissionsData(forceReload = false) {
   if (settingsPermissionsLoading) return;
@@ -108,12 +230,27 @@ async function settingsEnsurePermissionsData(forceReload = false) {
   renderSettingsPermissionsTab();
 
   try {
-    const { data, error } = await supa.from('profiles').select('id, email, full_name, role, created_at').order('created_at', { ascending: true });
+    const [{ data: profiles, error }, teams, teamMap] = await Promise.all([
+      supa.from('profiles').select('id, email, full_name, role, created_at').order('created_at', { ascending: true }),
+      typeof teamsDataLoadAll === 'function' ? teamsDataLoadAll() : Promise.resolve([]),
+      typeof teamsDataLoadUserTeamMap === 'function' ? teamsDataLoadUserTeamMap() : Promise.resolve({})
+    ]);
+
     if (error) throw error;
-    settingsPermissionsData = data || [];
+
+    settingsPermissionsTeams = Array.isArray(teams) ? teams : [];
+    settingsPermissionsData = (profiles || []).map((user) => {
+      const assignment = teamMap?.[user.id] || null;
+      return {
+        ...user,
+        team_id: assignment?.teamId || '',
+        team_name: assignment?.teamName || ''
+      };
+    });
   } catch (err) {
     settingsPermissionsError = err?.message || 'Failed to load user accounts';
     settingsPermissionsData = [];
+    settingsPermissionsTeams = [];
   } finally {
     settingsPermissionsLoading = false;
     renderSettingsPermissionsTab();
@@ -126,7 +263,7 @@ function renderSettingsFamiliesTab() {
   if (!container) return;
 
   if (settingsFamiliesLoading || familiesState.loading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families…</div>';
+    container.innerHTML = settingsLoadingState('Loading families…');
     return;
   }
 
@@ -142,7 +279,7 @@ function renderSettingsFamiliesTab() {
   }
 
   if (!familiesState || !Array.isArray(familiesState.families)) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading families…</div>';
+    container.innerHTML = settingsLoadingState('Loading families…');
     settingsEnsureFamiliesData(true);
     return;
   }
@@ -181,7 +318,7 @@ function renderSettingsFamiliesTab() {
           </tr>
         </thead>
         <tbody>
-          <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+          ${canEdit() ? `<tr class="row-new" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
             <td><input class="cell-edit" id="sfNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
             <td><input class="cell-edit" id="sfNew-id" placeholder="e.g. HVAC"></td>
             <td><input class="cell-edit" id="sfNew-label" placeholder="e.g. HVAC Systems"></td>
@@ -190,14 +327,14 @@ function renderSettingsFamiliesTab() {
             <td class="families-actions-col">
               <button class="btn-del" title="Add family" data-action="settings-families-add">✓</button>
             </td>
-          </tr>
+          </tr>` : ''}
           ${families.length === 0 ? `
             <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No families defined yet. Add one above.</td></tr>
           ` : families.map(f => {
             const usage = usageMap[f.id] || 0;
             if (settingsFamiliesEditingId === f.id) {
               return `
-              <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+              <tr class="row-new" style="background-color:var(--row-highlight-amber);border-top:2px solid var(--amber)">
                 <td><input class="cell-edit" id="sfEdit-icon" value="${esc(f.icon || '📋')}" style="width:50px;text-align:center"></td>
                 <td><input class="cell-edit" id="sfEdit-id" value="${esc(f.name || f.id)}"></td>
                 <td><input class="cell-edit" id="sfEdit-label" value="${esc(f.label || '')}"></td>
@@ -212,13 +349,13 @@ function renderSettingsFamiliesTab() {
             return `
             <tr>
               <td class="ctr" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
-              <td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
+              <td><code style="background:var(--code-bg);padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
               <td><strong>${esc(f.label)}</strong></td>
               <td>${esc(f.description || '—')}</td>
               <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
               <td class="families-actions-col">
-                <button class="btn-del" title="Edit" data-action="settings-families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
-                <button class="btn-del" title="Delete" data-action="settings-families-delete" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>
+                ${canEdit() ? `<button class="btn-del" title="Edit" data-action="settings-families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
+                <button class="btn-del" title="Delete" data-action="settings-families-delete" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>` : '—'}
               </td>
             </tr>`;
           }).join('')}
@@ -307,7 +444,7 @@ function renderSettingsWorkAreasTab() {
   if (!container) return;
 
   if (workAreasState.loading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading work areas…</div>';
+    container.innerHTML = settingsLoadingState('Loading work areas…');
     return;
   }
 
@@ -333,19 +470,19 @@ function renderSettingsWorkAreasTab() {
           </tr>
         </thead>
         <tbody>
-          <tr class="row-new" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+          ${canEdit() ? `<tr class="row-new" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
             <td><input class="cell-edit" id="waNew-name" placeholder="e.g. Unit 9"></td>
             <td><input class="cell-edit" id="waNew-desc" placeholder="Description (optional)"></td>
             <td class="families-actions-col">
               <button class="btn-del" title="Add work area" data-action="settings-wa-add">✓</button>
             </td>
-          </tr>
+          </tr>` : ''}
           ${areas.length === 0 ? `
             <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">No work areas defined yet. Add one above.</td></tr>
           ` : areas.map(w => {
             if (settingsWorkAreasEditingId === w.id) {
               return `
-              <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+              <tr class="row-new" style="background-color:var(--row-highlight-amber);border-top:2px solid var(--amber)">
                 <td><input class="cell-edit" id="waEdit-name" value="${esc(w.name)}"></td>
                 <td><input class="cell-edit" id="waEdit-desc" value="${esc(w.description || '')}"></td>
                 <td class="families-actions-col">
@@ -359,7 +496,7 @@ function renderSettingsWorkAreasTab() {
               <td><strong>${esc(w.name)}</strong></td>
               <td>${esc(w.description || '—')}</td>
               <td class="families-actions-col">
-                <button class="btn-del" title="Rename" data-action="settings-wa-start-edit" data-wa-id="${esc(w.id)}">✏️</button>
+                ${canEdit() ? `<button class="btn-del" title="Rename" data-action="settings-wa-start-edit" data-wa-id="${esc(w.id)}">✏️</button>` : '—'}
               </td>
             </tr>`;
           }).join('')}
@@ -425,18 +562,354 @@ function settingsEmailToName(email) {
   return local.split(/[._-]/).map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
 }
 
+// ── Change a user's role ───────────────────────────────────────
+async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
+  if (!isAdmin()) { showToast('Only admins can change roles.', 'error'); return; }
+  if (!userId || !newRole) return;
+  if (isLastAdmin && newRole !== 'admin') {
+    showToast('Cannot remove the last admin. Promote another user to admin first.', 'warning');
+    settingsEnsurePermissionsData(true);
+    return;
+  }
+  try {
+    const { error } = await supa.from('profiles').update({ role: newRole }).eq('id', userId);
+    if (error) throw error;
+    // Update local cache so the UI stays consistent without a full reload
+    if (settingsPermissionsData) {
+      const rec = settingsPermissionsData.find(u => u.id === userId);
+      if (rec) rec.role = newRole;
+    }
+    showToast('Role updated. Change takes effect on that user\'s next login.', 'info');
+    renderSettingsPermissionsTab();
+  } catch (err) {
+    showToast('Failed to update role: ' + err.message, 'error');
+    settingsEnsurePermissionsData(true);
+  }
+}
+
+// ── Change a user's team assignment ────────────────────────────
+async function settingsPermissionsChangeTeam(userId, teamId) {
+  if (!isAdmin()) { showToast('Only admins can change team assignments.', 'error'); return; }
+  if (!userId || typeof teamsDataSetUserTeam !== 'function') return;
+
+  try {
+    const nextTeamId = teamId || '';
+    const success = await teamsDataSetUserTeam(userId, nextTeamId);
+    if (!success) {
+      showToast('Failed to update team assignment', 'error');
+      return;
+    }
+
+    if (settingsPermissionsData) {
+      const rec = settingsPermissionsData.find((u) => u.id === userId);
+      const teamRec = settingsPermissionsTeams.find((t) => t.id === nextTeamId);
+      if (rec) {
+        rec.team_id = nextTeamId;
+        rec.team_name = teamRec?.name || '';
+      }
+    }
+
+    showToast('Team assignment updated.', 'success');
+    renderSettingsPermissionsTab();
+  } catch (err) {
+    showToast('Failed to update team assignment: ' + err.message, 'error');
+    settingsEnsurePermissionsData(true);
+  }
+}
+
+// ── Render teams tab ───────────────────────────────────────────
+function renderSettingsTeamsTab() {
+  const container = document.getElementById('settingsTeamsTab');
+  if (!container) return;
+
+  if (settingsTeamsLoading) {
+    container.innerHTML = settingsLoadingState('Loading teams…');
+    return;
+  }
+
+  if (settingsTeamsError) {
+    container.innerHTML = `
+      <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
+        <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load teams</div>
+        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsTeamsError)}</div>
+        <button class="btn btn-ghost" data-action="settings-teams-retry">Retry</button>
+      </div>
+    `;
+    return;
+  }
+
+  const teams = settingsTeamsData || [];
+  const DEFAULT_TEAMS = ['ME', 'PM', 'OPS', 'Admin', 'ReadOnly'];
+
+  let tableBody = '';
+  if (teams.length === 0) {
+    // Show default teams as suggestions if none exist
+    tableBody = DEFAULT_TEAMS.map(type => `
+      <tr style="opacity:0.6">
+        <td>${type}</td>
+        <td>${type}</td>
+        <td style="text-align:center">0</td>
+        <td style="text-align:center;color:var(--muted)">—</td>
+      </tr>
+    `).join('');
+  } else {
+    tableBody = teams.map(t => `
+      <tr>
+        <td>${esc(t.name)}</td>
+        <td>${esc(t.team_type)}</td>
+        <td style="text-align:center">${t.userCount || 0}</td>
+        <td style="text-align:center">
+          <button class="btn btn-sm btn-ghost" data-action="settings-teams-edit" data-team-id="${esc(t.id)}" title="Edit permissions">Edit</button>
+          <button class="btn btn-sm btn-ghost" data-action="settings-teams-delete" data-team-id="${esc(t.id)}" title="Delete team" style="color:var(--red)">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Teams</h2>
+      <p class="settings-section-desc">Organize users by department and manage group permissions.</p>
+    </div>
+    <div style="margin-bottom:16px">
+      <button class="btn btn-primary" data-action="settings-teams-add">+ Add Team</button>
+    </div>
+    <table class="prod-tbl" style="width:100%">
+      <thead>
+        <tr>
+          <th>Team Name</th>
+          <th>Type</th>
+          <th>Users</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableBody}
+      </tbody>
+    </table>
+    ${teams.length === 0 ? `
+      <div class="permissions-notice" style="margin-top:16px">
+        <strong>No teams created yet.</strong> Click "Add Team" to create your first team. Default types: ME, PM, OPS, Admin, ReadOnly.
+      </div>
+    ` : ''}
+  `;
+}
+
+// ── Team CRUD operations ────────────────────────────────────────
+async function settingsTeamsAdd() {
+  const name = prompt('Team name:');
+  if (!name || !name.trim()) return;
+
+  const type = prompt('Team type (ME, PM, OPS, Admin, ReadOnly):');
+  if (!type || !type.trim()) return;
+
+  const validTypes = ['ME', 'PM', 'OPS', 'Admin', 'ReadOnly'];
+  if (!validTypes.includes(type.trim())) {
+    showToast('Invalid team type. Use: ME, PM, OPS, Admin, or ReadOnly', 'error');
+    return;
+  }
+
+  const description = prompt('Team description (optional):');
+
+  try {
+    const newTeam = await teamsDataAdd({
+      name: name.trim(),
+      team_type: type.trim(),
+      description: description?.trim() || ''
+    });
+
+    if (!newTeam) {
+      showToast('Failed to create team', 'error');
+      return;
+    }
+
+    newTeam.userCount = 0;
+    settingsTeamsData.push(newTeam);
+    showToast('Team created successfully', 'success');
+    renderSettingsTeamsTab();
+  } catch (err) {
+    showToast('Error creating team: ' + err.message, 'error');
+  }
+}
+
+async function settingsTeamsDelete(teamId) {
+  if (!teamId) return;
+
+  const team = settingsTeamsData.find(t => t.id === teamId);
+  if (!team) return;
+
+  if (team.userCount && team.userCount > 0) {
+    showToast(`Cannot delete team with ${team.userCount} user(s). Reassign users first.`, 'warning');
+    return;
+  }
+
+  if (!confirm(`Delete team "${esc(team.name)}"? This cannot be undone.`)) return;
+
+  try {
+    const success = await teamsDataDelete(teamId);
+    if (!success) {
+      showToast('Failed to delete team', 'error');
+      return;
+    }
+
+    settingsTeamsData = settingsTeamsData.filter(t => t.id !== teamId);
+    showToast('Team deleted', 'success');
+    renderSettingsTeamsTab();
+  } catch (err) {
+    showToast('Error deleting team: ' + err.message, 'error');
+  }
+}
+
+async function settingsTeamsEdit(teamId) {
+  if (!teamId) return;
+
+  settingsTeamsPermissionsEditingId = teamId;
+  try {
+    settingsTeamsPermissionsData[teamId] = await teamsDataLoadPermissions(teamId);
+    renderSettingsTeamsPermissionsEditor();
+  } catch (err) {
+    showToast('Failed to load permissions: ' + err.message, 'error');
+  }
+}
+
+async function settingsTeamsPermissionsSave() {
+  const teamId = settingsTeamsPermissionsEditingId;
+  if (!teamId) return;
+
+  const permissions = settingsTeamsPermissionsData[teamId] || [];
+  try {
+    const success = await teamPermissionsDataSave(teamId, permissions);
+    if (!success) {
+      showToast('Failed to save permissions', 'error');
+      return;
+    }
+
+    showToast('Permissions saved', 'success');
+    settingsTeamsPermissionsEditingId = null;
+    settingsEnsureTeamsData(true);
+    renderSettingsTeamsTab();
+  } catch (err) {
+    showToast('Error saving permissions: ' + err.message, 'error');
+  }
+}
+
+function settingsTeamsPermissionsCancel() {
+  settingsTeamsPermissionsEditingId = null;
+  renderSettingsTeamsTab();
+}
+
+function settingsTeamsPermissionsToggle(teamId, permission) {
+  if (!settingsTeamsPermissionsData[teamId]) return;
+  const perm = settingsTeamsPermissionsData[teamId].find(p => p.permission === permission);
+  if (perm) {
+    perm.allowed = !perm.allowed;
+  } else {
+    settingsTeamsPermissionsData[teamId].push({ permission, allowed: true });
+  }
+  renderSettingsTeamsPermissionsEditor();
+}
+
+function settingsGetTeamPermissionDefinitions() {
+  if (typeof getPermissionDefinitions === 'function') {
+    return getPermissionDefinitions().map((def) => ({
+      key: def.key,
+      label: def.label,
+      group: def.group || 'Other'
+    }));
+  }
+
+  return [
+    { key: 'view_all_project_data', label: 'View all project data', group: 'Legacy' },
+    { key: 'edit_projects_tasks_schedules', label: 'Edit projects, tasks & schedules', group: 'Legacy' },
+    { key: 'add_delete_records', label: 'Add & delete records', group: 'Legacy' },
+    { key: 'manage_families', label: 'Manage product families', group: 'Legacy' },
+    { key: 'manage_work_areas', label: 'Manage work areas', group: 'Legacy' },
+    { key: 'manage_capacity', label: 'Manage capacity planning', group: 'Legacy' },
+    { key: 'manage_user_roles', label: 'Change user roles', group: 'Legacy' },
+    { key: 'access_settings', label: 'Access Settings page', group: 'Legacy' }
+  ];
+}
+
+// ── Render permissions editor ──────────────────────────────────
+function renderSettingsTeamsPermissionsEditor() {
+  const teamId = settingsTeamsPermissionsEditingId;
+  if (!teamId) return;
+
+  const team = settingsTeamsData.find(t => t.id === teamId);
+  if (!team) return;
+
+  const permissions = settingsTeamsPermissionsData[teamId] || [];
+  const definitions = settingsGetTeamPermissionDefinitions();
+
+  let permRows = '';
+  let activeGroup = '';
+  definitions.forEach(({ key, label, group }) => {
+    if (group !== activeGroup) {
+      activeGroup = group;
+      permRows += `
+        <tr>
+          <td colspan="2" style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;background:var(--bg-alt)">${esc(group)}</td>
+        </tr>
+      `;
+    }
+
+    const perm = permissions.find(p => p.permission === key);
+    const isAllowed = perm?.allowed || false;
+    permRows += `
+      <tr>
+        <td>${esc(label)}</td>
+        <td style="text-align:center">
+          <input type="checkbox" ${isAllowed ? 'checked' : ''}
+                 data-action="settings-teams-permission-toggle"
+                 data-permission="${esc(key)}"
+                 style="cursor:pointer;width:18px;height:18px">
+        </td>
+      </tr>
+    `;
+  });
+
+  const container = document.getElementById('settingsTeamsTab');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Edit Permissions: ${esc(team.name)}</h2>
+      <p class="settings-section-desc">Configure what this team can do in the system.</p>
+    </div>
+    <table class="prod-tbl" style="width:100%;margin-bottom:16px">
+      <thead>
+        <tr>
+          <th>Permission</th>
+          <th style="width:80px;text-align:center">Allowed</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${permRows}
+      </tbody>
+    </table>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" data-action="settings-teams-permissions-save">Save</button>
+      <button class="btn btn-ghost" data-action="settings-teams-permissions-cancel">Cancel</button>
+    </div>
+  `;
+}
+
 // ── Render permissions tab ─────────────────────────────────────
 function renderSettingsPermissionsTab() {
   const container = document.getElementById('settingsPermissionsTab');
   if (!container) return;
 
   if (settingsPermissionsLoading) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading user accounts…</div>';
+    container.innerHTML = settingsLoadingState('Loading user accounts…');
     return;
   }
 
   const users = settingsPermissionsData || [];
+  const teams = settingsPermissionsTeams || [];
   const currentEmail = currentUser?.email || '';
+
+  const adminCount = users.filter(u => (u.role || 'editor') === 'admin').length;
+  const viewerIsAdmin = isAdmin();
 
   let tableBody = '';
   if (users.length === 0 && !settingsPermissionsError) {
@@ -446,8 +919,28 @@ function renderSettingsPermissionsTab() {
       const isYou = u.email === currentEmail;
       const name = esc(u.full_name || settingsEmailToName(u.email));
       const email = esc(u.email || '—');
-      const role = esc(u.role || 'user');
+      const role = u.role || 'editor';
       const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB') : '—';
+      const isLastAdmin = role === 'admin' && adminCount <= 1;
+      const teamId = u.team_id || '';
+      const teamName = u.team_name || 'Unassigned';
+
+      const teamCell = viewerIsAdmin
+        ? `<select class="cell-edit" style="width:180px" data-action="settings-permissions-change-team" data-user-id="${esc(u.id)}">
+            <option value="">Unassigned</option>
+            ${teams.map((team) => `<option value="${esc(team.id)}" ${team.id === teamId ? 'selected' : ''}>${esc(team.name)}</option>`).join('')}
+          </select>`
+        : `<span class="permissions-badge">${esc(teamName)}</span>`;
+
+      // Admins see a dropdown; everyone else sees a read-only badge
+      const roleCell = viewerIsAdmin
+        ? `<select class="cell-edit" style="width:100px" data-action="settings-permissions-change-role" data-user-id="${esc(u.id)}" data-is-last-admin="${isLastAdmin}" ${isYou && isLastAdmin ? 'disabled title="Cannot remove your own admin role when you are the only admin"' : ''}>
+            <option value="admin"  ${role === 'admin'  ? 'selected' : ''}>Admin</option>
+            <option value="editor" ${role === 'editor' ? 'selected' : ''}>Editor</option>
+            <option value="viewer" ${role === 'viewer' ? 'selected' : ''}>Viewer</option>
+          </select>`
+        : `<span class="permissions-badge">${esc(role)}</span>`;
+
       return `
       <tr>
         <td>
@@ -455,23 +948,30 @@ function renderSettingsPermissionsTab() {
           ${isYou ? '<span class="permissions-badge you">You</span>' : ''}
         </td>
         <td>${email}</td>
-        <td><span class="permissions-badge">${role}</span></td>
+        <td>${roleCell}</td>
+        <td>${teamCell}</td>
         <td>${joined}</td>
       </tr>`;
     }).join('');
   }
 
   const errorBanner = settingsPermissionsError ? `
-    <div style="margin-bottom:12px;padding:10px 14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:6px;font-size:0.82rem;color:var(--red)">
+    <div style="margin-bottom:12px;padding:10px 14px;background:var(--status-red-bg);border:1px solid var(--red);border-radius:6px;font-size:0.82rem;color:var(--red)">
       Could not load user accounts: ${esc(settingsPermissionsError)}
       <button class="btn btn-ghost" style="margin-left:12px;font-size:0.8rem;padding:2px 8px" data-action="settings-permissions-retry">Retry</button>
     </div>
   ` : '';
 
+  const adminNote = viewerIsAdmin
+    ? `<div class="permissions-notice" style="background:var(--status-blue-bg);border-color:var(--blue)">
+        <strong>Admin tip:</strong> Use the dropdowns to assign role and team grants. Role changes take effect on next login, team grants apply immediately.
+      </div>`
+    : `<div class="permissions-notice">Only admins can change roles. Your current role is <strong>${esc(currentUserRole || 'editor')}</strong>.</div>`;
+
   container.innerHTML = `
     <div class="settings-section-header">
       <h2>Permissions</h2>
-      <p class="settings-section-desc">All registered user accounts. Role-based access controls are planned for a future release.</p>
+      <p class="settings-section-desc">Role-based access control. Admins can assign roles to control what each user can do.</p>
     </div>
     ${errorBanner}
     <table class="prod-tbl" style="width:100%">
@@ -480,6 +980,7 @@ function renderSettingsPermissionsTab() {
           <th>Name</th>
           <th>Email</th>
           <th>Role</th>
+          <th>Team</th>
           <th>Joined</th>
         </tr>
       </thead>
@@ -487,19 +988,526 @@ function renderSettingsPermissionsTab() {
         ${tableBody}
       </tbody>
     </table>
-    <div class="permissions-notice">
-      Role-based permissions are not yet active. All authenticated users currently have full access to the portal.
+    ${adminNote}
+  `;
+}
+
+// ── Render role definitions tab ────────────────────────────────
+function renderSettingsRoleDefinitionsTab() {
+  const container = document.getElementById('settingsRoleDefinitionsTab');
+  if (!container) return;
+
+  const roleMatrix = [
+    { label: 'View all project data',            admin: true,  editor: true,  viewer: true  },
+    { label: 'Edit projects, tasks & schedules', admin: true,  editor: true,  viewer: false },
+    { label: 'Add & delete records',             admin: true,  editor: true,  viewer: false },
+    { label: 'Manage product families',          admin: true,  editor: true,  viewer: false },
+    { label: 'Manage work areas',                admin: true,  editor: true,  viewer: false },
+    { label: 'Manage capacity planning',         admin: true,  editor: true,  viewer: false },
+    { label: 'Change user roles',                admin: true,  editor: false, viewer: false },
+    { label: 'Access Settings page',             admin: true,  editor: false, viewer: false },
+  ];
+
+  const tick  = `<span style="color:var(--green);font-size:1.1em">✓</span>`;
+  const cross = `<span style="color:var(--muted);font-size:1.1em">—</span>`;
+
+  const matrixRows = roleMatrix.map(r => `
+    <tr>
+      <td>${esc(r.label)}</td>
+      <td class="ctr">${r.admin  ? tick : cross}</td>
+      <td class="ctr">${r.editor ? tick : cross}</td>
+      <td class="ctr">${r.viewer ? tick : cross}</td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Role Definitions</h2>
+      <p class="settings-section-desc">What each role can do across the portal. Go to <strong>Permissions</strong> to assign roles to users.</p>
+    </div>
+    <table class="prod-tbl" style="width:100%;max-width:600px">
+      <thead>
+        <tr>
+          <th>Permission</th>
+          <th class="ctr" style="width:80px">Admin</th>
+          <th class="ctr" style="width:80px">Editor</th>
+          <th class="ctr" style="width:80px">Viewer</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${matrixRows}
+      </tbody>
+    </table>
+  `;
+}
+
+// ── Render appearance tab ──────────────────────────────────────
+function renderSettingsAppearanceTab() {
+  const container = document.getElementById('settingsAppearanceTab');
+  if (!container) return;
+
+  const prefs = settingsLoadAppearancePrefs();
+  const theme       = prefs.theme === 'dark' ? 'dark' : prefs.theme === 'terminal' ? 'terminal' : 'light';
+  const orgName     = esc(prefs.orgName      || '');
+  const appSubtitle = esc(prefs.appSubtitle  || '');
+  const density     = prefs.tableDensity     || 'normal';
+  const toastDur    = prefs.toastDuration    || 'normal';
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Appearance</h2>
+      <p class="settings-section-desc">Personalise how the portal looks. These preferences are saved to this browser only.</p>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Colour theme</h3>
+      <p class="appearance-group-desc">Choose whether the portal uses a light or dark colour scheme.</p>
+      <div class="appearance-theme-grid">
+        <label class="appearance-theme-card ${theme === 'light' ? 'selected' : ''}">
+          <input type="radio" name="ap-theme" value="light" ${theme === 'light' ? 'checked' : ''}>
+          <span class="appearance-theme-swatch appearance-theme-swatch-light" aria-hidden="true"></span>
+          <span class="appearance-theme-copy">
+            <strong>Light</strong>
+            <span>Bright workspace with dark text.</span>
+          </span>
+        </label>
+        <label class="appearance-theme-card ${theme === 'dark' ? 'selected' : ''}">
+          <input type="radio" name="ap-theme" value="dark" ${theme === 'dark' ? 'checked' : ''}>
+          <span class="appearance-theme-swatch appearance-theme-swatch-dark" aria-hidden="true"></span>
+          <span class="appearance-theme-copy">
+            <strong>Dark</strong>
+            <span>Lower-glare workspace for darker environments.</span>
+          </span>
+        </label>
+        <label class="appearance-theme-card ${theme === 'terminal' ? 'selected' : ''}">
+          <input type="radio" name="ap-theme" value="terminal" ${theme === 'terminal' ? 'checked' : ''}>
+          <span class="appearance-theme-swatch appearance-theme-swatch-terminal" aria-hidden="true"></span>
+          <span class="appearance-theme-copy">
+            <strong>Terminal</strong>
+            <span>Phosphor-green on black. Classic.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Branding</h3>
+      <p class="appearance-group-desc">Customise the name shown in the top-left corner of the portal.</p>
+      <div class="appearance-row">
+        <label class="appearance-label" for="ap-orgName">Organisation name</label>
+        <input class="cell-edit appearance-input" id="ap-orgName" placeholder="TIDYCO" maxlength="40" value="${orgName}">
+        <span class="appearance-hint">Shown as the main brand name. Leave blank for default.</span>
+      </div>
+      <div class="appearance-row">
+        <label class="appearance-label" for="ap-appSubtitle">App sub-title</label>
+        <input class="cell-edit appearance-input" id="ap-appSubtitle" placeholder="Operations Portal" maxlength="50" value="${appSubtitle}">
+        <span class="appearance-hint">Shown next to the organisation name. Leave blank for default.</span>
+      </div>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Tables</h3>
+      <div class="appearance-row">
+        <label class="appearance-label">Row density</label>
+        <div class="density-picker">
+          <label class="density-card ${density === 'normal' ? 'selected' : ''}">
+            <input type="radio" name="ap-density" value="normal" ${density === 'normal' ? 'checked' : ''}>
+            <div class="density-preview">
+              <div class="dp-header"><div class="dp-cell dp-cell--wide"></div><div class="dp-cell"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--normal"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--normal"><div class="dp-cell dp-cell--wide dp-cell--text dp-cell--dim"></div><div class="dp-cell dp-cell--badge dp-cell--green"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--normal"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge dp-cell--amber"></div><div class="dp-cell"></div></div>
+            </div>
+            <span class="density-card-label">Normal</span>
+          </label>
+          <label class="density-card ${density === 'compact' ? 'selected' : ''}">
+            <input type="radio" name="ap-density" value="compact" ${density === 'compact' ? 'checked' : ''}>
+            <div class="density-preview">
+              <div class="dp-header"><div class="dp-cell dp-cell--wide"></div><div class="dp-cell"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text dp-cell--dim"></div><div class="dp-cell dp-cell--badge dp-cell--green"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge dp-cell--amber"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text dp-cell--dim"></div><div class="dp-cell dp-cell--badge"></div><div class="dp-cell"></div></div>
+              <div class="dp-row dp-row--compact"><div class="dp-cell dp-cell--wide dp-cell--text"></div><div class="dp-cell dp-cell--badge dp-cell--green"></div><div class="dp-cell"></div></div>
+            </div>
+            <span class="density-card-label">Compact</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Notifications</h3>
+      <div class="appearance-row">
+        <label class="appearance-label">Toast duration</label>
+        <div class="appearance-radio-group">
+          <label class="appearance-radio-label">
+            <input type="radio" name="ap-toast" value="short"  ${toastDur === 'short'  ? 'checked' : ''}> Short (2 s)
+          </label>
+          <label class="appearance-radio-label">
+            <input type="radio" name="ap-toast" value="normal" ${toastDur === 'normal' ? 'checked' : ''}> Normal (4 s)
+          </label>
+          <label class="appearance-radio-label">
+            <input type="radio" name="ap-toast" value="long"   ${toastDur === 'long'   ? 'checked' : ''}> Long (6 s)
+          </label>
+        </div>
+        <span class="appearance-hint">How long notification pop-ups stay on screen.</span>
+      </div>
+    </div>
+
+    <div class="appearance-actions">
+      <button class="btn btn-primary" data-action="settings-appearance-save">Save preferences</button>
+      <button class="btn btn-ghost" data-action="settings-appearance-reset">Reset to defaults</button>
     </div>
   `;
 }
 
-// ── Event listener setup ───────────────────────────────────────
+// ── Save / reset appearance preferences ───────────────────────
+function settingsAppearanceSave() {
+  const theme       = document.querySelector('input[name="ap-theme"]:checked')?.value       || 'light';
+  const orgName     = document.getElementById('ap-orgName')?.value.trim()     || '';
+  const appSubtitle = document.getElementById('ap-appSubtitle')?.value.trim() || '';
+  const density     = document.querySelector('input[name="ap-density"]:checked')?.value || 'normal';
+  const toastDur    = document.querySelector('input[name="ap-toast"]:checked')?.value   || 'normal';
+
+  settingsSaveAppearancePrefs({ theme, orgName, appSubtitle, tableDensity: density, toastDuration: toastDur });
+  settingsApplyAppearance();
+  showToast('Appearance preferences saved.', 'info');
+  renderSettingsAppearanceTab();
+}
+
+function settingsAppearanceReset() {
+  settingsSaveAppearancePrefs({});
+  settingsApplyAppearance();
+  showToast('Appearance reset to defaults.', 'info');
+  renderSettingsAppearanceTab();
+}
+
+// ── Render about tab ───────────────────────────────────────────
+function renderSettingsAboutTab() {
+  const container = document.getElementById('settingsAboutTab');
+  if (!container) return;
+
+  const shortcuts = [
+    { key: '?  or  Ctrl / ⌘ + /',  desc: 'Show keyboard shortcuts help' },
+    { key: 'Ctrl / ⌘ + S',         desc: 'Save current work' },
+    { key: 'Ctrl / ⌘ + F',         desc: 'Focus search' },
+    { key: 'Ctrl / ⌘ + Enter',     desc: 'Save form / row' },
+    { key: 'Enter',                 desc: 'Add item (in add-row inputs)' },
+    { key: 'Escape',                desc: 'Cancel edit / close modal' },
+    { key: 'Tab',                   desc: 'Move to next field' },
+    { key: 'Backspace',             desc: 'Navigate back (when not editing)' },
+  ];
+
+  const shortcutRows = shortcuts.map(s => `
+    <tr>
+      <td><kbd class="about-kbd">${esc(s.key)}</kbd></td>
+      <td>${esc(s.desc)}</td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>About</h2>
+      <p class="settings-section-desc">App information, keyboard shortcuts, and help resources.</p>
+    </div>
+
+    <div class="about-card">
+      <div class="about-app-name">Tidyco Operations Portal</div>
+      <p class="about-app-desc">
+        A web-based APQP quality tool covering NPI project management, capacity planning,
+        production scheduling, and operations oversight. Data is stored securely in Supabase
+        and shared in real time across all users in your organisation.
+      </p>
+      ${typeof showGuide === 'function' ? `
+        <button class="btn btn-primary" data-action="settings-about-open-guide">📖 Open User Guide</button>
+      ` : ''}
+    </div>
+
+    <div class="settings-section-header" style="margin-top:24px">
+      <h2 style="font-size:1rem">Keyboard Shortcuts</h2>
+    </div>
+    <table class="prod-tbl about-shortcuts-table" style="width:100%;max-width:560px">
+      <thead>
+        <tr><th>Keys</th><th>Action</th></tr>
+      </thead>
+      <tbody>${shortcutRows}</tbody>
+    </table>
+
+    <div class="settings-section-header" style="margin-top:24px">
+      <h2 style="font-size:1rem">Support</h2>
+    </div>
+    <p style="font-size:0.88rem;color:var(--mid)">
+      For help or to report issues, use the
+      <strong>💬 Feedback &amp; Bugs</strong> button in the top bar.
+    </p>
+  `;
+}
+
+
+// ── Ensure approvals data is loaded ───────────────────────────
+async function settingsEnsureMcsData(forceReload = false) {
+  if (settingsMcsLoading) return;
+  if (!forceReload && mcsApproverConfig !== null && npiGateSignoffConfig !== null) {
+    await settingsEnsurePermissionsData();
+    renderSettingsMcsTab();
+    return;
+  }
+
+  settingsMcsLoading = true;
+  settingsMcsError = null;
+  renderSettingsMcsTab();
+
+  try {
+    await settingsEnsurePermissionsData();
+    [mcsApproverConfig, npiGateSignoffConfig] = await Promise.all([
+      mcsApproversLoad(),
+      npiGateSignoffLoad(),
+    ]);
+    if (!mcsApproverConfig) {
+      settingsMcsError = 'Failed to load approver config';
+      mcsApproverConfig = null;
+    }
+  } catch (err) {
+    settingsMcsError = err?.message || 'Failed to load';
+  } finally {
+    settingsMcsLoading = false;
+    renderSettingsMcsTab();
+  }
+}
+
+// ── Render Approvals tab ───────────────────────────────────────
+function renderSettingsMcsTab() {
+  const container = document.getElementById('settingsMcsTab');
+  if (!container) return;
+
+  if (settingsMcsLoading) {
+    container.innerHTML = settingsLoadingState('Loading…');
+    return;
+  }
+
+  if (settingsMcsError) {
+    container.innerHTML = `
+      <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
+        <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load approvals config</div>
+        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsMcsError)}</div>
+        <button class="btn btn-ghost" data-action="settings-mcs-retry">Retry</button>
+      </div>`;
+    return;
+  }
+
+  if (!mcsApproverConfig || !npiGateSignoffConfig) {
+    container.innerHTML = settingsLoadingState('Loading…');
+    settingsEnsureMcsData(true);
+    return;
+  }
+
+  const users = settingsPermissionsData || [];
+
+  // ── MCS approval steps ────────────────────────────────────────
+  const mcsStepsHtml = MCS_APPROVAL_STEPS.map(step => {
+    const approvers = mcsApproverConfig[step.key] || [];
+    const availableUsers = users.filter(u => !approvers.some(a => a.user_id === u.id));
+
+    const approverRows = approvers.length === 0
+      ? `<div style="color:var(--muted);font-size:13px;padding:8px 0">No specific approver assigned — any editor or admin can approve this step.</div>`
+      : approvers.map(a => `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
+            <span style="flex:1;font-size:13px">${esc(a.user_name)}</span>
+            ${isAdmin() ? `<button class="btn btn-sm btn-ghost" style="color:var(--red)"
+              data-action="settings-mcs-remove-approver"
+              data-step="${esc(step.key)}"
+              data-user-id="${esc(a.user_id)}">Remove</button>` : ''}
+          </div>`).join('');
+
+    const addRow = isAdmin() && availableUsers.length > 0 ? `
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <select class="cell-edit" id="mcs-add-user-${esc(step.key)}" style="flex:1">
+          <option value="">Select user to add…</option>
+          ${availableUsers.map(u => `<option value="${esc(u.id)}" data-name="${esc(u.full_name || settingsEmailToName(u.email))}" data-email="${esc(u.email || '')}">${esc(u.full_name || settingsEmailToName(u.email))}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm btn-primary"
+          data-action="settings-mcs-add-approver"
+          data-step="${esc(step.key)}">+ Add</button>
+      </div>` : '';
+
+    return `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <span class="card-title">${esc(step.label)}</span>
+          <span class="card-meta">${approvers.length} approver${approvers.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div style="padding:0 16px 12px">
+          ${approverRows}
+          ${addRow}
+        </div>
+      </div>`;
+  }).join('');
+
+  // ── NPI gate signoff roles ────────────────────────────────────
+  const gateStepsHtml = NPI_GATE_SIGNOFF_ROLES.map(role => {
+    const assignees = npiGateSignoffConfig[role.key] || [];
+    const availableUsers = users.filter(u => !assignees.some(a => a.user_id === u.id));
+
+    const assigneeRows = assignees.length === 0
+      ? `<div style="color:var(--muted);font-size:13px;padding:8px 0">No individual assigned — falls back to team permission.</div>`
+      : assignees.map(a => `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
+            <span style="flex:1;font-size:13px">${esc(a.user_name)}</span>
+            ${isAdmin() ? `<button class="btn btn-sm btn-ghost" style="color:var(--red)"
+              data-action="settings-gate-signoff-remove"
+              data-role="${esc(role.key)}"
+              data-user-id="${esc(a.user_id)}">Remove</button>` : ''}
+          </div>`).join('');
+
+    const addRow = isAdmin() && availableUsers.length > 0 ? `
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <select class="cell-edit" id="gate-signoff-add-user-${esc(role.key)}" style="flex:1">
+          <option value="">Select user to add…</option>
+          ${availableUsers.map(u => `<option value="${esc(u.id)}" data-name="${esc(u.full_name || settingsEmailToName(u.email))}" data-email="${esc(u.email || '')}">${esc(u.full_name || settingsEmailToName(u.email))}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm btn-primary"
+          data-action="settings-gate-signoff-add"
+          data-role="${esc(role.key)}">+ Add</button>
+      </div>` : '';
+
+    return `
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <span class="card-title">${esc(role.label)}</span>
+          <span class="card-meta">${assignees.length} assignee${assignees.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div style="padding:0 16px 12px">
+          ${assigneeRows}
+          ${addRow}
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="settings-section-header">
+      <h2>Approvals</h2>
+      <p class="settings-section-desc">
+        Assign individuals to approval and sign-off roles across the system.
+      </p>
+    </div>
+    ${!isAdmin() ? `<div class="permissions-notice">Only admins can change assignments. Your current role is <strong>${esc(currentUserRole || 'editor')}</strong>.</div>` : ''}
+
+    <h3 style="font-size:14px;font-weight:600;color:var(--ink);margin:0 0 8px">Manufacturing Change Sign-offs</h3>
+    <p style="font-size:13px;color:var(--mid);margin:0 0 16px">Assign users to each step in the MCS approval chain. Assigned users will see pending changes in their Action Centre and can approve or reject their step. Each step can have multiple approvers.</p>
+    ${mcsStepsHtml}
+
+    <h3 style="font-size:14px;font-weight:600;color:var(--ink);margin:24px 0 8px">NPI Gate Sign-offs</h3>
+    <p style="font-size:13px;color:var(--mid);margin:0 0 16px">Assign individuals who can sign off each gate review role. If no individual is assigned, the role falls back to team-based permission.</p>
+    ${gateStepsHtml}
+  `;
+}
+
+// ── MCS approver CRUD ─────────────────────────────────────────
+async function settingsMcsAddApprover(stepKey) {
+  if (!isAdmin()) { showToast('Only admins can change approvers.', 'error'); return; }
+  const select = document.getElementById(`mcs-add-user-${stepKey}`);
+  if (!select || !select.value) return;
+
+  const userId = select.value;
+  const option = select.querySelector(`option[value="${userId}"]`);
+  const userName = option?.dataset.name || option?.textContent || userId;
+  const userEmail = option?.dataset.email || '';
+
+  const ok = await mcsApproversAdd(stepKey, userId, userName, userEmail);
+  if (!ok) { showToast('Failed to add approver', 'error'); return; }
+
+  // Update local state
+  if (mcsApproverConfig && mcsApproverConfig[stepKey]) {
+    const entry = { user_id: userId, user_name: userName };
+    if (userEmail) entry.user_email = userEmail;
+    mcsApproverConfig[stepKey].push(entry);
+  }
+  showToast(`${esc(userName)} added as ${stepKey} approver`, 'success');
+  renderSettingsMcsTab();
+}
+
+async function settingsMcsRemoveApprover(stepKey, userId) {
+  if (!isAdmin()) { showToast('Only admins can change approvers.', 'error'); return; }
+
+  const approver = (mcsApproverConfig?.[stepKey] || []).find(a => a.user_id === userId);
+  const name = approver?.user_name || userId;
+
+  if (!confirm(`Remove ${name} as an approver for ${stepKey}?`)) return;
+
+  const ok = await mcsApproversRemove(stepKey, userId);
+  if (!ok) { showToast('Failed to remove approver', 'error'); return; }
+
+  if (mcsApproverConfig && mcsApproverConfig[stepKey]) {
+    mcsApproverConfig[stepKey] = mcsApproverConfig[stepKey].filter(a => a.user_id !== userId);
+  }
+  showToast('Approver removed', 'info');
+  renderSettingsMcsTab();
+}
+
+// ── Gate signoff CRUD ─────────────────────────────────────────
+async function settingsMcsAddGateSignoff(roleKey) {
+  if (!isAdmin()) { showToast('Only admins can change assignments.', 'error'); return; }
+  const select = document.getElementById(`gate-signoff-add-user-${roleKey}`);
+  if (!select || !select.value) return;
+
+  const userId = select.value;
+  const option = select.querySelector(`option[value="${userId}"]`);
+  const userName = option?.dataset.name || option?.textContent || userId;
+  const userEmail = option?.dataset.email || '';
+
+  const ok = await npiGateSignoffAdd(roleKey, userId, userName, userEmail);
+  if (!ok) { showToast('Failed to add assignee', 'error'); return; }
+
+  if (npiGateSignoffConfig) {
+    if (!npiGateSignoffConfig[roleKey]) npiGateSignoffConfig[roleKey] = [];
+    const entry = { user_id: userId, user_name: userName };
+    if (userEmail) entry.user_email = userEmail;
+    npiGateSignoffConfig[roleKey].push(entry);
+  }
+  const role = NPI_GATE_SIGNOFF_ROLES.find(r => r.key === roleKey);
+  showToast(`${esc(userName)} added as ${role ? role.label : roleKey} sign-off`, 'success');
+  renderSettingsMcsTab();
+}
+
+async function settingsMcsRemoveGateSignoff(roleKey, userId) {
+  if (!isAdmin()) { showToast('Only admins can change assignments.', 'error'); return; }
+
+  const assignee = (npiGateSignoffConfig?.[roleKey] || []).find(a => a.user_id === userId);
+  const name = assignee?.user_name || userId;
+  const role = NPI_GATE_SIGNOFF_ROLES.find(r => r.key === roleKey);
+  const roleLabel = role?.label || roleKey;
+
+  if (!confirm(`Remove ${name} as ${roleLabel} sign-off?`)) return;
+
+  const ok = await npiGateSignoffRemove(roleKey, userId);
+  if (!ok) { showToast('Failed to remove assignee', 'error'); return; }
+
+  if (npiGateSignoffConfig && npiGateSignoffConfig[roleKey]) {
+    npiGateSignoffConfig[roleKey] = npiGateSignoffConfig[roleKey].filter(a => a.user_id !== userId);
+  }
+  showToast('Assignee removed', 'info');
+  renderSettingsMcsTab();
+}
+
 function setupSettingsEventListeners() {
   const root = document.getElementById('settingsPortalRoot');
   if (!root || settingsEventListenerRoot === root) return;
   settingsEventListenerRoot = root;
 
   root.addEventListener('click', async (event) => {
+    const densityCard = event.target.closest('.density-card');
+    if (densityCard && root.contains(densityCard)) {
+      const densityInput = densityCard.querySelector('input[name="ap-density"]');
+      if (densityInput) settingsAppearanceSetDensityCard(root, densityInput.value);
+      return;
+    }
+
+    // Skip native form controls — selects/inputs handle their own events via 'change'.
+    // Intercepting their click can cause the browser dropdown to close immediately.
+    const tag = event.target.tagName;
+    if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
+
     const actionEl = event.target.closest('[data-action]');
     if (!actionEl || !root.contains(actionEl)) return;
     const action = actionEl.dataset.action;
@@ -511,7 +1519,16 @@ function setupSettingsEventListeners() {
       root.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
       root.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
       actionEl.classList.add('active');
-      const tabMap = { families: 'settingsFamiliesTab', 'work-areas': 'settingsWorkAreasTab', permissions: 'settingsPermissionsTab' };
+      const tabMap = {
+        families: 'settingsFamiliesTab',
+        'work-areas': 'settingsWorkAreasTab',
+        teams: 'settingsTeamsTab',
+        permissions: 'settingsPermissionsTab',
+        'role-definitions': 'settingsRoleDefinitionsTab',
+        'mcs-approvers': 'settingsMcsTab',
+        appearance: 'settingsAppearanceTab',
+        about: 'settingsAboutTab',
+      };
       document.getElementById(tabMap[tab])?.classList.add('active');
       if (tab === 'families') {
         renderSettingsFamiliesTab();
@@ -519,9 +1536,21 @@ function setupSettingsEventListeners() {
       } else if (tab === 'work-areas') {
         renderSettingsWorkAreasTab();
         settingsEnsureWorkAreasData();
+      } else if (tab === 'teams') {
+        renderSettingsTeamsTab();
+        settingsEnsureTeamsData();
       } else if (tab === 'permissions') {
         renderSettingsPermissionsTab();
         settingsEnsurePermissionsData();
+      } else if (tab === 'role-definitions') {
+        renderSettingsRoleDefinitionsTab();
+      } else if (tab === 'mcs-approvers') {
+        renderSettingsMcsTab();
+        settingsEnsureMcsData();
+      } else if (tab === 'appearance') {
+        renderSettingsAppearanceTab();
+      } else if (tab === 'about') {
+        renderSettingsAboutTab();
       }
       return;
     }
@@ -540,7 +1569,70 @@ function setupSettingsEventListeners() {
     if (action === 'settings-wa-save-edit') { await settingsWorkAreaSaveEdit(actionEl.dataset.waId || ''); return; }
     if (action === 'settings-wa-cancel-edit') { settingsWorkAreaCancelEdit(); return; }
 
+    // Teams tab actions
+    if (action === 'settings-teams-retry') { settingsEnsureTeamsData(true); return; }
+    if (action === 'settings-teams-add') { await settingsTeamsAdd(); return; }
+    if (action === 'settings-teams-edit') { await settingsTeamsEdit(actionEl.dataset.teamId || ''); return; }
+    if (action === 'settings-teams-delete') { await settingsTeamsDelete(actionEl.dataset.teamId || ''); return; }
+    if (action === 'settings-teams-permissions-save') { await settingsTeamsPermissionsSave(); return; }
+    if (action === 'settings-teams-permissions-cancel') { settingsTeamsPermissionsCancel(); return; }
+    if (action === 'settings-teams-permission-toggle') { settingsTeamsPermissionsToggle(settingsTeamsPermissionsEditingId, actionEl.dataset.permission || ''); return; }
+
     // Permissions tab actions
     if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
+
+    // MCS approvers tab actions
+    if (action === 'settings-mcs-retry') { settingsEnsureMcsData(true); return; }
+    if (action === 'settings-mcs-add-approver') { await settingsMcsAddApprover(actionEl.dataset.step || ''); return; }
+    if (action === 'settings-mcs-remove-approver') { await settingsMcsRemoveApprover(actionEl.dataset.step || '', actionEl.dataset.userId || ''); return; }
+    if (action === 'settings-gate-signoff-add') { await settingsMcsAddGateSignoff(actionEl.dataset.role || ''); return; }
+    if (action === 'settings-gate-signoff-remove') { await settingsMcsRemoveGateSignoff(actionEl.dataset.role || '', actionEl.dataset.userId || ''); return; }
+
+    // Appearance tab actions
+    if (action === 'settings-appearance-save')  { settingsAppearanceSave();  return; }
+    if (action === 'settings-appearance-reset') { settingsAppearanceReset(); return; }
+
+    // About tab actions
+    if (action === 'settings-about-open-guide') {
+      if (typeof showGuide === 'function') showGuide('hub');
+      return;
+    }
+  });
+
+  // Role dropdowns and checkboxes fire 'change', not 'click' — handle separately to prevent the
+  // dropdown from closing the instant it opens (click fires before the user picks).
+  root.addEventListener('change', async (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (event.target.name === 'ap-theme') {
+      settingsAppearanceSetTheme(event.target.value);
+      root
+        .querySelectorAll('.appearance-theme-card')
+        .forEach((card) => card.classList.remove('selected'));
+      event.target.closest('.appearance-theme-card')?.classList.add('selected');
+      return;
+    }
+
+    if (event.target.name === 'ap-density') {
+      settingsAppearanceSetDensityCard(root, event.target.value);
+      return;
+    }
+
+    if (!actionEl || !root.contains(actionEl)) return;
+    const action = actionEl.dataset.action;
+
+    if (action === 'settings-permissions-change-role') {
+      await settingsPermissionsChangeRole(actionEl.dataset.userId || '', actionEl.value, actionEl.dataset.isLastAdmin === 'true');
+      return;
+    }
+
+    if (action === 'settings-permissions-change-team') {
+      await settingsPermissionsChangeTeam(actionEl.dataset.userId || '', actionEl.value || '');
+      return;
+    }
+
+    if (action === 'settings-teams-permission-toggle') {
+      settingsTeamsPermissionsToggle(settingsTeamsPermissionsEditingId, actionEl.dataset.permission || '');
+      return;
+    }
   });
 }

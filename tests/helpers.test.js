@@ -221,6 +221,58 @@ describe('Helpers Module (helpers.js)', () => {
     });
   });
 
+  // ── Keyboard shortcuts ───────────────────────────────────────
+  describe('keyboard shortcuts', () => {
+    test('Ctrl+/ opens the shortcuts modal', () => {
+      const modal = document.getElementById('shortcutsModal');
+      modal.style.display = 'none';
+
+      const evt = new KeyboardEvent('keydown', { key: '/', ctrlKey: true, cancelable: true });
+      document.dispatchEvent(evt);
+
+      expect(modal.style.display).toBe('flex');
+    });
+
+    test('Ctrl+S triggers global save when available', () => {
+      global.save = jest.fn();
+
+      const evt = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, cancelable: true });
+      document.dispatchEvent(evt);
+
+      expect(global.save).toHaveBeenCalledTimes(1);
+    });
+
+    test('Ctrl+F focuses the active search input', () => {
+      const search = document.createElement('input');
+      search.type = 'search';
+      search.id = 'testShortcutSearch';
+      search.placeholder = 'Search items';
+      document.body.prepend(search);
+
+      const evt = new KeyboardEvent('keydown', { key: 'f', ctrlKey: true, cancelable: true });
+      document.dispatchEvent(evt);
+
+      expect(document.activeElement).toBe(search);
+    });
+
+    test('Escape closes an open modal', () => {
+      document.querySelectorAll('.modal-bg').forEach(el => {
+        el.style.display = 'none';
+      });
+
+      const modal = document.createElement('div');
+      modal.id = 'escCloseModal';
+      modal.className = 'modal-bg';
+      modal.style.display = 'flex';
+      document.body.appendChild(modal);
+
+      const evt = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+      document.dispatchEvent(evt);
+
+      expect(modal.style.display).toBe('none');
+    });
+  });
+
   // ── getWeekNumber() ───────────────────────────────────────────
   describe('getWeekNumber()', () => {
     test('should return 1 for 2024-01-01 (ISO week 1)', () => {

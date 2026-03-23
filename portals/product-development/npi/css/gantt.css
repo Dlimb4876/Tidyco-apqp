@@ -16,11 +16,11 @@
   text-align: center; padding: 3px 5px; letter-spacing: .7px;
   cursor: pointer; border: 1px solid rgba(255,255,255,.07);
 }
-.gantt-month-row th:hover { background: #dbe9f8; }
+.gantt-month-row th:hover { background: var(--blue-pale); }
 
 /* ── Week header row ────────────────────────────────────────── */
 .gantt-week-row th {
-  background: #edf4fb; color: #667d95;
+  background: var(--bg-soft); color: #667d95;
   font-family: 'IBM Plex Mono', monospace; font-size: 8px;
   text-align: center; padding: 2px 1px;
   border: 1px solid rgba(255,255,255,.04);
@@ -28,8 +28,8 @@
 
 /* ── Data rows ──────────────────────────────────────────────── */
 .gantt-row td     { border: 1px solid var(--line); vertical-align: middle; padding: 0; }
-.gantt-plan-row   { background: #f8fafc; }
-.gantt-act-row    { background: #fffbf5; }
+.gantt-plan-row   { background: var(--bg-soft); }
+.gantt-act-row    { background: var(--amber-pale); }
 
 /* ── Cell types ─────────────────────────────────────────────── */
 .gantt-task-cell  { padding: 3px 6px !important;  vertical-align: top !important; min-width: 160px; }
@@ -58,23 +58,96 @@
 .gantt-today-col { outline: 2px solid var(--blue); outline-offset: -2px; }
 
 /* ── Collapsed month ────────────────────────────────────────── */
-.gantt-collapsed-cell { background: #f1f5f9; cursor: default; }
-.gantt-collapsed-wk   { background: #e2e8f0 !important; color: #94a3b8 !important; font-size: 10px !important; cursor: pointer; }
+.gantt-collapsed-cell { background: var(--bg-soft); cursor: default; }
+.gantt-collapsed-wk   { background: var(--line) !important; color: #94a3b8 !important; font-size: 10px !important; cursor: pointer; }
 
 /* ── Add row ────────────────────────────────────────────────── */
 .gantt-add-row td { padding: 0 !important; border-bottom: 2px solid var(--line2); }
 
 /* ── Column header alignment helpers ───────────────────────── */
-.gantt-th-left  { text-align: left !important;  padding: 4px 8px !important; color: white !important; }
+.gantt-th-left  { text-align: left !important;  padding: 4px 8px !important; color: var(--white) !important; }
 .gantt-th-notes { text-align: left !important;  padding: 3px 5px !important; color: var(--table-head-ink) !important; }
 .gantt-th-left  { color: var(--table-head-ink) !important; }
 
+/* ── Section header rows ────────────────────────────────────── */
+.gantt-section-hdr td {
+  padding: 5px 10px !important;
+  user-select: none;
+  border-top: 2px solid var(--line2) !important;
+}
+.gantt-section-hdr:first-child td { border-top: none !important; }
+.gantt-section-hdr:hover td { filter: brightness(1.08); }
+
+/* ── Milestone row ──────────────────────────────────────────── */
+.gantt-milestone-row th,
+.gantt-milestone-row td {
+  background: #f5f0ff;
+  height: 14px;
+  padding: 0;
+  border: 1px solid rgba(124,58,237,.08);
+}
+
+/* ── Milestone cells ────────────────────────────────────────── */
+.gantt-ms-cell {
+  text-align: center;
+  font-size: 9px;
+  color: transparent;
+  cursor: pointer;
+  height: 14px;
+}
+.gantt-ms-cell:not(.gantt-ms-set):not(.gantt-collapsed-cell):hover {
+  background: #ede9fe !important;
+  color: #c4b5fd !important;
+  content: '◆';
+}
+.gantt-ms-set {
+  color: #7c3aed;
+  font-weight: 700;
+}
+.gantt-ms-set:hover { background: #fee2e2 !important; color: #dc2626 !important; }
+
+/* ── Row action buttons (↑ ↓ ×) ────────────────────────────── */
+.gantt-actions-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 2px !important;
+}
+.gantt-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.gantt-row-actions .del-btn { font-size: 10px; padding: 1px 5px; line-height: 1.4; }
+.gantt-row-actions .del-btn:disabled { opacity: .2; cursor: default; }
+
+/* ── Print / PDF export ─────────────────────────────────────── */
+@media print {
+  .sec-head, .btn, .add-row, .del-btn, .gantt-row-actions { display: none !important; }
+  #gantt-scroll-container {
+    overflow: visible !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  .cell-edit {
+    border: none !important;
+    background: transparent !important;
+    pointer-events: none;
+  }
+  .gantt-tbl { font-size: 8px !important; }
+  .gantt-cell, .gantt-actual-cell { min-width: 14px !important; height: 12px !important; }
+  .gantt-task-cell  { min-width: 120px !important; }
+  .gantt-notes-cell { min-width: 80px !important; }
+  .gantt-ms-cell    { display: none !important; }
+  .gantt-milestone-row { display: none !important; }
+}
+
 /* ── Kit styles (BOM kit builder, lives near timing in nav) ─── */
 .kit-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
-.kit-card  { background: var(--white); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.kit-card  { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .kit-header {
   display: flex; align-items: center; gap: 10px;
-  padding: 12px 14px; border-bottom: 1px solid var(--line); background: #fafbfd;
+  padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--bg-soft);
 }
 .kit-name-input {
   flex: 1; border: none; background: transparent;
@@ -98,7 +171,7 @@
 }
 .kit-qty-input:focus { border-color: var(--blue); }
 .kit-unit    { font-size: 11px; color: var(--muted); min-width: 24px; }
-.kit-summary { padding: 6px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); background: #fafbfd; }
+.kit-summary { padding: 6px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); background: var(--bg-soft); }
 .kit-add-btn {
   display: block; width: 100%; padding: 8px; border: none;
   border-top: 1px dashed var(--line); background: transparent;

@@ -1,5 +1,8 @@
 # Database & Supabase Patterns
 
+## Scope
+This file owns Supabase query, persistence, and RLS policy guidance. Capacity parity rules are canonical in `.github/instructions/capacity-parity.instructions.md`.
+
 ## Backend Stack
 - **Database**: PostgreSQL (via Supabase v2)
 - **Auth**: Supabase Auth
@@ -24,11 +27,6 @@ if (error) {
 }
 return data;
 ```
-
-## Capacity Parity
-**Manufacturing Engineering (ME) Capacity changes must be mirrored in PM Capacity** unless explicitly excluded.
-
-When updating capacity data, ensure both portals (`portals/capacity/`) stay in sync.
 
 ## Table RLS Policies
 All tables need authentication RLS:

@@ -6,11 +6,12 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   const department = typeof window.meCurrentDepartmentContext === 'string'
     ? window.meCurrentDepartmentContext
     : 'ME';
-    
-  // KPIs always reflect the current calendar month
-  const today = new Date();
-  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-  const currentMonthData = meCalculateMonthData(currentMonthKey, teamArray, tasksArray, productsArray, holidaysArray);
+
+  // Keep KPI cards aligned with the selected chart month.
+  const selectedMonthKey = typeof monthKey === 'string' && /^\d{4}-\d{2}$/.test(monthKey)
+    ? monthKey
+    : `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthData = meCalculateMonthData(selectedMonthKey, teamArray, tasksArray, productsArray, holidaysArray);
 
   const capacity    = currentMonthData.capacity.toFixed(1);
   const demand      = currentMonthData.totalDemand.toFixed(1);
@@ -18,7 +19,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   const headroom    = Math.max(0, currentMonthData.capacity - currentMonthData.totalDemand).toFixed(1);
 
   const utilisationColor = getUtilisationColor(utilisation);
-  const currentMonthLabel = meGetMonthLabel(currentMonthKey);
+  const currentMonthLabel = meGetMonthLabel(selectedMonthKey);
 
   // ── Demand breakdown rows ──────────────────────────────────
   const pct = (v) => currentMonthData.totalDemand === 0 ? '—' : ((v / currentMonthData.totalDemand) * 100).toFixed(0) + '%';
@@ -49,7 +50,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
       <td style="text-align:right;">${currentMonthData.other.toFixed(1)} h</td>
       <td style="text-align:right;">${pct(currentMonthData.other)}</td>
     </tr>
-    <tr style="border-top:2px solid var(--line);font-weight:700;background:#fafbfd;">
+    <tr style="border-top:2px solid var(--line);font-weight:700;background:var(--bg-soft);">
       <td>Total Demand</td>
       <td style="text-align:right;">${currentMonthData.totalDemand.toFixed(1)} h</td>
       <td style="text-align:right;">100%</td>
@@ -59,7 +60,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   // ── Per-engineer capacity rows ─────────────────────────────
   // NOTE: members without a startDate are excluded here to match meCalculateMonthData
   // (fixes mismatch between KPI totals and table totals)
-  const [currentYear, currentMonthNum] = currentMonthKey.split('-').map(Number);
+  const [currentYear, currentMonthNum] = selectedMonthKey.split('-').map(Number);
   const monthStart  = new Date(currentYear, currentMonthNum - 1, 1);
   const monthEnd    = new Date(currentYear, currentMonthNum, 0);
   const bankHolSet  = new Set(getBankHolidaysForYear(currentYear).map(h => h.date));
@@ -140,7 +141,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
 
   const memberCapacityTableBody = memberCapacityRows.length
     ? memberCapacityRows.join('') + `
-      <tr style="border-top:2px solid var(--line);font-weight:700;background:#fafbfd;">
+      <tr style="border-top:2px solid var(--line);font-weight:700;background:var(--bg-soft);">
         <td colspan="5">Total Available (after holidays &amp; utilisation)</td>
         <td style="text-align:right;">${teamCapacityTotal.toFixed(1)} h</td>
       </tr>
@@ -203,12 +204,12 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
             <canvas id="meChart" height="300"></canvas>
           </div>
           <div class="me-chart-legend">
-            <div class="legend-item"><div class="legend-color" style="background:#1e40af;"></div><span>NPI</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#15803d;"></div><span>Improvement</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#ea580c;"></div><span>Tendering</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#be185d;"></div><span>Support</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#7c3aed;"></div><span>Other</span></div>
-            <div class="legend-item" style="margin-left:24px;"><div class="legend-line" style="background:#ef4444;"></div><span>Team Capacity</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-blue);"></div><span>NPI</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-green);"></div><span>Improvement</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-amber);"></div><span>Tendering</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-pink);"></div><span>Support</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:var(--chart-purple);"></div><span>Other</span></div>
+            <div class="legend-item" style="margin-left:24px;"><div class="legend-line" style="background:var(--chart-red);"></div><span>Team Capacity</span></div>
           </div>
         </div>
       </div>
@@ -307,26 +308,13 @@ window.meDrawChartNow = function() {
 
   const ctx = canvas.getContext('2d');
 
-  // Create gradient colors for bars
-  const gradientNPI = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientNPI.addColorStop(0, '#1e40af');
-  gradientNPI.addColorStop(1, '#3b82f6');
-
-  const gradientImprovement = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientImprovement.addColorStop(0, '#15803d');
-  gradientImprovement.addColorStop(1, '#4ade80');
-
-  const gradientTendering = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientTendering.addColorStop(0, '#ea580c');
-  gradientTendering.addColorStop(1, '#fb923c');
-
-  const gradientSupport = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientSupport.addColorStop(0, '#be185d');
-  gradientSupport.addColorStop(1, '#ec4899');
-
-  const gradientOther = ctx.createLinearGradient(0, 0, 0, 200);
-  gradientOther.addColorStop(0, '#7c3aed');
-  gradientOther.addColorStop(1, '#a78bfa');
+  // Resolve CSS custom properties for Chart.js (getComputedStyle required — Chart.js cannot use var())
+  const style = getComputedStyle(document.documentElement);
+  const colorBlue   = style.getPropertyValue('--chart-blue').trim();
+  const colorGreen  = style.getPropertyValue('--chart-green').trim();
+  const colorAmber  = style.getPropertyValue('--chart-amber').trim();
+  const colorPink   = style.getPropertyValue('--chart-pink').trim();
+  const colorPurple = style.getPropertyValue('--chart-purple').trim();
 
   // Calculate total demand for each month (for tooltip percentages)
   const totalDemandByMonth = monthKeys.map((_, idx) =>
@@ -389,11 +377,11 @@ window.meDrawChartNow = function() {
     data: {
       labels: monthLabels,
       datasets: [
-        { label: 'NPI', data: npiData, backgroundColor: gradientNPI, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
-        { label: 'Improvement', data: improvementData, backgroundColor: gradientImprovement, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
-        { label: 'Tendering', data: tenderingData, backgroundColor: gradientTendering, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
-        { label: 'Support', data: supportData, backgroundColor: gradientSupport, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
-        { label: 'Other', data: otherData, backgroundColor: gradientOther, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'NPI', data: npiData, backgroundColor: colorBlue, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Improvement', data: improvementData, backgroundColor: colorGreen, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Tendering', data: tenderingData, backgroundColor: colorAmber, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Support', data: supportData, backgroundColor: colorPink, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
+        { label: 'Other', data: otherData, backgroundColor: colorPurple, type: 'bar', order: 2, stack: 'demand', borderRadius: 2 },
         { label: 'Team Capacity', data: capacityData, borderColor: '#ef4444', borderWidth: 3, type: 'line', fill: false, pointRadius: 5, pointBackgroundColor: '#fff', pointBorderColor: '#ef4444', pointBorderWidth: 2, tension: 0.3, order: 1, pointHoverRadius: 6 }
       ]
     },
@@ -478,6 +466,22 @@ window.meDrawChartNow = function() {
 window.meOnTodayClick = function() {
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+  // Handle holidays tab for ME capacity
+  if (typeof meTab !== 'undefined' && meTab === 'holidays') {
+    meHolidayMonth = currentMonthKey;
+    if (typeof meRefreshCurrentTab === 'function') meRefreshCurrentTab();
+    return;
+  }
+
+  // Handle holidays tab for PM capacity
+  if (typeof pmTab !== 'undefined' && pmTab === 'holidays') {
+    pmHolidayMonth = currentMonthKey;
+    if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab();
+    return;
+  }
+
+  // Default: chart tab
   const input = document.getElementById('meChartMonthInput');
   if (input) {
     input.value = currentMonthKey;

@@ -88,8 +88,6 @@ window.meLoadRelationalProducts = async function(userId) {
       id: mp.id,
       name: mp.name || '(Unknown Product)',
       productDatabaseId: mp.product_database_id,
-      supportFrom: mp.support_from || '',
-      supportUntil: mp.support_until || '',
       hoursPerWeek: mp.hours_per_week,
       department: meNormalizeDepartmentTag(mp.department, 'ME'),
       notes: mp.notes,
@@ -98,6 +96,35 @@ window.meLoadRelationalProducts = async function(userId) {
     }));
   } catch (err) {
     console.warn('meLoadRelationalProducts exception:', err.message);
+    return [];
+  }
+};
+
+window.meLoadRelationalProductSupportHistory = async function(userId) {
+  try {
+    const { data, error } = await supa
+      .from('me_product_support_history')
+      .select('*');
+
+    if (error) {
+      console.warn('meLoadRelationalProductSupportHistory error:', error.message);
+      return [];
+    }
+
+    return (data || []).map(row => ({
+      id: row.id,
+      productId: row.product_id,
+      hoursPerWeek: row.hours_per_week,
+      effectiveDate: row.effective_date,
+      endDate: row.end_date || '',
+      changeReason: row.change_reason || '',
+      notes: row.notes || '',
+      department: meNormalizeDepartmentTag(row.department, 'ME'),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }));
+  } catch (err) {
+    console.warn('meLoadRelationalProductSupportHistory exception:', err.message);
     return [];
   }
 };
@@ -203,8 +230,6 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
 window.meSaveProductRelational = async function(userId, product) {
   try {
     const department = meNormalizeDepartmentTag(product.department, 'ME');
-    const supportFrom = product.supportFrom || product.support_from || null;
-    const supportUntil = product.supportUntil || product.support_until || null;
     const productId = product.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
 
     const payload = {
@@ -212,8 +237,6 @@ window.meSaveProductRelational = async function(userId, product) {
       user_id: userId,
       name: product.name || '',
       product_database_id: product.productDatabaseId || null,
-      support_from: supportFrom || null,
-      support_until: supportUntil || null,
       hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
       department,
       notes: product.notes || null,
@@ -235,6 +258,59 @@ window.meSaveProductRelational = async function(userId, product) {
     return true;
   } catch (err) {
     console.warn('meSaveProductRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meSaveProductSupportHistoryRelational = async function(userId, historyRows) {
+  try {
+    const rows = Array.isArray(historyRows) ? historyRows : [];
+
+    const { error: deleteError } = await supa
+      .from('me_product_support_history')
+      .delete()
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      console.warn('meSaveProductSupportHistoryRelational delete error:', deleteError.message);
+      return false;
+    }
+
+    if (rows.length === 0) {
+      return true;
+    }
+
+    const payload = rows
+      .filter(row => row && row.productId && row.effectiveDate)
+      .map(row => ({
+        id: row.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID()),
+        user_id: userId,
+        product_id: row.productId,
+        hours_per_week: Number(row.hoursPerWeek || 0) || 0,
+        effective_date: row.effectiveDate,
+        end_date: row.endDate || null,
+        change_reason: row.changeReason || null,
+        notes: row.notes || null,
+        department: meNormalizeDepartmentTag(row.department, 'ME'),
+        updated_at: new Date().toISOString()
+      }));
+
+    if (payload.length === 0) {
+      return true;
+    }
+
+    const { error: insertError } = await supa
+      .from('me_product_support_history')
+      .insert(payload);
+
+    if (insertError) {
+      console.warn('meSaveProductSupportHistoryRelational insert error:', insertError.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meSaveProductSupportHistoryRelational exception:', err.message);
     return false;
   }
 };

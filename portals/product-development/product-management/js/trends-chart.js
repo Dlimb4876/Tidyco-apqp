@@ -129,8 +129,8 @@ function calculatePortfolioKPIs(year) {
 
 function renderPortfolioKpiGridHtml(kpis, year) {
   const avgChangeHtml = kpis.avgChange !== null
-    ? `<span style="color:${kpis.avgChange < 0 ? '#2e7d32' : kpis.avgChange > 0 ? '#c62828' : '#666'}">${kpis.avgChange > 0 ? '+' : ''}${kpis.avgChange}%</span>`
-    : '<span style="color:#888">—</span>';
+    ? `<span style="color:${kpis.avgChange < 0 ? 'var(--green)' : kpis.avgChange > 0 ? 'var(--red)' : 'var(--muted)'}">${kpis.avgChange > 0 ? '+' : ''}${kpis.avgChange}%</span>`
+    : '<span style="color:var(--mid)">—</span>';
 
   const mostImprovedVal = kpis.mostImproved ? esc(kpis.mostImproved.name) : '—';
   const mostImprovedUnit = kpis.mostImproved
@@ -195,8 +195,8 @@ function renderKPICards(kpis) {
                         kpis.changeDirection === 'worsening' ? '📉' : '→';
   const directionText = kpis.changeDirection === 'improvement' ? 'Improved' :
                         kpis.changeDirection === 'worsening' ? 'Increased' : 'Stable';
-  const directionColor = kpis.changeDirection === 'improvement' ? '#2e7d32' :
-                         kpis.changeDirection === 'worsening' ? '#c62828' : '#666';
+  const directionColor = kpis.changeDirection === 'improvement' ? 'var(--green)' :
+                         kpis.changeDirection === 'worsening' ? 'var(--red)' : 'var(--muted)';
 
   return `
     <div class="kpi-grid">
@@ -253,6 +253,14 @@ function renderLineChart(productId, history) {
   const reasons = sorted.map(h => h.change_reason || '—');
   const average = data.reduce((a, b) => a + b, 0) / data.length;
 
+  // Resolve CSS custom properties for Chart.js (getComputedStyle required — Chart.js cannot use var())
+  const chartStyle = getComputedStyle(document.documentElement);
+  const cGreen  = chartStyle.getPropertyValue('--green').trim();
+  const cAmber  = chartStyle.getPropertyValue('--amber').trim();
+  const cLine   = chartStyle.getPropertyValue('--line').trim();
+  const cMuted  = chartStyle.getPropertyValue('--muted').trim();
+  const cWhite  = chartStyle.getPropertyValue('--white').trim();
+
   trendsChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
@@ -261,22 +269,22 @@ function renderLineChart(productId, history) {
         {
           label: 'Overhaul Time (hours)',
           data,
-          borderColor: '#4CAF50',
-          backgroundColor: 'rgba(76, 175, 80, 0.05)',
+          borderColor: cGreen,
+          backgroundColor: cLine,
           borderWidth: 3,
           fill: true,
           tension: 0.4,
           pointRadius: 6,
-          pointBackgroundColor: '#4CAF50',
-          pointBorderColor: '#fff',
+          pointBackgroundColor: cGreen,
+          pointBorderColor: cWhite,
           pointBorderWidth: 2,
           pointHoverRadius: 8,
-          pointHoverBackgroundColor: '#45a049'
+          pointHoverBackgroundColor: cGreen
         },
         {
           label: 'Average (' + average.toFixed(1) + 'h)',
           data: Array(labels.length).fill(average),
-          borderColor: '#FF9800',
+          borderColor: cAmber,
           borderDash: [5, 5],
           borderWidth: 2,
           fill: false,
@@ -307,13 +315,13 @@ function renderLineChart(productId, history) {
       },
       scales: {
         x: {
-          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-          ticks: { font: { size: 11 }, color: '#666' }
+          grid: { color: cLine, drawBorder: false },
+          ticks: { font: { size: 11 }, color: cMuted }
         },
         y: {
           beginAtZero: false,
-          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-          ticks: { font: { size: 11 }, color: '#666' },
+          grid: { color: cLine, drawBorder: false },
+          ticks: { font: { size: 11 }, color: cMuted },
           title: { display: true, text: 'Overhaul Time (hours)', font: { weight: 'bold' } }
         }
       }
@@ -341,13 +349,14 @@ function renderProductDetail(productId) {
   const today = new Date().toISOString().split('T')[0];
 
   const historyTableHtml = sorted.length === 0
-    ? '<p style="color:#888;font-size:0.9em;margin:0 0 12px;">No history records yet. Add the first estimation below.</p>'
+    ? '<p style="color:var(--mid);font-size:0.9em;margin:0 0 12px;">No history records yet. Add the first estimation below.</p>'
     : `<div style="overflow-x:auto;margin-bottom:16px;">
         <table class="data-table">
           <thead>
             <tr>
               <th>Effective Date</th>
-              <th>Overhaul (hrs)</th>
+              <th>Total (hrs)</th>
+              <th>Change (hrs)</th>
               <th>Change Reason</th>
               <th>Notes</th>
               <th>Created By</th>
@@ -355,10 +364,17 @@ function renderProductDetail(productId) {
             </tr>
           </thead>
           <tbody>
-            ${sorted.map(h => `
+            ${sorted.map(h => {
+              const delta = h.time_impact_hours;
+              const deltaStr = delta == null ? '—'
+                : delta > 0 ? `<span style="color:var(--red)">+${delta.toFixed(1)}</span>`
+                : delta < 0 ? `<span style="color:var(--green)">${delta.toFixed(1)}</span>`
+                : '0.0';
+              return `
               <tr>
                 <td><strong>${esc(h.effective_date)}</strong></td>
                 <td class="numeric">${h.overhaul_hours.toFixed(1)}</td>
+                <td class="numeric">${deltaStr}</td>
                 <td>${esc(h.change_reason || '—')}</td>
                 <td>${esc(h.notes || '—')}</td>
                 <td>${esc(h.created_by_name || '—')}</td>
@@ -366,8 +382,8 @@ function renderProductDetail(productId) {
                   <button class="btn-icon" data-action="del-history"
                     data-history-id="${h.id}" data-product-id="${productId}" title="Delete">🗑️</button>
                 </td>
-              </tr>
-            `).join('')}
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>`;
@@ -393,8 +409,11 @@ function renderProductDetail(productId) {
             <input type="date" id="inlineHistoryDate" value="${today}">
           </div>
           <div class="form-group">
-            <label>Overhaul Time (hours) *</label>
-            <input type="number" id="inlineHistoryHours" min="0" step="0.5" placeholder="0.0">
+            <label>
+              Time Change (hours) *
+              <span class="field-tooltip" title="Enter how many hours this change adds or removes. Use a negative number for an improvement — e.g. −2 means the overhaul now takes 2 hours less. The new total will be calculated automatically from the current value.">ⓘ</span>
+            </label>
+            <input type="number" id="inlineHistoryDelta" step="0.5" placeholder="e.g. −2 or +3">
           </div>
           <div class="form-group">
             <label>Change Reason</label>
@@ -414,7 +433,7 @@ function renderProductDetail(productId) {
           </div>
         </div>
         <div class="inline-form-actions">
-          <button class="btn btn-primary" data-action="save-history" data-product-id="${productId}">Save Estimation</button>
+          <button class="btn btn-primary" data-action="save-history" data-product-id="${productId}">Save</button>
           <button class="btn btn-secondary" data-action="cancel-add-form">Cancel</button>
         </div>
       </div>
@@ -499,7 +518,7 @@ function renderAllProductsTrends() {
                     </div>
                     <div class="mini-kpi">
                       <span class="mini-label">Trend</span>
-                      <span class="mini-value" style="color:${pt.kpis.changeDirection === 'improvement' ? '#2e7d32' : pt.kpis.changeDirection === 'worsening' ? '#c62828' : '#666'};">
+                      <span class="mini-value" style="color:${pt.kpis.changeDirection === 'improvement' ? 'var(--green)' : pt.kpis.changeDirection === 'worsening' ? 'var(--red)' : 'var(--muted)'};">
                         ${pt.kpis.changeDirection === 'improvement' ? '📈' : pt.kpis.changeDirection === 'worsening' ? '📉' : '→'}
                         ${Math.abs(pt.kpis.changePercent)}%
                       </span>
@@ -582,16 +601,16 @@ function renderAllProductsTrends() {
     if (action === 'save-history') {
       const productId = btn.dataset.productId;
       const date = document.getElementById('inlineHistoryDate')?.value;
-      const hoursVal = document.getElementById('inlineHistoryHours')?.value;
-      const hours = parseFloat(hoursVal);
+      const deltaVal = document.getElementById('inlineHistoryDelta')?.value;
+      const delta = parseFloat(deltaVal);
 
-      if (!date || !hoursVal || isNaN(hours)) {
-        showToast('Please enter a date and overhaul hours.', 'warning');
+      if (!date || deltaVal === '' || isNaN(delta)) {
+        showToast('Please enter a date and a time change (hours).', 'warning');
         return;
       }
 
       const historyData = {
-        overhaul_hours: hours,
+        time_impact_hours: delta,
         effective_date: date,
         change_reason: document.getElementById('inlineHistoryReason')?.value || '',
         notes: document.getElementById('inlineHistoryNotes')?.value || ''

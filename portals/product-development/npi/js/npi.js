@@ -78,7 +78,7 @@ npi.notify = function(key) {
 
 // ── Realtime sync for shared NPI projects ──────────────────
 let npiRealtimeActive = false
-let npiLoadedProgId = null
+// npiLoadedProgId is declared in state.js
 const NPI_PROJECTS_CHANNEL = 'npi_projects_channel'
 const NPI_TABLES_CHANNEL_PREFIX = 'npi_tables_'
 let npiLastRealtimeUpdateAt = 0
@@ -139,6 +139,11 @@ function npiScheduleReload() {
 
 function npiDataInit() {
   if (typeof createRealtimeSubscription !== 'function') return
+
+  // Load gate signoff config once so canCurrentUserSignRole can check individual assignments
+  if (npiGateSignoffConfig === null && typeof npiGateSignoffLoad === 'function') {
+    npiGateSignoffLoad().then(cfg => { npiGateSignoffConfig = cfg })
+  }
 
   // Load relational data when switching to a new project
   if (npiLoadedProgId !== progId && progId && typeof npiRelLoad === 'function') {

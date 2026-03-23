@@ -61,6 +61,67 @@ window.meGetHolidayDaysInRange = function(memberId, rangeStart, rangeEnd, holida
   return holidayDays;
 };
 
+window.meGetProductBatchCountInRange = function(product, rangeStart, rangeEnd) {
+  if (!product || !rangeStart || !rangeEnd) return 0;
+  const productDbId = product.productDatabaseId || product.product_database_id || null;
+  if (!productDbId) return 0;
+
+  const batches = (window.prodState && Array.isArray(window.prodState.batches))
+    ? window.prodState.batches
+    : [];
+
+  let count = 0;
+  batches.forEach(batch => {
+    if (!batch || batch.product_id !== productDbId) return;
+    if (!batch.start_date || !batch.due_date) return;
+
+    const batchStart = new Date(batch.start_date);
+    const batchEnd = new Date(batch.due_date);
+    if (Number.isNaN(batchStart.getTime()) || Number.isNaN(batchEnd.getTime())) return;
+    if (batchStart <= rangeEnd && batchEnd >= rangeStart) count += 1;
+  });
+
+  return count;
+};
+
+window.meGetProductBatchesInRange = function(product, rangeStart, rangeEnd) {
+  if (!product || !rangeStart || !rangeEnd) return [];
+  const productDbId = product.productDatabaseId || product.product_database_id || null;
+  if (!productDbId) return [];
+
+  const batches = (window.prodState && Array.isArray(window.prodState.batches))
+    ? window.prodState.batches
+    : [];
+
+  return batches.filter(batch => {
+    if (!batch || batch.product_id !== productDbId) return false;
+    if (!batch.start_date || !batch.due_date) return false;
+
+    const batchStart = new Date(batch.start_date);
+    const batchEnd = new Date(batch.due_date);
+    if (Number.isNaN(batchStart.getTime()) || Number.isNaN(batchEnd.getTime())) return false;
+    return batchStart <= rangeEnd && batchEnd >= rangeStart;
+  });
+};
+
+window.meGetProductSupportHoursForBatch = function(product, batch, monthStart, fallbackHoursPerWeek) {
+  if (!product || !batch) return Number(fallbackHoursPerWeek || 0) || 0;
+  const batchStart = meParseDateOnlyLocal(batch.start_date) || new Date(monthStart);
+  const lookupDate = batchStart > monthStart ? batchStart : new Date(monthStart);
+  const lookupDateStr = lookupDate.toISOString().split('T')[0];
+
+  if (typeof window.meDataGetProductSupportRateForDate === 'function') {
+    return window.meDataGetProductSupportRateForDate(
+      product.id,
+      lookupDateStr,
+      fallbackHoursPerWeek,
+      product.department
+    );
+  }
+
+  return Number(fallbackHoursPerWeek || 0) || 0;
+};
+
 // ── Month Capacity & Demand Calculation ─────────────────────
 window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const [year, month] = monthKey.split('-').map(Number);
@@ -107,9 +168,6 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     }
   });
 
-  const adjustedCapacity = capacity;
-  const adjustedCapacityMax = capacityMax;
-
   // Calculate demand using network days proration (equivalent to NETWORKDAYS in Excel)
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
 
@@ -141,32 +199,33 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
     }
   });
 
-  // Product support using network days
+  // Product support from production schedule batches (support value is per batch).
+  // Effective-dated history is resolved per overlapping batch.
   productsArray.forEach(product => {
-    if (!product.supportFrom || !product.supportUntil) return;
-
-    const prodStart = new Date(product.supportFrom);
-    const prodEnd = new Date(product.supportUntil);
-
-    if (prodStart <= monthEnd && prodEnd >= monthStart) {
-      const overlapStart = new Date(Math.max(prodStart.getTime(), monthStart.getTime()));
-      const overlapEnd = new Date(Math.min(prodEnd.getTime(), monthEnd.getTime()));
-      const netDays = window.countNetworkDaysBetween(overlapStart, overlapEnd, bankHolSet);
-      support += (product.hoursPerWeek || 0) * (netDays / 5);
-    }
+    const fallbackSupportPerBatch = Number(product.hoursPerWeek) || 0;
+    const overlappingBatches = window.meGetProductBatchesInRange(product, monthStart, monthEnd);
+    overlappingBatches.forEach(batch => {
+      const supportPerBatch = window.meGetProductSupportHoursForBatch(
+        product,
+        batch,
+        monthStart,
+        fallbackSupportPerBatch
+      );
+      support += supportPerBatch;
+    });
   });
 
   const totalDemand = npi + improvement + tendering + support + other;
   return {
-    capacity: adjustedCapacity,
-    capacityMax: adjustedCapacityMax,
+    capacity,
+    capacityMax,
     npi,
     improvement,
     tendering,
     support,
     other,
     totalDemand,
-    utilisation: adjustedCapacity > 0 ? Math.round((totalDemand / adjustedCapacity) * 100) : 0
+    utilisation: capacity > 0 ? Math.round((totalDemand / capacity) * 100) : 0
   };
 };
 
@@ -190,11 +249,28 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
   const baseHours = meGetHoursPerWeek(person.hoursPerWeek);
   const utilisation = person.utilisation || 80;
 
-  // Capacity: network days in week (Mon-Fri, excluding bank holidays)
-  const netDays = window.countNetworkDaysBetween(weekStart_d, weekEnd_d, bankHolSet);
+  // Clip week to person's active employment dates
+  let activeStart = weekStart_d;
+  let activeEnd = weekEnd_d;
+
+  const personStart = meParseDateOnlyLocal(person.startDate);
+  if (personStart && personStart > weekStart_d) activeStart = personStart;
+
+  if (person.endDate) {
+    const personEnd = meParseDateOnlyLocal(person.endDate);
+    if (personEnd && personEnd < weekEnd_d) activeEnd = personEnd;
+  }
+
+  // If entirely outside active period, return no capacity (tile goes gray)
+  if (activeStart > activeEnd) {
+    return { capacity: 0, demand: 0, utilisation: 0 };
+  }
+
+  // Capacity: network days in active portion of week (Mon-Fri, excluding bank holidays)
+  const netDays = window.countNetworkDaysBetween(activeStart, activeEnd, bankHolSet);
   const grossCapacity = baseHours * (netDays / 5);
 
-  const holidayDays = meGetHolidayDaysInRange(personId, weekStart_d, weekEnd_d, holidaysArray, bankHolSet);
+  const holidayDays = meGetHolidayDaysInRange(personId, activeStart, activeEnd, holidaysArray, bankHolSet);
   const holidayHours = holidayDays * (baseHours / 5);
   const adjustedGross = Math.max(0, grossCapacity - holidayHours);
   const capacity = adjustedGross * (utilisation / 100);
@@ -230,12 +306,16 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
 };
 
 // ── Work Days Calculation ───────────────────────────────────
+function isWeekday(date) {
+  const d = date.getDay();
+  return d !== 0 && d !== 6;
+}
+
 window.countWorkDaysInMonth = function(year, month) {
   const date = new Date(year, month - 1, 1);
   let workDays = 0;
   while (date.getMonth() === month - 1) {
-    const day = date.getDay();
-    if (day !== 0 && day !== 6) workDays++;
+    if (isWeekday(date)) workDays++;
     date.setDate(date.getDate() + 1);
   }
   return workDays;
@@ -249,8 +329,7 @@ window.countWorkDaysBetween = function(startDate, endDate) {
   end.setHours(23, 59, 59, 999);
 
   while (current <= end) {
-    const day = current.getDay();
-    if (day !== 0 && day !== 6) workDays++;
+    if (isWeekday(current)) workDays++;
     current.setDate(current.getDate() + 1);
   }
   return workDays;
@@ -265,8 +344,7 @@ window.countNetworkDaysBetween = function(startDate, endDate, bankHolSet) {
   end.setHours(23, 59, 59, 999);
 
   while (current <= end) {
-    const day = current.getDay();
-    if (day !== 0 && day !== 6) {
+    if (isWeekday(current)) {
       const dateStr = formatDateForHolidays(current);
       if (!bankHolSet || !bankHolSet.has(dateStr)) workDays++;
     }

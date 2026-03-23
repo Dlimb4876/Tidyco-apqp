@@ -105,6 +105,17 @@ describe('ME chart tab rendering', () => {
     expect(result).toContain('100%');
   });
 
+  test('uses selected chart month for KPI calculations', () => {
+    const team = [
+      { id: 'p1', name: 'Alex', startDate: '2026-01-01', hoursPerWeek: 40, utilisation: 80 }
+    ];
+
+    meRenderChartTab('2026-08', team, [], [], []);
+
+    expect(global.meCalculateMonthData).toHaveBeenCalledWith('2026-08', team, [], [], []);
+    expect(global.getMonthLabel).toHaveBeenCalledWith('2026-08');
+  });
+
   test('renders no-engineer hint when no team members have start dates', () => {
     const team = [
       { id: 'p1', name: 'Alex', hoursPerWeek: 40, utilisation: 80 },

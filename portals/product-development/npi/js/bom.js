@@ -78,7 +78,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w44 ctr"><input type="checkbox" name="bom_parts_${actualIdx}_isAaw" ${r.isAaw    ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isAaw"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
       <td class="w44 ctr"><input type="checkbox" name="bom_parts_${actualIdx}_isRepair" ${r.isRepair ? 'checked' : ''} data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="isRepair" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
       <td class="bom-col-notes"><input class="cell-edit" name="bom_parts_${actualIdx}_notes" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="parts" data-idx="${actualIdx}" data-field="notes" placeholder="Notes / scheme ref"></td>
-      <td class="w28 ctr"><button class="del-btn" data-action="bom-del-row" data-type="parts" data-idx="${actualIdx}">×</button></td>
+      <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="bom-del-row" data-type="parts" data-idx="${actualIdx}">×</button>` : ''}</td>
     </tr>`}).join('')
   } else if (type === 'tools') {
     thead = npi.components.tableHeader([{ label: 'Tool ID' }, { label: 'Description' }, { label: 'Spec / PN' }, { label: 'Notes' }, { label: '' }])
@@ -87,7 +87,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="bom-col-desc"><input class="cell-edit" name="bom_tools_${i}_desc" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="desc" placeholder="Description"></td>
       <td class="w140"><input class="cell-edit mono" name="bom_tools_${i}_spec" value="${esc(r.spec)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="spec" placeholder="Spec / PN"></td>
       <td class="bom-col-notes"><input class="cell-edit" name="bom_tools_${i}_notes" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
-      <td class="w28 ctr"><button class="del-btn" data-action="bom-del-row" data-type="tools" data-idx="${i}">×</button></td>
+      <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="bom-del-row" data-type="tools" data-idx="${i}">×</button>` : ''}</td>
     </tr>`).join('')
   } else if (type === 'equip') {
     thead = npi.components.tableHeader([{ label: 'Equip ID' }, { label: 'Description' }, { label: 'Location' }, { label: 'Notes' }, { label: '' }])
@@ -96,7 +96,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="bom-col-desc"><input class="cell-edit" name="bom_equip_${i}_desc" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="desc" placeholder="Description"></td>
       <td class="w140"><input class="cell-edit" name="bom_equip_${i}_location" value="${esc(r.location)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="location" placeholder="Bay / location"></td>
       <td class="bom-col-notes"><input class="cell-edit" name="bom_equip_${i}_notes" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
-      <td class="w28 ctr"><button class="del-btn" data-action="bom-del-row" data-type="equip" data-idx="${i}">×</button></td>
+      <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="bom-del-row" data-type="equip" data-idx="${i}">×</button>` : ''}</td>
     </tr>`).join('')
   } else {
     thead = npi.components.tableHeader([{ label: 'Part / Cat. No.' }, { label: 'Description' }, { label: 'Unit' }, { label: 'Qty/Unit' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
@@ -109,7 +109,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w44 ctr"><input type="checkbox" name="bom_${type}_${i}_isAaw" ${r.isAaw    ? 'checked' : ''} data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="isAaw"    style="accent-color:var(--amber);width:15px;height:15px;cursor:pointer"></td>
       <td class="w44 ctr"><input type="checkbox" name="bom_${type}_${i}_isRepair" ${r.isRepair ? 'checked' : ''} data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="isRepair" style="accent-color:var(--rose);width:15px;height:15px;cursor:pointer"></td>
       <td class="bom-col-notes"><input class="cell-edit" name="bom_${type}_${i}_notes" value="${esc(r.notes)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="notes" placeholder="Notes"></td>
-      <td class="w28 ctr"><button class="del-btn" data-action="bom-del-row" data-type="${type}" data-idx="${i}">×</button></td>
+      <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="bom-del-row" data-type="${type}" data-idx="${i}">×</button>` : ''}</td>
     </tr>`).join('')
   }
 
@@ -128,13 +128,13 @@ npi.bom.renderBomTable = function(type, p) {
       }`;
 
   return `<div class="bom-register-wrap"><div class="card">
-  <div class="card-head"><span class="card-title">${t.icon} ${t.label} Register</span><span class="card-meta">${items.length} items</span>${
+  <div class="card-head"><span class="card-title">${t.icon} ${t.label} Register</span><span class="card-meta">${items.length} items</span>${canEdit() ? (
     type === 'parts'
       ? `<button class="btn btn-primary btn-sm" data-action="bom-open-abc-pick" style="margin-left:auto">＋ Add from Parts Database</button>`
       : `<button class="btn btn-primary btn-sm" data-action="bom-add-row" data-type="${type}" style="margin-left:auto">＋ Add ${t.label.replace(/s$/, '')}</button>`
-  }</div>
+  ) : ''}</div>
   ${content}
-  ${type !== 'parts' ? `<button class="add-row" data-action="bom-add-row" data-type="${type}">＋ Add ${t.label.replace(/s$/, '')}</button>` : ''}</div></div>`
+  ${canEdit() && type !== 'parts' ? `<button class="add-row" data-action="bom-add-row" data-type="${type}">＋ Add ${t.label.replace(/s$/, '')}</button>` : ''}</div></div>`
 }
 
 npi.bom.addBomRow = function(type) {
@@ -178,7 +178,7 @@ npi.bom.renderKits = function(p) {
         <div style="display:flex;gap:3px">${flags.join('')}</div>
         <input class="kit-qty-input" type="number" name="bom_kit_${ki}_${ri}_qty" min="0" step="0.01" value="${ref.qty || 1}" data-action="bom-upd-kit-item" data-ki="${ki}" data-ri="${ri}" data-field="qty" title="Quantity">
         <span class="kit-unit">${item.unit || 'ea'}</span>
-        <button class="del-btn" data-action="bom-del-kit-item" data-ki="${ki}" data-ri="${ri}">×</button>
+        ${canEdit() ? `<button class="del-btn" data-action="bom-del-kit-item" data-ki="${ki}" data-ri="${ri}">×</button>` : ''}
       </div>`
     }).join('')
     return `<div class="kit-card">
@@ -186,22 +186,22 @@ npi.bom.renderKits = function(p) {
         <span style="font-size:20px">📦</span>
         <input class="kit-name-input" name="bom_kit_${ki}_name" value="${esc(kit.name)}" data-action="bom-upd-kit" data-ki="${ki}" data-field="name" placeholder="Kit name (e.g. Overhaul Kit, Fastener Kit…)">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-left:auto">${totalBomRefs} items</span>
-        <button class="del-btn" data-action="bom-del-kit" data-ki="${ki}" style="margin-left:8px">×</button>
+        ${canEdit() ? `<button class="del-btn" data-action="bom-del-kit" data-ki="${ki}" style="margin-left:8px">×</button>` : ''}
       </div>
       <div class="kit-body">
         ${kitRows || `<div class="kit-empty">No items yet — click Add Items to build this kit</div>`}
       </div>
       <div class="kit-summary">${summary || 'Empty kit'}</div>
-      <button class="kit-add-btn" data-action="bom-open-kit-pick" data-ki="${ki}">＋ Add Items from BoM</button>
+      ${canEdit() ? `<button class="kit-add-btn" data-action="bom-open-kit-pick" data-ki="${ki}">＋ Add Items from BoM</button>` : ''}
     </div>`
   }).join('')
 
   return `<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
     <div style="font-size:13px;color:var(--muted)">${kits.length} kit${kits.length !== 1 ? 's' : ''} · ${totalItems} total BoM items available</div>
-    <button class="btn btn-primary btn-sm" data-action="bom-add-kit">＋ New Kit</button>
+    ${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="bom-add-kit">＋ New Kit</button>` : ''}
   </div>
   ${kits.length === 0
-    ? `<button class="new-kit-btn" data-action="bom-add-kit">＋ Create your first kit<div style="font-size:12px;margin-top:4px;color:var(--muted)">e.g. Overhaul Kit, Fastener Kit, Bearing Kit, Repair Kit A…</div></button>`
+    ? (canEdit() ? `<button class="new-kit-btn" data-action="bom-add-kit">＋ Create your first kit<div style="font-size:12px;margin-top:4px;color:var(--muted)">e.g. Overhaul Kit, Fastener Kit, Bearing Kit, Repair Kit A…</div></button>` : `<div style="padding:24px;text-align:center;color:var(--muted)">No kits defined.</div>`)
     : `<div class="kit-list">${kitCards}</div>`}`
 }
 

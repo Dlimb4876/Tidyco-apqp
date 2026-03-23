@@ -45,3 +45,11 @@ check_onclick.js
 
 # Local assistant-generated docs/scripts
 scripts/pre-commit-quality-hook.js
+
+# OpenWolf runtime files (auto-updated by daemon, not for sharing)
+.wolf/cron-state.json
+.wolf/token-ledger.json
+.wolf/daemon.log
+.wolf/buglog.json
+.wolf/suggestions.json
+.wolf/hooks/_session.json
