@@ -12,12 +12,15 @@ window.prodCapSetWorkArea = function (workArea) {
 }
 
 function _renderProdCapKpiCards(kpis) {
-  const { totalProducts, activeBatches, totalDemand, totalSupply, peakUtil } = kpis
+  const { totalProducts, activeBatches, totalDemand, totalSupply, oneYearHeadroom, peakUtil } = kpis
 
   const headroom = totalSupply - totalDemand
+  const roundedHeadroom = Math.round(headroom)
+  const roundedOneYearHeadroom = Math.round(oneYearHeadroom)
   const totalUtil = totalSupply > 0 ? Math.round((totalDemand / totalSupply) * 100) : 0
 
   const headroomColor = headroom > 0 ? 'var(--green)' : 'var(--red)'
+  const oneYearHeadroomColor = oneYearHeadroom > 0 ? 'var(--green)' : 'var(--red)'
   const utilColor = totalUtil < 80 ? 'var(--blue)' : totalUtil < 100 ? 'var(--amber)' : 'var(--red)'
   const utilLabel = totalUtil < 80 ? '● Healthy' : totalUtil < 100 ? '⚠ Tight' : '✗ Over capacity'
   const peakColor = peakUtil < 80 ? 'var(--blue)' : peakUtil < 100 ? 'var(--amber)' : 'var(--red)'
@@ -33,8 +36,12 @@ function _renderProdCapKpiCards(kpis) {
         <div class="pc-kpi-val">${activeBatches}</div>
         <div class="pc-kpi-label">Active Batches</div>
       </div>
+      <div class="pc-kpi" style="border-left:4px solid ${oneYearHeadroomColor}">
+        <div class="pc-kpi-val" style="color:${oneYearHeadroomColor}">${roundedOneYearHeadroom.toLocaleString()}h</div>
+        <div class="pc-kpi-label">1-Yr Headroom</div>
+      </div>
       <div class="pc-kpi" style="border-left:4px solid ${headroomColor}">
-        <div class="pc-kpi-val" style="color:${headroomColor}">${headroom.toLocaleString()}h</div>
+        <div class="pc-kpi-val" style="color:${headroomColor}">${roundedHeadroom.toLocaleString()}h</div>
         <div class="pc-kpi-label">2-Yr Headroom</div>
       </div>
       <div class="pc-kpi" style="border-left:4px solid ${utilColor}">
@@ -92,8 +99,11 @@ function renderProdCapWorkArea() {
   // ── KPI Calculations ───────────────────────────────────
   const totalProducts = waProds.length
   const activeBatches = waBatches.length
+  const oneYearMonthKeys = monthKeys.slice(0, 12)
   let totalDemand = 0
   let totalSupply = 0
+  let oneYearDemand = 0
+  let oneYearSupply = 0
   let peakUtil = 0
 
   monthKeys.forEach((key) => {
@@ -109,7 +119,13 @@ function renderProdCapWorkArea() {
     }
   })
 
-  const kpis = { totalProducts, activeBatches, totalDemand, totalSupply, peakUtil }
+  oneYearMonthKeys.forEach((key) => {
+    oneYearDemand += demandMx[key]?.[wa] || 0
+    oneYearSupply += supplyMx[key]?.[wa] || 0
+  })
+
+  const oneYearHeadroom = oneYearSupply - oneYearDemand
+  const kpis = { totalProducts, activeBatches, totalDemand, totalSupply, oneYearHeadroom, peakUtil }
 
   // Monthly breakdown for selected area
   const tableRows = monthKeys

@@ -235,6 +235,13 @@ function mcsToggleStageBlock(stageBlock, expand) {
 function mcsInitStageCollapsibles(container, expandedStages) {
   if (!container) return;
 
+  const stageBadgeMap = {
+    open: '1',
+    approval1: '2',
+    implement: '3',
+    approval2: '4'
+  };
+
   const expandedOrder = (expandedStages || ['open']).map(String);
   const blocks = container.querySelectorAll('.mcs-stage-block');
   const expandedKey = expandedOrder.find(key => container.querySelector(`.mcs-stage-block[data-stage="${key}"]`)) ||
@@ -257,7 +264,13 @@ function mcsInitStageCollapsibles(container, expandedStages) {
 
     const textWrap = document.createElement('span');
     textWrap.className = 'mcs-stage-toggle-text';
-    textWrap.appendChild(titleEl.cloneNode(true));
+    const titleClone = titleEl.cloneNode(true);
+    const stageBadge = document.createElement('span');
+    stageBadge.className = 'mcs-stage-badge';
+    stageBadge.textContent = stageBadgeMap[stageKey] || String(index + 1);
+    titleClone.classList.add('has-stage-badge');
+    titleClone.prepend(stageBadge);
+    textWrap.appendChild(titleClone);
     if (subtitleEl) textWrap.appendChild(subtitleEl.cloneNode(true));
 
     const chevron = document.createElement('span');

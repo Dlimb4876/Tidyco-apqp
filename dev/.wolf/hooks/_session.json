@@ -1,49 +1,12 @@
 {
-  "session_id": "session-2026-03-23-1236",
-  "started": "2026-03-23T12:36:25.649Z",
-  "files_read": {
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/anatomy.md": {
-      "count": 1,
-      "tokens": 0,
-      "first_read": "2026-03-23T12:38:21.379Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-heatmap.js": {
-      "count": 1,
-      "tokens": 2627,
-      "first_read": "2026-03-23T12:38:39.646Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-calculations.js": {
-      "count": 1,
-      "tokens": 3552,
-      "first_read": "2026-03-23T12:38:46.133Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
-      "count": 1,
-      "tokens": 12351,
-      "first_read": "2026-03-23T12:39:54.716Z"
-    }
-  },
-  "files_written": [
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/capacity/js/me-calculations.js",
-      "action": "edit",
-      "tokens": 292,
-      "at": "2026-03-23T12:39:51.040Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
-      "action": "edit",
-      "tokens": 71,
-      "at": "2026-03-23T12:39:59.837Z"
-    }
-  ],
-  "edit_counts": {
-    "portals/capacity/js/me-calculations.js": 1,
-    "CHANGELOG.md": 1
-  },
-  "anatomy_hits": 3,
-  "anatomy_misses": 1,
+  "session_id": "session-2026-03-23-1309",
+  "started": "2026-03-23T13:09:12.461Z",
+  "files_read": {},
+  "files_written": [],
+  "edit_counts": {},
+  "anatomy_hits": 0,
+  "anatomy_misses": 0,
   "repeated_reads_warned": 0,
   "cerebrum_warnings": 0,
-  "stop_count": 1
+  "stop_count": 0
 }
