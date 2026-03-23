@@ -7,6 +7,11 @@
 - Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
 
 ## 2026-03-23
+- Updated Production Capacity by Work Area KPIs in `portals/capacity/js/prod-capacity-workarea.js`: added a new `1-Yr Headroom` card and rounded `2-Yr Headroom` to whole hours so Unit 2/3/6 KPI tiles are easier to scan.
+- Finalized robust MCS stage-number rendering in `portals/mcs/js/mcs-modal.js` by injecting explicit `.mcs-stage-badge` elements during stage-toggle build (instead of relying only on pseudo-elements), with matching fallback-safe color styling and stronger footer/button contrast updates in `portals/mcs/css/mcs.css`.
+- Applied MCS modal follow-up styling in `portals/mcs/css/mcs.css`: hard-forced Stage 2 badge rendering (`content: '2' !important`) and lightened the modal footer with higher-contrast action button styles so controls stand out.
+- Fixed NPI Kanban search churn in `portals/product-development/npi/js/dashboard.js` and `portals/product-development/npi/js/npi-events.js` by restoring focus/caret after each search-triggered re-render; added regression coverage in `tests/npi-dashboard-search.test.js`.
+- Polished the MCS staged modal visuals in `portals/mcs/css/mcs.css` + `portals/mcs/css/mcs-responsive.css`: added explicit numbered stage bullets (including Stage 2), a colored header bar treatment, and a left-side stage separator guide line with node markers so stage transitions are easier to identify.
 - Fixed ME/PM Capacity Chart KPI month mismatch by switching KPI/breakdown calculations in `portals/capacity/js/me-chart.js` from calendar-month to selected chart month (`monthKey`); added regression coverage in `tests/me-chart.test.js` and validated with `npm test` + `npm run check:all`.
 - Fixed ME/PM Capacity tasks search input churn in `portals/capacity/js/capacity-events.js` by restoring focus and caret after delegated tab re-render on each keystroke; added regression coverage in `tests/capacity-events.test.js`.
 - Updated Product Support edit UX to intent-based history changes: hours/effective-date edits no longer persist automatically; users must click Apply Change with a reason, and each row now has a View History toggle showing dated support-rate records inline.
@@ -1006,3 +1011,8 @@
 | 12:39 | Edited portals/capacity/js/me-calculations.js | added 4 condition(s) | ~292 |
 | 12:39 | Edited CHANGELOG.md | 1→3 lines | ~66 |
 | 12:40 | Session end: 2 writes across 2 files (me-calculations.js, CHANGELOG.md) | 4 reads | ~18893 tok |
+
+## Session: 2026-03-23 13:09
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

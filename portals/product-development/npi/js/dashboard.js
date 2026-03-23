@@ -29,6 +29,37 @@ npi.dashboard.setProjectsSearch = function (value) {
   render()
 }
 
+npi.dashboard.setProjectsSearchFromInput = function (inputEl) {
+  if (!inputEl) {
+    npi.dashboard.setProjectsSearch('')
+    return
+  }
+
+  const selectionStart =
+    typeof inputEl.selectionStart === 'number' ? inputEl.selectionStart : null
+  const selectionEnd = typeof inputEl.selectionEnd === 'number' ? inputEl.selectionEnd : null
+
+  npi.dashboard.setProjectsSearch(inputEl.value)
+
+  // Search updates re-render the dashboard; restore caret on the replacement input.
+  setTimeout(() => {
+    const nextInput = document.querySelector('.npi-search-input[name="npi_projects_search"]')
+    if (!nextInput) return
+
+    nextInput.focus()
+
+    const len = nextInput.value.length
+    const safeStart =
+      typeof selectionStart === 'number' ? Math.max(0, Math.min(selectionStart, len)) : len
+    const safeEnd =
+      typeof selectionEnd === 'number' ? Math.max(safeStart, Math.min(selectionEnd, len)) : safeStart
+
+    if (typeof nextInput.setSelectionRange === 'function') {
+      nextInput.setSelectionRange(safeStart, safeEnd)
+    }
+  }, 0)
+}
+
 npi.dashboard.setProjectsFamilyFilter = function (value) {
   npiProjectsFamilyFilter = value || 'all'
   render()
@@ -283,7 +314,7 @@ npi.dashboard.renderProjects = function () {
     <div class="npi-swimlane-wrap">
       <div class="npi-view-note">${visibleLabel} · ${visibleProducts.length} shown</div>
       <div class="npi-filter-row">
-        <input class="npi-search-input" name="npi_projects_search" type="search" placeholder="Search name, code, customer..." value="${esc(npiProjectsSearch)}" oninput="npi.dashboard.setProjectsSearch(this.value)">
+        <input class="npi-search-input" name="npi_projects_search" type="search" placeholder="Search name, code, customer..." value="${esc(npiProjectsSearch)}" oninput="npi.dashboard.setProjectsSearchFromInput(this)">
         <select class="npi-family-filter" name="npi_projects_family_filter" onchange="npi.dashboard.setProjectsFamilyFilter(this.value)">
           ${familyOptions}
         </select>

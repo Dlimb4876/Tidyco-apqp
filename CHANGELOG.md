@@ -3,6 +3,16 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-23 | Add 1-year headroom KPI and integer 2-year headroom in Production Capacity by Work Area | Unit 2/3/6 KPI cards now show both 1-year and 2-year headroom, and 2-year headroom is rounded to whole hours for cleaner at-a-glance reading
+
+## 2026-03-23 | MCS staged headers use explicit number badges | Replaced pseudo-only stage numbers with real badge elements in stage toggle rendering so Stage 2 cannot disappear due to theme/cascade edge cases; also increased footer action contrast again
+
+## 2026-03-23 | MCS modal follow-up contrast and Stage 2 badge fix | Ensured Stage 2 badge content is forced to show and brightened the modal footer/button styling so action controls stand out clearly
+
+## 2026-03-23 | Keep NPI Kanban search focused while typing | NPI project search re-rendered the dashboard on each keystroke and dropped focus/caret, forcing users to re-click for every character
+
+## 2026-03-23 | MCS modal stage bullets and visual polish | Added explicit numbered stage bullets (including Stage 2), a color-treated header bar, and clearer stage transition guide lines so the staged flow is easier to scan
+
 ## 2026-03-23 | Align ME/PM chart KPIs to selected month | Capacity chart KPI cards and breakdown were using the current calendar month, causing mismatch when viewing other months
 
 ## 2026-03-23 | Keep ME/PM task search focused while typing | Task list search re-rendered the tab on each keystroke and dropped input focus/caret, forcing users to re-click the field for every character

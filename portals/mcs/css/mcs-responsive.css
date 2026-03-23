@@ -186,6 +186,18 @@
     padding: 16px 16px;
   }
 
+  .mcs-stage-blocks {
+    padding-left: 14px;
+  }
+
+  .mcs-stage-blocks::before {
+    left: 5px;
+  }
+
+  .mcs-stage-block::before {
+    left: -13px;
+  }
+
   /* Search input - larger on mobile */
   .mcs-search-input {
     min-height: 44px;

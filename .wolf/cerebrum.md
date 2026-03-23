@@ -14,6 +14,9 @@
 - For NPI PFD flowchart visuals, user expects a professional polished look (clean edge labels, restrained palette, and non-scruffy rendering) in addition to readability.
 - For MCS staged modals, user prefers a wider dialog with bordered collapsible stage cards and a fixed title banner that remains visible during scroll.
 - For MCS stage headings, user prefers clear color-coded visual hierarchy (not monochrome black-and-white section labels).
+- For MCS change modals, user expects explicit stage bullets for every stage (including Stage 2), a colored header bar, and visible separators/gridlines between stage sections.
+- For MCS modal polish, user expects Stage 2's numbered icon to be visibly present and the footer action bar/buttons to stay light and high-contrast (not dark/flat).
+- For MCS staged headers, pseudo-element-only numbering is not reliable enough; render explicit numeric badge elements so Stage 2 is always visible.
 - For MCS modals, status is a global state and should appear in the top bar, not inside Stage 1 content.
 - For MCS approvals, Stage 1 Impact Assessment needs its own estimated time impact separate from the Stage 3 implementation time impact.
 - On MCS main cards, user wants explicit label text (`Change Type: ...`) rather than only the raw type value.
@@ -55,6 +58,7 @@
 
 <!-- [2026-03-23] Capacity persistence gotcha: `public.me_holidays` is the live source of truth and `public.me_capacity` does not exist in production. Do not reintroduce a client query to `me_capacity`, and never delete all `me_holidays` rows globally during save — delete only the current user's rows before reinserting replacements. -->
 <!-- [2026-03-23] Capacity task delete gotcha: removing a task from `meDataState.tasks` is not enough. Any delete path must also persist a relational delete (or queue ids for deletion in `meDataSave`) so `me_tasks` rows do not come back on refresh. -->
+<!-- [2026-03-23] NPI dashboard search gotcha: if search input triggers `render()` on each keystroke, the input node is replaced and focus/caret is lost. Capture selection before render and restore focus + selection on the replacement input. -->
 
 <!-- Mistakes made and corrected. Each entry prevents the same mistake recurring. -->
 <!-- Format: [YYYY-MM-DD] Description of what went wrong and what to do instead. -->

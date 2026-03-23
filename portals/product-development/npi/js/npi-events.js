@@ -271,7 +271,7 @@ npi.events._onInput = function(evt) {
     break
   }
 
-  case 'dash-search': npi.dashboard.setProjectsSearch(el.value); break
+  case 'dash-search': npi.dashboard.setProjectsSearchFromInput(el); break
 
   default: break
   }

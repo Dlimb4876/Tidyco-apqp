@@ -130,6 +130,13 @@
 
 ## Manual Update 2026-03-23
 
+- Updated Production Capacity by Work Area KPI cards in `portals/capacity/js/prod-capacity-workarea.js` to add `1-Yr Headroom` and round `2-Yr Headroom` to integer hours for Unit 2/3/6 views.
+
+- Robustified MCS stage numbering in `portals/mcs/js/mcs-modal.js` by rendering explicit `.mcs-stage-badge` nodes in the stage toggle builder (Stage 2 no longer depends on pseudo-element content); paired with fallback-safe stage colors and brighter footer/button contrast in `portals/mcs/css/mcs.css`.
+- Follow-up MCS modal polish in `portals/mcs/css/mcs.css`: forced Stage 2 badge content visibility and brightened footer/action button contrast for clearer call-to-action controls.
+- Fixed NPI Kanban search focus/caret churn in `portals/product-development/npi/js/dashboard.js` and aligned delegated path in `portals/product-development/npi/js/npi-events.js`.
+- Added focused regression coverage in `tests/npi-dashboard-search.test.js`.
+- Improved MCS staged modal visual hierarchy in `portals/mcs/css/mcs.css` and `portals/mcs/css/mcs-responsive.css`: explicit numbered stage bullets (1-4, including Stage 2), color-treated header bar, and stage-separator guide line markers.
 - Aligned ME/PM Capacity Chart KPI and breakdown month context to follow selected chart month in `portals/capacity/js/me-chart.js`; added regression coverage in `tests/me-chart.test.js` and changelog entry.
 - Updated task-search focus behavior in `portals/capacity/js/capacity-events.js`.
 - Added regression coverage in `tests/capacity-events.test.js`.
