@@ -202,7 +202,11 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   // Product support from production schedule batches (support value is per batch).
   // Effective-dated history is resolved per overlapping batch.
   productsArray.forEach(product => {
-    const fallbackSupportPerBatch = Number(product.hoursPerWeek) || 0;
+    const rawKitting = Number(product && (product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawMovement = Number(product && (product.productMovementHours ?? product.product_movement_hours));
+    const fallbackSupportPerBatch = (Number.isFinite(rawKitting) || Number.isFinite(rawMovement))
+      ? Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0) + Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0)
+      : (Number(product.hoursPerWeek) || 0);
     const overlappingBatches = window.meGetProductBatchesInRange(product, monthStart, monthEnd);
     overlappingBatches.forEach(batch => {
       const supportPerBatch = window.meGetProductSupportHoursForBatch(

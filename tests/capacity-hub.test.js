@@ -22,6 +22,8 @@ global.render = jest.fn()
 global.renderMeCapacity = jest.fn(() => '<div>ME Capacity</div>')
 global.renderProdCapacity = jest.fn(() => '<div>Prod Capacity</div>')
 global.pmRenderCapacity = jest.fn(() => '<div>PM Capacity</div>')
+global.logRenderCapacity = jest.fn(() => '<div>Logistics Capacity</div>')
+global.unit6RenderCapacity = jest.fn(() => '<div>Unit 6 Capacity</div>')
 
 // Load capacity.js
 const capacitySrc = fs.readFileSync(
@@ -124,6 +126,20 @@ describe('renderCapacity() hub view', () => {
     const html = renderCapacity() // eslint-disable-line no-undef
     expect(html).toContain('PM Capacity')
     expect(html).not.toContain('hub-grid')
+  })
+
+  it('renders Logistics without the shared capacity route-switcher bar', () => {
+    global.capacityTab = 'logistics'
+    const html = renderCapacity() // eslint-disable-line no-undef
+    expect(html).toContain('Logistics Capacity')
+    expect(html).not.toContain('prod-nav-bar')
+  })
+
+  it('renders Unit 6 without the shared capacity route-switcher bar', () => {
+    global.capacityTab = 'unit6'
+    const html = renderCapacity() // eslint-disable-line no-undef
+    expect(html).toContain('Unit 6 Capacity')
+    expect(html).not.toContain('prod-nav-bar')
   })
 })
 

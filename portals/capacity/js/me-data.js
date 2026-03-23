@@ -94,6 +94,33 @@ function meNormalizeDateOnly(value) {
   return parsed.toISOString().split('T')[0];
 }
 
+function meNormalizeProductSupportBreakdown(source, fallbackHoursPerWeek) {
+  const rawTotal = Number(
+    fallbackHoursPerWeek ??
+    (source && (source.hoursPerWeek ?? source.hours_per_week)) ??
+    0
+  );
+  const rawKitting = Number(source && (source.kittingTimeBookingHours ?? source.kitting_time_booking_hours));
+  const rawMovement = Number(source && (source.productMovementHours ?? source.product_movement_hours));
+  const hasBreakdown = Number.isFinite(rawKitting) || Number.isFinite(rawMovement);
+
+  const kittingTimeBookingHours = hasBreakdown
+    ? Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0)
+    : Math.max(0, Number.isFinite(rawTotal) ? rawTotal : 0);
+  const productMovementHours = hasBreakdown
+    ? Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0)
+    : 0;
+  const hoursPerWeek = hasBreakdown
+    ? kittingTimeBookingHours + productMovementHours
+    : Math.max(0, Number.isFinite(rawTotal) ? rawTotal : 0);
+
+  return {
+    hoursPerWeek,
+    kittingTimeBookingHours,
+    productMovementHours
+  };
+}
+
 function meGetDateMinusOneDay(dateValue) {
   const parsed = new Date(dateValue);
   if (Number.isNaN(parsed.getTime())) return '';
@@ -108,10 +135,14 @@ function meNormalizeSupportHistoryRecord(record, fallbackDepartment = 'ME') {
   const effectiveDate = meNormalizeDateOnly(record.effectiveDate || record.effective_date);
   if (!productId || !effectiveDate) return null;
 
+  const breakdown = meNormalizeProductSupportBreakdown(record);
+
   return {
     id: record.id || meUUID(),
     productId,
-    hoursPerWeek: Number(record.hoursPerWeek ?? record.hours_per_week ?? 0) || 0,
+    hoursPerWeek: breakdown.hoursPerWeek,
+    kittingTimeBookingHours: breakdown.kittingTimeBookingHours,
+    productMovementHours: breakdown.productMovementHours,
     effectiveDate,
     endDate: meNormalizeDateOnly(record.endDate || record.end_date) || '',
     changeReason: record.changeReason || record.change_reason || '',
@@ -120,6 +151,21 @@ function meNormalizeSupportHistoryRecord(record, fallbackDepartment = 'ME') {
     createdAt: record.createdAt || record.created_at || new Date().toISOString(),
     updatedAt: record.updatedAt || record.updated_at || ''
   };
+}
+
+function meApplyLatestSupportHistoryToProduct(product, department) {
+  if (!product || !product.id) return;
+
+  const targetDepartment = meNormalizeDepartmentTag(department || product.department, 'ME');
+  const latestHistory = meGetProductSupportHistoryRows(product.id, targetDepartment).slice(-1)[0] || null;
+  const breakdown = meNormalizeProductSupportBreakdown(latestHistory || product, product.hoursPerWeek);
+
+  product.hoursPerWeek = breakdown.hoursPerWeek;
+  product.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+  product.productMovementHours = breakdown.productMovementHours;
+  product.supportEffectiveDate = latestHistory
+    ? (latestHistory.effectiveDate || meNormalizeDateOnly(product.createdAt || product.created_at) || '')
+    : (product.supportEffectiveDate || meNormalizeDateOnly(product.createdAt || product.created_at) || '');
 }
 
 function meSortSupportHistoryByDate(historyRows) {
@@ -164,10 +210,13 @@ function meEnsureProductSupportHistoryBaseline(product) {
   if (existing.length > 0) return;
 
   const baselineDate = meNormalizeDateOnly(product.createdAt || product.created_at) || meNormalizeDateOnly(new Date());
+  const breakdown = meNormalizeProductSupportBreakdown(product, product.hoursPerWeek);
   meDataState.productSupportHistory.push({
     id: meUUID(),
     productId: product.id,
-    hoursPerWeek: Number(product.hoursPerWeek || 0) || 0,
+    hoursPerWeek: breakdown.hoursPerWeek,
+    kittingTimeBookingHours: breakdown.kittingTimeBookingHours,
+    productMovementHours: breakdown.productMovementHours,
     effectiveDate: baselineDate,
     endDate: '',
     changeReason: 'Baseline from product support value',
@@ -345,11 +394,14 @@ window.meDataGetTasks = function() {
 
 window.meDataAddProduct = function(name, hoursPerWeek, notes, productDatabaseId, department) {
   if (!name || name.trim().length === 0) return false;
+  const breakdown = meNormalizeProductSupportBreakdown({ hoursPerWeek }, hoursPerWeek);
   const product = {
     id: meUUID(),
     name: name.trim(),
     department: meGetDepartmentFromContext(department),
-    hoursPerWeek: parseFloat(hoursPerWeek) || 5,
+    hoursPerWeek: breakdown.hoursPerWeek || 5,
+    kittingTimeBookingHours: breakdown.kittingTimeBookingHours || 5,
+    productMovementHours: breakdown.productMovementHours || 0,
     notes: notes ? notes.trim() : '',
     productDatabaseId: productDatabaseId || '',
     createdAt: new Date().toISOString()
@@ -367,25 +419,62 @@ window.meDataUpdateProduct = function(idx, field, value, metadata) {
       product.name = value.trim();
       break;
     case 'hoursPerWeek':
-      product.hoursPerWeek = parseFloat(value) || 0;
+      {
+        const breakdown = meNormalizeProductSupportBreakdown({
+          hoursPerWeek: value,
+          kittingTimeBookingHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'kittingTimeBookingHours')
+            ? metadata.kittingTimeBookingHours
+            : undefined,
+          productMovementHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'productMovementHours')
+            ? metadata.productMovementHours
+            : undefined
+        }, value);
+        product.hoursPerWeek = breakdown.hoursPerWeek;
+        product.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+        product.productMovementHours = breakdown.productMovementHours;
 
-      // Maintain effective-dated support history so past capacity can be reproduced.
-      if (typeof window.meDataAddProductSupportHistory === 'function') {
-        const effectiveDate = metadata && metadata.effectiveDate
-          ? metadata.effectiveDate
-          : meNormalizeDateOnly(new Date());
-        window.meDataAddProductSupportHistory(
-          product.id,
-          product.hoursPerWeek,
-          effectiveDate,
-          metadata && metadata.changeReason ? metadata.changeReason : '',
-          metadata && metadata.notes ? metadata.notes : '',
-          product.department
-        );
+        // Maintain effective-dated support history so past capacity can be reproduced.
+        if (typeof window.meDataAddProductSupportHistory === 'function') {
+          const effectiveDate = metadata && metadata.effectiveDate
+            ? metadata.effectiveDate
+            : meNormalizeDateOnly(new Date());
+          window.meDataAddProductSupportHistory(
+            product.id,
+            product.hoursPerWeek,
+            effectiveDate,
+            metadata && metadata.changeReason ? metadata.changeReason : '',
+            metadata && metadata.notes ? metadata.notes : '',
+            product.department,
+            product.kittingTimeBookingHours,
+            product.productMovementHours
+          );
+        }
+        product.supportEffectiveDate = metadata && metadata.effectiveDate
+          ? meNormalizeDateOnly(metadata.effectiveDate)
+          : (product.supportEffectiveDate || meNormalizeDateOnly(new Date()));
       }
-      product.supportEffectiveDate = metadata && metadata.effectiveDate
-        ? meNormalizeDateOnly(metadata.effectiveDate)
-        : (product.supportEffectiveDate || meNormalizeDateOnly(new Date()));
+      break;
+    case 'kittingTimeBookingHours':
+      {
+        const breakdown = meNormalizeProductSupportBreakdown({
+          kittingTimeBookingHours: value,
+          productMovementHours: product.productMovementHours
+        }, product.hoursPerWeek);
+        product.hoursPerWeek = breakdown.hoursPerWeek;
+        product.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+        product.productMovementHours = breakdown.productMovementHours;
+      }
+      break;
+    case 'productMovementHours':
+      {
+        const breakdown = meNormalizeProductSupportBreakdown({
+          kittingTimeBookingHours: product.kittingTimeBookingHours,
+          productMovementHours: value
+        }, product.hoursPerWeek);
+        product.hoursPerWeek = breakdown.hoursPerWeek;
+        product.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+        product.productMovementHours = breakdown.productMovementHours;
+      }
       break;
     case 'supportEffectiveDate':
       product.supportEffectiveDate = meNormalizeDateOnly(value) || product.supportEffectiveDate || '';
@@ -417,15 +506,22 @@ window.meDataGetProductSupportHistory = function() {
   return meDataState.productSupportHistory;
 };
 
-window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effectiveDate, changeReason, notes, department) {
+window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effectiveDate, changeReason, notes, department, kittingTimeBookingHours, productMovementHours) {
   if (!productId) return false;
 
   const normalizedDate = meNormalizeDateOnly(effectiveDate) || meNormalizeDateOnly(new Date());
   const targetDepartment = meNormalizeDepartmentTag(department, 'ME');
   const existingRows = meGetProductSupportHistoryRows(productId, targetDepartment);
   const sameDateRow = existingRows.find(row => row.effectiveDate === normalizedDate);
+  const breakdown = meNormalizeProductSupportBreakdown({
+    hoursPerWeek,
+    kittingTimeBookingHours,
+    productMovementHours
+  }, hoursPerWeek);
   if (sameDateRow) {
-    sameDateRow.hoursPerWeek = Number(hoursPerWeek) || 0;
+    sameDateRow.hoursPerWeek = breakdown.hoursPerWeek;
+    sameDateRow.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+    sameDateRow.productMovementHours = breakdown.productMovementHours;
     sameDateRow.changeReason = changeReason || sameDateRow.changeReason || '';
     sameDateRow.notes = notes || sameDateRow.notes || '';
     sameDateRow.updatedAt = new Date().toISOString();
@@ -443,7 +539,9 @@ window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effect
   meDataState.productSupportHistory.push({
     id: meUUID(),
     productId,
-    hoursPerWeek: Number(hoursPerWeek) || 0,
+    hoursPerWeek: breakdown.hoursPerWeek,
+    kittingTimeBookingHours: breakdown.kittingTimeBookingHours,
+    productMovementHours: breakdown.productMovementHours,
     effectiveDate: normalizedDate,
     endDate: '',
     changeReason: changeReason || '',
@@ -509,20 +607,38 @@ function meDataAutoSyncDepartmentProducts(department) {
       .filter(meP => meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment && meP.productDatabaseId)
       .map(meP => [meP.productDatabaseId, meP])
   );
+  const sourceByDbId = new Map(
+    meDataState.products
+      .filter(meP => meP && meP.productDatabaseId)
+      .map(meP => [meP.productDatabaseId, meP])
+  );
 
   dbProducts.forEach(dbProduct => {
     const existing = existingByDbId.get(dbProduct.id);
+    const sourceProduct = sourceByDbId.get(dbProduct.id) || null;
 
     if (existing) {
       existing.name = dbProduct.name;
       existing.notes = dbProduct.notes || '';
       existing.department = targetDepartment;
+      if (sourceProduct && sourceProduct.id) existing.id = sourceProduct.id;
+      meApplyLatestSupportHistoryToProduct(existing, targetDepartment);
     } else {
+      const seedBreakdown = meNormalizeProductSupportBreakdown(sourceProduct || { hoursPerWeek: 0 }, sourceProduct && sourceProduct.hoursPerWeek);
+
       // Temporarily set context so meDataAddProduct tags the product correctly
       const savedContext = window.meCurrentDepartmentContext;
       window.meCurrentDepartmentContext = targetDepartment;
-      meDataAddProduct(dbProduct.name, 0, dbProduct.notes || '', dbProduct.id, targetDepartment);
+      meDataAddProduct(dbProduct.name, seedBreakdown.hoursPerWeek, dbProduct.notes || '', dbProduct.id, targetDepartment);
       window.meCurrentDepartmentContext = savedContext;
+
+      const createdProduct = meDataState.products[meDataState.products.length - 1];
+      if (createdProduct) {
+        createdProduct.notes = dbProduct.notes || '';
+        createdProduct.department = targetDepartment;
+        if (sourceProduct && sourceProduct.id) createdProduct.id = sourceProduct.id;
+        meApplyLatestSupportHistoryToProduct(createdProduct, targetDepartment);
+      }
     }
   });
 
@@ -697,17 +813,12 @@ window.meDataInit = async function() {
       meDataState.products.forEach(product => {
         if (!('productDatabaseId' in product)) product.productDatabaseId = '';
         if (!('department' in product)) product.department = 'ME';
+        meApplyLatestSupportHistoryToProduct(product, product.department);
       });
 
       meEnsureAllProductSupportHistoryBaselines();
       meDataState.products.forEach(product => {
-        if (!('supportEffectiveDate' in product)) {
-          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(
-            product.id,
-            product.department,
-            product.createdAt
-          );
-        }
+        meApplyLatestSupportHistoryToProduct(product, product.department);
       });
 
       meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays || []);
@@ -1075,11 +1186,14 @@ window.meDataSubscribe = function() {
     {
       table: 'me_products',
       onInsert: (newProduct) => {
+        const breakdown = meNormalizeProductSupportBreakdown(newProduct, newProduct.hours_per_week);
         const normalizedProduct = {
           id: newProduct.id,
           name: newProduct.name || '(Unknown Product)',
           productDatabaseId: newProduct.product_database_id || '',
-          hoursPerWeek: parseFloat(newProduct.hours_per_week) || 0,
+          hoursPerWeek: breakdown.hoursPerWeek,
+          kittingTimeBookingHours: breakdown.kittingTimeBookingHours,
+          productMovementHours: breakdown.productMovementHours,
           department: meNormalizeDepartmentTag(newProduct.department, 'ME'),
           notes: newProduct.notes || '',
           createdAt: newProduct.created_at || new Date().toISOString(),
@@ -1110,10 +1224,11 @@ window.meDataSubscribe = function() {
           meDataState.productSupportHistory.push(normalized);
         }
         meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
-        const product = meDataState.products.find(p => p.id === normalized.productId);
-        if (product) {
-          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(product.id, product.department, product.createdAt);
-        }
+        meDataState.products.forEach(product => {
+          if (product.id !== normalized.productId) return;
+          if (meNormalizeDepartmentTag(product.department, normalized.department) !== normalized.department) return;
+          meApplyLatestSupportHistoryToProduct(product, normalized.department);
+        });
         if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
         meCapSmartRender();
       },
@@ -1127,10 +1242,11 @@ window.meDataSubscribe = function() {
           meDataState.productSupportHistory.push(normalized);
         }
         meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
-        const product = meDataState.products.find(p => p.id === normalized.productId);
-        if (product) {
-          product.supportEffectiveDate = window.meDataGetProductLatestSupportEffectiveDate(product.id, product.department, product.createdAt);
-        }
+        meDataState.products.forEach(product => {
+          if (product.id !== normalized.productId) return;
+          if (meNormalizeDepartmentTag(product.department, normalized.department) !== normalized.department) return;
+          meApplyLatestSupportHistoryToProduct(product, normalized.department);
+        });
       },
       onDelete: (deleted) => {
         meDataState.productSupportHistory = meDataState.productSupportHistory.filter(h => h.id !== deleted.id);

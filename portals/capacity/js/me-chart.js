@@ -149,10 +149,25 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
     : `
       <tr>
         <td colspan="6" style="text-align:center;color:var(--muted);padding:20px;font-style:italic;">
-          No engineers with a start date set — add start dates on the Team tab.
+          No ${department === 'PM' ? 'managers' : department === 'LOG' ? 'logistics technicians' : department === 'UNIT6' ? 'technicians' : 'engineers'} with a start date set — add start dates on the Team tab.
         </td>
       </tr>
     `;
+
+  const roleSingular = department === 'PM'
+    ? 'Manager'
+    : department === 'LOG'
+      ? 'Logistics Technician'
+      : department === 'UNIT6'
+        ? 'Technician'
+        : 'Engineer';
+  const capacityCardTitle = department === 'PM'
+    ? 'CAPACITY PER MANAGER'
+    : department === 'LOG'
+      ? 'CAPACITY PER LOGISTICS TECHNICIAN'
+      : department === 'UNIT6'
+        ? 'CAPACITY PER TECHNICIAN'
+        : 'CAPACITY PER ENGINEER';
 
   const heatmapPanelHtml = typeof meRenderHeatmapPanel === 'function'
     ? meRenderHeatmapPanel(monthKey)
@@ -238,14 +253,14 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
 
         <div class="me-card">
           <div class="me-card-head">
-            <span class="me-card-title">${department === 'PM' ? 'CAPACITY PER MANAGER' : 'CAPACITY PER ENGINEER'}</span>
+            <span class="me-card-title">${capacityCardTitle}</span>
             <span style="font-size:11px;color:var(--muted);">${currentMonthLabel}</span>
           </div>
           <div class="me-card-body">
             <div class="me-tbl-wrap">
               <table class="me-tbl">
                 <thead><tr>
-                  <th>${department === 'PM' ? 'Manager' : 'Engineer'}</th>
+                  <th>${roleSingular}</th>
                   <th style="text-align:right;">Util %</th>
                   <th style="text-align:right;">Working Days</th>
                   <th style="text-align:right;">Holiday (days)</th>

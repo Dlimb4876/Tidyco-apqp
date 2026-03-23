@@ -4,9 +4,10 @@
 > Old sessions are consolidated by the daemon weekly.
 
 ## 2026-03-21
-- Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
-
 ## 2026-03-23
+- Updated shared Capacity wording for Logistics and Unit 6 so user-facing team labels no longer default to engineer-only text: `capacity-events.js`, `me-team.js`, `me-chart.js`, and `me-holidays.js` now show `Logistics Technician` for LOG and `Technician` for UNIT6; added focused regressions in `tests/me-team-render.test.js` and `tests/me-chart.test.js`; full Jest suite passes (55 suites, 737 tests).
+- Verified the user's correction on capacity headers: no further code change made after checking the current router/render paths; recorded that broader header-removal suggestions must be verified first.
+- Removed the shared Capacity route-switcher bar from the Logistics and Unit 6 pages in `portals/capacity/js/capacity.js` because those views already have their own local header/back controls; added regression coverage in `tests/capacity-hub.test.js`.
 - Fixed Product Support duplicate values caused by legacy manual `me_products` rows (null `product_database_id`) surviving alongside synced DB-linked rows of the same name: patched `meDataAutoSyncDepartmentProducts` to drop stale manual duplicates, added regression test in `tests/me-data-core.test.js`, and deleted 19 duplicate manual rows from Supabase.
 - Normalized overgrown live Supabase RLS policies across 14 public tables to the auth-only model (single `auth` policy each), removing overlapping permissive policies and broad `allow all` drift; added rollback SQL at `supabase/rollback_normalize_rls_to_single_auth_policy.sql`; validated with `npm test` (53/53 suites, 705/705 tests) and `npm run check:all` (EXIT:0).
 - Fixed cascading ME relational save failures in `portals/capacity/js/me-data-relational.js`: product saves now resolve existing `me_products.id` by `product_database_id` before upsert and persist only ME/PM product departments, eliminating `uq_me_product_database_id` and `me_products_department_check` save errors; added regression in `tests/me-data-core.test.js` and verified full `npm test` (53 suites, 705 tests).
@@ -1151,3 +1152,23 @@
 | 21:00 | Edited tests/npi-data-relational.test.js | added 1 condition(s) | ~566 |
 | 21:01 | Edited CHANGELOG.md | 1→3 lines | ~81 |
 | 21:01 | Session end: 3 writes across 2 files (CHANGELOG.md, npi-data-relational.test.js) | 5 reads | ~30557 tok |
+
+## Session: 2026-03-23 21:04
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 21:08
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:10 | Created tests/me-data-relational-queries.test.js | — | ~3553 |
+| 21:11 | Edited tests/prod-capacity-data.test.js | expanded (+63 lines) | ~840 |
+| 21:11 | Created tests/work-areas-data.test.js | — | ~1643 |
+| 21:12 | Edited CHANGELOG.md | 1→3 lines | ~107 |
+| 21:12 | Session end: 4 writes across 4 files (me-data-relational-queries.test.js, prod-capacity-data.test.js, work-areas-data.test.js, CHANGELOG.md) | 2 reads | ~20755 tok |
+
+## Session: 2026-03-23 21:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

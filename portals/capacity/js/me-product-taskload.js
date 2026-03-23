@@ -96,6 +96,17 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
     return count;
   };
 
+  const getSupportPerBatch = (product) => {
+    const rawKitting = Number(product && (product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawMovement = Number(product && (product.productMovementHours ?? product.product_movement_hours));
+    if (Number.isFinite(rawKitting) || Number.isFinite(rawMovement)) {
+      return Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0) +
+        Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0);
+    }
+
+    return Number(product && (product.hoursPerWeek ?? product.hours_per_week)) || 0;
+  };
+
   function resolveFamilyLabel(familyRef) {
     if (!familyRef) return '—';
 
@@ -169,10 +180,10 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
       taskCount,
       categories,
       tasks,
-      hoursPerWeek: Number(product.hoursPerWeek) || 0,
+      hoursPerWeek: getSupportPerBatch(product),
       monthlySupport: (() => {
         const batchCount = countBatchesForProductInRange(product, monthStart, monthEnd);
-        return (Number(product.hoursPerWeek) || 0) * batchCount;
+        return getSupportPerBatch(product) * batchCount;
       })()
     };
   });

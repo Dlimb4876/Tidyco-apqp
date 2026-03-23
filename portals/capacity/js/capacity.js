@@ -18,6 +18,10 @@ function setCapacityTab(tab) {
 }
 
 function capacityNavBar() {
+  if (capacityTab === 'logistics' || capacityTab === 'unit6') {
+    return '';
+  }
+
   return `
     <div class="prod-nav-bar">
       <button class="prod-nav-item prod-nav-back" data-action="cap-nav-root">← Back</button>

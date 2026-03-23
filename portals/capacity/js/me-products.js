@@ -92,13 +92,26 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
     ? meGetDepartmentFromContext()
     : 'ME';
   const isPmContext = department === 'PM';
+  const isLogContext = department === 'LOG';
   const state = meProductsGetState(department);
+
+  const getSupportPerBatch = (product) => {
+    const rawKitting = Number(product && (product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawMovement = Number(product && (product.productMovementHours ?? product.product_movement_hours));
+    if (Number.isFinite(rawKitting) || Number.isFinite(rawMovement)) {
+      return Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0) +
+        Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0);
+    }
+
+    const explicitTotal = Number(product && (product.hoursPerWeek ?? product.hours_per_week));
+    return Math.max(0, Number.isFinite(explicitTotal) ? explicitTotal : 0);
+  };
 
   const updated = Array.isArray(productsArray) ? productsArray : meDataGetProducts();
   const tasks = tasksArray || meDataGetTasks();
   const allProducts = typeof meDataGetProducts === 'function' ? meDataGetProducts() : updated;
 
-  const totalLoadPerBatch = updated.reduce((sum, p) => sum + (Number(p.hoursPerWeek) || 0), 0);
+  const totalLoadPerBatch = updated.reduce((sum, p) => sum + getSupportPerBatch(p), 0);
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -128,7 +141,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
     return count;
   };
   const totalLoadMonthly = updated.reduce((sum, product) => {
-    const fallbackSupportPerBatch = Number(product.hoursPerWeek) || 0;
+    const fallbackSupportPerBatch = getSupportPerBatch(product);
 
     if (typeof window.meGetProductBatchesInRange === 'function' && typeof window.meGetProductSupportHoursForBatch === 'function') {
       const overlappingBatches = window.meGetProductBatchesInRange(product, monthStart, monthEnd);
@@ -222,7 +235,9 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       familyLabel,
       status: statusLabel,
       name: (product.name || '').toString(),
-      hoursPerWeek: Number(product.hoursPerWeek) || 0,
+      hoursPerWeek: getSupportPerBatch(product),
+      kittingTimeBookingHours: Math.max(0, Number(product.kittingTimeBookingHours) || 0),
+      productMovementHours: Math.max(0, Number(product.productMovementHours) || 0),
       supportEffectiveDate: (product.supportEffectiveDate || '').toString(),
       notes: (product.notes || '').toString()
     };
@@ -296,6 +311,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
   });
 
   let rows = '';
+  const totalColumnCount = isLogContext ? 10 : 8;
   visibleRows.forEach(row => {
     const product = row.product;
     const rowIndex = row.rowIndex;
@@ -316,7 +332,11 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
         <td>${esc(product.name)}</td>
         <td>${esc(row.familyLabel)}</td>
         <td>${typeof renderStatusBadge === 'function' ? renderStatusBadge(row.status) : esc(row.status)}</td>
-        <td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${product.hoursPerWeek || 0}" step="0.5" data-field="hoursPerWeek"></td>
+        ${isLogContext
+    ? `<td><input name="cap_products_${rowIndex}_kittingTimeBookingHours" type="number" value="${row.kittingTimeBookingHours || 0}" step="0.5" min="0" data-cap-action="cap-products-upd" data-field="kittingTimeBookingHours"></td>
+        <td><input name="cap_products_${rowIndex}_productMovementHours" type="number" value="${row.productMovementHours || 0}" step="0.5" min="0" data-cap-action="cap-products-upd" data-field="productMovementHours"></td>
+        <td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${row.hoursPerWeek || 0}" step="0.5" data-field="hoursPerWeek" readonly></td>`
+    : `<td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${row.hoursPerWeek || 0}" step="0.5" min="0" data-field="hoursPerWeek"></td>`}
         <td><input name="cap_products_${rowIndex}_supportEffectiveDate" type="date" value="${esc(row.supportEffectiveDate || '')}" data-field="supportEffectiveDate"></td>
         <td><input name="cap_products_${rowIndex}_supportChangeReason" type="text" placeholder="Reason for change" data-field="supportChangeReason"></td>
         <td><input name="cap_products_${rowIndex}_notes" value="${esc(product.notes || '')}" data-cap-action="cap-products-upd" data-field="notes"></td>
@@ -327,7 +347,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       </tr>
       ${historyIsOpen ? `
       <tr>
-        <td colspan="8" style="background:var(--bg-soft)">
+        <td colspan="${totalColumnCount}" style="background:var(--bg-soft)">
           <div style="padding:10px 12px">
             <div style="font-size:12px;font-weight:600;margin-bottom:8px">Support History</div>
             <table class="me-tbl" style="margin:0">
@@ -431,19 +451,23 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
               <th style="width:200px">Product Name</th>
               <th style="width:150px">Product Family</th>
               <th style="width:130px">Product Status</th>
-              <th style="width:120px">Hours/Batch</th>
+              ${isLogContext
+    ? `<th style="width:170px">Kitting Booking In/Out</th>
+              <th style="width:150px">Product Movement</th>
+              <th style="width:120px">Hours/Batch</th>`
+    : `<th style="width:120px">Hours/Batch</th>`}
               <th style="width:150px">Effective Date</th>
               <th style="width:180px">Change Reason</th>
               <th style="width:200px">Notes</th>
               <th style="width:180px">Actions</th>
             </tr></thead>
             <tbody>
-              ${rows || `<tr><td colspan="8"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
+              ${rows || `<tr><td colspan="${totalColumnCount}"><div style="text-align:center;padding:40px;color:var(--muted)">No ${isPmContext ? 'project' : 'production'} products found</div></td></tr>`}
             </tbody>
           </table>
         </div>
         <div style="font-size: 12px; color: var(--muted); padding: 12px 0;">
-          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. To avoid accidental history edits, support rate changes only save when you click Apply Change with an effective date and reason. Use View History on each row to audit past rates.
+          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. ${isLogContext ? 'For Logistics, Hours/Batch is calculated from Kitting Booking In/Out plus Product Movement. ' : ''}To avoid accidental history edits, support rate changes only save when you click Apply Change with an effective date and reason. Use View History on each row to audit past rates.
         </div>
       </div>
     </div>

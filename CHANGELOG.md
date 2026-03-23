@@ -3,6 +3,12 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-23 | Rename Logistics and Unit 6 capacity team labels | Shared capacity screens treated every non-PM stream as engineer-only; Logistics now shows Logistics Technician and Unit 6 shows Technician across team, chart, holiday, and add-member UI text
+
+## 2026-03-23 | Remove shared capacity nav bar from Logistics and Unit 6 pages | Those pages already have their own local header/back controls, so the extra route-switcher bar was redundant and cluttered the top of the screen
+
+## 2026-03-23 | Add capacity Supabase query tests | New test files for me-data-relational.js (save payloads, delete filters, load mapping), prod-capacity-data.js (query shapes for init and staff insert), and work-areas-data.js (CRUD column verification); catches wrong DB column names, camelCase leaking into payloads, and wrong filter columns
+
 ## 2026-03-23 | Add npiRelLoad query consistency tests | Detect future column type mismatches and per-table project_id inconsistencies; tests verify npi_documents receives text prog_id (not UUID) and that all 16 npi tables receive the same project_id value
 
 ## 2026-03-23 | Fix npi_documents 400 error — change project_id column from uuid to text | npi_documents.project_id was typed uuid while all other npi_* tables use text; the code passes prog_id (text) as the project identifier so queries failed with 400 Bad Request; dropped the incorrect FK constraint and retyped the column to text to match all other npi tables

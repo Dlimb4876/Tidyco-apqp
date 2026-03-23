@@ -15,6 +15,9 @@
 - On MCS main cards, user wants explicit label text (`Change Type: ...`) rather than only the raw value.
 - For favourites UX, user expects star toggles on all hub-style cards (main hub and section root hubs).
 - For layout/design feedback, recommendations must be based on direct inspection of the current implementation before suggesting changes.
+- For Logistics and Unit 6 capacity pages, user does not want the shared Capacity route-switcher bar above the local page header.
+- In Capacity, user-facing role labels must match the stream: Logistics uses `Logistics Technician` and Unit 6 uses `Technician` instead of generic `Engineer` wording.
+- Do not assume the same capacity-header cleanup is needed on other capacity pages; verify the current implementation before suggesting broader nav removals.
 - For ME/PM product support planning, monthly support/load must be driven by production schedule batch counts (batch multiplier), not fixed weeks-per-month multipliers.
 - For Product Support effective-dated edits, user expects explicit intent controls (not auto-save on field change), with clear in-context change history at the point of editing.
 - For settings portal work, user prioritizes reducing churn in `settings.js`; avoid broad rewrites and stabilize tests with explicit hooks/contracts to prevent scope collisions and brittle `settings-portal.test.js` coupling.

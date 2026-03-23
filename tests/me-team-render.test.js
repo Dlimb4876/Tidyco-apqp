@@ -74,6 +74,18 @@ describe('meRenderTeamTab()', () => {
     expect(html).toContain('PM TEAM');
   });
 
+  it('shows LOGISTICS TECHNICIANS label for Logistics context', () => {
+    global.meGetDepartmentFromContext.mockReturnValue('LOG');
+    const html = window.meRenderTeamTab(SAMPLE_TEAM);
+    expect(html).toContain('LOGISTICS TECHNICIANS');
+  });
+
+  it('shows TECHNICIAN TEAM label for Unit 6 context', () => {
+    global.meGetDepartmentFromContext.mockReturnValue('UNIT6');
+    const html = window.meRenderTeamTab(SAMPLE_TEAM);
+    expect(html).toContain('TECHNICIAN TEAM');
+  });
+
   it('shows member count', () => {
     const html = window.meRenderTeamTab(SAMPLE_TEAM);
     expect(html).toContain('2 engineers');
@@ -83,6 +95,18 @@ describe('meRenderTeamTab()', () => {
     global.meGetDepartmentFromContext.mockReturnValue('PM');
     const html = window.meRenderTeamTab(SAMPLE_TEAM);
     expect(html).toContain('2 managers');
+  });
+
+  it('shows logistics technicians count for Logistics context', () => {
+    global.meGetDepartmentFromContext.mockReturnValue('LOG');
+    const html = window.meRenderTeamTab(SAMPLE_TEAM);
+    expect(html).toContain('2 logistics technicians');
+  });
+
+  it('shows technicians count for Unit 6 context', () => {
+    global.meGetDepartmentFromContext.mockReturnValue('UNIT6');
+    const html = window.meRenderTeamTab(SAMPLE_TEAM);
+    expect(html).toContain('2 technicians');
   });
 
   it('includes Add Engineer button', () => {
@@ -116,6 +140,24 @@ describe('meRenderTeamTab()', () => {
     global.meDataGetTeam.mockReturnValue([]);
     const html = window.meRenderTeamTab([]);
     expect(html).toContain('Add First Engineer');
+  });
+
+  it('shows Logistics Technician empty state labels for Logistics context', () => {
+    global.meGetDepartmentFromContext.mockReturnValue('LOG');
+    global.meDataGetTeam.mockReturnValue([]);
+    const html = window.meRenderTeamTab([]);
+    expect(html).toContain('No logistics technicians added yet');
+    expect(html).toContain('Add First Logistics Technician');
+    expect(html).toContain('＋ Add Logistics Technician');
+  });
+
+  it('shows Technician empty state labels for Unit 6 context', () => {
+    global.meGetDepartmentFromContext.mockReturnValue('UNIT6');
+    global.meDataGetTeam.mockReturnValue([]);
+    const html = window.meRenderTeamTab([]);
+    expect(html).toContain('No technicians added yet');
+    expect(html).toContain('Add First Technician');
+    expect(html).toContain('＋ Add Technician');
   });
 
   it('includes job title in rendered rows', () => {
