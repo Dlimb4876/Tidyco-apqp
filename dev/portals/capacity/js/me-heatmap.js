@@ -9,7 +9,7 @@ window.meRenderHeatmapPanel = function(monthKey) {
   return `
     <div class="me-card" style="margin-top: 16px;">
       <div class="me-card-head">
-        <span class="me-card-title">TEAM UTILISATION HEAT MAP (20 WEEKS)</span>
+        <span class="me-card-title">TEAM UTILISATION HEAT MAP (FULL YEAR)</span>
         <span style="font-size:12px;color:var(--muted)">${monthLabel}</span>
       </div>
       <div class="me-card-body" style="padding: 16px;">
@@ -56,7 +56,7 @@ window.meDrawHeatmapNow = function() {
   const holidays = meFilterByDepartment(meDataGetHolidays(), dept, 'ME');
   const monthKey = meChartStart;
 
-  const weeks = meGetWeekRange(monthKey, 20);
+  const weeks = meGetWeekRange(monthKey, 52);
   const container = document.getElementById('meHeatmapGrid');
 
   if (!container) return;

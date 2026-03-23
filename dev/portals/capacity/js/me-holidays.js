@@ -43,9 +43,15 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
 
   const [year, month] = selectedMonth.split('-').map(Number);
   const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0);
+  // Show 2 months: extend end to end of next month
+  const endDate = new Date(year, month + 1, 0);
 
-  const bankHols = meGetBankHolidaysForYear(year);
+  // Bank holidays for both months (handle Dec → Jan year boundary)
+  const bankHols = Object.assign({}, meGetBankHolidaysForYear(year));
+  const nextMonthYear = month === 12 ? year + 1 : year;
+  if (nextMonthYear !== year) {
+    Object.assign(bankHols, meGetBankHolidaysForYear(nextMonthYear));
+  }
 
   const dates = [];
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -57,6 +63,10 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
     }
   }
 
+  const todayObj = new Date();
+  const todayMonthKey = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}`;
+  const isCurrentMonth = selectedMonth === todayMonthKey;
+
   let html = `
     <div class="me-card" style="overflow: auto;">
       <div class="me-card-head">
@@ -67,6 +77,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-prev-month">← Prev</button>
         <input type="month" name="cap_me_holidays_month" value="${selectedMonth}" data-cap-action="cap-me-month-change" style="padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px;">
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-next-month">Next →</button>
+        <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-today" ${isCurrentMonth ? 'disabled style="opacity:0.4;"' : 'style="color:var(--primary);"'}>↩ Today</button>
       </div>
       <div class="me-card-body" style="overflow-x: auto;">
         <table class="holiday-matrix">

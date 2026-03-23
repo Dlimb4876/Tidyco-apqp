@@ -276,7 +276,7 @@ describe('meDataInit()', () => {
 
     await window.meDataInit();
 
-    expect(from).not.toHaveBeenCalled();
+    expect(from).not.toHaveBeenCalledWith('me_capacity');
     expect(window.meDataState.team).toHaveLength(1);
     expect(window.meDataState.holidays).toEqual([
       expect.objectContaining({

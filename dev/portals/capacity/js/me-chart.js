@@ -6,11 +6,12 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   const department = typeof window.meCurrentDepartmentContext === 'string'
     ? window.meCurrentDepartmentContext
     : 'ME';
-    
-  // KPIs always reflect the current calendar month
-  const today = new Date();
-  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-  const currentMonthData = meCalculateMonthData(currentMonthKey, teamArray, tasksArray, productsArray, holidaysArray);
+
+  // Keep KPI cards aligned with the selected chart month.
+  const selectedMonthKey = typeof monthKey === 'string' && /^\d{4}-\d{2}$/.test(monthKey)
+    ? monthKey
+    : `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthData = meCalculateMonthData(selectedMonthKey, teamArray, tasksArray, productsArray, holidaysArray);
 
   const capacity    = currentMonthData.capacity.toFixed(1);
   const demand      = currentMonthData.totalDemand.toFixed(1);
@@ -18,7 +19,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   const headroom    = Math.max(0, currentMonthData.capacity - currentMonthData.totalDemand).toFixed(1);
 
   const utilisationColor = getUtilisationColor(utilisation);
-  const currentMonthLabel = meGetMonthLabel(currentMonthKey);
+  const currentMonthLabel = meGetMonthLabel(selectedMonthKey);
 
   // ── Demand breakdown rows ──────────────────────────────────
   const pct = (v) => currentMonthData.totalDemand === 0 ? '—' : ((v / currentMonthData.totalDemand) * 100).toFixed(0) + '%';
@@ -59,7 +60,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
   // ── Per-engineer capacity rows ─────────────────────────────
   // NOTE: members without a startDate are excluded here to match meCalculateMonthData
   // (fixes mismatch between KPI totals and table totals)
-  const [currentYear, currentMonthNum] = currentMonthKey.split('-').map(Number);
+  const [currentYear, currentMonthNum] = selectedMonthKey.split('-').map(Number);
   const monthStart  = new Date(currentYear, currentMonthNum - 1, 1);
   const monthEnd    = new Date(currentYear, currentMonthNum, 0);
   const bankHolSet  = new Set(getBankHolidaysForYear(currentYear).map(h => h.date));
@@ -465,6 +466,22 @@ window.meDrawChartNow = function() {
 window.meOnTodayClick = function() {
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+  // Handle holidays tab for ME capacity
+  if (typeof meTab !== 'undefined' && meTab === 'holidays') {
+    meHolidayMonth = currentMonthKey;
+    if (typeof meRefreshCurrentTab === 'function') meRefreshCurrentTab();
+    return;
+  }
+
+  // Handle holidays tab for PM capacity
+  if (typeof pmTab !== 'undefined' && pmTab === 'holidays') {
+    pmHolidayMonth = currentMonthKey;
+    if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab();
+    return;
+  }
+
+  // Default: chart tab
   const input = document.getElementById('meChartMonthInput');
   if (input) {
     input.value = currentMonthKey;

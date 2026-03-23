@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-23T10:44:06.551Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-23T12:39:59.822Z
 > Files: 281 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
@@ -14,7 +14,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~12142 tok)
+- `CHANGELOG.md` — Changelog (~12401 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -130,8 +130,15 @@
 
 ## Manual Update 2026-03-23
 
+- Aligned ME/PM Capacity Chart KPI and breakdown month context to follow selected chart month in `portals/capacity/js/me-chart.js`; added regression coverage in `tests/me-chart.test.js` and changelog entry.
+- Updated task-search focus behavior in `portals/capacity/js/capacity-events.js`.
+- Added regression coverage in `tests/capacity-events.test.js`.
+- Added release note in `CHANGELOG.md`.
+
 
 ## Manual Update Notes
+
+- ME and PM both route through delegated `cap-task-search`; fix applied centrally to preserve parity.
 
 
 ## core/css/
@@ -193,7 +200,7 @@
 - `capacity.css` — Styles: 58 rules, 2 media queries (~2226 tok)
 - `me-capacity-chart.css` — Styles: 31 rules, 1 media queries (~1086 tok)
 - `me-capacity-dashboard.css` — Styles: 41 rules (~1729 tok)
-- `me-capacity-heatmap.css` — Styles: 35 rules, 1 animations (~1474 tok)
+- `me-capacity-heatmap.css` — Styles: 35 rules (~1474 tok)
 - `me-capacity-holidays.css` — Styles: 23 rules (~977 tok)
 - `me-capacity-responsive.css` — Styles: 2 rules, 2 media queries (~623 tok)
 - `me-capacity-shell.css` — Styles: 14 rules (~617 tok)
@@ -202,20 +209,20 @@
 
 ## portals/capacity/js/
 
-- `capacity-events.js` — capActionTarget: capNum, capIsPM, capTaskFilters, capTaskRefresh (~5118 tok)
+- `capacity-events.js` — capActionTarget: capNum, capIsPM, capTaskFilters, capTaskRefresh (~5862 tok)
 - `capacity.js` — Capacity Management Portal Hub (~1687 tok)
-- `me-calculations.js` — dateOnly: isWeekday (~3552 tok)
+- `me-calculations.js` — Declares dateOnly (~4247 tok)
 - `me-capacity.js` — Main render function for ME Capacity Portal (~3300 tok)
 - `me-chart.js` — Declares department (~5967 tok)
 - `me-components.js` — Declares color (~1714 tok)
 - `me-dashboard.js` — Draw mini 6-month capacity chart on dashboard (~2606 tok)
 - `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeIsoDate, meNormalizeDateRange (~3794 tok)
 - `me-data.js` — Auto-sync products from product management database into a department stream. (~8794 tok)
-- `me-heatmap.js` — monthLabel: meRenderDetailPanel (~2626 tok)
+- `me-heatmap.js` — monthLabel: meRenderDetailPanel (~2627 tok)
 - `me-holidays.js` — Declares y (~2042 tok)
 - `me-product-taskload.js` — meProductLoadTableState: meProductLoadGetState, meProductLoadRefreshTable, resolveFamilyLabel, resolveFamilyLabelForProduct (~3912 tok)
 - `me-products.js` — meProductsTableState: meProductsGetState, meProductsRefreshTable, resolveFamilyLabel, resolveFamilyLabelForProduct, resolveStatusForProduct (~4292 tok)
-- `me-tasks.js` — Declares setState (~4726 tok)
+- `me-tasks.js` — Declares setState (~5323 tok)
 - `me-team.js` — Declares department (~1924 tok)
 - `me-utils.js` — Declares parsed (~2732 tok)
 - `prod-capacity-dashboard.js` — ═══════════════════════════════════════════════════════════════ (~3256 tok)

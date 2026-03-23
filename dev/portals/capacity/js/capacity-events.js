@@ -137,6 +137,12 @@ window.capacityEvents._onClick = function(evt) {
     capTaskRefresh(isPM)
     break
   }
+  case 'cap-task-clear-month': {
+    const f = capTaskFilters(isPM)
+    if (f) f.month = 'all'
+    capTaskRefresh(isPM)
+    break
+  }
   case 'cap-task-toggle-hide-completed': {
     const f = capTaskFilters(isPM)
     const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
@@ -152,13 +158,67 @@ window.capacityEvents._onClick = function(evt) {
     const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
     const hideVal = f ? f.hideCompleted : false
     if (f) {
-      Object.assign(f, { search: '', category: 'all', assignee: 'all', product: 'all', hideCompleted: hideVal })
+      Object.assign(f, { search: '', category: 'all', assignee: 'all', product: 'all', month: 'all', hideCompleted: hideVal })
     }
     capTaskRefresh(isPM)
     break
   }
 
   // ── ME Products ───────────────────────────────────────────
+  case 'cap-products-apply-hours': {
+    const row = el.closest('[data-product-idx]')
+    const idx = capNum(row?.getAttribute('data-product-idx'), -1)
+    if (idx < 0) break
+
+    const hoursEl = row?.querySelector('input[data-field="hoursPerWeek"]')
+    const effectiveDateEl = row?.querySelector('input[data-field="supportEffectiveDate"]')
+    const reasonEl = row?.querySelector('input[data-field="supportChangeReason"]')
+    const hoursValue = hoursEl ? Number(hoursEl.value) : NaN
+    const effectiveDate = (effectiveDateEl?.value || '').trim()
+    const changeReason = (reasonEl?.value || '').trim()
+
+    if (!Number.isFinite(hoursValue) || hoursValue < 0) {
+      alert('Enter a valid Hours/Batch value before applying.')
+      if (hoursEl) hoursEl.focus()
+      break
+    }
+
+    if (!effectiveDate) {
+      alert('Choose an Effective Date before applying the support change.')
+      if (effectiveDateEl) effectiveDateEl.focus()
+      break
+    }
+
+    if (changeReason.length < 3) {
+      alert('Add a short reason so this change is intentional and traceable.')
+      if (reasonEl) reasonEl.focus()
+      break
+    }
+
+    const products = typeof meDataGetProducts === 'function' ? meDataGetProducts() : []
+    const product = products[idx]
+    const currentEffectiveDate = (product && product.supportEffectiveDate) ? String(product.supportEffectiveDate) : ''
+
+    if (currentEffectiveDate && effectiveDate < currentEffectiveDate) {
+      const confirmBackdate = confirm('You are backdating this support change before the current effective date. Continue intentionally?')
+      if (!confirmBackdate) break
+    }
+
+    meDataUpdateProduct(idx, 'hoursPerWeek', String(hoursValue), {
+      effectiveDate,
+      changeReason
+    })
+
+    if (typeof meRefreshCurrentTab === 'function') meRefreshCurrentTab()
+    meDebouncedSave()
+    break
+  }
+  case 'cap-products-toggle-history': {
+    if (typeof meProductsToggleHistory === 'function') {
+      meProductsToggleHistory(el.getAttribute('data-product-id'), el.getAttribute('data-dept'))
+    }
+    break
+  }
   case 'cap-products-sort-dir': if (typeof meProductsToggleSortDir === 'function') meProductsToggleSortDir(el.getAttribute('data-dept')); break
   case 'cap-products-clear-filters': if (typeof meProductsClearFilters === 'function') meProductsClearFilters(el.getAttribute('data-dept')); break
 
@@ -260,6 +320,12 @@ window.capacityEvents._onChange = function(evt) {
     capTaskRefresh(isPM)
     break
   }
+  case 'cap-task-filter-month': {
+    const f = capTaskFilters(isPM)
+    if (f) f.month = el.value
+    capTaskRefresh(isPM)
+    break
+  }
 
   // ── ME Products update ────────────────────────────────────
   case 'cap-products-upd': {
@@ -267,6 +333,11 @@ window.capacityEvents._onChange = function(evt) {
     const idx = capNum(row?.getAttribute('data-product-idx'), -1)
     if (idx < 0) break
     const field = el.getAttribute('data-field')
+    if (field === 'hoursPerWeek' || field === 'supportEffectiveDate') {
+      // Intent-based flow: dated support changes are only persisted via cap-products-apply-hours.
+      break
+    }
+
     meDataUpdateProduct(idx, field, el.value)
     meDebouncedSave()
     break
@@ -325,13 +396,37 @@ window.capacityEvents._onInput = function(evt) {
   if (!el) return
   const action = el.getAttribute('data-cap-action')
   const isPM = capIsPM(el)
+  const contextRoot = el.closest('[data-cap-context]')
 
   switch (action) {
   case 'cap-task-search': {
     const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
+    const caretStart = typeof el.selectionStart === 'number' ? el.selectionStart : null
+    const caretEnd = typeof el.selectionEnd === 'number' ? el.selectionEnd : caretStart
+    const contextType = contextRoot ? contextRoot.getAttribute('data-cap-context') : ''
+
     if (filterStateVar) filterStateVar.search = el.value
     if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
     else meSetTab('tasks')
+
+    // Keep typing uninterrupted when the tasks tab is re-rendered.
+    setTimeout(function() {
+      const scope = contextType
+        ? document.querySelector('[data-cap-context="' + contextType + '"]')
+        : document
+      const replacement = scope && typeof scope.querySelector === 'function'
+        ? scope.querySelector('[data-cap-action="cap-task-search"]')
+        : null
+      if (!replacement) return
+
+      replacement.focus()
+      if (caretStart !== null && typeof replacement.setSelectionRange === 'function') {
+        const len = (replacement.value || '').length
+        const start = Math.min(caretStart, len)
+        const end = Math.min(caretEnd === null ? start : caretEnd, len)
+        replacement.setSelectionRange(start, end)
+      }
+    }, 0)
     break
   }
   case 'cap-products-search': {
