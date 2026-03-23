@@ -3,13 +3,31 @@
 let prodSchedulingSort = { field: 'start_date', ascending: true };
 let prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFrom: '', dateTo: '' };
 let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
+let selectedBatchIds = new Set();
+
+function flashSaved(el) {
+  el.classList.add('cell-saved');
+  setTimeout(() => el.classList.remove('cell-saved'), 1000);
+}
+
+function updateBulkToolbar() {
+  const toolbar = document.getElementById('bulk-toolbar');
+  const countEl = document.getElementById('bulk-count');
+  if (!toolbar) return;
+  if (selectedBatchIds.size > 0) {
+    toolbar.classList.remove('hidden');
+    if (countEl) countEl.textContent = `${selectedBatchIds.size} selected`;
+  } else {
+    toolbar.classList.add('hidden');
+  }
+}
 
 function renderSchedulingNewRow() {
   // Defensive check: ensure prodState exists
   const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
   
   return `
-    <tr class="row-new" id="batch-new-row" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+    <tr class="row-new" id="batch-new-row" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
       <td class="w28 ctr">+</td>
       <td>
         <select class="cell-edit" id="batch-new-product" data-field="product">
@@ -60,45 +78,47 @@ function addSchedulingNewRowEventListeners() {
   });
 }
 
-function renderSchedulingRow(batch, idx, activeBatches) {
-  const product = prodDataGetProductById(batch.product_id);
+function renderSchedulingRow(batch, idx, activeBatches, productMap, allFamilies) {
+  const product = productMap ? productMap.get(batch.product_id) : prodDataGetProductById(batch.product_id);
   const batchIdx = (prodState && Array.isArray(prodState.batches)) ? prodState.batches.indexOf(batch) : -1;
 
-  // Defensive check for products array
   const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  const families = allFamilies || getFamilies();
 
-  // Auto-populate work location if empty
   let workLocation = batch.work_location;
   if (!workLocation && product && product.work_location) {
     workLocation = product.work_location;
   }
 
-  // Due date urgency check
-  let dueBadge = ''
-  let rowUrgencyClass = ''
+  let dueBadge = '';
+  let rowUrgencyClass = '';
   if (batch.due_date && batch.status !== 'Complete') {
-    const today = new Date(); today.setHours(0,0,0,0)
-    const due = new Date(batch.due_date); due.setHours(0,0,0,0)
-    const daysLeft = Math.round((due - today) / 86400000)
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due = new Date(batch.due_date); due.setHours(0,0,0,0);
+    const daysLeft = Math.round((due - today) / 86400000);
     if (daysLeft < 0) {
-      dueBadge = `<div class="batch-due-badge batch-overdue">⚠ Overdue</div>`
-      rowUrgencyClass = 'batch-row-overdue'
+      dueBadge = `<div class="batch-due-badge batch-overdue">⚠ Overdue</div>`;
+      rowUrgencyClass = 'batch-row-overdue';
     } else if (daysLeft <= 7) {
-      dueBadge = `<div class="batch-due-badge batch-due-soon">⚠ Due soon</div>`
-      rowUrgencyClass = 'batch-row-due-soon'
+      dueBadge = `<div class="batch-due-badge batch-due-soon">⚠ Due soon</div>`;
+      rowUrgencyClass = 'batch-row-due-soon';
     }
   }
 
+  const isSelected = selectedBatchIds.has(batch.id);
+
   return `
-    <tr id="batch-row-${batchIdx}" class="${rowUrgencyClass}">
-      <td class="w28 ctr">${activeBatches.indexOf(batch) + 1}</td>
+    <tr id="batch-row-${batchIdx}" class="${rowUrgencyClass}${isSelected ? ' batch-row-selected' : ''}">
+      <td class="w28 ctr">
+        <input type="checkbox" class="batch-select-cb" data-batch-id="${batch.id}" ${isSelected ? 'checked' : ''}>
+      </td>
       <td>
         <select class="cell-edit" name="batch_${batchIdx}_product_id" data-field="product_id">
           ${products.filter(p => p.status?.toLowerCase() !== 'closed').map(p => `<option value="${p.id}" ${batch.product_id === p.id ? 'selected' : ''}>${p.name} (${p.part_number || 'N/A'})</option>`).join('')}
         </select>
       </td>
       <td>
-        <div class="cell-display">${product && product.family ? (getFamilies().find(f => f.id === product.family)?.label || '—') : '—'}</div>
+        <div class="cell-display">${product && product.family ? (families.find(f => f.id === product.family)?.label || '—') : '—'}</div>
       </td>
       <td>
         <div class="cell-display">${workLocation || '—'}</div>
@@ -120,8 +140,8 @@ function renderSchedulingRow(batch, idx, activeBatches) {
       </td>
       <td><textarea class="cell-edit" name="batch_${batchIdx}_notes" data-field="notes">${esc(batch.notes || '')}</textarea></td>
       <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
-        <button class="btn-del" data-action="duplicate" title="Duplicate batch">⧉</button>
-        <button class="btn-del" data-action="delete" title="Delete batch">✕</button>
+        ${canEdit() ? `<button class="btn-del" data-action="duplicate" title="Duplicate batch">⧉</button>
+        <button class="btn-del" data-action="delete" title="Delete batch">✕</button>` : ''}
       </td>
     </tr>
   `;
@@ -134,15 +154,12 @@ function addSchedulingRowEventListeners(batch) {
   if (!row) return;
 
   row.querySelectorAll('[data-field]').forEach(input => {
-    input.addEventListener('change', (e) => {
+    input.addEventListener('change', async (e) => {
       const field = e.target.getAttribute('data-field');
-      // Date fields are handled exclusively by the blur listener below,
-      // which converts DD/MM/YYYY → ISO before saving. Saving the raw
-      // display value here would cause PostgreSQL to mis-parse the date
-      // as MM/DD/YYYY, swapping day and month (e.g. 08/11 → August 11).
       if (field === 'start_date' || field === 'due_date') return;
       const value = e.target.value;
-      prodDataUpdateBatch(batchIdx, field, value);
+      const ok = await prodDataUpdateBatch(batchIdx, field, value);
+      if (ok) flashSaved(e.target);
       if (field === 'product_id') {
         autoPopulateWorkLocationForBatch(batchIdx, value);
       }
@@ -150,8 +167,14 @@ function addSchedulingRowEventListeners(batch) {
     input.addEventListener('keydown', handleCellKey);
   });
 
-  row.querySelector(`[data-field="start_date"]`).addEventListener('blur', (e) => smartDateFormat(e.target.id, () => prodDataUpdateBatch(batchIdx, 'start_date', parseDisplayDate(e.target.value))));
-  row.querySelector(`[data-field="due_date"]`).addEventListener('blur', (e) => smartDateFormat(e.target.id, () => prodDataUpdateBatch(batchIdx, 'due_date', parseDisplayDate(e.target.value))));
+  row.querySelector(`[data-field="start_date"]`).addEventListener('blur', (e) => smartDateFormat(e.target.id, async () => {
+    const ok = await prodDataUpdateBatch(batchIdx, 'start_date', parseDisplayDate(e.target.value));
+    if (ok) flashSaved(e.target);
+  }));
+  row.querySelector(`[data-field="due_date"]`).addEventListener('blur', (e) => smartDateFormat(e.target.id, async () => {
+    const ok = await prodDataUpdateBatch(batchIdx, 'due_date', parseDisplayDate(e.target.value));
+    if (ok) flashSaved(e.target);
+  }));
 
   row.querySelector('[data-action="duplicate"]').addEventListener('click', () => duplicateBatchRow(batchIdx));
   row.querySelector('[data-action="delete"]').addEventListener('click', () => {
@@ -162,15 +185,18 @@ function addSchedulingRowEventListeners(batch) {
 }
 
 function renderScheduling() {
-  // Defensive checks for prodState
   const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
   const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
   const activeBatches = getFilteredBatches();
 
-  let rows = renderSchedulingNewRow();
+  // Build lookup maps once for all rows
+  const productMap = new Map(products.map(p => [p.id, p]));
+  const allFamilies = getFamilies();
+
+  let rows = canEdit() ? renderSchedulingNewRow() : '';
 
   activeBatches.forEach((batch, idx) => {
-    rows += renderSchedulingRow(batch, idx, activeBatches);
+    rows += renderSchedulingRow(batch, idx, activeBatches, productMap, allFamilies);
   });
 
   const html = `
@@ -197,7 +223,7 @@ function renderScheduling() {
           <label>Family:</label>
           <select id="family-filter">
             <option value="">— All Families</option>
-            ${getFamilies().map(f => `<option value="${f.id}" ${prodSchedulingFilters.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
+            ${allFamilies.map(f => `<option value="${f.id}" ${prodSchedulingFilters.family === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}
           </select>
         </div>
         <div class="filter-group">
@@ -224,6 +250,20 @@ function renderScheduling() {
         </div>
       </div>
 
+      <!-- Bulk Action Toolbar -->
+      <div id="bulk-toolbar" class="bulk-toolbar${selectedBatchIds.size > 0 ? '' : ' hidden'}">
+        <span id="bulk-count">${selectedBatchIds.size} selected</span>
+        <select id="bulk-status-select">
+          <option value="">Set status…</option>
+          <option value="Planned">Planned</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Complete">Complete</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" id="bulk-status-apply">Apply</button>
+        <button class="btn btn-danger btn-sm" id="bulk-delete-btn">Delete Selected</button>
+        <button class="btn btn-ghost btn-sm" id="bulk-clear-btn">Clear</button>
+      </div>
+
       <!-- Legend -->
       <div style="background:var(--bg-secondary);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted);display:flex;gap:24px;flex-wrap:wrap">
         <div><strong>⧉</strong> Duplicate batch — copies all fields (product, location, qty, dates, notes) to create a new batch</div>
@@ -247,7 +287,7 @@ function renderScheduling() {
           </colgroup>
         <thead>
           <tr>
-            <th>#</th>
+            <th><input type="checkbox" id="select-all-batches" title="Select all"></th>
             <th data-sort-field="product_id" style="cursor:pointer">Product ${prodSchedulingSort.field === 'product_id' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th data-sort-field="family" style="cursor:pointer">Family ${prodSchedulingSort.field === 'family' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
             <th data-sort-field="work_location" style="cursor:pointer">Work Location ${prodSchedulingSort.field === 'work_location' ? (prodSchedulingSort.ascending ? '↑' : '↓') : ''}</th>
@@ -260,7 +300,7 @@ function renderScheduling() {
           </tr>
         </thead>
         <tbody>
-          ${rows || `<tr><td colspan="9" style="text-align:center;padding:32px">
+          ${rows || `<tr><td colspan="10" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No batches scheduled yet.</div>
             <button class="btn btn-primary btn-sm" onclick="focusBatchNewRow()">＋ Schedule First Batch</button>
           </td></tr>`}
@@ -280,7 +320,13 @@ function renderScheduling() {
 
     document.getElementById('family-filter')?.addEventListener('change', (e) => {
       prodSchedulingFilters.family = e.target.value;
-      prodSchedulingFilters.product = '';
+      // Only clear product filter if the selected product doesn't belong to the new family
+      if (prodSchedulingFilters.product) {
+        const selectedProduct = products.find(p => p.id === prodSchedulingFilters.product);
+        if (!selectedProduct || (e.target.value && selectedProduct.family !== e.target.value)) {
+          prodSchedulingFilters.product = '';
+        }
+      }
       render();
     });
     document.getElementById('product-filter')?.addEventListener('change', (e) => {
@@ -303,6 +349,72 @@ function renderScheduling() {
     document.querySelectorAll('th[data-sort-field]').forEach(th => {
       th.addEventListener('click', () => toggleSort(th.getAttribute('data-sort-field')));
     });
+
+    // Select-all checkbox
+    document.getElementById('select-all-batches')?.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        activeBatches.forEach(b => selectedBatchIds.add(b.id));
+      } else {
+        selectedBatchIds.clear();
+      }
+      document.querySelectorAll('.batch-select-cb').forEach(cb => {
+        cb.checked = e.target.checked;
+        const row = cb.closest('tr');
+        if (row) {
+          if (e.target.checked) row.classList.add('batch-row-selected');
+          else row.classList.remove('batch-row-selected');
+        }
+      });
+      updateBulkToolbar();
+    });
+
+    // Individual row checkboxes
+    document.querySelectorAll('.batch-select-cb').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const batchId = e.target.getAttribute('data-batch-id');
+        if (e.target.checked) {
+          selectedBatchIds.add(batchId);
+          e.target.closest('tr')?.classList.add('batch-row-selected');
+        } else {
+          selectedBatchIds.delete(batchId);
+          e.target.closest('tr')?.classList.remove('batch-row-selected');
+        }
+        updateBulkToolbar();
+      });
+    });
+
+    // Bulk delete
+    document.getElementById('bulk-delete-btn')?.addEventListener('click', async () => {
+      if (!selectedBatchIds.size) return;
+      if (!confirm(`Delete ${selectedBatchIds.size} batch${selectedBatchIds.size > 1 ? 'es' : ''}?`)) return;
+      const ids = Array.from(selectedBatchIds);
+      for (const batchId of ids) {
+        const idx = prodState.batches.findIndex(b => b.id === batchId);
+        if (idx >= 0) await prodDataDeleteBatch(idx);
+      }
+      selectedBatchIds.clear();
+      render();
+    });
+
+    // Bulk status update
+    document.getElementById('bulk-status-apply')?.addEventListener('click', async () => {
+      const newStatus = document.getElementById('bulk-status-select').value;
+      if (!newStatus || !selectedBatchIds.size) return;
+      const ids = Array.from(selectedBatchIds);
+      for (const batchId of ids) {
+        const idx = prodState.batches.findIndex(b => b.id === batchId);
+        if (idx >= 0) await prodDataUpdateBatch(idx, 'status', newStatus);
+      }
+      selectedBatchIds.clear();
+      render();
+    });
+
+    // Bulk clear selection
+    document.getElementById('bulk-clear-btn')?.addEventListener('click', () => {
+      selectedBatchIds.clear();
+      render();
+    });
+
   }, 0);
 
   return html;
@@ -310,7 +422,6 @@ function renderScheduling() {
 
 
 function getFilteredBatches() {
-  // Ensure batches and products are arrays
   if (!prodState || !Array.isArray(prodState.batches)) {
     return [];
   }
@@ -319,7 +430,6 @@ function getFilteredBatches() {
   let filtered = prodState.batches;
 
   if (prodSchedulingFilters.family) {
-    // Filter by family ID
     const familyProducts = products.filter(p => p.family === prodSchedulingFilters.family).map(p => p.id);
     filtered = filtered.filter(b => familyProducts.includes(b.product_id));
   }
@@ -344,16 +454,17 @@ function getFilteredBatches() {
     filtered = filtered.filter(b => b.status !== 'Complete');
   }
 
-  // Apply sorting
+  // Cache families once before sort to avoid repeated calls inside the comparator
+  const allFamilies = prodSchedulingSort.field === 'family' ? getFamilies() : [];
+
   filtered.sort((a, b) => {
     let aVal, bVal;
 
-    // Special handling for family (pulled from product and family database)
     if (prodSchedulingSort.field === 'family') {
       const productA = products.find(p => p.id === a.product_id);
       const productB = products.find(p => p.id === b.product_id);
-      const familyA = productA ? getFamilies().find(f => f.id === productA.family) : null;
-      const familyB = productB ? getFamilies().find(f => f.id === productB.family) : null;
+      const familyA = productA ? allFamilies.find(f => f.id === productA.family) : null;
+      const familyB = productB ? allFamilies.find(f => f.id === productB.family) : null;
       aVal = familyA?.label || '';
       bVal = familyB?.label || '';
     } else {

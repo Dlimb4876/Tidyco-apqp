@@ -27,6 +27,11 @@ global.createRealtimeSubscription = jest.fn();
 global.removeRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
 
+// Permission helpers — default to editor (full access) in tests
+global.currentUserRole = 'editor';
+global.canEdit = jest.fn(() => true);
+global.isAdmin = jest.fn(() => false);
+
 // Mocking the DOM — only available in jsdom environment
 if (typeof document !== 'undefined') {
   const fs = require('fs');

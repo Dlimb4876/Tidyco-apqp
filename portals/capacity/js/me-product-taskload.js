@@ -57,14 +57,6 @@ window.meProductLoadClearFilters = function(department) {
   meProductLoadRefreshTable();
 };
 
-// HTML escape utility
-function esc(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
 window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
   const department = typeof meGetDepartmentFromContext === 'function'
     ? meGetDepartmentFromContext()
@@ -72,9 +64,37 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
   const isPmContext = department === 'PM';
   const state = meProductLoadGetState(department);
 
-  const weeksPerMonth = 4.33;
   const allProds = typeof window.productsDataGetAll === 'function' ? window.productsDataGetAll() : [];
   const families = typeof getFamilies === 'function' ? getFamilies() : [];
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  const countBatchesForProductInRange = (product, rangeStart, rangeEnd) => {
+    if (!product || !rangeStart || !rangeEnd) return 0;
+    if (typeof window.meGetProductBatchCountInRange === 'function') {
+      return window.meGetProductBatchCountInRange(product, rangeStart, rangeEnd);
+    }
+
+    const productDbId = product.productDatabaseId || product.product_database_id || null;
+    if (!productDbId) return 0;
+
+    const batches = (window.prodState && Array.isArray(window.prodState.batches))
+      ? window.prodState.batches
+      : [];
+
+    let count = 0;
+    batches.forEach(batch => {
+      if (!batch || batch.product_id !== productDbId) return;
+      if (!batch.start_date || !batch.due_date) return;
+
+      const batchStart = new Date(batch.start_date);
+      const batchEnd = new Date(batch.due_date);
+      if (Number.isNaN(batchStart.getTime()) || Number.isNaN(batchEnd.getTime())) return;
+      if (batchStart <= rangeEnd && batchEnd >= rangeStart) count += 1;
+    });
+    return count;
+  };
 
   function resolveFamilyLabel(familyRef) {
     if (!familyRef) return '—';
@@ -149,7 +169,11 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
       taskCount,
       categories,
       tasks,
-      hoursPerWeek: product.hoursPerWeek || 0
+      hoursPerWeek: Number(product.hoursPerWeek) || 0,
+      monthlySupport: (() => {
+        const batchCount = countBatchesForProductInRange(product, monthStart, monthEnd);
+        return (Number(product.hoursPerWeek) || 0) * batchCount;
+      })()
     };
   });
 
@@ -181,7 +205,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
       case 'tasks':
         return (a.taskCount - b.taskCount) * dir;
       case 'support':
-        return (a.hoursPerWeek - b.hoursPerWeek) * dir;
+        return (a.monthlySupport - b.monthlySupport) * dir;
       case 'total':
       default:
         return (a.totalHours - b.totalHours) * dir;
@@ -191,7 +215,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
   // Calculate totals
   const totalTaskHours = productLoads.reduce((sum, p) => sum + p.totalHours, 0).toFixed(1);
   const totalTasks = tasksArray.length;
-  const totalMonthlySupport = (productsArray.reduce((sum, p) => sum + (p.hoursPerWeek || 0), 0) * weeksPerMonth).toFixed(1);
+  const totalMonthlySupport = productLoads.reduce((sum, p) => sum + p.monthlySupport, 0).toFixed(1);
   const totalMonthlyLoad = (parseFloat(totalTaskHours) + parseFloat(totalMonthlySupport)).toFixed(1);
 
   // Unassigned tasks
@@ -205,9 +229,9 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
         <td><strong>${esc(load.productName)}</strong></td>
         <td>${esc(load.family)}</td>
         <td style="text-align: center;">${load.taskCount}</td>
-        <td style="text-align: right;">${(load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
+        <td style="text-align: right;">${load.monthlySupport.toFixed(1)}h</td>
         <td style="text-align: right;">${load.totalHours.toFixed(1)}</td>
-        <td style="text-align: right;">${(parseFloat(load.totalHours) + load.hoursPerWeek * weeksPerMonth).toFixed(1)}h</td>
+        <td style="text-align: right;">${(parseFloat(load.totalHours) + load.monthlySupport).toFixed(1)}h</td>
       </tr>`;
   });
 
@@ -278,7 +302,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
             >
               <option value="total" ${state.sortBy === 'total' ? 'selected' : ''}>Sort: Task Demand</option>
               <option value="tasks" ${state.sortBy === 'tasks' ? 'selected' : ''}>Sort: Tasks</option>
-              <option value="support" ${state.sortBy === 'support' ? 'selected' : ''}>Sort: Support/Month</option>
+              <option value="support" ${state.sortBy === 'support' ? 'selected' : ''}>Sort: Support/Month (schedule)</option>
               <option value="family" ${state.sortBy === 'family' ? 'selected' : ''}>Sort: Family</option>
               <option value="product" ${state.sortBy === 'product' ? 'selected' : ''}>Sort: Product</option>
             </select>
@@ -303,7 +327,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
             </table>
           </div>
           <div style="font-size: 12px; color: var(--muted); padding: 12px 0; margin-top: 12px;">
-            💡 Support/Month = support hours per week × 4.33 | Total Load = Task Demand + Support/Month | Task Demand = sum of ${isPmContext ? 'PM' : 'ME'} capacity task hours
+            💡 Support/Month = support hours per batch × scheduled batch count in current month | Total Load = Task Demand + Support/Month | Task Demand = sum of ${isPmContext ? 'PM' : 'ME'} capacity task hours
           </div>
         </div>
       </div>

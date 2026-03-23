@@ -9,7 +9,7 @@ window.meRenderHeatmapPanel = function(monthKey) {
   return `
     <div class="me-card" style="margin-top: 16px;">
       <div class="me-card-head">
-        <span class="me-card-title">TEAM UTILISATION HEAT MAP (20 WEEKS)</span>
+        <span class="me-card-title">TEAM UTILISATION HEAT MAP (FULL YEAR)</span>
         <span style="font-size:12px;color:var(--muted)">${monthLabel}</span>
       </div>
       <div class="me-card-body" style="padding: 16px;">
@@ -18,10 +18,10 @@ window.meRenderHeatmapPanel = function(monthKey) {
         </div>
 
         <div class="me-chart-legend" style="margin-top: 12px;">
-          <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>Underutilized (&lt;80%)</span></div>
-          <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div><span>At Capacity (80–100%)</span></div>
-          <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div><span>Overloaded (&gt;100%)</span></div>
-          <div class="legend-item"><div class="legend-color" style="background: #e5e7eb;"></div><span>No capacity</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:var(--chart-green);"></div><span>Underutilized (&lt;80%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:var(--chart-amber);"></div><span>At Capacity (80–100%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:var(--chart-red);"></div><span>Overloaded (&gt;100%)</span></div>
+          <div class="legend-item"><div class="legend-color" style="background:var(--gray-200);"></div><span>No capacity</span></div>
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@ window.meDrawHeatmapNow = function() {
   const holidays = meFilterByDepartment(meDataGetHolidays(), dept, 'ME');
   const monthKey = meChartStart;
 
-  const weeks = meGetWeekRange(monthKey, 20);
+  const weeks = meGetWeekRange(monthKey, 52);
   const container = document.getElementById('meHeatmapGrid');
 
   if (!container) return;

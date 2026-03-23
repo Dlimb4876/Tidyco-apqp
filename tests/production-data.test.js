@@ -39,6 +39,7 @@ global.supa = {
 // Stub prodDataSubscribe (defined after data.js in the real app)
 global.prodDataSubscribe = jest.fn();
 global.showToast = jest.fn();
+global.render = jest.fn();
 
 // Load module
 const src = fs.readFileSync(
@@ -158,5 +159,22 @@ describe('prodDataAddProduct()', () => {
 
     await window.prodDataAddProduct('My Product', 'MP001', 'HVAC', 5, 'notes', 'Active', 'Unit 2');
     expect(insertCalled).toBe(true);
+  });
+
+  it('handles existing products with missing names when sorting', async () => {
+    window.prodState.products = [{ id: 'legacy-1' }];
+
+    global.supa.from = jest.fn(() => ({
+      insert: jest.fn(() => ({
+        select: jest.fn().mockResolvedValue({
+          data: [{ id: 'new-1', name: 'Alpha Widget' }],
+          error: null,
+        }),
+      })),
+    }));
+
+    const result = await window.prodDataAddProduct('Alpha Widget', 'AW001', 'HVAC', 5, '', 'active', 'Unit 2');
+    expect(result).toBe(true);
+    expect(window.prodState.products.map(p => p.id)).toEqual(['legacy-1', 'new-1']);
   });
 });

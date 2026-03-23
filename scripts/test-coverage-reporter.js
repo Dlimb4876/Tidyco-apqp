@@ -9,6 +9,45 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 
+function readJsonSafe(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    const raw = fs.readFileSync(filePath, 'utf-8').trim();
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+}
+
+function formatPct(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 'n/a';
+  return `${num.toFixed(1)}%`;
+}
+
+function printCoverageSummary() {
+  const summary = readJsonSafe('coverage/coverage-summary.json');
+  const finalCoverage = readJsonSafe('coverage/coverage-final.json');
+  const hasFiles = finalCoverage && typeof finalCoverage === 'object' && Object.keys(finalCoverage).length > 0;
+
+  console.log(`\n${'─'.repeat(40)}\n`);
+  console.log('📈 COVERAGE SUMMARY:\n');
+
+  if (!summary || !summary.total || !hasFiles) {
+    console.log('⚠️  Coverage data unavailable for source files in this run.');
+    console.log('   Tests still executed successfully, but no instrumented source map was produced.');
+    console.log('   Common cause in this repo: many suites load source files via eval(), which bypasses Jest module instrumentation.\n');
+    return;
+  }
+
+  const total = summary.total;
+  console.log(`  Statements: ${formatPct(total.statements?.pct)}`);
+  console.log(`  Branches:   ${formatPct(total.branches?.pct)}`);
+  console.log(`  Functions:  ${formatPct(total.functions?.pct)}`);
+  console.log(`  Lines:      ${formatPct(total.lines?.pct)}\n`);
+}
+
 function main() {
   console.log(`\n📊 Test Coverage Reporter\n${'═'.repeat(40)}\n`);
 
@@ -16,13 +55,14 @@ function main() {
     console.log(`Running Jest with coverage...\n`);
 
     // Run jest with coverage
-    const output = execSync('npm test -- --coverage --no-color 2>&1', {
+    const output = execSync('npm test -- --coverage --coverageReporters=json-summary --coverageReporters=lcov --no-color 2>&1', {
       encoding: 'utf-8',
       stdio: 'pipe'
     });
 
     // Parse output
     console.log(output);
+    printCoverageSummary();
 
     // Print recommendations
     console.log(`\n${'─'.repeat(40)}\n`);

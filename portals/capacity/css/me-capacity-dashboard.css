@@ -82,7 +82,7 @@
 
 .me-health-util {
 	font-weight: 600; font-family: 'IBM Plex Mono', monospace;
-	background: #f4f6fa; padding: 2px 8px; border-radius: 4px;
+	background: var(--table-head-bg); padding: 2px 8px; border-radius: 4px;
 	margin-left: 12px;
 }
 
@@ -105,7 +105,7 @@
 .me-task-item {
 	display: flex; align-items: center; justify-content: space-between;
 	padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px;
-	background: #fafbfd;
+	background: var(--bg-soft);
 	border-left: 4px solid transparent;
 	transition: all .12s;
 }
@@ -115,15 +115,15 @@
 }
 
 .me-task-item.urgent {
-	border-left-color: var(--red); background: rgba(239, 68, 68, 0.05);
+	border-left-color: var(--red); background: var(--status-red-bg);
 }
 
 .me-task-item.warning {
-	border-left-color: var(--amber); background: rgba(245, 158, 11, 0.05);
+	border-left-color: var(--amber); background: var(--status-amber-bg);
 }
 
 .me-task-item.normal {
-	border-left-color: var(--green); background: rgba(16, 185, 129, 0.05);
+	border-left-color: var(--green); background: var(--status-green-bg);
 }
 
 .me-task-details {
@@ -182,13 +182,13 @@
 
 .me-mini-heatmap-header {
 	grid-column: 1; position: sticky; top: 0; left: 0;
-	background: #f4f6fa; border-bottom: 1px solid var(--line);
+	background: var(--table-head-bg); border-bottom: 1px solid var(--line);
 	border-right: 2px solid var(--line); z-index: 3; height: 40px;
 }
 
 .me-mini-heatmap-person-name {
 	grid-column: 1; position: sticky; left: 0;
-	background: #fafbfd; border-bottom: 1px solid var(--line);
+	background: var(--bg-soft); border-bottom: 1px solid var(--line);
 	border-right: 2px solid var(--line); z-index: 2;
 	padding: 6px 8px; font-weight: 500; color: var(--ink);
 	white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -197,7 +197,7 @@
 }
 
 .me-mini-heatmap-week-header {
-	position: sticky; top: 0; background: #f4f6fa;
+	position: sticky; top: 0; background: var(--table-head-bg);
 	border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
 	display: flex; align-items: center; justify-content: center;
 	z-index: 2; min-height: 40px; font-size: 10px;
@@ -207,7 +207,7 @@
 
 .me-mini-heatmap-cell {
 	height: 32px; width: 40px; display: flex; align-items: center; justify-content: center;
-	border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;
+	border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
 	font-weight: 600; font-size: 11px; cursor: pointer; user-select: none;
 	color: var(--white); text-shadow: 0 1px 1px rgba(0,0,0,0.1);
 	transition: all .1s;

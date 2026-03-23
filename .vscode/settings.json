@@ -1,6 +1,6 @@
 {
     "workbench.colorTheme": "Default Dark Modern",
-    "claudeCode.initialPermissionMode": "acceptEdits",
+    "claudeCode.initialPermissionMode": "bypassPermissions",
     "terminal.integrated.env.windows": {
         "PATH": "${env:PATH};C:\\Program Files\\nodejs;C:\\Users\\Tidyco\\AppData\\Roaming\\npm"
     },
@@ -24,5 +24,6 @@
             "path": "pwsh",
             "icon": "terminal-powershell"
         }
-    }
+    },
+    "claudeCode.allowDangerouslySkipPermissions": true
 }

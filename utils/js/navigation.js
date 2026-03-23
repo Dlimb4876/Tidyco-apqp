@@ -16,7 +16,9 @@ const SECTION_LABELS = {
   operations: 'Operations Mission Control',
   production: 'Production Planning',
   'product-development': 'Product Development',
-  feedback: 'Feedback & Bugs'
+  feedback: 'Feedback & Bugs',
+  'action-centre': 'Action Centre',
+  mcs: 'Manufacturing Change'
 };
 
 // 1.5 Back button labels — defined once at module level
@@ -26,6 +28,8 @@ const BACK_BUTTON_LABELS = {
   'product-development': '← Back to Product Development',
   operations: '← Back to Operations',
   feedback: '← Back to Feedback & Bugs',
+  'action-centre': '← Back to Hub',
+  mcs: '← Back to Hub',
   apqp: '← Back to Project',
   actions: '← Back to Project',
   risks: '← Back to Project',
@@ -147,6 +151,19 @@ function navigate(sec, { pushHash = true } = {}) {
     if (typeof workAreasDataUnsubscribe === 'function') workAreasDataUnsubscribe();
   }
 
+  // Clean up MCS subscriptions when leaving MCS
+  if (currentSection === 'mcs' && sec !== 'mcs') {
+    if (typeof mcsCleanupRealtimeSubscriptions === 'function') mcsCleanupRealtimeSubscriptions();
+    if (typeof mcsStopPolling === 'function') mcsStopPolling();
+  }
+
+  // Setup MCS subscriptions when entering MCS
+  if (sec === 'mcs' && currentSection !== 'mcs') {
+    if (typeof mcsSetupRealtimeSubscriptions === 'function') {
+      setTimeout(() => mcsSetupRealtimeSubscriptions(), 100);
+    }
+  }
+
   // Clean up subscriptions when leaving production
   if (currentSection === 'production' && sec !== 'production') {
     if (typeof prodDataUnsubscribe === 'function') prodDataUnsubscribe();
@@ -196,6 +213,9 @@ function navigate(sec, { pushHash = true } = {}) {
     if (sec === 'projects' && npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab));
     if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
     if (sec === 'capacity' && capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(capacityTab));
+    if (sec === 'capacity' && capacityTab === 'me' && typeof meTab !== 'undefined' && meTab !== 'chart') parts.push('met=' + encodeURIComponent(meTab));
+    if (sec === 'capacity' && capacityTab === 'production' && prodCapTab !== 'dashboard') parts.push('pct=' + encodeURIComponent(prodCapTab));
+    if (sec === 'capacity' && capacityTab === 'projects' && typeof pmTab !== 'undefined' && pmTab !== 'chart') parts.push('pmt=' + encodeURIComponent(pmTab));
     if (sec === 'operations' && operationsTab !== 'overview') parts.push('od=' + encodeURIComponent(operationsTab));
     if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
     if (sec === 'product-development' && productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(productDevelopmentTab));
@@ -209,7 +229,38 @@ function navigate(sec, { pushHash = true } = {}) {
   // 1.5 Dynamic back button text using module-level constant
   returnBtn.textContent = BACK_BUTTON_LABELS[sec] || '← Return to Portal';
 
+  // Update project name breadcrumb display
+  updateProjectBreadcrumb();
+
   render();
+}
+
+/**
+ * Update project name display in topbar breadcrumb
+ * Shows project name when inside a project-specific section
+ */
+function updateProjectBreadcrumb() {
+  const projectNameEl = document.getElementById('projectName');
+  if (!projectNameEl) return;
+
+  const p = prog();
+  const isProjectSection = progId && p && (
+    currentSection === 'project' ||
+    currentSection === 'apqp' ||
+    currentSection === 'actions' ||
+    currentSection === 'risks' ||
+    currentSection === 'bom' ||
+    currentSection === 'timing' ||
+    currentSection === 'documents' ||
+    currentSection.startsWith('gate_')
+  );
+
+  if (isProjectSection && p) {
+    projectNameEl.textContent = p.name;
+    projectNameEl.style.display = 'block';
+  } else {
+    projectNameEl.style.display = 'none';
+  }
 }
 
 /**
@@ -277,6 +328,19 @@ function setApqpTab(t) {
   render();
 }
 
+function renderAccessDenied(sectionKey) {
+  const label = SECTION_LABELS[sectionKey] || sectionKey || 'this section';
+  return `
+    <div class="section-inner">
+      <div class="card" style="padding:20px;max-width:760px;margin:20px auto">
+        <h2 style="margin-top:0">Access denied</h2>
+        <p>You do not currently have permission to view ${esc(label)}.</p>
+        <p style="color:var(--muted);font-size:13px">Ask an admin to update your role or team grants in Settings.</p>
+      </div>
+    </div>
+  `;
+}
+
 /**
  * Main UI render switchboard - clears and repaints #mainContent
  * Routes to appropriate render function based on currentSection
@@ -289,6 +353,11 @@ function setApqpTab(t) {
  */
 function render() {
   const mc = document.getElementById('mainContent');
+  if (typeof canViewSection === 'function' && !canViewSection(currentSection)) {
+    mc.innerHTML = renderAccessDenied(currentSection);
+    return;
+  }
+
   if (currentSection === 'projects') { mc.innerHTML = npi.dashboard.renderProjects(); return; }
   if (currentSection === 'product-development') {
     mc.innerHTML = `<div class="section-inner">${renderProductDevelopment()}</div>`;
@@ -322,6 +391,16 @@ function render() {
     mc.innerHTML = `<div class="section-inner">${renderSettings()}</div>`;
     return;
   }
+  if (currentSection === 'action-centre') {
+    mc.innerHTML = `<div class="section-inner">${renderActionCentre()}</div>`;
+    if (!actionCentreData && !actionCentreLoading) actionCentreLoad();
+    return;
+  }
+  if (currentSection === 'mcs') {
+    renderMcs();
+    if (!mcsList || mcsList.length === 0) mcsLoadChanges();
+    return;
+  }
   if (currentSection === 'capacity') {
     if (capacityTab === 'root') mc.innerHTML = renderCapacity();
     else if (capacityTab === 'me') mc.innerHTML = `<div class="section-inner">${renderMeCapacity()}</div>`;
@@ -347,7 +426,7 @@ function render() {
     }
     return;
   }
-  if (currentSection === 'hub') { mc.innerHTML = renderHub(); return; }
+  if (currentSection === 'hub') { mc.innerHTML = renderHub(); hubInit(); return; }
 
   if (!prog()) { mc.innerHTML = npi.dashboard.renderProjects(); return; }
 
@@ -368,6 +447,12 @@ function render() {
     requestAnimationFrame(() => {
       autoResizeAll();
       if (typeof npi?.events?.setup === 'function') npi.events.setup();
+
+      // Scroll to selected item when navigating from Action Centre
+      scrollToSelectedItem();
+
+      // Update project name breadcrumb display
+      updateProjectBreadcrumb();
     });
   });
 }
@@ -383,7 +468,60 @@ function renderSection() {
   if (currentSection === 'risks') return npi.tracker.renderRisks();
   if (currentSection === 'bom') return npi.bom.renderBOM();
   if (currentSection === 'timing') return npi.timing.renderTimingPlan();
+  if (currentSection === 'documents') return npi.docs.render();
   return '';
+}
+
+/**
+ * Scrolls to a selected item when navigating from Action Centre.
+ * NPI relational data loads asynchronously, so the first render after
+ * navigation may not yet have the row in the DOM.  The selected IDs are
+ * therefore kept in state until the row is actually found; they are cleared
+ * only on a successful scroll (or when the data is confirmed loaded but the
+ * row still cannot be found, meaning the item no longer exists).
+ */
+function scrollToSelectedItem() {
+  // npiLoadedProgId (state.js) is set to progId when npiRelLoad completes.
+  const npiDataReady = npiLoadedProgId === progId;
+
+  if (currentSection === 'actions' && selectedActionId) {
+    const targetRow = document.querySelector(`tr[data-action-id="${selectedActionId}"]`);
+    if (targetRow) {
+      targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetRow.classList.add('pulse');
+      setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+      selectedActionId = null;
+    } else if (npiDataReady) {
+      // Data is loaded but row not found — item was deleted or ID is wrong; stop retrying.
+      selectedActionId = null;
+    }
+    // If data not yet loaded, keep selectedActionId so the post-load render retries.
+  }
+
+  if (currentSection === 'risks' && selectedRiskId) {
+    const targetRow = document.querySelector(`tr[data-risk-id="${selectedRiskId}"]`);
+    if (targetRow) {
+      targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetRow.classList.add('pulse');
+      setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+      selectedRiskId = null;
+    } else if (npiDataReady) {
+      selectedRiskId = null;
+    }
+  }
+
+  if (currentSection === 'apqp' && selectedPfmeaCauseId) {
+    // For PFMEA, scroll to the row containing the cause
+    const targetRow = document.querySelector(`tr[data-cause-id="${selectedPfmeaCauseId}"]`);
+    if (targetRow) {
+      targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetRow.classList.add('pulse');
+      setTimeout(() => targetRow.classList.remove('pulse'), 2000);
+      selectedPfmeaCauseId = null;
+    } else if (npiDataReady) {
+      selectedPfmeaCauseId = null;
+    }
+  }
 }
 
 // ── Browser back/forward support ─────────────────────────────
@@ -401,6 +539,9 @@ window.addEventListener('popstate', () => {
   operationsTab        = h.od  || 'overview';
   productionTab        = h.pt  || 'root';
   productDevelopmentTab = h.pdt || 'root';
+  if (h.met && typeof meTab !== 'undefined') meTab = h.met;
+  if (h.pct) prodCapTab = h.pct;
+  if (h.pmt && typeof pmTab !== 'undefined') pmTab = h.pmt;
   if (h.t) apqpTab = h.t;
   if (h.p && db.projects.find(p => p.id === h.p)) {
     progId = h.p;
@@ -443,9 +584,85 @@ function hasActiveTextSelection() {
 }
 
 /**
+ * Returns true when any modal overlay is currently visible.
+ * @returns {boolean}
+ */
+function hasVisibleModal() {
+  return !!document.querySelector(
+    '.modal-bg[style*="display: flex"], .modal-bg[style*="display:flex"], .modal-bg[style*="display: block"], .modal-bg[style*="display:block"]'
+  );
+}
+
+/**
+ * Resolves a hub shortcut key (1-5) to a navigation action.
+ * Returns null when the current page is not a supported hub/root view.
+ * @param {string} key
+ * @returns {Function|null}
+ */
+function getHubKeyAction(key) {
+  if (currentSection === 'hub') {
+    const hubRoutes = {
+      '1': () => navigate('capacity'),
+      '2': () => navigate('product-development'),
+      '3': () => navigate('production'),
+      '4': () => navigate('operations'),
+      '5': () => navigate('mcs')
+    };
+    return hubRoutes[key] || null;
+  }
+
+  if (currentSection === 'capacity' && capacityTab === 'root') {
+    const capacityRoutes = {
+      '1': () => setCapacityTab('production'),
+      '2': () => setCapacityTab('me'),
+      '3': () => setCapacityTab('projects')
+    };
+    return capacityRoutes[key] || null;
+  }
+
+  if (currentSection === 'product-development' && productDevelopmentTab === 'root') {
+    const productDevelopmentRoutes = {
+      '1': () => setProductDevelopmentTab('npi'),
+      '2': () => setProductDevelopmentTab('product-management'),
+      '3': () => setProductDevelopmentTab('product-family-db'),
+      '4': () => setProductDevelopmentTab('parts-database')
+    };
+    return productDevelopmentRoutes[key] || null;
+  }
+
+  if (currentSection === 'production' && productionTab === 'root') {
+    const productionRoutes = {
+      '1': () => setProductionTab('scheduling'),
+      '2': () => setProductionTab('by-product'),
+      '3': () => setProductionTab('by-unit')
+    };
+    return productionRoutes[key] || null;
+  }
+
+  return null;
+}
+
+/**
  * Backspace acts as app-level back navigation when not typing/editing.
  */
 window.addEventListener('keydown', (event) => {
+  const isHubNumberShortcut = /^[1-5]$/.test(event.key || '');
+  if (isHubNumberShortcut) {
+    if (event.defaultPrevented) return;
+    if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+
+    const activeEl = document.activeElement;
+    if (isEditableElement(event.target) || isEditableElement(activeEl)) return;
+    if (hasVisibleModal()) return;
+
+    const action = getHubKeyAction(event.key);
+    if (!action) return;
+
+    event.preventDefault();
+    action();
+    return;
+  }
+
   const isBackspace = event.key === 'Backspace' || event.keyCode === 8;
   if (!isBackspace) return;
   if (event.defaultPrevented) return;

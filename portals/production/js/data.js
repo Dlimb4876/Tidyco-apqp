@@ -30,6 +30,16 @@ function parseDisplayDate(displayDate) {
   return null;
 }
 
+function normalizeProductName(product) {
+  if (!product || typeof product.name !== 'string') return '';
+  return product.name.trim();
+}
+
+function sortProductsByNameSafe(products) {
+  if (!Array.isArray(products)) return;
+  products.sort((a, b) => normalizeProductName(a).localeCompare(normalizeProductName(b)));
+}
+
 // Initialize production data from Supabase
 async function prodDataInit() {
   try {
@@ -90,7 +100,7 @@ window.prodDataAddProduct = async function(name, code, family, lead_time_days, n
 
     if (data && data[0]) {
       prodState.products.push(data[0]);
-      prodState.products.sort((a, b) => a.name.localeCompare(b.name));
+      sortProductsByNameSafe(prodState.products);
       render();
       return true;
     }
@@ -141,7 +151,7 @@ window.prodDataUpdateProduct = async function(idx, field, value) {
     if (error) throw error;
 
     Object.assign(product, updates);
-    prodState.products.sort((a, b) => a.name.localeCompare(b.name));
+    sortProductsByNameSafe(prodState.products);
     if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
       window.prodPendingRealTimeUpdate = true;
       return true;

@@ -60,7 +60,7 @@ npi.bom.renderABCCatalogueResults = function() {
         <td class="w44 ctr"><input type="checkbox" ${r.in_sage ? 'checked' : ''}
           onchange="npi.bom.updABCInline(${i}, 'in_sage', this.checked)"
           style="accent-color:var(--green);width:15px;height:15px;cursor:pointer" title="Part in Sage (MRP)"></td>
-        <td class="ctr" style="white-space:nowrap;padding:2px 4px"><button class="btn btn-ghost btn-sm" onclick="npi.bom.openABCEdit(${i})" title="Edit details" style="padding:1px 4px;font-size:12px">✏️</button></td>
+        <td class="ctr" style="white-space:nowrap;padding:2px 4px">${canEdit() ? `<button class="btn btn-ghost btn-sm" onclick="npi.bom.openABCEdit(${i})" title="Edit details" style="padding:1px 4px;font-size:12px">✏️</button>` : ''}</td>
       </tr>`
     }).join('')
 
@@ -118,7 +118,7 @@ npi.bom.renderABCCatalogue = function() {
       placeholder="Search by PN, manufacturer PN, or description…" style="flex:1;min-width:160px;max-width:260px;margin-left:4px">
     <span style="margin-left:auto;display:flex;gap:6px;flex-shrink:0">
       <button class="btn btn-ghost btn-sm" onclick="npi.bom.showAbcInfo()">What are A / B / C? ℹ</button>
-      <button class="btn btn-primary btn-sm" onclick="npi.bom.openABCNew()">＋ Add Part</button>
+      ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="npi.bom.openABCNew()">＋ Add Part</button>` : ''}
     </span>
   </div>`
 

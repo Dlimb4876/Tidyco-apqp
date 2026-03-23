@@ -5,6 +5,11 @@
 
 npi.data = npi.data || {}
 
+npi.data.calcCauseRpn = function(sev, occ, det) {
+  if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })
+  return (sev || 1) * (occ || 1) * (det || 1)
+}
+
 npi.data.prog = function() { return prog() }
 
 npi.data.pfdType = {
@@ -13,7 +18,30 @@ npi.data.pfdType = {
   },
   isExecutable(type) {
     return !npi.data.pfdType.isHeader(type)
-  }
+  },
+  isDecision(type) {
+    return type === 'Decision'
+  },
+  isInspection(type) {
+    return type === 'Inspection'
+  },
+  isTwoPath(type) {
+    return type === 'Decision' || type === 'Inspection'
+  },
+  normalize(type) {
+    const known = ['Process', 'Decision', 'Inspection', 'Rework', 'Transport']
+    return known.includes(type) ? type : npi.data.pfdType.Process
+  },
+  Process: 'Process',
+  Decision: 'Decision',
+  Inspection: 'Inspection',
+  Rework: 'Rework',
+  Transport: 'Transport'
+}
+
+npi.data.normalizePfdLink = function(value) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
 npi.data.firstExecutableStep = function(pfd) {
@@ -138,7 +166,11 @@ npi.data.pfd = {
       detail: '',
       ctqIds: [],
       bomRefs: [],
-      docRefs: []
+      docRefs: [],
+      pfd_type: null,
+      nextStepId: null,
+      nextStepId_yes: null,
+      nextStepId_no: null
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -148,7 +180,7 @@ npi.data.pfd = {
   addMainStep() {
     const p = prog()
     const hadExecutable = p.pfd.some(s => npi.data.pfdType.isExecutable(s.type))
-    const step = { id: crypto.randomUUID(), stepNum: npi.data.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [] }
+    const step = { id: crypto.randomUUID(), stepNum: npi.data.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [], pfd_type: npi.data.pfdType.Process, nextStepId: null, nextStepId_yes: null, nextStepId_no: null }
     p.pfd.push(step)
     if (!hadExecutable) npi.data.pfd.ensureLeadingHeader()
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -169,7 +201,11 @@ npi.data.pfd = {
       detail: '',
       ctqIds: [],
       bomRefs: [],
-      docRefs: []
+      docRefs: [],
+      pfd_type: null,
+      nextStepId: null,
+      nextStepId_yes: null,
+      nextStepId_no: null
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -199,7 +235,11 @@ npi.data.pfd = {
       detail: '',
       ctqIds: [],
       bomRefs: [],
-      docRefs: []
+      docRefs: [],
+      pfd_type: npi.data.pfdType.Process,
+      nextStepId: null,
+      nextStepId_yes: null,
+      nextStepId_no: null
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -238,7 +278,20 @@ npi.data.pfd = {
   upd(sid, f, v) {
     const s = prog().pfd.find(x => x.id === sid)
     if (!s) return
-    s[f] = v
+
+    if (f === 'pfd_type') {
+      s.pfd_type = npi.data.pfdType.normalize(v)
+      if (npi.data.pfdType.isTwoPath(s.pfd_type)) s.nextStepId = null
+      else {
+        s.nextStepId_yes = null
+        s.nextStepId_no = null
+      }
+    } else if (f === 'nextStepId' || f === 'nextStepId_yes' || f === 'nextStepId_no') {
+      s[f] = npi.data.normalizePfdLink(v)
+    } else {
+      s[f] = v
+    }
+
     Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
   },
   toggleGroup(collapsedGroups, key) {
@@ -462,26 +515,98 @@ npi.data.tracker = {
 }
 
 npi.data.gate = {
+  rolePermissionKey(role) {
+    const roleLabel = String(role || '').trim().toLowerCase()
+    const ROLE_PERMISSION_MAP = {
+      'me manager': 'feature_npi_signoff_me_manager',
+      'operations director': 'feature_npi_signoff_operations_director',
+      'sales director': 'feature_npi_signoff_sales_director'
+    }
+    return ROLE_PERMISSION_MAP[roleLabel] || ''
+  },
+  canCurrentUserSignRole(role) {
+    const roleLabel = String(role || '').trim().toLowerCase()
+    const ROLE_KEY_MAP = {
+      'me manager':          'me_manager',
+      'operations director': 'operations_director',
+      'sales director':      'sales_director',
+    }
+    const roleKey = ROLE_KEY_MAP[roleLabel]
+
+    // Check individual assignment config first (if loaded and has entries for this role)
+    if (roleKey && typeof npiGateSignoffConfig !== 'undefined' && npiGateSignoffConfig !== null) {
+      const assigned = npiGateSignoffConfig[roleKey] || []
+      if (assigned.length > 0) {
+        if (!currentUser) return false
+        const myId = currentUser.id
+        const myEmail = (currentUser.email || '').toLowerCase()
+        return assigned.some(u =>
+          (myId && u.user_id && u.user_id === myId) ||
+          (myEmail && u.user_email && u.user_email.toLowerCase() === myEmail)
+        )
+      }
+    }
+
+    // Fall back to team permission check
+    const permissionKey = npi.data.gate.rolePermissionKey(role)
+    if (!permissionKey) return true
+    if (typeof hasPermission === 'function') return hasPermission(permissionKey)
+    return (typeof currentUserRole !== 'undefined') && (currentUserRole === 'admin' || currentUserRole === 'editor')
+  },
+  canCurrentUserEditSig(gi, si) {
+    const p = prog()
+    const gate = p && p.gates ? p.gates[gi] : null
+    const sig = gate && gate.sigs ? gate.sigs[si] : null
+    if (!sig) return false
+    return npi.data.gate.canCurrentUserSignRole(sig.role)
+  },
+  unauthorizedMessage(role) {
+    const roleLabel = String(role || 'this role').trim()
+    return `You are not authorised to sign off as ${roleLabel}.`
+  },
   toggleCheck(gi, ii, v) {
     prog().gates[gi].checks[ii] = v
     Promise.resolve().then(() => npiRelSaveGate(gi)).catch(err => console.error('[NPI] save gate failed:', err))
     npi.notify('render')
   },
   updSig(gi, si, f, v) {
-    prog().gates[gi].sigs[si][f] = v
+    const p = prog()
+    const sig = p && p.gates && p.gates[gi] && p.gates[gi].sigs ? p.gates[gi].sigs[si] : null
+    if (!sig) return false
+    if (!npi.data.gate.canCurrentUserEditSig(gi, si)) {
+      if (typeof showToast === 'function') showToast(npi.data.gate.unauthorizedMessage(sig.role), 'error')
+      return false
+    }
+    sig[f] = v
     Promise.resolve().then(() => npiRelSaveGateSig(gi, si)).catch(err => console.error('[NPI] save gate sig failed:', err))
+    return true
   },
   signOff(gi, si) {
-    const sig = prog().gates[gi].sigs[si]
+    const p = prog()
+    const sig = p && p.gates && p.gates[gi] && p.gates[gi].sigs ? p.gates[gi].sigs[si] : null
+    if (!sig) return false
+    if (!npi.data.gate.canCurrentUserEditSig(gi, si)) {
+      if (typeof showToast === 'function') showToast(npi.data.gate.unauthorizedMessage(sig.role), 'error')
+      return false
+    }
     sig.signed = true
     if (!sig.date) sig.date = new Date().toISOString().slice(0, 10)
     Promise.resolve().then(() => npiRelSaveGateSig(gi, si)).catch(err => console.error('[NPI] save gate sig failed:', err))
     npi.notify('render')
+    return true
   },
   unsign(gi, si) {
-    prog().gates[gi].sigs[si].signed = false
+    const p = prog()
+    const sig = p && p.gates && p.gates[gi] && p.gates[gi].sigs ? p.gates[gi].sigs[si] : null
+    if (!sig) return false
+    if (!npi.data.gate.canCurrentUserEditSig(gi, si)) {
+      if (typeof showToast === 'function') showToast(npi.data.gate.unauthorizedMessage(sig.role), 'error')
+      return false
+    }
+    sig.signed = false
     Promise.resolve().then(() => npiRelSaveGateSig(gi, si)).catch(err => console.error('[NPI] save gate sig failed:', err))
     npi.notify('render')
+    return true
   }
 }
 
@@ -514,6 +639,31 @@ npi.data.timing = {
   updNotes(id, val) { const r = prog().gantt.find(x => x.id === id); if (r) { r.notes = val; Promise.resolve().then(() => npiRelSaveGanttRow(r)).catch(err => console.error('[NPI] save gantt row failed:', err)) } },
   delRow(id) { const p = prog(); p.gantt = p.gantt.filter(r => r.id !== id); Promise.resolve().then(() => npiRelDeleteGanttRow(id)).catch(err => console.error('[NPI] delete gantt row failed:', err)); npi.notify('render') },
   setStart(val) { const p = prog(); p.ganttStart = val; save(); npi.notify('render') },
+  moveRow(id, dir) {
+    const p = prog()
+    const row = p.gantt.find(r => r.id === id); if (!row) return
+    const secRows    = p.gantt.filter(r => r.section === row.section)
+    const secIndices = secRows.map(r => p.gantt.indexOf(r))
+    const pos        = secRows.findIndex(r => r.id === id)
+    const target     = pos + dir
+    if (target < 0 || target >= secRows.length) return
+    const idxA = secIndices[pos]; const idxB = secIndices[target]
+    ;[p.gantt[idxA], p.gantt[idxB]] = [p.gantt[idxB], p.gantt[idxA]]
+    save(); npi.notify('render')
+  },
+  addMilestone(week, label) {
+    const p = prog()
+    if (!p.ganttMilestones) p.ganttMilestones = []
+    p.ganttMilestones = p.ganttMilestones.filter(m => m.week !== week)
+    p.ganttMilestones.push({ id: crypto.randomUUID(), week, label })
+    save(); npi.notify('render')
+  },
+  delMilestone(id) {
+    const p = prog()
+    if (!p.ganttMilestones) return
+    p.ganttMilestones = p.ganttMilestones.filter(m => m.id !== id)
+    save(); npi.notify('render')
+  },
   clear() {
     const p = prog()
     const ids = p.gantt.map(r => r.id)
@@ -526,8 +676,8 @@ npi.data.timing = {
 npi.data.pfmea = {
   addMode(pfdId) {
     const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
-    const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
-    const mode = { id: crypto.randomUUID(), _type: 'mode', pfdId, mode: '', ctqIds: [], effects: [ef] }
+    const ef = { id: crypto.randomUUID(), effect: '', sev: 1, specialChar: null, causes: [ca] }
+    const mode = { id: crypto.randomUUID(), _type: 'mode', pfdId, function: '', mode: '', ctqIds: [], effects: [ef] }
     prog().pfmea.push(mode)
     Promise.resolve().then(async () => {
       await npiRelSavePFMEAMode(mode)
@@ -549,7 +699,7 @@ npi.data.pfmea = {
   addEffect(mi) {
     const mode = prog().pfmea[mi]
     const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
-    const ef = { id: crypto.randomUUID(), effect: '', sev: 1, causes: [ca] }
+    const ef = { id: crypto.randomUUID(), effect: '', sev: 1, specialChar: null, causes: [ca] }
     mode.effects.push(ef)
     Promise.resolve().then(async () => {
       await npiRelSavePFMEAEffect(mode.id, ef)
@@ -596,10 +746,10 @@ npi.data.pfmea = {
     const mode = p.pfmea[mi]; const ef = mode.effects[ei]; const ca = ef.causes[ci]
     const act = ca.action || {}
     if (!act.desc && !act.newOcc && !act.newDet) return { ok: false, error: 'missing-action' }
-    const oldRpn = (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1)
+    const oldRpn = npi.data.calcCauseRpn(ef.sev, ca.occ, ca.det)
     const newOcc = act.newOcc ? +act.newOcc : ca.occ
     const newDet = act.newDet ? +act.newDet : ca.det
-    const newRpn = (ef.sev || 1) * newOcc * newDet
+    const newRpn = npi.data.calcCauseRpn(ef.sev, newOcc, newDet)
     if (!ca.history) ca.history = []
     const histEntry = {
       rpn: oldRpn,

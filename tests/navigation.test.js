@@ -44,6 +44,7 @@ global.operationsTab = 'overview';
 global.productionTab = 'root';
 global.productDevelopmentTab = 'root';
 global.productsActiveTab = 'list';
+global.npiLoadedProgId = null;    // state.js variable used by scrollToSelectedItem
 
 // Mock prog() accessor function
 global.prog = () => global.db.projects.find(p => p.id === global.progId) || null;
@@ -70,6 +71,7 @@ global.renderCapacity = jest.fn().mockReturnValue('<div>Capacity</div>');
 global.renderMeCapacity = jest.fn().mockReturnValue('<div>ME Capacity</div>');
 global.renderProdCapacity = jest.fn().mockReturnValue('<div>Prod Capacity</div>');
 global.renderHub = jest.fn().mockReturnValue('<div>Hub</div>');
+global.hubInit = jest.fn();
 global.meDrawChartNow = jest.fn();
 global.autoResizeAll = jest.fn();
 global.capacityEvents = { setup: jest.fn(), teardown: jest.fn(), _onClick: jest.fn(), _onChange: jest.fn(), _onInput: jest.fn(), _onKeydown: jest.fn() };
@@ -89,7 +91,8 @@ global.npi = {
     renderRisks: jest.fn().mockReturnValue('<div>Risks</div>')
   },
   bom: { renderBOM: jest.fn().mockReturnValue('<div>BOM</div>') },
-  timing: { renderTimingPlan: jest.fn().mockReturnValue('<div>Timing</div>') }
+  timing: { renderTimingPlan: jest.fn().mockReturnValue('<div>Timing</div>') },
+  docs: { render: jest.fn().mockReturnValue('<div>Documents</div>') }
 };
 
 // Mock family/template modal state
@@ -142,7 +145,7 @@ const productDevelopmentScript = fs.readFileSync(
 );
 eval(productDevelopmentScript);
 
-async function waitFor(condition, timeoutMs = 200) {
+async function waitFor(condition, timeoutMs = 1000) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {

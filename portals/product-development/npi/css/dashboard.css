@@ -16,7 +16,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  background: linear-gradient(130deg, #f8fcff 0%, #eaf5ff 100%);
+  background: linear-gradient(130deg, var(--bg-soft) 0%, var(--blue-pale) 100%);
   border: 1px solid rgba(18, 41, 66, 0.14);
   border-radius: 16px;
   padding: 16px;
@@ -92,7 +92,7 @@
 }
 
 .mc-shell .cmd-card {
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--ghost-bg);
   border: 1px solid rgba(18, 41, 66, 0.14);
   border-radius: 14px;
   padding: 14px;
@@ -110,7 +110,7 @@
 
 .mc-shell .cmd-card.alarm {
   border-color: rgba(217, 72, 65, 0.45);
-  background: linear-gradient(145deg, rgba(255, 238, 236, 0.9), rgba(255, 255, 255, 0.82));
+  background: linear-gradient(145deg, var(--red-pale) 0%, var(--ghost-bg) 100%);
 }
 
 .mc-shell .cmd-title {
@@ -141,7 +141,7 @@
 }
 
 .mc-shell .panel {
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--ghost-bg);
   border: 1px solid rgba(18, 41, 66, 0.14);
   border-radius: 16px;
   padding: 14px;
@@ -183,7 +183,7 @@
   place-items: center;
   font-weight: 700;
   color: #70839a;
-  background: #ffffff;
+  background: var(--surface);
   cursor: pointer;
 }
 
@@ -233,7 +233,7 @@
   border: 1px dashed rgba(18, 41, 66, 0.25);
   border-radius: 12px;
   padding: 12px;
-  background: #fbfeff;
+  background: var(--bg-soft);
 }
 
 .mc-shell .next-box h3 {
@@ -262,7 +262,7 @@
   border: 1px solid rgba(18, 41, 66, 0.14);
   border-radius: 12px;
   padding: 12px;
-  background: #ffffffd6;
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
 }
 
 .mc-shell .stack-card h3 {
@@ -279,7 +279,7 @@
 .mc-shell .chips button {
   border: 1px solid rgba(18, 41, 66, 0.14);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--surface);
   color: var(--ink);
   padding: 10px 13px;
   font-weight: 600;
@@ -297,7 +297,7 @@
   border-radius: 10px;
   padding: 9px 10px;
   margin-bottom: 8px;
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .mc-shell .stack-card.muted summary {
@@ -385,7 +385,7 @@
 }
 
 .kpi-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: 8px;
   padding: 14px 16px;
@@ -427,7 +427,7 @@
 .gate-strip {
   display: flex;
   align-items: stretch;
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -494,7 +494,7 @@
 .section-launcher {
   display: flex;
   align-items: stretch;
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -579,7 +579,7 @@
 }
 
 .sub-asm-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: 8px;
   padding: 12px 14px;
@@ -716,7 +716,7 @@
   flex-direction: column;
   gap: 2px;
   background: var(--navy);
-  color: white;
+  color: var(--white);
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 12px;
@@ -737,7 +737,7 @@
 .parent-prog-name {
   font-size: 13px;
   font-weight: 700;
-  color: white;
+  color: var(--white);
 }
 .parent-prog-meta {
   font-size: 10px;
@@ -808,7 +808,7 @@
 }
 
 .proj-card {
-  background: var(--white);
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: 8px;
   padding: 14px 16px;
@@ -1193,7 +1193,7 @@
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 16px;
-  background: var(--white);
+  background: var(--surface);
   color: var(--mid);
   font-size: 11px;
   font-family: 'IBM Plex Mono', monospace;
@@ -1216,7 +1216,7 @@
   height: 32px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--white);
+  background: var(--surface);
   color: var(--ink);
   padding: 0 10px;
   font-size: 12px;
@@ -1250,7 +1250,7 @@
   color: var(--muted);
   border: 1px dashed var(--line2);
   border-radius: 8px;
-  background: var(--white);
+  background: var(--surface);
 }
 
 /* 3-A: Load more button row beneath the kanban lanes */
@@ -1296,7 +1296,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: var(--white);
+  background: var(--surface);
   cursor: pointer;
   user-select: none;
   border-bottom: 1px solid var(--line);
@@ -1349,7 +1349,8 @@
 
 /* ── Slim product card ───────────────────────────────────────── */
 .npi-slim-card {
-  background: var(--white);
+  position: relative;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 10px 12px;
@@ -1386,12 +1387,50 @@
   display: inline-block;
   font-size: 9px;
   font-weight: 700;
-  color: #b45309;
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
+  color: var(--amber);
+  background: var(--amber-pale);
+  border: 1px solid var(--amber);
   border-radius: 3px;
   padding: 1px 5px;
   margin-top: 4px;
+}
+.npi-slim-subasm-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--blue-pale);
+  border: 1px solid var(--blue);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-top: 4px;
+}
+
+.npi-slim-fav-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+  z-index: 2;
+}
+
+.npi-slim-fav-toggle:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.npi-slim-fav-toggle.is-active {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-pale);
 }
 
 @media (max-width: 768px) {
@@ -1427,4 +1466,104 @@
   .npi-col-headers .npi-col-header-label:not(:first-child) {
     display: none;
   }
+}
+
+/* ── Dark mode overrides for mc-shell (project dashboard) ──── */
+:root[data-theme="dark"] .mc-shell .dash-prog-name {
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .mc-shell .eyebrow {
+  color: #5bc8e2;
+}
+
+:root[data-theme="dark"] .mc-shell .cmd-big {
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .mc-shell .next-box h3 {
+  color: #5bc8e2;
+}
+
+:root[data-theme="dark"] .mc-shell .next-box li {
+  color: var(--ink2);
+}
+
+:root[data-theme="dark"] .mc-shell .gate.done {
+  border-color: rgba(66, 179, 110, 0.5);
+  color: #42b36e;
+  background: rgba(66, 179, 110, 0.15);
+}
+
+:root[data-theme="dark"] .mc-shell .gate.active {
+  border-color: rgba(91, 200, 226, 0.5);
+  color: #5bc8e2;
+  background: rgba(91, 200, 226, 0.12);
+}
+
+:root[data-theme="dark"] .mc-shell .chips button:hover {
+  border-color: #42b36e;
+  color: #42b36e;
+  background: rgba(66, 179, 110, 0.12);
+}
+
+/* ── Terminal mode overrides for mc-shell (project dashboard) ─ */
+:root[data-theme="terminal"] .mc-shell .dash-prog-name {
+  color: var(--ink);
+}
+
+:root[data-theme="terminal"] .mc-shell .eyebrow {
+  color: var(--blue);
+}
+
+:root[data-theme="terminal"] .mc-shell .cmd-big {
+  color: var(--ink);
+}
+
+:root[data-theme="terminal"] .mc-shell .next-box h3 {
+  color: var(--blue);
+}
+
+:root[data-theme="terminal"] .mc-shell .next-box li {
+  color: var(--ink2);
+}
+
+:root[data-theme="terminal"] .mc-shell .panel-head span {
+  color: var(--ink2);
+}
+
+:root[data-theme="terminal"] .mc-shell .gate {
+  border-color: rgba(0, 255, 65, 0.35);
+  color: var(--ink);
+  background: var(--surface);
+}
+
+:root[data-theme="terminal"] .mc-shell .gate.done {
+  border-color: rgba(0, 255, 65, 0.5);
+  color: var(--green);
+  background: var(--green-pale);
+}
+
+:root[data-theme="terminal"] .mc-shell .gate.active {
+  border-color: rgba(0, 204, 255, 0.5);
+  color: var(--navy);
+  background: var(--navy-pale);
+}
+
+:root[data-theme="terminal"] .mc-shell .connector {
+  background: rgba(0, 255, 65, 0.3);
+}
+
+:root[data-theme="terminal"] .mc-shell .connector.done {
+  background: rgba(0, 255, 65, 0.6);
+}
+
+:root[data-theme="terminal"] .mc-shell .connector.active {
+  background: linear-gradient(90deg, rgba(0, 255, 65, 0.8), rgba(0, 204, 255, 0.8));
+}
+
+:root[data-theme="terminal"] .mc-shell .chips button:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-pale);
 }

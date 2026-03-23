@@ -27,7 +27,7 @@
 	border-right: 2px solid var(--table-border);
 }
 .holiday-person-name {
-	padding: 6px 8px; text-align: left; background: #f7fbff;
+	padding: 6px 8px; text-align: left; background: var(--bg-soft);
 	font-weight: 500; color: var(--ink);
 	min-width: 124px; width: 124px;
 	position: sticky; left: 0; z-index: 14;
@@ -49,7 +49,7 @@
 	transition: background 0.15s, color 0.15s;
 }
 .holiday-cell:hover {
-	background: #edf5ff; color: var(--blue);
+	background: var(--blue-pale); color: var(--blue);
 }
 .holiday-cell.holiday-half {
 	background: var(--amber-pale); color: var(--amber); font-weight: 700;
@@ -64,11 +64,11 @@
 	background: var(--red); color: var(--white);
 }
 .holiday-cell.bank-holiday {
-	background: #e0f2fe; border-right: 2px solid #0284c7; border-left: none;
-	color: #0284c7; font-weight: 600; font-size: 12px;
+	background: var(--teal-pale); border-right: 2px solid var(--blue); border-left: none;
+	color: var(--blue); font-weight: 600; font-size: 12px;
 }
 .holiday-cell.bank-holiday:hover {
-	background: #0284c7; color: var(--white);
+	background: var(--blue); color: var(--white);
 }
 .holiday-cell.bank-holiday.week-start {
 	border-left: none;
@@ -78,8 +78,8 @@
 	padding: 4px 2px; min-width: 34px; width: 34px;
 }
 .holiday-date-header.bank-holiday-header {
-	background: #e0f2fe; color: #0284c7; font-weight: 600;
-	border-bottom-color: #0284c7; border-left: none;
+	background: var(--teal-pale); color: var(--blue); font-weight: 600;
+	border-bottom-color: var(--blue); border-left: none;
 }
 .holiday-date-header.bank-holiday-header.week-start {
 	border-left: none;

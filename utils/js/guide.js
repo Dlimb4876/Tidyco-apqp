@@ -346,6 +346,25 @@ const GUIDE_CONTENT = {
         </ul>
       </div>
       <div class="guide-section">
+        <div class="guide-section-title">Special Characteristics (SC)</div>
+        <p>Each <strong>Effect</strong> can be flagged with a Special Characteristic to indicate it requires enhanced controls beyond standard process monitoring.</p>
+        <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13px">
+          <tr style="border-bottom:1px solid var(--line)">
+            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">🦺 Safety</td>
+            <td style="padding:6px 0;color:var(--mid)">Failure could injure an operator, end-user, or violate a regulatory requirement. These must have documented prevention and detection controls.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--line)">
+            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">❗ Critical</td>
+            <td style="padding:6px 0;color:var(--mid)">Non-conformance is very likely to reach the customer without detection. Requires robust 100% inspection or process control.</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">⚠️ Major</td>
+            <td style="padding:6px 0;color:var(--mid)">Significant impact on product quality or function. Needs formal monitoring but may not require 100% inspection.</td>
+          </tr>
+        </table>
+        <p style="margin-top:8px">Use the <strong>SC filter</strong> in the toolbar to view only steps with a particular characteristic.</p>
+      </div>
+      <div class="guide-section">
         <div class="guide-section-title">Used By</div>
         <p>PFMEA causes can be synced directly into the <strong>Control Plan</strong> using the <em>Sync from PFMEA</em> button. High-RPN causes are surfaced in the <strong>Project Dashboard</strong> and <strong>Operations Risk</strong> view.</p>
       </div>
@@ -506,8 +525,8 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">Colour Legend</div>
         <ul class="guide-list">
-          <li><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#4ade80;margin-right:6px;vertical-align:middle"></span><strong>Green</strong> — Planned weeks</li>
-          <li><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:#fb923c;margin-right:6px;vertical-align:middle"></span><strong>Orange hatched</strong> — Actual weeks</li>
+          <li><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:var(--green);margin-right:6px;vertical-align:middle"></span><strong>Green</strong> — Planned weeks</li>
+          <li><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:var(--amber);margin-right:6px;vertical-align:middle"></span><strong>Orange hatched</strong> — Actual weeks</li>
         </ul>
       </div>
       <div class="guide-section">
@@ -748,6 +767,88 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">Forecast</div>
         <p>Forward-looking entries manually added in this view (not pulled from other portals). Use to record agreed commercial forecasts, delivery commitments, or outlook notes.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">How System Health % is calculated</div>
+        <p>The headline <strong>System Health %</strong> score is the average of seven signals, each scored from 0 to 100:</p>
+        <ul class="guide-list">
+          <li><strong>Overdue Actions</strong> — starts at 100, minus 10 for every overdue action (floor 0).</li>
+          <li><strong>High RPN Causes</strong> — starts at 100, minus 2 for every PFMEA cause with an RPN of 100 or above (floor 0).</li>
+          <li><strong>Gate Completion</strong> — the percentage of gate checks ticked across all active NPI projects.</li>
+          <li><strong>Open Bugs</strong> — starts at 100, minus 4 for every open bug report (floor 0).</li>
+          <li><strong>ME Capacity</strong> — 100 when utilisation is 85% or under; each percentage point above 85% deducts 2 points. Shows 70 if capacity data has not yet been loaded.</li>
+          <li><strong>Production Completion</strong> — the percentage of tracked production batches that have been completed.</li>
+          <li><strong>Forecast Utilisation</strong> — same formula as ME Capacity, applied to the 24-month weighted forecast load. Shows 70 if forecast data is not yet ready.</li>
+        </ul>
+        <p>The seven scores are added together and divided by seven (rounded). Colour bands: <strong>85% and above</strong> = green (good), <strong>65–84%</strong> = amber (watch), <strong>below 65%</strong> = red (critical).</p>
+      </div>
+    `
+  },
+
+  // ── MCS (Change Register) ────────────────────────────────────
+  mcs: {
+    title: '🔧 Change Register — User Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Change Register</strong> tracks all manufacturing, engineering, and process changes from initial request through to implementation. Each change follows a two-step approval process before it is marked as implemented.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Raising a Change</div>
+        <p>Click <strong>+ Raise a Change</strong> to open the form. Fill in the change type, description, affected product, priority, and any impact details. The system auto-assigns an ECR reference number.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Approval Process</div>
+        <ul class="guide-list">
+          <li><strong>Open</strong> — Change raised, awaiting submission for review.</li>
+          <li><strong>Awaiting Approval 1</strong> — Submitted for first sign-off. The nominated Approval 1 reviewer must approve or reject.</li>
+          <li><strong>Implementing</strong> — Approval 1 granted. Change is being carried out.</li>
+          <li><strong>Awaiting Approval 2</strong> — Implementation complete, awaiting final sign-off.</li>
+          <li><strong>Implemented</strong> — Fully approved and closed out. Overhaul Trends updated automatically.</li>
+          <li><strong>Closed</strong> — Change rejected or cancelled.</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Filters & Search</div>
+        <p>Use the sidebar to filter by Status, Priority, Change Type, or Source. Use the search box to find a change by keyword. The sort dropdown lets you order by date or priority.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Activity Log</div>
+        <p>Each change has a timeline showing all status changes, approvals, and comments. Anyone can post a <em>💬 Comment</em> or <em>📈 Progress Update</em> directly into the activity log.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Action Centre Integration</div>
+        <p>Changes awaiting your approval appear automatically in your <strong>Action Centre</strong> under Pending Approvals — no need to check the register manually.</p>
+      </div>
+    `
+  },
+
+  // ── Action Centre ─────────────────────────────────────────────
+  'action-centre': {
+    title: '✅ Action Centre — User Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Action Centre</strong> is your personal work queue — a single place to see every task, risk, and approval assigned to you across all NPI projects and the Change Register.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">What appears here</div>
+        <ul class="guide-list">
+          <li><strong>Actions</strong> — NPI project actions where you are the listed owner.</li>
+          <li><strong>PFMEA Actions</strong> — Corrective actions from PFMEA causes assigned to you.</li>
+          <li><strong>Risks</strong> — Project risks where you are the owner.</li>
+          <li><strong>Pending Approvals</strong> — Engineering changes awaiting your sign-off (amber panel, displayed only when you have pending approvals).</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Status indicators</div>
+        <p>Items are colour-coded: <strong>red</strong> = overdue (past due date), <strong>amber</strong> = due soon, <strong>green</strong> = on track. The KPI cards at the top summarise your open and overdue counts at a glance.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Navigating to items</div>
+        <p>Click <strong>Go to Project →</strong> on any action or risk to jump directly to the relevant NPI project section. Click <strong>Review ECR →</strong> on a pending approval to open the change in the Change Register.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Refreshing</div>
+        <p>Data loads automatically when you open the Action Centre. Use the <strong>↺ Refresh</strong> button to pull the latest changes at any time.</p>
       </div>
     `
   },

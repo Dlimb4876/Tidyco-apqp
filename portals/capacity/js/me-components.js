@@ -66,7 +66,7 @@ window.renderEditableCell = function(value, fieldType, onBlurHandler, placeholde
 
   switch (fieldType) {
     case 'number':
-      html = `<input type="number" name="cap_edit_number" value="${value || 0}" step="0.1" placeholder="${placeholder}">`;
+      html = `<input type="number" name="cap_edit_number" value="${value || 0}" step="0.5" placeholder="${placeholder}">`;
       break;
     case 'date':
       html = `<input type="date" name="cap_edit_date" value="${value || ''}" placeholder="${placeholder}">`;

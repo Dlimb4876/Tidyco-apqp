@@ -29,6 +29,37 @@ npi.dashboard.setProjectsSearch = function (value) {
   render()
 }
 
+npi.dashboard.setProjectsSearchFromInput = function (inputEl) {
+  if (!inputEl) {
+    npi.dashboard.setProjectsSearch('')
+    return
+  }
+
+  const selectionStart =
+    typeof inputEl.selectionStart === 'number' ? inputEl.selectionStart : null
+  const selectionEnd = typeof inputEl.selectionEnd === 'number' ? inputEl.selectionEnd : null
+
+  npi.dashboard.setProjectsSearch(inputEl.value)
+
+  // Search updates re-render the dashboard; restore caret on the replacement input.
+  setTimeout(() => {
+    const nextInput = document.querySelector('.npi-search-input[name="npi_projects_search"]')
+    if (!nextInput) return
+
+    nextInput.focus()
+
+    const len = nextInput.value.length
+    const safeStart =
+      typeof selectionStart === 'number' ? Math.max(0, Math.min(selectionStart, len)) : len
+    const safeEnd =
+      typeof selectionEnd === 'number' ? Math.max(safeStart, Math.min(selectionEnd, len)) : safeStart
+
+    if (typeof nextInput.setSelectionRange === 'function') {
+      nextInput.setSelectionRange(safeStart, safeEnd)
+    }
+  }, 0)
+}
+
 npi.dashboard.setProjectsFamilyFilter = function (value) {
   npiProjectsFamilyFilter = value || 'all'
   render()
@@ -283,7 +314,7 @@ npi.dashboard.renderProjects = function () {
     <div class="npi-swimlane-wrap">
       <div class="npi-view-note">${visibleLabel} · ${visibleProducts.length} shown</div>
       <div class="npi-filter-row">
-        <input class="npi-search-input" name="npi_projects_search" type="search" placeholder="Search name, code, customer..." value="${esc(npiProjectsSearch)}" oninput="npi.dashboard.setProjectsSearch(this.value)">
+        <input class="npi-search-input" name="npi_projects_search" type="search" placeholder="Search name, code, customer..." value="${esc(npiProjectsSearch)}" oninput="npi.dashboard.setProjectsSearchFromInput(this)">
         <select class="npi-family-filter" name="npi_projects_family_filter" onchange="npi.dashboard.setProjectsFamilyFilter(this.value)">
           ${familyOptions}
         </select>
@@ -356,6 +387,9 @@ npi.dashboard.renderProjects = function () {
 
 // ── Slim card for a product + its linked project ────────────
 npi.dashboard.renderNpiSlimCard = function (product, project) {
+  const isFavourite = typeof hubIsProductFavourite === 'function'
+    ? hubIsProductFavourite(product.id)
+    : false
   let pipsHtml = ''
   let gateScopeBadge = ''
   if (project) {
@@ -398,6 +432,10 @@ npi.dashboard.renderNpiSlimCard = function (product, project) {
   }
   const hasHighRPN = project && (project.pfmea || []).some((r) => npi.pfmea.calcRPN(r) >= RPN_HIGH)
   const rpnBadge = hasHighRPN ? `<div class="npi-slim-rpn-badge">⚠ High RPN</div>` : ''
+  const subAsmCount = project && Array.isArray(project.subAssemblies) ? project.subAssemblies.length : 0
+  const subAsmBadge = subAsmCount > 0
+    ? `<div class="npi-slim-subasm-badge">🔩 ${subAsmCount} sub-assembl${subAsmCount === 1 ? 'y' : 'ies'}</div>`
+    : ''
   const targetProgId = project ? project.id : ''
   const productScope = product.scope || 'overhaul'
   const scopeIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
@@ -405,19 +443,46 @@ npi.dashboard.renderNpiSlimCard = function (product, project) {
   const scopeLabel = productScope.charAt(0).toUpperCase() + productScope.slice(1)
   const scopeBadge = `<div class="npi-slim-card-meta" style="margin-top:4px">${scopeIcon} ${esc(scopeLabel)}</div>`
   return `<div class="npi-slim-card" onclick="npi.dashboard.openProjectOrRender('${targetProgId}')">
+    <button
+      class="npi-slim-fav-toggle${isFavourite ? ' is-active' : ''}"
+      type="button"
+      title="${isFavourite ? 'Remove from favourites' : 'Add to favourites'}"
+      data-product-id="${esc(product.id || '')}"
+      onclick="npi.nav.stopEvent(event);hubToggleProductFavourite(this.dataset.productId, event)">
+      ${isFavourite ? '★' : '☆'}
+    </button>
     <div class="npi-slim-card-name">${esc(product.name)}</div>
     ${product.code ? `<div class="npi-slim-card-code">${esc(product.code)}</div>` : ''}
     ${product.customer ? `<div class="npi-slim-card-meta">👤 ${esc(product.customer)}</div>` : ''}
     ${scopeBadge}
     ${gateScopeBadge}
+    ${subAsmBadge}
     ${rpnBadge}
     ${pipsHtml}
   </div>`
 }
 
+// ── Shared APQP completion helpers ───────────────────────────
+// Used by renderDashboard (main project), sub-assembly cards, and the
+// sub-assembly average completion reducer — defined once to avoid drift.
+function apqpCompletionPct(project) {
+  const done = ['ctq', 'pfd', 'pfmea', 'cp'].filter(
+    (k) => (project[k] || []).length > 0
+  ).length
+  return Math.round((done / 4) * 100)
+}
+
+function bomTotalItems(project) {
+  return Object.keys(BOM_TYPES).reduce(
+    (n, k) => n + ((project.bom && project.bom[k]) ? project.bom[k].length : 0),
+    0
+  )
+}
+
 // ── Dashboard ─────────────────────────────────────────────────
 npi.dashboard.renderDashboard = function () {
   const p = prog()
+  if (!p) return '<div class="mc-shell"><p style="padding:24px;color:var(--muted)">No project selected.</p></div>'
   const openAct = p.actions.filter((a) => a.status !== 'Closed').length
   const overdueAct = p.actions.filter(
     (a) => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()
@@ -433,11 +498,8 @@ npi.dashboard.renderDashboard = function () {
   const parentProg = p.parentId ? db.projects.find((x) => x.id === p.parentId) : null
 
   if (parentProg) {
-    const childBomItems = Object.keys(BOM_TYPES).reduce((n, k) => n + (p.bom[k] || []).length, 0)
-    const apqpSectionsDone = ['ctq', 'pfd', 'pfmea', 'cp'].filter(
-      (k) => (p[k] || []).length > 0
-    ).length
-    const apqpPct = Math.round((apqpSectionsDone / 4) * 100)
+    const childBomItems = bomTotalItems(p)
+    const apqpPct = apqpCompletionPct(p)
     const linkedInParent = (parentProg.subAssemblies || []).find((x) => x.id === p.id)
     const linkedKit = linkedInParent
       ? (parentProg.bom.kits || []).find((k) => k.id === linkedInParent.kitId)
@@ -484,7 +546,7 @@ npi.dashboard.renderDashboard = function () {
     </div>`
   }).join('')
 
-  const totalBomItems = Object.keys(BOM_TYPES).reduce((n, k) => n + p.bom[k].length, 0)
+  const totalBomItems = bomTotalItems(p)
   const sections = [
     {
       id: 'timing',
@@ -530,19 +592,13 @@ npi.dashboard.renderDashboard = function () {
       .map((link, li) => {
         const sp = db.projects.find((x) => x.id === link.id)
         if (!sp) return ''
-        const apqpSectionsDone = ['ctq', 'pfd', 'pfmea', 'cp'].filter(
-          (k) => (sp[k] || []).length > 0
-        ).length
-        const apqpPct = Math.round((apqpSectionsDone / 4) * 100)
-        const bomItemCount = Object.keys(BOM_TYPES).reduce(
-          (sum, k) => sum + (sp.bom && sp.bom[k] ? sp.bom[k].length : 0),
-          0
-        )
+        const apqpPct = apqpCompletionPct(sp)
+        const bomItemCount = bomTotalItems(sp)
         const linkedKit = (p.bom.kits || []).find((k) => k.id === link.kitId)
         return `<div class="sub-asm-card" onclick="npi.nav.openProjectById('${sp.id}')">
         <div class="sub-asm-card-head">
           <span class="sub-asm-name">${esc(sp.name)}</span>
-          <button class="del-btn" style="font-size:10px" onclick="npi.nav.stopEvent(event);npi.dashboard.deleteSubAsm(${li})">× Delete</button>
+          ${canEdit() ? `<button class="del-btn" style="font-size:10px" onclick="npi.nav.stopEvent(event);npi.dashboard.deleteSubAsm(${li})">× Delete</button>` : ''}
         </div>
         ${sp.unit ? `<div style="font-size:10px;color:var(--muted);margin-bottom:6px">🚂 ${esc(sp.unit)}</div>` : ''}
         <div class="sub-asm-stats">
@@ -557,7 +613,7 @@ npi.dashboard.renderDashboard = function () {
       })
       .filter(Boolean)
       .join('')
-    const addCard = `<div class="sub-asm-add-card" onclick="npi.dashboard.createSubAsm()"><span style="font-size:16px">＋</span> Create sub-assembly</div>`
+    const addCard = canEdit() ? `<div class="sub-asm-add-card" onclick="npi.dashboard.createSubAsm()"><span style="font-size:16px">＋</span> Create sub-assembly</div>` : ''
     return `<div class="sub-asm-grid">${cards}${addCard}</div>`
   })()
 
@@ -569,10 +625,7 @@ npi.dashboard.renderDashboard = function () {
           p.subAssemblies.reduce((sum, link) => {
             const sp = db.projects.find((x) => x.id === link.id)
             if (!sp) return sum
-            const apqpSectionsDone = ['ctq', 'pfd', 'pfmea', 'cp'].filter(
-              (k) => (sp[k] || []).length > 0
-            ).length
-            return sum + (apqpSectionsDone / 4) * 100
+            return sum + apqpCompletionPct(sp)
           }, 0) / subAsmCount
         )
       : 0
@@ -605,7 +658,7 @@ npi.dashboard.renderDashboard = function () {
       .slice(0, 5)
       .map((a) => {
         const od = a.due && new Date(a.due) < new Date()
-        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);${od ? 'background:#fff8f8' : ''}"><span class="sp sp-${a.status === 'In Progress' ? 'inprog' : 'open'}">${a.status || 'Open'}</span><span style="flex:1;font-size:12px">${esc(a.desc)}</span><span style="font-size:10px;color:${od ? 'var(--red)' : 'var(--muted)'}">${a.owner ? esc(a.owner) + ' ' : ''} ${a.due || ''}</span></div>`
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);${od ? 'background:var(--red-pale)' : ''}"><span class="sp sp-${a.status === 'In Progress' ? 'inprog' : 'open'}">${a.status || 'Open'}</span><span style="flex:1;font-size:12px">${esc(a.desc)}</span><span style="font-size:10px;color:${od ? 'var(--red)' : 'var(--muted)'}">${a.owner ? esc(a.owner) + ' ' : ''} ${a.due || ''}</span></div>`
       })
       .join('') ||
     `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open actions</div>`
@@ -714,7 +767,7 @@ npi.dashboard.renderDashboard = function () {
         <button class="btn btn-ghost" onclick="npi.nav.navigate('projects')">← Back</button>
         <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-dashboard')" title="User Guide">❓ Guide</button>
         <button class="btn btn-ghost" onclick="npi.dashboard.openGateScopeEditor()">Gate Scope</button>
-        <button class="btn btn-primary" onclick="npi.dashboard.showEditProject()">Edit Project</button>
+        ${canEdit() ? `<button class="btn btn-primary" onclick="npi.dashboard.showEditProject()">Edit Project</button>` : ''}
       </div>
     </div>
     ${liveUpdateBadge ? `<div class="live-row">${liveUpdateBadge}</div>` : ''}
@@ -740,7 +793,7 @@ npi.dashboard.renderDashboard = function () {
       <section class="layout">
         <div class="panel gate-panel">
           <div class="panel-head">
-            <h2>Gate Trajectory</h2>
+            <h2>Gate Progress</h2>
             <span>Click a gate to open detail</span>
           </div>
           <div class="trajectory">${trajectoryHTML}</div>

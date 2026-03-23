@@ -122,8 +122,16 @@ window.pmRenderCapacity = function() {
 };
 
 window.pmSetTab = function(tab) {
+  const prevPmTab = pmTab;
   pmTab = tab;
   if (tab === 'chart') pmChartDirty = false;
+
+  // Update URL so refresh restores this tab
+  const pmParts = ['s=capacity', 'ct=projects'];
+  if (tab !== 'chart') pmParts.push('pmt=' + encodeURIComponent(tab));
+  if (typeof writeNavigationHistory === 'function') {
+    writeNavigationHistory('#' + pmParts.join('&'), { push: prevPmTab !== tab });
+  }
   window.meCurrentDepartmentContext = 'PM';
 
   document.querySelectorAll('.pm-shell .me-nav-btn').forEach(btn => {

@@ -238,3 +238,130 @@ describe('getTodayDateString()', () => {
     expect(getTodayDateString()).toBe(today); // eslint-disable-line no-undef
   });
 });
+
+describe('meDataInit()', () => {
+  afterEach(() => {
+    delete global.currentUser;
+    delete global.supa;
+    delete global.render;
+    delete global.setSyncBadge;
+    delete global.meSaveTeamRelational;
+    delete global.meSaveTaskRelational;
+    delete global.meSaveProductRelational;
+    delete global.meDeleteTaskRelational;
+    global.meLoadRelationalTeams = undefined;
+    global.meLoadRelationalTasks = undefined;
+    global.meLoadRelationalProducts = undefined;
+    global.meLoadRelationalHolidays = undefined;
+    window.meDataReset();
+  });
+
+  it('loads relational holidays without querying legacy me_capacity', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    global.currentUser = { id: 'user-1' };
+    global.render = undefined;
+    global.meLoadRelationalTeams = jest.fn().mockResolvedValue([
+      { id: 'person-1', name: 'Alex', startDate: '2025-01-01', department: 'ME' }
+    ]);
+    global.meLoadRelationalTasks = jest.fn().mockResolvedValue([]);
+    global.meLoadRelationalProducts = jest.fn().mockResolvedValue([]);
+    global.meLoadRelationalHolidays = jest.fn().mockResolvedValue([
+      { person_id: 'person-1', date: '2026-01-05', type: 'full', department: 'ME' }
+    ]);
+
+    const from = jest.fn(() => {
+      throw new Error('meDataInit should not query legacy me_capacity');
+    });
+    global.supa = { from };
+
+    await window.meDataInit();
+
+    expect(from).not.toHaveBeenCalledWith('me_capacity');
+    expect(window.meDataState.team).toHaveLength(1);
+    expect(window.meDataState.holidays).toEqual([
+      expect.objectContaining({
+        personId: 'person-1',
+        date: '2026-01-05',
+        type: 'full',
+        department: 'ME'
+      })
+    ]);
+
+    warnSpy.mockRestore();
+  });
+
+  it('deletes only the current user holiday rows before inserting replacements', async () => {
+    global.currentUser = { id: 'user-1' };
+    global.setSyncBadge = jest.fn();
+    global.meSaveTeamRelational = jest.fn().mockResolvedValue(true);
+    global.meSaveTaskRelational = jest.fn();
+    global.meSaveProductRelational = jest.fn();
+
+    window.meDataReset();
+    window.meDataAddHoliday('person-1', '2026-01-05', 'full', 'ME');
+
+    const eq = jest.fn().mockResolvedValue({ error: null });
+    const del = jest.fn().mockReturnValue({ eq });
+    const insert = jest.fn().mockResolvedValue({ error: null });
+    const from = jest.fn((table) => {
+      if (table === 'me_holidays') {
+        return { delete: del, insert };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    });
+    global.supa = { from };
+
+    await window.meDataSave(false);
+
+    expect(from).toHaveBeenCalledWith('me_holidays');
+    expect(del).toHaveBeenCalled();
+    expect(eq).toHaveBeenCalledWith('user_id', 'user-1');
+    expect(insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        user_id: 'user-1',
+        person_id: 'person-1',
+        date: '2026-01-05',
+        type: 'full',
+        department: 'ME'
+      })
+    ]);
+  });
+
+  it('persists deleted tasks to relational storage so refresh does not restore them', async () => {
+    global.currentUser = { id: 'user-1' };
+    global.setSyncBadge = jest.fn();
+    global.meSaveTeamRelational = jest.fn().mockResolvedValue(true);
+    global.meSaveProductRelational = jest.fn().mockResolvedValue(true);
+    global.meSaveTaskRelational = jest.fn().mockResolvedValue({ success: true, taskId: 'persisted-task' });
+    global.meDeleteTaskRelational = jest.fn().mockResolvedValue(true);
+
+    window.meDataReset();
+    window.meDataAddTask('Task One', 'NPI', '', '2026-01-01', '2026-01-02', 4, '', 'ME');
+    window.meDataAddTask('Task Two', 'NPI', '', '2026-01-03', '2026-01-04', 8, '', 'ME');
+    window.meDataState.tasks[0].id = 'task-delete-me';
+    window.meDataState.tasks[1].id = 'task-keep-me';
+
+    // Simulate user deleting the first task in the Tasks tab.
+    window.meDataDeleteTask(0);
+
+    const eq = jest.fn().mockResolvedValue({ error: null });
+    const del = jest.fn().mockReturnValue({ eq });
+    const from = jest.fn((table) => {
+      if (table === 'me_holidays') {
+        return { delete: del, insert: jest.fn().mockResolvedValue({ error: null }) };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    });
+    global.supa = { from };
+
+    await window.meDataSave(false);
+
+    expect(global.meDeleteTaskRelational).toHaveBeenCalledWith('task-delete-me');
+    expect(global.meSaveTaskRelational).toHaveBeenCalledTimes(1);
+    expect(global.meSaveTaskRelational).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ id: 'task-keep-me', name: 'Task Two' })
+    );
+    expect(window.meDataPendingDeletes.tasks).toEqual([]);
+  });
+});

@@ -5,6 +5,11 @@
 
 npi.cp = npi.cp || {}
 
+npi.cp.calcCauseRpn = function(sev, occ, det) {
+  if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })
+  return (sev || 1) * (occ || 1) * (det || 1)
+}
+
 npi.cp.render = function() {
   const p = prog()
   const cpCauseKeys = new Set(p.cp.map(r => r.pfmeaCauseId || r.pfmeaEffectId || r.pfmeaId))
@@ -25,7 +30,7 @@ npi.cp.render = function() {
       const ci = p.ctq.findIndex(c => c.id === cid)
       return ci >= 0 ? `<span class="tag tag-ctq" style="font-size:9px">C${ci + 1}</span>` : ''
     }).join('')
-    const rpn = ca && ef ? (ef.sev || 1) * (ca.occ || 1) * (ca.det || 1) : 0
+    const rpn = ca && ef ? npi.cp.calcCauseRpn(ef.sev, ca.occ, ca.det) : 0
     const rpnBadge = rpn ? npi.components.rpnBadge(rpn) : ''
 
     return `<tr><td class="w100"><span class="tag tag-step" style="font-size:10px">${sl}</span></td>
@@ -38,7 +43,7 @@ npi.cp.render = function() {
       <td class="w70"><input class="cell-edit" name="cp_${i}_resp" value="${esc(r.resp)}" data-action="cp-upd" data-idx="${i}" data-field="resp" placeholder="Who"></td>
       <td><textarea class="cell-edit" name="cp_${i}_reaction" rows="2" data-action="cp-upd" data-idx="${i}" data-field="reaction" placeholder="Reaction plan">${esc(r.reaction)}</textarea></td>
       <td class="w50"><div style="display:flex;flex-wrap:wrap;gap:2px">${ctqs || '—'}</div></td>
-      <td class="w28 ctr"><button class="del-btn" data-action="cp-del" data-idx="${i}">×</button></td></tr>`
+      <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="cp-del" data-idx="${i}">×</button>` : ''}</td></tr>`
   }).join('')
 
   const syncBanner = miss.length > 0
@@ -46,12 +51,12 @@ npi.cp.render = function() {
     : ''
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Step 04</div><div class="sec-title">Control Plan</div><div class="sec-desc">Linked to PFMEA and PFD. Step numbers and CTQs carry through automatically.</div></div>
-  <div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-cp')" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="cp-sync">Sync from PFMEA</button><button class="btn btn-primary btn-sm" data-action="cp-add">＋ Add Row</button></div></div>
+  <div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-cp')" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-ghost btn-sm" data-action="cp-sync">Sync from PFMEA</button><button class="btn btn-primary btn-sm" data-action="cp-add">＋ Add Row</button>` : ''}</div></div>
   ${syncBanner}
   <div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">Control Plan</span><span class="card-meta">${p.cp.length} characteristics</span></div>
   ${p.cp.length === 0 ? emptyState('📊', 'No entries yet', miss.length > 0 ? 'Use "Sync from PFMEA" to auto-populate' : 'Complete PFMEA first') : `<div class="sticky-table-wrap"><table class="tbl" style="min-width:1100px">${npi.components.tableHeader([{label:'Step'},{label:'FMEA/RPN'},{label:'Characteristic'},{label:'Type'},{label:'Spec'},{label:'Method'},{label:'Freq'},{label:'Resp'},{label:'Reaction Plan'},{label:'CTQs'},{label:''}])}<tbody>${rows}</tbody></table></div>`}
-  <button class="add-row" data-action="cp-add">＋ Add Row</button></div>`
+  ${canEdit() ? `<button class="add-row" data-action="cp-add">＋ Add Row</button>` : ''}</div>`
 }
 
 npi.cp.syncFromPFMEA = function() { npi.data.cp.syncFromPFMEA() }

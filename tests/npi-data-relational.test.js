@@ -102,6 +102,38 @@ describe('NPI relational project UUID resolution', () => {
     )
   })
 
+  test('persists decision flow fields for executable PFD rows', async () => {
+    const step = {
+      id: 'step-2',
+      stepNum: 20,
+      type: 'step',
+      op: 'Inspect',
+      detail: '',
+      ctqIds: [],
+      bomRefs: [],
+      docRefs: [],
+      pfd_type: 'Decision',
+      nextStepId: null,
+      nextStepId_yes: 30,
+      nextStepId_no: 10
+    }
+    global.db.projects[0].pfd = [step]
+
+    await npiRelSavePFDStep(step)
+
+    const upsert = global.supa.from('npi_pfd_steps').upsert
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'step-2',
+        pfd_type: 'Decision',
+        next_step_num: null,
+        next_step_num_yes: 30,
+        next_step_num_no: 10
+      }),
+      { onConflict: 'id' }
+    )
+  })
+
   test('hydrates persisted leading and attached headers back into UI shape', () => {
     const rows = [
       { id: 'lead-header', step_num: 9, step_type: 'header', op: '', detail: '', ctq_ids: [], bom_refs: [], doc_refs: [] },
@@ -117,5 +149,33 @@ describe('NPI relational project UUID resolution', () => {
     expect(leadHeader.stepNum).toBeNull()
     expect(leadHeader.beforeStepId).toBe('step-1')
     expect(midHeader.afterStepId).toBe('step-1')
+  })
+
+  test('hydrates flowchart fields back into UI shape', () => {
+    const rows = [
+      {
+        id: 'step-20',
+        step_num: 20,
+        step_type: 'step',
+        op: 'Inspect',
+        detail: '',
+        ctq_ids: [],
+        bom_refs: [],
+        doc_refs: [],
+        pfd_type: 'Decision',
+        next_step_num: null,
+        next_step_num_yes: 30,
+        next_step_num_no: 10
+      }
+    ]
+
+    const hydrated = npiRelHydratePfdRows(rows)
+
+    expect(hydrated[0]).toEqual(expect.objectContaining({
+      pfd_type: 'Decision',
+      nextStepId: null,
+      nextStepId_yes: 30,
+      nextStepId_no: 10
+    }))
   })
 })

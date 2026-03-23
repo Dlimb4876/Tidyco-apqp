@@ -58,6 +58,36 @@ function buildProjectRow(p, now, email) {
   return row;
 }
 
+// ── Row → in-memory project ────────────────────────────────────
+// Single source of truth for mapping a Supabase `projects` row to the
+// shape used throughout the app.  Used by loadRemote(), loadRemotePage(),
+// and the realtime onInsert handler so that adding a new column only
+// requires a change in one place.
+function rowToProject(row) {
+  return {
+    dbId:                     row.id || null,
+    id:                       row.prog_id,
+    name:                     row.name,
+    customer:                 row.customer                 || '',
+    unit:                     row.unit_name                || '',
+    family:                   row.family                   || '',
+    lead:                     row.lead                     || '',
+    pm:                       row.pm                       || '',
+    date:                     row.start_date               || '',
+    ganttStart:               row.gantt_start              || '',
+    ganttCollapsed:           row.gantt_collapsed          || [],
+    subAssemblies:            row.sub_assembly_ids         || [],
+    status:                   row.prog_status              || 'Active',
+    qNumber:                  row.q_number                 || '',
+    partNumber:               row.part_number              || '',
+    product_id:               row.product_id               || null,
+    gate_selections:          row.gate_selections          || null,
+    gate_selection_locked:    !!row.gate_selection_locked,
+    gate_selection_locked_at: row.gate_selection_locked_at || null,
+    gate_selection_locked_by: row.gate_selection_locked_by || null,
+  };
+}
+
 // ── Auto-resize textareas ─────────────────────────────────────
 function autoResizeAll() {
   document.querySelectorAll('textarea[data-autoresize]').forEach(el => {
@@ -213,28 +243,7 @@ async function loadRemote() {
 
   if (error) { console.error('Load error', error); return; }
   if (data && data.length > 0) {
-    db.projects = data.map(row => migrateprog({
-      dbId:           row.id || null,
-      id:             row.prog_id,
-      name:           row.name,
-      customer:       row.customer          || '',
-      unit:           row.unit_name         || '',
-      family:         row.family            || '',
-      lead:           row.lead              || '',
-      pm:             row.pm                || '',
-      date:           row.start_date        || '',
-      ganttStart:     row.gantt_start       || '',
-      ganttCollapsed: row.gantt_collapsed   || [],
-      subAssemblies:  row.sub_assembly_ids  || [],
-      status:         row.prog_status       || 'Active',
-      qNumber:        row.q_number          || '',
-      partNumber:     row.part_number       || '',
-      product_id:     row.product_id        || null,
-      gate_selections: row.gate_selections || null,
-      gate_selection_locked: !!row.gate_selection_locked,
-      gate_selection_locked_at: row.gate_selection_locked_at || null,
-      gate_selection_locked_by: row.gate_selection_locked_by || null,
-    }));
+    db.projects = data.map(row => migrateprog(rowToProject(row)));
     const last = data[0];
     if (last.updated_by) {
       const who  = last.updated_by.split('@')[0];
@@ -273,28 +282,7 @@ async function loadRemotePage(page, pageSize = 50) {
 
   if (error) { console.error('Load page error', error); return; }
 
-  const rows = (data || []).map(row => migrateprog({
-    dbId:            row.id || null,
-    id:              row.prog_id,
-    name:            row.name,
-    customer:        row.customer          || '',
-    unit:            row.unit_name         || '',
-    family:          row.family            || '',
-    lead:            row.lead              || '',
-    pm:              row.pm                || '',
-    date:            row.start_date        || '',
-    ganttStart:      row.gantt_start       || '',
-    ganttCollapsed:  row.gantt_collapsed   || [],
-    subAssemblies:   row.sub_assembly_ids  || [],
-    status:          row.prog_status       || 'Active',
-    qNumber:         row.q_number          || '',
-    partNumber:      row.part_number       || '',
-    product_id:      row.product_id        || null,
-    gate_selections:          row.gate_selections          || null,
-    gate_selection_locked:    !!row.gate_selection_locked,
-    gate_selection_locked_at: row.gate_selection_locked_at || null,
-    gate_selection_locked_by: row.gate_selection_locked_by || null,
-  }));
+  const rows = (data || []).map(row => migrateprog(rowToProject(row)));
 
   if (page === 0) {
     db.projects = rows;
@@ -330,10 +318,32 @@ async function loadMoreProjects() {
 
 function setSyncBadge(state, text) {
   const b = document.getElementById('syncBadge');
-  if (!b) return;
-  b.className   = 'sync-badge ' + state;
-  b.textContent = text;
-  b.title       = text; // Tooltip for long error messages
+  if (b) {
+    b.className   = 'sync-badge ' + state;
+    b.textContent = text;
+    b.title       = text; // Tooltip for long error messages
+  }
+
+  // Also update bottombar
+  const bottombarSync = document.getElementById('bottombarSync');
+  if (bottombarSync) {
+    bottombarSync.className = 'bottombar-status ' + state;
+    bottombarSync.textContent = text;
+    bottombarSync.title = text;
+  }
+}
+
+function setUnsavedIndicator(count) {
+  const el = document.getElementById('bottombarUnsaved');
+  if (!el) return;
+
+  if (count > 0) {
+    el.style.display = 'inline-flex';
+    el.textContent = `✎ ${count} unsaved`;
+    el.title = `${count} unsaved change(s) — press Ctrl+S to save`;
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 // ── Migration ─────────────────────────────────────────────────
@@ -472,28 +482,7 @@ function subscribeProjectsGlobally() {
   createRealtimeSubscription('projects', 'global_projects_channel', {
     onInsert: (row) => {
       if (db.projects.find(p => p.id === row.prog_id)) return; // already known
-      const newProg = migrateprog({
-        dbId:            row.id || null,
-        id:              row.prog_id,
-        name:            row.name            || '',
-        customer:        row.customer        || '',
-        unit:            row.unit_name       || '',
-        family:          row.family          || '',
-        lead:            row.lead            || '',
-        pm:              row.pm              || '',
-        date:            row.start_date      || '',
-        ganttStart:      row.gantt_start     || '',
-        ganttCollapsed:  row.gantt_collapsed || [],
-        subAssemblies:   row.sub_assembly_ids || [],
-        status:          row.prog_status     || 'Active',
-        qNumber:         row.q_number        || '',
-        partNumber:      row.part_number     || '',
-        product_id:      row.product_id      || null,
-        gate_selections:        row.gate_selections         || null,
-        gate_selection_locked:  !!row.gate_selection_locked,
-        gate_selection_locked_at: row.gate_selection_locked_at  || null,
-        gate_selection_locked_by: row.gate_selection_locked_by  || null,
-      });
+      const newProg = migrateprog(rowToProject(row));
       db.projects.unshift(newProg);
       try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
       if (currentSection === 'hub' || currentSection === 'projects') {
@@ -631,6 +620,142 @@ function getPresenceForProg(pid) {
   // Return only non-stale entries
   presenceMap[pid] = presenceMap[pid].filter(e => Date.now() - e.ts < PRESENCE_TTL_MS);
   return presenceMap[pid];
+}
+
+// ── Teams Data Functions ───────────────────────────────────────
+// Team management: CRUD operations for teams and team permissions
+
+async function teamsDataLoadAll() {
+  if (!currentUser) return [];
+  try {
+    const { data, error } = await supa
+      .from('teams')
+      .select('id, name, team_type, description, created_at')
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('Failed to load teams:', err);
+    return [];
+  }
+}
+
+async function teamsDataLoadPermissions(teamId) {
+  if (!teamId || !currentUser) return [];
+  try {
+    const { data, error } = await supa
+      .from('team_permissions')
+      .select('permission, allowed')
+      .eq('team_id', teamId)
+      .order('permission', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('Failed to load team permissions:', err);
+    return [];
+  }
+}
+
+async function teamsDataGetUserCount(teamId) {
+  if (!teamId || !currentUser) return 0;
+  try {
+    const { count, error } = await supa
+      .from('profiles')
+      .select('id', { count: 'exact' })
+      .eq('team_id', teamId);
+    if (error) throw error;
+    return count || 0;
+  } catch (err) {
+    console.error('Failed to count team users:', err);
+    return 0;
+  }
+}
+
+async function teamsDataAdd(team) {
+  if (!currentUser || !team || !team.name || !team.team_type) {
+    console.error('teamsDataAdd: invalid team data');
+    return null;
+  }
+  try {
+    const { data, error } = await supa
+      .from('teams')
+      .insert([{
+        name: team.name,
+        team_type: team.team_type,
+        description: team.description || '',
+        created_by: currentUser.id
+      }])
+      .select('id, name, team_type, description, created_at');
+    if (error) throw error;
+    return data?.[0] || null;
+  } catch (err) {
+    console.error('Failed to create team:', err);
+    return null;
+  }
+}
+
+async function teamsDataUpdate(teamId, updates) {
+  if (!currentUser || !teamId || !updates) return false;
+  try {
+    const { error } = await supa
+      .from('teams')
+      .update({
+        ...updates,
+        updated_by: currentUser.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', teamId);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Failed to update team:', err);
+    return false;
+  }
+}
+
+async function teamsDataDelete(teamId) {
+  if (!currentUser || !teamId) return false;
+  try {
+    const { error } = await supa
+      .from('teams')
+      .delete()
+      .eq('id', teamId);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Failed to delete team:', err);
+    return false;
+  }
+}
+
+async function teamPermissionsDataSave(teamId, permissions) {
+  if (!currentUser || !teamId || !Array.isArray(permissions)) return false;
+  try {
+    // Delete all existing permissions for this team
+    const { error: deleteError } = await supa
+      .from('team_permissions')
+      .delete()
+      .eq('team_id', teamId);
+    if (deleteError) throw deleteError;
+
+    // Insert new permissions
+    if (permissions.length > 0) {
+      const records = permissions.map(p => ({
+        team_id: teamId,
+        permission: p.permission,
+        allowed: p.allowed,
+        updated_by: currentUser.id
+      }));
+      const { error: insertError } = await supa
+        .from('team_permissions')
+        .insert(records);
+      if (insertError) throw insertError;
+    }
+    return true;
+  } catch (err) {
+    console.error('Failed to save team permissions:', err);
+    return false;
+  }
 }
 
 // Expose for use in navigation.js and dashboard.js

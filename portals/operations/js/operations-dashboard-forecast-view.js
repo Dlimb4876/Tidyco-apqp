@@ -158,9 +158,9 @@ function opsRenderForecastRows(rows) {
 									${inlineMode
 										? `<button class="btn btn-primary" onclick="opsForecastSaveInline('${esc(row.id)}')">Save</button>
 											 <button class="btn btn-ghost" onclick="opsForecastCancelInline()">Cancel</button>`
-										: `<button class="btn btn-ghost" onclick="opsForecastStartInlineEdit('${esc(row.id)}')">Edit</button>`}
-									<button class="btn btn-ghost" onclick="opsForecastSetStatus('${esc(row.id)}', 'archived')">Archive</button>
-									<button class="btn btn-ghost" onclick="opsForecastDelete('${esc(row.id)}')">Delete</button>
+										: (canEdit() ? `<button class="btn btn-ghost" onclick="opsForecastStartInlineEdit('${esc(row.id)}')">Edit</button>` : '')}
+									${canEdit() ? `<button class="btn btn-ghost" onclick="opsForecastSetStatus('${esc(row.id)}', 'archived')">Archive</button>
+									<button class="btn btn-ghost" onclick="opsForecastDelete('${esc(row.id)}')">Delete</button>` : ''}
 								</td>
 							</tr>
 						`;
@@ -237,7 +237,7 @@ function opsRenderForecastView(metrics) {
 				</div>
 			</section>
 
-			<section class="ops-panel">
+			${canEdit() ? `<section class="ops-panel">
 				<div class="ops-panel-head">
 					<h3>${esc(formTitle)}</h3>
 					<span>${esc(formSub)}</span>
@@ -279,7 +279,7 @@ function opsRenderForecastView(metrics) {
 						<button class="btn btn-primary" type="submit">${editingRow ? 'Save Changes' : 'Add Opportunity'}</button>
 					</div>
 				</form>
-			</section>
+			</section>` : ''}
 
 			<section class="ops-panel">
 				<div class="ops-panel-head">

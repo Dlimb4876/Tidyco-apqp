@@ -17,6 +17,41 @@
   align-items: center;
 }
 
+.ops-reporting-date {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-soft);
+}
+
+.ops-reporting-date label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.ops-reporting-date-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ops-reporting-date input[type="date"] {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: 32px;
+  padding: 0 8px;
+  background: var(--white);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
 .ops-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -25,9 +60,9 @@
 }
 
 .ops-tab {
-  border: 1px solid color-mix(in srgb, var(--line) 70%, #1a2a3f);
-  background: linear-gradient(135deg, #f4f8fb 0%, #e9f2fb 100%);
-  color: #0d2a45;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
   border-radius: 999px;
   padding: 8px 14px;
   font-weight: 600;
@@ -95,7 +130,7 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 12px 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+  background: var(--surface);
   transition: transform .15s ease, box-shadow .15s ease;
 }
 
@@ -119,14 +154,14 @@
   margin-top: 6px;
   font-size: clamp(22px, 4vw, 30px);
   font-weight: 700;
-  color: #0a2741;
+  color: var(--ink);
   line-height: 1.1;
 }
 
 .ops-metric-detail {
   margin-top: 6px;
   font-size: 12px;
-  color: #365066;
+  color: var(--muted);
 }
 
 .ops-tone-good {
@@ -151,9 +186,7 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 12px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, .96) 0%, rgba(247, 250, 253, .96) 100%),
-    repeating-linear-gradient(45deg, rgba(20, 62, 96, .02) 0, rgba(20, 62, 96, .02) 8px, transparent 8px, transparent 16px);
+  background: var(--surface);
 }
 
 .ops-panel-head {
@@ -167,7 +200,7 @@
 .ops-panel-head h3 {
   margin: 0;
   font-size: 16px;
-  color: #0d2b46;
+  color: var(--ink);
 }
 
 .ops-panel-head span {
@@ -183,7 +216,7 @@
 .ops-feed-row {
   text-align: left;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--white);
   border-radius: 10px;
   padding: 10px;
   cursor: pointer;
@@ -191,13 +224,13 @@
 
 .ops-feed-title {
   font-weight: 600;
-  color: #0e2d49;
+  color: var(--ink);
 }
 
 .ops-feed-detail {
   margin-top: 4px;
   font-size: 12px;
-  color: #3a5268;
+  color: var(--muted);
 }
 
 .ops-radar-row {
@@ -211,7 +244,7 @@
 .ops-radar-label,
 .ops-radar-value {
   font-size: 12px;
-  color: #29445b;
+  color: var(--text);
 }
 
 .ops-radar-value {
@@ -222,7 +255,7 @@
 .ops-radar-bar {
   height: 10px;
   border-radius: 999px;
-  background: #dfebf5;
+  background: var(--line);
   overflow: hidden;
 }
 
@@ -245,12 +278,12 @@
 }
 
 .ops-empty-note {
-  border: 1px dashed color-mix(in srgb, var(--line) 75%, #4b6377);
+  border: 1px dashed var(--line);
   border-radius: 10px;
   padding: 10px;
   font-size: 13px;
-  color: #314d62;
-  background: #f7fbff;
+  color: var(--muted);
+  background: var(--bg-soft);
 }
 
 .ops-forecast-chart-wrap {
@@ -270,7 +303,7 @@
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
-  color: #29445b;
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -282,8 +315,8 @@
   min-height: 38px;
   padding: 8px 10px;
   font: inherit;
-  color: #0b2a43;
-  background: #fff;
+  color: var(--text);
+  background: var(--white);
 }
 
 .ops-forecast-form textarea {
@@ -324,8 +357,8 @@
   padding: 0 8px;
   font: inherit;
   font-size: 13px;
-  color: #0b2a43;
-  background: #fff;
+  color: var(--text);
+  background: var(--white);
 }
 
 .ops-forecast-filter-status {
@@ -336,8 +369,8 @@
   padding: 0 8px;
   font: inherit;
   font-size: 13px;
-  color: #0b2a43;
-  background: #fff;
+  color: var(--text);
+  background: var(--white);
 }
 
 .ops-forecast-archived-toggle {
@@ -352,7 +385,7 @@
 }
 
 .ops-sortable:hover {
-  color: #0b2a43;
+  color: var(--ink);
 }
 
 .ops-sort-icon {
@@ -376,7 +409,7 @@
   border-bottom: 1px solid var(--line);
   padding: 8px;
   font-size: 12px;
-  color: #17344e;
+  color: var(--text);
   text-align: left;
   white-space: nowrap;
 }
@@ -385,16 +418,16 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .06em;
-  color: #456077;
+  color: var(--muted);
 }
 
 .ops-forecast-status {
   display: inline-flex;
   align-items: center;
-  border: 1px solid color-mix(in srgb, var(--line) 70%, #4d6477);
+  border: 1px solid var(--line);
   border-radius: 999px;
   padding: 2px 8px;
-  background: #f3f8fd;
+  background: var(--bg-soft);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .05em;
@@ -411,8 +444,8 @@
   border-radius: 6px;
   padding: 4px 6px;
   font: inherit;
-  color: #0b2a43;
-  background: #fff;
+  color: var(--text);
+  background: var(--white);
   min-width: 110px;
 }
 
@@ -439,6 +472,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .ops-shell-people .ops-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .ops-columns {
     grid-template-columns: 1.2fr .8fr;
   }
@@ -459,6 +496,10 @@
 @media (min-width: 1200px) {
   .ops-metrics-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ops-shell-people .ops-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ops-forecast-form {
@@ -483,4 +524,45 @@
   color: var(--ink);
   min-width: 80px;
   text-align: center;
+}
+
+/* ── Theme overrides: ops-hero banner ── */
+:root[data-theme="light"] .ops-hero {
+  color: #0d2035;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(255, 255, 255, .30), transparent 42%),
+    linear-gradient(135deg, #c9e4f5 0%, #a8d5ea 50%, #9fd8cc 100%);
+  border-color: #9acde3;
+}
+
+:root[data-theme="light"] .ops-hero-copy h2,
+:root[data-theme="light"] .ops-kicker,
+:root[data-theme="light"] .ops-hero-copy p {
+  color: #0d2035;
+}
+
+:root[data-theme="light"] .ops-tab.active {
+  background: linear-gradient(135deg, #c2dff5 0%, #9fd8cc 100%);
+  color: #0d2035;
+  border-color: #80c4d8;
+}
+
+:root[data-theme="terminal"] .ops-hero {
+  color: #00ff41;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(0, 255, 65, .08), transparent 42%),
+    linear-gradient(135deg, #000000 0%, #021a06 50%, #031a0a 100%);
+  border-color: #006618;
+}
+
+:root[data-theme="terminal"] .ops-hero-copy h2,
+:root[data-theme="terminal"] .ops-kicker,
+:root[data-theme="terminal"] .ops-hero-copy p {
+  color: #00ff41;
+}
+
+:root[data-theme="terminal"] .ops-tab.active {
+  background: linear-gradient(135deg, #021a06 0%, #031a0a 100%);
+  color: #00ff41;
+  border-color: #006618;
 }

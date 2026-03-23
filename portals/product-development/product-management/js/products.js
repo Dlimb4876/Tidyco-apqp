@@ -228,8 +228,8 @@ function renderProductsList() {
         </tr>
       </thead>
       <tbody>
-        <!-- New row -->
-        <tr class="row-new" id="productsNewRow" style="background-color:rgba(59,130,246,0.05);border-top:2px solid rgba(59,130,246,0.2)">
+        <!-- New row (editors/admins only) -->
+        ${canEdit() ? `<tr class="row-new" id="productsNewRow" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--chart-blue-lt)">
           <td><input class="cell-edit" id="pNew-name" placeholder="Product name"></td>
           <td><input class="cell-edit" id="pNew-partNumber" placeholder="Part number"></td>
           <td><select class="cell-edit" id="pNew-family">${buildFamilyOptions('')}</select></td>
@@ -243,23 +243,23 @@ function renderProductsList() {
           <td class="w28 ctr">
             <button class="btn-del" title="Add product" data-action="products-add-row">✓</button>
           </td>
-        </tr>
+        </tr>` : ''}
         ${filtered.length === 0 ? `
           <tr><td colspan="11" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No products found.</div>
-            <button class="btn btn-primary btn-sm" data-action="products-focus-add">＋ Add First Product</button>
+            ${canEdit() ? '<button class="btn btn-primary btn-sm" data-action="products-focus-add">＋ Add First Product</button>' : ''}
           </td></tr>
         ` : filtered.map(p => {
           const familyLabel = p.family ? (getFamilies().find(f => f.id === p.family)?.label || '—') : '—';
           if (productsEditingId === p.id) {
             return `
-            <tr class="row-new" style="background-color:rgba(255,191,0,0.05);border-top:2px solid rgba(255,191,0,0.2)">
+            <tr class="row-new" style="background-color:var(--row-highlight-amber);border-top:2px solid var(--chart-amber-lt)">
               <td><input class="cell-edit" id="pEdit-name" value="${esc(p.name || '')}"></td>
               <td><input class="cell-edit" id="pEdit-partNumber" value="${esc(p.part_number || '')}"></td>
               <td><select class="cell-edit" id="pEdit-family">${buildFamilyOptions(p.family || '')}</select></td>
               <td><select class="cell-edit" id="pEdit-location">${buildLocationOptions(p.work_location || '')}</select></td>
               <td><input class="cell-edit" id="pEdit-customer" value="${esc(p.customer || '')}"></td>
-              <td><input class="cell-edit cell-num" id="pEdit-hours" type="number" min="0" step="0.5" value="${p.current_overhaul_hours || 0}"></td>
+              <td><span class="cell-display" style="font-variant-numeric:tabular-nums;" title="Overhaul time is maintained automatically via MCS changes and the Overhaul Trends history. Edit is disabled.">${(p.current_overhaul_hours || 0).toFixed(1)} h</span></td>
               <td><input class="cell-edit cell-num" id="pEdit-turnaround" type="number" min="0" step="1" value="${p.turnaround_days || ''}"></td>
               <td><input class="cell-edit" id="pEdit-notes" value="${esc(p.notes || '')}"></td>
               <td><select class="cell-edit" id="pEdit-status">${buildStatusOptions(p.status || 'Tender')}</select></td>
@@ -283,8 +283,8 @@ function renderProductsList() {
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td><span class="badge badge-scope-${esc(p.scope || 'overhaul')}">${(p.scope || 'overhaul').charAt(0).toUpperCase() + (p.scope || 'overhaul').slice(1)}</span></td>
             <td class="w28 ctr" style="display:flex;gap:4px;justify-content:center">
-              <button class="btn-del" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
-              <button class="btn-del" title="Delete" data-action="products-delete-row" data-product-id="${esc(p.id)}" data-product-name="${esc(p.name)}">🗑️</button>
+              ${canEdit() ? `<button class="btn-del" title="Edit" data-action="products-start-edit" data-product-id="${esc(p.id)}">✏️</button>
+              <button class="btn-del" title="Delete" data-action="products-delete-row" data-product-id="${esc(p.id)}" data-product-name="${esc(p.name)}">🗑️</button>` : ''}
             </td>
           </tr>`;
         }).join('')}
@@ -340,7 +340,7 @@ async function productsAddRow() {
     // Brief highlight on add row
     const newRow = document.getElementById('productsNewRow');
     if (newRow) {
-      newRow.style.backgroundColor = 'rgba(59,130,246,0.12)';
+      newRow.style.backgroundColor = 'var(--field-highlight)';
       setTimeout(() => { newRow.style.backgroundColor = ''; }, 500);
     }
   } catch (err) {
@@ -373,7 +373,7 @@ async function productsSaveEdit(productId) {
     family: document.getElementById('pEdit-family')?.value || '',
     work_location: document.getElementById('pEdit-location')?.value || null,
     customer: document.getElementById('pEdit-customer')?.value.trim() || '',
-    current_overhaul_hours: parseFloat(document.getElementById('pEdit-hours')?.value) || 0,
+
     turnaround_days: parseFloat(document.getElementById('pEdit-turnaround')?.value) || null,
     notes: document.getElementById('pEdit-notes')?.value.trim() || '',
     status: document.getElementById('pEdit-status')?.value || 'Tender',
