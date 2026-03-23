@@ -127,6 +127,26 @@ describe('ME chart tab rendering', () => {
     expect(result).toContain('No engineers with a start date set');
   });
 
+  test('uses Logistics Technician labels for Logistics context', () => {
+    window.meCurrentDepartmentContext = 'LOG';
+
+    const result = meRenderChartTab('2026-03', [], [], [], []);
+
+    expect(result).toContain('CAPACITY PER LOGISTICS TECHNICIAN');
+    expect(result).toContain('<th>Logistics Technician</th>');
+    expect(result).toContain('No logistics technicians with a start date set');
+  });
+
+  test('uses Technician labels for Unit 6 context', () => {
+    window.meCurrentDepartmentContext = 'UNIT6';
+
+    const result = meRenderChartTab('2026-03', [], [], [], []);
+
+    expect(result).toContain('CAPACITY PER TECHNICIAN');
+    expect(result).toContain('<th>Technician</th>');
+    expect(result).toContain('No technicians with a start date set');
+  });
+
   test('reduces available hours when holiday days are present for a member', () => {
     const team = [
       { id: 'p1', name: 'Alex', startDate: '2026-01-01', hoursPerWeek: 40, utilisation: 80 }

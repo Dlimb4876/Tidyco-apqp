@@ -89,7 +89,14 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-team-add': {
-    const label = isPM ? 'New PM Manager' : 'New Engineer'
+    const department = window.meCurrentDepartmentContext || 'ME'
+    const label = isPM
+      ? 'New PM Manager'
+      : department === 'LOG'
+        ? 'New Logistics Technician'
+        : department === 'UNIT6'
+          ? 'New Technician'
+          : 'New Engineer'
     meDataAddTeam(label, ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team')
     break
   }
@@ -171,11 +178,25 @@ window.capacityEvents._onClick = function(evt) {
     if (idx < 0) break
 
     const hoursEl = row?.querySelector('input[data-field="hoursPerWeek"]')
+    const kittingEl = row?.querySelector('input[data-field="kittingTimeBookingHours"]')
+    const movementEl = row?.querySelector('input[data-field="productMovementHours"]')
     const effectiveDateEl = row?.querySelector('input[data-field="supportEffectiveDate"]')
     const reasonEl = row?.querySelector('input[data-field="supportChangeReason"]')
-    const hoursValue = hoursEl ? Number(hoursEl.value) : NaN
+    const hasSplitFields = !!kittingEl || !!movementEl
+    const kittingValue = kittingEl ? Number(kittingEl.value) : 0
+    const movementValue = movementEl ? Number(movementEl.value) : 0
+    const hoursValue = hasSplitFields
+      ? ((Number.isFinite(kittingValue) ? kittingValue : NaN) + (Number.isFinite(movementValue) ? movementValue : NaN))
+      : (hoursEl ? Number(hoursEl.value) : NaN)
     const effectiveDate = (effectiveDateEl?.value || '').trim()
     const changeReason = (reasonEl?.value || '').trim()
+
+    if (hasSplitFields && (!Number.isFinite(kittingValue) || kittingValue < 0 || !Number.isFinite(movementValue) || movementValue < 0)) {
+      alert('Enter valid non-negative values for Kitting Booking In/Out and Product Movement before applying.')
+      if (kittingEl && (!Number.isFinite(kittingValue) || kittingValue < 0)) kittingEl.focus()
+      else if (movementEl) movementEl.focus()
+      break
+    }
 
     if (!Number.isFinite(hoursValue) || hoursValue < 0) {
       alert('Enter a valid Hours/Batch value before applying.')
@@ -206,7 +227,9 @@ window.capacityEvents._onClick = function(evt) {
 
     meDataUpdateProduct(idx, 'hoursPerWeek', String(hoursValue), {
       effectiveDate,
-      changeReason
+      changeReason,
+      kittingTimeBookingHours: hasSplitFields ? kittingValue : undefined,
+      productMovementHours: hasSplitFields ? movementValue : undefined
     })
 
     if (typeof meRefreshCurrentTab === 'function') meRefreshCurrentTab()
@@ -341,6 +364,18 @@ window.capacityEvents._onChange = function(evt) {
     const idx = capNum(row?.getAttribute('data-product-idx'), -1)
     if (idx < 0) break
     const field = el.getAttribute('data-field')
+    if (field === 'kittingTimeBookingHours' || field === 'productMovementHours') {
+      const hoursEl = row?.querySelector('input[data-field="hoursPerWeek"]')
+      const kittingEl = row?.querySelector('input[data-field="kittingTimeBookingHours"]')
+      const movementEl = row?.querySelector('input[data-field="productMovementHours"]')
+      const kittingValue = kittingEl ? Number(kittingEl.value) : 0
+      const movementValue = movementEl ? Number(movementEl.value) : 0
+      if (hoursEl) {
+        const total = Math.max(0, Number.isFinite(kittingValue) ? kittingValue : 0) + Math.max(0, Number.isFinite(movementValue) ? movementValue : 0)
+        hoursEl.value = String(total)
+      }
+      break
+    }
     if (field === 'hoursPerWeek' || field === 'supportEffectiveDate') {
       // Intent-based flow: dated support changes are only persisted via cap-products-apply-hours.
       break

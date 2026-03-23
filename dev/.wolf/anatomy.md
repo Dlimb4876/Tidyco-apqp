@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-23T21:01:06.871Z
-> Files: 287 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-23T23:59:00.000Z
+> Files: 296 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
 
@@ -14,10 +14,12 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~14019 tok)
+- `CHANGELOG.md` — Changelog (~14106 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
+- `favicon.ico` — Site favicon
+- `Tidyco logo-blue.png` — Tidyco brand logo (blue)
 - `index.html` — Tidyco Operations Portal (~10240 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~328 tok)
@@ -130,8 +132,19 @@
 
 ## Manual Update 2026-03-23
 
+- `portals/capacity/js/capacity.js` — Capacity hub/router now suppresses the shared `prod-nav-bar` for `logistics` and `unit6` tabs so those pages only show their local header/back controls.
+- `tests/capacity-hub.test.js` — Added regression coverage that Logistics and Unit 6 render without the shared route-switcher bar.
+- Verification note — checked current capacity router/render paths after user correction; no additional capacity-page header changes were applied.
+
 
 ## Manual Update Notes
+
+- `portals/capacity/js/capacity-events.js` — Team-member quick-add now uses department-aware default names so Logistics creates `New Logistics Technician` and Unit 6 creates `New Technician` instead of generic engineer labels.
+- `portals/capacity/js/me-team.js` — Shared team tab now renders department-aware titles, counts, and empty-state CTA labels for LOG and UNIT6 while preserving existing ME and PM wording.
+- `portals/capacity/js/me-chart.js` — Capacity-per-person card title, first-column header, and no-start-date helper text now switch to Logistics Technician or Technician for LOG and UNIT6 contexts.
+- `portals/capacity/js/me-holidays.js` — Holiday planner first column header now uses the department-specific role label for LOG and UNIT6.
+- `tests/me-team-render.test.js` — Added Logistics and Unit 6 label regressions for team title, count, and empty-state CTA text.
+- `tests/me-chart.test.js` — Added Logistics and Unit 6 regressions for chart card and empty-state role labels.
 
 
 ## core/css/
@@ -242,6 +255,10 @@
 ## portals/capacity/unit6/js/
 
 - `unit6-capacity.js` — unit6FilterByDepartment: unit6GetCurrentMonthKey, unit6GetData, unit6GetTabContent (~2392 tok)
+
+## portals/bugs/
+
+- *(css/ and js/ directories exist but are currently empty — portal scaffolded, not yet implemented)*
 
 ## portals/feedback/css/
 
@@ -392,6 +409,7 @@
 - `hybrid_permissions_role_team_grants.sql` — hybrid_permissions_role_team_grants.sql (~1527 tok)
 - `mcs_changes_2step_migration.sql` — MCS Changes — 2-Step Approval Migration (~1552 tok)
 - `mcs_timeline_comment_types.sql` — MCS Timeline: add 'comment' and 'progress_update' event types (~248 tok)
+- `me_product_support_history.sql` — Effective-dated Product Support History (ME / PM Capacity)
 - `npi_pfd_flowchart_columns.sql` — Add PFD flowchart fields so step type and branch destinations persist. (~127 tok)
 - `operations_forecast_opportunities.sql` — Operations forecast opportunities table for the Operations dashboard forecast layer. (~473 tok)
 - `overhaul_history_mcs_columns.sql` — overhaul_history — Add MCS integration columns (~760 tok)
@@ -399,6 +417,7 @@
 - `pfmea_mcs_linking.sql` — ════════════════════════════════════════════════════════════════════ (~304 tok)
 - `phase3_optimisations.sql` — ════════════════════════════════════════════════════════════════════ (~1551 tok)
 - `realtime_missing_tables.sql` — Enable realtime publication for tables missing subscriptions (~72 tok)
+- `rollback_normalize_rls_to_single_auth_policy.sql` — Rollback script restoring pre-normalization RLS policy set
 - `sub_assembly_attribution.sql` — Add sub_assembly_id to npi_actions and npi_risks (~100 tok)
 - `teams_table.sql` — ═══════════════════════════════════════════════════════════════ (~574 tok)
 - `user_feedback_table.sql` — User Feedback Table Schema (~759 tok)
@@ -419,6 +438,7 @@
 - `feedback-data.test.js` — feedback-data.test.js — Tests for portals/feedback/js/feedback-data.js (~3070 tok)
 - `helpers.test.js` — Declares fs (~2810 tok)
 - `hub.test.js` — hub.test.js — Tests for portals/hub/js/hub.js (~3476 tok)
+- `log-capacity.test.js` — Tests for portals/capacity/logistics/js/log-capacity.js (~logRenderCapacity, logSetTab, logDebouncedSave)
 - `mcs-actions.test.js` — Declares fs (~1217 tok)
 - `mcs-approval-core.test.js` — Declares fs (~1226 tok)
 - `mcs-approval.test.js` — Declares fs (~929 tok)
@@ -428,11 +448,13 @@
 - `me-chart.test.js` — Declares fs (~1154 tok)
 - `me-components.test.js` — me-components.test.js — Tests for portals/capacity/js/me-components.js (~2337 tok)
 - `me-data-core.test.js` — me-data-core.test.js — Tests for portals/capacity/js/me-data.js (~2641 tok)
+- `me-data-relational-queries.test.js` — me-data-relational-queries.test.js (~3553 tok)
 - `me-heatmap.test.js` — Declares fs (~1078 tok)
 - `me-products-filters.test.js` — fs: renderSupportTable, renderLoadTable (~2203 tok)
 - `me-tasks-sort.test.js` — me-tasks-sort.test.js — Tests for portals/capacity/js/me-tasks.js (~2384 tok)
 - `me-team-render.test.js` — me-team-render.test.js — Tests for portals/capacity/js/me-team.js (~1520 tok)
 - `navigation.test.js` — fs: waitFor (~5721 tok)
+- `npi-dashboard-search.test.js` — NPI dashboard search input behavior tests
 - `npi-data-relational.test.js` — fs: makeCapturingSupa (~2295 tok)
 - `npi-gate-permissions.test.js` — Declares fs (~933 tok)
 - `npi-pfd-flowchart.test.js` — Declares fs (~2326 tok)
@@ -443,7 +465,7 @@
 - `permissions-helpers.test.js` — Declares fs (~427 tok)
 - `pfmea.test.js` — Declares fs (~1883 tok)
 - `pm-capacity-data.test.js` — pm-capacity-data.test.js — Tests for portals/capacity/project-management/js/pm-capacity-data.js (~1343 tok)
-- `prod-capacity-data.test.js` — Declares fs (~586 tok)
+- `prod-capacity-data.test.js` — Declares fs (~1382 tok)
 - `product-development.test.js` — fs: renderProductDevelopmentShell (~1655 tok)
 - `product-management.test.js` — Declares fs (~1044 tok)
 - `production-data.test.js` — production-data.test.js — Tests for portals/production/js/data.js (~1788 tok)
@@ -456,6 +478,8 @@
 - `settings-portal.test.js` — settings-portal.test.js — Tests for portals/settings/js/settings.js (~9451 tok)
 - `supabase-rw.test.js` — SUPA_URL: fetchWithTimeout (~1645 tok)
 - `timing-core.test.js` — timing-core.test.js — Tests for portals/product-development/npi/js/timing.js (~1468 tok)
+- `unit6-capacity.test.js` — Tests for portals/capacity/unit6/js/unit6-capacity.js (~unit6RenderCapacity, unit6SetTab, unit6DebouncedSave)
+- `work-areas-data.test.js` — work-areas-data.test.js (~1643 tok)
 
 ## utils/js/
 

@@ -110,7 +110,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
 
   html += `</tr>
             <tr>
-              <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left; width: 130px; max-width: 130px;">${department === 'PM' ? 'Manager' : 'Engineer'}</th>`;
+              <th style="position: sticky; left: 0; z-index: 10; background: var(--white); text-align: left; width: 130px; max-width: 130px;">${department === 'PM' ? 'Manager' : department === 'LOG' ? 'Logistics Technician' : department === 'UNIT6' ? 'Technician' : 'Engineer'}</th>`;
 
   dates.forEach((date, idx) => {
     const d = new Date(date);
