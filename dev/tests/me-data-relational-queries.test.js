@@ -209,7 +209,18 @@ describe('meSaveProductSupportHistoryRelational', () => {
     }
 
     await meSaveProductSupportHistoryRelational(USER_ID, [
-      { productId: 'prod-1', hoursPerWeek: 5, effectiveDate: '2025-01-01', endDate: '', changeReason: '', notes: '', department: 'ME' }
+      {
+        productId: 'prod-1',
+        hoursPerWeek: 5,
+        kittingHours: 3,
+        bookingInOutHours: 1,
+        productMovementHours: 2,
+        effectiveDate: '2025-01-01',
+        endDate: '',
+        changeReason: '',
+        notes: '',
+        department: 'ME'
+      }
     ])
 
     expect(deleteEqMock).toHaveBeenCalledWith('user_id', USER_ID)
@@ -218,6 +229,10 @@ describe('meSaveProductSupportHistoryRelational', () => {
         expect.objectContaining({
           product_id: 'prod-1',
           hours_per_week: 5,
+          kitting_hours: 3,
+          booking_in_out_hours: 1,
+          kitting_time_booking_hours: 3,
+          product_movement_hours: 2,
           effective_date: '2025-01-01'
         })
       ])

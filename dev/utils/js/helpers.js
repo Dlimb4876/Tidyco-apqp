@@ -233,6 +233,44 @@ function calcRPN(r) {
   return (r.sev || 1) * (r.occ || 1) * (r.det || 1);
 }
 
+// Preserve typing continuity when an input-triggered action re-renders UI.
+function preserveInputCaretAfterRender(inputEl, rerenderFn, options = {}) {
+  if (typeof rerenderFn !== 'function') return;
+
+  const selectionStart = inputEl && typeof inputEl.selectionStart === 'number'
+    ? inputEl.selectionStart
+    : null;
+  const selectionEnd = inputEl && typeof inputEl.selectionEnd === 'number'
+    ? inputEl.selectionEnd
+    : selectionStart;
+
+  rerenderFn();
+
+  if (!inputEl) return;
+
+  const delay = Number.isFinite(options.delayMs) ? options.delayMs : 0;
+  setTimeout(() => {
+    const scope = typeof options.scopeResolver === 'function'
+      ? options.scopeResolver()
+      : (options.scope || document);
+    const replacement = typeof options.findReplacement === 'function'
+      ? options.findReplacement(scope)
+      : (options.replacementSelector && scope && typeof scope.querySelector === 'function'
+        ? scope.querySelector(options.replacementSelector)
+        : null);
+    if (!replacement) return;
+
+    replacement.focus();
+
+    if (selectionStart === null || typeof replacement.setSelectionRange !== 'function') return;
+
+    const len = (replacement.value || '').length;
+    const safeStart = Math.max(0, Math.min(selectionStart, len));
+    const safeEnd = Math.max(safeStart, Math.min(selectionEnd === null ? safeStart : selectionEnd, len));
+    replacement.setSelectionRange(safeStart, safeEnd);
+  }, delay);
+}
+
 
 function getWeekNumber(d) {
   d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));

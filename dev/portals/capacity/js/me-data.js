@@ -100,23 +100,34 @@ function meNormalizeProductSupportBreakdown(source, fallbackHoursPerWeek) {
     (source && (source.hoursPerWeek ?? source.hours_per_week)) ??
     0
   );
-  const rawKitting = Number(source && (source.kittingTimeBookingHours ?? source.kitting_time_booking_hours));
+  const rawLegacyKittingBooking = Number(source && (source.kittingTimeBookingHours ?? source.kitting_time_booking_hours));
+  const rawKitting = Number(source && (source.kittingHours ?? source.kitting_hours));
+  const rawBookingInOut = Number(source && (source.bookingInOutHours ?? source.booking_in_out_hours));
   const rawMovement = Number(source && (source.productMovementHours ?? source.product_movement_hours));
-  const hasBreakdown = Number.isFinite(rawKitting) || Number.isFinite(rawMovement);
+  const hasSplitBreakdown = Number.isFinite(rawKitting) || Number.isFinite(rawBookingInOut);
+  const hasBreakdown = hasSplitBreakdown || Number.isFinite(rawLegacyKittingBooking) || Number.isFinite(rawMovement);
 
-  const kittingTimeBookingHours = hasBreakdown
+  const kittingHours = hasSplitBreakdown
     ? Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0)
-    : Math.max(0, Number.isFinite(rawTotal) ? rawTotal : 0);
+    : (hasBreakdown
+      ? Math.max(0, Number.isFinite(rawLegacyKittingBooking) ? rawLegacyKittingBooking : 0)
+      : Math.max(0, Number.isFinite(rawTotal) ? rawTotal : 0));
+  const bookingInOutHours = hasSplitBreakdown
+    ? Math.max(0, Number.isFinite(rawBookingInOut) ? rawBookingInOut : 0)
+    : 0;
   const productMovementHours = hasBreakdown
     ? Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0)
     : 0;
   const hoursPerWeek = hasBreakdown
-    ? kittingTimeBookingHours + productMovementHours
+    ? kittingHours + bookingInOutHours + productMovementHours
     : Math.max(0, Number.isFinite(rawTotal) ? rawTotal : 0);
 
   return {
     hoursPerWeek,
-    kittingTimeBookingHours,
+    kittingHours,
+    bookingInOutHours,
+    // Backward-compatible alias for legacy references.
+    kittingTimeBookingHours: kittingHours,
     productMovementHours
   };
 }
@@ -141,7 +152,9 @@ function meNormalizeSupportHistoryRecord(record, fallbackDepartment = 'ME') {
     id: record.id || meUUID(),
     productId,
     hoursPerWeek: breakdown.hoursPerWeek,
-    kittingTimeBookingHours: breakdown.kittingTimeBookingHours,
+    kittingHours: breakdown.kittingHours,
+    bookingInOutHours: breakdown.bookingInOutHours,
+    kittingTimeBookingHours: breakdown.kittingHours,
     productMovementHours: breakdown.productMovementHours,
     effectiveDate,
     endDate: meNormalizeDateOnly(record.endDate || record.end_date) || '',
@@ -161,7 +174,9 @@ function meApplyLatestSupportHistoryToProduct(product, department) {
   const breakdown = meNormalizeProductSupportBreakdown(latestHistory || product, product.hoursPerWeek);
 
   product.hoursPerWeek = breakdown.hoursPerWeek;
-  product.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+  product.kittingHours = breakdown.kittingHours;
+  product.bookingInOutHours = breakdown.bookingInOutHours;
+  product.kittingTimeBookingHours = breakdown.kittingHours;
   product.productMovementHours = breakdown.productMovementHours;
   product.supportEffectiveDate = latestHistory
     ? (latestHistory.effectiveDate || meNormalizeDateOnly(product.createdAt || product.created_at) || '')
@@ -215,7 +230,9 @@ function meEnsureProductSupportHistoryBaseline(product) {
     id: meUUID(),
     productId: product.id,
     hoursPerWeek: breakdown.hoursPerWeek,
-    kittingTimeBookingHours: breakdown.kittingTimeBookingHours,
+    kittingHours: breakdown.kittingHours,
+    bookingInOutHours: breakdown.bookingInOutHours,
+    kittingTimeBookingHours: breakdown.kittingHours,
     productMovementHours: breakdown.productMovementHours,
     effectiveDate: baselineDate,
     endDate: '',
@@ -399,8 +416,10 @@ window.meDataAddProduct = function(name, hoursPerWeek, notes, productDatabaseId,
     id: meUUID(),
     name: name.trim(),
     department: meGetDepartmentFromContext(department),
-    hoursPerWeek: breakdown.hoursPerWeek || 5,
-    kittingTimeBookingHours: breakdown.kittingTimeBookingHours || 5,
+    hoursPerWeek: breakdown.hoursPerWeek,
+    kittingHours: breakdown.kittingHours,
+    bookingInOutHours: breakdown.bookingInOutHours || 0,
+    kittingTimeBookingHours: breakdown.kittingHours,
     productMovementHours: breakdown.productMovementHours || 0,
     notes: notes ? notes.trim() : '',
     productDatabaseId: productDatabaseId || '',
@@ -422,15 +441,23 @@ window.meDataUpdateProduct = function(idx, field, value, metadata) {
       {
         const breakdown = meNormalizeProductSupportBreakdown({
           hoursPerWeek: value,
+          kittingHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'kittingHours')
+            ? metadata.kittingHours
+            : undefined,
           kittingTimeBookingHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'kittingTimeBookingHours')
             ? metadata.kittingTimeBookingHours
+            : undefined,
+          bookingInOutHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'bookingInOutHours')
+            ? metadata.bookingInOutHours
             : undefined,
           productMovementHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'productMovementHours')
             ? metadata.productMovementHours
             : undefined
         }, value);
         product.hoursPerWeek = breakdown.hoursPerWeek;
-        product.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+        product.kittingHours = breakdown.kittingHours;
+        product.bookingInOutHours = breakdown.bookingInOutHours;
+        product.kittingTimeBookingHours = breakdown.kittingHours;
         product.productMovementHours = breakdown.productMovementHours;
 
         // Maintain effective-dated support history so past capacity can be reproduced.
@@ -445,7 +472,8 @@ window.meDataUpdateProduct = function(idx, field, value, metadata) {
             metadata && metadata.changeReason ? metadata.changeReason : '',
             metadata && metadata.notes ? metadata.notes : '',
             product.department,
-            product.kittingTimeBookingHours,
+            product.kittingHours,
+            product.bookingInOutHours,
             product.productMovementHours
           );
         }
@@ -455,24 +483,45 @@ window.meDataUpdateProduct = function(idx, field, value, metadata) {
       }
       break;
     case 'kittingTimeBookingHours':
+    case 'kittingHours':
       {
         const breakdown = meNormalizeProductSupportBreakdown({
-          kittingTimeBookingHours: value,
+          kittingHours: value,
+          bookingInOutHours: product.bookingInOutHours,
           productMovementHours: product.productMovementHours
         }, product.hoursPerWeek);
         product.hoursPerWeek = breakdown.hoursPerWeek;
-        product.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+        product.kittingHours = breakdown.kittingHours;
+        product.bookingInOutHours = breakdown.bookingInOutHours;
+        product.kittingTimeBookingHours = breakdown.kittingHours;
+        product.productMovementHours = breakdown.productMovementHours;
+      }
+      break;
+    case 'bookingInOutHours':
+      {
+        const breakdown = meNormalizeProductSupportBreakdown({
+          kittingHours: product.kittingHours,
+          bookingInOutHours: value,
+          productMovementHours: product.productMovementHours
+        }, product.hoursPerWeek);
+        product.hoursPerWeek = breakdown.hoursPerWeek;
+        product.kittingHours = breakdown.kittingHours;
+        product.bookingInOutHours = breakdown.bookingInOutHours;
+        product.kittingTimeBookingHours = breakdown.kittingHours;
         product.productMovementHours = breakdown.productMovementHours;
       }
       break;
     case 'productMovementHours':
       {
         const breakdown = meNormalizeProductSupportBreakdown({
-          kittingTimeBookingHours: product.kittingTimeBookingHours,
+          kittingHours: product.kittingHours,
+          bookingInOutHours: product.bookingInOutHours,
           productMovementHours: value
         }, product.hoursPerWeek);
         product.hoursPerWeek = breakdown.hoursPerWeek;
-        product.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+        product.kittingHours = breakdown.kittingHours;
+        product.bookingInOutHours = breakdown.bookingInOutHours;
+        product.kittingTimeBookingHours = breakdown.kittingHours;
         product.productMovementHours = breakdown.productMovementHours;
       }
       break;
@@ -506,7 +555,7 @@ window.meDataGetProductSupportHistory = function() {
   return meDataState.productSupportHistory;
 };
 
-window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effectiveDate, changeReason, notes, department, kittingTimeBookingHours, productMovementHours) {
+window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effectiveDate, changeReason, notes, department, kittingHours, bookingInOutHours, productMovementHours) {
   if (!productId) return false;
 
   const normalizedDate = meNormalizeDateOnly(effectiveDate) || meNormalizeDateOnly(new Date());
@@ -515,12 +564,15 @@ window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effect
   const sameDateRow = existingRows.find(row => row.effectiveDate === normalizedDate);
   const breakdown = meNormalizeProductSupportBreakdown({
     hoursPerWeek,
-    kittingTimeBookingHours,
+    kittingHours,
+    bookingInOutHours,
     productMovementHours
   }, hoursPerWeek);
   if (sameDateRow) {
     sameDateRow.hoursPerWeek = breakdown.hoursPerWeek;
-    sameDateRow.kittingTimeBookingHours = breakdown.kittingTimeBookingHours;
+    sameDateRow.kittingHours = breakdown.kittingHours;
+    sameDateRow.bookingInOutHours = breakdown.bookingInOutHours;
+    sameDateRow.kittingTimeBookingHours = breakdown.kittingHours;
     sameDateRow.productMovementHours = breakdown.productMovementHours;
     sameDateRow.changeReason = changeReason || sameDateRow.changeReason || '';
     sameDateRow.notes = notes || sameDateRow.notes || '';
@@ -540,7 +592,9 @@ window.meDataAddProductSupportHistory = function(productId, hoursPerWeek, effect
     id: meUUID(),
     productId,
     hoursPerWeek: breakdown.hoursPerWeek,
-    kittingTimeBookingHours: breakdown.kittingTimeBookingHours,
+    kittingHours: breakdown.kittingHours,
+    bookingInOutHours: breakdown.bookingInOutHours,
+    kittingTimeBookingHours: breakdown.kittingHours,
     productMovementHours: breakdown.productMovementHours,
     effectiveDate: normalizedDate,
     endDate: '',
@@ -1192,6 +1246,8 @@ window.meDataSubscribe = function() {
           name: newProduct.name || '(Unknown Product)',
           productDatabaseId: newProduct.product_database_id || '',
           hoursPerWeek: breakdown.hoursPerWeek,
+          kittingHours: breakdown.kittingHours,
+          bookingInOutHours: breakdown.bookingInOutHours,
           kittingTimeBookingHours: breakdown.kittingTimeBookingHours,
           productMovementHours: breakdown.productMovementHours,
           department: meNormalizeDepartmentTag(newProduct.department, 'ME'),

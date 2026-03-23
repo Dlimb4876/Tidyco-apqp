@@ -96,10 +96,12 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
   const state = meProductsGetState(department);
 
   const getSupportPerBatch = (product) => {
-    const rawKitting = Number(product && (product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawKitting = Number(product && (product.kittingHours ?? product.kitting_hours ?? product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawBookingInOut = Number(product && (product.bookingInOutHours ?? product.booking_in_out_hours));
     const rawMovement = Number(product && (product.productMovementHours ?? product.product_movement_hours));
-    if (Number.isFinite(rawKitting) || Number.isFinite(rawMovement)) {
+    if (Number.isFinite(rawKitting) || Number.isFinite(rawBookingInOut) || Number.isFinite(rawMovement)) {
       return Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0) +
+        Math.max(0, Number.isFinite(rawBookingInOut) ? rawBookingInOut : 0) +
         Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0);
     }
 
@@ -236,7 +238,8 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
       status: statusLabel,
       name: (product.name || '').toString(),
       hoursPerWeek: getSupportPerBatch(product),
-      kittingTimeBookingHours: Math.max(0, Number(product.kittingTimeBookingHours) || 0),
+      kittingHours: Math.max(0, Number(product.kittingHours ?? product.kittingTimeBookingHours) || 0),
+      bookingInOutHours: Math.max(0, Number(product.bookingInOutHours) || 0),
       productMovementHours: Math.max(0, Number(product.productMovementHours) || 0),
       supportEffectiveDate: (product.supportEffectiveDate || '').toString(),
       notes: (product.notes || '').toString()
@@ -311,21 +314,27 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
   });
 
   let rows = '';
-  const totalColumnCount = isLogContext ? 10 : 8;
+  const totalColumnCount = isLogContext ? 11 : 8;
   visibleRows.forEach(row => {
     const product = row.product;
     const rowIndex = row.rowIndex;
     const historyRows = getProductHistoryRows(product);
     const historyIsOpen = historyOpenSet.has(product.id);
+    const historyColumnCount = isLogContext ? 7 : 4;
     const historyBody = historyRows.length > 0
       ? historyRows.map(entry => `
         <tr>
           <td>${esc(entry.effectiveDate || '')}</td>
           <td>${esc(entry.endDate || 'Current')}</td>
-          <td>${Number(entry.hoursPerWeek || 0).toFixed(2)}</td>
+          ${isLogContext
+            ? `<td>${Number(entry.kittingHours ?? entry.kittingTimeBookingHours ?? 0).toFixed(2)}</td>
+              <td>${Number(entry.bookingInOutHours || 0).toFixed(2)}</td>
+          <td>${Number(entry.productMovementHours || 0).toFixed(2)}</td>
+          <td>${Number(entry.hoursPerWeek || 0).toFixed(2)}</td>`
+    : `<td>${Number(entry.hoursPerWeek || 0).toFixed(2)}</td>`}
           <td>${esc(entry.changeReason || '')}</td>
         </tr>`).join('')
-      : `<tr><td colspan="4" style="color:var(--muted)">No support history entries yet.</td></tr>`;
+      : `<tr><td colspan="${historyColumnCount}" style="color:var(--muted)">No support history entries yet.</td></tr>`;
 
     rows += `
       <tr data-product-idx="${rowIndex}">
@@ -333,7 +342,8 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
         <td>${esc(row.familyLabel)}</td>
         <td>${typeof renderStatusBadge === 'function' ? renderStatusBadge(row.status) : esc(row.status)}</td>
         ${isLogContext
-    ? `<td><input name="cap_products_${rowIndex}_kittingTimeBookingHours" type="number" value="${row.kittingTimeBookingHours || 0}" step="0.5" min="0" data-cap-action="cap-products-upd" data-field="kittingTimeBookingHours"></td>
+      ? `<td><input name="cap_products_${rowIndex}_kittingHours" type="number" value="${row.kittingHours || 0}" step="0.5" min="0" data-cap-action="cap-products-upd" data-field="kittingHours"></td>
+        <td><input name="cap_products_${rowIndex}_bookingInOutHours" type="number" value="${row.bookingInOutHours || 0}" step="0.5" min="0" data-cap-action="cap-products-upd" data-field="bookingInOutHours"></td>
         <td><input name="cap_products_${rowIndex}_productMovementHours" type="number" value="${row.productMovementHours || 0}" step="0.5" min="0" data-cap-action="cap-products-upd" data-field="productMovementHours"></td>
         <td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${row.hoursPerWeek || 0}" step="0.5" data-field="hoursPerWeek" readonly></td>`
     : `<td><input name="cap_products_${rowIndex}_hoursPerWeek" type="number" value="${row.hoursPerWeek || 0}" step="0.5" min="0" data-field="hoursPerWeek"></td>`}
@@ -355,7 +365,12 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
                 <tr>
                   <th style="width:130px">Effective</th>
                   <th style="width:130px">Until</th>
-                  <th style="width:120px">Hours/Batch</th>
+                  ${isLogContext
+    ? `<th style="width:120px">Kitting</th>
+                  <th style="width:140px">Booking In/Out</th>
+                  <th style="width:150px">Product Movement</th>
+                  <th style="width:120px">Hours/Batch</th>`
+    : `<th style="width:120px">Hours/Batch</th>`}
                   <th>Reason</th>
                 </tr>
               </thead>
@@ -452,7 +467,8 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
               <th style="width:150px">Product Family</th>
               <th style="width:130px">Product Status</th>
               ${isLogContext
-    ? `<th style="width:170px">Kitting Booking In/Out</th>
+          ? `<th style="width:120px">Kitting</th>
+                <th style="width:140px">Booking In/Out</th>
               <th style="width:150px">Product Movement</th>
               <th style="width:120px">Hours/Batch</th>`
     : `<th style="width:120px">Hours/Batch</th>`}
@@ -467,7 +483,7 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
           </table>
         </div>
         <div style="font-size: 12px; color: var(--muted); padding: 12px 0;">
-          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. ${isLogContext ? 'For Logistics, Hours/Batch is calculated from Kitting Booking In/Out plus Product Movement. ' : ''}To avoid accidental history edits, support rate changes only save when you click Apply Change with an effective date and reason. Use View History on each row to audit past rates.
+          💡 ${isPmContext ? 'Project products' : 'Products'} are synced from the Product Management database. ${isLogContext ? 'For Logistics, Hours/Batch is calculated from Kitting, Booking In/Out, and Product Movement. ' : ''}To avoid accidental history edits, support rate changes only save when you click Apply Change with an effective date and reason. Use View History on each row to audit past rates.
         </div>
       </div>
     </div>

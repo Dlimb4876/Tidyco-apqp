@@ -270,6 +270,77 @@ describe('ME/PM Product table filtering and sorting', () => {
     expect(loadHtml).toContain('Support/Month = support hours per batch');
   });
 
+  test('Logistics Product Support splits Hours/Batch into kitting, booking in/out, and movement inputs', () => {
+    currentDepartment = 'LOG';
+    meProducts = [
+      {
+        id: 'log-1',
+        name: 'Alpha Pump',
+        productDatabaseId: 'db-1',
+        supportEffectiveDate: '2026-01-01',
+        hoursPerWeek: 2.25,
+        kittingHours: 1.5,
+        bookingInOutHours: 0.25,
+        productMovementHours: 0.5,
+        notes: 'Logistics split'
+      }
+    ];
+
+    const html = renderSupportTable();
+    expect(html).toContain('Kitting');
+    expect(html).toContain('Booking In/Out');
+    expect(html).toContain('Product Movement');
+    expect(html).toContain('data-field="kittingHours"');
+    expect(html).toContain('data-field="bookingInOutHours"');
+    expect(html).toContain('data-field="productMovementHours"');
+    expect(html).toContain('data-field="hoursPerWeek" readonly');
+    expect(html).toContain('For Logistics, Hours/Batch is calculated from Kitting, Booking In/Out, and Product Movement.');
+  });
+
+  test('Logistics Product Support history shows kitting, booking in/out, and movement values', () => {
+    currentDepartment = 'LOG';
+    meProducts = [
+      {
+        id: 'log-1',
+        name: 'Alpha Pump',
+        productDatabaseId: 'db-1',
+        supportEffectiveDate: '2026-01-01',
+        hoursPerWeek: 2.25,
+        kittingHours: 1.5,
+        bookingInOutHours: 0.25,
+        productMovementHours: 0.5,
+        notes: 'Logistics split'
+      }
+    ];
+    global.meDataGetProductSupportHistory = jest.fn(() => [
+      {
+        id: 'log-hist-1',
+        productId: 'log-1',
+        department: 'LOG',
+        effectiveDate: '2026-01-01',
+        endDate: '',
+        hoursPerWeek: 2.25,
+        kittingHours: 1.5,
+        bookingInOutHours: 0.25,
+        productMovementHours: 0.5,
+        changeReason: 'Split logistics work'
+      }
+    ]);
+
+    meProductsToggleHistory('log-1', 'LOG');
+    const html = renderSupportTable();
+
+    expect(html).toContain('Support History');
+    expect(html).toContain('Kitting');
+    expect(html).toContain('Booking In/Out');
+    expect(html).toContain('Product Movement');
+    expect(html).toContain('Split logistics work');
+    expect(html).toContain('1.50');
+    expect(html).toContain('0.25');
+    expect(html).toContain('0.50');
+    expect(html).toContain('2.25');
+  });
+
   test('Product Support shows history rows after toggling a product history panel', () => {
     meProductsClearFilters('ME');
 

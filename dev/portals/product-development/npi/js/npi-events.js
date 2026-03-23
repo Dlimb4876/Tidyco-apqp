@@ -221,8 +221,19 @@ npi.events._onInput = function(evt) {
   switch (action) {
   case 'pfmea-text-search': {
     clearTimeout(_pfmeaSearchTimer)
+    const searchInput = el
+    const searchValue = el.value
     _pfmeaSearchTimer = setTimeout(() => {
-      npi.pfmea.pfSetExtraFilter('searchText', el.value)
+      if (typeof preserveInputCaretAfterRender === 'function') {
+        preserveInputCaretAfterRender(searchInput, () => {
+          npi.pfmea.pfSetExtraFilter('searchText', searchValue)
+        }, {
+          replacementSelector: 'input[data-action="pfmea-text-search"]'
+        })
+        return
+      }
+
+      npi.pfmea.pfSetExtraFilter('searchText', searchValue)
     }, 300)
     break
   }

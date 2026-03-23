@@ -97,10 +97,12 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
   };
 
   const getSupportPerBatch = (product) => {
-    const rawKitting = Number(product && (product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawKitting = Number(product && (product.kittingHours ?? product.kitting_hours ?? product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawBookingInOut = Number(product && (product.bookingInOutHours ?? product.booking_in_out_hours));
     const rawMovement = Number(product && (product.productMovementHours ?? product.product_movement_hours));
-    if (Number.isFinite(rawKitting) || Number.isFinite(rawMovement)) {
+    if (Number.isFinite(rawKitting) || Number.isFinite(rawBookingInOut) || Number.isFinite(rawMovement)) {
       return Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0) +
+        Math.max(0, Number.isFinite(rawBookingInOut) ? rawBookingInOut : 0) +
         Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0);
     }
 

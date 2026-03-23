@@ -94,6 +94,26 @@ async function launchApp() {
   }
 }
 
+// ── Secret wiki access: click logo 5× within 3s ──────────────
+(function() {
+  let _wikiClicks = 0, _wikiTimer = null;
+  document.addEventListener('DOMContentLoaded', function() {
+    const logo = document.getElementById('brandLogo');
+    if (!logo) return;
+    logo.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _wikiClicks++;
+      clearTimeout(_wikiTimer);
+      if (_wikiClicks >= 5) {
+        _wikiClicks = 0;
+        window.open('wiki/index.html', '_blank');
+        return;
+      }
+      _wikiTimer = setTimeout(function() { _wikiClicks = 0; }, 3000);
+    });
+  });
+})();
+
 // ── Kick off on page load if session exists ───────────────────
 (async () => {
   if (typeof settingsApplyAppearance === 'function') settingsApplyAppearance();

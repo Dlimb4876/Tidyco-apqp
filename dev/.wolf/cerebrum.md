@@ -6,6 +6,9 @@
 
 ## User Preferences
 
+- For standalone guide rollout, user wants the wiki reachable by direct URL first and does not want a portal navigation link added until after manual review.
+- For large guide/documentation systems, user prefers a standalone index/wiki linked from the app (not embedded in SPA routes), with folder structure by area and small token-limited files for easier audits.
+- For Logistics Product Support, user expects `Kitting` and `Booking In/Out` as separate columns (not one combined `Kitting Booking In/Out` column), with Hours/Batch reflecting the component sum.
 - **OpenWolf protocol is non-negotiable, even mid-flow.** Cerebrum, buglog, anatomy, and memory updates are mandatory checkpoints — not optional wrap-up. A fast-moving session is not an excuse to skip them.
 - For Operations dashboard unit capacity displays, user prefers one box per unit (not grouped into a single shared panel/card).
 - User expects README.md and TESTING_STRATEGY.md to be updated in the same logical change whenever implementation changes affect behavior, workflow, or test reality.
@@ -43,6 +46,7 @@
 <!-- [2026-03-23] Capacity persistence: `public.me_holidays` is the live source; `public.me_capacity` does not exist. Never reintroduce a query to `me_capacity`, and never delete all `me_holidays` rows globally — delete only the current user's rows before reinserting. -->
 <!-- [2026-03-23] Capacity task delete: removing from `meDataState.tasks` is not enough — always persist a relational delete (or queue ids in `meDataSave`) so `me_tasks` rows don't return on refresh. -->
 <!-- [2026-03-23] NPI dashboard search: if search triggers `render()` on each keystroke, the input is replaced and focus/caret is lost. Capture selection before render and restore focus + selection on the replacement input. -->
+<!-- [2026-03-23] Any search/filter path that triggers rerender (`render`, `setTab`, table/body refresh) must use shared continuity helper (`preserveInputCaretAfterRender`) and keep a local fallback in isolated tests where helpers globals are not loaded. -->
 <!-- [2026-03-23] OpenWolf cron: `openwolf cron run <ai-task>` only works when `claude` CLI is on PATH; daemon records failure even if CLI wrapper reports success. -->
 <!-- [2026-03-23] Settings test stability: do not use blanket `let`→`var` rewrites of `settings.js` in Jest. Prefer explicit state hooks (`settingsSetCoreState`) and stable load contracts to avoid eval-scope collisions across split settings modules. -->
 

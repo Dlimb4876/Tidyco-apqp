@@ -3,6 +3,38 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-23 | Rewrite standalone wiki pages for human-facing guidance | Reworked wiki content to explain purpose, day-to-day use, key calculation logic, and cross-system links in plain language instead of template-style technical phrasing
+
+## 2026-03-23 | Fix wiki search results appearing in wrong location | Results panel was inside the sidebar so users couldn't see it when typing — moved to dropdown under the search input and auto-close on result click
+
+## 2026-03-23 | Rename wiki header to Operations Portal Wiki and remove subtitle | Updated wiki branding text to the requested title and removed the subtext line for a cleaner topbar
+
+## 2026-03-23 | Wiki hidden behind logo easter egg | Wiki not ready for launch — replaced visible button with 5-click secret on the Tidyco logo
+
+## 2026-03-23 | Align standalone wiki styling with main portal and add top-left logo | Updated wiki topbar, controls, content surfaces, and typography to follow the main site visual language and added the Tidyco logo in the wiki header for consistent branding
+
+## 2026-03-23 | Add hidden wiki button to portal topbar | Users can now access the standalone wiki documentation through a subtle, low-opacity button (📖) in the topbar that opens in a new tab; button becomes fully visible on hover
+
+## 2026-03-23 | Harden live-search focus and caret continuity across capacity, NPI PFMEA, and feedback | Product Load, PFMEA text search, and feedback browse search now preserve focus/caret after re-renders via shared helper reuse, with targeted regression tests added to prevent typing interruptions
+
+## 2026-03-23 | Add second-wave standalone wiki APQP topics | Added CTQ, Control Plan, Action Tracker, Risk Register, BOM, Timing Plan, and APQP Gates pages, updated Product Development topic navigation, rebuilt search index, and revalidated wiki checks
+
+## 2026-03-23 | Add first 10 high-priority standalone wiki topics | Populated core guide pages for Capacity, Product Development, and MCS, expanded `areas.json` navigation, and regenerated search index to support practical review before portal integration
+
+## 2026-03-23 | Scaffold standalone guide wiki preview (no portal link yet) | Created `wiki/index.html` with area-based starter content, local search, and wiki audit scripts so the guide can be reviewed directly by URL before any in-app navigation changes
+
+## 2026-03-23 | Reframe guide plan to standalone wiki with area-based small files | Revised `plans/guide-system-implementation-plan.md` to move guidance outside SPA routing, define a dedicated `wiki/index.html` entry point, and enforce token/file-size guardrails for easier audits and updates
+
+## 2026-03-23 | Guide modal content corrections | Audit found outdated and inaccurate content; added capacity-logistics and capacity-unit6 guide keys; fixed PFD section header and flowchart descriptions; corrected hub module count from four to five; added Manufacturing Change to hub guide
+
+## 2026-03-23 | Keep Product Support search focused while typing | Product search input in Capacity Product Support was re-rendering and dropping focus after each character, so input handling now restores focus/caret and includes a regression test to prevent typing interruptions
+
+## 2026-03-23 | Correct Logistics Product Support split to separate kitting and booking in/out columns | User clarification required separate `Kitting` and `Booking In/Out` inputs (not a combined field), so Product Support UI/history, save flow, relational mapping, and calculations now sum three components (`Kitting` + `Booking In/Out` + `Product Movement`) into Hours/Batch
+
+## 2026-03-23 | Show Logistics split values in Product Support history | Logistics support history now exposes Kitting, Booking In/Out, and Product Movement values alongside the summed Hours/Batch total so past changes can be audited without reconstructing the split manually
+
+## 2026-03-23 | Split Logistics Product Support hours into components | Logistics Product Support now captures Kitting, Booking In/Out, and Product Movement separately while keeping Hours/Batch as the summed value used by support history and monthly batch-based load calculations
+
 ## 2026-03-23 | Rename Logistics and Unit 6 capacity team labels | Shared capacity screens treated every non-PM stream as engineer-only; Logistics now shows Logistics Technician and Unit 6 shows Technician across team, chart, holiday, and add-member UI text
 
 ## 2026-03-23 | Remove shared capacity nav bar from Logistics and Unit 6 pages | Those pages already have their own local header/back controls, so the extra route-switcher bar was redundant and cluttered the top of the screen
