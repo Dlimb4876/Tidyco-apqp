@@ -3,6 +3,40 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-23 | Add npiRelLoad query consistency tests | Detect future column type mismatches and per-table project_id inconsistencies; tests verify npi_documents receives text prog_id (not UUID) and that all 16 npi tables receive the same project_id value
+
+## 2026-03-23 | Fix npi_documents 400 error — change project_id column from uuid to text | npi_documents.project_id was typed uuid while all other npi_* tables use text; the code passes prog_id (text) as the project identifier so queries failed with 400 Bad Request; dropped the incorrect FK constraint and retyped the column to text to match all other npi tables
+
+## 2026-03-23 | Fix action centre project lookup query — use prog_id not database primary key | Action centre was querying projects by database primary key (id) but NPI tables store prog_id, causing 400 Bad Request errors when resolving project names; now queries on prog_id column to match foreign key references
+
+## 2026-03-23 | Fix NPI action FK violation — return prog_id not database primary key | npi_actions.project_id and related NPI tables (npi_pfmea_causes, npi_risks) use foreign keys that reference projects(prog_id), not projects(id); npiRelResolveProjectId was returning the database primary key (projects.id) instead of prog_id, causing 409 FK constraint violations when saving actions; changed to return project.id (which holds prog_id in the cache) from the in-memory project and projects.prog_id from queries
+
+## 2026-03-23 | Remove stale manual product duplicates during capacity auto-sync | Product Support tables showed duplicated product values because legacy manual rows (no product DB ID) were kept alongside synced DB-linked rows with the same name; auto-sync now drops stale manual duplicates and keeps only unique product records per department
+
+## 2026-03-23 | Normalize overgrown RLS policies to one auth rule per table and add rollback migration | Live DB had overlapping permissive RLS policies (up to 8 per table) including broad `allow all`; standardized affected tables to the auth-only model in database.md and added `supabase/rollback_normalize_rls_to_single_auth_policy.sql` to restore prior policy layout if needed
+
+## 2026-03-23 | Fix ME/PM product relational conflicts on save | me_products enforces unique product_database_id, but saves were upserting only by id and persisting unsupported department tags; save now resolves existing row id by product_database_id first and writes only ME/PM product departments to satisfy DB constraints
+
+## 2026-03-23 | Fix Product Support tab duplicates (ME) and empty tabs (Logistics, Unit 6) | Wrong arg order in meDataAddProduct call caused ME products to have no DB ID, bypassing de-dup; Logistics and Unit 6 had no auto-sync call so their product lists were always empty
+
+## 2026-03-23 | Decouple settings portal tests from let/var rewrites | settings.js is high-churn and broad lexical rewrites in tests were creating scope-collision risk and brittle coupling
+
+## 2026-03-23 | Filter support history by valid product IDs before DB insert | FK constraint violation when history rows referenced deleted/orphaned products
+
+## 2026-03-23 | Add focused LOG and Unit 6 capacity portal Jest coverage | Added dedicated behavior tests for logistics and unit6 orchestrators (rendering, department filtering, tab routing, and debounced save handling) to match existing capacity portal test depth and reduce regression risk
+
+## 2026-03-23 | Fix me_holidays 409 PK conflict on page load | meLoadRelationalHolidays loaded all users' holidays but user_id was not stored in state; save then tried to INSERT other users' rows (which still existed) causing a duplicate key error; fix stores userId on each holiday state object and filters the insert to only the current user's holidays
+
+## 2026-03-23 | Update capacity hub test for five stream cards | Capacity hub includes Logistics and Unit 6 cards; test expectation was still fixed at three cards and caused false CI failures
+
+## 2026-03-23 | Split settings teams and MCS tabs into dedicated modules | settings.js had grown too large; moved teams/permissions logic to settings-teams.js and approvals logic to settings-mcs.js to improve maintainability without changing behavior
+
+## 2026-03-23 | Split PFMEA worksheet/filter state into pfmea-state.js | pfmea.js had grown large; moving column-view and filter state helpers into a dedicated module reduces file size and keeps render/mutation logic focused
+
+## 2026-03-23 | Split mcs-modal.js into four sub-renderers | File was 16k tokens making stage changes risky; split into mcs-modal-shared, mcs-modal-create, mcs-modal-view, mcs-modal-edit
+
+## 2026-03-23 | Add Logistics and Unit 6 capacity plans to Capacity Hub | Two new ME-style load capacity plans (Logistics = LOG tag, Unit 6 = UNIT6 tag) added as fully independent streams; data stored in shared me_* tables filtered by department tag, no ME or PM data shown
+
 ## 2026-03-23 | Add 1-year headroom KPI and integer 2-year headroom in Production Capacity by Work Area | Unit 2/3/6 KPI cards now show both 1-year and 2-year headroom, and 2-year headroom is rounded to whole hours for cleaner at-a-glance reading
 
 ## 2026-03-23 | MCS staged headers use explicit number badges | Replaced pseudo-only stage numbers with real badge elements in stage toggle rendering so Stage 2 cannot disappear due to theme/cascade edge cases; also increased footer action contrast again

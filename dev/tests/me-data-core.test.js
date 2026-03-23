@@ -239,6 +239,55 @@ describe('getTodayDateString()', () => {
   });
 });
 
+describe('meSaveProductRelational()', () => {
+  afterEach(() => {
+    delete global.supa;
+  });
+
+  it('reuses existing row id by product_database_id and persists only supported product departments', async () => {
+    const lookupLimit = jest.fn().mockResolvedValue({ data: [{ id: 'existing-prod-id' }], error: null });
+    const lookupEq = jest.fn(() => ({ limit: lookupLimit }));
+    const lookupSelect = jest.fn(() => ({ eq: lookupEq }));
+
+    const upsertSelect = jest.fn().mockResolvedValue({ data: [{ id: 'existing-prod-id' }], error: null });
+    const upsert = jest.fn(() => ({ select: upsertSelect }));
+
+    global.supa = {
+      from: jest.fn(() => ({
+        select: lookupSelect,
+        upsert
+      }))
+    };
+
+    const product = {
+      id: '',
+      name: 'Widget',
+      productDatabaseId: 'db-prod-1',
+      hoursPerWeek: 8,
+      department: 'LOG',
+      notes: 'sync product'
+    };
+
+    const saved = await window.meSaveProductRelational('user-1', product);
+
+    expect(saved).toBe(true);
+    expect(global.supa.from).toHaveBeenCalledWith('me_products');
+    expect(lookupEq).toHaveBeenCalledWith('product_database_id', 'db-prod-1');
+    expect(upsert).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          id: 'existing-prod-id',
+          user_id: 'user-1',
+          product_database_id: 'db-prod-1',
+          department: 'ME'
+        })
+      ],
+      { onConflict: 'id' }
+    );
+    expect(product.id).toBe('existing-prod-id');
+  });
+});
+
 describe('meDataInit()', () => {
   afterEach(() => {
     delete global.currentUser;
@@ -363,5 +412,57 @@ describe('meDataInit()', () => {
       expect.objectContaining({ id: 'task-keep-me', name: 'Task Two' })
     );
     expect(window.meDataPendingDeletes.tasks).toEqual([]);
+  });
+});
+
+describe('meDataAutoSyncDepartmentProducts()', () => {
+  afterEach(() => {
+    delete global.productsState;
+    window.meDataReset();
+  });
+
+  it('drops legacy manual rows when a linked product with the same name exists', () => {
+    global.productsState = {
+      products: [
+        { id: 'db-prod-1', name: 'Widget', notes: '' }
+      ]
+    };
+
+    window.meDataState.products = [
+      {
+        id: 'linked-row',
+        name: 'Widget',
+        department: 'ME',
+        hoursPerWeek: 5,
+        notes: '',
+        productDatabaseId: 'db-prod-1',
+        createdAt: '2026-03-01T00:00:00.000Z'
+      },
+      {
+        id: 'legacy-manual',
+        name: 'Widget',
+        department: 'ME',
+        hoursPerWeek: 5,
+        notes: '',
+        productDatabaseId: '',
+        createdAt: '2026-03-01T00:00:00.000Z'
+      },
+      {
+        id: 'manual-custom',
+        name: 'Custom Fixture',
+        department: 'ME',
+        hoursPerWeek: 4,
+        notes: '',
+        productDatabaseId: '',
+        createdAt: '2026-03-01T00:00:00.000Z'
+      }
+    ];
+
+    const synced = window.meDataAutoSyncProductionProducts();
+
+    expect(synced).toBe(true);
+    const meProducts = window.meDataState.products.filter(p => p.department === 'ME');
+    expect(meProducts.map(p => p.name)).toEqual(expect.arrayContaining(['Widget', 'Custom Fixture']));
+    expect(meProducts.filter(p => p.name === 'Widget')).toHaveLength(1);
   });
 });

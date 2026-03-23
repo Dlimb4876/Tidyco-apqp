@@ -24,6 +24,8 @@ function capacityNavBar() {
       <button class="prod-nav-item ${capacityTab === 'production' ? 'active' : ''}" data-action="cap-nav-tab" data-tab="production">🚂 Production</button>
       <button class="prod-nav-item ${capacityTab === 'me' ? 'active' : ''}" data-action="cap-nav-tab" data-tab="me">🧑‍🔧 ME</button>
       <button class="prod-nav-item ${capacityTab === 'projects' ? 'active' : ''}" data-action="cap-nav-tab" data-tab="projects">📅 Projects</button>
+      <button class="prod-nav-item ${capacityTab === 'logistics' ? 'active' : ''}" data-action="cap-nav-tab" data-tab="logistics">🚚 Logistics</button>
+      <button class="prod-nav-item ${capacityTab === 'unit6' ? 'active' : ''}" data-action="cap-nav-tab" data-tab="unit6">🏭 Unit 6</button>
     </div>
   `;
 }
@@ -42,12 +44,22 @@ function renderCapacity() {
     setTimeout(setupCapacityPortalDelegation, 0);
     return `<div id="capacity-portal-container">${nav}${pmRenderCapacity()}</div>`;
   }
+  if (capacityTab === 'logistics') {
+    setTimeout(setupCapacityPortalDelegation, 0);
+    return `<div id="capacity-portal-container">${nav}${logRenderCapacity()}</div>`;
+  }
+  if (capacityTab === 'unit6') {
+    setTimeout(setupCapacityPortalDelegation, 0);
+    return `<div id="capacity-portal-container">${nav}${unit6RenderCapacity()}</div>`;
+  }
 
   // Root hub view
   setTimeout(setupCapacityPortalDelegation, 0);
   const favProduction = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('capacity::production');
   const favMe = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('capacity::me');
   const favProjects = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('capacity::projects');
+  const favLogistics = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('capacity::logistics');
+  const favUnit6 = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('capacity::unit6');
   return `
     <div class="proj-home" id="capacity-portal-container">
       <div class="proj-home-header">
@@ -104,6 +116,36 @@ function renderCapacity() {
             <div class="hub-icon">📅</div>
             <div class="proj-card-name">Project Management</div>
             <div class="proj-card-meta">Project Management load capacity plan</div>
+          </div>
+        </div>
+
+        <div class="proj-card hub-card" data-action="cap-hub-tab" data-tab="logistics">
+          <button
+            class="hub-fav-toggle${favLogistics ? ' is-active' : ''}"
+            type="button"
+            title="${favLogistics ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('capacity::logistics', event)">
+            ${favLogistics ? '★' : '☆'}
+          </button>
+          <div class="hub-card-content">
+            <div class="hub-icon">🚚</div>
+            <div class="proj-card-name">Logistics</div>
+            <div class="proj-card-meta">Logistics load capacity plan</div>
+          </div>
+        </div>
+
+        <div class="proj-card hub-card" data-action="cap-hub-tab" data-tab="unit6">
+          <button
+            class="hub-fav-toggle${favUnit6 ? ' is-active' : ''}"
+            type="button"
+            title="${favUnit6 ? 'Remove from favourites' : 'Add to favourites'}"
+            onclick="hubTogglePageFavourite('capacity::unit6', event)">
+            ${favUnit6 ? '★' : '☆'}
+          </button>
+          <div class="hub-card-content">
+            <div class="hub-icon">🏭</div>
+            <div class="proj-card-name">Unit 6</div>
+            <div class="proj-card-meta">Unit 6 load capacity plan</div>
           </div>
         </div>
       </div>

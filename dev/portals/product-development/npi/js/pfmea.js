@@ -1,6 +1,7 @@
 /* ============================================================
    pfmea.js — PFMEA render, mutations, and RPN logic
    Depends on: state.js (prog), db.js (save), navigation.js (render), helpers.js (esc)
+   pfmea-state.js (PFMEA worksheet/view/filter state)
    npi-constants.js (RPN_HIGH, RPN_CRITICAL), npi.js
    renderRpnBurndown() is defined in rpn-chart.js (loaded before this file)
    ============================================================ */
@@ -8,34 +9,9 @@
 // ══════════════════════════════════════
 // PFMEA — grouped by PFD step, multi-row per step
 // ══════════════════════════════════════
-const PFMEA_RPN_FILTERS = ['all', 'high', 'r1_49', 'r50_99', 'r100_199', 'r200_plus']
-const PFMEA_VIEWS = ['worksheet', 'history']
-
 npi.pfmea.calcCauseRpn = function(sev, occ, det) {
   if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })
   return (sev || 1) * (occ || 1) * (det || 1)
-}
-
-npi.pfmea.getRpnFilter = function() {
-  const cur = (globalThis.pfmeaRpnFilter || 'all').toString()
-  return PFMEA_RPN_FILTERS.includes(cur) ? cur : 'all'
-}
-
-npi.pfmea.setRpnFilter = function(nextFilter) {
-  const safe = (nextFilter || 'all').toString()
-  globalThis.pfmeaRpnFilter = PFMEA_RPN_FILTERS.includes(safe) ? safe : 'all'
-  render()
-}
-
-npi.pfmea.getView = function() {
-  const cur = (globalThis.pfmeaView || 'worksheet').toString()
-  return PFMEA_VIEWS.includes(cur) ? cur : 'worksheet'
-}
-
-npi.pfmea.setView = function(nextView) {
-  const safe = (nextView || 'worksheet').toString()
-  globalThis.pfmeaView = PFMEA_VIEWS.includes(safe) ? safe : 'worksheet'
-  render()
 }
 
 npi.pfmea.rpnInFilter = function(rpn, filter) {
@@ -774,127 +750,6 @@ npi.pfmea.pfLiveForecast = function(mi, ei, ci) {
     el.className = 'rpn ' + (hasAction ? npi.pfmea.pfRpnClass(forecast) : 'rpn-lo')
   }
   if (wrap) wrap.style.opacity = hasAction ? '1' : '0'
-}
-
-// ── Feature 4: Column view (Compact / Standard / Full) ────────────────────────
-const PFMEA_COLUMN_VIEWS = ['compact', 'standard', 'full']
-const COLUMN_VISIBILITY = {
-  compact:  { name: 'compact',  function: false, prevent: false, detect: false, action: false, owner: false, due: false, newOcc: false, newDet: false, forecast: false, implement: false },
-  standard: { name: 'standard', function: true,  prevent: true,  detect: true,  action: true,  owner: false, due: false, newOcc: false, newDet: false, forecast: false, implement: true  },
-  full:     { name: 'full',     function: true,  prevent: true,  detect: true,  action: true,  owner: true,  due: true,  newOcc: true,  newDet: true,  forecast: true,  implement: true  }
-}
-
-npi.pfmea.getColumnView = function() {
-  const cur = (globalThis.pfmeaColumnView || 'standard').toString()
-  return COLUMN_VISIBILITY[PFMEA_COLUMN_VIEWS.includes(cur) ? cur : 'standard']
-}
-
-npi.pfmea.setColumnView = function(v) {
-  globalThis.pfmeaColumnView = PFMEA_COLUMN_VIEWS.includes(v) ? v : 'standard'
-  render()
-}
-
-// Total visible column count (used for colspan calculations)
-npi.pfmea.pfColCount = function(vis) {
-  let cols = 8 // always: mode + effect + sev + cause + occ + det + rpn + del
-  if (vis.function)  cols++
-  if (vis.prevent)   cols++
-  if (vis.detect)    cols++
-  if (vis.action)    cols += 2 // desc + taken
-  if (vis.owner)     cols++
-  if (vis.due)       cols++
-  if (vis.newOcc)    cols++
-  if (vis.newDet)    cols++
-  if (vis.forecast)  cols++
-  if (vis.implement) cols++
-  return cols
-}
-
-// Approximate min-width in px for horizontal scroll container
-npi.pfmea.pfColMinWidth = function(vis) {
-  let w = 776 // base: mode(180)+effect(180)+sev(60)+cause(180)+occ(44)+det(44)+rpn(60)+del(28)
-  if (vis.function)  w += 200
-  if (vis.prevent)   w += 180
-  if (vis.detect)    w += 180
-  if (vis.action)    w += 300 // desc(150)+taken(150)
-  if (vis.owner)     w += 80
-  if (vis.due)       w += 100
-  if (vis.newOcc)    w += 44
-  if (vis.newDet)    w += 44
-  if (vis.forecast)  w += 60
-  if (vis.implement) w += 60
-  return w
-}
-
-// ── Feature 5: Extra filters (owner / overdue / special char / text search) ──
-npi.pfmea.pfGetExtraFilters = function() {
-  return {
-    owner:       globalThis.pfmeaOwnerFilter    || null,
-    overdueOnly: globalThis.pfmeaOverdueFilter  || false,
-    specialChar: globalThis.pfmeaScFilter       || null,
-    searchText:  globalThis.pfmeaSearchFilter   || ''
-  }
-}
-
-npi.pfmea.pfSetExtraFilter = function(key, val) {
-  if (key === 'owner')       globalThis.pfmeaOwnerFilter   = val || null
-  if (key === 'overdueOnly') globalThis.pfmeaOverdueFilter = !!val
-  if (key === 'specialChar') globalThis.pfmeaScFilter      = val || null
-  if (key === 'searchText')  globalThis.pfmeaSearchFilter  = val || ''
-  render()
-}
-
-npi.pfmea.pfClearExtraFilters = function() {
-  globalThis.pfmeaOwnerFilter   = null
-  globalThis.pfmeaOverdueFilter = false
-  globalThis.pfmeaScFilter      = null
-  globalThis.pfmeaSearchFilter  = ''
-  render()
-}
-
-npi.pfmea.pfModeMatchesExtraFilters = function(mode, xf) {
-  const effects = mode.effects || []
-
-  if (xf.owner) {
-    const has = effects.some(ef => (ef.causes || []).some(ca => ca.action && ca.action.owner === xf.owner))
-    if (!has) return false
-  }
-
-  if (xf.overdueOnly) {
-    const now = Date.now()
-    const has = effects.some(ef => (ef.causes || []).some(ca => {
-      const due = ca.action && ca.action.due
-      return due && new Date(due).getTime() < now
-    }))
-    if (!has) return false
-  }
-
-  if (xf.specialChar) {
-    const has = effects.some(ef => ef.specialChar === xf.specialChar)
-    if (!has) return false
-  }
-
-  if (xf.searchText) {
-    const q = xf.searchText.toLowerCase()
-    const matchesText =
-      (mode.function || '').toLowerCase().includes(q) ||
-      (mode.mode || '').toLowerCase().includes(q) ||
-      effects.some(ef =>
-        (ef.effect || '').toLowerCase().includes(q) ||
-        (ef.causes || []).some(ca => (ca.cause || '').toLowerCase().includes(q))
-      )
-    if (!matchesText) return false
-  }
-
-  return true
-}
-
-npi.pfmea.pfGetUniqueOwners = function(p) {
-  const owners = new Set()
-  ;(p.pfmea || []).forEach(mode => (mode.effects || []).forEach(ef => (ef.causes || []).forEach(ca => {
-    if (ca.action && ca.action.owner) owners.add(ca.action.owner)
-  })))
-  return [...owners].sort()
 }
 
 // ── Feature 3: Validation warnings ───────────────────────────────────────────

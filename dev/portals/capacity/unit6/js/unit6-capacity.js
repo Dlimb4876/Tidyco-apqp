@@ -1,0 +1,220 @@
+/* ============================================================
+   unit6-capacity.js — Unit 6 Capacity Orchestrator
+   Shared me_* tables with department='UNIT6' filter
+   ============================================================ */
+
+let unit6Tab = 'chart';
+let unit6HolidayMonth = null;
+let unit6ChartStart = null;
+let unit6SaveTimer = null;
+let unit6ChartDirty = true;
+
+window.unit6CapSmartRender = function() {
+  if (unit6Tab === 'chart') {
+    unit6ChartDirty = true;
+    return;
+  }
+  render();
+};
+
+function unit6FilterByDepartment(list, department, fallback) {
+  if (typeof meFilterByDepartment === 'function') {
+    return meFilterByDepartment(list, department, fallback);
+  }
+  return Array.isArray(list) ? list : [];
+}
+
+function unit6GetCurrentMonthKey() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function unit6GetData() {
+  const allTeam     = typeof meDataGetTeam     === 'function' ? meDataGetTeam()     : [];
+  const allTasks    = typeof meDataGetTasks    === 'function' ? meDataGetTasks()    : [];
+  const allProducts = typeof meDataGetProducts === 'function' ? meDataGetProducts() : [];
+  const allHolidays = typeof meDataGetHolidays === 'function' ? meDataGetHolidays() : [];
+
+  return {
+    team:     unit6FilterByDepartment(allTeam,     'UNIT6', 'ME'),
+    tasks:    unit6FilterByDepartment(allTasks,    'UNIT6', 'ME'),
+    products: unit6FilterByDepartment(allProducts, 'UNIT6', 'ME'),
+    holidays: unit6FilterByDepartment(allHolidays, 'UNIT6', 'ME')
+  };
+}
+
+function unit6GetTabContent() {
+  const { team, tasks, products, holidays } = unit6GetData();
+
+  if (!unit6HolidayMonth) unit6HolidayMonth = unit6GetCurrentMonthKey();
+  if (!unit6ChartStart)   unit6ChartStart   = unit6GetCurrentMonthKey();
+
+  switch (unit6Tab) {
+    case 'team':
+      return meRenderTeamTab(team);
+    case 'tasks':
+      return meRenderTasksTab(tasks, team, products);
+    case 'products':
+      return meRenderProductsTab(products, products, tasks);
+    case 'product-taskload':
+      return meRenderProductTaskLoadTab(tasks, products);
+    case 'holidays':
+      return meRenderHolidaysTab(holidays, team, unit6HolidayMonth);
+    case 'chart':
+    default:
+      return meRenderChartTab(unit6ChartStart, team, tasks, products, holidays);
+  }
+}
+
+window.unit6RenderCapacity = function() {
+  window.meCurrentDepartmentContext = 'UNIT6';
+
+  if (typeof meDataAutoSyncUnit6Products === 'function') {
+    const synced = meDataAutoSyncUnit6Products();
+    if (synced && window.meDataInitialized) {
+      setTimeout(() => {
+        if (typeof meDataSave === 'function') meDataSave(false);
+      }, 1000);
+    }
+  }
+
+  const html = `
+    <div class="unit6-shell me-shell" data-cap-context="unit6">
+      <div class="me-topbar">
+        <div class="me-topbar-left">
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-unit6-back">← Back</button>
+          <div>
+            <div class="me-topbar-title">Unit 6 Load Capacity</div>
+            <div class="me-topbar-sub">Unit 6 · Man-hours planning</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="me-nav">
+        <button class="me-nav-btn ${unit6Tab === 'chart'           ? 'active' : ''}" data-tab="chart"          data-cap-action="cap-unit6-set-tab">📊 Capacity Chart</button>
+        <button class="me-nav-btn ${unit6Tab === 'team'            ? 'active' : ''}" data-tab="team"           data-cap-action="cap-unit6-set-tab">👷 Team</button>
+        <button class="me-nav-btn ${unit6Tab === 'tasks'           ? 'active' : ''}" data-tab="tasks"          data-cap-action="cap-unit6-set-tab">📋 Tasks</button>
+        <button class="me-nav-btn ${unit6Tab === 'products'        ? 'active' : ''}" data-tab="products"       data-cap-action="cap-unit6-set-tab">🚂 Product Support</button>
+        <button class="me-nav-btn ${unit6Tab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" data-cap-action="cap-unit6-set-tab">📦 Product Load</button>
+        <button class="me-nav-btn ${unit6Tab === 'holidays'        ? 'active' : ''}" data-tab="holidays"       data-cap-action="cap-unit6-set-tab">🏖️ Holiday Planner</button>
+      </div>
+
+      <div class="me-body" id="unit6Body">
+        ${unit6GetTabContent()}
+      </div>
+    </div>`;
+
+  unit6ChartDirty = false;
+  setTimeout(() => {
+    if (unit6Tab === 'chart') {
+      if (typeof meDrawChartNow   === 'function') meDrawChartNow();
+      if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+    }
+  }, 100);
+
+  return html;
+};
+
+window.unit6SetTab = function(tab) {
+  const prevUnit6Tab = unit6Tab;
+  unit6Tab = tab;
+  if (tab === 'chart') unit6ChartDirty = false;
+
+  const u6Parts = ['s=capacity', 'ct=unit6'];
+  if (tab !== 'chart') u6Parts.push('u6t=' + encodeURIComponent(tab));
+  if (typeof writeNavigationHistory === 'function') {
+    writeNavigationHistory('#' + u6Parts.join('&'), { push: prevUnit6Tab !== tab });
+  }
+  window.meCurrentDepartmentContext = 'UNIT6';
+
+  document.querySelectorAll('.unit6-shell .me-nav-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  const activeBtn = document.querySelector(`.unit6-shell .me-nav-btn[data-tab="${tab}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const body = document.getElementById('unit6Body');
+  if (body) {
+    body.innerHTML = unit6GetTabContent();
+    setTimeout(() => {
+      if (tab === 'chart') {
+        if (typeof meChartStart    !== 'undefined') window.meChartStart = unit6ChartStart || unit6GetCurrentMonthKey();
+        if (typeof meDrawChartNow  === 'function')  meDrawChartNow();
+        if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+      }
+    }, 100);
+  }
+};
+
+window.unit6RefreshCurrentTab = function() {
+  window.meCurrentDepartmentContext = 'UNIT6';
+  const body = document.getElementById('unit6Body');
+  if (body) {
+    body.innerHTML = unit6GetTabContent();
+    setTimeout(() => {
+      if (unit6Tab === 'chart') {
+        if (typeof meChartStart    !== 'undefined') window.meChartStart = unit6ChartStart || unit6GetCurrentMonthKey();
+        if (typeof meDrawChartNow  === 'function')  meDrawChartNow();
+        if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+      }
+    }, 100);
+  }
+};
+
+window.unit6OnMonthChange = function(newMonth) {
+  if (unit6Tab === 'chart') {
+    unit6ChartStart = newMonth;
+  } else {
+    unit6HolidayMonth = newMonth;
+  }
+  unit6RefreshCurrentTab();
+};
+
+window.unit6OnNextMonth = function() {
+  const isChart = unit6Tab === 'chart';
+  const current = isChart ? (unit6ChartStart || unit6GetCurrentMonthKey()) : (unit6HolidayMonth || unit6GetCurrentMonthKey());
+  const [year, month] = current.split('-').map(Number);
+  const date = new Date(year, month - 1, 1);
+  date.setMonth(date.getMonth() + 1);
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  if (isChart) { unit6ChartStart = newMonth; } else { unit6HolidayMonth = newMonth; }
+  unit6RefreshCurrentTab();
+};
+
+window.unit6OnPrevMonth = function() {
+  const isChart = unit6Tab === 'chart';
+  const current = isChart ? (unit6ChartStart || unit6GetCurrentMonthKey()) : (unit6HolidayMonth || unit6GetCurrentMonthKey());
+  const [year, month] = current.split('-').map(Number);
+  const date = new Date(year, month - 1, 1);
+  date.setMonth(date.getMonth() - 1);
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  if (isChart) { unit6ChartStart = newMonth; } else { unit6HolidayMonth = newMonth; }
+  unit6RefreshCurrentTab();
+};
+
+window.unit6OnSave = async function(showAlert = false) {
+  await meDataSave(showAlert);
+};
+
+window.unit6DebouncedSave = function() {
+  clearTimeout(unit6SaveTimer);
+  unit6SaveTimer = setTimeout(async () => {
+    await unit6OnSave(false);
+    if (unit6Tab === 'chart') {
+      unit6ChartDirty = true;
+      return;
+    }
+    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+      window.unit6PendingRerender = true;
+      return;
+    }
+    unit6RefreshCurrentTab();
+  }, 900);
+};
+
+window.unit6Refresh = function() {
+  const mc = document.getElementById('mainContent');
+  if (!mc || currentSection !== 'capacity' || capacityTab !== 'unit6') return;
+  window.meCurrentDepartmentContext = 'UNIT6';
+  mc.innerHTML = `<div class="section-inner">${unit6RenderCapacity()}</div>`;
+};

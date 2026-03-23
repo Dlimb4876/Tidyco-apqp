@@ -96,6 +96,14 @@ window.meSetTab = function(tab) {
     pmSetTab(tab);
     return;
   }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logSetTab === 'function') {
+    logSetTab(tab);
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6SetTab === 'function') {
+    unit6SetTab(tab);
+    return;
+  }
 
   if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart';
   const prevMeTab = meTab;
@@ -133,6 +141,14 @@ window.meSetTab = function(tab) {
 window.meRefreshCurrentTab = function() {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmRefreshCurrentTab === 'function') {
     pmRefreshCurrentTab();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logRefreshCurrentTab === 'function') {
+    logRefreshCurrentTab();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6RefreshCurrentTab === 'function') {
+    unit6RefreshCurrentTab();
     return;
   }
 
@@ -194,6 +210,14 @@ window.meOnMonthChange = function(newMonth) {
     pmOnMonthChange(newMonth);
     return;
   }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logOnMonthChange === 'function') {
+    logOnMonthChange(newMonth);
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6OnMonthChange === 'function') {
+    unit6OnMonthChange(newMonth);
+    return;
+  }
 
   if (meTab === 'holidays') {
     meHolidayMonth = newMonth;
@@ -207,6 +231,14 @@ window.meOnMonthChange = function(newMonth) {
 window.meOnNextMonth = function() {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnNextMonth === 'function') {
     pmOnNextMonth();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logOnNextMonth === 'function') {
+    logOnNextMonth();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6OnNextMonth === 'function') {
+    unit6OnNextMonth();
     return;
   }
 
@@ -228,6 +260,14 @@ window.meOnNextMonth = function() {
 window.meOnPrevMonth = function() {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnPrevMonth === 'function') {
     pmOnPrevMonth();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logOnPrevMonth === 'function') {
+    logOnPrevMonth();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6OnPrevMonth === 'function') {
+    unit6OnPrevMonth();
     return;
   }
 
@@ -259,6 +299,14 @@ window.meOnSave = async function(showAlert) {
 function meDebouncedSave() {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmDebouncedSave === 'function') {
     pmDebouncedSave();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logDebouncedSave === 'function') {
+    logDebouncedSave();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6DebouncedSave === 'function') {
+    unit6DebouncedSave();
     return;
   }
 

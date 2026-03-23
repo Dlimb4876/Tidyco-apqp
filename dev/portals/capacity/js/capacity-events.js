@@ -230,6 +230,14 @@ window.capacityEvents._onClick = function(evt) {
   case 'cap-pm-set-tab': if (typeof pmSetTab === 'function') pmSetTab(el.getAttribute('data-tab')); break
   case 'cap-pm-back': setCapacityTab('root'); break
 
+  // ── Logistics Capacity ────────────────────────────────────
+  case 'cap-log-set-tab': if (typeof logSetTab === 'function') logSetTab(el.getAttribute('data-tab')); break
+  case 'cap-log-back': setCapacityTab('root'); break
+
+  // ── Unit 6 Capacity ───────────────────────────────────────
+  case 'cap-unit6-set-tab': if (typeof unit6SetTab === 'function') unit6SetTab(el.getAttribute('data-tab')); break
+  case 'cap-unit6-back': setCapacityTab('root'); break
+
   // ── Production Capacity ───────────────────────────────────
   case 'cap-prod-set-tab': if (typeof setProdCapTab === 'function') setProdCapTab(el.getAttribute('data-tab')); break
   case 'cap-prod-back': setCapacityTab('root'); break
@@ -477,6 +485,7 @@ window.capacityEvents._onFocusOut = function(evt) {
   // No pending re-renders to flush across any capacity portal
   if (!window.mePendingRealTimeUpdate && !window.mePendingRerender &&
       !window.pmPendingRealTimeUpdate && !window.pmPendingRerender &&
+      !window.logPendingRerender && !window.unit6PendingRerender &&
       !window.prodCapPendingRealTimeUpdate) return
 
   // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
@@ -503,6 +512,20 @@ window.capacityEvents._onFocusOut = function(evt) {
         return
       }
       if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab()
+      return
+    }
+
+    // ── Logistics Capacity flush ───────────────────────────
+    if (window.logPendingRerender) {
+      window.logPendingRerender = false
+      if (typeof logRefreshCurrentTab === 'function') logRefreshCurrentTab()
+      return
+    }
+
+    // ── Unit 6 Capacity flush ──────────────────────────────
+    if (window.unit6PendingRerender) {
+      window.unit6PendingRerender = false
+      if (typeof unit6RefreshCurrentTab === 'function') unit6RefreshCurrentTab()
       return
     }
 

@@ -19,6 +19,14 @@ function getTodayDateString() {
 
 function meNormalizeDepartmentTag(value, fallback = 'ME') {
   const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
+  if (normalized === 'PM') return 'PM';
+  if (normalized === 'LOG') return 'LOG';
+  if (normalized === 'UNIT6') return 'UNIT6';
+  return 'ME';
+}
+
+function meNormalizePersistedProductDepartment(value, fallback = 'ME') {
+  const normalized = meNormalizeDepartmentTag(value, fallback);
   return normalized === 'PM' ? 'PM' : 'ME';
 }
 
@@ -142,6 +150,7 @@ window.meLoadRelationalHolidays = async function(userId) {
 
     return (data || []).map(h => ({
       id: h.id,
+      userId: h.user_id,
       personId: h.person_id,
       date: h.date,
       type: h.type,
@@ -229,14 +238,36 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
 
 window.meSaveProductRelational = async function(userId, product) {
   try {
-    const department = meNormalizeDepartmentTag(product.department, 'ME');
-    const productId = product.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
+    const department = meNormalizePersistedProductDepartment(product.department, 'ME');
+    const productDatabaseId = product.productDatabaseId || product.product_database_id || null;
+    let productId = product.id || null;
+
+    if (productDatabaseId) {
+      const { data: existingRows, error: lookupError } = await supa
+        .from('me_products')
+        .select('id')
+        .eq('product_database_id', productDatabaseId)
+        .limit(1);
+
+      if (lookupError) {
+        console.warn('meSaveProductRelational lookup error:', lookupError.message);
+        return false;
+      }
+
+      if (Array.isArray(existingRows) && existingRows.length > 0 && existingRows[0].id) {
+        productId = existingRows[0].id;
+      }
+    }
+
+    if (!productId) {
+      productId = typeof meUUID === 'function' ? meUUID() : crypto.randomUUID();
+    }
 
     const payload = {
       id: productId,
       user_id: userId,
       name: product.name || '',
-      product_database_id: product.productDatabaseId || null,
+      product_database_id: productDatabaseId,
       hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
       department,
       notes: product.notes || null,

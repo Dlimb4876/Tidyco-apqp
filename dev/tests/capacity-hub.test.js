@@ -53,10 +53,10 @@ describe('renderCapacity() hub view', () => {
     expect(html).toContain('hub-grid')
   })
 
-  it('contains three capacity stream cards', () => {
+  it('contains five capacity stream cards', () => {
     const html = renderCapacity() // eslint-disable-line no-undef
     const matches = (html.match(/class="proj-card hub-card"/g) || []).length
-    expect(matches).toBe(3)
+    expect(matches).toBe(5)
   })
 
   it('includes Production card with cap-hub-tab action', () => {
@@ -78,6 +78,18 @@ describe('renderCapacity() hub view', () => {
     expect(html).toContain('Project Management')
   })
 
+  it('includes Logistics card with cap-hub-tab action', () => {
+    const html = renderCapacity() // eslint-disable-line no-undef
+    expect(html).toContain('data-tab="logistics"')
+    expect(html).toContain('Logistics')
+  })
+
+  it('includes Unit 6 card with cap-hub-tab action', () => {
+    const html = renderCapacity() // eslint-disable-line no-undef
+    expect(html).toContain('data-tab="unit6"')
+    expect(html).toContain('Unit 6')
+  })
+
   it('includes hub-card-content div within each card', () => {
     const html = renderCapacity() // eslint-disable-line no-undef
     const matches = (html.match(/hub-card-content/g) || []).length
@@ -89,6 +101,8 @@ describe('renderCapacity() hub view', () => {
     expect(html).toContain('🚂') // Production
     expect(html).toContain('🧑‍🔧') // ME
     expect(html).toContain('📅') // PM
+    expect(html).toContain('🚚') // Logistics
+    expect(html).toContain('🏭') // Unit 6
   })
 
   it('renders ME Capacity when capacityTab is me', () => {
