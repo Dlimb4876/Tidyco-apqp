@@ -1,5 +1,30 @@
 [
   {
+    "id": "learning-function",
+    "icon": "🧠",
+    "title": "Learning Function",
+    "topics": [
+      { "file": "00-overview", "title": "Function Lens Overview" }
+    ]
+  },
+  {
+    "id": "learning-process",
+    "icon": "🛠️",
+    "title": "Learning Process",
+    "topics": [
+      { "file": "00-overview", "title": "Process Lens Overview" },
+      { "file": "10-capacity-process", "title": "Capacity Process Workflow" },
+      { "file": "20-product-development-process", "title": "Product Development Process Workflow" },
+      { "file": "30-product-management-process", "title": "Product Management Process Workflow" },
+      { "file": "40-production-process", "title": "Production Process Workflow" },
+      { "file": "50-operations-process", "title": "Operations Process Workflow" },
+      { "file": "60-mcs-process", "title": "MCS Process Workflow" },
+      { "file": "70-action-centre-process", "title": "Action Centre Process Workflow" },
+      { "file": "80-feedback-process", "title": "Feedback Process Workflow" },
+      { "file": "90-settings-process", "title": "Settings Process Workflow" }
+    ]
+  },
+  {
     "id": "getting-started",
     "icon": "🏠",
     "title": "Getting Started",
@@ -31,6 +56,7 @@
       { "file": "30-ctq", "title": "CTQ Matrix" },
       { "file": "40-pfd", "title": "Process Flow Diagram" },
       { "file": "50-pfmea", "title": "PFMEA" },
+      { "file": "51-pfmea-tool-workflow", "title": "PFMEA in Tidyco: Tool Workflow" },
       { "file": "60-control-plan", "title": "Control Plan" },
       { "file": "70-actions", "title": "Action Tracker" },
       { "file": "80-risks", "title": "Risk Register" },

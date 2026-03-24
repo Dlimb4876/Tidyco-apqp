@@ -5,6 +5,11 @@
 
 ## 2026-03-21
 ## 2026-03-23
+- Repaired malformed `.wolf/anatomy.md` structure caused by patch auto-correction: moved the wiki dual-lens note out of the `## ./` file list and into a dedicated `## Manual Update 2026-03-24` section; logged fix in `.wolf/buglog.json` as `bug-068`.
+- Implemented wiki-wide learning-model split into Function vs Process lenses: added `learning-function/00-overview.md`, `learning-process/00-overview.md`, and area process workflow pages (`10..90`); wired both lenses into `wiki/content/_meta/areas.json`; linked PFMEA method page to PFMEA tool-workflow page; validated with `npm run wiki:check` and final `npm run wiki:audit-tokens` (soft=0 hard=0).
+- Split PFMEA docs into two pages to separate intent: `wiki/content/product-development/50-pfmea.md` now serves as method/risk reference and new `wiki/content/product-development/51-pfmea-tool-workflow.md` covers in-site usage flow; updated `wiki/content/_meta/areas.json`; validated with `npm run wiki:check` (41 entries, links clean) and final `npm run wiki:audit-tokens` (soft=0 hard=0).
+- Refined `wiki/content/product-development/50-pfmea.md` per user feedback: removed explicit training-objective section, expanded practical explanatory depth, then trimmed copy to stay within token soft cap; validated via `npm run wiki:audit-tokens` (soft=0 hard=0) and `npm run wiki:check-links` (broken=0).
+- Reworked only `wiki/content/product-development/50-pfmea.md` into a training-manual page (objective, preparation, scoring rules, step-by-step completion flow, worked example, quality checklist, and system links), then revalidated with `npm run wiki:check` (40 entries, token audit clean, 0 broken links).
 - Rewrote all standalone wiki content pages (`wiki/content/**/*.md`, 40 files) from template-style technical wording into human-facing guides focused on purpose, day-to-day usage, key calculations where relevant, and links to connected areas; rebuilt wiki search index and validated with `npm run wiki:check` (40 entries indexed, token audit clean, 0 broken links).
 - Renamed wiki header/title to `Operations Portal Wiki` and removed the wiki subtext line in `wiki/index.html`; updated changelog entry for the branding tweak.
 - Aligned standalone wiki styling to match main portal visual language (`wiki/assets/css/wiki.css`) and added top-left Tidyco logo + IBM Plex font link in `wiki/index.html`; validated with `npm run wiki:check` (build index, token audit, link check all passed).
@@ -1213,3 +1218,13 @@
 | 22:25 | Edited index.html | inline fix | ~24 |
 | 22:25 | Edited CHANGELOG.md | 4→6 lines | ~82 |
 | 22:25 | Session end: 7 writes across 4 files (index.html, main.css, CHANGELOG.md, app.js) | 5 reads | ~35603 tok |
+
+## Session: 2026-03-23 22:44
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-23 22:44
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

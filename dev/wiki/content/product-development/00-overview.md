@@ -4,6 +4,9 @@
 Product Development manages NPI delivery from early project setup through APQP maturity and gate sign-off.
 It connects engineering intent, process definition, risk control, and release readiness in one workflow.
 
+## Process workflow companion
+For click-path execution in the Tidyco site, use [Product Development Process Workflow](../learning-process/20-product-development-process.md).
+
 ## End-to-end workflow
 1. Start in NPI Projects and open the target project.
 2. Build APQP content (CTQ, PFD, PFMEA, Control Plan, BOM, Timing).

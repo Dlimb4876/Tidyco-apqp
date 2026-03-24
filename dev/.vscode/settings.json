@@ -25,5 +25,6 @@
             "icon": "terminal-powershell"
         }
     },
-    "claudeCode.allowDangerouslySkipPermissions": true
+    "claudeCode.allowDangerouslySkipPermissions": true,
+    "workbench.browser.enableChatTools": true
 }
