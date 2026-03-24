@@ -5,6 +5,8 @@
 
 ## 2026-03-21
 ## 2026-03-23
+## 2026-03-24
+- Fixed standalone wiki internal-link navigation so markdown links no longer open new tabs and 404. Updated `wiki/assets/js/wiki-render.js` to resolve relative `.md` links against the active topic path and output same-window hash routes; passed `topicPath` from `wiki/assets/js/wiki-app.js`; validated with `npm run wiki:check` and `npm test` (57 suites, 753 tests).
 - Fixed standalone wiki bootstrap fetch failure (`Failed to load: ./content/_meta/areas.json`) by resolving wiki base path from `window.location.pathname` in `wiki/assets/js/wiki-app.js`, then added compatibility redirect page `dev/wiki/index.html` to forward legacy `/dev/wiki/` URLs to `/wiki/` while preserving hash navigation; validated with `npm run wiki:check`.
 - Repaired malformed `.wolf/anatomy.md` structure caused by patch auto-correction: moved the wiki dual-lens note out of the `## ./` file list and into a dedicated `## Manual Update 2026-03-24` section; logged fix in `.wolf/buglog.json` as `bug-068`.
 - Implemented wiki-wide learning-model split into Function vs Process lenses: added `learning-function/00-overview.md`, `learning-process/00-overview.md`, and area process workflow pages (`10..90`); wired both lenses into `wiki/content/_meta/areas.json`; linked PFMEA method page to PFMEA tool-workflow page; validated with `npm run wiki:check` and final `npm run wiki:audit-tokens` (soft=0 hard=0).

@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-24 | Keep wiki internal links in same tab and resolve relative .md paths | Internal markdown links were opening new tabs and 404ing; renderer now converts relative wiki links to hash routes in the current window
+
 ## 2026-03-24 | Fix wiki metadata loading for /wiki and /dev/wiki URLs | Made wiki bootstrap fetches use a stable pathname-derived base and added a /dev/wiki compatibility redirect so areas.json loads reliably on GitHub Pages
 
 ## 2026-03-24 | Remove secret wiki logo handler | The click interceptor used e.stopPropagation() which broke the logo's navigate('hub') behaviour; removed the whole block so clicking the logo returns to the portal as expected

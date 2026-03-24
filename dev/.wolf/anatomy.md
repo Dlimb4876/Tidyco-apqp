@@ -580,3 +580,4 @@
 
 - Fixed wiki metadata/content fetch path resolution in `wiki/assets/js/wiki-app.js` by deriving a stable base path from `window.location.pathname` before loading `_meta` JSON and markdown topic files.
 - Added compatibility redirect at `dev/wiki/index.html` so legacy `/dev/wiki/` links resolve to `/wiki/` while preserving the topic hash.
+- Fixed wiki internal markdown link behavior in `wiki/assets/js/wiki-render.js` and `wiki/assets/js/wiki-app.js`: relative `.md` links are now resolved against the current topic and converted to same-window hash routes instead of opening `_blank` tabs that 404.
