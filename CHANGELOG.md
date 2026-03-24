@@ -3,6 +3,14 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-24 | Restructure wiki into Function and Process learning lenses | Added separate wiki navigation and content paths for conceptual learning (Function: what/why) and execution learning (Process: how-to in site), with cross-links between both models and PFMEA split into method vs tool workflow
+
+## 2026-03-23 | Split PFMEA wiki into method page and tool-workflow page | Clarified documentation intent by keeping PFMEA risk-method guidance in one page and adding a dedicated PFMEA site-usage workflow page for click-path and field-entry usage
+
+## 2026-03-23 | Refine PFMEA wiki tone and expand practical guidance | Removed explicit training-objective framing and expanded PFMEA content with deeper scoring guidance, prioritization flow, common mistakes, and clearer action-quality expectations
+
+## 2026-03-23 | Rewrite PFMEA wiki page into training-manual format | Converted PFMEA guide into a practical learning page with step-by-step instructions, worked example, scoring rules, and quality checks for user training
+
 ## 2026-03-23 | Rewrite standalone wiki pages for human-facing guidance | Reworked wiki content to explain purpose, day-to-day use, key calculation logic, and cross-system links in plain language instead of template-style technical phrasing
 
 ## 2026-03-23 | Fix wiki search results appearing in wrong location | Results panel was inside the sidebar so users couldn't see it when typing — moved to dropdown under the search input and auto-close on result click
