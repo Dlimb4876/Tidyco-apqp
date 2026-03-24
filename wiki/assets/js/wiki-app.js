@@ -40,7 +40,9 @@
 
     try {
       const markdown = await fetchText(toContentPath(hashPath));
-      contentEl.innerHTML = window.wikiRender.markdownToHtml(markdown);
+      contentEl.innerHTML = window.wikiRender.markdownToHtml(markdown, {
+        topicPath: hashPath
+      });
       if (window.wikiNav) window.wikiNav.buildNav(state.areas, hashPath);
     } catch (error) {
       contentEl.innerHTML = "<h2>Topic not found</h2><p>Could not load <code>" + hashPath + "</code>.</p>";

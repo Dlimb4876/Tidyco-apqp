@@ -1,4 +1,73 @@
 (function() {
+  function normalizeTopicPath(path) {
+    return String(path || "")
+      .replace(/^content\//, "")
+      .replace(/^\/+/, "")
+      .replace(/\.md$/i, "")
+      .trim();
+  }
+
+  function isExternalHref(href) {
+    return /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(href);
+  }
+
+  function isBlockedProtocol(href) {
+    return /^(?:javascript|data|vbscript):/i.test(href);
+  }
+
+  function resolveRelativePath(basePath, relativePath) {
+    const baseParts = normalizeTopicPath(basePath).split("/").filter(Boolean);
+    if (baseParts.length) baseParts.pop();
+
+    const relParts = String(relativePath || "").split("/");
+    for (let i = 0; i < relParts.length; i += 1) {
+      const part = relParts[i].trim();
+      if (!part || part === ".") continue;
+      if (part === "..") {
+        if (baseParts.length) baseParts.pop();
+      } else {
+        baseParts.push(part);
+      }
+    }
+
+    return baseParts.join("/");
+  }
+
+  function toWikiHref(rawHref, topicPath) {
+    const href = String(rawHref || "").trim();
+    if (!href) return "#";
+    if (isBlockedProtocol(href)) return "#";
+    if (isExternalHref(href)) return href;
+
+    let pathPart = href;
+    const hashIndex = href.indexOf("#");
+    if (hashIndex >= 0) {
+      pathPart = href.slice(0, hashIndex);
+    }
+
+    if (!pathPart) {
+      return "#" + normalizeTopicPath(topicPath);
+    }
+
+    let resolvedPath = "";
+    if (pathPart.startsWith("../") || pathPart.startsWith("./")) {
+      resolvedPath = resolveRelativePath(topicPath, pathPart);
+    } else if (pathPart.startsWith("/")) {
+      return pathPart;
+    } else if (pathPart.includes("/")) {
+      resolvedPath = normalizeTopicPath(pathPart);
+    } else if (/\.md$/i.test(pathPart)) {
+      resolvedPath = resolveRelativePath(topicPath, pathPart);
+    } else {
+      resolvedPath = normalizeTopicPath(pathPart);
+    }
+
+    resolvedPath = normalizeTopicPath(resolvedPath);
+    if (!resolvedPath) return "#";
+
+    return "#" + resolvedPath;
+  }
+
   function escapeHtml(value) {
     return String(value || "")
       .replace(/&/g, "&amp;")
@@ -8,16 +77,19 @@
       .replace(/'/g, "&#39;");
   }
 
-  function renderInline(text) {
+  function renderInline(text, topicPath) {
     let out = escapeHtml(text);
     out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
     out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-    out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+    out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(match, label, href) {
+      return '<a href="' + escapeHtml(toWikiHref(href, topicPath)) + '">' + label + '</a>';
+    });
     return out;
   }
 
-  function markdownToHtml(markdown) {
+  function markdownToHtml(markdown, options) {
     const lines = String(markdown || "").split(/\r?\n/);
+    const topicPath = options && options.topicPath ? options.topicPath : "";
     const html = [];
     let inList = false;
     let inCode = false;
@@ -65,13 +137,13 @@
 
         if (isHeader && html[html.length - 2] !== "<thead>") {
           html.push("<thead>");
-          html.push("<tr>" + cells.map(function(c) { return "<th>" + renderInline(c) + "</th>"; }).join("") + "</tr>");
+          html.push("<tr>" + cells.map(function(c) { return "<th>" + renderInline(c, topicPath) + "</th>"; }).join("") + "</tr>");
           html.push("</thead><tbody>");
         } else {
           if (html[html.length - 1] !== "</thead><tbody>" && !html.join("").includes("<tbody>")) {
             html.push("<tbody>");
           }
-          html.push("<tr>" + cells.map(function(c) { return "<td>" + renderInline(c) + "</td>"; }).join("") + "</tr>");
+          html.push("<tr>" + cells.map(function(c) { return "<td>" + renderInline(c, topicPath) + "</td>"; }).join("") + "</tr>");
         }
 
         const nextLine = i + 1 < lines.length ? lines[i + 1] : "";
@@ -95,7 +167,7 @@
           inList = false;
         }
         const level = headingMatch[1].length;
-        html.push("<h" + level + ">" + renderInline(headingMatch[2]) + "</h" + level + ">");
+        html.push("<h" + level + ">" + renderInline(headingMatch[2], topicPath) + "</h" + level + ">");
         continue;
       }
 
@@ -105,7 +177,7 @@
           html.push("<ul>");
           inList = true;
         }
-        html.push("<li>" + renderInline(bulletMatch[1]) + "</li>");
+        html.push("<li>" + renderInline(bulletMatch[1], topicPath) + "</li>");
         continue;
       }
 
@@ -119,7 +191,7 @@
         continue;
       }
 
-      html.push("<p>" + renderInline(line) + "</p>");
+      html.push("<p>" + renderInline(line, topicPath) + "</p>");
     }
 
     if (inList) html.push("</ul>");
