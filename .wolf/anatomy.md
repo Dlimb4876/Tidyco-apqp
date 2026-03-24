@@ -575,3 +575,8 @@
 ## wiki/content/settings/
 
 - `00-overview.md` — Settings (~568 tok)
+
+## Manual Update 2026-03-24
+
+- Fixed wiki metadata/content fetch path resolution in `wiki/assets/js/wiki-app.js` by deriving a stable base path from `window.location.pathname` before loading `_meta` JSON and markdown topic files.
+- Added compatibility redirect at `dev/wiki/index.html` so legacy `/dev/wiki/` links resolve to `/wiki/` while preserving the topic hash.

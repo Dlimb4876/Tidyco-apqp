@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-24 | Fix wiki metadata loading for /wiki and /dev/wiki URLs | Made wiki bootstrap fetches use a stable pathname-derived base and added a /dev/wiki compatibility redirect so areas.json loads reliably on GitHub Pages
+
 ## 2026-03-24 | Remove secret wiki logo handler | The click interceptor used e.stopPropagation() which broke the logo's navigate('hub') behaviour; removed the whole block so clicking the logo returns to the portal as expected
 
 ## 2026-03-24 | Add .nojekyll to fix wiki bootstrap on GitHub Pages | Jekyll skips folders starting with _ so _meta/ was never deployed, causing fetch 404s on bootstrap

@@ -21,8 +21,16 @@
     return raw || "getting-started/00-overview";
   }
 
+  function getWikiBasePath() {
+    const marker = "/wiki/";
+    const path = String(window.location.pathname || "");
+    const markerIndex = path.toLowerCase().indexOf(marker);
+    if (markerIndex === -1) return "./";
+    return path.slice(0, markerIndex + marker.length);
+  }
+
   function toContentPath(hashPath) {
-    return "./content/" + hashPath + ".md";
+    return getWikiBasePath() + "content/" + hashPath + ".md";
   }
 
   async function renderCurrentTopic() {
@@ -81,8 +89,9 @@
   }
 
   async function bootstrap() {
-    state.areas = await fetchJson("./content/_meta/areas.json");
-    state.searchIndex = await fetchJson("./content/_meta/search-index.json");
+    const basePath = getWikiBasePath();
+    state.areas = await fetchJson(basePath + "content/_meta/areas.json");
+    state.searchIndex = await fetchJson(basePath + "content/_meta/search-index.json");
 
     wireSearch();
     wireSidebarToggle();

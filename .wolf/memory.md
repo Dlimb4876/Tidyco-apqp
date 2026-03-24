@@ -5,6 +5,7 @@
 
 ## 2026-03-21
 ## 2026-03-23
+- Fixed standalone wiki bootstrap fetch failure (`Failed to load: ./content/_meta/areas.json`) by resolving wiki base path from `window.location.pathname` in `wiki/assets/js/wiki-app.js`, then added compatibility redirect page `dev/wiki/index.html` to forward legacy `/dev/wiki/` URLs to `/wiki/` while preserving hash navigation; validated with `npm run wiki:check`.
 - Repaired malformed `.wolf/anatomy.md` structure caused by patch auto-correction: moved the wiki dual-lens note out of the `## ./` file list and into a dedicated `## Manual Update 2026-03-24` section; logged fix in `.wolf/buglog.json` as `bug-068`.
 - Implemented wiki-wide learning-model split into Function vs Process lenses: added `learning-function/00-overview.md`, `learning-process/00-overview.md`, and area process workflow pages (`10..90`); wired both lenses into `wiki/content/_meta/areas.json`; linked PFMEA method page to PFMEA tool-workflow page; validated with `npm run wiki:check` and final `npm run wiki:audit-tokens` (soft=0 hard=0).
 - Split PFMEA docs into two pages to separate intent: `wiki/content/product-development/50-pfmea.md` now serves as method/risk reference and new `wiki/content/product-development/51-pfmea-tool-workflow.md` covers in-site usage flow; updated `wiki/content/_meta/areas.json`; validated with `npm run wiki:check` (41 entries, links clean) and final `npm run wiki:audit-tokens` (soft=0 hard=0).
