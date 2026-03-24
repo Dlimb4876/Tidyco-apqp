@@ -28,6 +28,7 @@
 ## Key Learnings
 
 - **Project:** tidyco-apqp — Manufacturing Engineering SPA for rail overhaul, managing APQP Gates 0–5. Stack: vanilla JavaScript, Chart.js, Supabase.
+- Wiki compatibility: keep legacy `/dev/wiki/` URL functional (redirect to `/wiki/`) and avoid raw `./content/...` bootstrap fetch paths that depend on trailing-slash URL shape.
 - Docs split: `plans/` (pending work/specs), `docs/reference/` (technical refs), `docs/guides/` (how-to), `docs/setup/` (setup). Filenames use lowercase kebab-case.
 - Appearance preferences are browser-local in `tidyco_prefs`; `settingsApplyAppearance()` applies them on startup. Theme selection must apply immediately on `ap-theme` radio change — no Save required.
 - **ChartTheme utility** (`core/js/chart-theme.js`, loaded after `db.js`) provides `getColors()`, `getPalette(n)`, `getDefaultOptions()` — use for all Chart.js code. CSS variables `--bg-soft`, `--table-head-bg`, `--overlay-bg` replace legacy hardcoded values; all component colors must use CSS variables or have explicit `[data-theme="dark"]` overrides.
