@@ -1,66 +1,44 @@
 {
-  "session_id": "session-2026-03-24-0600",
-  "started": "2026-03-24T06:00:10.965Z",
+  "session_id": "session-2026-03-24-0613",
+  "started": "2026-03-24T06:13:52.875Z",
   "files_read": {
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/anatomy.md": {
-      "count": 2,
-      "tokens": 0,
-      "first_read": "2026-03-24T06:00:41.791Z"
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/core/js/app.js": {
+      "count": 1,
+      "tokens": 1448,
+      "first_read": "2026-03-24T06:14:44.283Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/wiki/index.html": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/index.html": {
       "count": 1,
       "tokens": 10297,
-      "first_read": "2026-03-24T06:00:47.846Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/wiki/assets/js/wiki-app.js": {
-      "count": 1,
-      "tokens": 864,
-      "first_read": "2026-03-24T06:00:48.434Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.claude/serve.ps1": {
-      "count": 1,
-      "tokens": 586,
-      "first_read": "2026-03-24T06:01:01.516Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.github/workflows/preview.yml": {
-      "count": 1,
-      "tokens": 194,
-      "first_read": "2026-03-24T06:01:04.177Z"
+      "first_read": "2026-03-24T06:14:54.268Z"
     },
     "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
       "count": 1,
-      "tokens": 15534,
-      "first_read": "2026-03-24T06:01:54.902Z"
+      "tokens": 15577,
+      "first_read": "2026-03-24T06:14:57.771Z"
     }
   },
   "files_written": [
     {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.nojekyll",
-      "action": "create",
-      "tokens": 0,
-      "at": "2026-03-24T06:01:41.755Z"
-    },
-    {
-      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.claude/serve.ps1",
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/core/js/app.js",
       "action": "edit",
-      "tokens": 17,
-      "at": "2026-03-24T06:01:51.745Z"
+      "tokens": 1,
+      "at": "2026-03-24T06:14:50.512Z"
     },
     {
       "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
       "action": "edit",
-      "tokens": 95,
-      "at": "2026-03-24T06:02:00.171Z"
+      "tokens": 111,
+      "at": "2026-03-24T06:15:04.878Z"
     }
   ],
   "edit_counts": {
-    ".nojekyll": 1,
-    ".claude/serve.ps1": 1,
+    "core/js/app.js": 1,
     "CHANGELOG.md": 1
   },
-  "anatomy_hits": 5,
-  "anatomy_misses": 1,
-  "repeated_reads_warned": 1,
+  "anatomy_hits": 3,
+  "anatomy_misses": 0,
+  "repeated_reads_warned": 0,
   "cerebrum_warnings": 0,
-  "stop_count": 2
+  "stop_count": 1
 }
