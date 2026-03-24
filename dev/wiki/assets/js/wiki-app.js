@@ -22,7 +22,7 @@
   }
 
   function toContentPath(hashPath) {
-    return "/wiki/content/" + hashPath + ".md";
+    return "./content/" + hashPath + ".md";
   }
 
   async function renderCurrentTopic() {
@@ -81,8 +81,8 @@
   }
 
   async function bootstrap() {
-    state.areas = await fetchJson("/wiki/content/_meta/areas.json");
-    state.searchIndex = await fetchJson("/wiki/content/_meta/search-index.json");
+    state.areas = await fetchJson("./content/_meta/areas.json");
+    state.searchIndex = await fetchJson("./content/_meta/search-index.json");
 
     wireSearch();
     wireSidebarToggle();

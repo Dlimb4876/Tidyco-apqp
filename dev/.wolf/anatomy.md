@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-24T06:02:00.146Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-24T06:15:04.863Z
 > Files: 363 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
@@ -11,7 +11,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~15577 tok)
+- `CHANGELOG.md` — Changelog (~15634 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~606 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -128,7 +128,7 @@
 
 ## core/js/
 
-- `app.js` — ═══════════════════════════════════ (~1448 tok)
+- `app.js` — ═══════════════════════════════════ (~1269 tok)
 - `auth.js` — ═══════════════════════════════════ (~1240 tok)
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~697 tok)
 - `db.js` — ═══════════════════════════════════ (~8516 tok)

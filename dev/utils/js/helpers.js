@@ -347,6 +347,17 @@ document.addEventListener('keydown', function(e) {
       closeModal(openModal.id);
     }
   }
+
+  // Return to portal (hub) with P key.
+  if (key === 'p' && !isInputFocused()) {
+    if (isEditableElement(e.target)) return;
+    const openModal = document.querySelector('.modal-bg[style*="display: flex"], .modal-bg[style*="display:flex"], .modal-bg[style*="display: block"], .modal-bg[style*="display:block"]');
+    if (openModal) return;
+    e.preventDefault();
+    if (typeof navigate === 'function') {
+      navigate('hub');
+    }
+  }
 });
 
 // ── 1.11 Smart Date Entry Helper ──────────────────────────────
