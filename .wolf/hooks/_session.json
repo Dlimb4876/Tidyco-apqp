@@ -1,48 +1,66 @@
 {
-  "session_id": "session-2026-03-23-2244",
-  "started": "2026-03-23T22:44:00.574Z",
+  "session_id": "session-2026-03-24-0600",
+  "started": "2026-03-24T06:00:10.965Z",
   "files_read": {
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/action-centre/js/action-centre.js": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.wolf/anatomy.md": {
       "count": 2,
-      "tokens": 5330,
-      "first_read": "2026-03-23T22:44:53.702Z"
+      "tokens": 0,
+      "first_read": "2026-03-24T06:00:41.791Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/core/js/db.js": {
-      "count": 2,
-      "tokens": 8516,
-      "first_read": "2026-03-23T22:44:58.591Z"
-    },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/product-management/js/products-data.js": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/wiki/index.html": {
       "count": 1,
-      "tokens": 5129,
-      "first_read": "2026-03-23T22:45:03.230Z"
+      "tokens": 10297,
+      "first_read": "2026-03-24T06:00:47.846Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/npi-data-relational.js": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/wiki/assets/js/wiki-app.js": {
       "count": 1,
-      "tokens": 12209,
-      "first_read": "2026-03-23T22:45:12.254Z"
+      "tokens": 864,
+      "first_read": "2026-03-24T06:00:48.434Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/product-development/npi/js/trackers.js": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.claude/serve.ps1": {
       "count": 1,
-      "tokens": 5599,
-      "first_read": "2026-03-23T22:48:01.919Z"
+      "tokens": 586,
+      "first_read": "2026-03-24T06:01:01.516Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/core/js/auth.js": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.github/workflows/preview.yml": {
       "count": 1,
-      "tokens": 1240,
-      "first_read": "2026-03-23T22:48:43.448Z"
+      "tokens": 194,
+      "first_read": "2026-03-24T06:01:04.177Z"
     },
-    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/portals/settings/js/teams-data.js": {
+    "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md": {
       "count": 1,
-      "tokens": 1400,
-      "first_read": "2026-03-23T22:50:25.520Z"
+      "tokens": 15534,
+      "first_read": "2026-03-24T06:01:54.902Z"
     }
   },
-  "files_written": [],
-  "edit_counts": {},
-  "anatomy_hits": 7,
-  "anatomy_misses": 0,
-  "repeated_reads_warned": 2,
+  "files_written": [
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.nojekyll",
+      "action": "create",
+      "tokens": 0,
+      "at": "2026-03-24T06:01:41.755Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/.claude/serve.ps1",
+      "action": "edit",
+      "tokens": 17,
+      "at": "2026-03-24T06:01:51.745Z"
+    },
+    {
+      "file": "c:/Users/Tidyco/Documents/VScode/Tidyco-apqp/CHANGELOG.md",
+      "action": "edit",
+      "tokens": 95,
+      "at": "2026-03-24T06:02:00.171Z"
+    }
+  ],
+  "edit_counts": {
+    ".nojekyll": 1,
+    ".claude/serve.ps1": 1,
+    "CHANGELOG.md": 1
+  },
+  "anatomy_hits": 5,
+  "anatomy_misses": 1,
+  "repeated_reads_warned": 1,
   "cerebrum_warnings": 0,
-  "stop_count": 1
+  "stop_count": 2
 }

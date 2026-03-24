@@ -1,9 +1,35 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-24T00:00:00.957Z
-> Files: 351 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-24T06:02:00.146Z
+> Files: 363 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
+
+- `.gitignore` — Git ignore rules (~305 tok)
+- `.mcp.json` (~189 tok)
+- `.nojekyll` (~0 tok)
+- `.prettierrc` — Prettier configuration (~31 tok)
+- `%TEMP%install-qwen.bat` (~2737 tok)
+- `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
+- `CHANGELOG.md` — Changelog (~15577 tok)
+- `check_onclick.js` — fs: findJSFiles (~410 tok)
+- `CLAUDE.md` — Tidyco APQP Core Router (~606 tok)
+- `eslint.config.js` — ESLint flat configuration (~1015 tok)
+- `index.html` — Tidyco Operations Portal (~10297 tok)
+- `jest.config.js` — Jest test configuration (~26 tok)
+- `jest.setup.js` — Mock Supabase (~328 tok)
+- `mcs-updated-2.html` (~13058 tok)
+- `package-lock.json` — npm lock file (~61736 tok)
+- `package.json` — Node.js package manifest (~574 tok)
+- `QWEN.md` — QWEN.md — Tidyco APQP Quality Tool (~3321 tok)
+- `README.md` — Project documentation (~5014 tok)
+- `SKILLS_GUIDE.md` — Tidyco APQP Development Skills Guide (~2715 tok)
+- `SKILLS_QUICK_REFERENCE.txt` — Declares in (~847 tok)
+- `SKILLS_SUMMARY.md` — Tidyco APQP Development Skills — Summary (~1594 tok)
+- `test-holidays.html` — Test Bank Holidays 2026 (~1252 tok)
+- `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~5656 tok)
+
+## .claude/
 
 - `AGENTS_QUICKSTART.md` — Agent Quickstart Guide (~1929 tok)
 - `agents.md` — Claude Agents for Tidyco APQP (~1579 tok)
@@ -11,7 +37,7 @@
 - `launch.json` (~69 tok)
 - `mcp.json` (~742 tok)
 - `README.md` — Project documentation (~1459 tok)
-- `serve.ps1` — .claude/serve.ps1 - start a simple HTTP file server from the repo root (~586 tok)
+- `serve.ps1` — .claude/serve.ps1 - start a simple HTTP file server from the repo root (~593 tok)
 - `serve.sh` — .claude/serve.sh — start MCP helper servers declared in mcp.json (POSIX / Linux / macOS / WSL) (~936 tok)
 - `settings.json` — /*.js)", (~694 tok)
 - `settings.local.json` — /*.css)", (~1963 tok)
@@ -94,10 +120,6 @@
 - `project-overview.md` (~128 tok)
 - `style-and-conventions.md` (~156 tok)
 - `suggested_commands.md` (~116 tok)
-
-## Manual Update 2026-03-24
-
-- `wiki/content/learning-function/*` and `wiki/content/learning-process/*` — Added wiki-wide dual-lens structure to separate Function learning (what/why) from Process learning (how-to in site), linked via overview pages and included in `wiki/content/_meta/areas.json` navigation.
 
 ## core/css/
 
@@ -463,12 +485,12 @@
 
 ## wiki/content/_meta/
 
-- `areas.json` (~1066 tok)
-- `search-index.json` (~7076 tok)
+- `areas.json` (~1394 tok)
+- `search-index.json` — Declares pages (~10128 tok)
 
 ## wiki/content/action-centre/
 
-- `00-overview.md` — Action Centre (~142 tok)
+- `00-overview.md` — Action Centre (~598 tok)
 
 ## wiki/content/capacity/
 
@@ -486,7 +508,24 @@
 
 ## wiki/content/getting-started/
 
-- `00-overview.md` — Getting Started (~174 tok)
+- `00-overview.md` — Getting Started (~533 tok)
+
+## wiki/content/learning-function/
+
+- `00-overview.md` — Learning Function (~259 tok)
+
+## wiki/content/learning-process/
+
+- `00-overview.md` — Learning Process (~262 tok)
+- `10-capacity-process.md` — Capacity Process Workflow (~194 tok)
+- `20-product-development-process.md` — Product Development Process Workflow (~222 tok)
+- `30-product-management-process.md` — Product Management Process Workflow (~142 tok)
+- `40-production-process.md` — Production Process Workflow (~116 tok)
+- `50-operations-process.md` — Operations Process Workflow (~146 tok)
+- `60-mcs-process.md` — MCS Process Workflow (~87 tok)
+- `70-action-centre-process.md` — Action Centre Process Workflow (~98 tok)
+- `80-feedback-process.md` — Feedback and Bugs Process Workflow (~87 tok)
+- `90-settings-process.md` — Settings Process Workflow (~89 tok)
 
 ## wiki/content/mcs/
 
@@ -496,43 +535,43 @@
 ## wiki/content/operations/
 
 - `00-overview.md` — Operations (~228 tok)
-- `10-overview-tab.md` — Operations Overview Tab (~154 tok)
-- `20-flow-tab.md` — Operations Flow Tab (~177 tok)
-- `30-risk-tab.md` — Operations Risk Tab (~185 tok)
-- `40-people-tab.md` — Operations People Tab (~181 tok)
-- `50-actions-tab.md` — Operations Actions Tab (~172 tok)
-- `60-forecast-tab.md` — Operations Forecast Tab (~158 tok)
+- `10-overview-tab.md` — Operations Overview Tab (~492 tok)
+- `20-flow-tab.md` — Operations Flow Tab (~480 tok)
+- `30-risk-tab.md` — Operations Risk Tab (~508 tok)
+- `40-people-tab.md` — Operations People Tab (~513 tok)
+- `50-actions-tab.md` — Operations Actions Tab (~492 tok)
+- `60-forecast-tab.md` — Operations Forecast Tab (~494 tok)
 
 ## wiki/content/product-development/
 
-- `00-overview.md` — Product Development (~225 tok)
+- `00-overview.md` — Product Development (~270 tok)
 - `10-npi-projects.md` — NPI Projects (~126 tok)
-- `100-timing.md` — Timing Plan (~115 tok)
-- `110-gates.md` — APQP Gates (~129 tok)
-- `30-ctq.md` — CTQ Matrix (~175 tok)
-- `40-pfd.md` — Process Flow Diagram (~170 tok)
-- `50-pfmea.md` — PFMEA (~1333 tok)
+- `100-timing.md` — Timing Plan (~717 tok)
+- `110-gates.md` — APQP Gates (~840 tok)
+- `30-ctq.md` — CTQ Matrix (~707 tok)
+- `40-pfd.md` — Process Flow Diagram (~746 tok)
+- `50-pfmea.md` — PFMEA (~1155 tok)
 - `51-pfmea-tool-workflow.md` — PFMEA in Tidyco: Tool Workflow (~726 tok)
 - `60-control-plan.md` — Control Plan (~938 tok)
-- `70-actions.md` — Action Tracker (~118 tok)
-- `80-risks.md` — Risk Register (~141 tok)
-- `90-bom.md` — Bill of Materials (~136 tok)
+- `70-actions.md` — Action Tracker (~774 tok)
+- `80-risks.md` — Risk Register (~820 tok)
+- `90-bom.md` — Bill of Materials (BOM) (~727 tok)
 
 ## wiki/content/product-management/
 
 - `00-overview.md` — Product Management (~170 tok)
-- `10-product-catalogue.md` — Product Catalogue (~130 tok)
-- `20-overhaul-trends.md` — Overhaul Trends (~153 tok)
-- `30-product-families.md` — Product Families (~126 tok)
-- `40-parts-database.md` — Parts Database (~120 tok)
+- `10-product-catalogue.md` — Product Catalogue (~459 tok)
+- `20-overhaul-trends.md` — Overhaul Trends (~480 tok)
+- `30-product-families.md` — Product Families (~470 tok)
+- `40-parts-database.md` — Parts Database (~398 tok)
 
 ## wiki/content/production/
 
 - `00-overview.md` — Production (~150 tok)
-- `10-schedule.md` — Schedule (~169 tok)
-- `20-plan-by-product.md` — Plan by Product (~117 tok)
-- `30-plan-by-work-area.md` — Plan by Work Area (~107 tok)
+- `10-schedule.md` — Schedule (~565 tok)
+- `20-plan-by-product.md` — Plan by Product (~530 tok)
+- `30-plan-by-work-area.md` — Plan by Work Area (~549 tok)
 
 ## wiki/content/settings/
 
-- `00-overview.md` — Settings (~110 tok)
+- `00-overview.md` — Settings (~568 tok)

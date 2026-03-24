@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-24 | Add .nojekyll to fix wiki bootstrap on GitHub Pages | Jekyll skips folders starting with _ so _meta/ was never deployed, causing fetch 404s on bootstrap
+
 ## 2026-03-24 | Restructure wiki into Function and Process learning lenses | Added separate wiki navigation and content paths for conceptual learning (Function: what/why) and execution learning (Process: how-to in site), with cross-links between both models and PFMEA split into method vs tool workflow
 
 ## 2026-03-23 | Split PFMEA wiki into method page and tool-workflow page | Clarified documentation intent by keeping PFMEA risk-method guidance in one page and adding a dedicated PFMEA site-usage workflow page for click-path and field-entry usage
