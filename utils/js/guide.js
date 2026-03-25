@@ -514,6 +514,18 @@ const GUIDE_CONTENT = {
           <li><strong>Materials</strong> — Raw materials used in the process</li>
           <li><strong>Consumables</strong> — PPE, chemicals, adhesives, etc.</li>
           <li><strong>Structure</strong> — Visual tree of the product's assembly hierarchy</li>
+          <li><strong>AAW &amp; Repair</strong> — Multiple small BoMs for after-warranty and repair jobs, each with its own editable title</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">AAW &amp; Repair Tab</div>
+        <ul class="guide-list">
+          <li>Click <em>＋ Add BoM</em> to create a new group — give it a descriptive name (e.g. "AAW Gearbox", "Seal Kit Repair").</li>
+          <li>Each group works like the Structure tree: add <strong>Parts</strong> from the Parts Database or create <strong>Sub-Assemblies</strong> with their own nested parts.</li>
+          <li>Click directly on the group title to rename it at any time.</li>
+          <li>Click <strong>×</strong> on the group header to delete the entire BoM including all its parts.</li>
+          <li>Use the <strong>Tag</strong> dropdown (AAW / Repair) in the group header to classify each BoM. A coloured badge appears in the stats area once a tag is set.</li>
+          <li>The count shown on the tab reflects the number of AAW/Repair BoM groups for this project.</li>
         </ul>
       </div>
       <div class="guide-section">

@@ -442,6 +442,123 @@ select.abc-class-select.abc-none { background: var(--bg); color: var(--muted); }
   border-bottom: 1px solid var(--line);
 }
 
+/* ── AAW / Repair Tag Pills ───────────────────────── */
+.bom-aaw-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.bom-aaw-tag-pill:hover {
+  border-color: var(--blue);
+  background: var(--blue-pale);
+}
+
+/* AAW tag - vivid blue */
+.bom-aaw-tag-pill.active[data-tag="aaw"] {
+  background: var(--blue);
+  border-color: var(--blue-dark);
+  color: white;
+  box-shadow: 0 2px 4px rgba(11, 95, 167, 0.3);
+}
+
+/* Repair tag - vivid amber/orange */
+.bom-aaw-tag-pill.active[data-tag="repair"] {
+  background: var(--amber);
+  border-color: #92400e;
+  color: white;
+  box-shadow: 0 2px 4px rgba(180, 83, 9, 0.3);
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .bom-aaw-tag-pill.active[data-tag="aaw"] {
+  background: var(--blue);
+  border-color: var(--blue-mid);
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(90, 165, 255, 0.25);
+}
+
+[data-theme="dark"] .bom-aaw-tag-pill.active[data-tag="repair"] {
+  background: var(--amber);
+  border-color: var(--amber-mid);
+  color: #1a1a1a;
+  box-shadow: 0 2px 4px rgba(233, 173, 71, 0.25);
+}
+
+/* Terminal theme adjustments */
+[data-theme="terminal"] .bom-aaw-tag-pill.active[data-tag="aaw"] {
+  background: var(--blue);
+  border-color: var(--green-mid);
+  color: #000;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
+  text-shadow: none;
+}
+
+[data-theme="terminal"] .bom-aaw-tag-pill.active[data-tag="repair"] {
+  background: var(--amber);
+  border-color: var(--amber-mid);
+  color: #000;
+  box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+  text-shadow: none;
+}
+
+/* Non-editable tag pill (span) */
+.bom-aaw-tag-pill:not(button) {
+  cursor: default;
+}
+
+.bom-aaw-tag-pill:not(button):hover {
+  border-color: var(--line);
+  background: var(--bg);
+}
+
+.bom-aaw-tag-pill:not(button).active[data-tag="aaw"] {
+  background: var(--blue);
+  border-color: var(--blue-dark);
+  color: white;
+}
+
+.bom-aaw-tag-pill:not(button).active[data-tag="repair"] {
+  background: var(--amber);
+  border-color: #92400e;
+  color: white;
+}
+
+[data-theme="dark"] .bom-aaw-tag-pill:not(button).active[data-tag="aaw"] {
+  background: var(--blue);
+  border-color: var(--blue-mid);
+  color: #0f172a;
+}
+
+[data-theme="dark"] .bom-aaw-tag-pill:not(button).active[data-tag="repair"] {
+  background: var(--amber);
+  border-color: var(--amber-mid);
+  color: #1a1a1a;
+}
+
+[data-theme="terminal"] .bom-aaw-tag-pill:not(button).active[data-tag="aaw"] {
+  background: var(--blue);
+  border-color: var(--green-mid);
+  color: #000;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
+}
+
+[data-theme="terminal"] .bom-aaw-tag-pill:not(button).active[data-tag="repair"] {
+  background: var(--amber);
+  border-color: var(--amber-mid);
+  color: #000;
+  box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+}
+
 /* ── Responsive: ABC filter on mobile ───────────────────────── */
 @media (max-width: 767px) {
   .bom-abc-filter-row { gap: 4px; }

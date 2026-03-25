@@ -134,14 +134,15 @@ window.npiRelResolveProjectId = async function(targetProgId) {
       .limit(1);
     if (error) {
       console.warn('npiRelResolveProjectId error:', error.message);
-      return null;
+      return targetProgId;
     }
-    // Return prog_id from the database row (not the database pk id)
+    // Return prog_id from the database row (not the database pk id).
+    // If no row is found, keep the original ID so non-UUID local IDs still load.
     const resolved = data && data[0] ? data[0].prog_id : null;
-    return resolved;
+    return resolved || targetProgId;
   } catch (err) {
     console.warn('npiRelResolveProjectId exception:', err.message);
-    return null;
+    return targetProgId;
   }
 };
 
@@ -159,7 +160,7 @@ window.npiRelLoad = async function(pid) {
     const [
       ctqRes, pfdRes, modesRes, effectsRes, causesRes, histRes,
       cpRes, bomRes, gatesRes, gateSigsRes,
-      actionsRes, risksRes, ganttRes, docsRes, bomTreeRes
+      actionsRes, risksRes, ganttRes, docsRes, bomTreeRes, bomGroupsRes
     ] = await Promise.all([
       supa.from('npi_ctq').select('*').eq('project_id', projectId).order('sort_order'),
       supa.from('npi_pfd_steps').select('*').eq('project_id', projectId).order('step_num'),
@@ -175,7 +176,8 @@ window.npiRelLoad = async function(pid) {
       supa.from('npi_risks').select('*').eq('project_id', projectId).order('sort_order'),
       supa.from('npi_gantt_rows').select('*').eq('project_id', projectId).order('sort_order'),
       supa.from('npi_documents').select('*').eq('project_id', projectId).order('sort_order'),
-      supa.from('npi_bom_tree').select('*').eq('project_id', projectId).order('sort_order')
+      supa.from('npi_bom_tree').select('*').eq('project_id', projectId).order('sort_order'),
+      supa.from('npi_bom_groups').select('*').eq('project_id', projectId).order('sort_order')
     ]);
 
     // ── CTQ ──────────────────────────────────────────────────
@@ -280,7 +282,7 @@ window.npiRelLoad = async function(pid) {
 
     // ── BOM ──────────────────────────────────────────────────
     if (!bomRes.error) {
-      p.bom = { parts: [], tools: [], equip: [], mat: [], cons: [], tree: [] };
+      p.bom = { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [], tree: [] };
       (bomRes.data || []).forEach(r => {
         const type = r.bom_type;
         if (!p.bom[type]) return;
@@ -309,10 +311,11 @@ window.npiRelLoad = async function(pid) {
     // ── BOM Tree ─────────────────────────────────────────────
     if (!bomTreeRes.error) {
       const existing = p.bom || {};
-      p.bom = { ...existing, tree: [] };
-      p.bom.tree = (bomTreeRes.data || []).map(r => ({
+      p.bom = { ...existing, tree: [], aaw_repair: existing.aaw_repair || [] };
+      const mapNode = r => ({
         id: r.id,
         parentId: r.parent_id || null,
+        groupId: r.group_id || null,
         nodeType: r.node_type,
         pn: r.pn || '',
         desc: r.item_desc || '',
@@ -321,7 +324,23 @@ window.npiRelLoad = async function(pid) {
         abcCatalogueId: r.abc_catalogue_id || null,
         notes: r.notes || '',
         sortOrder: r.sort_order || 0
-      }));
+      });
+      const allNodes = (bomTreeRes.data || []).map(mapNode);
+      p.bom.tree = allNodes.filter(n => !n.groupId);
+      const aawNodesByGroup = {};
+      allNodes.filter(n => n.groupId).forEach(n => {
+        if (!aawNodesByGroup[n.groupId]) aawNodesByGroup[n.groupId] = [];
+        aawNodesByGroup[n.groupId].push(n);
+      });
+      if (!bomGroupsRes.error) {
+        p.bom.aaw_repair = (bomGroupsRes.data || []).map(g => ({
+          id: g.id,
+          title: g.title || 'Untitled BoM',
+          sortOrder: g.sort_order || 0,
+          tag: g.tag || null,
+          nodes: aawNodesByGroup[g.id] || []
+        }));
+      }
     }
 
     // ── Gates ────────────────────────────────────────────────
@@ -890,6 +909,7 @@ window.npiRelSaveBomTreeNode = async function(node) {
       id: node.id,
       project_id: projectId,
       parent_id: node.parentId || null,
+      group_id: node.groupId || null,
       node_type: node.nodeType,
       pn: node.pn || null,
       item_desc: node.desc || null,
@@ -914,6 +934,35 @@ window.npiRelDeleteBomTreeNode = async function(id) {
     if (error) console.warn('npiRelDeleteBomTreeNode error:', error.message);
   } catch (err) {
     console.warn('npiRelDeleteBomTreeNode exception:', err.message);
+  }
+};
+
+window.npiRelSaveBomGroup = async function(group) {
+  const projectId = await window.npiRelResolveProjectId(progId);
+  if (!group || !group.id || !projectId || !currentUser) return;
+  try {
+    const payload = {
+      id: group.id,
+      project_id: projectId,
+      title: group.title || 'Untitled BoM',
+      sort_order: group.sortOrder || 0,
+      tag: group.tag || null
+    };
+    const { error } = await supa.from('npi_bom_groups').upsert(payload, { onConflict: 'id' });
+    if (error) console.warn('npiRelSaveBomGroup error:', error.message);
+  } catch (err) {
+    console.warn('npiRelSaveBomGroup exception:', err.message);
+  }
+};
+
+window.npiRelDeleteBomGroup = async function(id) {
+  if (!id) return;
+  try {
+    // Cascades to all tree nodes in this group via ON DELETE CASCADE
+    const { error } = await supa.from('npi_bom_groups').delete().eq('id', id);
+    if (error) console.warn('npiRelDeleteBomGroup error:', error.message);
+  } catch (err) {
+    console.warn('npiRelDeleteBomGroup exception:', err.message);
   }
 };
 
@@ -1189,5 +1238,90 @@ window.npiRelDeleteDoc = async function(id) {
     if (error) console.warn('npiRelDeleteDoc error:', error.message);
   } catch (err) {
     console.warn('npiRelDeleteDoc exception:', err.message);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// Part Usage — Where Used functionality
+// ─────────────────────────────────────────────────────────────
+
+window.npiRelFetchPartUsage = async function(abcCatalogueId) {
+  if (!abcCatalogueId) return [];
+  try {
+    // Fetch from npi_bom_items (flat BOM list)
+    const { data: itemsData, error: itemsError } = await supa
+      .from('npi_bom_items')
+      .select('project_id, item_desc, qty, abc_catalogue_id')
+      .eq('abc_catalogue_id', abcCatalogueId);
+
+    if (itemsError) {
+      console.warn('npiRelFetchPartUsage items error:', itemsError.message);
+    }
+
+    // Fetch from npi_bom_tree (hierarchical BOM)
+    const { data: treeData, error: treeError } = await supa
+      .from('npi_bom_tree')
+      .select('project_id, item_desc, qty, abc_catalogue_id')
+      .eq('abc_catalogue_id', abcCatalogueId);
+
+    if (treeError) {
+      console.warn('npiRelFetchPartUsage tree error:', treeError.message);
+    }
+
+    // Get unique project prog_ids (BOM tables store prog_id, not id)
+    const projectProgIds = new Set();
+    (itemsData || []).forEach(r => projectProgIds.add(r.project_id));
+    (treeData || []).forEach(r => projectProgIds.add(r.project_id));
+
+    // Fetch project details by prog_id
+    let projectsMap = {};
+    if (projectProgIds.size > 0) {
+      const { data: projectsData, error: projectsError } = await supa
+        .from('projects')
+        .select('id, prog_id, name')
+        .in('prog_id', Array.from(projectProgIds));
+
+      if (projectsError) {
+        console.warn('[WhereUsed] Projects fetch error:', projectsError.message);
+      }
+
+      (projectsData || []).forEach(p => {
+        projectsMap[p.prog_id] = p;
+      });
+    }
+
+    // Aggregate usage data
+    const usage = [];
+
+    // Process BOM items
+    (itemsData || []).forEach(r => {
+      const project = projectsMap[r.project_id];
+      if (project) {
+        usage.push({
+          projectId: r.project_id,
+          projectName: project.name || project.prog_id || 'Unknown',
+          location: r.item_desc || 'BOM Item',
+          qty: r.qty || 0
+        });
+      }
+    });
+
+    // Process tree items
+    (treeData || []).forEach(r => {
+      const project = projectsMap[r.project_id];
+      if (project) {
+        usage.push({
+          projectId: r.project_id,
+          projectName: project.name || project.prog_id || 'Unknown',
+          location: r.item_desc || 'Assembly',
+          qty: r.qty || 0
+        });
+      }
+    });
+
+    return usage;
+  } catch (err) {
+    console.warn('npiRelFetchPartUsage exception:', err.message);
+    return [];
   }
 };

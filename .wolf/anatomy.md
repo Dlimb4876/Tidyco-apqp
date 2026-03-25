@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-25T15:58:44.258Z
-> Files: 387 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-25T19:41:44.097Z
+> Files: 388 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -12,7 +12,7 @@
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1827 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~18901 tok)
+- `CHANGELOG.md` — Changelog (~19010 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~606 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -106,6 +106,10 @@
 
 - `preview.yml` — CI: Deploy Preview (~194 tok)
 
+## .opencode/
+
+- `config.json` (~344 tok)
+
 ## .qwen/
 
 - `mcp-tools.md` — MCP Tools Configuration (~686 tok)
@@ -135,7 +139,7 @@
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~720 tok)
 - `db.js` — ═══════════════════════════════════ (~8516 tok)
 - `network.js` — Check if Supabase is reachable with a minimal query (~766 tok)
-- `state.js` — ═══════════════════════════════════ (~4539 tok)
+- `state.js` — ═══════════════════════════════════ (~4621 tok)
 
 ## dev/wiki/
 
@@ -330,16 +334,16 @@
 - `apqp.js` — ═══════════════════════════════════ (~2275 tok)
 - `bom-cclass.js` — ═══════════════════════════════════ (~3929 tok)
 - `bom.js` — ═══════════════════════════════════ (~7599 tok)
-- `dashboard.js` — ═══════════════════════════════════ (~14578 tok)
+- `dashboard.js` — ═══════════════════════════════════ (~14730 tok)
 - `documents.js` — ═══════════════════════════════════ (~1269 tok)
 - `gates.js` — ═══════════════════════════════════ (~3031 tok)
 - `npi-components.js` — ═══════════════════════════════════ (~629 tok)
-- `npi-constants.js` — ═══════════════════════════════════ (~567 tok)
+- `npi-constants.js` — ═══════════════════════════════════ (~576 tok)
 - `npi-cp.js` — ═══════════════════════════════════ (~1613 tok)
 - `npi-ctq.js` — ═══════════════════════════════════ (~2294 tok)
-- `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydrate (~12616 tok)
-- `npi-data.js` — ═══════════════════════════════════ (~9568 tok)
-- `npi-events.js` — ═══════════════════════════════════ (~4668 tok)
+- `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydrate (~13187 tok)
+- `npi-data.js` — ═══════════════════════════════════ (~10411 tok)
+- `npi-events.js` — ═══════════════════════════════════ (~4949 tok)
 - `npi-gates-editor.js` — ═══════════════════════════════════ (~3071 tok)
 - `npi-orchestrator.js` — ═══════════════════════════════════ (~1190 tok)
 - `npi-pfd.js` — ═══════════════════════════════════ (~10240 tok)
@@ -489,7 +493,7 @@
 
 ## utils/js/
 
-- `guide.js` — ═══════════════════════════════════ (~19039 tok)
+- `guide.js` — ═══════════════════════════════════ (~19358 tok)
 - `helpers.js` — ═══════════════════════════════════ (~7230 tok)
 - `navigation.js` — Section labels for UI display (reserved for future use) (~7896 tok)
 - `realtime-patch.js` — Surgical Realtime DOM Patch Helpers (~845 tok)

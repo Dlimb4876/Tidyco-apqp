@@ -3,6 +3,20 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-25 | Add Where Used feature to Parts Database | New "Used In" column shows count of active projects using each part; click opens modal showing project names, locations (BOM/assembly), and quantities; usage data loads asynchronously and is cached per session
+
+## 2026-03-25 | Fix PFD BOM pick to show parts from BoM tree and add AAW/Repair Assembly filter | PFD resource picker now aggregates parts from Core BoM tree and AAW/Repair groups; added new "AAW/Repair Assembly" filter to select entire assembly groups at top level
+
+## 2026-03-25 | Add Part Class badges to all BoM views | ABC classification (A/B/C) badges now display on Core BoM, AAW/Repair BoM, and Parts Register for parts linked to the Parts Database catalogue
+
+## 2026-03-25 | Add rolled-up Parts Register to BoM page | New Parts Register tab aggregates parts from Structure and AAW/Repair tabs, showing unique parts with summed quantities; supports Total, Structure-only, and AAW/Repair-only views
+
+## 2026-03-25 | AAW & Repair BoM tagging | Add AAW / Repair tag to each BoM group with coloured badge and persistent DB column
+
+## 2026-03-25 | AAW & Repair BoMs tab | Support multiple named BoMs for after-warranty and repair scopes, each with its own tree structure
+
+## 2026-03-25 | Fix dashboard crash on BOM kits | p.bom.kits was undefined causing TypeError; added kits:[] to bom init and used safe bomKits variable in dashboard
+
 ## 2026-03-25 | BoM Structure tree tab | New hierarchical product structure view replacing Kits; parts added from Parts Database, sub-assemblies with manual PNs, up to 4 levels deep
 
 ## 2026-03-25 | Surgical realtime DOM updates (Phase 5) | Replace render() in all four *CapSmartRender() functions (ME, PM, LOG, UNIT6) with *RefreshCurrentTab() — replaces only the tab body div instead of the full page; prod-capacity-data.js subscription callbacks likewise swapped to prodCapRefreshCurrentTab()

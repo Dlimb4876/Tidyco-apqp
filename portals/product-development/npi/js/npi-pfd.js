@@ -52,11 +52,33 @@ function stepRowHTML(s, oi, p) {
   }).join('')
   const pfCnt = p.pfmea.filter(r => r.pfdId === s.id).length
   const pills = (s.bomRefs || []).map(ref => {
+    // Handle aggregated parts from BOM tree
+    if (ref.bomType === 'parts_agg') {
+      const aggregatedParts = npi.bom._aggregatePartsRegister ? npi.bom._aggregatePartsRegister(p) : []
+      const part = aggregatedParts.find(x => (x.pn || x.desc) === ref.itemId)
+      if (!part) return ''
+      const sources = Array.from(part.sources || [])
+      const isAaw = sources.includes('aaw')
+      const isRepair = sources.includes('repair')
+      const name = part.desc || part.pn || 'Part'
+      return `<span class="res-pill res-pill-part" ${canEdit() ? `data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to remove"` : ''}>🔩 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}${isRepair ? ' <span class="flag flag-repair" style="font-size:9px">RPR</span>' : ''}</span>`
+    }
+    
+    // Handle AAW/Repair assemblies
+    if (ref.bomType === 'aaw_asm') {
+      const group = (p.bom.aaw_repair || []).find(x => x.id === ref.itemId)
+      if (!group) return ''
+      const tagLabel = group.tag === 'aaw' ? 'AAW' : (group.tag === 'repair' ? 'RPR' : 'ASM')
+      const name = group.title || 'Assembly'
+      return `<span class="res-pill res-pill-asm" ${canEdit() ? `data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to remove"` : ''}>🔧 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)} <span class="flag ${group.tag === 'aaw' ? 'flag-aaw' : 'flag-repair'}" style="font-size:9px">${tagLabel}</span></span>`
+    }
+    
+    // Handle standard BOM types
     const bt = p.bom[ref.bomType]; if (!bt) return ''
     const item = bt.find(x => x.id === ref.itemId); if (!item) return ''
     const t = BOM_TYPES[ref.bomType]
     const name = item.desc || (item.pn || item.toolId || item.equipId || '?')
-    return `<span class="res-pill ${t.pc}" ${canEdit() ? `data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${ref.itemId}" title="Click to remove"` : ''}>${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}</span>`
+    return `<span class="res-pill ${t.pc}" ${canEdit() ? `data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${ref.itemId}" title="Click to remove"` : ''}>${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}${item.isRepair ? ' <span class="flag flag-repair" style="font-size:9px">RPR</span>' : ''}</span>`
   }).join('')
   const docBadges = (s.docRefs || []).map(docId => {
     const doc = (p.docs || []).find(d => d.id === docId)
@@ -637,25 +659,62 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter) {
   const listEl = document.getElementById(listId)
   if (!filterEl || !listEl) return
 
-  const types = Object.entries(BOM_TYPES)
-  const total = types.reduce((n, [k]) => n + p.bom[k].length, 0)
+  // Aggregate parts from BOM tree and AAW groups
+  const aggregatedParts = npi.bom._aggregatePartsRegister ? npi.bom._aggregatePartsRegister(p) : []
+  
+  // Get AAW/Repair groups (top-level only)
+  const aawGroups = p.bom.aaw_repair || []
 
-  filterEl.innerHTML = `<button class="bom-filter-btn${activeFilter === 'all' ? ' active' : ''}" data-action="pfd-set-bom-filter" data-filter="all" data-filter-id="${filterId}" data-list-id="${listId}">All (${total})</button>` +
-    types.map(([k, t]) => `<button class="bom-filter-btn${activeFilter === k ? ' active' : ''}" data-action="pfd-set-bom-filter" data-filter="${k}" data-filter-id="${filterId}" data-list-id="${listId}">${t.icon} ${t.label} (${p.bom[k].length})</button>`).join('')
+  const types = Object.entries(BOM_TYPES)
+  const flatTotal = types.reduce((n, [k]) => n + (p.bom[k] || []).length, 0)
+  const totalCount = flatTotal + aggregatedParts.length + aawGroups.length
+
+  filterEl.innerHTML = `<button class="bom-filter-btn${activeFilter === 'all' ? ' active' : ''}" data-action="pfd-set-bom-filter" data-filter="all" data-filter-id="${filterId}" data-list-id="${listId}">All (${totalCount})</button>` +
+    types.map(([k, t]) => `<button class="bom-filter-btn${activeFilter === k ? ' active' : ''}" data-action="pfd-set-bom-filter" data-filter="${k}" data-filter-id="${filterId}" data-list-id="${listId}">${t.icon} ${t.label} (${(p.bom[k] || []).length})</button>`).join('') +
+    `<button class="bom-filter-btn${activeFilter === 'parts_agg' ? ' active' : ''}" data-action="pfd-set-bom-filter" data-filter="parts_agg" data-filter-id="${filterId}" data-list-id="${listId}">🔩 Parts (${aggregatedParts.length})</button>` +
+    `<button class="bom-filter-btn${activeFilter === 'aaw_asm' ? ' active' : ''}" data-action="pfd-set-bom-filter" data-filter="aaw_asm" data-filter-id="${filterId}" data-list-id="${listId}">🔧 AAW/Repair Asm (${aawGroups.length})</button>`
 
   const items = []
+  
+  // Add flat BOM types (tools, equip, mat, cons)
   types.forEach(([k, t]) => {
     if (activeFilter !== 'all' && activeFilter !== k) return
-    p.bom[k].forEach(item => {
+    ;(p.bom[k] || []).forEach(item => {
       const key = k + '|' + item.id
       const name = item.desc || (item.pn || item.toolId || item.equipId || '')
       const flags = []
-      if (item.isAaw) flags.push('<span class="flag flag-aaw">AAW</span>')
-      if (item.isRepair) flags.push('<span class="flag flag-repair">RPR</span>')
+      if (item.isAaw) flags.push('<span class="flag-pill flag-aaw">AAW</span>')
+      if (item.isRepair) flags.push('<span class="flag-pill flag-repair">RPR</span>')
       const meta = [item.pn || item.toolId || item.equipId, item.spec].filter(Boolean).join(' · ')
       items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">${t.icon} ${esc(name || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">${t.label}</span></div>`)
     })
   })
+  
+  // Add aggregated parts from BOM tree and AAW groups
+  if (activeFilter === 'all' || activeFilter === 'parts_agg') {
+    aggregatedParts.forEach(part => {
+      const key = 'parts_agg|' + (part.pn || part.desc)
+      const flags = []
+      const sources = Array.from(part.sources || [])
+      if (sources.includes('aaw')) flags.push('<span class="flag-pill flag-aaw">AAW</span>')
+      if (sources.includes('repair')) flags.push('<span class="flag-pill flag-repair">RPR</span>')
+      const meta = [part.pn, `Qty: ${part.qty} ${part.unit}`].filter(Boolean).join(' · ')
+      items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔩 ${esc(part.desc || part.pn || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Part</span></div>`)
+    })
+  }
+  
+  // Add AAW/Repair assemblies (top-level groups only)
+  if (activeFilter === 'all' || activeFilter === 'aaw_asm') {
+    aawGroups.forEach(group => {
+      const key = 'aaw_asm|' + group.id
+      const tagLabel = group.tag === 'aaw' ? 'AAW' : (group.tag === 'repair' ? 'Repair' : 'AAW/Repair')
+      const flagClass = group.tag === 'aaw' ? 'flag-pill flag-aaw' : (group.tag === 'repair' ? 'flag-pill flag-repair' : 'flag-pill flag-aaw')
+      const totalParts = (group.nodes || []).filter(n => n.nodeType === 'part').length
+      const totalSubAsm = (group.nodes || []).filter(n => n.nodeType === 'subassembly').length
+      const meta = [`${totalSubAsm} sub-assemblies`, `${totalParts} parts`].join(' · ')
+      items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔧 ${esc(group.title || 'Unnamed Assembly')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap"><span class="${flagClass}">${tagLabel}</span></div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Assembly</span></div>`)
+    })
+  }
 
   listEl.innerHTML = items.length ? items.join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No items in BoM yet.</div>'
 }

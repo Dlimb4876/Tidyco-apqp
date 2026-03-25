@@ -1235,3 +1235,102 @@
 | 15:58 | Edited utils/js/guide.js | expanded (+6 lines) | ~774 |
 | 15:58 | Edited CHANGELOG.md | 4→6 lines | ~92 |
 | 15:59 | Session end: 20 writes across 10 files (state.js, npi-constants.js, npi-data-relational.js, npi-data.js, bom.js) | 12 reads | ~105043 tok |
+
+## Session: 2026-03-25 16:20
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 16:21
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 16:21
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 16:22
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 16:36
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:37 | Edited portals/product-development/npi/js/dashboard.js | "${totalBomItems} items · " → "${totalBomItems} items · " | ~22 |
+| 16:37 | Edited portals/product-development/npi/js/npi-data-relational.js | inline fix | ~26 |
+| 16:37 | Edited CHANGELOG.md | 2→4 lines | ~84 |
+| 16:38 | Session end: 3 writes across 3 files (dashboard.js, npi-data-relational.js, CHANGELOG.md) | 3 reads | ~46233 tok |
+
+## Session: 2026-03-25 16:59
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 18:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 18:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 18:26 | Edited core/js/state.js | 2→5 lines | ~129 |
+| 18:26 | Edited core/js/state.js | inline fix | ~26 |
+| 18:26 | Edited portals/product-development/npi/js/npi-constants.js | 2→2 lines | ~41 |
+| 18:27 | Edited portals/product-development/npi/js/npi-data-relational.js | 22→23 lines | ~480 |
+| 18:27 | Edited portals/product-development/npi/js/npi-data-relational.js | added 2 condition(s) | ~331 |
+| 18:27 | Edited portals/product-development/npi/js/npi-data-relational.js | 13→14 lines | ~128 |
+| 18:27 | Edited portals/product-development/npi/js/npi-data-relational.js | added 4 condition(s) | ~397 |
+| 18:28 | Edited portals/product-development/npi/js/npi-data.js | added 8 condition(s) | ~986 |
+| 18:30 | Edited portals/product-development/npi/js/npi-events.js | expanded (+7 lines) | ~264 |
+| 18:30 | Edited portals/product-development/npi/js/npi-events.js | 1→3 lines | ~95 |
+| 18:31 | Edited utils/js/guide.js | expanded (+11 lines) | ~300 |
+| 18:31 | Edited CHANGELOG.md | 4→6 lines | ~81 |
+| 18:32 | Session end: 12 writes across 7 files (state.js, npi-constants.js, npi-data-relational.js, npi-data.js, npi-events.js) | 9 reads | ~91412 tok |
+
+## Session: 2026-03-25 18:35
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 18:37 | Edited portals/product-development/npi/js/npi-data-relational.js | 6→7 lines | ~74 |
+| 18:38 | Edited portals/product-development/npi/js/npi-events.js | 1→2 lines | ~58 |
+| 18:39 | Edited utils/js/guide.js | 1→2 lines | ~82 |
+| 18:39 | Edited CHANGELOG.md | 1→3 lines | ~71 |
+| 18:39 | Session end: 4 writes across 4 files (npi-data-relational.js, npi-events.js, guide.js, CHANGELOG.md) | 4 reads | ~56673 tok |
+
+## Session: 2026-03-25 19:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 19:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:41 | Edited .opencode/config.json | 2→2 lines | ~10 |
+| 19:41 | Session end: 1 writes across 1 files (config.json) | 2 reads | ~333 tok |
+
+## Session: 2026-03-25 19:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 19:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 19:45
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 19:45
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
