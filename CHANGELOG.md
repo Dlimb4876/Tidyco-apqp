@@ -3,6 +3,173 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-25 | Fix ME capacity bulk save showing no feedback when validation fails | Bulk save alert wasn't showing when all drafts failed validation because effective date/reason missing or backdate cancelled; now shows clear error messages for each validation failure and prompts user to fill required fields
+
+## 2026-03-25 | Add meProductsClearAllDrafts utility for state management | Added global function meProductsClearAllDrafts(department) to clear all product support drafts for a department; useful for testing and for programmatic state reset
+
+## 2026-03-25 | Fix Product Support History save reverting after edit | Duplicate support-history rows sharing the same product/effective-date/department key could overwrite freshly edited values during dedupe; dedupe now keeps the most recently updated record so Save stays persisted and posts correctly
+
+## 2026-03-25 | Add Logistics capacity to Operations dashboard and infographic | Logistics (LOG) capacity was missing from the Operations Overview and People tabs; added opsCalcLogCapacity function, updated opsBuildMetrics, added LOG panels to People view, included LOG ring gauge in infographic, and updated documentation
+
+## 2026-03-25 | Fix PRODUCTS/ONGOING SUPPORT table issues in ME capacity | Fixed draft key resolution causing entered data to disappear (rowIndex was using wrong products array), improved bulk save product lookup with fallback strategies, and added debugging for history save failures
+
+## 2026-03-24 | Fix Capacity stream cards not opening from the Capacity hub | Capacity root cards and top route-switcher buttons were still rendered with data-action attributes after routing moved to the delegated data-cap-action handler, so clicks never reached setCapacityTab
+
+## 2026-03-24 | Complete capacity isolated-stream parity fixes for PM/Logistics/Unit 6 | Fixed PM history edit routing, stream-specific history delete routing, missing isolated support-history CRUD queues, realtime focus guards to stop inline-edit rerender thrash, autosync debounce parity, and duplicate capacity nav event binding
+
+## 2026-03-24 | Fix product support history edit not saving for LOG and Unit 6 | meProductsSaveHistoryEdit always called meDataUpdateProductSupportHistoryEntry which only searches meDataState; LOG and Unit 6 use separate data states so the lookup always failed — added unit6DataUpdateProductSupportHistoryEntry and logDataUpdateProductSupportHistoryEntry and dispatch to the correct function by department
+
+## 2026-03-24 | Add consistent inner gutters to capacity plan cards | Team, Tasks, Product Support, Product Task Load, and Holiday Planner cards shared zero-padding bodies that let controls sit flush to white container edges, so a shared card-body gutter utility was applied across capacity streams
+
+## 2026-03-24 | Add inner spacing to Product Support cards across all capacity plans | Shared Product Support card body had zero padding so controls and table edges could sit flush against the white container in ME, PM, Logistics, and Unit 6
+
+## 2026-03-24 | Replace Product Support sort controls with sortable table columns | Users asked to remove separate sort buttons and sort directly from Product Support table headers across ME, PM, Logistics, and Unit 6
+
+## 2026-03-24 | Fix product support history edit revert + table refresh loop | The support history realtime handlers were missing the meDataSaveInProgress guard (present on holidays), causing the delete-all/re-insert save pattern to trigger re-renders on every save and create a feedback loop; history edit draft state now stays in sync with inputs so any incidental re-render preserves the user's typed values
+
+## 2026-03-24 | Add Edit button to Product Support history rows across ME/PM/LOG/Unit 6 | Users needed to correct past support history entries (effective date, hours, reason) without deleting and re-adding them
+
+## 2026-03-24 | Stabilize Product Support bulk-edit draft visibility across rerenders | Some rows could lose visible draft values during table refresh while still submitting via Bulk Save due to draft key mismatch; draft lookup now falls back across product ID, product DB ID, and row index
+
+## 2026-03-24 | Move Product Support bulk save button to the right in all capacity streams | Users requested consistent right-side placement near the Product Support table across ME, PM, Logistics, and Unit 6
+
+## 2026-03-24 | Re-render capacity chart side panels on month change across ME/PM/LOG/Unit 6 | Demand Breakdown and Capacity per role were stale because month navigation only redrew the chart canvas without rebuilding tab HTML
+
+## 2026-03-24 | Sync capacity chart month selector with active month state | Chart-only redraw optimization skipped HTML rerender, so Prev/Next/Today updates could leave the month selector showing stale January even when the chart month changed
+
+## 2026-03-24 | Disable live-sync redraw on capacity charts and refresh on chart-open | Capacity chart views now stay stable while open; latest values are pulled when the chart page is opened, removing realtime redraw churn
+
+## 2026-03-24 | Add defensive guards to capacity chart rendering | Chart.js was failing with null context errors under edge-case data conditions (empty arrays, invalid scaling) when threshold zone plugin tried to access shape data; added guards for valid data, wrapped initialization in try-catch, and added debug logging
+
+## 2026-03-24 | Add Bulk Save button for product support changes across ME, PM, LOG, Unit 6 | Clicking "Apply Change" on one line was resetting drafted changes on other lines; now users can edit multiple product support rows and save all changes at once with validation
+
+## 2026-03-24 | Optimize chart tab real-time updates to prevent DOM thrashing | Live real-time events (team/task/product/holiday updates) were triggering full page re-renders and causing the capacity chart to bounce around; now only the chart is redrawn without replacing page HTML
+
+## 2026-03-24 | Reset PM/LOG/Unit6 support history baselines to 2026-01-01 | Aligns all split capacity streams with zeroed support values and a single clean effective-date baseline
+
+## 2026-03-24 | Add one-shot SQL reset for support baseline at 2026-01-01 | Allows full reset of ME/PM/LOG/Unit 6 product support to 0 with clean baseline history in the database
+
+## 2026-03-24 | Set default effective date to 2026-01-01 for product support entries | Provides a sensible default so users have a starting point when making support rate changes
+
+## 2026-03-24 | Add delete button for support history entries in ME, PM, LOG, Unit 6 | Users need to be able to remove incorrect or stale history entries from the Product Support tab
+
+## 2026-03-24 | Add Current column to Product Support tab in ME, PM, LOG, Unit 6 | Makes the active saved support rate visible at a glance so users can compare before applying changes
+
+## 2026-03-24 | Preserve Product Support draft edits across capacity streams | Shared Product Support rerenders were rebuilding ME, PM, Logistics, and Unit 6 edit rows from saved data, so in-progress Hours/Date/Reason changes kept resetting before Apply
+
+## 2026-03-24 | Force ME-only departments for legacy me_* writes | Some environments still enforce ME-only check constraints on me_teams/me_tasks/me_holidays/me_product_support_history, so stale LOG/UNIT6/PM tags caused save storms and cascading FK failures
+
+## 2026-03-24 | Persist team deletes across all capacity streams | Team removals in ME/PM/Logistics/Unit6 were only local UI deletes, so members reappeared after refresh because relational delete calls were never queued/executed during save
+
+## 2026-03-24 | Fix split-stream holiday planner routing | Shared Holiday Planner actions were still calling ME-only handlers, so PM, Logistics, and Unit 6 holiday clicks and Today navigation did not update the active stream
+
+## 2026-03-24 | Fix LOG/Unit6 event save routing to isolated tables | Shared capacity event handlers were still writing team/task/product edits through ME save paths, causing me_teams department constraint failures during Logistics and Unit 6 saves
+
+## 2026-03-24 | Full capacity department split | PM, Logistics, and Unit 6 now use isolated tables and JS data layers so cross-stream saves can no longer overwrite ME data
+
+## 2026-03-24 | Fix live sync indicator ticker and isDisabled cross-window refresh | Indicator now auto-ticks every 5s to show correct age since last update; toggling task enable/disable in another window now triggers chart refresh
+## 2026-03-24 | Add disable-from-calculation checkbox to ME/PM capacity tasks | Planners can now keep tasks visible for tracking while excluding them from load maths without deleting records
+
+## 2026-03-24 | Auto-refresh ME/PM capacity chart on realtime updates | Supports cross-window load balancing by redrawing chart/KPIs/heatmap when tasks or capacity data are changed in another open window, with a live-update indicator in the chart header
+
+## 2026-03-24 | Stabilize Logistics Hours/Batch test assertion | Prevent brittle test failures when readonly inputs gain additional attributes like styling classes
+
+## 2026-03-24 | Extend access permissions to sub-hub card visibility | Team access now controls second-level hub cards and deep links so users only see pages they can actually open
+
+## 2026-03-24 | Widen department check constraints on all me_* tables | LOG and UNIT6 departments were rejected by DB (only ME and PM were allowed), causing 400 errors on save
+
+## 2026-03-24 | Remove editable hover treatment from Logistics calculated Hours/Batch column | Hours/Batch in Logistics Product Support is derived from split component fields, so it should not show hover/focus styling that implies direct editing
+
+## 2026-03-24 | Add permission descriptions to the team editor | Team permission toggles now explain what each permission actually allows so admins can assign access with less guesswork
+
+## 2026-03-24 | Keep wiki internal links in same tab and resolve relative .md paths | Internal markdown links were opening new tabs and 404ing; renderer now converts relative wiki links to hash routes in the current window
+
+## 2026-03-24 | Fix wiki metadata loading for /wiki and /dev/wiki URLs | Made wiki bootstrap fetches use a stable pathname-derived base and added a /dev/wiki compatibility redirect so areas.json loads reliably on GitHub Pages
+
+## 2026-03-24 | Remove secret wiki logo handler | The click interceptor used e.stopPropagation() which broke the logo's navigate('hub') behaviour; removed the whole block so clicking the logo returns to the portal as expected
+
+## 2026-03-24 | Add .nojekyll to fix wiki bootstrap on GitHub Pages | Jekyll skips folders starting with _ so _meta/ was never deployed, causing fetch 404s on bootstrap
+
+## 2026-03-24 | Restructure wiki into Function and Process learning lenses | Added separate wiki navigation and content paths for conceptual learning (Function: what/why) and execution learning (Process: how-to in site), with cross-links between both models and PFMEA split into method vs tool workflow
+
+## 2026-03-23 | Split PFMEA wiki into method page and tool-workflow page | Clarified documentation intent by keeping PFMEA risk-method guidance in one page and adding a dedicated PFMEA site-usage workflow page for click-path and field-entry usage
+
+## 2026-03-23 | Refine PFMEA wiki tone and expand practical guidance | Removed explicit training-objective framing and expanded PFMEA content with deeper scoring guidance, prioritization flow, common mistakes, and clearer action-quality expectations
+
+## 2026-03-23 | Rewrite PFMEA wiki page into training-manual format | Converted PFMEA guide into a practical learning page with step-by-step instructions, worked example, scoring rules, and quality checks for user training
+
+## 2026-03-23 | Rewrite standalone wiki pages for human-facing guidance | Reworked wiki content to explain purpose, day-to-day use, key calculation logic, and cross-system links in plain language instead of template-style technical phrasing
+
+## 2026-03-23 | Fix wiki search results appearing in wrong location | Results panel was inside the sidebar so users couldn't see it when typing — moved to dropdown under the search input and auto-close on result click
+
+## 2026-03-23 | Rename wiki header to Operations Portal Wiki and remove subtitle | Updated wiki branding text to the requested title and removed the subtext line for a cleaner topbar
+
+## 2026-03-23 | Wiki hidden behind logo easter egg | Wiki not ready for launch — replaced visible button with 5-click secret on the Tidyco logo
+
+## 2026-03-23 | Align standalone wiki styling with main portal and add top-left logo | Updated wiki topbar, controls, content surfaces, and typography to follow the main site visual language and added the Tidyco logo in the wiki header for consistent branding
+
+## 2026-03-23 | Add hidden wiki button to portal topbar | Users can now access the standalone wiki documentation through a subtle, low-opacity button (📖) in the topbar that opens in a new tab; button becomes fully visible on hover
+
+## 2026-03-23 | Harden live-search focus and caret continuity across capacity, NPI PFMEA, and feedback | Product Load, PFMEA text search, and feedback browse search now preserve focus/caret after re-renders via shared helper reuse, with targeted regression tests added to prevent typing interruptions
+
+## 2026-03-23 | Add second-wave standalone wiki APQP topics | Added CTQ, Control Plan, Action Tracker, Risk Register, BOM, Timing Plan, and APQP Gates pages, updated Product Development topic navigation, rebuilt search index, and revalidated wiki checks
+
+## 2026-03-23 | Add first 10 high-priority standalone wiki topics | Populated core guide pages for Capacity, Product Development, and MCS, expanded `areas.json` navigation, and regenerated search index to support practical review before portal integration
+
+## 2026-03-23 | Scaffold standalone guide wiki preview (no portal link yet) | Created `wiki/index.html` with area-based starter content, local search, and wiki audit scripts so the guide can be reviewed directly by URL before any in-app navigation changes
+
+## 2026-03-23 | Reframe guide plan to standalone wiki with area-based small files | Revised `plans/guide-system-implementation-plan.md` to move guidance outside SPA routing, define a dedicated `wiki/index.html` entry point, and enforce token/file-size guardrails for easier audits and updates
+
+## 2026-03-23 | Guide modal content corrections | Audit found outdated and inaccurate content; added capacity-logistics and capacity-unit6 guide keys; fixed PFD section header and flowchart descriptions; corrected hub module count from four to five; added Manufacturing Change to hub guide
+
+## 2026-03-23 | Keep Product Support search focused while typing | Product search input in Capacity Product Support was re-rendering and dropping focus after each character, so input handling now restores focus/caret and includes a regression test to prevent typing interruptions
+
+## 2026-03-23 | Correct Logistics Product Support split to separate kitting and booking in/out columns | User clarification required separate `Kitting` and `Booking In/Out` inputs (not a combined field), so Product Support UI/history, save flow, relational mapping, and calculations now sum three components (`Kitting` + `Booking In/Out` + `Product Movement`) into Hours/Batch
+
+## 2026-03-23 | Show Logistics split values in Product Support history | Logistics support history now exposes Kitting, Booking In/Out, and Product Movement values alongside the summed Hours/Batch total so past changes can be audited without reconstructing the split manually
+
+## 2026-03-23 | Split Logistics Product Support hours into components | Logistics Product Support now captures Kitting, Booking In/Out, and Product Movement separately while keeping Hours/Batch as the summed value used by support history and monthly batch-based load calculations
+
+## 2026-03-23 | Rename Logistics and Unit 6 capacity team labels | Shared capacity screens treated every non-PM stream as engineer-only; Logistics now shows Logistics Technician and Unit 6 shows Technician across team, chart, holiday, and add-member UI text
+
+## 2026-03-23 | Remove shared capacity nav bar from Logistics and Unit 6 pages | Those pages already have their own local header/back controls, so the extra route-switcher bar was redundant and cluttered the top of the screen
+
+## 2026-03-23 | Add capacity Supabase query tests | New test files for me-data-relational.js (save payloads, delete filters, load mapping), prod-capacity-data.js (query shapes for init and staff insert), and work-areas-data.js (CRUD column verification); catches wrong DB column names, camelCase leaking into payloads, and wrong filter columns
+
+## 2026-03-23 | Add npiRelLoad query consistency tests | Detect future column type mismatches and per-table project_id inconsistencies; tests verify npi_documents receives text prog_id (not UUID) and that all 16 npi tables receive the same project_id value
+
+## 2026-03-23 | Fix npi_documents 400 error — change project_id column from uuid to text | npi_documents.project_id was typed uuid while all other npi_* tables use text; the code passes prog_id (text) as the project identifier so queries failed with 400 Bad Request; dropped the incorrect FK constraint and retyped the column to text to match all other npi tables
+
+## 2026-03-23 | Fix action centre project lookup query — use prog_id not database primary key | Action centre was querying projects by database primary key (id) but NPI tables store prog_id, causing 400 Bad Request errors when resolving project names; now queries on prog_id column to match foreign key references
+
+## 2026-03-23 | Fix NPI action FK violation — return prog_id not database primary key | npi_actions.project_id and related NPI tables (npi_pfmea_causes, npi_risks) use foreign keys that reference projects(prog_id), not projects(id); npiRelResolveProjectId was returning the database primary key (projects.id) instead of prog_id, causing 409 FK constraint violations when saving actions; changed to return project.id (which holds prog_id in the cache) from the in-memory project and projects.prog_id from queries
+
+## 2026-03-23 | Remove stale manual product duplicates during capacity auto-sync | Product Support tables showed duplicated product values because legacy manual rows (no product DB ID) were kept alongside synced DB-linked rows with the same name; auto-sync now drops stale manual duplicates and keeps only unique product records per department
+
+## 2026-03-23 | Normalize overgrown RLS policies to one auth rule per table and add rollback migration | Live DB had overlapping permissive RLS policies (up to 8 per table) including broad `allow all`; standardized affected tables to the auth-only model in database.md and added `supabase/rollback_normalize_rls_to_single_auth_policy.sql` to restore prior policy layout if needed
+
+## 2026-03-23 | Fix ME/PM product relational conflicts on save | me_products enforces unique product_database_id, but saves were upserting only by id and persisting unsupported department tags; save now resolves existing row id by product_database_id first and writes only ME/PM product departments to satisfy DB constraints
+
+## 2026-03-23 | Fix Product Support tab duplicates (ME) and empty tabs (Logistics, Unit 6) | Wrong arg order in meDataAddProduct call caused ME products to have no DB ID, bypassing de-dup; Logistics and Unit 6 had no auto-sync call so their product lists were always empty
+
+## 2026-03-23 | Decouple settings portal tests from let/var rewrites | settings.js is high-churn and broad lexical rewrites in tests were creating scope-collision risk and brittle coupling
+
+## 2026-03-23 | Filter support history by valid product IDs before DB insert | FK constraint violation when history rows referenced deleted/orphaned products
+
+## 2026-03-23 | Add focused LOG and Unit 6 capacity portal Jest coverage | Added dedicated behavior tests for logistics and unit6 orchestrators (rendering, department filtering, tab routing, and debounced save handling) to match existing capacity portal test depth and reduce regression risk
+
+## 2026-03-23 | Fix me_holidays 409 PK conflict on page load | meLoadRelationalHolidays loaded all users' holidays but user_id was not stored in state; save then tried to INSERT other users' rows (which still existed) causing a duplicate key error; fix stores userId on each holiday state object and filters the insert to only the current user's holidays
+
+## 2026-03-23 | Update capacity hub test for five stream cards | Capacity hub includes Logistics and Unit 6 cards; test expectation was still fixed at three cards and caused false CI failures
+
+## 2026-03-23 | Split settings teams and MCS tabs into dedicated modules | settings.js had grown too large; moved teams/permissions logic to settings-teams.js and approvals logic to settings-mcs.js to improve maintainability without changing behavior
+
+## 2026-03-23 | Split PFMEA worksheet/filter state into pfmea-state.js | pfmea.js had grown large; moving column-view and filter state helpers into a dedicated module reduces file size and keeps render/mutation logic focused
+
+## 2026-03-23 | Split mcs-modal.js into four sub-renderers | File was 16k tokens making stage changes risky; split into mcs-modal-shared, mcs-modal-create, mcs-modal-view, mcs-modal-edit
+
+## 2026-03-23 | Add Logistics and Unit 6 capacity plans to Capacity Hub | Two new ME-style load capacity plans (Logistics = LOG tag, Unit 6 = UNIT6 tag) added as fully independent streams; data stored in shared me_* tables filtered by department tag, no ME or PM data shown
+
 ## 2026-03-23 | Add 1-year headroom KPI and integer 2-year headroom in Production Capacity by Work Area | Unit 2/3/6 KPI cards now show both 1-year and 2-year headroom, and 2-year headroom is rounded to whole hours for cleaner at-a-glance reading
 
 ## 2026-03-23 | MCS staged headers use explicit number badges | Replaced pseudo-only stage numbers with real badge elements in stage toggle rendering so Stage 2 cannot disappear due to theme/cascade edge cases; also increased footer action contrast again

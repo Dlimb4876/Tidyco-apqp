@@ -3,6 +3,14 @@
 	 ============================================================ */
 
 /* ── Inline-Editable Tables ──────────────────────────────────── */
+.me-products-card-body {
+	padding: 12px;
+}
+
+.me-card-body-gutter {
+	padding: 12px;
+}
+
 .me-tbl-wrap { overflow-x: auto; }
 .me-tbl {
 	width: 100%; border-collapse: collapse; font-size: 13px;
@@ -40,6 +48,16 @@
 }
 .me-tbl td input[type="number"] { text-align: right; }
 .me-tbl td input[type="date"]   { min-width: 120px; }
+
+/* Calculated fields should not show editable hover/focus treatment. */
+.me-tbl td input.me-calculated-field,
+.me-tbl td input.me-calculated-field:hover,
+.me-tbl td input.me-calculated-field:focus {
+	border-color: transparent;
+	background: transparent;
+	box-shadow: none;
+	cursor: default;
+}
 
 /* Add row */
 .me-add-row {
@@ -98,4 +116,14 @@
 	font-size: 11px; color: var(--muted);
 	font-family: 'IBM Plex Mono', monospace;
 	padding: 4px 8px;
+}
+
+@media (max-width: 767px) {
+	.me-products-card-body {
+		padding: 10px;
+	}
+
+	.me-card-body-gutter {
+		padding: 10px;
+	}
 }

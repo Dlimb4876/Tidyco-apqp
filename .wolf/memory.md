@@ -1,14 +1,73 @@
-# Memory
+﻿# Memory
 
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
 ## 2026-03-21
-- Finished the NPI PFD flowchart foundation work: step type and branch destinations now edit in the table, save through the relational layer, reload into UI state, and generate a Mermaid preview with focused Jest coverage.
-
 ## 2026-03-23
+## 2026-03-24
+## 2026-03-25
+- Fixed Serena MCP client-context mismatch for OpenCode by changing `.mcp.json` default `oraios/serena` context to `codex` and adding `oraios/serena-claude` with `claude-code`, so both OpenCode and Claude Code can connect without conflicting prompts/tool filters.
+- Fixed Product Support History edit-save reversion by making `meNormalizeAndDedupeSupportHistory` prefer the most recently updated duplicate record (instead of last-iterated), added regression in `tests/me-data-core.test.js`, and validated with `npm test -- tests/me-data-core.test.js` plus full `npm test`/`npm run check:all` runs (existing unrelated failure remains in `tests/operations-infographic.test.js`).
+- Fixed dead Capacity hub stream buttons by changing `portals/capacity/js/capacity.js` root cards and top route-switcher buttons from stale `data-action` wiring to delegated `data-cap-action="cap-set-tab"`, so clicks reach `setCapacityTab` again; added focused regression coverage in `tests/capacity-hub.test.js` and validated with `npm test -- tests/capacity-hub.test.js`.
+- Completed capacity isolated-stream parity fixes: PM Product Support history edit now routes to PM data, stream-specific history delete routing now dispatches to PM/LOG/UNIT6/ME correctly, PM/LOG/UNIT6 support-history delete queues + relational delete helpers were added, realtime focus guards were added to PM/LOG/UNIT6 subscriptions to prevent inline-edit rerender thrash, autosync persistence now uses debounced saves, duplicate cap-nav-tab/cap-hub-tab handling was removed from `capacity.js`, and regressions were added in `tests/capacity-events.test.js` / `tests/capacity-hub.test.js`; validated with `npm test` (63/63 suites, 807/807 tests) and `npm run check:all` (pass).
+- Fixed Hub -> Capacity access regression for legacy permission sets by adding a parent-portal fallback in `canViewPortalTab` when child-tab policy is not configured (`utils/js/helpers.js`), plus regression coverage in `tests/permissions-helpers.test.js`; validated with focused permission/hub/navigation suites.
+- Expanded the capacity edge-spacing polish beyond Product Support by introducing `.me-card-body-gutter` in `portals/capacity/css/me-capacity-tables.css` and applying it to Team (`me-team.js`), Tasks (`me-tasks.js`), Product Task Load (`me-product-taskload.js`), and Holiday Planner (`me-holidays.js`) card bodies so controls and table content are consistently inset across all capacity plans.
+- Fixed Product Support edge-touch spacing in all capacity streams by adding a shared `me-products-card-body` padding wrapper in `portals/capacity/js/me-products.js` + `portals/capacity/css/me-capacity-tables.css`, so filters/status chips/bulk-save controls and table content no longer sit flush against the white card edges; updated `CHANGELOG.md`.
+- Replaced Product Support toolbar sort controls with sortable table headers across all capacity streams (ME/PM/Logistics/Unit 6) by updating shared renderer `portals/capacity/js/me-products.js` and click routing in `portals/capacity/js/capacity-events.js`; added regression checks in `tests/me-products-filters.test.js` and `tests/capacity-events.test.js`; updated guide text (`utils/js/guide.js`) and changelog; validated with `npm test -- tests/me-products-filters.test.js tests/capacity-events.test.js` (2/2 suites, 23/23 tests).
+- Pruned stale OpenWolf session blocks in `.wolf/memory.md` by removing 50 `## Session:` sections that had no action rows, and preserved all session blocks that contained logged actions.
+- Fixed Product Support bulk-edit visual reset where drafted values could disappear on rerender while still saving: added multi-key draft resolution (product id / product DB id / row index) in `portals/capacity/js/me-products.js`, passed product DB IDs through `portals/capacity/js/capacity-events.js`, added regression `tests/me-products-filters.test.js`, and validated with focused Jest plus full suite (`npm test -- --runInBand --silent`, 63/63 suites, 801/801 tests).
+- Moved the shared Product Support `📦 Bulk Save All Changes` control to the right above the table in `portals/capacity/js/me-products.js`, which applies to ME/PM/Logistics/Unit 6; updated guide copy in `utils/js/guide.js` and added changelog entry; validated with `npm test -- tests/me-products-filters.test.js tests/capacity-events.test.js` (2/2 suites, 20/20 tests).
+- Fixed stale Capacity Chart side panels on month navigation for ME/PM/LOG/Unit 6: chart month handlers now re-render chart-tab body (KPI, Demand Breakdown, Capacity per role) before `meDrawChartNow`/`meDrawHeatmapNow`; validated with focused suites (`me-chart`, `log-capacity`, `unit6-capacity`) and full `npm test` (62/62 suites, 798/798 tests).
+- Fixed Capacity chart month selector state drift across ME/PM/Logistics/Unit 6 by syncing `meChartMonthInput.value` in each stream's chart-only refresh path (`meRefreshCurrentTab`, `pmRefreshCurrentTab`, `logRefreshCurrentTab`, `unit6RefreshCurrentTab`) so Prev/Next/Today no longer leave the input stuck on stale January; validated with `npm test -- --runTestsByPath tests/me-chart.test.js`.
+- Disabled live chart auto-refresh for ME/PM capacity and switched to refresh-on-open behavior: `meCapSmartRender`/`pmCapSmartRender` now mark chart dirty instead of redrawing while chart is open; chart header text in `me-chart.js` now states refresh-on-open, matching test updates in `tests/me-chart.test.js`, guide updates in `utils/js/guide.js`, and changelog entry in `CHANGELOG.md`.
+- Fixed Product Support edit churn across ME/PM/Logistics/Unit 6 by adding per-stream draft state for shared Product Support rows in `portals/capacity/js/me-products.js` and wiring draft-only inputs through `portals/capacity/js/capacity-events.js`; Apply Change now clears only the matching draft, and focused regressions were added in `tests/me-products-filters.test.js` and `tests/capacity-events.test.js`.
+- Fixed recurring ME save storm/400 constraint failures by coercing all ME legacy table writes (`me_teams`, `me_tasks`, `me_holidays`, `me_product_support_history`) to department `ME` in `me-data-relational.js` and `me-data.js`; added regressions in `tests/me-data-relational-queries.test.js` and `tests/me-data-core.test.js`.
+- Fixed split-stream Holiday Planner routing so shared holiday clicks and Today month jumps now dispatch through the active capacity stream (`PM`, `LOG`, `UNIT6`, or `ME`) instead of always mutating ME state; added regressions in `tests/me-holidays.test.js` and `tests/me-chart.test.js`.
+- Fixed team-delete persistence across all capacity streams (ME/PM/LOG/UNIT6): added `teams` pending-delete queues in each `*DataPendingDeletes`, queued deleted member IDs in each `*DataDeleteTeam`, and persisted relational team deletes inside each `*DataSave` so removed members no longer reappear after refresh; added/updated tests in `tests/me-data-core.test.js` and new `tests/capacity-team-delete-persistence.test.js`; validated with focused tests, full `npm test` (62/62 suites, 792/792), and `npm run check:all` (EXIT:0).
+- Fixed post-split capacity save failures (`me_teams_department_check`) by making `portals/capacity/js/capacity-events.js` context-aware for `me`/`pm`/`log`/`unit6`, so LOG and Unit 6 now call `logData*` / `unit6Data*` CRUD+save paths instead of ME handlers; updated `tests/capacity-events.test.js` with PM + LOG routing assertions; validated with focused `npm test -- tests/capacity-events.test.js` (8/8), full `npm test` (60/60 suites, 783/783), and `npm run check:all` (pass, existing warnings unchanged).
+- Finished the capacity department split runtime and repo sync: added isolated state modules `portals/capacity/logistics/js/log-data.js` and `portals/capacity/unit6/js/unit6-data.js`, rewired PM/LOG/UNIT6 orchestrators and `pm-capacity-data.js` to per-stream `*DataGet/*DataSave` APIs, loaded and initialized the split modules from `index.html` and `core/js/app.js`, updated shared chart/heatmap data reads to respect the active stream state, backfilled `supabase/capacity_dept_split.sql`, updated README/TESTING_STRATEGY/CHANGELOG, added relational split tests plus updated PM/LOG/UNIT6 tests, and validated with focused Jest, full `npm test` (60/60 suites, 782/782 tests), and `npm run check:all` (pass with only pre-existing core-script ordering warnings for `chart-theme.js` and `guide.js`).
+- Added task-level Disable support to shared ME/PM capacity tasks so tasks remain visible but are excluded from calculations: added `isDisabled` state/defaults in `portals/capacity/js/me-data.js`, relational load/save mapping (`is_disabled`) in `portals/capacity/js/me-data-relational.js`, disabled-task exclusion in `portals/capacity/js/me-calculations.js`, Disable checkbox + marker in `portals/capacity/js/me-tasks.js`, and toggle handling in `portals/capacity/js/capacity-events.js`; added migration `supabase/me_tasks_disable_flag.sql`; updated guide copy (`utils/js/guide.js`) and `CHANGELOG.md`; added regressions in `tests/me-calculations.test.js`, `tests/me-data-core.test.js`, `tests/me-tasks-sort.test.js`, and `tests/capacity-events.test.js`; validated with `npm test` (57/57 suites, 774/774 tests) and `npm run check:all`.
+- Added ME/PM Capacity Chart live-update indicator in the chart header (default `Live sync on`, then `Last live update ...` after realtime refresh), and wired refresh timestamps from ME/PM smart-render paths. Chart-tab realtime refresh continues to redraw both chart and embedded heatmap. Updated `portals/capacity/js/me-chart.js`, `portals/capacity/css/me-capacity-chart.css`, `portals/capacity/css/me-capacity-responsive.css`, `portals/capacity/js/me-capacity.js`, `portals/capacity/project-management/js/pm-capacity.js`, `tests/me-chart.test.js`, `utils/js/guide.js`, and `CHANGELOG.md`; validated with `npm test -- tests/me-chart.test.js tests/capacity-events.test.js tests/pm-capacity-data.test.js` (23/23 passing).
+- Enabled multi-window live refresh for ME/PM Capacity Chart: realtime smart-render now refreshes the active chart tab (instead of only setting dirty), so chart/KPI values update when tasks are changed in another open window. Updated `portals/capacity/js/me-capacity.js`, `portals/capacity/project-management/js/pm-capacity.js`, `utils/js/guide.js`, and `CHANGELOG.md`; validated with `npm test -- tests/me-chart.test.js tests/capacity-events.test.js tests/pm-capacity-data.test.js` (21/21 passing).
+- Fixed failing `tests/me-products-filters.test.js` assertion for Logistics Hours/Batch by replacing exact substring check (`data-field="hoursPerWeek" readonly`) with attribute-order-safe regex (`/data-field="hoursPerWeek"[^>]*readonly/`); validated with focused run and full `npm test` (57/57 suites, 766/766 tests).
+- Extended team access permissions down to second-level hub cards and deep links: added sub-portal view grants in `utils/js/helpers.js`, hid denied cards/favourites/tabs across Hub, Capacity, Product Development, and Production, added direct-route access-denied handling in `utils/js/navigation.js`, updated related guide copy in `utils/js/guide.js`, and validated with `npm test -- tests/permissions-helpers.test.js tests/hub.test.js tests/capacity-hub.test.js tests/product-development.test.js tests/production.test.js tests/navigation.test.js` (141/141 passing).
+- Removed misleading editable hover/focus styling from the Logistics Product Support calculated `Hours/Batch` input by tagging it as a calculated field in `portals/capacity/js/me-products.js` and adding a readonly visual override in `portals/capacity/css/me-capacity-tables.css`; updated `CHANGELOG.md`.
+- Added brief plain-language descriptions to the Settings team permission editor so admins can see what each permission grants before toggling it; updated `utils/js/helpers.js`, `portals/settings/js/settings-teams.js`, `portals/settings/css/settings.css`, `tests/settings-portal.test.js`, and `CHANGELOG.md`, then aligned fallback permission copy in `settings-teams.js` and revalidated with `npm test -- tests/settings-portal.test.js` (61/61 passing).
+- Fixed standalone wiki internal-link navigation so markdown links no longer open new tabs and 404. Updated `wiki/assets/js/wiki-render.js` to resolve relative `.md` links against the active topic path and output same-window hash routes; passed `topicPath` from `wiki/assets/js/wiki-app.js`; validated with `npm run wiki:check` and `npm test` (57 suites, 753 tests).
+- Fixed standalone wiki bootstrap fetch failure (`Failed to load: ./content/_meta/areas.json`) by resolving wiki base path from `window.location.pathname` in `wiki/assets/js/wiki-app.js`, then added compatibility redirect page `dev/wiki/index.html` to forward legacy `/dev/wiki/` URLs to `/wiki/` while preserving hash navigation; validated with `npm run wiki:check`.
+- Repaired malformed `.wolf/anatomy.md` structure caused by patch auto-correction: moved the wiki dual-lens note out of the `## ./` file list and into a dedicated `## Manual Update 2026-03-24` section; logged fix in `.wolf/buglog.json` as `bug-068`.
+- Implemented wiki-wide learning-model split into Function vs Process lenses: added `learning-function/00-overview.md`, `learning-process/00-overview.md`, and area process workflow pages (`10..90`); wired both lenses into `wiki/content/_meta/areas.json`; linked PFMEA method page to PFMEA tool-workflow page; validated with `npm run wiki:check` and final `npm run wiki:audit-tokens` (soft=0 hard=0).
+- Split PFMEA docs into two pages to separate intent: `wiki/content/product-development/50-pfmea.md` now serves as method/risk reference and new `wiki/content/product-development/51-pfmea-tool-workflow.md` covers in-site usage flow; updated `wiki/content/_meta/areas.json`; validated with `npm run wiki:check` (41 entries, links clean) and final `npm run wiki:audit-tokens` (soft=0 hard=0).
+- Refined `wiki/content/product-development/50-pfmea.md` per user feedback: removed explicit training-objective section, expanded practical explanatory depth, then trimmed copy to stay within token soft cap; validated via `npm run wiki:audit-tokens` (soft=0 hard=0) and `npm run wiki:check-links` (broken=0).
+- Reworked only `wiki/content/product-development/50-pfmea.md` into a training-manual page (objective, preparation, scoring rules, step-by-step completion flow, worked example, quality checklist, and system links), then revalidated with `npm run wiki:check` (40 entries, token audit clean, 0 broken links).
+- Rewrote all standalone wiki content pages (`wiki/content/**/*.md`, 40 files) from template-style technical wording into human-facing guides focused on purpose, day-to-day usage, key calculations where relevant, and links to connected areas; rebuilt wiki search index and validated with `npm run wiki:check` (40 entries indexed, token audit clean, 0 broken links).
+- Renamed wiki header/title to `Operations Portal Wiki` and removed the wiki subtext line in `wiki/index.html`; updated changelog entry for the branding tweak.
+- Aligned standalone wiki styling to match main portal visual language (`wiki/assets/css/wiki.css`) and added top-left Tidyco logo + IBM Plex font link in `wiki/index.html`; validated with `npm run wiki:check` (build index, token audit, link check all passed).
+- Hardened search typing continuity across re-rendering flows: added shared `preserveInputCaretAfterRender` helper (`utils/js/helpers.js`), reused it in Capacity task/product/product-load handlers, NPI dashboard and PFMEA text search, and feedback browse search; added regressions `tests/capacity-events.test.js`, `tests/npi-events-search.test.js`, `tests/feedback-search-focus.test.js`; validated with focused Jest suite (4/4 passing, 8 tests).
+- Added second-wave standalone wiki APQP topics (CTQ, Control Plan, Action Tracker, Risk Register, BOM, Timing Plan, APQP Gates), expanded Product Development navigation in `wiki/content/_meta/areas.json`, rebuilt `wiki/content/_meta/search-index.json` to 27 entries, and revalidated with `npm run wiki:check` (all green).
+- Added first-pass high-priority standalone wiki content set: 10 topic files across Capacity/Product Development/MCS, expanded `wiki/content/_meta/areas.json` topic navigation, rebuilt `wiki/content/_meta/search-index.json` to 20 entries, and revalidated with `npm run wiki:check` (all green).
+- Scaffolded standalone guide wiki preview under `wiki/` (index page, runtime JS modules, area-based starter content, and metadata files), added wiki maintenance scripts (`wiki-build-search-index`, `wiki-token-audit`, `wiki-link-check`), validated with `npm run wiki:check`, and intentionally left portal navigation unchanged so review is URL-only.
+- Reviewed and fully reframed `plans/guide-system-implementation-plan.md` to a standalone wiki strategy: separate `wiki/index.html` entrypoint, by-area content folders, and strict token/file-size guardrails for future audits and low-churn updates.
+- Fixed Capacity Product Support search focus churn: `cap-products-search` now restores focus/caret after re-render in `capacity-events.js` so typing continues uninterrupted; added regression in `tests/capacity-events.test.js` and verified the suite passes.
+- Corrected the Logistics Product Support split to use three distinct component fields (`Kitting`, `Booking In/Out`, `Product Movement`) with read-only `Hours/Batch` as the computed sum; updated shared render/events/state/relational/calculation paths, extended migration + applied SQL (`kitting_hours`, `booking_in_out_hours`), and revalidated with focused Jest plus full `npm test` (55 suites, 749 tests).
+- Applied the Logistics product-support split migration to Supabase (`me_product_support_history` now has `kitting_time_booking_hours` and `product_movement_hours`) and updated the Product Support history panel to show both component values plus Hours/Batch; revalidated with focused Jest, full `npm test` (55 suites, 749 tests), and `npm run check:all`.
+- Split Logistics Product Support hours into `Kitting Booking In/Out` and `Product Movement` in the shared capacity product-support flow: updated `me-data.js`, `me-products.js`, `capacity-events.js`, `me-data-relational.js`, `me-calculations.js`, and `me-product-taskload.js`; added support-history migration `supabase/logistics_product_support_history_split.sql`; validated with focused Jest coverage plus full `npm test` (55 suites, 748 tests) and `npm run check:all`.
+- Updated shared Capacity wording for Logistics and Unit 6 so user-facing team labels no longer default to engineer-only text: `capacity-events.js`, `me-team.js`, `me-chart.js`, and `me-holidays.js` now show `Logistics Technician` for LOG and `Technician` for UNIT6; added focused regressions in `tests/me-team-render.test.js` and `tests/me-chart.test.js`; full Jest suite passes (55 suites, 737 tests).
+- Verified the user's correction on capacity headers: no further code change made after checking the current router/render paths; recorded that broader header-removal suggestions must be verified first.
+- Removed the shared Capacity route-switcher bar from the Logistics and Unit 6 pages in `portals/capacity/js/capacity.js` because those views already have their own local header/back controls; added regression coverage in `tests/capacity-hub.test.js`.
+- Fixed Product Support duplicate values caused by legacy manual `me_products` rows (null `product_database_id`) surviving alongside synced DB-linked rows of the same name: patched `meDataAutoSyncDepartmentProducts` to drop stale manual duplicates, added regression test in `tests/me-data-core.test.js`, and deleted 19 duplicate manual rows from Supabase.
+- Normalized overgrown live Supabase RLS policies across 14 public tables to the auth-only model (single `auth` policy each), removing overlapping permissive policies and broad `allow all` drift; added rollback SQL at `supabase/rollback_normalize_rls_to_single_auth_policy.sql`; validated with `npm test` (53/53 suites, 705/705 tests) and `npm run check:all` (EXIT:0).
+- Fixed cascading ME relational save failures in `portals/capacity/js/me-data-relational.js`: product saves now resolve existing `me_products.id` by `product_database_id` before upsert and persist only ME/PM product departments, eliminating `uq_me_product_database_id` and `me_products_department_check` save errors; added regression in `tests/me-data-core.test.js` and verified full `npm test` (53 suites, 705 tests).
+- Reduced settings portal test brittleness tied to high-churn `settings.js`: added explicit core-state test hooks (`settingsSetCoreState` / `settingsGetCoreState`) and removed the test-time `let`→`var` source rewrite from `tests/settings-portal.test.js`; settings modules are now loaded in one eval context and full Jest suite still passes.
+- Added focused Logistics (LOG) and Unit 6 (UNIT6) portal coverage in new suites `tests/log-capacity.test.js` and `tests/unit6-capacity.test.js`, asserting render shell output, department-filtered tab content, URL tab history keys, and debounced save rerender behavior.
+- Fixed outdated Capacity Hub Jest expectation in `tests/capacity-hub.test.js`: card count now asserts 5 (Production, ME, PM, Logistics, Unit 6) with explicit Logistics/Unit 6 action and icon checks; revalidated with `npm test` and `npm run check:all` (both passing).
+- Split `portals/settings/js/settings.js` into focused modules by moving Teams/Permissions logic to `portals/settings/js/settings-teams.js` and MCS approvals logic to `portals/settings/js/settings-mcs.js`; updated `index.html` script order and adjusted `tests/settings-portal.test.js` to eval the new modules.
 - Updated Production Capacity by Work Area KPIs in `portals/capacity/js/prod-capacity-workarea.js`: added a new `1-Yr Headroom` card and rounded `2-Yr Headroom` to whole hours so Unit 2/3/6 KPI tiles are easier to scan.
+- Split `mcs-modal.js` (16k tokens) into four focused files: `mcs-modal-shared.js` (helpers + close), `mcs-modal-create.js`, `mcs-modal-view.js`, `mcs-modal-edit.js`. Updated `index.html` load order and deleted original file.
+- Added Logistics (LOG) and Unit 6 (UNIT6) capacity plans to Capacity Hub: created `portals/capacity/logistics/js/log-capacity.js` and `portals/capacity/unit6/js/unit6-capacity.js` following the PM pattern; expanded `meNormalizeDepartmentTag` in both `me-data.js` and `me-data-relational.js` to pass through LOG and UNIT6 tags; added context redirects to `me-capacity.js` shared functions; wired up hub cards, nav bar items, routing, and events in `capacity.js` and `capacity-events.js`; added script tags to `index.html`.
 - Finalized robust MCS stage-number rendering in `portals/mcs/js/mcs-modal.js` by injecting explicit `.mcs-stage-badge` elements during stage-toggle build (instead of relying only on pseudo-elements), with matching fallback-safe color styling and stronger footer/button contrast updates in `portals/mcs/css/mcs.css`.
+- Fixed NPI action FK violations (409 Conflict on save): `npi_actions`, `npi_pfmea_causes`, and `npi_risks` foreign keys reference `projects(prog_id)` but `npiRelResolveProjectId` was returning `project.dbId` (the DB primary key) instead of `project.id` (which holds prog_id). Changed function to return prog_id values; updated tests in `tests/npi-data-relational.test.js` to verify correct FK behavior; all 706 tests pass.
 - Applied MCS modal follow-up styling in `portals/mcs/css/mcs.css`: hard-forced Stage 2 badge rendering (`content: '2' !important`) and lightened the modal footer with higher-contrast action button styles so controls stand out.
 - Fixed NPI Kanban search churn in `portals/product-development/npi/js/dashboard.js` and `portals/product-development/npi/js/npi-events.js` by restoring focus/caret after each search-triggered re-render; added regression coverage in `tests/npi-dashboard-search.test.js`.
 - Polished the MCS staged modal visuals in `portals/mcs/css/mcs.css` + `portals/mcs/css/mcs-responsive.css`: added explicit numbered stage bullets (including Stage 2), a colored header bar treatment, and a left-side stage separator guide line with node markers so stage transitions are easier to identify.
@@ -19,6 +78,7 @@
 - Audited `supabase/` against live code, docs, and tests; kept all setup-relevant SQL files and deleted only `remove_legacy_me_pert_subtasks.sql` because it was a completed one-off cleanup with no remaining runtime or onboarding value.
 - Removed the dead `me_capacity` fallback from `portals/capacity/js/me-data.js` after confirming the live project has no such table, and changed holiday saves to delete only the current user's `me_holidays` rows before insert; added focused regression coverage in `tests/me-data-core.test.js`.
 - Fixed ME/PM capacity task delete persistence in `portals/capacity/js/me-data.js` by queueing deleted task IDs and deleting them from `me_tasks` during save; added regression coverage in `tests/me-data-core.test.js` to prevent refresh resurrection.
+- Split PFMEA worksheet state out of `portals/product-development/npi/js/pfmea.js` into new `portals/product-development/npi/js/pfmea-state.js` (RPN/view/column/extra-filter state + column geometry helpers), updated `index.html` script order to load it before `pfmea.js`, and updated `tests/pfmea.test.js` to eval the new state module before PFMEA core.
 
 ## 2026-03-22
 - Fixed production hub delegation regression in `portals/production/js/production.js` by replacing inline favourite `onclick` handlers with delegated `data-action` handling (`prod-fav-toggle`), then validated with targeted production tests.
@@ -112,11 +172,6 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 06:37
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 | 06:38 | Edited portals/capacity/css/prod-capacity.css | CSS: overflow-y | ~48 |
 | 06:38 | Edited CHANGELOG.md | 1→3 lines | ~100 |
 
@@ -131,11 +186,6 @@
 | 06:44 | Edited utils/js/navigation.js | added 3 condition(s) | ~93 |
 | 06:44 | Edited core/js/app.js | added 3 condition(s) | ~91 |
 | 06:44 | Edited CHANGELOG.md | 1→3 lines | ~75 |
-
-## Session: 2026-03-21 06:49
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-21 07:21
 
@@ -338,16 +388,6 @@
 | 11:51 | Edited portals/capacity/js/prod-capacity-dashboard.js | 8→9 lines | ~79 |
 | 11:51 | Edited CHANGELOG.md | 1→3 lines | ~86 |
 
-## Session: 2026-03-21 11:57
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 12:00
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
 ## Session: 2026-03-21 12:00
 
 | Time | Action | File(s) | Outcome | ~Tokens |
@@ -360,32 +400,12 @@
 | 12:15 | Split Operations units into one-box-per-unit layout in People + Infographic | portals/operations/js/operations-dashboard-render-core.js, portals/operations/js/operations-infographic.js, tests/operations-dashboard.test.js, CHANGELOG.md, .wolf/cerebrum.md, .wolf/buglog.json | Unit 2/3/6 now render as separate boxes; targeted operations suite still passes | ~360 |
 | 12:22 | Fixed misleading 0% coverage output in check:coverage | scripts/test-coverage-reporter.js, CHANGELOG.md, .wolf/buglog.json, .wolf/cerebrum.md | Reporter now prints explicit coverage-unavailable status when coverage map is empty; check:coverage and check:all pass | ~280 |
 
-## Session: 2026-03-21 12:08
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
 ## Session: 2026-03-21 12:09
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
 | 12:10 | Edited utils/js/guide.js | expanded (+14 lines) | ~518 |
 | 12:10 | Edited CHANGELOG.md | 1→3 lines | ~68 |
-
-## Session: 2026-03-21 12:14
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 12:35
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 12:35
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-21 12:42
 
@@ -441,47 +461,12 @@
 | 13:48 | Edited tests/mcs-overhaul-integration.test.js | inline fix | ~17 |
 | 13:48 | Edited CHANGELOG.md | 1→3 lines | ~126 |
 
-## Session: 2026-03-21 14:00
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 20:26
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
 ## Session: 2026-03-21 20:26
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
 | 20:28 | Edited portals/capacity/js/me-products.js | 2→2 lines | ~33 |
 | 20:28 | Edited CHANGELOG.md | 4→6 lines | ~76 |
-
-## Session: 2026-03-21 20:28
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 20:34
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 20:34
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 20:43
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 20:43
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-21 20:43
 
@@ -490,16 +475,6 @@
 | 20:51 | Created .mcp.json | — | ~81 |
 | 20:51 | Edited .vscode/mcp.json | 12→11 lines | ~61 |
 | 20:52 | Edited .mcp.json | expanded (+15 lines) | ~105 |
-
-## Session: 2026-03-21 20:55
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 20:55
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-21 21:01
 
@@ -596,31 +571,6 @@
 |------|--------|---------|---------|--------|
 | 22:20 | Created portals/operations/js/operations-infographic.js | — | ~5115 |
 | 22:21 | Edited CHANGELOG.md | 4→6 lines | ~125 |
-
-## Session: 2026-03-21 22:29
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-21 23:02
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-22 07:26
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-22 07:26
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-22 07:42
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-22 07:47
 
@@ -750,11 +700,6 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
-
-## Session: 2026-03-22 11:28
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 | 11:29 | Edited index.html | 9→7 lines | ~60 |
 | 11:30 | Edited index.html | 7→9 lines | ~79 |
 | 11:30 | Edited core/css/main.css | — | ~0 |
@@ -786,11 +731,6 @@
 | 11:56 | Session end: 11 writes across 7 files (mcs-approvers-data.js, npi-data.js, settings.js, npi.js, CHANGELOG.md) | 8 reads | ~15635 tok |
 | 12:01 | Edited CLAUDE.md | 1→5 lines | ~94 |
 | 12:01 | Session end: 12 writes across 8 files (mcs-approvers-data.js, npi-data.js, settings.js, npi.js, CHANGELOG.md) | 9 reads | ~16219 tok |
-
-## Session: 2026-03-22 12:09
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-22 14:23
 
@@ -830,11 +770,6 @@
 | 18:44 | Edited portals/mcs/js/mcs-main.js | modified mcsKpiFilterApproval1() | ~169 |
 | 18:44 | Edited portals/mcs/css/mcs.css | 4→5 lines | ~93 |
 | 18:49 | Edited .gitignore | 6→7 lines | ~53 |
-
-## Session: 2026-03-22 18:54
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-22 19:10
 
@@ -910,16 +845,6 @@
 | 21:21 | Edited CHANGELOG.md | 4→6 lines | ~104 |
 | 21:21 | Session end: 3 writes across 2 files (pfmea.js, CHANGELOG.md) | 3 reads | ~30298 tok |
 
-## Session: 2026-03-22 21:33
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-23 06:26
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
 ## Session: 2026-03-23 06:26
 
 | Time | Action | File(s) | Outcome | ~Tokens |
@@ -932,31 +857,6 @@
 | 16:02 | Edited portals/capacity/js/me-data.js | removed dead me_capacity fallback and scoped holiday delete to current user | ~365 |
 | 16:03 | Edited tests/me-data-core.test.js | replaced fallback regression with init/save protection tests | ~170 |
 | 16:05 | Edited CHANGELOG.md | updated holiday persistence entry | ~46 |
-
-## Session: 2026-03-23 10:24
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-23 10:35
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-23 10:36
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-23 10:37
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-
-## Session: 2026-03-23 10:38
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-23 10:38
 
@@ -974,11 +874,6 @@
 |------|--------|---------|---------|--------|
 | 11:06 | Edited CHANGELOG.md | 1→3 lines | ~69 |
 | 11:06 | Session end: 1 writes across 1 files (CHANGELOG.md) | 1 reads | ~12216 tok |
-
-## Session: 2026-03-23 11:25
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
 
 ## Session: 2026-03-23 11:46
 
@@ -1013,6 +908,226 @@
 | 12:40 | Session end: 2 writes across 2 files (me-calculations.js, CHANGELOG.md) | 4 reads | ~18893 tok |
 
 ## Session: 2026-03-23 13:09
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 18:31 | Edited portals/capacity/js/me-data-relational.js | added 3 condition(s) | ~82 |
+| 18:31 | Edited portals/capacity/js/me-data.js | added 3 condition(s) | ~82 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~134 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~153 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~142 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~154 |
+| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~141 |
+| 18:32 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~141 |
+| 18:32 | Created portals/capacity/logistics/js/log-capacity.js | — | ~2256 |
+| 18:33 | Created portals/capacity/unit6/js/unit6-capacity.js | — | ~2314 |
+| 18:33 | Edited portals/capacity/js/capacity.js | modified capacityNavBar() | ~261 |
+| 18:33 | Edited portals/capacity/js/capacity.js | added 2 condition(s) | ~156 |
+| 18:34 | Edited portals/capacity/js/capacity.js | 5→7 lines | ~170 |
+| 18:34 | Edited portals/capacity/js/capacity.js | expanded (+30 lines) | ~580 |
+| 18:34 | Edited portals/capacity/js/capacity-events.js | added 2 condition(s) | ~196 |
+| 18:34 | Edited portals/capacity/js/capacity-events.js | 4→5 lines | ~92 |
+| 18:34 | Edited portals/capacity/js/capacity-events.js | added 4 condition(s) | ~485 |
+| 18:35 | Edited index.html | 3→5 lines | ~97 |
+| 18:35 | Edited core/js/state.js | inline fix | ~21 |
+| 18:35 | Edited CHANGELOG.md | 1→3 lines | ~139 |
+| 18:36 | Session end: 20 writes across 10 files (me-data-relational.js, me-data.js, me-capacity.js, log-capacity.js, unit6-capacity.js) | 13 reads | ~61105 tok |
+| 18:36 | Diagnosed OpenWolf cerebrum-reflection cron failure | .wolf/cron-state.json, .wolf/daemon.log, .wolf/config.json, C:/Users/Tidyco/AppData/Roaming/npm/node_modules/openwolf/dist/src/daemon/cron-engine.js | confirmed AI cron tasks fail when `claude` CLI is missing from PATH | ~1800 tok |
+| 18:48 | Installed Claude Code and verified OpenWolf cron recovery | .wolf/cron-state.json, .wolf/daemon.log | installed Claude Code 2.1.81 via winget, verified `claude -p`, restarted daemon with updated PATH, and confirmed `cerebrum-reflection` succeeded | ~2200 tok |
+
+## Session: 2026-03-23 18:55
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:00 | Created portals/mcs/js/mcs-modal-shared.js | — | ~3486 |
+| 19:00 | Created portals/mcs/js/mcs-modal-create.js | — | ~2728 |
+| 19:01 | Created portals/mcs/js/mcs-modal-view.js | — | ~5331 |
+| 19:02 | Created portals/mcs/js/mcs-modal-edit.js | — | ~4964 |
+| 19:03 | Edited index.html | 1→4 lines | ~62 |
+| 19:03 | Edited CHANGELOG.md | 4→6 lines | ~94 |
+| 19:03 | Session end: 6 writes across 6 files (mcs-modal-shared.js, mcs-modal-create.js, mcs-modal-view.js, mcs-modal-edit.js, index.html) | 3 reads | ~56393 tok |
+| 19:04 | Session end: 6 writes across 6 files (mcs-modal-shared.js, mcs-modal-create.js, mcs-modal-view.js, mcs-modal-edit.js, index.html) | 3 reads | ~56393 tok |
+
+## Session: 2026-03-23 19:08
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:12 | Edited .mcp.json | 12→14 lines | ~83 |
+| 19:12 | Session end: 1 writes across 1 files (.mcp.json) | 2 reads | ~262 tok |
+
+## Session: 2026-03-23 19:27
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:29 | Edited portals/capacity/js/me-data.js | 8→9 lines | ~82 |
+| 19:29 | Session end: 1 writes across 1 files (me-data.js) | 3 reads | ~29566 tok |
+
+## Session: 2026-03-23 19:33
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:37 | Edited portals/capacity/js/me-data.js | modified if() | ~221 |
+| 19:37 | Edited CHANGELOG.md | 4→6 lines | ~86 |
+| 19:37 | Session end: 2 writes across 2 files (me-data.js, CHANGELOG.md) | 4 reads | ~29906 tok |
+
+## Session: 2026-03-23 19:40
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:47 | Edited portals/capacity/js/me-data.js | inline fix | ~28 |
+| 19:47 | Edited portals/capacity/js/me-data.js | modified function() | ~169 |
+| 19:47 | Edited portals/capacity/logistics/js/log-capacity.js | added 3 condition(s) | ~106 |
+| 19:47 | Edited portals/capacity/unit6/js/unit6-capacity.js | added 3 condition(s) | ~108 |
+| 19:47 | Edited CHANGELOG.md | 4→6 lines | ~116 |
+| 19:47 | Session end: 5 writes across 4 files (me-data.js, log-capacity.js, unit6-capacity.js, CHANGELOG.md) | 8 reads | ~38970 tok |
+
+## Session: 2026-03-23 20:03
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 20:55 | Edited CHANGELOG.md | 1→3 lines | ~123 |
+| 20:56 | Session end: 1 writes across 1 files (CHANGELOG.md) | 3 reads | ~28042 tok |
+| 21:00 | Edited tests/npi-data-relational.test.js | added 1 condition(s) | ~566 |
+| 21:01 | Edited CHANGELOG.md | 1→3 lines | ~81 |
+| 21:01 | Session end: 3 writes across 2 files (CHANGELOG.md, npi-data-relational.test.js) | 5 reads | ~30557 tok |
+
+## Session: 2026-03-23 21:08
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:10 | Created tests/me-data-relational-queries.test.js | — | ~3553 |
+| 21:11 | Edited tests/prod-capacity-data.test.js | expanded (+63 lines) | ~840 |
+| 21:11 | Created tests/work-areas-data.test.js | — | ~1643 |
+| 21:12 | Edited CHANGELOG.md | 1→3 lines | ~107 |
+| 21:12 | Session end: 4 writes across 4 files (me-data-relational-queries.test.js, prod-capacity-data.test.js, work-areas-data.test.js, CHANGELOG.md) | 2 reads | ~20755 tok |
+
+## Session: 2026-03-23 21:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:55 | Edited utils/js/guide.js | 2→2 lines | ~75 |
+| 21:56 | Edited utils/js/guide.js | expanded (+8 lines) | ~450 |
+| 21:56 | Edited utils/js/guide.js | inline fix | ~92 |
+| 21:56 | Edited utils/js/guide.js | 12→16 lines | ~440 |
+| 21:56 | Edited utils/js/guide.js | inline fix | ~119 |
+| 21:57 | Edited utils/js/guide.js | expanded (+70 lines) | ~1204 |
+| 21:57 | Edited CHANGELOG.md | 4→6 lines | ~115 |
+| 21:57 | Session end: 7 writes across 2 files (guide.js, CHANGELOG.md) | 4 reads | ~32397 tok |
+| 21:59 | Edited utils/js/guide.js | 18→22 lines | ~475 |
+| 22:00 | Edited CHANGELOG.md | inline fix | ~78 |
+| 22:00 | Session end: 9 writes across 2 files (guide.js, CHANGELOG.md) | 4 reads | ~34636 tok |
+
+## Session: 2026-03-23 22:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:18 | Edited index.html | 3→4 lines | ~95 |
+| 22:18 | Edited core/css/main.css | CSS: opacity, wiki-btn, opacity | ~228 |
+| 22:19 | Edited CHANGELOG.md | 6→8 lines | ~186 |
+| 22:20 | Session end: 3 writes across 3 files (index.html, main.css, CHANGELOG.md) | 4 reads | ~33599 tok |
+| 22:25 | Edited index.html | 2→1 lines | ~26 |
+| 22:25 | Edited index.html | inline fix | ~24 |
+| 22:25 | Edited CHANGELOG.md | 4→6 lines | ~82 |
+| 22:25 | Session end: 7 writes across 4 files (index.html, main.css, CHANGELOG.md, app.js) | 5 reads | ~35603 tok |
+
+## Session: 2026-03-24 06:00
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 06:01 | Created .nojekyll | — | ~0 |
+| 06:01 | Edited .claude/serve.ps1 | 2→3 lines | ~16 |
+| 06:02 | Edited CHANGELOG.md | 4→6 lines | ~89 |
+| 06:02 | Session end: 3 writes across 3 files (.nojekyll, serve.ps1, CHANGELOG.md) | 6 reads | ~27587 tok |
+| 06:03 | Session end: 3 writes across 3 files (.nojekyll, serve.ps1, CHANGELOG.md) | 6 reads | ~27587 tok |
+
+## Session: 2026-03-24 06:13
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 06:14 | Edited core/js/app.js | removed 21 lines | ~1 |
+| 06:15 | Edited CHANGELOG.md | 4→6 lines | ~104 |
+| 06:15 | Session end: 2 writes across 2 files (app.js, CHANGELOG.md) | 3 reads | ~27434 tok |
+
+## Session: 2026-03-24 09:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 09:19 | Edited CHANGELOG.md | 4→6 lines | ~91 |
+| 09:20 | Session end: 1 writes across 1 files (CHANGELOG.md) | 4 reads | ~97 tok |
+| 09:20 | Session end: 1 writes across 1 files (CHANGELOG.md) | 4 reads | ~97 tok |
+
+## Session: 2026-03-24 10:15
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:26 | Created ../../../.claude/plans/dapper-meandering-quilt.md | — | ~2165 |
+| 11:31 | Edited ../../../.claude/plans/dapper-meandering-quilt.md | 2→2 lines | ~61 |
+| 11:31 | Edited ../../../.claude/plans/dapper-meandering-quilt.md | 1→3 lines | ~212 |
+| 11:32 | Edited ../../../.claude/plans/dapper-meandering-quilt.md | 4→4 lines | ~265 |
+| 11:32 | Edited ../../../.claude/plans/dapper-meandering-quilt.md | 4→5 lines | ~190 |
+| 11:40 | Created ../../../.claude/projects/c--Users-Tidyco-Documents-VScode-Tidyco-apqp/memory/project_capacity_split.md | — | ~657 |
+| 11:40 | Edited ../../../.claude/projects/c--Users-Tidyco-Documents-VScode-Tidyco-apqp/memory/MEMORY.md | 1→2 lines | ~107 |
+| 11:44 | Created plans/capacity-department-split.md | — | ~2588 |
+| 11:44 | Session end: 8 writes across 4 files (dapper-meandering-quilt.md, project_capacity_split.md, MEMORY.md, capacity-department-split.md) | 45 reads | ~6691 tok |
+| 11:51 | Created plans/capacity-department-split.md | — | ~3975 |
+| 11:52 | Session end: 9 writes across 4 files (dapper-meandering-quilt.md, project_capacity_split.md, MEMORY.md, capacity-department-split.md) | 51 reads | ~13377 tok |
+
+## Session: 2026-03-24 11:52
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:01 | Created portals/capacity/project-management/js/pm-data-relational.js | — | ~3143 |
+| 12:02 | Created portals/capacity/logistics/js/log-data-relational.js | — | ~3166 |
+| 12:02 | Created portals/capacity/unit6/js/unit6-data-relational.js | — | ~3207 |
+| 12:04 | Created portals/capacity/project-management/js/pm-data.js | — | ~8203 |
+
+## Session: 2026-03-24 21:05
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:14 | Edited portals/capacity/js/me-data.js | added 8 condition(s) | ~664 |
+| 21:14 | Edited portals/capacity/js/me-products.js | modified meProductsCreateState() | ~73 |
+| 21:15 | Edited portals/capacity/js/me-products.js | added 14 condition(s) | ~849 |
+| 21:16 | Edited portals/capacity/js/me-products.js | added 1 condition(s) | ~1136 |
+| 21:16 | Edited portals/capacity/js/capacity-events.js | added 5 condition(s) | ~541 |
+| 21:17 | Edited utils/js/guide.js | 4→5 lines | ~320 |
+| 21:17 | Edited utils/js/guide.js | 1→2 lines | ~189 |
+| 21:17 | Edited utils/js/guide.js | 2→3 lines | ~188 |
+| 21:17 | Edited utils/js/guide.js | 2→3 lines | ~178 |
+| 21:17 | Edited CHANGELOG.md | 1→3 lines | ~134 |
+| 21:18 | Session end: 10 writes across 5 files (me-data.js, me-products.js, capacity-events.js, guide.js, CHANGELOG.md) | 7 reads | ~71022 tok |
+
+
+| 21:31 | Edited portals/capacity/js/me-data.js | added 1 condition(s) | ~77 |
+| 21:31 | Edited portals/capacity/js/me-data.js | added 1 condition(s) | ~126 |
+| 21:31 | Edited portals/capacity/js/me-products.js | added 1 condition(s) | ~90 |
+| 21:31 | Edited portals/capacity/js/me-products.js | 9→9 lines | ~591 |
+| 21:32 | Edited portals/capacity/js/capacity-events.js | added 1 condition(s) | ~130 |
+| 21:32 | Edited portals/capacity/js/capacity-events.js | added 1 condition(s) | ~132 |
+| 21:33 | Edited CHANGELOG.md | 4→6 lines | ~153 |
+| 21:33 | Session end: 7 writes across 4 files (me-data.js, me-products.js, capacity-events.js, CHANGELOG.md) | 5 reads | ~60731 tok |
+
+## Session: 2026-03-24 21:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 08:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 08:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 10:27
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 10:27
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|

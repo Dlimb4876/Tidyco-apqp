@@ -13,9 +13,21 @@ const SECTION_LABELS = {
   bom:     'Bill of Materials',
   timing:  'NPI Timing Plan',
   capacity: 'Capacity Management',
+  'capacity::production': 'Capacity - Production',
+  'capacity::me': 'Capacity - Manufacturing Engineering',
+  'capacity::projects': 'Capacity - Project Management',
+  'capacity::logistics': 'Capacity - Logistics',
+  'capacity::unit6': 'Capacity - Unit 6',
   operations: 'Operations Mission Control',
   production: 'Production Planning',
+  'production::scheduling': 'Production - Schedule',
+  'production::by-product': 'Production - Plan by Product',
+  'production::by-unit': 'Production - Plan by Work Area',
   'product-development': 'Product Development',
+  'product-development::npi': 'Product Development - NPI Projects',
+  'product-development::product-management': 'Product Development - Product Management',
+  'product-development::product-family-db': 'Product Development - Product Family Database',
+  'product-development::parts-database': 'Product Development - Parts Database',
   feedback: 'Feedback & Bugs',
   'action-centre': 'Action Centre',
   mcs: 'Manufacturing Change'
@@ -360,6 +372,10 @@ function render() {
 
   if (currentSection === 'projects') { mc.innerHTML = npi.dashboard.renderProjects(); return; }
   if (currentSection === 'product-development') {
+    if (productDevelopmentTab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('product-development', productDevelopmentTab)) {
+      mc.innerHTML = renderAccessDenied(`product-development::${productDevelopmentTab}`);
+      return;
+    }
     mc.innerHTML = `<div class="section-inner">${renderProductDevelopment()}</div>`;
     const pdContainer = mc.querySelector('#product-development-portal-container');
     if (pdContainer) {
@@ -376,6 +392,10 @@ function render() {
     return;
   }
   if (currentSection === 'production') {
+    if (productionTab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('production', productionTab)) {
+      mc.innerHTML = renderAccessDenied(`production::${productionTab}`);
+      return;
+    }
     mc.innerHTML = `<div class="section-inner">${renderProduction()}</div>`;
     return;
   }
@@ -402,6 +422,10 @@ function render() {
     return;
   }
   if (currentSection === 'capacity') {
+    if (capacityTab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('capacity', capacityTab)) {
+      mc.innerHTML = renderAccessDenied(`capacity::${capacityTab}`);
+      return;
+    }
     if (capacityTab === 'root') mc.innerHTML = renderCapacity();
     else if (capacityTab === 'me') mc.innerHTML = `<div class="section-inner">${renderMeCapacity()}</div>`;
     else if (capacityTab === 'production') mc.innerHTML = `<div class="section-inner">${renderProdCapacity()}</div>`;

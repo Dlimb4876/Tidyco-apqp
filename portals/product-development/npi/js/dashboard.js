@@ -35,6 +35,15 @@ npi.dashboard.setProjectsSearchFromInput = function (inputEl) {
     return
   }
 
+  if (typeof preserveInputCaretAfterRender === 'function') {
+    preserveInputCaretAfterRender(inputEl, function() {
+      npi.dashboard.setProjectsSearch(inputEl.value)
+    }, {
+      replacementSelector: '.npi-search-input[name="npi_projects_search"]'
+    })
+    return
+  }
+
   const selectionStart =
     typeof inputEl.selectionStart === 'number' ? inputEl.selectionStart : null
   const selectionEnd = typeof inputEl.selectionEnd === 'number' ? inputEl.selectionEnd : null

@@ -105,6 +105,33 @@ describe('ME monthly capacity calculations', () => {
     expect(result.npi).toBeCloseTo(expectedNpi, 6);
   });
 
+  test('excludes disabled tasks from demand calculations', () => {
+    const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
+    const tasks = [
+      {
+        id: 't1',
+        assigneeId: 'p1',
+        totalHours: 20,
+        category: 'npi',
+        startDate: '2026-01-05',
+        endDate: '2026-01-09',
+        isDisabled: false
+      },
+      {
+        id: 't2',
+        assigneeId: 'p1',
+        totalHours: 30,
+        category: 'npi',
+        startDate: '2026-01-05',
+        endDate: '2026-01-09',
+        isDisabled: true
+      }
+    ];
+
+    const result = meCalculateMonthData('2026-01', team, tasks, [], []);
+    expect(result.npi).toBeCloseTo(20, 6);
+  });
+
   test('calculates product support from overlapping batch count in month', () => {
     const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
     const products = [{
@@ -212,6 +239,31 @@ describe('ME monthly capacity calculations', () => {
 
     const result = meCalculateMonthData('2026-01', team, [], products, []);
     expect(result.support).toBeCloseTo(8, 6);
+  });
+
+  test('sums logistics kitting, booking in/out, and product movement values into support hours per batch', () => {
+    const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
+    const products = [{
+      id: 'log-prod-1',
+      productDatabaseId: 'db-prod-1',
+      department: 'LOG',
+      hoursPerWeek: 0,
+      kittingHours: 1.5,
+      bookingInOutHours: 0.25,
+      productMovementHours: 0.5
+    }];
+
+    global.prodState = {
+      batches: [
+        { product_id: 'db-prod-1', start_date: '2026-01-05', due_date: '2026-01-06' },
+        { product_id: 'db-prod-1', start_date: '2026-01-20', due_date: '2026-01-21' }
+      ]
+    };
+
+    global.meDataGetProductSupportRateForDate = undefined;
+
+    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    expect(result.support).toBeCloseTo(4.5, 6);
   });
 
   test('returns zero utilisation when person does not exist in team', () => {

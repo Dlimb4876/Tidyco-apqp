@@ -15,21 +15,232 @@ function capNum(v, fallback) {
   return Number.isFinite(n) ? n : fallback
 }
 
-// Determine ME vs PM context from data-cap-context ancestor
-function capIsPM(el) {
+function capContextType(el) {
   const ctx = el.closest('[data-cap-context]')
-  return ctx ? ctx.getAttribute('data-cap-context') === 'pm' : false
+  if (ctx) {
+    return (ctx.getAttribute('data-cap-context') || 'me').toLowerCase()
+  }
+
+  const dep = (window.meCurrentDepartmentContext || 'ME').toUpperCase()
+  if (dep === 'PM') return 'pm'
+  if (dep === 'LOG') return 'log'
+  if (dep === 'UNIT6') return 'unit6'
+  return 'me'
+}
+
+function capIsPM(contextType) {
+  return contextType === 'pm'
+}
+
+function capGetDataApi(contextType) {
+  if (contextType === 'pm') {
+    return {
+      addTeam: window.pmDataAddTeam,
+      updateTeam: window.pmDataUpdateTeam,
+      deleteTeam: window.pmDataDeleteTeam,
+      addTask: window.pmDataAddTask,
+      updateTask: window.pmDataUpdateTask,
+      deleteTask: window.pmDataDeleteTask,
+      updateProduct: window.pmDataUpdateProduct,
+      getProducts: window.pmDataGetProducts
+    }
+  }
+  if (contextType === 'log') {
+    return {
+      addTeam: window.logDataAddTeam,
+      updateTeam: window.logDataUpdateTeam,
+      deleteTeam: window.logDataDeleteTeam,
+      addTask: window.logDataAddTask,
+      updateTask: window.logDataUpdateTask,
+      deleteTask: window.logDataDeleteTask,
+      updateProduct: window.logDataUpdateProduct,
+      getProducts: window.logDataGetProducts
+    }
+  }
+  if (contextType === 'unit6') {
+    return {
+      addTeam: window.unit6DataAddTeam,
+      updateTeam: window.unit6DataUpdateTeam,
+      deleteTeam: window.unit6DataDeleteTeam,
+      addTask: window.unit6DataAddTask,
+      updateTask: window.unit6DataUpdateTask,
+      deleteTask: window.unit6DataDeleteTask,
+      updateProduct: window.unit6DataUpdateProduct,
+      getProducts: window.unit6DataGetProducts
+    }
+  }
+  return {
+    addTeam: window.meDataAddTeam,
+    updateTeam: window.meDataUpdateTeam,
+    deleteTeam: window.meDataDeleteTeam,
+    addTask: window.meDataAddTask,
+    updateTask: window.meDataUpdateTask,
+    deleteTask: window.meDataDeleteTask,
+    updateProduct: window.meDataUpdateProduct,
+    getProducts: window.meDataGetProducts
+  }
+}
+
+function capRunSave(contextType) {
+  if (contextType === 'pm' && typeof window.pmOnSave === 'function') return window.pmOnSave()
+  if (contextType === 'log' && typeof window.logOnSave === 'function') return window.logOnSave()
+  if (contextType === 'unit6' && typeof window.unit6OnSave === 'function') return window.unit6OnSave()
+  if (typeof window.meOnSave === 'function') return window.meOnSave()
+  return null
+}
+
+function capRunDebouncedSave(contextType) {
+  if (contextType === 'pm' && typeof window.pmDebouncedSave === 'function') return window.pmDebouncedSave()
+  if (contextType === 'log' && typeof window.logDebouncedSave === 'function') return window.logDebouncedSave()
+  if (contextType === 'unit6' && typeof window.unit6DebouncedSave === 'function') return window.unit6DebouncedSave()
+  if (typeof window.meDebouncedSave === 'function') return window.meDebouncedSave()
+  return null
+}
+
+function capSetTab(contextType, tabName) {
+  if (contextType === 'pm' && typeof window.pmSetTab === 'function') return window.pmSetTab(tabName)
+  if (contextType === 'log' && typeof window.logSetTab === 'function') return window.logSetTab(tabName)
+  if (contextType === 'unit6' && typeof window.unit6SetTab === 'function') return window.unit6SetTab(tabName)
+  if (typeof window.meSetTab === 'function') return window.meSetTab(tabName)
+  return null
+}
+
+function capRefreshCurrentTab(contextType) {
+  if (contextType === 'pm' && typeof window.pmRefreshCurrentTab === 'function') return window.pmRefreshCurrentTab()
+  if (contextType === 'log' && typeof window.logRefreshCurrentTab === 'function') return window.logRefreshCurrentTab()
+  if (contextType === 'unit6' && typeof window.unit6RefreshCurrentTab === 'function') return window.unit6RefreshCurrentTab()
+  if (typeof window.meRefreshCurrentTab === 'function') return window.meRefreshCurrentTab()
+  return null
+}
+
+function capToggleTaskSort(column, contextType) {
+  const sortState = capIsPM(contextType) ? window.pmTasksSort : window.meTasksSort
+  if (!sortState) return
+  if (sortState.column === column) {
+    sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortState.column = column
+    sortState.direction = 'asc'
+  }
 }
 
 // Return the task-filters state object for the current ME or PM context.
-function capTaskFilters(isPM) {
-  return isPM ? window.pmTasksFilters : window.meTasksFilters
+function capTaskFilters(contextType) {
+  return capIsPM(contextType) ? window.pmTasksFilters : window.meTasksFilters
+}
+
+function capProductDraftDepartment(contextType) {
+  if (contextType === 'pm') return 'PM'
+  if (contextType === 'log') return 'LOG'
+  if (contextType === 'unit6') return 'UNIT6'
+  return 'ME'
+}
+
+function capSetProductDraft(row, contextType, patch) {
+  if (!row || typeof window.meProductsSetDraftValue !== 'function') return null
+  const idx = capNum(row.getAttribute('data-product-idx'), -1)
+  if (idx < 0) return null
+  const productDbId = row.getAttribute('data-product-db-id') || ''
+
+  if (productDbId) {
+    return window.meProductsSetDraftValue(
+      capProductDraftDepartment(contextType),
+      row.getAttribute('data-product-id') || '',
+      idx,
+      patch || {},
+      productDbId
+    )
+  }
+
+  return window.meProductsSetDraftValue(
+    capProductDraftDepartment(contextType),
+    row.getAttribute('data-product-id') || '',
+    idx,
+    patch || {}
+  )
+}
+
+function capHandleProductDraftChange(el, contextType) {
+  const row = el.closest('[data-product-idx]')
+  if (!row) return
+
+  const field = el.getAttribute('data-field')
+  if (!field) return
+
+  if (field === 'kittingHours' || field === 'bookingInOutHours' || field === 'productMovementHours') {
+    const kittingEl = row.querySelector('input[data-field="kittingHours"]')
+    const bookingInOutEl = row.querySelector('input[data-field="bookingInOutHours"]')
+    const movementEl = row.querySelector('input[data-field="productMovementHours"]')
+    const hoursEl = row.querySelector('input[data-field="hoursPerWeek"]')
+    const kittingRaw = kittingEl ? kittingEl.value : ''
+    const bookingInOutRaw = bookingInOutEl ? bookingInOutEl.value : ''
+    const movementRaw = movementEl ? movementEl.value : ''
+    const kittingValue = Number(kittingRaw)
+    const bookingInOutValue = Number(bookingInOutRaw)
+    const movementValue = Number(movementRaw)
+    const total = Math.max(0, Number.isFinite(kittingValue) ? kittingValue : 0) +
+      Math.max(0, Number.isFinite(bookingInOutValue) ? bookingInOutValue : 0) +
+      Math.max(0, Number.isFinite(movementValue) ? movementValue : 0)
+
+    if (hoursEl) hoursEl.value = String(total)
+
+    capSetProductDraft(row, contextType, {
+      kittingHours: kittingRaw,
+      bookingInOutHours: bookingInOutRaw,
+      productMovementHours: movementRaw,
+      hoursPerWeek: String(total)
+    })
+    return
+  }
+
+  capSetProductDraft(row, contextType, {
+    [field]: el.value
+  })
 }
 
 // Re-render the tasks tab for the current ME or PM context.
-function capTaskRefresh(isPM) {
-  if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-  else meSetTab('tasks')
+function capTaskRefresh(contextType) {
+  capSetTab(contextType, 'tasks')
+}
+
+function capPreserveSearchContinuity(inputEl, replacementSelector, rerenderFn) {
+  const contextRoot = inputEl && typeof inputEl.closest === 'function'
+    ? inputEl.closest('[data-cap-context]')
+    : null
+  const contextType = contextRoot ? contextRoot.getAttribute('data-cap-context') : ''
+
+  if (typeof preserveInputCaretAfterRender === 'function') {
+    preserveInputCaretAfterRender(inputEl, rerenderFn, {
+      replacementSelector,
+      scopeResolver: function() {
+        return contextType
+          ? document.querySelector('[data-cap-context="' + contextType + '"]')
+          : document
+      }
+    })
+    return
+  }
+
+  const caretStart = inputEl && typeof inputEl.selectionStart === 'number' ? inputEl.selectionStart : null
+  const caretEnd = inputEl && typeof inputEl.selectionEnd === 'number' ? inputEl.selectionEnd : caretStart
+  rerenderFn()
+  setTimeout(function() {
+    const scope = contextType
+      ? document.querySelector('[data-cap-context="' + contextType + '"]')
+      : document
+    const replacement = scope && typeof scope.querySelector === 'function'
+      ? scope.querySelector(replacementSelector)
+      : null
+    if (!replacement) return
+
+    replacement.focus()
+    if (caretStart !== null && typeof replacement.setSelectionRange === 'function') {
+      const len = (replacement.value || '').length
+      const start = Math.min(caretStart, len)
+      const end = Math.min(caretEnd === null ? start : caretEnd, len)
+      replacement.setSelectionRange(start, end)
+    }
+  }, 0)
 }
 
 window.capacityEvents = {}
@@ -62,7 +273,8 @@ window.capacityEvents._onClick = function(evt) {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
-  const isPM = capIsPM(el)
+  const contextType = capContextType(el)
+  const isPM = capIsPM(contextType)
 
   switch (action) {
   // ── Navigation ─────────────────────────────────────────────
@@ -85,82 +297,110 @@ window.capacityEvents._onClick = function(evt) {
     const row = el.closest('[data-member-idx]')
     const idx = capNum(row?.getAttribute('data-member-idx'), -1)
     if (idx < 0) break
-    if (confirm('Delete team member?')) { meDataDeleteTeam(idx); meOnSave(); meSetTab('team') }
+    const api = capGetDataApi(contextType)
+    if (confirm('Delete team member?')) {
+      if (typeof api.deleteTeam === 'function') api.deleteTeam(idx)
+      capRunSave(contextType)
+      capSetTab(contextType, 'team')
+    }
     break
   }
   case 'cap-team-add': {
-    const label = isPM ? 'New PM Manager' : 'New Engineer'
-    meDataAddTeam(label, ME_DEFAULT_HOURS_PER_WEEK, 80); meOnSave(); meSetTab('team')
+    const department = (window.meCurrentDepartmentContext || 'ME').toUpperCase()
+    const label = isPM
+      ? 'New PM Manager'
+      : department === 'LOG'
+        ? 'New Logistics Technician'
+        : department === 'UNIT6'
+          ? 'New Technician'
+          : 'New Engineer'
+    const api = capGetDataApi(contextType)
+    if (typeof api.addTeam === 'function') {
+      api.addTeam(label, ME_DEFAULT_HOURS_PER_WEEK, 80)
+      capRunSave(contextType)
+      capSetTab(contextType, 'team')
+    }
     break
   }
-  case 'cap-team-holidays': meSetTab('holidays'); break
+  case 'cap-team-holidays': capSetTab(contextType, 'holidays'); break
 
   // ── ME Tasks ──────────────────────────────────────────────
   case 'cap-task-del': {
     const idx = capNum(el.closest('[data-task-idx]')?.getAttribute('data-task-idx'), -1)
     if (idx < 0) break
+    const api = capGetDataApi(contextType)
     if (confirm('Delete task?')) {
-      meDataDeleteTask(idx); meOnSave()
-      capTaskRefresh(isPM)
+      if (typeof api.deleteTask === 'function') api.deleteTask(idx)
+      capRunSave(contextType)
+      capTaskRefresh(contextType)
     }
     break
   }
-  case 'cap-task-add': if (typeof meAddDefaultTask === 'function') meAddDefaultTask(); break
+  case 'cap-task-add': {
+    const api = capGetDataApi(contextType)
+    if (typeof api.addTask === 'function') {
+      api.addTask('New Task', 'NPI', '', '', '', 0, '')
+      capRunSave(contextType)
+      capSetTab(contextType, 'tasks')
+    }
+    break
+  }
   case 'cap-task-sort': {
     const key = el.getAttribute('data-sort-key')
-    if (typeof meTasksSortBy === 'function') meTasksSortBy(key, isPM)
+    capToggleTaskSort(key, contextType)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-search': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.search = ''
     const inp = document.querySelector('.me-filter-input')
     if (inp) inp.value = ''
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-category': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.category = 'all'
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-assignee': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.assignee = 'all'
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-product': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.product = 'all'
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-month': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.month = 'all'
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-toggle-hide-completed': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
     if (f) {
       f.hideCompleted = !f.hideCompleted
       localStorage.setItem(storageKey, f.hideCompleted)
     }
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-all-filters': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
     const hideVal = f ? f.hideCompleted : false
     if (f) {
       Object.assign(f, { search: '', category: 'all', assignee: 'all', product: 'all', month: 'all', hideCompleted: hideVal })
     }
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
 
@@ -171,11 +411,28 @@ window.capacityEvents._onClick = function(evt) {
     if (idx < 0) break
 
     const hoursEl = row?.querySelector('input[data-field="hoursPerWeek"]')
+    const kittingEl = row?.querySelector('input[data-field="kittingHours"]')
+    const bookingInOutEl = row?.querySelector('input[data-field="bookingInOutHours"]')
+    const movementEl = row?.querySelector('input[data-field="productMovementHours"]')
     const effectiveDateEl = row?.querySelector('input[data-field="supportEffectiveDate"]')
     const reasonEl = row?.querySelector('input[data-field="supportChangeReason"]')
-    const hoursValue = hoursEl ? Number(hoursEl.value) : NaN
+    const hasSplitFields = !!kittingEl || !!bookingInOutEl || !!movementEl
+    const kittingValue = kittingEl ? Number(kittingEl.value) : 0
+    const bookingInOutValue = bookingInOutEl ? Number(bookingInOutEl.value) : 0
+    const movementValue = movementEl ? Number(movementEl.value) : 0
+    const hoursValue = hasSplitFields
+      ? ((Number.isFinite(kittingValue) ? kittingValue : NaN) + (Number.isFinite(bookingInOutValue) ? bookingInOutValue : NaN) + (Number.isFinite(movementValue) ? movementValue : NaN))
+      : (hoursEl ? Number(hoursEl.value) : NaN)
     const effectiveDate = (effectiveDateEl?.value || '').trim()
     const changeReason = (reasonEl?.value || '').trim()
+
+    if (hasSplitFields && (!Number.isFinite(kittingValue) || kittingValue < 0 || !Number.isFinite(bookingInOutValue) || bookingInOutValue < 0 || !Number.isFinite(movementValue) || movementValue < 0)) {
+      alert('Enter valid non-negative values for Kitting, Booking In/Out, and Product Movement before applying.')
+      if (kittingEl && (!Number.isFinite(kittingValue) || kittingValue < 0)) kittingEl.focus()
+      else if (bookingInOutEl && (!Number.isFinite(bookingInOutValue) || bookingInOutValue < 0)) bookingInOutEl.focus()
+      else if (movementEl) movementEl.focus()
+      break
+    }
 
     if (!Number.isFinite(hoursValue) || hoursValue < 0) {
       alert('Enter a valid Hours/Batch value before applying.')
@@ -195,7 +452,8 @@ window.capacityEvents._onClick = function(evt) {
       break
     }
 
-    const products = typeof meDataGetProducts === 'function' ? meDataGetProducts() : []
+    const api = capGetDataApi(contextType)
+    const products = typeof api.getProducts === 'function' ? api.getProducts() : []
     const product = products[idx]
     const currentEffectiveDate = (product && product.supportEffectiveDate) ? String(product.supportEffectiveDate) : ''
 
@@ -204,13 +462,36 @@ window.capacityEvents._onClick = function(evt) {
       if (!confirmBackdate) break
     }
 
-    meDataUpdateProduct(idx, 'hoursPerWeek', String(hoursValue), {
-      effectiveDate,
-      changeReason
-    })
+    if (typeof api.updateProduct === 'function') {
+      api.updateProduct(idx, 'hoursPerWeek', String(hoursValue), {
+        effectiveDate,
+        changeReason,
+        kittingHours: hasSplitFields ? kittingValue : undefined,
+        bookingInOutHours: hasSplitFields ? bookingInOutValue : undefined,
+        productMovementHours: hasSplitFields ? movementValue : undefined
+      })
+    }
 
-    if (typeof meRefreshCurrentTab === 'function') meRefreshCurrentTab()
-    meDebouncedSave()
+    if (typeof window.meProductsClearDraft === 'function') {
+      const productDbId = row?.getAttribute('data-product-db-id') || ''
+      if (productDbId) {
+        window.meProductsClearDraft(
+          capProductDraftDepartment(contextType),
+          row?.getAttribute('data-product-id') || '',
+          idx,
+          productDbId
+        )
+      } else {
+        window.meProductsClearDraft(
+          capProductDraftDepartment(contextType),
+          row?.getAttribute('data-product-id') || '',
+          idx
+        )
+      }
+    }
+
+    capRefreshCurrentTab(contextType)
+    capRunDebouncedSave(contextType)
     break
   }
   case 'cap-products-toggle-history': {
@@ -219,8 +500,80 @@ window.capacityEvents._onClick = function(evt) {
     }
     break
   }
+  case 'cap-products-edit-history': {
+    const historyId = el.getAttribute('data-history-id')
+    const dept = el.getAttribute('data-dept') || 'ME'
+    if (!historyId) break
+    const isLogContext = dept === 'LOG'
+    const entrySnapshot = {
+      effectiveDate: el.getAttribute('data-effective-date') || '',
+      hoursPerWeek: parseFloat(el.getAttribute('data-hours') || '0'),
+      changeReason: el.getAttribute('data-reason') || ''
+    }
+    if (isLogContext) {
+      entrySnapshot.kittingHours = parseFloat(el.getAttribute('data-kitting') || '0')
+      entrySnapshot.bookingInOutHours = parseFloat(el.getAttribute('data-booking') || '0')
+      entrySnapshot.productMovementHours = parseFloat(el.getAttribute('data-movement') || '0')
+    }
+    if (typeof window.meProductsStartHistoryEdit === 'function') {
+      window.meProductsStartHistoryEdit(historyId, entrySnapshot, dept)
+    }
+    break
+  }
+  case 'cap-products-save-history-edit': {
+    const historyId = el.getAttribute('data-history-id')
+    const dept = el.getAttribute('data-dept') || 'ME'
+    if (!historyId) break
+    const editRow = el.closest('tr[data-history-edit-row]')
+    if (typeof window.meProductsSaveHistoryEdit === 'function') {
+      window.meProductsSaveHistoryEdit(historyId, dept, editRow)
+    }
+    break
+  }
+  case 'cap-products-cancel-history-edit': {
+    const dept = el.getAttribute('data-dept') || 'ME'
+    if (typeof window.meProductsCancelHistoryEdit === 'function') {
+      window.meProductsCancelHistoryEdit(dept)
+    }
+    break
+  }
+  case 'cap-products-delete-history': {
+    const historyId = el.getAttribute('data-history-id')
+    const dept = (el.getAttribute('data-dept') || '').toUpperCase()
+    const deleteContextType = dept === 'PM' ? 'pm' : dept === 'LOG' ? 'log' : dept === 'UNIT6' ? 'unit6' : contextType
+    if (!historyId) break
+    if (!confirm('Delete this support history entry? This cannot be undone.')) break
+    const deleteFn = deleteContextType === 'pm'
+      ? window.pmDataDeleteProductSupportHistoryEntry
+      : deleteContextType === 'log'
+        ? window.logDataDeleteProductSupportHistoryEntry
+        : deleteContextType === 'unit6'
+          ? window.unit6DataDeleteProductSupportHistoryEntry
+          : window.meDataDeleteProductSupportHistoryEntry
+    if (typeof deleteFn === 'function') {
+      deleteFn(historyId)
+    }
+    capRefreshCurrentTab(deleteContextType)
+    capRunDebouncedSave(deleteContextType)
+    break
+  }
+  case 'cap-products-sort-column': {
+    const key = el.getAttribute('data-sort-key')
+    const dept = el.getAttribute('data-dept') || capProductDraftDepartment(contextType)
+    if (typeof window.meProductsSortByColumn === 'function') {
+      window.meProductsSortByColumn(key, dept)
+    }
+    break
+  }
   case 'cap-products-sort-dir': if (typeof meProductsToggleSortDir === 'function') meProductsToggleSortDir(el.getAttribute('data-dept')); break
   case 'cap-products-clear-filters': if (typeof meProductsClearFilters === 'function') meProductsClearFilters(el.getAttribute('data-dept')); break
+  case 'cap-products-bulk-save': {
+    const department = el.getAttribute('data-dept') || 'ME'
+    if (typeof window.meProductsBulkSaveChanges === 'function') {
+      window.meProductsBulkSaveChanges(department)
+    }
+    break
+  }
 
   // ── ME Product Taskload ───────────────────────────────────
   case 'cap-product-load-sort-dir': if (typeof meProductLoadToggleSortDir === 'function') meProductLoadToggleSortDir(el.getAttribute('data-dept')); break
@@ -229,6 +582,14 @@ window.capacityEvents._onClick = function(evt) {
   // ── PM Capacity ───────────────────────────────────────────
   case 'cap-pm-set-tab': if (typeof pmSetTab === 'function') pmSetTab(el.getAttribute('data-tab')); break
   case 'cap-pm-back': setCapacityTab('root'); break
+
+  // ── Logistics Capacity ────────────────────────────────────
+  case 'cap-log-set-tab': if (typeof logSetTab === 'function') logSetTab(el.getAttribute('data-tab')); break
+  case 'cap-log-back': setCapacityTab('root'); break
+
+  // ── Unit 6 Capacity ───────────────────────────────────────
+  case 'cap-unit6-set-tab': if (typeof unit6SetTab === 'function') unit6SetTab(el.getAttribute('data-tab')); break
+  case 'cap-unit6-back': setCapacityTab('root'); break
 
   // ── Production Capacity ───────────────────────────────────
   case 'cap-prod-set-tab': if (typeof setProdCapTab === 'function') setProdCapTab(el.getAttribute('data-tab')); break
@@ -263,7 +624,8 @@ window.capacityEvents._onChange = function(evt) {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
-  const isPM = capIsPM(el)
+  const contextType = capContextType(el)
+  const isPM = capIsPM(contextType)
 
   switch (action) {
   // ── ME month change ────────────────────────────────────────
@@ -275,8 +637,9 @@ window.capacityEvents._onChange = function(evt) {
     const idx = capNum(row?.getAttribute('data-member-idx'), -1)
     if (idx < 0) break
     const field = el.getAttribute('data-field')
-    meDataUpdateTeam(idx, field, el.value)
-    meDebouncedSave()
+    const api = capGetDataApi(contextType)
+    if (typeof api.updateTeam === 'function') api.updateTeam(idx, field, el.value)
+    capRunDebouncedSave(contextType)
     break
   }
 
@@ -286,60 +649,97 @@ window.capacityEvents._onChange = function(evt) {
     const idx = capNum(row?.getAttribute('data-task-idx'), -1)
     if (idx < 0) break
     const field = el.getAttribute('data-field')
-    meDataUpdateTask(idx, field, el.value)
-    if (isPM && typeof pmDebouncedSave === 'function') pmDebouncedSave()
-    else meDebouncedSave()
+    const api = capGetDataApi(contextType)
+    if (typeof api.updateTask === 'function') api.updateTask(idx, field, el.value)
+    capRunDebouncedSave(contextType)
     break
   }
   case 'cap-task-status-upd': {
     const row = el.closest('[data-task-idx]')
     const idx = capNum(row?.getAttribute('data-task-idx'), -1)
     if (idx < 0) break
-    meDataUpdateTask(idx, 'status', el.value)
-    if (isPM && typeof pmDebouncedSave === 'function') pmDebouncedSave()
-    else meDebouncedSave()
+    const api = capGetDataApi(contextType)
+    if (typeof api.updateTask === 'function') api.updateTask(idx, 'status', el.value)
+    capRunDebouncedSave(contextType)
     // Do NOT immediately call meSetTab/pmSetTab — the debounce and blur handler
     // will re-render at the right time, preserving focus.
     break
   }
+  case 'cap-task-toggle-disabled': {
+    const row = el.closest('[data-task-idx]')
+    const idx = capNum(row?.getAttribute('data-task-idx'), -1)
+    if (idx < 0) break
+    const api = capGetDataApi(contextType)
+    if (typeof api.updateTask === 'function') api.updateTask(idx, 'isDisabled', !!el.checked)
+    capRunDebouncedSave(contextType)
+    capTaskRefresh(contextType)
+    break
+  }
   case 'cap-task-filter-category': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.category = el.value
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-assignee': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.assignee = el.value
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-product': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.product = el.value
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-month': {
-    const f = capTaskFilters(isPM)
+    const f = capTaskFilters(contextType)
     if (f) f.month = el.value
-    capTaskRefresh(isPM)
+    capTaskRefresh(contextType)
     break
   }
 
   // ── ME Products update ────────────────────────────────────
+  case 'cap-products-draft': {
+    capHandleProductDraftChange(el, contextType)
+    break
+  }
+  case 'cap-products-history-edit-field': {
+    const field = el.getAttribute('data-history-edit-field')
+    const dept = el.getAttribute('data-dept') || 'ME'
+    if (field && typeof window.meProductsUpdateHistoryEditDraft === 'function') {
+      window.meProductsUpdateHistoryEditDraft(dept, field, el.value)
+    }
+    break
+  }
   case 'cap-products-upd': {
     const row = el.closest('[data-product-idx]')
     const idx = capNum(row?.getAttribute('data-product-idx'), -1)
     if (idx < 0) break
     const field = el.getAttribute('data-field')
+    if (field === 'kittingHours' || field === 'bookingInOutHours' || field === 'productMovementHours') {
+      const hoursEl = row?.querySelector('input[data-field="hoursPerWeek"]')
+      const kittingEl = row?.querySelector('input[data-field="kittingHours"]')
+      const bookingInOutEl = row?.querySelector('input[data-field="bookingInOutHours"]')
+      const movementEl = row?.querySelector('input[data-field="productMovementHours"]')
+      const kittingValue = kittingEl ? Number(kittingEl.value) : 0
+      const bookingInOutValue = bookingInOutEl ? Number(bookingInOutEl.value) : 0
+      const movementValue = movementEl ? Number(movementEl.value) : 0
+      if (hoursEl) {
+        const total = Math.max(0, Number.isFinite(kittingValue) ? kittingValue : 0) + Math.max(0, Number.isFinite(bookingInOutValue) ? bookingInOutValue : 0) + Math.max(0, Number.isFinite(movementValue) ? movementValue : 0)
+        hoursEl.value = String(total)
+      }
+      break
+    }
     if (field === 'hoursPerWeek' || field === 'supportEffectiveDate') {
       // Intent-based flow: dated support changes are only persisted via cap-products-apply-hours.
       break
     }
 
-    meDataUpdateProduct(idx, field, el.value)
-    meDebouncedSave()
+    const api = capGetDataApi(contextType)
+    if (typeof api.updateProduct === 'function') api.updateProduct(idx, field, el.value)
+    capRunDebouncedSave(contextType)
     break
   }
   case 'cap-products-family-filter': {
@@ -395,48 +795,42 @@ window.capacityEvents._onInput = function(evt) {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
-  const isPM = capIsPM(el)
-  const contextRoot = el.closest('[data-cap-context]')
+  const contextType = capContextType(el)
+  const isPM = capIsPM(contextType)
 
   switch (action) {
   case 'cap-task-search': {
-    const filterStateVar = isPM ? window.pmTasksFilters : window.meTasksFilters
-    const caretStart = typeof el.selectionStart === 'number' ? el.selectionStart : null
-    const caretEnd = typeof el.selectionEnd === 'number' ? el.selectionEnd : caretStart
-    const contextType = contextRoot ? contextRoot.getAttribute('data-cap-context') : ''
-
-    if (filterStateVar) filterStateVar.search = el.value
-    if (isPM && typeof pmSetTab === 'function') pmSetTab('tasks')
-    else meSetTab('tasks')
-
-    // Keep typing uninterrupted when the tasks tab is re-rendered.
-    setTimeout(function() {
-      const scope = contextType
-        ? document.querySelector('[data-cap-context="' + contextType + '"]')
-        : document
-      const replacement = scope && typeof scope.querySelector === 'function'
-        ? scope.querySelector('[data-cap-action="cap-task-search"]')
-        : null
-      if (!replacement) return
-
-      replacement.focus()
-      if (caretStart !== null && typeof replacement.setSelectionRange === 'function') {
-        const len = (replacement.value || '').length
-        const start = Math.min(caretStart, len)
-        const end = Math.min(caretEnd === null ? start : caretEnd, len)
-        replacement.setSelectionRange(start, end)
-      }
-    }, 0)
+    const filterStateVar = capTaskFilters(contextType)
+    capPreserveSearchContinuity(el, '[data-cap-action="cap-task-search"]', function() {
+      if (filterStateVar) filterStateVar.search = el.value
+      capTaskRefresh(contextType)
+    })
     break
   }
   case 'cap-products-search': {
     const dept = el.getAttribute('data-dept')
-    if (typeof meProductsSetSearch === 'function') meProductsSetSearch(el.value, dept)
+    capPreserveSearchContinuity(el, '[data-cap-action="cap-products-search"]', function() {
+      if (typeof meProductsSetSearch === 'function') meProductsSetSearch(el.value, dept)
+    })
+    break
+  }
+  case 'cap-products-draft': {
+    capHandleProductDraftChange(el, contextType)
+    break
+  }
+  case 'cap-products-history-edit-field': {
+    const field = el.getAttribute('data-history-edit-field')
+    const dept = el.getAttribute('data-dept') || 'ME'
+    if (field && typeof window.meProductsUpdateHistoryEditDraft === 'function') {
+      window.meProductsUpdateHistoryEditDraft(dept, field, el.value)
+    }
     break
   }
   case 'cap-product-load-search': {
     const dept = el.getAttribute('data-dept')
-    if (typeof meProductLoadSetSearch === 'function') meProductLoadSetSearch(el.value, dept)
+    capPreserveSearchContinuity(el, '[data-cap-action="cap-product-load-search"]', function() {
+      if (typeof meProductLoadSetSearch === 'function') meProductLoadSetSearch(el.value, dept)
+    })
     break
   }
   default: break
@@ -477,6 +871,7 @@ window.capacityEvents._onFocusOut = function(evt) {
   // No pending re-renders to flush across any capacity portal
   if (!window.mePendingRealTimeUpdate && !window.mePendingRerender &&
       !window.pmPendingRealTimeUpdate && !window.pmPendingRerender &&
+      !window.logPendingRerender && !window.unit6PendingRerender &&
       !window.prodCapPendingRealTimeUpdate) return
 
   // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
@@ -503,6 +898,20 @@ window.capacityEvents._onFocusOut = function(evt) {
         return
       }
       if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab()
+      return
+    }
+
+    // ── Logistics Capacity flush ───────────────────────────
+    if (window.logPendingRerender) {
+      window.logPendingRerender = false
+      if (typeof logRefreshCurrentTab === 'function') logRefreshCurrentTab()
+      return
+    }
+
+    // ── Unit 6 Capacity flush ──────────────────────────────
+    if (window.unit6PendingRerender) {
+      window.unit6PendingRerender = false
+      if (typeof unit6RefreshCurrentTab === 'function') unit6RefreshCurrentTab()
       return
     }
 

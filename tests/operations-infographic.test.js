@@ -51,6 +51,7 @@ describe('operations infographic', () => {
       gate: { percentage: 92 },
       me: { utilisation: 75, ready: true, demand: 120, capacity: 160, headroom: 40 },
       pm: { utilisation: 83, ready: true, demand: 100, capacity: 120, headroom: 20 },
+      log: { utilisation: 70, ready: true, demand: 80, capacity: 115, headroom: 35 },
       operationsUnits: [
         { workArea: 'Unit 2', utilisation: 70, ready: true, demand: 70, capacity: 100, headroom: 30 },
       ],
@@ -78,6 +79,7 @@ describe('operations infographic', () => {
       gate: { percentage: 50 },
       me: { utilisation: 99, ready: true, demand: 99, capacity: 100, headroom: 1 },
       pm: { utilisation: 99, ready: true, demand: 99, capacity: 100, headroom: 1 },
+      log: { utilisation: 99, ready: true, demand: 99, capacity: 100, headroom: 1 },
       operationsUnits: [],
       production: { total: 1, active: 1, completed: 0, completionRate: 0 },
     }));

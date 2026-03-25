@@ -172,6 +172,7 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
 
   tasksArray.forEach(task => {
+    if (task && task.isDisabled === true) return;
     if (!task.startDate || !task.endDate) return;
 
     const taskStart = new Date(task.startDate);
@@ -202,7 +203,12 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   // Product support from production schedule batches (support value is per batch).
   // Effective-dated history is resolved per overlapping batch.
   productsArray.forEach(product => {
-    const fallbackSupportPerBatch = Number(product.hoursPerWeek) || 0;
+    const rawKitting = Number(product && (product.kittingHours ?? product.kitting_hours ?? product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawBookingInOut = Number(product && (product.bookingInOutHours ?? product.booking_in_out_hours));
+    const rawMovement = Number(product && (product.productMovementHours ?? product.product_movement_hours));
+    const fallbackSupportPerBatch = (Number.isFinite(rawKitting) || Number.isFinite(rawBookingInOut) || Number.isFinite(rawMovement))
+      ? Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0) + Math.max(0, Number.isFinite(rawBookingInOut) ? rawBookingInOut : 0) + Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0)
+      : (Number(product.hoursPerWeek) || 0);
     const overlappingBatches = window.meGetProductBatchesInRange(product, monthStart, monthEnd);
     overlappingBatches.forEach(batch => {
       const supportPerBatch = window.meGetProductSupportHoursForBatch(
@@ -230,8 +236,9 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
 };
 
 // ── Week Utilisation Calculation (Per-Person) ────────────────
-window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray, holidaysArray) {
-  const person = meDataGetTeam().find(p => p.id === personId);
+window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray, holidaysArray, teamArray) {
+  const useTeam = teamArray || meDataGetTeam();
+  const person = useTeam.find(p => p.id === personId);
   if (!person || !person.startDate) return { capacity: 0, demand: 0, utilisation: 0 };
 
   const weekStart_d = new Date(weekStart);
@@ -278,6 +285,7 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
   // Demand: network days proration (NETWORKDAYS equivalent)
   let demand = 0;
   tasksArray.forEach(task => {
+    if (task && task.isDisabled === true) return;
     if (!task.startDate || !task.endDate) return;
 
     const taskStart = new Date(task.startDate);

@@ -37,7 +37,7 @@ describe('NPI relational project UUID resolution', () => {
     eval(script)
   })
 
-  test('uses project dbId for document saves', async () => {
+  test('uses project prog_id (not dbId) for document saves', async () => {
     const item = { id: '33333333-3333-4333-8333-333333333333', docNumber: 'DWG-001' }
 
     await npiRelSaveDoc(item)
@@ -47,18 +47,18 @@ describe('NPI relational project UUID resolution', () => {
     const upsert = global.supa.from('npi_documents').upsert
     expect(upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        project_id: '11111111-1111-4111-8111-111111111111'
+        project_id: 'p_local_1'
       }),
       { onConflict: 'id' }
     )
   })
 
-  test('resolves missing dbId from projects table by prog_id', async () => {
-    global.db.projects[0].dbId = null
+  test('resolves missing prog_id from projects table when not in cache', async () => {
+    global.db.projects[0].id = null
 
     const upsert = jest.fn().mockResolvedValue({ error: null })
     const limit = jest.fn().mockResolvedValue({
-      data: [{ id: '44444444-4444-4444-8444-444444444444', prog_id: 'p_local_1' }],
+      data: [{ id: '44444444-4444-4444-8444-444444444444', prog_id: 'p_resolved_prog_id' }],
       error: null
     })
     const eq = jest.fn(() => ({ limit }))
@@ -81,7 +81,16 @@ describe('NPI relational project UUID resolution', () => {
 
     await npiRelSaveDoc({ id: '33333333-3333-4333-8333-333333333333' })
 
-    expect(global.db.projects[0].dbId).toBe('44444444-4444-4444-8444-444444444444')
+    expect(global.supa.from('projects').select).toHaveBeenCalledWith('id, prog_id')
+    const docCall = global.supa.from.mock.calls.find(([table]) => table === 'npi_documents')
+    expect(docCall).toBeTruthy()
+    const upsert2 = global.supa.from('npi_documents').upsert
+    expect(upsert2).toHaveBeenCalledWith(
+      expect.objectContaining({
+        project_id: 'p_resolved_prog_id'
+      }),
+      { onConflict: 'id' }
+    )
   })
 
   test('persists a leading header with a non-null surrogate step number', async () => {
@@ -177,5 +186,58 @@ describe('NPI relational project UUID resolution', () => {
       nextStepId_yes: 30,
       nextStepId_no: 10
     }))
+  })
+
+  // Helper: build a supa mock that captures project_id values per table.
+  // Returns { supa, capturedIds }.
+  // Each table mock handles both .eq().order() and plain .eq() chains.
+  function makeCapturingSupa () {
+    const capturedIds = {}
+    const makeEqResult = (table) => {
+      const result = Promise.resolve({ data: [], error: null })
+      result.order = jest.fn().mockResolvedValue({ data: [], error: null })
+      return result
+    }
+    const supa = {
+      from: jest.fn((table) => ({
+        select: jest.fn(() => ({
+          eq: jest.fn((col, val) => {
+            if (col === 'project_id') capturedIds[table] = val
+            return makeEqResult(table)
+          }),
+          limit: jest.fn().mockResolvedValue({ data: [], error: null })
+        }))
+      }))
+    }
+    return { supa, capturedIds }
+  }
+
+  test('npiRelLoad passes text prog_id (not a UUID) to npi_documents query', async () => {
+    const { supa, capturedIds } = makeCapturingSupa()
+    global.supa = supa
+
+    await npiRelLoad('p_local_1')
+
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    expect(capturedIds['npi_documents']).toBe('p_local_1')
+    expect(uuidPattern.test(capturedIds['npi_documents'])).toBe(false)
+  })
+
+  test('npiRelLoad sends the same project_id to every npi table', async () => {
+    const { supa, capturedIds } = makeCapturingSupa()
+    global.supa = supa
+
+    await npiRelLoad('p_local_1')
+
+    const npiTables = [
+      'npi_ctq', 'npi_pfd_steps', 'npi_pfmea_modes', 'npi_pfmea_effects',
+      'npi_pfmea_causes', 'npi_pfmea_history', 'npi_control_plan',
+      'npi_bom_items', 'npi_bom_kits', 'npi_bom_kit_items',
+      'npi_gates', 'npi_gate_sigs', 'npi_actions', 'npi_risks',
+      'npi_gantt_rows', 'npi_documents'
+    ]
+    npiTables.forEach(table => {
+      expect(capturedIds[table]).toBe('p_local_1')
+    })
   })
 })

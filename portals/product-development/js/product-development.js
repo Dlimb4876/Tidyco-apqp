@@ -4,6 +4,10 @@
 let productDevelopmentPortalDelegationContainer = null;
 
 function setProductDevelopmentTab(tab) {
+  if (tab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('product-development', tab)) {
+    return;
+  }
+
   const prevTab = productDevelopmentTab;
   productDevelopmentTab = tab;
   const parts = ['s=product-development'];
@@ -18,13 +22,43 @@ function setProductDevelopmentTab(tab) {
 }
 
 function productDevelopmentNavBar() {
+  const tabs = [
+    { key: 'npi', icon: '📋', label: 'NPI' },
+    { key: 'product-management', icon: '📦', label: 'Products' },
+    { key: 'product-family-db', icon: '🏢', label: 'Families' },
+    { key: 'parts-database', icon: '🔩', label: 'Parts' }
+  ].filter((tab) => typeof canViewPortalTab !== 'function' || canViewPortalTab('product-development', tab.key));
+
+  const buttons = tabs
+    .map((tab) => `<button class="prod-nav-item ${productDevelopmentTab === tab.key ? 'active' : ''}" data-action="pd-nav-tab" data-tab="${tab.key}">${tab.icon} ${tab.label}</button>`)
+    .join('');
+
   return `
     <div class="prod-nav-bar">
       <button class="prod-nav-item prod-nav-back" data-action="pd-nav-root">← Back</button>
-      <button class="prod-nav-item ${productDevelopmentTab === 'npi' ? 'active' : ''}" data-action="pd-nav-tab" data-tab="npi">📋 NPI</button>
-      <button class="prod-nav-item ${productDevelopmentTab === 'product-management' ? 'active' : ''}" data-action="pd-nav-tab" data-tab="product-management">📦 Products</button>
-      <button class="prod-nav-item ${productDevelopmentTab === 'product-family-db' ? 'active' : ''}" data-action="pd-nav-tab" data-tab="product-family-db">🏢 Families</button>
-      <button class="prod-nav-item ${productDevelopmentTab === 'parts-database' ? 'active' : ''}" data-action="pd-nav-tab" data-tab="parts-database">🔩 Parts</button>
+      ${buttons}
+    </div>
+  `;
+}
+
+function renderProductDevelopmentHubCard(tabKey, favouriteKey, icon, title, meta) {
+  if (typeof canViewPortalTab === 'function' && !canViewPortalTab('product-development', tabKey)) return '';
+
+  const isFav = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite(favouriteKey);
+  return `
+    <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="${tabKey}">
+      <button
+        class="hub-fav-toggle${isFav ? ' is-active' : ''}"
+        type="button"
+        title="${isFav ? 'Remove from favourites' : 'Add to favourites'}"
+        onclick="hubTogglePageFavourite('${favouriteKey}', event)">
+        ${isFav ? '★' : '☆'}
+      </button>
+      <div class="hub-card-content">
+        <div class="hub-icon">${icon}</div>
+        <div class="proj-card-name">${title}</div>
+        <div class="proj-card-meta">${meta}</div>
+      </div>
     </div>
   `;
 }
@@ -50,10 +84,12 @@ function renderProductDevelopment() {
 
   // Root hub view
   setTimeout(setupProductDevelopmentPortalDelegation, 0);
-  const favNpi = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::npi');
-  const favProductManagement = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::product-management');
-  const favProductFamilies = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::product-family-db');
-  const favPartsDatabase = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('product-development::parts-database');
+  const cards = [
+    renderProductDevelopmentHubCard('npi', 'product-development::npi', '📋', 'NPI Projects', 'APQP Gates, PFMEA & BoM'),
+    renderProductDevelopmentHubCard('product-management', 'product-development::product-management', '📦', 'Product Management', 'Product Catalog & Lifecycle'),
+    renderProductDevelopmentHubCard('product-family-db', 'product-development::product-family-db', '🏢', 'Product Family Database', 'Family definitions & attributes'),
+    renderProductDevelopmentHubCard('parts-database', 'product-development::parts-database', '🔩', 'Parts Database', 'A, B & C-Class parts database')
+  ].filter(Boolean).join('');
   return `
     <div class="proj-home" id="product-development-portal-container">
       <div class="proj-home-header">
@@ -68,65 +104,7 @@ function renderProductDevelopment() {
       </div>
 
       <div class="proj-cards hub-grid">
-        <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="npi">
-          <button
-            class="hub-fav-toggle${favNpi ? ' is-active' : ''}"
-            type="button"
-            title="${favNpi ? 'Remove from favourites' : 'Add to favourites'}"
-            onclick="hubTogglePageFavourite('product-development::npi', event)">
-            ${favNpi ? '★' : '☆'}
-          </button>
-          <div class="hub-card-content">
-            <div class="hub-icon">📋</div>
-            <div class="proj-card-name">NPI Projects</div>
-            <div class="proj-card-meta">APQP Gates, PFMEA & BoM</div>
-          </div>
-        </div>
-
-        <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="product-management">
-          <button
-            class="hub-fav-toggle${favProductManagement ? ' is-active' : ''}"
-            type="button"
-            title="${favProductManagement ? 'Remove from favourites' : 'Add to favourites'}"
-            onclick="hubTogglePageFavourite('product-development::product-management', event)">
-            ${favProductManagement ? '★' : '☆'}
-          </button>
-          <div class="hub-card-content">
-            <div class="hub-icon">📦</div>
-            <div class="proj-card-name">Product Management</div>
-            <div class="proj-card-meta">Product Catalog & Lifecycle</div>
-          </div>
-        </div>
-
-        <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="product-family-db">
-          <button
-            class="hub-fav-toggle${favProductFamilies ? ' is-active' : ''}"
-            type="button"
-            title="${favProductFamilies ? 'Remove from favourites' : 'Add to favourites'}"
-            onclick="hubTogglePageFavourite('product-development::product-family-db', event)">
-            ${favProductFamilies ? '★' : '☆'}
-          </button>
-          <div class="hub-card-content">
-            <div class="hub-icon">🏢</div>
-            <div class="proj-card-name">Product Family Database</div>
-            <div class="proj-card-meta">Family definitions & attributes</div>
-          </div>
-        </div>
-
-        <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="parts-database">
-          <button
-            class="hub-fav-toggle${favPartsDatabase ? ' is-active' : ''}"
-            type="button"
-            title="${favPartsDatabase ? 'Remove from favourites' : 'Add to favourites'}"
-            onclick="hubTogglePageFavourite('product-development::parts-database', event)">
-            ${favPartsDatabase ? '★' : '☆'}
-          </button>
-          <div class="hub-card-content">
-            <div class="hub-icon">🔩</div>
-            <div class="proj-card-name">Parts Database</div>
-            <div class="proj-card-meta">A, B & C-Class parts database</div>
-          </div>
-        </div>
+        ${cards || `<div class="hub-favs-empty">No product development pages are available for your current permissions.</div>`}
       </div>
     </div>
   `;

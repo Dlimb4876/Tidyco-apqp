@@ -77,7 +77,8 @@ function opsMetricsDependencies(overrides = {}) {
 				: []),
 		meDataState: overrides.meDataState || window.meDataState || null,
 		meCalculateMonthData: overrides.meCalculateMonthData || window.meCalculateMonthData,
-		meFilterByDepartment: overrides.meFilterByDepartment || window.meFilterByDepartment
+		meFilterByDepartment: overrides.meFilterByDepartment || window.meFilterByDepartment,
+		logDataState: overrides.logDataState || window.logDataState || null
 	};
 }
 
@@ -233,6 +234,41 @@ function opsCalcMeCapacity(dependencies = {}, monthKeyOverride = '') {
 
 function opsCalcPmCapacity(dependencies = {}, monthKeyOverride = '') {
 	return opsCalcDepartmentCapacity('PM', dependencies, monthKeyOverride);
+}
+
+function opsCalcLogCapacity(dependencies = {}, monthKeyOverride = '') {
+	if (typeof window.meCalculateMonthData !== 'function') {
+		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
+	}
+
+	const logDataState = window.logDataState;
+	if (!logDataState || (!Array.isArray(logDataState.team) || logDataState.team.length === 0)) {
+		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
+	}
+
+	const monthKey = monthKeyOverride || opsCurrentMonthKey();
+	const team = Array.isArray(logDataState.team) ? logDataState.team : [];
+	const tasks = Array.isArray(logDataState.tasks) ? logDataState.tasks : [];
+	const products = Array.isArray(logDataState.products) ? logDataState.products : [];
+	const holidays = Array.isArray(logDataState.holidays) ? logDataState.holidays : [];
+
+	if (team.length === 0) {
+		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
+	}
+
+	const monthData = window.meCalculateMonthData(monthKey, team, tasks, products, holidays);
+	const capacity = opsToNumber(monthData.capacity);
+	const demand = opsToNumber(monthData.totalDemand);
+	const utilisation = Math.max(0, Math.round(opsToNumber(monthData.utilisation)));
+	const headroom = Math.round(capacity - demand);
+
+	return {
+		ready: true,
+		utilisation,
+		headroom,
+		demand: Math.round(demand),
+		capacity: Math.round(capacity)
+	};
 }
 
 function opsCalcOperationsUnitCapacity(workArea, monthKeyOverride = '') {
@@ -397,6 +433,7 @@ function opsBuildMetrics() {
 	const bugs = opsCalcBugHealth(deps, reportingDate);
 	const me = opsCalcMeCapacity(deps, reportingMonthKey);
 	const pm = opsCalcPmCapacity(deps, reportingMonthKey);
+	const log = opsCalcLogCapacity(deps, reportingMonthKey);
 	const operationsUnits = opsCalcOperationsUnits(reportingMonthKey);
 	const production = opsCalcProductionFlow();
 	const forecast = opsCalcForecastProduction();
@@ -408,6 +445,7 @@ function opsBuildMetrics() {
 		gate.percentage,
 		Math.max(0, 100 - (bugs.open * 4)),
 		me.ready ? Math.max(0, 100 - Math.max(0, me.utilisation - 85) * 2) : 70,
+		log.ready ? Math.max(0, 100 - Math.max(0, log.utilisation - 85) * 2) : 70,
 		production.completionRate,
 		forecast.ready ? Math.max(0, 100 - Math.max(0, forecast.utilisation24 - 85) * 2) : 70
 	];
@@ -421,6 +459,7 @@ function opsBuildMetrics() {
 		bugs,
 		me,
 		pm,
+		log,
 		operationsUnits,
 		production,
 		forecast,

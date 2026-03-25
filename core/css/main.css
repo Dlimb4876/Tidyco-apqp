@@ -432,6 +432,10 @@ body {
 .tbtn-primary { background: var(--topbar-control-bg-strong); color: var(--topbar-control-text-strong); border-color: var(--topbar-control-border); }
 .tbtn-primary:hover { background: var(--topbar-control-bg-hover-strong); color: var(--topbar-control-text-hover); border-color: var(--topbar-control-border-hover-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 
+/* Hidden wiki button - visible on hover */
+.wiki-btn { opacity: 0.5; }
+.wiki-btn:hover { opacity: 1; }
+
 
 /* ── Main content area ──────────────────────────────────────── */
 .main {
