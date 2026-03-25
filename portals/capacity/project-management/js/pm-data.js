@@ -403,6 +403,7 @@ window.pmDataDeleteHoliday = function(personId, date) {
 
 window.pmDataAutoSyncPMProducts = function() {
   if (!productsState || !productsState.products) return false;
+  let changed = false;
   const dbProducts = Array.isArray(productsState.products) ? productsState.products : [];
   const dbMap = {};
   const dbNameSet = new Set();
@@ -419,9 +420,13 @@ window.pmDataAutoSyncPMProducts = function() {
   dbProducts.forEach(dbProduct => {
     const existing = existingByDbId.get(dbProduct.id);
     if (existing) {
-      existing.name = dbProduct.name;
-      existing.notes = dbProduct.notes || '';
-      existing.department = 'PM';
+      const newNotes = dbProduct.notes || '';
+      if (existing.name !== dbProduct.name || existing.notes !== newNotes || existing.department !== 'PM') {
+        existing.name = dbProduct.name;
+        existing.notes = newNotes;
+        existing.department = 'PM';
+        changed = true;
+      }
     } else {
       const seedBreakdown = meNormalizeProductSupportBreakdown({ hoursPerWeek: 0 }, 0);
       pmDataState.products.push({
@@ -435,9 +440,11 @@ window.pmDataAutoSyncPMProducts = function() {
       });
       const created = pmDataState.products[pmDataState.products.length - 1];
       pmEnsureProductSupportHistoryBaseline(created);
+      changed = true;
     }
   });
 
+  const countBefore = pmDataState.products.length;
   const seenDbIds = new Set();
   const seenNames = new Set();
   pmDataState.products = pmDataState.products.filter(p => {
@@ -452,8 +459,9 @@ window.pmDataAutoSyncPMProducts = function() {
     seenDbIds.add(p.productDatabaseId);
     return dbMap[p.productDatabaseId] !== undefined;
   });
+  if (pmDataState.products.length !== countBefore) changed = true;
 
-  return true;
+  return changed;
 };
 
 // ─────────────────────────────────────────────────────────────

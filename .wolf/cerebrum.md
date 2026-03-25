@@ -62,6 +62,8 @@
 <!-- [2026-03-24] When moving or deduplicating event routing between `capacity.js` and `capacity-events.js`, update routing-ownership tests immediately; stale delegation expectations can hide duplicated handlers or false regressions. -->
 <!-- [2026-03-24] Intent-based table inputs that are only committed by an Apply action must not live only in the DOM. Store per-row draft values in state (scoped by stream/page) so shared tab refreshes and realtime rerenders cannot wipe in-progress edits. -->
 <!-- [2026-03-24] Capacity chart month navigation cannot rely on chart-only canvas redraw. If month changes, re-render chart-tab HTML so KPI cards, Demand Breakdown, and Capacity-per-role tables recalculate for the selected month across ME/PM/LOG/UNIT6. -->
+<!-- [2026-03-25] Shared capacity chart/heatmap draw code must resolve month key from active stream context (PM/LOG/UNIT6/ME). Reading `meChartStart` directly causes non-ME date adjusters to appear broken. -->
+<!-- [2026-03-25] Keep strict core script order in index bootstrap (`state -> auth -> db -> helpers -> navigation -> realtime`). Place utility scripts like chart-theme.js and guide.js after this chain to avoid load-order drift warnings. -->
 
 ## Decision Log
 
