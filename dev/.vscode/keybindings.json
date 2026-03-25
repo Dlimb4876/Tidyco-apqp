@@ -1,0 +1,14 @@
+[
+  {
+    "key": "ctrl+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Run All Tests",
+    "when": "!terminalFocus"
+  },
+  {
+    "key": "ctrl+t",
+    "command": "workbench.action.terminal.focus",
+    "when": "terminalFocus"
+  }
+]
+

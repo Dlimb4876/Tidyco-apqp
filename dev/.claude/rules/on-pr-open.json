@@ -1,0 +1,19 @@
+{
+  "name": "on-pr-open",
+  "description": "When a pull request opens, run code-review and testing agents and save their output.",
+  "trigger": "on-pr-open",
+  "agents": ["code-review", "testing"],
+  "output": ".claude/rules/last-pr-review.json",
+  "steps": [
+    {
+      "agent": "code-review",
+      "command": "node .claude/agents/code-review.js",
+      "description": "Run lint and tests; write dated log to .claude/agents/logs/"
+    },
+    {
+      "agent": "testing",
+      "command": "node .claude/agents/testing.js",
+      "description": "Run full test suite and report pass/fail summary"
+    }
+  ]
+}

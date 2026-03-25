@@ -1,0 +1,1488 @@
+[
+  {
+    "title": "Action Centre",
+    "path": "content/action-centre/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "Before you start",
+      "Key components",
+      "The execution process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "action",
+      "centre",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "execution",
+      "process",
+      "common"
+    ],
+    "excerpt": "The Action Centre is the shared execution queue across projects and modules. It aggregates your specific commitments from NPI Projects, PFME"
+  },
+  {
+    "title": "Capacity",
+    "path": "content/capacity/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "What you can do here",
+      "The key calculation logic",
+      "How this links to other systems",
+      "Related"
+    ],
+    "keywords": [
+      "capacity",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "you",
+      "can",
+      "do",
+      "here",
+      "the",
+      "key",
+      "calculation",
+      "logic",
+      "how",
+      "links"
+    ],
+    "excerpt": "Capacity is where teams check whether planned work fits inside available people hours. It gives you one planning model across ME, PM, Logist"
+  },
+  {
+    "title": "Capacity Hub",
+    "path": "content/capacity/10-capacity-hub.md",
+    "headings": [
+      "What this page is for",
+      "Streams you can open",
+      "Typical use",
+      "Why this matters",
+      "Related"
+    ],
+    "keywords": [
+      "capacity",
+      "hub",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "streams",
+      "you",
+      "can",
+      "open",
+      "typical",
+      "use",
+      "why",
+      "matters",
+      "related"
+    ],
+    "excerpt": "The Capacity Hub is your entry point into the right planning stream. Use it first so you are editing the correct team and demand data. - ME "
+  },
+  {
+    "title": "ME Capacity",
+    "path": "content/capacity/20-me-capacity.md",
+    "headings": [
+      "What this page is for",
+      "What to check first",
+      "How the numbers are built",
+      "Practical routine",
+      "Related"
+    ],
+    "keywords": [
+      "me",
+      "capacity",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "to",
+      "check",
+      "first",
+      "how",
+      "the",
+      "numbers",
+      "are",
+      "built",
+      "practical"
+    ],
+    "excerpt": "ME Capacity helps Manufacturing Engineering plan workload month by month. It shows whether the team has enough hours for both project tasks "
+  },
+  {
+    "title": "PM Capacity",
+    "path": "content/capacity/30-pm-capacity.md",
+    "headings": [
+      "What this page is for",
+      "What to review regularly",
+      "Calculation notes",
+      "Related"
+    ],
+    "keywords": [
+      "pm",
+      "capacity",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "to",
+      "review",
+      "regularly",
+      "calculation",
+      "notes",
+      "related"
+    ],
+    "excerpt": "PM Capacity gives Project Management teams the same planning framework as ME, with PM-only data. It is used to forecast coordinator and plan"
+  },
+  {
+    "title": "Logistics Capacity",
+    "path": "content/capacity/40-logistics-capacity.md",
+    "headings": [
+      "What this page is for",
+      "Special logic for Logistics",
+      "Typical workflow",
+      "Related"
+    ],
+    "keywords": [
+      "logistics",
+      "capacity",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "special",
+      "logic",
+      "typical",
+      "workflow",
+      "related"
+    ],
+    "excerpt": "Logistics Capacity plans technician workload and support demand for logistics activity. It uses the same core model as other streams, with l"
+  },
+  {
+    "title": "Unit 6 Capacity",
+    "path": "content/capacity/50-unit6-capacity.md",
+    "headings": [
+      "What this page is for",
+      "What to maintain",
+      "What to watch",
+      "Related"
+    ],
+    "keywords": [
+      "unit",
+      "6",
+      "capacity",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "to",
+      "maintain",
+      "watch",
+      "related"
+    ],
+    "excerpt": "Unit 6 Capacity helps you plan technician workload in the Unit 6 stream. It follows the same structure as ME, PM, and Logistics so planning "
+  },
+  {
+    "title": "Product Support",
+    "path": "content/capacity/80-product-support.md",
+    "headings": [
+      "What this page is for",
+      "How calculations use this data",
+      "Effective dating and history",
+      "Good practice",
+      "Related"
+    ],
+    "keywords": [
+      "product",
+      "support",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "how",
+      "calculations",
+      "use",
+      "data",
+      "effective",
+      "dating",
+      "and",
+      "history",
+      "good"
+    ],
+    "excerpt": "Product Support defines how much support effort each product requires per production batch. Those values are a core input to monthly capacit"
+  },
+  {
+    "title": "Feedback and Bugs",
+    "path": "content/feedback-and-bugs/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "Simple workflow",
+      "Related"
+    ],
+    "keywords": [
+      "feedback",
+      "and",
+      "bugs",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "simple",
+      "workflow",
+      "related"
+    ],
+    "excerpt": "Feedback and Bugs is where users report issues, request improvements, and track responses. 1. Submit a clear report with context. 2. Triage "
+  },
+  {
+    "title": "Getting Started",
+    "path": "content/getting-started/00-overview.md",
+    "headings": [
+      "What this wiki is for",
+      "Before you start",
+      "Key components of the system",
+      "The learning process",
+      "Common mistakes to avoid",
+      "Access and Navigation",
+      "Related"
+    ],
+    "keywords": [
+      "getting",
+      "started",
+      "what",
+      "this",
+      "wiki",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "the",
+      "system",
+      "learning"
+    ],
+    "excerpt": "This wiki explains the platform in plain language for everyday users. It is designed as a quick reference for what each area does, how key f"
+  },
+  {
+    "title": "Learning Function",
+    "path": "content/learning-function/00-overview.md",
+    "headings": [
+      "What this lens is for",
+      "How this links to Process learning",
+      "Start points by area"
+    ],
+    "keywords": [
+      "learning",
+      "function",
+      "what",
+      "this",
+      "lens",
+      "is",
+      "for",
+      "how",
+      "links",
+      "to",
+      "process",
+      "start",
+      "points",
+      "by",
+      "area"
+    ],
+    "excerpt": "Use the Function lens when you want to understand what a tool is, why it exists, and how it connects to APQP outcomes. This lens answers: - "
+  },
+  {
+    "title": "Learning Process",
+    "path": "content/learning-process/00-overview.md",
+    "headings": [
+      "What this lens is for",
+      "How this links to Function learning",
+      "Process workflows by area"
+    ],
+    "keywords": [
+      "learning",
+      "process",
+      "what",
+      "this",
+      "lens",
+      "is",
+      "for",
+      "how",
+      "links",
+      "to",
+      "function",
+      "workflows",
+      "by",
+      "area"
+    ],
+    "excerpt": "Use the Process lens when you need to perform work in the Tidyco site. This lens answers: - Where do I click first? - What order should I do"
+  },
+  {
+    "title": "Capacity Process Workflow",
+    "path": "content/learning-process/10-capacity-process.md",
+    "headings": [
+      "Primary workflow",
+      "Monthly planning order",
+      "Related function pages"
+    ],
+    "keywords": [
+      "capacity",
+      "process",
+      "workflow",
+      "primary",
+      "monthly",
+      "planning",
+      "order",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Open ../capacity/10-capacity-hub.md. 2. Choose the correct stream (ME, PM, Logistics, Unit 6, or Production views). 3. Update team availa"
+  },
+  {
+    "title": "Product Development Process Workflow",
+    "path": "content/learning-process/20-product-development-process.md",
+    "headings": [
+      "Primary workflow",
+      "PFMEA site workflow",
+      "Related function pages"
+    ],
+    "keywords": [
+      "product",
+      "development",
+      "process",
+      "workflow",
+      "primary",
+      "pfmea",
+      "site",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Open ../product-development/10-npi-projects.md and select the project. 2. Build APQP sequence in order: CTQ -> PFD -> PFMEA -> Control Pl"
+  },
+  {
+    "title": "Product Management Process Workflow",
+    "path": "content/learning-process/30-product-management-process.md",
+    "headings": [
+      "Primary workflow",
+      "Related function pages"
+    ],
+    "keywords": [
+      "product",
+      "management",
+      "process",
+      "workflow",
+      "primary",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Maintain product master data in ../product-management/10-product-catalogue.md. 2. Keep family assignment current in ../product-management"
+  },
+  {
+    "title": "Production Process Workflow",
+    "path": "content/learning-process/40-production-process.md",
+    "headings": [
+      "Primary workflow",
+      "Related function pages"
+    ],
+    "keywords": [
+      "production",
+      "process",
+      "workflow",
+      "primary",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Create/update batches in ../production/10-schedule.md. 2. Validate load by product in ../production/20-plan-by-product.md. 3. Validate lo"
+  },
+  {
+    "title": "Operations Process Workflow",
+    "path": "content/learning-process/50-operations-process.md",
+    "headings": [
+      "Daily operational review flow",
+      "Weekly pattern",
+      "Related function pages"
+    ],
+    "keywords": [
+      "operations",
+      "process",
+      "workflow",
+      "daily",
+      "operational",
+      "review",
+      "flow",
+      "weekly",
+      "pattern",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Start at ../operations/10-overview-tab.md. 2. Triage issues by severity and urgency. 3. Drill into the matching tab: Flow, Risk, People, "
+  },
+  {
+    "title": "MCS Process Workflow",
+    "path": "content/learning-process/60-mcs-process.md",
+    "headings": [
+      "Primary workflow",
+      "Related function pages"
+    ],
+    "keywords": [
+      "mcs",
+      "process",
+      "workflow",
+      "primary",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Raise change in ../mcs/00-overview.md. 2. Complete impact assessment details. 3. Complete Approval 1. 4. Execute implementation stage wit"
+  },
+  {
+    "title": "Action Centre Process Workflow",
+    "path": "content/learning-process/70-action-centre-process.md",
+    "headings": [
+      "Primary workflow",
+      "Related function pages"
+    ],
+    "keywords": [
+      "action",
+      "centre",
+      "process",
+      "workflow",
+      "primary",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Open ../action-centre/00-overview.md. 2. Start with overdue items. 3. Confirm owner, due date, and next update. 4. Open source context fo"
+  },
+  {
+    "title": "Feedback and Bugs Process Workflow",
+    "path": "content/learning-process/80-feedback-process.md",
+    "headings": [
+      "Primary workflow",
+      "Related function pages"
+    ],
+    "keywords": [
+      "feedback",
+      "and",
+      "bugs",
+      "process",
+      "workflow",
+      "primary",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Submit issue with clear context and impact. 2. Triage and classify. 3. Assign owner and target date. 4. Update status through investigati"
+  },
+  {
+    "title": "Settings Process Workflow",
+    "path": "content/learning-process/90-settings-process.md",
+    "headings": [
+      "Primary workflow",
+      "Related function pages"
+    ],
+    "keywords": [
+      "settings",
+      "process",
+      "workflow",
+      "primary",
+      "related",
+      "function",
+      "pages"
+    ],
+    "excerpt": "1. Review current configuration scope before editing. 2. Update structural data first (work areas, teams, departments). 3. Update local pref"
+  },
+  {
+    "title": "MCS",
+    "path": "content/mcs/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "High-level lifecycle",
+      "Related"
+    ],
+    "keywords": [
+      "mcs",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "high",
+      "level",
+      "lifecycle",
+      "related"
+    ],
+    "excerpt": "MCS (Manufacturing Change System) manages controlled change from proposal through approval and implementation. It is used when a process, me"
+  },
+  {
+    "title": "MCS Approval Workflow",
+    "path": "content/mcs/30-approval-workflow.md",
+    "headings": [
+      "What this page is for",
+      "Stage model",
+      "What to capture at each stage",
+      "Related"
+    ],
+    "keywords": [
+      "mcs",
+      "approval",
+      "workflow",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "stage",
+      "model",
+      "to",
+      "capture",
+      "at",
+      "each",
+      "related"
+    ],
+    "excerpt": "This page explains how a change moves through the MCS stage model with traceable approvals. - Open - Impact Assessment - Approval 1 - Implem"
+  },
+  {
+    "title": "Operations",
+    "path": "content/operations/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "What each tab gives you",
+      "How this links to other systems",
+      "Related"
+    ],
+    "keywords": [
+      "operations",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "each",
+      "tab",
+      "gives",
+      "you",
+      "how",
+      "links",
+      "to",
+      "other",
+      "systems",
+      "related"
+    ],
+    "excerpt": "Operations is the cross-functional control tower. It brings together live signals from production, capacity, risks, and actions so teams can"
+  },
+  {
+    "title": "Operations Overview Tab",
+    "path": "content/operations/10-overview-tab.md",
+    "headings": [
+      "What this tab is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "operations",
+      "overview",
+      "tab",
+      "what",
+      "this",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical",
+      "process",
+      "common"
+    ],
+    "excerpt": "This is the first-stop health check for the whole operation.  It provides a high-level summary of delivery flow, capacity pressure, and exec"
+  },
+  {
+    "title": "Operations Flow Tab",
+    "path": "content/operations/20-flow-tab.md",
+    "headings": [
+      "What this tab is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "operations",
+      "flow",
+      "tab",
+      "what",
+      "this",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical",
+      "process",
+      "common"
+    ],
+    "excerpt": "Flow gives you a quick read of production movement: what is active, what has completed, and whether delivery is keeping to plan. It helps op"
+  },
+  {
+    "title": "Operations Risk Tab",
+    "path": "content/operations/30-risk-tab.md",
+    "headings": [
+      "What this tab is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "operations",
+      "risk",
+      "tab",
+      "what",
+      "this",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical",
+      "process",
+      "common"
+    ],
+    "excerpt": "The Risk tab consolidates the most severe risk signals across the entire system. It elevates high-impact threats from individual project sil"
+  },
+  {
+    "title": "Operations People Tab",
+    "path": "content/operations/40-people-tab.md",
+    "headings": [
+      "What this tab is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "operations",
+      "people",
+      "tab",
+      "what",
+      "this",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical",
+      "process",
+      "common"
+    ],
+    "excerpt": "People shows where capacity pressure is building across operational and engineering streams. It acts as an early warning radar for resource "
+  },
+  {
+    "title": "Operations Actions Tab",
+    "path": "content/operations/50-actions-tab.md",
+    "headings": [
+      "What this tab is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "operations",
+      "actions",
+      "tab",
+      "what",
+      "this",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical",
+      "process",
+      "common"
+    ],
+    "excerpt": "The Actions tab provides a cross-project execution view, aggregating commitments from across the platform. It ensures that critical tasks, e"
+  },
+  {
+    "title": "Operations Forecast Tab",
+    "path": "content/operations/60-forecast-tab.md",
+    "headings": [
+      "What this tab is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "operations",
+      "forecast",
+      "tab",
+      "what",
+      "this",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical",
+      "process",
+      "common"
+    ],
+    "excerpt": "Forecast captures the forward view: expected demand, planned delivery, and key assumptions. It is used in leadership and planning reviews to"
+  },
+  {
+    "title": "Product Development",
+    "path": "content/product-development/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "Process workflow companion",
+      "End-to-end workflow",
+      "How this links to other systems",
+      "Related"
+    ],
+    "keywords": [
+      "product",
+      "development",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "process",
+      "workflow",
+      "companion",
+      "end",
+      "to",
+      "how",
+      "links",
+      "other",
+      "systems"
+    ],
+    "excerpt": "Product Development manages NPI delivery from early project setup through APQP maturity and gate sign-off. It connects engineering intent, p"
+  },
+  {
+    "title": "NPI Projects",
+    "path": "content/product-development/10-npi-projects.md",
+    "headings": [
+      "What this page is for",
+      "How teams typically use it",
+      "Related"
+    ],
+    "keywords": [
+      "npi",
+      "projects",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "how",
+      "teams",
+      "typically",
+      "use",
+      "it",
+      "related"
+    ],
+    "excerpt": "NPI Projects is the front door to active and historical projects. Use it to find the right project quickly and move into dashboard or APQP w"
+  },
+  {
+    "title": "Timing Plan",
+    "path": "content/product-development/100-timing.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a good Timing Plan",
+      "The planning process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Quality checks for a good Timing Plan",
+      "How Timing Plan connects to other pages"
+    ],
+    "keywords": [
+      "timing",
+      "plan",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "a",
+      "good",
+      "the"
+    ],
+    "excerpt": "The Timing Plan is the project's schedule and Gantt chart. It visualizes the timeline, tracks phase activities, highlights milestones, and s"
+  },
+  {
+    "title": "APQP Gates",
+    "path": "content/product-development/110-gates.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a Gate Review",
+      "The gateway process",
+      "Common mistakes to avoid",
+      "The 6 Standard Gates",
+      "Quality checks for a passed Gate",
+      "How Gates connect to other pages"
+    ],
+    "keywords": [
+      "apqp",
+      "gates",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "a",
+      "gate",
+      "review"
+    ],
+    "excerpt": "APQP Gates (0 through 5) are formal phase-gate reviews that track project readiness. They provide a structured checklist to verify that all "
+  },
+  {
+    "title": "CTQ Matrix",
+    "path": "content/product-development/30-ctq.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a good CTQ",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Quality checks for a good CTQ Matrix",
+      "How CTQ connects to other pages"
+    ],
+    "keywords": [
+      "ctq",
+      "matrix",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "a",
+      "good",
+      "the"
+    ],
+    "excerpt": "CTQ (Critical to Quality) defines the measurable requirements that must be met for the product to be considered acceptable. It is the refere"
+  },
+  {
+    "title": "Process Flow Diagram",
+    "path": "content/product-development/40-pfd.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a good PFD",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Quality checks for a good PFD",
+      "How PFD connects to other pages"
+    ],
+    "keywords": [
+      "process",
+      "flow",
+      "diagram",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "a",
+      "good"
+    ],
+    "excerpt": "The PFD (Process Flow Diagram) documents the step-by-step sequence of operations required to build or overhaul a product. It is the structur"
+  },
+  {
+    "title": "PFMEA",
+    "path": "content/product-development/50-pfmea.md",
+    "headings": [
+      "What PFMEA is used for",
+      "Before you start",
+      "What good PFMEA entries look like",
+      "Scoring rules",
+      "Common scoring mistakes to avoid",
+      "The analytical process",
+      "Quick example",
+      "How to prioritize PFMEA workload"
+    ],
+    "keywords": [
+      "pfmea",
+      "what",
+      "is",
+      "used",
+      "for",
+      "before",
+      "you",
+      "start",
+      "good",
+      "entries",
+      "look",
+      "like",
+      "scoring",
+      "rules",
+      "common",
+      "mistakes"
+    ],
+    "excerpt": "PFMEA (Process Failure Mode and Effects Analysis) helps teams identify where a process can fail, how serious that failure is, and what actio"
+  },
+  {
+    "title": "PFMEA in Tidyco: Tool Workflow",
+    "path": "content/product-development/51-pfmea-tool-workflow.md",
+    "headings": [
+      "What this page is for",
+      "When to use this page",
+      "Navigation path",
+      "Typical PFMEA workflow in the site",
+      "Field-entry guidance",
+      "Day-to-day working pattern",
+      "Linking PFMEA to connected site tools",
+      "Data quality checks before leaving the page"
+    ],
+    "keywords": [
+      "pfmea",
+      "in",
+      "tidyco",
+      "tool",
+      "workflow",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "when",
+      "to",
+      "use",
+      "navigation",
+      "path",
+      "typical"
+    ],
+    "excerpt": "This page explains how to use the PFMEA tools in the Tidyco site. It focuses on where to click, what to enter, and how to keep records clean"
+  },
+  {
+    "title": "Control Plan",
+    "path": "content/product-development/60-control-plan.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a good control",
+      "Prevention vs. Detection",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Quality checks for a good Control Plan"
+    ],
+    "keywords": [
+      "control",
+      "plan",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "a",
+      "good",
+      "prevention"
+    ],
+    "excerpt": "Control Plan defines how each key process step will be controlled in day-to-day execution. It translates risk analysis (PFMEA) and requireme"
+  },
+  {
+    "title": "Action Tracker",
+    "path": "content/product-development/70-actions.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a good action",
+      "The management process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Quality checks for a good Action Tracker",
+      "How Actions connect to other pages"
+    ],
+    "keywords": [
+      "action",
+      "tracker",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "a",
+      "good",
+      "the"
+    ],
+    "excerpt": "The Action Tracker is where project commitments are recorded, assigned, and followed through to completion. It serves as the operational bri"
+  },
+  {
+    "title": "Risk Register",
+    "path": "content/product-development/80-risks.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a good risk entry",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Quality checks for a good Risk Register",
+      "How Risk Register connects to other pages"
+    ],
+    "keywords": [
+      "risk",
+      "register",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "a",
+      "good",
+      "entry"
+    ],
+    "excerpt": "The Risk Register tracks project-level uncertainty and ensures mitigation efforts are visible and managed. While PFMEA handles process-speci"
+  },
+  {
+    "title": "Bill of Materials (BOM)",
+    "path": "content/product-development/90-bom.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a good BOM",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Quality checks for a good BOM",
+      "How BOM connects to other pages"
+    ],
+    "keywords": [
+      "bill",
+      "of",
+      "materials",
+      "bom",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "a",
+      "good"
+    ],
+    "excerpt": "The BOM (Bill of Materials) is the comprehensive list of resources required to deliver the project and support production. In APQP, this goe"
+  },
+  {
+    "title": "Product Management",
+    "path": "content/product-management/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "What is managed here",
+      "How this links to other systems",
+      "Related"
+    ],
+    "keywords": [
+      "product",
+      "management",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "managed",
+      "here",
+      "how",
+      "links",
+      "to",
+      "other",
+      "systems",
+      "related"
+    ],
+    "excerpt": "Product Management is the master-data home for products, families, and parts. If data here is clean, planning and APQP workflows across the "
+  },
+  {
+    "title": "Product Catalogue",
+    "path": "content/product-management/10-product-catalogue.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components",
+      "The management process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "product",
+      "catalogue",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "management",
+      "process",
+      "common"
+    ],
+    "excerpt": "Product Catalogue is the master list of all products used throughout planning and APQP. It acts as a controlled data set that drives downstr"
+  },
+  {
+    "title": "Overhaul Trends",
+    "path": "content/product-management/20-overhaul-trends.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "overhaul",
+      "trends",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical",
+      "process",
+      "common"
+    ],
+    "excerpt": "Overhaul Trends visualizes how product overhaul activity and standard times change over its lifecycle. It helps planning teams identify wher"
+  },
+  {
+    "title": "Product Families",
+    "path": "content/product-management/30-product-families.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components",
+      "The management process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "product",
+      "families",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "management",
+      "process",
+      "common"
+    ],
+    "excerpt": "Product Families group similar products together so that APQP setup can be reused effectively. They provide the structure for standardizing "
+  },
+  {
+    "title": "Parts Database",
+    "path": "content/product-management/40-parts-database.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components",
+      "The management process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "parts",
+      "database",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "management",
+      "process",
+      "common"
+    ],
+    "excerpt": "The Parts Database is the central reference library for all physical items consumed during manufacturing or overhaul. It supports accurate B"
+  },
+  {
+    "title": "Production",
+    "path": "content/production/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "Why this area matters across the platform",
+      "Main views",
+      "Related"
+    ],
+    "keywords": [
+      "production",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "why",
+      "matters",
+      "across",
+      "the",
+      "platform",
+      "main",
+      "views",
+      "related"
+    ],
+    "excerpt": "Production is where planned batches are created and reviewed. It is the operational source for what will be made, when, and where. - Capacit"
+  },
+  {
+    "title": "Schedule",
+    "path": "content/production/10-schedule.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components of a scheduled batch",
+      "The scheduling process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "How Schedule connects to other pages",
+      "Related"
+    ],
+    "keywords": [
+      "schedule",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "of",
+      "a",
+      "scheduled",
+      "batch",
+      "the"
+    ],
+    "excerpt": "The Schedule is the master production planning table. It defines every production batch, serving as the operational source of truth for what"
+  },
+  {
+    "title": "Plan by Product",
+    "path": "content/production/20-plan-by-product.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "How Plan by Product connects to other pages",
+      "Related"
+    ],
+    "keywords": [
+      "plan",
+      "by",
+      "product",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical",
+      "process"
+    ],
+    "excerpt": "Plan by Product reorganizes the master schedule by grouping batches under each specific product. It helps teams spot product-level loading p"
+  },
+  {
+    "title": "Plan by Work Area",
+    "path": "content/production/30-plan-by-work-area.md",
+    "headings": [
+      "What this page is for",
+      "Before you start",
+      "Key components",
+      "The analytical process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "How Plan by Work Area connects to other pages",
+      "Related"
+    ],
+    "keywords": [
+      "plan",
+      "by",
+      "work",
+      "area",
+      "what",
+      "this",
+      "page",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "analytical"
+    ],
+    "excerpt": "Plan by Work Area groups the master schedule by physical location (e.g., Unit 2, Unit 3, Unit 6). It helps production managers balance floor"
+  },
+  {
+    "title": "Settings",
+    "path": "content/settings/00-overview.md",
+    "headings": [
+      "What this area is for",
+      "Before you start",
+      "Key components",
+      "The configuration process",
+      "Common mistakes to avoid",
+      "Quick example",
+      "Related"
+    ],
+    "keywords": [
+      "settings",
+      "what",
+      "this",
+      "area",
+      "is",
+      "for",
+      "before",
+      "you",
+      "start",
+      "key",
+      "components",
+      "the",
+      "configuration",
+      "process",
+      "common",
+      "mistakes"
+    ],
+    "excerpt": "Settings controls platform configuration and local user preferences. It is used to keep structural reference data (like teams and roles) and"
+  }
+]

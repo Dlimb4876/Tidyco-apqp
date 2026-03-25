@@ -1,0 +1,231 @@
+/* ============================================================
+   apqp-responsive.css — Responsive / media-query overrides
+   for all APQP sub-tab components.
+   Tidyco APQP Quality Tool
+   ============================================================ */
+
+/* ── Responsive Design ──────────────────────────────────────── */
+
+/* Tablet & Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .apqp-filters {
+    gap: 24px;
+  }
+
+  .card {
+    padding: 24px;
+  }
+}
+
+/* Tablet (768px - 1199px) */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .sec-title {
+    font-size: 20px;
+  }
+
+  .step-field.f-op {
+    width: 160px;
+  }
+
+  .step-field.f-ctq {
+    width: 130px;
+  }
+
+  .step-field.f-doc {
+    width: 160px;
+  }
+
+  .flow-node {
+    max-width: 100px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .apqp-filters {
+    gap: 12px;
+  }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 767px) {
+  /* Layout adjustments */
+  .sec-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sec-actions {
+    width: 100%;
+  }
+
+  .sec-actions .btn {
+    flex: 1;
+  }
+
+  /* Step field adjustments */
+  .step-num-cell {
+    width: 48px;
+    min-width: 48px;
+  }
+
+  .step-fields {
+    flex-wrap: wrap;
+  }
+
+  .step-field {
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .step-field.f-op {
+    width: auto;
+    min-width: 100px;
+  }
+
+  .step-field.f-ctq {
+    width: auto;
+    min-width: 80px;
+  }
+
+  .step-field.f-doc {
+    width: auto;
+    min-width: 100px;
+  }
+
+  .step-field.f-pfmea {
+    width: auto;
+    min-width: 60px;
+  }
+
+  .step-resources {
+    padding: 6px 8px 6px 50px;
+    gap: 3px;
+  }
+
+  /* Flow ribbon adjustments */
+  .flow-ribbon {
+    margin-bottom: 12px;
+    overflow-x: auto;
+  }
+
+  .flow-node {
+    min-width: 60px;
+    max-width: 100px;
+    padding: 6px 8px;
+  }
+
+  .flow-node-name {
+    font-size: 9px;
+  }
+
+  .flow-node-num {
+    font-size: 9px;
+  }
+
+  /* CTQ table column widths */
+  .ctq-tbl td:nth-child(2) { min-width: 30px; }
+  .ctq-tbl td:nth-child(3) { min-width: 120px; }
+  .ctq-tbl td:nth-child(4) { min-width: 70px; }
+  .ctq-tbl td:nth-child(5) { min-width: 80px; }
+  .ctq-tbl td:nth-child(6) { min-width: 70px; }
+  .ctq-tbl td:nth-child(7) { min-width: 80px; }
+  .ctq-tbl td:nth-child(8) { min-width: 50px; }
+
+  /* Action tracker table column widths */
+  .act-tbl td:nth-child(2) { min-width: 150px; }
+  .act-tbl td:nth-child(3) { min-width: 70px; }
+  .act-tbl td:nth-child(6) { min-width: 80px; }
+  .act-tbl td:nth-child(7) { min-width: 100px; }
+
+  /* BOM subnav */
+  .bom-subnav {
+    overflow-x: auto;
+  }
+
+  .bom-tab {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  /* BOM filter row */
+  .bom-filter-row {
+    gap: 4px;
+  }
+
+  .bom-filter-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .bom-pick-list {
+    max-height: 280px;
+  }
+
+  .bom-pick-item {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .bom-pick-name {
+    font-size: 12px;
+  }
+
+  .bom-pick-meta {
+    font-size: 10px;
+  }
+
+  /* Card adjustments */
+  .card {
+    padding: 16px;
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  .card-meta {
+    font-size: 11px;
+  }
+
+  /* Filter toolbar */
+  .apqp-filters {
+    gap: 8px;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  /* Button sizing */
+  .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  /* Typography scaling */
+  .sec-title {
+    font-size: 18px;
+  }
+
+  .sec-desc {
+    font-size: 12px;
+  }
+
+  /* Tab buttons */
+  .apqp-tab-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .apqp-tabs-shell {
+    padding: 10px 16px;
+    gap: 6px;
+  }
+}

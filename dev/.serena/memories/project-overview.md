@@ -1,0 +1,6 @@
+- Purpose: Tidyco APQP is a vanilla JavaScript SPA for APQP, manufacturing engineering, capacity, operations, feedback, MCS, and related workflows.
+- Backend: Supabase Auth + Postgres + Realtime.
+- Frontend: static HTML/CSS/ES6 JavaScript, Chart.js via CDN, IBM Plex Sans/Mono.
+- Entry point and dependency order source of truth: index.html.
+- Repo includes portals/, core/, utils/, tests/, docs/, plans/, supabase/, scripts/.
+- Primary user is non-technical; responses and docs should use plain language.
