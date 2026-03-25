@@ -35,6 +35,7 @@ $mimeTypes = @{
     '.svg'   = 'image/svg+xml'
     '.ico'   = 'image/x-icon'
     '.woff2' = 'font/woff2'
+    '.md'    = 'text/plain'
 }
 
 while ($listener.IsListening) {

@@ -4,30 +4,42 @@
 
 // ── Permission helpers ─────────────────────────────────────────
 const HYBRID_PERMISSION_DEFINITIONS = [
-  { key: 'portal_hub_view', label: 'Access Hub', group: 'Portal access' },
-  { key: 'portal_projects_view', label: 'Access Projects and APQP pages', group: 'Portal access' },
-  { key: 'portal_capacity_view', label: 'Access Capacity portal', group: 'Portal access' },
-  { key: 'portal_operations_view', label: 'Access Operations portal', group: 'Portal access' },
-  { key: 'portal_production_view', label: 'Access Production portal', group: 'Portal access' },
-  { key: 'portal_product_development_view', label: 'Access Product Development portal', group: 'Portal access' },
-  { key: 'portal_action_centre_view', label: 'Access Action Centre', group: 'Portal access' },
-  { key: 'portal_feedback_view', label: 'Access Feedback portal', group: 'Portal access' },
-  { key: 'portal_mcs_view', label: 'Access Manufacturing Change', group: 'Portal access' },
-  { key: 'portal_settings_view', label: 'Access Settings portal', group: 'Portal access' },
-  { key: 'feature_view_all_project_data', label: 'View all project data', group: 'Features' },
-  { key: 'feature_edit_projects_tasks_schedules', label: 'Edit projects, tasks and schedules', group: 'Features' },
-  { key: 'feature_add_delete_records', label: 'Add and delete records', group: 'Features' },
-  { key: 'feature_manage_families', label: 'Manage product families', group: 'Features' },
-  { key: 'feature_manage_work_areas', label: 'Manage work areas', group: 'Features' },
-  { key: 'feature_manage_capacity', label: 'Manage capacity planning', group: 'Features' },
-  { key: 'feature_manage_user_roles', label: 'Change user roles and team assignments', group: 'Features' },
-  { key: 'feature_access_settings', label: 'Edit Settings content', group: 'Features' },
-  { key: 'feature_mcs_approve', label: 'Approve or reject manufacturing changes', group: 'Features' },
-  { key: 'feature_npi_signoff_me_manager', label: 'Sign off NPI gates as ME Manager', group: 'Features' },
-  { key: 'feature_npi_signoff_operations_director', label: 'Sign off NPI gates as Operations Director', group: 'Features' },
-  { key: 'feature_npi_signoff_sales_director', label: 'Sign off NPI gates as Sales Director', group: 'Features' },
-  { key: 'field_settings_permissions_edit', label: 'Edit role and team assignment fields', group: 'Field-level' },
-  { key: 'data_scope_global', label: 'Global data scope', group: 'Data scope' }
+  { key: 'portal_hub_view', label: 'Access Hub', description: 'Lets the user open the main hub and use its shortcut cards.', group: 'Portal access' },
+  { key: 'portal_projects_view', label: 'Access Projects and APQP pages', description: 'Lets the user open project records and APQP working pages.', group: 'Portal access' },
+  { key: 'portal_capacity_view', label: 'Access Capacity portal', description: 'Lets the user open the capacity planning area.', group: 'Portal access' },
+  { key: 'portal_capacity_production_view', label: 'Access Capacity - Production', description: 'Lets the user open the Production stream inside Capacity.', group: 'Portal access' },
+  { key: 'portal_capacity_me_view', label: 'Access Capacity - ME', description: 'Lets the user open the Manufacturing Engineering stream inside Capacity.', group: 'Portal access' },
+  { key: 'portal_capacity_projects_view', label: 'Access Capacity - Project Management', description: 'Lets the user open the Project Management stream inside Capacity.', group: 'Portal access' },
+  { key: 'portal_capacity_logistics_view', label: 'Access Capacity - Logistics', description: 'Lets the user open the Logistics stream inside Capacity.', group: 'Portal access' },
+  { key: 'portal_capacity_unit6_view', label: 'Access Capacity - Unit 6', description: 'Lets the user open the Unit 6 stream inside Capacity.', group: 'Portal access' },
+  { key: 'portal_operations_view', label: 'Access Operations portal', description: 'Lets the user open operations dashboards and views.', group: 'Portal access' },
+  { key: 'portal_production_view', label: 'Access Production portal', description: 'Lets the user open production schedules and production views.', group: 'Portal access' },
+  { key: 'portal_production_scheduling_view', label: 'Access Production - Schedule', description: 'Lets the user open the Schedule page inside Production.', group: 'Portal access' },
+  { key: 'portal_production_by_product_view', label: 'Access Production - Plan by Product', description: 'Lets the user open the Plan by Product page inside Production.', group: 'Portal access' },
+  { key: 'portal_production_by_unit_view', label: 'Access Production - Plan by Work Area', description: 'Lets the user open the Plan by Work Area page inside Production.', group: 'Portal access' },
+  { key: 'portal_product_development_view', label: 'Access Product Development portal', description: 'Lets the user open product development and NPI pages.', group: 'Portal access' },
+  { key: 'portal_product_development_npi_view', label: 'Access Product Development - NPI Projects', description: 'Lets the user open the NPI Projects page inside Product Development.', group: 'Portal access' },
+  { key: 'portal_product_development_product_management_view', label: 'Access Product Development - Product Management', description: 'Lets the user open the Product Management page inside Product Development.', group: 'Portal access' },
+  { key: 'portal_product_development_product_family_db_view', label: 'Access Product Development - Product Family Database', description: 'Lets the user open the Product Family Database page inside Product Development.', group: 'Portal access' },
+  { key: 'portal_product_development_parts_database_view', label: 'Access Product Development - Parts Database', description: 'Lets the user open the Parts Database page inside Product Development.', group: 'Portal access' },
+  { key: 'portal_action_centre_view', label: 'Access Action Centre', description: 'Lets the user open the Action Centre and review tracked actions.', group: 'Portal access' },
+  { key: 'portal_feedback_view', label: 'Access Feedback portal', description: 'Lets the user open the feedback and bug reporting area.', group: 'Portal access' },
+  { key: 'portal_mcs_view', label: 'Access Manufacturing Change', description: 'Lets the user open manufacturing change records and workflows.', group: 'Portal access' },
+  { key: 'portal_settings_view', label: 'Access Settings portal', description: 'Lets the user open the Settings area.', group: 'Portal access' },
+  { key: 'feature_view_all_project_data', label: 'View all project data', description: 'Lets the user see project records, schedules, and related planning data.', group: 'Features' },
+  { key: 'feature_edit_projects_tasks_schedules', label: 'Edit projects, tasks and schedules', description: 'Lets the user change project details, task lists, and schedule information.', group: 'Features' },
+  { key: 'feature_add_delete_records', label: 'Add and delete records', description: 'Lets the user create new records and remove existing ones.', group: 'Features' },
+  { key: 'feature_manage_families', label: 'Manage product families', description: 'Lets the user add, edit, and organise product family records.', group: 'Features' },
+  { key: 'feature_manage_work_areas', label: 'Manage work areas', description: 'Lets the user maintain production work areas and their settings.', group: 'Features' },
+  { key: 'feature_manage_capacity', label: 'Manage capacity planning', description: 'Lets the user update capacity teams, loads, and planning settings.', group: 'Features' },
+  { key: 'feature_manage_user_roles', label: 'Change user roles and team assignments', description: 'Lets the user change another user\'s role or team assignment.', group: 'Features' },
+  { key: 'feature_access_settings', label: 'Edit Settings content', description: 'Lets the user change editable content inside the Settings portal.', group: 'Features' },
+  { key: 'feature_mcs_approve', label: 'Approve or reject manufacturing changes', description: 'Lets the user complete MCS approval decisions.', group: 'Features' },
+  { key: 'feature_npi_signoff_me_manager', label: 'Sign off NPI gates as ME Manager', description: 'Lets the user complete NPI gate sign-off as the ME Manager approver.', group: 'Features' },
+  { key: 'feature_npi_signoff_operations_director', label: 'Sign off NPI gates as Operations Director', description: 'Lets the user complete NPI gate sign-off as the Operations Director approver.', group: 'Features' },
+  { key: 'feature_npi_signoff_sales_director', label: 'Sign off NPI gates as Sales Director', description: 'Lets the user complete NPI gate sign-off as the Sales Director approver.', group: 'Features' },
+  { key: 'field_settings_permissions_edit', label: 'Edit role and team assignment fields', description: 'Lets the user use the dropdown fields on the Permissions page.', group: 'Field-level' },
+  { key: 'data_scope_global', label: 'Global data scope', description: 'Gives access to the shared data set used across the portal.', group: 'Data scope' }
 ];
 
 const LEGACY_TEAM_PERMISSION_MAP = {
@@ -74,6 +86,21 @@ const SECTION_EDIT_PERMISSION_MAP = {
   documents: 'feature_edit_projects_tasks_schedules'
 };
 
+const PORTAL_TAB_VIEW_PERMISSION_MAP = {
+  'capacity::production': 'portal_capacity_production_view',
+  'capacity::me': 'portal_capacity_me_view',
+  'capacity::projects': 'portal_capacity_projects_view',
+  'capacity::logistics': 'portal_capacity_logistics_view',
+  'capacity::unit6': 'portal_capacity_unit6_view',
+  'production::scheduling': 'portal_production_scheduling_view',
+  'production::by-product': 'portal_production_by_product_view',
+  'production::by-unit': 'portal_production_by_unit_view',
+  'product-development::npi': 'portal_product_development_npi_view',
+  'product-development::product-management': 'portal_product_development_product_management_view',
+  'product-development::product-family-db': 'portal_product_development_product_family_db_view',
+  'product-development::parts-database': 'portal_product_development_parts_database_view'
+};
+
 function getPermissionDefinitions() {
   return HYBRID_PERMISSION_DEFINITIONS.slice();
 }
@@ -88,9 +115,21 @@ function getRoleBaselinePermissions(role) {
     portal_hub_view: true,
     portal_projects_view: true,
     portal_capacity_view: true,
+    portal_capacity_production_view: true,
+    portal_capacity_me_view: true,
+    portal_capacity_projects_view: true,
+    portal_capacity_logistics_view: true,
+    portal_capacity_unit6_view: true,
     portal_operations_view: true,
     portal_production_view: true,
+    portal_production_scheduling_view: true,
+    portal_production_by_product_view: true,
+    portal_production_by_unit_view: true,
     portal_product_development_view: true,
+    portal_product_development_npi_view: true,
+    portal_product_development_product_management_view: true,
+    portal_product_development_product_family_db_view: true,
+    portal_product_development_parts_database_view: true,
     portal_action_centre_view: true,
     portal_feedback_view: true,
     portal_mcs_view: true,
@@ -153,6 +192,56 @@ function canViewSection(sectionKey) {
   const permissionKey = SECTION_VIEW_PERMISSION_MAP[sectionKey];
   if (!permissionKey) return true;
   return hasPermission(permissionKey);
+}
+
+function getPortalTabViewPermission(sectionKey, tabKey) {
+  if (!sectionKey || !tabKey || tabKey === 'root') return '';
+  return PORTAL_TAB_VIEW_PERMISSION_MAP[`${sectionKey}::${tabKey}`] || '';
+}
+
+function hasConfiguredPortalTabPolicy(sectionKey) {
+  const source = (typeof currentUserPermissions === 'object' && currentUserPermissions)
+    ? currentUserPermissions
+    : null;
+  if (!source || !sectionKey) return false;
+
+  const prefix = `${sectionKey}::`;
+  const tabPermissionKeys = Object.keys(PORTAL_TAB_VIEW_PERMISSION_MAP)
+    .filter((pageKey) => pageKey.startsWith(prefix))
+    .map((pageKey) => PORTAL_TAB_VIEW_PERMISSION_MAP[pageKey]);
+
+  if (tabPermissionKeys.length === 0) return false;
+
+  // Treat tab policy as configured only when at least one child grant is enabled.
+  // This keeps legacy parent-only permission sets working during migration.
+  return tabPermissionKeys.some((permissionKey) => {
+    const rawKey = Object.keys(source).find((k) => normalizePermissionKey(k) === permissionKey);
+    return !!(rawKey && source[rawKey]);
+  });
+}
+
+function canViewPortalTab(sectionKey, tabKey) {
+  if (!sectionKey) return false;
+  if (!canViewSection(sectionKey)) return false;
+  const permissionKey = getPortalTabViewPermission(sectionKey, tabKey);
+  if (!permissionKey) return true;
+
+  if (hasPermission(permissionKey)) return true;
+
+  // Backward compatibility: if no child tab policy is configured yet,
+  // inherit access from the parent portal grant.
+  if (!hasConfiguredPortalTabPolicy(sectionKey)) return true;
+
+  return false;
+}
+
+function canViewPageKey(pageKey) {
+  const key = String(pageKey || '').trim();
+  if (!key) return false;
+  if (!key.includes('::')) return canViewSection(key);
+
+  const [sectionKey, tabKey] = key.split('::');
+  return canViewPortalTab(sectionKey, tabKey);
 }
 
 // Returns true if the current user can create, edit, or delete data.
@@ -233,6 +322,44 @@ function calcRPN(r) {
   return (r.sev || 1) * (r.occ || 1) * (r.det || 1);
 }
 
+// Preserve typing continuity when an input-triggered action re-renders UI.
+function preserveInputCaretAfterRender(inputEl, rerenderFn, options = {}) {
+  if (typeof rerenderFn !== 'function') return;
+
+  const selectionStart = inputEl && typeof inputEl.selectionStart === 'number'
+    ? inputEl.selectionStart
+    : null;
+  const selectionEnd = inputEl && typeof inputEl.selectionEnd === 'number'
+    ? inputEl.selectionEnd
+    : selectionStart;
+
+  rerenderFn();
+
+  if (!inputEl) return;
+
+  const delay = Number.isFinite(options.delayMs) ? options.delayMs : 0;
+  setTimeout(() => {
+    const scope = typeof options.scopeResolver === 'function'
+      ? options.scopeResolver()
+      : (options.scope || document);
+    const replacement = typeof options.findReplacement === 'function'
+      ? options.findReplacement(scope)
+      : (options.replacementSelector && scope && typeof scope.querySelector === 'function'
+        ? scope.querySelector(options.replacementSelector)
+        : null);
+    if (!replacement) return;
+
+    replacement.focus();
+
+    if (selectionStart === null || typeof replacement.setSelectionRange !== 'function') return;
+
+    const len = (replacement.value || '').length;
+    const safeStart = Math.max(0, Math.min(selectionStart, len));
+    const safeEnd = Math.max(safeStart, Math.min(selectionEnd === null ? safeStart : selectionEnd, len));
+    replacement.setSelectionRange(safeStart, safeEnd);
+  }, delay);
+}
+
 
 function getWeekNumber(d) {
   d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -307,6 +434,17 @@ document.addEventListener('keydown', function(e) {
     if (openModal && openModal.id) {
       e.preventDefault();
       closeModal(openModal.id);
+    }
+  }
+
+  // Return to portal (hub) with P key.
+  if (key === 'p' && !isInputFocused()) {
+    if (isEditableElement(e.target)) return;
+    const openModal = document.querySelector('.modal-bg[style*="display: flex"], .modal-bg[style*="display:flex"], .modal-bg[style*="display: block"], .modal-bg[style*="display:block"]');
+    if (openModal) return;
+    e.preventDefault();
+    if (typeof navigate === 'function') {
+      navigate('hub');
     }
   }
 });

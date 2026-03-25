@@ -185,6 +185,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
     const startD = new Date(task.startDate || ''); startD.setHours(0,0,0,0);
     const isOverdue = task.status === 'SCHEDULED' && task.startDate && startD <= today;
     const rowUrgencyClass = isOverdue ? 'batch-row-overdue' : '';
+    const disabledRowClass = task.isDisabled === true ? ' me-task-row-disabled' : '';
 
     const catOpts = ME_CATS.map(c => `<option value="${c}" ${task.category === c ? 'selected' : ''}>${c}</option>`).join('');
     const memOpts = '<option value="">Unassigned</option>' + teamArray.map(m => `<option value="${m.id}" ${task.assigneeId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
@@ -197,14 +198,15 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
     const debouncedSaveFunc = isPM ? 'pmDebouncedSave' : 'meDebouncedSave';
 
     rows += `
-      <tr class="me-task-row ${rowUrgencyClass}" data-task-idx="${taskIndex}">
+      <tr class="me-task-row ${rowUrgencyClass}${disabledRowClass}" data-task-idx="${taskIndex}">
         <td><input name="cap_task_${taskIndex}_name" value="${esc(task.name)}" placeholder="new task" data-cap-action="cap-task-upd" data-field="name"></td>
         <td><select name="cap_task_${taskIndex}_category" data-cap-action="cap-task-upd" data-field="category">${catOpts}</select></td>
         <td><select name="cap_task_${taskIndex}_assigneeId" data-cap-action="cap-task-upd" data-field="assigneeId">${memOpts}</select></td>
         <td><select name="cap_task_${taskIndex}_productId" data-cap-action="cap-task-upd" data-field="productId">${prodOpts}</select></td>
         <td><input name="cap_task_${taskIndex}_startDate" type="date" value="${task.startDate || ''}" data-cap-action="cap-task-upd" data-field="startDate"></td>
         <td><input name="cap_task_${taskIndex}_endDate" type="date" value="${task.endDate || ''}" data-cap-action="cap-task-upd" data-field="endDate"></td>
-        <td><select name="cap_task_${taskIndex}_status" data-cap-action="cap-task-status-upd">${statusOpts}</select>${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
+        <td><select name="cap_task_${taskIndex}_status" data-cap-action="cap-task-status-upd">${statusOpts}</select>${task.isDisabled === true ? '<div class="batch-due-badge" style="background: var(--bg-soft); color: var(--muted); border-color: var(--line);">Disabled from calculations</div>' : ''}${isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''}</td>
+        <td style="text-align:center;"><input type="checkbox" style="width:14px;height:14px;" aria-label="Disable task from calculations" data-cap-action="cap-task-toggle-disabled" ${task.isDisabled === true ? 'checked' : ''}></td>
         <td><input name="cap_task_${taskIndex}_totalHours" type="number" value="${task.totalHours || 0}" step="0.5" data-cap-action="cap-task-upd" data-field="totalHours"></td>
         <td style="text-align: center;">
           ${canEdit() ? `<button class="me-del-btn" data-cap-action="cap-task-del">✕</button>` : ''}
@@ -286,7 +288,7 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
           <span class="me-card-title">TASKS</span>
           <span style="font-size:12px;color:var(--muted)">${totalHours} total hours</span>
         </div>
-        <div class="me-card-body">
+        <div class="me-card-body me-card-body-gutter">
           <div class="me-filters" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
             <div class="filter-chip">
               <input type="text" class="me-filter-input" placeholder="🔍 Search tasks..." value="${esc(currentFilters.search || '')}"
@@ -337,11 +339,12 @@ window.meRenderTasksTab = function(tasksArray, teamArray, availableProducts, isP
               <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">${meGetSortIcon('startDate', isPM)} Start Date</th>
               <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">${meGetSortIcon('endDate', isPM)} End Date</th>
               <th style="width:120px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">${meGetSortIcon('status', isPM)} Status</th>
+              <th style="width:90px">Disable</th>
               <th style="width:80px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="hours" title="Sort by hours">${meGetSortIcon('hours', isPM)} Hours</th>
               <th style="width:60px"></th>
             </tr></thead>
             <tbody>
-              ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
+              ${rows || `<tr><td colspan="10"><div style="text-align:center;padding:40px">
                   <div style="color:var(--muted);margin-bottom:12px">No tasks match the current filters</div>
                   ${canEdit() ? `<button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>` : ''}
                 </div></td></tr>`}

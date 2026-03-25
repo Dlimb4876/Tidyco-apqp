@@ -42,6 +42,17 @@ npm test -- tests/navigation.test.js
 npm test -- --coverage
 ```
 
+### Standalone Guide Wiki Validation
+
+The standalone guide wiki under `wiki/` is validated with lightweight static checks:
+
+```bash
+npm run wiki:build-index     # rebuilds wiki/content/_meta/search-index.json
+npm run wiki:audit-tokens    # warns on >1200 token soft cap, fails >1500 hard cap
+npm run wiki:check-links     # validates local markdown links in wiki/content
+npm run wiki:check           # runs all three checks
+```
+
 ---
 
 ## Test Coverage Status (March 2026)
@@ -57,6 +68,8 @@ npm test -- --coverage
 - Persistence and migration behavior (db)
 - Helpers/utilities (including modal and escaping helpers)
 - Capacity modules (ME/PM/Production paths)
+- Capacity stream isolation across PM, Logistics, and Unit 6 data adapters, orchestrators, and relational save paths
+- Capacity product-support rendering and support-history persistence mapping, including logistics split support inputs and history-table display
 - Product Development/NPI data and rendering paths
 - NPI PFD flowchart generation and persistence mapping
 - NPI gate signoff role-permission enforcement
@@ -71,6 +84,8 @@ npm test -- --coverage
   - Keyboard shortcut behavior parity with shortcuts modal
 
 **When writing new tests, prioritize cross-module regression protection before adding broad new feature suites.**
+
+For capacity split work, prefer per-stream mocks (`pmDataGet*`, `logDataGet*`, `unit6DataGet*`) over the old shared `meDataGet*` plus department filtering pattern. The isolated data-layer contract is now the behavior under test.
 
 ---
 

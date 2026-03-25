@@ -7,6 +7,27 @@ window.meRenderTeamTab = function(teamArray) {
     ? meGetDepartmentFromContext()
     : 'ME';
   const isPmContext = department === 'PM';
+  const teamTitle = isPmContext
+    ? 'PM TEAM'
+    : department === 'LOG'
+      ? 'LOGISTICS TECHNICIANS'
+      : department === 'UNIT6'
+        ? 'TECHNICIAN TEAM'
+        : 'ENGINEERING TEAM';
+  const memberPlural = isPmContext
+    ? 'managers'
+    : department === 'LOG'
+      ? 'logistics technicians'
+      : department === 'UNIT6'
+        ? 'technicians'
+        : 'engineers';
+  const addFirstLabel = isPmContext
+    ? 'Manager'
+    : department === 'LOG'
+      ? 'Logistics Technician'
+      : department === 'UNIT6'
+        ? 'Technician'
+        : 'Engineer';
 
   // Calculate monthly capacity (4.33 weeks per month average) — single pass
   const weeksPerMonth = 4.33;
@@ -86,10 +107,10 @@ window.meRenderTeamTab = function(teamArray) {
 
       <div class="me-card">
         <div class="me-card-head">
-          <span class="me-card-title">${isPmContext ? 'PM TEAM' : 'ENGINEERING TEAM'}</span>
-          <span style="font-size:12px;color:var(--muted)">${teamArray.length} ${isPmContext ? 'managers' : 'engineers'}</span>
+          <span class="me-card-title">${teamTitle}</span>
+          <span style="font-size:12px;color:var(--muted)">${teamArray.length} ${memberPlural}</span>
         </div>
-        <div class="me-card-body">
+        <div class="me-card-body me-card-body-gutter">
           <div class="me-tbl-wrap">
             <table class="me-tbl">
               <thead><tr>
@@ -105,14 +126,14 @@ window.meRenderTeamTab = function(teamArray) {
               </tr></thead>
               <tbody>
                 ${rows || `<tr><td colspan="9"><div style="text-align:center;padding:40px">
-                  <div style="color:var(--muted);margin-bottom:12px">No ${isPmContext ? 'managers' : 'engineers'} added yet</div>
-                  ${canEdit() ? `<button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add First ${isPmContext ? 'Manager' : 'Engineer'}</button>` : ''}
+                  <div style="color:var(--muted);margin-bottom:12px">No ${memberPlural} added yet</div>
+                  ${canEdit() ? `<button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add First ${addFirstLabel}</button>` : ''}
                 </div></td></tr>`}
               </tbody>
             </table>
           </div>
           ${canEdit() ? `<div class="me-add-row">
-            <button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add ${isPmContext ? 'Manager' : 'Engineer'}</button>
+            <button class="btn btn-primary btn-sm" data-cap-action="cap-team-add">＋ Add ${addFirstLabel}</button>
           </div>` : ''}
         </div>
       </div>

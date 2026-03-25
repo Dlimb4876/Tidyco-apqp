@@ -96,6 +96,19 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
     return count;
   };
 
+  const getSupportPerBatch = (product) => {
+    const rawKitting = Number(product && (product.kittingHours ?? product.kitting_hours ?? product.kittingTimeBookingHours ?? product.kitting_time_booking_hours));
+    const rawBookingInOut = Number(product && (product.bookingInOutHours ?? product.booking_in_out_hours));
+    const rawMovement = Number(product && (product.productMovementHours ?? product.product_movement_hours));
+    if (Number.isFinite(rawKitting) || Number.isFinite(rawBookingInOut) || Number.isFinite(rawMovement)) {
+      return Math.max(0, Number.isFinite(rawKitting) ? rawKitting : 0) +
+        Math.max(0, Number.isFinite(rawBookingInOut) ? rawBookingInOut : 0) +
+        Math.max(0, Number.isFinite(rawMovement) ? rawMovement : 0);
+    }
+
+    return Number(product && (product.hoursPerWeek ?? product.hours_per_week)) || 0;
+  };
+
   function resolveFamilyLabel(familyRef) {
     if (!familyRef) return '—';
 
@@ -169,10 +182,10 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
       taskCount,
       categories,
       tasks,
-      hoursPerWeek: Number(product.hoursPerWeek) || 0,
+      hoursPerWeek: getSupportPerBatch(product),
       monthlySupport: (() => {
         const batchCount = countBatchesForProductInRange(product, monthStart, monthEnd);
-        return (Number(product.hoursPerWeek) || 0) * batchCount;
+        return getSupportPerBatch(product) * batchCount;
       })()
     };
   });
@@ -277,7 +290,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
           <span class="me-card-title">PRODUCT TASK LOAD ANALYSIS</span>
           <span style="font-size:12px;color:var(--muted)">Demand from ${isPmContext ? 'PM' : 'ME'} capacity tasks per product · Showing ${visibleLoads.length}/${productLoads.length}</span>
         </div>
-        <div class="me-card-body">
+        <div class="me-card-body me-card-body-gutter">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
             <input
               type="text"

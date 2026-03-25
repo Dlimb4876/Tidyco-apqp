@@ -8,37 +8,25 @@ const fs = require('fs');
 const path = require('path');
 
 // ─────────────────────────────────────────────────────────────
-// Mock me-data.js functions (dependencies)
+// Mock isolated PM data functions (dependencies)
 // ─────────────────────────────────────────────────────────────
 
-const ME_TASKS = [
-  { id: 't1', name: 'Gate Review', department: 'ME' },
+const PM_TASKS = [
   { id: 't2', name: 'Milestone Review', department: 'PM' },
   { id: 't3', name: 'Budget Planning', department: 'PM' },
 ];
 
-const ME_TEAM = [
-  { id: 'm1', name: 'Alice', department: 'ME' },
+const PM_TEAM = [
   { id: 'm2', name: 'Bob',   department: 'PM' },
 ];
 
-const ME_PRODUCTS = [
-  { id: 'p1', name: 'Widget A', department: 'ME' },
+const PM_PRODUCTS = [
   { id: 'p2', name: 'Widget B', department: 'PM' },
 ];
 
-global.meDataGetTasks    = jest.fn(() => ME_TASKS);
-global.meDataGetTeam     = jest.fn(() => ME_TEAM);
-global.meDataGetProducts = jest.fn(() => ME_PRODUCTS);
-
-global.meFilterByDepartment = jest.fn((list, dept) => {
-  if (!Array.isArray(list)) return [];
-  const target = (dept || 'ME').toString().trim().toUpperCase();
-  return list.filter(item => {
-    const d = ((item && item.department) || 'ME').toString().trim().toUpperCase();
-    return d === target;
-  });
-});
+global.pmDataGetTasks = jest.fn(() => PM_TASKS);
+global.pmDataGetTeam = jest.fn(() => PM_TEAM);
+global.pmDataGetProducts = jest.fn(() => PM_PRODUCTS);
 
 // Load module
 const src = fs.readFileSync(
@@ -53,9 +41,9 @@ eval(src); // eslint-disable-line no-eval
 
 beforeEach(() => {
   jest.clearAllMocks();
-  global.meDataGetTasks.mockReturnValue(ME_TASKS);
-  global.meDataGetTeam.mockReturnValue(ME_TEAM);
-  global.meDataGetProducts.mockReturnValue(ME_PRODUCTS);
+  global.pmDataGetTasks.mockReturnValue(PM_TASKS);
+  global.pmDataGetTeam.mockReturnValue(PM_TEAM);
+  global.pmDataGetProducts.mockReturnValue(PM_PRODUCTS);
 });
 
 describe('pmCapacityData.getTasks()', () => {
@@ -65,20 +53,11 @@ describe('pmCapacityData.getTasks()', () => {
     expect(result).toHaveLength(2);
   });
 
-  it('returns empty array when meDataGetTasks is not a function', () => {
-    global.meDataGetTasks = undefined;
+  it('returns empty array when pmDataGetTasks is not a function', () => {
+    global.pmDataGetTasks = undefined;
     const result = window.pmCapacityData.getTasks();
     expect(result).toEqual([]);
-    global.meDataGetTasks = jest.fn(() => ME_TASKS);
-  });
-
-  it('returns all tasks when meFilterByDepartment is not available', () => {
-    const origFilter = global.meFilterByDepartment;
-    global.meFilterByDepartment = undefined;
-    const result = window.pmCapacityData.getTasks();
-    // Falls back to all tasks
-    expect(result).toHaveLength(ME_TASKS.length);
-    global.meFilterByDepartment = origFilter;
+    global.pmDataGetTasks = jest.fn(() => PM_TASKS);
   });
 });
 
@@ -90,21 +69,20 @@ describe('pmCapacityData.getTeam()', () => {
     expect(result[0].name).toBe('Bob');
   });
 
-  it('falls back to full team when no PM members exist', () => {
-    global.meDataGetTeam.mockReturnValue([
-      { id: 'm1', name: 'Alice', department: 'ME' },
+  it('returns the isolated PM team as-is', () => {
+    global.pmDataGetTeam.mockReturnValue([
+      { id: 'm4', name: 'Sam', department: 'PM' },
     ]);
     const result = window.pmCapacityData.getTeam();
-    // No PM members → return all ME members
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Alice');
+    expect(result[0].name).toBe('Sam');
   });
 
-  it('returns empty array when meDataGetTeam is not a function', () => {
-    global.meDataGetTeam = undefined;
+  it('returns empty array when pmDataGetTeam is not a function', () => {
+    global.pmDataGetTeam = undefined;
     const result = window.pmCapacityData.getTeam();
     expect(result).toEqual([]);
-    global.meDataGetTeam = jest.fn(() => ME_TEAM);
+    global.pmDataGetTeam = jest.fn(() => PM_TEAM);
   });
 });
 
@@ -116,19 +94,19 @@ describe('pmCapacityData.getProducts()', () => {
     expect(result[0].name).toBe('Widget B');
   });
 
-  it('falls back to all products when no PM products exist', () => {
-    global.meDataGetProducts.mockReturnValue([
-      { id: 'p1', name: 'Widget A', department: 'ME' },
+  it('returns the isolated PM products as-is', () => {
+    global.pmDataGetProducts.mockReturnValue([
+      { id: 'p9', name: 'Widget C', department: 'PM' },
     ]);
     const result = window.pmCapacityData.getProducts();
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Widget A');
+    expect(result[0].name).toBe('Widget C');
   });
 
-  it('returns empty array when meDataGetProducts is not a function', () => {
-    global.meDataGetProducts = undefined;
+  it('returns empty array when pmDataGetProducts is not a function', () => {
+    global.pmDataGetProducts = undefined;
     const result = window.pmCapacityData.getProducts();
     expect(result).toEqual([]);
-    global.meDataGetProducts = jest.fn(() => ME_PRODUCTS);
+    global.pmDataGetProducts = jest.fn(() => PM_PRODUCTS);
   });
 });

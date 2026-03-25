@@ -16,13 +16,14 @@ function opsMetricCard(label, value, detail, tone = 'good', dest = '') {
 
 function opsRenderUnitKpis(metrics) {
 	const unitMetrics = Array.isArray(metrics && metrics.operationsUnits) ? metrics.operationsUnits : [];
-	const hasDepartmentMetrics = !!(metrics && metrics.me && metrics.pm);
+	const hasDepartmentMetrics = !!(metrics && metrics.me && metrics.pm && metrics.log);
 	if (!hasDepartmentMetrics && unitMetrics.length === 0) {
 		return '';
 	}
 
 	const meTone = !metrics.me.ready ? 'watch' : metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good';
 	const pmTone = !metrics.pm.ready ? 'watch' : metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good';
+	const logTone = !metrics.log.ready ? 'watch' : metrics.log.utilisation > 90 ? 'critical' : metrics.log.utilisation > 80 ? 'watch' : 'good';
 	const areaCards = [
 		opsMetricCard(
 			'ME Utilisation',
@@ -41,6 +42,15 @@ function opsRenderUnitKpis(metrics) {
 				: 'Open Capacity once to initialize',
 			pmTone,
 			'capacity'
+		),
+		opsMetricCard(
+			'LOG Utilisation',
+			metrics.log.ready ? `${metrics.log.utilisation}%` : 'Not Ready',
+			metrics.log.ready
+				? `${Math.round(metrics.log.capacity)}h capacity / ${Math.round(metrics.log.demand)}h demand (${Math.round(metrics.log.headroom)}h headroom)`
+				: 'Open Capacity once to initialize',
+			logTone,
+			'capacity'
 		)
 	];
 
@@ -57,7 +67,7 @@ function opsRenderUnitKpis(metrics) {
 		<section class="ops-section">
 			<div class="ops-section-head">
 				<h3>Operations Capacity by Area</h3>
-				<span>ME, PM, Unit 2, Unit 3, and Unit 6 utilisation and headroom</span>
+				<span>ME, PM, Logistics, Unit 2, Unit 3, and Unit 6 utilisation and headroom</span>
 			</div>
 			<div class="ops-metrics-grid">
 				${areaCards.join('')}
@@ -131,6 +141,15 @@ function opsBuildPulseRows(metrics) {
 			? `Current utilisation is ${metrics.pm.utilisation}% with ${metrics.pm.headroom}h headroom this month.`
 			: 'PM capacity data has not been initialized yet. Open Capacity once to hydrate data.',
 		tone: metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch',
+		dest: 'capacity'
+	});
+
+	rows.push({
+		title: 'LOG Capacity Check',
+		detail: metrics.log.ready
+			? `Current utilisation is ${metrics.log.utilisation}% with ${metrics.log.headroom}h headroom this month.`
+			: 'Logistics capacity data has not been initialized yet. Open Capacity once to hydrate data.',
+		tone: metrics.log.ready ? (metrics.log.utilisation > 90 ? 'critical' : metrics.log.utilisation > 80 ? 'watch' : 'good') : 'watch',
 		dest: 'capacity'
 	});
 
@@ -302,6 +321,17 @@ function opsRenderPeopleView(metrics) {
 				<div class="ops-metrics-grid">
 					${opsMetricCard('PM Utilisation', metrics.pm.ready ? `${metrics.pm.utilisation}%` : 'Not Ready', metrics.pm.ready ? `${metrics.pm.capacity}h capacity / ${metrics.pm.demand}h demand` : 'Open Capacity once to initialize', metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch')}
 					${opsMetricCard('PM Headroom', metrics.pm.ready ? `${metrics.pm.headroom}h` : 'Not Ready', 'Current month available room', metrics.pm.ready && metrics.pm.headroom < 0 ? 'critical' : 'good')}
+				</div>
+			</section>
+
+			<section class="ops-panel">
+				<div class="ops-panel-head">
+					<h3>LOG Load</h3>
+					<span>Logistics capacity pressure and breathing room</span>
+				</div>
+				<div class="ops-metrics-grid">
+					${opsMetricCard('LOG Utilisation', metrics.log.ready ? `${metrics.log.utilisation}%` : 'Not Ready', metrics.log.ready ? `${metrics.log.capacity}h capacity / ${metrics.log.demand}h demand` : 'Open Capacity once to initialize', metrics.log.ready ? (metrics.log.utilisation > 90 ? 'critical' : metrics.log.utilisation > 80 ? 'watch' : 'good') : 'watch')}
+					${opsMetricCard('LOG Headroom', metrics.log.ready ? `${metrics.log.headroom}h` : 'Not Ready', 'Current month available room', metrics.log.ready && metrics.log.headroom < 0 ? 'critical' : 'good')}
 				</div>
 			</section>
 

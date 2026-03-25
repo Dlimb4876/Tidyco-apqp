@@ -156,6 +156,23 @@
   color: var(--mid);
 }
 
+.settings-permission-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-permission-label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.settings-permission-desc {
+  color: var(--mid);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 /* ── Desktop layout ─────────────────────────────────────────── */
 @media (min-width: 768px) {
   .settings-portal {

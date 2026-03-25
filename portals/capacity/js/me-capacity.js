@@ -20,6 +20,7 @@ window.meCapSmartRender = function() {
     return;
   }
   if (meTab === 'chart') {
+    // Chart stays static while open; refresh applies next time chart is opened.
     meChartDirty = true;
     return;
   }
@@ -40,7 +41,7 @@ window.renderMeCapacity = function() {
     const synced = meDataAutoSyncProductionProducts();
     if (synced && window.meDataInitialized) {
       setTimeout(() => {
-        if (typeof meDataSave === 'function') meDataSave(false);
+        if (typeof meDebouncedSave === 'function') meDebouncedSave();
       }, 1000);
     }
   }
@@ -96,6 +97,14 @@ window.meSetTab = function(tab) {
     pmSetTab(tab);
     return;
   }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logSetTab === 'function') {
+    logSetTab(tab);
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6SetTab === 'function') {
+    unit6SetTab(tab);
+    return;
+  }
 
   if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart';
   const prevMeTab = meTab;
@@ -135,6 +144,26 @@ window.meRefreshCurrentTab = function() {
     pmRefreshCurrentTab();
     return;
   }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logRefreshCurrentTab === 'function') {
+    logRefreshCurrentTab();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6RefreshCurrentTab === 'function') {
+    unit6RefreshCurrentTab();
+    return;
+  }
+
+  // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
+  // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
+  if (meTab === 'chart') {
+    const monthInput = document.getElementById('meChartMonthInput');
+    if (monthInput && meChartStart) {
+      monthInput.value = meChartStart;
+    }
+    meDrawChartNow();
+    meDrawHeatmapNow();
+    return;
+  }
 
   const body = document.getElementById('meBody');
   if (body) {
@@ -149,18 +178,10 @@ window.meRefreshCurrentTab = function() {
 };
 
 function meGetTabContent() {
-  const team = typeof meFilterByDepartment === 'function'
-    ? meFilterByDepartment(meDataGetTeam(), 'ME', 'ME')
-    : meDataGetTeam();
-  const tasks = typeof meFilterByDepartment === 'function'
-    ? meFilterByDepartment(meDataGetTasks(), 'ME', 'ME')
-    : meDataGetTasks();
-  const products = typeof meFilterByDepartment === 'function'
-    ? meFilterByDepartment(meDataGetProducts(), 'ME', 'ME')
-    : meDataGetProducts();
-  const holidays = typeof meFilterByDepartment === 'function'
-    ? meFilterByDepartment(meDataGetHolidays(), 'ME', 'ME')
-    : meDataGetHolidays();
+  const team = meDataGetTeam();
+  const tasks = meDataGetTasks();
+  const products = meDataGetProducts();
+  const holidays = meDataGetHolidays();
 
   // Initialize holiday month on first view
   if (!meHolidayMonth) {
@@ -188,10 +209,28 @@ function meGetTabContent() {
   }
 }
 
+function meRerenderChartTabForMonthChange() {
+  const body = document.getElementById('meBody');
+  if (!body) return;
+  body.innerHTML = meGetTabContent();
+  setTimeout(() => {
+    meDrawChartNow();
+    meDrawHeatmapNow();
+  }, 100);
+}
+
 // ── Month navigation handlers ──────────────────────────────
 window.meOnMonthChange = function(newMonth) {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnMonthChange === 'function') {
     pmOnMonthChange(newMonth);
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logOnMonthChange === 'function') {
+    logOnMonthChange(newMonth);
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6OnMonthChange === 'function') {
+    unit6OnMonthChange(newMonth);
     return;
   }
 
@@ -200,6 +239,8 @@ window.meOnMonthChange = function(newMonth) {
   } else {
     meChartStart = newMonth;
     localStorage.setItem('meChartStartMonth', newMonth);
+    meRerenderChartTabForMonthChange();
+    return;
   }
   meRefreshCurrentTab();
 };
@@ -207,6 +248,14 @@ window.meOnMonthChange = function(newMonth) {
 window.meOnNextMonth = function() {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnNextMonth === 'function') {
     pmOnNextMonth();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logOnNextMonth === 'function') {
+    logOnNextMonth();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6OnNextMonth === 'function') {
+    unit6OnNextMonth();
     return;
   }
 
@@ -221,6 +270,8 @@ window.meOnNextMonth = function() {
   } else {
     meChartStart = newMonth;
     localStorage.setItem('meChartStartMonth', newMonth);
+    meRerenderChartTabForMonthChange();
+    return;
   }
   meRefreshCurrentTab();
 };
@@ -228,6 +279,14 @@ window.meOnNextMonth = function() {
 window.meOnPrevMonth = function() {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnPrevMonth === 'function') {
     pmOnPrevMonth();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logOnPrevMonth === 'function') {
+    logOnPrevMonth();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6OnPrevMonth === 'function') {
+    unit6OnPrevMonth();
     return;
   }
 
@@ -242,6 +301,8 @@ window.meOnPrevMonth = function() {
   } else {
     meChartStart = newMonth;
     localStorage.setItem('meChartStartMonth', newMonth);
+    meRerenderChartTabForMonthChange();
+    return;
   }
   meRefreshCurrentTab();
 };
@@ -259,6 +320,14 @@ window.meOnSave = async function(showAlert) {
 function meDebouncedSave() {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmDebouncedSave === 'function') {
     pmDebouncedSave();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logDebouncedSave === 'function') {
+    logDebouncedSave();
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6DebouncedSave === 'function') {
+    unit6DebouncedSave();
     return;
   }
 

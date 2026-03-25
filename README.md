@@ -88,6 +88,29 @@ When changing the ME Capacity plan, make the equivalent change in the PM Capacit
 
 This applies to UI, routing, shared data handling, and persistence changes so the two capacity plans do not drift apart.
 
+Capacity streams now persist through isolated data layers: ME continues to use the `me_*` tables, while PM, Logistics, and Unit 6 use their own `pm_*`, `log_*`, and `unit6_*` tables plus matching JS state modules. Shared chart and heatmap components still exist, but they now read from the active stream's isolated state instead of filtering everything out of ME memory.
+
+Logistics Product Support now captures `Kitting`, `Booking In/Out`, and `Product Movement` separately, with `Hours/Batch` shown as the computed sum of those component values when a support change is applied. The row history view shows all component values as well as the total.
+
+---
+
+## Standalone Guide Wiki (Preview)
+
+A standalone guide wiki scaffold now exists under `wiki/` and is intentionally **not** linked from the main portal yet.
+
+- Local review URL: `http://localhost:8000/wiki/index.html`
+- Entry file: `wiki/index.html`
+- Area metadata: `wiki/content/_meta/areas.json`
+
+Validation commands:
+
+```bash
+npm run wiki:build-index
+npm run wiki:audit-tokens
+npm run wiki:check-links
+npm run wiki:check
+```
+
 ---
 
 ## NPI Gate Signoff Permissions
@@ -139,6 +162,9 @@ These links are edited directly in the PFD table and used to build the graphical
 │   │   └── /js
 │   │       ├── capacity.js           # Portal entry and sub-tab routing
 │   │       ├── me-data.js            # ME data layer and Supabase sync
+│   │       ├── /project-management/js/pm-data.js # PM isolated data layer and sync
+│   │       ├── /logistics/js/log-data.js # Logistics isolated data layer and sync
+│   │       ├── /unit6/js/unit6-data.js # Unit 6 isolated data layer and sync
 │   │       ├── me-team.js            # Team member management
 │   │       ├── me-tasks.js           # Task and project allocation
 │   │       ├── me-products.js        # Product loading for ME capacity

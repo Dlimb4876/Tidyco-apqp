@@ -37,6 +37,7 @@ global.esc = (v) => String(v ?? '')
   .replace(/>/g, '&gt;')
   .replace(/\"/g, '&quot;')
   .replace(/'/g, '&#039;');
+global.canViewPortalTab = jest.fn(() => true);
 global.render = jest.fn();
 global.prodState = {
     products: [],
@@ -63,6 +64,7 @@ describe('Production Portal', () => {
   beforeEach(() => {
     prodPlanMonthOffset = 0;
     productionTab = 'root';
+    global.canViewPortalTab = jest.fn(() => true);
     prodState.products = [];
     prodState.batches = [];
     prodState.activeUnit = 'Unit 2';
@@ -85,6 +87,24 @@ describe('Production Portal', () => {
         const tabHtml = renderProduction();
         expect(tabHtml).toContain('data-action="prod-nav-tab"');
         expect(tabHtml).not.toContain('onclick=');
+      });
+
+      test('renderProduction hides production pages the user cannot view', () => {
+        global.canViewPortalTab = jest.fn((section, tab) => !(section === 'production' && tab === 'by-unit'));
+
+        const rootHtml = renderProduction();
+
+        expect(rootHtml).toContain('Plan by Product');
+        expect(rootHtml).not.toContain('Plan by Work Area');
+      });
+
+      test('setProductionTab ignores tabs the user cannot view', () => {
+        global.canViewPortalTab = jest.fn((section, tab) => !(section === 'production' && tab === 'by-unit'));
+
+        setProductionTab('by-unit');
+
+        expect(productionTab).toBe('root');
+        expect(global.render).not.toHaveBeenCalled();
       });
     });
 

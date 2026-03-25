@@ -36,10 +36,10 @@ eval(src); // eslint-disable-line no-eval
 // ─────────────────────────────────────────────────────────────
 
 const SAMPLE_TASKS = [
-  { id: 't1', name: 'Gate Review',       category: 'NPI',         assigneeId: 'm1', productId: 'p1', startDate: '2025-01-10', endDate: '2025-01-20', status: 'SCHEDULED', totalHours: 8  },
-  { id: 't2', name: 'Jig Design',        category: 'Improvement', assigneeId: 'm2', productId: 'p1', startDate: '2025-02-01', endDate: '2025-02-15', status: 'STARTED',    totalHours: 16 },
-  { id: 't3', name: 'Supplier Audit',    category: 'NPI',         assigneeId: 'm1', productId: 'p2', startDate: '2025-03-01', endDate: '2025-03-05', status: 'COMPLETED',  totalHours: 4  },
-  { id: 't4', name: 'Quote Estimation',  category: 'Tendering',   assigneeId: null, productId: null, startDate: '2025-04-01', endDate: '2025-04-10', status: 'SCHEDULED',  totalHours: 12 },
+  { id: 't1', name: 'Gate Review',       category: 'NPI',         assigneeId: 'm1', productId: 'p1', startDate: '2025-01-10', endDate: '2025-01-20', status: 'SCHEDULED', totalHours: 8,  isDisabled: false },
+  { id: 't2', name: 'Jig Design',        category: 'Improvement', assigneeId: 'm2', productId: 'p1', startDate: '2025-02-01', endDate: '2025-02-15', status: 'STARTED',    totalHours: 16, isDisabled: true },
+  { id: 't3', name: 'Supplier Audit',    category: 'NPI',         assigneeId: 'm1', productId: 'p2', startDate: '2025-03-01', endDate: '2025-03-05', status: 'COMPLETED',  totalHours: 4,  isDisabled: false },
+  { id: 't4', name: 'Quote Estimation',  category: 'Tendering',   assigneeId: null, productId: null, startDate: '2025-04-01', endDate: '2025-04-10', status: 'SCHEDULED',  totalHours: 12, isDisabled: false },
 ];
 
 const SAMPLE_TEAM = [
@@ -210,5 +210,12 @@ describe('meRenderTasksTab() — HTML structure', () => {
     window.meTasksFilters.search = 'nonexistent_task_xyz';
     const html = window.meRenderTasksTab(SAMPLE_TASKS, SAMPLE_TEAM, SAMPLE_PRODUCTS);
     expect(html).toContain('No tasks match the current filters');
+  });
+
+  it('shows disabled marker and checked disable checkbox for disabled tasks', () => {
+    const html = window.meRenderTasksTab(SAMPLE_TASKS, SAMPLE_TEAM, SAMPLE_PRODUCTS);
+    expect(html).toContain('Disabled from calculations');
+    expect(html).toContain('data-cap-action="cap-task-toggle-disabled" checked');
+    expect(html).toContain('>Disable</th>');
   });
 });

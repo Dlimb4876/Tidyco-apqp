@@ -25,6 +25,10 @@ global.getBankHolidaysForYear = jest.fn(() => [
   { date: '2025-01-01', title: "New Year's Day" },
   { date: '2025-12-25', title: 'Christmas Day' },
 ]);
+global.meGetHoursPerWeek = jest.fn((value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : 37;
+});
 global.getMonthLabel = jest.fn((monthKey) => {
   const [year, month] = monthKey.split('-');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -179,6 +183,38 @@ describe('meNormalizeDateRange()', () => {
   });
 });
 
+describe('meNormalizeAndDedupeSupportHistory()', () => {
+  it('keeps the most recently updated record for duplicate product/date/department rows', () => {
+    const rows = [
+      {
+        id: 'history-old',
+        productId: 'prod-1',
+        department: 'ME',
+        effectiveDate: '2026-03-01',
+        hoursPerWeek: 8,
+        changeReason: 'Old value',
+        updatedAt: '2026-03-20T08:00:00.000Z'
+      },
+      {
+        id: 'history-new',
+        productId: 'prod-1',
+        department: 'ME',
+        effectiveDate: '2026-03-01',
+        hoursPerWeek: 12,
+        changeReason: 'Edited value',
+        updatedAt: '2026-03-25T09:00:00.000Z'
+      }
+    ];
+
+    const deduped = meNormalizeAndDedupeSupportHistory(rows); // eslint-disable-line no-undef
+
+    expect(deduped).toHaveLength(1);
+    expect(deduped[0].id).toBe('history-new');
+    expect(deduped[0].hoursPerWeek).toBe(12);
+    expect(deduped[0].changeReason).toBe('Edited value');
+  });
+});
+
 // ─────────────────────────────────────────────────────────────
 // Tests — meFormatDate, meGetMonthLabel (me-holidays.js)
 // ─────────────────────────────────────────────────────────────
@@ -239,6 +275,124 @@ describe('getTodayDateString()', () => {
   });
 });
 
+describe('meSaveProductRelational()', () => {
+  afterEach(() => {
+    delete global.supa;
+  });
+
+  it('reuses existing row id by product_database_id and persists only supported product departments', async () => {
+    const lookupLimit = jest.fn().mockResolvedValue({ data: [{ id: 'existing-prod-id' }], error: null });
+    const lookupEq = jest.fn(() => ({ limit: lookupLimit }));
+    const lookupSelect = jest.fn(() => ({ eq: lookupEq }));
+
+    const upsertSelect = jest.fn().mockResolvedValue({ data: [{ id: 'existing-prod-id' }], error: null });
+    const upsert = jest.fn(() => ({ select: upsertSelect }));
+
+    global.supa = {
+      from: jest.fn(() => ({
+        select: lookupSelect,
+        upsert
+      }))
+    };
+
+    const product = {
+      id: '',
+      name: 'Widget',
+      productDatabaseId: 'db-prod-1',
+      hoursPerWeek: 8,
+      department: 'LOG',
+      notes: 'sync product'
+    };
+
+    const saved = await window.meSaveProductRelational('user-1', product);
+
+    expect(saved).toBe(true);
+    expect(global.supa.from).toHaveBeenCalledWith('me_products');
+    expect(lookupEq).toHaveBeenCalledWith('product_database_id', 'db-prod-1');
+    expect(upsert).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          id: 'existing-prod-id',
+          user_id: 'user-1',
+          product_database_id: 'db-prod-1'
+        })
+      ],
+      { onConflict: 'id' }
+    );
+    const [productPayload] = upsert.mock.calls[0][0];
+    expect(productPayload).not.toHaveProperty('department');
+    expect(product.id).toBe('existing-prod-id');
+  });
+});
+
+describe('task disable relational mapping', () => {
+  afterEach(() => {
+    delete global.supa;
+  });
+
+  it('maps is_disabled from relational me_tasks rows', async () => {
+    global.supa = {
+      from: jest.fn(() => ({
+        select: jest.fn().mockResolvedValue({
+          data: [{
+            id: 'task-1',
+            name: 'Review',
+            category: 'NPI',
+            type: 'standard',
+            assignee_id: 'member-1',
+            product_id: null,
+            start_date: '2026-01-01',
+            end_date: '2026-01-02',
+            total_hours: 4,
+            status: 'SCHEDULED',
+            is_disabled: true,
+            department: 'ME',
+            created_at: '2026-01-01T00:00:00.000Z'
+          }],
+          error: null
+        })
+      }))
+    };
+
+    const tasks = await window.meLoadRelationalTasks('user-1');
+    expect(tasks).toEqual([
+      expect.objectContaining({ id: 'task-1', isDisabled: true })
+    ]);
+  });
+
+  it('persists isDisabled into is_disabled payload on save', async () => {
+    const upsertSelect = jest.fn().mockResolvedValue({ data: [{ id: 'task-1' }], error: null });
+    const upsert = jest.fn(() => ({ select: upsertSelect }));
+    global.supa = {
+      from: jest.fn(() => ({ upsert }))
+    };
+
+    const task = {
+      id: 'task-1',
+      name: 'Review',
+      category: 'NPI',
+      type: 'standard',
+      assigneeId: 'member-1',
+      productId: '',
+      startDate: '2026-01-01',
+      endDate: '2026-01-02',
+      totalHours: 4,
+      status: 'SCHEDULED',
+      isDisabled: true,
+      department: 'ME'
+    };
+
+    const result = await window.meSaveTaskRelational('user-1', task);
+    expect(result.success).toBe(true);
+    expect(upsert).toHaveBeenCalledWith(
+      [expect.objectContaining({ id: 'task-1', is_disabled: true })],
+      { onConflict: 'id' }
+    );
+    const [taskPayload] = upsert.mock.calls[0][0];
+    expect(taskPayload).not.toHaveProperty('department');
+  });
+});
+
 describe('meDataInit()', () => {
   afterEach(() => {
     delete global.currentUser;
@@ -249,6 +403,7 @@ describe('meDataInit()', () => {
     delete global.meSaveTaskRelational;
     delete global.meSaveProductRelational;
     delete global.meDeleteTaskRelational;
+    delete global.meDeleteTeamRelational;
     global.meLoadRelationalTeams = undefined;
     global.meLoadRelationalTasks = undefined;
     global.meLoadRelationalProducts = undefined;
@@ -298,7 +453,7 @@ describe('meDataInit()', () => {
     global.meSaveProductRelational = jest.fn();
 
     window.meDataReset();
-    window.meDataAddHoliday('person-1', '2026-01-05', 'full', 'ME');
+    window.meDataAddHoliday('person-1', '2026-01-05', 'full', 'LOG');
 
     const eq = jest.fn().mockResolvedValue({ error: null });
     const del = jest.fn().mockReturnValue({ eq });
@@ -363,5 +518,143 @@ describe('meDataInit()', () => {
       expect.objectContaining({ id: 'task-keep-me', name: 'Task Two' })
     );
     expect(window.meDataPendingDeletes.tasks).toEqual([]);
+  });
+
+  it('persists deleted team members to relational storage so refresh does not restore them', async () => {
+    global.currentUser = { id: 'user-1' };
+    global.setSyncBadge = jest.fn();
+    global.meSaveTeamRelational = jest.fn().mockResolvedValue(true);
+    global.meSaveProductRelational = jest.fn().mockResolvedValue(true);
+    global.meSaveTaskRelational = jest.fn().mockResolvedValue({ success: true, taskId: 'persisted-task' });
+    global.meDeleteTeamRelational = jest.fn().mockResolvedValue(true);
+
+    window.meDataReset();
+    window.meDataState.team = [
+      { id: 'team-delete-me', name: 'Alex', hoursPerWeek: 37, utilisation: 80, department: 'ME' },
+      { id: 'team-keep-me', name: 'Sam', hoursPerWeek: 37, utilisation: 80, department: 'ME' }
+    ];
+
+    // Simulate user deleting the first person in the Team tab.
+    window.meDataDeleteTeam(0);
+
+    const eq = jest.fn().mockResolvedValue({ error: null });
+    const del = jest.fn().mockReturnValue({ eq });
+    const from = jest.fn((table) => {
+      if (table === 'me_holidays') {
+        return { delete: del, insert: jest.fn().mockResolvedValue({ error: null }) };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    });
+    global.supa = { from };
+
+    await window.meDataSave(false);
+
+    expect(global.meDeleteTeamRelational).toHaveBeenCalledWith('team-delete-me');
+    expect(global.meSaveTeamRelational).toHaveBeenCalledTimes(1);
+    expect(global.meSaveTeamRelational).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ id: 'team-keep-me', name: 'Sam' })
+    );
+    expect(window.meDataPendingDeletes.teams).toEqual([]);
+  });
+});
+
+describe('meDataAutoSyncDepartmentProducts()', () => {
+  afterEach(() => {
+    delete global.productsState;
+    window.meDataReset();
+  });
+
+  it('drops legacy manual rows when a linked product with the same name exists', () => {
+    global.productsState = {
+      products: [
+        { id: 'db-prod-1', name: 'Widget', notes: '' }
+      ]
+    };
+
+    window.meDataState.products = [
+      {
+        id: 'linked-row',
+        name: 'Widget',
+        department: 'ME',
+        hoursPerWeek: 5,
+        notes: '',
+        productDatabaseId: 'db-prod-1',
+        createdAt: '2026-03-01T00:00:00.000Z'
+      },
+      {
+        id: 'legacy-manual',
+        name: 'Widget',
+        department: 'ME',
+        hoursPerWeek: 5,
+        notes: '',
+        productDatabaseId: '',
+        createdAt: '2026-03-01T00:00:00.000Z'
+      },
+      {
+        id: 'manual-custom',
+        name: 'Custom Fixture',
+        department: 'ME',
+        hoursPerWeek: 4,
+        notes: '',
+        productDatabaseId: '',
+        createdAt: '2026-03-01T00:00:00.000Z'
+      }
+    ];
+
+    const synced = window.meDataAutoSyncProductionProducts();
+
+    expect(synced).toBe(true);
+    const meProducts = window.meDataState.products.filter(p => p.department === 'ME');
+    expect(meProducts.map(p => p.name)).toEqual(expect.arrayContaining(['Widget', 'Custom Fixture']));
+    expect(meProducts.filter(p => p.name === 'Widget')).toHaveLength(1);
+  });
+
+  it('restores latest logistics support breakdown from support history', () => {
+    global.productsState = {
+      products: [
+        { id: 'db-prod-1', name: 'Widget', notes: '' }
+      ]
+    };
+
+    window.meDataState.products = [
+      {
+        id: 'persisted-product',
+        name: 'Widget',
+        department: 'ME',
+        hoursPerWeek: 5,
+        notes: '',
+        productDatabaseId: 'db-prod-1',
+        createdAt: '2026-03-01T00:00:00.000Z'
+      }
+    ];
+    window.meDataState.productSupportHistory = [
+      {
+        id: 'log-hist-1',
+        productId: 'persisted-product',
+        department: 'LOG',
+        hoursPerWeek: 2.25,
+        kittingHours: 1.25,
+        bookingInOutHours: 0.25,
+        productMovementHours: 0.75,
+        effectiveDate: '2026-03-05',
+        endDate: '',
+        changeReason: 'Split logistics work',
+        notes: ''
+      }
+    ];
+
+    const synced = window.meDataAutoSyncLogProducts();
+
+    expect(synced).toBe(true);
+    const logProduct = window.meDataState.products.find(p => p.department === 'LOG');
+    expect(logProduct).toBeTruthy();
+    expect(logProduct.id).toBe('persisted-product');
+    expect(logProduct.hoursPerWeek).toBeCloseTo(2.25, 6);
+    expect(logProduct.kittingHours).toBeCloseTo(1.25, 6);
+    expect(logProduct.bookingInOutHours).toBeCloseTo(0.25, 6);
+    expect(logProduct.kittingTimeBookingHours).toBeCloseTo(1.25, 6);
+    expect(logProduct.productMovementHours).toBeCloseTo(0.75, 6);
+    expect(logProduct.supportEffectiveDate).toBe('2026-03-05');
   });
 });

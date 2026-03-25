@@ -11,11 +11,7 @@ Guidelines for building and running lightweight repo agents in Tidyco APQP.
 ### Testing
 - Purpose: Validate test health and gaps.
 - Trigger: Test changes and PR review.
-- Default checks: `npm test`, then `npm run check:all`.
-
-### Capacity Parity
-- Purpose: Keep ME and PM capacity behavior aligned.
-- Trigger: Any edit under `portals/capacity/`.
+- Default checks: `npm run check:all`.
 
 ### Documentation
 - Purpose: Keep docs/rules aligned with real behavior.
@@ -44,6 +40,5 @@ Guidelines for building and running lightweight repo agents in Tidyco APQP.
 ## Workflow Order
 1. Code Quality
 2. Testing
-3. Capacity parity (when relevant)
-4. Security/DB validation (when relevant)
-5. Documentation consistency
+3. Security/DB validation (when relevant)
+4. Documentation consistency

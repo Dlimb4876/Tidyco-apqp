@@ -19,7 +19,19 @@ function getTodayDateString() {
 
 function meNormalizeDepartmentTag(value, fallback = 'ME') {
   const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
-  return normalized === 'PM' ? 'PM' : 'ME';
+  if (normalized === 'PM') return 'PM';
+  if (normalized === 'LOG') return 'LOG';
+  if (normalized === 'UNIT6') return 'UNIT6';
+  return 'ME';
+}
+
+function meNormalizeMeTableDepartment(value) {
+  void value;
+  return 'ME';
+}
+
+function meNormalizePersistedProductDepartment(value, fallback = 'ME') {
+  return meNormalizeMeTableDepartment(meNormalizeDepartmentTag(value, fallback));
 }
 
 function meNormalizeIsoDate(dateValue, fallbackDate) {
@@ -62,7 +74,7 @@ window.meLoadRelationalTeams = async function(userId) {
       utilisation: t.utilisation,
       jobTitle: t.job_title || '',
       group: t.team_group || '',
-      department: meNormalizeDepartmentTag(t.department, 'ME'),
+      department: meNormalizeMeTableDepartment(t.department),
       startDate: t.start_date || '',
       endDate: t.end_date || '',
       createdAt: t.created_at
@@ -89,7 +101,7 @@ window.meLoadRelationalProducts = async function(userId) {
       name: mp.name || '(Unknown Product)',
       productDatabaseId: mp.product_database_id,
       hoursPerWeek: mp.hours_per_week,
-      department: meNormalizeDepartmentTag(mp.department, 'ME'),
+      department: meNormalizeMeTableDepartment(mp.department),
       notes: mp.notes,
       createdAt: mp.created_at,
       updatedAt: mp.updated_at
@@ -115,11 +127,15 @@ window.meLoadRelationalProductSupportHistory = async function(userId) {
       id: row.id,
       productId: row.product_id,
       hoursPerWeek: row.hours_per_week,
+      kittingHours: row.kitting_hours ?? row.kitting_time_booking_hours,
+      bookingInOutHours: row.booking_in_out_hours,
+      kittingTimeBookingHours: row.kitting_hours ?? row.kitting_time_booking_hours,
+      productMovementHours: row.product_movement_hours,
       effectiveDate: row.effective_date,
       endDate: row.end_date || '',
       changeReason: row.change_reason || '',
       notes: row.notes || '',
-      department: meNormalizeDepartmentTag(row.department, 'ME'),
+      department: meNormalizeMeTableDepartment(row.department),
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
@@ -142,10 +158,11 @@ window.meLoadRelationalHolidays = async function(userId) {
 
     return (data || []).map(h => ({
       id: h.id,
+      userId: h.user_id,
       personId: h.person_id,
       date: h.date,
       type: h.type,
-      department: meNormalizeDepartmentTag(h.department, 'ME'),
+      department: meNormalizeMeTableDepartment(h.department),
       createdAt: h.created_at
     }));
   } catch (err) {
@@ -176,7 +193,8 @@ window.meLoadRelationalTasks = async function(userId) {
       endDate:    t.end_date    || '',
       totalHours: t.total_hours || 0,
       status:     t.status || 'SCHEDULED',
-      department: meNormalizeDepartmentTag(t.department, 'ME'),
+      isDisabled: t.is_disabled === true,
+      department: meNormalizeMeTableDepartment(t.department),
       createdAt:  t.created_at
     }));
   } catch (err) {
@@ -191,7 +209,6 @@ window.meLoadRelationalTasks = async function(userId) {
 
 window.meSaveTeamRelational = async function(userId, teamMember) {
   try {
-    const department = meNormalizeDepartmentTag(teamMember.department, 'ME');
     const teamId = teamMember.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
 
     const payload = {
@@ -202,7 +219,6 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
       utilisation: teamMember.utilisation,
       job_title: teamMember.jobTitle,
       team_group: teamMember.group,
-      department,
       start_date: teamMember.startDate || null,
       end_date: teamMember.endDate || null,
       updated_at: new Date().toISOString()
@@ -229,16 +245,36 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
 
 window.meSaveProductRelational = async function(userId, product) {
   try {
-    const department = meNormalizeDepartmentTag(product.department, 'ME');
-    const productId = product.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
+    const productDatabaseId = product.productDatabaseId || product.product_database_id || null;
+    let productId = product.id || null;
+
+    if (productDatabaseId) {
+      const { data: existingRows, error: lookupError } = await supa
+        .from('me_products')
+        .select('id')
+        .eq('product_database_id', productDatabaseId)
+        .limit(1);
+
+      if (lookupError) {
+        console.warn('meSaveProductRelational lookup error:', lookupError.message);
+        return false;
+      }
+
+      if (Array.isArray(existingRows) && existingRows.length > 0 && existingRows[0].id) {
+        productId = existingRows[0].id;
+      }
+    }
+
+    if (!productId) {
+      productId = typeof meUUID === 'function' ? meUUID() : crypto.randomUUID();
+    }
 
     const payload = {
       id: productId,
       user_id: userId,
       name: product.name || '',
-      product_database_id: product.productDatabaseId || null,
+      product_database_id: productDatabaseId,
       hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
-      department,
       notes: product.notes || null,
       updated_at: new Date().toISOString()
     };
@@ -287,11 +323,14 @@ window.meSaveProductSupportHistoryRelational = async function(userId, historyRow
         user_id: userId,
         product_id: row.productId,
         hours_per_week: Number(row.hoursPerWeek || 0) || 0,
+        kitting_hours: Number((row.kittingHours ?? row.kittingTimeBookingHours) || 0) || 0,
+        booking_in_out_hours: Number(row.bookingInOutHours || 0) || 0,
+        kitting_time_booking_hours: Number((row.kittingHours ?? row.kittingTimeBookingHours) || 0) || 0,
+        product_movement_hours: Number(row.productMovementHours || 0) || 0,
         effective_date: row.effectiveDate,
         end_date: row.endDate || null,
         change_reason: row.changeReason || null,
         notes: row.notes || null,
-        department: meNormalizeDepartmentTag(row.department, 'ME'),
         updated_at: new Date().toISOString()
       }));
 
@@ -317,7 +356,6 @@ window.meSaveProductSupportHistoryRelational = async function(userId, historyRow
 
 window.meSaveTaskRelational = async function(userId, task) {
   try {
-    const department = meNormalizeDepartmentTag(task.department, 'ME');
     const todayStr = getTodayDateString();
     const { safeStart, safeEnd } = meNormalizeDateRange(task.startDate, task.endDate, todayStr);
     const taskId = task.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
@@ -337,7 +375,7 @@ window.meSaveTaskRelational = async function(userId, task) {
       end_date: safeEnd,
       total_hours: task.totalHours || 0,
       status: task.status || 'SCHEDULED',
-      department,
+      is_disabled: task.isDisabled === true,
       updated_at: new Date().toISOString()
     };
 
@@ -398,6 +436,25 @@ window.meDeleteTaskRelational = async function(taskId) {
     return true;
   } catch (err) {
     console.warn('meDeleteTaskRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meDeleteSupportHistoryRelational = async function(historyId) {
+  try {
+    const { error } = await supa
+      .from('me_product_support_history')
+      .delete()
+      .eq('id', historyId);
+
+    if (error) {
+      console.warn('meDeleteSupportHistoryRelational error:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meDeleteSupportHistoryRelational exception:', err.message);
     return false;
   }
 };
@@ -494,8 +551,7 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
             user_id: userId,
             person_id: h.personId,
             date: h.date,
-            type: h.type,
-            department: meNormalizeDepartmentTag(h.department, 'ME')
+            type: h.type
           };
           return row;
         });

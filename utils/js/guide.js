@@ -10,11 +10,12 @@ const GUIDE_CONTENT = {
     title: '🏠 Tidyco Operations Portal — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Operations Portal</strong> is the central hub for all Tidyco quality planning, capacity management, and production operations. Select any of the four modules to get started.</p>
+        <p>The <strong>Operations Portal</strong> is the central hub for all Tidyco quality planning, capacity management, and production operations. Select any of the five modules to get started.</p>
+        <p>Hub cards are shown based on your role and team permissions, so you only see modules you are allowed to open.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity</div>
-        <p>Plan and monitor workload for Manufacturing Engineering, Project Management, and Production. Tracks team capacity against live task data.</p>
+        <p>Plan and monitor workload across five departments: Manufacturing Engineering (ME), Project Management (PM), Production, Logistics, and Unit 6. Tracks team capacity against live task data.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚀 Product Development</div>
@@ -28,6 +29,10 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">🛰️ Operations Dashboard</div>
         <p>Director-level overview drawing live data from all portals — capacity utilisation, overdue actions, high-risk items, and production flow in one place.</p>
       </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🔧 Manufacturing Change</div>
+        <p>Raise and track Engineering Change Requests (ECRs). Changes go through a two-step approval workflow. Approved changes are logged in the activity timeline and can be linked to PFMEA corrective actions.</p>
+      </div>
     `
   },
 
@@ -36,7 +41,8 @@ const GUIDE_CONTENT = {
     title: '📊 Capacity Management — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Capacity Management</strong> portal lets you plan and monitor workload across three operational streams. Select a stream to view its loading plan.</p>
+        <p>The <strong>Capacity Management</strong> portal lets you plan and monitor workload across five operational streams. Select a stream to view its loading plan.</p>
+        <p>Only the capacity streams your role or team can access are shown on the hub and in the local navigation bar.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Production Capacity</div>
@@ -50,6 +56,14 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">📅 Project Management (PM)</div>
         <p>Same structure as ME Capacity but filtered to the PM department. Shares the same underlying data table, separated by department tag.</p>
       </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🚚 Logistics</div>
+        <p>Same structure as ME Capacity but for the Logistics department. Tracks kitting and product movement workload alongside team tasks and product support hours.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🏭 Unit 6</div>
+        <p>Same structure as ME Capacity but for the Unit 6 department. Tracks team loading, tasks, and product support for that work area.</p>
+      </div>
     `
   },
 
@@ -58,11 +72,13 @@ const GUIDE_CONTENT = {
     title: '🧑‍🔧 ME Load Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>ME Capacity</strong> plan tracks Manufacturing Engineering workload against available hours. Data is shared in real time across all logged-in users.</p>
+        <p>The <strong>ME Capacity</strong> plan tracks Manufacturing Engineering workload against available hours. Data is shared in real time across all logged-in users. The Logistics and Unit 6 departments use the same tab structure — their data is stored in the same underlying tables, separated by department tag.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
         <p>Bar chart showing total allocated hours vs available capacity per month. Use the month navigator to scroll the view window. Bars turn amber when utilisation exceeds 80%, red above 100%.</p>
+        <p>The chart refreshes when you open the chart page. If changes are saved in another window while you stay on this page, open the chart page again to pull the latest values.</p>
+        <p>The chart header reminder confirms this refresh-on-open behavior.</p>
         <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
       </div>
       <div class="guide-section">
@@ -73,10 +89,15 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">📋 Tasks</div>
         <p>Log ongoing tasks and projects. Each task has an estimated duration (using 3-point PERT estimation: optimistic, most likely, pessimistic). Tasks are assigned to a month range and contribute to the capacity chart.</p>
         <p><strong>PERT formula:</strong> Expected duration = (Optimistic + 4 × Most Likely + Pessimistic) ÷ 6</p>
+        <p>Use the <strong>Disable</strong> checkbox on a task row to keep the task in the list but remove it from capacity calculations. Re-enable it any time by unticking the same checkbox.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Product Support</div>
         <p>Assign ME effort to specific products in the production plan. This represents recurring support time (e.g. inspection, rework support) separate from project tasks.</p>
+        <p><strong>Sorting:</strong> Click table column headers (Product, Family, Status, Current, Hours/Batch, Effective Date) to sort in-place. Click the same header again to reverse direction.</p>
+        <p>The <strong>Current</strong> column shows the active saved support rate (h/batch) for each product at a glance so you can compare it with any new value before applying a change.</p>
+        <p><strong>Bulk Save:</strong> Edit multiple product support rows (hours, effective date, and reason), then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and apply all changes at once. This prevents individual rows from resetting when you apply other changes.</p>
+        <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Each history entry has an <strong>Edit</strong> button to correct the effective date, hours, or reason, and a <strong>Delete</strong> button to remove the entry. Changes to history save automatically after confirmation.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📦 Product Load</div>
@@ -134,11 +155,16 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
         <p>Month-by-month bar chart of PM team loading vs available hours. Use the month navigator to scroll forward or back.</p>
+        <p>The chart refreshes when you open the chart page. If PM changes are saved in another window while you stay on this page, open the chart page again to load the latest values.</p>
+        <p>The chart header reminder confirms this refresh-on-open behavior.</p>
         <p><strong>Calculation:</strong> Available hours = (working days × hours per day per PM) minus approved holidays and UK bank holidays.</p>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">👷 Team / 📋 Tasks / 📦 Product Load / 🏖️ Holiday Planner</div>
-        <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view.</p>
+        <div class="guide-section-title">👷 Team / 📋 Tasks / � Product Support / 📦 Product Load / 🏖️ Holiday Planner</div>
+        <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view. PM task rows also support the <strong>Disable</strong> checkbox to exclude a task from calculations without deleting it.</p>
+        <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to toggle ascending/descending.</p>
+        <p>The <strong>Current</strong> column in the Product Support tab shows the active saved rate (h/batch) so you can compare it with any new value before applying a change. Edit multiple rows, then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
+        <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Each entry has <strong>Edit</strong> and <strong>Delete</strong> buttons so you can correct or remove a past entry. Edits require a valid effective date and a reason (min 3 characters).</p>
       </div>
     `
   },
@@ -149,6 +175,7 @@ const GUIDE_CONTENT = {
     body: `
       <div class="guide-section">
         <p>The <strong>Product Development</strong> portal covers the full lifecycle of a product from initial tender through to production sign-off.</p>
+        <p>Hub cards and local tabs are shown based on your role and team permissions, so unavailable pages stay hidden.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 NPI Projects</div>
@@ -302,12 +329,16 @@ const GUIDE_CONTENT = {
         </ul>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">Sub-assemblies</div>
-        <p>Use <em>＋ Sub-assembly</em> to insert a group header that collapses a set of steps. Useful for organising complex processes.</p>
+        <div class="guide-section-title">Section Headers</div>
+        <p>Click <em>＋ section after</em> (visible below each step) to insert a collapsible section header. Sections group steps under a named heading — click the toggle arrow to collapse or expand the group. Useful for organising complex processes into phases (e.g. STRIP DOWN UNIT, INSPECTION, REASSEMBLY).</p>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">Flow Mini-Map</div>
-        <p>The numbered ribbon at the top shows all steps in sequence. Click any node to jump to that step in the table below.</p>
+        <div class="guide-section-title">Flowchart View</div>
+        <p>Click <em>Show Flowchart</em> to switch from the table to a visual flow diagram. Each step appears as a node; Decision and Inspection steps show Yes/Pass and No/Fail branches. Step types are: <strong>Process</strong>, <strong>Decision</strong>, <strong>Inspection</strong>, <strong>Rework</strong>, and <strong>Transport</strong>. Steps with a high PFMEA RPN are marked ⚑. Click any node to see its details. Use <em>↔ Horizontal / ↕ Vertical</em> to change the layout direction.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Section Navigator</div>
+        <p>The ribbon at the top shows each section with its step range. Click a section to scroll the table to that group.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Inserting Steps</div>
@@ -366,7 +397,7 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Used By</div>
-        <p>PFMEA causes can be synced directly into the <strong>Control Plan</strong> using the <em>Sync from PFMEA</em> button. High-RPN causes are surfaced in the <strong>Project Dashboard</strong> and <strong>Operations Risk</strong> view.</p>
+        <p>PFMEA causes can be synced directly into the <strong>Control Plan</strong> using the <em>Sync from PFMEA</em> button. High-RPN causes are surfaced in the <strong>Project Dashboard</strong> and <strong>Operations Risk</strong> view. If a corrective action is linked to a Manufacturing Change request, a badge appears on that action row — click it to open the related entry in the Change Register (MCS).</p>
       </div>
     `
   },
@@ -647,6 +678,7 @@ const GUIDE_CONTENT = {
     body: `
       <div class="guide-section">
         <p>The <strong>Production Planning</strong> portal manages production batch scheduling and lets you view the plan from multiple angles.</p>
+        <p>Only the production pages your role or team can access are shown on the hub and in the local navigation bar.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📅 Schedule</div>
@@ -849,6 +881,80 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">Refreshing</div>
         <p>Data loads automatically when you open the Action Centre. Use the <strong>↺ Refresh</strong> button to pull the latest changes at any time.</p>
+      </div>
+    `
+  },
+
+  // ── Logistics Capacity ────────────────────────────────────────
+  'capacity-logistics': {
+    title: '🚚 Logistics Load Capacity — User Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Logistics Capacity</strong> plan tracks the Logistics department's workload against available hours. It uses the same tab structure as ME Capacity, with data separated by department tag.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📊 Capacity Chart</div>
+        <p>Bar chart showing total allocated hours vs available capacity per month. Bars turn amber above 80% utilisation and red above 100%.</p>
+        <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">👷 Team</div>
+        <p>Add and manage Logistics team members. Set each person's hours per day and department tag. Team members appear as rows in the capacity calculations.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📋 Tasks</div>
+        <p>Log ongoing tasks. Each task uses 3-point PERT estimation (optimistic, most likely, pessimistic) and contributes to the capacity chart across its assigned month range.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🚂 Product Support</div>
+        <p>Assign Logistics effort to specific products — for example, kitting preparation time and product movement hours per batch. Edit multiple rows and click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
+        <p><strong>Sorting:</strong> Click Product Support table headers to sort by Product, Family, Status, Current, Kitting, Booking In/Out, Product Movement, Hours/Batch, or Effective Date. Click the same header again to flip direction.</p>
+        <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Use the <strong>Edit</strong> button on a history entry to correct its effective date, hours breakdown, or reason. Use <strong>Delete</strong> to remove an entry.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📦 Product Load</div>
+        <p>View the total Logistics hours attributed to each product, broken down by task and product support entries.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🏖️ Holiday Planner</div>
+        <p>Record approved annual leave for each team member by month. Holidays reduce available capacity on the chart. UK bank holidays are automatically deducted.</p>
+      </div>
+    `
+  },
+
+  // ── Unit 6 Capacity ───────────────────────────────────────────
+  'capacity-unit6': {
+    title: '🏭 Unit 6 Load Capacity — User Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Unit 6 Capacity</strong> plan tracks the Unit 6 department's workload against available hours. It uses the same tab structure as ME Capacity, with data separated by department tag.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📊 Capacity Chart</div>
+        <p>Bar chart showing total allocated hours vs available capacity per month. Bars turn amber above 80% utilisation and red above 100%.</p>
+        <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">👷 Team</div>
+        <p>Add and manage Unit 6 team members. Set each person's hours per day and department tag.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📋 Tasks</div>
+        <p>Log ongoing tasks using 3-point PERT estimation. Tasks contribute to the capacity chart across their assigned month range.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🚂 Product Support</div>
+        <p>Assign Unit 6 effort to specific products for recurring support work separate from project tasks. Edit multiple rows and click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
+        <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to reverse the sort direction.</p>
+        <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Use the <strong>Edit</strong> button on a history entry to correct its effective date, hours, or reason. Use <strong>Delete</strong> to remove an entry.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📦 Product Load</div>
+        <p>View the total Unit 6 hours attributed to each product, broken down by task and product support entries.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🏖️ Holiday Planner</div>
+        <p>Record approved annual leave for each team member by month. UK bank holidays are automatically deducted.</p>
       </div>
     `
   },

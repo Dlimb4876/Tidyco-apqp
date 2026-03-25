@@ -75,7 +75,7 @@
   <div class="topbar">
     <div class="topbar-left">
       <div class="brand" onclick="navigate('hub')" style="cursor:pointer">
-        <img src="Tidyco logo-blue.png" alt="Tidyco" class="brand-logo">
+        <img src="Tidyco logo-blue.png" alt="Tidyco" class="brand-logo" id="brandLogo">
         <span class="brand-sep">|</span>
         <span class="brand-sub">Operations Portal</span>
       </div>
@@ -132,6 +132,7 @@
       <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>Enter</kbd><span>Save form / row</span></div>
       <div class="shortcut-item"><kbd>1</kbd> - <kbd>5</kbd><span>Open cards on current hub page</span></div>
       <div class="shortcut-item"><kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd><span>Capacity, Product Development, Production (main hub)</span></div>
+      <div class="shortcut-item"><kbd>P</kbd><span>Return to portal</span></div>
       <div class="shortcut-item"><kbd>Enter</kbd><span>Add item (in add-row inputs)</span></div>
       <div class="shortcut-item"><kbd>Escape</kbd><span>Cancel edit / Close modal</span></div>
       <div class="shortcut-item"><kbd>Tab</kbd><span>Move to next field</span></div>
@@ -615,6 +616,13 @@
 <script src="portals/capacity/js/me-dashboard.js"></script>
 <script src="portals/capacity/js/me-capacity.js"></script>
 
+<script src="portals/capacity/project-management/js/pm-data-relational.js"></script>
+<script src="portals/capacity/project-management/js/pm-data.js"></script>
+<script src="portals/capacity/logistics/js/log-data-relational.js"></script>
+<script src="portals/capacity/logistics/js/log-data.js"></script>
+<script src="portals/capacity/unit6/js/unit6-data-relational.js"></script>
+<script src="portals/capacity/unit6/js/unit6-data.js"></script>
+
 <script src="portals/capacity/js/prod-capacity-data.js"></script>
 <script src="portals/capacity/js/work-areas-data.js"></script>
 <script src="portals/capacity/js/prod-capacity-dashboard.js"></script>
@@ -625,6 +633,8 @@
 
 <script src="portals/capacity/project-management/js/pm-capacity-data.js"></script>
 <script src="portals/capacity/project-management/js/pm-capacity.js"></script>
+<script src="portals/capacity/logistics/js/log-capacity.js"></script>
+<script src="portals/capacity/unit6/js/unit6-capacity.js"></script>
 <script src="portals/capacity/js/capacity-events.js"></script>
 
 <script src="portals/production/js/data.js"></script>
@@ -639,6 +649,8 @@
 <script src="portals/product-development/js/product-development.js"></script>
 <script src="portals/product-development/js/product-management.js"></script>
 <script src="portals/settings/js/teams-data.js"></script>
+<script src="portals/settings/js/settings-teams.js"></script>
+<script src="portals/settings/js/settings-mcs.js"></script>
 <script src="portals/settings/js/settings.js"></script>
 
 <!-- NPI Portal: namespace root and centralized constants -->
@@ -653,6 +665,7 @@
 
 <!-- NPI Portal: feature modules (all under npi.* namespace) -->
 <script src="portals/product-development/npi/js/gates.js"></script>
+<script src="portals/product-development/npi/js/pfmea-state.js"></script>
 <script src="portals/product-development/npi/js/pfmea.js"></script>
 <script src="portals/product-development/npi/js/npi-ctq.js"></script>
 <script src="portals/product-development/npi/js/npi-pfd.js"></script>
@@ -676,7 +689,10 @@
 <script src="portals/mcs/js/mcs-realtime.js"></script>
 <script src="portals/mcs/js/mcs-approvers-data.js"></script>
 <script src="portals/mcs/js/mcs-approval.js"></script>
-<script src="portals/mcs/js/mcs-modal.js"></script>
+<script src="portals/mcs/js/mcs-modal-shared.js"></script>
+<script src="portals/mcs/js/mcs-modal-create.js"></script>
+<script src="portals/mcs/js/mcs-modal-view.js"></script>
+<script src="portals/mcs/js/mcs-modal-edit.js"></script>
 <script src="portals/mcs/js/mcs-main.js"></script>
 <script src="portals/mcs/js/mcs-pfmea.js"></script>
 <script src="portals/mcs/js/mcs-actions.js"></script>

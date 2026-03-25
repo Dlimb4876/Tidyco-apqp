@@ -178,6 +178,7 @@ function hubOpenFavouriteProduct(productId) {
 
 function hubOpenFavouritePage(pageKey) {
   if (!HUB_FAVOURITE_PAGES[pageKey]) return;
+  if (typeof canViewPageKey === 'function' && !canViewPageKey(pageKey)) return;
 
   if (pageKey.startsWith('capacity::')) {
     const tab = pageKey.split('::')[1] || 'root';
@@ -227,6 +228,7 @@ function renderHubFavouritesPanel() {
     .map((section) => {
       const meta = HUB_FAVOURITE_PAGES[section];
       if (!meta) return '';
+      if (typeof canViewPageKey === 'function' && !canViewPageKey(section)) return '';
       return `<button class="hub-fav-page" onclick="hubOpenFavouritePage('${section}')" title="Open ${esc(meta.label)}">${meta.icon} ${esc(meta.label)}</button>`;
     })
     .filter(Boolean)
@@ -260,6 +262,7 @@ function renderHubFavouritesPanel() {
 }
 
 function renderHubCard(section, icon, title, meta) {
+  if (typeof canViewPageKey === 'function' && !canViewPageKey(section)) return '';
   const isFav = hubIsPageFavourite(section);
   return `<div class="proj-card hub-card" onclick="navigate('${section}')">
     <button
@@ -363,6 +366,14 @@ function renderHubActionWidget() {
 // ─────────────────────────────────────────────────────────────
 
 function renderHub() {
+  const cards = [
+    renderHubCard('capacity', '📊', 'CAPACITY', 'Load Capacity Planning'),
+    renderHubCard('product-development', '🚀', 'PRODUCT DEVELOPMENT', 'NPI & Product Management'),
+    renderHubCard('production', '🏭', 'PRODUCTION', 'Batch Scheduling & Planning'),
+    renderHubCard('operations', '🛰️', 'OPERATIONS DASHBOARD', 'Unified overview of all operations, metrics, and risks'),
+    renderHubCard('mcs', '🔧', 'MANUFACTURING CHANGE', 'Engineering Change Requests & Approvals')
+  ].filter(Boolean).join('');
+
   return `
     <div class="proj-home hub-home">
       ${renderHubActionWidget()}
@@ -377,11 +388,7 @@ function renderHub() {
       </div>
 
       <div class="proj-cards hub-grid">
-        ${renderHubCard('capacity', '📊', 'CAPACITY', 'Load Capacity Planning')}
-        ${renderHubCard('product-development', '🚀', 'PRODUCT DEVELOPMENT', 'NPI & Product Management')}
-        ${renderHubCard('production', '🏭', 'PRODUCTION', 'Batch Scheduling & Planning')}
-        ${renderHubCard('operations', '🛰️', 'OPERATIONS DASHBOARD', 'Unified overview of all operations, metrics, and risks')}
-        ${renderHubCard('mcs', '🔧', 'MANUFACTURING CHANGE', 'Engineering Change Requests & Approvals')}
+        ${cards || `<div class="hub-favs-empty">No portal shortcuts are available for your current permissions.</div>`}
       </div>
     </div>`;
 }

@@ -74,6 +74,7 @@ describe('Product Development family template modal flow', () => {
     global.showGuide = jest.fn();
     global.showToast = jest.fn();
     global.confirm = jest.fn(() => true);
+    global.canViewPortalTab = jest.fn(() => true);
 
     global.npi = {
       dashboard: {
@@ -113,6 +114,7 @@ describe('Product Development family template modal flow', () => {
 
     eval(`${script}
 window.renderProductDevelopment = renderProductDevelopment;
+  window.setProductDevelopmentTab = setProductDevelopmentTab;
 window.setupProductDevelopmentPortalDelegation = setupProductDevelopmentPortalDelegation;
 window.renderFamilyModal = renderFamilyModal;
 window.renderTemplateManager = renderTemplateManager;
@@ -160,5 +162,25 @@ window.__getTemplateViewerState = () => templateViewerState;`);
 
     expect(document.body.textContent).not.toContain('PFMEA Templates for HVAC Systems');
     expect(document.body.textContent).toContain('Product Family Database');
+  });
+
+  test('hides product-development hub cards the user cannot view', () => {
+    global.productDevelopmentTab = 'root';
+    global.canViewPortalTab = jest.fn((section, tab) => !(section === 'product-development' && tab === 'product-management'));
+
+    renderProductDevelopmentShell();
+
+    expect(document.body.textContent).toContain('NPI Projects');
+    expect(document.body.textContent).not.toContain('Product Management');
+    expect(document.body.textContent).toContain('Parts Database');
+  });
+
+  test('does not switch to a hidden product-development tab', () => {
+    global.productDevelopmentTab = 'root';
+    global.canViewPortalTab = jest.fn((section, tab) => !(section === 'product-development' && tab === 'product-management'));
+
+    window.setProductDevelopmentTab('product-management');
+
+    expect(global.productDevelopmentTab).toBe('root');
   });
 });
