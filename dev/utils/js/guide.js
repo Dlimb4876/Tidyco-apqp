@@ -302,7 +302,17 @@ const GUIDE_CONTENT = {
           <li><strong>Source</strong> — Where the requirement comes from (Customer Spec, Drawing, etc.)</li>
           <li><strong>Out-of-Spec Action</strong> — What to do if the part fails (Repair, Replace, Scrap, etc.)</li>
           <li><strong>Customer Accepted</strong> — Tick when the customer has approved the test method and OOS plan</li>
+          <li><strong>Coverage</strong> — Shows if the CTQ is linked to PFD/PFMEA (green = linked, amber = orphaned)</li>
         </ul>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Coverage Tracking</div>
+        <p>The <strong>Coverage</strong> column and filter help ensure all CTQs are properly integrated into your process flow and risk analysis:</p>
+        <ul class="guide-list">
+          <li><span style="color:var(--green)">✓ Linked</span> — CTQ is referenced in PFD steps or PFMEA modes</li>
+          <li><span style="color:var(--amber)">⚠️ Orphaned</span> — CTQ is not yet linked anywhere (use the filter to find these)</li>
+        </ul>
+        <p>Hover over the coverage badge to see the exact number of PFD steps and PFMEA modes linked.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Used By</div>

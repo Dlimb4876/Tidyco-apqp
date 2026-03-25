@@ -5,7 +5,7 @@
 
 // ── Targeted content refresh (avoids full page render) ───────
 function feedbackRefreshContent() {
-  const inner = document.querySelector('#mc .section-inner');
+  const inner = document.querySelector('#mainContent .section-inner');
   if (!inner) return;
   inner.innerHTML = renderFeedback();
 }

@@ -12,14 +12,14 @@ They provide a structured checklist to verify that all required engineering, qua
 ## Key components of a Gate Review
 - **Checklist Items:** Specific deliverables or criteria that must be verified (e.g., "PFMEA completed", "Suppliers approved").
 - **Evidence:** The actual documentation or data proving the checklist item is satisfied.
-- **Signatories:** Role-based approvals (e.g., ME Lead, Quality Manager) who take accountability for the phase completion.
+- **Signatories:** Role-based approvals (e.g., ME Manager, Operations Director, Sales Director) who take accountability for the phase completion. Sign-off requires specific system permissions.
 - **Status:** The overall health of the gate (Not Started, In Progress, Ready for Sign-off, Complete).
 
 ## The gateway process
 1. **Prepare:** The project team works through the checklist, completing the necessary background work and gathering evidence.
 2. **Review:** The team reviews the checklist items, ensuring the quality of the work is acceptable, not just that a document exists.
 3. **Blockers:** If an item fails, create an action in the Action Tracker to resolve it. The gate cannot be signed until blockers are cleared.
-4. **Sign-off:** Authorized users formally sign the gate, locking the phase.
+4. **Sign-off:** Authorized users (based on Settings > Teams permissions) formally sign the gate, locking the phase.
 5. **Advance:** The project officially moves into the next phase.
 
 ## Common mistakes to avoid

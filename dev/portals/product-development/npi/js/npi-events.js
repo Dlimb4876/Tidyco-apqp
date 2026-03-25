@@ -150,6 +150,7 @@ npi.events._onChange = function(evt) {
   case 'ctq-filter-source': npi.ctq.setSourceFilter(el.value); break
   case 'ctq-filter-oos': npi.ctq.setOosFilter(el.value); break
   case 'ctq-filter-agreed': npi.ctq.setAgreedFilter(el.value); break
+  case 'ctq-filter-coverage': npi.ctq.setCoverageFilter(el.value); break
   case 'cp-upd': npi.cp.upd(npiNum(el.getAttribute('data-idx'), -1), el.getAttribute('data-field'), el.value); break
   case 'pfd-upd': npi.pfd.upd(el.getAttribute('data-id'), el.getAttribute('data-field'), el.value); break
   case 'pfd-toggle-ctq-pick': npi.pfd.toggleCtqPick(el.getAttribute('data-id'), !!el.checked); break

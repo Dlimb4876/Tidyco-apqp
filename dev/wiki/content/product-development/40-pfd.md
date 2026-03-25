@@ -15,6 +15,13 @@ It is the structural backbone of APQP, mapping out the physical journey of the p
 - **Step Type:** Categorization of the step (e.g., Operation, Inspection, Decision, Transport, Storage).
 - **Flow Logic:** Explicit links to the next step, including "Yes/No" branches for decisions.
 
+## The Flowchart View
+The PFD automatically generates a graphical flowchart based on your table entries. 
+- **Layout:** Toggle between Top-to-Bottom (TD) and Left-to-Right (LR) layouts depending on the complexity of your flow.
+- **Visuals:** Different step types (Process, Decision, Inspection, Rework, Transport) are shape and color-coded. The diagram automatically includes clear Start/End terminators and grouped section subgraphs.
+- **Navigation:** Use the section navigator ribbon at the top to jump to specific parts of large flows.
+- **Risk Indicators:** Steps with high-RPN PFMEA risks automatically display a flag (⚑) on the flowchart node.
+
 ## The analytical process
 1. **Outline the main path:** Document the "happy path" from start to finish without worrying about exceptions yet.
 2. **Add inspections and decisions:** Insert quality checks and tests into the sequence.
