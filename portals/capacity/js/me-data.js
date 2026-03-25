@@ -17,7 +17,9 @@ window.meDataState = {
 };
 
 window.meDataPendingDeletes = {
-  tasks: []
+  tasks: [],
+  teams: [],
+  supportHistory: []
 };
 
 window.meDataSaveInProgress = false;
@@ -29,6 +31,11 @@ function meNormalizeDepartmentTag(value, fallback = 'ME') {
   if (normalized === 'PM') return 'PM';
   if (normalized === 'LOG') return 'LOG';
   if (normalized === 'UNIT6') return 'UNIT6';
+  return 'ME';
+}
+
+function meNormalizeMeTableDepartment(value) {
+  void value;
   return 'ME';
 }
 
@@ -192,6 +199,25 @@ function meSortSupportHistoryByDate(historyRows) {
   });
 }
 
+function meSupportHistoryTimestamp(row) {
+  if (!row || typeof row !== 'object') return 0;
+  const updated = Date.parse(row.updatedAt || row.updated_at || '');
+  if (Number.isFinite(updated)) return updated;
+  const created = Date.parse(row.createdAt || row.created_at || '');
+  if (Number.isFinite(created)) return created;
+  return 0;
+}
+
+function mePickPreferredSupportHistoryRecord(existingRecord, nextRecord) {
+  if (!existingRecord) return nextRecord;
+  if (!nextRecord) return existingRecord;
+
+  const existingTime = meSupportHistoryTimestamp(existingRecord);
+  const nextTime = meSupportHistoryTimestamp(nextRecord);
+  if (nextTime >= existingTime) return nextRecord;
+  return existingRecord;
+}
+
 function meNormalizeAndDedupeSupportHistory(rows) {
   if (!Array.isArray(rows)) return [];
 
@@ -200,7 +226,8 @@ function meNormalizeAndDedupeSupportHistory(rows) {
     const normalized = meNormalizeSupportHistoryRecord(raw);
     if (!normalized) return;
     const key = `${normalized.productId}|${normalized.effectiveDate}|${normalized.department}`;
-    deduped.set(key, normalized);
+    const existing = deduped.get(key);
+    deduped.set(key, mePickPreferredSupportHistoryRecord(existing, normalized));
   });
 
   return meSortSupportHistoryByDate(Array.from(deduped.values()));
@@ -315,7 +342,21 @@ window.meDataUpdateTeam = function(idx, field, value) {
 
 window.meDataDeleteTeam = function(idx) {
   if (idx < 0 || idx >= meDataState.team.length) return false;
+  const removed = meDataState.team[idx];
   meDataState.team.splice(idx, 1);
+  if (removed && removed.id) {
+    const pendingTasks = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.tasks)
+      ? window.meDataPendingDeletes.tasks
+      : [];
+    const pendingTeams = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.teams)
+      ? window.meDataPendingDeletes.teams
+      : [];
+    if (!pendingTeams.includes(removed.id)) pendingTeams.push(removed.id);
+    window.meDataPendingDeletes = {
+      tasks: pendingTasks,
+      teams: pendingTeams
+    };
+  }
   return true;
 };
 
@@ -342,6 +383,7 @@ window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, 
     endDate: endDate || todayStr,
     totalHours: parseFloat(totalHours) || 0,
     status: 'SCHEDULED',
+    isDisabled: false,
     createdAt: new Date().toISOString()
   };
   meDataState.tasks.push(task);
@@ -379,8 +421,65 @@ window.meDataUpdateTask = function(idx, field, value) {
     case 'status':
       task.status = value || 'SCHEDULED';
       break;
+    case 'isDisabled':
+      task.isDisabled = value === true || value === 'true';
+      break;
     default:
       return false;
+  }
+  return true;
+};
+
+window.meDataDeleteProductSupportHistoryEntry = function(historyId) {
+  if (!historyId) return false;
+  meDataState.productSupportHistory = meDataState.productSupportHistory.filter(h => h.id !== historyId);
+  if (!window.meDataPendingDeletes.supportHistory) window.meDataPendingDeletes.supportHistory = [];
+  if (!window.meDataPendingDeletes.supportHistory.includes(historyId)) {
+    window.meDataPendingDeletes.supportHistory.push(historyId);
+  }
+  return true;
+};
+
+window.meDataUpdateProductSupportHistoryEntry = function(historyId, patch) {
+  if (!historyId || !patch) return false;
+  const entry = meDataState.productSupportHistory.find(h => h.id === historyId);
+  if (!entry) return false;
+
+  if (patch.effectiveDate !== undefined) {
+    const normalized = meNormalizeDateOnly(patch.effectiveDate);
+    if (normalized) entry.effectiveDate = normalized;
+  }
+  if (patch.changeReason !== undefined) entry.changeReason = patch.changeReason;
+
+  const hasSplitFields = patch.kittingHours !== undefined || patch.bookingInOutHours !== undefined || patch.productMovementHours !== undefined;
+  if (hasSplitFields) {
+    const kitting = Number(patch.kittingHours !== undefined ? patch.kittingHours : entry.kittingHours) || 0;
+    const booking = Number(patch.bookingInOutHours !== undefined ? patch.bookingInOutHours : entry.bookingInOutHours) || 0;
+    const movement = Number(patch.productMovementHours !== undefined ? patch.productMovementHours : entry.productMovementHours) || 0;
+    entry.kittingHours = kitting;
+    entry.kittingTimeBookingHours = kitting;
+    entry.bookingInOutHours = booking;
+    entry.productMovementHours = movement;
+    entry.hoursPerWeek = kitting + booking + movement;
+  } else if (patch.hoursPerWeek !== undefined) {
+    entry.hoursPerWeek = Number(patch.hoursPerWeek) || 0;
+  }
+  entry.updatedAt = new Date().toISOString();
+
+  // Recalculate endDates for all siblings in this product+department group
+  const dept = String(entry.department || 'ME').toUpperCase();
+  const siblings = meDataState.productSupportHistory
+    .filter(h => h.productId === entry.productId && String(h.department || 'ME').toUpperCase() === dept)
+    .sort((a, b) => (a.effectiveDate < b.effectiveDate ? -1 : a.effectiveDate > b.effectiveDate ? 1 : 0));
+  siblings.forEach((sib, i) => {
+    sib.endDate = i + 1 < siblings.length
+      ? (typeof meGetDateMinusOneDay === 'function' ? meGetDateMinusOneDay(siblings[i + 1].effectiveDate) : siblings[i + 1].effectiveDate)
+      : '';
+  });
+
+  meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(meDataState.productSupportHistory);
+  if (typeof meApplyLatestSupportHistoryToProduct === 'function') {
+    meApplyLatestSupportHistoryToProduct(entry.productId);
   }
   return true;
 };
@@ -862,6 +961,7 @@ window.meDataInit = async function() {
         if (!('type' in task)) task.type = 'standard';
         if (!('department' in task)) task.department = 'ME';
         if (!('status' in task)) task.status = 'SCHEDULED';
+        if (!('isDisabled' in task)) task.isDisabled = false;
       });
 
       meDataState.products.forEach(product => {
@@ -878,7 +978,7 @@ window.meDataInit = async function() {
       meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays || []);
 
       window.meDataState = meDataState;
-      window.meDataPendingDeletes = { tasks: [] };
+      window.meDataPendingDeletes = { tasks: [], teams: [], supportHistory: [] };
 
       // Set up real-time sync
       meDataSubscribe();
@@ -995,6 +1095,52 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
+        // 3-C. Persist queued team deletions so refresh does not resurrect removed rows.
+        const queuedTeamDeletes = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.teams)
+          ? window.meDataPendingDeletes.teams.slice()
+          : [];
+
+        if (queuedTeamDeletes.length > 0) {
+          if (typeof meDeleteTeamRelational === 'function') {
+            const failedTeamDeletes = [];
+            for (let i = 0; i < queuedTeamDeletes.length; i++) {
+              const teamId = queuedTeamDeletes[i];
+              const deleted = await meDeleteTeamRelational(teamId);
+              if (!deleted) {
+                failedTeamDeletes.push(teamId);
+                relationalSuccess = false;
+              }
+            }
+            window.meDataPendingDeletes.teams = failedTeamDeletes;
+          } else {
+            console.warn('Team deletes queued but meDeleteTeamRelational is unavailable');
+            relationalSuccess = false;
+          }
+        }
+
+        // 3-D. Persist queued support history deletions.
+        const queuedHistoryDeletes = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.supportHistory)
+          ? window.meDataPendingDeletes.supportHistory.slice()
+          : [];
+
+        if (queuedHistoryDeletes.length > 0) {
+          if (typeof meDeleteSupportHistoryRelational === 'function') {
+            const failedHistoryDeletes = [];
+            for (let i = 0; i < queuedHistoryDeletes.length; i++) {
+              const historyId = queuedHistoryDeletes[i];
+              const deleted = await meDeleteSupportHistoryRelational(historyId);
+              if (!deleted) {
+                failedHistoryDeletes.push(historyId);
+                relationalSuccess = false;
+              }
+            }
+            window.meDataPendingDeletes.supportHistory = failedHistoryDeletes;
+          } else {
+            console.warn('Support history deletes queued but meDeleteSupportHistoryRelational is unavailable');
+            relationalSuccess = false;
+          }
+        }
+
         // 4. Save holidays for the current user only, then reload as shared data.
         // The table's unique key is (user_id, person_id, date), so global deletes are
         // destructive and can wipe other users' rows if one user saves an empty state.
@@ -1018,7 +1164,7 @@ window.meDataSave = async function(showAlert) {
               person_id: h.personId,
               date: h.date,
               type: h.type,
-              department: meNormalizeDepartmentTag(h.department, 'ME')
+              department: meNormalizeMeTableDepartment(h.department)
             };
             return row;
           });
@@ -1089,7 +1235,7 @@ window.meDataReset = function() {
     productSupportHistory: []
   };
   window.meDataState = meDataState;
-  window.meDataPendingDeletes = { tasks: [] };
+  window.meDataPendingDeletes = { tasks: [], teams: [] };
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1134,6 +1280,7 @@ function meNormalizeTaskRow(row) {
     endDate: row.end_date || '',
     totalHours: parseFloat(row.total_hours) || 0,
     status: row.status || 'SCHEDULED',
+    isDisabled: row.is_disabled === true,
     createdAt: row.created_at || new Date().toISOString()
   };
 }
@@ -1218,7 +1365,8 @@ window.meDataSubscribe = function() {
           current.startDate !== normalizedTask.startDate ||
           current.endDate !== normalizedTask.endDate ||
           Number(current.totalHours || 0) !== Number(normalizedTask.totalHours || 0) ||
-          current.status !== normalizedTask.status;
+          current.status !== normalizedTask.status ||
+          Boolean(current.isDisabled) !== Boolean(normalizedTask.isDisabled);
 
         if (!changed) return;
         meDataState.tasks[idx] = { ...current, ...normalizedTask };
@@ -1271,6 +1419,8 @@ window.meDataSubscribe = function() {
     {
       table: 'me_product_support_history',
       onInsert: (newEntry) => {
+        // meDataSave uses delete-all then re-insert — skip own-save echoes entirely.
+        if (window.meDataSaveInProgress) return;
         const normalized = meNormalizeSupportHistoryRecord(newEntry);
         if (!normalized) return;
         const existingIdx = meDataState.productSupportHistory.findIndex(h => h.id === normalized.id);
@@ -1305,6 +1455,8 @@ window.meDataSubscribe = function() {
         });
       },
       onDelete: (deleted) => {
+        // meDataSave uses delete-all then re-insert — skip own-save echoes entirely.
+        if (window.meDataSaveInProgress) return;
         meDataState.productSupportHistory = meDataState.productSupportHistory.filter(h => h.id !== deleted.id);
         if (isEditingInlineCell()) { window.mePendingRealTimeUpdate = true; return; }
         meCapSmartRender();

@@ -52,6 +52,12 @@
 		flex: 1;
 	}
 
+	.me-live-sync-indicator {
+		margin-left: 0;
+		padding-left: 0;
+		white-space: normal;
+	}
+
 	.me-legend {
 		flex-direction: column;
 		align-items: flex-start;

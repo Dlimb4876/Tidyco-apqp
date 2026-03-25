@@ -25,9 +25,13 @@ function meNormalizeDepartmentTag(value, fallback = 'ME') {
   return 'ME';
 }
 
+function meNormalizeMeTableDepartment(value) {
+  void value;
+  return 'ME';
+}
+
 function meNormalizePersistedProductDepartment(value, fallback = 'ME') {
-  const normalized = meNormalizeDepartmentTag(value, fallback);
-  return normalized === 'PM' ? 'PM' : 'ME';
+  return meNormalizeMeTableDepartment(meNormalizeDepartmentTag(value, fallback));
 }
 
 function meNormalizeIsoDate(dateValue, fallbackDate) {
@@ -70,7 +74,7 @@ window.meLoadRelationalTeams = async function(userId) {
       utilisation: t.utilisation,
       jobTitle: t.job_title || '',
       group: t.team_group || '',
-      department: meNormalizeDepartmentTag(t.department, 'ME'),
+      department: meNormalizeMeTableDepartment(t.department),
       startDate: t.start_date || '',
       endDate: t.end_date || '',
       createdAt: t.created_at
@@ -97,7 +101,7 @@ window.meLoadRelationalProducts = async function(userId) {
       name: mp.name || '(Unknown Product)',
       productDatabaseId: mp.product_database_id,
       hoursPerWeek: mp.hours_per_week,
-      department: meNormalizeDepartmentTag(mp.department, 'ME'),
+      department: meNormalizeMeTableDepartment(mp.department),
       notes: mp.notes,
       createdAt: mp.created_at,
       updatedAt: mp.updated_at
@@ -131,7 +135,7 @@ window.meLoadRelationalProductSupportHistory = async function(userId) {
       endDate: row.end_date || '',
       changeReason: row.change_reason || '',
       notes: row.notes || '',
-      department: meNormalizeDepartmentTag(row.department, 'ME'),
+      department: meNormalizeMeTableDepartment(row.department),
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
@@ -158,7 +162,7 @@ window.meLoadRelationalHolidays = async function(userId) {
       personId: h.person_id,
       date: h.date,
       type: h.type,
-      department: meNormalizeDepartmentTag(h.department, 'ME'),
+      department: meNormalizeMeTableDepartment(h.department),
       createdAt: h.created_at
     }));
   } catch (err) {
@@ -189,7 +193,8 @@ window.meLoadRelationalTasks = async function(userId) {
       endDate:    t.end_date    || '',
       totalHours: t.total_hours || 0,
       status:     t.status || 'SCHEDULED',
-      department: meNormalizeDepartmentTag(t.department, 'ME'),
+      isDisabled: t.is_disabled === true,
+      department: meNormalizeMeTableDepartment(t.department),
       createdAt:  t.created_at
     }));
   } catch (err) {
@@ -204,7 +209,6 @@ window.meLoadRelationalTasks = async function(userId) {
 
 window.meSaveTeamRelational = async function(userId, teamMember) {
   try {
-    const department = meNormalizeDepartmentTag(teamMember.department, 'ME');
     const teamId = teamMember.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
 
     const payload = {
@@ -215,7 +219,6 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
       utilisation: teamMember.utilisation,
       job_title: teamMember.jobTitle,
       team_group: teamMember.group,
-      department,
       start_date: teamMember.startDate || null,
       end_date: teamMember.endDate || null,
       updated_at: new Date().toISOString()
@@ -242,7 +245,6 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
 
 window.meSaveProductRelational = async function(userId, product) {
   try {
-    const department = meNormalizePersistedProductDepartment(product.department, 'ME');
     const productDatabaseId = product.productDatabaseId || product.product_database_id || null;
     let productId = product.id || null;
 
@@ -273,7 +275,6 @@ window.meSaveProductRelational = async function(userId, product) {
       name: product.name || '',
       product_database_id: productDatabaseId,
       hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
-      department,
       notes: product.notes || null,
       updated_at: new Date().toISOString()
     };
@@ -330,7 +331,6 @@ window.meSaveProductSupportHistoryRelational = async function(userId, historyRow
         end_date: row.endDate || null,
         change_reason: row.changeReason || null,
         notes: row.notes || null,
-        department: meNormalizeDepartmentTag(row.department, 'ME'),
         updated_at: new Date().toISOString()
       }));
 
@@ -356,7 +356,6 @@ window.meSaveProductSupportHistoryRelational = async function(userId, historyRow
 
 window.meSaveTaskRelational = async function(userId, task) {
   try {
-    const department = meNormalizeDepartmentTag(task.department, 'ME');
     const todayStr = getTodayDateString();
     const { safeStart, safeEnd } = meNormalizeDateRange(task.startDate, task.endDate, todayStr);
     const taskId = task.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
@@ -376,7 +375,7 @@ window.meSaveTaskRelational = async function(userId, task) {
       end_date: safeEnd,
       total_hours: task.totalHours || 0,
       status: task.status || 'SCHEDULED',
-      department,
+      is_disabled: task.isDisabled === true,
       updated_at: new Date().toISOString()
     };
 
@@ -437,6 +436,25 @@ window.meDeleteTaskRelational = async function(taskId) {
     return true;
   } catch (err) {
     console.warn('meDeleteTaskRelational exception:', err.message);
+    return false;
+  }
+};
+
+window.meDeleteSupportHistoryRelational = async function(historyId) {
+  try {
+    const { error } = await supa
+      .from('me_product_support_history')
+      .delete()
+      .eq('id', historyId);
+
+    if (error) {
+      console.warn('meDeleteSupportHistoryRelational error:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('meDeleteSupportHistoryRelational exception:', err.message);
     return false;
   }
 };
@@ -533,8 +551,7 @@ window.meMigrateJsonToRelational = async function(userId, jsonData) {
             user_id: userId,
             person_id: h.personId,
             date: h.date,
-            type: h.type,
-            department: meNormalizeDepartmentTag(h.department, 'ME')
+            type: h.type
           };
           return row;
         });

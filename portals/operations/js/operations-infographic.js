@@ -175,6 +175,7 @@ async function opsGenerateInfographic() {
 	// Pre-compute display values to keep the HTML template readable
 	const meTone = opsInfographicTone(metrics.me.utilisation, metrics.me.ready);
 	const pmTone = opsInfographicTone(metrics.pm.utilisation, metrics.pm.ready);
+	const logTone = opsInfographicTone(metrics.log.utilisation, metrics.log.ready);
 	const gateTone = metrics.gate.percentage >= 85 ? 'good' : metrics.gate.percentage >= 65 ? 'watch' : 'critical';
 	const gateColor = gateTone === 'critical' ? '#b2352f' : gateTone === 'watch' ? '#c47d00' : '#1a9e6e';
 	const prodRate = metrics.production.completionRate;
@@ -186,6 +187,9 @@ async function opsGenerateInfographic() {
 		: 'Open Capacity once to initialise';
 	const pmDetail = metrics.pm.ready
 		? metrics.pm.demand + 'h demand \u00b7 ' + metrics.pm.capacity + 'h capacity \u00b7 ' + metrics.pm.headroom + 'h headroom'
+		: 'Open Capacity once to initialise';
+	const logDetail = metrics.log.ready
+		? metrics.log.demand + 'h demand \u00b7 ' + metrics.log.capacity + 'h capacity \u00b7 ' + metrics.log.headroom + 'h headroom'
 		: 'Open Capacity once to initialise';
 
 	const overdueColor = metrics.actions.overdue > 0 ? '#ffb3b3' : '#fff';
@@ -261,11 +265,13 @@ async function opsGenerateInfographic() {
     <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:space-around;align-items:flex-start;">
       ${opsInfographicRing(metrics.me.utilisation, 'ME Engineering', metrics.me.ready, meTone)}
       ${opsInfographicRing(metrics.pm.utilisation, 'Project Mgmt', metrics.pm.ready, pmTone)}
+      ${opsInfographicRing(metrics.log.utilisation, 'Logistics', metrics.log.ready, logTone)}
       ${unitRings}
     </div>
-    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #edf0f4;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #edf0f4;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
       <div style="font-size:11px;color:#6b7b8d;"><strong style="color:#1a2634;">ME:</strong> ${meDetail}</div>
       <div style="font-size:11px;color:#6b7b8d;"><strong style="color:#1a2634;">PM:</strong> ${pmDetail}</div>
+      <div style="font-size:11px;color:#6b7b8d;"><strong style="color:#1a2634;">LOG:</strong> ${logDetail}</div>
     </div>
   </div>
 

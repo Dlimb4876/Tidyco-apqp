@@ -79,7 +79,7 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-next-month">Next →</button>
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-today" ${isCurrentMonth ? 'disabled style="opacity:0.4;"' : 'style="color:var(--primary);"'}>↩ Today</button>
       </div>
-      <div class="me-card-body" style="overflow-x: auto;">
+      <div class="me-card-body me-card-body-gutter" style="overflow-x: auto;">
         <table class="holiday-matrix">
           <thead>
             <tr>
@@ -159,23 +159,59 @@ window.meRenderHolidaysTab = function(holidaysArray, teamArray, selectedMonth) {
 };
 
 window.meToggleHoliday = function(personId, date) {
-  const holidays = meDataGetHolidays();
+  let holidays = [];
+  let addHoliday = null;
+  let updateHoliday = null;
+  let deleteHoliday = null;
+  let debouncedSave = null;
+  let setTab = null;
+
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects') {
+    holidays = typeof pmDataGetHolidays === 'function' ? pmDataGetHolidays() : [];
+    addHoliday = typeof pmDataAddHoliday === 'function' ? pmDataAddHoliday : null;
+    updateHoliday = typeof pmDataUpdateHoliday === 'function' ? pmDataUpdateHoliday : null;
+    deleteHoliday = typeof pmDataDeleteHoliday === 'function' ? pmDataDeleteHoliday : null;
+    debouncedSave = typeof pmDebouncedSave === 'function' ? pmDebouncedSave : null;
+    setTab = typeof pmSetTab === 'function' ? pmSetTab : null;
+  } else if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics') {
+    holidays = typeof logDataGetHolidays === 'function' ? logDataGetHolidays() : [];
+    addHoliday = typeof logDataAddHoliday === 'function' ? logDataAddHoliday : null;
+    updateHoliday = typeof logDataUpdateHoliday === 'function' ? logDataUpdateHoliday : null;
+    deleteHoliday = typeof logDataDeleteHoliday === 'function' ? logDataDeleteHoliday : null;
+    debouncedSave = typeof logDebouncedSave === 'function' ? logDebouncedSave : null;
+    setTab = typeof logSetTab === 'function' ? logSetTab : null;
+  } else if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6') {
+    holidays = typeof unit6DataGetHolidays === 'function' ? unit6DataGetHolidays() : [];
+    addHoliday = typeof unit6DataAddHoliday === 'function' ? unit6DataAddHoliday : null;
+    updateHoliday = typeof unit6DataUpdateHoliday === 'function' ? unit6DataUpdateHoliday : null;
+    deleteHoliday = typeof unit6DataDeleteHoliday === 'function' ? unit6DataDeleteHoliday : null;
+    debouncedSave = typeof unit6DebouncedSave === 'function' ? unit6DebouncedSave : null;
+    setTab = typeof unit6SetTab === 'function' ? unit6SetTab : null;
+  } else {
+    holidays = typeof meDataGetHolidays === 'function' ? meDataGetHolidays() : [];
+    addHoliday = typeof meDataAddHoliday === 'function' ? meDataAddHoliday : null;
+    updateHoliday = typeof meDataUpdateHoliday === 'function' ? meDataUpdateHoliday : null;
+    deleteHoliday = typeof meDataDeleteHoliday === 'function' ? meDataDeleteHoliday : null;
+    debouncedSave = typeof meDebouncedSave === 'function' ? meDebouncedSave : null;
+    setTab = typeof meSetTab === 'function' ? meSetTab : null;
+  }
+
   const holiday = holidays.find(h => h.personId === personId && h.date === date);
 
   if (!holiday) {
-    meDataAddHoliday(personId, date, 'full');
+    if (addHoliday) addHoliday(personId, date, 'full');
   } else if (holiday.type === 'full') {
-    meDataUpdateHoliday(personId, date, 'half');
-  } else {
-    meDataDeleteHoliday(personId, date);
+    if (updateHoliday) updateHoliday(personId, date, 'half');
+  } else if (deleteHoliday) {
+    deleteHoliday(personId, date);
   }
 
   // Save scroll position before re-render
   const scrollContainer = document.querySelector('.me-card-body');
   const scrollPos = scrollContainer ? scrollContainer.scrollLeft : 0;
 
-  meDebouncedSave();
-  meSetTab('holidays');
+  if (debouncedSave) debouncedSave();
+  if (setTab) setTab('holidays');
 
   // Restore scroll position immediately after re-render
   setTimeout(() => {

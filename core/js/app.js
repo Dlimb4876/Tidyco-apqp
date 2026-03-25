@@ -41,6 +41,9 @@ async function launchApp() {
 
   // Load ME Capacity data (separate Supabase table, silent if table absent)
   await meDataInit();
+  if (typeof pmDataInit === 'function') await pmDataInit();
+  if (typeof logDataInit === 'function') await logDataInit();
+  if (typeof unit6DataInit === 'function') await unit6DataInit();
 
   // Load user profiles for owner dropdowns (non-blocking, used across portals)
   if (typeof settingsEnsurePermissionsData === 'function') {

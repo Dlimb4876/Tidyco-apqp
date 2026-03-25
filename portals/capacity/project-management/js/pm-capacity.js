@@ -11,18 +11,12 @@ let pmChartDirty = true; // Chart tab recalculates only when accessed
 // ── Smart render: skips full re-render when on read-only chart tab ──
 window.pmCapSmartRender = function() {
   if (pmTab === 'chart') {
+    // Chart stays static while open; refresh applies next time chart is opened.
     pmChartDirty = true;
     return;
   }
   render();
 };
-
-function pmFilterByDepartment(list, department, fallback) {
-  if (typeof meFilterByDepartment === 'function') {
-    return meFilterByDepartment(list, department, fallback);
-  }
-  return Array.isArray(list) ? list : [];
-}
 
 function pmGetCurrentMonthKey() {
   const today = new Date();
@@ -30,17 +24,12 @@ function pmGetCurrentMonthKey() {
 }
 
 function pmGetData() {
-  const allTeam = typeof meDataGetTeam === 'function' ? meDataGetTeam() : [];
-  const allTasks = typeof meDataGetTasks === 'function' ? meDataGetTasks() : [];
-  const allProducts = typeof meDataGetProducts === 'function' ? meDataGetProducts() : [];
-  const allHolidays = typeof meDataGetHolidays === 'function' ? meDataGetHolidays() : [];
-
-  const team = pmFilterByDepartment(allTeam, 'PM', 'ME');
-  const tasks = pmFilterByDepartment(allTasks, 'PM', 'ME');
-  const products = pmFilterByDepartment(allProducts, 'PM', 'ME');
-  const holidays = pmFilterByDepartment(allHolidays, 'PM', 'ME');
-
-  return { team, tasks, products, holidays };
+  return {
+    team: typeof pmDataGetTeam === 'function' ? pmDataGetTeam() : [],
+    tasks: typeof pmDataGetTasks === 'function' ? pmDataGetTasks() : [],
+    products: typeof pmDataGetProducts === 'function' ? pmDataGetProducts() : [],
+    holidays: typeof pmDataGetHolidays === 'function' ? pmDataGetHolidays() : []
+  };
 }
 
 function pmGetTabContent() {
@@ -69,16 +58,27 @@ function pmGetTabContent() {
   }
 }
 
+function pmRerenderChartTabForMonthChange() {
+  const body = document.getElementById('pmBody');
+  if (!body) return;
+  body.innerHTML = pmGetTabContent();
+  setTimeout(() => {
+    if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
+    if (typeof meDrawChartNow === 'function') meDrawChartNow();
+    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+  }, 100);
+}
+
 window.pmRenderCapacity = function() {
   window.meCurrentDepartmentContext = 'PM';
 
   // Auto-sync PM products from the Product Management database (all statuses)
-  if (typeof meDataAutoSyncPMProducts === 'function') {
-    const synced = meDataAutoSyncPMProducts();
+  if (typeof pmDataAutoSyncPMProducts === 'function') {
+    const synced = pmDataAutoSyncPMProducts();
     if (synced) {
       // Persist any newly-added products to Supabase (debounced)
       setTimeout(() => {
-        if (typeof meDataSave === 'function') meDataSave(false);
+        if (typeof pmDebouncedSave === 'function') pmDebouncedSave();
       }, 1000);
     }
   }
@@ -90,7 +90,7 @@ window.pmRenderCapacity = function() {
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-pm-back">← Back</button>
           <div>
             <div class="me-topbar-title">Project Management Capacity</div>
-            <div class="me-topbar-sub">PM stream · shared table with department tag</div>
+            <div class="me-topbar-sub">PM stream · dedicated relational tables</div>
           </div>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="showGuide('capacity-pm')" title="User Guide">❓ Guide</button>
@@ -155,6 +155,20 @@ window.pmSetTab = function(tab) {
 
 window.pmRefreshCurrentTab = function() {
   window.meCurrentDepartmentContext = 'PM';
+
+  // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
+  // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
+  if (pmTab === 'chart') {
+    const monthInput = document.getElementById('meChartMonthInput');
+    if (monthInput && pmChartStart) {
+      monthInput.value = pmChartStart;
+    }
+    if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
+    if (typeof meDrawChartNow === 'function') meDrawChartNow();
+    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+    return;
+  }
+
   const body = document.getElementById('pmBody');
   if (body) {
     body.innerHTML = pmGetTabContent();
@@ -171,6 +185,8 @@ window.pmRefreshCurrentTab = function() {
 window.pmOnMonthChange = function(newMonth) {
   if (pmTab === 'chart') {
     pmChartStart = newMonth;
+    pmRerenderChartTabForMonthChange();
+    return;
   } else {
     pmHolidayMonth = newMonth;
   }
@@ -184,7 +200,13 @@ window.pmOnNextMonth = function() {
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() + 1);
   const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  if (isChart) { pmChartStart = newMonth; } else { pmHolidayMonth = newMonth; }
+  if (isChart) {
+    pmChartStart = newMonth;
+    pmRerenderChartTabForMonthChange();
+    return;
+  } else {
+    pmHolidayMonth = newMonth;
+  }
   pmRefreshCurrentTab();
 };
 
@@ -195,12 +217,20 @@ window.pmOnPrevMonth = function() {
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() - 1);
   const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  if (isChart) { pmChartStart = newMonth; } else { pmHolidayMonth = newMonth; }
+  if (isChart) {
+    pmChartStart = newMonth;
+    pmRerenderChartTabForMonthChange();
+    return;
+  } else {
+    pmHolidayMonth = newMonth;
+  }
   pmRefreshCurrentTab();
 };
 
 window.pmOnSave = async function(showAlert = false) {
-  await meDataSave(showAlert);
+  if (typeof pmDataSave === 'function') {
+    await pmDataSave(showAlert);
+  }
 };
 
 window.pmDebouncedSave = function() {

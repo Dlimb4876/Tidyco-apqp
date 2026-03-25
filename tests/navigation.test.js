@@ -30,6 +30,9 @@ global.supa = {
 global.createRealtimeSubscription = jest.fn();
 global.removeRealtimeSubscription = jest.fn();
 global.currentUser = { id: 'test-user', email: 'test@test.com' };
+global.canViewSection = jest.fn(() => true);
+global.canViewPortalTab = jest.fn(() => true);
+global.esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
 // Mock global state variables
 global.db = { projects: [
@@ -163,6 +166,8 @@ async function waitFor(condition, timeoutMs = 1000) {
 describe('Navigation Module (navigation.js)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    global.canViewSection = jest.fn(() => true);
+    global.canViewPortalTab = jest.fn(() => true);
     global.progId = 'test-prog-1';
     global.currentSection = 'hub';
     global.npiTab = 'all';
@@ -378,6 +383,28 @@ describe('Navigation Module (navigation.js)', () => {
       global.capacityTab = 'me';
       render();
       expect(document.getElementById('mainContent').innerHTML).toContain('ME Capacity');
+    });
+
+    test('should render access denied when a capacity sub-tab is blocked', () => {
+      global.currentSection = 'capacity';
+      global.capacityTab = 'me';
+      global.canViewPortalTab = jest.fn((section, tab) => !(section === 'capacity' && tab === 'me'));
+
+      render();
+
+      expect(document.getElementById('mainContent').innerHTML).toContain('Access denied');
+      expect(document.getElementById('mainContent').innerHTML).toContain('Capacity - Manufacturing Engineering');
+    });
+
+    test('should render access denied when a product-development sub-tab is blocked', () => {
+      global.currentSection = 'product-development';
+      global.productDevelopmentTab = 'product-management';
+      global.canViewPortalTab = jest.fn((section, tab) => !(section === 'product-development' && tab === 'product-management'));
+
+      render();
+
+      expect(document.getElementById('mainContent').innerHTML).toContain('Access denied');
+      expect(document.getElementById('mainContent').innerHTML).toContain('Product Development - Product Management');
     });
 
     test('should render feedback section', () => {

@@ -68,6 +68,7 @@ npm run wiki:check           # runs all three checks
 - Persistence and migration behavior (db)
 - Helpers/utilities (including modal and escaping helpers)
 - Capacity modules (ME/PM/Production paths)
+- Capacity stream isolation across PM, Logistics, and Unit 6 data adapters, orchestrators, and relational save paths
 - Capacity product-support rendering and support-history persistence mapping, including logistics split support inputs and history-table display
 - Product Development/NPI data and rendering paths
 - NPI PFD flowchart generation and persistence mapping
@@ -83,6 +84,8 @@ npm run wiki:check           # runs all three checks
   - Keyboard shortcut behavior parity with shortcuts modal
 
 **When writing new tests, prioritize cross-module regression protection before adding broad new feature suites.**
+
+For capacity split work, prefer per-stream mocks (`pmDataGet*`, `logDataGet*`, `unit6DataGet*`) over the old shared `meDataGet*` plus department filtering pattern. The isolated data-layer contract is now the behavior under test.
 
 ---
 

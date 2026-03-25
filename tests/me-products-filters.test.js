@@ -194,6 +194,19 @@ describe('ME/PM Product table filtering and sorting', () => {
     expect(idxGamma).toBeLessThan(idxAlpha);
   });
 
+  test('Product Support removes toolbar sort controls and uses sortable table headers', () => {
+    meProductsClearFilters('ME');
+
+    const html = renderSupportTable();
+
+    expect(html).not.toContain('data-cap-action="cap-products-sort"');
+    expect(html).not.toContain('data-cap-action="cap-products-sort-dir"');
+    expect(html).toContain('data-cap-action="cap-products-sort-column"');
+    expect(html).toContain('data-sort-key="name"');
+    expect(html).toContain('data-sort-key="hours"');
+    expect(html).toContain('data-sort-key="effectiveDate"');
+  });
+
   test('Product Support keeps ME and PM filter states independent', () => {
     meProductsClearFilters('ME');
     meProductsClearFilters('PM');
@@ -209,6 +222,79 @@ describe('ME/PM Product table filtering and sorting', () => {
     const pmHtml = meRenderProductsTab(pmProducts, pmProducts, []);
     expect(pmHtml).toContain('Alpha Pump');
     expect(pmHtml).not.toContain('Beta Fan');
+  });
+
+  test('Product Support keeps draft state independent for ME, PM, LOG, and UNIT6', () => {
+    meProductsClearFilters('ME');
+    meProductsClearFilters('PM');
+    meProductsClearFilters('LOG');
+    meProductsClearFilters('UNIT6');
+
+    meProductsSetDraftValue('ME', 'me-1', 0, {
+      hoursPerWeek: '3.5',
+      supportEffectiveDate: '2026-03-01',
+      supportChangeReason: 'ME change'
+    });
+    meProductsSetDraftValue('PM', 'pm-1', 0, {
+      hoursPerWeek: '7',
+      supportEffectiveDate: '2026-04-01',
+      supportChangeReason: 'PM change'
+    });
+    meProductsSetDraftValue('LOG', 'me-1', 0, {
+      kittingHours: '1.25',
+      bookingInOutHours: '0.75',
+      productMovementHours: '0.5',
+      hoursPerWeek: '2.5',
+      supportEffectiveDate: '2026-05-01',
+      supportChangeReason: 'LOG change'
+    });
+    meProductsSetDraftValue('UNIT6', 'me-1', 0, {
+      hoursPerWeek: '4',
+      supportEffectiveDate: '2026-06-01',
+      supportChangeReason: 'Unit 6 change'
+    });
+
+    currentDepartment = 'ME';
+    expect(renderSupportTable()).toContain('value="3.5"');
+    expect(renderSupportTable()).toContain('value="2026-03-01"');
+    expect(renderSupportTable()).toContain('value="ME change"');
+
+    currentDepartment = 'PM';
+    const pmHtml = meRenderProductsTab(pmProducts, pmProducts, []);
+    expect(pmHtml).toContain('value="7"');
+    expect(pmHtml).toContain('value="2026-04-01"');
+    expect(pmHtml).toContain('value="PM change"');
+
+    currentDepartment = 'LOG';
+    const logHtml = renderSupportTable();
+    expect(logHtml).toContain('value="1.25"');
+    expect(logHtml).toContain('value="0.75"');
+    expect(logHtml).toContain('value="0.5"');
+    expect(logHtml).toContain('value="2.5"');
+    expect(logHtml).toContain('value="2026-05-01"');
+    expect(logHtml).toContain('value="LOG change"');
+
+    currentDepartment = 'UNIT6';
+    const unit6Html = renderSupportTable();
+    expect(unit6Html).toContain('value="4"');
+    expect(unit6Html).toContain('value="2026-06-01"');
+    expect(unit6Html).toContain('value="Unit 6 change"');
+  });
+
+  test('Product Support draft lookup survives key changes between row index and DB key', () => {
+    meProductsClearFilters('ME');
+
+    meProductsSetDraftValue('ME', '', 1, {
+      hoursPerWeek: '7',
+      supportEffectiveDate: '2026-08-01',
+      supportChangeReason: 'Draft started before IDs stabilized'
+    });
+
+    const upgradedDraft = meProductsGetDraftValue('ME', 'me-2', 1, 'db-2');
+    expect(upgradedDraft).toBeTruthy();
+    expect(upgradedDraft.hoursPerWeek).toBe('7');
+    expect(upgradedDraft.supportEffectiveDate).toBe('2026-08-01');
+    expect(upgradedDraft.supportChangeReason).toBe('Draft started before IDs stabilized');
   });
 
   test('Product Load table filters by family and sorts by task demand', () => {
@@ -293,7 +379,7 @@ describe('ME/PM Product table filtering and sorting', () => {
     expect(html).toContain('data-field="kittingHours"');
     expect(html).toContain('data-field="bookingInOutHours"');
     expect(html).toContain('data-field="productMovementHours"');
-    expect(html).toContain('data-field="hoursPerWeek" readonly');
+    expect(html).toMatch(/data-field="hoursPerWeek"[^>]*readonly/);
     expect(html).toContain('For Logistics, Hours/Batch is calculated from Kitting, Booking In/Out, and Product Movement.');
   });
 
@@ -353,5 +439,23 @@ describe('ME/PM Product table filtering and sorting', () => {
     expect(html).toContain('Initial planning');
     expect(html).toContain('Support improvement');
     expect(html).toContain('Hide History');
+  });
+
+  test('Product Support draft edits survive table rerenders until Apply Change', () => {
+    meProductsClearFilters('ME');
+
+    meProductsSetDraftValue('ME', 'me-1', 0, {
+      hoursPerWeek: '6',
+      supportEffectiveDate: '2026-07-01',
+      supportChangeReason: 'Keep while filtering'
+    });
+
+    meProductsSetSearch('Alpha', 'ME');
+
+    const html = renderSupportTable();
+    expect(html).toContain('Alpha Pump');
+    expect(html).toContain('value="6"');
+    expect(html).toContain('value="2026-07-01"');
+    expect(html).toContain('value="Keep while filtering"');
   });
 });

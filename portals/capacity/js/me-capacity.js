@@ -20,6 +20,7 @@ window.meCapSmartRender = function() {
     return;
   }
   if (meTab === 'chart') {
+    // Chart stays static while open; refresh applies next time chart is opened.
     meChartDirty = true;
     return;
   }
@@ -40,7 +41,7 @@ window.renderMeCapacity = function() {
     const synced = meDataAutoSyncProductionProducts();
     if (synced && window.meDataInitialized) {
       setTimeout(() => {
-        if (typeof meDataSave === 'function') meDataSave(false);
+        if (typeof meDebouncedSave === 'function') meDebouncedSave();
       }, 1000);
     }
   }
@@ -152,6 +153,18 @@ window.meRefreshCurrentTab = function() {
     return;
   }
 
+  // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
+  // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
+  if (meTab === 'chart') {
+    const monthInput = document.getElementById('meChartMonthInput');
+    if (monthInput && meChartStart) {
+      monthInput.value = meChartStart;
+    }
+    meDrawChartNow();
+    meDrawHeatmapNow();
+    return;
+  }
+
   const body = document.getElementById('meBody');
   if (body) {
     body.innerHTML = meGetTabContent();
@@ -165,18 +178,10 @@ window.meRefreshCurrentTab = function() {
 };
 
 function meGetTabContent() {
-  const team = typeof meFilterByDepartment === 'function'
-    ? meFilterByDepartment(meDataGetTeam(), 'ME', 'ME')
-    : meDataGetTeam();
-  const tasks = typeof meFilterByDepartment === 'function'
-    ? meFilterByDepartment(meDataGetTasks(), 'ME', 'ME')
-    : meDataGetTasks();
-  const products = typeof meFilterByDepartment === 'function'
-    ? meFilterByDepartment(meDataGetProducts(), 'ME', 'ME')
-    : meDataGetProducts();
-  const holidays = typeof meFilterByDepartment === 'function'
-    ? meFilterByDepartment(meDataGetHolidays(), 'ME', 'ME')
-    : meDataGetHolidays();
+  const team = meDataGetTeam();
+  const tasks = meDataGetTasks();
+  const products = meDataGetProducts();
+  const holidays = meDataGetHolidays();
 
   // Initialize holiday month on first view
   if (!meHolidayMonth) {
@@ -204,6 +209,16 @@ function meGetTabContent() {
   }
 }
 
+function meRerenderChartTabForMonthChange() {
+  const body = document.getElementById('meBody');
+  if (!body) return;
+  body.innerHTML = meGetTabContent();
+  setTimeout(() => {
+    meDrawChartNow();
+    meDrawHeatmapNow();
+  }, 100);
+}
+
 // ── Month navigation handlers ──────────────────────────────
 window.meOnMonthChange = function(newMonth) {
   if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnMonthChange === 'function') {
@@ -224,6 +239,8 @@ window.meOnMonthChange = function(newMonth) {
   } else {
     meChartStart = newMonth;
     localStorage.setItem('meChartStartMonth', newMonth);
+    meRerenderChartTabForMonthChange();
+    return;
   }
   meRefreshCurrentTab();
 };
@@ -253,6 +270,8 @@ window.meOnNextMonth = function() {
   } else {
     meChartStart = newMonth;
     localStorage.setItem('meChartStartMonth', newMonth);
+    meRerenderChartTabForMonthChange();
+    return;
   }
   meRefreshCurrentTab();
 };
@@ -282,6 +301,8 @@ window.meOnPrevMonth = function() {
   } else {
     meChartStart = newMonth;
     localStorage.setItem('meChartStartMonth', newMonth);
+    meRerenderChartTabForMonthChange();
+    return;
   }
   meRefreshCurrentTab();
 };

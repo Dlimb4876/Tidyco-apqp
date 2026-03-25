@@ -290,7 +290,7 @@ window.meRenderProductTaskLoadTab = function(tasksArray, productsArray) {
           <span class="me-card-title">PRODUCT TASK LOAD ANALYSIS</span>
           <span style="font-size:12px;color:var(--muted)">Demand from ${isPmContext ? 'PM' : 'ME'} capacity tasks per product · Showing ${visibleLoads.length}/${productLoads.length}</span>
         </div>
-        <div class="me-card-body">
+        <div class="me-card-body me-card-body-gutter">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
             <input
               type="text"

@@ -172,6 +172,7 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
   let npi = 0, improvement = 0, tendering = 0, support = 0, other = 0;
 
   tasksArray.forEach(task => {
+    if (task && task.isDisabled === true) return;
     if (!task.startDate || !task.endDate) return;
 
     const taskStart = new Date(task.startDate);
@@ -235,8 +236,9 @@ window.meCalculateMonthData = function(monthKey, teamArray, tasksArray, products
 };
 
 // ── Week Utilisation Calculation (Per-Person) ────────────────
-window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray, holidaysArray) {
-  const person = meDataGetTeam().find(p => p.id === personId);
+window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray, holidaysArray, teamArray) {
+  const useTeam = teamArray || meDataGetTeam();
+  const person = useTeam.find(p => p.id === personId);
   if (!person || !person.startDate) return { capacity: 0, demand: 0, utilisation: 0 };
 
   const weekStart_d = new Date(weekStart);
@@ -283,6 +285,7 @@ window.meCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray
   // Demand: network days proration (NETWORKDAYS equivalent)
   let demand = 0;
   tasksArray.forEach(task => {
+    if (task && task.isDisabled === true) return;
     if (!task.startDate || !task.endDate) return;
 
     const taskStart = new Date(task.startDate);

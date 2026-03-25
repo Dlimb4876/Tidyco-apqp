@@ -3,6 +3,85 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-25 | Fix ME capacity bulk save showing no feedback when validation fails | Bulk save alert wasn't showing when all drafts failed validation because effective date/reason missing or backdate cancelled; now shows clear error messages for each validation failure and prompts user to fill required fields
+
+## 2026-03-25 | Add meProductsClearAllDrafts utility for state management | Added global function meProductsClearAllDrafts(department) to clear all product support drafts for a department; useful for testing and for programmatic state reset
+
+## 2026-03-25 | Fix Product Support History save reverting after edit | Duplicate support-history rows sharing the same product/effective-date/department key could overwrite freshly edited values during dedupe; dedupe now keeps the most recently updated record so Save stays persisted and posts correctly
+
+## 2026-03-25 | Add Logistics capacity to Operations dashboard and infographic | Logistics (LOG) capacity was missing from the Operations Overview and People tabs; added opsCalcLogCapacity function, updated opsBuildMetrics, added LOG panels to People view, included LOG ring gauge in infographic, and updated documentation
+
+## 2026-03-25 | Fix PRODUCTS/ONGOING SUPPORT table issues in ME capacity | Fixed draft key resolution causing entered data to disappear (rowIndex was using wrong products array), improved bulk save product lookup with fallback strategies, and added debugging for history save failures
+
+## 2026-03-24 | Fix Capacity stream cards not opening from the Capacity hub | Capacity root cards and top route-switcher buttons were still rendered with data-action attributes after routing moved to the delegated data-cap-action handler, so clicks never reached setCapacityTab
+
+## 2026-03-24 | Complete capacity isolated-stream parity fixes for PM/Logistics/Unit 6 | Fixed PM history edit routing, stream-specific history delete routing, missing isolated support-history CRUD queues, realtime focus guards to stop inline-edit rerender thrash, autosync debounce parity, and duplicate capacity nav event binding
+
+## 2026-03-24 | Fix product support history edit not saving for LOG and Unit 6 | meProductsSaveHistoryEdit always called meDataUpdateProductSupportHistoryEntry which only searches meDataState; LOG and Unit 6 use separate data states so the lookup always failed — added unit6DataUpdateProductSupportHistoryEntry and logDataUpdateProductSupportHistoryEntry and dispatch to the correct function by department
+
+## 2026-03-24 | Add consistent inner gutters to capacity plan cards | Team, Tasks, Product Support, Product Task Load, and Holiday Planner cards shared zero-padding bodies that let controls sit flush to white container edges, so a shared card-body gutter utility was applied across capacity streams
+
+## 2026-03-24 | Add inner spacing to Product Support cards across all capacity plans | Shared Product Support card body had zero padding so controls and table edges could sit flush against the white container in ME, PM, Logistics, and Unit 6
+
+## 2026-03-24 | Replace Product Support sort controls with sortable table columns | Users asked to remove separate sort buttons and sort directly from Product Support table headers across ME, PM, Logistics, and Unit 6
+
+## 2026-03-24 | Fix product support history edit revert + table refresh loop | The support history realtime handlers were missing the meDataSaveInProgress guard (present on holidays), causing the delete-all/re-insert save pattern to trigger re-renders on every save and create a feedback loop; history edit draft state now stays in sync with inputs so any incidental re-render preserves the user's typed values
+
+## 2026-03-24 | Add Edit button to Product Support history rows across ME/PM/LOG/Unit 6 | Users needed to correct past support history entries (effective date, hours, reason) without deleting and re-adding them
+
+## 2026-03-24 | Stabilize Product Support bulk-edit draft visibility across rerenders | Some rows could lose visible draft values during table refresh while still submitting via Bulk Save due to draft key mismatch; draft lookup now falls back across product ID, product DB ID, and row index
+
+## 2026-03-24 | Move Product Support bulk save button to the right in all capacity streams | Users requested consistent right-side placement near the Product Support table across ME, PM, Logistics, and Unit 6
+
+## 2026-03-24 | Re-render capacity chart side panels on month change across ME/PM/LOG/Unit 6 | Demand Breakdown and Capacity per role were stale because month navigation only redrew the chart canvas without rebuilding tab HTML
+
+## 2026-03-24 | Sync capacity chart month selector with active month state | Chart-only redraw optimization skipped HTML rerender, so Prev/Next/Today updates could leave the month selector showing stale January even when the chart month changed
+
+## 2026-03-24 | Disable live-sync redraw on capacity charts and refresh on chart-open | Capacity chart views now stay stable while open; latest values are pulled when the chart page is opened, removing realtime redraw churn
+
+## 2026-03-24 | Add defensive guards to capacity chart rendering | Chart.js was failing with null context errors under edge-case data conditions (empty arrays, invalid scaling) when threshold zone plugin tried to access shape data; added guards for valid data, wrapped initialization in try-catch, and added debug logging
+
+## 2026-03-24 | Add Bulk Save button for product support changes across ME, PM, LOG, Unit 6 | Clicking "Apply Change" on one line was resetting drafted changes on other lines; now users can edit multiple product support rows and save all changes at once with validation
+
+## 2026-03-24 | Optimize chart tab real-time updates to prevent DOM thrashing | Live real-time events (team/task/product/holiday updates) were triggering full page re-renders and causing the capacity chart to bounce around; now only the chart is redrawn without replacing page HTML
+
+## 2026-03-24 | Reset PM/LOG/Unit6 support history baselines to 2026-01-01 | Aligns all split capacity streams with zeroed support values and a single clean effective-date baseline
+
+## 2026-03-24 | Add one-shot SQL reset for support baseline at 2026-01-01 | Allows full reset of ME/PM/LOG/Unit 6 product support to 0 with clean baseline history in the database
+
+## 2026-03-24 | Set default effective date to 2026-01-01 for product support entries | Provides a sensible default so users have a starting point when making support rate changes
+
+## 2026-03-24 | Add delete button for support history entries in ME, PM, LOG, Unit 6 | Users need to be able to remove incorrect or stale history entries from the Product Support tab
+
+## 2026-03-24 | Add Current column to Product Support tab in ME, PM, LOG, Unit 6 | Makes the active saved support rate visible at a glance so users can compare before applying changes
+
+## 2026-03-24 | Preserve Product Support draft edits across capacity streams | Shared Product Support rerenders were rebuilding ME, PM, Logistics, and Unit 6 edit rows from saved data, so in-progress Hours/Date/Reason changes kept resetting before Apply
+
+## 2026-03-24 | Force ME-only departments for legacy me_* writes | Some environments still enforce ME-only check constraints on me_teams/me_tasks/me_holidays/me_product_support_history, so stale LOG/UNIT6/PM tags caused save storms and cascading FK failures
+
+## 2026-03-24 | Persist team deletes across all capacity streams | Team removals in ME/PM/Logistics/Unit6 were only local UI deletes, so members reappeared after refresh because relational delete calls were never queued/executed during save
+
+## 2026-03-24 | Fix split-stream holiday planner routing | Shared Holiday Planner actions were still calling ME-only handlers, so PM, Logistics, and Unit 6 holiday clicks and Today navigation did not update the active stream
+
+## 2026-03-24 | Fix LOG/Unit6 event save routing to isolated tables | Shared capacity event handlers were still writing team/task/product edits through ME save paths, causing me_teams department constraint failures during Logistics and Unit 6 saves
+
+## 2026-03-24 | Full capacity department split | PM, Logistics, and Unit 6 now use isolated tables and JS data layers so cross-stream saves can no longer overwrite ME data
+
+## 2026-03-24 | Fix live sync indicator ticker and isDisabled cross-window refresh | Indicator now auto-ticks every 5s to show correct age since last update; toggling task enable/disable in another window now triggers chart refresh
+## 2026-03-24 | Add disable-from-calculation checkbox to ME/PM capacity tasks | Planners can now keep tasks visible for tracking while excluding them from load maths without deleting records
+
+## 2026-03-24 | Auto-refresh ME/PM capacity chart on realtime updates | Supports cross-window load balancing by redrawing chart/KPIs/heatmap when tasks or capacity data are changed in another open window, with a live-update indicator in the chart header
+
+## 2026-03-24 | Stabilize Logistics Hours/Batch test assertion | Prevent brittle test failures when readonly inputs gain additional attributes like styling classes
+
+## 2026-03-24 | Extend access permissions to sub-hub card visibility | Team access now controls second-level hub cards and deep links so users only see pages they can actually open
+
+## 2026-03-24 | Widen department check constraints on all me_* tables | LOG and UNIT6 departments were rejected by DB (only ME and PM were allowed), causing 400 errors on save
+
+## 2026-03-24 | Remove editable hover treatment from Logistics calculated Hours/Batch column | Hours/Batch in Logistics Product Support is derived from split component fields, so it should not show hover/focus styling that implies direct editing
+
+## 2026-03-24 | Add permission descriptions to the team editor | Team permission toggles now explain what each permission actually allows so admins can assign access with less guesswork
+
 ## 2026-03-24 | Keep wiki internal links in same tab and resolve relative .md paths | Internal markdown links were opening new tabs and 404ing; renderer now converts relative wiki links to hash routes in the current window
 
 ## 2026-03-24 | Fix wiki metadata loading for /wiki and /dev/wiki URLs | Made wiki bootstrap fetches use a stable pathname-derived base and added a /dev/wiki compatibility redirect so areas.json loads reliably on GitHub Pages

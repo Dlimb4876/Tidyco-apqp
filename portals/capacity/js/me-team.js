@@ -110,7 +110,7 @@ window.meRenderTeamTab = function(teamArray) {
           <span class="me-card-title">${teamTitle}</span>
           <span style="font-size:12px;color:var(--muted)">${teamArray.length} ${memberPlural}</span>
         </div>
-        <div class="me-card-body">
+        <div class="me-card-body me-card-body-gutter">
           <div class="me-tbl-wrap">
             <table class="me-tbl">
               <thead><tr>

@@ -316,19 +316,20 @@ function settingsGetTeamPermissionDefinitions() {
     return getPermissionDefinitions().map((def) => ({
       key: def.key,
       label: def.label,
+      description: def.description || '',
       group: def.group || 'Other'
     }));
   }
 
   return [
-    { key: 'view_all_project_data', label: 'View all project data', group: 'Legacy' },
-    { key: 'edit_projects_tasks_schedules', label: 'Edit projects, tasks & schedules', group: 'Legacy' },
-    { key: 'add_delete_records', label: 'Add & delete records', group: 'Legacy' },
-    { key: 'manage_families', label: 'Manage product families', group: 'Legacy' },
-    { key: 'manage_work_areas', label: 'Manage work areas', group: 'Legacy' },
-    { key: 'manage_capacity', label: 'Manage capacity planning', group: 'Legacy' },
-    { key: 'manage_user_roles', label: 'Change user roles', group: 'Legacy' },
-    { key: 'access_settings', label: 'Access Settings page', group: 'Legacy' }
+    { key: 'view_all_project_data', label: 'View all project data', description: 'Lets the user see project records, schedules, and related planning data.', group: 'Legacy' },
+    { key: 'edit_projects_tasks_schedules', label: 'Edit projects, tasks & schedules', description: 'Lets the user change project details, task lists, and schedule information.', group: 'Legacy' },
+    { key: 'add_delete_records', label: 'Add & delete records', description: 'Lets the user create new records and remove existing ones.', group: 'Legacy' },
+    { key: 'manage_families', label: 'Manage product families', description: 'Lets the user add, edit, and organise product family records.', group: 'Legacy' },
+    { key: 'manage_work_areas', label: 'Manage work areas', description: 'Lets the user maintain production work areas and their settings.', group: 'Legacy' },
+    { key: 'manage_capacity', label: 'Manage capacity planning', description: 'Lets the user update capacity teams, loads, and planning settings.', group: 'Legacy' },
+    { key: 'manage_user_roles', label: 'Change user roles', description: 'Lets the user change another user\'s role or team assignment.', group: 'Legacy' },
+    { key: 'access_settings', label: 'Access Settings page', description: 'Lets the user open and edit the Settings area.', group: 'Legacy' }
   ];
 }
 
@@ -345,7 +346,7 @@ function renderSettingsTeamsPermissionsEditor() {
 
   let permRows = '';
   let activeGroup = '';
-  definitions.forEach(({ key, label, group }) => {
+  definitions.forEach(({ key, label, description, group }) => {
     if (group !== activeGroup) {
       activeGroup = group;
       permRows += `
@@ -359,7 +360,12 @@ function renderSettingsTeamsPermissionsEditor() {
     const isAllowed = perm?.allowed || false;
     permRows += `
       <tr>
-        <td>${esc(label)}</td>
+        <td>
+          <div class="settings-permission-copy">
+            <div class="settings-permission-label">${esc(label)}</div>
+            ${description ? `<div class="settings-permission-desc">${esc(description)}</div>` : ''}
+          </div>
+        </td>
         <td style="text-align:center">
           <input type="checkbox" ${isAllowed ? 'checked' : ''}
                  data-action="settings-teams-permission-toggle"
@@ -376,7 +382,7 @@ function renderSettingsTeamsPermissionsEditor() {
   container.innerHTML = `
     <div class="settings-section-header">
       <h2>Edit Permissions: ${esc(team.name)}</h2>
-      <p class="settings-section-desc">Configure what this team can do in the system.</p>
+      <p class="settings-section-desc">Configure what this team can do in the system. Each permission includes a short description of the access it gives.</p>
     </div>
     <table class="prod-tbl" style="width:100%;margin-bottom:16px">
       <thead>

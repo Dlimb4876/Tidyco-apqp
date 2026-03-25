@@ -13,6 +13,7 @@ const path = require('path');
 
 global.showGuide = jest.fn();
 global.navigate = jest.fn();
+global.canViewPageKey = jest.fn(() => true);
 global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 global.emailToDisplayName = (email) => {
   if (!email) return '';
@@ -29,6 +30,7 @@ eval(src); // eslint-disable-line no-eval
 describe('renderHub()', () => {
   beforeEach(() => {
     localStorage.clear();
+    global.canViewPageKey = jest.fn(() => true);
     // Reset action centre state before each test
     global.actionCentreLoading = false;
     global.actionCentreData = null;
@@ -55,6 +57,15 @@ describe('renderHub()', () => {
 
   it('contains a PRODUCT DEVELOPMENT card', () => {
     const html = renderHub(); // eslint-disable-line no-undef
+    expect(html).toContain('PRODUCT DEVELOPMENT');
+  });
+
+  it('hides cards the user cannot view', () => {
+    global.canViewPageKey = jest.fn((pageKey) => pageKey !== 'capacity');
+
+    const html = renderHub(); // eslint-disable-line no-undef
+
+    expect(html).not.toContain('CAPACITY');
     expect(html).toContain('PRODUCT DEVELOPMENT');
   });
 
@@ -118,6 +129,21 @@ describe('renderHub()', () => {
     }));
     const html = renderHub(); // eslint-disable-line no-undef
     expect(html).toContain('📊 Capacity');
+  });
+
+  it('hides inaccessible favourites from the favourites panel', () => {
+    global.currentUser = { email: 'fav.user@example.com' };
+    global.canViewPageKey = jest.fn((pageKey) => pageKey !== 'capacity');
+    localStorage.setItem('tidyco_favourites_v1_fav.user@example.com', JSON.stringify({
+      version: 1,
+      pages: ['capacity', 'product-development'],
+      products: []
+    }));
+
+    const html = renderHub(); // eslint-disable-line no-undef
+
+    expect(html).not.toContain('📊 Capacity');
+    expect(html).toContain('🚀 Product Development');
   });
 });
 
@@ -317,5 +343,15 @@ describe('hub favourites storage', () => {
     hubOpenFavouritePage('capacity::me'); // eslint-disable-line no-undef
     expect(global.navigate).toHaveBeenCalledWith('capacity');
     expect(global.setCapacityTab).toHaveBeenCalledWith('me');
+  });
+
+  it('does not open a favourite page that is no longer viewable', () => {
+    global.setCapacityTab = jest.fn();
+    global.canViewPageKey = jest.fn(() => false);
+
+    hubOpenFavouritePage('capacity::me'); // eslint-disable-line no-undef
+
+    expect(global.navigate).not.toHaveBeenCalled();
+    expect(global.setCapacityTab).not.toHaveBeenCalled();
   });
 });

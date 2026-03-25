@@ -1,48 +1,33 @@
 /**
  * log-capacity.test.js — Tests for portals/capacity/logistics/js/log-capacity.js
  *
- * Covers: LOG capacity render, department filtering, tab switching, debounced save behavior.
+ * Covers: LOG capacity render, isolated data loading, tab switching, debounced save behavior.
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const TEAM_FIXTURE = [
-  { id: 'm1', name: 'Log A', department: 'LOG' },
-  { id: 'm2', name: 'Me A', department: 'ME' },
-];
+const TEAM_FIXTURE = [{ id: 'm1', name: 'Log A', department: 'LOG' }];
 
-const TASKS_FIXTURE = [
-  { id: 't1', task: 'Log Task', department: 'LOG' },
-  { id: 't2', task: 'Me Task', department: 'ME' },
-];
+const TASKS_FIXTURE = [{ id: 't1', task: 'Log Task', department: 'LOG' }];
 
-const PRODUCTS_FIXTURE = [
-  { id: 'p1', product: 'Log Product', department: 'LOG' },
-  { id: 'p2', product: 'Me Product', department: 'ME' },
-];
+const PRODUCTS_FIXTURE = [{ id: 'p1', product: 'Log Product', department: 'LOG' }];
 
-const HOLIDAYS_FIXTURE = [
-  { id: 'h1', date: '2026-01-01', department: 'LOG' },
-  { id: 'h2', date: '2026-01-02', department: 'ME' },
-];
+const HOLIDAYS_FIXTURE = [{ id: 'h1', date: '2026-01-01', department: 'LOG' }];
 
 global.render = jest.fn();
 global.currentSection = 'capacity';
 global.capacityTab = 'logistics';
 global.writeNavigationHistory = jest.fn();
-global.meDataSave = jest.fn(() => Promise.resolve());
+global.logDataSave = jest.fn(() => Promise.resolve());
 global.isEditingInlineCell = jest.fn(() => false);
+global.logDataInitialized = true;
 
-global.meDataGetTeam = jest.fn(() => TEAM_FIXTURE);
-global.meDataGetTasks = jest.fn(() => TASKS_FIXTURE);
-global.meDataGetProducts = jest.fn(() => PRODUCTS_FIXTURE);
-global.meDataGetHolidays = jest.fn(() => HOLIDAYS_FIXTURE);
-
-global.meFilterByDepartment = jest.fn((list, dept) => {
-  if (!Array.isArray(list)) return [];
-  return list.filter(item => (item.department || '').toUpperCase() === dept);
-});
+global.logDataGetTeam = jest.fn(() => TEAM_FIXTURE);
+global.logDataGetTasks = jest.fn(() => TASKS_FIXTURE);
+global.logDataGetProducts = jest.fn(() => PRODUCTS_FIXTURE);
+global.logDataGetHolidays = jest.fn(() => HOLIDAYS_FIXTURE);
+global.logDataAutoSyncLogProducts = jest.fn(() => false);
 
 global.meRenderTeamTab = jest.fn(() => '<div>LOG Team Tab</div>');
 global.meRenderTasksTab = jest.fn(() => '<div>LOG Tasks Tab</div>');
@@ -67,15 +52,11 @@ beforeEach(() => {
   global.currentSection = 'capacity';
   global.capacityTab = 'logistics';
 
-  global.meDataGetTeam.mockReturnValue(TEAM_FIXTURE);
-  global.meDataGetTasks.mockReturnValue(TASKS_FIXTURE);
-  global.meDataGetProducts.mockReturnValue(PRODUCTS_FIXTURE);
-  global.meDataGetHolidays.mockReturnValue(HOLIDAYS_FIXTURE);
-
-  global.meFilterByDepartment = jest.fn((list, dept) => {
-    if (!Array.isArray(list)) return [];
-    return list.filter(item => (item.department || '').toUpperCase() === dept);
-  });
+  global.logDataGetTeam.mockReturnValue(TEAM_FIXTURE);
+  global.logDataGetTasks.mockReturnValue(TASKS_FIXTURE);
+  global.logDataGetProducts.mockReturnValue(PRODUCTS_FIXTURE);
+  global.logDataGetHolidays.mockReturnValue(HOLIDAYS_FIXTURE);
+  global.logDataAutoSyncLogProducts.mockReturnValue(false);
 
   window.logSetTab('chart');
 });
@@ -116,22 +97,21 @@ describe('logSetTab()', () => {
     window.logSetTab('team');
 
     expect(global.writeNavigationHistory).toHaveBeenCalledWith('#s=capacity&ct=logistics&lgt=team', { push: true });
-    expect(global.meRenderTeamTab).toHaveBeenCalledWith([
-      { id: 'm1', name: 'Log A', department: 'LOG' },
-    ]);
+    expect(global.meRenderTeamTab).toHaveBeenCalledWith(TEAM_FIXTURE);
 
     const body = document.getElementById('logBody');
     expect(body.innerHTML).toContain('LOG Team Tab');
     expect(window.meCurrentDepartmentContext).toBe('LOG');
   });
 
-  it('falls back safely when meFilterByDepartment is unavailable', () => {
-    global.meFilterByDepartment = undefined;
+  it('falls back safely when log data getters are unavailable', () => {
+    global.logDataGetTeam = undefined;
 
     document.body.innerHTML = '<div id="logBody"></div>';
     window.logSetTab('team');
 
-    expect(global.meRenderTeamTab).toHaveBeenCalledWith(TEAM_FIXTURE);
+    expect(global.meRenderTeamTab).toHaveBeenCalledWith([]);
+    global.logDataGetTeam = jest.fn(() => TEAM_FIXTURE);
   });
 });
 
@@ -145,7 +125,7 @@ describe('logDebouncedSave()', () => {
     jest.advanceTimersByTime(900);
     await Promise.resolve();
 
-    expect(global.meDataSave).toHaveBeenCalledWith(false);
+    expect(global.logDataSave).toHaveBeenCalledWith(false);
     expect(window.logPendingRerender).toBe(false);
     expect(refreshSpy).not.toHaveBeenCalled();
   });
