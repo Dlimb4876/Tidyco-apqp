@@ -14,6 +14,12 @@ In APQP, this goes beyond just the product's components; it includes parts, tool
 - **Category:** Classification (e.g., Part, Tool, Equipment, Material, Consumable).
 - **Quantity:** How many are required per unit or per batch.
 - **Process Link:** The specific PFD step where the item is used or installed.
+- **Part Class Badges (A/B/C):** Visual indicators linked to the Parts Database that highlight high-value or critical parts.
+
+## BOM Views
+- **Structure (Core BoM):** The hierarchical product tree for the main assembly (up to 4 levels deep).
+- **AAW & Repair:** Separate named BoMs for after-warranty and repair scopes.
+- **Parts Register:** A rolled-up aggregation of all parts showing unique items and summed quantities across all views.
 
 ## The analytical process
 1. **Import product parts:** Start with the core components required to build the product.

@@ -21,8 +21,15 @@ npi.pfmea.getRpnFilter = function() {
 }
 
 npi.pfmea.setRpnFilter = function(nextFilter) {
+  const prevFilter = globalThis.pfmeaRpnFilter || 'all'
   const safe = (nextFilter || 'all').toString()
   globalThis.pfmeaRpnFilter = PFMEA_RPN_FILTERS.includes(safe) ? safe : 'all'
+  // Update URL to persist PFMEA RPN filter
+  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=pfmea']
+  if (globalThis.pfmeaRpnFilter !== 'all') parts.push('pfr=' + encodeURIComponent(globalThis.pfmeaRpnFilter))
+  if (globalThis.pfmeaView !== 'worksheet') parts.push('pfv=' + encodeURIComponent(globalThis.pfmeaView))
+  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  writeNavigationHistory('#' + parts.join('&'), { push: prevFilter !== safe })
   render()
 }
 
@@ -32,8 +39,15 @@ npi.pfmea.getView = function() {
 }
 
 npi.pfmea.setView = function(nextView) {
+  const prevView = globalThis.pfmeaView || 'worksheet'
   const safe = (nextView || 'worksheet').toString()
   globalThis.pfmeaView = PFMEA_VIEWS.includes(safe) ? safe : 'worksheet'
+  // Update URL to persist PFMEA view
+  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=pfmea']
+  if (globalThis.pfmeaRpnFilter !== 'all') parts.push('pfr=' + encodeURIComponent(globalThis.pfmeaRpnFilter))
+  if (globalThis.pfmeaView !== 'worksheet') parts.push('pfv=' + encodeURIComponent(globalThis.pfmeaView))
+  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  writeNavigationHistory('#' + parts.join('&'), { push: prevView !== safe })
   render()
 }
 

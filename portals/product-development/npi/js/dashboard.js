@@ -21,11 +21,26 @@ npi.dashboard.setProjectsViewMode = function (mode) {
   npiProjectsViewMode = mode
   localStorage.setItem(NPI_PROJECTS_VIEW_MODE_KEY, mode)
   npiProjectsStatusFilter = 'all'
+  // Update URL to persist view mode
+  const parts = ['s=projects']
+  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch))
+  if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter))
+  if (mode !== 'active') parts.push('pvm=' + encodeURIComponent(mode))
+  writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
 
 npi.dashboard.setProjectsSearch = function (value) {
   npiProjectsSearch = (value || '').trim().toLowerCase()
+  // Update URL to persist search (use replace to avoid flooding history)
+  const parts = ['s=projects']
+  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch))
+  if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter))
+  if (npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(npiProjectsStatusFilter))
+  if (npiProjectsViewMode !== 'active') parts.push('pvm=' + encodeURIComponent(npiProjectsViewMode))
+  writeNavigationHistory('#' + parts.join('&'), { push: false })
   render()
 }
 
@@ -71,11 +86,27 @@ npi.dashboard.setProjectsSearchFromInput = function (inputEl) {
 
 npi.dashboard.setProjectsFamilyFilter = function (value) {
   npiProjectsFamilyFilter = value || 'all'
+  // Update URL to persist family filter
+  const parts = ['s=projects']
+  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch))
+  if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter))
+  if (npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(npiProjectsStatusFilter))
+  if (npiProjectsViewMode !== 'active') parts.push('pvm=' + encodeURIComponent(npiProjectsViewMode))
+  writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
 
 npi.dashboard.setProjectsStatusFilter = function (value) {
   npiProjectsStatusFilter = value || 'all'
+  // Update URL to persist status filter
+  const parts = ['s=projects']
+  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch))
+  if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter))
+  if (npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(npiProjectsStatusFilter))
+  if (npiProjectsViewMode !== 'active') parts.push('pvm=' + encodeURIComponent(npiProjectsViewMode))
+  writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
 
@@ -83,6 +114,10 @@ npi.dashboard.clearProjectFilters = function () {
   npiProjectsSearch = ''
   npiProjectsFamilyFilter = 'all'
   npiProjectsStatusFilter = 'all'
+  // Update URL to clear filters
+  const parts = ['s=projects']
+  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
 

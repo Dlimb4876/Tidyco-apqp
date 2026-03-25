@@ -231,6 +231,51 @@ function navigate(sec, { pushHash = true } = {}) {
     if (sec === 'operations' && operationsTab !== 'overview') parts.push('od=' + encodeURIComponent(operationsTab));
     if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
     if (sec === 'product-development' && productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(productDevelopmentTab));
+
+    // NPI Projects Dashboard filters
+    if (sec === 'projects') {
+      if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch));
+      if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter));
+      if (npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(npiProjectsStatusFilter));
+      if (npiProjectsViewMode !== 'active') parts.push('pvm=' + encodeURIComponent(npiProjectsViewMode));
+    }
+
+    // BOM sub-tab
+    if (sec === 'project' && typeof bomSubTab !== 'undefined' && bomSubTab !== 'tree') {
+      parts.push('bt=' + encodeURIComponent(bomSubTab));
+    }
+
+    // PFMEA filters
+    if (sec === 'project' && typeof apqpTab !== 'undefined' && apqpTab === 'pfmea') {
+      if (typeof pfmeaRpnFilter !== 'undefined' && pfmeaRpnFilter !== 'all') {
+        parts.push('pfr=' + encodeURIComponent(pfmeaRpnFilter));
+      }
+      if (typeof pfmeaView !== 'undefined' && pfmeaView !== 'worksheet') {
+        parts.push('pfv=' + encodeURIComponent(pfmeaView));
+      }
+    }
+
+    // CTQ filters
+    if (sec === 'project' && typeof apqpTab !== 'undefined' && apqpTab === 'ctq') {
+      if (typeof ctqSourceFilter !== 'undefined' && ctqSourceFilter !== 'all') {
+        parts.push('csf=' + encodeURIComponent(ctqSourceFilter));
+      }
+      if (typeof ctqOosFilter !== 'undefined' && ctqOosFilter !== 'all') {
+        parts.push('cof=' + encodeURIComponent(ctqOosFilter));
+      }
+      if (typeof ctqAgreedFilter !== 'undefined' && ctqAgreedFilter !== 'all') {
+        parts.push('caf=' + encodeURIComponent(ctqAgreedFilter));
+      }
+      if (typeof ctqCoverageFilter !== 'undefined' && ctqCoverageFilter !== 'all') {
+        parts.push('ccf=' + encodeURIComponent(ctqCoverageFilter));
+      }
+    }
+
+    // Tracker sub-assembly filter
+    if (sec === 'project' && typeof trackerSubAsmFilter !== 'undefined' && trackerSubAsmFilter !== 'all') {
+      parts.push('tsf=' + encodeURIComponent(trackerSubAsmFilter));
+    }
+
     const hash = parts.length ? '#' + parts.join('&') : '#';
     writeNavigationHistory(hash, { push: sec !== prevSection });
   }
@@ -567,6 +612,41 @@ window.addEventListener('popstate', () => {
   if (h.pct) prodCapTab = h.pct;
   if (h.pmt && typeof pmTab !== 'undefined') pmTab = h.pmt;
   if (h.t) apqpTab = h.t;
+
+  // Restore NPI Projects Dashboard filters
+  if (h.ps)  npiProjectsSearch       = decodeURIComponent(h.ps);
+  else       npiProjectsSearch       = '';
+  if (h.pf)  npiProjectsFamilyFilter = decodeURIComponent(h.pf);
+  else       npiProjectsFamilyFilter = 'all';
+  if (h.pst) npiProjectsStatusFilter = decodeURIComponent(h.pst);
+  else       npiProjectsStatusFilter = 'all';
+  if (h.pvm) npiProjectsViewMode     = decodeURIComponent(h.pvm);
+  else       npiProjectsViewMode     = 'active';
+
+  // Restore BOM sub-tab
+  if (h.bt)  bomSubTab               = decodeURIComponent(h.bt);
+  else       bomSubTab               = 'tree';
+
+  // Restore PFMEA filters
+  if (h.pfr) pfmeaRpnFilter          = decodeURIComponent(h.pfr);
+  else       pfmeaRpnFilter          = 'all';
+  if (h.pfv) pfmeaView               = decodeURIComponent(h.pfv);
+  else       pfmeaView               = 'worksheet';
+
+  // Restore CTQ filters
+  if (h.csf) ctqSourceFilter         = decodeURIComponent(h.csf);
+  else       ctqSourceFilter         = 'all';
+  if (h.cof) ctqOosFilter            = decodeURIComponent(h.cof);
+  else       ctqOosFilter            = 'all';
+  if (h.caf) ctqAgreedFilter         = decodeURIComponent(h.caf);
+  else       ctqAgreedFilter         = 'all';
+  if (h.ccf) ctqCoverageFilter       = decodeURIComponent(h.ccf);
+  else       ctqCoverageFilter       = 'all';
+
+  // Restore tracker sub-assembly filter
+  if (h.tsf) trackerSubAsmFilter     = decodeURIComponent(h.tsf);
+  else       trackerSubAsmFilter     = 'all';
+
   if (h.p && db.projects.find(p => p.id === h.p)) {
     progId = h.p;
     navigate(h.s || 'project', { pushHash: false });

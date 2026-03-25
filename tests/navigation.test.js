@@ -49,6 +49,12 @@ global.productDevelopmentTab = 'root';
 global.productsActiveTab = 'list';
 global.npiLoadedProgId = null;    // state.js variable used by scrollToSelectedItem
 
+// Mock NPI Projects Dashboard filter state (for URL persistence)
+global.npiProjectsSearch = '';
+global.npiProjectsFamilyFilter = 'all';
+global.npiProjectsStatusFilter = 'all';
+global.npiProjectsViewMode = 'active';
+
 // Mock prog() accessor function
 global.prog = () => global.db.projects.find(p => p.id === global.progId) || null;
 

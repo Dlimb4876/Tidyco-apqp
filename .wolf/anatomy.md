@@ -1,18 +1,18 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-25T19:41:44.097Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-25T22:44:32.634Z
 > Files: 388 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
-- `.gitignore` — Git ignore rules (~347 tok)
+- `.gitignore` — Git ignore rules (~370 tok)
 - `.mcp.json` (~323 tok)
 - `.nojekyll` (~0 tok)
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1827 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~19010 tok)
+- `CHANGELOG.md` — Changelog (~19385 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~606 tok)
 - `eslint.config.js` — ESLint flat configuration (~1015 tok)
@@ -151,22 +151,17 @@
 
 ## docs/guides/
 
-- `FAMILY_TEMPLATES_GUIDE.md` — Family PFMEA Templates — User Guide (~1776 tok)
 - `family-templates-guide.md` — Family PFMEA Templates — User Guide (~1776 tok)
 
 ## docs/reference/
 
-- `FAMILY_TEMPLATES_ARCHITECTURE.md` — Family PFMEA Templates — System Architecture (~2838 tok)
 - `family-templates-architecture.md` — Family PFMEA Templates — System Architecture (~2838 tok)
-- `GATE_DEFINITIONS_GUIDE.md` — APQP Gates & GATE_DEFS — Technical Reference (~4465 tok)
 - `gate-definitions-guide.md` — APQP Gates & GATE_DEFS — Technical Reference (~4465 tok)
 - `guide-modal-audit-2026-03-23.md` — Guide Modal Audit Report (~3145 tok)
-- `NPI_PROJECT_FLOW_GUIDE.md` — NPI Project Creation & Gate Workflow — Comprehensive Guide (~4436 tok)
 - `npi-project-flow-guide.md` — NPI Project Creation & Gate Workflow — Comprehensive Guide (~4436 tok)
 
 ## docs/setup/
 
-- `FEEDBACK_SETUP.md` — Feedback & Bug Reporting System — Setup Guide (~1504 tok)
 - `feedback-setup.md` — Feedback & Bug Reporting System — Setup Guide (~1504 tok)
 
 ## plans/
@@ -261,7 +256,7 @@
 
 - `feedback-constants.js` — Declares to (~977 tok)
 - `feedback-data.js` — ═══════════════════════════════════ (~1715 tok)
-- `feedback.js` — ═══════════════════════════════════ (~5408 tok)
+- `feedback.js` — ═══════════════════════════════════ (~5411 tok)
 
 ## portals/hub/css/
 

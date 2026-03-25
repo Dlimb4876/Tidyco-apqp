@@ -17,11 +17,17 @@ For PFMEA method and scoring logic, use [PFMEA](./50-pfmea.md).
 ## Typical PFMEA workflow in the site
 1. Confirm the process step exists in PFD before creating PFMEA rows.
 2. Add or open the PFMEA row for that step.
-3. Enter failure mode, effect, and cause details.
-4. Enter S, O, and D values and confirm the displayed RPN.
-5. Add action details (owner, due date, status) for unacceptable risk.
-6. Update forecast values after action planning.
-7. Save and review the row in context with related actions.
+3. Enter the intended **Function**, then log the failure mode, effect, and cause details.
+4. Tag any **Special Characteristics** (🦺 Safety, ❗ Critical, ⚠️ Major) using the dropdown next to the Severity score.
+5. Enter S, O, and D values and confirm the displayed RPN.
+6. Add action details (owner, due date, status) for unacceptable risk.
+7. Update forecast values after action planning.
+8. Save and review the row in context with related actions.
+
+## UI Tools & Navigation
+- **Collapsible Columns:** Use the View toggles (Compact / Standard / Full) in the toolbar to reduce horizontal scrolling and focus on the data you need.
+- **Advanced Filters:** Use the filter bar to quickly find items by RPN range, Owner, Special Characteristic, text search, or to isolate overdue items. Filter state is saved in the URL.
+- **Validation Warnings:** Look for the pulsing ⚠️ badge next to RPNs. Clicking it opens a modal explaining rule violations (e.g., "High severity without mitigation", "Critical RPN without action plan", or "Overdue action").
 
 ## Field-entry guidance
 - Keep failure mode text short and specific.

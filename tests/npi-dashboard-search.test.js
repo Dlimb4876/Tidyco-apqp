@@ -14,6 +14,14 @@ describe('NPI dashboard search input behavior', () => {
     global.db = { projects: [] }
     global.esc = (v) => String(v ?? '')
 
+    // Mock NPI Projects Dashboard filter state (for URL persistence)
+    global.npiTab = 'all'
+    global.npiProjectsSearch = ''
+    global.npiProjectsFamilyFilter = 'all'
+    global.npiProjectsStatusFilter = 'all'
+    global.npiProjectsViewMode = 'active'
+    global.writeNavigationHistory = jest.fn()
+
     global.render = jest.fn(() => {
       const mount = document.getElementById('mount')
       if (!mount) return

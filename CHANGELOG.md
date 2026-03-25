@@ -3,6 +3,12 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-25 | Add CTQ Coverage tracking and filtering | New Coverage column shows if each CTQ is linked to PFD/PFMEA (green=linked, amber=orphaned); Coverage filter dropdown to show All/Linked/Orphaned CTQs; Coverage stats banner displays count of linked and orphaned CTQs; URL param `ccf` persists coverage filter state
+
+## 2026-03-25 | Fix Browse All tab in Feedback & Bugs | Wrong DOM selector (#mc vs #mainContent) meant tab switch never updated the UI
+
+## 2026-03-25 | Add URL state persistence for NPI dashboard and project filters | Page refreshes now restore: NPI Projects view mode, search text, family/status filters; BOM sub-tab (tree/register/tools/equip/cons); PFMEA RPN filter and view mode; CTQ source/OOS/agreed filters; Tracker sub-assembly filter. URL params: ps, pf, pst, pvm, bt, pfr, pfv, csf, cof, caf, tsf
+
 ## 2026-03-25 | Add Where Used feature to Parts Database | New "Used In" column shows count of active projects using each part; click opens modal showing project names, locations (BOM/assembly), and quantities; usage data loads asynchronously and is cached per session
 
 ## 2026-03-25 | Fix PFD BOM pick to show parts from BoM tree and add AAW/Repair Assembly filter | PFD resource picker now aggregates parts from Core BoM tree and AAW/Repair groups; added new "AAW/Repair Assembly" filter to select entire assembly groups at top level

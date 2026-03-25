@@ -40,7 +40,16 @@ npi.bom.renderBOM = function() {
   return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-bom" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="npi-go-home">← Dashboard</button></div></div>${tabHTML}${content}`
 }
 
-npi.bom.setBomTab = function(t) { bomSubTab = t; render() }
+npi.bom.setBomTab = function(t) {
+  const prevTab = bomSubTab
+  bomSubTab = t
+  // Update URL hash to persist BOM tab state
+  const parts = ['p=' + encodeURIComponent(progId), 's=project']
+  if (typeof apqpTab !== 'undefined' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab))
+  if (t !== 'tree') parts.push('bt=' + encodeURIComponent(t))
+  writeNavigationHistory('#' + parts.join('&'), { push: prevTab !== t })
+  render()
+}
 npi.bom.setPartsRegisterView = function(view) { bomPartsRegisterView = view; render() }
 
 // ══════════════════════════════════════

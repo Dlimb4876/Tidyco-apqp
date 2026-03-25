@@ -23,6 +23,7 @@ let pfmeaView = 'worksheet'; // worksheet|history
 let ctqSourceFilter = 'all'; // all | Customer Spec | OEM Data | Internal Standard | Regulatory | Drawing
 let ctqOosFilter = 'all'; // all | Repair | Replace | Scrap | Review | TBD
 let ctqAgreedFilter = 'all'; // all | yes | no
+let ctqCoverageFilter = 'all'; // all | linked | orphaned — filter CTQs by whether they are referenced in PFD/PFMEA
 let trackerSubAsmFilter = 'all'; // all|root|<sub-assembly-id>
 let prodPlanMonthOffset = 0; // Month offset from current month
 let meStartOffset = 0; // Months from today
