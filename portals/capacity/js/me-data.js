@@ -741,6 +741,8 @@ function meDataAutoSyncDepartmentProducts(department) {
     return false;
   }
 
+  let changed = false;
+
   const targetDepartment = meNormalizeDepartmentTag(department, 'ME');
   const dbProducts = Array.isArray(productsState.products) ? productsState.products : [];
 
@@ -771,10 +773,20 @@ function meDataAutoSyncDepartmentProducts(department) {
     const sourceProduct = sourceByDbId.get(dbProduct.id) || null;
 
     if (existing) {
-      existing.name = dbProduct.name;
-      existing.notes = dbProduct.notes || '';
-      existing.department = targetDepartment;
-      if (sourceProduct && sourceProduct.id) existing.id = sourceProduct.id;
+      const newNotes = dbProduct.notes || '';
+      const newId = (sourceProduct && sourceProduct.id) ? sourceProduct.id : existing.id;
+      if (
+        existing.name !== dbProduct.name ||
+        existing.notes !== newNotes ||
+        existing.department !== targetDepartment ||
+        existing.id !== newId
+      ) {
+        existing.name = dbProduct.name;
+        existing.notes = newNotes;
+        existing.department = targetDepartment;
+        if (sourceProduct && sourceProduct.id) existing.id = sourceProduct.id;
+        changed = true;
+      }
       meApplyLatestSupportHistoryToProduct(existing, targetDepartment);
     } else {
       const seedBreakdown = meNormalizeProductSupportBreakdown(sourceProduct || { hoursPerWeek: 0 }, sourceProduct && sourceProduct.hoursPerWeek);
@@ -792,10 +804,15 @@ function meDataAutoSyncDepartmentProducts(department) {
         if (sourceProduct && sourceProduct.id) createdProduct.id = sourceProduct.id;
         meApplyLatestSupportHistoryToProduct(createdProduct, targetDepartment);
       }
+      changed = true;
     }
   });
 
   // De-dup department products and remove DB-linked rows that no longer exist in products DB
+  const countBefore = meDataState.products.filter(
+    meP => meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment
+  ).length;
+
   const seenDbIds = new Set();
   const seenNames = new Set();
   meDataState.products = meDataState.products.filter(meP => {
@@ -821,7 +838,13 @@ function meDataAutoSyncDepartmentProducts(department) {
     return dbMap[meP.productDatabaseId] !== undefined;
   });
 
-  return true;
+  const countAfter = meDataState.products.filter(
+    meP => meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment
+  ).length;
+
+  if (countAfter !== countBefore) changed = true;
+
+  return changed;
 }
 
 window.meDataAutoSyncProductionProducts = function() {

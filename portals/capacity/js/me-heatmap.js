@@ -60,7 +60,9 @@ window.meDrawHeatmapNow = function() {
   const team = departmentData.team;
   const tasks = departmentData.tasks;
   const holidays = departmentData.holidays;
-  const monthKey = meChartStart;
+  const monthKey = typeof window.meGetActiveChartMonthKey === 'function'
+    ? window.meGetActiveChartMonthKey()
+    : meChartStart;
 
   const weeks = meGetWeekRange(monthKey, 52);
   const container = document.getElementById('meHeatmapGrid');
