@@ -452,6 +452,7 @@ window.logDataDeleteHoliday = function(personId, date) {
 
 window.logDataAutoSyncLogProducts = function() {
   if (!productsState || !productsState.products) return false;
+  let changed = false;
   const dbProducts = Array.isArray(productsState.products) ? productsState.products : [];
   const dbMap = {};
   const dbNameSet = new Set();
@@ -468,9 +469,13 @@ window.logDataAutoSyncLogProducts = function() {
   dbProducts.forEach(dbProduct => {
     const existing = existingByDbId.get(dbProduct.id);
     if (existing) {
-      existing.name = dbProduct.name;
-      existing.notes = dbProduct.notes || '';
-      existing.department = 'LOG';
+      const newNotes = dbProduct.notes || '';
+      if (existing.name !== dbProduct.name || existing.notes !== newNotes || existing.department !== 'LOG') {
+        existing.name = dbProduct.name;
+        existing.notes = newNotes;
+        existing.department = 'LOG';
+        changed = true;
+      }
       return;
     }
 
@@ -490,8 +495,10 @@ window.logDataAutoSyncLogProducts = function() {
     });
     const created = logDataState.products[logDataState.products.length - 1];
     logEnsureProductSupportHistoryBaseline(created);
+    changed = true;
   });
 
+  const countBefore = logDataState.products.length;
   const seenDbIds = new Set();
   const seenNames = new Set();
   logDataState.products = logDataState.products.filter(product => {
@@ -507,8 +514,9 @@ window.logDataAutoSyncLogProducts = function() {
     seenDbIds.add(product.productDatabaseId);
     return dbMap[product.productDatabaseId] !== undefined;
   });
+  if (logDataState.products.length !== countBefore) changed = true;
 
-  return true;
+  return changed;
 };
 
 window.logDataInit = async function() {

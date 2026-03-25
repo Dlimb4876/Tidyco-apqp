@@ -3,6 +3,14 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-25 | Fix continuous refresh loop on ME, PM, LOG, UNIT6 capacity and products portals | Auto-sync functions (meDataAutoSyncDepartmentProducts and equivalents for LOG, PM, UNIT6) always returned true even when no data changed, causing every render to trigger a debounced save, which fired a realtime event, which triggered another render — an infinite loop. Fixed by tracking actual changes and returning false when nothing was modified.
+
+## 2026-03-25 | Fix core script load order warnings in index bootstrap | Moved chart-theme.js and guide.js to load after core chain (state/auth/db/helpers/navigation/realtime) to align with guardrail order and remove load-order checker warnings
+
+## 2026-03-25 | Fix PM/LOG/Unit 6 date adjuster to move chart and heatmap together | Shared chart/heatmap redraw paths were reading ME month state instead of active stream month, so non-ME date changes did not move the visual chart/heatmap despite month controls updating
+
+## 2026-03-25 | Fix capacity plan charts auto-refreshing on real-time updates | Charts on ME, PM, LOG, and Unit 6 portals were auto-refreshing when on chart tab due to missing chart-tab checks in LOG and UNIT6 flush handlers in capacity-events.js; added same smart-render checks that ME and PM already had to prevent chart redraws during real-time subscription updates. Charts now only refresh when user first opens the chart page, matching the "Updates when this chart page is opened" tooltip
+
 ## 2026-03-25 | Fix ME capacity bulk save showing no feedback when validation fails | Bulk save alert wasn't showing when all drafts failed validation because effective date/reason missing or backdate cancelled; now shows clear error messages for each validation failure and prompts user to fill required fields
 
 ## 2026-03-25 | Add meProductsClearAllDrafts utility for state management | Added global function meProductsClearAllDrafts(department) to clear all product support drafts for a department; useful for testing and for programmatic state reset

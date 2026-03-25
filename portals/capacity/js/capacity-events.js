@@ -904,6 +904,11 @@ window.capacityEvents._onFocusOut = function(evt) {
     // ── Logistics Capacity flush ───────────────────────────
     if (window.logPendingRerender) {
       window.logPendingRerender = false
+      var activeLogBtn = document.querySelector('.log-shell .me-nav-btn.active')
+      if (activeLogBtn && activeLogBtn.getAttribute('data-tab') === 'chart') {
+        if (typeof logCapSmartRender === 'function') logCapSmartRender()
+        return
+      }
       if (typeof logRefreshCurrentTab === 'function') logRefreshCurrentTab()
       return
     }
@@ -911,6 +916,11 @@ window.capacityEvents._onFocusOut = function(evt) {
     // ── Unit 6 Capacity flush ──────────────────────────────
     if (window.unit6PendingRerender) {
       window.unit6PendingRerender = false
+      var activeUnit6Btn = document.querySelector('.unit6-shell .me-nav-btn.active')
+      if (activeUnit6Btn && activeUnit6Btn.getAttribute('data-tab') === 'chart') {
+        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender()
+        return
+      }
       if (typeof unit6RefreshCurrentTab === 'function') unit6RefreshCurrentTab()
       return
     }

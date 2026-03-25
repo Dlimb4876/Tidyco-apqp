@@ -7,6 +7,8 @@
 ## 2026-03-23
 ## 2026-03-24
 ## 2026-03-25
+- Fixed load-order checker warnings by moving `core/js/chart-theme.js` and `utils/js/guide.js` in `index.html` to load after the core chain (`state/auth/db/helpers/navigation/realtime`); validated with `npm run check:load-order` (clean, no warnings).
+- Fixed PM/LOG/Unit 6 Capacity date adjuster regression where month controls changed but chart/heatmap stayed pinned to ME month by introducing shared active-stream month resolver `meGetActiveChartMonthKey()` in `portals/capacity/js/me-chart.js` and using it in both `meDrawChartNow` and `meDrawHeatmapNow`; added regression in `tests/me-chart.test.js` and validated with `npm test -- tests/me-chart.test.js tests/pm-capacity.test.js`.
 - Fixed Serena MCP client-context mismatch for OpenCode by changing `.mcp.json` default `oraios/serena` context to `codex` and adding `oraios/serena-claude` with `claude-code`, so both OpenCode and Claude Code can connect without conflicting prompts/tool filters.
 - Fixed Product Support History edit-save reversion by making `meNormalizeAndDedupeSupportHistory` prefer the most recently updated duplicate record (instead of last-iterated), added regression in `tests/me-data-core.test.js`, and validated with `npm test -- tests/me-data-core.test.js` plus full `npm test`/`npm run check:all` runs (existing unrelated failure remains in `tests/operations-infographic.test.js`).
 - Fixed dead Capacity hub stream buttons by changing `portals/capacity/js/capacity.js` root cards and top route-switcher buttons from stale `data-action` wiring to delegated `data-cap-action="cap-set-tab"`, so clicks reach `setCapacityTab` again; added focused regression coverage in `tests/capacity-hub.test.js` and validated with `npm test -- tests/capacity-hub.test.js`.
@@ -1131,3 +1133,8 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+| 11:28 | Edited portals/capacity/logistics/js/log-data.js | added 2 condition(s) | ~749 |
+| 11:29 | Edited portals/capacity/project-management/js/pm-data.js | added 2 condition(s) | ~701 |
+| 11:29 | Edited portals/capacity/unit6/js/unit6-data.js | added 2 condition(s) | ~757 |
+| 11:29 | Edited CHANGELOG.md | 1→3 lines | ~139 |
+| 11:29 | Session end: 4 writes across 4 files (log-data.js, pm-data.js, unit6-data.js, CHANGELOG.md) | 9 reads | ~2355 tok |

@@ -121,6 +121,13 @@ describe('ME chart tab rendering', () => {
     expect(global.getMonthLabel).toHaveBeenCalledWith('2026-08');
   });
 
+  test('resolves active chart month from PM stream context', () => {
+    window.meCurrentDepartmentContext = 'PM';
+    global.pmChartStart = '2027-02';
+
+    expect(window.meGetActiveChartMonthKey()).toBe('2027-02');
+  });
+
   test('shows chart refresh indicator text in chart header', () => {
     window.meCurrentDepartmentContext = 'ME';
 

@@ -44,6 +44,29 @@ window.meGetCapacityDepartmentData = function() {
   };
 };
 
+window.meGetActiveChartMonthKey = function() {
+  const dept = (window.meCurrentDepartmentContext || 'ME').toUpperCase();
+
+  if (dept === 'PM' && typeof pmChartStart === 'string' && /^\d{4}-\d{2}$/.test(pmChartStart)) {
+    return pmChartStart;
+  }
+
+  if (dept === 'LOG' && typeof logChartStart === 'string' && /^\d{4}-\d{2}$/.test(logChartStart)) {
+    return logChartStart;
+  }
+
+  if (dept === 'UNIT6' && typeof unit6ChartStart === 'string' && /^\d{4}-\d{2}$/.test(unit6ChartStart)) {
+    return unit6ChartStart;
+  }
+
+  if (typeof meChartStart === 'string' && /^\d{4}-\d{2}$/.test(meChartStart)) {
+    return meChartStart;
+  }
+
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+};
+
 window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const department = typeof window.meCurrentDepartmentContext === 'string'
     ? window.meCurrentDepartmentContext
@@ -345,7 +368,10 @@ window.meDrawChartNow = function() {
 
   if (meChartInst) meChartInst.destroy();
 
-  const monthKeys = meGetMonthRange(meChartStart, 18);
+  const chartStartMonth = typeof window.meGetActiveChartMonthKey === 'function'
+    ? window.meGetActiveChartMonthKey()
+    : meChartStart;
+  const monthKeys = meGetMonthRange(chartStartMonth, 18);
   const monthLabels = monthKeys.map(m => meGetMonthLabel(m));
   const isSmallScreen = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
 
