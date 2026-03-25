@@ -552,6 +552,7 @@ describe('Teams Tab - Permissions Editor', () => {
     const container = document.getElementById('settingsTeamsTab');
     expect(container.innerHTML).toContain('Edit Permissions: Manufacturing');
     expect(container.innerHTML).toContain('View all project data');
+    expect(container.innerHTML).toContain('Lets the user see project records, schedules, and related planning data.');
     expect(container.innerHTML).toContain('Save');
   });
 
@@ -583,6 +584,7 @@ describe('Teams Tab - Permissions Editor', () => {
     expect(html).toContain('Manage capacity');
     expect(html).toContain('Change user roles');
     expect(html).toContain('Access Settings page');
+    expect(html).toContain('Lets the user change another user\'s role or team assignment.');
   });
 });
 

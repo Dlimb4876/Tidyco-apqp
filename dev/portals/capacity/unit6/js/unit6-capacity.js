@@ -1,6 +1,6 @@
 /* ============================================================
    unit6-capacity.js — Unit 6 Capacity Orchestrator
-   Shared me_* tables with department='UNIT6' filter
+  Dedicated Unit 6 relational tables
    ============================================================ */
 
 let unit6Tab = 'chart';
@@ -17,29 +17,17 @@ window.unit6CapSmartRender = function() {
   render();
 };
 
-function unit6FilterByDepartment(list, department, fallback) {
-  if (typeof meFilterByDepartment === 'function') {
-    return meFilterByDepartment(list, department, fallback);
-  }
-  return Array.isArray(list) ? list : [];
-}
-
 function unit6GetCurrentMonthKey() {
   const today = new Date();
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 }
 
 function unit6GetData() {
-  const allTeam     = typeof meDataGetTeam     === 'function' ? meDataGetTeam()     : [];
-  const allTasks    = typeof meDataGetTasks    === 'function' ? meDataGetTasks()    : [];
-  const allProducts = typeof meDataGetProducts === 'function' ? meDataGetProducts() : [];
-  const allHolidays = typeof meDataGetHolidays === 'function' ? meDataGetHolidays() : [];
-
   return {
-    team:     unit6FilterByDepartment(allTeam,     'UNIT6', 'ME'),
-    tasks:    unit6FilterByDepartment(allTasks,    'UNIT6', 'ME'),
-    products: unit6FilterByDepartment(allProducts, 'UNIT6', 'ME'),
-    holidays: unit6FilterByDepartment(allHolidays, 'UNIT6', 'ME')
+    team: typeof unit6DataGetTeam === 'function' ? unit6DataGetTeam() : [],
+    tasks: typeof unit6DataGetTasks === 'function' ? unit6DataGetTasks() : [],
+    products: typeof unit6DataGetProducts === 'function' ? unit6DataGetProducts() : [],
+    holidays: typeof unit6DataGetHolidays === 'function' ? unit6DataGetHolidays() : []
   };
 }
 
@@ -66,14 +54,25 @@ function unit6GetTabContent() {
   }
 }
 
+function unit6RerenderChartTabForMonthChange() {
+  const body = document.getElementById('unit6Body');
+  if (!body) return;
+  body.innerHTML = unit6GetTabContent();
+  setTimeout(() => {
+    if (typeof meChartStart !== 'undefined') window.meChartStart = unit6ChartStart || unit6GetCurrentMonthKey();
+    if (typeof meDrawChartNow === 'function') meDrawChartNow();
+    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+  }, 100);
+}
+
 window.unit6RenderCapacity = function() {
   window.meCurrentDepartmentContext = 'UNIT6';
 
-  if (typeof meDataAutoSyncUnit6Products === 'function') {
-    const synced = meDataAutoSyncUnit6Products();
-    if (synced && window.meDataInitialized) {
+  if (typeof unit6DataAutoSyncUnit6Products === 'function') {
+    const synced = unit6DataAutoSyncUnit6Products();
+    if (synced && window.unit6DataInitialized) {
       setTimeout(() => {
-        if (typeof meDataSave === 'function') meDataSave(false);
+        if (typeof unit6DebouncedSave === 'function') unit6DebouncedSave();
       }, 1000);
     }
   }
@@ -148,6 +147,20 @@ window.unit6SetTab = function(tab) {
 
 window.unit6RefreshCurrentTab = function() {
   window.meCurrentDepartmentContext = 'UNIT6';
+
+  // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
+  // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
+  if (unit6Tab === 'chart') {
+    const monthInput = document.getElementById('meChartMonthInput');
+    if (monthInput && unit6ChartStart) {
+      monthInput.value = unit6ChartStart;
+    }
+    if (typeof meChartStart    !== 'undefined') window.meChartStart = unit6ChartStart || unit6GetCurrentMonthKey();
+    if (typeof meDrawChartNow  === 'function')  meDrawChartNow();
+    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+    return;
+  }
+
   const body = document.getElementById('unit6Body');
   if (body) {
     body.innerHTML = unit6GetTabContent();
@@ -164,6 +177,8 @@ window.unit6RefreshCurrentTab = function() {
 window.unit6OnMonthChange = function(newMonth) {
   if (unit6Tab === 'chart') {
     unit6ChartStart = newMonth;
+    unit6RerenderChartTabForMonthChange();
+    return;
   } else {
     unit6HolidayMonth = newMonth;
   }
@@ -177,7 +192,13 @@ window.unit6OnNextMonth = function() {
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() + 1);
   const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  if (isChart) { unit6ChartStart = newMonth; } else { unit6HolidayMonth = newMonth; }
+  if (isChart) {
+    unit6ChartStart = newMonth;
+    unit6RerenderChartTabForMonthChange();
+    return;
+  } else {
+    unit6HolidayMonth = newMonth;
+  }
   unit6RefreshCurrentTab();
 };
 
@@ -188,12 +209,20 @@ window.unit6OnPrevMonth = function() {
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() - 1);
   const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  if (isChart) { unit6ChartStart = newMonth; } else { unit6HolidayMonth = newMonth; }
+  if (isChart) {
+    unit6ChartStart = newMonth;
+    unit6RerenderChartTabForMonthChange();
+    return;
+  } else {
+    unit6HolidayMonth = newMonth;
+  }
   unit6RefreshCurrentTab();
 };
 
 window.unit6OnSave = async function(showAlert = false) {
-  await meDataSave(showAlert);
+  if (typeof unit6DataSave === 'function') {
+    await unit6DataSave(showAlert);
+  }
 };
 
 window.unit6DebouncedSave = function() {

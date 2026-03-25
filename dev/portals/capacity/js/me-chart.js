@@ -2,10 +2,53 @@
    me-chart.js — Chart Tab & Utilities
    ============================================================ */
 
+function meGetChartRefreshText() {
+  return 'Updates when this chart page is opened';
+}
+
+window.meGetCapacityDepartmentData = function() {
+  const dept = window.meCurrentDepartmentContext || 'ME';
+
+  if (dept === 'PM' && typeof pmDataGetTeam === 'function') {
+    return {
+      team: pmDataGetTeam(),
+      tasks: typeof pmDataGetTasks === 'function' ? pmDataGetTasks() : [],
+      products: typeof pmDataGetProducts === 'function' ? pmDataGetProducts() : [],
+      holidays: typeof pmDataGetHolidays === 'function' ? pmDataGetHolidays() : []
+    };
+  }
+
+  if (dept === 'LOG' && typeof logDataGetTeam === 'function') {
+    return {
+      team: logDataGetTeam(),
+      tasks: typeof logDataGetTasks === 'function' ? logDataGetTasks() : [],
+      products: typeof logDataGetProducts === 'function' ? logDataGetProducts() : [],
+      holidays: typeof logDataGetHolidays === 'function' ? logDataGetHolidays() : []
+    };
+  }
+
+  if (dept === 'UNIT6' && typeof unit6DataGetTeam === 'function') {
+    return {
+      team: unit6DataGetTeam(),
+      tasks: typeof unit6DataGetTasks === 'function' ? unit6DataGetTasks() : [],
+      products: typeof unit6DataGetProducts === 'function' ? unit6DataGetProducts() : [],
+      holidays: typeof unit6DataGetHolidays === 'function' ? unit6DataGetHolidays() : []
+    };
+  }
+
+  return {
+    team: meDataGetTeam(),
+    tasks: meDataGetTasks(),
+    products: meDataGetProducts(),
+    holidays: meDataGetHolidays()
+  };
+};
+
 window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray) {
   const department = typeof window.meCurrentDepartmentContext === 'string'
     ? window.meCurrentDepartmentContext
     : 'ME';
+  const refreshText = meGetChartRefreshText();
 
   // Keep KPI cards aligned with the selected chart month.
   const selectedMonthKey = typeof monthKey === 'string' && /^\d{4}-\d{2}$/.test(monthKey)
@@ -213,6 +256,7 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
             <button class="btn btn-secondary btn-sm" data-cap-action="cap-me-next-month">Next →</button>
             <a href="javascript:void(0)" class="me-chart-today-link" data-cap-action="cap-me-today">Today</a>
           </div>
+          <div class="me-live-sync-indicator" aria-live="polite">${refreshText}</div>
         </div>
         <div class="me-card-body" style="padding:16px;">
           <div class="me-chart-wrapper">
@@ -282,11 +326,14 @@ window.meRenderChartTab = function(monthKey, teamArray, tasksArray, productsArra
 };
 
 window.meDrawChartNow = function() {
-  const dept = window.meCurrentDepartmentContext || 'ME';
-  const team     = meFilterByDepartment(meDataGetTeam(),     dept, 'ME');
-  const tasks    = meFilterByDepartment(meDataGetTasks(),    dept, 'ME');
-  const products = meFilterByDepartment(meDataGetProducts(), dept, 'ME');
-  const holidays = meFilterByDepartment(meDataGetHolidays(), dept, 'ME');
+  const { team, tasks, products, holidays } = typeof window.meGetCapacityDepartmentData === 'function'
+    ? window.meGetCapacityDepartmentData()
+    : {
+        team: meDataGetTeam(),
+        tasks: meDataGetTasks(),
+        products: meDataGetProducts(),
+        holidays: meDataGetHolidays()
+      };
 
   if (!window.Chart) {
     console.warn('Chart.js not loaded');
@@ -322,68 +369,80 @@ window.meDrawChartNow = function() {
   });
 
   const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    console.warn('Failed to get 2D context for meChart');
+    return;
+  }
 
-  // Resolve CSS custom properties for Chart.js (getComputedStyle required — Chart.js cannot use var())
-  const style = getComputedStyle(document.documentElement);
-  const colorBlue   = style.getPropertyValue('--chart-blue').trim();
-  const colorGreen  = style.getPropertyValue('--chart-green').trim();
-  const colorAmber  = style.getPropertyValue('--chart-amber').trim();
-  const colorPink   = style.getPropertyValue('--chart-pink').trim();
-  const colorPurple = style.getPropertyValue('--chart-purple').trim();
+  try {
+    const style = getComputedStyle(document.documentElement);
+    const colorBlue   = style.getPropertyValue('--chart-blue').trim();
+    const colorGreen  = style.getPropertyValue('--chart-green').trim();
+    const colorAmber  = style.getPropertyValue('--chart-amber').trim();
+    const colorPink   = style.getPropertyValue('--chart-pink').trim();
+    const colorPurple = style.getPropertyValue('--chart-purple').trim();
 
-  // Calculate total demand for each month (for tooltip percentages)
-  const totalDemandByMonth = monthKeys.map((_, idx) =>
-    npiData[idx] + improvementData[idx] + tenderingData[idx] + supportData[idx] + otherData[idx]
-  );
+    // Calculate total demand for each month (for tooltip percentages)
+    const totalDemandByMonth = monthKeys.map((_, idx) =>
+      npiData[idx] + improvementData[idx] + tenderingData[idx] + supportData[idx] + otherData[idx]
+    );
 
-  // Calculate max capacity for threshold zone shading
-  const maxCapacity = Math.max(...capacityData);
+    // Calculate max capacity for threshold zone shading
+    const maxCapacity = capacityData.length > 0 && capacityData.some(v => isFinite(v))
+    ? Math.max(...capacityData.filter(v => isFinite(v)))
+    : 0;
 
   // Plugin to draw threshold zone shading (green, amber, red zones)
   const thresholdZonePlugin = {
     id: 'thresholdZones',
     afterDatasetsDraw(chart) {
-      const ctx = chart.ctx;
-      const yScale = chart.scales.y;
-      const xScale = chart.scales.x;
+      try {
+        const ctx = chart.ctx;
+        const yScale = chart.scales.y;
+        const xScale = chart.scales.x;
 
-      if (!yScale || !xScale) return;
+        if (!ctx || !yScale || !xScale || !isFinite(maxCapacity) || maxCapacity <= 0) {
+          return;
+        }
 
-      // Get pixel positions for threshold zones
-      const healthyEnd = yScale.getPixelForValue(maxCapacity * 0.8);   // 80%
-      const tightEnd = yScale.getPixelForValue(maxCapacity);           // 100%
-      const chartTop = yScale.getPixelForValue(maxCapacity * 1.2);     // Top of chart
-      const chartBottom = yScale.getPixelForValue(0);
+        // Get pixel positions for threshold zones
+        const healthyEnd = yScale.getPixelForValue(maxCapacity * 0.8);   // 80%
+        const tightEnd = yScale.getPixelForValue(maxCapacity);           // 100%
+        const chartTop = yScale.getPixelForValue(maxCapacity * 1.2);     // Top of chart
+        const chartBottom = yScale.getPixelForValue(0);
 
-      // Draw zone backgrounds
-      ctx.save();
-      ctx.globalAlpha = 0.04;
+        // Draw zone backgrounds
+        ctx.save();
+        ctx.globalAlpha = 0.04;
 
-      // Green zone (0-80%)
-      ctx.fillStyle = '#1a7a3c';
-      ctx.fillRect(xScale.left, healthyEnd, xScale.right - xScale.left, chartBottom - healthyEnd);
+        // Green zone (0-80%)
+        ctx.fillStyle = '#1a7a3c';
+        ctx.fillRect(xScale.left, healthyEnd, xScale.right - xScale.left, chartBottom - healthyEnd);
 
-      // Amber zone (80-100%)
-      ctx.fillStyle = '#b45309';
-      ctx.fillRect(xScale.left, tightEnd, xScale.right - xScale.left, healthyEnd - tightEnd);
+        // Amber zone (80-100%)
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(xScale.left, tightEnd, xScale.right - xScale.left, healthyEnd - tightEnd);
 
-      // Red zone (100%+)
-      ctx.fillStyle = '#c0392b';
-      ctx.fillRect(xScale.left, chartTop, xScale.right - xScale.left, tightEnd - chartTop);
+        // Red zone (100%+)
+        ctx.fillStyle = '#c0392b';
+        ctx.fillRect(xScale.left, chartTop, xScale.right - xScale.left, tightEnd - chartTop);
 
-      ctx.restore();
+        ctx.restore();
 
-      // Draw threshold line at 100% capacity
-      const capacityLineY = yScale.getPixelForValue(maxCapacity);
-      ctx.save();
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(xScale.left, capacityLineY);
-      ctx.lineTo(xScale.right, capacityLineY);
-      ctx.stroke();
-      ctx.restore();
+        // Draw threshold line at 100% capacity
+        const capacityLineY = yScale.getPixelForValue(maxCapacity);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(xScale.left, capacityLineY);
+        ctx.lineTo(xScale.right, capacityLineY);
+        ctx.stroke();
+        ctx.restore();
+      } catch (e) {
+        console.warn('Chart threshold zone plugin error:', e);
+      }
     }
   };
 
@@ -475,12 +534,28 @@ window.meDrawChartNow = function() {
     },
     plugins: [thresholdZonePlugin]
   });
+  } catch (e) {
+    console.error('Error initializing meChart:', e);
+  }
 };
 
 // ── Control Handlers ──────────────────────────────────────
 window.meOnTodayClick = function() {
   const today = new Date();
   const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects' && typeof pmOnMonthChange === 'function') {
+    pmOnMonthChange(currentMonthKey);
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'logistics' && typeof logOnMonthChange === 'function') {
+    logOnMonthChange(currentMonthKey);
+    return;
+  }
+  if (typeof capacityTab !== 'undefined' && capacityTab === 'unit6' && typeof unit6OnMonthChange === 'function') {
+    unit6OnMonthChange(currentMonthKey);
+    return;
+  }
 
   // Handle holidays tab for ME capacity
   if (typeof meTab !== 'undefined' && meTab === 'holidays') {

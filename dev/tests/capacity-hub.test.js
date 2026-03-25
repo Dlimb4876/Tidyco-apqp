@@ -12,6 +12,7 @@ const path = require('path')
 // ─────────────────────────────────────────────────────────────
 
 global.navigate = jest.fn()
+global.canViewPortalTab = jest.fn(() => true)
 global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 global.showGuide = jest.fn()
 
@@ -36,6 +37,7 @@ describe('renderCapacity() hub view', () => {
   beforeEach(() => {
     global.capacityTab = 'root'
     global.capacityPortalDelegationContainer = null
+    global.canViewPortalTab = jest.fn(() => true)
     jest.clearAllMocks()
   })
 
@@ -61,9 +63,20 @@ describe('renderCapacity() hub view', () => {
     expect(matches).toBe(5)
   })
 
+  it('hides capacity cards the user cannot view', () => {
+    global.canViewPortalTab = jest.fn((section, tab) => !(section === 'capacity' && tab === 'me'))
+
+    const html = renderCapacity() // eslint-disable-line no-undef
+
+    expect(html).not.toContain('Manufacturing Engineering')
+    expect(html).toContain('Project Management')
+    const matches = (html.match(/class="proj-card hub-card"/g) || []).length
+    expect(matches).toBe(4)
+  })
+
   it('includes Production card with cap-hub-tab action', () => {
     const html = renderCapacity() // eslint-disable-line no-undef
-    expect(html).toContain('data-action="cap-hub-tab"')
+    expect(html).toContain('data-cap-action="cap-set-tab"')
     expect(html).toContain('data-tab="production"')
     expect(html).toContain('Production')
   })
@@ -128,6 +141,15 @@ describe('renderCapacity() hub view', () => {
     expect(html).not.toContain('hub-grid')
   })
 
+  it('does not switch to a capacity tab the user cannot view', () => {
+    global.canViewPortalTab = jest.fn((section, tab) => !(section === 'capacity' && tab === 'me'))
+
+    setCapacityTab('me') // eslint-disable-line no-undef
+
+    expect(global.capacityTab).toBe('root')
+    expect(global.render).not.toHaveBeenCalled()
+  })
+
   it('renders Logistics without the shared capacity route-switcher bar', () => {
     global.capacityTab = 'logistics'
     const html = renderCapacity() // eslint-disable-line no-undef
@@ -169,20 +191,19 @@ describe('setupCapacityPortalDelegation()', () => {
     expect(addEventListenerSpy).toHaveBeenCalledWith('click', expect.any(Function))
   })
 
-  it('handles cap-hub-tab click to update capacity tab', () => {
+  it('ignores cap-hub-tab click because global capacity-events router handles it', () => {
     global.render = jest.fn()
     setupCapacityPortalDelegation() // eslint-disable-line no-undef
 
     const card = document.createElement('div')
-    card.setAttribute('data-action', 'cap-hub-tab')
+    card.setAttribute('data-cap-action', 'cap-set-tab')
     card.setAttribute('data-tab', 'production')
     container.appendChild(card)
 
     card.click()
 
-    // Verify that capacityTab was changed and render was called
-    expect(global.capacityTab).toBe('production')
-    expect(global.render).toHaveBeenCalled()
+    expect(global.capacityTab).toBe('root')
+    expect(global.render).not.toHaveBeenCalled()
   })
 
   it('handles cap-nav-root click to go back to root view', () => {
@@ -199,6 +220,16 @@ describe('setupCapacityPortalDelegation()', () => {
     // Verify that capacityTab was set to root and render was called
     expect(global.capacityTab).toBe('root')
     expect(global.render).toHaveBeenCalled()
+  })
+
+  it('renders top nav buttons with delegated cap-set-tab actions', () => {
+    global.capacityTab = 'me'
+
+    const html = renderCapacity() // eslint-disable-line no-undef
+
+    expect(html).toContain('data-cap-action="cap-set-tab" data-tab="root"')
+    expect(html).toContain('data-cap-action="cap-set-tab" data-tab="production"')
+    expect(html).toContain('data-cap-action="cap-set-tab" data-tab="projects"')
   })
 
   it('handles cap-nav-hub click to navigate to hub', () => {

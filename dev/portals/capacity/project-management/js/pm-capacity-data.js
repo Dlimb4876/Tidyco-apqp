@@ -5,24 +5,14 @@
 
 window.pmCapacityData = {
   getTasks() {
-    if (typeof meDataGetTasks !== 'function') return [];
-    if (typeof meFilterByDepartment !== 'function') return meDataGetTasks();
-    return meFilterByDepartment(meDataGetTasks(), 'PM', 'ME');
+    return typeof pmDataGetTasks === 'function' ? pmDataGetTasks() : [];
   },
 
   getTeam() {
-    if (typeof meDataGetTeam !== 'function') return [];
-    if (typeof meFilterByDepartment !== 'function') return meDataGetTeam();
-    const allTeam = meDataGetTeam();
-    const pmTeam = meFilterByDepartment(allTeam, 'PM', 'ME');
-    return pmTeam.length > 0 ? pmTeam : allTeam;
+    return typeof pmDataGetTeam === 'function' ? pmDataGetTeam() : [];
   },
 
   getProducts() {
-    if (typeof meDataGetProducts !== 'function') return [];
-    if (typeof meFilterByDepartment !== 'function') return meDataGetProducts();
-    const allProducts = meDataGetProducts();
-    const pmProducts = meFilterByDepartment(allProducts, 'PM', 'ME');
-    return pmProducts.length > 0 ? pmProducts : allProducts;
+    return typeof pmDataGetProducts === 'function' ? pmDataGetProducts() : [];
   }
 };

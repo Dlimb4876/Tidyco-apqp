@@ -49,6 +49,7 @@ global.meLoadRelationalHolidays = jest.fn().mockResolvedValue([]);
 
 global.prodState = { products: [], batches: [] };
 global.meDataState = { team: [], tasks: [], products: [], holidays: [] };
+global.logDataState = { team: [], tasks: [], products: [], holidays: [] };
 global.feedbackDataManager = { state: { feedback: [] } };
 global.productsState = { products: [] };
 

@@ -6,6 +6,8 @@
 
 ## User Preferences
 
+- User expects access permissions to control visibility as well as blocking: inaccessible hub and sub-hub cards should be hidden, not merely denied on click.
+- For the Settings team-permissions editor, user wants a short plain-language explanation of what each permission actually allows.
 - For standalone guide rollout, user wants the wiki reachable by direct URL first and does not want a portal navigation link added until after manual review.
 - For large guide/documentation systems, user prefers a standalone index/wiki linked from the app (not embedded in SPA routes), with folder structure by area and small token-limited files for easier audits.
 - For Logistics Product Support, user expects `Kitting` and `Booking In/Out` as separate columns (not one combined `Kitting Booking In/Out` column), with Hours/Batch reflecting the component sum.
@@ -23,10 +25,12 @@
 - Do not assume the same capacity-header cleanup is needed on other capacity pages; verify the current implementation before suggesting broader nav removals.
 - For ME/PM product support planning, monthly support/load must be driven by production schedule batch counts (batch multiplier), not fixed weeks-per-month multipliers.
 - For Product Support effective-dated edits, user expects explicit intent controls (not auto-save on field change), with clear in-context change history at the point of editing.
+- For Capacity Product Support, user expects the `📦 Bulk Save All Changes` control to sit on the right above the table across all streams (ME/PM/Logistics/Unit 6).
 - For settings portal work, user prioritizes reducing churn in `settings.js`; avoid broad rewrites and stabilize tests with explicit hooks/contracts to prevent scope collisions and brittle `settings-portal.test.js` coupling.
 
 ## Key Learnings
 
+- Serena MCP context is client-specific: OpenCode/Codex expects `--context codex`, while Claude Code expects `--context claude-code`. A single `claude-code` server entry can appear visible in OpenCode but still be rejected as incompatible.
 - **Project:** tidyco-apqp — Manufacturing Engineering SPA for rail overhaul, managing APQP Gates 0–5. Stack: vanilla JavaScript, Chart.js, Supabase.
 - Wiki compatibility: keep legacy `/dev/wiki/` URL functional (redirect to `/wiki/`) and avoid raw `./content/...` bootstrap fetch paths that depend on trailing-slash URL shape.
 - Docs split: `plans/` (pending work/specs), `docs/reference/` (technical refs), `docs/guides/` (how-to), `docs/setup/` (setup). Filenames use lowercase kebab-case.
@@ -42,6 +46,9 @@
 
 ## Do-Not-Repeat
 
+<!-- [2026-03-24] Avoid exact-string HTML assertions that depend on attribute order (for example `data-field="..." readonly`) in rendered input tests; use regex/assertions that tolerate extra attributes/classes to prevent false regressions. -->
+<!-- [2026-03-24] When adding new "access" permissions, wire them into both render-time visibility (hub cards, local nav tabs, favourites) and deep-link access checks; only gating navigate/render is not enough for the clean role-based UI the user expects. -->
+<!-- [2026-03-24] Settings permissions copy: when `settings-teams.js` falls back to its local permission definitions in isolated tests, keep labels/descriptions aligned with `utils/js/helpers.js` or the test harness will render different permission text from the live app. -->
 <!-- [2026-03-21] Dark mode colours: never use hardcoded hex for borders/backgrounds in shared components. Any colour against --surface or --bg must use a CSS variable or have a [data-theme="dark"] override. --blue-dark (#3f8ded) is NOT legible on dark blue — use --blue (#5aa5ff) for dark mode text. -->
 <!-- [2026-03-21] Refactor gotcha: do not assume helpers.js globals are always available in tests. When replacing inline formulas/UI snippets with shared helpers, add local wrappers that call the helper when defined and fall back to equivalent inline behavior. -->
 <!-- [2026-03-23] Capacity persistence: `public.me_holidays` is the live source; `public.me_capacity` does not exist. Never reintroduce a query to `me_capacity`, and never delete all `me_holidays` rows globally — delete only the current user's rows before reinserting. -->
@@ -50,6 +57,11 @@
 <!-- [2026-03-23] Any search/filter path that triggers rerender (`render`, `setTab`, table/body refresh) must use shared continuity helper (`preserveInputCaretAfterRender`) and keep a local fallback in isolated tests where helpers globals are not loaded. -->
 <!-- [2026-03-23] OpenWolf cron: `openwolf cron run <ai-task>` only works when `claude` CLI is on PATH; daemon records failure even if CLI wrapper reports success. -->
 <!-- [2026-03-23] Settings test stability: do not use blanket `let`→`var` rewrites of `settings.js` in Jest. Prefer explicit state hooks (`settingsSetCoreState`) and stable load contracts to avoid eval-scope collisions across split settings modules. -->
+<!-- [2026-03-24] Department constraint parity: whenever a new department value is added to `meNormalizeDepartmentTag` (in me-data.js AND me-data-relational.js — both copies must match), a DB migration must also widen the check constraints on me_tasks, me_teams, me_products, and me_holidays. Without this, saves from new department contexts hit a 400. -->
+<!-- [2026-03-24] Capacity delete parity: if delete persistence is added/fixed for one stream (ME/PM/LOG/UNIT6), verify and patch all stream data layers together. Deleting from local arrays alone causes rows to reappear after refresh when relational delete queues are missing. -->
+<!-- [2026-03-24] When moving or deduplicating event routing between `capacity.js` and `capacity-events.js`, update routing-ownership tests immediately; stale delegation expectations can hide duplicated handlers or false regressions. -->
+<!-- [2026-03-24] Intent-based table inputs that are only committed by an Apply action must not live only in the DOM. Store per-row draft values in state (scoped by stream/page) so shared tab refreshes and realtime rerenders cannot wipe in-progress edits. -->
+<!-- [2026-03-24] Capacity chart month navigation cannot rely on chart-only canvas redraw. If month changes, re-render chart-tab HTML so KPI cards, Demand Breakdown, and Capacity-per-role tables recalculate for the selected month across ME/PM/LOG/UNIT6. -->
 
 ## Decision Log
 

@@ -50,10 +50,16 @@ window.meRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsAr
 
 // ── Heat map rendering ──────────────────────────────────────
 window.meDrawHeatmapNow = function() {
-  const dept = window.meCurrentDepartmentContext || 'ME';
-  const team     = meFilterByDepartment(meDataGetTeam(),     dept, 'ME');
-  const tasks    = meFilterByDepartment(meDataGetTasks(),    dept, 'ME');
-  const holidays = meFilterByDepartment(meDataGetHolidays(), dept, 'ME');
+  const departmentData = typeof window.meGetCapacityDepartmentData === 'function'
+    ? window.meGetCapacityDepartmentData()
+    : {
+        team: meDataGetTeam(),
+        tasks: meDataGetTasks(),
+        holidays: meDataGetHolidays()
+      };
+  const team = departmentData.team;
+  const tasks = departmentData.tasks;
+  const holidays = departmentData.holidays;
   const monthKey = meChartStart;
 
   const weeks = meGetWeekRange(monthKey, 52);
@@ -86,7 +92,7 @@ window.meDrawHeatmapNow = function() {
     html += `<div class="me-heatmap-person-label">${esc(person.name)}</div>`;
 
     weeks.forEach(({ start, end }) => {
-      const data = meCalcWeekUtilisation(person.id, start, end, tasks, holidays);
+      const data = meCalcWeekUtilisation(person.id, start, end, tasks, holidays, team);
       const util = data.capacity > 0 ? Math.round((data.demand / data.capacity) * 100) : 0;
 
       let cellClass = 'me-heatmap-cell';
@@ -113,9 +119,16 @@ window.meDrawHeatmapNow = function() {
 
 // ── Drill-down modal ────────────────────────────────────────
 window.meOpenHeatmapDetail = function(personId, weekStart, weekEnd) {
-  const team = meDataGetTeam();
-  const tasks = meDataGetTasks();
-  const holidays = meDataGetHolidays();
+  const departmentData = typeof window.meGetCapacityDepartmentData === 'function'
+    ? window.meGetCapacityDepartmentData()
+    : {
+        team: meDataGetTeam(),
+        tasks: meDataGetTasks(),
+        holidays: meDataGetHolidays()
+      };
+  const team = departmentData.team;
+  const tasks = departmentData.tasks;
+  const holidays = departmentData.holidays;
 
   const person = team.find(p => p.id === personId);
   if (!person) return;
@@ -131,7 +144,7 @@ window.meOpenHeatmapDetail = function(personId, weekStart, weekEnd) {
 
   document.getElementById('meDetailTitle').textContent = `${person.name} · ${startDay}–${endDay} ${month} ${year}`;
 
-  const data = meCalcWeekUtilisation(personId, weekStart, weekEnd, tasks, holidays);
+  const data = meCalcWeekUtilisation(personId, weekStart, weekEnd, tasks, holidays, team);
   const util = data.capacity > 0 ? Math.round((data.demand / data.capacity) * 100) : 0;
 
   let subtitle = `${util}% utilised · ${data.demand.toFixed(1)}h / ${data.capacity.toFixed(1)}h`;

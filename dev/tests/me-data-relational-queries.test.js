@@ -71,7 +71,6 @@ describe('meSaveTeamRelational', () => {
         utilisation: 0.8,
         job_title: 'Engineer',
         team_group: 'Mech',
-        department: 'ME',
         start_date: '2025-01-01'
       })],
       { onConflict: 'id' }
@@ -88,6 +87,25 @@ describe('meSaveTeamRelational', () => {
     expect(payload).not.toHaveProperty('hoursPerWeek')
     expect(payload).not.toHaveProperty('jobTitle')
   })
+
+  test('does not send department column for me_teams writes', async () => {
+    const { supa, upsertMock } = makeUpsertSupa()
+    global.supa = supa
+
+    await meSaveTeamRelational(USER_ID, {
+      name: 'Logistics User',
+      hoursPerWeek: 37,
+      utilisation: 0.9,
+      jobTitle: 'Technician',
+      group: 'Log',
+      department: 'LOG',
+      startDate: '2025-01-01',
+      endDate: ''
+    })
+
+    const [payload] = upsertMock.mock.calls[0][0]
+    expect(payload).not.toHaveProperty('department')
+  })
 })
 
 // ─── meSaveProductRelational ─────────────────────────────────
@@ -101,7 +119,7 @@ describe('meSaveProductRelational', () => {
     await meSaveProductRelational(USER_ID, {
       id: null,
       name: 'Widget',
-      productDatabaseId: null, // skip lookup path
+      productDatabaseId: null, // triggers manual lookup path
       hoursPerWeek: 5,
       department: 'ME',
       notes: null
@@ -112,8 +130,7 @@ describe('meSaveProductRelational', () => {
       [expect.objectContaining({
         name: 'Widget',
         product_database_id: null,
-        hours_per_week: 5,
-        department: 'ME'
+        hours_per_week: 5
       })],
       { onConflict: 'id' }
     )
@@ -173,8 +190,7 @@ describe('meSaveTaskRelational', () => {
         start_date: expect.any(String),
         end_date: expect.any(String),
         total_hours: 20,
-        status: 'SCHEDULED',
-        department: 'ME'
+        status: 'SCHEDULED'
       })],
       { onConflict: 'id' }
     )
@@ -192,6 +208,27 @@ describe('meSaveTaskRelational', () => {
     expect(payload).not.toHaveProperty('totalHours')
     expect(payload).not.toHaveProperty('startDate')
     expect(payload).not.toHaveProperty('endDate')
+  })
+
+  test('does not send department column for me_tasks writes', async () => {
+    const { supa, upsertMock } = makeUpsertSupa()
+    global.supa = supa
+
+    await meSaveTaskRelational(USER_ID, {
+      name: 'Logistics Task',
+      category: 'Engineering',
+      type: 'standard',
+      assigneeId: 'person-1',
+      productId: 'prod-1',
+      startDate: '2025-06-01',
+      endDate: '2025-06-30',
+      totalHours: 20,
+      status: 'SCHEDULED',
+      department: 'UNIT6'
+    })
+
+    const [payload] = upsertMock.mock.calls[0][0]
+    expect(payload).not.toHaveProperty('department')
   })
 })
 
@@ -255,6 +292,32 @@ describe('meSaveProductSupportHistoryRelational', () => {
     // delete must filter by user_id, not by id
     expect(deleteEqMock).toHaveBeenCalledWith('user_id', USER_ID)
     expect(deleteEqMock).not.toHaveBeenCalledWith('id', expect.anything())
+  })
+
+  test('does not send department column for me_product_support_history writes', async () => {
+    const deleteEqMock = jest.fn().mockResolvedValue({ error: null })
+    const insertMock = jest.fn().mockResolvedValue({ error: null })
+    global.supa = {
+      from: jest.fn(() => ({
+        delete: jest.fn(() => ({ eq: deleteEqMock })),
+        insert: insertMock
+      }))
+    }
+
+    await meSaveProductSupportHistoryRelational(USER_ID, [
+      {
+        productId: 'prod-1',
+        hoursPerWeek: 5,
+        effectiveDate: '2025-01-01',
+        endDate: '',
+        changeReason: '',
+        notes: '',
+        department: 'PM'
+      }
+    ])
+
+    const [rows] = insertMock.mock.calls[0]
+    expect(rows[0]).not.toHaveProperty('department')
   })
 })
 

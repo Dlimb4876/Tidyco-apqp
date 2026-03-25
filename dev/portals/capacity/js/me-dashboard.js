@@ -144,7 +144,13 @@ window.meDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray,
   const clr = (v) => styles.getPropertyValue(v).trim();
 
   const ctx = canvas.getContext('2d');
-  window.meMiniChartInst = new Chart(ctx, {
+  if (!ctx) {
+    console.warn('Failed to get 2D context for meMiniChart');
+    return;
+  }
+
+  try {
+    window.meMiniChartInst = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: monthLabels,
@@ -193,7 +199,10 @@ window.meDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray,
         }
       }
     }
-  });
+    });
+  } catch (e) {
+    console.warn('Error initializing meMiniChart:', e);
+  }
 };
 
 /**
@@ -226,7 +235,7 @@ window.meDashboardDrawMiniHeatmap = function(teamArray, tasksArray, holidaysArra
     html += `<div class="me-mini-heatmap-person-name">${esc(person.name)}</div>`;
 
     weeks.forEach(({ start, end }) => {
-      const data = meCalcWeekUtilisation(person.id, start, end, tasksArray, holidaysArray);
+      const data = meCalcWeekUtilisation(person.id, start, end, tasksArray, holidaysArray, teamArray);
       const util = data.capacity > 0 ? Math.round((data.demand / data.capacity) * 100) : 0;
 
       const heatStyles = getComputedStyle(document.documentElement);

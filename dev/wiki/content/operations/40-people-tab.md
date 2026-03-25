@@ -11,7 +11,7 @@ It acts as an early warning radar for resource bottlenecks before overload impac
 ## Key components
 - **Utilisation Gauges:** High-level percentage of available hours currently allocated to planned work.
 - **Headroom Trends:** Forward-looking view of spare capacity (or deficit) over the next 1-3 months.
-- **Stream Breakdown:** Individual panels for each major operational area (e.g., ME, PM, Unit 2, Unit 6).
+- **Stream Breakdown:** Individual panels for each major operational area (ME, PM, Logistics, Unit 2, Unit 3, Unit 6).
 
 ## The analytical process
 1. **Scan the gauges:** Look for any stream where utilisation is consistently above the safe threshold (e.g., >85%).
@@ -27,10 +27,12 @@ It acts as an early warning radar for resource bottlenecks before overload impac
 | Stream | Current Utilisation | Next Month Headroom | Status |
 |---|---|---|---|
 | ME | 82% | +45 hrs | Healthy |
-| Unit 6 | 95% | -20 hrs | ⚠️ Overloaded. Requires schedule smoothing. |
 | PM | 70% | +120 hrs | Spare capacity |
+| Logistics | 88% | +15 hrs | ⚠️ Watch closely |
+| Unit 6 | 95% | -20 hrs | ⚠️ Overloaded. Requires schedule smoothing. |
 
 ## Related
 - [Capacity Overview](../capacity/00-overview.md)
 - [ME Capacity](../capacity/20-me-capacity.md)
 - [PM Capacity](../capacity/30-pm-capacity.md)
+- [Logistics Capacity](../capacity/40-logistics-capacity.md)

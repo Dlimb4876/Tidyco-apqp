@@ -52,8 +52,8 @@ Agent(
 ```
 Agent(
   subagent_type="Plan",
-  description="Plan capacity parity feature",
-  prompt="Design how to sync ME and PM capacity automatically"
+  description="Plan new capacity unit",
+  prompt="Design how to add a new physical unit to the capacity portal"
 )
 ```
 *Agent provides step-by-step plan.*
@@ -203,7 +203,7 @@ Results: 179 tests passed, 98% coverage ✓
 | Task | Agent Type | Example |
 |---|---|---|
 | Find code patterns | Explore | "Find all modal implementations" |
-| Plan feature | Plan | "Design new capacity sync" |
+| Plan feature | Plan | "Design new PFMEA filter" |
 | Check code quality | General | "Run npm run check:all" |
 | Search codebase | Explore | "Find all RLS policies" |
 | Refactor strategy | Plan | "Plan refactoring of helpers.js" |

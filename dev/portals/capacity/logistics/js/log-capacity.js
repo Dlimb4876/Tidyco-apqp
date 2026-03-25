@@ -1,6 +1,6 @@
 /* ============================================================
    log-capacity.js — Logistics Capacity Orchestrator
-   Shared me_* tables with department='LOG' filter
+  Dedicated logistics relational tables
    ============================================================ */
 
 let logTab = 'chart';
@@ -17,29 +17,17 @@ window.logCapSmartRender = function() {
   render();
 };
 
-function logFilterByDepartment(list, department, fallback) {
-  if (typeof meFilterByDepartment === 'function') {
-    return meFilterByDepartment(list, department, fallback);
-  }
-  return Array.isArray(list) ? list : [];
-}
-
 function logGetCurrentMonthKey() {
   const today = new Date();
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 }
 
 function logGetData() {
-  const allTeam     = typeof meDataGetTeam     === 'function' ? meDataGetTeam()     : [];
-  const allTasks    = typeof meDataGetTasks    === 'function' ? meDataGetTasks()    : [];
-  const allProducts = typeof meDataGetProducts === 'function' ? meDataGetProducts() : [];
-  const allHolidays = typeof meDataGetHolidays === 'function' ? meDataGetHolidays() : [];
-
   return {
-    team:     logFilterByDepartment(allTeam,     'LOG', 'ME'),
-    tasks:    logFilterByDepartment(allTasks,    'LOG', 'ME'),
-    products: logFilterByDepartment(allProducts, 'LOG', 'ME'),
-    holidays: logFilterByDepartment(allHolidays, 'LOG', 'ME')
+    team: typeof logDataGetTeam === 'function' ? logDataGetTeam() : [],
+    tasks: typeof logDataGetTasks === 'function' ? logDataGetTasks() : [],
+    products: typeof logDataGetProducts === 'function' ? logDataGetProducts() : [],
+    holidays: typeof logDataGetHolidays === 'function' ? logDataGetHolidays() : []
   };
 }
 
@@ -66,14 +54,25 @@ function logGetTabContent() {
   }
 }
 
+function logRerenderChartTabForMonthChange() {
+  const body = document.getElementById('logBody');
+  if (!body) return;
+  body.innerHTML = logGetTabContent();
+  setTimeout(() => {
+    if (typeof meChartStart !== 'undefined') window.meChartStart = logChartStart || logGetCurrentMonthKey();
+    if (typeof meDrawChartNow === 'function') meDrawChartNow();
+    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+  }, 100);
+}
+
 window.logRenderCapacity = function() {
   window.meCurrentDepartmentContext = 'LOG';
 
-  if (typeof meDataAutoSyncLogProducts === 'function') {
-    const synced = meDataAutoSyncLogProducts();
-    if (synced && window.meDataInitialized) {
+  if (typeof logDataAutoSyncLogProducts === 'function') {
+    const synced = logDataAutoSyncLogProducts();
+    if (synced && window.logDataInitialized) {
       setTimeout(() => {
-        if (typeof meDataSave === 'function') meDataSave(false);
+        if (typeof logDebouncedSave === 'function') logDebouncedSave();
       }, 1000);
     }
   }
@@ -148,6 +147,20 @@ window.logSetTab = function(tab) {
 
 window.logRefreshCurrentTab = function() {
   window.meCurrentDepartmentContext = 'LOG';
+
+  // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
+  // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
+  if (logTab === 'chart') {
+    const monthInput = document.getElementById('meChartMonthInput');
+    if (monthInput && logChartStart) {
+      monthInput.value = logChartStart;
+    }
+    if (typeof meChartStart    !== 'undefined') window.meChartStart = logChartStart || logGetCurrentMonthKey();
+    if (typeof meDrawChartNow  === 'function')  meDrawChartNow();
+    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+    return;
+  }
+
   const body = document.getElementById('logBody');
   if (body) {
     body.innerHTML = logGetTabContent();
@@ -164,6 +177,8 @@ window.logRefreshCurrentTab = function() {
 window.logOnMonthChange = function(newMonth) {
   if (logTab === 'chart') {
     logChartStart = newMonth;
+    logRerenderChartTabForMonthChange();
+    return;
   } else {
     logHolidayMonth = newMonth;
   }
@@ -177,7 +192,13 @@ window.logOnNextMonth = function() {
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() + 1);
   const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  if (isChart) { logChartStart = newMonth; } else { logHolidayMonth = newMonth; }
+  if (isChart) {
+    logChartStart = newMonth;
+    logRerenderChartTabForMonthChange();
+    return;
+  } else {
+    logHolidayMonth = newMonth;
+  }
   logRefreshCurrentTab();
 };
 
@@ -188,12 +209,20 @@ window.logOnPrevMonth = function() {
   const date = new Date(year, month - 1, 1);
   date.setMonth(date.getMonth() - 1);
   const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  if (isChart) { logChartStart = newMonth; } else { logHolidayMonth = newMonth; }
+  if (isChart) {
+    logChartStart = newMonth;
+    logRerenderChartTabForMonthChange();
+    return;
+  } else {
+    logHolidayMonth = newMonth;
+  }
   logRefreshCurrentTab();
 };
 
 window.logOnSave = async function(showAlert = false) {
-  await meDataSave(showAlert);
+  if (typeof logDataSave === 'function') {
+    await logDataSave(showAlert);
+  }
 };
 
 window.logDebouncedSave = function() {

@@ -13,6 +13,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Testing and Linting artifacts
+playwright-report/
+test-results/
+.eslintcache
+
+# Environment variables
+.env
+.env.local
+
 # System files
 .DS_Store
 Thumbs.db
@@ -53,3 +62,4 @@ scripts/pre-commit-quality-hook.js
 .wolf/buglog.json
 .wolf/suggestions.json
 .wolf/hooks/_session.json
+.wolf/designqc-captures/

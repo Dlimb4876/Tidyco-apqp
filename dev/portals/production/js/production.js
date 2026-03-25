@@ -4,6 +4,10 @@
 let productionPortalDelegationContainer = null;
 
 function setProductionTab(tab) {
+  if (tab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('production', tab)) {
+    return;
+  }
+
   const prevTab = productionTab;
   productionTab = tab;
   const parts = ['s=production'];
@@ -18,12 +22,43 @@ function setProductionTab(tab) {
 }
 
 function prodNavBar() {
+  const tabs = [
+    { key: 'scheduling', icon: '📅', label: 'Schedule' },
+    { key: 'by-product', icon: '📋', label: 'Plan by Product' },
+    { key: 'by-unit', icon: '🏭', label: 'Plan by Work Area' }
+  ].filter((tab) => typeof canViewPortalTab !== 'function' || canViewPortalTab('production', tab.key));
+
+  const buttons = tabs
+    .map((tab) => `<button class="prod-nav-item ${productionTab === tab.key ? 'active' : ''}" data-action="prod-nav-tab" data-tab="${tab.key}">${tab.icon} ${tab.label}</button>`)
+    .join('');
+
   return `
     <div class="prod-nav-bar">
       <button class="prod-nav-item prod-nav-back" data-action="prod-nav-root">← Back</button>
-      <button class="prod-nav-item ${productionTab === 'scheduling' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="scheduling">📅 Schedule</button>
-      <button class="prod-nav-item ${productionTab === 'by-product' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="by-product">📋 Plan by Product</button>
-      <button class="prod-nav-item ${productionTab === 'by-unit' ? 'active' : ''}" data-action="prod-nav-tab" data-tab="by-unit">🏭 Plan by Work Area</button>
+      ${buttons}
+    </div>
+  `;
+}
+
+function renderProductionHubCard(tabKey, favouriteKey, icon, title, meta) {
+  if (typeof canViewPortalTab === 'function' && !canViewPortalTab('production', tabKey)) return '';
+
+  const isFav = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite(favouriteKey);
+  return `
+    <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="${tabKey}">
+      <button
+        class="hub-fav-toggle${isFav ? ' is-active' : ''}"
+        type="button"
+        title="${isFav ? 'Remove from favourites' : 'Add to favourites'}"
+        data-action="prod-fav-toggle"
+        data-section="${favouriteKey}">
+        ${isFav ? '★' : '☆'}
+      </button>
+      <div class="hub-card-content">
+        <div class="hub-icon">${icon}</div>
+        <div class="proj-card-name">${title}</div>
+        <div class="proj-card-meta">${meta}</div>
+      </div>
     </div>
   `;
 }
@@ -51,9 +86,11 @@ function renderProduction() {
 
   // Root hub view
   setTimeout(setupProductionPortalDelegation, 0);
-  const favScheduling = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('production::scheduling');
-  const favByProduct = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('production::by-product');
-  const favByUnit = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite('production::by-unit');
+  const cards = [
+    renderProductionHubCard('scheduling', 'production::scheduling', '📅', 'Schedule', 'Add Production Batches'),
+    renderProductionHubCard('by-product', 'production::by-product', '📋', 'Plan by Product', 'View by Product'),
+    renderProductionHubCard('by-unit', 'production::by-unit', '🏭', 'Plan by Work Area', 'Units 2, 3 & 6')
+  ].filter(Boolean).join('');
   return `
     <div class="proj-home" id="production-portal-container">
       <div class="proj-home-header">
@@ -68,53 +105,7 @@ function renderProduction() {
       </div>
 
       <div class="proj-cards hub-grid">
-        <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="scheduling">
-          <button
-            class="hub-fav-toggle${favScheduling ? ' is-active' : ''}"
-            type="button"
-            title="${favScheduling ? 'Remove from favourites' : 'Add to favourites'}"
-            data-action="prod-fav-toggle"
-            data-section="production::scheduling">
-            ${favScheduling ? '★' : '☆'}
-          </button>
-          <div class="hub-card-content">
-            <div class="hub-icon">📅</div>
-            <div class="proj-card-name">Schedule</div>
-            <div class="proj-card-meta">Add Production Batches</div>
-          </div>
-        </div>
-
-        <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="by-product">
-          <button
-            class="hub-fav-toggle${favByProduct ? ' is-active' : ''}"
-            type="button"
-            title="${favByProduct ? 'Remove from favourites' : 'Add to favourites'}"
-            data-action="prod-fav-toggle"
-            data-section="production::by-product">
-            ${favByProduct ? '★' : '☆'}
-          </button>
-          <div class="hub-card-content">
-            <div class="hub-icon">📋</div>
-            <div class="proj-card-name">Plan by Product</div>
-            <div class="proj-card-meta">View by Product</div>
-          </div>
-        </div>
-
-        <div class="proj-card hub-card" data-action="prod-hub-tab" data-tab="by-unit">
-          <button
-            class="hub-fav-toggle${favByUnit ? ' is-active' : ''}"
-            type="button"
-            title="${favByUnit ? 'Remove from favourites' : 'Add to favourites'}"
-            data-action="prod-fav-toggle"
-            data-section="production::by-unit">
-            ${favByUnit ? '★' : '☆'}
-          </button>
-          <div class="hub-card-content">
-            <div class="hub-icon">🏭</div>
-            <div class="proj-card-name">Plan by Work Area</div>
-            <div class="proj-card-meta">Units 2, 3 & 6</div>
-          </div>
-        </div>
+        ${cards || `<div class="hub-favs-empty">No production pages are available for your current permissions.</div>`}
       </div>
     </div>
   `;

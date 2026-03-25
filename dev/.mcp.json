@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=eihxvmzsfnpdaizggsvs"
+    },
     "github": {
       "type": "stdio",
       "command": "docker",
@@ -16,6 +20,20 @@
       }
     },
     "oraios/serena": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12",
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "codex"
+      ]
+    },
+    "oraios/serena-claude": {
       "type": "stdio",
       "command": "uvx",
       "args": [

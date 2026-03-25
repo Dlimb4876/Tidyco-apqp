@@ -105,6 +105,33 @@ describe('ME monthly capacity calculations', () => {
     expect(result.npi).toBeCloseTo(expectedNpi, 6);
   });
 
+  test('excludes disabled tasks from demand calculations', () => {
+    const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
+    const tasks = [
+      {
+        id: 't1',
+        assigneeId: 'p1',
+        totalHours: 20,
+        category: 'npi',
+        startDate: '2026-01-05',
+        endDate: '2026-01-09',
+        isDisabled: false
+      },
+      {
+        id: 't2',
+        assigneeId: 'p1',
+        totalHours: 30,
+        category: 'npi',
+        startDate: '2026-01-05',
+        endDate: '2026-01-09',
+        isDisabled: true
+      }
+    ];
+
+    const result = meCalculateMonthData('2026-01', team, tasks, [], []);
+    expect(result.npi).toBeCloseTo(20, 6);
+  });
+
   test('calculates product support from overlapping batch count in month', () => {
     const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
     const products = [{

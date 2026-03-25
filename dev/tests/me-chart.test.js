@@ -51,6 +51,11 @@ describe('ME chart tab rendering', () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-03-15T10:00:00Z'));
+    window.meCurrentDepartmentContext = 'ME';
+    global.capacityTab = 'me';
+    global.pmOnMonthChange = jest.fn();
+    global.logOnMonthChange = jest.fn();
+    global.unit6OnMonthChange = jest.fn();
 
     global.meCalculateMonthData.mockReturnValue({
       capacity: 160,
@@ -114,6 +119,32 @@ describe('ME chart tab rendering', () => {
 
     expect(global.meCalculateMonthData).toHaveBeenCalledWith('2026-08', team, [], [], []);
     expect(global.getMonthLabel).toHaveBeenCalledWith('2026-08');
+  });
+
+  test('shows chart refresh indicator text in chart header', () => {
+    window.meCurrentDepartmentContext = 'ME';
+
+    const result = meRenderChartTab('2026-03', [], [], [], []);
+
+    expect(result).toContain('Updates when this chart page is opened');
+  });
+
+  test('Today delegates month navigation to Logistics capacity', () => {
+    global.capacityTab = 'logistics';
+
+    window.meOnTodayClick();
+
+    expect(global.logOnMonthChange).toHaveBeenCalledWith('2026-03');
+    expect(global.unit6OnMonthChange).not.toHaveBeenCalled();
+  });
+
+  test('Today delegates month navigation to Unit 6 capacity', () => {
+    global.capacityTab = 'unit6';
+
+    window.meOnTodayClick();
+
+    expect(global.unit6OnMonthChange).toHaveBeenCalledWith('2026-03');
+    expect(global.logOnMonthChange).not.toHaveBeenCalled();
   });
 
   test('renders no-engineer hint when no team members have start dates', () => {

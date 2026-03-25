@@ -11,6 +11,7 @@ const GUIDE_CONTENT = {
     body: `
       <div class="guide-section">
         <p>The <strong>Operations Portal</strong> is the central hub for all Tidyco quality planning, capacity management, and production operations. Select any of the five modules to get started.</p>
+        <p>Hub cards are shown based on your role and team permissions, so you only see modules you are allowed to open.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity</div>
@@ -41,6 +42,7 @@ const GUIDE_CONTENT = {
     body: `
       <div class="guide-section">
         <p>The <strong>Capacity Management</strong> portal lets you plan and monitor workload across five operational streams. Select a stream to view its loading plan.</p>
+        <p>Only the capacity streams your role or team can access are shown on the hub and in the local navigation bar.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Production Capacity</div>
@@ -75,6 +77,8 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
         <p>Bar chart showing total allocated hours vs available capacity per month. Use the month navigator to scroll the view window. Bars turn amber when utilisation exceeds 80%, red above 100%.</p>
+        <p>The chart refreshes when you open the chart page. If changes are saved in another window while you stay on this page, open the chart page again to pull the latest values.</p>
+        <p>The chart header reminder confirms this refresh-on-open behavior.</p>
         <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
       </div>
       <div class="guide-section">
@@ -85,10 +89,15 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">📋 Tasks</div>
         <p>Log ongoing tasks and projects. Each task has an estimated duration (using 3-point PERT estimation: optimistic, most likely, pessimistic). Tasks are assigned to a month range and contribute to the capacity chart.</p>
         <p><strong>PERT formula:</strong> Expected duration = (Optimistic + 4 × Most Likely + Pessimistic) ÷ 6</p>
+        <p>Use the <strong>Disable</strong> checkbox on a task row to keep the task in the list but remove it from capacity calculations. Re-enable it any time by unticking the same checkbox.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Product Support</div>
         <p>Assign ME effort to specific products in the production plan. This represents recurring support time (e.g. inspection, rework support) separate from project tasks.</p>
+        <p><strong>Sorting:</strong> Click table column headers (Product, Family, Status, Current, Hours/Batch, Effective Date) to sort in-place. Click the same header again to reverse direction.</p>
+        <p>The <strong>Current</strong> column shows the active saved support rate (h/batch) for each product at a glance so you can compare it with any new value before applying a change.</p>
+        <p><strong>Bulk Save:</strong> Edit multiple product support rows (hours, effective date, and reason), then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and apply all changes at once. This prevents individual rows from resetting when you apply other changes.</p>
+        <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Each history entry has an <strong>Edit</strong> button to correct the effective date, hours, or reason, and a <strong>Delete</strong> button to remove the entry. Changes to history save automatically after confirmation.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📦 Product Load</div>
@@ -146,11 +155,16 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
         <p>Month-by-month bar chart of PM team loading vs available hours. Use the month navigator to scroll forward or back.</p>
+        <p>The chart refreshes when you open the chart page. If PM changes are saved in another window while you stay on this page, open the chart page again to load the latest values.</p>
+        <p>The chart header reminder confirms this refresh-on-open behavior.</p>
         <p><strong>Calculation:</strong> Available hours = (working days × hours per day per PM) minus approved holidays and UK bank holidays.</p>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">👷 Team / 📋 Tasks / 📦 Product Load / 🏖️ Holiday Planner</div>
-        <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view.</p>
+        <div class="guide-section-title">👷 Team / 📋 Tasks / � Product Support / 📦 Product Load / 🏖️ Holiday Planner</div>
+        <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view. PM task rows also support the <strong>Disable</strong> checkbox to exclude a task from calculations without deleting it.</p>
+        <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to toggle ascending/descending.</p>
+        <p>The <strong>Current</strong> column in the Product Support tab shows the active saved rate (h/batch) so you can compare it with any new value before applying a change. Edit multiple rows, then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
+        <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Each entry has <strong>Edit</strong> and <strong>Delete</strong> buttons so you can correct or remove a past entry. Edits require a valid effective date and a reason (min 3 characters).</p>
       </div>
     `
   },
@@ -161,6 +175,7 @@ const GUIDE_CONTENT = {
     body: `
       <div class="guide-section">
         <p>The <strong>Product Development</strong> portal covers the full lifecycle of a product from initial tender through to production sign-off.</p>
+        <p>Hub cards and local tabs are shown based on your role and team permissions, so unavailable pages stay hidden.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 NPI Projects</div>
@@ -663,6 +678,7 @@ const GUIDE_CONTENT = {
     body: `
       <div class="guide-section">
         <p>The <strong>Production Planning</strong> portal manages production batch scheduling and lets you view the plan from multiple angles.</p>
+        <p>Only the production pages your role or team can access are shown on the hub and in the local navigation bar.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📅 Schedule</div>
@@ -891,7 +907,9 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Product Support</div>
-        <p>Assign Logistics effort to specific products — for example, kitting preparation time and product movement hours per batch.</p>
+        <p>Assign Logistics effort to specific products — for example, kitting preparation time and product movement hours per batch. Edit multiple rows and click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
+        <p><strong>Sorting:</strong> Click Product Support table headers to sort by Product, Family, Status, Current, Kitting, Booking In/Out, Product Movement, Hours/Batch, or Effective Date. Click the same header again to flip direction.</p>
+        <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Use the <strong>Edit</strong> button on a history entry to correct its effective date, hours breakdown, or reason. Use <strong>Delete</strong> to remove an entry.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📦 Product Load</div>
@@ -926,7 +944,9 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Product Support</div>
-        <p>Assign Unit 6 effort to specific products for recurring support work separate from project tasks.</p>
+        <p>Assign Unit 6 effort to specific products for recurring support work separate from project tasks. Edit multiple rows and click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
+        <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to reverse the sort direction.</p>
+        <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Use the <strong>Edit</strong> button on a history entry to correct its effective date, hours, or reason. Use <strong>Delete</strong> to remove an entry.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📦 Product Load</div>
