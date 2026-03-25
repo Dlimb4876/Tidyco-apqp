@@ -519,6 +519,27 @@ function renderTemplateManager() {
   `;
 }
 
+// Single PFMEA row for the template viewer — carries data-id for surgical patches.
+function familyTemplateViewerRowHTML(item) {
+  const severity = item.severity || 3;
+  const occurrence = item.occurrence || 3;
+  const detection = item.detection || 3;
+  const rpn = severity * occurrence * detection;
+  return `
+    <tr data-id="${esc(item.id)}" style="border-bottom:1px solid var(--line)">
+      <td style="padding:12px 14px;vertical-align:top;color:var(--ink);font-weight:500">${esc(item.failure_mode)}</td>
+      <td style="padding:12px 14px;vertical-align:top">${item.effect ? esc(item.effect) : '<span style="color:var(--muted)">-</span>'}</td>
+      <td style="padding:12px 14px;text-align:center;vertical-align:top">${severity}</td>
+      <td style="padding:12px 14px;vertical-align:top">${item.cause ? esc(item.cause) : '<span style="color:var(--muted)">-</span>'}</td>
+      <td style="padding:12px 14px;text-align:center;vertical-align:top">${occurrence}</td>
+      <td style="padding:12px 14px;vertical-align:top">${item.prevention_control ? esc(item.prevention_control) : '<span style="color:var(--muted)">-</span>'}</td>
+      <td style="padding:12px 14px;vertical-align:top">${item.detection_control ? esc(item.detection_control) : '<span style="color:var(--muted)">-</span>'}</td>
+      <td style="padding:12px 14px;text-align:center;vertical-align:top">${detection}</td>
+      <td style="padding:12px 14px;text-align:center;vertical-align:top;font-weight:600">${rpn}</td>
+      <td style="padding:12px 14px;vertical-align:top">${item.notes ? esc(item.notes) : '<span style="color:var(--muted)">-</span>'}</td>
+    </tr>`;
+}
+
 function renderTemplateViewer() {
   if (!templateViewerState.isOpen) return '';
 
@@ -563,28 +584,8 @@ function renderTemplateViewer() {
                     <th style="padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--mid)">Notes</th>
                   </tr>
                 </thead>
-                <tbody>
-                  ${items.map(item => {
-                    const severity = item.severity || 3;
-                    const occurrence = item.occurrence || 3;
-                    const detection = item.detection || 3;
-                    const rpn = severity * occurrence * detection;
-
-                    return `
-                      <tr style="border-bottom:1px solid var(--line)">
-                        <td style="padding:12px 14px;vertical-align:top;color:var(--ink);font-weight:500">${esc(item.failure_mode)}</td>
-                        <td style="padding:12px 14px;vertical-align:top">${item.effect ? esc(item.effect) : '<span style="color:var(--muted)">-</span>'}</td>
-                        <td style="padding:12px 14px;text-align:center;vertical-align:top">${severity}</td>
-                        <td style="padding:12px 14px;vertical-align:top">${item.cause ? esc(item.cause) : '<span style="color:var(--muted)">-</span>'}</td>
-                        <td style="padding:12px 14px;text-align:center;vertical-align:top">${occurrence}</td>
-                        <td style="padding:12px 14px;vertical-align:top">${item.prevention_control ? esc(item.prevention_control) : '<span style="color:var(--muted)">-</span>'}</td>
-                        <td style="padding:12px 14px;vertical-align:top">${item.detection_control ? esc(item.detection_control) : '<span style="color:var(--muted)">-</span>'}</td>
-                        <td style="padding:12px 14px;text-align:center;vertical-align:top">${detection}</td>
-                        <td style="padding:12px 14px;text-align:center;vertical-align:top;font-weight:600">${rpn}</td>
-                        <td style="padding:12px 14px;vertical-align:top">${item.notes ? esc(item.notes) : '<span style="color:var(--muted)">-</span>'}</td>
-                      </tr>
-                    `;
-                  }).join('')}
+                <tbody id="tmpl-viewer-tbody">
+                  ${items.map(item => familyTemplateViewerRowHTML(item)).join('')}
                 </tbody>
               </table>
             </div>

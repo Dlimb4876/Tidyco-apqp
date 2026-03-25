@@ -277,9 +277,178 @@ select.abc-class-select.abc-none { background: var(--bg); color: var(--muted); }
   font-style: italic;
 }
 
+/* ── BOM Tree (Structure tab) ────────────────────────────────── */
+.bom-tree-wrap { width: 100%; }
+
+.bom-tree-card { padding: 0 !important; overflow: hidden; }
+
+/* Root row (product PN — not stored) */
+.bom-tree-root-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--blue-pale);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.bom-tree-root-pn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.bom-tree-root-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.bom-tree-root-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  background: var(--white);
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.bom-tree-root-children {
+  padding: 6px 0 6px 0;
+}
+
+/* Tree nodes */
+.bom-tree-item {
+  padding-left: calc(var(--depth, 0) * 24px + 12px);
+}
+
+.bom-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px 7px 0;
+  border-bottom: 1px solid var(--line);
+  min-height: 36px;
+}
+
+.bom-tree-row:last-child { border-bottom: none; }
+
+/* Toggle button (▶ / ▾) */
+.bom-tree-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--muted);
+  border-radius: 4px;
+  padding: 0;
+  transition: background 0.1s;
+}
+.bom-tree-toggle:hover { background: var(--bg); color: var(--ink); }
+.bom-tree-toggle--leaf { cursor: default; visibility: hidden; }
+.bom-tree-toggle--root { cursor: default; color: var(--blue); visibility: visible; }
+
+/* Node icon */
+.bom-tree-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+/* Part number */
+.bom-tree-pn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  min-width: 90px;
+}
+.bom-tree-no-pn { color: var(--muted); }
+
+/* Description */
+.bom-tree-desc {
+  font-size: 12px;
+  color: var(--ink);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Qty input */
+.bom-tree-qty {
+  width: 60px;
+  padding: 3px 6px;
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  text-align: right;
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  background: var(--white);
+  flex-shrink: 0;
+}
+.bom-tree-qty:focus { outline: none; border-color: var(--blue); }
+
+/* Unit label */
+.bom-tree-unit {
+  font-size: 11px;
+  color: var(--muted);
+  width: 28px;
+  flex-shrink: 0;
+}
+
+/* Row action buttons */
+.bom-tree-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.btn.btn-xs.bom-tree-add-btn {
+  padding: 2px 8px;
+  font-size: 11px;
+  height: auto;
+  white-space: nowrap;
+}
+
+.bom-tree-del { flex-shrink: 0; }
+
+/* Children container */
+.bom-tree-children { overflow: hidden; }
+.bom-tree-children--collapsed { display: none; }
+
+/* Empty slot message inside an open sub-assembly */
+.bom-tree-empty-slot {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  padding: 8px 12px 8px calc(var(--depth, 0) * 24px + 12px + 54px);
+  border-bottom: 1px solid var(--line);
+}
+
 /* ── Responsive: ABC filter on mobile ───────────────────────── */
 @media (max-width: 767px) {
   .bom-abc-filter-row { gap: 4px; }
   .bom-abc-chip { padding: 4px 10px; font-size: 10px; }
   .npi-dash-tab { padding: 8px 12px; font-size: 12px; }
+  .bom-tree-pn { min-width: 70px; }
+  .bom-tree-desc { display: none; }
+  .bom-tree-add-btn { display: none; }
+  .bom-tree-root-row { gap: 6px; }
 }

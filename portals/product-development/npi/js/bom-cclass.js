@@ -144,7 +144,7 @@ npi.bom.subscribeABCCatalogue = function() {
       if (!abcCatalogueData.find(r => r.id === row.id)) {
         abcCatalogueData.push(row)
         if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
-          render()
+          npi.bom.refreshABCCatalogueResults()
         }
       }
     },
@@ -153,14 +153,14 @@ npi.bom.subscribeABCCatalogue = function() {
       if (idx >= 0) {
         abcCatalogueData[idx] = row
         if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
-          render()
+          npi.bom.refreshABCCatalogueResults()
         }
       }
     },
     onDelete: (row) => {
       abcCatalogueData = abcCatalogueData.filter(r => r.id !== row.id)
       if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
-        render()
+        npi.bom.refreshABCCatalogueResults()
       }
     }
   })

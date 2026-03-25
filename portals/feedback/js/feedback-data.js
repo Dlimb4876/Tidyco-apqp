@@ -44,19 +44,29 @@ window.feedbackDataManager = {
       onInsert: (newFeedback) => {
         if (!this.state.feedback.some(f => f.id === newFeedback.id)) {
           this.state.feedback.unshift(newFeedback);
-          this._publishChange();
+          // Only re-render if the feedback section is currently visible.
+          if (typeof currentSection !== 'undefined' && currentSection === 'feedback' &&
+              typeof feedbackRefreshContent === 'function') {
+            feedbackRefreshContent();
+          }
         }
       },
       onUpdate: (updated) => {
         const idx = this.state.feedback.findIndex(f => f.id === updated.id);
         if (idx >= 0) {
           this.state.feedback[idx] = updated;
-          this._publishChange();
+          if (typeof currentSection !== 'undefined' && currentSection === 'feedback' &&
+              typeof feedbackRefreshContent === 'function') {
+            feedbackRefreshContent();
+          }
         }
       },
       onDelete: (deleted) => {
         this.state.feedback = this.state.feedback.filter(f => f.id !== deleted.id);
-        this._publishChange();
+        if (typeof currentSection !== 'undefined' && currentSection === 'feedback' &&
+            typeof feedbackRefreshContent === 'function') {
+          feedbackRefreshContent();
+        }
       }
     });
   },

@@ -3,6 +3,14 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-25 | BoM Structure tree tab | New hierarchical product structure view replacing Kits; parts added from Parts Database, sub-assemblies with manual PNs, up to 4 levels deep
+
+## 2026-03-25 | Surgical realtime DOM updates (Phase 5) | Replace render() in all four *CapSmartRender() functions (ME, PM, LOG, UNIT6) with *RefreshCurrentTab() — replaces only the tab body div instead of the full page; prod-capacity-data.js subscription callbacks likewise swapped to prodCapRefreshCurrentTab()
+
+## 2026-03-25 | Surgical realtime DOM updates (Phases 1–4) | Replace full-page render() calls in realtime subscription callbacks with targeted DOM patches — new realtimePatchInsert/Update/Delete utility; work areas, families, family templates, ABC catalogue, MCS cards, feedback, and production batches all patched surgically so only the changed element updates, eliminating full-page flash on collaborative edits
+
+## 2026-03-25 | Fix MCS PFMEA cause column name and date null handling | `npi_pfmea_causes.description` does not exist (correct column is `cause`); empty target date sent as `""` caused a Postgres date parse error — now sends `null`
+
 ## 2026-03-25 | Fix continuous refresh loop on ME, PM, LOG, UNIT6 capacity and products portals | Auto-sync functions (meDataAutoSyncDepartmentProducts and equivalents for LOG, PM, UNIT6) always returned true even when no data changed, causing every render to trigger a debounced save, which fired a realtime event, which triggered another render — an infinite loop. Fixed by tracking actual changes and returning false when nothing was modified.
 
 ## 2026-03-25 | Fix core script load order warnings in index bootstrap | Moved chart-theme.js and guide.js to load after core chain (state/auth/db/helpers/navigation/realtime) to align with guardrail order and remove load-order checker warnings

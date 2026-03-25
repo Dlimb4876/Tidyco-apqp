@@ -503,36 +503,42 @@ const GUIDE_CONTENT = {
     title: '📦 Bill of Materials — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Bill of Materials (BOM)</strong> records all items needed to manufacture and support the product. Items are split into categories and can be linked to process steps in the PFD.</p>
+        <p>The <strong>Bill of Materials (BOM)</strong> records all items needed to manufacture and support the product. Use the tabs to switch between item registers and the product structure tree.</p>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">BOM Categories</div>
+        <div class="guide-section-title">BOM Tabs</div>
         <ul class="guide-list">
-          <li><strong>Parts</strong> — Components and sub-assemblies (part numbers)</li>
+          <li><strong>Parts</strong> — Flat list of components sourced from the Parts Database</li>
           <li><strong>Tools</strong> — Special tooling and fixtures</li>
           <li><strong>Equipment</strong> — Machinery and test equipment</li>
-          <li><strong>Materials</strong> — Raw materials and consumables used in process</li>
+          <li><strong>Materials</strong> — Raw materials used in the process</li>
           <li><strong>Consumables</strong> — PPE, chemicals, adhesives, etc.</li>
-          <li><strong>Kits</strong> — Named groups of items from any category (e.g. "Overhaul Kit")</li>
+          <li><strong>Structure</strong> — Visual tree of the product's assembly hierarchy</li>
         </ul>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">ABC Classification</div>
-        <p>Parts are classified A, B, or C based on value:</p>
+        <div class="guide-section-title">Structure Tab — Product Tree</div>
         <ul class="guide-list">
-          <li><strong>A</strong> — High value / critical (top 10–20% by value). Tightest inventory control.</li>
-          <li><strong>B</strong> — Medium value (middle tier ~30%). Standard control.</li>
-          <li><strong>C</strong> — Low value / common (50–70% of unique parts, ~5–10% of total value). Minimal control.</li>
+          <li>The top-level root is the <strong>product part number</strong> linked to this project — it cannot be edited here.</li>
+          <li>Click <em>＋ Add Sub-Assembly</em> to add a named sub-assembly node. Enter its part number and description.</li>
+          <li>Click <em>＋ Add Part</em> to search and pick parts from the Parts Database and attach them at that level.</li>
+          <li>Up to <strong>4 levels</strong> of nesting are supported (product → sub-asm → sub-sub-asm → parts).</li>
+          <li>Click the <strong>▶</strong> toggle on any sub-assembly to expand or collapse its children.</li>
+          <li>Qty can be edited inline on any row.</li>
+          <li>Click <strong>×</strong> to remove a node. Removing a sub-assembly also removes everything inside it.</li>
         </ul>
-        <p>Items marked <strong>AAW</strong> (Additional Arising Work) have special stocking requirements.</p>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">Linking to PFD</div>
-        <p>In the Process Flow, click <em>＋ Resource</em> on any step to attach BOM items. This creates traceability from process step to required materials and tooling.</p>
+        <div class="guide-section-title">ABC Classification (Parts tab)</div>
+        <ul class="guide-list">
+          <li><strong>A</strong> — High value / critical. Tightest inventory control.</li>
+          <li><strong>B</strong> — Medium value. Standard control.</li>
+          <li><strong>C</strong> — Low value / common (fasteners, fixings, etc.).</li>
+        </ul>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Parts Database</div>
-        <p>Parts can be added from the central <strong>Parts Database</strong> (Product Development → Parts Database) using the <em>＋ Add from Parts Database</em> button.</p>
+        <p>All parts come from the central <strong>Parts Database</strong>. Add new parts there first, then use <em>＋ Add from Parts Database</em> or <em>＋ Add Part</em> in the tree to include them in this project's BOM.</p>
       </div>
     `
   },

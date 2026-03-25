@@ -14,7 +14,7 @@ window.unit6CapSmartRender = function() {
     unit6ChartDirty = true;
     return;
   }
-  render();
+  unit6RefreshCurrentTab();
 };
 
 function unit6GetCurrentMonthKey() {

@@ -158,8 +158,8 @@ window.npiRelLoad = async function(pid) {
   try {
     const [
       ctqRes, pfdRes, modesRes, effectsRes, causesRes, histRes,
-      cpRes, bomRes, kitsRes, kitItemsRes, gatesRes, gateSigsRes,
-      actionsRes, risksRes, ganttRes, docsRes
+      cpRes, bomRes, gatesRes, gateSigsRes,
+      actionsRes, risksRes, ganttRes, docsRes, bomTreeRes
     ] = await Promise.all([
       supa.from('npi_ctq').select('*').eq('project_id', projectId).order('sort_order'),
       supa.from('npi_pfd_steps').select('*').eq('project_id', projectId).order('step_num'),
@@ -169,14 +169,13 @@ window.npiRelLoad = async function(pid) {
       supa.from('npi_pfmea_history').select('*').eq('project_id', projectId),
       supa.from('npi_control_plan').select('*').eq('project_id', projectId).order('sort_order'),
       supa.from('npi_bom_items').select('*').eq('project_id', projectId).order('sort_order'),
-      supa.from('npi_bom_kits').select('*').eq('project_id', projectId).order('sort_order'),
-      supa.from('npi_bom_kit_items').select('*').eq('project_id', projectId),
       supa.from('npi_gates').select('*').eq('project_id', projectId),
       supa.from('npi_gate_sigs').select('*').eq('project_id', projectId),
       supa.from('npi_actions').select('*').eq('project_id', projectId).order('sort_order'),
       supa.from('npi_risks').select('*').eq('project_id', projectId).order('sort_order'),
       supa.from('npi_gantt_rows').select('*').eq('project_id', projectId).order('sort_order'),
-      supa.from('npi_documents').select('*').eq('project_id', projectId).order('sort_order')
+      supa.from('npi_documents').select('*').eq('project_id', projectId).order('sort_order'),
+      supa.from('npi_bom_tree').select('*').eq('project_id', projectId).order('sort_order')
     ]);
 
     // ── CTQ ──────────────────────────────────────────────────
@@ -281,7 +280,7 @@ window.npiRelLoad = async function(pid) {
 
     // ── BOM ──────────────────────────────────────────────────
     if (!bomRes.error) {
-      p.bom = { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] };
+      p.bom = { parts: [], tools: [], equip: [], mat: [], cons: [], tree: [] };
       (bomRes.data || []).forEach(r => {
         const type = r.bom_type;
         if (!p.bom[type]) return;
@@ -305,24 +304,24 @@ window.npiRelLoad = async function(pid) {
           abcCatalogueId: r.abc_catalogue_id || null
         });
       });
+    }
 
-      // BOM Kits
-      if (!kitsRes.error && !kitItemsRes.error) {
-        const bomTypeMap = {};
-        (bomRes.data || []).forEach(r => { bomTypeMap[r.id] = r.bom_type; });
-        p.bom.kits = (kitsRes.data || []).map(k => ({
-          id: k.id,
-          name: k.name || '',
-          items: (kitItemsRes.data || [])
-            .filter(ki => ki.kit_id === k.id)
-            .map(ki => ({
-              id: ki.id,
-              bomType: bomTypeMap[ki.bom_item_id] || '',
-              itemId: ki.bom_item_id,
-              qty: ki.qty || 1
-            }))
-        }));
-      }
+    // ── BOM Tree ─────────────────────────────────────────────
+    if (!bomTreeRes.error) {
+      const existing = p.bom || {};
+      p.bom = { ...existing, tree: [] };
+      p.bom.tree = (bomTreeRes.data || []).map(r => ({
+        id: r.id,
+        parentId: r.parent_id || null,
+        nodeType: r.node_type,
+        pn: r.pn || '',
+        desc: r.item_desc || '',
+        qty: r.qty != null ? r.qty : 1,
+        unit: r.unit || 'ea',
+        abcCatalogueId: r.abc_catalogue_id || null,
+        notes: r.notes || '',
+        sortOrder: r.sort_order || 0
+      }));
     }
 
     // ── Gates ────────────────────────────────────────────────
@@ -880,6 +879,45 @@ window.npiRelSaveKitItems = async function(kit) {
 };
 
 // ─────────────────────────────────────────────────────────────
+// BOM Tree
+// ─────────────────────────────────────────────────────────────
+
+window.npiRelSaveBomTreeNode = async function(node) {
+  const projectId = await window.npiRelResolveProjectId(progId);
+  if (!node || !node.id || !projectId || !currentUser) return;
+  try {
+    const payload = {
+      id: node.id,
+      project_id: projectId,
+      parent_id: node.parentId || null,
+      node_type: node.nodeType,
+      pn: node.pn || null,
+      item_desc: node.desc || null,
+      qty: node.qty != null ? node.qty : 1,
+      unit: node.unit || 'ea',
+      abc_catalogue_id: node.abcCatalogueId || null,
+      notes: node.notes || null,
+      sort_order: node.sortOrder || 0
+    };
+    const { error } = await supa.from('npi_bom_tree').upsert(payload, { onConflict: 'id' });
+    if (error) console.warn('npiRelSaveBomTreeNode error:', error.message);
+  } catch (err) {
+    console.warn('npiRelSaveBomTreeNode exception:', err.message);
+  }
+};
+
+window.npiRelDeleteBomTreeNode = async function(id) {
+  if (!id) return;
+  try {
+    // Cascades to all child nodes via ON DELETE CASCADE
+    const { error } = await supa.from('npi_bom_tree').delete().eq('id', id);
+    if (error) console.warn('npiRelDeleteBomTreeNode error:', error.message);
+  } catch (err) {
+    console.warn('npiRelDeleteBomTreeNode exception:', err.message);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
 // Gates
 // ─────────────────────────────────────────────────────────────
 
@@ -1104,7 +1142,7 @@ window.npiRelClearAll = async function(pid) {
   if (!projectId) return;
   const tables = [
     'npi_pfmea_history', 'npi_pfmea_causes', 'npi_pfmea_effects', 'npi_pfmea_modes',
-    'npi_control_plan', 'npi_bom_kit_items', 'npi_bom_kits', 'npi_bom_items',
+    'npi_control_plan', 'npi_bom_tree', 'npi_bom_items',
     'npi_gate_sigs', 'npi_gates', 'npi_gantt_rows', 'npi_actions', 'npi_risks',
     'npi_pfd_steps', 'npi_ctq', 'npi_documents'
   ];

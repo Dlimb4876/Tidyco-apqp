@@ -187,15 +187,6 @@ function mcsShowViewModal(change) {
   `;
 
   document.body.appendChild(backdrop);
-  const activeViewStage = {
-    open: 'open',
-    review: 'approval1',
-    implementing: 'implement',
-    final_review: 'approval2',
-    implemented: 'approval2',
-    closed: 'approval2'
-  }[change.status] || 'open';
-  mcsInitStageCollapsibles(backdrop, [activeViewStage]);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) mcsCloseModal('mcs-view-backdrop');
   });

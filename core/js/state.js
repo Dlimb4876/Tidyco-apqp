@@ -9,7 +9,7 @@ let currentUserTeams = []; // Team IDs assigned to the current user (single-team
 let progId = null;
 let currentSection = 'hub';
 let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
-let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
+let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|tree
 let capacityTab = 'root'; // root|me|production|projects|logistics|unit6
 let prodCapTab  = 'dashboard'; // dashboard|by-work-area|settings|detail
 let pmCapTab = 'tasks'; // tasks (project-management capacity)
@@ -37,7 +37,8 @@ let tenderGateScopeState = {
 // Modal picker state
 let ctqPickTarget = null, ctqPickSelected = [];
 let bomPickTarget = null, bomPickSelected = [], bomPickFilter = 'all';
-let kitPickTarget = null, kitPickSelected = [], kitPickFilter = 'all';
+let bomTreeExpanded = new Set(); // IDs of expanded subassembly nodes in the tree tab
+let bomTreeAddParentId = null;  // parent node ID when opening the add-part or add-subasm modals
 let docPickTarget = null, docPickSelected = [];
 let insertOriginIdx = null;
 let collapsedGroups = new Set();
@@ -266,7 +267,7 @@ function newProgTemplate(name, customer, unit, family, lead, pm, date) {
   return {
     id: crypto.randomUUID(), name, customer, unit, family, lead, pm, date,
     ctq: [], pfd: [], pfmea: [], cp: [],
-    bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
+    bom: { parts: [], tools: [], equip: [], mat: [], cons: [], tree: [] },
     gates, actions: [], risks: [], timing: [], gantt: [], subAssemblies: [],
     product_id: null,
     gate_selections: null,

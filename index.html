@@ -305,16 +305,24 @@
   </div>
 </div>
 
-<!-- BoM Picker for Kit item add -->
-<div class="modal-bg" id="modalKitPick" style="display:none">
-  <div class="modal modal-lg">
-    <div class="modal-title">Add Items to Kit</div>
-    <div class="bom-filter-row" id="kitPickFilter"></div>
-    <div class="bom-pick-list" id="kitPickList"></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('modalKitPick')">Cancel</button>
-      <button class="btn btn-primary" data-action="bom-save-kit-pick">Add Selected</button>
-    </div>
+<!-- BoM Tree — Add Sub-Assembly -->
+<div class="modal-bg" id="modalBomTreeSubAsm" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">📦 Add Sub-Assembly</div>
+    <form id="bomTreeSubAsmForm" onsubmit="event.preventDefault(); npi.bom.saveTreeSubAsm()">
+      <div class="field">
+        <label for="bomTreeSubAsmPn">Part Number *</label>
+        <input id="bomTreeSubAsmPn" class="cell-edit" placeholder="e.g. SA-001" style="font-family:'IBM Plex Mono',monospace" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="bomTreeSubAsmDesc">Description</label>
+        <input id="bomTreeSubAsmDesc" class="cell-edit" placeholder="e.g. Gearbox Assembly">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modalBomTreeSubAsm')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Sub-Assembly</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -579,6 +587,7 @@
 <script src="utils/js/helpers.js"></script>
 <script src="utils/js/navigation.js"></script>
 <script src="utils/js/realtime.js"></script>
+<script src="utils/js/realtime-patch.js"></script>
 <script src="core/js/chart-theme.js"></script>
 <script src="utils/js/guide.js"></script>
 <script src="core/js/network.js"></script>

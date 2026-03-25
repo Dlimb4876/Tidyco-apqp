@@ -14,8 +14,8 @@ window.PFMEA_SCORE_MAX = 10
 window.APQP_TABS = { CTQ: 'ctq', PFD: 'pfd', PFMEA: 'pfmea', CP: 'cp' }
 
 // ── BOM Sub-Tab Keys ──────────────────────────────────────────
-// Mirrors the keys of BOM_TYPES in state.js plus 'kits'
-window.BOM_TABS = [...Object.keys(BOM_TYPES), 'kits']
+// Mirrors the keys of BOM_TYPES in state.js plus 'tree'
+window.BOM_TABS = [...Object.keys(BOM_TYPES), 'tree']
 
 // ── Gantt Chart Configuration ──────────────────────────────────
 // Used in timing.js for project timeline visualization

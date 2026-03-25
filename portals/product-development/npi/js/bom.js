@@ -8,13 +8,13 @@ npi.bom.renderBOM = function() {
   const p    = prog()
   const tabs = [
     ...Object.entries(BOM_TYPES).map(([id, meta]) => ({ id, label: `${meta.icon} ${meta.label}`, count: (p.bom[id] || []).length })),
-    { id: 'kits', label: '📦 Kits', count: p.bom.kits.length },
+    { id: 'tree', label: '🌲 Structure', count: (p.bom.tree || []).length },
   ]
   const tabHTML = `<div class="bom-subnav">${
     tabs.map(t => `<button class="bom-tab${bomSubTab === t.id ? ' active' : ''}" data-action="bom-set-tab" data-tab="${t.id}">${t.label} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:inherit;opacity:.7">(${t.count})</span></button>`).join('')
   }</div>`
 
-  const content = bomSubTab === 'kits' ? npi.bom.renderKits(p) : npi.bom.renderBomTable(bomSubTab, p)
+  const content = bomSubTab === 'tree' ? npi.bom.renderBomTree(p) : npi.bom.renderBomTable(bomSubTab, p)
   return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-bom" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="npi-go-home">← Dashboard</button></div></div>${tabHTML}${content}`
 }
 
@@ -149,99 +149,186 @@ npi.bom.delBom = function(type, i) {
 }
 
 // ══════════════════════════════════════
-// KITS
+// BOM TREE (Structure tab)
 // ══════════════════════════════════════
-npi.bom.renderKits = function(p) {
-  const kits     = p.bom.kits
-  const allItems = []
-  Object.entries(BOM_TYPES).forEach(([k, t]) => { p.bom[k].forEach(item => { allItems.push({ bomType: k, item, t }) }) })
-  const totalItems = allItems.length
 
-  const kitCards = kits.map((kit, ki) => {
-    const totalBomRefs = kit.items.length
-    const summary = Object.entries(BOM_TYPES).map(([k, t]) => { const n = kit.items.filter(r => r.bomType === k).length; return n > 0 ? `${t.icon} ${n} ${t.label.toLowerCase()}` : null }).filter(Boolean).join(' · ')
-    const kitRows = kit.items.map((ref, ri) => {
-      const bt   = p.bom[ref.bomType]; if (!bt) return ''
-      const item = bt.find(x => x.id === ref.itemId); if (!item) return ''
-      const t    = BOM_TYPES[ref.bomType]
-      const name = item.desc || (item.pn || item.toolId || item.equipId || '?')
-      const pn   = item.pn || item.toolId || item.equipId || ''
-      const flags = []
-      if (item.isAaw)    flags.push('<span class="flag flag-aaw">AAW</span>')
-      if (item.isRepair) flags.push('<span class="flag flag-repair">RPR</span>')
-      const typeBg  = { parts: 'var(--blue-pale)', tools: 'var(--navy-pale)', equip: 'var(--amber-pale)', mat: 'var(--green-pale)', cons: 'var(--red-pale)' }[ref.bomType]
-      const typeCol = { parts: 'var(--blue)',      tools: 'var(--navy)',      equip: 'var(--amber)',      mat: 'var(--green)',      cons: 'var(--red)'      }[ref.bomType]
-      return `<div class="kit-item-row">
-        <span class="kit-item-type" style="background:${typeBg};color:${typeCol}">${t.icon} ${t.label}</span>
-        <span class="kit-item-name">${esc(name)}</span>
-        ${pn ? `<span class="kit-item-pn">${esc(pn)}</span>` : ''}
-        <div style="display:flex;gap:3px">${flags.join('')}</div>
-        <input class="kit-qty-input" type="number" name="bom_kit_${ki}_${ri}_qty" min="0" step="0.01" value="${ref.qty || 1}" data-action="bom-upd-kit-item" data-ki="${ki}" data-ri="${ri}" data-field="qty" title="Quantity">
-        <span class="kit-unit">${item.unit || 'ea'}</span>
-        ${canEdit() ? `<button class="del-btn" data-action="bom-del-kit-item" data-ki="${ki}" data-ri="${ri}">×</button>` : ''}
-      </div>`
-    }).join('')
-    return `<div class="kit-card">
-      <div class="kit-header">
-        <span style="font-size:20px">📦</span>
-        <input class="kit-name-input" name="bom_kit_${ki}_name" value="${esc(kit.name)}" data-action="bom-upd-kit" data-ki="${ki}" data-field="name" placeholder="Kit name (e.g. Overhaul Kit, Fastener Kit…)">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-left:auto">${totalBomRefs} items</span>
-        ${canEdit() ? `<button class="del-btn" data-action="bom-del-kit" data-ki="${ki}" style="margin-left:8px">×</button>` : ''}
-      </div>
-      <div class="kit-body">
-        ${kitRows || `<div class="kit-empty">No items yet — click Add Items to build this kit</div>`}
-      </div>
-      <div class="kit-summary">${summary || 'Empty kit'}</div>
-      ${canEdit() ? `<button class="kit-add-btn" data-action="bom-open-kit-pick" data-ki="${ki}">＋ Add Items from BoM</button>` : ''}
-    </div>`
-  }).join('')
+// MAX_TREE_DEPTH: nodes at this storage depth cannot add children (0-indexed under root)
+// 4 visual levels = root (product) + 3 storage levels (depth 0, 1, 2)
+const MAX_TREE_DEPTH = 2
 
-  return `<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-size:13px;color:var(--muted)">${kits.length} kit${kits.length !== 1 ? 's' : ''} · ${totalItems} total BoM items available</div>
-    ${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="bom-add-kit">＋ New Kit</button>` : ''}
-  </div>
-  ${kits.length === 0
-    ? (canEdit() ? `<button class="new-kit-btn" data-action="bom-add-kit">＋ Create your first kit<div style="font-size:12px;margin-top:4px;color:var(--muted)">e.g. Overhaul Kit, Fastener Kit, Bearing Kit, Repair Kit A…</div></button>` : `<div style="padding:24px;text-align:center;color:var(--muted)">No kits defined.</div>`)
-    : `<div class="kit-list">${kitCards}</div>`}`
+npi.bom._buildBomTree = function(nodes) {
+  const byId = {}
+  nodes.forEach(n => { byId[n.id] = { ...n, children: [] } })
+  const roots = []
+  nodes.forEach(n => {
+    const node = byId[n.id]
+    if (n.parentId && byId[n.parentId]) {
+      byId[n.parentId].children.push(node)
+    } else {
+      roots.push(node)
+    }
+  })
+  const sortNodes = arr => { arr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); arr.forEach(n => sortNodes(n.children)) }
+  sortNodes(roots)
+  return roots
 }
 
-npi.bom.addKit = function() {
-  npi.data.bom.addKit()
-  render()
+npi.bom._renderTreeChildren = function(nodes, depth) {
+  return nodes.map(n => npi.bom._renderTreeNode(n, depth)).join('')
 }
-npi.bom.updKit = function(ki, f, v) { npi.data.bom.updKit(ki, f, v) }
-npi.bom.delKit = function(ki) {
-  const p = prog()
-  const kit = p && p.bom && p.bom.kits ? p.bom.kits[ki] : null
-  if (kit && kit.linkedSubAssemblyId) {
-    showToast('Delete the sub-assembly from the dashboard to remove this linked kit.', 'warning')
-    return
+
+npi.bom._renderTreeNode = function(node, depth) {
+  const hasChildren = node.children && node.children.length > 0
+  const isExpanded  = bomTreeExpanded.has(node.id)
+  const canAddKids  = depth < MAX_TREE_DEPTH
+
+  const toggleHtml = node.nodeType === 'subassembly'
+    ? `<button class="bom-tree-toggle" data-action="bom-tree-toggle" data-id="${node.id}" aria-label="${isExpanded ? 'Collapse' : 'Expand'}">${isExpanded ? '▾' : '▶'}</button>`
+    : `<span class="bom-tree-toggle bom-tree-toggle--leaf"></span>`
+
+  const icon = node.nodeType === 'subassembly' ? '📦' : '🔩'
+
+  const qtyHtml = `<input type="number" class="bom-tree-qty" min="0" step="0.01"
+    value="${node.qty != null ? node.qty : 1}"
+    data-action="bom-tree-upd-qty" data-id="${node.id}"
+    title="Quantity">`
+
+  const addHtml = canEdit() && node.nodeType === 'subassembly' && canAddKids ? `
+    <button class="btn btn-ghost btn-xs bom-tree-add-btn" data-action="bom-tree-add-part" data-parent="${node.id}">＋ Part</button>
+    <button class="btn btn-ghost btn-xs bom-tree-add-btn" data-action="bom-tree-add-subasm" data-parent="${node.id}">＋ Sub-Asm</button>` : ''
+
+  const delHtml = canEdit()
+    ? `<button class="del-btn bom-tree-del" data-action="bom-tree-del-node" data-id="${node.id}" title="Remove">×</button>`
+    : ''
+
+  const childrenHtml = node.nodeType === 'subassembly'
+    ? `<div class="bom-tree-children${isExpanded ? '' : ' bom-tree-children--collapsed'}" data-parent="${node.id}">
+        ${hasChildren ? npi.bom._renderTreeChildren(node.children, depth + 1) : `<div class="bom-tree-empty-slot">${canEdit() ? 'Empty — add parts or sub-assemblies' : 'Empty'}</div>`}
+       </div>`
+    : ''
+
+  return `<div class="bom-tree-item" style="--depth:${depth}">
+    <div class="bom-tree-row">
+      ${toggleHtml}
+      <span class="bom-tree-icon">${icon}</span>
+      <span class="bom-tree-pn">${esc(node.pn) || '<span class="bom-tree-no-pn">—</span>'}</span>
+      <span class="bom-tree-desc">${esc(node.desc) || '<span style="color:var(--muted)">No description</span>'}</span>
+      ${qtyHtml}
+      <span class="bom-tree-unit">${esc(node.unit || 'ea')}</span>
+      <div class="bom-tree-row-actions">${addHtml}${delHtml}</div>
+    </div>
+    ${childrenHtml}
+  </div>`
+}
+
+npi.bom.renderBomTree = function(p) {
+  const linkedProduct = (typeof productsState !== 'undefined' && productsState)
+    ? (productsState.products || []).find(pr => pr.id === p.product_id)
+    : null
+
+  if (!linkedProduct) {
+    return emptyState('🌲', 'No product linked', 'Link this project to a product from the dashboard before building the BoM structure.')
   }
-  npi.data.bom.delKit(ki)
-  render()
+
+  const rootPN   = esc(linkedProduct.part_number || '—')
+  const rootName = esc(linkedProduct.name || '')
+  const treeNodes = p.bom.tree || []
+  const treeRoots = npi.bom._buildBomTree(treeNodes)
+  const totalParts = treeNodes.filter(n => n.nodeType === 'part').length
+  const totalSubAsm = treeNodes.filter(n => n.nodeType === 'subassembly').length
+
+  const statsHtml = `<div style="display:flex;gap:8px;margin-bottom:14px">
+    <span class="flag bom-summary-pill" style="background:var(--bg);border:1px solid var(--line);color:var(--mid)">${totalSubAsm} sub-assemblies</span>
+    <span class="flag bom-summary-pill" style="background:var(--bg);border:1px solid var(--line);color:var(--mid)">${totalParts} parts</span>
+  </div>`
+
+  const rootChildrenHtml = treeRoots.length
+    ? npi.bom._renderTreeChildren(treeRoots, 0)
+    : `<div class="bom-tree-empty-slot">${canEdit() ? 'Empty — add parts or sub-assemblies to get started' : 'No items yet'}</div>`
+
+  const rootAddHtml = canEdit() ? `
+    <button class="btn btn-primary btn-sm" data-action="bom-tree-add-part" data-parent="">＋ Add Part</button>
+    <button class="btn btn-secondary btn-sm" data-action="bom-tree-add-subasm" data-parent="">＋ Add Sub-Assembly</button>` : ''
+
+  return `<div class="bom-tree-wrap">
+    ${statsHtml}
+    <div class="card bom-tree-card">
+      <div class="bom-tree-root-row">
+        <span class="bom-tree-toggle bom-tree-toggle--root">▾</span>
+        <span class="bom-tree-icon">🔷</span>
+        <span class="bom-tree-pn bom-tree-root-pn">${rootPN}</span>
+        <span class="bom-tree-desc bom-tree-root-name">${rootName}</span>
+        <span class="bom-tree-root-label">Top-level product</span>
+        <div class="bom-tree-row-actions">${rootAddHtml}</div>
+      </div>
+      <div class="bom-tree-children bom-tree-root-children">
+        ${rootChildrenHtml}
+      </div>
+    </div>
+  </div>`
 }
-npi.bom.updKitItem = function(ki, ri, f, v) {
-  npi.data.bom.updKitItem(ki, ri, f, v)
+
+npi.bom.toggleTreeNode = function(id) {
+  const childEl  = document.querySelector(`.bom-tree-children[data-parent="${id}"]`)
+  const toggleEl = document.querySelector(`.bom-tree-toggle[data-id="${id}"]`)
+  if (!childEl) return
+  const collapsed = childEl.classList.toggle('bom-tree-children--collapsed')
+  if (toggleEl) toggleEl.textContent = collapsed ? '▶' : '▾'
+  if (collapsed) bomTreeExpanded.delete(id); else bomTreeExpanded.add(id)
 }
-npi.bom.delKitItem = function(ki, ri) {
-  npi.data.bom.delKitItem(ki, ri)
+
+npi.bom.openTreeAddPart = async function(parentId) {
+  const p = prog()
+  if (!p) return
+  bomTreeAddParentId  = parentId || null
+  abcPickTarget       = { progId: p.id, type: 'tree', parentId: bomTreeAddParentId }
+  abcPickResults      = []
+  abcPickSelected     = []
+  abcPickLoading      = true
+  abcPickSearch       = ''
+  abcPickClassFilter  = 'all'
+  // Reset search UI if visible
+  const searchEl = document.getElementById('abcPickSearchInput')
+  if (searchEl) searchEl.value = ''
+  showModal('modalABCPick')
+  npi.bom._refreshAbcPickBtn()
+  abcPickResults = await npiRelFetchABCCatalogue()
+  abcPickLoading = false
+  const listEl = document.getElementById('abcPickList')
+  if (listEl) listEl.innerHTML = npi.bom.renderABCPickList()
+}
+
+npi.bom.openTreeAddSubAsm = function(parentId) {
+  bomTreeAddParentId = parentId || null
+  const form = document.getElementById('bomTreeSubAsmForm')
+  if (form) form.reset()
+  showModal('modalBomTreeSubAsm')
+}
+
+npi.bom.saveTreeSubAsm = function() {
+  const pn   = (document.getElementById('bomTreeSubAsmPn')  || {}).value?.trim()
+  const desc = (document.getElementById('bomTreeSubAsmDesc') || {}).value?.trim()
+  if (!pn) { showToast('Part number is required', 'warning'); return }
+  npi.data.bom.addTreeNode(bomTreeAddParentId, 'subassembly', { pn, desc: desc || '' })
+  closeModal('modalBomTreeSubAsm')
   render()
 }
 
-npi.bom.openKitPick = function(ki) {
-  kitPickTarget = ki
-  const p   = prog()
-  const kit = p.bom.kits[ki]
-  kitPickSelected   = kit.items.map(r => r.bomType + '|' + r.itemId)
-  kitPickFilter     = 'all'
-  bomPickSelected   = [...kitPickSelected]
-  bomPickFilter     = kitPickFilter
-  npi.pfd.refreshBomPickModal(p, 'kitPickFilter', 'kitPickList', 'all')
-  showModal('modalKitPick')
+npi.bom.delTreeNode = function(id) {
+  const p = prog()
+  if (!p) return
+  const node = (p.bom.tree || []).find(n => n.id === id)
+  if (!node) return
+  const childCount = (p.bom.tree || []).filter(n => n.parentId === id).length
+  const msg = childCount > 0
+    ? `Remove this sub-assembly and all ${childCount} item(s) inside it?`
+    : `Remove this item from the structure?`
+  if (!confirm(msg)) return
+  npi.data.bom.delTreeNode(id)
 }
-npi.bom.saveKitPick = function() {
-  npi.data.bom.saveKitPick(kitPickTarget, bomPickSelected)
-  closeModal('modalKitPick'); render()
+
+npi.bom.updTreeNodeQty = function(id, v) {
+  npi.data.bom.updTreeNode(id, 'qty', parseFloat(v) || 0)
 }
 
 // ══════════════════════════════════════
@@ -301,9 +388,12 @@ npi.bom.renderABCPickList = function() {
 
   if (!filtered.length) return '<div style="padding:20px;text-align:center;color:var(--muted)">No parts found.</div>'
 
-  // IDs of parts already in this project's BOM
+  // IDs of parts already in this project's flat BOM (not applicable in tree context)
   const p = prog()
-  const alreadyAdded = new Set((p && p.bom && p.bom.parts || []).map(x => x.abcCatalogueId).filter(Boolean))
+  const isTreeContext = abcPickTarget && abcPickTarget.type === 'tree'
+  const alreadyAdded = isTreeContext
+    ? new Set()
+    : new Set((p && p.bom && p.bom.parts || []).map(x => x.abcCatalogueId).filter(Boolean))
 
   return filtered.map(r => {
     const idx = abcPickResults.indexOf(r)
@@ -346,6 +436,27 @@ npi.bom.toggleABCPick = function(idx) {
 npi.bom.confirmABCPick = function() {
   const p = prog()
   if (!p || !abcPickSelected.length) return
+
+  // Tree context — add parts as tree nodes
+  if (abcPickTarget && abcPickTarget.type === 'tree') {
+    abcPickSelected.forEach(catId => {
+      const src = abcPickResults.find(r => r.id === catId)
+      if (!src) return
+      npi.data.bom.addTreeNode(abcPickTarget.parentId, 'part', {
+        pn: src.pn || '',
+        desc: src.item_desc || '',
+        unit: src.unit || 'ea',
+        qty: 1,
+        abcCatalogueId: src.id
+      })
+    })
+    abcPickSelected = []
+    npi.notify('render')
+    closeModal('modalABCPick')
+    return
+  }
+
+  // Parts tab context — original behaviour
   abcPickSelected.forEach(catId => {
     const src = abcPickResults.find(r => r.id === catId)
     if (!src) return
