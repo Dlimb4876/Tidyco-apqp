@@ -462,6 +462,52 @@ function mcsUpdateCounts() {
 }
 
 /**
+ * Render HTML for a single MCS change card. Carries data-id for surgical realtime patches.
+ */
+function mcsRenderCardHTML(change) {
+  const impactCount = (change.impacts || []).length;
+  const impactStr = impactCount > 0
+    ? `${impactCount} impact${impactCount !== 1 ? 's' : ''}`
+    : 'No impacts';
+  const overdue = mcsIsOverdue(change);
+  const targetStr = change.target_implementation
+    ? `<span class="${overdue ? 'mcs-overdue-date' : ''}">🎯 ${change.target_implementation}${overdue ? ' ⚠' : ''}</span>`
+    : '';
+  const partStr = change.part_drawing_no
+    ? `<span>📦 ${esc(change.part_drawing_no)}</span>`
+    : '';
+  const timeStr = change.estimated_time_impact_hours
+    ? `<div class="mcs-card-time-impact">⏱ ${change.estimated_time_impact_hours > 0 ? '+' : ''}${change.estimated_time_impact_hours}h</div>`
+    : '';
+
+  return `
+  <div class="mcs-card status-${change.status}" data-id="${esc(change.id)}" onclick="mcsViewChange('${esc(change.id)}')">
+    <div class="mcs-card-header">
+      <div class="mcs-card-ref">${esc(change.id)}</div>
+      <span class="mcs-status-pill mcs-status-${change.status}">${mcStatusLabel(change.status)}</span>
+    </div>
+    <div class="mcs-card-title">${esc(change.title)}</div>
+    <div class="mcs-card-meta">
+      <div class="mcs-card-meta-left">
+        <span class="mcs-tag">Change Type: ${esc(change.change_type || 'Not set')}</span>
+        <span class="mcs-priority-badge mcs-priority-${change.priority}">${change.priority}</span>
+      </div>
+      <div class="mcs-card-meta-right">
+        <div class="mcs-card-impacts">${impactStr}</div>
+        ${timeStr}
+      </div>
+    </div>
+    <div class="mcs-card-sep"></div>
+    <div class="mcs-card-submeta">
+      <span>👤 ${esc(change.initiated_by || 'Unknown')}</span>
+      ${partStr}
+      <span>📅 ${change.created_at ? change.created_at.split('T')[0] : '—'}</span>
+      ${targetStr}
+    </div>
+  </div>`;
+}
+
+/**
  * Render change list
  */
 function mcsRenderList() {
@@ -494,48 +540,7 @@ function mcsRenderList() {
     return;
   }
 
-  container.innerHTML = filtered.map(change => {
-    const impactCount = (change.impacts || []).length;
-    const impactStr = impactCount > 0
-      ? `${impactCount} impact${impactCount !== 1 ? 's' : ''}`
-      : 'No impacts';
-    const overdue = mcsIsOverdue(change);
-    const targetStr = change.target_implementation
-      ? `<span class="${overdue ? 'mcs-overdue-date' : ''}">🎯 ${change.target_implementation}${overdue ? ' ⚠' : ''}</span>`
-      : '';
-    const partStr = change.part_drawing_no
-      ? `<span>📦 ${esc(change.part_drawing_no)}</span>`
-      : '';
-    const timeStr = change.estimated_time_impact_hours
-      ? `<div class="mcs-card-time-impact">⏱ ${change.estimated_time_impact_hours > 0 ? '+' : ''}${change.estimated_time_impact_hours}h</div>`
-      : '';
-
-    return `
-    <div class="mcs-card status-${change.status}" onclick="mcsViewChange('${esc(change.id)}')">
-      <div class="mcs-card-header">
-        <div class="mcs-card-ref">${esc(change.id)}</div>
-        <span class="mcs-status-pill mcs-status-${change.status}">${mcStatusLabel(change.status)}</span>
-      </div>
-      <div class="mcs-card-title">${esc(change.title)}</div>
-      <div class="mcs-card-meta">
-        <div class="mcs-card-meta-left">
-          <span class="mcs-tag">Change Type: ${esc(change.change_type || 'Not set')}</span>
-          <span class="mcs-priority-badge mcs-priority-${change.priority}">${change.priority}</span>
-        </div>
-        <div class="mcs-card-meta-right">
-          <div class="mcs-card-impacts">${impactStr}</div>
-          ${timeStr}
-        </div>
-      </div>
-      <div class="mcs-card-sep"></div>
-      <div class="mcs-card-submeta">
-        <span>👤 ${esc(change.initiated_by || 'Unknown')}</span>
-        ${partStr}
-        <span>📅 ${change.created_at ? change.created_at.split('T')[0] : '—'}</span>
-        ${targetStr}
-      </div>
-    </div>`;
-  }).join('');
+  container.innerHTML = filtered.map(change => mcsRenderCardHTML(change)).join('');
 }
 
 /**

@@ -319,16 +319,34 @@ function familyTemplatesDataSubscribe() {
   createRealtimeSubscription('family_pfmea_templates', 'family_templates_channel', {
     onInsert: (record) => {
       familyTemplatesState.templates.push(record);
-      render();
+      sortFamilyTemplatesState();
+      // Patch the viewer tbody if it's showing this template
+      if (typeof templateViewerState !== 'undefined' &&
+          templateViewerState.isOpen &&
+          templateViewerState.familyId === record.family_id &&
+          templateViewerState.templateName === record.template_name &&
+          typeof familyTemplateViewerRowHTML === 'function') {
+        realtimePatchInsert('#tmpl-viewer-tbody', familyTemplateViewerRowHTML(record));
+      } else if (typeof templateManagerState !== 'undefined' && templateManagerState.isOpen &&
+                 templateManagerState.familyId === record.family_id) {
+        // Template manager shows groups — re-render only if this family's manager is open
+        render();
+      }
     },
     onUpdate: (record) => {
       const idx = familyTemplatesState.templates.findIndex(t => t.id === record.id);
       if (idx >= 0) familyTemplatesState.templates[idx] = record;
-      render();
+      if (typeof templateViewerState !== 'undefined' &&
+          templateViewerState.isOpen &&
+          templateViewerState.familyId === record.family_id &&
+          templateViewerState.templateName === record.template_name &&
+          typeof familyTemplateViewerRowHTML === 'function') {
+        realtimePatchUpdate('#tmpl-viewer-tbody', record.id, familyTemplateViewerRowHTML(record));
+      }
     },
     onDelete: (record) => {
       familyTemplatesState.templates = familyTemplatesState.templates.filter(t => t.id !== record.id);
-      render();
+      realtimePatchDelete('#tmpl-viewer-tbody', record.id);
     }
   });
 }

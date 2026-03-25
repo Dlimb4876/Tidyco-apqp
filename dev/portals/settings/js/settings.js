@@ -245,6 +245,37 @@ async function settingsEnsureWorkAreasData() {
 // Teams/permissions logic moved to settings-teams.js
 
 // ── Render families tab ───────────────────────────────────────
+// Single-row HTML for a family (used for initial render and surgical realtime patches).
+// usage is optional — omit or pass -1 to compute from db.projects at call time.
+function settingsFamilyRenderRowHTML(f, usage) {
+  if (usage === undefined || usage < 0) {
+    usage = (db.projects || []).filter(p => (p.family || 'Other') === f.id).length;
+  }
+  return `
+  <tr data-id="${esc(f.id)}">
+    <td class="ctr" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
+    <td><code style="background:var(--code-bg);padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
+    <td><strong>${esc(f.label)}</strong></td>
+    <td>${esc(f.description || '—')}</td>
+    <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
+    <td class="families-actions-col">
+      ${canEdit() ? `<button class="btn-del" title="Edit" data-action="settings-families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
+      <button class="btn-del" title="Delete" data-action="settings-families-delete" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>` : '—'}
+    </td>
+  </tr>`;
+}
+
+// Re-sort families data rows inside #families-tbody alphabetically by label.
+function _familiesResortTbody(tbody) {
+  const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+  rows.sort((a, b) => {
+    const na = (a.querySelector('strong')?.textContent || '').trim();
+    const nb = (b.querySelector('strong')?.textContent || '').trim();
+    return na.localeCompare(nb);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
 function renderSettingsFamiliesTab() {
   const container = document.getElementById('settingsFamiliesTab');
   if (!container) return;
@@ -304,7 +335,7 @@ function renderSettingsFamiliesTab() {
             <th class="families-actions-col">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="families-tbody">
           ${canEdit() ? `<tr class="row-new" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
             <td><input class="cell-edit" id="sfNew-icon" placeholder="📋" maxlength="4" style="width:50px;text-align:center"></td>
             <td><input class="cell-edit" id="sfNew-id" placeholder="e.g. HVAC"></td>
@@ -333,18 +364,7 @@ function renderSettingsFamiliesTab() {
                 </td>
               </tr>`;
             }
-            return `
-            <tr>
-              <td class="ctr" style="font-size:1.3em">${esc(f.icon || '📋')}</td>
-              <td><code style="background:var(--code-bg);padding:2px 6px;border-radius:3px">${esc(f.name || f.id)}</code></td>
-              <td><strong>${esc(f.label)}</strong></td>
-              <td>${esc(f.description || '—')}</td>
-              <td class="ctr"><span class="badge badge-NPI">${usage}</span></td>
-              <td class="families-actions-col">
-                ${canEdit() ? `<button class="btn-del" title="Edit" data-action="settings-families-start-edit" data-family-id="${esc(f.id)}">✏️</button>
-                <button class="btn-del" title="Delete" data-action="settings-families-delete" data-family-id="${esc(f.id)}" data-family-label="${esc(f.label)}">🗑️</button>` : '—'}
-              </td>
-            </tr>`;
+            return settingsFamilyRenderRowHTML(f, usage);
           }).join('')}
         </tbody>
       </table>
@@ -426,6 +446,30 @@ async function settingsFamiliesDelete(familyId, familyLabel) {
 }
 
 // ── Render work areas tab ──────────────────────────────────────
+// Single-row HTML for a work area (used for initial render and surgical realtime patches).
+// Must carry data-id on the root element.
+function settingsWARenderRowHTML(w) {
+  return `
+  <tr data-id="${esc(w.id)}">
+    <td><strong>${esc(w.name)}</strong></td>
+    <td>${esc(w.description || '—')}</td>
+    <td class="families-actions-col">
+      ${canEdit() ? `<button class="btn-del" title="Rename" data-action="settings-wa-start-edit" data-wa-id="${esc(w.id)}">✏️</button>` : '—'}
+    </td>
+  </tr>`;
+}
+
+// Re-sort data rows inside #wa-tbody alphabetically by name.
+function _waResortTbody(tbody) {
+  const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+  rows.sort((a, b) => {
+    const na = (a.querySelector('strong')?.textContent || '').trim();
+    const nb = (b.querySelector('strong')?.textContent || '').trim();
+    return na.localeCompare(nb);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
 function renderSettingsWorkAreasTab() {
   const container = document.getElementById('settingsWorkAreasTab');
   if (!container) return;
@@ -456,7 +500,7 @@ function renderSettingsWorkAreasTab() {
             <th class="families-actions-col">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="wa-tbody">
           ${canEdit() ? `<tr class="row-new" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
             <td><input class="cell-edit" id="waNew-name" placeholder="e.g. Unit 9"></td>
             <td><input class="cell-edit" id="waNew-desc" placeholder="Description (optional)"></td>
@@ -478,14 +522,7 @@ function renderSettingsWorkAreasTab() {
                 </td>
               </tr>`;
             }
-            return `
-            <tr>
-              <td><strong>${esc(w.name)}</strong></td>
-              <td>${esc(w.description || '—')}</td>
-              <td class="families-actions-col">
-                ${canEdit() ? `<button class="btn-del" title="Rename" data-action="settings-wa-start-edit" data-wa-id="${esc(w.id)}">✏️</button>` : '—'}
-              </td>
-            </tr>`;
+            return settingsWARenderRowHTML(w);
           }).join('')}
         </tbody>
       </table>

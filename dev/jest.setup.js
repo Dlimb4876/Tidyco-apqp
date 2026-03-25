@@ -31,6 +31,7 @@ global.currentUser = { id: 'test-user', email: 'test@test.com' };
 global.currentUserRole = 'editor';
 global.canEdit = jest.fn(() => true);
 global.isAdmin = jest.fn(() => false);
+global.bomPartsRegisterView = 'total';
 
 // Mocking the DOM — only available in jsdom environment
 if (typeof document !== 'undefined') {

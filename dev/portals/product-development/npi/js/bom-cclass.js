@@ -8,6 +8,12 @@
 let abcInlineSaveTimer = null
 const ABC_CATALOGUE_CHANNEL = 'abc_catalogue_channel'
 
+// Cache for part usage counts (keyed by abc_catalogue_id)
+let abcPartUsageCache = {}
+
+// Store usage data for modal display
+let abcPartUsageData = []
+
 function getFilteredAbcCatalogueRows() {
   const searchTerm = (abcCatalogueSearch || '').toLowerCase()
   let filtered = searchTerm
@@ -35,9 +41,10 @@ npi.bom.renderABCCatalogueResults = function() {
   </div>`
 
   const tableRows = filtered.length === 0
-    ? `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">${abcCatalogueData.length === 0 ? 'No parts yet. Click ＋ Add Part to start building the catalogue.' : 'No parts match the current filter.'}</td></tr>`
+    ? `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">${abcCatalogueData.length === 0 ? 'No parts yet. Click ＋ Add Part to start building the catalogue.' : 'No parts match the current filter.'}</td></tr>`
     : filtered.map(r => {
       const i = abcCatalogueData.indexOf(r)
+      const usageCount = abcPartUsageCache[r.id] !== undefined ? abcPartUsageCache[r.id] : '-'
       return `<tr>
         <td class="w110"><input class="cell-edit mono" value="${esc(r.pn || '')}"
           onchange="npi.bom.updABCInline(${i}, 'pn', this.value)" placeholder="Tidyco PN" style="width:100%"></td>
@@ -60,6 +67,9 @@ npi.bom.renderABCCatalogueResults = function() {
         <td class="w44 ctr"><input type="checkbox" ${r.in_sage ? 'checked' : ''}
           onchange="npi.bom.updABCInline(${i}, 'in_sage', this.checked)"
           style="accent-color:var(--green);width:15px;height:15px;cursor:pointer" title="Part in Sage (MRP)"></td>
+        <td class="w60 ctr" style="cursor:pointer" onclick="npi.bom.showWhereUsed('${r.id}')" title="Click to see where used">
+          <span class="flag bom-summary-pill" style="background:var(--bg);border:1px solid var(--line);color:var(--mid);font-size:11px;padding:2px 6px" data-usage-id="${r.id}">${usageCount}</span>
+        </td>
         <td class="ctr" style="white-space:nowrap;padding:2px 4px">${canEdit() ? `<button class="btn btn-ghost btn-sm" onclick="npi.bom.openABCEdit(${i})" title="Edit details" style="padding:1px 4px;font-size:12px">✏️</button>` : ''}</td>
       </tr>`
     }).join('')
@@ -74,9 +84,10 @@ npi.bom.renderABCCatalogueResults = function() {
         <col style="width:170px">
         <col style="width:170px">
         <col style="width:70px">
+        <col style="width:70px">
         <col style="width:44px">
       </colgroup>
-      <thead>${npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Class' }, { label: 'Description' }, { label: 'Units' }, { label: 'Manufacturer OEM' }, { label: 'Manufacturer PN' }, { label: 'In Sage' }, { label: '' }])}</thead>
+      <thead>${npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Class' }, { label: 'Description' }, { label: 'Units' }, { label: 'Manufacturer OEM' }, { label: 'Manufacturer PN' }, { label: 'In Sage' }, { label: 'Used In' }, { label: '' }])}</thead>
       <tbody>${tableRows}</tbody>
     </table>
   </div>`
@@ -88,6 +99,8 @@ npi.bom.refreshABCCatalogueResults = function() {
   const resultsEl = document.getElementById('abcCatalogueResults')
   if (!resultsEl) return
   resultsEl.innerHTML = npi.bom.renderABCCatalogueResults()
+  // Load usage counts after filter/search changes
+  setTimeout(() => npi.bom.loadPartUsageCounts(), 100)
 }
 
 npi.bom.renderABCCatalogue = function() {
@@ -98,12 +111,17 @@ npi.bom.renderABCCatalogue = function() {
       abcCatalogueLoaded = true
       abcCatalogueLoading = false
       render() // Re-render when data is loaded
+      // Load usage counts after render completes
+      setTimeout(() => npi.bom.loadPartUsageCounts(), 200)
     }).catch(err => {
       console.error('[NPI] Failed to load ABC catalogue:', err)
       abcCatalogueLoading = false
       abcCatalogueLoaded = true // Mark as loaded to prevent retry spam
       render()
     })
+  } else if (abcCatalogueLoaded) {
+    // Data already loaded, trigger usage count loading
+    setTimeout(() => npi.bom.loadPartUsageCounts(), 100)
   }
 
   // Combined toolbar: class filter + search input + info + add button all inline
@@ -144,7 +162,7 @@ npi.bom.subscribeABCCatalogue = function() {
       if (!abcCatalogueData.find(r => r.id === row.id)) {
         abcCatalogueData.push(row)
         if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
-          render()
+          npi.bom.refreshABCCatalogueResults()
         }
       }
     },
@@ -153,14 +171,14 @@ npi.bom.subscribeABCCatalogue = function() {
       if (idx >= 0) {
         abcCatalogueData[idx] = row
         if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
-          render()
+          npi.bom.refreshABCCatalogueResults()
         }
       }
     },
     onDelete: (row) => {
       abcCatalogueData = abcCatalogueData.filter(r => r.id !== row.id)
       if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
-        render()
+        npi.bom.refreshABCCatalogueResults()
       }
     }
   })
@@ -314,4 +332,122 @@ npi.bom.updABCInline = function(i, field, value) {
   abcInlineSaveTimer = setTimeout(async () => {
     await npiRelSaveABCCatalogueEntry(entry)
   }, 800)
+}
+
+// ── Where Used functionality ──────────────────────────────────
+npi.bom.loadPartUsageCounts = async function() {
+  // Load usage counts for all visible parts
+  const visibleParts = getFilteredAbcCatalogueRows()
+  
+  // First, update any badges that are already cached
+  visibleParts.forEach(part => {
+    if (abcPartUsageCache[part.id] !== undefined) {
+      const badge = document.querySelector(`[data-usage-id="${part.id}"]`)
+      if (badge) {
+        badge.textContent = abcPartUsageCache[part.id]
+      }
+    }
+  })
+  
+  const uncachedParts = visibleParts.filter(r => abcPartUsageCache[r.id] === undefined)
+  if (uncachedParts.length === 0) return
+
+  // Fetch usage for each uncached part
+  for (const part of uncachedParts) {
+    try {
+      const usage = await npiRelFetchPartUsage(part.id)
+      abcPartUsageCache[part.id] = usage.length
+      // Update the display
+      const badge = document.querySelector(`[data-usage-id="${part.id}"]`)
+      if (badge) {
+        badge.textContent = usage.length
+      }
+    } catch (err) {
+      console.warn('Failed to load usage for part:', part.id, err)
+      abcPartUsageCache[part.id] = 0
+      const badge = document.querySelector(`[data-usage-id="${part.id}"]`)
+      if (badge) {
+        badge.textContent = '0'
+      }
+    }
+  }
+}
+
+npi.bom.showWhereUsed = async function(partId) {
+  const part = abcCatalogueData.find(r => r.id === partId)
+  if (!part) return
+
+  // Fetch fresh usage data
+  const usage = await npiRelFetchPartUsage(partId)
+  abcPartUsageData = usage
+
+  // Update modal content
+  const titleEl = document.getElementById('whereUsedTitle')
+  const contentEl = document.getElementById('whereUsedContent')
+
+  if (titleEl) {
+    titleEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="abc-badge abc-${part.abc_class || 'C'}">${part.abc_class || 'C'}</span>
+        <span class="mono">${esc(part.pn || '')}</span>
+        <span style="color:var(--muted)">—</span>
+        <span>${esc(part.item_desc || '')}</span>
+      </div>
+    `
+  }
+
+  if (contentEl) {
+    if (usage.length === 0) {
+      contentEl.innerHTML = `<p style="color:var(--muted);text-align:center;padding:24px">Not used in any projects</p>`
+    } else {
+      // Group by project
+      const byProject = {}
+      usage.forEach(u => {
+        if (!byProject[u.projectId]) {
+          byProject[u.projectId] = {
+            projectName: u.projectName,
+            items: []
+          }
+        }
+        byProject[u.projectId].items.push(u)
+      })
+
+      const rows = Object.entries(byProject).map(([pid, data]) => {
+        const itemRows = data.items.map(item => `
+          <tr>
+            <td style="padding:4px 8px;color:var(--muted);padding-left:16px">${esc(item.location)}</td>
+            <td style="padding:4px 8px;text-align:right;width:60px">${item.qty}</td>
+          </tr>
+        `).join('')
+
+        return `
+          <tr style="background:var(--bg)">
+            <td colspan="2" style="padding:8px;font-weight:500">${esc(data.projectName)}</td>
+          </tr>
+          ${itemRows}
+        `
+      }).join('')
+
+      contentEl.innerHTML = `
+        <table class="tbl" style="width:100%;font-size:13px">
+          <thead>
+            <tr>
+              <th style="text-align:left">Location</th>
+              <th style="text-align:right;width:60px">Qty</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px">
+          ${usage.length} reference${usage.length !== 1 ? 's' : ''} across ${Object.keys(byProject).length} project${Object.keys(byProject).length !== 1 ? 's' : ''}
+        </div>
+      `
+    }
+  }
+
+  showModal('modalWhereUsed')
+}
+
+npi.bom.closeWhereUsed = function() {
+  closeModal('modalWhereUsed')
 }

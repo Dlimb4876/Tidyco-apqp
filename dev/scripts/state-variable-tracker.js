@@ -122,7 +122,7 @@ function main() {
   // Known important state variables
   const important = [
     'db', 'progId', 'currentSection', 'apqpTab', 'capacityTab',
-    'productionTab', 'productDevelopmentTab', 'bomSubTab',
+    'productionTab', 'productDevelopmentTab', 'bomSubTab', 'bomPartsRegisterView',
     'meStartOffset', 'prodPlanMonthOffset'
   ];
 

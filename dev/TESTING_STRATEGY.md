@@ -185,6 +185,7 @@ global.capacityTab = 'root';
 global.productionTab = 'root';
 global.productDevelopmentTab = 'root';
 global.bomSubTab = 'parts';
+global.bomPartsRegisterView = 'total';
 global.meStartOffset = 0;
 global.prodPlanMonthOffset = 0;
 

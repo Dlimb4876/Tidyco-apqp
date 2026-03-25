@@ -98,17 +98,24 @@ npi.events._onClick = function(evt) {
   case 'tracker-del-risk': npi.tracker.delRisk(npiNum(el.getAttribute('data-idx'), -1)); break
 
   case 'bom-set-tab': npi.bom.setBomTab(el.getAttribute('data-tab')); break
+  case 'bom-register-set-view': npi.bom.setPartsRegisterView(el.getAttribute('data-view')); break
   case 'bom-add-row': npi.bom.addBomRow(el.getAttribute('data-type')); break
   case 'bom-del-row': npi.bom.delBom(el.getAttribute('data-type'), npiNum(el.getAttribute('data-idx'), -1)); break
-  case 'bom-add-kit': npi.bom.addKit(); break
-  case 'bom-del-kit': npi.bom.delKit(npiNum(el.getAttribute('data-ki'), -1)); break
-  case 'bom-open-kit-pick': npi.bom.openKitPick(npiNum(el.getAttribute('data-ki'), -1)); break
-  case 'bom-save-kit-pick': npi.bom.saveKitPick(); break
-  case 'bom-del-kit-item': npi.bom.delKitItem(npiNum(el.getAttribute('data-ki'), -1), npiNum(el.getAttribute('data-ri'), -1)); break
+  case 'bom-tree-toggle':   npi.bom.toggleTreeNode(el.getAttribute('data-id')); break
+  case 'bom-tree-add-part':   npi.bom.openTreeAddPart(el.getAttribute('data-parent') || null); break
+  case 'bom-tree-add-subasm': npi.bom.openTreeAddSubAsm(el.getAttribute('data-parent') || null); break
+  case 'bom-tree-del-node':   npi.bom.delTreeNode(el.getAttribute('data-id')); break
   case 'bom-open-abc-pick': npi.bom.openABCPick(); break
   case 'bom-abc-filter': npi.bom.setAbcFilter(el.getAttribute('data-cls')); break
   case 'bom-abc-info': npi.bom.showAbcInfo(); break
   case 'bom-import-abc': npi.bom.importABCPart(npiNum(el.getAttribute('data-idx'), -1)); break
+
+  case 'bom-aaw-add-group':      npi.bom.addAawGroup(); break
+  case 'bom-aaw-del-group':      npi.bom.delAawGroup(el.getAttribute('data-id')); break
+  case 'bom-aaw-tree-toggle':    npi.bom.toggleAawTreeNode(el.getAttribute('data-id')); break
+  case 'bom-aaw-tree-add-part':  npi.bom.openAawAddPart(el.getAttribute('data-group'), el.getAttribute('data-parent') || null); break
+  case 'bom-aaw-tree-add-subasm':npi.bom.openAawAddSubAsm(el.getAttribute('data-group'), el.getAttribute('data-parent') || null); break
+  case 'bom-aaw-tree-del-node':  npi.bom.delAawTreeNode(el.getAttribute('data-id'), el.getAttribute('data-group')); break
 
   case 'gantt-toggle-month': npi.timing.toggleMonth(npiNum(el.getAttribute('data-mi'), -1)); break
   case 'gantt-toggle-plan': npi.timing.ganttTogglePlan(el.getAttribute('data-id'), npiNum(el.getAttribute('data-wi'), -1)); break
@@ -198,8 +205,15 @@ npi.events._onChange = function(evt) {
     npi.bom.updBom(type, idx, field, value)
     break
   }
-  case 'bom-upd-kit': npi.bom.updKit(npiNum(el.getAttribute('data-ki'), -1), el.getAttribute('data-field'), el.value); break
-  case 'bom-upd-kit-item': npi.bom.updKitItem(npiNum(el.getAttribute('data-ki'), -1), npiNum(el.getAttribute('data-ri'), -1), el.getAttribute('data-field'), Number(el.value)); break
+  case 'bom-tree-upd-qty': npi.bom.updTreeNodeQty(el.getAttribute('data-id'), el.value); break
+  case 'bom-aaw-tree-upd-qty': npi.bom.updAawTreeNodeQty(el.getAttribute('data-id'), el.getAttribute('data-group'), el.value); break
+  case 'bom-aaw-upd-title': npi.data.bom.updAawGroupTitle(el.getAttribute('data-id'), el.value); break
+  case 'bom-aaw-upd-tag': {
+    const id = el.getAttribute('data-id')
+    const tag = el.getAttribute('data-tag')
+    npi.data.bom.updAawGroupTag(id, tag)
+    break
+  }
 
   case 'gantt-upd-task': npi.timing.ganttUpdTask(el.getAttribute('data-id'), el.value); break
   case 'gantt-upd-sec': npi.timing.ganttUpdSec(el.getAttribute('data-id'), el.value); break

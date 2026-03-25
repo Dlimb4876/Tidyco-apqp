@@ -5,21 +5,22 @@
 **Status:** Proposed  
 
 ## 1. Executive Summary
-Currently, ME Capacity uses top-down "Budget Buckets" (e.g., 400 hours for a project). Planners lack visibility into actual burn rates and remaining effort. 
+Currently, ME Capacity uses top-down "Budget Buckets" (e.g., 400 hours for a project). Planners lack visibility into actual burn rates and remaining effort.
 
-This plan introduces **Earned Value Management (EVM)** to the ME Capacity portal. By linking macro capacity tasks to micro engineering actions and introducing lightweight time-tracking, the capacity engine will automatically transition from a static budget tracker to a self-correcting forecasting engine.
+This plan introduces **Earned Value Management (EVM)** as the foundation for a new, standalone **ME Department Space**. Instead of bolting this onto the existing shared Capacity portal, we will create a dedicated hub (with its own `index.html`, similar to the standalone wiki) tailored specifically for ME execution, tracking, and forecasting. By linking macro capacity tasks to micro engineering actions and introducing lightweight time-tracking, the engine will automatically transition from a static budget tracker to a self-correcting forecasting engine.
 
 ## 2. Architecture & Data Flow
 
-The system bridges the gap between the Planner's view (ME Capacity) and the Engineer's view (Action Centre).
+The system bridges the gap between the Planner's view (in the new standalone ME Hub) and the Engineer's view (Action Centre).
 
 ```text
 ========================================================================
                          SYSTEM ARCHITECTURE
 ========================================================================
 
-      [ PLANNER DOMAIN ]                   [ ENGINEER DOMAIN ]
-      ME Capacity Portal                      Action Centre
+      [ PLANNER DOMAIN ]                      [ ENGINEER DOMAIN ]
+      ME Dept Hub (Standalone)                   Action Centre
+      (me-hub/index.html)
    +----------------------+               +----------------------+
    | me_tasks             |               | npi_actions          |
    | (The Budget Bucket)  |<--- Links --- | (The Deliverables)   |
@@ -84,10 +85,10 @@ The task table is upgraded from static data to an actionable diagnostic tool hig
 
 ```text
 ========================================================================
-                      ME CAPACITY (Planner View)
+                   ME DEPARTMENT HUB (Planner View)
 ========================================================================
 
- ME TASKS & DEMAND
+ PROJECT EVM & DEMAND
  +----------------+------+---------+---------+-------+-----------------+
  | Task Name      | BAC  | Actuals | Progress| EAC   | Variance Status |
  +----------------+------+---------+---------+-------+-----------------+

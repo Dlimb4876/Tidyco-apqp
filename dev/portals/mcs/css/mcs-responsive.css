@@ -37,14 +37,6 @@
     gap: 14px;
   }
 
-  .mcs-stage-toggle {
-    padding: 12px;
-  }
-
-  .mcs-stage-content {
-    padding: 0 12px 12px;
-  }
-
   /* Approval chain - stack vertically on mobile */
   .mcs-approval-chain {
     flex-direction: column;

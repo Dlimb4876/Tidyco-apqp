@@ -492,16 +492,26 @@ function bomTotalItems(project) {
 npi.dashboard.renderDashboard = function () {
   const p = prog()
   if (!p) return '<div class="mc-shell"><p style="padding:24px;color:var(--muted)">No project selected.</p></div>'
-  const openAct = p.actions.filter((a) => a.status !== 'Closed').length
-  const overdueAct = p.actions.filter(
+  const actions = Array.isArray(p.actions) ? p.actions : []
+  const risks = Array.isArray(p.risks) ? p.risks : []
+  const pfmea = Array.isArray(p.pfmea) ? p.pfmea : []
+  const gates = Array.isArray(p.gates) ? p.gates : []
+  const gantt = Array.isArray(p.gantt) ? p.gantt : []
+  const subAssemblies = Array.isArray(p.subAssemblies) ? p.subAssemblies : []
+  const bom = p.bom || {}
+  const bomParts = Array.isArray(bom.parts) ? bom.parts : []
+  const bomMat = Array.isArray(bom.mat) ? bom.mat : []
+  const bomCons = Array.isArray(bom.cons) ? bom.cons : []
+  const bomKits = Array.isArray(bom.kits) ? bom.kits : []
+  const openAct = actions.filter((a) => a.status !== 'Closed').length
+  const overdueAct = actions.filter(
     (a) => a.status !== 'Closed' && a.due && new Date(a.due) < new Date()
   ).length
-  const highRisks = p.risks.filter((r) => r.lik * r.imp >= 12 && r.status !== 'Closed').length
-  const highRPN = p.pfmea.filter((r) => npi.pfmea.calcRPN(r) >= RPN_HIGH).length
-  const gatesDone = p.gates.filter((g) => npi.gate.gateAllSigned(g)).length
-  const curGate = p.gates.findIndex((g) => !npi.gate.gateAllSigned(g))
-  const aaw = [...p.bom.parts, ...p.bom.mat, ...p.bom.cons].filter((x) => x.isAaw).length
-  const gantt = p.gantt || []
+  const highRisks = risks.filter((r) => r.lik * r.imp >= 12 && r.status !== 'Closed').length
+  const highRPN = pfmea.filter((r) => npi.pfmea.calcRPN(r) >= RPN_HIGH).length
+  const gatesDone = gates.filter((g) => npi.gate.gateAllSigned(g)).length
+  const curGate = gates.findIndex((g) => !npi.gate.gateAllSigned(g))
+  const aaw = [...bomParts, ...bomMat, ...bomCons].filter((x) => x.isAaw).length
   const timingTotal = gantt.length
   const timingFilled = gantt.filter((r) => r.weeks && r.weeks.some((w) => w > 0)).length
   const parentProg = p.parentId ? db.projects.find((x) => x.id === p.parentId) : null
@@ -575,7 +585,7 @@ npi.dashboard.renderDashboard = function () {
       id: 'bom',
       icon: '📦',
       title: 'Bill of Materials',
-      desc: `${totalBomItems} items · ${p.bom.kits.length} kits · ${aaw} AAW`,
+      desc: `${totalBomItems} items · ${bomKits.length} kits · ${aaw} AAW`,
       color: 'var(--navy)'
     },
     {
@@ -603,7 +613,7 @@ npi.dashboard.renderDashboard = function () {
         if (!sp) return ''
         const apqpPct = apqpCompletionPct(sp)
         const bomItemCount = bomTotalItems(sp)
-        const linkedKit = (p.bom.kits || []).find((k) => k.id === link.kitId)
+        const linkedKit = bomKits.find((k) => k.id === link.kitId)
         return `<div class="sub-asm-card" onclick="npi.nav.openProjectById('${sp.id}')">
         <div class="sub-asm-card-head">
           <span class="sub-asm-name">${esc(sp.name)}</span>
@@ -627,11 +637,11 @@ npi.dashboard.renderDashboard = function () {
   })()
 
   // Calculate sub-assembly summary for hero badge
-  const subAsmCount = p.subAssemblies.length
+  const subAsmCount = subAssemblies.length
   const subAsmAvgCompletion =
     subAsmCount > 0
       ? Math.round(
-          p.subAssemblies.reduce((sum, link) => {
+          subAssemblies.reduce((sum, link) => {
             const sp = db.projects.find((x) => x.id === link.id)
             if (!sp) return sum
             return sum + apqpCompletionPct(sp)
@@ -641,7 +651,7 @@ npi.dashboard.renderDashboard = function () {
 
   // ── RPN Burndown (right column of split) ──────────────────────
   const rpnBurndownHTML =
-    p.pfmea && p.pfmea.length > 0
+    pfmea.length > 0
       ? `
     <div class="card" style="margin-bottom:0;padding:0;overflow:hidden;height:100%;box-sizing:border-box">
       <div class="card-head" style="padding:10px 14px">
@@ -662,7 +672,7 @@ npi.dashboard.renderDashboard = function () {
     .join('')
 
   const actHTML =
-    p.actions
+    actions
       .filter((a) => a.status !== 'Closed')
       .slice(0, 5)
       .map((a) => {
@@ -673,7 +683,7 @@ npi.dashboard.renderDashboard = function () {
     `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No open actions</div>`
 
   const riskHTML =
-    p.risks
+    risks
       .filter((r) => r.status !== 'Closed')
       .sort((a, b) => b.lik * b.imp - a.lik * a.imp)
       .slice(0, 4)
@@ -717,7 +727,7 @@ npi.dashboard.renderDashboard = function () {
       : ''
   const curGateIndex = curGate >= 0 ? curGate : 5
   const curGateDef = GATE_DEFS[curGateIndex]
-  const openRiskCount = p.risks.filter((r) => r.status !== 'Closed').length
+  const openRiskCount = risks.filter((r) => r.status !== 'Closed').length
   const gateScopeSelections = getAllProjectGateSelections(p.id)
   const gateScopeLocked = isGateSelectionLocked(p.id)
   const gateScopeSelectedCount = GATE_DEFS.reduce(

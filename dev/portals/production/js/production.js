@@ -63,6 +63,20 @@ function renderProductionHubCard(tabKey, favouriteKey, icon, title, meta) {
   `;
 }
 
+// Targeted tab-body refresh used by realtime callbacks — avoids full page render.
+function prodRefreshTabBody() {
+  const body = document.getElementById('prodTabBody');
+  if (!body) return;
+  let content = '';
+  if (productionTab === 'scheduling') content = renderScheduling();
+  else if (productionTab === 'by-product') content = renderPlanByProduct();
+  else if (productionTab === 'by-unit') content = renderPlanByUnit();
+  if (content) {
+    body.innerHTML = content;
+    setTimeout(setupProductionPortalDelegation, 0);
+  }
+}
+
 function renderProduction() {
   const nav = prodNavBar();
   // Products are now managed in Product Management — redirect if accessed

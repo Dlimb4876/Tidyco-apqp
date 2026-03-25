@@ -108,7 +108,7 @@ function renderSchedulingRow(batch, idx, activeBatches, productMap, allFamilies)
   const isSelected = selectedBatchIds.has(batch.id);
 
   return `
-    <tr id="batch-row-${batchIdx}" class="${rowUrgencyClass}${isSelected ? ' batch-row-selected' : ''}">
+    <tr id="batch-row-${batchIdx}" data-id="${esc(batch.id)}" class="${rowUrgencyClass}${isSelected ? ' batch-row-selected' : ''}">
       <td class="w28 ctr">
         <input type="checkbox" class="batch-select-cb" data-batch-id="${batch.id}" ${isSelected ? 'checked' : ''}>
       </td>
@@ -299,7 +299,7 @@ function renderScheduling() {
             <th></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="prod-sched-tbody">
           ${rows || `<tr><td colspan="10" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No batches scheduled yet.</div>
             <button class="btn btn-primary btn-sm" onclick="focusBatchNewRow()">＋ Schedule First Batch</button>

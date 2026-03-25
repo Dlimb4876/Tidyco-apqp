@@ -203,6 +203,12 @@ describe('NPI relational project UUID resolution', () => {
         select: jest.fn(() => ({
           eq: jest.fn((col, val) => {
             if (col === 'project_id') capturedIds[table] = val
+            // Handle the projects table query in npiRelResolveProjectId
+            if (table === 'projects' && col === 'prog_id') {
+              const result = Promise.resolve({ data: [{ id: '11111111-1111-4111-8111-111111111111', prog_id: val }], error: null })
+              result.limit = jest.fn().mockResolvedValue({ data: [{ id: '11111111-1111-4111-8111-111111111111', prog_id: val }], error: null })
+              return result
+            }
             return makeEqResult(table)
           }),
           limit: jest.fn().mockResolvedValue({ data: [], error: null })
@@ -232,9 +238,9 @@ describe('NPI relational project UUID resolution', () => {
     const npiTables = [
       'npi_ctq', 'npi_pfd_steps', 'npi_pfmea_modes', 'npi_pfmea_effects',
       'npi_pfmea_causes', 'npi_pfmea_history', 'npi_control_plan',
-      'npi_bom_items', 'npi_bom_kits', 'npi_bom_kit_items',
-      'npi_gates', 'npi_gate_sigs', 'npi_actions', 'npi_risks',
-      'npi_gantt_rows', 'npi_documents'
+      'npi_bom_items', 'npi_gates', 'npi_gate_sigs',
+      'npi_actions', 'npi_risks', 'npi_gantt_rows', 'npi_documents',
+      'npi_bom_tree', 'npi_bom_groups'
     ]
     npiTables.forEach(table => {
       expect(capturedIds[table]).toBe('p_local_1')
