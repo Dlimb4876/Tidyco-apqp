@@ -1,0 +1,7 @@
+- Install deps: npm install
+- Run tests: npm test
+- Full quality checks: npm run check:all
+- Lint NPI files: npx eslint portals/product-development/npi/**/*.js
+- Format NPI files: npx prettier --write portals/product-development/npi/**/*.js
+- Start local web server in VS Code task: Start Local Web Server (8000)
+- Windows shell utilities commonly used: Get-ChildItem, Select-String, Test-Path, Get-Content, rg (preferred if available), git status, git diff

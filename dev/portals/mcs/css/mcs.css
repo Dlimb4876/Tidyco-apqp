@@ -1,0 +1,1780 @@
+/* MCS (Manufacturing Change) Portal Styles */
+/* Integrated with Tidyco design language */
+
+/* -- MCS Specific Variables -- */
+:root {
+  --mcs-status-open: var(--blue);
+  --mcs-status-review: var(--amber);
+  --mcs-status-approved: var(--green);
+  --mcs-status-implemented: var(--muted, #9ca3af);
+  --mcs-status-rejected: var(--red);
+  --mcs-sidebar-width: 200px;
+}
+
+/* -- Top-level layout: list on left, filter sidebar on right -- */
+.mcs-layout {
+  display: flex;
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+/* -- Portal Layout (inherited from main shell) -- */
+.mcs-portal {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  border-right: 1px solid var(--border);
+}
+
+/* -- Filter Sidebar -- */
+.mcs-sidebar {
+  width: var(--mcs-sidebar-width);
+  flex-shrink: 0;
+  background: var(--surface2);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.mcs-search-wrap {
+  margin-bottom: 16px;
+}
+
+.mcs-sidebar-section {
+  padding-top: 16px;
+  margin-bottom: 4px;
+}
+
+.mcs-sidebar-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 0 10px 6px;
+}
+
+/* -- Toolbar (status counts) -- */
+.mcs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.mcs-toolbar-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.mcs-toolbar-count {
+  font-size: 13px;
+  color: var(--text3);
+  margin-left: 4px;
+}
+
+.mcs-toolbar-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mcs-sort-label {
+  font-size: 12px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.mcs-sort-select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: var(--body);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mcs-sort-select:hover {
+  border-color: var(--text2);
+}
+
+.mcs-sort-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* -- Change List -- */
+.mcs-list {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* -- Change Card -- */
+.mcs-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 8px;
+}
+
+.mcs-card:hover {
+  border-color: var(--border2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.mcs-card.status-open {
+  border-left-color: var(--mcs-status-open);
+}
+
+.mcs-card.status-review {
+  border-left-color: var(--mcs-status-review);
+}
+
+.mcs-card.status-approved {
+  border-left-color: var(--mcs-status-approved);
+}
+
+.mcs-card.status-implemented {
+  border-left-color: var(--mcs-status-implemented);
+}
+
+.mcs-card.status-rejected {
+  border-left-color: var(--mcs-status-rejected);
+}
+
+/* Card header row: ref on left, status pill on right */
+.mcs-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mcs-card-ref {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  white-space: nowrap;
+}
+
+.mcs-card-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Meta row: type+priority on left, impacts on right */
+.mcs-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mcs-card-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mcs-card-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Separator between meta and submeta */
+.mcs-card-sep {
+  height: 1px;
+  background: var(--border);
+}
+
+.mcs-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--surface3);
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+
+/* Priority badge (replaces dot) */
+.mcs-priority-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.mcs-priority-badge.mcs-priority-critical {
+  background: var(--red-dim, #fee2e2);
+  color: var(--red);
+}
+
+.mcs-priority-badge.mcs-priority-high {
+  background: var(--orange-dim, #fef3c7);
+  color: var(--orange);
+}
+
+.mcs-priority-badge.mcs-priority-medium {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.mcs-priority-badge.mcs-priority-low {
+  background: var(--surface3);
+  color: var(--text3);
+}
+
+.mcs-card-submeta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mcs-overdue-date {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.mcs-status-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.mcs-status-open {
+  background: var(--status-blue-bg, #dbeafe);
+  color: var(--status-blue-text, #1d4ed8);
+}
+
+.mcs-status-review {
+  background: var(--status-amber-bg, #fef3c7);
+  color: var(--status-amber-text, #92400e);
+}
+
+.mcs-status-implementing {
+  background: var(--status-blue-bg, #dbeafe);
+  color: var(--status-blue-text, #1d4ed8);
+}
+
+.mcs-status-final_review {
+  background: var(--status-amber-bg, #fef3c7);
+  color: var(--status-amber-text, #92400e);
+}
+
+.mcs-status-approved {
+  background: var(--status-green-bg, #dcfce7);
+  color: var(--status-green-text, #15803d);
+}
+
+.mcs-status-implemented {
+  background: var(--surface3);
+  color: var(--text3);
+}
+
+.mcs-status-rejected,
+.mcs-status-closed {
+  background: var(--surface3);
+  color: var(--text3);
+}
+
+.mcs-card-impacts {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.mcs-card-time-impact {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--orange);
+  font-weight: 600;
+}
+
+/* -- Modal Styles (reuse from components) -- */
+.mcs-modal {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface2) 100%);
+  border: 1px solid var(--border);
+  width: 1140px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  animation: slidein 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.mcs-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.25);
+  border-top: 2px solid var(--accent);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.14) 0%, rgba(14, 165, 233, 0.08) 42%, rgba(255, 255, 255, 0) 100%),
+    var(--surface);
+}
+
+.mcs-modal-ref-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: rgba(37, 99, 235, 0.14);
+  color: var(--accent2);
+  padding: 3px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.mcs-modal-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.mcs-modal-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--text);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
+  margin-bottom: 8px;
+}
+
+.mcs-modal-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mcs-modal-close {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: var(--accent2);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: all 0.1s;
+}
+
+.mcs-modal-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.mcs-modal-body {
+  padding: 20px 24px;
+  background:
+    linear-gradient(180deg, rgba(37, 99, 235, 0.04) 0%, rgba(255, 255, 255, 0) 120px),
+    var(--surface);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.mcs-staged-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 18px;
+  align-items: start;
+}
+
+.mcs-stage-blocks {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 18px;
+}
+
+.mcs-stage-blocks::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(148, 163, 184, 0.7) 0,
+      rgba(148, 163, 184, 0.7) 7px,
+      rgba(148, 163, 184, 0.15) 7px,
+      rgba(148, 163, 184, 0.15) 14px
+    );
+}
+
+.mcs-stage-block {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--border2);
+  border-radius: 10px;
+  padding: 0;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.mcs-stage-block::before {
+  content: '';
+  position: absolute;
+  left: -17px;
+  top: 17px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border2);
+  z-index: 1;
+}
+
+.mcs-stage-block[data-stage='open'] {
+  border-left-color: var(--blue);
+}
+
+.mcs-stage-block[data-stage='open']::before {
+  border-color: var(--blue);
+}
+
+.mcs-stage-block[data-stage='approval1'] {
+  border-left-color: var(--orange);
+}
+
+.mcs-stage-block[data-stage='approval1']::before {
+  border-color: var(--orange);
+}
+
+.mcs-stage-block[data-stage='implement'] {
+  border-left-color: var(--green);
+}
+
+.mcs-stage-block[data-stage='implement']::before {
+  border-color: var(--green);
+}
+
+.mcs-stage-block[data-stage='approval2'] {
+  border-left-color: var(--red);
+}
+
+.mcs-stage-block[data-stage='approval2']::before {
+  border-color: var(--red);
+}
+
+.mcs-stage-block:focus-within {
+  border-color: var(--blue);
+}
+
+.mcs-stage-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text2);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 14px 8px;
+}
+
+.mcs-stage-title::before {
+  content: '1';
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--border2);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: var(--mono);
+}
+
+.mcs-stage-subtitle {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0 14px;
+}
+
+.mcs-stage-block[data-stage='open'] .mcs-stage-title {
+  color: var(--blue);
+}
+
+.mcs-stage-block[data-stage='open'] .mcs-stage-title::before {
+  background: var(--blue, #2563eb);
+}
+
+.mcs-stage-block[data-stage='approval1'] .mcs-stage-title {
+  color: var(--orange, #d97706);
+}
+
+.mcs-stage-block[data-stage='approval1'] .mcs-stage-title::before {
+  content: '2' !important;
+  background: var(--orange, #d97706);
+}
+
+.mcs-stage-block[data-stage='implement'] .mcs-stage-title {
+  color: var(--green, #16a34a);
+}
+
+.mcs-stage-block[data-stage='implement'] .mcs-stage-title::before {
+  content: '3';
+  background: var(--green, #16a34a);
+}
+
+.mcs-stage-block[data-stage='approval2'] .mcs-stage-title {
+  color: var(--red, #dc2626);
+}
+
+.mcs-stage-block[data-stage='approval2'] .mcs-stage-title::before {
+  content: '4';
+  background: var(--red, #dc2626);
+}
+
+.mcs-stage-note {
+  font-size: 12px;
+  color: var(--text3);
+  padding: 10px 12px;
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.mcs-stage-readonly {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+  background: var(--surface);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.mcs-stage-readonly-inline {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.mcs-impact-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mcs-flow-rail.mcs-approval-chain {
+  display: block;
+  margin: 0;
+  padding: 14px 12px;
+  position: sticky;
+  top: 0;
+}
+
+.mcs-flow-rail-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+}
+
+.mcs-flow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.mcs-flow-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  column-gap: 10px;
+  padding: 0 0 14px;
+}
+
+.mcs-flow-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--border2);
+}
+
+.mcs-flow-step.done:not(:last-child)::after {
+  background: var(--green);
+}
+
+.mcs-flow-step.current:not(:last-child)::after {
+  background: linear-gradient(180deg, var(--orange), var(--border2));
+}
+
+.mcs-flow-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: var(--surface);
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.mcs-flow-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mcs-flow-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.mcs-flow-role,
+.mcs-flow-meta,
+.mcs-flow-note {
+  font-size: 10px;
+  color: var(--text3);
+  line-height: 1.3;
+}
+
+.mcs-flow-state {
+  display: inline-flex;
+  width: fit-content;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  background: var(--surface);
+}
+
+.mcs-flow-step.done .mcs-flow-dot {
+  border-color: var(--green);
+  background: var(--green-dim, #dcfce7);
+  color: var(--green);
+}
+
+.mcs-flow-step.done .mcs-flow-name,
+.mcs-flow-step.done .mcs-flow-state {
+  color: var(--green);
+}
+
+.mcs-flow-step.done .mcs-flow-state {
+  border-color: rgba(22, 163, 74, 0.35);
+  background: var(--green-dim, #dcfce7);
+}
+
+.mcs-flow-step.current .mcs-flow-dot {
+  border-color: var(--orange);
+  background: var(--orange-dim, #fef3c7);
+  color: var(--orange);
+}
+
+.mcs-flow-step.current .mcs-flow-name,
+.mcs-flow-step.current .mcs-flow-state {
+  color: var(--orange);
+}
+
+.mcs-flow-step.current .mcs-flow-state {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: var(--orange-dim, #fef3c7);
+}
+
+.mcs-flow-step.rejected .mcs-flow-dot {
+  border-color: var(--red);
+  background: var(--red-dim, #fee2e2);
+  color: var(--red);
+}
+
+.mcs-flow-step.rejected .mcs-flow-name,
+.mcs-flow-step.rejected .mcs-flow-state {
+  color: var(--red);
+}
+
+.mcs-flow-step.rejected .mcs-flow-state {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: var(--red-dim, #fee2e2);
+}
+
+.mcs-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.mcs-modal-grid.full {
+  grid-template-columns: 1fr;
+}
+
+.mcs-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mcs-field-group.full {
+  grid-column: 1 / -1;
+}
+
+.mcs-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+
+.mcs-field-input,
+.mcs-field-select,
+.mcs-field-textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  border-radius: 6px;
+  transition: all 0.15s;
+  width: 100%;
+}
+
+.mcs-field-input:focus,
+.mcs-field-select:focus,
+.mcs-field-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--surface);
+}
+
+.mcs-field-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: var(--body);
+}
+
+.mcs-field-select {
+  cursor: pointer;
+}
+
+.mcs-field-select option {
+  background: var(--surface);
+}
+
+/* -- Section Titles -- */
+.mcs-section-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  margin-top: 20px;
+}
+
+/* -- Approval Chain -- */
+.mcs-approval-chain {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.mcs-approval-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 0;
+  padding: 0 2px;
+}
+
+/* Connector rendered as explicit sibling element in JS */
+.mcs-approval-connector {
+  flex: 1;
+  height: 3px;
+  min-width: 16px;
+  border-radius: 2px;
+  background: var(--border2);
+  align-self: flex-start;
+  margin-top: 20px; /* half of 40px circle */
+  transition: background 0.3s;
+}
+
+.mcs-approval-connector.done {
+  background: var(--green);
+}
+
+.mcs-approval-connector.active {
+  background: linear-gradient(90deg, var(--green), var(--orange));
+}
+
+.mcs-approval-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2.5px solid var(--border2);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  z-index: 1;
+  position: relative;
+  transition: all 0.25s;
+  color: var(--text3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.mcs-approval-step.done .mcs-approval-circle {
+  border-color: var(--green);
+  background: var(--green-dim, #dcfce7);
+  color: var(--green);
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12), 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.mcs-approval-step.current .mcs-approval-circle {
+  border-color: var(--orange);
+  background: var(--orange-dim, #fef3c7);
+  color: var(--orange);
+  animation: mcs-pulse-ring 1.8s ease-in-out infinite;
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.12), 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.mcs-approval-step.rejected .mcs-approval-circle {
+  border-color: var(--red);
+  background: var(--red-dim, #fee2e2);
+  color: var(--red);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12), 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Step label block */
+.mcs-approval-step-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+  gap: 3px;
+}
+
+.mcs-approval-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  text-align: center;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.mcs-approval-step.done .mcs-approval-name {
+  color: var(--green);
+}
+
+.mcs-approval-step.current .mcs-approval-name {
+  color: var(--orange);
+}
+
+.mcs-approval-step.rejected .mcs-approval-name {
+  color: var(--red);
+}
+
+.mcs-approval-role {
+  font-size: 10px;
+  color: var(--text3);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Status badge pill */
+.mcs-approval-status-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border2);
+  color: var(--text3);
+  background: var(--surface2);
+  white-space: nowrap;
+}
+
+.mcs-approval-step.done .mcs-approval-status-label {
+  color: var(--green);
+  border-color: rgba(22,163,74,0.35);
+  background: var(--green-dim, #dcfce7);
+}
+
+.mcs-approval-step.current .mcs-approval-status-label {
+  color: var(--orange);
+  border-color: rgba(217,119,6,0.35);
+  background: var(--orange-dim, #fef3c7);
+}
+
+.mcs-approval-step.rejected .mcs-approval-status-label {
+  color: var(--red);
+  border-color: rgba(220,38,38,0.35);
+  background: var(--red-dim, #fee2e2);
+}
+
+.mcs-approval-meta {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 3px;
+  text-align: center;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcs-approval-date {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-align: center;
+}
+
+.mcs-approval-notes {
+  font-size: 10px;
+  color: var(--text3);
+  font-style: italic;
+  text-align: center;
+  margin-top: 2px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes mcs-pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.12), 0 2px 8px rgba(0,0,0,0.08); }
+  50%       { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0.20), 0 2px 8px rgba(0,0,0,0.08); }
+}
+
+/* -- Impact Tags (view mode) -- */
+.mcs-impact-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.mcs-impact-none {
+  font-size: 12px;
+  color: var(--text3);
+  font-style: italic;
+}
+
+/* -- Time Impact display (view mode) -- */
+.mcs-time-impact-display {
+  display: flex;
+  align-items: center;
+}
+
+.mcs-time-impact-value {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--orange);
+  background: var(--orange-dim);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+/* -- Impact Assessment Grid -- */
+.mcs-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mcs-impact-cell {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mcs-impact-cell input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.mcs-impact-cell label {
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* -- Timeline -- */
+.mcs-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-left: 2px solid var(--border);
+  margin-left: 8px;
+  padding-left: 20px;
+}
+
+.mcs-tl-event {
+  position: relative;
+  padding-bottom: 18px;
+}
+
+.mcs-tl-event::before {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface3);
+  border: 2px solid var(--border2);
+}
+
+.mcs-tl-event.accent::before {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.mcs-tl-event.warn::before {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.mcs-tl-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-bottom: 2px;
+}
+
+.mcs-tl-text {
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.mcs-tl-author {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* -- Activity Log: comment / progress-update coloured dot -- */
+.mcs-tl-event.comment::before {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.mcs-tl-event.progress_update::before {
+  background: var(--green, #16a34a);
+  border-color: var(--green, #16a34a);
+}
+
+/* -- Comment / Progress Update form -- */
+.mcs-comment-form {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mcs-comment-form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mcs-comment-type {
+  flex: 1;
+  min-width: 0;
+}
+
+.mcs-comment-post-btn {
+  flex-shrink: 0;
+  padding: 6px 16px;
+}
+
+.mcs-comment-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .mcs-comment-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mcs-comment-post-btn {
+    width: 100%;
+  }
+}
+
+/* -- Modal Footer -- */
+.mcs-modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 14px 24px;
+  border-top: 1px solid rgba(37, 99, 235, 0.25);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%),
+    var(--surface);
+  border-radius: 0 0 12px 12px;
+}
+
+.mcs-btn {
+  font-family: var(--body);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 8px 18px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+  font-weight: 600;
+}
+
+.mcs-btn-primary {
+  background: var(--accent, #2563eb);
+  color: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.45);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
+}
+
+.mcs-btn-primary:hover {
+  background: var(--accent2);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+}
+
+.mcs-btn-ghost {
+  background: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  color: var(--accent, #2563eb);
+}
+
+.mcs-btn-ghost:hover {
+  border-color: rgba(37, 99, 235, 0.45);
+  color: var(--accent);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.mcs-btn-danger {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: var(--red);
+}
+
+.mcs-btn-danger:hover {
+  background: var(--red-dim);
+  border-color: var(--red);
+}
+
+/* -- Empty State -- */
+.mcs-empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text3);
+}
+
+.mcs-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.mcs-empty-text {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+
+.mcs-empty-sub {
+  font-size: 13px;
+  color: var(--text3);
+  max-width: 320px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* -- Toast -- */
+.mcs-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--surface);
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 500;
+  display: none;
+  animation: slideup 0.2s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.mcs-toast.show {
+  display: block;
+}
+
+@keyframes slideup {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* pulse animation removed — replaced with mcs-pulse-ring above */
+
+/* -- Modal Backdrop -- */
+.mcs-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: fadein 0.15s;
+}
+
+.mcs-modal-backdrop.open {
+  display: flex;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* -- Sidebar Filters (inherited layout) -- */
+.mcs-filter-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.1s;
+  text-align: left;
+  margin-bottom: 1px;
+}
+
+.mcs-filter-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.mcs-filter-btn.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.mcs-filter-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface3);
+  padding: 1px 7px;
+  border-radius: 10px;
+  color: var(--text3);
+}
+
+.mcs-filter-btn.active .mcs-filter-count {
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--accent);
+}
+
+/* -- Search Input (inherited from main) -- */
+.mcs-search-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  border-radius: 6px;
+  transition: border-color 0.15s;
+}
+
+.mcs-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.mcs-search-input::placeholder {
+  color: var(--text3);
+}
+
+/* -- KPI Dashboard Bar -- */
+.mcs-kpi-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.mcs-kpi-card {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 0;
+}
+
+.mcs-kpi-card:hover {
+  border-color: var(--border2);
+  background: var(--surface3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.mcs-kpi-value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.mcs-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+
+.mcs-kpi-card.kpi-open .mcs-kpi-value { color: var(--blue); }
+.mcs-kpi-card.kpi-review .mcs-kpi-value { color: var(--amber); }
+.mcs-kpi-card.kpi-final-review .mcs-kpi-value { color: var(--orange); }
+.mcs-kpi-card.kpi-overdue .mcs-kpi-value { color: var(--red); }
+.mcs-kpi-card.kpi-week .mcs-kpi-value { color: var(--green); }
+
+/* -- Accordion Filter Sections -- */
+.mcs-filter-section {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+.mcs-filter-section:last-child {
+  border-bottom: none;
+}
+
+.mcs-section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  transition: color 0.1s;
+}
+
+.mcs-section-toggle:hover {
+  color: var(--text2);
+}
+
+.mcs-toggle-icon {
+  font-size: 9px;
+  transition: transform 0.15s;
+}
+
+.mcs-section-body {
+  padding: 0 0 8px;
+}
+
+/* -- Quick Filters (checkboxes) -- */
+.mcs-quick-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.1s;
+  user-select: none;
+  margin-bottom: 1px;
+}
+
+.mcs-quick-filter-label:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.mcs-quick-filter-label input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* -- Date Range Select -- */
+.mcs-date-range-select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: var(--body);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin: 0 0 8px;
+}
+
+.mcs-date-range-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* -- Clear Filters Button -- */
+.mcs-clear-filters {
+  width: 100%;
+  padding: 7px 10px;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text3);
+  font-family: var(--body);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+  text-align: center;
+}
+
+.mcs-clear-filters:hover {
+  border-color: var(--text2);
+  color: var(--text2);
+}
+
+/* -- Dark Mode Overrides -- */
+:root[data-theme="dark"] {
+  --mcs-kpi-bg: var(--surface2);
+  --mcs-card-hover-bg: rgba(255,255,255,0.03);
+
+  .mcs-modal-header {
+    background:
+      linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(56, 189, 248, 0.06) 42%, rgba(255, 255, 255, 0) 100%),
+      var(--surface);
+  }
+
+  .mcs-modal-close {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  .mcs-modal-close:hover {
+    background: rgba(59, 130, 246, 0.2);
+  }
+
+  .mcs-modal-body {
+    background:
+      linear-gradient(180deg, rgba(59, 130, 246, 0.04) 0%, rgba(255, 255, 255, 0) 120px),
+      var(--surface);
+  }
+
+  .mcs-modal-footer {
+    background:
+      linear-gradient(180deg, rgba(22, 36, 50, 0.95) 0%, rgba(15, 27, 39, 0.98) 100%),
+      var(--surface);
+  }
+
+  .mcs-stage-block {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  }
+
+  .mcs-stage-blocks::before {
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(148, 163, 184, 0.4) 0,
+        rgba(148, 163, 184, 0.4) 7px,
+        rgba(148, 163, 184, 0.08) 7px,
+        rgba(148, 163, 184, 0.08) 14px
+      );
+  }
+
+  .mcs-stage-title::before {
+    background: var(--border2);
+    color: var(--text);
+  }
+
+  .mcs-approval-circle {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .mcs-approval-step.done .mcs-approval-circle {
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2), 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .mcs-approval-step.current .mcs-approval-circle {
+    box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.2), 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .mcs-approval-step.rejected .mcs-approval-circle {
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.2), 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .mcs-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .mcs-modal {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* -- Terminal Mode Overrides -- */
+:root[data-theme="terminal"] {
+  --mcs-kpi-bg: var(--surface2);
+  --mcs-card-hover-bg: rgba(0,255,65,0.03);
+
+  .mcs-modal-header {
+    background:
+      linear-gradient(135deg, rgba(0, 255, 65, 0.1) 0%, rgba(0, 204, 255, 0.05) 42%, rgba(255, 255, 255, 0) 100%),
+      var(--surface);
+    border-bottom-color: rgba(0, 255, 65, 0.25);
+    border-top-color: var(--accent);
+  }
+
+  .mcs-modal-ref-badge {
+    background: rgba(0, 255, 65, 0.12);
+    border-color: rgba(0, 255, 65, 0.3);
+    color: var(--accent);
+  }
+
+  .mcs-modal-close {
+    background: rgba(0, 255, 65, 0.1);
+    border-color: rgba(0, 255, 65, 0.35);
+    color: var(--accent);
+  }
+
+  .mcs-modal-close:hover {
+    background: rgba(0, 255, 65, 0.2);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .mcs-modal-body {
+    background:
+      linear-gradient(180deg, rgba(0, 255, 65, 0.03) 0%, rgba(255, 255, 255, 0) 120px),
+      var(--surface);
+  }
+
+  .mcs-modal-footer {
+    background:
+      linear-gradient(180deg, rgba(10, 15, 10, 0.95) 0%, rgba(5, 10, 5, 0.98) 100%),
+      var(--surface);
+    border-top-color: rgba(0, 255, 65, 0.25);
+  }
+
+  .mcs-modal {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  .mcs-stage-block {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .mcs-stage-blocks::before {
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(0, 255, 65, 0.3) 0,
+        rgba(0, 255, 65, 0.3) 7px,
+        rgba(0, 255, 65, 0.06) 7px,
+        rgba(0, 255, 65, 0.06) 14px
+      );
+  }
+
+  .mcs-stage-title::before {
+    background: var(--border2);
+    color: var(--ink);
+  }
+
+  .mcs-stage-badge {
+    color: #000;
+  }
+
+  .mcs-approval-circle {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    color: var(--text);
+  }
+
+  .mcs-approval-step.done .mcs-approval-circle {
+    box-shadow: 0 0 0 4px rgba(0, 255, 65, 0.15), 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .mcs-approval-step.current .mcs-approval-circle {
+    box-shadow: 0 0 0 4px rgba(255, 170, 0, 0.15), 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .mcs-approval-step.rejected .mcs-approval-circle {
+    box-shadow: 0 0 0 4px rgba(255, 68, 68, 0.15), 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .mcs-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 255, 65, 0.1);
+  }
+
+  .mcs-flow-dot {
+    color: var(--text);
+  }
+
+  .mcs-flow-step.done .mcs-flow-dot {
+    color: var(--green);
+  }
+
+  .mcs-flow-step.current .mcs-flow-dot {
+    color: var(--amber);
+  }
+}

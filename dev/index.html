@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tidyco Operations Portal</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- CSS load order: global shell → shared components → feature modules -->
+<link rel="stylesheet" href="core/css/main.css">
+<link rel="stylesheet" href="core/css/components.css">
+<link rel="stylesheet" href="portals/feedback/css/feedback.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/dashboard.css">
+<link rel="stylesheet" href="portals/hub/css/hub.css">
+<link rel="stylesheet" href="portals/operations/css/operations-dashboard.css">
+<link rel="stylesheet" href="portals/capacity/css/capacity.css">
+<link rel="stylesheet" href="portals/capacity/css/me-capacity-shell.css">
+<link rel="stylesheet" href="portals/capacity/css/me-capacity-tables.css">
+<link rel="stylesheet" href="portals/capacity/css/me-capacity-chart.css">
+<link rel="stylesheet" href="portals/capacity/css/me-capacity-holidays.css">
+<link rel="stylesheet" href="portals/capacity/css/me-capacity-heatmap.css">
+<link rel="stylesheet" href="portals/capacity/css/me-capacity-dashboard.css">
+<link rel="stylesheet" href="portals/capacity/css/me-capacity-responsive.css">
+<link rel="stylesheet" href="portals/capacity/css/prod-capacity.css">
+<link rel="stylesheet" href="portals/capacity/project-management/css/pm-capacity.css">
+<link rel="stylesheet" href="portals/production/css/production.css">
+<link rel="stylesheet" href="portals/product-development/product-management/css/products.css">
+<link rel="stylesheet" href="portals/settings/css/settings.css">
+<link rel="stylesheet" href="portals/action-centre/css/action-centre.css">
+<link rel="stylesheet" href="portals/mcs/css/mcs.css">
+<link rel="stylesheet" href="portals/mcs/css/mcs-responsive.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/pfmea.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/gantt.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/apqp-shell.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/apqp-tables.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/apqp-pfd.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/apqp-ctq.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/apqp-bom.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/apqp-responsive.css">
+<link rel="stylesheet" href="portals/product-development/npi/css/rpn-chart.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     LOGIN SCREEN
+     ═══════════════════════════════════ -->
+<div id="loginScreen" class="login-shell">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="Tidyco logo-blue.png" alt="Tidyco" class="login-logo-img">
+      <div class="login-logo-sub">Operations Portal</div>
+    </div>
+    <div class="login-title">Sign in</div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-field">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     APP SHELL
+     ═══════════════════════════════════ -->
+<div class="shell" id="appShell" style="display:none">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="brand" onclick="navigate('hub')" style="cursor:pointer">
+        <img src="Tidyco logo-blue.png" alt="Tidyco" class="brand-logo" id="brandLogo">
+        <span class="brand-sep">|</span>
+        <span class="brand-sub">Operations Portal</span>
+      </div>
+      <button class="back-btn" id="returnHubBtn" style="display:none" onclick="navigateBack()">← Return to Portal</button>
+      <span class="project-breadcrumb" id="projectName" style="display:none"></span>
+    </div>
+    <div class="topbar-center">
+      <button class="bug-report-btn" onclick="navigate('action-centre')" title="My assigned actions across all projects">✅ My Actions</button>
+      <button class="bug-report-btn" onclick="navigate('feedback')">💬 Feedback & Bugs</button>
+    </div>
+    <div class="topbar-actions">
+      <button class="tbtn tbtn-ghost" onclick="exportJSON()" style="display:none">⬇ Export</button>
+      <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()" style="display:none">⬆ Import</button>
+      <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
+      <button class="tbtn tbtn-ghost mobile-quick-btn" onclick="navigate('action-centre')" title="My Actions">✅</button>
+      <button class="tbtn tbtn-ghost mobile-quick-btn" onclick="navigate('feedback')" title="Feedback & Bugs">💬</button>
+      <button class="tbtn tbtn-primary" onclick="navigate('settings')" title="Settings">⚙️ Settings</button>
+      <button class="tbtn tbtn-primary" onclick="doLogout()" title="Sign out">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="mainContent"></div>
+
+  <!-- ═══════════════════════════════════
+       BOTTOM STATUS BAR
+       ═══════════════════════════════════ -->
+  <div class="bottombar" id="bottombar">
+  <div class="bottombar-left">
+    <span class="bottombar-status" id="bottombarSync">● saved</span>
+    <span class="bottombar-status" id="bottombarUnsaved" style="display:none">✎ unsaved</span>
+    <span class="bottombar-status" id="bottombarRealtime">⟳ 0 subscriptions</span>
+  </div>
+  <div class="bottombar-right">
+    <span class="bottombar-status" id="bottombarNetwork">📡 online</span>
+    <button class="bottombar-btn" onclick="showModal('shortcutsModal')" title="Keyboard shortcuts">[?]</button>
+  </div>
+</div>
+
+</div><!-- end appShell -->
+
+<!-- Toast container (1.3) -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Keyboard Shortcuts Modal (1.10) -->
+<div class="modal-bg shortcuts-modal" id="shortcutsModal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">Keyboard Shortcuts</div>
+    <div class="shortcuts-grid">
+      <div class="shortcut-item"><kbd>?</kbd><span>Show this help</span></div>
+      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>/</kbd><span>Show this help</span></div>
+      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>S</kbd><span>Save current work</span></div>
+      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>F</kbd><span>Focus search</span></div>
+      <div class="shortcut-item"><kbd>Ctrl</kbd> + <kbd>Enter</kbd><span>Save form / row</span></div>
+      <div class="shortcut-item"><kbd>1</kbd> - <kbd>5</kbd><span>Open cards on current hub page</span></div>
+      <div class="shortcut-item"><kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd><span>Capacity, Product Development, Production (main hub)</span></div>
+      <div class="shortcut-item"><kbd>P</kbd><span>Return to portal</span></div>
+      <div class="shortcut-item"><kbd>Enter</kbd><span>Add item (in add-row inputs)</span></div>
+      <div class="shortcut-item"><kbd>Escape</kbd><span>Cancel edit / Close modal</span></div>
+      <div class="shortcut-item"><kbd>Tab</kbd><span>Move to next field</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('shortcutsModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Production Capacity Formula Modal -->
+<div class="modal-bg" id="modalProdCapacityFormula" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">How Capacity Is Calculated</div>
+    <div style="display:grid;gap:10px;font-size:13px;color:var(--text)">
+      <div>
+        <strong>Formula</strong>
+        <div style="margin-top:4px">Capacity = Staff x Working Days x 8 hours x Utilization Factor</div>
+      </div>
+      <div>
+        <strong>Working Days</strong>
+        <div style="margin-top:4px">Working days include Monday to Friday and exclude UK bank holidays.</div>
+      </div>
+      <div>
+        <strong>Baseline</strong>
+        <div style="margin-top:4px">The baseline is 40 hours per person per week (5 days x 8 hours), then adjusted by the utilization factor set in Capacity Settings.</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalProdCapacityFormula')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     MODALS
+     ═══════════════════════════════════ -->
+
+<!-- New Project -->
+<div class="modal-bg" id="modalNewProj" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">New Project</div>
+    <div class="field"><label for="np_name">Project Name *</label><input id="np_name" placeholder="e.g. Class 158 Traction Motor Overhaul"></div>
+    <div class="field-row">
+      <div class="field"><label for="np_customer">Customer</label><input id="np_customer"></div>
+      <div class="field"><label for="np_unit">Unit / Product</label><input id="np_unit"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label for="np_family">Product Family</label>
+        <select id="np_family"></select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label for="np_lead">ME Lead</label><input id="np_lead"></div>
+      <div class="field"><label for="np_pm">Project Manager</label><input id="np_pm"></div>
+    </div>
+    <div class="field"><label for="np_date">Start Date</label><input type="date" id="np_date"></div>
+    <div class="field-row">
+      <div class="field"><label for="np_qNumber">Q Number</label><input id="np_qNumber"></div>
+      <div class="field"><label for="np_partNumber">Part Number</label><input id="np_partNumber"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewProj')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.dashboard.createProg()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Sub-Assembly -->
+<div class="modal-bg" id="modalNewSubAsm" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">New Sub-Assembly</div>
+    <div class="field"><label for="nsa_name">Sub-Assembly Name *</label><input id="nsa_name" placeholder="e.g. Gearbox Sub-Assembly"></div>
+    <div class="field"><label for="nsa_unit">Unit (optional)</label><input id="nsa_unit" placeholder="e.g. Unit 158001"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewSubAsm')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.dashboard.saveNewSubAsm()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Project -->
+<div class="modal-bg" id="modalEditProj" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">Edit Project</div>
+    <div id="ep_product_info" style="background:var(--bg-alt);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--muted)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">Product (managed in Product Registry)</div>
+      <div style="font-weight:600;font-size:14px;color:var(--text)" id="ep_ro_name"></div>
+      <div style="margin-top:3px;display:flex;gap:12px;flex-wrap:wrap">
+        <span id="ep_ro_customer"></span>
+        <span id="ep_ro_unit"></span>
+        <span id="ep_ro_family"></span>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label for="ep_status">Project Status</label>
+        <select id="ep_status">
+          <option value="Active">Active</option>
+          <option value="Tender">Tender</option>
+          <option value="Archive">Archive</option>
+        </select>
+      </div>
+      <div class="field"><label for="ep_date">Start Date</label><input type="date" id="ep_date"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label for="ep_lead">ME Lead</label><input id="ep_lead"></div>
+      <div class="field"><label for="ep_pm">Project Manager</label><input id="ep_pm"></div>
+    </div>
+    <div class="field"><label for="ep_qNumber">Q Number</label><input id="ep_qNumber" placeholder="e.g. Q-1234"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="npi.dashboard.deleteProject()">Delete Project</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('modalEditProj')">Cancel</button>
+        <button class="btn btn-primary" onclick="npi.dashboard.saveEditProject()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Insert PFD Step -->
+<div class="modal-bg" id="modalInsert" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">Insert Step</div>
+    <div class="field">
+      <label for="insertNum">Step Number</label>
+      <input type="number" id="insertNum" min="1" step="1">
+      <div style="font-size:11px;color:var(--muted);margin-top:3px" id="insertNumHint"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalInsert')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.apqp.confirmInsert()">Insert</button>
+    </div>
+  </div>
+</div>
+
+<!-- CTQ Picker -->
+<div class="modal-bg" id="modalCtqPick" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Link CTQ Requirements</div>
+    <div id="ctqPickList" style="display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalCtqPick')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.apqp.saveCtqPick()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BoM Picker for PFD step resources -->
+<div class="modal-bg" id="modalBomPick" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-title" id="bomPickTitle">Link Resources</div>
+    <div class="bom-filter-row" id="bomPickFilter"></div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg-soft)">
+      <input type="text" id="bomPickSearch" class="cell-edit" placeholder="🔍 Search resources..." data-action="pfd-search-bom" style="width:100%">
+    </div>
+    <div class="bom-pick-list" id="bomPickList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalBomPick')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.apqp.saveBomPick()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Resource Edit Modal for PFD step resources -->
+<div class="modal-bg" id="modalResourceEdit" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title" id="resourceEditTitle">Edit Resource</div>
+    <div id="resourceEditContent" style="display:flex;flex-direction:column;gap:16px">
+      <div class="field">
+        <label for="resourceEditQty">Quantity</label>
+        <input type="number" id="resourceEditQty" class="cell-edit" min="1" step="1" value="1" placeholder="Amount needed">
+      </div>
+      <div id="resourceEditInfo" style="font-size:13px;color:var(--muted)"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="npi.pfd.deleteResourceEdit()">Remove</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalResourceEdit')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.pfd.saveResourceEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Document Picker for PFD step doc references -->
+<div class="modal-bg" id="modalDocPick" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Link Documents</div>
+    <div id="docPickList" style="display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalDocPick')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.pfd.saveDocPick()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BoM Tree — Add Sub-Assembly -->
+<div class="modal-bg" id="modalBomTreeSubAsm" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">📦 Add Sub-Assembly</div>
+    <form id="bomTreeSubAsmForm" onsubmit="event.preventDefault(); npi.bom.saveTreeSubAsm()">
+      <div class="field">
+        <label for="bomTreeSubAsmPn">Part Number *</label>
+        <input id="bomTreeSubAsmPn" class="cell-edit" placeholder="e.g. SA-001" style="font-family:'IBM Plex Mono',monospace" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="bomTreeSubAsmDesc">Description</label>
+        <input id="bomTreeSubAsmDesc" class="cell-edit" placeholder="e.g. Gearbox Assembly">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modalBomTreeSubAsm')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Sub-Assembly</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ABC Class Info -->
+<div class="modal-bg" id="modalAbcInfo" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">ABC Inventory Classification</div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0 8px">
+      <div class="abc-info-row">
+        <span class="abc-badge abc-A">A</span>
+        <div><strong>Class A — High Value / Critical</strong><br>
+          <span style="font-size:12px;color:var(--muted)">Typically top ~10–20% of parts by value or criticality. Tightly controlled, closely monitored stock levels. Usually the smallest number of unique parts.</span>
+        </div>
+      </div>
+      <div class="abc-info-row">
+        <span class="abc-badge abc-B">B</span>
+        <div><strong>Class B — Medium Value</strong><br>
+          <span style="font-size:12px;color:var(--muted)">Middle tier ~30% of parts. Moderate control. Reviewed periodically. Larger number of unique parts than A.</span>
+        </div>
+      </div>
+      <div class="abc-info-row">
+        <span class="abc-badge abc-C">C</span>
+        <div><strong>Class C — Low Value / Common</strong><br>
+          <span style="font-size:12px;color:var(--muted)">Typically ~50–70% of unique part types but only ~5–10% of total value. Fasteners, consumables, standard fixings. Often bulk-stocked. These are shared across projects and tracked in the C-Class Catalogue.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalAbcInfo')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- ABC Parts Catalogue Picker -->
+<div class="modal-bg" id="modalABCPick" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-title">＋ Add from Parts Database</div>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px">
+      Search the global parts catalogue, select one or more parts, then click the <strong>Add</strong> button.
+    </p>
+    <!-- Search and class filter bar -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+      <input type="text" id="abcPickSearchInput" class="cell-edit"
+        placeholder="Search by description or PN…" style="flex:1"
+        oninput="abcPickSearch=this.value; document.getElementById('abcPickList').innerHTML=npi.bom.renderABCPickList()">
+      <div style="display:flex;gap:4px">
+        <button class="bom-abc-chip" onclick="abcPickClassFilter='all'; document.getElementById('abcPickList').innerHTML=npi.bom.renderABCPickList()">All</button>
+        <button class="bom-abc-chip" onclick="abcPickClassFilter='A'; document.getElementById('abcPickList').innerHTML=npi.bom.renderABCPickList()">A</button>
+        <button class="bom-abc-chip" onclick="abcPickClassFilter='B'; document.getElementById('abcPickList').innerHTML=npi.bom.renderABCPickList()">B</button>
+        <button class="bom-abc-chip" onclick="abcPickClassFilter='C'; document.getElementById('abcPickList').innerHTML=npi.bom.renderABCPickList()">C</button>
+      </div>
+    </div>
+    <div class="bom-pick-list" id="abcPickList">
+      <div style="padding:20px;text-align:center;color:var(--muted)">Loading...</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalABCPick')">Cancel</button>
+      <button class="btn btn-primary" id="abcPickAddBtn" disabled onclick="npi.bom.confirmABCPick()">Add Parts</button>
+    </div>
+  </div>
+</div>
+
+<!-- ABC Catalogue Entry Edit/Add -->
+<div class="modal-bg" id="modalABCEdit" style="display:none">
+  <div class="modal">
+    <div class="modal-title">📦 Parts Database Entry</div>
+    <div class="field">
+      <label for="abcEditForm_pn">Tidyco Part Number *</label>
+      <input id="abcEditForm_pn" class="cell-edit" placeholder="e.g. FAS-001" style="font-family:'IBM Plex Mono',monospace">
+    </div>
+    <div class="field">
+      <label for="abcEditForm_desc">Description *</label>
+      <input id="abcEditForm_desc" class="cell-edit" placeholder="e.g. M6 × 20mm Bolt">
+    </div>
+    <div class="field">
+      <label for="abcEditForm_supplierPn">Supplier PN</label>
+      <input id="abcEditForm_supplierPn" class="cell-edit" placeholder="e.g. ABC-123456" style="font-family:'IBM Plex Mono',monospace">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="abcEditForm_unit">Unit</label>
+        <input id="abcEditForm_unit" class="cell-edit" value="ea" placeholder="ea">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="abcEditForm_class">ABC Class *</label>
+        <select id="abcEditForm_class">
+          <option value="A">A — Critical</option>
+          <option value="B">B — Important</option>
+          <option value="C" selected>C — Standard</option>
+        </select>
+      </div>
+      <div class="field" style="justify-content:flex-end;padding-top:22px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="abcEditForm_inSage" style="width:16px;height:16px;accent-color:var(--green)">
+          Part in Sage (MRP)
+        </label>
+      </div>
+    </div>
+    <div class="field">
+      <label for="abcEditForm_notes">Notes</label>
+      <textarea id="abcEditForm_notes" class="cell-edit" placeholder="Optional notes about this part…" rows="3" style="resize:vertical"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="abcEditForm_manufacturer">Manufacturer (OEM)</label>
+        <input id="abcEditForm_manufacturer" class="cell-edit" placeholder="e.g. Bossard">
+      </div>
+      <div class="field">
+        <label for="abcEditForm_manufacturerPn">Manufacturer PN</label>
+        <input id="abcEditForm_manufacturerPn" class="cell-edit" placeholder="e.g. MPN-0042" style="font-family:'IBM Plex Mono',monospace">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="abcEditForm_datasheetUrl">Datasheet URL</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="abcEditForm_datasheetUrl" class="cell-edit" type="url" placeholder="https://…" style="flex:1">
+          <button type="button" id="abcEditForm_openDatasheetBtn" class="btn btn-secondary" onclick="npi.bom.openABCDatasheetLink()">Open Link</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button id="abcEditForm_deleteBtn" class="btn btn-danger" onclick="npi.bom.deleteFromModal()" style="margin-right:auto;display:none">🗑 Delete Part</button>
+      <button class="btn btn-ghost" onclick="npi.bom.cancelABCEdit()">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.bom.saveABCEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Where Used Modal -->
+<div class="modal-bg" id="modalWhereUsed" style="display:none">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title">📍 Where Used</div>
+    <div id="whereUsedTitle" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)"></div>
+    <div id="whereUsedContent" style="max-height:400px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalWhereUsed')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Risk Matrix -->
+<div class="modal-bg" id="modalRiskMatrix" style="display:none">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">5×5 Risk Matrix</div>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 16px">Score = Likelihood × Impact. Rate each between 1 (lowest) and 5 (highest).</p>
+    <table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:12px;text-align:center">
+      <!-- Top axis header: Impact -->
+      <thead>
+        <tr>
+          <td style="width:36px"></td>
+          <td style="width:28px"></td>
+          <th colspan="5" style="padding:7px 6px;background:#e0eeff;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:0.04em">IMPACT →</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">1</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">2</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">3</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">4</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">5</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <!-- Left axis header: Likelihood (rowspan 5) -->
+          <th rowspan="5" style="writing-mode:vertical-rl;transform:rotate(180deg);background:#e0eeff;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:0.04em;padding:8px 4px;white-space:nowrap">← LIKELIHOOD</th>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">1</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">1</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">3</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">5</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">6</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">8</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">10</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">3</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">3</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">6</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">9</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">12</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">15</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">4</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">8</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">12</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">16</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">20</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">5</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">5</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">10</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">15</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">20</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">25</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display:flex;gap:16px;margin-top:14px;font-size:12px;align-items:center">
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#d1fae5;border-radius:3px;border:1px solid #a7f3d0"></span><strong style="color:#065f46">Low</strong> &lt;6</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#fef3c7;border-radius:3px;border:1px solid #fcd34d"></span><strong style="color:#92400e">Medium</strong> 6–11</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#fee2e2;border-radius:3px;border:1px solid #fca5a5"></span><strong style="color:#991b1b">High</strong> ≥12</span>
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modalRiskMatrix')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Guide Modal (shared, populated dynamically by guide.js) -->
+<div class="modal-bg" id="modalGuide" style="display:none">
+  <div class="modal modal-lg guide-modal">
+    <div class="modal-title" id="guideModalTitle">User Guide</div>
+    <div class="guide-modal-body" id="guideModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalGuide')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- PFMEA Validation Warnings Modal -->
+<div class="modal-bg" id="modalPfmeaWarnings" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Validation Warnings</div>
+      <button class="modal-close" onclick="closeModal('modalPfmeaWarnings')" aria-label="Close">×</button>
+    </div>
+    <ul id="pfmeaWarningList" class="pf-warning-list"></ul>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalPfmeaWarnings')">Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<!-- PFMEA History Modal -->
+<div class="modal-bg" id="modalPfmeaHistory" style="display:none">
+  <div class="modal modal-lg pfmea-history-modal">
+    <div class="modal-head">
+      <div class="modal-title" id="pfmeaHistoryModalTitle">PFMEA History</div>
+      <button class="modal-close" onclick="closeModal('modalPfmeaHistory')" aria-label="Close PFMEA history">×</button>
+    </div>
+    <div id="pfmeaHistoryModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalPfmeaHistory')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SCRIPTS — load order matters
+     state → auth → db → helpers → navigation →
+     hub → npi-constants → npi → rpn-chart → dashboard →
+     capacity → me-capacity →
+     gates → pfmea → apqp → bom → timing → trackers → app
+     ═══════════════════════════════════ -->
+
+<script src="core/js/state.js"></script>
+<script src="core/js/auth.js"></script>
+<script src="core/js/db.js"></script>
+
+<script src="utils/js/helpers.js"></script>
+<script src="utils/js/navigation.js"></script>
+<script src="utils/js/realtime.js"></script>
+<script src="utils/js/realtime-patch.js"></script>
+<script src="core/js/chart-theme.js"></script>
+<script src="utils/js/guide.js"></script>
+<script src="core/js/network.js"></script>
+
+<script src="portals/hub/js/hub.js"></script>
+<script src="portals/operations/js/operations-forecast-data.js"></script>
+<script src="portals/operations/js/operations-dashboard-state.js"></script>
+<script src="portals/operations/js/operations-dashboard-metrics.js"></script>
+<script src="portals/operations/js/operations-dashboard-realtime.js"></script>
+<script src="portals/operations/js/operations-dashboard-render-core.js"></script>
+<script src="portals/operations/js/operations-dashboard-forecast-view.js"></script>
+<script src="portals/operations/js/operations-dashboard-forecast-actions.js"></script>
+<script src="portals/operations/js/operations-infographic.js"></script>
+<script src="portals/operations/js/operations-dashboard-main.js"></script>
+
+<!-- Load product management database first as it's used by production and capacity modules -->
+<script src="portals/product-development/js/families-data.js"></script>
+<script src="portals/product-development/js/family-templates-data.js"></script>
+<script src="portals/product-development/product-management/js/products-data.js"></script>
+<script src="portals/product-development/product-management/js/trends-chart.js"></script>
+
+<script src="portals/capacity/js/capacity.js"></script>
+<script src="portals/capacity/js/me-data-relational.js"></script>
+<script src="portals/capacity/js/me-data.js"></script>
+<script src="portals/capacity/js/me-utils.js"></script>
+<script src="portals/capacity/js/me-calculations.js"></script>
+<script src="portals/capacity/js/me-components.js"></script>
+<script src="portals/capacity/js/me-team.js"></script>
+<script src="portals/capacity/js/me-tasks.js"></script>
+<script src="portals/capacity/js/me-products.js"></script>
+<script src="portals/capacity/js/me-product-taskload.js"></script>
+<script src="portals/capacity/js/me-holidays.js"></script>
+<script src="portals/capacity/js/me-chart.js"></script>
+<script src="portals/capacity/js/me-heatmap.js"></script>
+<script src="portals/capacity/js/me-dashboard.js"></script>
+<script src="portals/capacity/js/me-capacity.js"></script>
+
+<script src="portals/capacity/project-management/js/pm-data-relational.js"></script>
+<script src="portals/capacity/project-management/js/pm-data.js"></script>
+<script src="portals/capacity/logistics/js/log-data-relational.js"></script>
+<script src="portals/capacity/logistics/js/log-data.js"></script>
+<script src="portals/capacity/unit6/js/unit6-data-relational.js"></script>
+<script src="portals/capacity/unit6/js/unit6-data.js"></script>
+
+<script src="portals/capacity/js/prod-capacity-data.js"></script>
+<script src="portals/capacity/js/work-areas-data.js"></script>
+<script src="portals/capacity/js/prod-capacity-dashboard.js"></script>
+<script src="portals/capacity/js/prod-capacity-workarea.js"></script>
+<script src="portals/capacity/js/prod-capacity-settings.js"></script>
+<script src="portals/capacity/js/prod-capacity-detail.js"></script>
+<script src="portals/capacity/js/prod-capacity.js"></script>
+
+<script src="portals/capacity/project-management/js/pm-capacity-data.js"></script>
+<script src="portals/capacity/project-management/js/pm-capacity.js"></script>
+<script src="portals/capacity/logistics/js/log-capacity.js"></script>
+<script src="portals/capacity/unit6/js/unit6-capacity.js"></script>
+<script src="portals/capacity/js/capacity-events.js"></script>
+
+<script src="portals/production/js/data.js"></script>
+<script src="portals/production/js/products.js"></script>
+<script src="portals/production/js/production.js"></script>
+<script src="portals/production/js/scheduling.js"></script>
+<script src="portals/production/js/planning.js"></script>
+
+<!-- products-data.js and trends-chart.js are already loaded above -->
+<script src="portals/product-development/product-management/js/products.js"></script>
+
+<script src="portals/product-development/js/product-development.js"></script>
+<script src="portals/product-development/js/product-management.js"></script>
+<script src="portals/settings/js/teams-data.js"></script>
+<script src="portals/settings/js/settings-teams.js"></script>
+<script src="portals/settings/js/settings-mcs.js"></script>
+<script src="portals/settings/js/settings.js"></script>
+
+<!-- NPI Portal: namespace root and centralized constants -->
+<script src="portals/product-development/npi/js/npi-constants.js"></script>
+<script src="portals/product-development/npi/js/npi-data-relational.js"></script>
+<script src="portals/product-development/npi/js/npi.js"></script>
+<script src="portals/product-development/npi/js/npi-data.js"></script>
+<script src="portals/product-development/npi/js/npi-components.js"></script>
+<script src="portals/product-development/npi/js/npi-gates-editor.js"></script>
+<script src="portals/product-development/npi/js/rpn-chart.js"></script>
+<script src="portals/product-development/npi/js/dashboard.js"></script>
+
+<!-- NPI Portal: feature modules (all under npi.* namespace) -->
+<script src="portals/product-development/npi/js/gates.js"></script>
+<script src="portals/product-development/npi/js/pfmea-state.js"></script>
+<script src="portals/product-development/npi/js/pfmea.js"></script>
+<script src="portals/product-development/npi/js/npi-ctq.js"></script>
+<script src="portals/product-development/npi/js/npi-pfd.js"></script>
+<script src="portals/product-development/npi/js/npi-cp.js"></script>
+<script src="portals/product-development/npi/js/apqp.js"></script>
+<script src="portals/product-development/npi/js/bom.js"></script>
+<script src="portals/product-development/npi/js/bom-cclass.js"></script>
+<script src="portals/product-development/npi/js/timing.js"></script>
+<script src="portals/product-development/npi/js/trackers.js"></script>
+<script src="portals/product-development/npi/js/documents.js"></script>
+<script src="portals/product-development/npi/js/npi-orchestrator.js"></script>
+<script src="portals/product-development/npi/js/npi-events.js"></script>
+
+<script src="portals/feedback/js/feedback-constants.js"></script>
+<script src="portals/feedback/js/feedback-data.js"></script>
+<script src="portals/feedback/js/feedback.js"></script>
+
+<script src="portals/action-centre/js/action-centre.js"></script>
+
+<!-- MCS (Manufacturing Change) -->
+<script src="portals/mcs/js/mcs-realtime.js"></script>
+<script src="portals/mcs/js/mcs-approvers-data.js"></script>
+<script src="portals/mcs/js/mcs-approval.js"></script>
+<script src="portals/mcs/js/mcs-modal-shared.js"></script>
+<script src="portals/mcs/js/mcs-modal-create.js"></script>
+<script src="portals/mcs/js/mcs-modal-view.js"></script>
+<script src="portals/mcs/js/mcs-modal-edit.js"></script>
+<script src="portals/mcs/js/mcs-main.js"></script>
+<script src="portals/mcs/js/mcs-pfmea.js"></script>
+<script src="portals/mcs/js/mcs-actions.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+<script src="core/js/app.js"></script>
+
+</body>
+</html>

@@ -3,18 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redirecting to Wiki</title>
-  <meta http-equiv="refresh" content="0; url=../../wiki/">
+  <title>Operations Portal Wiki</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/wiki.css">
 </head>
 <body>
-  <p>Redirecting to wiki...</p>
-  <script>
-    (function() {
-      var hash = window.location.hash || "";
-      var target = new URL("../../wiki/", window.location.href);
-      if (hash) target.hash = hash;
-      window.location.replace(target.href);
-    })();
-  </script>
+  <header class="wiki-topbar">
+    <div class="wiki-brand">
+      <img src="../Tidyco logo-blue.png" alt="Tidyco" class="wiki-brand-logo">
+      <div class="wiki-brand-text">
+        <h1>Operations Portal Wiki</h1>
+      </div>
+    </div>
+    <div class="wiki-search-wrap">
+      <input id="wikiSearch" type="search" placeholder="Search guide topics...">
+      <button id="wikiClearSearch" type="button">Clear</button>
+      <section id="wikiSearchResults" class="wiki-search-results" hidden></section>
+    </div>
+  </header>
+
+  <main class="wiki-layout">
+    <aside class="wiki-sidebar" aria-label="Guide navigation">
+      <button id="wikiSidebarToggle" class="wiki-sidebar-toggle" type="button" aria-expanded="false">Areas</button>
+      <nav id="wikiNav" class="wiki-nav"></nav>
+    </aside>
+
+    <section class="wiki-content-wrap">
+      <article id="wikiContent" class="wiki-content" aria-live="polite"></article>
+    </section>
+  </main>
+
+  <script src="assets/js/wiki-render.js"></script>
+  <script src="assets/js/wiki-nav.js"></script>
+  <script src="assets/js/wiki-search.js"></script>
+  <script src="assets/js/wiki-app.js"></script>
 </body>
 </html>

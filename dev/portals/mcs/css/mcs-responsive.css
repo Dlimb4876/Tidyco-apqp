@@ -1,0 +1,425 @@
+/* MCS Responsive Design - Mobile-First Approach */
+/* Breakpoints: 375px (mobile base) → 768px (desktop) */
+
+/* -- Mobile (≤767px) -- */
+@media (max-width: 767px) {
+  /* Layout - stack sidebar below list on mobile */
+  .mcs-layout {
+    flex-direction: column;
+  }
+
+  .mcs-portal {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mcs-sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 12px 12px;
+  }
+
+  /* Modal - full screen on mobile */
+  .mcs-modal {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .mcs-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mcs-staged-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Approval chain - stack vertically on mobile */
+  .mcs-approval-chain {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .mcs-flow-rail.mcs-approval-chain {
+    flex-direction: column;
+    gap: 0;
+    padding: 12px;
+    position: static;
+    order: 2;
+  }
+
+  .mcs-flow-step {
+    grid-template-columns: 28px 1fr;
+    padding-bottom: 12px;
+  }
+
+  .mcs-flow-step:not(:last-child)::after {
+    left: 13px;
+  }
+
+  .mcs-approval-step:not(:last-child)::after {
+    top: auto;
+    bottom: -8px;
+    left: 50%;
+    width: 2px;
+    height: 16px;
+  }
+
+  .mcs-approval-step.done:not(:last-child)::after {
+    background: var(--green);
+  }
+
+  .mcs-approval-step.current:not(:last-child)::after {
+    background: linear-gradient(180deg, var(--orange), var(--border));
+  }
+
+  /* Impact grid - 2 columns on mobile */
+  .mcs-impact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mcs-impact-tags-wrap {
+    margin-bottom: 4px;
+  }
+
+  /* Toolbar - stack controls */
+  .mcs-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mcs-toolbar-controls {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .mcs-sort-label {
+    flex: 1;
+  }
+
+  .mcs-sort-select {
+    flex: 1;
+  }
+
+  /* Card layout - already flex-column, adjust for mobile */
+  .mcs-card-meta {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .mcs-card-meta-right {
+    width: 100%;
+  }
+
+  .mcs-card-submeta {
+    gap: 12px;
+    font-size: 11px;
+  }
+
+  /* Modal header - stack on mobile */
+  .mcs-modal-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mcs-modal-titles {
+    width: 100%;
+  }
+
+  .mcs-modal-close {
+    align-self: flex-start;
+  }
+
+  /* Modal footer - full width buttons */
+  .mcs-modal-footer {
+    flex-direction: column;
+  }
+
+  .mcs-btn {
+    width: 100%;
+  }
+
+  /* Field input - larger touch targets on mobile */
+  .mcs-field-input,
+  .mcs-field-select,
+  .mcs-field-textarea {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  /* Timeline - adjust for mobile */
+  .mcs-timeline {
+    margin-left: 4px;
+    padding-left: 16px;
+  }
+
+  .mcs-tl-event::before {
+    left: -22px;
+  }
+
+  /* List padding - mobile optimized */
+  .mcs-list {
+    padding: 12px 12px;
+    gap: 6px;
+  }
+
+  /* Card padding - mobile optimized */
+  .mcs-card {
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  /* Modal body padding - mobile */
+  .mcs-modal-body {
+    padding: 16px 16px;
+  }
+
+  .mcs-stage-blocks {
+    padding-left: 14px;
+  }
+
+  .mcs-stage-blocks::before {
+    left: 5px;
+  }
+
+  .mcs-stage-block::before {
+    left: -13px;
+  }
+
+  /* Search input - larger on mobile */
+  .mcs-search-input {
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  /* Impact cells - touch-friendly */
+  .mcs-impact-cell {
+    min-height: 44px;
+    padding: 12px;
+  }
+
+  .mcs-impact-cell input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mcs-impact-cell label {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* KPI bar - 2x2 grid on mobile */
+  .mcs-kpi-bar {
+    flex-wrap: wrap;
+  }
+
+  .mcs-kpi-card {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .mcs-kpi-value {
+    font-size: 18px;
+  }
+}
+
+/* -- Tablet/Desktop (≥768px) -- */
+@media (min-width: 768px) {
+  /* Modal - centered dialog */
+  .mcs-modal {
+    width: 1140px;
+  }
+
+  .mcs-modal-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mcs-staged-layout {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    align-items: start;
+  }
+
+  /* Approval chain - horizontal */
+  .mcs-approval-chain {
+    flex-direction: row;
+    gap: 0;
+    margin-bottom: 16px;
+  }
+
+  .mcs-flow-rail.mcs-approval-chain {
+    display: block;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 0;
+    position: sticky;
+    top: 0;
+  }
+
+  .mcs-approval-step:not(:last-child)::after {
+    top: 16px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+  }
+
+  /* Impact grid - 4 columns on desktop */
+  .mcs-impact-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Toolbar - horizontal layout */
+  .mcs-toolbar {
+    flex-wrap: nowrap;
+  }
+
+  .mcs-toolbar-controls {
+    width: auto;
+    margin-left: auto;
+  }
+
+  /* Card layout - three-column grid */
+  .mcs-card {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .mcs-card-right {
+    align-items: flex-end;
+  }
+
+  /* Modal header - inline */
+  .mcs-modal-header {
+    flex-direction: row;
+  }
+
+  .mcs-modal-close {
+    align-self: flex-start;
+  }
+
+  /* Modal footer - flex layout */
+  .mcs-modal-footer {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .mcs-btn {
+    width: auto;
+  }
+
+  /* Field inputs - normal size */
+  .mcs-field-input,
+  .mcs-field-select,
+  .mcs-field-textarea {
+    min-height: auto;
+    font-size: 13px;
+  }
+
+  /* List padding - desktop */
+  .mcs-list {
+    padding: 16px 20px;
+    gap: 8px;
+  }
+
+  /* Card padding - desktop */
+  .mcs-card {
+    padding: 14px 16px;
+  }
+
+  /* Modal body - desktop */
+  .mcs-modal-body {
+    padding: 20px 24px;
+  }
+
+  /* Search input - normal */
+  .mcs-search-input {
+    min-height: auto;
+    font-size: 13px;
+  }
+
+  /* Impact cells - normal size */
+  .mcs-impact-cell {
+    min-height: auto;
+    padding: 10px 12px;
+  }
+
+  .mcs-impact-cell input[type='checkbox'] {
+    width: 14px;
+    height: 14px;
+  }
+
+  .mcs-impact-cell label {
+    font-size: 12px;
+  }
+}
+
+/* -- Large Desktop (≥1024px) -- */
+@media (min-width: 1024px) {
+  /* Extra space for larger screens */
+  .mcs-list {
+    padding: 20px 24px;
+  }
+
+  .mcs-card {
+    padding: 16px 18px;
+  }
+
+  .mcs-modal {
+    width: 900px;
+  }
+}
+
+/* -- High Density Displays (retina) -- */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders on retina */
+  .mcs-card {
+    border-width: 0.5px;
+  }
+
+  .mcs-modal {
+    border-width: 0.5px;
+  }
+}
+
+/* -- Reduced Motion -- */
+@media (prefers-reduced-motion: reduce) {
+  .mcs-card,
+  .mcs-btn,
+  .mcs-modal,
+  .mcs-approval-circle {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* -- Dark Mode Support (future) -- */
+@media (prefers-color-scheme: dark) {
+  /* Automatically inherits CSS variables from root */
+  /* No changes needed - design system handles dark mode */
+}
+
+/* -- Print Styles -- */
+@media print {
+  .mcs-toolbar,
+  .mcs-modal-footer,
+  .mcs-btn,
+  .mcs-search-input {
+    display: none;
+  }
+
+  .mcs-modal {
+    width: 100%;
+    max-height: 100%;
+    border: none;
+    box-shadow: none;
+  }
+
+  .mcs-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
