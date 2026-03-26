@@ -306,6 +306,15 @@ npi.data.pfd = {
     Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
     npi.notify('render')
   },
+  updateResourceQty(sid, bt, iid, qty) {
+    const s = prog().pfd.find(x => x.id === sid)
+    if (!s) return
+    const ref = (s.bomRefs || []).find(r => r.bomType === bt && r.itemId === iid)
+    if (!ref) return
+    ref.qty = Math.max(1, parseInt(qty, 10) || 1)
+    Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
+  },
   saveCtqPick(stepIndex, selectedIds) {
     const step = prog().pfd[stepIndex]
     if (!step) return
@@ -316,9 +325,11 @@ npi.data.pfd = {
   saveBomPick(stepId, selectedKeys) {
     const s = prog().pfd.find(x => x.id === stepId)
     if (!s) return
+    const existingRefs = (s.bomRefs || [])
     s.bomRefs = selectedKeys.map(k => {
       const [bt, id] = k.split('|')
-      return { bomType: bt, itemId: id }
+      const existing = existingRefs.find(r => r.bomType === bt && r.itemId === id)
+      return { bomType: bt, itemId: id, qty: existing?.qty || 1 }
     })
     Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
     npi.notify('render')

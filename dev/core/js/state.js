@@ -38,13 +38,15 @@ let tenderGateScopeState = {
 
 // Modal picker state
 let ctqPickTarget = null, ctqPickSelected = [];
-let bomPickTarget = null, bomPickSelected = [], bomPickFilter = 'all';
+let bomPickTarget = null, bomPickSelected = [], bomPickFilter = 'all', bomPickSearch = '';
 let bomTreeExpanded = new Set(); // IDs of expanded subassembly nodes in the tree tab
 let bomTreeAddParentId = null;  // parent node ID when opening the add-part or add-subasm modals
 let bomAawTreeExpanded = new Set(); // IDs of expanded nodes in AAW/Repair trees
 let bomAawActiveGroupId = null;  // group ID for the active AAW/Repair add-part or add-subasm modal
 let bomAawGroupParentId = null;  // parent node ID within the active AAW/Repair group
 let docPickTarget = null, docPickSelected = [];
+let resourceEditTarget = null; // { stepId, bomType, itemId } for editing resource quantity
+let resourceEditQty = 1;
 let insertOriginIdx = null;
 let collapsedGroups = new Set();
 

@@ -13,7 +13,8 @@ window.meDataState = {
   tasks: [],
   products: [],
   holidays: [],
-  productSupportHistory: []
+  productSupportHistory: [],
+  timeLogs: []
 };
 
 window.meDataPendingDeletes = {
@@ -963,12 +964,17 @@ window.meDataInit = async function() {
         }
       }
 
+      const timeLogs = typeof meLoadTimeLogs === 'function'
+        ? (await meLoadTimeLogs().catch(() => []))
+        : [];
+
       meDataState = {
         team: relState.team,
         tasks: relState.tasks,
         products: relState.products,
         holidays: relState.holidays,
-        productSupportHistory: meNormalizeAndDedupeSupportHistory(relState.productSupportHistory)
+        productSupportHistory: meNormalizeAndDedupeSupportHistory(relState.productSupportHistory),
+        timeLogs
       };
 
       // Ensure all data has backward-compatible fields
@@ -1271,6 +1277,7 @@ function meEnsureStructure() {
   if (!meDataState.products) meDataState.products = [];
   if (!meDataState.holidays) meDataState.holidays = [];
   if (!meDataState.productSupportHistory) meDataState.productSupportHistory = [];
+  if (!meDataState.timeLogs) meDataState.timeLogs = [];
 }
 
 function meUUID() {

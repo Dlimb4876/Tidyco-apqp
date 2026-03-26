@@ -44,13 +44,16 @@ npi.apqp.delPFD = function(sid) { return typeof npi.pfd?.del === 'function' ? np
 npi.apqp.updPFD = function(sid, f, v) { return typeof npi.pfd?.upd === 'function' ? npi.pfd.upd(sid, f, v) : undefined }
 npi.apqp.scrollToPfd = function(sid) { return typeof npi.pfd?.scrollTo === 'function' ? npi.pfd.scrollTo(sid) : undefined }
 npi.apqp.toggleGroup = function(key) { return typeof npi.pfd?.toggleGroup === 'function' ? npi.pfd.toggleGroup(key) : undefined }
-npi.apqp.delBomRef = function(sid, bt, iid) { return typeof npi.pfd?.delBomRef === 'function' ? npi.pfd.delBomRef(sid, bt, iid) : undefined }
+npi.apqp.openResourceEdit = function(sid, bt, iid) { return typeof npi.pfd?.openResourceEdit === 'function' ? npi.pfd.openResourceEdit(sid, bt, iid) : undefined }
+npi.apqp.saveResourceEdit = function() { return typeof npi.pfd?.saveResourceEdit === 'function' ? npi.pfd.saveResourceEdit() : undefined }
+npi.apqp.deleteResourceEdit = function() { return typeof npi.pfd?.deleteResourceEdit === 'function' ? npi.pfd.deleteResourceEdit() : undefined }
 npi.apqp.openCtqPick = function(oi) { return typeof npi.pfd?.openCtqPick === 'function' ? npi.pfd.openCtqPick(oi) : undefined }
 npi.apqp.tCP = function(cid, checked) { return typeof npi.pfd?.toggleCtqPick === 'function' ? npi.pfd.toggleCtqPick(cid, checked) : undefined }
 npi.apqp.saveCtqPick = function() { return typeof npi.pfd?.saveCtqPick === 'function' ? npi.pfd.saveCtqPick() : undefined }
 npi.apqp.openBomPick = function(sid) { return typeof npi.pfd?.openBomPick === 'function' ? npi.pfd.openBomPick(sid) : undefined }
-npi.apqp.refreshBomPickModal = function(p, filterId, listId, activeFilter) { return typeof npi.pfd?.refreshBomPickModal === 'function' ? npi.pfd.refreshBomPickModal(p, filterId, listId, activeFilter) : undefined }
+npi.apqp.refreshBomPickModal = function(p, filterId, listId, activeFilter, searchTerm) { return typeof npi.pfd?.refreshBomPickModal === 'function' ? npi.pfd.refreshBomPickModal(p, filterId, listId, activeFilter, searchTerm) : undefined }
 npi.apqp.setBomFilter = function(f, fid, lid) { return typeof npi.pfd?.setBomFilter === 'function' ? npi.pfd.setBomFilter(f, fid, lid) : undefined }
+npi.apqp.searchBomPick = function(query) { return typeof npi.pfd?.searchBomPick === 'function' ? npi.pfd.searchBomPick(query) : undefined }
 npi.apqp.toggleBomPick = function(key, el) { return typeof npi.pfd?.toggleBomPick === 'function' ? npi.pfd.toggleBomPick(key, el) : undefined }
 npi.apqp.saveBomPick = function() { return typeof npi.pfd?.saveBomPick === 'function' ? npi.pfd.saveBomPick() : undefined }
 npi.apqp.openDocPick = function(oi) { return typeof npi.pfd?.openDocPick === 'function' ? npi.pfd.openDocPick(oi) : undefined }

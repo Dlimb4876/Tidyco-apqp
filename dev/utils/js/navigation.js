@@ -338,6 +338,13 @@ function goHome()     { navigate('project'); }
  * All other sections → hub
  */
 function navigateBack() {
+  // Always return to project dashboard when inside any NPI project section
+  const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing', 'documents'];
+  if (npiSections.includes(currentSection) || currentSection.startsWith('gate_')) {
+    navigate('project');
+    return;
+  }
+
   if (canNavigateBackInApp()) {
     history.back();
     return;
@@ -364,12 +371,7 @@ function navigateBack() {
     navigate('projects');
     return;
   }
-  const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing', 'documents'];
-  if (npiSections.includes(currentSection) || currentSection.startsWith('gate_')) {
-    navigate('project');
-  } else {
-    navigate('hub');
-  }
+  navigate('hub');
 }
 
 /**
