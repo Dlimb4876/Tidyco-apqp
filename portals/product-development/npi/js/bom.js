@@ -380,6 +380,12 @@ npi.bom._renderTreeNode = function(node, depth) {
     data-action="bom-tree-upd-qty" data-id="${node.id}"
     title="Quantity">`
 
+  const descHtml = canEdit() && node.nodeType === 'subassembly'
+    ? `<input class="bom-tree-desc-input" value="${esc(node.desc || '')}"
+        data-action="bom-tree-upd-desc" data-id="${node.id}"
+        placeholder="Description">`
+    : `<span class="bom-tree-desc">${esc(node.desc) || '<span style="color:var(--muted)">No description</span>'}</span>`
+
   const addHtml = canEdit() && node.nodeType === 'subassembly' && canAddKids ? `
     <button class="btn btn-ghost btn-xs bom-tree-add-btn" data-action="bom-tree-add-part" data-parent="${node.id}">＋ Part</button>
     <button class="btn btn-ghost btn-xs bom-tree-add-btn" data-action="bom-tree-add-subasm" data-parent="${node.id}">＋ Sub-Asm</button>` : ''
@@ -400,7 +406,7 @@ npi.bom._renderTreeNode = function(node, depth) {
       <span class="bom-tree-icon">${icon}</span>
       <span class="bom-tree-pn">${esc(node.pn) || '<span class="bom-tree-no-pn">—</span>'}</span>
       ${abcClassHtml}
-      <span class="bom-tree-desc">${esc(node.desc) || '<span style="color:var(--muted)">No description</span>'}</span>
+      ${descHtml}
       ${qtyHtml}
       <span class="bom-tree-unit">${esc(node.unit || 'ea')}</span>
       <div class="bom-tree-row-actions">${addHtml}${delHtml}</div>
@@ -541,6 +547,10 @@ npi.bom.delTreeNode = function(id) {
 
 npi.bom.updTreeNodeQty = function(id, v) {
   npi.data.bom.updTreeNode(id, 'qty', parseFloat(v) || 0)
+}
+
+npi.bom.updTreeNodeDesc = function(id, v) {
+  npi.data.bom.updTreeNode(id, 'desc', v)
 }
 
 // ══════════════════════════════════════
@@ -713,12 +723,19 @@ npi.bom.renderBomAawRepair = function(p) {
       ? `<button class="del-btn" data-action="bom-aaw-del-group" data-id="${group.id}" title="Delete this BoM" style="margin-left:8px">×</button>`
       : ''
 
+    const pnInputHtml = canEdit()
+      ? `<input class="cell-edit bom-aaw-pn-input" value="${esc(group.pn || '')}"
+          data-action="bom-aaw-upd-pn" data-id="${group.id}"
+          placeholder="Part Number" style="font-weight:500;font-size:13px;width:140px;flex-shrink:0;background:transparent;border:1px solid var(--line);border-radius:4px;padding:4px 8px;margin-left:12px">`
+      : (group.pn ? `<span class="bom-aaw-pn-display" style="font-weight:500;font-size:13px;color:var(--mid);margin-left:12px">PN: ${esc(group.pn)}</span>` : '')
+
     return `<div class="card bom-tree-card" style="margin-bottom:16px">
       <div class="card-head" style="padding:12px 14px">
         <span class="bom-tree-icon" style="margin-right:8px">🔧</span>
         <input class="cell-edit bom-aaw-title-input" value="${esc(group.title)}"
           data-action="bom-aaw-upd-title" data-id="${group.id}"
           placeholder="BoM name (e.g. AAW Gearbox)" style="font-weight:600;font-size:15px;flex:1;min-width:0;background:transparent;border:none;padding:0">
+        ${pnInputHtml}
         ${statsPillsHtml}
         ${delBtnHtml}
         <div class="bom-tree-row-actions" style="flex-shrink:0;margin-left:8px">${rootAddHtml}</div>
@@ -765,6 +782,12 @@ npi.bom._renderAawTreeNode = function(node, groupId, depth) {
     data-action="bom-aaw-tree-upd-qty" data-id="${node.id}" data-group="${groupId}"
     title="Quantity">`
 
+  const descHtml = canEdit() && node.nodeType === 'subassembly'
+    ? `<input class="bom-tree-desc-input" value="${esc(node.desc || '')}"
+        data-action="bom-aaw-tree-upd-desc" data-id="${node.id}" data-group="${groupId}"
+        placeholder="Description">`
+    : `<span class="bom-tree-desc">${esc(node.desc) || '<span style="color:var(--muted)">No description</span>'}</span>`
+
   const addHtml = canEdit() && node.nodeType === 'subassembly' && canAddKids ? `
     <button class="btn btn-ghost btn-xs bom-tree-add-btn" data-action="bom-aaw-tree-add-part" data-group="${groupId}" data-parent="${node.id}">＋ Part</button>
     <button class="btn btn-ghost btn-xs bom-tree-add-btn" data-action="bom-aaw-tree-add-subasm" data-group="${groupId}" data-parent="${node.id}">＋ Sub-Asm</button>` : ''
@@ -785,7 +808,7 @@ npi.bom._renderAawTreeNode = function(node, groupId, depth) {
       <span class="bom-tree-icon">${icon}</span>
       <span class="bom-tree-pn">${esc(node.pn) || '<span class="bom-tree-no-pn">—</span>'}</span>
       ${abcClassHtml}
-      <span class="bom-tree-desc">${esc(node.desc) || '<span style="color:var(--muted)">No description</span>'}</span>
+      ${descHtml}
       ${qtyHtml}
       <span class="bom-tree-unit">${esc(node.unit || 'ea')}</span>
       <div class="bom-tree-row-actions">${addHtml}${delHtml}</div>
@@ -842,6 +865,10 @@ npi.bom.openAawAddSubAsm = function(groupId, parentId) {
 
 npi.bom.updAawTreeNodeQty = function(id, groupId, v) {
   npi.data.bom.updAawTreeNode(groupId, id, 'qty', parseFloat(v) || 0)
+}
+
+npi.bom.updAawTreeNodeDesc = function(id, groupId, v) {
+  npi.data.bom.updAawTreeNode(groupId, id, 'desc', v)
 }
 
 npi.bom.delAawTreeNode = function(id, groupId) {

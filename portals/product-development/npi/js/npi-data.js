@@ -479,6 +479,7 @@ npi.data.bom = {
     const group = {
       id: crypto.randomUUID(),
       title: 'Untitled BoM',
+      pn: '',
       sortOrder: p.bom.aaw_repair.length,
       tag: null,
       nodes: []
@@ -493,6 +494,14 @@ npi.data.bom = {
     const group = (p.bom.aaw_repair || []).find(g => g.id === id)
     if (!group) return
     group.title = title
+    Promise.resolve().then(() => npiRelSaveBomGroup(group)).catch(err => console.error('[NPI] save bom group failed:', err))
+  },
+
+  updAawGroupPn(id, pn) {
+    const p = prog()
+    const group = (p.bom.aaw_repair || []).find(g => g.id === id)
+    if (!group) return
+    group.pn = pn || ''
     Promise.resolve().then(() => npiRelSaveBomGroup(group)).catch(err => console.error('[NPI] save bom group failed:', err))
   },
 

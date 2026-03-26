@@ -174,8 +174,11 @@ npi.pfd._showDetail = function(s, p, anchorEl, canvasEl) {
   const typeTagClass = { Process: '', Decision: 'tag-amber', Inspection: 'tag-teal', Rework: 'tag-orange', Transport: 'tag-purple' }[stepType] || ''
   const pfCnt = p.pfmea.filter(r => r.pfdId === s.id).length
   const maxRpn = (p.pfmea || []).filter(r => r.pfdId === s.id).reduce((max, row) => {
-    const rpn = (row.causes || []).reduce((m, c) => Math.max(m, npi.data.calcCauseRpn(c.sev, c.occ, c.det)), 0)
-    return Math.max(max, rpn)
+    const rowMax = (row.effects || []).reduce((emax, ef) => {
+      const efMax = (ef.causes || []).reduce((cmax, c) => Math.max(cmax, npi.data.calcCauseRpn(ef.sev, c.occ, c.det)), 0)
+      return Math.max(emax, efMax)
+    }, 0)
+    return Math.max(max, rowMax)
   }, 0)
 
   const ctqItems = (s.ctqIds || []).map(cid => {
@@ -265,8 +268,11 @@ npi.pfd.generateMermaidSyntax = function() {
   // Build set of high-risk step numbers (PFMEA RPN >= RPN_HIGH)
   const highRiskStepIds = new Set()
   ;(p.pfmea || []).forEach(row => {
-    const rpn = (row.causes || []).reduce((max, c) => Math.max(max, npi.data.calcCauseRpn(c.sev, c.occ, c.det)), 0)
-    if (rpn >= (window.RPN_HIGH || 100) && row.pfdId) {
+    const rowMax = (row.effects || []).reduce((emax, ef) => {
+      const efMax = (ef.causes || []).reduce((cmax, c) => Math.max(cmax, npi.data.calcCauseRpn(ef.sev, c.occ, c.det)), 0)
+      return Math.max(emax, efMax)
+    }, 0)
+    if (rowMax >= (window.RPN_HIGH || 100) && row.pfdId) {
       const step = p.pfd.find(s => s.id === row.pfdId)
       if (step && step.stepNum) highRiskStepIds.add(step.stepNum)
     }
@@ -386,7 +392,7 @@ npi.pfd.render = function() {
   const layoutToggleButton = !showFlowchart ? `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-layout" title="Toggle flowchart orientation">${isLR ? '↕ Vertical' : '↔ Horizontal'}</button>` : ''
 
   const header = `<div class="sec-head"><div><div class="sec-eyebrow">Step 02</div><div class="sec-title">Process Flow Diagram</div><div class="sec-desc">Section navigator at top for fast jumps in large flows. Steps stay numbered in 10s, and those numbers remain permanent PFMEA and Control Plan references.</div></div>
-  <div class="sec-actions">${viewToggleButton}${layoutToggleButton}<button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="pfd-add-main">＋ Add Step</button>` : ''}</div></div>`
+  <div class="sec-actions">${viewToggleButton}${layoutToggleButton}<button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button></div></div>`
 
   if (npi.pfd.viewMode === 'flowchart') {
     const syntax = npi.pfd.generateMermaidSyntax()
@@ -457,7 +463,7 @@ npi.pfd.render = function() {
       }
     }, 50)
     const legend = `<div class="pfd-flowchart-legend"><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--process"></span>Process</span><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--decision"></span>Decision</span><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--inspection"></span>Inspection</span><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--rework"></span>Rework</span><span class="pfd-legend-item"><span class="pfd-legend-box pfd-legend-box--transport"></span>Transport</span><span class="pfd-legend-item"><span class="pfd-legend-risk-icon">⚑</span>High RPN</span></div>`
-    return `${header}<div class="card pfd-flowchart-shell"><div class="card-head"><span class="card-title">Process Flowchart</span><span class="card-meta">Click any step to see its details.</span></div><div class="pfd-flowchart-help">Blank process links auto-continue to the next numbered step. ⚑ = high RPN in PFMEA.</div><div class="mermaid pfd-flowchart-canvas"></div>${legend}</div>`
+    return `${header}<div class="card pfd-flowchart-shell"><div class="card-head"><span class="card-title">Process Flowchart</span><span class="card-meta">Click any step to see its details.</span></div><div class="pfd-flowchart-help">Blank process links auto-continue to the next numbered step. ⚑ = high RPN in PFMEA.</div>${legend}<div class="mermaid pfd-flowchart-canvas"></div></div>`
   }
 
   // Table view (default)

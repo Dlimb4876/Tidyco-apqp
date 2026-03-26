@@ -253,8 +253,8 @@ npi.pfmea.renderPFMEA = function() {
     <col style="width:44px"> <!-- OCC -->
     ${vis.prevent   ? '<col style="width:180px"><!-- prevent -->' : ''}
     ${vis.detect    ? '<col style="width:180px"><!-- detect -->'  : ''}
-    <col style="width:44px"> <!-- DET -->
-    <col style="width:60px"> <!-- RPN -->
+    ${vis.detect    ? '<col style="width:44px"> <!-- DET -->' : ''}
+    ${vis.detect    ? '<col style="width:60px"> <!-- RPN -->' : ''}
     ${vis.action    ? '<col style="width:150px"><!-- action desc -->' : ''}
     ${vis.action    ? '<col style="width:150px"><!-- action taken -->' : ''}
     ${vis.owner     ? '<col style="width:80px"> <!-- owner -->'   : ''}
@@ -276,8 +276,8 @@ npi.pfmea.renderPFMEA = function() {
     <th rowspan="2" title="Occurrence of cause">OCC</th>
     ${vis.prevent   ? '<th rowspan="2">Controls — Prevent</th>' : ''}
     ${vis.detect    ? '<th rowspan="2">Controls — Detect</th>'  : ''}
-    <th rowspan="2" title="Detection rating">DET</th>
-    <th rowspan="2">RPN</th>
+    ${vis.detect ? '<th rowspan="2" title="Detection rating">DET</th>' : ''}
+    ${vis.detect ? '<th rowspan="2">RPN</th>' : ''}
     ${actionGroupSpan > 0 ? `<th colspan="${actionGroupSpan}" style="background:var(--blue-pale);color:var(--blue);letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>` : ''}
     <th rowspan="${actionGroupSpan > 0 ? 2 : 1}"></th>
   </tr>`
@@ -413,15 +413,15 @@ npi.pfmea.renderPFMEA = function() {
             ${vis.detect ? `<td style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_detect_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="detect" placeholder="Detection controls" style="width:100%">${esc(ca.detect || '')}</textarea>
             </td>` : ''}
-            <td class="pfmea-score-cell">
+            ${vis.detect ? `<td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_det_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${det}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="cause-det" data-fallback="${det}">
-            </td>
-            <td class="pfmea-score-cell">
+            </td>` : ''}
+            ${vis.detect ? `<td class="pfmea-score-cell">
               ${npi.components.rpnBadge(rpn, { id: `rpn_${mi}_${ei}_${ci}` })}
               ${warnBadges}
               ${hist.length > 0 ? `<button class="rpn-hist-btn" data-action="pfmea-show-hist" data-cause-id="${ca.id}">⏱${hist.length}</button>` : ''}
-            </td>
+            </td>` : ''}
             ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea>${ca.action_related_ecr_id ? `<div style="margin-top:4px;padding:4px 6px;background:var(--accent-dim);border-radius:3px;border-left:2px solid var(--accent);font-size:10px;font-weight:600;cursor:pointer;text-align:center" onclick="navigate('mcs');">🔗 ${esc(ca.action_related_ecr_id)}</div>` : ''}</td>` : ''}
             ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_taken_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>` : ''}
             ${vis.owner ? `<td><select class="cell-edit" name="pfmea_action_owner_${mi}_${ei}_${ci}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" style="width:100%">${ownerSelectOptions(act.owner || '')}</select></td>` : ''}
@@ -580,15 +580,16 @@ npi.pfmea.renderPFMEA = function() {
     <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfmea" title="User Guide">❓ Guide</button>
   </div></div>
 ${viewTabs}
-<div class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
-    <div class="card-head" style="padding:10px 14px">
+<details class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
+    <summary class="card-head" style="padding:10px 14px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px">
+      <span style="font-size:10px;color:var(--muted)">▶</span>
       <span class="card-title">📉 RPN Burndown — Total Original vs Total Current</span>
       <span class="card-meta" style="margin-left:auto">Sum across all failure modes · green = improved</span>
-    </div>
+    </summary>
     <div style="padding:14px 16px 16px">${renderRpnBurndown(false)}</div>
-</div>
-<div class="card">${html}</div>
-${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" data-action="npi-set-apqp" data-tab="cp" style="color:var(--blue)">Control Plan →</a></div>` : ''}`
+</details>
+${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" data-action="npi-set-apqp" data-tab="cp" style="color:var(--blue)">Control Plan →</a></div>` : ''}
+<div class="card">${html}</div>`
 }
 
 // ── History modal ─────────────────────────────────────────────

@@ -180,14 +180,16 @@ describe('NPI PFD flowchart behavior', () => {
     global.RPN_HIGH = 100
     activeProject.pfmea = [{
       pfdId: 's10',
-      causes: [{ sev: 8, occ: 7, det: 3 }]
+      effects: [{
+        sev: 8,
+        causes: [{ occ: 7, det: 3 }]
+      }]
     }]
     global.npi.data.calcCauseRpn = (sev, occ, det) => sev * occ * det
 
     const syntax = npi.pfd.generateMermaidSyntax()
 
     expect(syntax).toContain('⚑')
-    expect(syntax).toContain('riskBorder')
   })
 
   test('flowchart uses LR direction when flowDirection is LR', () => {

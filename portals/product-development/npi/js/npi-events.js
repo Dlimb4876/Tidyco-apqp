@@ -208,8 +208,11 @@ npi.events._onChange = function(evt) {
     break
   }
   case 'bom-tree-upd-qty': npi.bom.updTreeNodeQty(el.getAttribute('data-id'), el.value); break
+  case 'bom-tree-upd-desc': npi.bom.updTreeNodeDesc(el.getAttribute('data-id'), el.value); break
   case 'bom-aaw-tree-upd-qty': npi.bom.updAawTreeNodeQty(el.getAttribute('data-id'), el.getAttribute('data-group'), el.value); break
+  case 'bom-aaw-tree-upd-desc': npi.bom.updAawTreeNodeDesc(el.getAttribute('data-id'), el.getAttribute('data-group'), el.value); break
   case 'bom-aaw-upd-title': npi.data.bom.updAawGroupTitle(el.getAttribute('data-id'), el.value); break
+  case 'bom-aaw-upd-pn': npi.data.bom.updAawGroupPn(el.getAttribute('data-id'), el.value); break
   case 'bom-aaw-upd-tag': {
     const id = el.getAttribute('data-id')
     const tag = el.getAttribute('data-tag')
