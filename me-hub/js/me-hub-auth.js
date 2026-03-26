@@ -15,6 +15,10 @@ async function hubAuthBoot() {
   const { data: { session } } = await hubSupa.auth.getSession();
   if (session) {
     hubCurrentUser = session.user;
+    // Also set global for data layer access
+    if (typeof window.hubCurrentUser !== 'undefined') {
+      window.hubCurrentUser = session.user;
+    }
     hubShowApp();
   } else {
     hubShowLogin();
@@ -62,6 +66,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   }
 
   hubCurrentUser = data.user;
+  // Also set global for data layer access
+  if (typeof window.hubCurrentUser !== 'undefined') {
+    window.hubCurrentUser = data.user;
+  }
   hubShowApp();
 });
 

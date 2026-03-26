@@ -102,10 +102,16 @@ function hubGetFavouriteProducts() {
   const items = [];
   const staleIds = [];
 
+  // Only check for stale products if products data has finished loading
+  // This prevents clearing favorites when data hasn't loaded yet
+  const productsLoaded = typeof productsState !== 'undefined' && productsState && productsState.loaded;
+
   favourites.products.forEach((id) => {
     const product = byId.get(String(id));
     if (!product) {
-      staleIds.push(id);
+      if (productsLoaded) {
+        staleIds.push(id);
+      }
       return;
     }
     items.push(product);

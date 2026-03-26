@@ -338,6 +338,42 @@ describe('hub favourites storage', () => {
     expect(hubIsProductFavourite('missing')).toBe(false); // eslint-disable-line no-undef
   });
 
+  it('does not clear product favourites when products data is not loaded', () => {
+    // Setup: Add product favorites
+    hubToggleProductFavourite('prod_123'); // eslint-disable-line no-undef
+    hubToggleProductFavourite('prod_456'); // eslint-disable-line no-undef
+
+    // Simulate products data not being loaded yet
+    global.productsDataGetAll = jest.fn(() => []);
+    global.productsState = { loaded: false, products: [] };
+
+    // Call hubGetFavouriteProducts which would previously clear favorites
+    const result = hubGetFavouriteProducts(); // eslint-disable-line no-undef
+
+    // Verify favorites were NOT cleared from localStorage
+    const raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.products).toContain('prod_123');
+    expect(raw.products).toContain('prod_456');
+    expect(result).toHaveLength(0); // Returns empty array since data not loaded
+  });
+
+  it('clears stale product favourites only when products data is loaded', () => {
+    // Setup: Add product favorites for a product that no longer exists
+    hubToggleProductFavourite('deleted_product'); // eslint-disable-line no-undef
+
+    // Simulate products data loaded but product doesn't exist
+    global.productsDataGetAll = jest.fn(() => [{ id: 'existing_product', name: 'Test' }]);
+    global.productsState = { loaded: true, products: [{ id: 'existing_product', name: 'Test' }] };
+
+    // Call hubGetFavouriteProducts
+    const result = hubGetFavouriteProducts(); // eslint-disable-line no-undef
+
+    // Verify stale favorite was cleared from localStorage
+    const raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.products).not.toContain('deleted_product');
+    expect(result).toHaveLength(0); // deleted_product not in products list
+  });
+
   it('opens sub-hub favourites by navigating section then setting tab', () => {
     global.setCapacityTab = jest.fn();
     hubOpenFavouritePage('capacity::me'); // eslint-disable-line no-undef

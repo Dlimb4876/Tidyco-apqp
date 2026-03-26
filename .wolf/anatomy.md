@@ -1,18 +1,18 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-26T06:00:01.356Z
-> Files: 388 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-26T16:20:09.649Z
+> Files: 390 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
-- `.gitignore` — Git ignore rules (~370 tok)
+- `.gitignore` — Git ignore rules (~379 tok)
 - `.mcp.json` (~320 tok)
 - `.nojekyll` (~0 tok)
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1835 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Change log (~19616 tok)
+- `CHANGELOG.md` — Change log (~19931 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~606 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
@@ -22,7 +22,7 @@
 - `package-lock.json` — npm lock file (~61736 tok)
 - `package.json` — Node.js package manifest (~574 tok)
 - `QWEN.md` — QWEN.md — Tidyco APQP Quality Tool (~3321 tok)
-- `README.md` — Project documentation (~5169 tok)
+- `README.md` — Project documentation (~6418 tok)
 - `SKILLS_GUIDE.md` — Tidyco APQP Development Skills Guide (~2715 tok)
 - `SKILLS_QUICK_REFERENCE.txt` — Declares in (~847 tok)
 - `SKILLS_SUMMARY.md` — Tidyco APQP Development Skills — Summary (~1594 tok)
@@ -165,17 +165,17 @@
 
 ## me-hub/
 
-- `index.html` — ME Department Hub (~926 tok)
+- `index.html` — ME Department Hub (~962 tok)
 
 ## me-hub/css/
 
-- `me-hub.css` — Styles: 66 rules, 17 vars, 2 media queries (~2542 tok)
+- `me-hub.css` — Styles: 87 rules, 17 vars, 2 media queries (~5251 tok)
 
 ## me-hub/js/
 
-- `me-hub-app.js` — ═══════════════════════════════════ (~1379 tok)
-- `me-hub-auth.js` — ═══════════════════════════════════ (~730 tok)
-- `me-hub-data.js` — ═══════════════════════════════════ (~940 tok)
+- `me-hub-app.js` — ═══════════════════════════════════ (~6446 tok)
+- `me-hub-auth.js` — ═══════════════════════════════════ (~813 tok)
+- `me-hub-data.js` — ═══════════════════════════════════ (~2779 tok)
 
 ## plans/
 
@@ -185,7 +185,7 @@
 - `guide-system-implementation-plan.md` — Standalone User Guide Wiki - Implementation Plan (Revised) (~2213 tok)
 - `hub-improvements-plan.md` — Hub Portal Improvements Plan — UX Enhancement & Modernization (~8953 tok)
 - `master-current-state.md` — Master Current State (Live Baseline) (~762 tok)
-- `me-evm-capacity-plan.md` — Plan: ME Capacity - Bottom-Up Execution & EVM Integration (~2279 tok)
+- `me-evm-capacity-plan.md` — Plan: ME Capacity - Bottom-Up Execution & EVM Integration (~2561 tok)
 - `next-implementation-sprint.md` — Next Implementation Sprint (~1107 tok)
 - `pfMEA-improvements-plan.md` — PFMEA Improvements Plan — AIAG-VDA Compliance & UX Enhancement (~7899 tok)
 - `product-allocation-heatmap-plan.md` — Per-Person Product Support Allocation for ME Heatmap (~1851 tok)
@@ -277,7 +277,7 @@
 
 ## portals/hub/js/
 
-- `hub.js` — js/features/hub.js (~4248 tok)
+- `hub.js` — js/features/hub.js (~4330 tok)
 
 ## portals/mcs/css/
 
@@ -326,7 +326,7 @@
 
 ## portals/product-development/npi/css/
 
-- `apqp-bom.css` — Styles: 73 rules, 1 vars (~3954 tok)
+- `apqp-bom.css` — Styles: 75 rules, 1 vars (~4034 tok)
 - `apqp-ctq.css` — Styles: 45 rules (~1817 tok)
 - `apqp-pfd.css` — Styles: 85 rules, 1 vars, 3 media queries (~3498 tok)
 - `apqp-responsive.css` — Styles: 3 rules, 3 media queries (~1083 tok)
@@ -339,9 +339,9 @@
 
 ## portals/product-development/npi/js/
 
-- `apqp.js` — ═══════════════════════════════════ (~2363 tok)
+- `apqp.js` — ═══════════════════════════════════ (~2410 tok)
 - `bom-cclass.js` — ═══════════════════════════════════ (~5365 tok)
-- `bom.js` — ═══════════════════════════════════ (~13060 tok)
+- `bom.js` — ═══════════════════════════════════ (~13442 tok)
 - `dashboard.js` — ═══════════════════════════════════ (~15456 tok)
 - `documents.js` — ═══════════════════════════════════ (~1269 tok)
 - `gates.js` — ═══════════════════════════════════ (~3031 tok)
@@ -349,15 +349,15 @@
 - `npi-constants.js` — ═══════════════════════════════════ (~576 tok)
 - `npi-cp.js` — ═══════════════════════════════════ (~1613 tok)
 - `npi-ctq.js` — ═══════════════════════════════════ (~4028 tok)
-- `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydratePfdRows (~13970 tok)
-- `npi-data.js` — ═══════════════════════════════════ (~10682 tok)
-- `npi-events.js` — ═══════════════════════════════════ (~5023 tok)
+- `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydratePfdRows (~13986 tok)
+- `npi-data.js` — ═══════════════════════════════════ (~10772 tok)
+- `npi-events.js` — ═══════════════════════════════════ (~5190 tok)
 - `npi-gates-editor.js` — ═══════════════════════════════════ (~3071 tok)
 - `npi-orchestrator.js` — ═══════════════════════════════════ (~1190 tok)
-- `npi-pfd.js` — ═══════════════════════════════════ (~12909 tok)
+- `npi-pfd.js` — ═══════════════════════════════════ (~13003 tok)
 - `npi.js` — ═══════════════════════════════════ (~2312 tok)
 - `pfmea-state.js` — Declares PFMEA_RPN_FILTERS (~1898 tok)
-- `pfmea.js` — Declares v (~13437 tok)
+- `pfmea.js` — Declares v (~13522 tok)
 - `rpn-chart.js` — portals/npi/js/rpn-chart.js (~1068 tok)
 - `timing.js` — ═══════════════════════════════════ (~8495 tok)
 - `trackers.js` — ═══════════════════════════════════ (~5715 tok)
@@ -414,6 +414,7 @@
 
 - `capacity_dept_split.sql` — Capacity department split reference migration (~1817 tok)
 - `evm_phase2_migration.sql` — ═══════════════════════════════════════════════════════════════ (~715 tok)
+- `evm_phase3_wbs_migration.sql` — ═══════════════════════════════════════════════════════════════ (~1202 tok)
 - `hybrid_permissions_role_team_grants.sql` — hybrid_permissions_role_team_grants.sql (~1527 tok)
 - `logistics_product_support_history_split.sql` — Logistics Product Support Split Fields (~534 tok)
 - `mcs_changes_2step_migration.sql` — MCS Changes — 2-Step Approval Migration (~1552 tok)
@@ -450,7 +451,7 @@
 - `feedback-data.test.js` — feedback-data.test.js — Tests for portals/feedback/js/feedback-data.js (~3070 tok)
 - `feedback-search-focus.test.js` — Declares fs (~644 tok)
 - `helpers.test.js` — Declares fs (~2810 tok)
-- `hub.test.js` — hub.test.js — Tests for portals/hub/js/hub.js (~3858 tok)
+- `hub.test.js` — hub.test.js — Tests for portals/hub/js/hub.js (~4391 tok)
 - `log-capacity.test.js` — log-capacity.test.js — Tests for portals/capacity/logistics/js/log-capacity.js (~1334 tok)
 - `log-data-relational.test.js` — Declares fs (~900 tok)
 - `mcs-actions.test.js` — Declares fs (~1217 tok)
@@ -473,7 +474,7 @@
 - `npi-data-relational.test.js` — fs: makeCapturingSupa (~2354 tok)
 - `npi-events-search.test.js` — Declares fs (~695 tok)
 - `npi-gate-permissions.test.js` — Declares fs (~933 tok)
-- `npi-pfd-flowchart.test.js` — Declares fs (~2326 tok)
+- `npi-pfd-flowchart.test.js` — Declares fs (~2324 tok)
 - `npi-pfd-headers.test.js` — Declares fs (~1146 tok)
 - `operations-dashboard.test.js` — Declares fs (~6338 tok)
 - `operations-forecast-data.test.js` — Declares fs (~955 tok)
@@ -500,11 +501,15 @@
 - `unit6-data-relational.test.js` — Declares fs (~906 tok)
 - `work-areas-data.test.js` — work-areas-data.test.js (~1691 tok)
 
+## trello/
+
+- `index.html` — Tidyco Operations — Trello (~3742 tok)
+
 ## utils/js/
 
 - `guide.js` — ═══════════════════════════════════ (~19585 tok)
 - `helpers.js` — ═══════════════════════════════════ (~7230 tok)
-- `navigation.js` — Section labels for UI display (reserved for future use) (~8929 tok)
+- `navigation.js` — Section labels for UI display (reserved for future use) (~8951 tok)
 - `realtime-patch.js` — Surgical Realtime DOM Patch Helpers (~845 tok)
 - `realtime.js` — Subscribe to real-time changes on a table (~1923 tok)
 
