@@ -9,7 +9,7 @@ The Timing Plan is the project's schedule and Gantt chart. It visualizes the tim
 - Break down the required work into logical sections or phases.
 
 ## Key components of a good Timing Plan
-- **Sections:** Groupings of related tasks (e.g., Gate 1 Design, Gate 2 Process).
+- **Sections:** Collapsible groupings of related tasks with colored headers and summary metrics (e.g., Gate 1 Design, Gate 2 Process).
 - **Tasks:** Specific activities with clear start and end dates.
 - **Milestones:** Point-in-time markers (usually target dates for Gate approvals or physical build events).
 - **Ownership:** Who is driving the specific task block.
@@ -19,7 +19,11 @@ The Timing Plan is the project's schedule and Gantt chart. It visualizes the tim
 2. **Place milestones:** Drop in the target dates for Gates 0 through 5.
 3. **Build the sections:** Create task rows for the major activities required to pass each gate.
 4. **Sequence and overlap:** Adjust task durations to reflect reality, overlapping work where parallel processing is possible.
-5. **Monitor and adjust:** Update the plan weekly. If a task slips, adjust the timeline to visualize the impact on the next milestone.
+5. **Refine layout:** Reorder tasks within a section using the up/down arrows. Adjust the overall timeline length (24-72 weeks) to fit the project scale.
+6. **Monitor and adjust:** Update the plan weekly. If a task slips, adjust the timeline to visualize the impact on the next milestone.
+
+## Exporting
+You can generate a professional, customer-facing PDF export directly from the Timing Plan. The export is optimized for A3 landscape printing and automatically includes the Tidyco logo, project metadata, summary statistics, and the full Gantt chart.
 
 ## Common mistakes to avoid
 - **Unrealistic compression:** Cramming 6 weeks of work into 2 weeks just to make a milestone fit on paper.

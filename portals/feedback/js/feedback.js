@@ -3,8 +3,20 @@
 // Depends on: feedback-data.js, feedback-constants.js, helpers.js, navigation.js
 // ═══════════════════════════════════
 
+// ── Targeted content refresh (avoids full page render) ───────
+function feedbackRefreshContent() {
+  const inner = document.querySelector('#mainContent .section-inner');
+  if (!inner) return;
+  inner.innerHTML = renderFeedback();
+}
+
 // ── Event Listener ───────────────────────────────────────────
-document.addEventListener('feedbackDataChanged', () => render());
+// Only refresh if the feedback section is currently visible.
+document.addEventListener('feedbackDataChanged', () => {
+  if (typeof currentSection !== 'undefined' && currentSection === 'feedback') {
+    feedbackRefreshContent();
+  }
+});
 
 // ── Global App Object for Inline Event Handlers ──────────────
 window.feedbackApp = {

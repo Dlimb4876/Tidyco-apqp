@@ -10,8 +10,8 @@ const PFMEA_VIEWS = ['worksheet', 'history']
 const PFMEA_COLUMN_VIEWS = ['compact', 'standard', 'full']
 
 const PFMEA_COLUMN_VISIBILITY = {
-  compact:  { name: 'compact',  function: false, prevent: false, detect: false, action: false, owner: false, due: false, newOcc: false, newDet: false, forecast: false, implement: false },
-  standard: { name: 'standard', function: true,  prevent: true,  detect: true,  action: true,  owner: false, due: false, newOcc: false, newDet: false, forecast: false, implement: true  },
+  compact:  { name: 'compact',  function: true,  prevent: false, detect: false, action: false, owner: false, due: false, newOcc: false, newDet: false, forecast: false, implement: false },
+  standard: { name: 'standard', function: true,  prevent: true,  detect: true,  action: false, owner: false, due: false, newOcc: false, newDet: false, forecast: false, implement: false },
   full:     { name: 'full',     function: true,  prevent: true,  detect: true,  action: true,  owner: true,  due: true,  newOcc: true,  newDet: true,  forecast: true,  implement: true  }
 }
 
@@ -21,8 +21,15 @@ npi.pfmea.getRpnFilter = function() {
 }
 
 npi.pfmea.setRpnFilter = function(nextFilter) {
+  const prevFilter = globalThis.pfmeaRpnFilter || 'all'
   const safe = (nextFilter || 'all').toString()
   globalThis.pfmeaRpnFilter = PFMEA_RPN_FILTERS.includes(safe) ? safe : 'all'
+  // Update URL to persist PFMEA RPN filter
+  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=pfmea']
+  if (globalThis.pfmeaRpnFilter !== 'all') parts.push('pfr=' + encodeURIComponent(globalThis.pfmeaRpnFilter))
+  if (globalThis.pfmeaView !== 'worksheet') parts.push('pfv=' + encodeURIComponent(globalThis.pfmeaView))
+  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  writeNavigationHistory('#' + parts.join('&'), { push: prevFilter !== safe })
   render()
 }
 
@@ -32,8 +39,15 @@ npi.pfmea.getView = function() {
 }
 
 npi.pfmea.setView = function(nextView) {
+  const prevView = globalThis.pfmeaView || 'worksheet'
   const safe = (nextView || 'worksheet').toString()
   globalThis.pfmeaView = PFMEA_VIEWS.includes(safe) ? safe : 'worksheet'
+  // Update URL to persist PFMEA view
+  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=pfmea']
+  if (globalThis.pfmeaRpnFilter !== 'all') parts.push('pfr=' + encodeURIComponent(globalThis.pfmeaRpnFilter))
+  if (globalThis.pfmeaView !== 'worksheet') parts.push('pfv=' + encodeURIComponent(globalThis.pfmeaView))
+  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  writeNavigationHistory('#' + parts.join('&'), { push: prevView !== safe })
   render()
 }
 
@@ -49,10 +63,10 @@ npi.pfmea.setColumnView = function(viewName) {
 
 // Total visible column count (used for colspan calculations)
 npi.pfmea.pfColCount = function(vis) {
-  let cols = 8 // always: mode + effect + sev + cause + occ + det + rpn + del
+  let cols = 6 // always: mode + effect + sev + cause + occ + del
   if (vis.function) cols++
   if (vis.prevent) cols++
-  if (vis.detect) cols++
+  if (vis.detect) cols += 3 // detect + det + rpn
   if (vis.action) cols += 2 // desc + taken
   if (vis.owner) cols++
   if (vis.due) cols++
@@ -65,7 +79,7 @@ npi.pfmea.pfColCount = function(vis) {
 
 // Approximate min-width in px for horizontal scroll container
 npi.pfmea.pfColMinWidth = function(vis) {
-  let width = 776 // base: mode(180)+effect(180)+sev(60)+cause(180)+occ(44)+det(44)+rpn(60)+del(28)
+  let width = 672 // base: mode(180)+effect(180)+sev(60)+cause(180)+occ(44)+del(28)
   if (vis.function) width += 200
   if (vis.prevent) width += 180
   if (vis.detect) width += 180

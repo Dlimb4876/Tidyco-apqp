@@ -35,6 +35,10 @@ Thumbs.db
 # Debug/scratch files
 test-holidays.html
 check_onclick.js
+*.tmp
+
+# Auto-generated wiki search index
+wiki/content/_meta/search-index.json
 
 # MCP local environment and runtime files
 .claude/.env
@@ -63,3 +67,4 @@ scripts/pre-commit-quality-hook.js
 .wolf/suggestions.json
 .wolf/hooks/_session.json
 .wolf/designqc-captures/
+nul

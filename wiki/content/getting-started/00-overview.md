@@ -13,6 +13,7 @@ It is designed as a quick reference for what each area does, how key features wo
 - **Product Development (NPI):** Manages APQP setup, PFMEA, and Gate sign-offs.
 - **Production:** The master schedule of active overhaul batches on the shop floor.
 - **Operations:** The cross-functional dashboard showing live system health, bottlenecks, and risks.
+- **Manufacturing Change (MCS):** The centralized ECR (Engineering Change Request) management workflow and schedule impact tracker.
 
 ## The learning process
 1. **Find your area:** Choose the domain relevant to your role (e.g., Capacity, NPI).

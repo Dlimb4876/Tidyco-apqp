@@ -5,21 +5,24 @@
 **Status:** Proposed  
 
 ## 1. Executive Summary
-Currently, ME Capacity uses top-down "Budget Buckets" (e.g., 400 hours for a project). Planners lack visibility into actual burn rates and remaining effort. 
+Currently, ME Capacity uses top-down "Budget Buckets" (e.g., 400 hours for a project). Planners lack visibility into actual burn rates and remaining effort.
 
-This plan introduces **Earned Value Management (EVM)** to the ME Capacity portal. By linking macro capacity tasks to micro engineering actions and introducing lightweight time-tracking, the capacity engine will automatically transition from a static budget tracker to a self-correcting forecasting engine.
+This plan introduces **Earned Value Management (EVM)** as the foundation for a new, standalone **ME Department Space**. Instead of bolting this onto the existing shared Capacity portal—**which will remain fully intact and operational in the main portal for now**—we will create a dedicated hub (with its own `index.html`, similar to the standalone wiki) tailored specifically for ME execution, tracking, and forecasting. 
+
+**Crucial Phasing Constraint:** The initial integration will be strictly **one-directional**. High-level tasks from the portal's existing ME Capacity plan will flow into the new standalone breakdown tool, but progress, time logs, and EVM data will *not* report back to the main portal yet. By linking macro capacity tasks to micro engineering actions and introducing lightweight time-tracking, the standalone engine will independently transition from a static budget tracker to a self-correcting forecasting engine.
 
 ## 2. Architecture & Data Flow
 
-The system bridges the gap between the Planner's view (ME Capacity) and the Engineer's view (Action Centre).
+The system bridges the gap between the Planner's view (in the new standalone ME Hub) and the Engineer's view (Action Centre). *Note: In the initial phases, data flows strictly from the Portal's `me_tasks` into the Standalone Hub. Feedback loops updating the Portal will come in a later phase.*
 
 ```text
 ========================================================================
                          SYSTEM ARCHITECTURE
 ========================================================================
 
-      [ PLANNER DOMAIN ]                   [ ENGINEER DOMAIN ]
-      ME Capacity Portal                      Action Centre
+      [ PLANNER DOMAIN ]                      [ ENGINEER DOMAIN ]
+      ME Dept Hub (Standalone)                   Action Centre
+      (me-hub/index.html)
    +----------------------+               +----------------------+
    | me_tasks             |               | npi_actions          |
    | (The Budget Bucket)  |<--- Links --- | (The Deliverables)   |
@@ -84,10 +87,10 @@ The task table is upgraded from static data to an actionable diagnostic tool hig
 
 ```text
 ========================================================================
-                      ME CAPACITY (Planner View)
+                   ME DEPARTMENT HUB (Planner View)
 ========================================================================
 
- ME TASKS & DEMAND
+ PROJECT EVM & DEMAND
  +----------------+------+---------+---------+-------+-----------------+
  | Task Name      | BAC  | Actuals | Progress| EAC   | Variance Status |
  +----------------+------+---------+---------+-------+-----------------+
@@ -105,7 +108,13 @@ The charting engine (`me-chart.js` / `me-calculations.js`) fundamentally changes
 
 ## 5. Implementation Phases
 
-### Phase 1: Foundation & Data Layer
+### Phase 1: Standalone Hub Setup
+*   Set up the new `me-hub/index.html` file and basic structure.
+*   Configure the project to serve the new index via a GitHub Pages URL.
+*   Ensure it operates independently; do not add any cards, links, or access points on the main portal or anywhere else at this stage.
+*   Keep the existing ME Capacity plan active and unmodified in the main portal. The new hub will pull tasks from `me_tasks` but will not write capacity roll-ups back to the portal yet (one-directional flow).
+
+### Phase 2: Foundation & Data Layer
 *   **DB Migration:**
     *   Add `percent_complete` (INT, default 0) to `me_tasks` and `pm_tasks`.
     *   Create `time_logs` table `(id, user_id, task_id, hours_logged, log_date, created_at)`.
@@ -114,18 +123,18 @@ The charting engine (`me-chart.js` / `me-calculations.js`) fundamentally changes
     *   Update `me-data-relational.js` to fetch `time_logs` on initialization.
     *   Update `meDataState` to store `timeLogs` array.
 
-### Phase 2: Engineer Input (Action Centre)
+### Phase 3: Engineer Input (Action Centre)
 *   Update `action-centre.js` and `action-centre.css`.
 *   Add `% Complete` slider/input to Action cards.
 *   Add the "Log Time" inline form.
 *   Create `saveTimeLog()` Supabase handler.
 
-### Phase 3: Planner Visibility (ME Capacity)
+### Phase 4: Planner Visibility (ME Capacity)
 *   Update `me-tasks.js` table renderer to show BAC, Actuals, EAC, and Variance columns.
 *   Add visual color-coding for tasks that are trending to overrun (EAC > BAC).
 *   Add a "Drill Down" modal on ME Tasks that queries `time_logs` to show Planners *who* logged hours against that bucket and *when*.
 
-### Phase 4: Dynamic Charting
+### Phase 5: Dynamic Charting
 *   Update `meCalculateMonthData()` in `me-calculations.js`.
 *   Implement the EVM math logic (BAC, EV, ETC, EAC).
 *   Change chart distribution logic: Past = Actuals from `timeLogs`, Future = ETC spread across remaining months.

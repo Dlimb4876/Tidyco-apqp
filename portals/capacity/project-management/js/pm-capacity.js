@@ -15,7 +15,7 @@ window.pmCapSmartRender = function() {
     pmChartDirty = true;
     return;
   }
-  render();
+  pmRefreshCurrentTab();
 };
 
 function pmGetCurrentMonthKey() {

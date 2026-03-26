@@ -14,7 +14,7 @@ window.logCapSmartRender = function() {
     logChartDirty = true;
     return;
   }
-  render();
+  logRefreshCurrentTab();
 };
 
 function logGetCurrentMonthKey() {

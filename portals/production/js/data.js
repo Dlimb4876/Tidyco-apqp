@@ -341,7 +341,10 @@ window.prodDataSubscribe = function() {
       if (!prodState.batches.some(b => b.id === newBatch.id)) {
         prodState.batches.push(newBatch);
         if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
-        render();
+        if (typeof prodRefreshTabBody === 'function' &&
+            typeof currentSection !== 'undefined' && currentSection === 'production') {
+          prodRefreshTabBody();
+        }
       }
     },
     onUpdate: (updated) => {
@@ -350,14 +353,35 @@ window.prodDataSubscribe = function() {
       if (idx >= 0) {
         prodState.batches[idx] = updated;
         if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
-        render();
+        // Surgical: swap just the changed row if it's on screen
+        if (typeof currentSection !== 'undefined' && currentSection === 'production') {
+          const rowInDOM = document.querySelector(`#prod-sched-tbody [data-id="${CSS.escape(String(updated.id))}"]`);
+          if (rowInDOM && typeof renderSchedulingRow === 'function') {
+            const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+            const productMap = new Map(products.map(p => [p.id, p]));
+            const activeBatches = typeof getFilteredBatches === 'function' ? getFilteredBatches() : prodState.batches;
+            const batchIdx = activeBatches.indexOf(prodState.batches[idx]);
+            if (batchIdx >= 0) {
+              const allFamilies = typeof getFamilies === 'function' ? getFamilies() : [];
+              realtimePatchUpdate('#prod-sched-tbody', updated.id, renderSchedulingRow(prodState.batches[idx], batchIdx, activeBatches, productMap, allFamilies));
+            } else if (typeof prodRefreshTabBody === 'function') {
+              prodRefreshTabBody();
+            }
+          } else if (typeof prodRefreshTabBody === 'function') {
+            prodRefreshTabBody();
+          }
+        }
       }
     },
     onDelete: (deleted) => {
       if (!prodState || !Array.isArray(prodState.batches)) return;
       prodState.batches = prodState.batches.filter(b => b.id !== deleted.id);
       if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
-      render();
+      // Remove the row; rebuild tbody to fix shifted indices
+      if (typeof currentSection !== 'undefined' && currentSection === 'production') {
+        realtimePatchDelete('#prod-sched-tbody', deleted.id);
+        if (typeof prodRefreshTabBody === 'function') prodRefreshTabBody();
+      }
     }
   });
 
@@ -368,7 +392,10 @@ window.prodDataSubscribe = function() {
       if (!prodState.products.some(p => p.id === newProduct.id)) {
         prodState.products.push(newProduct);
         if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
-        render();
+        if (typeof prodRefreshTabBody === 'function' &&
+            typeof currentSection !== 'undefined' && currentSection === 'production') {
+          prodRefreshTabBody();
+        }
       }
     },
     onUpdate: (updated) => {
@@ -377,14 +404,20 @@ window.prodDataSubscribe = function() {
       if (idx >= 0) {
         prodState.products[idx] = updated;
         if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
-        render();
+        if (typeof prodRefreshTabBody === 'function' &&
+            typeof currentSection !== 'undefined' && currentSection === 'production') {
+          prodRefreshTabBody();
+        }
       }
     },
     onDelete: (deleted) => {
       if (!prodState || !Array.isArray(prodState.products)) return;
       prodState.products = prodState.products.filter(p => p.id !== deleted.id);
       if (isEditingInlineCell()) { window.prodPendingRealTimeUpdate = true; return; }
-      render();
+      if (typeof prodRefreshTabBody === 'function' &&
+          typeof currentSection !== 'undefined' && currentSection === 'production') {
+        prodRefreshTabBody();
+      }
     }
   });
 };

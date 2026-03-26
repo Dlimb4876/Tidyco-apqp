@@ -67,9 +67,16 @@ function handleMcsChangesUpdate(payload) {
   const { eventType, new: newRecord, old: oldRecord } = payload;
 
   if (eventType === 'INSERT') {
-    // New change added
+    // New change added — prepend for newest-first default sort.
+    // If a non-default sort is active, fall back to full list re-render.
     mcsList.unshift(newRecord);
-    mcsRenderList();
+    const sortKey = document.getElementById('mcs-sort-select')?.value || 'date-desc';
+    if (sortKey === 'date-desc') {
+      realtimePatchInsert('#mcs-list-container', mcsRenderCardHTML(newRecord), { prepend: true });
+      mcsUpdateCounts();
+    } else {
+      mcsRenderList();
+    }
     mcsToast('New change added: ' + newRecord.id);
   } else if (eventType === 'UPDATE') {
     // Change updated
@@ -85,12 +92,21 @@ function handleMcsChangesUpdate(payload) {
         mcsShowViewModal(mcsList[idx]);
       }
 
-      mcsRenderList();
+      // Patch the card if it's currently visible in the list; otherwise run full re-render
+      // in case filter/sort changes made it appear or disappear.
+      const cardInDOM = document.querySelector(`#mcs-list-container [data-id="${CSS.escape(String(newRecord.id))}"]`);
+      if (cardInDOM) {
+        realtimePatchUpdate('#mcs-list-container', newRecord.id, mcsRenderCardHTML(mcsList[idx]));
+        mcsUpdateCounts();
+      } else {
+        mcsRenderList();
+      }
     }
   } else if (eventType === 'DELETE') {
     // Change deleted
     mcsList = mcsList.filter(c => c.id !== oldRecord.id);
-    mcsRenderList();
+    realtimePatchDelete('#mcs-list-container', oldRecord.id);
+    mcsUpdateCounts();
     mcsToast('Change deleted: ' + oldRecord.id);
   }
 }

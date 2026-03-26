@@ -136,17 +136,27 @@ function workAreasDataSubscribe() {
     onInsert: (record) => {
       workAreasState.workAreas.push(record);
       workAreasState.workAreas.sort((a, b) => a.name.localeCompare(b.name));
-      render();
+      if (typeof settingsWARenderRowHTML === 'function') {
+        realtimePatchInsert('#wa-tbody', settingsWARenderRowHTML(record), {
+          sortFn: _waResortTbody
+        });
+      }
     },
     onUpdate: (record) => {
       const idx = workAreasState.workAreas.findIndex(w => w.id === record.id);
       if (idx >= 0) workAreasState.workAreas[idx] = record;
       workAreasState.workAreas.sort((a, b) => a.name.localeCompare(b.name));
-      render();
+      if (typeof settingsWARenderRowHTML === 'function' && typeof settingsWorkAreasEditingId !== 'undefined' && settingsWorkAreasEditingId !== record.id) {
+        realtimePatchUpdate('#wa-tbody', record.id, settingsWARenderRowHTML(record));
+        if (typeof _waResortTbody === 'function') {
+          const tbody = document.getElementById('wa-tbody');
+          if (tbody) _waResortTbody(tbody);
+        }
+      }
     },
     onDelete: (record) => {
       workAreasState.workAreas = workAreasState.workAreas.filter(w => w.id !== record.id);
-      render();
+      realtimePatchDelete('#wa-tbody', record.id);
     }
   });
 }

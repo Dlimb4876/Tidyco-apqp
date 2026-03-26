@@ -136,9 +136,20 @@ describe('functionName', () => {
 })
 ```
 
+## ID Generation Pattern
+Use prefixed short IDs consistently:
+```javascript
+const id = 'f_' + Math.random().toString(36).substr(2, 5)
+```
+
+**Prefixes**: `f_` = mode, `e_` = effect, `c_` = cause, `r_` = risk, `a_` = action
+
+## Save Debouncing
+Data persists to Supabase with an **800–900 ms debounce**. Plan UX accordingly.
+
 ## Changelog Management
 
-After each logical change, add one entry near the top of `CHANGELOG.md` using this format:
+After each logical change, add one entry near the top of `CHANGELOG.md`:
 ```
 ## YYYY-MM-DD | Short descriptive title | Brief reason
 ```
@@ -169,9 +180,8 @@ For detailed guidance, consult:
 ## MCP Tools
 
 This repository has MCP servers configured in `.mcp.json`:
-
-- **Serena** (`oraios/serena`): Use for Serena ALM/Octane integration. Activated automatically when context requires Serena operations.
-- **GitHub** (`github/github-mcp-server`): Use for GitHub API operations (issues, PRs, repos).
+- **Serena** (`oraios/serena`): Use for Serena ALM/Octane integration
+- **GitHub** (`github/github-mcp-server`): Use for GitHub API operations
 
 ## OpenWolf Protocol
 

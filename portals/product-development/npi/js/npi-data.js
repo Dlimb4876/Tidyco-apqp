@@ -306,6 +306,15 @@ npi.data.pfd = {
     Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
     npi.notify('render')
   },
+  updateResourceQty(sid, bt, iid, qty) {
+    const s = prog().pfd.find(x => x.id === sid)
+    if (!s) return
+    const ref = (s.bomRefs || []).find(r => r.bomType === bt && r.itemId === iid)
+    if (!ref) return
+    ref.qty = Math.max(1, parseInt(qty, 10) || 1)
+    Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
+    npi.notify('render')
+  },
   saveCtqPick(stepIndex, selectedIds) {
     const step = prog().pfd[stepIndex]
     if (!step) return
@@ -316,9 +325,11 @@ npi.data.pfd = {
   saveBomPick(stepId, selectedKeys) {
     const s = prog().pfd.find(x => x.id === stepId)
     if (!s) return
+    const existingRefs = (s.bomRefs || [])
     s.bomRefs = selectedKeys.map(k => {
       const [bt, id] = k.split('|')
-      return { bomType: bt, itemId: id }
+      const existing = existingRefs.find(r => r.bomType === bt && r.itemId === id)
+      return { bomType: bt, itemId: id, qty: existing?.qty || 1 }
     })
     Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
     npi.notify('render')
@@ -413,56 +424,147 @@ npi.data.bom = {
       s.bomRefs = (s.bomRefs || []).filter(r => !(r.bomType === type && r.itemId === item.id))
       if (s.bomRefs.length !== before) Promise.resolve().then(() => npiRelSavePFDStep(s)).catch(err => console.error('[NPI] save PFD step failed:', err))
     })
-    p.bom.kits.forEach(k => { k.items = (k.items || []).filter(r => !(r.bomType === type && r.itemId === item.id)) })
     p.bom[type].splice(i, 1)
     Promise.resolve().then(() => npiRelDeleteBOMItem(item.id)).catch(err => console.error('[NPI] delete BOM item failed:', err))
     npi.notify('render')
   },
-  addKit() {
-    const kit = { id: crypto.randomUUID(), name: '', items: [] }
-    prog().bom.kits.push(kit)
-    Promise.resolve().then(() => npiRelSaveBOMKit(kit)).catch(err => console.error('[NPI] save BOM kit failed:', err))
+
+  // ── BOM Tree ───────────────────────────────────────────────
+  addTreeNode(parentId, nodeType, data) {
+    const p = prog()
+    if (!p.bom.tree) p.bom.tree = []
+    const siblings = p.bom.tree.filter(n => n.parentId === (parentId || null))
+    const node = {
+      id: crypto.randomUUID(),
+      parentId: parentId || null,
+      nodeType,
+      pn: data.pn || '',
+      desc: data.desc || '',
+      qty: data.qty != null ? data.qty : 1,
+      unit: data.unit || 'ea',
+      abcCatalogueId: data.abcCatalogueId || null,
+      notes: data.notes || '',
+      sortOrder: siblings.length
+    }
+    p.bom.tree.push(node)
+    Promise.resolve().then(() => npiRelSaveBomTreeNode(node)).catch(err => console.error('[NPI] save bom tree node failed:', err))
+    return node
+  },
+  updTreeNode(id, f, v) {
+    const p = prog()
+    const node = p.bom.tree.find(n => n.id === id)
+    if (!node) return
+    node[f] = v
+    Promise.resolve().then(() => npiRelSaveBomTreeNode(node)).catch(err => console.error('[NPI] save bom tree node failed:', err))
+  },
+  delTreeNode(id) {
+    const p = prog()
+    // Collect all descendant IDs recursively
+    const toDelete = new Set()
+    const collect = (nodeId) => {
+      toDelete.add(nodeId)
+      p.bom.tree.filter(n => n.parentId === nodeId).forEach(n => collect(n.id))
+    }
+    collect(id)
+    p.bom.tree = p.bom.tree.filter(n => !toDelete.has(n.id))
+    // DB cascades via ON DELETE CASCADE; only need to delete root
+    Promise.resolve().then(() => npiRelDeleteBomTreeNode(id)).catch(err => console.error('[NPI] delete bom tree node failed:', err))
     npi.notify('render')
-    return kit
   },
-  updKit(ki, f, v) {
+
+  // ── AAW / Repair BoM Groups ────────────────────────────────
+  addAawGroup() {
     const p = prog()
-    if (!p.bom.kits[ki]) return
-    p.bom.kits[ki][f] = v
-    Promise.resolve().then(() => npiRelSaveBOMKit(p.bom.kits[ki])).catch(err => console.error('[NPI] save BOM kit failed:', err))
+    if (!p.bom.aaw_repair) p.bom.aaw_repair = []
+    const group = {
+      id: crypto.randomUUID(),
+      title: 'Untitled BoM',
+      pn: '',
+      sortOrder: p.bom.aaw_repair.length,
+      tag: null,
+      nodes: []
+    }
+    p.bom.aaw_repair.push(group)
+    Promise.resolve().then(() => npiRelSaveBomGroup(group)).catch(err => console.error('[NPI] save bom group failed:', err))
+    npi.notify('render')
+    return group
   },
-  delKit(ki) {
+  updAawGroupTitle(id, title) {
     const p = prog()
-    if (!p.bom.kits[ki]) return
-    const id = p.bom.kits[ki].id
-    p.bom.kits.splice(ki, 1)
-    Promise.resolve().then(() => npiRelDeleteBOMKit(id)).catch(err => console.error('[NPI] delete BOM kit failed:', err))
+    const group = (p.bom.aaw_repair || []).find(g => g.id === id)
+    if (!group) return
+    group.title = title
+    Promise.resolve().then(() => npiRelSaveBomGroup(group)).catch(err => console.error('[NPI] save bom group failed:', err))
+  },
+
+  updAawGroupPn(id, pn) {
+    const p = prog()
+    const group = (p.bom.aaw_repair || []).find(g => g.id === id)
+    if (!group) return
+    group.pn = pn || ''
+    Promise.resolve().then(() => npiRelSaveBomGroup(group)).catch(err => console.error('[NPI] save bom group failed:', err))
+  },
+
+  updAawGroupTag(id, tag) {
+    const p = prog()
+    const group = (p.bom.aaw_repair || []).find(g => g.id === id)
+    if (!group) return
+    group.tag = tag || null
+    npi.notify('render')
+    Promise.resolve().then(() => npiRelSaveBomGroup(group)).catch(err => console.error('[NPI] save bom group failed:', err))
+  },
+  delAawGroup(id) {
+    const p = prog()
+    if (!p.bom.aaw_repair) return
+    p.bom.aaw_repair = p.bom.aaw_repair.filter(g => g.id !== id)
+    Promise.resolve().then(() => npiRelDeleteBomGroup(id)).catch(err => console.error('[NPI] delete bom group failed:', err))
     npi.notify('render')
   },
-  updKitItem(ki, ri, f, v) {
+  addAawTreeNode(groupId, parentId, nodeType, data) {
     const p = prog()
-    if (!p.bom.kits[ki] || !p.bom.kits[ki].items[ri]) return
-    p.bom.kits[ki].items[ri][f] = v
-    Promise.resolve().then(() => npiRelSaveKitItems(p.bom.kits[ki])).catch(err => console.error('[NPI] save kit items failed:', err))
-  },
-  delKitItem(ki, ri) {
-    const p = prog()
-    if (!p.bom.kits[ki]) return
-    p.bom.kits[ki].items.splice(ri, 1)
-    Promise.resolve().then(() => npiRelSaveKitItems(p.bom.kits[ki])).catch(err => console.error('[NPI] save kit items failed:', err))
+    const group = (p.bom.aaw_repair || []).find(g => g.id === groupId)
+    if (!group) return null
+    if (!group.nodes) group.nodes = []
+    const siblings = group.nodes.filter(n => n.parentId === (parentId || null))
+    const node = {
+      id: crypto.randomUUID(),
+      parentId: parentId || null,
+      groupId,
+      nodeType,
+      pn: data.pn || '',
+      desc: data.desc || '',
+      qty: data.qty != null ? data.qty : 1,
+      unit: data.unit || 'ea',
+      abcCatalogueId: data.abcCatalogueId || null,
+      notes: data.notes || '',
+      sortOrder: siblings.length
+    }
+    group.nodes.push(node)
     npi.notify('render')
+    Promise.resolve().then(() => npiRelSaveBomTreeNode(node)).catch(err => console.error('[NPI] save aaw tree node failed:', err))
+    return node
   },
-  saveKitPick(kitIndex, selectedKeys) {
+  updAawTreeNode(groupId, id, f, v) {
     const p = prog()
-    const kit = p.bom.kits[kitIndex]
-    if (!kit) return
-    const existing = {}
-    kit.items.forEach(r => { existing[r.bomType + '|' + r.itemId] = r.qty })
-    kit.items = selectedKeys.map(key => {
-      const [bt, id] = key.split('|')
-      return { bomType: bt, itemId: id, qty: existing[key] || 1 }
-    })
-    Promise.resolve().then(() => npiRelSaveKitItems(kit)).catch(err => console.error('[NPI] save kit items failed:', err))
+    const group = (p.bom.aaw_repair || []).find(g => g.id === groupId)
+    if (!group) return
+    const node = group.nodes.find(n => n.id === id)
+    if (!node) return
+    node[f] = v
+    Promise.resolve().then(() => npiRelSaveBomTreeNode(node)).catch(err => console.error('[NPI] save aaw tree node failed:', err))
+  },
+  delAawTreeNode(groupId, id) {
+    const p = prog()
+    const group = (p.bom.aaw_repair || []).find(g => g.id === groupId)
+    if (!group) return
+    const toDelete = new Set()
+    const collect = nodeId => {
+      toDelete.add(nodeId)
+      group.nodes.filter(n => n.parentId === nodeId).forEach(n => collect(n.id))
+    }
+    collect(id)
+    group.nodes = group.nodes.filter(n => !toDelete.has(n.id))
+    Promise.resolve().then(() => npiRelDeleteBomTreeNode(id)).catch(err => console.error('[NPI] delete aaw tree node failed:', err))
     npi.notify('render')
   }
 }

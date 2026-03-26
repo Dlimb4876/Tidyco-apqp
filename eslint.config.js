@@ -21,6 +21,7 @@ export default [
         productionTab: 'writable',
         productDevelopmentTab: 'writable',
         bomSubTab: 'writable',
+        bomPartsRegisterView: 'writable',
         currentUser: 'writable',
         collapsedGroups: 'writable',
         meStartOffset: 'writable',

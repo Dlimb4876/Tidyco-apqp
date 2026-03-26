@@ -4,6 +4,16 @@
 // All functions under npi.tracker.*
 // ═══════════════════════════════════
 
+// Helper function to update tracker sub-assembly filter and URL
+function setTrackerSubAsmFilter(value) {
+  trackerSubAsmFilter = value || 'all'
+  // Update URL to persist tracker filter
+  const parts = ['p=' + encodeURIComponent(progId), 's=project']
+  if (trackerSubAsmFilter !== 'all') parts.push('tsf=' + encodeURIComponent(trackerSubAsmFilter))
+  writeNavigationHistory('#' + parts.join('&'), { push: true })
+  render()
+}
+
 // ══════════════════════════════════════
 // ACTION TRACKER
 // ══════════════════════════════════════
@@ -27,9 +37,9 @@ npi.tracker.renderActions = function() {
 
   // Filter chips markup
   const filterBar = hasSubAsms ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-    <button class="btn btn-sm ${trackerSubAsmFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="trackerSubAsmFilter='all';render()">All</button>
-    <button class="btn btn-sm ${trackerSubAsmFilter === 'root' ? 'btn-primary' : 'btn-ghost'}" onclick="trackerSubAsmFilter='root';render()">Root only</button>
-    ${subAsms.map(s => `<button class="btn btn-sm ${trackerSubAsmFilter === s.id ? 'btn-primary' : 'btn-ghost'}" onclick="trackerSubAsmFilter='${s.id}';render()">${esc(s.name)}</button>`).join('')}
+    <button class="btn btn-sm ${trackerSubAsmFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('all')">All</button>
+    <button class="btn btn-sm ${trackerSubAsmFilter === 'root' ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('root')">Root only</button>
+    ${subAsms.map(s => `<button class="btn btn-sm ${trackerSubAsmFilter === s.id ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('${s.id}')">${esc(s.name)}</button>`).join('')}
   </div>` : ''
 
   // Build visible rows (preserve original indices for in-place edits)
@@ -118,9 +128,9 @@ npi.tracker.renderRisks = function() {
 
   // Filter chips markup
   const filterBar = hasSubAsms ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-    <button class="btn btn-sm ${trackerSubAsmFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="trackerSubAsmFilter='all';render()">All</button>
-    <button class="btn btn-sm ${trackerSubAsmFilter === 'root' ? 'btn-primary' : 'btn-ghost'}" onclick="trackerSubAsmFilter='root';render()">Root only</button>
-    ${subAsms.map(s => `<button class="btn btn-sm ${trackerSubAsmFilter === s.id ? 'btn-primary' : 'btn-ghost'}" onclick="trackerSubAsmFilter='${s.id}';render()">${esc(s.name)}</button>`).join('')}
+    <button class="btn btn-sm ${trackerSubAsmFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('all')">All</button>
+    <button class="btn btn-sm ${trackerSubAsmFilter === 'root' ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('root')">Root only</button>
+    ${subAsms.map(s => `<button class="btn btn-sm ${trackerSubAsmFilter === s.id ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('${s.id}')">${esc(s.name)}</button>`).join('')}
   </div>` : ''
 
   const subAsmOpts = hasSubAsms
