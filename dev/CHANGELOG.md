@@ -3,6 +3,10 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-26 | Make sub-assembly descriptions editable in Core and AAW/Repair BoMs | Description field is now an editable input for all tree nodes (parts and sub-assemblies) in both Core BoM and AAW/Repair BoM views
+
+## 2026-03-26 | Add top-level Part Number field to AAW/Repair BoMs | Each AAW/Repair BoM group now has a dedicated Part Number input field displayed in the header; stored in pn column of npi_bom_groups table
+
 ## 2026-03-26 | Phase 2: EVM Foundation & Data Layer | DB migration adds percent_complete to me_tasks/pm_tasks, creates time_logs table with indexes and auth RLS, adds capacity_task_id FK to npi_actions; me-data-relational.js gains meLoadTimeLogs(); meDataState gains timeLogs array; me-hub-data.js fetches timeLogs on init and exposes hubGetActuals()
 
 ## 2026-03-25 | Phase 1: ME Department Hub standalone setup | New standalone hub at me-hub/index.html with its own auth, CSS, and JS; reads me_tasks one-directionally; no links added to main portal; EVM and charting deferred to later phases

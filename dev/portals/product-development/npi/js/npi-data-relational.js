@@ -336,6 +336,7 @@ window.npiRelLoad = async function(pid) {
         p.bom.aaw_repair = (bomGroupsRes.data || []).map(g => ({
           id: g.id,
           title: g.title || 'Untitled BoM',
+          pn: g.pn || '',
           sortOrder: g.sort_order || 0,
           tag: g.tag || null,
           nodes: aawNodesByGroup[g.id] || []
@@ -945,6 +946,7 @@ window.npiRelSaveBomGroup = async function(group) {
       id: group.id,
       project_id: projectId,
       title: group.title || 'Untitled BoM',
+      pn: group.pn || '',
       sort_order: group.sortOrder || 0,
       tag: group.tag || null
     };

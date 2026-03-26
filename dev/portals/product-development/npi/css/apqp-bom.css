@@ -389,6 +389,18 @@ select.abc-class-select.abc-none { background: var(--bg); color: var(--muted); }
   white-space: nowrap;
 }
 
+.bom-tree-desc-input {
+  font-size: 12px;
+  color: var(--ink);
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  background: var(--white);
+}
+.bom-tree-desc-input:focus { outline: none; border-color: var(--blue); }
+
 /* Qty input */
 .bom-tree-qty {
   width: 60px;
