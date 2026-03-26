@@ -9,7 +9,8 @@ let currentUserTeams = []; // Team IDs assigned to the current user (single-team
 let progId = null;
 let currentSection = 'hub';
 let apqpTab = 'ctq'; // ctq|pfd|pfmea|cp
-let bomSubTab = 'parts'; // parts|tools|equip|mat|cons|kits
+let bomSubTab = 'tree'; // tree|aaw_repair|register|tools|equip|cons
+let bomPartsRegisterView = 'total'; // total|structure|aaw — view mode for rolled-up parts register
 let capacityTab = 'root'; // root|me|production|projects|logistics|unit6
 let prodCapTab  = 'dashboard'; // dashboard|by-work-area|settings|detail
 let pmCapTab = 'tasks'; // tasks (project-management capacity)
@@ -22,6 +23,7 @@ let pfmeaView = 'worksheet'; // worksheet|history
 let ctqSourceFilter = 'all'; // all | Customer Spec | OEM Data | Internal Standard | Regulatory | Drawing
 let ctqOosFilter = 'all'; // all | Repair | Replace | Scrap | Review | TBD
 let ctqAgreedFilter = 'all'; // all | yes | no
+let ctqCoverageFilter = 'all'; // all | linked | orphaned — filter CTQs by whether they are referenced in PFD/PFMEA
 let trackerSubAsmFilter = 'all'; // all|root|<sub-assembly-id>
 let prodPlanMonthOffset = 0; // Month offset from current month
 let meStartOffset = 0; // Months from today
@@ -36,9 +38,15 @@ let tenderGateScopeState = {
 
 // Modal picker state
 let ctqPickTarget = null, ctqPickSelected = [];
-let bomPickTarget = null, bomPickSelected = [], bomPickFilter = 'all';
-let kitPickTarget = null, kitPickSelected = [], kitPickFilter = 'all';
+let bomPickTarget = null, bomPickSelected = [], bomPickFilter = 'all', bomPickSearch = '';
+let bomTreeExpanded = new Set(); // IDs of expanded subassembly nodes in the tree tab
+let bomTreeAddParentId = null;  // parent node ID when opening the add-part or add-subasm modals
+let bomAawTreeExpanded = new Set(); // IDs of expanded nodes in AAW/Repair trees
+let bomAawActiveGroupId = null;  // group ID for the active AAW/Repair add-part or add-subasm modal
+let bomAawGroupParentId = null;  // parent node ID within the active AAW/Repair group
 let docPickTarget = null, docPickSelected = [];
+let resourceEditTarget = null; // { stepId, bomType, itemId } for editing resource quantity
+let resourceEditQty = 1;
 let insertOriginIdx = null;
 let collapsedGroups = new Set();
 
@@ -266,7 +274,7 @@ function newProgTemplate(name, customer, unit, family, lead, pm, date) {
   return {
     id: crypto.randomUUID(), name, customer, unit, family, lead, pm, date,
     ctq: [], pfd: [], pfmea: [], cp: [],
-    bom: { parts: [], tools: [], equip: [], mat: [], cons: [], kits: [] },
+    bom: { parts: [], tools: [], equip: [], mat: [], cons: [], tree: [], aaw_repair: [] },
     gates, actions: [], risks: [], timing: [], gantt: [], subAssemblies: [],
     product_id: null,
     gate_selections: null,

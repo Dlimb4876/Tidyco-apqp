@@ -83,6 +83,28 @@ async function launchApp() {
     if (h.met) meTab                 = h.met;
     if (h.pct) prodCapTab            = h.pct;
     if (h.pmt) pmTab                 = h.pmt;
+
+    // Restore NPI Projects Dashboard filters
+    if (h.ps)  npiProjectsSearch       = decodeURIComponent(h.ps);
+    if (h.pf)  npiProjectsFamilyFilter = decodeURIComponent(h.pf);
+    if (h.pst) npiProjectsStatusFilter = decodeURIComponent(h.pst);
+    if (h.pvm) npiProjectsViewMode     = decodeURIComponent(h.pvm);
+
+    // Restore BOM sub-tab
+    if (h.bt)  bomSubTab               = decodeURIComponent(h.bt);
+
+    // Restore PFMEA filters
+    if (h.pfr) pfmeaRpnFilter          = decodeURIComponent(h.pfr);
+    if (h.pfv) pfmeaView               = decodeURIComponent(h.pfv);
+
+    // Restore CTQ filters
+    if (h.csf) ctqSourceFilter         = decodeURIComponent(h.csf);
+    if (h.cof) ctqOosFilter            = decodeURIComponent(h.cof);
+    if (h.caf) ctqAgreedFilter         = decodeURIComponent(h.caf);
+
+    // Restore tracker sub-assembly filter
+    if (h.tsf) trackerSubAsmFilter     = decodeURIComponent(h.tsf);
+
     navigate(h.s, { pushHash: false });
   } else {
     navigate('hub', { pushHash: false });

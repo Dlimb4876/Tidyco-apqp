@@ -24,7 +24,7 @@ A strong control plan utilizes both, but prioritizes prevention:
 
 ## The analytical process
 1. **Identify targets:** Look at the PFMEA. Any row with a high RPN, high Severity, or a Special Characteristic (SC) needs a robust control plan entry.
-2. **Define the standard:** Pull the exact specification and tolerance from the CTQ matrix.
+2. **Define the standard:** Pull the exact specification and tolerance from the CTQ matrix. Ensure any Special Characteristics (🦺 Safety, ❗ Critical, ⚠️ Major) identified in the PFMEA carry over to the Control Plan.
 3. **Assign the control:** Determine the best method, frequency, and owner to verify that standard.
 4. **Write the reaction plan:** Define the exact escalation path if the control fails.
 

@@ -161,7 +161,6 @@ async function mcsShowCreateModal() {
   `;
 
   document.body.appendChild(backdrop);
-  mcsInitStageCollapsibles(backdrop, ['open']);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop');
   });

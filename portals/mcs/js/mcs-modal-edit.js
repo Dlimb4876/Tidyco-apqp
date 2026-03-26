@@ -59,7 +59,7 @@ async function mcsSaveChange() {
         description,
         affected_product_id: selectedProductId || null,
         part_drawing_no: selectedProductName || null,
-        target_implementation: document.getElementById('mcs-f-target')?.value,
+        target_implementation: document.getElementById('mcs-f-target')?.value || null,
         estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: combinedJustification,
         updated_at: new Date().toISOString()
@@ -135,7 +135,7 @@ async function mcsSaveChange() {
         change_source: document.getElementById('mcs-f-source')?.value || 'Manual',
         created_at: now,
         updated_at: now,
-        target_implementation: document.getElementById('mcs-f-target')?.value,
+        target_implementation: document.getElementById('mcs-f-target')?.value || null,
         estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: combinedJustification,
         // Store nominated approver so mcsCanApproveStep can identify who was asked to review
@@ -328,15 +328,6 @@ async function mcsShowEditModal(change) {
   `;
 
   document.body.appendChild(backdrop);
-  const activeEditStage = {
-    open: 'open',
-    review: 'approval1',
-    implementing: 'implement',
-    final_review: 'approval2',
-    implemented: 'approval2',
-    closed: 'approval2'
-  }[change.status] || 'open';
-  mcsInitStageCollapsibles(backdrop, [activeEditStage]);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop');
   });

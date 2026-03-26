@@ -20,6 +20,9 @@ It is the reference point for what "good" looks like and how it will be verified
 3. **Define the target:** Ensure every requirement has a specific target and tolerance. Avoid vague terms like "good condition" or "tight".
 4. **Determine verification:** Decide how the shop floor or quality team will actually prove the requirement was met.
 
+## Filtering and Views
+Large CTQ lists can be narrowed down using the filter dropdowns at the top of the table. You can filter by **Source**, **Out-of-Spec Action**, and **Customer Accepted** status. Your filter selections are automatically saved in the page URL, making it easy to bookmark specific views.
+
 ## Common mistakes to avoid
 - **Vague specifications:** Writing "visually acceptable" instead of "no scratches visible from 1 meter under normal lighting".
 - **Missing tolerances:** Providing a target like "100mm" without stating if 100.5mm is acceptable.

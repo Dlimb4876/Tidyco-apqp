@@ -285,10 +285,32 @@
   <div class="modal modal-lg">
     <div class="modal-title" id="bomPickTitle">Link Resources</div>
     <div class="bom-filter-row" id="bomPickFilter"></div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg-soft)">
+      <input type="text" id="bomPickSearch" class="cell-edit" placeholder="🔍 Search resources..." data-action="pfd-search-bom" style="width:100%">
+    </div>
     <div class="bom-pick-list" id="bomPickList"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalBomPick')">Cancel</button>
       <button class="btn btn-primary" onclick="npi.apqp.saveBomPick()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Resource Edit Modal for PFD step resources -->
+<div class="modal-bg" id="modalResourceEdit" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title" id="resourceEditTitle">Edit Resource</div>
+    <div id="resourceEditContent" style="display:flex;flex-direction:column;gap:16px">
+      <div class="field">
+        <label for="resourceEditQty">Quantity</label>
+        <input type="number" id="resourceEditQty" class="cell-edit" min="1" step="1" value="1" placeholder="Amount needed">
+      </div>
+      <div id="resourceEditInfo" style="font-size:13px;color:var(--muted)"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="npi.pfd.deleteResourceEdit()">Remove</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalResourceEdit')">Cancel</button>
+      <button class="btn btn-primary" onclick="npi.pfd.saveResourceEdit()">Save</button>
     </div>
   </div>
 </div>
@@ -305,16 +327,24 @@
   </div>
 </div>
 
-<!-- BoM Picker for Kit item add -->
-<div class="modal-bg" id="modalKitPick" style="display:none">
-  <div class="modal modal-lg">
-    <div class="modal-title">Add Items to Kit</div>
-    <div class="bom-filter-row" id="kitPickFilter"></div>
-    <div class="bom-pick-list" id="kitPickList"></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('modalKitPick')">Cancel</button>
-      <button class="btn btn-primary" data-action="bom-save-kit-pick">Add Selected</button>
-    </div>
+<!-- BoM Tree — Add Sub-Assembly -->
+<div class="modal-bg" id="modalBomTreeSubAsm" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-title">📦 Add Sub-Assembly</div>
+    <form id="bomTreeSubAsmForm" onsubmit="event.preventDefault(); npi.bom.saveTreeSubAsm()">
+      <div class="field">
+        <label for="bomTreeSubAsmPn">Part Number *</label>
+        <input id="bomTreeSubAsmPn" class="cell-edit" placeholder="e.g. SA-001" style="font-family:'IBM Plex Mono',monospace" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="bomTreeSubAsmDesc">Description</label>
+        <input id="bomTreeSubAsmDesc" class="cell-edit" placeholder="e.g. Gearbox Assembly">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modalBomTreeSubAsm')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Sub-Assembly</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -442,6 +472,18 @@
       <button id="abcEditForm_deleteBtn" class="btn btn-danger" onclick="npi.bom.deleteFromModal()" style="margin-right:auto;display:none">🗑 Delete Part</button>
       <button class="btn btn-ghost" onclick="npi.bom.cancelABCEdit()">Cancel</button>
       <button class="btn btn-primary" onclick="npi.bom.saveABCEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Where Used Modal -->
+<div class="modal-bg" id="modalWhereUsed" style="display:none">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title">📍 Where Used</div>
+    <div id="whereUsedTitle" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)"></div>
+    <div id="whereUsedContent" style="max-height:400px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalWhereUsed')">Close</button>
     </div>
   </div>
 </div>
@@ -579,6 +621,7 @@
 <script src="utils/js/helpers.js"></script>
 <script src="utils/js/navigation.js"></script>
 <script src="utils/js/realtime.js"></script>
+<script src="utils/js/realtime-patch.js"></script>
 <script src="core/js/chart-theme.js"></script>
 <script src="utils/js/guide.js"></script>
 <script src="core/js/network.js"></script>

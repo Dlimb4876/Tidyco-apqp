@@ -20,17 +20,35 @@ async function familiesDataInit() {
 
     // Set up real-time subscription for collaborative editing
     if (typeof createRealtimeSubscription === 'function') {
-      const reloadAndRender = async () => {
-        await familiesDataLoad();
-        if (typeof renderSettingsFamiliesTab === 'function') renderSettingsFamiliesTab();
-      };
       familiesState.subscription = createRealtimeSubscription(
         'families',
         'families_changed',
         {
-          onInsert: reloadAndRender,
-          onUpdate: reloadAndRender,
-          onDelete: reloadAndRender
+          onInsert: (record) => {
+            familiesState.families.push(record);
+            familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
+            if (typeof settingsFamilyRenderRowHTML === 'function') {
+              realtimePatchInsert('#families-tbody', settingsFamilyRenderRowHTML(record), {
+                sortFn: _familiesResortTbody
+              });
+            }
+          },
+          onUpdate: (record) => {
+            const idx = familiesState.families.findIndex(f => f.id === record.id);
+            if (idx >= 0) familiesState.families[idx] = record;
+            familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
+            if (typeof settingsFamilyRenderRowHTML === 'function' &&
+                typeof settingsFamiliesEditingId !== 'undefined' &&
+                settingsFamiliesEditingId !== record.id) {
+              realtimePatchUpdate('#families-tbody', record.id, settingsFamilyRenderRowHTML(record));
+              const tbody = document.getElementById('families-tbody');
+              if (tbody && typeof _familiesResortTbody === 'function') _familiesResortTbody(tbody);
+            }
+          },
+          onDelete: (record) => {
+            familiesState.families = familiesState.families.filter(f => f.id !== record.id);
+            realtimePatchDelete('#families-tbody', record.id);
+          }
         }
       );
     }

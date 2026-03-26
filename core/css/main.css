@@ -111,6 +111,13 @@
   --status-amber-bg: #fef3c7; --status-amber-text: #92400e;
   --status-purple-bg: #ede9fe; --status-purple-text: #5b21b6;
   --status-red-bg: #fee2e2; --status-red-text: #991b1b;
+
+  /* Dim Background Colors (for badges, pills, tags) */
+  --green-dim: #dcfce7;
+  --blue-dim: #dbeafe;
+  --amber-dim: #fef3c7;
+  --orange-dim: #fed7aa;
+  --red-dim: #fee2e2;
 }
 
 :root[data-theme="dark"] {
@@ -213,6 +220,13 @@
   --status-amber-bg: rgba(245,158,11,0.15); --status-amber-text: #fcd34d;
   --status-purple-bg: rgba(139,92,246,0.15); --status-purple-text: #c4b5fd;
   --status-red-bg: rgba(239,68,68,0.15); --status-red-text: #fca5a5;
+
+  /* Dim Background Colors - Dark */
+  --green-dim: rgba(16,185,129,0.18);
+  --blue-dim: rgba(59,130,246,0.18);
+  --amber-dim: rgba(245,158,11,0.18);
+  --orange-dim: rgba(234,88,12,0.18);
+  --red-dim: rgba(239,68,68,0.18);
 }
 
 :root[data-theme="light"] {
@@ -319,6 +333,13 @@
   --status-amber-bg: rgba(255,204,0,0.12); --status-amber-text: #ffcc00;
   --status-purple-bg: rgba(204,119,255,0.12); --status-purple-text: #cc77ff;
   --status-red-bg: rgba(255,68,68,0.12); --status-red-text: #ff4444;
+
+  /* Dim Background Colors - Terminal */
+  --green-dim: rgba(0,255,65,0.16);
+  --blue-dim: rgba(0,204,255,0.16);
+  --amber-dim: rgba(255,204,0,0.16);
+  --orange-dim: rgba(255,170,0,0.16);
+  --red-dim: rgba(255,68,68,0.16);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

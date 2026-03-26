@@ -10,7 +10,7 @@ It serves as the operational bridge between identifying an issue (like a risk or
 
 ## Key components of a good action
 - **Description:** Exactly what needs to be done, starting with a verb (e.g., "Design a poka-yoke fixture for the bearing assembly").
-- **Owner:** A single named individual responsible for completion. "Engineering Team" is not an owner.
+- **Owner:** A single named individual responsible for completion, selected from the user account dropdown. "Engineering Team" is not an owner.
 - **Due Date:** A realistic, agreed-upon deadline.
 - **Status:** Current state (Open, In Progress, Blocked, Done).
 - **Action Taken:** The actual evidence or result achieved once completed.
@@ -41,7 +41,7 @@ It serves as the operational bridge between identifying an issue (like a risk or
 - Actions are linked back to their source (Risk, PFMEA, Gate).
 
 ## How Actions connect to other pages
-- **Action Centre:** All project actions aggregate into the user's Action Centre for cross-project visibility.
+- **Action Centre:** All project actions aggregate into the user's personal Action Centre for cross-project visibility. Open and overdue actions also appear in the top widget on the main Hub.
 - **PFMEA:** High RPNs generate mitigation actions that live here.
 - **Risk Register:** Project risks generate mitigation actions that live here.
 - **APQP Gates:** Incomplete gate criteria generate actions required to pass the gate.

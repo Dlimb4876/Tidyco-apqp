@@ -24,7 +24,7 @@ window.meCapSmartRender = function() {
     meChartDirty = true;
     return;
   }
-  render();
+  meRefreshCurrentTab();
 };
 
 // ── Entry point ────────────────────────────────────────────

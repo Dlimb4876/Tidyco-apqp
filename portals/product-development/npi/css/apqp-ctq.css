@@ -275,3 +275,39 @@
 .ctq-pick-label:hover {
   background: var(--blue-pale);
 }
+
+/* ── Coverage Banner ────────────────────────────────────────── */
+.coverage-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--blue-pale);
+  border: 1px solid var(--blue-mid);
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.coverage-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coverage-banner .tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.coverage-banner a {
+  margin-left: auto;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.coverage-banner a:hover {
+  text-decoration: underline;
+}

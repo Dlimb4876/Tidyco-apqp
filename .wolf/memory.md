@@ -1138,3 +1138,280 @@
 | 11:29 | Edited portals/capacity/unit6/js/unit6-data.js | added 2 condition(s) | ~757 |
 | 11:29 | Edited CHANGELOG.md | 1→3 lines | ~139 |
 | 11:29 | Session end: 4 writes across 4 files (log-data.js, pm-data.js, unit6-data.js, CHANGELOG.md) | 9 reads | ~2355 tok |
+
+## Session: 2026-03-25 12:07
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:10 | Edited portals/mcs/js/mcs-modal-edit.js | 4→4 lines | ~82 |
+| 12:10 | Edited portals/mcs/js/mcs-modal-edit.js | 4→4 lines | ~79 |
+| 12:10 | Edited CHANGELOG.md | 2→4 lines | ~102 |
+| 12:10 | Session end: 3 writes across 2 files (mcs-modal-edit.js, CHANGELOG.md) | 2 reads | ~23945 tok |
+
+## Session: 2026-03-25 12:13
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:33 | Created plans/surgical-realtime-updates.md | — | ~2675 |
+| 12:33 | Session end: 1 writes across 1 files (surgical-realtime-updates.md) | 3 reads | ~14758 tok |
+
+## Session: 2026-03-25 12:46
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 12:46
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 12:48
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 12:48
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:53 | Created utils/js/realtime-patch.js | — | ~845 |
+| 12:53 | Edited index.html | 1→2 lines | ~26 |
+| 12:56 | Edited portals/settings/js/settings.js | modified map() | ~448 |
+| 12:56 | Edited portals/settings/js/settings.js | added optional chaining | ~273 |
+| 12:57 | Edited portals/capacity/js/work-areas-data.js | added 4 condition(s) | ~391 |
+| 12:58 | Edited portals/settings/js/settings.js | modified map() | ~626 |
+| 12:58 | Edited portals/settings/js/settings.js | added optional chaining | ~453 |
+| 12:58 | Edited portals/product-development/js/families-data.js | added 3 condition(s) | ~471 |
+| 13:08 | Edited portals/product-development/js/product-development.js | removed 23 lines | ~44 |
+| 13:08 | Edited portals/product-development/js/product-development.js | modified familyTemplateViewerRowHTML() | ~479 |
+| 13:08 | Edited portals/product-development/js/family-templates-data.js | added 3 condition(s) | ~524 |
+| 13:09 | Edited portals/product-development/npi/js/bom-cclass.js | render() → refreshABCCatalogueResults() | ~276 |
+| 13:10 | Edited portals/mcs/js/mcs-main.js | removed 42 lines | ~24 |
+| 13:11 | Edited portals/mcs/js/mcs-main.js | modified mcsRenderCardHTML() | ~567 |
+| 13:11 | Edited portals/mcs/js/mcs-realtime.js | added optional chaining | ~614 |
+| 13:13 | Edited portals/feedback/js/feedback.js | added 2 condition(s) | ~151 |
+| 13:13 | Edited portals/feedback/js/feedback-data.js | _publishChange() → feedbackRefreshContent() | ~371 |
+| 13:15 | Edited portals/production/js/scheduling.js | inline fix | ~38 |
+| 13:15 | Edited portals/production/js/scheduling.js | 2→2 lines | ~34 |
+| 13:15 | Edited portals/production/js/production.js | added 5 condition(s) | ~160 |
+| 13:16 | Edited portals/production/js/data.js | added 11 condition(s) | ~1246 |
+| 13:17 | Edited CHANGELOG.md | 1→3 lines | ~130 |
+
+## Session: 2026-03-25 13:18
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 13:20 | Edited portals/capacity/js/me-capacity.js | render() → meRefreshCurrentTab() | ~51 |
+| 13:20 | Edited portals/capacity/project-management/js/pm-capacity.js | render() → pmRefreshCurrentTab() | ~51 |
+| 13:20 | Edited portals/capacity/logistics/js/log-capacity.js | render() → logRefreshCurrentTab() | ~28 |
+| 13:21 | Edited portals/capacity/unit6/js/unit6-capacity.js | render() → unit6RefreshCurrentTab() | ~30 |
+| 13:21 | Edited portals/capacity/js/prod-capacity-data.js | render() → prodCapRefreshCurrentTab() | ~66 |
+| 13:21 | Edited portals/capacity/js/prod-capacity-data.js | render() → prodCapRefreshCurrentTab() | ~324 |
+| 13:22 | Edited CHANGELOG.md | 1→3 lines | ~100 |
+| 13:22 | Session end: 7 writes across 6 files (me-capacity.js, pm-capacity.js, log-capacity.js, unit6-capacity.js, prod-capacity-data.js) | 7 reads | ~36805 tok |
+
+## Session: 2026-03-25 15:20
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:49 | Edited core/js/state.js | inline fix | ~17 |
+| 15:49 | Edited core/js/state.js | 2→3 lines | ~73 |
+| 15:49 | Edited core/js/state.js | inline fix | ~22 |
+| 15:49 | Edited portals/product-development/npi/js/npi-constants.js | 3→3 lines | ~51 |
+| 15:50 | Edited portals/product-development/npi/js/npi-data-relational.js | 22→21 lines | ~446 |
+| 15:50 | Edited portals/product-development/npi/js/npi-data-relational.js | modified if() | ~444 |
+| 15:50 | Edited portals/product-development/npi/js/npi-data-relational.js | added error handling | ~453 |
+| 15:50 | Edited portals/product-development/npi/js/npi-data-relational.js | 4→4 lines | ~77 |
+| 15:51 | Edited portals/product-development/npi/js/npi-data.js | modified delRow() | ~644 |
+| 15:54 | Edited portals/product-development/npi/js/bom.js | 4→4 lines | ~66 |
+| 15:54 | Edited portals/product-development/npi/js/bom.js | "kits" → "tree" | ~30 |
+| 15:55 | Edited portals/product-development/npi/js/bom.js | added optional chaining | ~2221 |
+| 15:56 | Edited portals/product-development/npi/js/bom.js | added 2 condition(s) | ~400 |
+| 15:56 | Edited portals/product-development/npi/js/bom.js | modified Set() | ~92 |
+| 15:56 | Edited portals/product-development/npi/js/npi-events.js | 6→5 lines | ~124 |
+| 15:56 | Edited portals/product-development/npi/js/npi-events.js | 2→1 lines | ~27 |
+| 15:57 | Edited index.html | expanded (+8 lines) | ~263 |
+| 15:57 | Edited portals/product-development/npi/css/apqp-bom.css | modified media() | ~1071 |
+| 15:58 | Edited utils/js/guide.js | expanded (+6 lines) | ~774 |
+| 15:58 | Edited CHANGELOG.md | 4→6 lines | ~92 |
+| 15:59 | Session end: 20 writes across 10 files (state.js, npi-constants.js, npi-data-relational.js, npi-data.js, bom.js) | 12 reads | ~105043 tok |
+
+## Session: 2026-03-25 16:20
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 16:21
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 16:21
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 16:22
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 16:36
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 16:37 | Edited portals/product-development/npi/js/dashboard.js | "${totalBomItems} items · " → "${totalBomItems} items · " | ~22 |
+| 16:37 | Edited portals/product-development/npi/js/npi-data-relational.js | inline fix | ~26 |
+| 16:37 | Edited CHANGELOG.md | 2→4 lines | ~84 |
+| 16:38 | Session end: 3 writes across 3 files (dashboard.js, npi-data-relational.js, CHANGELOG.md) | 3 reads | ~46233 tok |
+
+## Session: 2026-03-25 16:59
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 18:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 18:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 18:26 | Edited core/js/state.js | 2→5 lines | ~129 |
+| 18:26 | Edited core/js/state.js | inline fix | ~26 |
+| 18:26 | Edited portals/product-development/npi/js/npi-constants.js | 2→2 lines | ~41 |
+| 18:27 | Edited portals/product-development/npi/js/npi-data-relational.js | 22→23 lines | ~480 |
+| 18:27 | Edited portals/product-development/npi/js/npi-data-relational.js | added 2 condition(s) | ~331 |
+| 18:27 | Edited portals/product-development/npi/js/npi-data-relational.js | 13→14 lines | ~128 |
+| 18:27 | Edited portals/product-development/npi/js/npi-data-relational.js | added 4 condition(s) | ~397 |
+| 18:28 | Edited portals/product-development/npi/js/npi-data.js | added 8 condition(s) | ~986 |
+| 18:30 | Edited portals/product-development/npi/js/npi-events.js | expanded (+7 lines) | ~264 |
+| 18:30 | Edited portals/product-development/npi/js/npi-events.js | 1→3 lines | ~95 |
+| 18:31 | Edited utils/js/guide.js | expanded (+11 lines) | ~300 |
+| 18:31 | Edited CHANGELOG.md | 4→6 lines | ~81 |
+| 18:32 | Session end: 12 writes across 7 files (state.js, npi-constants.js, npi-data-relational.js, npi-data.js, npi-events.js) | 9 reads | ~91412 tok |
+
+## Session: 2026-03-25 18:35
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 18:37 | Edited portals/product-development/npi/js/npi-data-relational.js | 6→7 lines | ~74 |
+| 18:38 | Edited portals/product-development/npi/js/npi-events.js | 1→2 lines | ~58 |
+| 18:39 | Edited utils/js/guide.js | 1→2 lines | ~82 |
+| 18:39 | Edited CHANGELOG.md | 1→3 lines | ~71 |
+| 18:39 | Session end: 4 writes across 4 files (npi-data-relational.js, npi-events.js, guide.js, CHANGELOG.md) | 4 reads | ~56673 tok |
+
+## Session: 2026-03-25 19:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 19:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 19:41 | Edited .opencode/config.json | 2→2 lines | ~10 |
+| 19:41 | Session end: 1 writes across 1 files (config.json) | 2 reads | ~333 tok |
+
+## Session: 2026-03-25 19:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 19:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 19:45
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 19:45
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 21:54
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 21:54
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 22:29
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 22:29
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:31 | Edited portals/feedback/js/feedback.js | "#mc .section-inner" → "#mainContent .section-inn" | ~20 |
+| 22:31 | Edited CHANGELOG.md | 2→4 lines | ~76 |
+| 22:31 | Session end: 2 writes across 2 files (feedback.js, CHANGELOG.md) | 5 reads | ~31768 tok |
+
+## Session: 2026-03-25 22:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-25 22:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:44 | Edited .gitignore | 3→7 lines | ~37 |
+| 22:44 | Session end: 1 writes across 1 files (.gitignore) | 2 reads | ~386 tok |
+
+## Session: 2026-03-25 22:54
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:56 | Created me-hub/index.html | — | ~926 |
+| 22:57 | Created me-hub/css/me-hub.css | — | ~2542 |
+| 22:57 | Created me-hub/js/me-hub-auth.js | — | ~730 |
+| 22:57 | Created me-hub/js/me-hub-data.js | — | ~660 |
+| 22:58 | Created me-hub/js/me-hub-app.js | — | ~1379 |
+| 22:58 | Edited CHANGELOG.md | 1→3 lines | ~80 |
+| 22:58 | Session end: 6 writes across 6 files (index.html, me-hub.css, me-hub-auth.js, me-hub-data.js, me-hub-app.js) | 9 reads | ~68736 tok |
+| 22:59 | Session end: 6 writes across 6 files (index.html, me-hub.css, me-hub-auth.js, me-hub-data.js, me-hub-app.js) | 11 reads | ~69398 tok |
+
+## Session: 2026-03-25 23:01
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-26 05:31
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-26 05:31
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 05:33 | Created supabase/evm_phase2_migration.sql | — | ~667 |
+| 05:33 | Edited portals/capacity/js/me-data-relational.js | added error handling | ~264 |
+| 05:33 | Edited portals/capacity/js/me-data.js | 7→8 lines | ~36 |
+| 05:33 | Edited portals/capacity/js/me-data.js | modified if() | ~339 |
+| 05:33 | Edited portals/capacity/js/me-data.js | added 1 condition(s) | ~109 |
+| 05:33 | Edited portals/capacity/js/me-data-relational.js | 15→16 lines | ~187 |
+| 05:34 | Edited portals/capacity/js/me-data-relational.js | 15→16 lines | ~150 |
+| 05:34 | Edited me-hub/js/me-hub-data.js | 2→3 lines | ~19 |
+| 05:34 | Edited me-hub/js/me-hub-data.js | 12→13 lines | ~142 |
+| 05:34 | Edited me-hub/js/me-hub-data.js | added 1 condition(s) | ~261 |
+| 05:34 | Edited me-hub/js/me-hub-data.js | modified hubGetActuals() | ~72 |
+| 05:34 | Edited CHANGELOG.md | 1→3 lines | ~159 |
+| 05:35 | Session end: 12 writes across 5 files (evm_phase2_migration.sql, me-data-relational.js, me-data.js, me-hub-data.js, CHANGELOG.md) | 7 reads | ~47153 tok |
+
+## Session: 2026-03-26 08:25
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

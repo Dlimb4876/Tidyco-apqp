@@ -62,11 +62,9 @@ async function mcsGetPfmeaCausesForLinking() {
   if (!supa) return [];
 
   try {
-    // Query PFMEA causes (this assumes npi-related queries are available)
-    // For now, return empty array - actual implementation depends on NPI module structure
     const { data, error } = await supa
       .from('npi_pfmea_causes')
-      .select('id, description')
+      .select('id, cause')
       .limit(100);
 
     if (error) throw error;
@@ -91,7 +89,7 @@ function mcsBuildPfmeaLinkingSection(change, pfmeaCauses) {
     pfmeaCauses.find(c => c.id === change.related_pfmea_cause_id) : null;
   
   const causesOptions = pfmeaCauses
-    .map(c => `<option value="${esc(c.id)}" ${change.related_pfmea_cause_id === c.id ? 'selected' : ''}>${esc(c.description)}</option>`)
+    .map(c => `<option value="${esc(c.id)}" ${change.related_pfmea_cause_id === c.id ? 'selected' : ''}>${esc(c.cause)}</option>`)
     .join('');
 
   return `
@@ -108,7 +106,7 @@ function mcsBuildPfmeaLinkingSection(change, pfmeaCauses) {
     </div>
     ${currentLink ? `
     <div style="margin-top: 8px; padding: 8px; background: var(--accent-dim); border-radius: 4px; border: 1px solid var(--accent); font-size: 12px;">
-      <strong>Currently linked to:</strong> ${esc(currentLink.description)}
+      <strong>Currently linked to:</strong> ${esc(currentLink.cause)}
       <button style="margin-left: 8px; padding: 2px 8px; background: transparent; border: 1px solid var(--accent); border-radius: 3px; cursor: pointer; font-size: 11px;" onclick="document.getElementById('mcs-f-pfmea-cause').value = ''; mcsToast('Link cleared. Save to apply.');">Clear link</button>
     </div>
     ` : ''}
