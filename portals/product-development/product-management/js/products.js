@@ -207,6 +207,7 @@ function renderProductsList() {
           <col style="min-width:140px">
           <col style="min-width:120px">
           <col style="min-width:120px">
+          <col style="min-width:110px">
           <col style="min-width:200px">
           <col style="min-width:100px">
           <col style="min-width:110px">
@@ -221,6 +222,7 @@ function renderProductsList() {
           <th>Customer</th>
           <th class="ctr">Overhaul (hrs)</th>
           <th class="ctr">Turnaround (days)</th>
+          <th class="ctr">Unit Value (£)</th>
           <th>Notes</th>
           <th>Status</th>
           <th>Scope</th>
@@ -237,6 +239,7 @@ function renderProductsList() {
           <td><input class="cell-edit" id="pNew-customer" placeholder="Customer"></td>
           <td><input class="cell-edit cell-num" id="pNew-hours" type="number" min="0" step="0.5" placeholder="0"></td>
           <td><input class="cell-edit cell-num" id="pNew-turnaround" type="number" min="0" step="1" placeholder="—"></td>
+          <td><input class="cell-edit cell-num" id="pNew-unitValue" type="number" min="0" step="0.01" placeholder="100"></td>
           <td><input class="cell-edit" id="pNew-notes" placeholder="Notes"></td>
           <td><select class="cell-edit" id="pNew-status">${buildStatusOptions('Tender')}</select></td>
           <td><select class="cell-edit" id="pNew-scope">${buildScopeOptions('overhaul')}</select></td>
@@ -245,7 +248,7 @@ function renderProductsList() {
           </td>
         </tr>` : ''}
         ${filtered.length === 0 ? `
-          <tr><td colspan="11" style="text-align:center;padding:32px">
+          <tr><td colspan="12" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No products found.</div>
             ${canEdit() ? '<button class="btn btn-primary btn-sm" data-action="products-focus-add">＋ Add First Product</button>' : ''}
           </td></tr>
@@ -261,6 +264,7 @@ function renderProductsList() {
               <td><input class="cell-edit" id="pEdit-customer" value="${esc(p.customer || '')}"></td>
               <td><span class="cell-display" style="font-variant-numeric:tabular-nums;" title="Overhaul time is maintained automatically via MCS changes and the Overhaul Trends history. Edit is disabled.">${(p.current_overhaul_hours || 0).toFixed(1)} h</span></td>
               <td><input class="cell-edit cell-num" id="pEdit-turnaround" type="number" min="0" step="1" value="${p.turnaround_days || ''}"></td>
+              <td><input class="cell-edit cell-num" id="pEdit-unitValue" type="number" min="0" step="0.01" value="${p.unit_value != null ? p.unit_value : 100}"></td>
               <td><input class="cell-edit" id="pEdit-notes" value="${esc(p.notes || '')}"></td>
               <td><select class="cell-edit" id="pEdit-status">${buildStatusOptions(p.status || 'Tender')}</select></td>
               <td><select class="cell-edit" id="pEdit-scope">${buildScopeOptions(p.scope || 'overhaul')}</select></td>
@@ -279,6 +283,7 @@ function renderProductsList() {
             <td>${esc(p.customer || '')}</td>
             <td class="ctr">${(p.current_overhaul_hours || 0).toFixed(1)}</td>
             <td class="ctr">${p.turnaround_days ? Math.round(p.turnaround_days) : '—'}</td>
+            <td class="ctr">£${p.unit_value != null ? Number(p.unit_value).toFixed(2) : '100.00'}</td>
             <td><div class="cell-display" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</div></td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td><span class="badge badge-scope-${esc(p.scope || 'overhaul')}">${(p.scope || 'overhaul').charAt(0).toUpperCase() + (p.scope || 'overhaul').slice(1)}</span></td>
@@ -319,7 +324,8 @@ async function productsAddRow() {
     turnaround_days: parseFloat(document.getElementById('pNew-turnaround')?.value) || null,
     notes: document.getElementById('pNew-notes')?.value.trim() || '',
     status: document.getElementById('pNew-status')?.value || 'Tender',
-    scope: document.getElementById('pNew-scope')?.value || 'overhaul'
+    scope: document.getElementById('pNew-scope')?.value || 'overhaul',
+    unit_value: parseFloat(document.getElementById('pNew-unitValue')?.value) || 100
   };
 
   try {
@@ -377,7 +383,8 @@ async function productsSaveEdit(productId) {
     turnaround_days: parseFloat(document.getElementById('pEdit-turnaround')?.value) || null,
     notes: document.getElementById('pEdit-notes')?.value.trim() || '',
     status: document.getElementById('pEdit-status')?.value || 'Tender',
-    scope: document.getElementById('pEdit-scope')?.value || 'overhaul'
+    scope: document.getElementById('pEdit-scope')?.value || 'overhaul',
+    unit_value: parseFloat(document.getElementById('pEdit-unitValue')?.value) || 100
   };
 
   try {

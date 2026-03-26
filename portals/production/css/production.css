@@ -189,8 +189,19 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   background: var(--surface);
   border-radius: 6px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - 350px);
+  position: relative;
+}
+
+/* Virtual scrolling support */
+.prod-tbl tbody {
+  position: relative;
+}
+
+.prod-tbl tbody tr {
+  will-change: transform;
 }
 
 .prod-tbl {

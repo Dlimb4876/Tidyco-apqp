@@ -3,6 +3,10 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-26 | Fix production schedule virtual scroll jumping to top | Scroll position was lost on every re-render; new-row inputs were also at risk of being wiped on scroll updates
+
+## 2026-03-26 | Add Unit Value (£) column to Product Management | Track per-unit monetary value for each product; defaults to £100 for all existing and new products; editable inline in the product list table
+
 ## 2026-03-26 | Fix product support history not displaying in PM/LOG/UNIT6 capacity | Two issues: 1) getProductHistoryRows() was incorrectly passing product.department to meGetDepartmentFromContext(), 2) meRenderProductsTab() only checked for meDataGetProductSupportHistory but PM/LOG/UNIT6 use their own functions (pmDataGetProductSupportHistory, etc.); both fixed so history now displays correctly
 
 ## 2026-03-26 | Phase 3: Work Breakdown Structure & EVM Integration | New me_hub_subtasks table with EVM tracking columns; WBS interface in ME-Hub for breaking down tasks into subtasks with progress sliders; inline time logging with quick-entry form; Management View tab showing EAC calculations and variance status; full EVM math (BAC, EV, ETC, EAC) implemented in hub
