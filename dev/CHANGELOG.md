@@ -3,6 +3,18 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-26 | Fix production schedule virtual scroll jumping to top | Scroll position was lost on every re-render; new-row inputs were also at risk of being wiped on scroll updates
+
+## 2026-03-26 | Add Unit Value (£) column to Product Management | Track per-unit monetary value for each product; defaults to £100 for all existing and new products; editable inline in the product list table
+
+## 2026-03-26 | Fix product support history not displaying in PM/LOG/UNIT6 capacity | Two issues: 1) getProductHistoryRows() was incorrectly passing product.department to meGetDepartmentFromContext(), 2) meRenderProductsTab() only checked for meDataGetProductSupportHistory but PM/LOG/UNIT6 use their own functions (pmDataGetProductSupportHistory, etc.); both fixed so history now displays correctly
+
+## 2026-03-26 | Phase 3: Work Breakdown Structure & EVM Integration | New me_hub_subtasks table with EVM tracking columns; WBS interface in ME-Hub for breaking down tasks into subtasks with progress sliders; inline time logging with quick-entry form; Management View tab showing EAC calculations and variance status; full EVM math (BAC, EV, ETC, EAC) implemented in hub
+
+## 2026-03-26 | Update README.md | Reflect new project structure, ME Hub, BoM overhaul, CTQ Coverage, Parts Where Used, URL params, and capacity sub-modules added since last documentation update
+
+## 2026-03-26 | Fix NPI Products favourites resetting when data not loaded | hubGetFavouriteProducts() now checks productsState.loaded before removing stale products, preventing favorites from being cleared when products data hasn't finished loading yet
+
 ## 2026-03-26 | Make sub-assembly descriptions editable in Core and AAW/Repair BoMs | Description field is now an editable input for all tree nodes (parts and sub-assemblies) in both Core BoM and AAW/Repair BoM views
 
 ## 2026-03-26 | Add top-level Part Number field to AAW/Repair BoMs | Each AAW/Repair BoM group now has a dedicated Part Number input field displayed in the header; stored in pn column of npi_bom_groups table

@@ -639,6 +639,7 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">Product List</div>
         <p>All products with inline editing. Click any field to edit it directly. Changes are saved automatically after a short delay.</p>
         <p><strong>Status options:</strong> Tender → NPI → Production → Closed. Changing status here moves the product card between lanes in the NPI Projects view.</p>
+        <p><strong>Unit Value (£):</strong> The monetary value of one overhaul unit for this product. Used for contract and revenue reporting. Defaults to £100.00 — update to reflect actual contract pricing.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Overhaul Trends</div>

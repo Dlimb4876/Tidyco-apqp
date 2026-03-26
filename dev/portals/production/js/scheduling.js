@@ -5,6 +5,20 @@ let prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFro
 let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
 let selectedBatchIds = new Set();
 
+// Virtual scrolling configuration
+const VISIBLE_ROW_COUNT = 30;
+const BUFFER_ROW_COUNT = 10;
+const ROW_HEIGHT = 44;
+window.prodSchedulingScrollOffset = 0;
+window.prodSchedulingScrollHeight = 0;
+
+function getVirtualSlice(batches) {
+  const totalHeight = batches.length * ROW_HEIGHT;
+  const startIdx = Math.max(0, Math.floor(window.prodSchedulingScrollOffset / ROW_HEIGHT) - BUFFER_ROW_COUNT);
+  const endIdx = Math.min(batches.length, startIdx + VISIBLE_ROW_COUNT + BUFFER_ROW_COUNT * 2);
+  return { startIdx, endIdx, totalHeight };
+}
+
 function flashSaved(el) {
   el.classList.add('cell-saved');
   setTimeout(() => el.classList.remove('cell-saved'), 1000);
@@ -193,11 +207,30 @@ function renderScheduling() {
   const productMap = new Map(products.map(p => [p.id, p]));
   const allFamilies = getFamilies();
 
-  let rows = canEdit() ? renderSchedulingNewRow() : '';
+  // Virtual scrolling: calculate visible slice
+  const { startIdx, endIdx, totalHeight } = getVirtualSlice(activeBatches);
+  const visibleBatches = activeBatches.slice(startIdx, endIdx);
+  const topSpacerHeight = startIdx * ROW_HEIGHT;
+  const bottomSpacerHeight = (activeBatches.length - endIdx) * ROW_HEIGHT;
 
-  activeBatches.forEach((batch, idx) => {
-    rows += renderSchedulingRow(batch, idx, activeBatches, productMap, allFamilies);
+  const newRowHTML = canEdit() ? renderSchedulingNewRow() : '';
+
+  let dataRows = '';
+
+  // Add top spacer for virtual scroll
+  if (topSpacerHeight > 0) {
+    dataRows += `<tr style="height:${topSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`;
+  }
+
+  visibleBatches.forEach((batch, idx) => {
+    const actualIdx = startIdx + idx;
+    dataRows += renderSchedulingRow(batch, actualIdx, activeBatches, productMap, allFamilies);
   });
+
+  // Add bottom spacer for virtual scroll
+  if (bottomSpacerHeight > 0) {
+    dataRows += `<tr style="height:${bottomSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`;
+  }
 
   const html = `
     <div class="prod-section">
@@ -299,8 +332,11 @@ function renderScheduling() {
             <th></th>
           </tr>
         </thead>
+        <tbody id="prod-sched-new-tbody">
+          ${newRowHTML}
+        </tbody>
         <tbody id="prod-sched-tbody">
-          ${rows || `<tr><td colspan="10" style="text-align:center;padding:32px">
+          ${dataRows || `<tr><td colspan="10" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No batches scheduled yet.</div>
             <button class="btn btn-primary btn-sm" onclick="focusBatchNewRow()">＋ Schedule First Batch</button>
           </td></tr>`}
@@ -327,22 +363,27 @@ function renderScheduling() {
           prodSchedulingFilters.product = '';
         }
       }
+      window.prodSchedulingScrollOffset = 0;
       render();
     });
     document.getElementById('product-filter')?.addEventListener('change', (e) => {
       prodSchedulingFilters.product = e.target.value;
+      window.prodSchedulingScrollOffset = 0;
       render();
     });
     document.getElementById('work-location-filter')?.addEventListener('change', (e) => {
       prodSchedulingFilters.workLocation = e.target.value;
+      window.prodSchedulingScrollOffset = 0;
       render();
     });
     document.getElementById('date-from-filter')?.addEventListener('change', (e) => {
       prodSchedulingFilters.dateFrom = e.target.value;
+      window.prodSchedulingScrollOffset = 0;
       render();
     });
     document.getElementById('date-to-filter')?.addEventListener('change', (e) => {
       prodSchedulingFilters.dateTo = e.target.value;
+      window.prodSchedulingScrollOffset = 0;
       render();
     });
 
@@ -415,9 +456,59 @@ function renderScheduling() {
       render();
     });
 
+    // Virtual scroll handler — restore position and attach listener
+    const tableWrap = document.querySelector('.scheduling-table-wrap');
+    if (tableWrap) {
+      tableWrap.scrollTop = window.prodSchedulingScrollOffset;
+      tableWrap.addEventListener('scroll', handleSchedulingScroll, { passive: true });
+    }
+
   }, 0);
 
   return html;
+}
+
+// Update only the data tbody with the correct slice for the current scroll position
+function updateSchedulingVisibleRows() {
+  const tbody = document.getElementById('prod-sched-tbody');
+  if (!tbody) return;
+
+  // Don't disrupt an active cell edit
+  if (tbody.contains(document.activeElement)) return;
+
+  const activeBatches = getFilteredBatches();
+  if (!activeBatches.length) return;
+
+  const { startIdx, endIdx } = getVirtualSlice(activeBatches);
+  const visibleBatches = activeBatches.slice(startIdx, endIdx);
+  const topSpacerHeight = startIdx * ROW_HEIGHT;
+  const bottomSpacerHeight = (activeBatches.length - endIdx) * ROW_HEIGHT;
+
+  const productMap = new Map((prodState?.products || []).map(p => [p.id, p]));
+  const allFamilies = getFamilies();
+
+  let rows = '';
+  if (topSpacerHeight > 0) {
+    rows += `<tr style="height:${topSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`;
+  }
+  visibleBatches.forEach((batch, idx) => {
+    rows += renderSchedulingRow(batch, startIdx + idx, activeBatches, productMap, allFamilies);
+  });
+  if (bottomSpacerHeight > 0) {
+    rows += `<tr style="height:${bottomSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`;
+  }
+
+  tbody.innerHTML = rows;
+  visibleBatches.forEach(addSchedulingRowEventListeners);
+}
+
+let schedulingScrollTimer = null;
+
+// Virtual scroll handler
+function handleSchedulingScroll(event) {
+  window.prodSchedulingScrollOffset = event.target.scrollTop;
+  clearTimeout(schedulingScrollTimer);
+  schedulingScrollTimer = setTimeout(updateSchedulingVisibleRows, 50);
 }
 
 
@@ -454,19 +545,27 @@ function getFilteredBatches() {
     filtered = filtered.filter(b => b.status !== 'Complete');
   }
 
-  // Cache families once before sort to avoid repeated calls inside the comparator
+  // Build lookup maps for efficient sorting
+  const productMap = new Map(products.map(p => [p.id, p]));
   const allFamilies = prodSchedulingSort.field === 'family' ? getFamilies() : [];
+  const familyMap = new Map(allFamilies.map(f => [f.id, f]));
 
   filtered.sort((a, b) => {
     let aVal, bVal;
 
     if (prodSchedulingSort.field === 'family') {
-      const productA = products.find(p => p.id === a.product_id);
-      const productB = products.find(p => p.id === b.product_id);
-      const familyA = productA ? allFamilies.find(f => f.id === productA.family) : null;
-      const familyB = productB ? allFamilies.find(f => f.id === productB.family) : null;
+      const productA = productMap.get(a.product_id);
+      const productB = productMap.get(b.product_id);
+      const familyA = productA ? familyMap.get(productA.family) : null;
+      const familyB = productB ? familyMap.get(productB.family) : null;
       aVal = familyA?.label || '';
       bVal = familyB?.label || '';
+    } else if (prodSchedulingSort.field === 'product_id') {
+      // Sort by product name instead of ID
+      const productA = productMap.get(a.product_id);
+      const productB = productMap.get(b.product_id);
+      aVal = productA?.name || '';
+      bVal = productB?.name || '';
     } else {
       aVal = a[prodSchedulingSort.field];
       bVal = b[prodSchedulingSort.field];
@@ -492,6 +591,10 @@ function toggleSort(field) {
     prodSchedulingSort.field = field;
     prodSchedulingSort.ascending = true;
   }
+  // Reset scroll position on sort
+  window.prodSchedulingScrollOffset = 0;
+  const tableWrap = document.querySelector('.scheduling-table-wrap');
+  if (tableWrap) tableWrap.scrollTop = 0;
   render();
 }
 

@@ -65,6 +65,33 @@ async function prodDataInit() {
   }
 }
 
+// Load batches filtered by product (for performance optimization)
+async function prodDataLoadBatchesForProduct(productId) {
+  try {
+    if (!productId) {
+      // Load all batches if no product specified
+      const { data, error } = await supa.from('production_batches')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      prodState.batches = data || [];
+    } else {
+      // Load only batches for specific product
+      const { data, error } = await supa.from('production_batches')
+        .select('*')
+        .eq('product_id', productId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      prodState.batches = data || [];
+    }
+    if (typeof render === 'function') render();
+    return true;
+  } catch (err) {
+    console.error('Error loading batches for product:', err);
+    return false;
+  }
+}
+
 // Reload products (called when products are added/updated elsewhere)
 async function prodDataReloadProducts() {
   try {

@@ -123,18 +123,26 @@ The charting engine (`me-chart.js` / `me-calculations.js`) fundamentally changes
     *   Update `me-data-relational.js` to fetch `time_logs` on initialization.
     *   Update `meDataState` to store `timeLogs` array.
 
-### Phase 3: Engineer Input (Action Centre)
+### Phase 3: Work Breakdown Feature (Standalone ME-Hub)
+*   Implement a Work Breakdown Structure (WBS) interface strictly within the `me-hub` standalone portal.
+*   Read high-level macro tasks from `me_tasks` but keep all breakdown, estimation, and sub-tasking contained within the new hub (reads in, does not report out).
+*   Build the progress and time tracker directly into the WBS interface so engineers can log hours and update status inline without needing a separate view.
+*   Set up any new database tables or columns needed to support this isolated sub-task functionality (e.g., `me_hub_subtasks` or similar).
+*   **Management View Tab:** Create a separate "Management View" tab within the ME-Hub to display EAC (Estimate at Completion) calculations and financial forecasts. This tab will be restricted to management roles only (permissions to be implemented later). Engineers should not see EAC data as it could negatively impact work performance.
+*   Test and validate the EVM math and breakdown logic locally in the hub before planning any connections back to the main Action Centre or Operations portal.
+
+### Phase 4: Engineer Input (Action Centre)
 *   Update `action-centre.js` and `action-centre.css`.
 *   Add `% Complete` slider/input to Action cards.
 *   Add the "Log Time" inline form.
 *   Create `saveTimeLog()` Supabase handler.
 
-### Phase 4: Planner Visibility (ME Capacity)
+### Phase 5: Planner Visibility (ME Capacity)
 *   Update `me-tasks.js` table renderer to show BAC, Actuals, EAC, and Variance columns.
 *   Add visual color-coding for tasks that are trending to overrun (EAC > BAC).
 *   Add a "Drill Down" modal on ME Tasks that queries `time_logs` to show Planners *who* logged hours against that bucket and *when*.
 
-### Phase 5: Dynamic Charting
+### Phase 6: Dynamic Charting
 *   Update `meCalculateMonthData()` in `me-calculations.js`.
 *   Implement the EVM math logic (BAC, EV, ETC, EAC).
 *   Change chart distribution logic: Past = Actuals from `timeLogs`, Future = ETC spread across remaining months.

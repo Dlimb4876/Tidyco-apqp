@@ -472,14 +472,21 @@ window.meRenderProductsTab = function(productsArray, availableProducts, tasksArr
   const hiddenStatusSet = new Set(hiddenStatuses);
   const historyOpenSet = new Set(Array.isArray(state.historyOpenProductIds) ? state.historyOpenProductIds : []);
 
-  const supportHistory = typeof window.meDataGetProductSupportHistory === 'function'
-    ? window.meDataGetProductSupportHistory()
-    : [];
+  let supportHistory = []
+  if (department === 'PM' && typeof window.pmDataGetProductSupportHistory === 'function') {
+    supportHistory = window.pmDataGetProductSupportHistory()
+  } else if (department === 'LOG' && typeof window.logDataGetProductSupportHistory === 'function') {
+    supportHistory = window.logDataGetProductSupportHistory()
+  } else if (department === 'UNIT6' && typeof window.unit6DataGetProductSupportHistory === 'function') {
+    supportHistory = window.unit6DataGetProductSupportHistory()
+  } else if (typeof window.meDataGetProductSupportHistory === 'function') {
+    supportHistory = window.meDataGetProductSupportHistory()
+  }
 
   function getProductHistoryRows(product) {
     if (!product || !product.id || !Array.isArray(supportHistory)) return [];
     const departmentTag = typeof meGetDepartmentFromContext === 'function'
-      ? meGetDepartmentFromContext(product.department)
+      ? meGetDepartmentFromContext()
       : (product.department || 'ME');
 
     return supportHistory

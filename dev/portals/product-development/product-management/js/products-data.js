@@ -266,7 +266,8 @@ async function productsDataAddProduct(product) {
       work_location: product.work_location || null,
       status: product.status || 'active',
       notes: product.notes || '',
-      scope: product.scope || 'overhaul'
+      scope: product.scope || 'overhaul',
+      unit_value: product.unit_value != null ? product.unit_value : 100
     };
 
     const result = await supa.from('products').insert([newProduct]).select().single();

@@ -442,3 +442,569 @@ body {
 @media (min-width: 768px) {
   .hub-main { padding: 24px; }
 }
+
+/* ════════════════════════════════════
+   WORK BREAKDOWN STRUCTURE (WBS)
+   ════════════════════════════════════ */
+.hub-wbs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hub-wbs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hub-wbs-task {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.hub-wbs-task.expanded {
+  box-shadow: 0 2px 8px rgba(15, 42, 66, .08);
+}
+
+.hub-wbs-task-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.hub-wbs-task-header:hover {
+  background: rgba(11, 95, 167, .04);
+}
+
+.hub-wbs-task-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.hub-wbs-expand-icon {
+  font-size: 11px;
+  color: var(--muted);
+  width: 16px;
+  text-align: center;
+}
+
+.hub-wbs-task-name {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.hub-wbs-task-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hub-wbs-hours {
+  font-size: 12px;
+  color: var(--mid);
+}
+
+.hub-wbs-hours strong {
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.hub-wbs-progress {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+  background: var(--blue-pale);
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.hub-wbs-subtask-count {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hub-wbs-task-body {
+  border-top: 1px solid var(--line);
+  padding: 16px;
+  background: #fafbfc;
+}
+
+.hub-wbs-task-progress-section {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.hub-wbs-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.hub-wbs-progress-row label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mid);
+  min-width: 100px;
+}
+
+.hub-wbs-progress-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--line);
+  border-radius: 3px;
+  outline: none;
+}
+
+.hub-wbs-progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--blue);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.hub-wbs-progress-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 36px;
+  text-align: right;
+}
+
+.hub-wbs-timelog-quick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.hub-wbs-timelog-quick label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mid);
+  min-width: 100px;
+}
+
+.hub-wbs-hours-input {
+  width: 70px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+}
+
+.hub-wbs-date-input {
+  width: 130px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.hub-wbs-recent-logs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+  font-size: 11px;
+}
+
+.hub-wbs-recent-logs label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.hub-wbs-log-entry {
+  background: #f0f4f8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--mid);
+}
+
+.hub-wbs-subtasks {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.hub-wbs-subtasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.hub-wbs-subtasks-header span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hub-wbs-no-subtasks {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 13px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.hub-wbs-subtask-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hub-wbs-subtask-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.hub-wbs-subtask-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.hub-wbs-subtask-name {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.hub-wbs-subtask-assignee {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--white);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.hub-wbs-subtask-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hub-wbs-subtask-slider {
+  width: 80px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--line);
+  border-radius: 2px;
+  outline: none;
+}
+
+.hub-wbs-subtask-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--blue);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.hub-wbs-subtask-hours {
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--mid);
+  min-width: 50px;
+  text-align: right;
+}
+
+.hub-btn-danger {
+  background: var(--red-pale);
+  color: var(--red);
+  border-color: var(--red);
+  padding: 0 8px;
+}
+
+.hub-btn-danger:hover {
+  background: var(--red);
+  color: var(--white);
+}
+
+/* ════════════════════════════════════
+   MODAL DIALOGS
+   ════════════════════════════════════ */
+.hub-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hub-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 33, 53, .6);
+}
+
+.hub-modal-content {
+  position: relative;
+  background: var(--white);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(15, 33, 53, .3);
+}
+
+.hub-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.hub-modal-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hub-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.hub-modal-close:hover {
+  color: var(--ink);
+}
+
+.hub-modal-body {
+  padding: 20px;
+}
+
+.hub-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  background: #fafbfc;
+}
+
+.hub-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.hub-field select {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--white);
+  width: 100%;
+}
+
+/* ════════════════════════════════════
+   MANAGEMENT VIEW
+   ════════════════════════════════════ */
+.hub-mgmt-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.hub-mgmt-summary {
+  display: flex;
+  gap: 24px;
+}
+
+.hub-mgmt-total {
+  text-align: center;
+}
+
+.hub-mgmt-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 4px;
+}
+
+.hub-mgmt-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.hub-mgmt-value.negative {
+  color: var(--red);
+}
+
+.hub-mgmt-value.positive {
+  color: var(--green);
+}
+
+.hub-mgmt-table .col-progress {
+  width: 100px;
+}
+
+.hub-mgmt-progress-bar {
+  height: 6px;
+  background: var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.hub-mgmt-progress-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 3px;
+  transition: width .3s;
+}
+
+.hub-mgmt-progress-text {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hub-mgmt-subtask-badge {
+  font-size: 10px;
+  color: var(--muted);
+  background: #f0f4f8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.hub-badge-danger {
+  background: var(--red-pale);
+  color: var(--red);
+}
+
+.hub-badge-success {
+  background: var(--green-pale);
+  color: var(--green);
+}
+
+.hub-mgmt-legend {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.hub-mgmt-legend h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.hub-mgmt-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 24px;
+}
+
+.hub-mgmt-legend-item {
+  font-size: 12px;
+  color: var(--mid);
+}
+
+.hub-mgmt-legend-item strong {
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Mobile adjustments for WBS and Management */
+@media (max-width: 767px) {
+  .hub-wbs-task-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  
+  .hub-wbs-task-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .hub-wbs-subtask-controls {
+    flex-wrap: wrap;
+  }
+  
+  .hub-wbs-timelog-quick {
+    flex-wrap: wrap;
+  }
+  
+  .hub-wbs-timelog-quick label {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .hub-mgmt-summary {
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .hub-mgmt-value {
+    font-size: 16px;
+  }
+  
+  .hub-field-row {
+    grid-template-columns: 1fr;
+  }
+}

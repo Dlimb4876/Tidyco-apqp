@@ -1,5 +1,5 @@
 {
-    "workbench.colorTheme": "VS Code Dark",
+    "workbench.colorTheme": "GitHub Dark Colorblind (Beta)",
     "claudeCode.initialPermissionMode": "bypassPermissions",
     "terminal.integrated.env.windows": {
         "PATH": "${env:PATH};C:\\Program Files\\nodejs;C:\\Users\\Tidyco\\AppData\\Roaming\\npm"

@@ -32,6 +32,9 @@ Thumbs.db
 # Local/personal settings (not for sharing)
 .claude/settings.local.json
 
+# Trello exports/data
+trello/
+
 # Debug/scratch files
 test-holidays.html
 check_onclick.js

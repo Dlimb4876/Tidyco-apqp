@@ -67,13 +67,34 @@ function renderProductionHubCard(tabKey, favouriteKey, icon, title, meta) {
 function prodRefreshTabBody() {
   const body = document.getElementById('prodTabBody');
   if (!body) return;
+
+  // Preserve scroll position for scheduling table
+  let scrollTop = 0;
+  const tableWrap = body.querySelector('.scheduling-table-wrap');
+  if (tableWrap) {
+    scrollTop = tableWrap.scrollTop;
+  }
+
   let content = '';
   if (productionTab === 'scheduling') content = renderScheduling();
   else if (productionTab === 'by-product') content = renderPlanByProduct();
   else if (productionTab === 'by-unit') content = renderPlanByUnit();
+
   if (content) {
     body.innerHTML = content;
     setTimeout(setupProductionPortalDelegation, 0);
+
+    // Restore scroll position after render
+    if (scrollTop > 0 && productionTab === 'scheduling') {
+      setTimeout(() => {
+        const newTableWrap = document.querySelector('#prodTabBody .scheduling-table-wrap');
+        if (newTableWrap) {
+          newTableWrap.scrollTop = scrollTop;
+          // Update virtual scroll offset to match
+          window.prodSchedulingScrollOffset = scrollTop;
+        }
+      }, 0);
+    }
   }
 }
 
