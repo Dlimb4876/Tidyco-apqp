@@ -421,9 +421,24 @@
   letter-spacing: 0.5px;
 }
 
-.feedback-badge-open,
-.feedback-badge-in-review,
-.feedback-badge-planned,
+.feedback-badge-open {
+  background: var(--status-amber-bg);
+  color: var(--status-amber-text);
+  border: 1px solid var(--amber);
+}
+
+.feedback-badge-in-review {
+  background: var(--status-blue-bg);
+  color: var(--status-blue-text);
+  border: 1px solid var(--blue);
+}
+
+.feedback-badge-planned {
+  background: var(--status-purple-bg);
+  color: var(--status-purple-text);
+  border: 1px solid var(--purple);
+}
+
 .feedback-badge-in-progress {
   background: var(--amber);
   color: var(--white);
@@ -435,8 +450,9 @@
 }
 
 .feedback-badge-declined {
-  background: var(--grey);
-  color: var(--white);
+  background: var(--surface-low);
+  color: var(--muted);
+  border: 1px solid var(--border);
 }
 
 .feedback-badge-squashed {
@@ -538,22 +554,8 @@
   font-size: 13px;
 }
 
-/* ── Row Type Colors (subtle backgrounds) ────────────────── */
-.feedback-row-bug {
-  background: var(--status-red-bg);
-}
-
-.feedback-row-usability {
-  background: var(--status-blue-bg);
-}
-
-.feedback-row-feature {
-  background: var(--status-purple-bg);
-}
-
-.feedback-row-improvement {
-  background: var(--status-green-bg);
-}
+/* ── Row Type Colors ─────────────────────────────────────── */
+/* Row background colors removed for cleaner, clearer UI */
 
 /* ── Responsive Design ───────────────────────────────────── */
 @media (max-width: 767px) {
