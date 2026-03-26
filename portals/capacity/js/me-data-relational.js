@@ -183,22 +183,50 @@ window.meLoadRelationalTasks = async function(userId) {
     }
 
     return (tasksData || []).map(t => ({
-      id:         t.id,
-      name:       t.name,
-      category:   t.category,
-      type:       t.type || 'standard',
-      assigneeId: t.assignee_id || '',
-      productId:  t.product_id  || '',
-      startDate:  t.start_date  || '',
-      endDate:    t.end_date    || '',
-      totalHours: t.total_hours || 0,
-      status:     t.status || 'SCHEDULED',
-      isDisabled: t.is_disabled === true,
-      department: meNormalizeMeTableDepartment(t.department),
-      createdAt:  t.created_at
+      id:              t.id,
+      name:            t.name,
+      category:        t.category,
+      type:            t.type || 'standard',
+      assigneeId:      t.assignee_id || '',
+      productId:       t.product_id  || '',
+      startDate:       t.start_date  || '',
+      endDate:         t.end_date    || '',
+      totalHours:      t.total_hours || 0,
+      percentComplete: t.percent_complete || 0,
+      status:          t.status || 'SCHEDULED',
+      isDisabled:      t.is_disabled === true,
+      department:      meNormalizeMeTableDepartment(t.department),
+      createdAt:       t.created_at
     }));
   } catch (err) {
     console.warn('meLoadRelationalTasks exception:', err.message);
+    return [];
+  }
+};
+
+window.meLoadTimeLogs = async function() {
+  try {
+    const { data, error } = await supa
+      .from('time_logs')
+      .select('id, user_id, task_id, hours_logged, log_date, notes, created_at')
+      .order('log_date', { ascending: false });
+
+    if (error) {
+      console.warn('meLoadTimeLogs error:', error.message);
+      return [];
+    }
+
+    return (data || []).map(row => ({
+      id:          row.id,
+      userId:      row.user_id,
+      taskId:      row.task_id,
+      hoursLogged: Number(row.hours_logged) || 0,
+      logDate:     row.log_date,
+      notes:       row.notes || '',
+      createdAt:   row.created_at
+    }));
+  } catch (err) {
+    console.warn('meLoadTimeLogs exception:', err.message);
     return [];
   }
 };
@@ -374,6 +402,7 @@ window.meSaveTaskRelational = async function(userId, task) {
       start_date: safeStart,
       end_date: safeEnd,
       total_hours: task.totalHours || 0,
+      percent_complete: task.percentComplete || 0,
       status: task.status || 'SCHEDULED',
       is_disabled: task.isDisabled === true,
       updated_at: new Date().toISOString()

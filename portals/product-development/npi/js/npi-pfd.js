@@ -61,7 +61,8 @@ function stepRowHTML(s, oi, p) {
       const isAaw = sources.includes('aaw')
       const isRepair = sources.includes('repair')
       const name = part.desc || part.pn || 'Part'
-      return `<span class="res-pill res-pill-part" ${canEdit() ? `data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to remove"` : ''}>🔩 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}${isRepair ? ' <span class="flag flag-repair" style="font-size:9px">RPR</span>' : ''}</span>`
+      const qtyDisplay = ref.qty && ref.qty > 1 ? ` <span style="font-weight:600;color:var(--blue)">×${ref.qty}</span>` : ''
+      return `<span class="res-pill res-pill-part" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to edit quantity"` : ''}>🔩 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay}${isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}${isRepair ? ' <span class="flag flag-repair" style="font-size:9px">RPR</span>' : ''}</span>`
     }
     
     // Handle AAW/Repair assemblies
@@ -70,7 +71,8 @@ function stepRowHTML(s, oi, p) {
       if (!group) return ''
       const tagLabel = group.tag === 'aaw' ? 'AAW' : (group.tag === 'repair' ? 'RPR' : 'ASM')
       const name = group.title || 'Assembly'
-      return `<span class="res-pill res-pill-asm" ${canEdit() ? `data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to remove"` : ''}>🔧 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)} <span class="flag ${group.tag === 'aaw' ? 'flag-aaw' : 'flag-repair'}" style="font-size:9px">${tagLabel}</span></span>`
+      const qtyDisplay = ref.qty && ref.qty > 1 ? ` <span style="font-weight:600;color:var(--blue)">×${ref.qty}</span>` : ''
+      return `<span class="res-pill res-pill-asm" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to edit quantity"` : ''}>🔧 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay} <span class="flag ${group.tag === 'aaw' ? 'flag-aaw' : 'flag-repair'}" style="font-size:9px">${tagLabel}</span></span>`
     }
     
     // Handle standard BOM types
@@ -78,7 +80,8 @@ function stepRowHTML(s, oi, p) {
     const item = bt.find(x => x.id === ref.itemId); if (!item) return ''
     const t = BOM_TYPES[ref.bomType]
     const name = item.desc || (item.pn || item.toolId || item.equipId || '?')
-    return `<span class="res-pill ${t.pc}" ${canEdit() ? `data-action="pfd-del-bom-ref" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${ref.itemId}" title="Click to remove"` : ''}>${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}${item.isRepair ? ' <span class="flag flag-repair" style="font-size:9px">RPR</span>' : ''}</span>`
+    const qtyDisplay = ref.qty && ref.qty > 1 ? ` <span style="font-weight:600;color:var(--blue)">×${ref.qty}</span>` : ''
+    return `<span class="res-pill ${t.pc}" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${ref.itemId}" title="Click to edit quantity"` : ''}>${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}${item.isRepair ? ' <span class="flag flag-repair" style="font-size:9px">RPR</span>' : ''}</span>`
   }).join('')
   const docBadges = (s.docRefs || []).map(docId => {
     const doc = (p.docs || []).find(d => d.id === docId)
@@ -118,7 +121,7 @@ function stepRowHTML(s, oi, p) {
     }
   </div>`
 
-  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div>${typeChip}<div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields"><div class="step-field f-op"><input class="cell-edit" value="${esc(s.op)}" data-action="pfd-upd" data-id="${s.id}" data-field="op" placeholder="Operation" style="font-weight:600"></div><div class="step-field f-detail"><textarea class="cell-edit" rows="2" data-action="pfd-upd" data-id="${s.id}" data-field="detail" placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div></div>${canEdit() ? flowControlHTML : ''}</div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
+  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div>${typeChip}<div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields"><div class="step-field f-op"><input class="cell-edit" value="${esc(s.op)}" data-action="pfd-upd" data-id="${s.id}" data-field="op" placeholder="Operation" style="font-weight:600"></div><div class="step-field f-detail"><textarea class="cell-edit" rows="2" data-action="pfd-upd" data-id="${s.id}" data-field="detail" placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div>${canEdit() ? flowControlHTML : ''}</div></div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
 }
 
 function headerRowHTML(s, oi, meta) {
@@ -592,6 +595,70 @@ npi.pfd.scrollTo = function(sid) { const el = document.getElementById('pfd-row-'
 npi.pfd.toggleGroup = function(key) { npi.data.pfd.toggleGroup(collapsedGroups, key) }
 npi.pfd.delBomRef = function(sid, bt, iid) { npi.data.pfd.delBomRef(sid, bt, iid) }
 
+npi.pfd.openResourceEdit = function(stepId, bomType, itemId) {
+  const p = prog()
+  if (!p) return
+  const step = p.pfd.find(x => x.id === stepId)
+  if (!step) return
+  const ref = (step.bomRefs || []).find(r => r.bomType === bomType && r.itemId === itemId)
+  if (!ref) return
+
+  resourceEditTarget = { stepId, bomType, itemId }
+  resourceEditQty = ref.qty || 1
+
+  let itemName = 'Resource'
+  let itemDetails = ''
+
+  if (bomType === 'parts_agg') {
+    const aggregatedParts = npi.bom._aggregatePartsRegister ? npi.bom._aggregatePartsRegister(p) : []
+    const part = aggregatedParts.find(x => (x.pn || x.desc) === itemId)
+    if (part) {
+      itemName = part.desc || part.pn || 'Part'
+      itemDetails = part.pn ? `Part Number: ${part.pn}` : ''
+    }
+  } else if (bomType === 'aaw_asm') {
+    const group = (p.bom.aaw_repair || []).find(x => x.id === itemId)
+    if (group) {
+      itemName = group.title || 'Assembly'
+      itemDetails = group.tag === 'aaw' ? 'AAW Assembly' : (group.tag === 'repair' ? 'Repair Assembly' : 'Assembly')
+    }
+  } else {
+    const bt = p.bom[bomType]
+    if (bt) {
+      const item = bt.find(x => x.id === itemId)
+      if (item) {
+        const t = BOM_TYPES[bomType]
+        itemName = item.desc || (item.pn || item.toolId || item.equipId || 'Item')
+        itemDetails = `${t.label}${item.pn ? ' · ' + item.pn : ''}`
+      }
+    }
+  }
+
+  document.getElementById('resourceEditTitle').textContent = `Edit Resource`
+  document.getElementById('resourceEditQty').value = resourceEditQty
+  document.getElementById('resourceEditInfo').innerHTML = `<strong>${esc(itemName)}</strong><br>${esc(itemDetails)}`
+
+  showModal('modalResourceEdit')
+}
+
+npi.pfd.saveResourceEdit = function() {
+  if (!resourceEditTarget) return
+  const qtyInput = document.getElementById('resourceEditQty')
+  const qty = parseInt(qtyInput.value, 10) || 1
+  resourceEditQty = Math.max(1, qty)
+
+  npi.data.pfd.updateResourceQty(resourceEditTarget.stepId, resourceEditTarget.bomType, resourceEditTarget.itemId, resourceEditQty)
+  closeModal('modalResourceEdit')
+  resourceEditTarget = null
+}
+
+npi.pfd.deleteResourceEdit = function() {
+  if (!resourceEditTarget) return
+  npi.data.pfd.delBomRef(resourceEditTarget.stepId, resourceEditTarget.bomType, resourceEditTarget.itemId)
+  closeModal('modalResourceEdit')
+  resourceEditTarget = null
+}
+
 npi.pfd.openCtqPick = function(oi) {
   const p = prog(); ctqPickTarget = oi; ctqPickSelected = [...(p.pfd[oi].ctqIds || [])]
   document.getElementById('ctqPickList').innerHTML = p.ctq.length === 0
@@ -646,18 +713,25 @@ npi.pfd.openBomPick = function(sid) {
   bomPickTarget = sid
   bomPickSelected = [...(s.bomRefs || []).map(r => r.bomType + '|' + r.itemId)]
   bomPickFilter = 'all'
+  bomPickSearch = ''
 
   const titleEl = document.getElementById('bomPickTitle')
   if (titleEl) titleEl.textContent = `Resources — Step ${s.stepNum}: ${s.op || '(unnamed)'}`
 
-  npi.pfd.refreshBomPickModal(p, 'bomPickFilter', 'bomPickList', bomPickFilter)
+  const searchEl = document.getElementById('bomPickSearch')
+  if (searchEl) searchEl.value = ''
+
+  npi.pfd.refreshBomPickModal(p, 'bomPickFilter', 'bomPickList', bomPickFilter, bomPickSearch)
   showModal('modalBomPick')
 }
 
-npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter) {
+npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, searchTerm) {
   const filterEl = document.getElementById(filterId)
   const listEl = document.getElementById(listId)
   if (!filterEl || !listEl) return
+
+  const search = (searchTerm || '').toLowerCase().trim()
+  const matchesSearch = (text) => !search || (text || '').toLowerCase().includes(search)
 
   // Aggregate parts from BOM tree and AAW groups
   const aggregatedParts = npi.bom._aggregatePartsRegister ? npi.bom._aggregatePartsRegister(p) : []
@@ -686,6 +760,10 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter) {
       if (item.isAaw) flags.push('<span class="flag-pill flag-aaw">AAW</span>')
       if (item.isRepair) flags.push('<span class="flag-pill flag-repair">RPR</span>')
       const meta = [item.pn || item.toolId || item.equipId, item.spec].filter(Boolean).join(' · ')
+      
+      // Filter by search term
+      if (!matchesSearch(name) && !matchesSearch(item.pn) && !matchesSearch(item.toolId) && !matchesSearch(item.equipId) && !matchesSearch(item.spec)) return
+      
       items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">${t.icon} ${esc(name || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">${t.label}</span></div>`)
     })
   })
@@ -699,6 +777,10 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter) {
       if (sources.includes('aaw')) flags.push('<span class="flag-pill flag-aaw">AAW</span>')
       if (sources.includes('repair')) flags.push('<span class="flag-pill flag-repair">RPR</span>')
       const meta = [part.pn, `Qty: ${part.qty} ${part.unit}`].filter(Boolean).join(' · ')
+      
+      // Filter by search term
+      if (!matchesSearch(part.desc) && !matchesSearch(part.pn)) return
+      
       items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔩 ${esc(part.desc || part.pn || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Part</span></div>`)
     })
   }
@@ -712,14 +794,29 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter) {
       const totalParts = (group.nodes || []).filter(n => n.nodeType === 'part').length
       const totalSubAsm = (group.nodes || []).filter(n => n.nodeType === 'subassembly').length
       const meta = [`${totalSubAsm} sub-assemblies`, `${totalParts} parts`].join(' · ')
+      
+      // Filter by search term
+      if (!matchesSearch(group.title)) return
+      
       items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔧 ${esc(group.title || 'Unnamed Assembly')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap"><span class="${flagClass}">${tagLabel}</span></div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Assembly</span></div>`)
     })
   }
 
-  listEl.innerHTML = items.length ? items.join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No items in BoM yet.</div>'
+  if (items.length) {
+    listEl.innerHTML = items.join('')
+  } else if (search) {
+    listEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No resources match "${esc(search)}"</div>`
+  } else {
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No items in BoM yet.</div>'
+  }
 }
 
-npi.pfd.setBomFilter = function(f, fid, lid) { bomPickFilter = f; npi.pfd.refreshBomPickModal(prog(), fid, lid, f) }
+npi.pfd.setBomFilter = function(f, fid, lid) { bomPickFilter = f; npi.pfd.refreshBomPickModal(prog(), fid, lid, f, bomPickSearch) }
+
+npi.pfd.searchBomPick = function(query) {
+  bomPickSearch = query || ''
+  npi.pfd.refreshBomPickModal(prog(), 'bomPickFilter', 'bomPickList', bomPickFilter, bomPickSearch)
+}
 
 npi.pfd.toggleBomPick = function(key, el) {
   const chk = el.querySelector('input')

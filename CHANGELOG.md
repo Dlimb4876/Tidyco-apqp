@@ -3,6 +3,10 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-26 | Phase 2: EVM Foundation & Data Layer | DB migration adds percent_complete to me_tasks/pm_tasks, creates time_logs table with indexes and auth RLS, adds capacity_task_id FK to npi_actions; me-data-relational.js gains meLoadTimeLogs(); meDataState gains timeLogs array; me-hub-data.js fetches timeLogs on init and exposes hubGetActuals()
+
+## 2026-03-25 | Phase 1: ME Department Hub standalone setup | New standalone hub at me-hub/index.html with its own auth, CSS, and JS; reads me_tasks one-directionally; no links added to main portal; EVM and charting deferred to later phases
+
 ## 2026-03-25 | Add CTQ Coverage tracking and filtering | New Coverage column shows if each CTQ is linked to PFD/PFMEA (green=linked, amber=orphaned); Coverage filter dropdown to show All/Linked/Orphaned CTQs; Coverage stats banner displays count of linked and orphaned CTQs; URL param `ccf` persists coverage filter state
 
 ## 2026-03-25 | Fix Browse All tab in Feedback & Bugs | Wrong DOM selector (#mc vs #mainContent) meant tab switch never updated the UI

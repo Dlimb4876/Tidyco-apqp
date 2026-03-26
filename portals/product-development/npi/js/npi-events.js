@@ -7,6 +7,7 @@ npi.events = npi.events || {}
 
 let _npiEventsContainer = null
 let _pfmeaSearchTimer = null
+let _bomPickSearchTimer = null
 
 function npiActionTarget(evt) {
   return evt && evt.target ? evt.target.closest('[data-action]') : null
@@ -66,7 +67,7 @@ npi.events._onClick = function(evt) {
   case 'pfd-save-ctq-pick': npi.pfd.saveCtqPick(); break
   case 'pfd-open-bom-pick': npi.pfd.openBomPick(el.getAttribute('data-id')); break
   case 'pfd-save-bom-pick': npi.pfd.saveBomPick(); break
-  case 'pfd-del-bom-ref': npi.pfd.delBomRef(el.getAttribute('data-step-id'), el.getAttribute('data-bom-type'), el.getAttribute('data-item-id')); break
+  case 'pfd-open-resource-edit': npi.pfd.openResourceEdit(el.getAttribute('data-step-id'), el.getAttribute('data-bom-type'), el.getAttribute('data-item-id')); break
   case 'pfd-set-bom-filter': npi.pfd.setBomFilter(el.getAttribute('data-filter'), el.getAttribute('data-filter-id'), el.getAttribute('data-list-id')); break
   case 'pfd-toggle-bom-pick': npi.pfd.toggleBomPick(el.getAttribute('data-key'), el.closest('.bom-pick-item')); break
   case 'pfd-open-doc-pick': npi.pfd.openDocPick(npiNum(el.getAttribute('data-idx'), -1)); break
@@ -250,6 +251,15 @@ npi.events._onInput = function(evt) {
 
       npi.pfmea.pfSetExtraFilter('searchText', searchValue)
     }, 300)
+    break
+  }
+
+  case 'pfd-search-bom': {
+    clearTimeout(_bomPickSearchTimer)
+    const searchValue = el.value
+    _bomPickSearchTimer = setTimeout(() => {
+      npi.pfd.searchBomPick(searchValue)
+    }, 200)
     break
   }
 
