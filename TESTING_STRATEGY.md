@@ -70,6 +70,7 @@ npm run wiki:check           # runs all three checks
 - Capacity modules (ME/PM/Production paths)
 - Capacity stream isolation across PM, Logistics, and Unit 6 data adapters, orchestrators, and relational save paths
 - Capacity product-support rendering and support-history persistence mapping, including logistics split support inputs and history-table display
+- Shared capacity chart, holiday, and product-load rendering paths, including stream-aware month navigation and the embedded heatmap mount
 - Product Development/NPI data and rendering paths
 - NPI PFD flowchart generation and persistence mapping
 - NPI gate signoff role-permission enforcement
@@ -86,6 +87,10 @@ npm run wiki:check           # runs all three checks
 **When writing new tests, prioritize cross-module regression protection before adding broad new feature suites.**
 
 For capacity split work, prefer per-stream mocks (`pmDataGet*`, `logDataGet*`, `unit6DataGet*`) over the old shared `meDataGet*` plus department filtering pattern. The isolated data-layer contract is now the behavior under test.
+
+For capacity bootstrap work, treat `index.html` as part of the regression surface: shared `cap-*` files now load before the stream-specific orchestrators, and `capacity.js` / `capacity-events.js` remain the last capacity scripts. For this kind of change, run `npm run check:load-order` plus focused capacity suites alongside any data-layer tests.
+
+For deleted capacity legacy files, do not keep tests coupled to removed `portals/capacity/me/js/me-*.js` artifacts just because older suites loaded them with `readFileSync` + `eval`. Point tests at the live shared `cap-*` files or rewrite them to assert the shared wrapper contracts instead.
 
 ---
 

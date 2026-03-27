@@ -491,21 +491,24 @@ npi.bom.openTreeAddPart = async function(parentId) {
   bomAawActiveGroupId = null
   bomAawGroupParentId = null
   bomTreeAddParentId  = parentId || null
-  abcPickTarget       = { progId: p.id, type: 'tree', parentId: bomTreeAddParentId }
-  abcPickResults      = []
-  abcPickSelected     = []
-  abcPickLoading      = true
-  abcPickSearch       = ''
-  abcPickClassFilter  = 'all'
-  // Reset search UI if visible
-  const searchEl = document.getElementById('abcPickSearchInput')
-  if (searchEl) searchEl.value = ''
-  showModal('modalABCPick')
-  npi.bom._refreshAbcPickBtn()
-  abcPickResults = await npiRelFetchABCCatalogue()
-  abcPickLoading = false
-  const listEl = document.getElementById('abcPickList')
-  if (listEl) listEl.innerHTML = npi.bom.renderABCPickList()
+  await partsDatabase.openPick({
+    progId: p.id,
+    type: 'tree',
+    parentId: bomTreeAddParentId,
+    getAlreadyAddedIds: () => new Set(),
+    onConfirm: (selectedRows) => {
+      selectedRows.forEach((src) => {
+        npi.data.bom.addTreeNode(bomTreeAddParentId, 'part', {
+          pn: src.pn || '',
+          desc: src.item_desc || '',
+          unit: src.unit || 'ea',
+          qty: 1,
+          abcCatalogueId: src.id
+        })
+      })
+      npi.notify('render')
+    }
+  })
 }
 
 npi.bom.openTreeAddSubAsm = function(parentId) {
@@ -562,97 +565,50 @@ npi.bom.setAbcFilter = function(cls) {
 }
 
 npi.bom.showAbcInfo = function() {
-  showModal('modalAbcInfo')
+  partsDatabase.showInfo()
 }
 
 npi.bom.openABCPick = async function() {
   const p = prog()
   if (!p) return
-  abcPickTarget = { progId: p.id, type: 'parts' }
-  abcPickResults = []
-  abcPickSelected = []
-  abcPickLoading = true
-  abcPickSearch = ''
-  abcPickClassFilter = 'all'
-  showModal('modalABCPick')
-  npi.bom._refreshAbcPickBtn()
-  // Fetch and populate
-  abcPickResults = await npiRelFetchABCCatalogue()
-  abcPickLoading = false
-  // Re-render the modal list
-  const listEl = document.getElementById('abcPickList')
-  if (listEl) listEl.innerHTML = npi.bom.renderABCPickList()
+  await partsDatabase.openPick({
+    progId: p.id,
+    type: 'parts',
+    getAlreadyAddedIds: () => new Set((p && p.bom && p.bom.parts || []).map((item) => item.abcCatalogueId).filter(Boolean)),
+    onConfirm: (selectedRows) => {
+      selectedRows.forEach((src) => {
+        const item = {
+          id: crypto.randomUUID(),
+          desc: src.item_desc || '',
+          notes: src.notes || '',
+          pn: src.pn || '',
+          supplierPN: src.supplier_pn || '',
+          qty: 1,
+          unit: src.unit || 'ea',
+          isStd: false,
+          isAaw: false,
+          isRepair: false,
+          abcClass: src.abc_class || 'C',
+          abcCatalogueId: src.id
+        }
+        p.bom.parts.push(item)
+        Promise.resolve().then(() => npiRelSaveBOMItem('parts', item)).catch(err => console.error('[NPI] save BOM item failed:', err))
+      })
+      npi.notify('render')
+    }
+  })
 }
 
 npi.bom._refreshAbcPickBtn = function() {
-  const btn = document.getElementById('abcPickAddBtn')
-  if (!btn) return
-  const n = abcPickSelected.length
-  btn.textContent = n > 0 ? `Add ${n} Part${n !== 1 ? 's' : ''}` : 'Add Parts'
-  btn.disabled = n === 0
+  return partsDatabase.refreshPickButton()
 }
 
 npi.bom.renderABCPickList = function() {
-  if (abcPickLoading) return '<div class="skeleton-loader"><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div><div class="skeleton-line" style="width:90%"></div></div>'
-
-  // Apply filters
-  const searchTerm = (abcPickSearch || '').toLowerCase()
-  let filtered = searchTerm
-    ? abcPickResults.filter(r =>
-        (r.item_desc || '').toLowerCase().includes(searchTerm) ||
-        (r.pn || '').toLowerCase().includes(searchTerm)
-      )
-    : abcPickResults
-
-  if (abcPickClassFilter !== 'all') {
-    filtered = filtered.filter(r => r.abc_class === abcPickClassFilter)
-  }
-
-  if (!filtered.length) return '<div style="padding:20px;text-align:center;color:var(--muted)">No parts found.</div>'
-
-  // IDs of parts already in this project's flat BOM (not applicable in tree context)
-  const p = prog()
-  const isTreeContext = abcPickTarget && abcPickTarget.type === 'tree'
-  const alreadyAdded = isTreeContext
-    ? new Set()
-    : new Set((p && p.bom && p.bom.parts || []).map(x => x.abcCatalogueId).filter(Boolean))
-
-  return filtered.map(r => {
-    const idx = abcPickResults.indexOf(r)
-    const selected = abcPickSelected.includes(r.id)
-    const added = alreadyAdded.has(r.id)
-    const sageBadge = r.in_sage ? '<span style="color:var(--green);margin-left:4px">· Sage</span>' : ''
-    const addedBadge = added ? '<span style="color:var(--muted);font-size:11px;margin-left:4px">· Already in BOM</span>' : ''
-    return `
-    <div class="bom-pick-item${selected ? ' selected' : ''}${added ? ' bom-pick-item--added' : ''}"
-         onclick="npi.bom.toggleABCPick(${idx})" style="cursor:pointer">
-      <input type="checkbox" name="bom_abc_pick_${idx}" ${selected || added ? 'checked' : ''} ${added ? 'disabled' : ''} style="pointer-events:none;margin-right:8px">
-      <div style="flex:1;min-width:0">
-        <div class="bom-pick-name">${esc(r.item_desc)}${addedBadge}</div>
-        <div class="bom-pick-meta">${r.pn ? 'PN: ' + esc(r.pn) + ' · ' : ''}${esc(r.unit || 'ea')}${r.notes ? ' · ' + esc(r.notes) : ''}${sageBadge}</div>
-      </div>
-      <span class="abc-badge abc-${r.abc_class}">${r.abc_class}</span>
-    </div>`
-  }).join('')
+  return partsDatabase.renderPickList()
 }
 
 npi.bom.toggleABCPick = function(idx) {
-  const r = abcPickResults[idx]
-  if (!r) return
-  // Don't allow toggling parts already in the BOM
-  const p = prog()
-  const alreadyAdded = new Set((p && p.bom && p.bom.parts || []).map(x => x.abcCatalogueId).filter(Boolean))
-  if (alreadyAdded.has(r.id)) return
-
-  if (abcPickSelected.includes(r.id)) {
-    abcPickSelected = abcPickSelected.filter(id => id !== r.id)
-  } else {
-    abcPickSelected.push(r.id)
-  }
-  // Re-render the full list to reflect new selection state
-  const listEl = document.getElementById('abcPickList')
-  if (listEl) listEl.innerHTML = npi.bom.renderABCPickList()
-  npi.bom._refreshAbcPickBtn()
+  return partsDatabase.togglePick(idx)
 }
 
 
@@ -837,20 +793,25 @@ npi.bom.openAawAddPart = async function(groupId, parentId) {
   if (!p) return
   bomAawActiveGroupId = groupId
   bomAawGroupParentId = parentId || null
-  abcPickTarget       = { progId: p.id, type: 'aaw_tree', groupId, parentId: parentId || null }
-  abcPickResults      = []
-  abcPickSelected     = []
-  abcPickLoading      = true
-  abcPickSearch       = ''
-  abcPickClassFilter  = 'all'
-  const searchEl = document.getElementById('abcPickSearchInput')
-  if (searchEl) searchEl.value = ''
-  showModal('modalABCPick')
-  npi.bom._refreshAbcPickBtn()
-  abcPickResults = await npiRelFetchABCCatalogue()
-  abcPickLoading = false
-  const listEl = document.getElementById('abcPickList')
-  if (listEl) listEl.innerHTML = npi.bom.renderABCPickList()
+  await partsDatabase.openPick({
+    progId: p.id,
+    type: 'aaw_tree',
+    groupId,
+    parentId: parentId || null,
+    getAlreadyAddedIds: () => new Set(),
+    onConfirm: (selectedRows) => {
+      selectedRows.forEach((src) => {
+        npi.data.bom.addAawTreeNode(groupId, parentId || null, 'part', {
+          pn: src.pn || '',
+          desc: src.item_desc || '',
+          unit: src.unit || 'ea',
+          qty: 1,
+          abcCatalogueId: src.id
+        })
+      })
+      npi.notify('render')
+    }
+  })
 }
 
 npi.bom.openAawAddSubAsm = function(groupId, parentId) {
@@ -876,69 +837,5 @@ npi.bom.delAawTreeNode = function(id, groupId) {
 }
 
 npi.bom.confirmABCPick = function() {
-  const p = prog()
-  if (!p || !abcPickSelected.length) return
-
-  // AAW/Repair tree context
-  if (abcPickTarget && abcPickTarget.type === 'aaw_tree') {
-    abcPickSelected.forEach(catId => {
-      const src = abcPickResults.find(r => r.id === catId)
-      if (!src) return
-      npi.data.bom.addAawTreeNode(abcPickTarget.groupId, abcPickTarget.parentId, 'part', {
-        pn: src.pn || '',
-        desc: src.item_desc || '',
-        unit: src.unit || 'ea',
-        qty: 1,
-        abcCatalogueId: src.id
-      })
-    })
-    abcPickSelected = []
-    npi.notify('render')
-    closeModal('modalABCPick')
-    return
-  }
-
-  // Main structure tree context
-  if (abcPickTarget && abcPickTarget.type === 'tree') {
-    abcPickSelected.forEach(catId => {
-      const src = abcPickResults.find(r => r.id === catId)
-      if (!src) return
-      npi.data.bom.addTreeNode(abcPickTarget.parentId, 'part', {
-        pn: src.pn || '',
-        desc: src.item_desc || '',
-        unit: src.unit || 'ea',
-        qty: 1,
-        abcCatalogueId: src.id
-      })
-    })
-    abcPickSelected = []
-    npi.notify('render')
-    closeModal('modalABCPick')
-    return
-  }
-
-  // Parts tab context — original behaviour
-  abcPickSelected.forEach(catId => {
-    const src = abcPickResults.find(r => r.id === catId)
-    if (!src) return
-    const item = {
-      id: crypto.randomUUID(),
-      desc: src.item_desc || '',
-      notes: src.notes || '',
-      pn: src.pn || '',
-      supplierPN: src.supplier_pn || '',
-      qty: 1,
-      unit: src.unit || 'ea',
-      isStd: false,
-      isAaw: false,
-      isRepair: false,
-      abcClass: src.abc_class || 'C',
-      abcCatalogueId: src.id
-    }
-    p.bom.parts.push(item)
-    Promise.resolve().then(() => npiRelSaveBOMItem('parts', item)).catch(err => console.error('[NPI] save BOM item failed:', err))
-  })
-  abcPickSelected = []
-  npi.notify('render')
-  closeModal('modalABCPick')
+  return partsDatabase.confirmPick()
 }

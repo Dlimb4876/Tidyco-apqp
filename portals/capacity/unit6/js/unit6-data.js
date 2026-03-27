@@ -4,12 +4,8 @@
    Own tables: unit6_teams, unit6_tasks, unit6_products, unit6_holidays,
                unit6_product_support_history
 
-   Depends on me-data.js for shared utilities:
-   meNormalizeProductSupportBreakdown, meNormalizeDateOnly, meUUID,
-   meGetHoursPerWeek, meNormalizeAndDedupeHolidays,
-   meNormalizeAndDedupeSupportHistory, meNormalizeHolidayRecord,
-   meNormalizeSupportHistoryRecord, meSortSupportHistoryByDate,
-   meGetDateMinusOneDay
+  Depends on shared cap utilities with ME legacy fallbacks until
+  the shared bootstrap cut-over is complete.
    ============================================================ */
 
 window.unit6DataState = {
@@ -24,6 +20,17 @@ window.unit6DataPendingDeletes = { tasks: [], teams: [], supportHistory: [] };
 window.unit6DataSaveInProgress = false;
 window.unit6DataSaveQueued = false;
 window.unit6DataInitialized = false;
+
+var meNormalizeProductSupportBreakdown = window.capNormalizeProductSupportBreakdown || window.meNormalizeProductSupportBreakdown;
+var meNormalizeDateOnly = window.capNormalizeDateOnly || window.meNormalizeDateOnly;
+var meUUID = window.capUUID || window.meUUID || (() => crypto.randomUUID());
+var meGetHoursPerWeek = window.capGetHoursPerWeek || window.meGetHoursPerWeek;
+var meNormalizeAndDedupeHolidays = window.capNormalizeAndDedupeHolidays || window.meNormalizeAndDedupeHolidays;
+var meNormalizeAndDedupeSupportHistory = window.capNormalizeAndDedupeSupportHistory || window.meNormalizeAndDedupeSupportHistory;
+var meNormalizeHolidayRecord = window.capNormalizeHolidayRecord || window.meNormalizeHolidayRecord;
+var meNormalizeSupportHistoryRecord = window.capNormalizeSupportHistoryRecord || window.meNormalizeSupportHistoryRecord;
+var meSortSupportHistoryByDate = window.capSortSupportHistoryByDate || window.meSortSupportHistoryByDate;
+var meGetDateMinusOneDay = window.capGetDateMinusOneDay || window.meGetDateMinusOneDay;
 
 window.unit6DataGetTeam = function() { return unit6DataState.team; };
 window.unit6DataGetTasks = function() { return unit6DataState.tasks; };

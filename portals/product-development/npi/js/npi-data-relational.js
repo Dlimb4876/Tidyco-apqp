@@ -790,52 +790,22 @@ window.npiRelDeleteBOMItem = async function(id) {
 
 // ── ABC Catalogue (central source of truth) ───────────────────
 window.npiRelFetchABCCatalogue = async function() {
-  try {
-    const { data, error } = await supa
-      .from('abc_catalogue')
-      .select('*')
-      .order('item_desc');
-    if (error) { console.warn('npiRelFetchABCCatalogue error:', error.message); return []; }
-    return data || [];
-  } catch (err) {
-    console.warn('npiRelFetchABCCatalogue exception:', err.message);
-    return [];
+  if (window.partsDatabase && window.partsDatabase.data && typeof window.partsDatabase.data.fetchCatalogue === 'function') {
+    return window.partsDatabase.data.fetchCatalogue();
   }
+  return [];
 };
 
 window.npiRelSaveABCCatalogueEntry = async function(entry) {
-  if (!entry || !entry.pn || !currentUser) return null;
-  try {
-    const { data, error } = await supa.from('abc_catalogue').upsert({
-      id: entry.id || undefined,
-      pn: entry.pn,
-      item_desc: entry.item_desc || '',
-      supplier_pn: entry.supplier_pn || null,
-      unit: entry.unit || 'ea',
-      notes: entry.notes || '',
-      abc_class: entry.abc_class || 'C',
-      in_sage: entry.in_sage || false,
-      manufacturer: entry.manufacturer || null,
-      manufacturer_pn: entry.manufacturer_pn || null,
-      datasheet_url: entry.datasheet_url || null,
-      user_id: currentUser.id,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'id' }).select('*');
-    if (error) { console.warn('npiRelSaveABCCatalogueEntry error:', error.message); return null; }
-    return (data && data[0]) || null;
-  } catch (err) {
-    console.warn('npiRelSaveABCCatalogueEntry exception:', err.message);
-    return null;
+  if (window.partsDatabase && window.partsDatabase.data && typeof window.partsDatabase.data.saveCatalogueEntry === 'function') {
+    return window.partsDatabase.data.saveCatalogueEntry(entry);
   }
+  return null;
 };
 
 window.npiRelDeleteABCCatalogueEntry = async function(id) {
-  if (!id) return;
-  try {
-    const { error } = await supa.from('abc_catalogue').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteABCCatalogueEntry error:', error.message);
-  } catch (err) {
-    console.warn('npiRelDeleteABCCatalogueEntry exception:', err.message);
+  if (window.partsDatabase && window.partsDatabase.data && typeof window.partsDatabase.data.deleteCatalogueEntry === 'function') {
+    return window.partsDatabase.data.deleteCatalogueEntry(id);
   }
 };
 
@@ -1248,82 +1218,8 @@ window.npiRelDeleteDoc = async function(id) {
 // ─────────────────────────────────────────────────────────────
 
 window.npiRelFetchPartUsage = async function(abcCatalogueId) {
-  if (!abcCatalogueId) return [];
-  try {
-    // Fetch from npi_bom_items (flat BOM list)
-    const { data: itemsData, error: itemsError } = await supa
-      .from('npi_bom_items')
-      .select('project_id, item_desc, qty, abc_catalogue_id')
-      .eq('abc_catalogue_id', abcCatalogueId);
-
-    if (itemsError) {
-      console.warn('npiRelFetchPartUsage items error:', itemsError.message);
-    }
-
-    // Fetch from npi_bom_tree (hierarchical BOM)
-    const { data: treeData, error: treeError } = await supa
-      .from('npi_bom_tree')
-      .select('project_id, item_desc, qty, abc_catalogue_id')
-      .eq('abc_catalogue_id', abcCatalogueId);
-
-    if (treeError) {
-      console.warn('npiRelFetchPartUsage tree error:', treeError.message);
-    }
-
-    // Get unique project prog_ids (BOM tables store prog_id, not id)
-    const projectProgIds = new Set();
-    (itemsData || []).forEach(r => projectProgIds.add(r.project_id));
-    (treeData || []).forEach(r => projectProgIds.add(r.project_id));
-
-    // Fetch project details by prog_id
-    let projectsMap = {};
-    if (projectProgIds.size > 0) {
-      const { data: projectsData, error: projectsError } = await supa
-        .from('projects')
-        .select('id, prog_id, name')
-        .in('prog_id', Array.from(projectProgIds));
-
-      if (projectsError) {
-        console.warn('[WhereUsed] Projects fetch error:', projectsError.message);
-      }
-
-      (projectsData || []).forEach(p => {
-        projectsMap[p.prog_id] = p;
-      });
-    }
-
-    // Aggregate usage data
-    const usage = [];
-
-    // Process BOM items
-    (itemsData || []).forEach(r => {
-      const project = projectsMap[r.project_id];
-      if (project) {
-        usage.push({
-          projectId: r.project_id,
-          projectName: project.name || project.prog_id || 'Unknown',
-          location: r.item_desc || 'BOM Item',
-          qty: r.qty || 0
-        });
-      }
-    });
-
-    // Process tree items
-    (treeData || []).forEach(r => {
-      const project = projectsMap[r.project_id];
-      if (project) {
-        usage.push({
-          projectId: r.project_id,
-          projectName: project.name || project.prog_id || 'Unknown',
-          location: r.item_desc || 'Assembly',
-          qty: r.qty || 0
-        });
-      }
-    });
-
-    return usage;
-  } catch (err) {
-    console.warn('npiRelFetchPartUsage exception:', err.message);
-    return [];
+  if (window.partsDatabase && window.partsDatabase.data && typeof window.partsDatabase.data.fetchPartUsage === 'function') {
+    return window.partsDatabase.data.fetchPartUsage(abcCatalogueId);
   }
+  return [];
 };

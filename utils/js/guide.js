@@ -54,15 +54,15 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📅 Project Management (PM)</div>
-        <p>Same structure as ME Capacity but filtered to the PM department. Shares the same underlying data table, separated by department tag.</p>
+        <p>Same structure as ME Capacity but for the PM department. PM has its own independent data store for teams, tasks, products, and holidays.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚚 Logistics</div>
-        <p>Same structure as ME Capacity but for the Logistics department. Tracks kitting and product movement workload alongside team tasks and product support hours.</p>
+        <p>Same structure as ME Capacity but for the Logistics department. Logistics has its own independent data store.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🏭 Unit 6</div>
-        <p>Same structure as ME Capacity but for the Unit 6 department. Tracks team loading, tasks, and product support for that work area.</p>
+        <p>Same structure as ME Capacity but for the Unit 6 department. Unit 6 has its own independent data store.</p>
       </div>
     `
   },
@@ -72,7 +72,7 @@ const GUIDE_CONTENT = {
     title: '🧑‍🔧 ME Load Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>ME Capacity</strong> plan tracks Manufacturing Engineering workload against available hours. Data is shared in real time across all logged-in users. The Logistics and Unit 6 departments use the same tab structure — their data is stored in the same underlying tables, separated by department tag.</p>
+        <p>The <strong>ME Capacity</strong> plan tracks Manufacturing Engineering workload against available hours. Data is shared in real time across all logged-in users. Each department has its own independent data store.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
@@ -146,11 +146,11 @@ const GUIDE_CONTENT = {
     title: '📅 Project Management Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>PM Capacity</strong> plan tracks Project Manager workload against available hours. It uses the same data structure as ME Capacity, filtered to the PM department tag.</p>
+        <p>The <strong>PM Capacity</strong> plan tracks Project Manager workload against available hours. PM has its own independent data store for teams, tasks, products, and holidays.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Data Sources</div>
-        <p>Shares the same underlying dataset as ME Capacity (teams, tasks, products, holidays) but only displays records tagged as <strong>PM</strong> department.</p>
+        <p>PM maintains its own independent tables for team, tasks, products, and holidays. Data is not shared with other departments.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
@@ -919,7 +919,7 @@ const GUIDE_CONTENT = {
     title: '🚚 Logistics Load Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Logistics Capacity</strong> plan tracks the Logistics department's workload against available hours. It uses the same tab structure as ME Capacity, with data separated by department tag.</p>
+        <p>The <strong>Logistics Capacity</strong> plan tracks the Logistics department's workload against available hours. Logistics has its own independent data store.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
@@ -956,7 +956,7 @@ const GUIDE_CONTENT = {
     title: '🏭 Unit 6 Load Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Unit 6 Capacity</strong> plan tracks the Unit 6 department's workload against available hours. It uses the same tab structure as ME Capacity, with data separated by department tag.</p>
+        <p>The <strong>Unit 6 Capacity</strong> plan tracks the Unit 6 department's workload against available hours. Unit 6 has its own independent data store.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>

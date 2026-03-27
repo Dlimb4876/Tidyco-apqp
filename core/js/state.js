@@ -65,6 +65,7 @@ let abcCatalogueLoading = false;    // true while loading
 let abcCatalogueLoaded  = false;    // true once loaded
 let abcCatalogueSearch  = '';       // search filter text
 let abcCatalogueClassFilter = 'all'; // 'all' | 'A' | 'B' | 'C' — class filter on catalogue page
+let abcCatalogueSort = { field: 'item_desc', ascending: true }; // current sort state for parts table
 let abcEditTarget = null;           // index into abcCatalogueData during edit, or null for new entry
 
 // NPI dashboard tab

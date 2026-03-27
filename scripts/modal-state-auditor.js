@@ -28,6 +28,10 @@ function walkDir(dir, exclude = ['node_modules', '.git', 'tests']) {
   return files;
 }
 
+function normalizePath(filePath) {
+  return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '')
+}
+
 function analyzeFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
@@ -75,10 +79,11 @@ function analyzeFile(filePath) {
 
 function main() {
   const jsFiles = walkDir('.');
-  const filesToCheck = jsFiles.filter(f =>
-    (f.startsWith('./portals/') || f.startsWith('./core/') || f.startsWith('./utils/')) &&
+  const filesToCheck = jsFiles.filter(f => {
+    const normalized = normalizePath(f)
+    return (normalized.startsWith('portals/') || normalized.startsWith('core/') || normalized.startsWith('utils/')) &&
     !f.includes('test')
-  );
+  })
 
   console.log(`\n🎯 Modal State Auditor\n${'═'.repeat(40)}\n`);
   console.log(`Scanning ${filesToCheck.length} JS files for modals...\n`);

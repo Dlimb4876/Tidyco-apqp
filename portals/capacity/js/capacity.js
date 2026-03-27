@@ -147,3 +147,17 @@ function setupCapacityPortalDelegation() {
     }
   });
 }
+
+// ── Ensure capacity modals are injected ────────────────────────────
+function ensureCapacityModals() {
+  if (typeof injectCapacityModals === 'function') {
+    injectCapacityModals()
+  }
+}
+
+// Hook into renderCapacity to ensure modals are injected
+const originalRenderCapacity = renderCapacity
+renderCapacity = function() {
+  ensureCapacityModals()
+  return originalRenderCapacity()
+}

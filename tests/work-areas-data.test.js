@@ -18,7 +18,7 @@ global.esc = (v) => String(v || '')
 global.supa = { from: jest.fn() }
 
 const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/js/work-areas-data.js'),
+  path.resolve(__dirname, '../portals/capacity/production/js/work-areas-data.js'),
   'utf8'
 )
 eval(script) // eslint-disable-line no-eval

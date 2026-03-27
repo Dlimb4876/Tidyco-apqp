@@ -8,6 +8,9 @@
    Called by unit6-data.js during unit6DataInit() and unit6DataSave()
    ============================================================ */
 
+var meUUID = window.capUUID || window.meUUID || (() => crypto.randomUUID());
+var meNormalizeDateRange = window.capNormalizeDateRange || window.meNormalizeDateRange;
+
 // ─────────────────────────────────────────────────────────────
 // LOAD OPERATIONS
 // ─────────────────────────────────────────────────────────────

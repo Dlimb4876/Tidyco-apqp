@@ -34,8 +34,7 @@ describe('capacity events task search', () => {
 
   beforeEach(() => {
     document.body.innerHTML = ''
-    window.meTasksFilters = { search: '' }
-    window.pmTasksFilters = { search: '' }
+    window.capTasksFilters = { ME: { search: '' }, PM: { search: '' }, LOG: { search: '' }, UNIT6: { search: '' } }
     global.meSetTab = jest.fn()
     global.pmSetTab = jest.fn()
   })
@@ -50,7 +49,7 @@ describe('capacity events task search', () => {
     global.meSetTab = jest.fn(() => {
       document.body.innerHTML = `
         <div data-cap-context="me">
-          <input type="text" data-cap-action="cap-task-search" value="${window.meTasksFilters.search}">
+          <input type="text" data-cap-action="cap-task-search" value="${window.capTasksFilters.ME.search}">
         </div>
       `
     })
@@ -62,7 +61,7 @@ describe('capacity events task search', () => {
 
     window.capacityEvents._onInput({ target: input })
 
-    expect(window.meTasksFilters.search).toBe('abc')
+    expect(window.capTasksFilters.ME.search).toBe('abc')
     expect(global.meSetTab).toHaveBeenCalledWith('tasks')
 
     await new Promise(resolve => setTimeout(resolve, 0))
@@ -80,12 +79,20 @@ describe('capacity events task search', () => {
       </div>
     `
 
+    global.pmSetTab = jest.fn(() => {
+      document.body.innerHTML = `
+        <div data-cap-context="pm">
+          <input type="text" data-cap-action="cap-task-search" value="${window.capTasksFilters.PM.search}">
+        </div>
+      `
+    })
+
     const input = document.querySelector('[data-cap-action="cap-task-search"]')
     input.value = 'gate'
 
     window.capacityEvents._onInput({ target: input })
 
-    expect(window.pmTasksFilters.search).toBe('gate')
+    expect(window.capTasksFilters.PM.search).toBe('gate')
     expect(global.pmSetTab).toHaveBeenCalledWith('tasks')
     expect(global.meSetTab).not.toHaveBeenCalled()
   })
@@ -449,5 +456,48 @@ describe('capacity events product support history routing', () => {
     expect(global.unit6RefreshCurrentTab).toHaveBeenCalled()
     expect(global.unit6DebouncedSave).toHaveBeenCalled()
     expect(global.meDataDeleteProductSupportHistoryEntry).not.toHaveBeenCalled()
+  })
+})
+
+describe('capacity events month routing', () => {
+  beforeAll(() => {
+    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
+    eval(script)
+  })
+
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    global.meOnPrevMonth = jest.fn()
+    global.pmOnPrevMonth = jest.fn()
+    global.logOnMonthChange = jest.fn()
+    global.unit6OnNextMonth = jest.fn()
+  })
+
+  test('routes prev-month clicks to the active PM stream', () => {
+    document.body.innerHTML = '<div data-cap-context="pm"><button data-cap-action="cap-me-prev-month">Prev</button></div>'
+    const button = document.querySelector('[data-cap-action="cap-me-prev-month"]')
+
+    window.capacityEvents._onClick({ target: button })
+
+    expect(global.pmOnPrevMonth).toHaveBeenCalled()
+    expect(global.meOnPrevMonth).not.toHaveBeenCalled()
+  })
+
+  test('routes month input changes to the active Logistics stream', () => {
+    document.body.innerHTML = '<div data-cap-context="log"><input data-cap-action="cap-me-month-change" value="2026-04"></div>'
+    const input = document.querySelector('[data-cap-action="cap-me-month-change"]')
+
+    window.capacityEvents._onChange({ target: input })
+
+    expect(global.logOnMonthChange).toHaveBeenCalledWith('2026-04')
+  })
+
+  test('routes next-month clicks to the active Unit 6 stream', () => {
+    document.body.innerHTML = '<div data-cap-context="unit6"><button data-cap-action="cap-me-next-month">Next</button></div>'
+    const button = document.querySelector('[data-cap-action="cap-me-next-month"]')
+
+    window.capacityEvents._onClick({ target: button })
+
+    expect(global.unit6OnNextMonth).toHaveBeenCalled()
   })
 })

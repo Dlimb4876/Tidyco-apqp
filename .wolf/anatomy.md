@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-26T16:20:09.649Z
-> Files: 390 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-27T12:34:04.892Z
+> Files: 391 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -12,9 +12,9 @@
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1835 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Change log (~19931 tok)
+- `CHANGELOG.md` — Changelog (~21358 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
-- `CLAUDE.md` — Tidyco APQP Core Router (~606 tok)
+- `CLAUDE.md` — Tidyco APQP Core Router (~571 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
 - `index.html` — Tidyco Operations Portal (~11049 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
@@ -32,14 +32,14 @@
 ## .claude/
 
 - `AGENTS_QUICKSTART.md` — Agent Quickstart Guide (~1930 tok)
-- `agents.md` — Claude Agents for Tidyco APQP (~1579 tok)
-- `hooks.md` — Automation Hooks for Claude Code (~1067 tok)
+- `agents.md` — Claude Agents for Tidyco APQP (~1569 tok)
+- `hooks.md` — Automation Hooks for Claude Code (~960 tok)
 - `launch.json` (~69 tok)
 - `mcp.json` (~742 tok)
 - `README.md` — Project documentation (~1459 tok)
 - `serve.ps1` — .claude/serve.ps1 - start a simple HTTP file server from the repo root (~593 tok)
 - `serve.sh` — .claude/serve.sh — start MCP helper servers declared in mcp.json (POSIX / Linux / macOS / WSL) (~936 tok)
-- `settings.json` — /*.js)", (~694 tok)
+- `settings.json` — /*.js)", (~680 tok)
 - `settings.local.json` — /*.css)", (~1978 tok)
 
 ## .claude/agents/
@@ -59,9 +59,9 @@
 ## .claude/rules/
 
 - `agents.md` — Agent Development Patterns (~358 tok)
-- `code-style.md` — Code Style & Critical Rules (~206 tok)
+- `code-style.md` — Code Style & Critical Rules (~204 tok)
 - `components.md` — UI Components & Patterns (~1082 tok)
-- `database.md` — Database & Supabase Patterns (~425 tok)
+- `database.md` — Database & Supabase Patterns (~402 tok)
 - `navigation.md` — Navigation & Routing (~472 tok)
 - `on-commit.json` (~101 tok)
 - `on-pr-open.json` (~180 tok)
@@ -77,7 +77,7 @@
 
 ## .github/
 
-- `copilot-instructions.md` — Tidyco APQP - Copilot Instructions (~461 tok)
+- `copilot-instructions.md` — Tidyco APQP - Copilot Instructions (~427 tok)
 
 ## .github/agents/
 
@@ -89,12 +89,10 @@
 
 ## .github/instructions/
 
-- `capacity-parity.instructions.md` — Capacity Parity Guidelines (~232 tok)
 - `testing.instructions.md` — Testing Guidelines (~225 tok)
 
 ## .github/prompts/
 
-- `parity-check.prompt.md` — Inputs (~194 tok)
 
 ## .github/skills/code-review/
 
@@ -123,8 +121,11 @@
 ## .serena/memories/
 
 - `project-overview.md` (~128 tok)
-- `style-and-conventions.md` (~156 tok)
+- `style-and-conventions.md` (~140 tok)
 - `suggested_commands.md` (~116 tok)
+
+## Manual Update 2026-03-27
+
 
 ## core/css/
 
@@ -181,6 +182,7 @@
 
 - `capacity-department-split.md` — Plan: Full Capacity Department Split (~3788 tok)
 - `capacity-improvements-plan.md` — ME & PM Load Capacity Improvements Plan (~11114 tok)
+- `capacity-independance.md` — Plan: Capacity Independence — Eliminate Cross-Department Coupling (~7838 tok)
 - `capacity-isolated-streams-fixes.md` — Plan: Capacity Isolated Streams - Bug Fixes & Feature Parity (~1575 tok)
 - `guide-system-implementation-plan.md` — Standalone User Guide Wiki - Implementation Plan (Revised) (~2213 tok)
 - `hub-improvements-plan.md` — Hub Portal Improvements Plan — UX Enhancement & Modernization (~8953 tok)
@@ -189,7 +191,7 @@
 - `next-implementation-sprint.md` — Next Implementation Sprint (~1107 tok)
 - `pfMEA-improvements-plan.md` — PFMEA Improvements Plan — AIAG-VDA Compliance & UX Enhancement (~7899 tok)
 - `product-allocation-heatmap-plan.md` — Per-Person Product Support Allocation for ME Heatmap (~1851 tok)
-- `risk-and-regression-checklist.md` — Risk and Regression Checklist (~800 tok)
+- `risk-and-regression-checklist.md` — Risk and Regression Checklist (~725 tok)
 - `surgical-realtime-updates.md` — Plan: Surgical Realtime DOM Updates (~2508 tok)
 
 ## portals/action-centre/css/
@@ -243,6 +245,11 @@
 - `log-capacity.js` — logGetCurrentMonthKey: logGetData, logGetTabContent, logRerenderChartTabForMonthChange (~2628 tok)
 - `log-data-relational.js` — Declares teamId (~3328 tok)
 - `log-data.js` — member: logGetProductSupportHistoryRows, logEnsureProductSupportHistoryBaseline (~10306 tok)
+
+## portals/capacity/me/js/
+
+- `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeMeTableDepartment, meNormalizePersistedProd (~5467 tok)
+- `me-data.js` — meNormalizeDepartmentTag: meNormalizeMeTableDepartment, meNormalizeHolidayRecord, meNormalizeAndDedu (~18559 tok)
 
 ## portals/capacity/project-management/css/
 

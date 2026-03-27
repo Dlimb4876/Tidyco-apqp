@@ -78,10 +78,6 @@ Trigger specialized agents based on events:
       "agent": "debugging",
       "description": "Analyze test failures and suggest fixes"
     },
-    "on-capacity-change": {
-      "agent": "validation",
-      "description": "Verify capacity parity between ME and PM"
-    },
     "on-schema-change": {
       "agent": "migration",
       "description": "Detect database schema changes and plan migrations"
@@ -110,17 +106,6 @@ echo "✓ Ready to commit"
 #!/bin/bash
 if [[ "$1" == *.test.js ]]; then
   npm test -- "$1"
-fi
-```
-
-### Capacity Parity Validation
-After capacity changes in `portals/capacity/`:
-```bash
-#!/bin/bash
-if [[ "$1" == "portals/capacity"* ]]; then
-  # Trigger validation agent
-  echo "Checking capacity parity..."
-  # Agent job to verify ME/PM sync
 fi
 ```
 
@@ -218,7 +203,6 @@ Or disable in settings temporarily:
 
 Planned integrations:
 - Auto-run agents on PR open
-- Auto-validate capacity parity
 - Auto-generate changelogs
 - Auto-detect and fix common linting issues
 - Auto-suggest refactoring patterns

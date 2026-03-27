@@ -10,76 +10,50 @@ global.esc = (v) => String(v ?? '')
 global.canEdit = jest.fn(() => true);
 
 const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/js/me-holidays.js'),
+  path.resolve(__dirname, '../portals/capacity/shared/js/cap-holidays.js'),
   'utf8'
 );
 eval(script); // eslint-disable-line no-eval
 
-describe('meToggleHoliday()', () => {
+describe('capToggleHoliday()', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    document.body.innerHTML = '<div class="me-card-body"></div>';
-    global.capacityTab = 'me';
-
-    global.meDataGetHolidays = jest.fn(() => []);
-    global.meDataAddHoliday = jest.fn();
-    global.meDataUpdateHoliday = jest.fn();
-    global.meDataDeleteHoliday = jest.fn();
-    global.meDebouncedSave = jest.fn();
-    global.meSetTab = jest.fn();
-
-    global.pmDataGetHolidays = jest.fn(() => []);
-    global.pmDataAddHoliday = jest.fn();
-    global.pmDataUpdateHoliday = jest.fn();
-    global.pmDataDeleteHoliday = jest.fn();
-    global.pmDebouncedSave = jest.fn();
-    global.pmSetTab = jest.fn();
-
-    global.logDataGetHolidays = jest.fn(() => []);
-    global.logDataAddHoliday = jest.fn();
-    global.logDataUpdateHoliday = jest.fn();
-    global.logDataDeleteHoliday = jest.fn();
-    global.logDebouncedSave = jest.fn();
-    global.logSetTab = jest.fn();
-
-    global.unit6DataGetHolidays = jest.fn(() => []);
-    global.unit6DataAddHoliday = jest.fn();
-    global.unit6DataUpdateHoliday = jest.fn();
-    global.unit6DataDeleteHoliday = jest.fn();
-    global.unit6DebouncedSave = jest.fn();
-    global.unit6SetTab = jest.fn();
+    global.addHoliday = jest.fn();
+    global.updateHoliday = jest.fn();
+    global.deleteHoliday = jest.fn();
   });
 
-  test('uses PM holiday state and save flow in Projects capacity', () => {
-    global.capacityTab = 'projects';
+  test('adds a full-day holiday when no holiday exists', () => {
+    window.capToggleHoliday('pm-1', '2026-03-18', [], addHoliday, updateHoliday, deleteHoliday);
 
-    window.meToggleHoliday('pm-1', '2026-03-18');
-
-    expect(global.pmDataAddHoliday).toHaveBeenCalledWith('pm-1', '2026-03-18', 'full');
-    expect(global.pmDebouncedSave).toHaveBeenCalled();
-    expect(global.pmSetTab).toHaveBeenCalledWith('holidays');
-    expect(global.meDataAddHoliday).not.toHaveBeenCalled();
+    expect(global.addHoliday).toHaveBeenCalledWith('pm-1', '2026-03-18', 'full');
+    expect(global.updateHoliday).not.toHaveBeenCalled();
+    expect(global.deleteHoliday).not.toHaveBeenCalled();
   });
 
-  test('uses Logistics holiday state and save flow in Logistics capacity', () => {
-    global.capacityTab = 'logistics';
+  test('changes a full-day holiday to half-day on second toggle', () => {
+    window.capToggleHoliday(
+      'log-1',
+      '2026-03-19',
+      [{ personId: 'log-1', date: '2026-03-19', type: 'full' }],
+      addHoliday,
+      updateHoliday,
+      deleteHoliday
+    );
 
-    window.meToggleHoliday('log-1', '2026-03-19');
-
-    expect(global.logDataAddHoliday).toHaveBeenCalledWith('log-1', '2026-03-19', 'full');
-    expect(global.logDebouncedSave).toHaveBeenCalled();
-    expect(global.logSetTab).toHaveBeenCalledWith('holidays');
-    expect(global.meDataAddHoliday).not.toHaveBeenCalled();
+    expect(global.updateHoliday).toHaveBeenCalledWith('log-1', '2026-03-19', 'half');
   });
 
-  test('uses Unit 6 holiday state and save flow in Unit 6 capacity', () => {
-    global.capacityTab = 'unit6';
+  test('removes a half-day holiday on third toggle', () => {
+    window.capToggleHoliday(
+      'u6-1',
+      '2026-03-20',
+      [{ personId: 'u6-1', date: '2026-03-20', type: 'half' }],
+      addHoliday,
+      updateHoliday,
+      deleteHoliday
+    );
 
-    window.meToggleHoliday('u6-1', '2026-03-20');
-
-    expect(global.unit6DataAddHoliday).toHaveBeenCalledWith('u6-1', '2026-03-20', 'full');
-    expect(global.unit6DebouncedSave).toHaveBeenCalled();
-    expect(global.unit6SetTab).toHaveBeenCalledWith('holidays');
-    expect(global.meDataAddHoliday).not.toHaveBeenCalled();
+    expect(global.deleteHoliday).toHaveBeenCalledWith('u6-1', '2026-03-20');
   });
 });

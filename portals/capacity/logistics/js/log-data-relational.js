@@ -8,6 +8,9 @@
    Called by log-data.js during logDataInit() and logDataSave()
    ============================================================ */
 
+var meUUID = window.capUUID || window.meUUID || (() => crypto.randomUUID());
+var meNormalizeDateRange = window.capNormalizeDateRange || window.meNormalizeDateRange;
+
 // ─────────────────────────────────────────────────────────────
 // LOAD OPERATIONS
 // ─────────────────────────────────────────────────────────────

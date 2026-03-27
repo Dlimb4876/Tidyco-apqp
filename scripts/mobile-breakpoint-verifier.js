@@ -10,7 +10,11 @@ const fs = require('fs');
 const path = require('path');
 
 // Known CSS files that should have breakpoints (portal features, not core)
-const PORTAL_CSS_PATTERN = /portals\/.*\.css$/;
+const PORTAL_CSS_PATTERN = /^portals\/.*\.css$/;
+
+function normalizePath(filePath) {
+  return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '');
+}
 
 function walkDir(dir, ext = '.css') {
   const files = [];
@@ -53,7 +57,7 @@ function analyzeCss(filePath) {
 
 function main() {
   const allCss = walkDir('.');
-  const portalCss = allCss.filter(f => PORTAL_CSS_PATTERN.test(f));
+  const portalCss = allCss.filter(f => PORTAL_CSS_PATTERN.test(normalizePath(f)));
 
   console.log(`\n📱 Mobile Breakpoint Verifier\n${'═'.repeat(40)}\n`);
   console.log(`Scanning ${portalCss.length} portal CSS files...\n`);
@@ -64,7 +68,7 @@ function main() {
 
   portalCss.forEach(file => {
     const analysis = analyzeCss(file);
-    const shortPath = file.replace('./', '');
+    const shortPath = normalizePath(file);
 
     if (!analysis.hasResponsive) {
       missing.push(shortPath);

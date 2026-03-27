@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/me-utils.js'), 'utf8');
+const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/shared/js/cap-utils.js'), 'utf8');
 eval(script);
 
 describe('England bank holiday calculation', () => {

@@ -3,6 +3,47 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-27 | Fix ME capacity deletes not persisting to database | meDataDeleteTask was overwriting the pending deletes object and losing queued team deletions; meDataDeleteProduct had no queue at all
+## 2026-03-27 | Fix ME capacity saves not persisting to database | department field was missing from all three upsert payloads (me_teams, me_tasks, me_products), causing DB constraint failures on insert
+
+## 2026-03-27 | Restore shared capacity runtime after Phase 10 cut-over | Replace the remaining shared placeholder tabs, fix stream-aware month navigation, realign ME team saves with the isolated-stream model, and repair Windows validation scripts that were silently scanning zero files
+
+## 2026-03-27 | Complete capacity independence Phase 10 | Delete the old ME shared JS/CSS copies now that the shared bootstrap is live, and migrate direct Jest file loads onto shared `cap-*` files or shared wrapper coverage
+
+## 2026-03-27 | Complete capacity independence Phase 9 | Cut `index.html` over to the shared capacity bootstrap so live capacity pages load `cap-*` CSS/JS before stream-specific orchestrators instead of relying on the old ME shared include set
+
+## 2026-03-27 | Complete capacity independence Phase 8 | Move shared data/date/normalization utility ownership into the shared `cap-*` layer so ME, PM, Logistics, and Unit 6 data files no longer depend on ME as the source of generic helpers
+
+## 2026-03-27 | Complete capacity independence Phases 4 to 7 | Move PM, Logistics, and Unit 6 orchestrators onto shared-capacity entry points and make the capacity event router DOM-context driven before the shared bootstrap cut-over
+
+## 2026-03-27 | Replace shared capacity placeholder renderers | Finish the Phase 3 shared-tab gap by routing the shared products, task-load, holidays, dashboard, and heatmap files through the working runtime-safe capacity implementations
+
+## 2026-03-27 | Make Parts Database table sortable | Allow users to click column headers to sort by Tidyco PN, Class, Description, Units, Manufacturer, or Manufacturer PN
+
+## 2026-03-27 | Correct capacity independence Phase 3 status wording | Phase 3 decoupled the ME orchestrator, but the plan needed to state that a runtime-safe fallback bridge remains until the shared layer is fully cut over
+
+## 2026-03-27 | Complete capacity independence Phase 3 | Move the ME orchestrator onto shared-capacity entry points and remove cross-stream context delegation while keeping a runtime-safe bridge until the shared script cut-over
+
+## 2026-03-27 | Complete capacity independence Phase 2 | Remove shared-layer context/data fallbacks and make shared task rendering use explicit filter and sort inputs before the orchestrator cut-over
+
+## 2026-03-27 | Finish capacity independence Phase 1 cleanup | Remove the last ME-prefixed shared references so the shared capacity copies are ready for Phase 2 without changing the live app bootstrap
+
+## 2026-03-27 | Fix ME Capacity team member duplicate key error | meSaveTeamRelational now checks for existing team member by name before inserting to avoid violating the unique (user_id, name) constraint
+
+## 2026-03-27 | Add Parts Database folder README | Document the standalone Parts Database subsystem so its ownership, files, and integration points are easy to find
+
+## 2026-03-27 | Verify ME capacity database saves working correctly | User reported data not posting; investigation confirmed all saves working (67 products, 6 team, 80 tasks); removed verbose debug logging that was added for diagnosis
+
+## 2026-03-27 | Finish Parts Database subsystem split | Moved the Add from Parts Database picker and ABC-specific styling into the standalone Parts Database module so Product Development owns the full catalogue flow instead of relying on shared NPI internals
+
+## 2026-03-27 | Phase 1: Create shared capacity files | Create portals/capacity/shared/ folder with 12 JS and 7 CSS files copied from ME portal and renamed from me* to cap*; shared utilities (cap-utils.js, cap-components.js, cap-calculations.js, cap-data-utils.js) and renderers (cap-team.js, cap-tasks.js, cap-products.js, cap-product-taskload.js, cap-holidays.js, cap-chart.js, cap-heatmap.js, cap-dashboard.js) ready for Phase 2 refactoring
+
+## 2026-03-27 | Split Parts Database into its own Product Development subsystem | The parts catalogue had been embedded in shared NPI files; moving ownership into a dedicated folder makes the feature easier to find, maintain, and evolve independently
+
+## 2026-03-27 | Remove inline production schedule add-batch click | Production portal render output needed to stay on delegated controls so the production test passes and behavior stays consistent
+
+## 2026-03-26 | Restructure capacity portal folders | Move ME and Production files into their own named subfolders (me/, production/) so every capacity stream has a consistent folder structure
+
 ## 2026-03-26 | Fix production schedule virtual scroll jumping to top | Scroll position was lost on every re-render; new-row inputs were also at risk of being wiped on scroll updates
 
 ## 2026-03-26 | Add Unit Value (£) column to Product Management | Track per-unit monetary value for each product; defaults to £100 for all existing and new products; editable inline in the product list table

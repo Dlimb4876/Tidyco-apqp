@@ -34,15 +34,18 @@ async function authLoadEffectivePermissions(userId, roleSlug) {
       const { data: grants, error: grantsError } = await supa
         .from('team_permissions')
         .select('permission, allowed')
-        .in('team_id', assignedTeamIds)
-        .eq('allowed', true);
+        .in('team_id', assignedTeamIds);
 
       if (!grantsError && Array.isArray(grants)) {
         grants.forEach((grant) => {
           const key = typeof normalizePermissionKey === 'function'
             ? normalizePermissionKey(grant.permission)
             : grant.permission;
-          if (key) resolved[key] = true;
+          if (key) {
+            // Explicit denials (allowed: false) override role baseline
+            // Explicit grants (allowed: true) also override
+            resolved[key] = !!grant.allowed;
+          }
         });
       }
     }

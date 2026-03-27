@@ -218,3 +218,17 @@ function npiDataUnsubscribe() {
   npiLoadedProgId = null
   clearTimeout(npiReloadTimer)
 }
+
+// ── Ensure NPI modals are injected ────────────────────────────────
+function ensureNPIModals() {
+  if (typeof injectNPIModals === 'function') {
+    injectNPIModals()
+  }
+}
+
+// Hook into npiDataInit to ensure modals are injected
+const originalNpiDataInit = npiDataInit
+npiDataInit = function() {
+  ensureNPIModals()
+  return originalNpiDataInit()
+}

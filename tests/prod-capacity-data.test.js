@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const meUtilsScript = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/me-utils.js'), 'utf8');
-const prodCapDataScript = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/prod-capacity-data.js'), 'utf8');
+const meUtilsScript = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/shared/js/cap-utils.js'), 'utf8');
+const prodCapDataScript = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/production/js/prod-capacity-data.js'), 'utf8');
 
 eval(meUtilsScript);
 

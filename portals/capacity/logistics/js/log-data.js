@@ -4,12 +4,8 @@
    Own tables: log_teams, log_tasks, log_products, log_holidays,
                log_product_support_history
 
-   Depends on me-data.js for shared utilities:
-   meNormalizeProductSupportBreakdown, meNormalizeDateOnly, meUUID,
-   meGetHoursPerWeek, meNormalizeAndDedupeHolidays,
-   meNormalizeAndDedupeSupportHistory, meNormalizeHolidayRecord,
-   meNormalizeSupportHistoryRecord, meSortSupportHistoryByDate,
-   meGetDateMinusOneDay
+  Depends on shared cap utilities with ME legacy fallbacks until
+  the shared bootstrap cut-over is complete.
    ============================================================ */
 
 window.logDataState = {
@@ -24,6 +20,17 @@ window.logDataPendingDeletes = { tasks: [], teams: [], supportHistory: [] };
 window.logDataSaveInProgress = false;
 window.logDataSaveQueued = false;
 window.logDataInitialized = false;
+
+var meNormalizeProductSupportBreakdown = window.capNormalizeProductSupportBreakdown || window.meNormalizeProductSupportBreakdown;
+var meNormalizeDateOnly = window.capNormalizeDateOnly || window.meNormalizeDateOnly;
+var meUUID = window.capUUID || window.meUUID || (() => crypto.randomUUID());
+var meGetHoursPerWeek = window.capGetHoursPerWeek || window.meGetHoursPerWeek;
+var meNormalizeAndDedupeHolidays = window.capNormalizeAndDedupeHolidays || window.meNormalizeAndDedupeHolidays;
+var meNormalizeAndDedupeSupportHistory = window.capNormalizeAndDedupeSupportHistory || window.meNormalizeAndDedupeSupportHistory;
+var meNormalizeHolidayRecord = window.capNormalizeHolidayRecord || window.meNormalizeHolidayRecord;
+var meNormalizeSupportHistoryRecord = window.capNormalizeSupportHistoryRecord || window.meNormalizeSupportHistoryRecord;
+var meSortSupportHistoryByDate = window.capSortSupportHistoryByDate || window.meSortSupportHistoryByDate;
+var meGetDateMinusOneDay = window.capGetDateMinusOneDay || window.meGetDateMinusOneDay;
 
 window.logDataGetTeam = function() { return logDataState.team; };
 window.logDataGetTasks = function() { return logDataState.tasks; };

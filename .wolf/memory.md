@@ -8,6 +8,21 @@
 ## 2026-03-24
 ## 2026-03-25
 - Fixed load-order checker warnings by moving `core/js/chart-theme.js` and `utils/js/guide.js` in `index.html` to load after the core chain (`state/auth/db/helpers/navigation/realtime`); validated with `npm run check:load-order` (clean, no warnings).
+## 2026-03-27
+- Restored the shared capacity runtime after the Phase 10 cut-over by replacing the remaining placeholder Product Support / Product Load / Holiday Planner rendering, restoring shared chart month controls plus the embedded heatmap mount, making month controls stream-aware in `capacity-events.js`, reverting the stray ME team-name lookup in `me-data-relational.js`, and fixing multiple Windows validation scripts that had been silently scanning zero files. Validated with focused capacity Jest suites and full `npm test`; `check:all` now reports real repository findings instead of zero-file false greens.
+- Completed Capacity Independence Phase 10 by deleting the old ME shared JS/CSS copies from `portals/capacity/me/`, migrating direct Jest file loads onto shared `cap-*` files or shared wrapper bridge coverage, and updating README/testing docs to reflect that only the ME data/orchestrator files remain; validated with `npm run check:load-order`, focused shared-capacity Jest coverage (11/11 suites, 155/155 tests), and full `npm test` with only the pre-existing unrelated `tests/me-data-relational-queries.test.js` failure remaining.
+- Completed Capacity Independence Phase 9 by cutting `index.html` over to the shared capacity `cap-*` CSS/JS bootstrap, moving `capacity.js` / `capacity-events.js` to the end of the capacity block, updating README/testing docs to match, and fixing the browser-only PM/LOG/UNIT6 top-level alias redeclaration issue that appeared once all stream scripts loaded together; validated with `npm run check:load-order`, focused capacity Jest coverage (7/7 suites, 73/73 tests), and a clean browser load at `http://localhost:8000/`.
+- Completed Capacity Independence Phase 8 by moving generic data/date/normalization helper ownership into `cap-data-utils.js` / `cap-utils.js`, then making ME/PM/LOG/UNIT6 data and relational layers resolve shared `cap*` helpers first with temporary legacy fallbacks until the bootstrap cut-over; validated with targeted data-layer Jest coverage (`tests/me-data-core.test.js`, `tests/pm-capacity-data.test.js`, `tests/pm-data-relational.test.js`, `tests/log-data-relational.test.js`, `tests/unit6-data-relational.test.js`).
+- Completed Capacity Independence Phases 4 to 7 by moving `pm-capacity.js`, `log-capacity.js`, and `unit6-capacity.js` onto shared `cap*` entry points with runtime-safe legacy bridges, then making `capacity-events.js` DOM-context driven and generic-helper based; validated with `npm test -- tests/pm-capacity.test.js tests/log-capacity.test.js tests/unit6-capacity.test.js tests/capacity-events.test.js` (4/4 suites, 27/27 tests).
+- Replaced the remaining shared capacity placeholder tabs in `cap-products.js`, `cap-product-taskload.js`, `cap-holidays.js`, `cap-dashboard.js`, and `cap-heatmap.js` with runtime-safe wrappers to the working capacity render/draw flows; confirmed the placeholder strings are gone, editor diagnostics are clean, and focused capacity Jest coverage passed (`tests/me-products-filters.test.js`, `tests/me-holidays.test.js`, `tests/me-chart.test.js`, `tests/capacity-events.test.js`).
+- Corrected `plans/capacity-independance.md` to say Phase 3 is complete for ME orchestrator decoupling but still uses a runtime-safe fallback bridge until the shared `cap-*` layer is actually cut over in `index.html`; added matching changelog and buglog notes so Phase 4 work does not assume the shared renderers are already live.
+- Completed Capacity Independence Phase 3 by decoupling `portals/capacity/me/js/me-capacity.js` from `meCurrentDepartmentContext` and cross-stream PM/LOG/UNIT6 delegation, switching its tab/draw entry points to shared `cap*` calls, and keeping a runtime-safe legacy bridge because `index.html` still loads only the old ME scripts before the later cut-over phase; validated with grep checks for removed `meRender*`/`meCurrentDepartmentContext`/cross-stream delegation markers and editor error checks on touched files.
+- Completed Capacity Independence Phase 2 by making the shared tasks renderer consume explicit filter/sort inputs and removing the last shared `meDataGet*` fallbacks from `portals/capacity/shared/js/cap-calculations.js`; validated with shared-layer grep checks for `meCurrentDepartmentContext`, `meGetDepartmentFromContext`, and `meDataGet|pmDataGet|logDataGet|unit6DataGet`, plus editor error checks on the touched files.
+- Finished Capacity Independence Phase 1 cleanup by removing the last `window.me*` references from `portals/capacity/shared/js/cap-calculations.js`, confirming all shared Phase 1 JS/CSS files exist, and marking Phase 1 complete in `plans/capacity-independance.md`; validated with shared-folder inventory, `window.me` grep on `portals/capacity/shared/js/**`, and editor error checks on the touched files.
+- Added `portals/product-development/parts-database/README.md` to document the standalone Parts Database subsystem, its ownership boundary, and the expected thin-caller relationship from NPI BoM files.
+- Finished the Parts Database subsystem split by moving the Add from Parts Database picker and ABC-specific CSS into standalone Parts Database files (`parts-modals.js`, `parts-database.js`, `parts-database.css`), reducing `portals/product-development/npi/js/bom.js` to a thin caller for pick flows; validated with `npm test -- tests/parts-database.test.js tests/product-development.test.js` and full `npm test` (64/64 suites, 815/815 tests).
+- Split the Parts Database into its own Product Development subsystem under `portals/product-development/parts-database/js/` and left NPI on thin compatibility wrappers (`bom-cclass.js`, `npi-data-relational.js`) so BOM flows still consume the same catalogue; validated with `npm test -- tests/product-development.test.js`, `npm run check:load-order`, and full `npm test` (63/63 suites, 814/814 tests).
+- Fixed production scheduling delegation regression by replacing the empty-state inline `onclick="focusBatchNewRow()"` button in `portals/production/js/scheduling.js` with shared `data-action="focus-new-batch"` wiring, aligning it with the production portal's delegated-control pattern; validated with `npm test -- tests/production.test.js` and full `npm test` (63/63 suites, 813/813 tests).
 - Fixed PM/LOG/Unit 6 Capacity date adjuster regression where month controls changed but chart/heatmap stayed pinned to ME month by introducing shared active-stream month resolver `meGetActiveChartMonthKey()` in `portals/capacity/js/me-chart.js` and using it in both `meDrawChartNow` and `meDrawHeatmapNow`; added regression in `tests/me-chart.test.js` and validated with `npm test -- tests/me-chart.test.js tests/pm-capacity.test.js`.
 - Fixed Serena MCP client-context mismatch for OpenCode by changing `.mcp.json` default `oraios/serena` context to `codex` and adding `oraios/serena-claude` with `claude-code`, so both OpenCode and Claude Code can connect without conflicting prompts/tool filters.
 - Fixed Product Support History edit-save reversion by making `meNormalizeAndDedupeSupportHistory` prefer the most recently updated duplicate record (instead of last-iterated), added regression in `tests/me-data-core.test.js`, and validated with `npm test -- tests/me-data-core.test.js` plus full `npm test`/`npm run check:all` runs (existing unrelated failure remains in `tests/operations-infographic.test.js`).
@@ -1493,3 +1508,78 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 06:34
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 06:34
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 06:39 | Edited plans/capacity-independance.md | 7→9 lines | ~187 |
+| 06:39 | Edited plans/capacity-independance.md | modified remains() | ~351 |
+| 06:40 | Edited plans/capacity-independance.md | added 3 condition(s) | ~489 |
+| 06:40 | Edited plans/capacity-independance.md | modified JS() | ~158 |
+| 06:40 | Session end: 4 writes across 1 files (capacity-independance.md) | 1 reads | ~1269 tok |
+
+## Session: 2026-03-27 10:58
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 10:58
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 11:04
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:06 | Edited .claude/settings.json | — | ~0 |
+| 11:06 | Session end: 1 writes across 1 files (settings.json) | 2 reads | ~1388 tok |
+
+## Session: 2026-03-27 11:06
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 11:34 | Edited CLAUDE.md | 8→7 lines | ~123 |
+| 11:34 | Edited .github/copilot-instructions.md | 4→3 lines | ~54 |
+| 11:34 | Edited .github/copilot-instructions.md | 4→4 lines | ~71 |
+| 11:34 | Edited .github/copilot-instructions.md | 2→1 lines | ~16 |
+| 11:34 | Edited CLAUDE.md | 2→1 lines | ~18 |
+| 11:34 | Edited .serena/memories/style-and-conventions.md | 2→1 lines | ~6 |
+| 11:34 | Edited plans/risk-and-regression-checklist.md | removed 6 lines | ~9 |
+| 11:34 | Edited plans/risk-and-regression-checklist.md | 2→1 lines | ~14 |
+| 11:34 | Edited plans/risk-and-regression-checklist.md | 6→6 lines | ~59 |
+| 11:34 | Edited plans/risk-and-regression-checklist.md | 7 → 6 | ~7 |
+| 11:34 | Edited plans/risk-and-regression-checklist.md | 8 → 7 | ~7 |
+| 11:34 | Edited plans/risk-and-regression-checklist.md | 9 → 8 | ~9 |
+| 11:34 | Edited plans/risk-and-regression-checklist.md | 10 → 9 | ~10 |
+| 11:36 | Edited .claude/rules/database.md | inline fix | ~19 |
+| 11:36 | Edited .claude/rules/code-style.md | inline fix | ~53 |
+| 11:43 | Edited .claude/hooks.md | removed 5 lines | ~7 |
+| 11:44 | Edited .claude/hooks.md | removed 12 lines | ~8 |
+| 11:44 | Edited .claude/hooks.md | 2→1 lines | ~7 |
+| 11:44 | Edited .claude/agents.md | inline fix | ~21 |
+| 11:44 | Edited .claude/agents.md | 2→2 lines | ~46 |
+| 11:44 | Edited .claude/agents.md | inline fix | ~26 |
+| 11:44 | Edited .claude/agents.md | 2→1 lines | ~11 |
+| 11:44 | Session end: 22 writes across 8 files (CLAUDE.md, copilot-instructions.md, style-and-conventions.md, risk-and-regression-checklist.md, database.md) | 6 reads | ~5312 tok |
+
+## Session: 2026-03-27 11:50
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:00 | Edited portals/capacity/me/js/me-data-relational.js | 12→13 lines | ~128 |
+| 12:00 | Edited portals/capacity/me/js/me-data-relational.js | 9→10 lines | ~100 |
+| 12:00 | Edited portals/capacity/me/js/me-data-relational.js | 16→17 lines | ~162 |
+| 12:01 | Edited CHANGELOG.md | 4→6 lines | ~98 |
+| 12:01 | Session end: 4 writes across 2 files (me-data-relational.js, CHANGELOG.md) | 4 reads | ~20426 tok |
+| 12:32 | Edited portals/capacity/me/js/me-data.js | 7→7 lines | ~62 |
+| 12:33 | Edited portals/capacity/me/js/me-data.js | added 2 condition(s) | ~167 |
+| 12:33 | Edited portals/capacity/me/js/me-data.js | added 3 condition(s) | ~312 |
+| 12:34 | Edited CHANGELOG.md | 1→2 lines | ~108 |
+| 12:34 | Session end: 8 writes across 3 files (me-data-relational.js, CHANGELOG.md, me-data.js) | 6 reads | ~37779 tok |

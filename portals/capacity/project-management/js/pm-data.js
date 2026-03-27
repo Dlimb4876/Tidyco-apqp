@@ -4,13 +4,8 @@
    Own tables: pm_teams, pm_tasks, pm_products, pm_holidays,
                pm_product_support_history
 
-   Depends on me-data.js for shared utilities:
-   meNormalizeDepartmentTag, meNormalizeProductSupportBreakdown,
-   meNormalizeDateOnly, meUUID, meGetHoursPerWeek,
-   meNormalizeAndDedupeHolidays, meNormalizeHolidayRecord,
-   meNormalizeSupportHistoryRecord, meNormalizeAndDedupeSupportHistory,
-   meSortSupportHistoryByDate, meApplyLatestSupportHistoryToProduct,
-   meEnsureProductSupportHistoryBaseline (patched to use pmDataState)
+  Depends on shared cap utilities with ME legacy fallbacks until
+  the shared bootstrap cut-over is complete.
    ============================================================ */
 
 window.pmDataState = {
@@ -25,6 +20,18 @@ window.pmDataPendingDeletes = { tasks: [], teams: [], supportHistory: [] };
 window.pmDataSaveInProgress = false;
 window.pmDataSaveQueued = false;
 window.pmDataInitialized = false;
+
+var meNormalizeDepartmentTag = window.capNormalizeDepartmentTag || window.meNormalizeDepartmentTag;
+var meNormalizeProductSupportBreakdown = window.capNormalizeProductSupportBreakdown || window.meNormalizeProductSupportBreakdown;
+var meNormalizeDateOnly = window.capNormalizeDateOnly || window.meNormalizeDateOnly;
+var meUUID = window.capUUID || window.meUUID || (() => crypto.randomUUID());
+var meGetHoursPerWeek = window.capGetHoursPerWeek || window.meGetHoursPerWeek;
+var meNormalizeAndDedupeHolidays = window.capNormalizeAndDedupeHolidays || window.meNormalizeAndDedupeHolidays;
+var meNormalizeHolidayRecord = window.capNormalizeHolidayRecord || window.meNormalizeHolidayRecord;
+var meNormalizeSupportHistoryRecord = window.capNormalizeSupportHistoryRecord || window.meNormalizeSupportHistoryRecord;
+var meNormalizeAndDedupeSupportHistory = window.capNormalizeAndDedupeSupportHistory || window.meNormalizeAndDedupeSupportHistory;
+var meSortSupportHistoryByDate = window.capSortSupportHistoryByDate || window.meSortSupportHistoryByDate;
+var meGetDateMinusOneDay = window.capGetDateMinusOneDay || window.meGetDateMinusOneDay;
 
 // ─────────────────────────────────────────────────────────────
 // GETTERS

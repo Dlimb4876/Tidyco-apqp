@@ -19,7 +19,7 @@ global.capacityTab = 'team'
 global.supa = { from: jest.fn() }
 
 const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/js/me-data-relational.js'),
+  path.resolve(__dirname, '../portals/capacity/me/js/me-data-relational.js'),
   'utf8'
 )
 eval(script) // eslint-disable-line no-eval

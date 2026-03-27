@@ -82,6 +82,10 @@ describe('Product Development family template modal flow', () => {
       }
     };
 
+    global.partsDatabase = {
+      renderPortal: jest.fn(() => '<div>Standalone Parts Database</div>')
+    };
+
     global.familiesDataAddFamily = jest.fn();
     global.familiesDataUpdateFamily = jest.fn();
     global.familiesDataDeleteFamily = jest.fn();
@@ -182,5 +186,14 @@ window.__getTemplateViewerState = () => templateViewerState;`);
     window.setProductDevelopmentTab('product-management');
 
     expect(global.productDevelopmentTab).toBe('root');
+  });
+
+  test('renders the dedicated parts database subsystem for the parts tab', () => {
+    global.productDevelopmentTab = 'parts-database';
+
+    renderProductDevelopmentShell();
+
+    expect(global.partsDatabase.renderPortal).toHaveBeenCalled();
+    expect(document.body.textContent).toContain('Standalone Parts Database');
   });
 });

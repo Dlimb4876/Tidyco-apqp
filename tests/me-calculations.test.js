@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const utilsScript = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/me-utils.js'), 'utf8');
-const calculationsScript = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/me-calculations.js'), 'utf8');
+const utilsScript = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/shared/js/cap-utils.js'), 'utf8');
+const calculationsScript = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/shared/js/cap-calculations.js'), 'utf8');
 
 eval(utilsScript);
 eval(calculationsScript);
 
-describe('ME monthly capacity calculations', () => {
+describe('Shared monthly capacity calculations', () => {
   beforeEach(() => {
     global.prodState = { batches: [] };
     global.meDataGetProductSupportRateForDate = undefined;
@@ -22,7 +22,7 @@ describe('ME monthly capacity calculations', () => {
 
   test('uses 40h/week default for an 8-hour workday', () => {
     const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', utilisation: 100 }];
-    const result = meCalculateMonthData('2026-01', team, [], [], []);
+    const result = capCalculateMonthData('2026-01', team, [], [], []);
 
     // Jan 2026 has 21 network days after excluding New Year bank holiday.
     expect(result.capacity).toBeCloseTo(168, 6);
@@ -32,7 +32,7 @@ describe('ME monthly capacity calculations', () => {
     const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
     const holidays = [{ personId: 'p1', date: '2026-01-05', type: 'full' }];
 
-    const result = meCalculateMonthData('2026-01', team, [], [], holidays);
+    const result = capCalculateMonthData('2026-01', team, [], [], holidays);
     expect(result.capacity).toBeCloseTo(160, 6);
   });
 
@@ -40,7 +40,7 @@ describe('ME monthly capacity calculations', () => {
     const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
     const holidays = [{ personId: 'p1', date: '2026-01-04', type: 'full' }]; // Sunday
 
-    const result = meCalculateMonthData('2026-01', team, [], [], holidays);
+    const result = capCalculateMonthData('2026-01', team, [], [], holidays);
     expect(result.capacity).toBeCloseTo(168, 6);
   });
 
@@ -48,7 +48,7 @@ describe('ME monthly capacity calculations', () => {
     const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
     const holidays = [{ personId: 'unknown', date: '2026-01-05', type: 'full' }];
 
-    const result = meCalculateMonthData('2026-01', team, [], [], holidays);
+    const result = capCalculateMonthData('2026-01', team, [], [], holidays);
     expect(result.capacity).toBeCloseTo(168, 6);
   });
 
@@ -56,7 +56,7 @@ describe('ME monthly capacity calculations', () => {
     const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }];
     const holidays = [{ personId: 'p1', date: '2026-01-05', type: 'half' }];
 
-    const result = meCalculateMonthData('2026-01', team, [], [], holidays);
+    const result = capCalculateMonthData('2026-01', team, [], [], holidays);
     expect(result.capacity).toBeCloseTo(164, 6);
   });
 
@@ -64,7 +64,7 @@ describe('ME monthly capacity calculations', () => {
     const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 35, utilisation: 100 }];
     const holidays = [{ person_id: 'p1', date: '2026-01-05', type: 'full' }];
 
-    const result = meCalculateMonthData('2026-01', team, [], [], holidays);
+    const result = capCalculateMonthData('2026-01', team, [], [], holidays);
     // Jan 2026: 21 network days => 35 * (21/5) = 147 gross, minus one 7h day = 140
     expect(result.capacity).toBeCloseTo(140, 6);
   });
@@ -79,7 +79,7 @@ describe('ME monthly capacity calculations', () => {
       utilisation: 100
     }];
 
-    const result = meCalculateMonthData('2026-01', team, [], [], []);
+    const result = capCalculateMonthData('2026-01', team, [], [], []);
     const expectedNetDays = countNetworkDaysBetween(new Date('2026-01-15'), new Date('2026-01-21'), new Set());
     const expectedCapacity = 40 * (expectedNetDays / 5);
 
@@ -97,7 +97,7 @@ describe('ME monthly capacity calculations', () => {
       endDate: '2026-02-10'
     };
 
-    const result = meCalculateMonthData('2026-01', team, [task], [], []);
+    const result = capCalculateMonthData('2026-01', team, [task], [], []);
     const taskDays = countNetworkDaysBetween(new Date('2026-01-20'), new Date('2026-02-10'), new Set());
     const overlapDays = countNetworkDaysBetween(new Date('2026-01-20'), new Date('2026-01-31'), new Set());
     const expectedNpi = 100 * (overlapDays / taskDays);
@@ -128,7 +128,7 @@ describe('ME monthly capacity calculations', () => {
       }
     ];
 
-    const result = meCalculateMonthData('2026-01', team, tasks, [], []);
+    const result = capCalculateMonthData('2026-01', team, tasks, [], []);
     expect(result.npi).toBeCloseTo(20, 6);
   });
 
@@ -150,7 +150,7 @@ describe('ME monthly capacity calculations', () => {
       ]
     };
 
-    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    const result = capCalculateMonthData('2026-01', team, [], products, []);
     expect(result.support).toBeCloseTo(6, 6);
   });
 
@@ -170,7 +170,7 @@ describe('ME monthly capacity calculations', () => {
       ]
     };
 
-    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    const result = capCalculateMonthData('2026-01', team, [], products, []);
     expect(result.support).toBeCloseTo(2, 6);
   });
 
@@ -190,7 +190,7 @@ describe('ME monthly capacity calculations', () => {
       ]
     };
 
-    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    const result = capCalculateMonthData('2026-01', team, [], products, []);
     expect(result.support).toBeCloseTo(0, 6);
   });
 
@@ -210,12 +210,14 @@ describe('ME monthly capacity calculations', () => {
       ]
     };
 
-    global.meDataGetProductSupportRateForDate = jest.fn((productId, targetDate) => {
+    const supportRateResolver = jest.fn((productId, targetDate) => {
       expect(productId).toBe('me-prod-1');
       return targetDate >= '2026-01-15' ? 1 : 2;
     });
 
-    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    const result = capCalculateMonthData('2026-01', team, [], products, [], {
+      supportRateResolver
+    });
     expect(result.support).toBeCloseTo(3, 6);
   });
 
@@ -237,7 +239,7 @@ describe('ME monthly capacity calculations', () => {
 
     global.meDataGetProductSupportRateForDate = undefined;
 
-    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    const result = capCalculateMonthData('2026-01', team, [], products, []);
     expect(result.support).toBeCloseTo(8, 6);
   });
 
@@ -262,13 +264,13 @@ describe('ME monthly capacity calculations', () => {
 
     global.meDataGetProductSupportRateForDate = undefined;
 
-    const result = meCalculateMonthData('2026-01', team, [], products, []);
+    const result = capCalculateMonthData('2026-01', team, [], products, []);
     expect(result.support).toBeCloseTo(4.5, 6);
   });
 
   test('returns zero utilisation when person does not exist in team', () => {
     global.meDataGetTeam = jest.fn(() => []);
-    const result = meCalcWeekUtilisation('missing', '2026-01-05', '2026-01-11', [], []);
+    const result = capCalcWeekUtilisation('missing', '2026-01-05', '2026-01-11', [], [], []);
     expect(result).toEqual({ capacity: 0, demand: 0, utilisation: 0 });
   });
 });

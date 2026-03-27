@@ -32,6 +32,51 @@ function pmGetData() {
   };
 }
 
+function pmGetLegacyCapacityFunction(name) {
+  return window['me' + name];
+}
+
+function pmWithLegacyDepartment(callback) {
+  const contextKey = 'me' + 'CurrentDepartmentContext';
+  const previous = window[contextKey];
+  window[contextKey] = 'PM';
+  try {
+    return callback();
+  } finally {
+    window[contextKey] = previous;
+  }
+}
+
+function pmRenderWithSharedFallback(sharedRenderer, legacyName, args, legacyArgs) {
+  if (typeof sharedRenderer === 'function') return sharedRenderer(...args);
+  const legacyRenderer = pmGetLegacyCapacityFunction(legacyName);
+  return typeof legacyRenderer === 'function'
+    ? pmWithLegacyDepartment(function() { return legacyRenderer(...legacyArgs); })
+    : '';
+}
+
+function pmDrawChartViews() {
+  const { team, tasks, products, holidays } = pmGetData();
+
+  if (typeof window.capDrawChartNow === 'function') {
+    window.capDrawChartNow(team, tasks, products, holidays, pmChartStart, 'PM');
+  } else {
+    const legacyDrawChart = pmGetLegacyCapacityFunction('DrawChartNow');
+    if (typeof legacyDrawChart === 'function') {
+      pmWithLegacyDepartment(function() { legacyDrawChart(); });
+    }
+  }
+
+  if (typeof window.capDrawHeatmapNow === 'function') {
+    window.capDrawHeatmapNow(team, tasks, products, holidays, pmChartStart, 'PM');
+  } else {
+    const legacyDrawHeatmap = pmGetLegacyCapacityFunction('DrawHeatmapNow');
+    if (typeof legacyDrawHeatmap === 'function') {
+      pmWithLegacyDepartment(function() { legacyDrawHeatmap(); });
+    }
+  }
+}
+
 function pmGetTabContent() {
   const { team, tasks, products, holidays } = pmGetData();
 
@@ -41,20 +86,38 @@ function pmGetTabContent() {
 
   if (!pmChartStart) pmChartStart = pmGetCurrentMonthKey();
 
+  const taskFilters = window.capTasksFilters && window.capTasksFilters.PM
+    ? window.capTasksFilters.PM
+    : window['pm' + 'TasksFilters'];
+  const taskSort = window.capTasksSort && window.capTasksSort.PM
+    ? window.capTasksSort.PM
+    : window['pm' + 'TasksSort'];
+  const productsTableState = window.capProductsTableState && window.capProductsTableState.PM
+    ? window.capProductsTableState.PM
+    : undefined;
+  const productLoadTableState = window.capProductLoadTableState && window.capProductLoadTableState.PM
+    ? window.capProductLoadTableState.PM
+    : undefined;
+  const bankHolidays = typeof window.capGetBankHolidaysForYear === 'function'
+    ? window.capGetBankHolidaysForYear(Number((pmHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
+    : (typeof window.meGetBankHolidaysForYear === 'function'
+      ? window.meGetBankHolidaysForYear(Number((pmHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
+      : null);
+
   switch (pmTab) {
     case 'team':
-      return meRenderTeamTab(team);
+      return pmRenderWithSharedFallback(window.capRenderTeamTab, 'RenderTeamTab', [team, holidays, pmChartStart, 'PM', canEdit()], [team]);
     case 'tasks':
-      return meRenderTasksTab(tasks, team, products, true); // isPM = true
+      return pmRenderWithSharedFallback(window.capRenderTasksTab, 'RenderTasksTab', [tasks, team, products, 'PM', taskFilters, taskSort, canEdit()], [tasks, team, products, true]);
     case 'products':
-      return meRenderProductsTab(products, products, tasks);
+      return pmRenderWithSharedFallback(window.capRenderProductsTab, 'RenderProductsTab', [products, tasks, 'PM', productsTableState], [products, products, tasks]);
     case 'product-taskload':
-      return meRenderProductTaskLoadTab(tasks, products);
+      return pmRenderWithSharedFallback(window.capRenderProductTaskLoadTab, 'RenderProductTaskLoadTab', [tasks, products, 'PM', productLoadTableState], [tasks, products]);
     case 'holidays':
-      return meRenderHolidaysTab(holidays, team, pmHolidayMonth);
+      return pmRenderWithSharedFallback(window.capRenderHolidaysTab, 'RenderHolidaysTab', [holidays, team, pmHolidayMonth, 'PM', bankHolidays, canEdit()], [holidays, team, pmHolidayMonth]);
     case 'chart':
     default:
-      return meRenderChartTab(pmChartStart, team, tasks, products, holidays);
+      return pmRenderWithSharedFallback(window.capRenderChartTab, 'RenderChartTab', [pmChartStart, team, tasks, products, holidays, 'PM'], [pmChartStart, team, tasks, products, holidays]);
   }
 }
 
@@ -63,15 +126,11 @@ function pmRerenderChartTabForMonthChange() {
   if (!body) return;
   body.innerHTML = pmGetTabContent();
   setTimeout(() => {
-    if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
-    if (typeof meDrawChartNow === 'function') meDrawChartNow();
-    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+    pmDrawChartViews();
   }, 100);
 }
 
 window.pmRenderCapacity = function() {
-  window.meCurrentDepartmentContext = 'PM';
-
   // Auto-sync PM products from the Product Management database (all statuses)
   if (typeof pmDataAutoSyncPMProducts === 'function') {
     const synced = pmDataAutoSyncPMProducts();
@@ -113,8 +172,7 @@ window.pmRenderCapacity = function() {
   pmChartDirty = false;
   setTimeout(() => {
     if (pmTab === 'chart') {
-      meDrawChartNow();
-      meDrawHeatmapNow();
+      pmDrawChartViews();
     }
   }, 100);
 
@@ -132,7 +190,6 @@ window.pmSetTab = function(tab) {
   if (typeof writeNavigationHistory === 'function') {
     writeNavigationHistory('#' + pmParts.join('&'), { push: prevPmTab !== tab });
   }
-  window.meCurrentDepartmentContext = 'PM';
 
   document.querySelectorAll('.pm-shell .me-nav-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -145,17 +202,13 @@ window.pmSetTab = function(tab) {
     body.innerHTML = pmGetTabContent();
     setTimeout(() => {
       if (tab === 'chart') {
-        if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
-        if (typeof meDrawChartNow === 'function') meDrawChartNow();
-        if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+        pmDrawChartViews();
       }
     }, 100);
   }
 };
 
 window.pmRefreshCurrentTab = function() {
-  window.meCurrentDepartmentContext = 'PM';
-
   // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
   // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
   if (pmTab === 'chart') {
@@ -163,9 +216,7 @@ window.pmRefreshCurrentTab = function() {
     if (monthInput && pmChartStart) {
       monthInput.value = pmChartStart;
     }
-    if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
-    if (typeof meDrawChartNow === 'function') meDrawChartNow();
-    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+    pmDrawChartViews();
     return;
   }
 
@@ -174,9 +225,7 @@ window.pmRefreshCurrentTab = function() {
     body.innerHTML = pmGetTabContent();
     setTimeout(() => {
       if (pmTab === 'chart') {
-        if (typeof meChartStart !== 'undefined') window.meChartStart = pmChartStart || pmGetCurrentMonthKey();
-        if (typeof meDrawChartNow === 'function') meDrawChartNow();
-        if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+        pmDrawChartViews();
       }
     }, 100);
   }
@@ -254,6 +303,5 @@ window.pmDebouncedSave = function() {
 window.pmRefresh = function() {
   const mc = document.getElementById('mainContent');
   if (!mc || currentSection !== 'capacity' || capacityTab !== 'projects') return;
-  window.meCurrentDepartmentContext = 'PM';
   mc.innerHTML = `<div class="section-inner">${pmRenderCapacity()}</div>`;
 };

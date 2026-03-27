@@ -88,7 +88,6 @@
       "Bash(npm run lint:npi)",
       "Bash(npm run format:npi)",
       "Bash(grep -rn \"const \" ./portals/**/*.js)",
-      "Bash(grep -rn \"esc(\" ./portals/**/*.js)",
       "Bash(grep -rn \"type=\\\"date\\\"\" ./portals/capacity/js/*.js)",
       "Bash(node .claude/agents/code-review.js)",
       "Bash(node .claude/agents/testing.js)",

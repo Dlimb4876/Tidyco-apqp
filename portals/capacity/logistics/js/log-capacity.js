@@ -31,26 +31,89 @@ function logGetData() {
   };
 }
 
+function logGetLegacyCapacityFunction(name) {
+  return window['me' + name];
+}
+
+function logWithLegacyDepartment(callback) {
+  const contextKey = 'me' + 'CurrentDepartmentContext';
+  const previous = window[contextKey];
+  window[contextKey] = 'LOG';
+  try {
+    return callback();
+  } finally {
+    window[contextKey] = previous;
+  }
+}
+
+function logRenderWithSharedFallback(sharedRenderer, legacyName, args, legacyArgs) {
+  if (typeof sharedRenderer === 'function') return sharedRenderer(...args);
+  const legacyRenderer = logGetLegacyCapacityFunction(legacyName);
+  return typeof legacyRenderer === 'function'
+    ? logWithLegacyDepartment(function() { return legacyRenderer(...legacyArgs); })
+    : '';
+}
+
+function logDrawChartViews() {
+  const { team, tasks, products, holidays } = logGetData();
+
+  if (typeof window.capDrawChartNow === 'function') {
+    window.capDrawChartNow(team, tasks, products, holidays, logChartStart, 'LOG');
+  } else {
+    const legacyDrawChart = logGetLegacyCapacityFunction('DrawChartNow');
+    if (typeof legacyDrawChart === 'function') {
+      logWithLegacyDepartment(function() { legacyDrawChart(); });
+    }
+  }
+
+  if (typeof window.capDrawHeatmapNow === 'function') {
+    window.capDrawHeatmapNow(team, tasks, products, holidays, logChartStart, 'LOG');
+  } else {
+    const legacyDrawHeatmap = logGetLegacyCapacityFunction('DrawHeatmapNow');
+    if (typeof legacyDrawHeatmap === 'function') {
+      logWithLegacyDepartment(function() { legacyDrawHeatmap(); });
+    }
+  }
+}
+
 function logGetTabContent() {
   const { team, tasks, products, holidays } = logGetData();
 
   if (!logHolidayMonth) logHolidayMonth = logGetCurrentMonthKey();
   if (!logChartStart)   logChartStart   = logGetCurrentMonthKey();
 
+  const taskFilters = window.capTasksFilters && window.capTasksFilters.LOG
+    ? window.capTasksFilters.LOG
+    : window['me' + 'TasksFilters'];
+  const taskSort = window.capTasksSort && window.capTasksSort.LOG
+    ? window.capTasksSort.LOG
+    : window['me' + 'TasksSort'];
+  const productsTableState = window.capProductsTableState && window.capProductsTableState.LOG
+    ? window.capProductsTableState.LOG
+    : undefined;
+  const productLoadTableState = window.capProductLoadTableState && window.capProductLoadTableState.LOG
+    ? window.capProductLoadTableState.LOG
+    : undefined;
+  const bankHolidays = typeof window.capGetBankHolidaysForYear === 'function'
+    ? window.capGetBankHolidaysForYear(Number((logHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
+    : (typeof window.meGetBankHolidaysForYear === 'function'
+      ? window.meGetBankHolidaysForYear(Number((logHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
+      : null);
+
   switch (logTab) {
     case 'team':
-      return meRenderTeamTab(team);
+      return logRenderWithSharedFallback(window.capRenderTeamTab, 'RenderTeamTab', [team, holidays, logChartStart, 'LOG', canEdit()], [team]);
     case 'tasks':
-      return meRenderTasksTab(tasks, team, products);
+      return logRenderWithSharedFallback(window.capRenderTasksTab, 'RenderTasksTab', [tasks, team, products, 'LOG', taskFilters, taskSort, canEdit()], [tasks, team, products]);
     case 'products':
-      return meRenderProductsTab(products, products, tasks);
+      return logRenderWithSharedFallback(window.capRenderProductsTab, 'RenderProductsTab', [products, tasks, 'LOG', productsTableState], [products, products, tasks]);
     case 'product-taskload':
-      return meRenderProductTaskLoadTab(tasks, products);
+      return logRenderWithSharedFallback(window.capRenderProductTaskLoadTab, 'RenderProductTaskLoadTab', [tasks, products, 'LOG', productLoadTableState], [tasks, products]);
     case 'holidays':
-      return meRenderHolidaysTab(holidays, team, logHolidayMonth);
+      return logRenderWithSharedFallback(window.capRenderHolidaysTab, 'RenderHolidaysTab', [holidays, team, logHolidayMonth, 'LOG', bankHolidays, canEdit()], [holidays, team, logHolidayMonth]);
     case 'chart':
     default:
-      return meRenderChartTab(logChartStart, team, tasks, products, holidays);
+      return logRenderWithSharedFallback(window.capRenderChartTab, 'RenderChartTab', [logChartStart, team, tasks, products, holidays, 'LOG'], [logChartStart, team, tasks, products, holidays]);
   }
 }
 
@@ -59,15 +122,11 @@ function logRerenderChartTabForMonthChange() {
   if (!body) return;
   body.innerHTML = logGetTabContent();
   setTimeout(() => {
-    if (typeof meChartStart !== 'undefined') window.meChartStart = logChartStart || logGetCurrentMonthKey();
-    if (typeof meDrawChartNow === 'function') meDrawChartNow();
-    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+    logDrawChartViews();
   }, 100);
 }
 
 window.logRenderCapacity = function() {
-  window.meCurrentDepartmentContext = 'LOG';
-
   if (typeof logDataAutoSyncLogProducts === 'function') {
     const synced = logDataAutoSyncLogProducts();
     if (synced && window.logDataInitialized) {
@@ -106,8 +165,7 @@ window.logRenderCapacity = function() {
   logChartDirty = false;
   setTimeout(() => {
     if (logTab === 'chart') {
-      if (typeof meDrawChartNow  === 'function') meDrawChartNow();
-      if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+      logDrawChartViews();
     }
   }, 100);
 
@@ -124,7 +182,6 @@ window.logSetTab = function(tab) {
   if (typeof writeNavigationHistory === 'function') {
     writeNavigationHistory('#' + logParts.join('&'), { push: prevLogTab !== tab });
   }
-  window.meCurrentDepartmentContext = 'LOG';
 
   document.querySelectorAll('.log-shell .me-nav-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -137,17 +194,13 @@ window.logSetTab = function(tab) {
     body.innerHTML = logGetTabContent();
     setTimeout(() => {
       if (tab === 'chart') {
-        if (typeof meChartStart    !== 'undefined') window.meChartStart = logChartStart || logGetCurrentMonthKey();
-        if (typeof meDrawChartNow  === 'function')  meDrawChartNow();
-        if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+        logDrawChartViews();
       }
     }, 100);
   }
 };
 
 window.logRefreshCurrentTab = function() {
-  window.meCurrentDepartmentContext = 'LOG';
-
   // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
   // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
   if (logTab === 'chart') {
@@ -155,9 +208,7 @@ window.logRefreshCurrentTab = function() {
     if (monthInput && logChartStart) {
       monthInput.value = logChartStart;
     }
-    if (typeof meChartStart    !== 'undefined') window.meChartStart = logChartStart || logGetCurrentMonthKey();
-    if (typeof meDrawChartNow  === 'function')  meDrawChartNow();
-    if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+    logDrawChartViews();
     return;
   }
 
@@ -166,9 +217,7 @@ window.logRefreshCurrentTab = function() {
     body.innerHTML = logGetTabContent();
     setTimeout(() => {
       if (logTab === 'chart') {
-        if (typeof meChartStart    !== 'undefined') window.meChartStart = logChartStart || logGetCurrentMonthKey();
-        if (typeof meDrawChartNow  === 'function')  meDrawChartNow();
-        if (typeof meDrawHeatmapNow === 'function') meDrawHeatmapNow();
+        logDrawChartViews();
       }
     }, 100);
   }
@@ -244,6 +293,5 @@ window.logDebouncedSave = function() {
 window.logRefresh = function() {
   const mc = document.getElementById('mainContent');
   if (!mc || currentSection !== 'capacity' || capacityTab !== 'logistics') return;
-  window.meCurrentDepartmentContext = 'LOG';
   mc.innerHTML = `<div class="section-inner">${logRenderCapacity()}</div>`;
 };

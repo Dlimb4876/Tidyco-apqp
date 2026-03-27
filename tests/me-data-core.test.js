@@ -1,7 +1,7 @@
 /**
- * me-data-core.test.js — Tests for portals/capacity/js/me-data.js
- *                        and portals/capacity/js/me-data-relational.js
- *                        and portals/capacity/js/me-holidays.js
+ * me-data-core.test.js — Tests for portals/capacity/me/js/me-data.js
+ *                        and portals/capacity/me/js/me-data-relational.js
+ *                        and portals/capacity/shared/js/cap-utils.js
  *
  * Covers pure utility functions:
  *   meNormalizeDepartmentTag (via meFilterByDepartment)
@@ -37,21 +37,21 @@ global.getMonthLabel = jest.fn((monthKey) => {
 
 // Load me-data.js (contains meFilterByDepartment, meGetDepartmentFromContext)
 const meDataSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/js/me-data.js'),
+  path.resolve(__dirname, '../portals/capacity/me/js/me-data.js'),
   'utf8'
 );
 eval(meDataSrc); // eslint-disable-line no-eval
 
 // Load me-data-relational.js (contains meNormalizeIsoDate, meNormalizeDateRange)
 const meDataRelSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/js/me-data-relational.js'),
+  path.resolve(__dirname, '../portals/capacity/me/js/me-data-relational.js'),
   'utf8'
 );
 eval(meDataRelSrc); // eslint-disable-line no-eval
 
-// Load me-holidays.js (contains meFormatDate, meGetMonthLabel)
+// Load cap-utils.js (contains legacy meFormatDate, meGetMonthLabel aliases)
 const meHolSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/js/me-holidays.js'),
+  path.resolve(__dirname, '../portals/capacity/shared/js/cap-utils.js'),
   'utf8'
 );
 eval(meHolSrc); // eslint-disable-line no-eval
@@ -216,7 +216,7 @@ describe('meNormalizeAndDedupeSupportHistory()', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Tests — meFormatDate, meGetMonthLabel (me-holidays.js)
+// Tests — meFormatDate, meGetMonthLabel (shared legacy aliases)
 // ─────────────────────────────────────────────────────────────
 
 describe('meFormatDate()', () => {
@@ -246,10 +246,10 @@ describe('meGetMonthLabel()', () => {
     expect(label).toBe('Jun 2025');
   });
 
-  it('returns monthKey when getMonthLabel returns non-array', () => {
+  it('returns the underlying shared label when getMonthLabel returns a string', () => {
     global.getMonthLabel = jest.fn(() => 'June 2025'); // not an array
     const label = window.meGetMonthLabel('2025-06');
-    expect(label).toBe('2025-06');
+    expect(label).toBe('June 2025');
     // restore
     global.getMonthLabel = jest.fn((monthKey) => {
       const [year, month] = monthKey.split('-');

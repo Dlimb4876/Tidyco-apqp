@@ -18,6 +18,7 @@ global.capacityTab = 'projects';
 global.writeNavigationHistory = jest.fn();
 global.pmDataSave = jest.fn(() => Promise.resolve());
 global.isEditingInlineCell = jest.fn(() => false);
+global.canEdit = jest.fn(() => true);
 
 global.pmDataGetTeam = jest.fn(() => TEAM_FIXTURE);
 global.pmDataGetTasks = jest.fn(() => TASKS_FIXTURE);
@@ -25,14 +26,14 @@ global.pmDataGetProducts = jest.fn(() => PRODUCTS_FIXTURE);
 global.pmDataGetHolidays = jest.fn(() => HOLIDAYS_FIXTURE);
 global.pmDataAutoSyncPMProducts = jest.fn(() => false);
 
-global.meRenderTeamTab = jest.fn(() => '<div>PM Team Tab</div>');
-global.meRenderTasksTab = jest.fn(() => '<div>PM Tasks Tab</div>');
-global.meRenderProductsTab = jest.fn(() => '<div>PM Products Tab</div>');
-global.meRenderProductTaskLoadTab = jest.fn(() => '<div>PM Product Load Tab</div>');
-global.meRenderHolidaysTab = jest.fn(() => '<div>PM Holidays Tab</div>');
-global.meRenderChartTab = jest.fn((monthKey) => `<div>PM Chart ${monthKey}</div>`);
-global.meDrawChartNow = jest.fn();
-global.meDrawHeatmapNow = jest.fn();
+global.capRenderTeamTab = jest.fn(() => '<div>PM Team Tab</div>');
+global.capRenderTasksTab = jest.fn(() => '<div>PM Tasks Tab</div>');
+global.capRenderProductsTab = jest.fn(() => '<div>PM Products Tab</div>');
+global.capRenderProductTaskLoadTab = jest.fn(() => '<div>PM Product Load Tab</div>');
+global.capRenderHolidaysTab = jest.fn(() => '<div>PM Holidays Tab</div>');
+global.capRenderChartTab = jest.fn((monthKey) => `<div>PM Chart ${monthKey}</div>`);
+global.capDrawChartNow = jest.fn();
+global.capDrawHeatmapNow = jest.fn();
 
 const src = fs.readFileSync(
   path.resolve(__dirname, '../portals/capacity/project-management/js/pm-capacity.js'),
@@ -71,8 +72,22 @@ describe('PM chart month updates', () => {
 
     const body = document.getElementById('pmBody');
     expect(body.innerHTML).toContain('PM Chart 2027-04');
-    expect(global.meDrawChartNow).toHaveBeenCalled();
-    expect(global.meDrawHeatmapNow).toHaveBeenCalled();
+    expect(global.capDrawChartNow).toHaveBeenCalledWith(
+      TEAM_FIXTURE,
+      TASKS_FIXTURE,
+      PRODUCTS_FIXTURE,
+      HOLIDAYS_FIXTURE,
+      '2027-04',
+      'PM'
+    );
+    expect(global.capDrawHeatmapNow).toHaveBeenCalledWith(
+      TEAM_FIXTURE,
+      TASKS_FIXTURE,
+      PRODUCTS_FIXTURE,
+      HOLIDAYS_FIXTURE,
+      '2027-04',
+      'PM'
+    );
   });
 
   it('moves chart tab month forward and re-renders side panels', () => {

@@ -54,7 +54,6 @@ If Gemini is unsure about OpenWolf behavior, the source of truth is `.wolf/OPENW
 1.  **`index.html` is the Source of Truth for Load Order**: All JS/CSS files are loaded via `<script>` and `<link>` tags. Dependencies MUST be loaded before the files that depend on them. The core order is: `state.js` → `auth.js` → `db.js` → `helpers.js` → `navigation.js` → `realtime.js` → Portal-specific JS → `app.js`.
 2.  **No Duplicate `const`**: A `SyntaxError` (like a duplicate `const` in the same scope) will cause the entire JS file to fail silently at runtime. All functions within that file will become `undefined`.
 3.  **Global State in `core/js/state.js`**: All global state variables must be defined here with a default value. Use `let` for mutable state.
-4.  **Capacity Parity Rule**: Changes to ME Capacity (`portals/capacity/js/`) must be mirrored in PM Capacity (`portals/capacity/project-management/js/`).
 5.  **RLS is Auth-Only**: All authenticated users can see all data. Supabase queries should **never** be filtered by `user_id` on the client. New tables require the policy: `CREATE POLICY "auth" ON table FOR ALL USING (auth.role() = 'authenticated')`.
 6.  **Real-time Subscription Cleanup**: Always store the subscription reference and call `removeRealtimeSubscription(ref)` before navigating away. The `navigate()` function handles this automatically.
 7.  **`esc()` All User Data**: Use `esc(value)` from `helpers.js` to prevent XSS when interpolating user-supplied data into HTML.

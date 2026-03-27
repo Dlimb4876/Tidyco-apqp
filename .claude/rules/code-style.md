@@ -1,7 +1,7 @@
 # Code Style & Critical Rules
 
 ## Scope
-This file covers style-oriented conventions only. Core guardrails (script order, state ownership, `esc()`, `navigate()`, parity, RLS, and changelog process) are owned by `.github/copilot-instructions.md`.
+This file covers style-oriented conventions only. Core guardrails (script order, state ownership, `esc()`, `navigate()`, RLS, and changelog process) are owned by `.github/copilot-instructions.md`.
 
 ## ID Generation Pattern
 Use prefixed short IDs consistently across the app:

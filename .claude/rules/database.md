@@ -1,7 +1,7 @@
 # Database & Supabase Patterns
 
 ## Scope
-This file owns Supabase query, persistence, and RLS policy guidance. Capacity parity rules are canonical in `.github/instructions/capacity-parity.instructions.md`.
+This file owns Supabase query, persistence, and RLS policy guidance.
 
 ## Backend Stack
 - **Database**: PostgreSQL (via Supabase v2)
