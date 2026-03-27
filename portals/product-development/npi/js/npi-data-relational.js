@@ -122,21 +122,25 @@ window.npiRelHydratePfdRows = npiRelHydratePfdRows;
 window.npiRelResolveProjectId = async function(targetProgId) {
   if (!targetProgId) return null;
   const project = npiRelFindProject(targetProgId);
-  // Foreign key relationships reference projects(prog_id), which is stored as project.id
+  // Foreign key relationships reference projects(prog_id), which is stored in the database
+  // If the project is in cache, return its prog_id
+  if (project && project.prog_id) return project.prog_id;
   if (project && project.id) return project.id;
-  if (npiRelLooksLikeUuid(targetProgId)) return targetProgId;
 
   try {
+    // NPI tables reference projects(prog_id). Accept both prog_id and id as input.
+    // If input is a UUID (id), look it up to extract the prog_id.
+    const isUuid = npiRelLooksLikeUuid(targetProgId);
     const { data, error } = await supa
       .from('projects')
       .select('id, prog_id')
-      .eq('prog_id', targetProgId)
+      .eq(isUuid ? 'id' : 'prog_id', targetProgId)
       .limit(1);
     if (error) {
       console.warn('npiRelResolveProjectId error:', error.message);
       return targetProgId;
     }
-    // Return prog_id from the database row (not the database pk id).
+    // Return prog_id from the database row (required by NPI table foreign keys).
     // If no row is found, keep the original ID so non-UUID local IDs still load.
     const resolved = data && data[0] ? data[0].prog_id : null;
     return resolved || targetProgId;
@@ -916,7 +920,7 @@ window.npiRelSaveBomGroup = async function(group) {
       id: group.id,
       project_id: projectId,
       title: group.title || 'Untitled BoM',
-      pn: group.pn || '',
+      // pn: group.pn || '',  // Temporarily disabled - Supabase schema cache issue
       sort_order: group.sortOrder || 0,
       tag: group.tag || null
     };

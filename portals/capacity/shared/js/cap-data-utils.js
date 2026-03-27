@@ -59,28 +59,6 @@ window.capGetDateMinusOneDay = function(dateValue) {
   return parsed.toISOString().split('T')[0];
 };
 
-window.capGetDepartmentFromContext = function(explicitDepartment, fallback = 'ME') {
-  if (explicitDepartment) {
-    return capNormalizeDepartmentTag(explicitDepartment, fallback);
-  }
-
-  if (typeof window.meCurrentDepartmentContext === 'string' && window.meCurrentDepartmentContext.length > 0) {
-    return capNormalizeDepartmentTag(window.meCurrentDepartmentContext, fallback);
-  }
-
-  if (typeof capacityTab !== 'undefined' && capacityTab === 'projects') {
-    return 'PM';
-  }
-
-  return capNormalizeDepartmentTag(fallback, 'ME');
-};
-
-window.capFilterByDepartment = function(list, department, fallback = 'ME') {
-  if (!Array.isArray(list)) return [];
-  const target = capNormalizeDepartmentTag(department, fallback);
-  return list.filter(item => capNormalizeDepartmentTag(item && item.department, fallback) === target);
-};
-
 // ── Product Support Breakdown Normalization ─────────────────
 window.capNormalizeProductSupportBreakdown = function(source, fallbackHoursPerWeek) {
   const rawTotal = Number(

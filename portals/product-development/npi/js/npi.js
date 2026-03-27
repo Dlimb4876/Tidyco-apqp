@@ -52,7 +52,63 @@ npi.nav.goHome = function() { goHome() }
 npi.nav.render = function() { render() }
 npi.nav.setApqpTab = function(tab) { setApqpTab(tab) }
 npi.nav.setProductDevelopmentTab = function(tab) { setProductDevelopmentTab(tab) }
-npi.nav.openProjectById = function(id) { progId = id; navigate('project') }
+npi.nav.openProjectById = async function(id) {
+  if (!id) return
+
+  let targetId = id
+  const current = Array.isArray(db.projects) ? db.projects.find(p => p && p.id === id) : null
+
+  // If duplicates exist for the same product, prefer the project that already
+  // has relational NPI rows so users don't land on an empty clone.
+  if (current && current.product_id && Array.isArray(db.projects) && typeof supa !== 'undefined') {
+    const siblings = db.projects.filter(p => p && p.product_id === current.product_id && p.id)
+    if (siblings.length > 1) {
+      const siblingIds = [...new Set(siblings.map(p => p.id))]
+      const scoreByProjectId = {}
+      const scoredTables = [
+        'npi_ctq',
+        'npi_pfd_steps',
+        'npi_bom_items',
+        'npi_actions',
+        'npi_risks',
+        'npi_gates',
+        'npi_documents'
+      ]
+
+      try {
+        await Promise.all(scoredTables.map(async table => {
+          const { data, error } = await supa
+            .from(table)
+            .select('project_id')
+            .in('project_id', siblingIds)
+          if (error || !Array.isArray(data)) return
+          data.forEach(row => {
+            if (!row || !row.project_id) return
+            scoreByProjectId[row.project_id] = (scoreByProjectId[row.project_id] || 0) + 1
+          })
+        }))
+
+        const bestId = siblingIds.reduce((best, candidate) => {
+          const bestScore = scoreByProjectId[best] || 0
+          const candidateScore = scoreByProjectId[candidate] || 0
+          return candidateScore > bestScore ? candidate : best
+        }, targetId)
+
+        if ((scoreByProjectId[bestId] || 0) > (scoreByProjectId[targetId] || 0)) {
+          targetId = bestId
+          if (typeof showToast === 'function') {
+            showToast('Opened the project copy that contains existing APQP/BoM data', 'info', 3500)
+          }
+        }
+      } catch (err) {
+        console.warn('[NPI] duplicate project resolution failed:', err && err.message ? err.message : err)
+      }
+    }
+  }
+
+  progId = targetId
+  navigate('project')
+}
 npi.nav.openParentSection = function(section) {
   const p = typeof prog === 'function' ? prog() : null
   if (!p || !p.parentId) return

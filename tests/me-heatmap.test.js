@@ -82,14 +82,8 @@ describe('Shared heatmap rendering and detail wrappers', () => {
     expect(cells[0].className).toContain('me-heatmap-no-capacity');
   });
 
-  test('delegates detail open/close to legacy detail handlers when present', () => {
-    global.meOpenHeatmapDetail = jest.fn();
-    global.meCloseHeatmapDetail = jest.fn();
-
-    capOpenHeatmapDetail('p1', '2026-03-02', '2026-03-08');
-    capCloseHeatmapDetail();
-
-    expect(global.meOpenHeatmapDetail).toHaveBeenCalledWith('p1', '2026-03-02', '2026-03-08');
-    expect(global.meCloseHeatmapDetail).toHaveBeenCalled();
+  test('capOpenHeatmapDetail and capCloseHeatmapDetail are callable without error', () => {
+    expect(() => capOpenHeatmapDetail('p1', '2026-03-02', '2026-03-08')).not.toThrow();
+    expect(() => capCloseHeatmapDetail()).not.toThrow();
   });
 });

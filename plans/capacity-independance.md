@@ -286,7 +286,7 @@ Changes:
 > **Can be paused after:** Yes
 > **Files modified:** `portals/capacity/me/js/me-data.js`, `portals/capacity/me/js/me-data-relational.js`, `pm-data.js`, `log-data.js`, `unit6-data.js`, `pm-data-relational.js`, `log-data-relational.js`, `unit6-data-relational.js`
 > **Files deleted:** None
-> **Status:** Complete on 2026-03-27. Shared utility ownership is now in `cap-data-utils.js` / `cap-utils.js`; ME wrappers remain temporarily so the current bootstrap and old tests keep working until Phases 9 and 10 remove the legacy layer.
+> **Status:** Complete on 2026-03-27. Shared utility ownership is now in `cap-data-utils.js` / `cap-utils.js`; the final follow-up cleanup later on 2026-03-27 removed the last `meCurrentDepartmentContext`, `meGetDepartmentFromContext`, and `meFilterByDepartment` bridges from live code.
 
 ### 8a — me-data.js
 
@@ -312,9 +312,9 @@ Changes:
 
 ### Phase 8 verification
 
-- Shared utility resolution now flows through `cap-data-utils.js` / `cap-utils.js` for ME, PM, LOG, and UNIT6 data layers, with local legacy fallbacks kept only for bootstrap/test compatibility until Phases 9 and 10.
-- Focused validation passed: `npm test -- tests/me-data-core.test.js tests/pm-capacity-data.test.js tests/pm-data-relational.test.js tests/log-data-relational.test.js tests/unit6-data-relational.test.js`
-- Existing unrelated failure remains in `tests/me-data-relational-queries.test.js` around the `meSaveTeamRelational` query mock chain (`supa.from(...).select is not a function`); Phase 8 did not add a new failing suite.
+- Shared utility resolution now flows through `cap-data-utils.js` / `cap-utils.js` for ME, PM, LOG, and UNIT6 data layers with explicit department tagging in live code.
+- Later follow-up cleanup removed the remaining ME bridge helpers from `me-data.js` and the now-unused shared context helpers from `cap-data-utils.js`.
+- Existing unrelated failure remains in `tests/me-data-relational-queries.test.js` around the `meSaveTeamRelational` query mock chain (`supa.from(...).select is not a function`); the capacity-independence cleanup did not introduce that issue.
 
 ---
 
@@ -526,6 +526,7 @@ Updated these entries in `GUIDE_CONTENT` to remove shared-data language:
 
 - ✅ `grep -i "same.*data\|shared.*dataset\|department tag\|same.*table" utils/js/guide.js` returns 0 hits in capacity entries
 - ✅ Guide content now correctly describes independent data stores for each department
+- ✅ Follow-up cleanup removed the remaining team-page wording that still mentioned "department tag" in the capacity guide entries
 
 ---
 
@@ -534,7 +535,7 @@ Updated these entries in `GUIDE_CONTENT` to remove shared-data language:
 > **Prerequisite:** Phases 1–9 complete
 > **Can be paused after:** Yes
 > **Status:** COMPLETE on 2026-03-27
-> **Files modified:** `tests/capacity-events.test.js`, `tests/log-capacity.test.js`, `tests/pm-capacity.test.js`, `tests/unit6-capacity.test.js`
+> **Files modified:** `tests/capacity-events.test.js`, `tests/log-capacity.test.js`, `tests/pm-capacity.test.js`, `tests/unit6-capacity.test.js`, `tests/me-data-core.test.js`, `tests/operations-dashboard.test.js`
 
 ### 14a — Rename function references
 
@@ -559,7 +560,8 @@ Removed references to the deprecated `meCurrentDepartmentContext` global:
 - ✅ `npm test -- tests/capacity-events.test.js tests/log-capacity.test.js tests/pm-capacity.test.js tests/unit6-capacity.test.js` — 30 tests pass
 - ✅ `grep "meCurrentDepartmentContext" tests/capacity-events.test.js tests/log-capacity.test.js tests/pm-capacity.test.js tests/unit6-capacity.test.js` returns 0
 - ✅ `grep "meRenderTeamTab\|meRenderTasksTab" tests/` returns 0 (already using `capRender*` functions)
-- ⚠️ Pre-existing test failures remain in `tests/me-data-core.test.js` and `tests/me-data-relational-queries.test.js` (4 tests failing — unrelated to capacity independence, existing before Phases 13/14)
+- ✅ Follow-up cleanup replaced the stale `me-data-core.test.js` context-helper expectations with explicit department-tagging tests and updated `tests/operations-dashboard.test.js` to use the new generic department filter dependency
+- ⚠️ A pre-existing failure remains in `tests/me-data-relational-queries.test.js` around the relational query mock chain; the capacity-independence cleanup did not introduce that issue
 
 ---
 

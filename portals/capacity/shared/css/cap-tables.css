@@ -1,6 +1,6 @@
 /* ============================================================
-	 me-capacity-tables.css — tables and utility rows
-	 ============================================================ */
+ 	 me-capacity-tables.css — tables and utility rows
+ 	 ============================================================ */
 
 /* ── Inline-Editable Tables ──────────────────────────────────── */
 .me-products-card-body {
@@ -30,7 +30,7 @@
 	padding: var(--table-cell-py) var(--table-cell-px); vertical-align: middle; color: var(--ink);
 }
 
-/* Inline editable cells */
+/* Inline editable cells - me-tbl class */
 .me-tbl td input,
 .me-tbl td select {
 	width: 100%; border: 1px solid transparent; background: transparent;
@@ -49,10 +49,39 @@
 .me-tbl td input[type="number"] { text-align: right; }
 .me-tbl td input[type="date"]   { min-width: 120px; }
 
+/* Inline editable cells - tbl class (used in product support tables) */
+.tbl td input,
+.tbl td select {
+	width: 100%; border: 1px solid transparent; background: transparent;
+	padding: 3px 5px; border-radius: 4px; font-size: var(--table-cell-font-size); color: var(--ink);
+	font-family: 'IBM Plex Sans', sans-serif; outline: none;
+	transition: border-color .12s, background .12s;
+	min-height: var(--table-input-min-h);
+}
+.tbl td input:hover,
+.tbl td select:hover { border-color: var(--line2); background: var(--white); }
+.tbl td input:focus,
+.tbl td select:focus {
+	border-color: var(--blue); background: var(--white);
+	box-shadow: 0 0 0 2px rgba(0,102,204,.08);
+}
+.tbl td input[type="number"] { text-align: right; }
+.tbl td input[type="date"]   { min-width: 120px; }
+
 /* Calculated fields should not show editable hover/focus treatment. */
 .me-tbl td input.me-calculated-field,
 .me-tbl td input.me-calculated-field:hover,
 .me-tbl td input.me-calculated-field:focus {
+	border-color: transparent;
+	background: transparent;
+	box-shadow: none;
+	cursor: default;
+}
+
+/* Calculated fields - tbl class */
+.tbl td input.me-calculated-field,
+.tbl td input.me-calculated-field:hover,
+.tbl td input.me-calculated-field:focus {
 	border-color: transparent;
 	background: transparent;
 	box-shadow: none;
@@ -125,5 +154,24 @@
 
 	.me-card-body-gutter {
 		padding: 10px;
+	}
+}
+
+@media (min-width: 768px) {
+	.me-products-card-body {
+		padding: 14px;
+	}
+
+	.me-card-body-gutter {
+		padding: 14px;
+	}
+
+	.me-add-row {
+		justify-content: space-between;
+	}
+
+	.me-tbl td input[type="date"],
+	.tbl td input[type="date"] {
+		min-width: 136px;
 	}
 }

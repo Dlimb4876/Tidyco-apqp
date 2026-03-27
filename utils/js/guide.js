@@ -83,7 +83,7 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">👷 Team</div>
-        <p>Add and manage ME team members. Set each person's hours per day (e.g. 7.5h) and department tag. Team members appear as rows in the capacity calculations.</p>
+        <p>Add and manage ME team members. Set each person's hours per day (e.g. 7.5h). Team members appear as rows in the capacity calculations.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>
@@ -928,7 +928,7 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">👷 Team</div>
-        <p>Add and manage Logistics team members. Set each person's hours per day and department tag. Team members appear as rows in the capacity calculations.</p>
+        <p>Add and manage Logistics team members. Set each person's hours per day. Team members appear as rows in the capacity calculations.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>
@@ -965,7 +965,7 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">👷 Team</div>
-        <p>Add and manage Unit 6 team members. Set each person's hours per day and department tag.</p>
+        <p>Add and manage Unit 6 team members. Set each person's hours per day.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>

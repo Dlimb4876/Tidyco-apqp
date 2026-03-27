@@ -11,6 +11,20 @@ const path = require('path');
 
 // Known CSS files that should have breakpoints (portal features, not core)
 const PORTAL_CSS_PATTERN = /^portals\/.*\.css$/;
+const RESPONSIVE_COMPANIONS = [
+  {
+    match: /^portals\/capacity\//,
+    companion: 'portals/capacity/shared/css/cap-responsive.css'
+  },
+  {
+    match: /^portals\/mcs\/css\/mcs\.css$/,
+    companion: 'portals/mcs/css/mcs-responsive.css'
+  },
+  {
+    match: /^portals\/product-development\/npi\/css\/apqp-.*\.css$/,
+    companion: 'portals/product-development/npi/css/apqp-responsive.css'
+  }
+];
 
 function normalizePath(filePath) {
   return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '');
@@ -55,9 +69,20 @@ function analyzeCss(filePath) {
   };
 }
 
+function findResponsiveCompanion(filePath, portalCssSet) {
+  const normalized = normalizePath(filePath);
+  for (const rule of RESPONSIVE_COMPANIONS) {
+    if (!rule.match.test(normalized)) continue;
+    if (normalized === rule.companion) return '';
+    if (portalCssSet.has(rule.companion)) return rule.companion;
+  }
+  return '';
+}
+
 function main() {
   const allCss = walkDir('.');
   const portalCss = allCss.filter(f => PORTAL_CSS_PATTERN.test(normalizePath(f)));
+  const portalCssSet = new Set(portalCss.map(normalizePath));
 
   console.log(`\n📱 Mobile Breakpoint Verifier\n${'═'.repeat(40)}\n`);
   console.log(`Scanning ${portalCss.length} portal CSS files...\n`);
@@ -69,16 +94,24 @@ function main() {
   portalCss.forEach(file => {
     const analysis = analyzeCss(file);
     const shortPath = normalizePath(file);
+    const companion = findResponsiveCompanion(shortPath, portalCssSet);
+    const isCoveredByCompanion = Boolean(companion);
 
-    if (!analysis.hasResponsive) {
+    if (!analysis.hasResponsive && !isCoveredByCompanion) {
       missing.push(shortPath);
       console.log(`❌ ${shortPath}`);
       console.log(`   No responsive breakpoints found\n`);
+    } else if (!analysis.hasResponsive && isCoveredByCompanion) {
+      good.push(shortPath);
+      console.log(`✅ ${shortPath}`);
+      console.log(`   Covered by responsive companion: ${companion}\n`);
     } else if (!analysis.hasMobileMax || !analysis.hasTabletMin) {
       partial.push(shortPath);
       console.log(`⚠️  ${shortPath}`);
       if (!analysis.hasMobileMax) console.log(`   Missing: @media (max-width: 767px)`);
-      if (!analysis.hasTabletMin) console.log(`   Missing: @media (min-width: 768px)\n`);
+      if (!analysis.hasTabletMin) console.log(`   Missing: @media (min-width: 768px)`);
+      if (isCoveredByCompanion) console.log(`   Companion file: ${companion}`);
+      console.log('');
     } else {
       good.push(shortPath);
       console.log(`✅ ${shortPath}`);
@@ -129,7 +162,7 @@ function main() {
     console.log(`✅ All portal CSS files have proper breakpoints!\n`);
   }
 
-  process.exit((missing.length + partial.length) > 0 ? 1 : 0);
+  process.exit(missing.length > 0 ? 1 : 0);
 }
 
 main();

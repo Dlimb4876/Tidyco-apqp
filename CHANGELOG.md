@@ -3,7 +3,42 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-27 | Fill remaining desktop breakpoint gaps in portal CSS | Added explicit `min-width: 768px` refinements to the last partial portal stylesheets so the mobile audit is fully clean and desktop spacing is intentional in each feature area
+
+## 2026-03-27 | Harden repository guardrail scripts against false positives | Replaced heuristic syntax checks with parser-backed validation and taught the subscription, mobile, and modal audits to respect real app patterns so `check:all` reports genuine issues instead of validator noise
+
+## 2026-03-27 | Remove orphaned me_hub_evm_summary DB view | The live view was no longer referenced by app code, so removing it avoids stale schema drift and accidental reintroduction from the loose SQL script
+
+## 2026-03-27 | Bridge test gaps for NPI duplicate project flows | Added focused regression coverage for paged-project hydration and duplicate-safe project opening, plus stabilized hub favourites assertions
+
+## 2026-03-27 | Complete ME data modularisation Phase 7 | Convert `me-data.js` into the final facade/bootstrap layer and align persistence/reset with the same shared ME state shape
+
+## 2026-03-27 | Deduplicate projects and enforce one-project-per-product at DB level | Removed dangerous duplicate project rows, repointed relational NPI rows to canonical project IDs, restored dashboard access under paged loads, and added a unique partial index on projects.product_id to prevent recurrence
+
+## 2026-03-27 | Fix NPI duplicate project opening and stop duplicate auto-creation on partial loads | Multiple projects with the same product were being created/opened from paged data, causing dashboard cards to land on empty clones while real APQP rows existed on an older project id
+
+## 2026-03-27 | Fix NPI project pages loading blank relational data | NPI relational loads were querying NPI tables with project UUIDs instead of projects.prog_id, so BoM/APQP/actions/risks came back empty despite rows existing
+
+## 2026-03-27 | Complete ME data modularisation Phase 6 | Extract the ME realtime row-normalization and subscription wiring into its own file while keeping the current ME data API and behavior intact
+
+## 2026-03-27 | Complete ME data modularisation Phase 5 | Extract the ME init/save/reset/diagnostic orchestration into its own file, then fix the reviewed realtime and support-history sync regressions so the split stays safe
+
+## 2026-03-27 | Complete ME data modularisation Phase 4 | Extract the ME entity CRUD and department product autosync logic into their own file while keeping the current ME data API and behaviour intact
+
+## 2026-03-27 | Complete ME data modularisation Phase 3 | Extract the ME product support history logic into its own file while keeping the current ME data API and behaviour intact
+
+## 2026-03-27 | Complete ME data modularisation Phase 2 | Extract the pure ME data normalization helpers into a separate file without changing the live ME API or behaviour
+
+## 2026-03-27 | Fix favourites navigation loading wrong project on refresh | Hash project ID was only restored if already in paginated data (first 50), causing random project fallback; now trust URL hash and don't redirect to kanban if project not yet loaded
+
+## 2026-03-27 | Complete ME data modularisation Phase 1 | Lock the current ME data API and realtime behaviour with characterization tests before extracting code out of me-data.js
+
+## 2026-03-27 | Add ME data modularisation plan | Capture a phased non-behavioural split plan for the oversized ME data module before making structural changes
+
+## 2026-03-27 | Capacity independence cleanup | Fix remaining gaps from plan review: strip redundant department field from ME relational save payloads; remove dead legacy bridges from cap-dashboard.js and cap-heatmap.js; update heatmap test to match new non-bridged behaviour
+
 ## 2026-03-27 | Fix ME capacity deletes not persisting to database | meDataDeleteTask was overwriting the pending deletes object and losing queued team deletions; meDataDeleteProduct had no queue at all
+## 2026-03-27 | Finish capacity independence cleanup | Remove the last ME context bridges, decouple Operations from ME-only department filters, and align tests and guide text with the final isolated-stream design
 ## 2026-03-27 | Fix ME capacity saves not persisting to database | department field was missing from all three upsert payloads (me_teams, me_tasks, me_products), causing DB constraint failures on insert
 
 ## 2026-03-27 | Restore shared capacity runtime after Phase 10 cut-over | Replace the remaining shared placeholder tabs, fix stream-aware month navigation, realign ME team saves with the isolated-stream model, and repair Windows validation scripts that were silently scanning zero files

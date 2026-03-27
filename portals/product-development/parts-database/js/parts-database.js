@@ -139,16 +139,16 @@ window.partsDatabase = window.partsDatabase || {}
       }).join('')
 
     const table = `<div style="overflow-x:auto">
-      <table class="tbl bom-tbl abc-catalogue-tbl abc-tbl-compact" style="table-layout:fixed;width:auto">
+      <table class="tbl bom-tbl abc-catalogue-tbl abc-tbl-compact" style="table-layout:fixed;width:100%">
         <colgroup>
           <col style="width:150px">
           <col style="width:80px">
-          <col style="width:350px">
-          <col style="width:80px">
-          <col style="width:170px">
-          <col style="width:170px">
-          <col style="width:70px">
-          <col style="width:70px">
+          <col style="width:360px">
+          <col style="width:60px">
+          <col style="width:150px">
+          <col style="width:150px">
+          <col style="width:60px">
+          <col style="width:60px">
           <col style="width:44px">
         </colgroup>
         <thead>${renderTableHeader()}</thead>
@@ -200,7 +200,7 @@ window.partsDatabase = window.partsDatabase || {}
       </span>
     </div>`
 
-    return `<div style="width:fit-content;min-width:600px">${toolbar}<div id="abcCatalogueResults">${partsDb.renderCatalogueResults()}</div></div>`
+    return `<div style="min-width:1114px">${toolbar}<div id="abcCatalogueResults">${partsDb.renderCatalogueResults()}</div></div>`
   }
 
   partsDb.renderPortal = function() {
@@ -208,7 +208,7 @@ window.partsDatabase = window.partsDatabase || {}
     const catalogueHTML = partsDb.renderCatalogue() || loadingMsg
 
     return `
-      <div class="proj-home">
+      <div class="proj-home" style="max-width:1400px">
         <div class="proj-home-header">
           <div>
             <div class="proj-home-title">Parts Database</div>

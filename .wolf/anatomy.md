@@ -1,7 +1,34 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-27T12:34:04.892Z
-> Files: 391 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-27T15:54:38.326Z
+> Files: 393 tracked | Anatomy hits: 0 | Misses: 0
+
+## Manual Update 2026-03-27
+
+- `portals/capacity/css/capacity.css` — added tablet-and-up spacing/layout rules for the estimation subsystem header/body so the last capacity root stylesheet warning now has a real desktop breakpoint.
+- `portals/capacity/shared/css/cap-tables.css` — added tablet-and-up gutter, add-row, and date-field sizing rules so shared capacity tables explicitly define both mobile and desktop behavior.
+- `portals/mcs/css/mcs.css` — added desktop spacing rules for the MCS sidebar, toolbar, and list so the base MCS stylesheet now owns a concrete `min-width: 768px` layout path.
+- `portals/product-development/npi/css/apqp-bom.css` and `portals/product-development/npi/css/rpn-chart.css` — added desktop breakpoint refinements for BOM tab/picker/tree spacing and RPN chart padding so both NPI partials now declare desktop behavior explicitly.
+- `portals/product-development/parts-database/css/parts-database.css` — added tablet-and-up spacing for ABC filters, info rows, and project column width so the Parts Database stylesheet now includes both responsive directions.
+
+- `scripts/syntax-validator.js` — replaced the heuristic line scanner with Node parser-backed `--check` validation so syntax audit failures now reflect real parse errors instead of false positives from nested scopes and multiline objects.
+- `scripts/subscription-cleanup-auditor.js` — normalized Windows paths, added persistent-subscription allowlisting, recognized prefix cleanup and multiline subscription calls, and matched cleanups by channel names so the audit reports actual realtime leaks.
+- `scripts/mobile-breakpoint-verifier.js` — now understands responsive companion stylesheets for split portal CSS bundles and only fails on missing responsive coverage rather than planned shared/responsive composition.
+- `scripts/modal-state-auditor.js` — now scans workspace-wide JS/HTML close handlers and the shared Escape-based modal closer instead of treating single-file `showModal()` calls as leaks by default.
+
+- `supabase/evm_phase3_wbs_migration.sql` — removed the orphaned `me_hub_evm_summary` view definition so the loose EVM Phase 3 SQL matches the live schema cleanup and no longer recreates dead DB scaffolding.
+- `CHANGELOG.md` — logged the `me_hub_evm_summary` view removal for schema traceability.
+
+- `tests/npi-navigation-open-project.test.js` — added focused regression coverage for duplicate-safe NPI project opening so `npi.nav.openProjectById` picks the sibling with relational data instead of opening empty clones.
+- `tests/npi-dashboard-search.test.js` — added paged-project hydration coverage for `npi.dashboard.ensureProductProjects`, including in-flight guard behavior to prevent duplicate hydration requests.
+- `tests/hub.test.js` — stabilized favourites rendering assertions by resetting `canViewPageKey` in the favourites-storage test setup to avoid cross-test permission leakage.
+
+- `portals/capacity/me/js/me-data.js` — completed the final Phase 7 facade pass so it now only owns ME bootstrap factories, save flags, and module-ownership notes for the extracted ME data files.
+- `portals/capacity/me/js/me-data-persistence.js` — now reuses the facade bootstrap factories when initializing and resetting ME state, keeping the pending-delete/state shape aligned with `me-data.js`.
+
+- Fixed NPI relational ID resolution in `portals/product-development/npi/js/npi-data-relational.js` so loads use `projects.prog_id` for NPI `project_id` foreign keys even when the active project is tracked by UUID.
+- Restored NPI project accessibility under paged loads by hydrating missing project rows from Supabase in `portals/product-development/npi/js/dashboard.js` and routing dashboard opens through duplicate-safe selection in `portals/product-development/npi/js/npi.js`.
+- Deduped `public.projects` by `product_id` in Supabase (with FK row repointing), and enforced one-project-per-product using partial unique index `uq_projects_product_id_not_null`.
 
 ## ./
 
@@ -12,7 +39,7 @@
 - `%TEMP%install-qwen.bat` (~2737 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1835 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~21358 tok)
+- `CHANGELOG.md` — Changelog (~21481 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~571 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
@@ -125,6 +152,17 @@
 - `suggested_commands.md` (~116 tok)
 
 ## Manual Update 2026-03-27
+
+- `portals/capacity/me/js/me-data-realtime.js` — extracted ME realtime row-normalization and subscription ownership out of `me-data.js`; loaded after `me-data-persistence.js` so the subscription layer can use the full ME state/save surface without changing the current `window.meData*` API.
+- `portals/capacity/me/js/me-data.js` — reduced further to the ME global state/flag bootstrap and `meUUID()` compatibility helper after the realtime split.
+- `portals/capacity/me/js/me-data-persistence.js` — extracted ME init/save/reset/diagnostic ownership out of `me-data.js`; load order now places it after entity/support-history helpers so persistence keeps the existing `window.meData*` contract intact.
+- `portals/capacity/me/js/me-data.js` — reduced to ME state/bootstrap and realtime ownership, then fixed existing-row realtime updates so team/product/support-history/holiday changes now mutate in-memory state and trigger the smart repaint path instead of being ignored.
+- `tests/me-data-core.test.js` — updated Phase 5 characterization to assert the corrected realtime update behavior, support-history-to-product sync, and the full reset pending-delete structure.
+- `portals/capacity/me/js/me-data-entities.js` — extracted ME entity CRUD ownership for teams, tasks, products, holidays, and department product autosync helpers; loaded after `me-data-support-history.js` to preserve the current product support-history coupling.
+- `portals/capacity/me/js/me-data-support-history.js` — extracted ME product support history ownership, including baseline sync, effective-dated support history CRUD, and support-rate lookup helpers loaded after `me-data.js`.
+- `portals/capacity/me/js/me-data-normalize.js` — extracted pure ME data normalization helpers (department/date/holiday/support-history shaping) loaded before `me-data.js`.
+- `tests/me-data-core.test.js` — expanded ME data characterization coverage for public API presence, current split support-field behaviour, and current realtime callback behaviour before structural extraction.
+- `plans/me-data-modularisation-plan.md` — phased non-behavioural split plan for `portals/capacity/me/js/me-data.js`, preserving the current `window.meData*` API while extracting normalization, support-history, CRUD, persistence, and realtime ownership.
 
 
 ## core/css/
@@ -248,7 +286,7 @@
 
 ## portals/capacity/me/js/
 
-- `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeMeTableDepartment, meNormalizePersistedProd (~5467 tok)
+- `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeMeTableDepartment, meNormalizePersistedProd (~5426 tok)
 - `me-data.js` — meNormalizeDepartmentTag: meNormalizeMeTableDepartment, meNormalizeHolidayRecord, meNormalizeAndDedu (~18559 tok)
 
 ## portals/capacity/project-management/css/
@@ -261,6 +299,11 @@
 - `pm-capacity.js` — pmGetCurrentMonthKey: pmGetData, pmGetTabContent, pmRerenderChartTabForMonthChange (~2716 tok)
 - `pm-data-relational.js` — Declares teamId (~3305 tok)
 - `pm-data.js` — Declares member (~10241 tok)
+
+## portals/capacity/shared/js/
+
+- `cap-dashboard.js` — Declares dept (~873 tok)
+- `cap-heatmap.js` — Declares dept (~916 tok)
 
 ## portals/capacity/unit6/js/
 
@@ -471,7 +514,7 @@
 - `me-components.test.js` — me-components.test.js — Tests for portals/capacity/js/me-components.js (~2337 tok)
 - `me-data-core.test.js` — me-data-core.test.js — Tests for portals/capacity/js/me-data.js (~6755 tok)
 - `me-data-relational-queries.test.js` — me-data-relational-queries.test.js (~4271 tok)
-- `me-heatmap.test.js` — Declares fs (~1078 tok)
+- `me-heatmap.test.js` — Declares fs (~904 tok)
 - `me-holidays.test.js` — Declares fs (~875 tok)
 - `me-products-filters.test.js` — fs: renderSupportTable, renderLoadTable (~4442 tok)
 - `me-tasks-sort.test.js` — me-tasks-sort.test.js — Tests for portals/capacity/js/me-tasks.js (~2511 tok)

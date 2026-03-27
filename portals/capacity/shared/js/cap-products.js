@@ -11,21 +11,6 @@ const capProductsTableState = {
 
 window.capProductsTableState = capProductsTableState;
 
-function capProductsWithLegacyDepartment(department, callback) {
-  const contextKey = 'me' + 'CurrentDepartmentContext';
-  const previous = window[contextKey];
-  window[contextKey] = department || 'ME';
-  try {
-    return callback();
-  } finally {
-    window[contextKey] = previous;
-  }
-}
-
-function capProductsLegacyHelper(name) {
-  return window['me' + 'Products' + name];
-}
-
 function capProductsNormalizeDepartmentKey(department) {
   const key = (department || 'ME').toString().toUpperCase();
   if (key === 'PM' || key === 'LOG' || key === 'UNIT6') return key;

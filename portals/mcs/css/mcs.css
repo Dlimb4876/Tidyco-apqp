@@ -1216,6 +1216,21 @@
   }
 }
 
+@media (min-width: 768px) {
+  .mcs-sidebar {
+    width: 220px;
+    padding: 20px 14px;
+  }
+
+  .mcs-toolbar {
+    padding: 14px 24px;
+  }
+
+  .mcs-list {
+    padding: 20px 24px;
+  }
+}
+
 /* -- Modal Footer -- */
 .mcs-modal-footer {
   display: flex;

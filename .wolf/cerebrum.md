@@ -64,6 +64,8 @@
 <!-- [2026-03-25] Shared capacity chart/heatmap draw code must resolve month key from active stream context (PM/LOG/UNIT6/ME). Reading `meChartStart` directly causes non-ME date adjusters to appear broken. -->
 <!-- [2026-03-25] Keep strict core script order in index bootstrap (`state -> auth -> db -> helpers -> navigation -> realtime`). Place utility scripts like chart-theme.js and guide.js after this chain to avoid load-order drift warnings. -->
 <!-- [2026-03-27] Before deleting legacy shared files in this repo, grep tests for direct `readFileSync(...old-file...)` + `eval` coupling. Runtime bootstrap can be clean while Jest still depends on deleted artifacts, so migrate those suites to the live shared file or wrapper contract first. -->
+<!-- [2026-03-27] When a user reports "data is in DB but UI is blank", run direct Supabase SQL first for the exact entity name to verify duplicate keys/rows before assuming frontend ID mapping only; duplicate projects can make cards open empty clones while historical rows still exist. -->
+<!-- [2026-03-27] In NPI, ensure dashboard project-open handlers call the duplicate-safe navigator path (`npi.nav.openProjectById`). Bypassing it with direct `progId = id; navigate('project')` can silently reopen empty clones. -->
 
 ## Decision Log
 

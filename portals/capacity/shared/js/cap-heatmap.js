@@ -3,17 +3,6 @@
    ============================================================ */
 
 window.capRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray, department) {
-  if (typeof window.meRenderHeatmapTab === 'function') {
-    const contextKey = 'me' + 'CurrentDepartmentContext';
-    const previous = window[contextKey];
-    window[contextKey] = department || 'ME';
-    try {
-      return window.meRenderHeatmapTab(monthKey, teamArray, tasksArray, productsArray, holidaysArray);
-    } finally {
-      window[contextKey] = previous;
-    }
-  }
-
   const dept = department || 'ME';
   const monthLabel = getMonthLabel(monthKey);
   
@@ -32,18 +21,6 @@ window.capRenderHeatmapTab = function(monthKey, teamArray, tasksArray, productsA
 };
 
 window.capDrawHeatmapNow = function(teamArray, tasksArray, productsArray, holidaysArray, monthKey, department) {
-  if (typeof window.meDrawHeatmapNow === 'function') {
-    const contextKey = 'me' + 'CurrentDepartmentContext';
-    const previous = window[contextKey];
-    window[contextKey] = department || 'ME';
-    try {
-      window.meDrawHeatmapNow();
-    } finally {
-      window[contextKey] = previous;
-    }
-    return;
-  }
-
   const container = document.getElementById('capHeatmapGrid');
   if (!container) return;
 
@@ -96,14 +73,6 @@ window.capDrawHeatmapNow = function(teamArray, tasksArray, productsArray, holida
   container.innerHTML = html;
 };
 
-window.capOpenHeatmapDetail = function(personId, weekStart, weekEnd) {
-  if (typeof window.meOpenHeatmapDetail === 'function') {
-    window.meOpenHeatmapDetail(personId, weekStart, weekEnd);
-  }
-};
+window.capOpenHeatmapDetail = function(_personId, _weekStart, _weekEnd) {};
 
-window.capCloseHeatmapDetail = function() {
-  if (typeof window.meCloseHeatmapDetail === 'function') {
-    window.meCloseHeatmapDetail();
-  }
-};
+window.capCloseHeatmapDetail = function() {};

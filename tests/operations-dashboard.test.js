@@ -164,7 +164,6 @@ describe('Operations Dashboard', () => {
       holidays: []
     };
 
-    global.meFilterByDepartment = (arr) => arr;
     global.meCalculateMonthData = jest.fn().mockReturnValue({
       capacity: 100,
       totalDemand: 75,
@@ -209,7 +208,6 @@ describe('Operations Dashboard', () => {
     feedbackDataManager.state.feedback = [];
 
     meDataState = { team: [], tasks: [], products: [], holidays: [] };
-    global.meFilterByDepartment = (arr) => arr;
     global.meCalculateMonthData = jest.fn().mockReturnValue({
       capacity: 100,
       totalDemand: 50,
@@ -274,7 +272,7 @@ describe('Operations Dashboard', () => {
         products: [{ id: 'prod-1', department: 'PM' }],
         holidays: []
       },
-      meFilterByDepartment: jest.fn((arr, department) => arr.filter(row => row.department === department)),
+      departmentFilter: jest.fn((arr, department) => arr.filter(row => row.department === department)),
       meCalculateMonthData: jest.fn().mockReturnValue({
         capacity: 120,
         totalDemand: 60,
@@ -298,7 +296,7 @@ describe('Operations Dashboard', () => {
     expect(pm.capacity).toBe(120);
     expect(pm.demand).toBe(60);
     expect(pm.headroom).toBe(60);
-    expect(dependencies.meFilterByDepartment).toHaveBeenCalled();
+    expect(dependencies.departmentFilter).toHaveBeenCalled();
     expect(dependencies.meCalculateMonthData).toHaveBeenCalled();
   });
 

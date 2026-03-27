@@ -13,6 +13,20 @@ This document outlines the comprehensive testing strategy for the Tidyco APQP ap
 **Documentation Sync Rule:**
 - If a change affects behavior, workflow, or test status, update both `README.md` and `TESTING_STRATEGY.md` in the same logical change.
 
+### Quality Assurance Scripts
+
+This project includes several custom Node.js scripts in the `scripts/` directory to enforce code quality and architecture rules without needing full ESLint configuration for everything.
+
+```bash
+node scripts/syntax-validator.js             # Validates JS syntax across the codebase
+node scripts/subscription-cleanup-auditor.js # Checks for missing removeRealtimeSubscription calls
+node scripts/modal-state-auditor.js          # Ensures modals clear their state on close
+node scripts/state-variable-tracker.js       # Tracks state.js variables and undeclared globals
+node scripts/load-order-checker.js           # Verifies index.html script load order dependencies
+node scripts/test-coverage-reporter.js       # Generates Jest coverage summary with recommendations
+node scripts/rls-policy-checker.js           # Audits Supabase tables for RLS policy coverage
+```
+
 ---
 
 ## Test Framework
@@ -83,6 +97,7 @@ npm run wiki:check           # runs all three checks
   - Product status -> linked NPI tender gate scope flow
   - Gate scope lock/unlock lifecycle with filtered gate rendering
   - Keyboard shortcut behavior parity with shortcuts modal
+  - End-to-end interactions across the newly modularized ME data layer
 
 **When writing new tests, prioritize cross-module regression protection before adding broad new feature suites.**
 

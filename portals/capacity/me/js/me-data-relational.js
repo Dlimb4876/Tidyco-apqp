@@ -254,7 +254,6 @@ window.meSaveTeamRelational = async function(userId, teamMember) {
     const payload = {
       id: teamId,
       user_id: userId,
-      department: teamMember.department || 'ME',
       name: teamMember.name,
       hours_per_week: teamMember.hoursPerWeek,
       utilisation: teamMember.utilisation,
@@ -313,7 +312,6 @@ window.meSaveProductRelational = async function(userId, product) {
     const payload = {
       id: productId,
       user_id: userId,
-      department: product.department || 'ME',
       name: product.name || '',
       product_database_id: productDatabaseId,
       hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
@@ -408,7 +406,6 @@ window.meSaveTaskRelational = async function(userId, task) {
     const payload = {
       id: taskId,
       user_id: userId,
-      department: task.department || 'ME',
       name: task.name,
       category: task.category,
       type: task.type || 'standard',

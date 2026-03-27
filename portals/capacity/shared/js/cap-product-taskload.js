@@ -11,21 +11,6 @@ const capProductLoadTableState = {
 
 window.capProductLoadTableState = capProductLoadTableState;
 
-function capProductLoadWithLegacyDepartment(department, callback) {
-  const contextKey = 'me' + 'CurrentDepartmentContext';
-  const previous = window[contextKey];
-  window[contextKey] = department || 'ME';
-  try {
-    return callback();
-  } finally {
-    window[contextKey] = previous;
-  }
-}
-
-function capProductLoadLegacyHelper(name) {
-  return window['me' + 'ProductLoad' + name];
-}
-
 function capProductLoadRefresh(department) {
   if (department === 'PM' && typeof window.pmRefreshCurrentTab === 'function') return window.pmRefreshCurrentTab();
   if (department === 'LOG' && typeof window.logRefreshCurrentTab === 'function') return window.logRefreshCurrentTab();

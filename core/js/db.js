@@ -471,6 +471,7 @@ function importJSON(e) {
 }
 
 // ── Project selector ────────────────────────────────────────
+// Only sets a default project if none is already selected (e.g., from URL hash)
 function initProgSelect() {
   if (!progId && db.projects.length) progId = db.projects[0].id;
 }
@@ -763,3 +764,32 @@ window.broadcastPresence    = broadcastPresence;
 window.stopPresenceBroadcast = stopPresenceBroadcast;
 window.getPresenceForProg   = getPresenceForProg;
 window._getPresenceInitials = _getPresenceInitials;
+
+// ── Load specific project by ID ─────────────────────────────
+// Fetches a single project from Supabase when not in paginated memory
+async function loadProjectById(projectId) {
+  if (!projectId || !currentUser) return null
+  if (db.projects.find(p => p.id === projectId)) return db.projects.find(p => p.id === projectId)
+  
+  try {
+    const { data, error } = await supa
+      .from('projects')
+      .select(projectsGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
+      .eq('prog_id', projectId)
+      .single()
+    
+    if (error) {
+      console.error('Failed to load project by ID:', error)
+      return null
+    }
+    
+    if (data) {
+      const project = migrateprog(rowToProject(data))
+      db.projects.push(project)
+      return project
+    }
+  } catch (err) {
+    console.error('Error loading project:', err)
+  }
+  return null
+}

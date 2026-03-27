@@ -479,3 +479,21 @@ td.w75 { width: 75px; }
   .bom-tree-add-btn { display: none; }
   .bom-tree-root-row { gap: 6px; }
 }
+
+@media (min-width: 768px) {
+  .bom-subnav {
+    align-items: stretch;
+  }
+
+  .bom-tab {
+    padding: 12px 20px;
+  }
+
+  .bom-pick-list {
+    max-height: 420px;
+  }
+
+  .bom-tree-root-row {
+    gap: 10px;
+  }
+}

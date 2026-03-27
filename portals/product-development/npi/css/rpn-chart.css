@@ -30,3 +30,9 @@
     height: auto;
   }
 }
+
+@media (min-width: 768px) {
+  .rpn-chart-container {
+    padding: 16px 20px 20px;
+  }
+}

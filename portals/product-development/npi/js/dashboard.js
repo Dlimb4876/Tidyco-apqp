@@ -132,6 +132,52 @@ npi.dashboard.ensureProductProjects = function () {
   const products = productsDataGetAll()
   if (!products || products.length === 0) return
 
+  const loadedByProduct = new Set(
+    (db.projects || []).filter((p) => p && p.product_id).map((p) => p.product_id)
+  )
+  const missingProductIds = products
+    .map((product) => product && product.id)
+    .filter((id) => id && !loadedByProduct.has(id))
+
+  // When project paging is partial, fetch missing projects from Supabase first
+  // so cards remain accessible without creating duplicate empty projects.
+  if (
+    missingProductIds.length > 0 &&
+    typeof projectsAllLoaded === 'boolean' &&
+    projectsAllLoaded === false &&
+    typeof supa !== 'undefined'
+  ) {
+    if (npi.dashboard._missingProjectHydrationInFlight) return
+    npi.dashboard._missingProjectHydrationInFlight = true
+
+    Promise.resolve()
+      .then(async () => {
+        const { data, error } = await supa
+          .from('projects')
+          .select('id,prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by')
+          .in('product_id', [...new Set(missingProductIds)])
+
+        if (error || !Array.isArray(data) || data.length === 0) return
+
+        const known = new Set((db.projects || []).map((p) => p.id))
+        data.forEach((row) => {
+          const project = migrateprog(rowToProject(row))
+          if (known.has(project.id)) return
+          known.add(project.id)
+          db.projects.push(project)
+        })
+      })
+      .catch((err) => {
+        console.warn('[NPI] project hydration failed:', err && err.message ? err.message : err)
+      })
+      .finally(() => {
+        npi.dashboard._missingProjectHydrationInFlight = false
+        if (typeof render === 'function') render()
+      })
+
+    return
+  }
+
   let created = 0
   let updated = 0
   products.forEach((product) => {
@@ -930,6 +976,10 @@ npi.dashboard.renderDashboard = function () {
 
 // ── Project CRUD ──────────────────────────────────────────────
 npi.dashboard.openProject = function (id) {
+  if (npi && npi.nav && typeof npi.nav.openProjectById === 'function') {
+    npi.nav.openProjectById(id)
+    return
+  }
   progId = id
   navigate('project')
 }

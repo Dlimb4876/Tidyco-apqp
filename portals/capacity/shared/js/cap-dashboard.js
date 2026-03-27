@@ -3,10 +3,6 @@
    ============================================================ */
 
 window.capRenderDashboardTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray, department) {
-  if (typeof window.meRenderDashboardTab === 'function') {
-    return window.meRenderDashboardTab(monthKey, teamArray, tasksArray, productsArray, holidaysArray);
-  }
-
   const dept = department || 'ME';
   const monthData = capCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, holidaysArray);
   const monthLabel = getMonthLabel(monthKey);
@@ -61,11 +57,6 @@ window.capRenderDashboardTab = function(monthKey, teamArray, tasksArray, product
     </div>`;
 };
 
-window.capDashboardDrawMiniChart = function(teamArray, tasksArray, productsArray, holidaysArray) {
-  if (typeof window.meDashboardDrawMiniChart === 'function') {
-    window.meDashboardDrawMiniChart(teamArray, tasksArray, productsArray, holidaysArray);
-  }
-  if (typeof window.meDashboardDrawMiniHeatmap === 'function') {
-    window.meDashboardDrawMiniHeatmap(teamArray, tasksArray, holidaysArray);
-  }
+window.capDashboardDrawMiniChart = function(_teamArray, _tasksArray, _productsArray, _holidaysArray) {
+  // Mini chart/heatmap rendering is handled by the department orchestrator
 };

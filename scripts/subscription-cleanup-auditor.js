@@ -9,6 +9,13 @@
 const fs = require('fs');
 const path = require('path');
 
+const PERSISTENT_SUBSCRIPTIONS = [
+  {
+    file: 'core/js/db.js',
+    channel: 'global_projects_channel'
+  }
+];
+
 function walkDir(dir, exclude = ['node_modules', '.git', 'tests']) {
   const files = [];
   const items = fs.readdirSync(dir);
@@ -32,37 +39,87 @@ function normalizePath(filePath) {
   return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '')
 }
 
+function normalizeToken(token) {
+  const value = String(token || '').trim();
+  if (!value) return '';
+
+  const quoted = value.match(/^['"](.+?)['"]$/);
+  if (quoted) return quoted[1];
+
+  return value.replace(/\s+/g, ' ');
+}
+
+function isPersistentSubscription(filePath, channel) {
+  const normalizedFile = normalizePath(filePath);
+  const normalizedChannel = normalizeToken(channel);
+  return PERSISTENT_SUBSCRIPTIONS.some((entry) => {
+    return entry.file === normalizedFile && entry.channel === normalizedChannel;
+  });
+}
+
 function analyzeFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
   const subscriptions = [];
   const cleanups = [];
+  const prefixCleanups = [];
 
   lines.forEach((line, idx) => {
-    // Find createRealtimeSubscription calls
-    if (line.includes('createRealtimeSubscription')) {
-      const match = /(?:const|let)\s+(\w+)\s*=\s*createRealtimeSubscription/.exec(line);
-      const varName = match ? match[1] : 'unnamed';
+    const trimmed = line.trim();
+
+    if (
+      trimmed.startsWith('//') ||
+      trimmed.includes('function createRealtimeSubscription') ||
+      trimmed.includes('typeof createRealtimeSubscription')
+    ) {
+      return;
+    }
+
+    // Find real createRealtimeSubscription calls.
+    if (/\bcreateRealtimeSubscription\s*\(/.test(trimmed)) {
+      let callBuffer = trimmed;
+      for (let offset = 1; offset <= 8; offset += 1) {
+        if (/createRealtimeSubscription\s*\(\s*[\s\S]*?,\s*[\s\S]*?(?:,|\))/.test(callBuffer)) break;
+        const nextLine = lines[idx + offset];
+        if (typeof nextLine !== 'string') break;
+        callBuffer += ` ${nextLine.trim()}`;
+      }
+
+      const refMatch = /([\w.]+)\s*=\s*createRealtimeSubscription\s*\(/.exec(callBuffer);
+      const channelMatch = /createRealtimeSubscription\s*\(\s*[^,]+,\s*([^,]+?)\s*(?:,|\))/.exec(callBuffer);
+      const refName = refMatch ? normalizeToken(refMatch[1]) : '';
+      const channel = channelMatch ? normalizeToken(channelMatch[1]) : '';
       subscriptions.push({
         line: idx + 1,
-        variable: varName,
+        variable: refName,
+        channel,
         code: line.trim()
       });
     }
 
     // Find removeRealtimeSubscription calls
-    if (line.includes('removeRealtimeSubscription')) {
-      const match = /removeRealtimeSubscription\s*\(\s*(\w+)\s*\)/.exec(line);
-      const varName = match ? match[1] : 'unknown';
+    if (/\bremoveRealtimeSubscription\s*\(/.test(trimmed)) {
+      const match = /removeRealtimeSubscription\s*\(\s*([^\)]+?)\s*\)/.exec(trimmed);
+      const varName = match ? normalizeToken(match[1]) : 'unknown';
       cleanups.push({
         line: idx + 1,
         variable: varName,
         code: line.trim()
       });
     }
+
+    if (/\bremoveRealtimeSubscriptionsMatching\s*\(/.test(trimmed)) {
+      const match = /removeRealtimeSubscriptionsMatching\s*\(\s*([^\)]+?)\s*\)/.exec(trimmed);
+      const pattern = match ? normalizeToken(match[1]) : 'unknown';
+      prefixCleanups.push({
+        line: idx + 1,
+        pattern,
+        code: line.trim()
+      });
+    }
   });
 
-  return { subscriptions, cleanups };
+  return { subscriptions, cleanups, prefixCleanups };
 }
 
 function main() {
@@ -80,30 +137,41 @@ function main() {
   let uncleanedSubscriptions = [];
 
   filesToCheck.forEach(file => {
-    const { subscriptions, cleanups } = analyzeFile(file);
+    const { subscriptions, cleanups, prefixCleanups } = analyzeFile(file);
 
     if (subscriptions.length > 0) {
       console.log(`\n📡 ${file} (${subscriptions.length} subscription${subscriptions.length !== 1 ? 's' : ''})`);
 
       subscriptions.forEach(sub => {
-        const hasCleanup = cleanups.some(c => c.variable === sub.variable);
+        const hasDirectCleanup = cleanups.some(c => {
+          return c.variable === sub.channel || (sub.variable && c.variable === sub.variable);
+        });
+        const hasPrefixCleanup = prefixCleanups.some(c => {
+          return sub.channel && sub.channel.startsWith(c.pattern);
+        });
+        const isPersistent = isPersistentSubscription(file, sub.channel);
+        const hasCleanup = hasDirectCleanup || hasPrefixCleanup || isPersistent;
         const status = hasCleanup ? '✅' : '❌';
-        console.log(`  ${status} Line ${sub.line}: ${sub.variable}`);
+        const label = sub.channel || sub.variable || 'unknown';
+        console.log(`  ${status} Line ${sub.line}: ${label}`);
         console.log(`     ${sub.code.substring(0, 80)}${sub.code.length > 80 ? '...' : ''}`);
 
         if (!hasCleanup) {
           uncleanedSubscriptions.push({
             file,
-            variable: sub.variable,
+            variable: label,
             line: sub.line
           });
         }
       });
 
-      if (cleanups.length > 0) {
+      if (cleanups.length > 0 || prefixCleanups.length > 0) {
         console.log(`\n  Cleanups found:`);
         cleanups.forEach(cleanup => {
           console.log(`    Line ${cleanup.line}: removeRealtimeSubscription(${cleanup.variable})`);
+        });
+        prefixCleanups.forEach(cleanup => {
+          console.log(`    Line ${cleanup.line}: removeRealtimeSubscriptionsMatching(${cleanup.pattern})`);
         });
       }
 

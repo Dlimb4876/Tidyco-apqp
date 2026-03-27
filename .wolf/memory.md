@@ -9,6 +9,21 @@
 ## 2026-03-25
 - Fixed load-order checker warnings by moving `core/js/chart-theme.js` and `utils/js/guide.js` in `index.html` to load after the core chain (`state/auth/db/helpers/navigation/realtime`); validated with `npm run check:load-order` (clean, no warnings).
 ## 2026-03-27
+- Closed the remaining mobile-audit warnings by adding explicit `@media (min-width: 768px)` refinements to `portals/capacity/css/capacity.css`, `portals/capacity/shared/css/cap-tables.css`, `portals/mcs/css/mcs.css`, `portals/product-development/npi/css/apqp-bom.css`, `portals/product-development/npi/css/rpn-chart.css`, and `portals/product-development/parts-database/css/parts-database.css`; validated with clean editor diagnostics and follow-up mobile/full guardrail runs.
+- Fixed repository guardrail false positives by replacing `scripts/syntax-validator.js` with Node `--check` parsing and teaching the subscription/mobile/modal auditors about Windows paths, multiline realtime calls, responsive companion stylesheets, workspace-wide modal closers, and the shared Escape-based close flow; validated with clean `npm run check:syntax`, `npm run check:subscriptions`, `npm run check:modals`, and full `npm run check:all`.
+- Removed the orphaned `public.me_hub_evm_summary` view from Supabase with migration `drop_me_hub_evm_summary_view`, deleted its stale definition from `supabase/evm_phase3_wbs_migration.sql`, and logged the schema cleanup in `CHANGELOG.md` so the loose SQL cannot recreate dead DB scaffolding.
+- Bridged current testing gaps around NPI duplicate project handling by adding `tests/npi-navigation-open-project.test.js` for `npi.nav.openProjectById`, extending `tests/npi-dashboard-search.test.js` with paged-project hydration coverage for `ensureProductProjects`, and stabilizing `tests/hub.test.js` favourites assertions by resetting `canViewPageKey` in the suite setup; validated with targeted suites and full `npm test` (64/64 suites, 809/809 tests).
+- Completed Phase 7 of `plans/me-data-modularisation-plan.md` by turning `portals/capacity/me/js/me-data.js` into the final ME bootstrap/facade, reusing shared facade factories from `portals/capacity/me/js/me-data-persistence.js` so init/reset keep the same state and pending-delete shape, and validating with focused/full Jest plus a browser boot spot-check.
+- Completed critical project dedupe + prevention: deduped `public.projects` by `product_id` (301 duplicate rows removed), repointed all FK-linked NPI `project_id` rows and `projects.parent_id` to canonical `prog_id`s before delete, verified zero remaining duplicate product groups, and applied migration `enforce_unique_projects_product_id_not_null` creating partial unique index `uq_projects_product_id_not_null`.
+- Investigated live DB for "Class 717 Cooling Unit Water Pump" and confirmed duplicate `projects` rows for the same `product_id`; only one (`prog_id = p_rz5zjglz3`) had NPI rows (12 total across CTQ/PFD/actions/risks/gates). Fixed access by hydrating missing projects from Supabase during partial paging and routing dashboard opens through duplicate-safe `npi.nav.openProjectById`; validated with `npm test -- tests/product-development.test.js tests/npi-data-relational.test.js` (12/12 passing).
+- Fixed NPI relational project loading regression where project pages showed blank BoM/APQP/actions/risks despite DB rows: updated `portals/product-development/npi/js/npi-data-relational.js` so `npiRelResolveProjectId` maps UUID project IDs to `projects.prog_id` before querying NPI tables; validated with `npm test -- tests/npi-data-relational.test.js` (8/8 passing).
+- Completed Phase 6 of `plans/me-data-modularisation-plan.md` by extracting ME realtime row normalization plus subscribe/unsubscribe ownership from `portals/capacity/me/js/me-data.js` into new file `portals/capacity/me/js/me-data-realtime.js`, updating `index.html` and the eval-based `tests/me-data-core.test.js` load order, and validating with focused `npm test -- tests/me-data-core.test.js` plus full `npm test`.
+- Completed Phase 5 of `plans/me-data-modularisation-plan.md` by extracting ME init/save/reset/diagnostic ownership from `portals/capacity/me/js/me-data.js` into new file `portals/capacity/me/js/me-data-persistence.js`, updating `index.html` and the eval-based `tests/me-data-core.test.js` load order, then fixing the reviewed regressions so existing-row realtime updates repaint correctly and support-history edits immediately refresh the matching product state. Validated with focused `npm test -- tests/me-data-core.test.js` plus full `npm test`.
+- Completed Phase 4 of `plans/me-data-modularisation-plan.md` by extracting ME entity CRUD and department product autosync ownership from `portals/capacity/me/js/me-data.js` into new file `portals/capacity/me/js/me-data-entities.js`, updating `index.html` and the eval-based `tests/me-data-core.test.js` load order, and validating with focused `npm test -- tests/me-data-core.test.js` plus full `npm test`.
+- Completed Phase 3 of `plans/me-data-modularisation-plan.md` by extracting ME product support history ownership from `portals/capacity/me/js/me-data.js` into new file `portals/capacity/me/js/me-data-support-history.js`, updating `index.html` and the eval-based `tests/me-data-core.test.js` load order, and validating with focused `npm test -- tests/me-data-core.test.js` plus full `npm test`.
+- Completed Phase 2 of `plans/me-data-modularisation-plan.md` by extracting the pure helpers from `portals/capacity/me/js/me-data.js` into new file `portals/capacity/me/js/me-data-normalize.js`, updating `index.html` and the eval-based `tests/me-data-core.test.js` load order, and validating with focused `npm test -- tests/me-data-core.test.js` plus full `npm test`.
+- Completed Phase 1 of `plans/me-data-modularisation-plan.md` by extending `tests/me-data-core.test.js` with characterization coverage for the current `window.meData*` API surface, current split product-support edit behaviour, and current ME realtime callback behaviour; validated with focused `npm test -- tests/me-data-core.test.js` and full `npm test`.
+- Added `plans/me-data-modularisation-plan.md` with a phased structural refactor plan for `portals/capacity/me/js/me-data.js`; scope keeps runtime behaviour stable first, preserves the current `window.meData*` API, and splits work into characterization tests, pure helpers, support history, entity CRUD, persistence, realtime, and a final thin facade step.
 - Restored the shared capacity runtime after the Phase 10 cut-over by replacing the remaining placeholder Product Support / Product Load / Holiday Planner rendering, restoring shared chart month controls plus the embedded heatmap mount, making month controls stream-aware in `capacity-events.js`, reverting the stray ME team-name lookup in `me-data-relational.js`, and fixing multiple Windows validation scripts that had been silently scanning zero files. Validated with focused capacity Jest suites and full `npm test`; `check:all` now reports real repository findings instead of zero-file false greens.
 - Completed Capacity Independence Phase 10 by deleting the old ME shared JS/CSS copies from `portals/capacity/me/`, migrating direct Jest file loads onto shared `cap-*` files or shared wrapper bridge coverage, and updating README/testing docs to reflect that only the ME data/orchestrator files remain; validated with `npm run check:load-order`, focused shared-capacity Jest coverage (11/11 suites, 155/155 tests), and full `npm test` with only the pre-existing unrelated `tests/me-data-relational-queries.test.js` failure remaining.
 - Completed Capacity Independence Phase 9 by cutting `index.html` over to the shared capacity `cap-*` CSS/JS bootstrap, moving `capacity.js` / `capacity-events.js` to the end of the capacity block, updating README/testing docs to match, and fixing the browser-only PM/LOG/UNIT6 top-level alias redeclaration issue that appeared once all stream scripts loaded together; validated with `npm run check:load-order`, focused capacity Jest coverage (7/7 suites, 73/73 tests), and a clean browser load at `http://localhost:8000/`.
@@ -1583,3 +1598,56 @@
 | 12:33 | Edited portals/capacity/me/js/me-data.js | added 3 condition(s) | ~312 |
 | 12:34 | Edited CHANGELOG.md | 1→2 lines | ~108 |
 | 12:34 | Session end: 8 writes across 3 files (me-data-relational.js, CHANGELOG.md, me-data.js) | 6 reads | ~37779 tok |
+
+## Session: 2026-03-27 12:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 15:40
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 15:52 | Edited portals/capacity/me/js/me-data-relational.js | 5→4 lines | ~26 |
+| 15:52 | Edited portals/capacity/me/js/me-data-relational.js | 5→4 lines | ~28 |
+| 15:52 | Edited portals/capacity/me/js/me-data-relational.js | 5→4 lines | ~25 |
+| 15:52 | Edited portals/capacity/shared/js/cap-dashboard.js | modified function() | ~44 |
+| 15:52 | Edited portals/capacity/shared/js/cap-dashboard.js | modified function() | ~52 |
+| 15:53 | Edited portals/capacity/shared/js/cap-heatmap.js | modified function() | ~35 |
+| 15:54 | Edited tests/me-heatmap.test.js | reduced (-6 lines) | ~70 |
+| 15:54 | Edited CHANGELOG.md | 4→6 lines | ~117 |
+| 15:54 | Session end: 8 writes across 5 files (me-data-relational.js, cap-dashboard.js, cap-heatmap.js, me-heatmap.test.js, CHANGELOG.md) | 10 reads | ~62377 tok |
+| 16:00 | Session end: 8 writes across 5 files (me-data-relational.js, cap-dashboard.js, cap-heatmap.js, me-heatmap.test.js, CHANGELOG.md) | 10 reads | ~62377 tok |
+
+## Session: 2026-03-27 16:03
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 16:20
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 16:45
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 18:34
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 18:44
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-27 18:44
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

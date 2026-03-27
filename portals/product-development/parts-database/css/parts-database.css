@@ -108,3 +108,17 @@ select.abc-class-select.abc-none { background: var(--bg); color: var(--muted); }
   .bom-abc-filter-row { gap: 4px; }
   .bom-abc-chip { padding: 4px 10px; font-size: 10px; }
 }
+
+@media (min-width: 768px) {
+  .bom-abc-filter-row {
+    gap: 8px;
+  }
+
+  .abc-info-row {
+    gap: 16px;
+  }
+
+  .abc-catalogue-tbl td.col-project {
+    min-width: 140px;
+  }
+}

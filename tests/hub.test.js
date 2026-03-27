@@ -294,6 +294,7 @@ describe('hub favourites storage', () => {
   beforeEach(() => {
     localStorage.clear();
     global.currentUser = { email: 'star.user@example.com' };
+    global.canViewPageKey = jest.fn(() => true);
     global.render = jest.fn();
     global.currentSection = 'hub';
     global.setCapacityTab = undefined;
@@ -389,5 +390,57 @@ describe('hub favourites storage', () => {
 
     expect(global.navigate).not.toHaveBeenCalled();
     expect(global.setCapacityTab).not.toHaveBeenCalled();
+  });
+
+  it('removes page favourite with hubRemovePageFavourite', () => {
+    // Setup: Add a page favourite
+    hubTogglePageFavourite('capacity'); // eslint-disable-line no-undef
+    let raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.pages).toContain('capacity');
+
+    // Remove it
+    hubRemovePageFavourite('capacity'); // eslint-disable-line no-undef
+    raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.pages).not.toContain('capacity');
+    expect(global.render).toHaveBeenCalled();
+  });
+
+  it('removes product favourite with hubRemoveProductFavourite', () => {
+    // Setup: Add a product favourite
+    hubToggleProductFavourite('prod_123'); // eslint-disable-line no-undef
+    let raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.products).toContain('prod_123');
+
+    // Remove it
+    hubRemoveProductFavourite('prod_123'); // eslint-disable-line no-undef
+    raw = JSON.parse(localStorage.getItem('tidyco_favourites_v1_star.user@example.com'));
+    expect(raw.products).not.toContain('prod_123');
+    expect(global.render).toHaveBeenCalled();
+  });
+
+  it('includes delete buttons in favourites panel for pages', () => {
+    global.currentUser = { email: 'fav.user@example.com' };
+    localStorage.setItem('tidyco_favourites_v1_fav.user@example.com', JSON.stringify({
+      version: 1,
+      pages: ['capacity'],
+      products: []
+    }));
+    const html = renderHub(); // eslint-disable-line no-undef
+    expect(html).toContain('hubRemovePageFavourite');
+    expect(html).toContain('hub-fav-delete');
+  });
+
+  it('includes delete buttons in favourites panel for products', () => {
+    global.currentUser = { email: 'fav.user@example.com' };
+    global.productsDataGetAll = jest.fn(() => [{ id: 'prod_123', name: 'Test Product', status: 'Active' }]);
+    global.productsState = { loaded: true };
+    localStorage.setItem('tidyco_favourites_v1_fav.user@example.com', JSON.stringify({
+      version: 1,
+      pages: [],
+      products: ['prod_123']
+    }));
+    const html = renderHub(); // eslint-disable-line no-undef
+    expect(html).toContain('hubRemoveProductFavourite');
+    expect(html).toContain('hub-fav-delete');
   });
 });
