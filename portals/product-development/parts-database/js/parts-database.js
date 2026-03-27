@@ -143,7 +143,7 @@ window.partsDatabase = window.partsDatabase || {}
         <colgroup>
           <col style="width:150px">
           <col style="width:80px">
-          <col style="width:140px">
+          <col style="width:350px">
           <col style="width:80px">
           <col style="width:170px">
           <col style="width:170px">
