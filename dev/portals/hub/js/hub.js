@@ -228,6 +228,24 @@ function hubOpenFavouritePage(pageKey) {
   if (typeof navigate === 'function') navigate(pageKey);
 }
 
+function hubRemovePageFavourite(section, evt) {
+  if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  const favourites = hubLoadFavourites();
+  const pages = favourites.pages.filter((p) => p !== section);
+  hubSaveFavourites({ ...favourites, pages });
+  if (typeof render === 'function') render();
+}
+
+function hubRemoveProductFavourite(productId, evt) {
+  if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  const key = String(productId || '').trim();
+  if (!key) return;
+  const favourites = hubLoadFavourites();
+  const products = favourites.products.filter((p) => p !== key);
+  hubSaveFavourites({ ...favourites, products });
+  if (typeof render === 'function') render();
+}
+
 function renderHubFavouritesPanel() {
   const favourites = hubLoadFavourites();
   const pageItems = favourites.pages
@@ -235,7 +253,10 @@ function renderHubFavouritesPanel() {
       const meta = HUB_FAVOURITE_PAGES[section];
       if (!meta) return '';
       if (typeof canViewPageKey === 'function' && !canViewPageKey(section)) return '';
-      return `<button class="hub-fav-page" onclick="hubOpenFavouritePage('${section}')" title="Open ${esc(meta.label)}">${meta.icon} ${esc(meta.label)}</button>`;
+      return `<div class="hub-fav-item">
+        <button class="hub-fav-page" onclick="hubOpenFavouritePage('${section}')" title="Open ${esc(meta.label)}">${meta.icon} ${esc(meta.label)}</button>
+        <button class="hub-fav-delete" onclick="hubRemovePageFavourite('${section}', event)" title="Remove from favourites">×</button>
+      </div>`;
     })
     .filter(Boolean)
     .join('');
@@ -246,10 +267,13 @@ function renderHubFavouritesPanel() {
       const name = product.name || 'Unnamed Product';
       const status = product.status || 'Tender';
       const hasProject = typeof findProjectByProductId === 'function' ? !!findProjectByProductId(product.id) : false;
-      return `<button class="hub-fav-product" onclick="hubOpenFavouriteProduct('${esc(product.id)}')" title="Open ${esc(name)} in NPI">
-        <span class="hub-fav-product-name">${esc(name)}</span>
-        <span class="hub-fav-product-meta">${esc(status)}${hasProject ? ' · NPI' : ''}</span>
-      </button>`;
+      return `<div class="hub-fav-item">
+        <button class="hub-fav-product" onclick="hubOpenFavouriteProduct('${esc(product.id)}')" title="Open ${esc(name)} in NPI">
+          <span class="hub-fav-product-name">${esc(name)}</span>
+          <span class="hub-fav-product-meta">${esc(status)}${hasProject ? ' · NPI' : ''}</span>
+        </button>
+        <button class="hub-fav-delete" onclick="hubRemoveProductFavourite('${esc(product.id)}', event)" title="Remove from favourites">×</button>
+      </div>`;
     })
     .join('');
 

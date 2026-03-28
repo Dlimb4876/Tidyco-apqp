@@ -1,5 +1,5 @@
 /**
- * me-components.test.js — Tests for portals/capacity/js/me-components.js
+ * me-components.test.js — Tests for portals/capacity/shared/js/cap-components.js
  *
  * Covers: renderKPIStrip, renderMonthPicker, renderTableHeader,
  *         renderEditableCell, renderStatusBadge, renderEmptyState,
@@ -10,14 +10,14 @@ const fs = require('fs');
 const path = require('path');
 
 // ─────────────────────────────────────────────────────────────
-// Mock escapeHtml (defined in me-utils.js)
+// Mock escapeHtml (defined in shared capacity utils)
 // ─────────────────────────────────────────────────────────────
 
 global.escapeHtml = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // Load module
 const src = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/js/me-components.js'),
+  path.resolve(__dirname, '../portals/capacity/shared/js/cap-components.js'),
   'utf8'
 );
 eval(src); // eslint-disable-line no-eval

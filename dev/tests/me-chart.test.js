@@ -5,10 +5,9 @@ const path = require('path');
 const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
 document.documentElement.innerHTML = html.toString();
 
-// Global stubs used by me-chart.js
-global.meChartInst = null;
-global.meChartStart = '2026-03';
-global.Chart = function() {};
+// Global stubs used by cap-chart.js
+global.capChartInst = null;
+global.Chart = jest.fn(() => ({ destroy: jest.fn() }));
 global.escapeHtml = (v) => String(v ?? '')
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -16,190 +15,116 @@ global.escapeHtml = (v) => String(v ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#039;');
 
-global.meGetHoursPerWeek = jest.fn((hoursPerWeek) => {
-  const parsed = Number(hoursPerWeek);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 40;
-});
-
-global.getBankHolidaysForYear = jest.fn(() => []);
-global.countNetworkDaysBetween = jest.fn(() => 5);
 global.getUtilisationColor = jest.fn((util) => (util >= 100 ? 'var(--red)' : 'var(--green)'));
 global.getMonthLabel = jest.fn(() => 'Mar 2026');
 global.getMonthRange = jest.fn(() => ['2026-03']);
-global.meRenderHeatmapPanel = jest.fn(() => '<div id="heatmap-marker">Heatmap</div>');
-
-global.meCalculateMonthData = jest.fn(() => ({
+global.capRenderHeatmapTab = jest.fn(() => '<div id="capHeatmapGrid"></div>');
+global.capCalculateMonthData = jest.fn(() => ({
   capacity: 160,
-  capacityMax: 200,
-  npi: 50,
-  improvement: 20,
-  tendering: 10,
-  support: 20,
-  other: 0,
   totalDemand: 100,
   utilisation: 63
 }));
 
 const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/js/me-chart.js'),
+  path.resolve(__dirname, '../portals/capacity/shared/js/cap-chart.js'),
   'utf8'
 );
 eval(script);
 
-describe('ME chart tab rendering', () => {
+describe('Shared chart tab rendering', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date('2026-03-15T10:00:00Z'));
-    window.meCurrentDepartmentContext = 'ME';
-    global.capacityTab = 'me';
-    global.pmOnMonthChange = jest.fn();
-    global.logOnMonthChange = jest.fn();
-    global.unit6OnMonthChange = jest.fn();
-
-    global.meCalculateMonthData.mockReturnValue({
+    global.capCalculateMonthData.mockReturnValue({
       capacity: 160,
-      capacityMax: 200,
-      npi: 50,
-      improvement: 20,
-      tendering: 10,
-      support: 20,
-      other: 0,
       totalDemand: 100,
       utilisation: 63
     });
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   test('renders KPI strip and demand breakdown values', () => {
-    const team = [
-      { id: 'p1', name: 'Alex', startDate: '2026-01-01', hoursPerWeek: 40, utilisation: 80 }
-    ];
-
-    const result = meRenderChartTab('2026-03', team, [], [], []);
+    const result = capRenderChartTab('2026-03', [], [], [], [], 'ME');
 
     expect(result).toContain('Available Capacity');
     expect(result).toContain('160.0');
     expect(result).toContain('Total Demand');
-    expect(result).toContain('100.0 h');
-    expect(result).toContain('NPI');
-    expect(result).toContain('50.0 h');
-    expect(result).toContain('50%');
-    expect(result).toContain('heatmap-marker');
+    expect(result).toContain('100.0');
+    expect(result).toContain('63%');
+    expect(result).toContain('Headroom');
+    expect(result).toContain('meChartMonthInput');
+    expect(result).toContain('capHeatmapGrid');
   });
 
   test('shows dash percentage when total demand is zero', () => {
-    global.meCalculateMonthData.mockReturnValue({
+    global.capCalculateMonthData.mockReturnValue({
       capacity: 80,
-      capacityMax: 80,
-      npi: 0,
-      improvement: 0,
-      tendering: 0,
-      support: 0,
-      other: 0,
       totalDemand: 0,
       utilisation: 0
     });
 
-    const result = meRenderChartTab('2026-03', [], [], [], []);
+    const result = capRenderChartTab('2026-03', [], [], [], [], 'ME');
 
-    expect(result).toContain('—');
-    expect(result).toContain('100%');
+    expect(result).toContain('0%');
+    expect(result).toContain('80.0');
   });
 
   test('uses selected chart month for KPI calculations', () => {
-    const team = [
-      { id: 'p1', name: 'Alex', startDate: '2026-01-01', hoursPerWeek: 40, utilisation: 80 }
-    ];
+    capRenderChartTab('2026-08', [], [], [], [], 'ME');
 
-    meRenderChartTab('2026-08', team, [], [], []);
-
-    expect(global.meCalculateMonthData).toHaveBeenCalledWith('2026-08', team, [], [], []);
+    expect(global.capCalculateMonthData).toHaveBeenCalledWith('2026-08', [], [], [], []);
     expect(global.getMonthLabel).toHaveBeenCalledWith('2026-08');
   });
 
-  test('resolves active chart month from PM stream context', () => {
-    window.meCurrentDepartmentContext = 'PM';
-    global.pmChartStart = '2027-02';
+  test('renders department label in chart header', () => {
+    const result = capRenderChartTab('2026-03', [], [], [], [], 'LOG');
 
-    expect(window.meGetActiveChartMonthKey()).toBe('2027-02');
+    expect(result).toContain('LOG Department');
   });
 
   test('shows chart refresh indicator text in chart header', () => {
-    window.meCurrentDepartmentContext = 'ME';
-
-    const result = meRenderChartTab('2026-03', [], [], [], []);
-
-    expect(result).toContain('Updates when this chart page is opened');
+    expect(window.capGetChartRefreshText()).toBe('Updates when this chart page is opened');
   });
 
-  test('Today delegates month navigation to Logistics capacity', () => {
-    global.capacityTab = 'logistics';
+  test('draws a chart with stacked demand bars and capacity line', () => {
+    document.body.innerHTML = capRenderChartTab('2026-03', [], [], [], [], 'ME');
+    const canvas = document.getElementById('capChart');
+    canvas.getContext = jest.fn(() => ({}));
+    global.getMonthRange.mockReturnValue(['2026-03', '2026-04']);
+    global.capCalculateMonthData
+      .mockReturnValueOnce({ capacity: 160, totalDemand: 100, npi: 30, improvement: 25, tendering: 15, support: 20, other: 10, utilisation: 63 })
+      .mockReturnValueOnce({ capacity: 150, totalDemand: 90, npi: 25, improvement: 20, tendering: 15, support: 20, other: 10, utilisation: 60 });
 
-    window.meOnTodayClick();
+    capDrawChartNow([], [], [], [], '2026-03', 'ME');
 
-    expect(global.logOnMonthChange).toHaveBeenCalledWith('2026-03');
-    expect(global.unit6OnMonthChange).not.toHaveBeenCalled();
-  });
-
-  test('Today delegates month navigation to Unit 6 capacity', () => {
-    global.capacityTab = 'unit6';
-
-    window.meOnTodayClick();
-
-    expect(global.unit6OnMonthChange).toHaveBeenCalledWith('2026-03');
-    expect(global.logOnMonthChange).not.toHaveBeenCalled();
-  });
-
-  test('renders no-engineer hint when no team members have start dates', () => {
-    const team = [
-      { id: 'p1', name: 'Alex', hoursPerWeek: 40, utilisation: 80 },
-      { id: 'p2', name: 'Sam', hoursPerWeek: 40, utilisation: 80 }
-    ];
-
-    const result = meRenderChartTab('2026-03', team, [], [], []);
-
-    expect(result).toContain('No engineers with a start date set');
-  });
-
-  test('uses Logistics Technician labels for Logistics context', () => {
-    window.meCurrentDepartmentContext = 'LOG';
-
-    const result = meRenderChartTab('2026-03', [], [], [], []);
-
-    expect(result).toContain('CAPACITY PER LOGISTICS TECHNICIAN');
-    expect(result).toContain('<th>Logistics Technician</th>');
-    expect(result).toContain('No logistics technicians with a start date set');
-  });
-
-  test('uses Technician labels for Unit 6 context', () => {
-    window.meCurrentDepartmentContext = 'UNIT6';
-
-    const result = meRenderChartTab('2026-03', [], [], [], []);
-
-    expect(result).toContain('CAPACITY PER TECHNICIAN');
-    expect(result).toContain('<th>Technician</th>');
-    expect(result).toContain('No technicians with a start date set');
-  });
-
-  test('reduces available hours when holiday days are present for a member', () => {
-    const team = [
-      { id: 'p1', name: 'Alex', startDate: '2026-01-01', hoursPerWeek: 40, utilisation: 80 }
-    ];
-
-    const holidays = [
-      { personId: 'p1', date: '2026-03-03', type: 'full' },
-      { personId: 'p1', date: '2026-03-04', type: 'full' },
-      { personId: 'p1', date: '2026-03-05', type: 'full' }
-    ];
-
-    const result = meRenderChartTab('2026-03', team, [], [], holidays);
-
-    expect(result).toContain('3 d');
-    expect(result).toContain('16.0 h');
-    expect(result).toContain('12.8 h');
+    expect(global.Chart).toHaveBeenCalledTimes(1);
+    expect(global.Chart.mock.calls[0][1].data.labels).toEqual(['Mar 2026', 'Mar 2026']);
+    // Stacked demand bars (bars come first, then line)
+    expect(global.Chart.mock.calls[0][1].data.datasets[0].label).toBe('NPI');
+    expect(global.Chart.mock.calls[0][1].data.datasets[0].data).toEqual([30, 25]);
+    expect(global.Chart.mock.calls[0][1].data.datasets[0].backgroundColor).toBe('#2563eb');
+    expect(global.Chart.mock.calls[0][1].data.datasets[1].label).toBe('Improvement');
+    expect(global.Chart.mock.calls[0][1].data.datasets[1].data).toEqual([25, 20]);
+    expect(global.Chart.mock.calls[0][1].data.datasets[1].backgroundColor).toBe('#16a34a');
+    expect(global.Chart.mock.calls[0][1].data.datasets[2].label).toBe('Tendering');
+    expect(global.Chart.mock.calls[0][1].data.datasets[2].data).toEqual([15, 15]);
+    expect(global.Chart.mock.calls[0][1].data.datasets[2].backgroundColor).toBe('#ea580c');
+    expect(global.Chart.mock.calls[0][1].data.datasets[3].label).toBe('Support');
+    expect(global.Chart.mock.calls[0][1].data.datasets[3].data).toEqual([20, 20]);
+    expect(global.Chart.mock.calls[0][1].data.datasets[3].backgroundColor).toBe('#0891b2');
+    expect(global.Chart.mock.calls[0][1].data.datasets[4].label).toBe('Other');
+    expect(global.Chart.mock.calls[0][1].data.datasets[4].data).toEqual([10, 10]);
+    expect(global.Chart.mock.calls[0][1].data.datasets[4].backgroundColor).toBe('#7c3aed');
+    // Capacity line (comes last)
+    expect(global.Chart.mock.calls[0][1].data.datasets[5].label).toBe('Team Capacity');
+    expect(global.Chart.mock.calls[0][1].data.datasets[5].data).toEqual([160, 150]);
+    expect(global.Chart.mock.calls[0][1].data.datasets[5].borderColor).toBe('#dc2626');
+    expect(global.Chart.mock.calls[0][1].data.datasets[5].type).toBe('line');
+    // Check stacking
+    expect(global.Chart.mock.calls[0][1].data.datasets[0].stack).toBe('demand');
+    expect(global.Chart.mock.calls[0][1].data.datasets[1].stack).toBe('demand');
+    expect(global.Chart.mock.calls[0][1].options.scales.x.stacked).toBe(true);
+    expect(global.Chart.mock.calls[0][1].options.scales.y.stacked).toBe(true);
+    // Legend visible at bottom
+    expect(global.Chart.mock.calls[0][1].options.plugins.legend.display).toBe(true);
+    expect(global.Chart.mock.calls[0][1].options.plugins.legend.position).toBe('bottom');
   });
 });

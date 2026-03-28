@@ -27,6 +27,10 @@
 - For Product Support effective-dated edits, user expects explicit intent controls (not auto-save on field change), with clear in-context change history at the point of editing.
 - For Capacity Product Support, user expects the `📦 Bulk Save All Changes` control to sit on the right above the table across all streams (ME/PM/Logistics/Unit 6).
 - For settings portal work, user prioritizes reducing churn in `settings.js`; avoid broad rewrites and stabilize tests with explicit hooks/contracts to prevent scope collisions and brittle `settings-portal.test.js` coupling.
+- For Product Development architecture, user expects distinct tools like Parts Database to live as their own subsystem/folder rather than being hidden inside shared NPI implementation files.
+- User wants local debug batch launchers to match VS Code debug behavior by opening Chrome in a fresh Incognito session.
+- User prefers debug browser launches to use a separate Chrome profile instance (signed-out, separate taskbar icon), not only regular-profile tabs.
+- User wants MCS Stage 3 to mirror Stage 1 selected impacts as implementation checkboxes, with progress persisted to database-backed change data.
 
 ## Key Learnings
 
@@ -57,13 +61,20 @@
 <!-- [2026-03-23] Any search/filter path that triggers rerender (`render`, `setTab`, table/body refresh) must use shared continuity helper (`preserveInputCaretAfterRender`) and keep a local fallback in isolated tests where helpers globals are not loaded. -->
 <!-- [2026-03-23] OpenWolf cron: `openwolf cron run <ai-task>` only works when `claude` CLI is on PATH; daemon records failure even if CLI wrapper reports success. -->
 <!-- [2026-03-23] Settings test stability: do not use blanket `let`→`var` rewrites of `settings.js` in Jest. Prefer explicit state hooks (`settingsSetCoreState`) and stable load contracts to avoid eval-scope collisions across split settings modules. -->
-<!-- [2026-03-24] Department constraint parity: whenever a new department value is added to `meNormalizeDepartmentTag` (in me-data.js AND me-data-relational.js — both copies must match), a DB migration must also widen the check constraints on me_tasks, me_teams, me_products, and me_holidays. Without this, saves from new department contexts hit a 400. -->
-<!-- [2026-03-24] Capacity delete parity: if delete persistence is added/fixed for one stream (ME/PM/LOG/UNIT6), verify and patch all stream data layers together. Deleting from local arrays alone causes rows to reappear after refresh when relational delete queues are missing. -->
 <!-- [2026-03-24] When moving or deduplicating event routing between `capacity.js` and `capacity-events.js`, update routing-ownership tests immediately; stale delegation expectations can hide duplicated handlers or false regressions. -->
 <!-- [2026-03-24] Intent-based table inputs that are only committed by an Apply action must not live only in the DOM. Store per-row draft values in state (scoped by stream/page) so shared tab refreshes and realtime rerenders cannot wipe in-progress edits. -->
 <!-- [2026-03-24] Capacity chart month navigation cannot rely on chart-only canvas redraw. If month changes, re-render chart-tab HTML so KPI cards, Demand Breakdown, and Capacity-per-role tables recalculate for the selected month across ME/PM/LOG/UNIT6. -->
 <!-- [2026-03-25] Shared capacity chart/heatmap draw code must resolve month key from active stream context (PM/LOG/UNIT6/ME). Reading `meChartStart` directly causes non-ME date adjusters to appear broken. -->
 <!-- [2026-03-25] Keep strict core script order in index bootstrap (`state -> auth -> db -> helpers -> navigation -> realtime`). Place utility scripts like chart-theme.js and guide.js after this chain to avoid load-order drift warnings. -->
+<!-- [2026-03-27] Before deleting legacy shared files in this repo, grep tests for direct `readFileSync(...old-file...)` + `eval` coupling. Runtime bootstrap can be clean while Jest still depends on deleted artifacts, so migrate those suites to the live shared file or wrapper contract first. -->
+<!-- [2026-03-27] When a user reports "data is in DB but UI is blank", run direct Supabase SQL first for the exact entity name to verify duplicate keys/rows before assuming frontend ID mapping only; duplicate projects can make cards open empty clones while historical rows still exist. -->
+<!-- [2026-03-27] In NPI, ensure dashboard project-open handlers call the duplicate-safe navigator path (`npi.nav.openProjectById`). Bypassing it with direct `progId = id; navigate('project')` can silently reopen empty clones. -->
+<!-- [2026-03-27] Capacity realtime focus guard must cover search/filter controls as well as inline table editors. If defer logic only checks `isEditingInlineCell()`, startup realtime bursts can replace search inputs and eject cursor/focus repeatedly. -->
+<!-- [2026-03-27] Avoid full Capacity tasks-tab rerender on every search keystroke. Keep filter state immediate but debounce rerender and cancel stale pending timers when other task filters/sort controls trigger immediate refresh, or fast typing can stutter and drop characters. -->
+<!-- [2026-03-27] In Windows batch files, do not use `\"` as nested-quote escaping for `cmd`/`start` commands. CMD treats the backslashes literally, which can surface as “Windows can't find \\”. Use doubled CMD quotes or hand off the delayed browser launch to `powershell.exe` instead. -->
+<!-- [2026-03-28] For local debug launch parity with VS Code, batch launchers should prefer explicit Chrome launch with `--incognito --new-window` (not plain URL `Start-Process`) so a fresh private session is guaranteed. -->
+<!-- [2026-03-28] For stable separate-taskbar debug browser behavior, launch Chrome with a dedicated `--user-data-dir` plus `--incognito --new-window`; incognito alone may still attach to an existing profile/app identity. -->
+<!-- [2026-03-28] For MCS Stage 3 impact-progress persistence, avoid hard dependency on a new DB column unless migration is guaranteed. Persist checklist progress in existing persisted change data (e.g., structured tokens in justification) and parse on load to remain backward-compatible. -->
 
 ## Decision Log
 

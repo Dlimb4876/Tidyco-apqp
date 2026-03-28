@@ -32,6 +32,19 @@ Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and
 
 ---
 
+## Running locally without VS Code
+
+If you just want to open the site in your browser for debugging, you do not need VS Code open.
+
+- Double-click `start-debug-site.bat` in the repo root — it starts the local server and opens the site automatically
+- Double-click `start-debug-site-and-wiki.bat` to open both the main app and the standalone wiki
+- Or run `PowerShell -ExecutionPolicy Bypass -File .claude\serve.ps1`
+- Then open `http://localhost:8000/index.html`
+
+Press `Ctrl+C` in the launcher window when you want to stop the local server.
+
+---
+
 ## Responsive Design
 
 The application is designed with a **progressive enhancement** approach:
@@ -62,6 +75,14 @@ When adding features, always account for:
 
 See **CLAUDE.md** "Adding New Features" section for full workflow.
 
+### Capacity Bootstrap
+
+`index.html` now loads the shared capacity `cap-*` CSS/JS layer first, then the stream-specific ME/PM/Logistics/Unit 6 data and orchestrator files, then Production, and finally `capacity.js` / `capacity-events.js`. Treat that shared-first order as the live source of truth for capacity bootstrap changes.
+
+The shared runtime now owns the live chart month controls, embedded heatmap, Product Support table, Product Load table, and Holiday Planner rendering. Do not reintroduce ME-only placeholder bridges for those tabs.
+
+The old ME shared render/style copies were removed in Capacity Independence Phase 10. Under `portals/capacity/me/`, only `me-data.js`, `me-data-relational.js`, and `me-capacity.js` remain as ME-specific files.
+
 ---
 
 ## Portals
@@ -71,7 +92,7 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | Portal | Route | Description |
 |--------|-------|-------------|
 | **Hub** | `hub` | Operations Portal — landing page with navigation to all portals |
-| **Capacity** | `capacity` | Load Capacity Management (Production & ME streams) |
+| **Capacity** | `capacity` | Load Capacity Management (Production, ME, Project Management, Logistics, and Unit 6 streams) |
 | **Product Development** | `product-development` | NPI (APQP) and Product Management |
 | **Production** | `production` | Production planning, scheduling, and plan views |
 | **Operations** | `operations` | Operations Dashboard and Forecast |
@@ -79,18 +100,6 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | **MCS** | `mcs` | Manufacturing Change — ECR workflow and schedule impact tracking |
 | **Settings** | `settings` | User management, teams, permissions, appearance, work areas, and families |
 | **Feedback** | `feedback` | User feedback and bug reporting (real-time) |
-
----
-
-## Capacity Change Rule
-
-When changing the ME Capacity plan, make the equivalent change in the PM Capacity plan under `portals/capacity/project-management/` unless the request explicitly says not to.
-
-This applies to UI, routing, shared data handling, and persistence changes so the two capacity plans do not drift apart.
-
-Capacity streams now persist through isolated data layers: ME continues to use the `me_*` tables, while PM, Logistics, and Unit 6 use their own `pm_*`, `log_*`, and `unit6_*` tables plus matching JS state modules. Shared chart and heatmap components still exist, but they now read from the active stream's isolated state instead of filtering everything out of ME memory.
-
-Logistics Product Support now captures `Kitting`, `Booking In/Out`, and `Product Movement` separately, with `Hours/Batch` shown as the computed sum of those component values when a support change is applied. The row history view shows all component values as well as the total.
 
 ---
 
@@ -183,35 +192,31 @@ These links are edited directly in the PFD table and used to build the graphical
 │   │   └── /js/hub.js
 │   ├── /capacity                     # Load Capacity Management
 │   │   ├── /css
-│   │   │   ├── capacity.css          # Capacity portal shell styles
-│   │   │   └── me-capacity.css       # ME capacity module styles
+│   │   │   └── capacity.css          # Capacity portal shell styles
+│   │   ├── /shared                   # Shared capacity UI/calculation layer
+│   │   │   ├── /css                  # Shared capacity shell/table/chart/dashboard/heatmap styles
+│   │   │   └── /js                   # Shared cap-* renderers, utilities, and calculations
 │   │   ├── /js
 │   │   │   ├── capacity.js           # Portal entry and sub-tab routing
 │   │   │   ├── capacity-events.js    # Delegated event handler for all capacity streams
-│   │   │   ├── me-calculations.js    # ME capacity calculation helpers
-│   │   │   ├── me-capacity.js        # ME capacity orchestrator
-│   │   │   ├── me-chart.js           # Capacity bar chart (Chart.js)
-│   │   │   ├── me-components.js      # Shared ME UI components
-│   │   │   ├── me-dashboard.js       # ME capacity dashboard summary
-│   │   │   ├── me-data.js            # ME data layer and Supabase sync
-│   │   │   ├── me-data-relational.js # ME relational data layer (time logs, EVM)
-│   │   │   ├── me-heatmap.js         # Engineer load heat map
-│   │   │   ├── me-holidays.js        # Holiday planner
-│   │   │   ├── me-product-taskload.js# Product task load view
-│   │   │   ├── me-products.js        # Product loading for ME capacity
-│   │   │   ├── me-tasks.js           # Task and project allocation
-│   │   │   ├── me-team.js            # Team member management
-│   │   │   ├── me-utils.js           # ME utility helpers
-│   │   │   ├── prod-capacity.js      # Production capacity orchestrator
-│   │   │   ├── prod-capacity-dashboard.js  # Production capacity dashboard
-│   │   │   ├── prod-capacity-data.js       # Production capacity data layer
-│   │   │   ├── prod-capacity-detail.js     # Production capacity detail view
-│   │   │   ├── prod-capacity-settings.js   # Production capacity settings
-│   │   │   ├── prod-capacity-workarea.js   # Work area management
-│   │   │   └── work-areas-data.js    # Work areas data layer
+│   │   │   └── modals.js             # Capacity portal modal injection
+│   │   ├── /me/js                    # ME-specific data + orchestrator layer
+│   │   │   ├── me-capacity.js
+│   │   │   ├── me-data.js
+│   │   │   └── me-data-relational.js
+│   │   ├── /production/js            # Production capacity files
+│   │   │   ├── prod-capacity.js
+│   │   │   ├── prod-capacity-dashboard.js
+│   │   │   ├── prod-capacity-data.js
+│   │   │   ├── prod-capacity-detail.js
+│   │   │   ├── prod-capacity-settings.js
+│   │   │   ├── prod-capacity-workarea.js
+│   │   │   └── work-areas-data.js
 │   │   ├── /project-management/js    # PM isolated data layer
 │   │   │   ├── pm-data.js
-│   │   │   └── pm-data-relational.js
+│   │   │   ├── pm-data-relational.js
+│   │   │   ├── pm-capacity-data.js
+│   │   │   └── pm-capacity.js
 │   │   ├── /logistics/js             # Logistics isolated data layer
 │   │   │   ├── log-capacity.js
 │   │   │   ├── log-data.js
@@ -528,4 +533,3 @@ action-centre.css → mcs.css → settings.css → feedback.css
 4. **Avoid common mistakes** — duplicate `const`, wrong load order, missing RLS, subscription leaks
 5. **Write tests** — see TESTING_STRATEGY.md for patterns and guidelines
 6. **Update CHANGELOG.md** — add a 2-line entry for every logical change you make
-

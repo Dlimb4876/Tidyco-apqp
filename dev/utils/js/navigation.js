@@ -161,6 +161,9 @@ function navigate(sec, { pushHash = true } = {}) {
     if (typeof meDataUnsubscribe === 'function') meDataUnsubscribe();
     if (typeof prodCapUnsubscribeUtilization === 'function') prodCapUnsubscribeUtilization();
     if (typeof workAreasDataUnsubscribe === 'function') workAreasDataUnsubscribe();
+    if (typeof logDataUnsubscribe === 'function') logDataUnsubscribe();
+    if (typeof pmDataUnsubscribe === 'function') pmDataUnsubscribe();
+    if (typeof unit6DataUnsubscribe === 'function') unit6DataUnsubscribe();
   }
 
   // Clean up MCS subscriptions when leaving MCS
@@ -499,7 +502,10 @@ function render() {
   }
   if (currentSection === 'hub') { mc.innerHTML = renderHub(); hubInit(); return; }
 
-  if (!prog()) { mc.innerHTML = npi.dashboard.renderProjects(); return; }
+  // Allow missing project only when coming from URL hash (project may not be loaded yet)
+  const hasHashProject = typeof window !== 'undefined' && window.location &&
+    window.location.hash.includes('p=') && progId;
+  if (!prog() && !hasHashProject) { mc.innerHTML = npi.dashboard.renderProjects(); return; }
 
   if (currentSection === 'project' || currentSection.startsWith('gate_')) {
     mc.innerHTML = typeof npi?.render === 'function'

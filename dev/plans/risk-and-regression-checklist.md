@@ -21,39 +21,34 @@ Use this checklist before merging any non-trivial frontend or data-flow change.
 - [ ] Event delegation roots are stable and idempotent
 - [ ] Dangerous innerHTML usage is reviewed for escaped interpolation
 
-## 4. Capacity parity safety (ME/PM)
-- [ ] Any ME capacity behavior change is mirrored for PM unless explicitly excluded
-- [ ] Shared capacity event handling still supports both contexts
-- [ ] PM tab defaults and URL params still restore correctly
-
-## 5. Realtime and cleanup safety
+## 4. Realtime and cleanup safety
 - [ ] New subscriptions have explicit cleanup path
 - [ ] Leaving section unsubscribes listeners
 - [ ] No duplicate subscriptions after repeated navigation
 
-## 6. Tender gate scope safety
+## 5. Tender gate scope safety
 - [ ] gate_selections normalization handles invalid indices safely
 - [ ] Legacy projects without selections still show full gate checklist
 - [ ] Locked selection prevents edits in normal flow
 - [ ] Progress/sign-off counts are based on visible selected items
 
-## 7. Permissions safety
+## 6. Permissions safety
 - [ ] New sections define canView/canEdit behavior
 - [ ] Unauthorized access is blocked in navigation/render path
 - [ ] Admin behavior remains full-access
 
-## 8. UX contract safety
+## 7. UX contract safety
 - [ ] Keyboard shortcut modal only lists working shortcuts
 - [ ] Mobile and desktop layouts verified for touched screens
 - [ ] Empty states remain actionable and understandable
 
-## 9. Testing and quality gates
+## 8. Testing and quality gates
 - [ ] Added/updated focused tests for touched modules
 - [ ] npm test passes
 - [ ] npm run check:all passes
 - [ ] Manual smoke test done for affected portals
 
-## 10. Documentation and traceability
+## 9. Documentation and traceability
 - [ ] CHANGELOG entry added for logical change
 - [ ] README or strategy docs updated when behavior contract changes
 - [ ] README.md and TESTING_STRATEGY.md are both updated when affected by the change
@@ -71,5 +66,4 @@ If any of these occur, do not merge:
 - check:all failures
 - broken route rendering
 - unescaped user HTML in changed files
-- ME/PM parity drift for capacity behavior
 - shortcut modal advertising non-working shortcuts

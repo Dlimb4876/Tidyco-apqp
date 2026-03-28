@@ -28,6 +28,10 @@ function walkDir(dir, exclude = ['node_modules', '.git', 'tests']) {
   return files;
 }
 
+function normalizePath(filePath) {
+  return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '')
+}
+
 function extractStateVariables(content) {
   const vars = new Map();
 
@@ -107,10 +111,11 @@ function findStateUsages(jsFiles, stateVars) {
 
 function main() {
   const jsFiles = walkDir('.');
-  const filesToCheck = jsFiles.filter(f =>
-    (f.startsWith('./portals/') || f.startsWith('./core/') || f.startsWith('./utils/')) &&
+  const filesToCheck = jsFiles.filter(f => {
+    const normalized = normalizePath(f)
+    return (normalized.startsWith('portals/') || normalized.startsWith('core/') || normalized.startsWith('utils/')) &&
     !f.includes('test')
-  );
+  })
 
   console.log(`\n🗂️  State Variable Tracker\n${'═'.repeat(40)}\n`);
 

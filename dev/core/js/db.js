@@ -466,11 +466,13 @@ function importJSON(e) {
       } else { showToast('Invalid file', 'error'); }
     } catch (x) { showToast('Invalid JSON', 'error'); }
   };
+  r.onerror = () => { showToast('Could not read file', 'error'); };
   r.readAsText(f);
   e.target.value = '';
 }
 
 // ── Project selector ────────────────────────────────────────
+// Only sets a default project if none is already selected (e.g., from URL hash)
 function initProgSelect() {
   if (!progId && db.projects.length) progId = db.projects[0].id;
 }
@@ -636,6 +638,7 @@ async function teamsDataLoadAll() {
     return data || [];
   } catch (err) {
     console.error('Failed to load teams:', err);
+    if (typeof showToast === 'function') showToast('Could not load teams', 'error');
     return [];
   }
 }
@@ -690,6 +693,7 @@ async function teamsDataAdd(team) {
     return data?.[0] || null;
   } catch (err) {
     console.error('Failed to create team:', err);
+    if (typeof showToast === 'function') showToast('Could not create team', 'error');
     return null;
   }
 }
@@ -709,6 +713,7 @@ async function teamsDataUpdate(teamId, updates) {
     return true;
   } catch (err) {
     console.error('Failed to update team:', err);
+    if (typeof showToast === 'function') showToast('Could not update team', 'error');
     return false;
   }
 }
@@ -724,6 +729,7 @@ async function teamsDataDelete(teamId) {
     return true;
   } catch (err) {
     console.error('Failed to delete team:', err);
+    if (typeof showToast === 'function') showToast('Could not delete team', 'error');
     return false;
   }
 }
@@ -754,6 +760,7 @@ async function teamPermissionsDataSave(teamId, permissions) {
     return true;
   } catch (err) {
     console.error('Failed to save team permissions:', err);
+    if (typeof showToast === 'function') showToast('Could not save team permissions', 'error');
     return false;
   }
 }
@@ -763,3 +770,32 @@ window.broadcastPresence    = broadcastPresence;
 window.stopPresenceBroadcast = stopPresenceBroadcast;
 window.getPresenceForProg   = getPresenceForProg;
 window._getPresenceInitials = _getPresenceInitials;
+
+// ── Load specific project by ID ─────────────────────────────
+// Fetches a single project from Supabase when not in paginated memory
+async function loadProjectById(projectId) {
+  if (!projectId || !currentUser) return null
+  if (db.projects.find(p => p.id === projectId)) return db.projects.find(p => p.id === projectId)
+  
+  try {
+    const { data, error } = await supa
+      .from('projects')
+      .select(projectsGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
+      .eq('prog_id', projectId)
+      .single()
+    
+    if (error) {
+      console.error('Failed to load project by ID:', error)
+      return null
+    }
+    
+    if (data) {
+      const project = migrateprog(rowToProject(data))
+      db.projects.push(project)
+      return project
+    }
+  } catch (err) {
+    console.error('Error loading project:', err)
+  }
+  return null
+}

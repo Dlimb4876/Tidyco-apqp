@@ -26,6 +26,10 @@ function mcsShowViewModal(change) {
     : '<span class="mcs-impact-none">No impact areas selected</span>';
 
   const extendedJustification = mcsParseExtendedJustification(change.justification || '');
+  const stage3ProgressMap = change.impact_progress && typeof change.impact_progress === 'object'
+    ? change.impact_progress
+    : (extendedJustification.impactProgress || {});
+  const stage3ChecklistHtml = mcsBuildStage3ImpactChecklistHtml(change.impacts || [], stage3ProgressMap);
 
   const timelineHtml = mcsRenderTimelineHtml(change.timeline || []);
   const approval1Notes = (change.eng_review_notes || '').startsWith('nominated_approver:') ? '' : (change.eng_review_notes || '');
@@ -123,7 +127,7 @@ function mcsShowViewModal(change) {
 
             <section class="mcs-stage-block" data-stage="implement">
               <div class="mcs-stage-title">Stage 3: Implement</div>
-              <div class="mcs-stage-subtitle">Implementation target and overhaul impact.</div>
+              <div class="mcs-stage-subtitle">Implementation target, impact checklist progress, and overhaul impact.</div>
               <div class="mcs-modal-grid">
                 <div class="mcs-field-group">
                   <div class="mcs-field-label">Target Implementation</div>
@@ -136,6 +140,7 @@ function mcsShowViewModal(change) {
                   </div>
                 </div>
               </div>
+              <div class="mcs-impact-progress-wrap">${stage3ChecklistHtml}</div>
             </section>
 
             <section class="mcs-stage-block" data-stage="approval2">

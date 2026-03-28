@@ -84,7 +84,15 @@ function handleMcsChangesUpdate(payload) {
     if (idx !== -1) {
       // Preserve client-side-only fields (impacts, timeline) that aren't in the DB row
       const existing = mcsList[idx];
-      mcsList[idx] = { ...newRecord, impacts: existing.impacts || [], timeline: existing.timeline || [] };
+      const parsedJustification = mcsParseExtendedJustification(newRecord.justification || '');
+      mcsList[idx] = {
+        ...newRecord,
+        impacts: existing.impacts || [],
+        impact_progress: newRecord.impact_progress && typeof newRecord.impact_progress === 'object'
+          ? newRecord.impact_progress
+          : (parsedJustification.impactProgress || existing.impact_progress || {}),
+        timeline: existing.timeline || []
+      };
 
       // Only refresh the open modal — don't auto-reopen a modal the user has closed.
       // mcsViewingId is cleared by mcsCloseModal, so a null here means no modal is open.

@@ -32,7 +32,6 @@ async function launchApp() {
   await loadRemotePage(0);
   if (db.projects.length === 0) load();
   subscribeProjectsGlobally();
-  initProgSelect();
 
   // Load Families data from database (dynamic family definitions)
   await familiesDataInit();
@@ -72,8 +71,12 @@ async function launchApp() {
   const h = parseHash();
   if (h.s) {
     npiTab = h.nft || 'all';
-    if (h.p && db.projects.find(p => p.id === h.p)) {
+    // Restore project from URL hash - trust the hash even if project not yet loaded
+    // (avoids falling back to random project when paginated data doesn't include it yet)
+    if (h.p) {
       progId = h.p;
+      // Fetch project if not in paginated data
+      if (!prog()) loadProjectById(h.p).then(p => { if (p) render(); });
     }
     if (h.t)   apqpTab               = h.t;
     if (h.ct)  capacityTab           = h.ct;
@@ -109,6 +112,9 @@ async function launchApp() {
   } else {
     navigate('hub', { pushHash: false });
   }
+
+  // Set default project only if no project was specified in URL hash
+  initProgSelect();
 
   // 1.11 Smart date inputs — init after page renders
   setTimeout(setupSmartDateInputs, 200);

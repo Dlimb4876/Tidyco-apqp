@@ -13,6 +13,20 @@ This document outlines the comprehensive testing strategy for the Tidyco APQP ap
 **Documentation Sync Rule:**
 - If a change affects behavior, workflow, or test status, update both `README.md` and `TESTING_STRATEGY.md` in the same logical change.
 
+### Quality Assurance Scripts
+
+This project includes several custom Node.js scripts in the `scripts/` directory to enforce code quality and architecture rules without needing full ESLint configuration for everything.
+
+```bash
+node scripts/syntax-validator.js             # Validates JS syntax across the codebase
+node scripts/subscription-cleanup-auditor.js # Checks for missing removeRealtimeSubscription calls
+node scripts/modal-state-auditor.js          # Ensures modals clear their state on close
+node scripts/state-variable-tracker.js       # Tracks state.js variables and undeclared globals
+node scripts/load-order-checker.js           # Verifies index.html script load order dependencies
+node scripts/test-coverage-reporter.js       # Generates Jest coverage summary with recommendations
+node scripts/rls-policy-checker.js           # Audits Supabase tables for RLS policy coverage
+```
+
 ---
 
 ## Test Framework
@@ -42,6 +56,30 @@ npm test -- tests/navigation.test.js
 npm test -- --coverage
 ```
 
+### Manual Browser Debug Run
+
+For a quick browser debug session without VS Code, start the local static server from the repo root:
+
+```bash
+start-debug-site.bat
+```
+
+That launcher starts the server and opens `http://localhost:8000/index.html` automatically.
+
+If you want both the main app and the standalone wiki open together, use:
+
+```bash
+start-debug-site-and-wiki.bat
+```
+
+Or run:
+
+```bash
+PowerShell -ExecutionPolicy Bypass -File .claude\serve.ps1
+```
+
+Then open `http://localhost:8000/index.html` and use the browser dev tools (`F12`) for debugging.
+
 ### Standalone Guide Wiki Validation
 
 The standalone guide wiki under `wiki/` is validated with lightweight static checks:
@@ -70,6 +108,7 @@ npm run wiki:check           # runs all three checks
 - Capacity modules (ME/PM/Production paths)
 - Capacity stream isolation across PM, Logistics, and Unit 6 data adapters, orchestrators, and relational save paths
 - Capacity product-support rendering and support-history persistence mapping, including logistics split support inputs and history-table display
+- Shared capacity chart, holiday, and product-load rendering paths, including stream-aware month navigation and the embedded heatmap mount
 - Product Development/NPI data and rendering paths
 - NPI PFD flowchart generation and persistence mapping
 - NPI gate signoff role-permission enforcement
@@ -82,10 +121,15 @@ npm run wiki:check           # runs all three checks
   - Product status -> linked NPI tender gate scope flow
   - Gate scope lock/unlock lifecycle with filtered gate rendering
   - Keyboard shortcut behavior parity with shortcuts modal
+  - End-to-end interactions across the newly modularized ME data layer
 
 **When writing new tests, prioritize cross-module regression protection before adding broad new feature suites.**
 
 For capacity split work, prefer per-stream mocks (`pmDataGet*`, `logDataGet*`, `unit6DataGet*`) over the old shared `meDataGet*` plus department filtering pattern. The isolated data-layer contract is now the behavior under test.
+
+For capacity bootstrap work, treat `index.html` as part of the regression surface: shared `cap-*` files now load before the stream-specific orchestrators, and `capacity.js` / `capacity-events.js` remain the last capacity scripts. For this kind of change, run `npm run check:load-order` plus focused capacity suites alongside any data-layer tests.
+
+For deleted capacity legacy files, do not keep tests coupled to removed `portals/capacity/me/js/me-*.js` artifacts just because older suites loaded them with `readFileSync` + `eval`. Point tests at the live shared `cap-*` files or rewrite them to assert the shared wrapper contracts instead.
 
 ---
 

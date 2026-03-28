@@ -14,11 +14,15 @@ function opsScheduleRefresh(key, refreshFn, delayMs = 120) {
 			console.warn('Operations refresh failed for', key, err && err.message ? err.message : err);
 		} finally {
 			if (currentSection === 'operations') {
-				if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
-					opsPendingRealTimeUpdate = true;
-				} else {
-					render();
-				}
+				requestRender('ops', {
+					trigger: 'realtime',
+					renderNow: function() {
+						if (typeof opsRefreshCurrentTab === 'function') opsRefreshCurrentTab();
+						else render();
+					},
+					isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
+					debounceMs: 0,
+				});
 			}
 		}
 	}, delayMs);

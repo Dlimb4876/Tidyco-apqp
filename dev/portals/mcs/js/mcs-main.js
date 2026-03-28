@@ -257,10 +257,17 @@ async function mcsLoadChanges() {
       impactsByChange[imp.change_id].push(imp.impact_type);
     });
 
-    mcsList = (data || []).map(change => ({
-      ...change,
-      impacts: impactsByChange[change.id] || []
-    }));
+    mcsList = (data || []).map(change => {
+      const parsedJustification = mcsParseExtendedJustification(change.justification || '');
+      const impactProgress = change.impact_progress && typeof change.impact_progress === 'object'
+        ? change.impact_progress
+        : (parsedJustification.impactProgress || {});
+      return {
+        ...change,
+        impacts: impactsByChange[change.id] || [],
+        impact_progress: impactProgress
+      };
+    });
   } catch (err) {
     console.error('MCS load error:', err);
     mcsList = [];
@@ -641,14 +648,16 @@ function mcsSetDateRange(value) {
  * KPI click: filter to Approval 1 (engineering review)
  */
 function mcsKpiFilterApproval1() {
-  mcsSetFilter('status', 'review', document.querySelector('[onclick*="mcsSetFilter(\'status\', \'review\'"]'));
+  const btn = document.querySelector('[onclick*="mcsSetFilter(\'status\', \'review\'"]')
+  mcsSetFilter('status', 'review', btn)
 }
 
 /**
  * KPI click: filter to Approval 2 (final review)
  */
 function mcsKpiFilterApproval2() {
-  mcsSetFilter('status', 'final_review', document.querySelector('[onclick*="mcsSetFilter(\'status\', \'final_review\'"]'));
+  const btn = document.querySelector('[onclick*="mcsSetFilter(\'status\', \'final_review\'"]')
+  mcsSetFilter('status', 'final_review', btn)
 }
 
 /**

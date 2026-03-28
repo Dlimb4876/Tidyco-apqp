@@ -33,61 +33,105 @@ describe('capacity events task search', () => {
   })
 
   beforeEach(() => {
+    jest.useFakeTimers()
     document.body.innerHTML = ''
-    window.meTasksFilters = { search: '' }
-    window.pmTasksFilters = { search: '' }
+    window.capTasksFilters = { ME: { search: '' }, PM: { search: '' }, LOG: { search: '' }, UNIT6: { search: '' } }
     global.meSetTab = jest.fn()
     global.pmSetTab = jest.fn()
+    global.logSetTab = jest.fn()
+    global.unit6SetTab = jest.fn()
+    global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
   })
 
-  test('cap-task-search keeps focus and caret after ME re-render', async () => {
+  afterEach(() => {
+    jest.runOnlyPendingTimers()
+    jest.useRealTimers()
+  })
+
+  test('cap-task-search updates ME filters without full tab re-render', () => {
+    // Setup DOM with a more complete tasks tab structure
     document.body.innerHTML = `
       <div data-cap-context="me">
+        <div class="me-kpi-strip"></div>
+        <div class="me-card-head"><span>TASKS</span><span class="hours">0 total hours</span></div>
+        <div class="me-tbl-wrap">
+          <table class="me-tbl"><tbody></tbody></table>
+        </div>
         <input type="text" data-cap-action="cap-task-search" value="">
       </div>
     `
 
-    global.meSetTab = jest.fn(() => {
-      document.body.innerHTML = `
-        <div data-cap-context="me">
-          <input type="text" data-cap-action="cap-task-search" value="${window.meTasksFilters.search}">
-        </div>
-      `
-    })
+    // Mock data getters
+    global.meDataGetTasks = jest.fn(() => [
+      { id: '1', name: 'Test Task 1', category: 'NPI', totalHours: 10 },
+      { id: '2', name: 'Another Task', category: 'Support', totalHours: 5 }
+    ])
+    global.meDataGetTeam = jest.fn(() => [])
+    global.meDataGetProducts = jest.fn(() => [])
+    global.meSetTab = jest.fn()
 
     const input = document.querySelector('[data-cap-action="cap-task-search"]')
-    input.value = 'abc'
+    input.value = 'Test'
     input.focus()
     input.setSelectionRange(2, 2)
 
     window.capacityEvents._onInput({ target: input })
 
-    expect(window.meTasksFilters.search).toBe('abc')
-    expect(global.meSetTab).toHaveBeenCalledWith('tasks')
+    expect(window.capTasksFilters.ME.search).toBe('Test')
+    // meSetTab should NOT be called for search operations (targeted refresh instead)
+    expect(global.meSetTab).not.toHaveBeenCalled()
 
-    await new Promise(resolve => setTimeout(resolve, 0))
+    jest.advanceTimersByTime(90)
+    jest.runOnlyPendingTimers()
 
-    const replacement = document.querySelector('[data-cap-action="cap-task-search"]')
-    expect(document.activeElement).toBe(replacement)
-    expect(replacement.selectionStart).toBe(2)
-    expect(replacement.selectionEnd).toBe(2)
+    // meSetTab should still NOT be called after debounce - targeted refresh is used
+    expect(global.meSetTab).not.toHaveBeenCalled()
+    
+    // Input should still be focused (preserved during targeted refresh)
+    const searchInput = document.querySelector('[data-cap-action="cap-task-search"]')
+    expect(searchInput.value).toBe('Test')
   })
 
-  test('cap-task-search updates PM filters and refreshes PM tasks tab', () => {
+  test('cap-task-search updates PM filters without full tab re-render', () => {
+    // Setup DOM with a more complete tasks tab structure
     document.body.innerHTML = `
       <div data-cap-context="pm">
+        <div class="me-kpi-strip"></div>
+        <div class="me-card-head"><span>TASKS</span><span class="hours">0 total hours</span></div>
+        <div class="me-tbl-wrap">
+          <table class="me-tbl"><tbody></tbody></table>
+        </div>
         <input type="text" data-cap-action="cap-task-search" value="">
       </div>
     `
+
+    // Mock data getters
+    global.pmDataGetTasks = jest.fn(() => [
+      { id: '1', name: 'PM Task 1', category: 'NPI', totalHours: 10 }
+    ])
+    global.pmDataGetTeam = jest.fn(() => [])
+    global.pmDataGetProducts = jest.fn(() => [])
+    global.pmSetTab = jest.fn()
 
     const input = document.querySelector('[data-cap-action="cap-task-search"]')
     input.value = 'gate'
 
     window.capacityEvents._onInput({ target: input })
 
-    expect(window.pmTasksFilters.search).toBe('gate')
-    expect(global.pmSetTab).toHaveBeenCalledWith('tasks')
+    expect(window.capTasksFilters.PM.search).toBe('gate')
+    // pmSetTab should NOT be called for search operations (targeted refresh instead)
+    expect(global.pmSetTab).not.toHaveBeenCalled()
+
+    jest.advanceTimersByTime(90)
+    jest.runOnlyPendingTimers()
+
+    // pmSetTab should still NOT be called after debounce - targeted refresh is used
+    expect(global.pmSetTab).not.toHaveBeenCalled()
     expect(global.meSetTab).not.toHaveBeenCalled()
+    
+    // Input should still have the search value
+    const searchInput = document.querySelector('[data-cap-action="cap-task-search"]')
+    expect(searchInput.value).toBe('gate')
   })
 })
 
@@ -108,60 +152,85 @@ describe('capacity events task disable toggle', () => {
     global.meSetTab = jest.fn()
     global.pmSetTab = jest.fn()
     global.logSetTab = jest.fn()
+    global.unit6SetTab = jest.fn()
+    global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
   })
 
   test('cap-task-toggle-disabled updates task and refreshes ME tasks tab', () => {
     document.body.innerHTML = `
       <div data-cap-context="me">
-        <div data-task-idx="1"><input type="checkbox" data-cap-action="cap-task-toggle-disabled"></div>
+        <div class="me-kpi-strip"></div>
+        <div class="me-tbl-wrap"><table class="me-tbl"><tbody></tbody></table></div>
+        <div data-task-id="task-me-1"><input type="checkbox" data-cap-action="cap-task-toggle-disabled"></div>
       </div>
     `
+
+    // Mock data getters for targeted refresh
+    global.meDataGetTasks = jest.fn(() => [])
+    global.meDataGetTeam = jest.fn(() => [])
+    global.meDataGetProducts = jest.fn(() => [])
 
     const input = document.querySelector('[data-cap-action="cap-task-toggle-disabled"]')
     input.checked = true
 
     window.capacityEvents._onChange({ target: input })
 
-    expect(global.meDataUpdateTask).toHaveBeenCalledWith(1, 'isDisabled', true)
+    expect(global.meDataUpdateTask).toHaveBeenCalledWith('task-me-1', 'isDisabled', true)
     expect(global.meDebouncedSave).toHaveBeenCalled()
-    expect(global.meSetTab).toHaveBeenCalledWith('tasks')
+    // meSetTab should NOT be called - targeted refresh is used instead
+    expect(global.meSetTab).not.toHaveBeenCalled()
     expect(global.pmDebouncedSave).not.toHaveBeenCalled()
   })
 
   test('cap-task-toggle-disabled uses PM save flow in PM context', () => {
     document.body.innerHTML = `
       <div data-cap-context="pm">
-        <div data-task-idx="2"><input type="checkbox" data-cap-action="cap-task-toggle-disabled"></div>
+        <div class="me-kpi-strip"></div>
+        <div class="me-tbl-wrap"><table class="me-tbl"><tbody></tbody></table></div>
+        <div data-task-id="task-pm-2"><input type="checkbox" data-cap-action="cap-task-toggle-disabled"></div>
       </div>
     `
+
+    // Mock data getters for targeted refresh
+    global.pmDataGetTasks = jest.fn(() => [])
+    global.pmDataGetTeam = jest.fn(() => [])
+    global.pmDataGetProducts = jest.fn(() => [])
 
     const input = document.querySelector('[data-cap-action="cap-task-toggle-disabled"]')
     input.checked = false
 
     window.capacityEvents._onChange({ target: input })
 
-    expect(global.pmDataUpdateTask).toHaveBeenCalledWith(2, 'isDisabled', false)
+    expect(global.pmDataUpdateTask).toHaveBeenCalledWith('task-pm-2', 'isDisabled', false)
     expect(global.pmDebouncedSave).toHaveBeenCalled()
-    expect(global.pmSetTab).toHaveBeenCalledWith('tasks')
+    // pmSetTab should NOT be called - targeted refresh is used instead
+    expect(global.pmSetTab).not.toHaveBeenCalled()
     expect(global.meDataUpdateTask).not.toHaveBeenCalled()
   })
 
   test('cap-task-toggle-disabled uses Logistics save flow in LOG context', () => {
     document.body.innerHTML = `
       <div data-cap-context="log">
-        <div data-task-idx="3"><input type="checkbox" data-cap-action="cap-task-toggle-disabled"></div>
+        <div class="me-kpi-strip"></div>
+        <div class="me-tbl-wrap"><table class="me-tbl"><tbody></tbody></table></div>
+        <div data-task-id="task-log-3"><input type="checkbox" data-cap-action="cap-task-toggle-disabled"></div>
       </div>
     `
+
+    // Mock data getters for targeted refresh
+    global.logDataGetTasks = jest.fn(() => [])
+    global.logDataGetTeam = jest.fn(() => [])
+    global.logDataGetProducts = jest.fn(() => [])
 
     const input = document.querySelector('[data-cap-action="cap-task-toggle-disabled"]')
     input.checked = true
 
     window.capacityEvents._onChange({ target: input })
 
-    expect(global.logDataUpdateTask).toHaveBeenCalledWith(3, 'isDisabled', true)
+    expect(global.logDataUpdateTask).toHaveBeenCalledWith('task-log-3', 'isDisabled', true)
     expect(global.logDebouncedSave).toHaveBeenCalled()
-    expect(global.logSetTab).toHaveBeenCalledWith('tasks')
-    expect(global.meDataUpdateTask).not.toHaveBeenCalled()
+    // logSetTab should NOT be called - targeted refresh is used instead
+    expect(global.logSetTab).not.toHaveBeenCalled()
   })
 })
 
@@ -449,5 +518,107 @@ describe('capacity events product support history routing', () => {
     expect(global.unit6RefreshCurrentTab).toHaveBeenCalled()
     expect(global.unit6DebouncedSave).toHaveBeenCalled()
     expect(global.meDataDeleteProductSupportHistoryEntry).not.toHaveBeenCalled()
+  })
+})
+
+describe('capacity events month routing', () => {
+  beforeAll(() => {
+    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
+    eval(script)
+  })
+
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    global.meOnPrevMonth = jest.fn()
+    global.pmOnPrevMonth = jest.fn()
+    global.logOnMonthChange = jest.fn()
+    global.unit6OnNextMonth = jest.fn()
+  })
+
+  test('routes prev-month clicks to the active PM stream', () => {
+    document.body.innerHTML = '<div data-cap-context="pm"><button data-cap-action="cap-me-prev-month">Prev</button></div>'
+    const button = document.querySelector('[data-cap-action="cap-me-prev-month"]')
+
+    window.capacityEvents._onClick({ target: button })
+
+    expect(global.pmOnPrevMonth).toHaveBeenCalled()
+    expect(global.meOnPrevMonth).not.toHaveBeenCalled()
+  })
+
+  test('routes month input changes to the active Logistics stream', () => {
+    document.body.innerHTML = '<div data-cap-context="log"><input data-cap-action="cap-me-month-change" value="2026-04"></div>'
+    const input = document.querySelector('[data-cap-action="cap-me-month-change"]')
+
+    window.capacityEvents._onChange({ target: input })
+
+    expect(global.logOnMonthChange).toHaveBeenCalledWith('2026-04')
+  })
+
+  test('routes next-month clicks to the active Unit 6 stream', () => {
+    document.body.innerHTML = '<div data-cap-context="unit6"><button data-cap-action="cap-me-next-month">Next</button></div>'
+    const button = document.querySelector('[data-cap-action="cap-me-next-month"]')
+
+    window.capacityEvents._onClick({ target: button })
+
+    expect(global.unit6OnNextMonth).toHaveBeenCalled()
+  })
+})
+
+describe('capacity events task edit safety with filtered views', () => {
+  beforeAll(() => {
+    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
+    eval(script)
+  })
+
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    window.capTaskEditingId = { ME: null, PM: null, LOG: null, UNIT6: null }
+    global.meDataUpdateTask = jest.fn()
+    global.meOnSave = jest.fn()
+    global.meDataGetTasks = jest.fn(() => [])
+    global.meDataGetTeam = jest.fn(() => [])
+    global.meDataGetProducts = jest.fn(() => [])
+    global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  })
+
+  test('cap-task-save-edit updates the active editing task id even when another row is present', () => {
+    document.body.innerHTML = `
+      <div data-cap-context="me">
+        <div class="me-kpi-strip"></div>
+        <div class="me-card-head"><span>TASKS</span><span class="hours">0 total hours</span></div>
+        <div class="me-tbl-wrap">
+          <table class="me-tbl">
+            <tbody>
+              <tr data-task-id="task-target">
+                <td><input data-task-field="name" value="Correct Task Name"></td>
+                <td><select data-task-field="category"><option value="NPI" selected>NPI</option></select></td>
+                <td><select data-task-field="assigneeId"><option value="" selected>Unassigned</option></select></td>
+                <td><select data-task-field="productId"><option value="" selected>None</option></select></td>
+                <td><input data-task-field="startDate" value="2026-03-01"></td>
+                <td><input data-task-field="endDate" value="2026-03-02"></td>
+                <td><select data-task-field="status"><option value="SCHEDULED" selected>Scheduled</option></select></td>
+                <td><input type="checkbox" data-task-field="isDisabled"></td>
+                <td><input data-task-field="totalHours" value="12"></td>
+                <td><button data-cap-action="cap-task-save-edit" data-task-id="task-target">✓</button></td>
+              </tr>
+              <tr data-task-id="task-other">
+                <td><input data-task-field="name" value="Wrong Task Name"></td>
+                <td><button data-cap-action="cap-task-save-edit" data-task-id="task-other">✓</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+
+    window.capTaskEditingId.ME = 'task-target'
+
+    const wrongButton = document.querySelector('tr[data-task-id="task-other"] [data-cap-action="cap-task-save-edit"]')
+    window.capacityEvents._onClick({ target: wrongButton })
+
+    expect(global.meDataUpdateTask).toHaveBeenCalledWith('task-target', 'name', 'Correct Task Name')
+    expect(global.meDataUpdateTask).not.toHaveBeenCalledWith('task-other', 'name', expect.anything())
+    expect(window.capTaskEditingId.ME).toBe(null)
+    expect(global.meOnSave).toHaveBeenCalled()
   })
 })

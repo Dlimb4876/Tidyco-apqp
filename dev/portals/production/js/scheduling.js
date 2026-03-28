@@ -245,7 +245,7 @@ function renderScheduling() {
             ${prodSchedulingHideComplete ? '✓ Hide Complete' : '○ Show All'}
           </button>
           <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-scheduling" title="User Guide">❓ Guide</button>
-          <button class="btn btn-primary" id="add-batch-button">➕ Add Batch</button>
+          <button class="btn btn-primary" data-action="focus-new-batch">➕ Add Batch</button>
           <button class="btn btn-ghost" id="back-to-prod-hub">← Back</button>
         </div>
       </div>
@@ -338,7 +338,7 @@ function renderScheduling() {
         <tbody id="prod-sched-tbody">
           ${dataRows || `<tr><td colspan="10" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No batches scheduled yet.</div>
-            <button class="btn btn-primary btn-sm" onclick="focusBatchNewRow()">＋ Schedule First Batch</button>
+            <button class="btn btn-primary btn-sm" data-action="focus-new-batch">＋ Schedule First Batch</button>
           </td></tr>`}
         </tbody>
       </table>
@@ -351,7 +351,9 @@ function renderScheduling() {
     activeBatches.forEach(addSchedulingRowEventListeners);
 
     document.getElementById('toggle-hide-complete')?.addEventListener('click', toggleHideCompleteBatches);
-    document.getElementById('add-batch-button')?.addEventListener('click', focusBatchNewRow);
+    document.querySelectorAll('[data-action="focus-new-batch"]').forEach(button => {
+      button.addEventListener('click', focusBatchNewRow);
+    });
     document.getElementById('back-to-prod-hub')?.addEventListener('click', () => setProductionTab('root'));
 
     document.getElementById('family-filter')?.addEventListener('change', (e) => {

@@ -1,5 +1,7 @@
 # Plan: Full Capacity Department Split
 
+> **COMPLETED** — This plan has been implemented. See `plans/capacity-independence.md` for the current architecture and any remaining cleanup work.
+
 ## Context
 
 All four capacity streams (ME, PM, Logistics, Unit 6) currently share five Supabase tables (`me_teams`, `me_tasks`, `me_products`, `me_holidays`, `me_product_support_history`). Rows are distinguished only by a `department` column. Two save routines use a **delete-all-by-user-then-reinsert** pattern with no department filter:

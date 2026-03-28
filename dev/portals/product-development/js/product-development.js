@@ -210,26 +210,11 @@ function setupProductDevelopmentPortalDelegation() {
 }
 
 function renderPartsDatabase() {
-  const loadingMsg = '<div style="padding:20px;text-align:center;color:var(--muted)">Loading catalogue...</div>';
-  const catalogueHTML = (typeof npi !== 'undefined' && npi.bom && npi.bom.renderABCCatalogue)
-    ? (npi.bom.renderABCCatalogue() || loadingMsg)
-    : loadingMsg;
+  if (typeof partsDatabase !== 'undefined' && partsDatabase && typeof partsDatabase.renderPortal === 'function') {
+    return partsDatabase.renderPortal();
+  }
 
-  return `
-    <div class="proj-home">
-      <div class="proj-home-header">
-        <div>
-          <div class="proj-home-title">Parts Database</div>
-          <div class="proj-home-sub">A, B & C-Class central parts catalogue</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="parts-database" title="User Guide">❓ Guide</button>
-          <button class="btn btn-ghost" data-action="pd-nav-root">← Back</button>
-        </div>
-      </div>
-      ${catalogueHTML}
-    </div>
-  `;
+  return '<div style="padding:20px;text-align:center;color:var(--muted)">Loading parts database...</div>';
 }
 
 function renderProductFamilyDatabase() {

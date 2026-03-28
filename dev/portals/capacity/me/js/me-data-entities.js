@@ -1,0 +1,493 @@
+/* ============================================================
+   me-data-entities.js — ME Capacity Entity CRUD
+   Team, task, product, holiday, and department autosync helpers
+   ============================================================ */
+
+// ─────────────────────────────────────────────────────────────
+// TEAM CRUD
+// ─────────────────────────────────────────────────────────────
+
+window.meDataAddTeam = function(name, hoursPerWeek, utilisation, startDate, endDate, department) {
+  if (!name || name.trim().length === 0) return false;
+  const member = {
+    id: meUUID(),
+    name: name.trim(),
+    hoursPerWeek: meGetHoursPerWeek(hoursPerWeek),
+    utilisation: parseFloat(utilisation) || 80,
+    jobTitle: '',
+    group: '',
+    department: meNormalizeDepartmentTag(department, 'ME'),
+    startDate: startDate || '',
+    endDate: endDate || ''
+  };
+  meDataState.team.push(member);
+  return true;
+};
+
+window.meDataUpdateTeam = function(idx, field, value) {
+  if (idx < 0 || idx >= meDataState.team.length) return false;
+  const member = meDataState.team[idx];
+  switch (field) {
+    case 'name':
+      member.name = value.trim();
+      break;
+    case 'hoursPerWeek':
+      member.hoursPerWeek = meGetHoursPerWeek(value);
+      break;
+    case 'utilisation':
+      member.utilisation = parseFloat(value) || 80;
+      break;
+    case 'jobTitle':
+      member.jobTitle = value ? value.trim() : '';
+      break;
+    case 'group':
+      member.group = value ? value.trim() : '';
+      break;
+    case 'department':
+      member.department = meNormalizeDepartmentTag(value, 'ME');
+      break;
+    case 'startDate':
+      member.startDate = value || '';
+      break;
+    case 'endDate':
+      member.endDate = value || '';
+      break;
+    default:
+      return false;
+  }
+  return true;
+};
+
+window.meDataDeleteTeam = function(idx) {
+  if (idx < 0 || idx >= meDataState.team.length) return false;
+  const removed = meDataState.team[idx];
+  meDataState.team.splice(idx, 1);
+  if (removed && removed.id) {
+    // Fire an immediate DB delete so it is committed even if the
+    // user refreshes before the full save cycle reaches step 3-C.
+    if (typeof meDeleteTeamRelational === 'function') {
+      meDeleteTeamRelational(removed.id).catch(function(err) {
+        console.warn('[ME] Immediate team delete failed, queued for retry on save:', err.message);
+      });
+    }
+    const pendingTeams = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.teams)
+      ? window.meDataPendingDeletes.teams
+      : [];
+    if (!pendingTeams.includes(removed.id)) pendingTeams.push(removed.id);
+    window.meDataPendingDeletes = Object.assign({}, window.meDataPendingDeletes || {}, { teams: pendingTeams });
+  }
+  return true;
+};
+
+window.meDataGetTeam = function() {
+  return meDataState.team;
+};
+
+// ─────────────────────────────────────────────────────────────
+// TASK CRUD
+// ─────────────────────────────────────────────────────────────
+
+window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, totalHours, productId, department) {
+  if (!name || name.trim().length === 0) return false;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const task = {
+    id: meUUID(),
+    name: name.trim(),
+    category: category || 'NPI',
+    type: 'standard',
+    department: meNormalizeDepartmentTag(department, 'ME'),
+    assigneeId: assigneeId || '',
+    productId: productId || '',
+    startDate: startDate || todayStr,
+    endDate: endDate || todayStr,
+    totalHours: parseFloat(totalHours) || 0,
+    status: 'SCHEDULED',
+    isDisabled: false,
+    createdAt: new Date().toISOString()
+  };
+  meDataState.tasks.push(task);
+  return true;
+};
+
+window.meDataUpdateTask = function(taskId, field, value) {
+  const task = meDataState.tasks.find(t => t.id === taskId);
+  if (!task) return false;
+  switch (field) {
+    case 'name':
+      task.name = value.trim();
+      break;
+    case 'category':
+      task.category = value || 'NPI';
+      break;
+    case 'department':
+      task.department = meNormalizeDepartmentTag(value, 'ME');
+      break;
+    case 'assigneeId':
+      task.assigneeId = value || '';
+      break;
+    case 'productId':
+      task.productId = value || '';
+      break;
+    case 'startDate':
+      task.startDate = value;
+      break;
+    case 'endDate':
+      task.endDate = value;
+      break;
+    case 'totalHours':
+      task.totalHours = parseFloat(value) || 0;
+      break;
+    case 'status':
+      task.status = value || 'SCHEDULED';
+      break;
+    case 'isDisabled':
+      task.isDisabled = value === true || value === 'true';
+      break;
+    default:
+      return false;
+  }
+  return true;
+};
+
+window.meDataDeleteTask = function(taskId) {
+  const idx = meDataState.tasks.findIndex(t => t.id === taskId);
+  if (idx < 0) return false;
+  const removedTask = meDataState.tasks[idx];
+  meDataState.tasks.splice(idx, 1);
+  if (removedTask && removedTask.id) {
+    const pending = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.tasks)
+      ? window.meDataPendingDeletes.tasks
+      : [];
+    if (!pending.includes(removedTask.id)) {
+      pending.push(removedTask.id);
+    }
+    window.meDataPendingDeletes = Object.assign({}, window.meDataPendingDeletes || {}, { tasks: pending });
+  }
+  return true;
+};
+
+window.meDataGetTasks = function() {
+  return meDataState.tasks;
+};
+
+// ─────────────────────────────────────────────────────────────
+// PRODUCT CRUD
+// ─────────────────────────────────────────────────────────────
+
+window.meDataAddProduct = function(name, hoursPerWeek, notes, productDatabaseId, department) {
+  if (!name || name.trim().length === 0) return false;
+  const breakdown = meNormalizeProductSupportBreakdown({ hoursPerWeek }, hoursPerWeek);
+  const product = {
+    id: meUUID(),
+    name: name.trim(),
+    department: meNormalizeDepartmentTag(department, 'ME'),
+    hoursPerWeek: breakdown.hoursPerWeek,
+    kittingHours: breakdown.kittingHours,
+    bookingInOutHours: breakdown.bookingInOutHours || 0,
+    kittingTimeBookingHours: breakdown.kittingHours,
+    productMovementHours: breakdown.productMovementHours || 0,
+    notes: notes ? notes.trim() : '',
+    productDatabaseId: productDatabaseId || '',
+    createdAt: new Date().toISOString()
+  };
+  meDataState.products.push(product);
+  meEnsureProductSupportHistoryBaseline(product);
+  return true;
+};
+
+window.meDataUpdateProduct = function(idx, field, value, metadata) {
+  if (idx < 0 || idx >= meDataState.products.length) return false;
+  const product = meDataState.products[idx];
+  switch (field) {
+    case 'name':
+      product.name = value.trim();
+      break;
+    case 'hoursPerWeek':
+      {
+        const breakdown = meNormalizeProductSupportBreakdown({
+          hoursPerWeek: value,
+          kittingHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'kittingHours')
+            ? metadata.kittingHours
+            : undefined,
+          kittingTimeBookingHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'kittingTimeBookingHours')
+            ? metadata.kittingTimeBookingHours
+            : undefined,
+          bookingInOutHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'bookingInOutHours')
+            ? metadata.bookingInOutHours
+            : undefined,
+          productMovementHours: metadata && Object.prototype.hasOwnProperty.call(metadata, 'productMovementHours')
+            ? metadata.productMovementHours
+            : undefined
+        }, value);
+        product.hoursPerWeek = breakdown.hoursPerWeek;
+        product.kittingHours = breakdown.kittingHours;
+        product.bookingInOutHours = breakdown.bookingInOutHours;
+        product.kittingTimeBookingHours = breakdown.kittingHours;
+        product.productMovementHours = breakdown.productMovementHours;
+
+        if (typeof window.meDataAddProductSupportHistory === 'function') {
+          const effectiveDate = metadata && metadata.effectiveDate
+            ? metadata.effectiveDate
+            : meNormalizeDateOnly(new Date());
+          window.meDataAddProductSupportHistory(
+            product.id,
+            product.hoursPerWeek,
+            effectiveDate,
+            metadata && metadata.changeReason ? metadata.changeReason : '',
+            metadata && metadata.notes ? metadata.notes : '',
+            product.department,
+            product.kittingHours,
+            product.bookingInOutHours,
+            product.productMovementHours
+          );
+        }
+        product.supportEffectiveDate = metadata && metadata.effectiveDate
+          ? meNormalizeDateOnly(metadata.effectiveDate)
+          : (product.supportEffectiveDate || meNormalizeDateOnly(new Date()));
+      }
+      break;
+    case 'kittingTimeBookingHours':
+    case 'kittingHours':
+      {
+        const breakdown = meNormalizeProductSupportBreakdown({
+          kittingHours: value,
+          bookingInOutHours: product.bookingInOutHours,
+          productMovementHours: product.productMovementHours
+        }, product.hoursPerWeek);
+        product.hoursPerWeek = breakdown.hoursPerWeek;
+        product.kittingHours = breakdown.kittingHours;
+        product.bookingInOutHours = breakdown.bookingInOutHours;
+        product.kittingTimeBookingHours = breakdown.kittingHours;
+        product.productMovementHours = breakdown.productMovementHours;
+      }
+      break;
+    case 'bookingInOutHours':
+      {
+        const breakdown = meNormalizeProductSupportBreakdown({
+          kittingHours: product.kittingHours,
+          bookingInOutHours: value,
+          productMovementHours: product.productMovementHours
+        }, product.hoursPerWeek);
+        product.hoursPerWeek = breakdown.hoursPerWeek;
+        product.kittingHours = breakdown.kittingHours;
+        product.bookingInOutHours = breakdown.bookingInOutHours;
+        product.kittingTimeBookingHours = breakdown.kittingHours;
+        product.productMovementHours = breakdown.productMovementHours;
+      }
+      break;
+    case 'productMovementHours':
+      {
+        const breakdown = meNormalizeProductSupportBreakdown({
+          kittingHours: product.kittingHours,
+          bookingInOutHours: product.bookingInOutHours,
+          productMovementHours: value
+        }, product.hoursPerWeek);
+        product.hoursPerWeek = breakdown.hoursPerWeek;
+        product.kittingHours = breakdown.kittingHours;
+        product.bookingInOutHours = breakdown.bookingInOutHours;
+        product.kittingTimeBookingHours = breakdown.kittingHours;
+        product.productMovementHours = breakdown.productMovementHours;
+      }
+      break;
+    case 'supportEffectiveDate':
+      product.supportEffectiveDate = meNormalizeDateOnly(value) || product.supportEffectiveDate || '';
+      break;
+    case 'notes':
+      product.notes = value ? value.trim() : '';
+      break;
+    case 'department':
+      product.department = meNormalizeDepartmentTag(value, 'ME');
+      break;
+    default:
+      return false;
+  }
+  return true;
+};
+
+window.meDataDeleteProduct = function(idx) {
+  if (idx < 0 || idx >= meDataState.products.length) return false;
+  const removed = meDataState.products[idx];
+  meDataState.products.splice(idx, 1);
+  if (removed && removed.id) {
+    const pending = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.products)
+      ? window.meDataPendingDeletes.products
+      : [];
+    if (!pending.includes(removed.id)) pending.push(removed.id);
+    window.meDataPendingDeletes = Object.assign({}, window.meDataPendingDeletes || {}, { products: pending });
+  }
+  return true;
+};
+
+window.meDataGetProducts = function() {
+  return meDataState.products;
+};
+
+function meDataAutoSyncDepartmentProducts(department) {
+  if (!productsState || !productsState.products) {
+    return false;
+  }
+
+  let changed = false;
+
+  const targetDepartment = meNormalizeDepartmentTag(department, 'ME');
+  const dbProducts = Array.isArray(productsState.products) ? productsState.products : [];
+
+  const dbMap = {};
+  const dbNameSet = new Set();
+  dbProducts.forEach(p => {
+    if (p && p.id) dbMap[p.id] = p;
+    const normalizedName = (p && p.name ? String(p.name) : '').trim().toLowerCase();
+    if (normalizedName) dbNameSet.add(normalizedName);
+  });
+
+  const existingByDbId = new Map(
+    meDataState.products
+      .filter(meP => meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment && meP.productDatabaseId)
+      .map(meP => [meP.productDatabaseId, meP])
+  );
+  const sourceByDbId = new Map(
+    meDataState.products
+      .filter(meP => meP && meP.productDatabaseId)
+      .map(meP => [meP.productDatabaseId, meP])
+  );
+
+  dbProducts.forEach(dbProduct => {
+    const existing = existingByDbId.get(dbProduct.id);
+    const sourceProduct = sourceByDbId.get(dbProduct.id) || null;
+
+    if (existing) {
+      const newNotes = dbProduct.notes || '';
+      const newId = (sourceProduct && sourceProduct.id) ? sourceProduct.id : existing.id;
+      if (
+        existing.name !== dbProduct.name ||
+        existing.notes !== newNotes ||
+        existing.department !== targetDepartment ||
+        existing.id !== newId
+      ) {
+        existing.name = dbProduct.name;
+        existing.notes = newNotes;
+        existing.department = targetDepartment;
+        if (sourceProduct && sourceProduct.id) existing.id = sourceProduct.id;
+        changed = true;
+      }
+      meApplyLatestSupportHistoryToProduct(existing, targetDepartment);
+    } else {
+      const seedBreakdown = meNormalizeProductSupportBreakdown(sourceProduct || { hoursPerWeek: 0 }, sourceProduct && sourceProduct.hoursPerWeek);
+
+      meDataAddProduct(dbProduct.name, seedBreakdown.hoursPerWeek, dbProduct.notes || '', dbProduct.id, targetDepartment);
+
+      const createdProduct = meDataState.products[meDataState.products.length - 1];
+      if (createdProduct) {
+        createdProduct.notes = dbProduct.notes || '';
+        createdProduct.department = targetDepartment;
+        if (sourceProduct && sourceProduct.id) createdProduct.id = sourceProduct.id;
+        meApplyLatestSupportHistoryToProduct(createdProduct, targetDepartment);
+      }
+      changed = true;
+    }
+  });
+
+  const countBefore = meDataState.products.filter(
+    meP => meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment
+  ).length;
+
+  const seenDbIds = new Set();
+  const seenNames = new Set();
+  meDataState.products = meDataState.products.filter(meP => {
+    if (meNormalizeDepartmentTag(meP.department, targetDepartment) !== targetDepartment) {
+      return true;
+    }
+
+    if (!meP.productDatabaseId) {
+      const manualName = (meP.name || '').trim().toLowerCase();
+      if (manualName && dbNameSet.has(manualName)) return false;
+      if (seenNames.has(manualName)) return false;
+      seenNames.add(manualName);
+      return true;
+    }
+
+    if (seenDbIds.has(meP.productDatabaseId)) {
+      return false;
+    }
+    seenDbIds.add(meP.productDatabaseId);
+    return dbMap[meP.productDatabaseId] !== undefined;
+  });
+
+  const countAfter = meDataState.products.filter(
+    meP => meNormalizeDepartmentTag(meP.department, targetDepartment) === targetDepartment
+  ).length;
+
+  if (countAfter !== countBefore) changed = true;
+
+  return changed;
+}
+
+window.meDataAutoSyncProductionProducts = function() {
+  return meDataAutoSyncDepartmentProducts('ME');
+};
+
+window.meDataAutoSyncPMProducts = function() {
+  return meDataAutoSyncDepartmentProducts('PM');
+};
+
+window.meDataAutoSyncLogProducts = function() {
+  return meDataAutoSyncDepartmentProducts('LOG');
+};
+
+window.meDataAutoSyncUnit6Products = function() {
+  return meDataAutoSyncDepartmentProducts('UNIT6');
+};
+
+// ─────────────────────────────────────────────────────────────
+// HOLIDAY CRUD
+// ─────────────────────────────────────────────────────────────
+
+window.meDataAddHoliday = function(personId, date, type, department) {
+  if (!personId || !date || !['full', 'half'].includes(type)) return false;
+  const existing = meDataState.holidays.find(h => h.personId === personId && h.date === date);
+  if (existing) {
+    existing.type = type;
+    existing.department = meNormalizeDepartmentTag(department, 'ME');
+    return true;
+  }
+  const holiday = {
+    id: meUUID(),
+    personId: personId,
+    date: date,
+    type: type,
+    department: meNormalizeDepartmentTag(department, 'ME'),
+    createdAt: new Date().toISOString()
+  };
+  meDataState.holidays.push(holiday);
+  return true;
+};
+
+window.meDataUpdateHoliday = function(personId, date, newType) {
+  const holiday = meDataState.holidays.find(h => h.personId === personId && h.date === date);
+  if (!holiday) {
+    if (newType) {
+      return meDataAddHoliday(personId, date, newType);
+    }
+    return false;
+  }
+  if (!newType) {
+    return meDataDeleteHoliday(personId, date);
+  }
+  if (!['full', 'half'].includes(newType)) {
+    return false;
+  }
+  holiday.type = newType;
+  return true;
+};
+
+window.meDataDeleteHoliday = function(personId, date) {
+  const idx = meDataState.holidays.findIndex(h => h.personId === personId && h.date === date);
+  if (idx === -1) return false;
+  meDataState.holidays.splice(idx, 1);
+  return true;
+};
+
+window.meDataGetHolidays = function() {
+  meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays);
+  return meDataState.holidays;
+};

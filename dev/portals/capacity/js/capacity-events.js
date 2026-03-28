@@ -15,16 +15,19 @@ function capNum(v, fallback) {
   return Number.isFinite(n) ? n : fallback
 }
 
+function capDefaultHoursPerWeek() {
+  if (typeof CAP_DEFAULT_HOURS_PER_WEEK === 'number') return CAP_DEFAULT_HOURS_PER_WEEK
+  if (typeof ME_DEFAULT_HOURS_PER_WEEK === 'number') return ME_DEFAULT_HOURS_PER_WEEK
+  return 37.5
+}
+
 function capContextType(el) {
-  const ctx = el.closest('[data-cap-context]')
+  const ctx = el && typeof el.closest === 'function'
+    ? el.closest('[data-cap-context]')
+    : null
   if (ctx) {
     return (ctx.getAttribute('data-cap-context') || 'me').toLowerCase()
   }
-
-  const dep = (window.meCurrentDepartmentContext || 'ME').toUpperCase()
-  if (dep === 'PM') return 'pm'
-  if (dep === 'LOG') return 'log'
-  if (dep === 'UNIT6') return 'unit6'
   return 'me'
 }
 
@@ -113,8 +116,44 @@ function capRefreshCurrentTab(contextType) {
   return null
 }
 
+function capRunMonthChange(contextType, newMonth) {
+  if (contextType === 'pm' && typeof window.pmOnMonthChange === 'function') return window.pmOnMonthChange(newMonth)
+  if (contextType === 'log' && typeof window.logOnMonthChange === 'function') return window.logOnMonthChange(newMonth)
+  if (contextType === 'unit6' && typeof window.unit6OnMonthChange === 'function') return window.unit6OnMonthChange(newMonth)
+  if (typeof window.meOnMonthChange === 'function') return window.meOnMonthChange(newMonth)
+  return null
+}
+
+function capRunPrevMonth(contextType) {
+  if (contextType === 'pm' && typeof window.pmOnPrevMonth === 'function') return window.pmOnPrevMonth()
+  if (contextType === 'log' && typeof window.logOnPrevMonth === 'function') return window.logOnPrevMonth()
+  if (contextType === 'unit6' && typeof window.unit6OnPrevMonth === 'function') return window.unit6OnPrevMonth()
+  if (typeof window.meOnPrevMonth === 'function') return window.meOnPrevMonth()
+  return null
+}
+
+function capRunNextMonth(contextType) {
+  if (contextType === 'pm' && typeof window.pmOnNextMonth === 'function') return window.pmOnNextMonth()
+  if (contextType === 'log' && typeof window.logOnNextMonth === 'function') return window.logOnNextMonth()
+  if (contextType === 'unit6' && typeof window.unit6OnNextMonth === 'function') return window.unit6OnNextMonth()
+  if (typeof window.meOnNextMonth === 'function') return window.meOnNextMonth()
+  return null
+}
+
+function capGetTaskSortState(contextType) {
+  const department = capProductDraftDepartment(contextType)
+  if (window.capTasksSort && window.capTasksSort[department]) {
+    return window.capTasksSort[department]
+  }
+
+  const legacyKey = contextType === 'pm'
+    ? 'pm' + 'TasksSort'
+    : 'me' + 'TasksSort'
+  return window[legacyKey] || null
+}
+
 function capToggleTaskSort(column, contextType) {
-  const sortState = capIsPM(contextType) ? window.pmTasksSort : window.meTasksSort
+  const sortState = capGetTaskSortState(contextType)
   if (!sortState) return
   if (sortState.column === column) {
     sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc'
@@ -124,9 +163,16 @@ function capToggleTaskSort(column, contextType) {
   }
 }
 
-// Return the task-filters state object for the current ME or PM context.
 function capTaskFilters(contextType) {
-  return capIsPM(contextType) ? window.pmTasksFilters : window.meTasksFilters
+  const department = capProductDraftDepartment(contextType)
+  if (window.capTasksFilters && window.capTasksFilters[department]) {
+    return window.capTasksFilters[department]
+  }
+
+  const legacyKey = contextType === 'pm'
+    ? 'pm' + 'TasksFilters'
+    : 'me' + 'TasksFilters'
+  return window[legacyKey] || null
 }
 
 function capProductDraftDepartment(contextType) {
@@ -136,14 +182,91 @@ function capProductDraftDepartment(contextType) {
   return 'ME'
 }
 
+function capGetTaskEditScope(contextType) {
+  const scope = document.querySelector('[data-cap-context="' + contextType + '"]')
+  return scope || document
+}
+
+function capResolveTaskEditRow(taskId, contextType) {
+  if (!taskId) return null
+  const scope = capGetTaskEditScope(contextType)
+  const rowSelector = 'tr[data-task-id="' + taskId + '"]'
+  const row = scope && typeof scope.querySelector === 'function'
+    ? scope.querySelector(rowSelector)
+    : null
+  if (row) return row
+  return document.querySelector(rowSelector)
+}
+
+function capGetProductHelper(name) {
+  const sharedHelper = window['capProducts' + name]
+  if (typeof sharedHelper === 'function') return sharedHelper
+
+  const legacyHelper = window['me' + 'Products' + name]
+  return typeof legacyHelper === 'function' ? legacyHelper : null
+}
+
+function capGetProductLoadHelper(name) {
+  const sharedHelper = window['capProductLoad' + name]
+  if (typeof sharedHelper === 'function') return sharedHelper
+
+  const legacyHelper = window['me' + 'ProductLoad' + name]
+  return typeof legacyHelper === 'function' ? legacyHelper : null
+}
+
+function capGetHeatmapHelper(name) {
+  const sharedHelper = window['cap' + name]
+  if (typeof sharedHelper === 'function') return sharedHelper
+
+  const legacyHelper = window['me' + name]
+  return typeof legacyHelper === 'function' ? legacyHelper : null
+}
+
+function capGetHolidayApi(contextType) {
+  if (contextType === 'pm') {
+    return {
+      holidays: typeof window.pmDataGetHolidays === 'function' ? window.pmDataGetHolidays() : [],
+      add: window.pmDataAddHoliday,
+      update: window.pmDataUpdateHoliday,
+      remove: window.pmDataDeleteHoliday
+    }
+  }
+
+  if (contextType === 'log') {
+    return {
+      holidays: typeof window.logDataGetHolidays === 'function' ? window.logDataGetHolidays() : [],
+      add: window.logDataAddHoliday,
+      update: window.logDataUpdateHoliday,
+      remove: window.logDataDeleteHoliday
+    }
+  }
+
+  if (contextType === 'unit6') {
+    return {
+      holidays: typeof window.unit6DataGetHolidays === 'function' ? window.unit6DataGetHolidays() : [],
+      add: window.unit6DataAddHoliday,
+      update: window.unit6DataUpdateHoliday,
+      remove: window.unit6DataDeleteHoliday
+    }
+  }
+
+  return {
+    holidays: typeof window.meDataGetHolidays === 'function' ? window.meDataGetHolidays() : [],
+    add: window.meDataAddHoliday,
+    update: window.meDataUpdateHoliday,
+    remove: window.meDataDeleteHoliday
+  }
+}
+
 function capSetProductDraft(row, contextType, patch) {
-  if (!row || typeof window.meProductsSetDraftValue !== 'function') return null
+  const setDraftValue = capGetProductHelper('SetDraftValue')
+  if (!row || typeof setDraftValue !== 'function') return null
   const idx = capNum(row.getAttribute('data-product-idx'), -1)
   if (idx < 0) return null
   const productDbId = row.getAttribute('data-product-db-id') || ''
 
   if (productDbId) {
-    return window.meProductsSetDraftValue(
+    return setDraftValue(
       capProductDraftDepartment(contextType),
       row.getAttribute('data-product-id') || '',
       idx,
@@ -152,7 +275,7 @@ function capSetProductDraft(row, contextType, patch) {
     )
   }
 
-  return window.meProductsSetDraftValue(
+  return setDraftValue(
     capProductDraftDepartment(contextType),
     row.getAttribute('data-product-id') || '',
     idx,
@@ -198,9 +321,307 @@ function capHandleProductDraftChange(el, contextType) {
   })
 }
 
-// Re-render the tasks tab for the current ME or PM context.
+// Refresh only the tasks results (KPIs + table) without re-rendering the entire tab.
+// This preserves focus on filter controls during search operations.
 function capTaskRefresh(contextType) {
-  capSetTab(contextType, 'tasks')
+  const dept = capProductDraftDepartment(contextType)
+  const scope = document.querySelector('[data-cap-context="' + contextType + '"]')
+  if (!scope) {
+    capSetTab(contextType, 'tasks')
+    return
+  }
+
+  const kpiStrip = scope.querySelector('.me-kpi-strip')
+  const tableWrap = scope.querySelector('.me-tbl-wrap')
+  const cardHeadSpan = scope.querySelector('.me-card-head span:last-child')
+
+  if (!kpiStrip || !tableWrap) {
+    capSetTab(contextType, 'tasks')
+    return
+  }
+
+  // Get data for the current context
+  const tasks = (function() {
+    if (contextType === 'pm' && typeof window.pmDataGetTasks === 'function') return window.pmDataGetTasks()
+    if (contextType === 'log' && typeof window.logDataGetTasks === 'function') return window.logDataGetTasks()
+    if (contextType === 'unit6' && typeof window.unit6DataGetTasks === 'function') return window.unit6DataGetTasks()
+    if (typeof window.meDataGetTasks === 'function') return window.meDataGetTasks()
+    return []
+  })()
+
+  const team = (function() {
+    if (contextType === 'pm' && typeof window.pmDataGetTeam === 'function') return window.pmDataGetTeam()
+    if (contextType === 'log' && typeof window.logDataGetTeam === 'function') return window.logDataGetTeam()
+    if (contextType === 'unit6' && typeof window.unit6DataGetTeam === 'function') return window.unit6DataGetTeam()
+    if (typeof window.meDataGetTeam === 'function') return window.meDataGetTeam()
+    return []
+  })()
+
+  const products = (function() {
+    const api = capGetDataApi(contextType)
+    return typeof api.getProducts === 'function' ? api.getProducts() : []
+  })()
+
+  const filters = capTaskFilters(contextType) || {}
+  const sortState = capGetTaskSortState(contextType) || { column: '', direction: 'asc' }
+  const canEditFlag = typeof canEdit === 'function' ? canEdit() : true
+
+  // Apply filters
+  let filteredTasks = tasks.filter(function(t) {
+    const search = (filters.search || '').toLowerCase()
+    const cat = filters.category || 'all'
+    const assignee = filters.assignee || 'all'
+    const product = filters.product || 'all'
+    const hideCompleted = filters.hideCompleted || false
+    const month = filters.month || 'all'
+
+    if (search && !t.name.toLowerCase().includes(search)) return false
+    if (cat !== 'all' && t.category !== cat) return false
+    if (assignee !== 'all' && t.assigneeId !== assignee) return false
+    if (product !== 'all' && t.productId !== product) return false
+    if (month !== 'all') {
+      const monthStart = month + '-01'
+      const monthEnd = month + '-31'
+      if (!t.startDate || !t.endDate) return false
+      if (t.startDate > monthEnd) return false
+      if (t.endDate < monthStart) return false
+    }
+    if (hideCompleted && t.status === 'COMPLETED') return false
+    return true
+  })
+
+  // Apply sorting
+  if (sortState.column) {
+    const col = sortState.column
+    const dir = sortState.direction === 'asc' ? 1 : -1
+    const assigneeMap = new Map(team.map(function(m) { return [m.id, m.name] }))
+    const productMap = new Map(products.map(function(p) { return [p.id, p.name] }))
+
+    filteredTasks.sort(function(a, b) {
+      let valA, valB
+      switch (col) {
+        case 'name': valA = (a.name || '').toLowerCase(); valB = (b.name || '').toLowerCase(); break
+        case 'category': valA = (a.category || '').toLowerCase(); valB = (b.category || '').toLowerCase(); break
+        case 'assignee': valA = assigneeMap.get(a.assigneeId) || ''; valB = assigneeMap.get(b.assigneeId) || ''; break
+        case 'product': valA = productMap.get(a.productId) || ''; valB = productMap.get(b.productId) || ''; break
+        case 'startDate': valA = a.startDate || ''; valB = b.startDate || ''; break
+        case 'endDate': valA = a.endDate || ''; valB = b.endDate || ''; break
+        case 'hours': valA = a.totalHours || 0; valB = b.totalHours || 0; break
+        case 'status': valA = (a.status || 'SCHEDULED').toLowerCase(); valB = (b.status || 'SCHEDULED').toLowerCase(); break
+        default: valA = 0; valB = 0
+      }
+      if (valA < valB) return -1 * dir
+      if (valA > valB) return 1 * dir
+      return 0
+    })
+  }
+
+  // Calculate KPI values
+  let totalHoursValue = 0
+  filteredTasks.forEach(function(t) { totalHoursValue += t.totalHours || 0 })
+  const totalHours = totalHoursValue.toFixed(1)
+  const taskCount = filteredTasks.length
+  const unassignedCount = filteredTasks.filter(function(t) { return !t.assigneeId }).length
+  const avgHours = taskCount > 0 ? (totalHoursValue / taskCount).toFixed(1) : '0'
+
+  const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other']
+  const hoursByCategory = {}
+  ME_CATS.forEach(function(cat) {
+    hoursByCategory[cat] = filteredTasks.filter(function(t) { return t.category === cat })
+      .reduce(function(sum, t) { return sum + (t.totalHours || 0) }, 0).toFixed(1)
+  })
+  const topCategory = ME_CATS.reduce(function(top, cat) {
+    return parseFloat(hoursByCategory[cat]) > parseFloat(hoursByCategory[top]) ? cat : top
+  })
+
+  // Update KPI strip
+  kpiStrip.innerHTML =
+    '<div class="me-kpi" style="border-left: 4px solid var(--green);">' +
+      '<div class="me-kpi-value">' + totalHours + '</div>' +
+      '<div class="me-kpi-label">Total Hours</div>' +
+      '<div class="me-kpi-month">' + filteredTasks.length + ' tasks</div>' +
+    '</div>' +
+    '<div class="me-kpi" style="border-left: 4px solid var(--blue);">' +
+      '<div class="me-kpi-value">' + taskCount + '</div>' +
+      '<div class="me-kpi-label">Tasks</div>' +
+      '<div class="me-kpi-month">filtered</div>' +
+    '</div>' +
+    '<div class="me-kpi" style="border-left: 4px solid var(--amber);">' +
+      '<div class="me-kpi-value">' + avgHours + '</div>' +
+      '<div class="me-kpi-label">Average Hours</div>' +
+      '<div class="me-kpi-month">per task</div>' +
+    '</div>' +
+    '<div class="me-kpi" style="border-left: 4px solid var(--navy);">' +
+      '<div class="me-kpi-value">' + hoursByCategory[topCategory] + '</div>' +
+      '<div class="me-kpi-label">Top Category</div>' +
+      '<div class="me-kpi-month">' + topCategory + '</div>' +
+    '</div>' +
+    '<div class="me-kpi" style="border-left: 4px solid var(--red);">' +
+      '<div class="me-kpi-value">' + unassignedCount + '</div>' +
+      '<div class="me-kpi-label">Unassigned</div>' +
+      '<div class="me-kpi-month">filtered tasks</div>' +
+    '</div>'
+
+  // Update card header hours
+  if (cardHeadSpan) cardHeadSpan.textContent = totalHours + ' total hours'
+
+  // Build table rows (click-to-edit: read-only by default, edit mode when capTaskEditingId[dept] matches)
+  var editingId = (window.capTaskEditingId || {})[dept] || null
+  var teamMap = new Map(team.map(function(m) { return [m.id, m.name] }))
+  var productMap = new Map(products.map(function(p) { return [p.id, p.name] }))
+  let rows = ''
+  filteredTasks.forEach(function(task) {
+    const today = new Date(); today.setHours(0,0,0,0)
+    const startD = new Date(task.startDate || ''); startD.setHours(0,0,0,0)
+    const isOverdue = task.status === 'SCHEDULED' && task.startDate && startD <= today
+    const rowUrgencyClass = isOverdue ? 'batch-row-overdue' : ''
+    const disabledRowClass = task.isDisabled === true ? ' me-task-row-disabled' : ''
+
+    if (editingId === task.id) {
+      const catOpts = ME_CATS.map(function(c) {
+        return '<option value="' + c + '"' + (task.category === c ? ' selected' : '') + '>' + c + '</option>'
+      }).join('')
+      const memOpts = '<option value="">Unassigned</option>' + team.map(function(m) {
+        return '<option value="' + m.id + '"' + (task.assigneeId === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'
+      }).join('')
+      const prodOpts = '<option value="">— No Product</option>' + products.map(function(p) {
+        return '<option value="' + p.id + '"' + (task.productId === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>'
+      }).join('')
+      const statusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(function(s) {
+        return '<option value="' + s + '"' + (task.status === s ? ' selected' : '') + '>' + s[0] + s.slice(1).toLowerCase() + '</option>'
+      }).join('')
+      rows +=
+        '<tr class="me-task-row ' + rowUrgencyClass + disabledRowClass + '" data-task-id="' + esc(task.id) + '" style="background-color:var(--row-highlight-amber,#fffbeb);outline:2px solid var(--chart-amber-lt,#fbbf24);outline-offset:-2px;">' +
+          '<td><input name="task_name" data-task-field="name" value="' + esc(task.name) + '" placeholder="Task name" style="width:100%;"></td>' +
+          '<td><select name="task_category" data-task-field="category">' + catOpts + '</select></td>' +
+          '<td><select name="task_assigneeId" data-task-field="assigneeId">' + memOpts + '</select></td>' +
+          '<td><select name="task_productId" data-task-field="productId">' + prodOpts + '</select></td>' +
+          '<td><input type="date" name="task_startDate" data-task-field="startDate" value="' + (task.startDate || '') + '"></td>' +
+          '<td><input type="date" name="task_endDate" data-task-field="endDate" value="' + (task.endDate || '') + '"></td>' +
+          '<td><select name="task_status" data-task-field="status">' + statusOpts + '</select></td>' +
+          '<td style="text-align:center;"><input type="checkbox" name="task_isDisabled" data-task-field="isDisabled" aria-label="Disable task from calculations" style="width:14px;height:14px;"' + (task.isDisabled === true ? ' checked' : '') + '></td>' +
+          '<td><input type="number" name="task_totalHours" data-task-field="totalHours" value="' + (task.totalHours || 0) + '" step="0.5" style="width:70px;"></td>' +
+          '<td style="text-align:center;display:flex;gap:4px;justify-content:center;">' +
+            '<button class="btn-del" title="Save" data-cap-action="cap-task-save-edit" data-task-id="' + esc(task.id) + '">✓</button>' +
+            '<button class="btn-del" title="Cancel" data-cap-action="cap-task-cancel-edit">✕</button>' +
+          '</td>' +
+        '</tr>'
+    } else {
+      const assigneeName = teamMap.get(task.assigneeId) || '—'
+      const productName = productMap.get(task.productId) || '—'
+      const statusLabel = task.status ? task.status[0] + task.status.slice(1).toLowerCase() : '—'
+      const overdueBadge = isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''
+      const disabledBadge = task.isDisabled === true ? '<div class="batch-due-badge" style="background:var(--bg-soft);color:var(--muted);border-color:var(--line);">Disabled from calculations</div>' : ''
+      const checkedAttr = task.isDisabled === true ? ' checked' : ''
+      rows +=
+        '<tr class="me-task-row ' + rowUrgencyClass + disabledRowClass + '" data-task-id="' + esc(task.id) + '">' +
+          '<td>' + esc(task.name) + '</td>' +
+          '<td>' + esc(task.category) + '</td>' +
+          '<td>' + esc(assigneeName) + '</td>' +
+          '<td>' + esc(productName) + '</td>' +
+          '<td>' + (task.startDate || '—') + '</td>' +
+          '<td>' + (task.endDate || '—') + '</td>' +
+          '<td><span class="badge badge-' + task.status + '">' + statusLabel + '</span>' + overdueBadge + '</td>' +
+          '<td style="text-align:center;"><input type="checkbox" name="task_toggle_disabled" style="width:14px;height:14px;" aria-label="Disable task from calculations" data-cap-action="cap-task-toggle-disabled"' + checkedAttr + '>' + disabledBadge + '</td>' +
+          '<td>' + (task.totalHours || 0).toFixed(1) + '</td>' +
+          '<td style="text-align:center;display:flex;gap:4px;justify-content:center;">' +
+            (canEditFlag
+              ? '<button class="btn-del" title="Edit task" data-cap-action="cap-task-start-edit" data-task-id="' + esc(task.id) + '">✏️</button>' +
+                '<button class="me-del-btn" title="Delete task" data-cap-action="cap-task-del" data-task-id="' + esc(task.id) + '">✕</button>'
+              : '') +
+          '</td>' +
+        '</tr>'
+    }
+  })
+
+  // Get sort icons
+  const getSortIcon = typeof capGetSortIcon === 'function' ? capGetSortIcon : function() { return '↕' }
+
+  // Build new-task top row
+  var newTaskRow = ''
+  if (canEditFlag) {
+    var ME_CATS_NEW = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other']
+    var newCatOpts = ME_CATS_NEW.map(function(c) { return '<option value="' + c + '">' + c + '</option>' }).join('')
+    var newMemOpts = '<option value="">Unassigned</option>' + team.map(function(m) { return '<option value="' + m.id + '">' + esc(m.name) + '</option>' }).join('')
+    var newProdOpts = '<option value="">— No Product</option>' + products.map(function(p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>' }).join('')
+    var newStatusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(function(s) { return '<option value="' + s + '">' + s[0] + s.slice(1).toLowerCase() + '</option>' }).join('')
+    newTaskRow =
+      '<tr class="me-task-row" data-cap-new-task="1" style="background-color:var(--row-highlight-blue,#eff6ff);outline:2px solid var(--chart-blue-lt,#93c5fd);outline-offset:-2px;">' +
+        '<td><input name="task_name" data-task-field="name" placeholder="Task name" style="width:100%;"></td>' +
+        '<td><select name="task_category" data-task-field="category">' + newCatOpts + '</select></td>' +
+        '<td><select name="task_assigneeId" data-task-field="assigneeId">' + newMemOpts + '</select></td>' +
+        '<td><select name="task_productId" data-task-field="productId">' + newProdOpts + '</select></td>' +
+        '<td><input type="date" name="task_startDate" data-task-field="startDate"></td>' +
+        '<td><input type="date" name="task_endDate" data-task-field="endDate"></td>' +
+        '<td><select name="task_status" data-task-field="status">' + newStatusOpts + '</select></td>' +
+        '<td></td>' +
+        '<td><input type="number" name="task_totalHours" data-task-field="totalHours" placeholder="0" step="0.5" style="width:70px;"></td>' +
+        '<td style="text-align:center;"><button class="btn-del" title="Add task" data-cap-action="cap-task-add">✓</button></td>' +
+      '</tr>'
+  }
+
+  // Update table
+  tableWrap.innerHTML =
+    '<table class="me-tbl">' +
+      '<thead><tr>' +
+        '<th style="width:150px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">' + getSortIcon('name', dept) + ' Task Name</th>' +
+        '<th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">' + getSortIcon('category', dept) + ' Category</th>' +
+        '<th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="assignee" title="Sort by assignee">' + getSortIcon('assignee', dept) + ' Assignee</th>' +
+        '<th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">' + getSortIcon('product', dept) + ' Product</th>' +
+        '<th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">' + getSortIcon('startDate', dept) + ' Start Date</th>' +
+        '<th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">' + getSortIcon('endDate', dept) + ' End Date</th>' +
+        '<th style="width:120px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">' + getSortIcon('status', dept) + ' Status</th>' +
+        '<th style="width:90px">Disable</th>' +
+        '<th style="width:80px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="hours" title="Sort by hours">' + getSortIcon('hours', dept) + ' Hours</th>' +
+        '<th style="width:60px"></th>' +
+      '</tr></thead>' +
+      '<tbody>' +
+        newTaskRow +
+        (rows || '<tr><td colspan="10"><div style="text-align:center;padding:40px;color:var(--muted);">No tasks match the current filters</div></td></tr>') +
+      '</tbody>' +
+    '</table>'
+}
+
+const CAP_TASK_SEARCH_RENDER_DEBOUNCE_MS = 90
+const _capTaskSearchRefreshTimers = {
+  me: null,
+  pm: null,
+  log: null,
+  unit6: null
+}
+
+function capTaskSearchTimerKey(contextType) {
+  return contextType === 'pm' || contextType === 'log' || contextType === 'unit6'
+    ? contextType
+    : 'me'
+}
+
+function capCancelTaskSearchRefresh(contextType) {
+  const key = capTaskSearchTimerKey(contextType)
+  const existing = _capTaskSearchRefreshTimers[key]
+  if (existing) {
+    clearTimeout(existing)
+    _capTaskSearchRefreshTimers[key] = null
+  }
+}
+
+function capScheduleTaskSearchRefresh(contextType) {
+  const key = capTaskSearchTimerKey(contextType)
+  capCancelTaskSearchRefresh(key)
+
+  _capTaskSearchRefreshTimers[key] = setTimeout(function() {
+    _capTaskSearchRefreshTimers[key] = null
+
+    const scope = document.querySelector('[data-cap-context="' + key + '"]')
+    const searchInput = scope && typeof scope.querySelector === 'function'
+      ? scope.querySelector('[data-cap-action="cap-task-search"]')
+      : null
+    if (!searchInput) return
+
+    capPreserveSearchContinuity(searchInput, '[data-cap-action="cap-task-search"]', function() {
+      capTaskRefresh(key)
+    })
+  }, CAP_TASK_SEARCH_RENDER_DEBOUNCE_MS)
 }
 
 function capPreserveSearchContinuity(inputEl, replacementSelector, rerenderFn) {
@@ -285,12 +706,48 @@ window.capacityEvents._onClick = function(evt) {
   // ── ME tabs ────────────────────────────────────────────────
   case 'cap-me-set-tab': meSetTab(el.getAttribute('data-tab')); break
   case 'cap-me-back': setCapacityTab('root'); break
-  case 'cap-me-prev-month': meOnPrevMonth(); break
-  case 'cap-me-next-month': meOnNextMonth(); break
-  case 'cap-me-today': if (typeof meOnTodayClick === 'function') meOnTodayClick(); break
-  case 'cap-me-toggle-holiday': meToggleHoliday(el.getAttribute('data-member-id'), el.getAttribute('data-date')); break
-  case 'cap-me-heatmap-open': meOpenHeatmapDetail(el.getAttribute('data-member-id'), el.getAttribute('data-start'), el.getAttribute('data-end')); break
-  case 'cap-me-heatmap-close': meCloseHeatmapDetail(); break
+  case 'cap-me-prev-month': capRunPrevMonth(contextType); break
+  case 'cap-me-next-month': capRunNextMonth(contextType); break
+  case 'cap-me-today': {
+    const today = new Date()
+    const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+    capRunMonthChange(contextType, monthKey)
+    break
+  }
+  case 'cap-me-toggle-holiday': {
+    const toggleHoliday = typeof window.capToggleHoliday === 'function'
+      ? window.capToggleHoliday
+      : null
+    if (toggleHoliday) {
+      const holidayApi = capGetHolidayApi(contextType)
+      toggleHoliday(
+        el.getAttribute('data-member-id'),
+        el.getAttribute('data-date'),
+        holidayApi.holidays,
+        holidayApi.add,
+        holidayApi.update,
+        holidayApi.remove
+      )
+      capRunDebouncedSave(contextType)
+      capSetTab(contextType, 'holidays')
+    } else {
+      const legacyToggle = window['me' + 'ToggleHoliday']
+      if (typeof legacyToggle === 'function') legacyToggle(el.getAttribute('data-member-id'), el.getAttribute('data-date'))
+    }
+    break
+  }
+  case 'cap-me-heatmap-open': {
+    const openHeatmapDetail = capGetHeatmapHelper('OpenHeatmapDetail')
+    if (typeof openHeatmapDetail === 'function') {
+      openHeatmapDetail(el.getAttribute('data-member-id'), el.getAttribute('data-start'), el.getAttribute('data-end'))
+    }
+    break
+  }
+  case 'cap-me-heatmap-close': {
+    const closeHeatmapDetail = capGetHeatmapHelper('CloseHeatmapDetail')
+    if (typeof closeHeatmapDetail === 'function') closeHeatmapDetail()
+    break
+  }
 
   // ── ME Team ────────────────────────────────────────────────
   case 'cap-team-del': {
@@ -306,7 +763,7 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-team-add': {
-    const department = (window.meCurrentDepartmentContext || 'ME').toUpperCase()
+    const department = capProductDraftDepartment(contextType)
     const label = isPM
       ? 'New PM Manager'
       : department === 'LOG'
@@ -316,7 +773,7 @@ window.capacityEvents._onClick = function(evt) {
           : 'New Engineer'
     const api = capGetDataApi(contextType)
     if (typeof api.addTeam === 'function') {
-      api.addTeam(label, ME_DEFAULT_HOURS_PER_WEEK, 80)
+      api.addTeam(label, capDefaultHoursPerWeek(), 80)
       capRunSave(contextType)
       capSetTab(contextType, 'team')
     }
@@ -326,32 +783,101 @@ window.capacityEvents._onClick = function(evt) {
 
   // ── ME Tasks ──────────────────────────────────────────────
   case 'cap-task-del': {
-    const idx = capNum(el.closest('[data-task-idx]')?.getAttribute('data-task-idx'), -1)
-    if (idx < 0) break
+    const taskId = el.getAttribute('data-task-id') || el.closest('[data-task-id]')?.getAttribute('data-task-id')
+    if (!taskId) break
     const api = capGetDataApi(contextType)
     if (confirm('Delete task?')) {
-      if (typeof api.deleteTask === 'function') api.deleteTask(idx)
+      if (typeof api.deleteTask === 'function') api.deleteTask(taskId)
       capRunSave(contextType)
       capTaskRefresh(contextType)
     }
     break
   }
   case 'cap-task-add': {
+    // Reads from the new-task top row inputs
+    const newRow = el.closest('[data-cap-new-task]')
+    if (!newRow) break
+    const newName = (newRow.querySelector('[data-task-field="name"]')?.value || '').trim()
+    if (!newName) { newRow.querySelector('[data-task-field="name"]')?.focus(); break }
     const api = capGetDataApi(contextType)
     if (typeof api.addTask === 'function') {
-      api.addTask('New Task', 'NPI', '', '', '', 0, '')
+      api.addTask(
+        newName,
+        newRow.querySelector('[data-task-field="category"]')?.value || 'NPI',
+        newRow.querySelector('[data-task-field="assigneeId"]')?.value || '',
+        newRow.querySelector('[data-task-field="startDate"]')?.value || '',
+        newRow.querySelector('[data-task-field="endDate"]')?.value || '',
+        parseFloat(newRow.querySelector('[data-task-field="totalHours"]')?.value) || 0,
+        newRow.querySelector('[data-task-field="productId"]')?.value || ''
+      )
       capRunSave(contextType)
-      capSetTab(contextType, 'tasks')
+      capTaskRefresh(contextType)
     }
     break
   }
+  case 'cap-task-start-edit': {
+    const dept = capProductDraftDepartment(contextType)
+    const taskId = el.getAttribute('data-task-id') || el.closest('[data-task-id]')?.getAttribute('data-task-id')
+    if (!taskId) break
+    if (!window.capTaskEditingId) window.capTaskEditingId = {}
+    window.capTaskEditingId[dept] = taskId
+    capTaskRefresh(contextType)
+    // Focus the name field in the now-rendered edit row
+    setTimeout(function() {
+      const taskRow = capResolveTaskEditRow(taskId, contextType)
+      const nameInput = taskRow && typeof taskRow.querySelector === 'function'
+        ? taskRow.querySelector('[data-task-field="name"]')
+        : null
+      if (nameInput) nameInput.focus()
+    }, 0)
+    break
+  }
+  case 'cap-task-save-edit': {
+    const dept = capProductDraftDepartment(contextType)
+    const activeTaskId = window.capTaskEditingId && window.capTaskEditingId[dept]
+      ? window.capTaskEditingId[dept]
+      : ''
+    const clickedTaskId = el.getAttribute('data-task-id') || el.closest('[data-task-id]')?.getAttribute('data-task-id')
+    const taskId = activeTaskId || clickedTaskId
+    if (!taskId) break
+    const editRow = capResolveTaskEditRow(taskId, contextType)
+    if (!editRow) break
+    const savedName = (editRow.querySelector('[data-task-field="name"]')?.value || '').trim()
+    if (!savedName) { editRow.querySelector('[data-task-field="name"]')?.focus(); break }
+    const api = capGetDataApi(contextType)
+    if (typeof api.updateTask === 'function') {
+      api.updateTask(taskId, 'name', savedName)
+      api.updateTask(taskId, 'category', editRow.querySelector('[data-task-field="category"]')?.value || 'NPI')
+      api.updateTask(taskId, 'assigneeId', editRow.querySelector('[data-task-field="assigneeId"]')?.value || '')
+      api.updateTask(taskId, 'productId', editRow.querySelector('[data-task-field="productId"]')?.value || '')
+      api.updateTask(taskId, 'startDate', editRow.querySelector('[data-task-field="startDate"]')?.value || '')
+      api.updateTask(taskId, 'endDate', editRow.querySelector('[data-task-field="endDate"]')?.value || '')
+      api.updateTask(taskId, 'totalHours', editRow.querySelector('[data-task-field="totalHours"]')?.value || 0)
+      api.updateTask(taskId, 'status', editRow.querySelector('[data-task-field="status"]')?.value || 'SCHEDULED')
+      api.updateTask(taskId, 'isDisabled', editRow.querySelector('[data-task-field="isDisabled"]')?.checked || false)
+    }
+    if (!window.capTaskEditingId) window.capTaskEditingId = {}
+    window.capTaskEditingId[dept] = null
+    capRunSave(contextType)
+    capTaskRefresh(contextType)
+    break
+  }
+  case 'cap-task-cancel-edit': {
+    const dept = capProductDraftDepartment(contextType)
+    if (!window.capTaskEditingId) window.capTaskEditingId = {}
+    window.capTaskEditingId[dept] = null
+    capTaskRefresh(contextType)
+    break
+  }
   case 'cap-task-sort': {
+    capCancelTaskSearchRefresh(contextType)
     const key = el.getAttribute('data-sort-key')
     capToggleTaskSort(key, contextType)
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-search': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.search = ''
     const inp = document.querySelector('.me-filter-input')
@@ -360,32 +886,43 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-task-clear-category': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.category = 'all'
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-assignee': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.assignee = 'all'
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-product': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.product = 'all'
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-month': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.month = 'all'
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-toggle-hide-completed': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
-    const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
+    const storageKey = contextType === 'pm'
+      ? 'pmTasksHideCompleted'
+      : contextType === 'log'
+        ? 'logTasksHideCompleted'
+        : contextType === 'unit6'
+          ? 'unit6TasksHideCompleted'
+          : 'meTasksHideCompleted'
     if (f) {
       f.hideCompleted = !f.hideCompleted
       localStorage.setItem(storageKey, f.hideCompleted)
@@ -394,8 +931,15 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-task-clear-all-filters': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
-    const storageKey = isPM ? 'pmTasksHideCompleted' : 'meTasksHideCompleted'
+    const storageKey = contextType === 'pm'
+      ? 'pmTasksHideCompleted'
+      : contextType === 'log'
+        ? 'logTasksHideCompleted'
+        : contextType === 'unit6'
+          ? 'unit6TasksHideCompleted'
+          : 'meTasksHideCompleted'
     const hideVal = f ? f.hideCompleted : false
     if (f) {
       Object.assign(f, { search: '', category: 'all', assignee: 'all', product: 'all', month: 'all', hideCompleted: hideVal })
@@ -472,17 +1016,18 @@ window.capacityEvents._onClick = function(evt) {
       })
     }
 
-    if (typeof window.meProductsClearDraft === 'function') {
+    const clearDraft = capGetProductHelper('ClearDraft')
+    if (typeof clearDraft === 'function') {
       const productDbId = row?.getAttribute('data-product-db-id') || ''
       if (productDbId) {
-        window.meProductsClearDraft(
+        clearDraft(
           capProductDraftDepartment(contextType),
           row?.getAttribute('data-product-id') || '',
           idx,
           productDbId
         )
       } else {
-        window.meProductsClearDraft(
+        clearDraft(
           capProductDraftDepartment(contextType),
           row?.getAttribute('data-product-id') || '',
           idx
@@ -495,8 +1040,9 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-products-toggle-history': {
-    if (typeof meProductsToggleHistory === 'function') {
-      meProductsToggleHistory(el.getAttribute('data-product-id'), el.getAttribute('data-dept'))
+    const toggleHistory = capGetProductHelper('ToggleHistory')
+    if (typeof toggleHistory === 'function') {
+      toggleHistory(el.getAttribute('data-product-id'), el.getAttribute('data-dept'))
     }
     break
   }
@@ -515,8 +1061,9 @@ window.capacityEvents._onClick = function(evt) {
       entrySnapshot.bookingInOutHours = parseFloat(el.getAttribute('data-booking') || '0')
       entrySnapshot.productMovementHours = parseFloat(el.getAttribute('data-movement') || '0')
     }
-    if (typeof window.meProductsStartHistoryEdit === 'function') {
-      window.meProductsStartHistoryEdit(historyId, entrySnapshot, dept)
+    const startHistoryEdit = capGetProductHelper('StartHistoryEdit')
+    if (typeof startHistoryEdit === 'function') {
+      startHistoryEdit(historyId, entrySnapshot, dept)
     }
     break
   }
@@ -525,15 +1072,17 @@ window.capacityEvents._onClick = function(evt) {
     const dept = el.getAttribute('data-dept') || 'ME'
     if (!historyId) break
     const editRow = el.closest('tr[data-history-edit-row]')
-    if (typeof window.meProductsSaveHistoryEdit === 'function') {
-      window.meProductsSaveHistoryEdit(historyId, dept, editRow)
+    const saveHistoryEdit = capGetProductHelper('SaveHistoryEdit')
+    if (typeof saveHistoryEdit === 'function') {
+      saveHistoryEdit(historyId, dept, editRow)
     }
     break
   }
   case 'cap-products-cancel-history-edit': {
     const dept = el.getAttribute('data-dept') || 'ME'
-    if (typeof window.meProductsCancelHistoryEdit === 'function') {
-      window.meProductsCancelHistoryEdit(dept)
+    const cancelHistoryEdit = capGetProductHelper('CancelHistoryEdit')
+    if (typeof cancelHistoryEdit === 'function') {
+      cancelHistoryEdit(dept)
     }
     break
   }
@@ -560,24 +1109,42 @@ window.capacityEvents._onClick = function(evt) {
   case 'cap-products-sort-column': {
     const key = el.getAttribute('data-sort-key')
     const dept = el.getAttribute('data-dept') || capProductDraftDepartment(contextType)
-    if (typeof window.meProductsSortByColumn === 'function') {
-      window.meProductsSortByColumn(key, dept)
+    const sortByColumn = capGetProductHelper('SortByColumn')
+    if (typeof sortByColumn === 'function') {
+      sortByColumn(key, dept)
     }
     break
   }
-  case 'cap-products-sort-dir': if (typeof meProductsToggleSortDir === 'function') meProductsToggleSortDir(el.getAttribute('data-dept')); break
-  case 'cap-products-clear-filters': if (typeof meProductsClearFilters === 'function') meProductsClearFilters(el.getAttribute('data-dept')); break
+  case 'cap-products-sort-dir': {
+    const toggleSortDir = capGetProductHelper('ToggleSortDir')
+    if (typeof toggleSortDir === 'function') toggleSortDir(el.getAttribute('data-dept'))
+    break
+  }
+  case 'cap-products-clear-filters': {
+    const clearFilters = capGetProductHelper('ClearFilters')
+    if (typeof clearFilters === 'function') clearFilters(el.getAttribute('data-dept'))
+    break
+  }
   case 'cap-products-bulk-save': {
     const department = el.getAttribute('data-dept') || 'ME'
-    if (typeof window.meProductsBulkSaveChanges === 'function') {
-      window.meProductsBulkSaveChanges(department)
+    const bulkSaveChanges = capGetProductHelper('BulkSaveChanges')
+    if (typeof bulkSaveChanges === 'function') {
+      bulkSaveChanges(department)
     }
     break
   }
 
   // ── ME Product Taskload ───────────────────────────────────
-  case 'cap-product-load-sort-dir': if (typeof meProductLoadToggleSortDir === 'function') meProductLoadToggleSortDir(el.getAttribute('data-dept')); break
-  case 'cap-product-load-clear-filters': if (typeof meProductLoadClearFilters === 'function') meProductLoadClearFilters(el.getAttribute('data-dept')); break
+  case 'cap-product-load-sort-dir': {
+    const toggleSortDir = capGetProductLoadHelper('ToggleSortDir')
+    if (typeof toggleSortDir === 'function') toggleSortDir(el.getAttribute('data-dept'))
+    break
+  }
+  case 'cap-product-load-clear-filters': {
+    const clearFilters = capGetProductLoadHelper('ClearFilters')
+    if (typeof clearFilters === 'function') clearFilters(el.getAttribute('data-dept'))
+    break
+  }
 
   // ── PM Capacity ───────────────────────────────────────────
   case 'cap-pm-set-tab': if (typeof pmSetTab === 'function') pmSetTab(el.getAttribute('data-tab')); break
@@ -629,7 +1196,7 @@ window.capacityEvents._onChange = function(evt) {
 
   switch (action) {
   // ── ME month change ────────────────────────────────────────
-  case 'cap-me-month-change': if (typeof meOnMonthChange === 'function') meOnMonthChange(el.value); break
+  case 'cap-me-month-change': capRunMonthChange(contextType, el.value); break
 
   // ── ME Team update ────────────────────────────────────────
   case 'cap-team-upd': {
@@ -643,57 +1210,40 @@ window.capacityEvents._onChange = function(evt) {
     break
   }
 
-  // ── ME Tasks update ───────────────────────────────────────
-  case 'cap-task-upd': {
-    const row = el.closest('[data-task-idx]')
-    const idx = capNum(row?.getAttribute('data-task-idx'), -1)
-    if (idx < 0) break
-    const field = el.getAttribute('data-field')
-    const api = capGetDataApi(contextType)
-    if (typeof api.updateTask === 'function') api.updateTask(idx, field, el.value)
-    capRunDebouncedSave(contextType)
-    break
-  }
-  case 'cap-task-status-upd': {
-    const row = el.closest('[data-task-idx]')
-    const idx = capNum(row?.getAttribute('data-task-idx'), -1)
-    if (idx < 0) break
-    const api = capGetDataApi(contextType)
-    if (typeof api.updateTask === 'function') api.updateTask(idx, 'status', el.value)
-    capRunDebouncedSave(contextType)
-    // Do NOT immediately call meSetTab/pmSetTab — the debounce and blur handler
-    // will re-render at the right time, preserving focus.
-    break
-  }
+  // ── ME Tasks — inline disable toggle (always available) ───
   case 'cap-task-toggle-disabled': {
-    const row = el.closest('[data-task-idx]')
-    const idx = capNum(row?.getAttribute('data-task-idx'), -1)
-    if (idx < 0) break
+    const row = el.closest('[data-task-id]')
+    const taskId = row?.getAttribute('data-task-id')
+    if (!taskId) break
     const api = capGetDataApi(contextType)
-    if (typeof api.updateTask === 'function') api.updateTask(idx, 'isDisabled', !!el.checked)
+    if (typeof api.updateTask === 'function') api.updateTask(taskId, 'isDisabled', !!el.checked)
     capRunDebouncedSave(contextType)
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-category': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.category = el.value
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-assignee': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.assignee = el.value
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-product': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.product = el.value
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-month': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.month = el.value
     capTaskRefresh(contextType)
@@ -708,8 +1258,9 @@ window.capacityEvents._onChange = function(evt) {
   case 'cap-products-history-edit-field': {
     const field = el.getAttribute('data-history-edit-field')
     const dept = el.getAttribute('data-dept') || 'ME'
-    if (field && typeof window.meProductsUpdateHistoryEditDraft === 'function') {
-      window.meProductsUpdateHistoryEditDraft(dept, field, el.value)
+    const updateHistoryEditDraft = capGetProductHelper('UpdateHistoryEditDraft')
+    if (field && typeof updateHistoryEditDraft === 'function') {
+      updateHistoryEditDraft(dept, field, el.value)
     }
     break
   }
@@ -743,16 +1294,19 @@ window.capacityEvents._onChange = function(evt) {
     break
   }
   case 'cap-products-family-filter': {
-    if (typeof meProductsSetFamilyFilter === 'function') meProductsSetFamilyFilter(el.value, el.getAttribute('data-dept'))
+    const setFamilyFilter = capGetProductHelper('SetFamilyFilter')
+    if (typeof setFamilyFilter === 'function') setFamilyFilter(el.value, el.getAttribute('data-dept'))
     break
   }
   case 'cap-products-sort': {
-    if (typeof meProductsSetSort === 'function') meProductsSetSort(el.value, el.getAttribute('data-dept'))
+    const setSort = capGetProductHelper('SetSort')
+    if (typeof setSort === 'function') setSort(el.value, el.getAttribute('data-dept'))
     break
   }
   case 'cap-products-status-toggle': {
-    if (typeof meProductsToggleStatusFilter === 'function') {
-      meProductsToggleStatusFilter(
+    const toggleStatusFilter = capGetProductHelper('ToggleStatusFilter')
+    if (typeof toggleStatusFilter === 'function') {
+      toggleStatusFilter(
         el.getAttribute('data-status'),
         !!el.checked,
         el.getAttribute('data-dept')
@@ -763,11 +1317,13 @@ window.capacityEvents._onChange = function(evt) {
 
   // ── ME Product Taskload ────────────────────────────────────
   case 'cap-product-load-family-filter': {
-    if (typeof meProductLoadSetFamilyFilter === 'function') meProductLoadSetFamilyFilter(el.value, el.getAttribute('data-dept'))
+    const setFamilyFilter = capGetProductLoadHelper('SetFamilyFilter')
+    if (typeof setFamilyFilter === 'function') setFamilyFilter(el.value, el.getAttribute('data-dept'))
     break
   }
   case 'cap-product-load-sort': {
-    if (typeof meProductLoadSetSort === 'function') meProductLoadSetSort(el.value, el.getAttribute('data-dept'))
+    const setSort = capGetProductLoadHelper('SetSort')
+    if (typeof setSort === 'function') setSort(el.value, el.getAttribute('data-dept'))
     break
   }
 
@@ -801,16 +1357,15 @@ window.capacityEvents._onInput = function(evt) {
   switch (action) {
   case 'cap-task-search': {
     const filterStateVar = capTaskFilters(contextType)
-    capPreserveSearchContinuity(el, '[data-cap-action="cap-task-search"]', function() {
-      if (filterStateVar) filterStateVar.search = el.value
-      capTaskRefresh(contextType)
-    })
+    if (filterStateVar) filterStateVar.search = el.value
+    capScheduleTaskSearchRefresh(contextType)
     break
   }
   case 'cap-products-search': {
     const dept = el.getAttribute('data-dept')
     capPreserveSearchContinuity(el, '[data-cap-action="cap-products-search"]', function() {
-      if (typeof meProductsSetSearch === 'function') meProductsSetSearch(el.value, dept)
+      const setSearch = capGetProductHelper('SetSearch')
+      if (typeof setSearch === 'function') setSearch(el.value, dept)
     })
     break
   }
@@ -821,15 +1376,17 @@ window.capacityEvents._onInput = function(evt) {
   case 'cap-products-history-edit-field': {
     const field = el.getAttribute('data-history-edit-field')
     const dept = el.getAttribute('data-dept') || 'ME'
-    if (field && typeof window.meProductsUpdateHistoryEditDraft === 'function') {
-      window.meProductsUpdateHistoryEditDraft(dept, field, el.value)
+    const updateHistoryEditDraft = capGetProductHelper('UpdateHistoryEditDraft')
+    if (field && typeof updateHistoryEditDraft === 'function') {
+      updateHistoryEditDraft(dept, field, el.value)
     }
     break
   }
   case 'cap-product-load-search': {
     const dept = el.getAttribute('data-dept')
     capPreserveSearchContinuity(el, '[data-cap-action="cap-product-load-search"]', function() {
-      if (typeof meProductLoadSetSearch === 'function') meProductLoadSetSearch(el.value, dept)
+      const setSearch = capGetProductLoadHelper('SetSearch')
+      if (typeof setSearch === 'function') setSearch(el.value, dept)
     })
     break
   }
@@ -864,15 +1421,19 @@ window.capacityEvents._onFocusOut = function(evt) {
   const contextRoot = evt.target && typeof evt.target.closest === 'function'
     ? evt.target.closest('[data-cap-context]')
     : null
-  const isPMContext = (contextRoot && contextRoot.getAttribute('data-cap-context') === 'pm') ||
-    window.meCurrentDepartmentContext === 'PM'
   // If moving to next cell in same table, no need to flush
   if (nextFocus && nextFocus.closest('table')) return
-  // No pending re-renders to flush across any capacity portal
-  if (!window.mePendingRealTimeUpdate && !window.mePendingRerender &&
-      !window.pmPendingRealTimeUpdate && !window.pmPendingRerender &&
-      !window.logPendingRerender && !window.unit6PendingRerender &&
-      !window.prodCapPendingRealTimeUpdate) return
+
+  // Scheduler-managed portals: flush deferred render (no-op if nothing pending)
+  if (typeof flushDeferred === 'function') {
+    flushDeferred('me')
+    flushDeferred('pm')
+    flushDeferred('log')
+    flushDeferred('unit6')
+  }
+
+  // No old-style portals pending — skip the setTimeout
+  if (!window.prodCapPendingRealTimeUpdate) return
 
   // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
   setTimeout(function() {
@@ -886,67 +1447,6 @@ window.capacityEvents._onFocusOut = function(evt) {
         prodCapRefreshCurrentTab()
       }
       return
-    }
-
-    // ── PM Capacity flush ──────────────────────────────────
-    if (window.pmPendingRealTimeUpdate || window.pmPendingRerender) {
-      window.pmPendingRealTimeUpdate = false
-      window.pmPendingRerender = false
-      var activePMBtn = document.querySelector('.pm-shell .me-nav-btn.active')
-      if (activePMBtn && activePMBtn.getAttribute('data-tab') === 'chart') {
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender()
-        return
-      }
-      if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab()
-      return
-    }
-
-    // ── Logistics Capacity flush ───────────────────────────
-    if (window.logPendingRerender) {
-      window.logPendingRerender = false
-      var activeLogBtn = document.querySelector('.log-shell .me-nav-btn.active')
-      if (activeLogBtn && activeLogBtn.getAttribute('data-tab') === 'chart') {
-        if (typeof logCapSmartRender === 'function') logCapSmartRender()
-        return
-      }
-      if (typeof logRefreshCurrentTab === 'function') logRefreshCurrentTab()
-      return
-    }
-
-    // ── Unit 6 Capacity flush ──────────────────────────────
-    if (window.unit6PendingRerender) {
-      window.unit6PendingRerender = false
-      var activeUnit6Btn = document.querySelector('.unit6-shell .me-nav-btn.active')
-      if (activeUnit6Btn && activeUnit6Btn.getAttribute('data-tab') === 'chart') {
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender()
-        return
-      }
-      if (typeof unit6RefreshCurrentTab === 'function') unit6RefreshCurrentTab()
-      return
-    }
-
-    // ── ME Capacity flush ──────────────────────────────────
-    // Using render() here would call renderMeCapacity() → meDataAutoSyncProductionProducts()
-    // which schedules another meDataSave, creating a feedback loop that constantly
-    // redraws the capacity chart.
-    if (window.mePendingRealTimeUpdate || window.mePendingRerender) {
-      window.mePendingRealTimeUpdate = false
-      window.mePendingRerender = false
-      // Chart tab is read-only — mark dirty, recalculate when user navigates to it.
-      // Only query .me-shell here; PM has already been handled above.
-      var activeNavBtn = contextRoot
-        ? contextRoot.querySelector('.me-nav-btn.active')
-        : document.querySelector('.me-shell .me-nav-btn.active')
-      if (activeNavBtn && activeNavBtn.getAttribute('data-tab') === 'chart') {
-        if (isPMContext && typeof pmCapSmartRender === 'function') pmCapSmartRender()
-        else if (typeof meCapSmartRender === 'function') meCapSmartRender()
-        return
-      }
-      if (isPMContext && typeof pmRefreshCurrentTab === 'function') {
-        pmRefreshCurrentTab()
-      } else if (typeof meRefreshCurrentTab === 'function') {
-        meRefreshCurrentTab()
-      }
     }
   }, 0)
 }

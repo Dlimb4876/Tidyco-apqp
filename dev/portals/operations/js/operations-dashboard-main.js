@@ -69,15 +69,7 @@ function setupOpsPulseFeed() {
 	container.addEventListener('focusout', function(evt) {
 		const nextFocus = evt.relatedTarget;
 		if (nextFocus && nextFocus.closest('table')) return;
-		if (!opsPendingRealTimeUpdate) return;
-		setTimeout(function() {
-			if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return;
-			if (opsPendingRealTimeUpdate) {
-				opsPendingRealTimeUpdate = false;
-				if (typeof opsRefreshCurrentTab === 'function') opsRefreshCurrentTab();
-				else render();
-			}
-		}, 0);
+		if (typeof flushDeferred === 'function') flushDeferred('ops');
 	});
 }
 

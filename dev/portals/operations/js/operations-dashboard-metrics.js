@@ -65,6 +65,20 @@ function opsStatusTone(value) {
 	return 'critical';
 }
 
+function opsNormalizeDepartment(value, fallback = 'ME') {
+	const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
+	if (normalized === 'PM') return 'PM';
+	if (normalized === 'LOG') return 'LOG';
+	if (normalized === 'UNIT6') return 'UNIT6';
+	return 'ME';
+}
+
+function opsFilterByDepartment(list, department, fallback = 'ME') {
+	if (!Array.isArray(list)) return [];
+	const target = opsNormalizeDepartment(department, fallback);
+	return list.filter(item => opsNormalizeDepartment(item && item.department, fallback) === target);
+}
+
 function opsMetricsDependencies(overrides = {}) {
 	return {
 		products: Array.isArray(overrides.products)
@@ -77,7 +91,7 @@ function opsMetricsDependencies(overrides = {}) {
 				: []),
 		meDataState: overrides.meDataState || window.meDataState || null,
 		meCalculateMonthData: overrides.meCalculateMonthData || window.meCalculateMonthData,
-		meFilterByDepartment: overrides.meFilterByDepartment || window.meFilterByDepartment,
+		departmentFilter: overrides.departmentFilter || opsFilterByDepartment,
 		logDataState: overrides.logDataState || window.logDataState || null
 	};
 }
@@ -200,17 +214,17 @@ function opsCalcDepartmentCapacity(department, dependencies = {}, monthKeyOverri
 	const products = Array.isArray(deps.meDataState.products) ? deps.meDataState.products : [];
 	const holidays = Array.isArray(deps.meDataState.holidays) ? deps.meDataState.holidays : [];
 
-	const teamFiltered = typeof deps.meFilterByDepartment === 'function'
-		? deps.meFilterByDepartment(team, department, 'ME')
+	const teamFiltered = typeof deps.departmentFilter === 'function'
+		? deps.departmentFilter(team, department, 'ME')
 		: team;
-	const tasksFiltered = typeof deps.meFilterByDepartment === 'function'
-		? deps.meFilterByDepartment(tasks, department, 'ME')
+	const tasksFiltered = typeof deps.departmentFilter === 'function'
+		? deps.departmentFilter(tasks, department, 'ME')
 		: tasks;
-	const productsFiltered = typeof deps.meFilterByDepartment === 'function'
-		? deps.meFilterByDepartment(products, department, 'ME')
+	const productsFiltered = typeof deps.departmentFilter === 'function'
+		? deps.departmentFilter(products, department, 'ME')
 		: products;
-	const holidaysFiltered = typeof deps.meFilterByDepartment === 'function'
-		? deps.meFilterByDepartment(holidays, department, 'ME')
+	const holidaysFiltered = typeof deps.departmentFilter === 'function'
+		? deps.departmentFilter(holidays, department, 'ME')
 		: holidays;
 
 	const monthData = deps.meCalculateMonthData(monthKey, teamFiltered, tasksFiltered, productsFiltered, holidaysFiltered);

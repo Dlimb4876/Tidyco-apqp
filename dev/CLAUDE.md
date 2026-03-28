@@ -20,13 +20,12 @@
 3. Keep global mutable state in `core/js/state.js` with defaults.
 4. Use `esc()` for user data rendered into HTML strings.
 5. Use `navigate()` for route changes so realtime cleanup runs.
-6. Keep ME and PM capacity parity unless explicitly excluded.
-7. Do not filter client queries by `user_id` (auth-only RLS model).
-8. Keep new plans/docs in `plans/` unless it is a core root doc.
-9. Use mobile-first CSS with both breakpoints:
+6. Do not filter client queries by `user_id` (auth-only RLS model).
+7. Keep new plans/docs in `plans/` unless it is a core root doc.
+8. Use mobile-first CSS with both breakpoints:
 	 - `@media (max-width: 767px)`
 	 - `@media (min-width: 768px)`
-10. When adding or changing a feature on any content page, update the matching entry in `GUIDE_CONTENT` inside `utils/js/guide.js` to reflect the change.
+9. When adding or changing a feature on any content page, update the matching entry in `GUIDE_CONTENT` inside `utils/js/guide.js` to reflect the change.
 
 ## Validation Commands
 - `npm install` (fresh clone only)
@@ -43,7 +42,6 @@
 
 ## Scoped Detail Owners
 - Core guardrails: `.github/copilot-instructions.md`
-- Capacity details: `.github/instructions/capacity-parity.instructions.md`
 - Testing details: `.github/instructions/testing.instructions.md`
 - Security: `.claude/rules/security.md`
 - Database and RLS: `.claude/rules/database.md`

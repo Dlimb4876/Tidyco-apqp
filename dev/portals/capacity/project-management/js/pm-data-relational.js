@@ -8,6 +8,9 @@
    Called by pm-data.js during pmDataInit() and pmDataSave()
    ============================================================ */
 
+var meUUID = window.capUUID || window.meUUID || (() => crypto.randomUUID());
+var meNormalizeDateRange = window.capNormalizeDateRange || window.meNormalizeDateRange;
+
 // ─────────────────────────────────────────────────────────────
 // LOAD OPERATIONS
 // ─────────────────────────────────────────────────────────────

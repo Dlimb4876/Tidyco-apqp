@@ -22,6 +22,7 @@ global.writeNavigationHistory = jest.fn();
 global.logDataSave = jest.fn(() => Promise.resolve());
 global.isEditingInlineCell = jest.fn(() => false);
 global.logDataInitialized = true;
+global.canEdit = jest.fn(() => true);
 
 global.logDataGetTeam = jest.fn(() => TEAM_FIXTURE);
 global.logDataGetTasks = jest.fn(() => TASKS_FIXTURE);
@@ -29,14 +30,14 @@ global.logDataGetProducts = jest.fn(() => PRODUCTS_FIXTURE);
 global.logDataGetHolidays = jest.fn(() => HOLIDAYS_FIXTURE);
 global.logDataAutoSyncLogProducts = jest.fn(() => false);
 
-global.meRenderTeamTab = jest.fn(() => '<div>LOG Team Tab</div>');
-global.meRenderTasksTab = jest.fn(() => '<div>LOG Tasks Tab</div>');
-global.meRenderProductsTab = jest.fn(() => '<div>LOG Products Tab</div>');
-global.meRenderProductTaskLoadTab = jest.fn(() => '<div>LOG Product Load Tab</div>');
-global.meRenderHolidaysTab = jest.fn(() => '<div>LOG Holidays Tab</div>');
-global.meRenderChartTab = jest.fn(() => '<div>LOG Chart Tab</div>');
-global.meDrawChartNow = jest.fn();
-global.meDrawHeatmapNow = jest.fn();
+global.capRenderTeamTab = jest.fn(() => '<div>LOG Team Tab</div>');
+global.capRenderTasksTab = jest.fn(() => '<div>LOG Tasks Tab</div>');
+global.capRenderProductsTab = jest.fn(() => '<div>LOG Products Tab</div>');
+global.capRenderProductTaskLoadTab = jest.fn(() => '<div>LOG Product Load Tab</div>');
+global.capRenderHolidaysTab = jest.fn(() => '<div>LOG Holidays Tab</div>');
+global.capRenderChartTab = jest.fn(() => '<div>LOG Chart Tab</div>');
+global.capDrawChartNow = jest.fn();
+global.capDrawHeatmapNow = jest.fn();
 
 const src = fs.readFileSync(
   path.resolve(__dirname, '../portals/capacity/logistics/js/log-capacity.js'),
@@ -67,21 +68,34 @@ afterEach(() => {
 });
 
 describe('logRenderCapacity()', () => {
-  it('returns logistics shell HTML and sets LOG context', () => {
+  it('returns logistics shell HTML without writing legacy context', () => {
     const html = window.logRenderCapacity();
 
     expect(typeof html).toBe('string');
     expect(html).toContain('Logistics Load Capacity');
     expect(html).toContain('data-cap-action="cap-log-set-tab"');
-    expect(window.meCurrentDepartmentContext).toBe('LOG');
   });
 
   it('draws chart and heatmap when chart tab is active', () => {
     window.logRenderCapacity();
     jest.advanceTimersByTime(110);
 
-    expect(global.meDrawChartNow).toHaveBeenCalled();
-    expect(global.meDrawHeatmapNow).toHaveBeenCalled();
+    expect(global.capDrawChartNow).toHaveBeenCalledWith(
+      TEAM_FIXTURE,
+      TASKS_FIXTURE,
+      PRODUCTS_FIXTURE,
+      HOLIDAYS_FIXTURE,
+      expect.any(String),
+      'LOG'
+    );
+    expect(global.capDrawHeatmapNow).toHaveBeenCalledWith(
+      TEAM_FIXTURE,
+      TASKS_FIXTURE,
+      PRODUCTS_FIXTURE,
+      HOLIDAYS_FIXTURE,
+      expect.any(String),
+      'LOG'
+    );
   });
 });
 
@@ -97,11 +111,16 @@ describe('logSetTab()', () => {
     window.logSetTab('team');
 
     expect(global.writeNavigationHistory).toHaveBeenCalledWith('#s=capacity&ct=logistics&lgt=team', { push: true });
-    expect(global.meRenderTeamTab).toHaveBeenCalledWith(TEAM_FIXTURE);
+    expect(global.capRenderTeamTab).toHaveBeenCalledWith(
+      TEAM_FIXTURE,
+      HOLIDAYS_FIXTURE,
+      expect.any(String),
+      'LOG',
+      true
+    );
 
     const body = document.getElementById('logBody');
     expect(body.innerHTML).toContain('LOG Team Tab');
-    expect(window.meCurrentDepartmentContext).toBe('LOG');
   });
 
   it('falls back safely when log data getters are unavailable', () => {
@@ -110,7 +129,13 @@ describe('logSetTab()', () => {
     document.body.innerHTML = '<div id="logBody"></div>';
     window.logSetTab('team');
 
-    expect(global.meRenderTeamTab).toHaveBeenCalledWith([]);
+    expect(global.capRenderTeamTab).toHaveBeenCalledWith(
+      [],
+      HOLIDAYS_FIXTURE,
+      expect.any(String),
+      'LOG',
+      true
+    );
     global.logDataGetTeam = jest.fn(() => TEAM_FIXTURE);
   });
 });

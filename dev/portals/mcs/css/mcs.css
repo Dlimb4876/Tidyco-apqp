@@ -428,6 +428,147 @@
   flex: 1;
 }
 
+/* -- Wider Modal for Create Form -- */
+.mcs-modal-wide {
+  width: 1400px;
+  max-width: 96vw;
+}
+
+/* -- New Form Layout -- */
+.mcs-form-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mcs-form-section {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.mcs-form-section-primary {
+  border-left: 4px solid var(--blue);
+}
+
+.mcs-form-section-final {
+  border-left: 4px solid var(--green);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(22, 163, 74, 0.03) 100%);
+}
+
+.mcs-form-section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mcs-form-section-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--mono);
+}
+
+.mcs-form-section-title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.mcs-form-section-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.mcs-form-section-subtitle {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.mcs-form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.mcs-form-row:last-child {
+  margin-bottom: 0;
+}
+
+.mcs-form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.mcs-form-row-3col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.mcs-field-full {
+  flex: 1;
+  min-width: 0;
+}
+
+.mcs-field-expand {
+  flex: 2;
+  min-width: 0;
+}
+
+/* Compact impact grid for create form */
+.mcs-impact-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.mcs-impact-grid-compact .mcs-impact-cell {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+/* Responsive adjustments for form */
+@media (max-width: 1200px) {
+  .mcs-form-row-3col {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .mcs-impact-grid-compact {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .mcs-form-row-3col,
+  .mcs-form-row-2col {
+    grid-template-columns: 1fr;
+  }
+  
+  .mcs-impact-grid-compact {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .mcs-staged-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 240px;
@@ -1105,6 +1246,71 @@
   user-select: none;
 }
 
+.mcs-impact-progress-wrap {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+}
+
+.mcs-impact-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mcs-impact-progress-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mcs-impact-progress-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.mcs-impact-progress-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mcs-impact-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.mcs-impact-progress-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.mcs-impact-progress-item label {
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.mcs-stage-note-compact {
+  margin: 0;
+  font-size: 12px;
+}
+
 /* -- Timeline -- */
 .mcs-timeline {
   display: flex;
@@ -1213,6 +1419,21 @@
   }
   .mcs-comment-post-btn {
     width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .mcs-sidebar {
+    width: 220px;
+    padding: 20px 14px;
+  }
+
+  .mcs-toolbar {
+    padding: 14px 24px;
+  }
+
+  .mcs-list {
+    padding: 20px 24px;
   }
 }
 

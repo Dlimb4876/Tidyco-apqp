@@ -187,6 +187,47 @@
   background: var(--bg-soft);
 }
 
+.hub-fav-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hub-fav-delete {
+  display: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+.hub-fav-item:hover .hub-fav-delete {
+  display: flex;
+}
+
+.hub-fav-delete:hover {
+  background: var(--red-pale, #fef2f2);
+  color: var(--red, #ef4444);
+}
+
+@media (max-width: 767px) {
+  .hub-fav-delete {
+    display: flex;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+}
+
 .hub-favs-empty {
   font-size: 13px;
   color: var(--muted);

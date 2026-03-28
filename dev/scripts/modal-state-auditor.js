@@ -9,7 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 
-function walkDir(dir, exclude = ['node_modules', '.git', 'tests']) {
+function walkDir(dir, extensions = ['.js'], exclude = ['node_modules', '.git', 'tests']) {
   const files = [];
   const items = fs.readdirSync(dir);
 
@@ -19,13 +19,38 @@ function walkDir(dir, exclude = ['node_modules', '.git', 'tests']) {
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      files.push(...walkDir(fullPath, exclude));
-    } else if (fullPath.endsWith('.js')) {
+      files.push(...walkDir(fullPath, extensions, exclude));
+    } else if (extensions.some((ext) => fullPath.endsWith(ext))) {
       files.push(fullPath);
     }
   });
 
   return files;
+}
+
+function normalizePath(filePath) {
+  return String(filePath || '').replace(/\\/g, '/').replace(/^\.\//, '')
+}
+
+function collectGlobalModalClosers(files) {
+  const explicitClosers = new Set();
+  let hasGenericCloser = false;
+
+  files.forEach((file) => {
+    const content = fs.readFileSync(file, 'utf8');
+    const closeRegex = /closeModal\s*\(\s*['"](\w+)['"]\s*\)/g;
+    let match = closeRegex.exec(content);
+    while (match) {
+      explicitClosers.add(match[1]);
+      match = closeRegex.exec(content);
+    }
+
+    if (content.includes('closeModal(openModal.id)')) {
+      hasGenericCloser = true;
+    }
+  });
+
+  return { explicitClosers, hasGenericCloser };
 }
 
 function analyzeFile(filePath) {
@@ -74,11 +99,14 @@ function analyzeFile(filePath) {
 }
 
 function main() {
-  const jsFiles = walkDir('.');
-  const filesToCheck = jsFiles.filter(f =>
-    (f.startsWith('./portals/') || f.startsWith('./core/') || f.startsWith('./utils/')) &&
+  const jsFiles = walkDir('.', ['.js']);
+  const filesToCheck = jsFiles.filter(f => {
+    const normalized = normalizePath(f)
+    return (normalized.startsWith('portals/') || normalized.startsWith('core/') || normalized.startsWith('utils/')) &&
     !f.includes('test')
-  );
+  })
+  const modalSourceFiles = walkDir('.', ['.js', '.html']).filter((file) => !file.includes('test'))
+  const { explicitClosers, hasGenericCloser } = collectGlobalModalClosers(modalSourceFiles)
 
   console.log(`\n🎯 Modal State Auditor\n${'═'.repeat(40)}\n`);
   console.log(`Scanning ${filesToCheck.length} JS files for modals...\n`);
@@ -92,7 +120,8 @@ function main() {
     modals.forEach((modalData, modalId) => {
       if (modalData.shows.length > 0) {
         totalModals++;
-        const hasClose = modalData.closes.length > 0;
+        const hasExplicitClose = modalData.closes.length > 0 || explicitClosers.has(modalId)
+        const hasClose = hasExplicitClose || hasGenericCloser;
         const status = hasClose ? '✅' : '⚠️ ';
 
         console.log(`${status} ${file}`);

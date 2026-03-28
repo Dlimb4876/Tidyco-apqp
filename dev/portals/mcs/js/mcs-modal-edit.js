@@ -17,17 +17,19 @@ async function mcsSaveChange() {
     return;
   }
 
-  const impactMap = {
-    'mcs-imp-bom': 'BOM Change',
-    'mcs-imp-proc': 'Work Instructions',
-    'mcs-imp-tooling': 'Tooling Change',
-    'mcs-imp-training': 'Training Required',
-    'mcs-imp-customer': 'Customer Notification'
-  };
+  const impactMap = mcsGetImpactFieldMap();
 
   const impacts = Object.entries(impactMap)
     .filter(([id]) => document.getElementById(id)?.checked)
     .map(([, label]) => label);
+  const selectedImpactSet = new Set(impacts);
+  const impactProgress = {};
+  const progressInputs = document.querySelectorAll('input[data-impact-progress]');
+  progressInputs.forEach(input => {
+    const label = input.getAttribute('data-impact-progress');
+    if (!label || !selectedImpactSet.has(label)) return;
+    impactProgress[label] = input.checked === true;
+  });
 
   // Get selected PFMEA cause
   const selectedPfmeaCauseId = document.getElementById('mcs-f-pfmea-cause')?.value || null;
@@ -38,7 +40,8 @@ async function mcsSaveChange() {
     document.getElementById('mcs-f-justification')?.value,
     documentsAffected,
     knockOnEffect,
-    impactAssessmentEstimate
+    impactAssessmentEstimate,
+    impactProgress
   );
 
   try {
@@ -79,7 +82,6 @@ async function mcsSaveChange() {
         const { error: impErr } = await supa.from('mcs_impacts').insert(impactRows);
         if (impErr) console.error('Error saving impacts:', impErr);
       }
-
       // Handle PFMEA linking if changed
       const oldLink = mcsList[changeIdx].related_pfmea_cause_id;
       if (selectedPfmeaCauseId !== oldLink) {
@@ -92,7 +94,13 @@ async function mcsSaveChange() {
         }
       }
 
-      mcsList[changeIdx] = { ...mcsList[changeIdx], ...updateFields, impacts, related_pfmea_cause_id: selectedPfmeaCauseId };
+      mcsList[changeIdx] = {
+        ...mcsList[changeIdx],
+        ...updateFields,
+        impacts,
+        impact_progress: impactProgress,
+        related_pfmea_cause_id: selectedPfmeaCauseId
+      };
       mcsToast('Change updated successfully');
     } else {
       // Create new — query DB for highest existing ECR number this year to avoid duplicate key
@@ -164,11 +172,11 @@ async function mcsSaveChange() {
         await mcsLinkToPfmeaCause(id, selectedPfmeaCauseId);
       }
 
-      mcsList.unshift({ ...newChange, impacts, timeline: [] });
+      mcsList.unshift({ ...newChange, impacts, impact_progress: impactProgress, timeline: [] });
       mcsToast(`Created: ${id}`);
     }
 
-    mcsCloseModal(mcsEditingId ? 'mcs-view-backdrop' : 'mcs-form-backdrop');
+    mcsCloseModal('mcs-form-backdrop');
     mcsRenderList();
   } catch (err) {
     console.error('Save error:', err);
@@ -188,6 +196,12 @@ async function mcsShowEditModal(change) {
   const initiatedBy = change.initiated_by || (currentUser && currentUser.email) || '';
   const preselectedApprover = mcsExtractNominatedApprover(change.eng_review_notes || '');
   const extendedJustification = mcsParseExtendedJustification(change.justification || '');
+  const stage3ChecklistHtml = mcsBuildStage3ImpactChecklistHtml(
+    change.impacts || [],
+    (change.impact_progress && typeof change.impact_progress === 'object')
+      ? change.impact_progress
+      : (extendedJustification.impactProgress || {})
+  );
 
   const productOptions = (window.productsState && window.productsState.products || [])
     .map(p => {
@@ -295,7 +309,7 @@ async function mcsShowEditModal(change) {
 
             <section class="mcs-stage-block" data-stage="implement">
               <div class="mcs-stage-title">Stage 3: Implement</div>
-              <div class="mcs-stage-subtitle">Update implementation target and overhaul time impact.</div>
+              <div class="mcs-stage-subtitle">Update implementation target, checklist progress, and overhaul time impact.</div>
               <div class="mcs-modal-grid">
                 <div class="mcs-field-group">
                   <div class="mcs-field-label">Target Implementation</div>
@@ -309,6 +323,7 @@ async function mcsShowEditModal(change) {
                   <input class="mcs-field-input" id="mcs-f-time-impact" type="number" step="0.5" value="${change.estimated_time_impact_hours || 0}" />
                 </div>
               </div>
+              <div class="mcs-impact-progress-wrap">${stage3ChecklistHtml}</div>
             </section>
 
             <section class="mcs-stage-block" data-stage="approval2">
@@ -330,5 +345,23 @@ async function mcsShowEditModal(change) {
   document.body.appendChild(backdrop);
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop');
+  });
+
+  const stage1ImpactInputs = document.querySelectorAll('#mcs-form-backdrop .mcs-impact-grid input[type="checkbox"]');
+  stage1ImpactInputs.forEach(input => {
+    input.addEventListener('change', () => {
+      const impactMap = mcsGetImpactFieldMap();
+      const selectedImpacts = Object.entries(impactMap)
+        .filter(([id]) => document.getElementById(id)?.checked)
+        .map(([, label]) => label);
+      const progressMap = {};
+      selectedImpacts.forEach(label => {
+        const progressInput = document.getElementById(mcsGetImpactProgressInputId(label));
+        if (progressInput) progressMap[label] = progressInput.checked === true;
+      });
+      const host = document.querySelector('#mcs-form-backdrop .mcs-impact-progress-wrap');
+      if (!host) return;
+      host.innerHTML = mcsBuildStage3ImpactChecklistHtml(selectedImpacts, progressMap);
+    });
   });
 }

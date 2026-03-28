@@ -22,6 +22,7 @@ global.writeNavigationHistory = jest.fn();
 global.unit6DataSave = jest.fn(() => Promise.resolve());
 global.isEditingInlineCell = jest.fn(() => false);
 global.unit6DataInitialized = true;
+global.canEdit = jest.fn(() => true);
 
 global.unit6DataGetTeam = jest.fn(() => TEAM_FIXTURE);
 global.unit6DataGetTasks = jest.fn(() => TASKS_FIXTURE);
@@ -29,14 +30,14 @@ global.unit6DataGetProducts = jest.fn(() => PRODUCTS_FIXTURE);
 global.unit6DataGetHolidays = jest.fn(() => HOLIDAYS_FIXTURE);
 global.unit6DataAutoSyncUnit6Products = jest.fn(() => false);
 
-global.meRenderTeamTab = jest.fn(() => '<div>UNIT6 Team Tab</div>');
-global.meRenderTasksTab = jest.fn(() => '<div>UNIT6 Tasks Tab</div>');
-global.meRenderProductsTab = jest.fn(() => '<div>UNIT6 Products Tab</div>');
-global.meRenderProductTaskLoadTab = jest.fn(() => '<div>UNIT6 Product Load Tab</div>');
-global.meRenderHolidaysTab = jest.fn(() => '<div>UNIT6 Holidays Tab</div>');
-global.meRenderChartTab = jest.fn(() => '<div>UNIT6 Chart Tab</div>');
-global.meDrawChartNow = jest.fn();
-global.meDrawHeatmapNow = jest.fn();
+global.capRenderTeamTab = jest.fn(() => '<div>UNIT6 Team Tab</div>');
+global.capRenderTasksTab = jest.fn(() => '<div>UNIT6 Tasks Tab</div>');
+global.capRenderProductsTab = jest.fn(() => '<div>UNIT6 Products Tab</div>');
+global.capRenderProductTaskLoadTab = jest.fn(() => '<div>UNIT6 Product Load Tab</div>');
+global.capRenderHolidaysTab = jest.fn(() => '<div>UNIT6 Holidays Tab</div>');
+global.capRenderChartTab = jest.fn(() => '<div>UNIT6 Chart Tab</div>');
+global.capDrawChartNow = jest.fn();
+global.capDrawHeatmapNow = jest.fn();
 
 const src = fs.readFileSync(
   path.resolve(__dirname, '../portals/capacity/unit6/js/unit6-capacity.js'),
@@ -67,21 +68,34 @@ afterEach(() => {
 });
 
 describe('unit6RenderCapacity()', () => {
-  it('returns Unit 6 shell HTML and sets UNIT6 context', () => {
+  it('returns Unit 6 shell HTML without writing legacy context', () => {
     const html = window.unit6RenderCapacity();
 
     expect(typeof html).toBe('string');
     expect(html).toContain('Unit 6 Load Capacity');
     expect(html).toContain('data-cap-action="cap-unit6-set-tab"');
-    expect(window.meCurrentDepartmentContext).toBe('UNIT6');
   });
 
   it('draws chart and heatmap when chart tab is active', () => {
     window.unit6RenderCapacity();
     jest.advanceTimersByTime(110);
 
-    expect(global.meDrawChartNow).toHaveBeenCalled();
-    expect(global.meDrawHeatmapNow).toHaveBeenCalled();
+    expect(global.capDrawChartNow).toHaveBeenCalledWith(
+      TEAM_FIXTURE,
+      TASKS_FIXTURE,
+      PRODUCTS_FIXTURE,
+      HOLIDAYS_FIXTURE,
+      expect.any(String),
+      'UNIT6'
+    );
+    expect(global.capDrawHeatmapNow).toHaveBeenCalledWith(
+      TEAM_FIXTURE,
+      TASKS_FIXTURE,
+      PRODUCTS_FIXTURE,
+      HOLIDAYS_FIXTURE,
+      expect.any(String),
+      'UNIT6'
+    );
   });
 });
 
@@ -97,11 +111,16 @@ describe('unit6SetTab()', () => {
     window.unit6SetTab('team');
 
     expect(global.writeNavigationHistory).toHaveBeenCalledWith('#s=capacity&ct=unit6&u6t=team', { push: true });
-    expect(global.meRenderTeamTab).toHaveBeenCalledWith(TEAM_FIXTURE);
+    expect(global.capRenderTeamTab).toHaveBeenCalledWith(
+      TEAM_FIXTURE,
+      HOLIDAYS_FIXTURE,
+      expect.any(String),
+      'UNIT6',
+      true
+    );
 
     const body = document.getElementById('unit6Body');
     expect(body.innerHTML).toContain('UNIT6 Team Tab');
-    expect(window.meCurrentDepartmentContext).toBe('UNIT6');
   });
 
   it('falls back safely when Unit 6 data getters are unavailable', () => {
@@ -110,7 +129,13 @@ describe('unit6SetTab()', () => {
     document.body.innerHTML = '<div id="unit6Body"></div>';
     window.unit6SetTab('team');
 
-    expect(global.meRenderTeamTab).toHaveBeenCalledWith([]);
+    expect(global.capRenderTeamTab).toHaveBeenCalledWith(
+      [],
+      HOLIDAYS_FIXTURE,
+      expect.any(String),
+      'UNIT6',
+      true
+    );
     global.unit6DataGetTeam = jest.fn(() => TEAM_FIXTURE);
   });
 });

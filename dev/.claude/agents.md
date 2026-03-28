@@ -37,7 +37,7 @@ Agent(subagent_type="Explore", description="Find all Supabase queries in codebas
 
 **Example trigger:**
 ```
-Agent(subagent_type="Plan", description="Design capacity parity sync system", ...)
+Agent(subagent_type="Plan", description="Design capacity data structure", ...)
 ```
 
 **Output:** Step-by-step implementation plan with critical files identified
@@ -116,7 +116,7 @@ Agent(description="Plan BOM refactoring")  // Depends on previous search
 Agents work better with context:
 ```
 Agent(description="Explore portals/ to find capacity sync patterns",
-  prompt="Search for capacity parity code, identify where ME and PM capacities are synced")
+  prompt="Search for capacity data patterns and identify how each department stream manages its data")
 ```
 
 ### Use Foreground for Dependencies
@@ -148,7 +148,7 @@ Agent(subagent_type="Explore", description="Find and analyze all duplicate const
 
 ### Feature Planning
 ```
-Agent(subagent_type="Plan", description="Plan capacity parity sync implementation across ME/PM")
+Agent(subagent_type="Plan", description="Plan capacity implementation for a department stream")
 ```
 
 ### Codebase Onboarding
@@ -182,7 +182,6 @@ Agent(subagent_type="Explore", description="Find all modal implementations and i
 Agents support automation hooks. Future setup can include:
 - Auto-run code quality agents on PR
 - Auto-validate test coverage
-- Auto-check for capacity parity mismatches
 - Auto-generate changelog from commits
 
 See `.claude/hooks.md` for automation patterns.
