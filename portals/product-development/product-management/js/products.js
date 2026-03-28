@@ -17,7 +17,9 @@ function loadProductsSearch() {
   try { return localStorage.getItem(PRODUCTS_SEARCH_KEY) || ''; } catch { return ''; }
 }
 function saveProductsSearch(val) {
-  try { localStorage.setItem(PRODUCTS_SEARCH_KEY, val); } catch(e) {}
+  try { localStorage.setItem(PRODUCTS_SEARCH_KEY, val); } catch(e) {
+    console.debug('Failed to save products search:', e)
+  }
 }
 
 const PRODUCTS_FILTERS_KEY = 'products_filters_state';
@@ -39,7 +41,9 @@ function loadProductsFilters() {
   }
 }
 function saveProductsFilters() {
-  try { localStorage.setItem(PRODUCTS_FILTERS_KEY, JSON.stringify(productsFilters)); } catch (e) {}
+  try { localStorage.setItem(PRODUCTS_FILTERS_KEY, JSON.stringify(productsFilters)); } catch (e) {
+    console.debug('Failed to save products filters:', e)
+  }
 }
 let productsFilters = loadProductsFilters();
 

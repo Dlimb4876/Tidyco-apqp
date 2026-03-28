@@ -108,7 +108,9 @@ document.addEventListener('input', e => {
 function save(...extraIds) {
   if (progId) dirtyProjects.add(progId);
   extraIds.forEach(id => { if (id) dirtyProjects.add(id); });
-  try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+  try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
+    console.debug('localStorage save failed:', e)
+  }
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveRemote, 800);
   // 3-D: Show pending count while a save is already in flight
@@ -304,7 +306,9 @@ async function loadRemotePage(page, pageSize = 50) {
     }
   }
 
-  try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+  try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
+    console.debug('localStorage save failed:', e)
+  }
 }
 
 // Load the next page of projects (called from "Load more" button in hub).
@@ -437,7 +441,9 @@ function load() {
     try {
       const s = localStorage.getItem(key);
       if (s) { const d = JSON.parse(s); if (d.projects && d.projects.length > 0) db = d; }
-    } catch (e) {}
+    } catch (e) {
+      console.debug('Failed to load from localStorage key', key, ':', e)
+    }
   });
   db.projects = db.projects.map(p => migrateprog(p));
 }
@@ -486,7 +492,9 @@ function subscribeProjectsGlobally() {
       if (db.projects.find(p => p.id === row.prog_id)) return; // already known
       const newProg = migrateprog(rowToProject(row));
       db.projects.unshift(newProg);
-      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
+        console.debug('localStorage save failed:', e)
+      }
       if (currentSection === 'hub' || currentSection === 'projects') {
         if (typeof render === 'function') render();
       }
@@ -521,7 +529,9 @@ function subscribeProjectsGlobally() {
       if (row.gate_selection_locked !== undefined)  p.gate_selection_locked  = !!row.gate_selection_locked;
       if (row.gate_selection_locked_at !== undefined) p.gate_selection_locked_at = row.gate_selection_locked_at;
       if (row.gate_selection_locked_by !== undefined) p.gate_selection_locked_by = row.gate_selection_locked_by;
-      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
+        console.debug('localStorage save failed:', e)
+      }
       if (currentSection === 'hub' || currentSection === 'projects') {
         if (typeof render === 'function') render();
       }
@@ -533,7 +543,9 @@ function subscribeProjectsGlobally() {
       if (progId === row.prog_id) {
         progId = db.projects.length ? db.projects[0].id : null;
       }
-      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {}
+      try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
+        console.debug('localStorage save failed:', e)
+      }
       if (currentSection === 'hub' || currentSection === 'projects' ||
           currentSection === 'project' || currentSection === 'apqp') {
         if (typeof render === 'function') render();

@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-28 | Replace silent error handling with proper logging | Code review found empty catch blocks swallowing errors; added console.error/console.debug to 9 locations so failures are visible for debugging
+
 ## 2026-03-28 | Fix code review issues (network race condition, gate questions return value, input escaping, cleanup) | Remove premature optimistic health state in network detection; make gate questions data loader return promise; fix double-escaping in input values; add teardown function for memory cleanup
 
 ## 2026-03-28 | Professional Wiki Content Rewrite | Updated 5 key wiki pages (Gates, MCS, Capacity, PFMEA, Action Centre) to an objective, encyclopedic tone as per reference guide standards.

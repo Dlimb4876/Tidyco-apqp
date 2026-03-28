@@ -46,7 +46,9 @@ async function launchApp() {
 
   // Load user profiles for owner dropdowns (non-blocking, used across portals)
   if (typeof settingsEnsurePermissionsData === 'function') {
-    settingsEnsurePermissionsData().catch(() => {});
+    settingsEnsurePermissionsData().catch(err => {
+      console.error('Failed to load permissions data:', err)
+    });
   }
 
   // Load Production Planning data (separate Supabase tables, silent if tables absent)
