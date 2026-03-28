@@ -3,6 +3,10 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-28 | Block self-echo renders in all capacity realtime handlers | PM, LOG, UNIT6 realtime callbacks now have the same SaveInProgress guard as ME, stopping startup flicker across all capacity streams
+## 2026-03-28 | Block self-echo renders in ME capacity realtime | me_teams, me_tasks, me_products handlers now skip re-render while a local save is in progress, stopping the startup flicker
+## 2026-03-28 | Add autocomplete="off" to capacity table inputs | Suppress 60k+ browser warnings about form fields with no id/name in cap-products, cap-product-taskload, cap-tasks
+
 ## 2026-03-28 | Fix operations dashboard capacity KPIs showing "Not Ready" | Added missing window exports for production capacity functions and backwards compatibility alias for meCalculateMonthData so ME, PM, LOG, and Unit 6 capacity metrics display correctly
 
 ## 2026-03-28 | Add Stage 3 impact checklist tracking for MCS | Stage 3 now mirrors Stage 1 impact selections as implementation checkboxes and saves progress in persisted change data

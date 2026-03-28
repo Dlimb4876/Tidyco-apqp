@@ -737,6 +737,7 @@ window.logDataSubscribe = function() {
     {
       table: 'log_teams',
       onInsert: (row) => {
+        if (window.logDataSaveInProgress) return;
         const normalized = {
           id: row.id,
           name: row.name || '',
@@ -756,6 +757,7 @@ window.logDataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
+        if (window.logDataSaveInProgress) return;
         logDataState.team = logDataState.team.filter(member => member.id !== deleted.id);
         logApplyRealtimeRender();
       }
@@ -763,6 +765,7 @@ window.logDataSubscribe = function() {
     {
       table: 'log_tasks',
       onInsert: (row) => {
+        if (window.logDataSaveInProgress) return;
         const normalized = {
           id: row.id,
           name: row.name || '',
@@ -784,6 +787,7 @@ window.logDataSubscribe = function() {
         }
       },
       onUpdate: (row) => {
+        if (window.logDataSaveInProgress) return;
         const normalized = {
           id: row.id,
           name: row.name || '',
@@ -805,6 +809,7 @@ window.logDataSubscribe = function() {
         logApplyRealtimeRender();
       },
       onDelete: (deleted) => {
+        if (window.logDataSaveInProgress) return;
         logDataState.tasks = logDataState.tasks.filter(task => task.id !== deleted.id);
         logApplyRealtimeRender();
       }
@@ -812,6 +817,7 @@ window.logDataSubscribe = function() {
     {
       table: 'log_products',
       onInsert: (row) => {
+        if (window.logDataSaveInProgress) return;
         const breakdown = meNormalizeProductSupportBreakdown(row, row.hours_per_week);
         const normalized = {
           id: row.id,
@@ -834,6 +840,7 @@ window.logDataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
+        if (window.logDataSaveInProgress) return;
         logDataState.products = logDataState.products.filter(product => product.id !== deleted.id);
         logApplyRealtimeRender();
       }
@@ -841,6 +848,7 @@ window.logDataSubscribe = function() {
     {
       table: 'log_holidays',
       onInsert: (row) => {
+        if (window.logDataSaveInProgress) return;
         const normalized = meNormalizeHolidayRecord(row);
         if (!normalized) return;
         if (!logDataState.holidays.some(holiday => holiday.id === normalized.id)) {
@@ -850,6 +858,7 @@ window.logDataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
+        if (window.logDataSaveInProgress) return;
         logDataState.holidays = logDataState.holidays.filter(holiday => holiday.id !== deleted.id);
         logApplyRealtimeRender();
       }
@@ -857,6 +866,7 @@ window.logDataSubscribe = function() {
     {
       table: 'log_product_support_history',
       onInsert: (row) => {
+        if (window.logDataSaveInProgress) return;
         const normalized = meNormalizeSupportHistoryRecord(row, 'LOG');
         if (!normalized) return;
         const idx = logDataState.productSupportHistory.findIndex(history => history.id === normalized.id);
@@ -867,6 +877,7 @@ window.logDataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
+        if (window.logDataSaveInProgress) return;
         logDataState.productSupportHistory = logDataState.productSupportHistory.filter(history => history.id !== deleted.id);
         logApplyRealtimeRender();
       }

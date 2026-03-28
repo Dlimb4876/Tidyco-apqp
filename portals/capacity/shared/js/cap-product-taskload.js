@@ -126,12 +126,12 @@ window.capRenderProductTaskLoadTab = function(tasksArray, productsArray, departm
         </div>
         <div class="me-card-body me-card-body-gutter">
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
-            <input type="text" value="${esc(state.search || '')}" placeholder="Search products" data-cap-action="cap-product-load-search" data-dept="${dept}" style="min-width:220px;flex:1 1 220px;">
-            <select data-cap-action="cap-product-load-family-filter" data-dept="${dept}">
+            <input type="text" autocomplete="off" value="${esc(state.search || '')}" placeholder="Search products" data-cap-action="cap-product-load-search" data-dept="${dept}" style="min-width:220px;flex:1 1 220px;">
+            <select autocomplete="off" data-cap-action="cap-product-load-family-filter" data-dept="${dept}">
               <option value="all">All families</option>
               ${familyOptions.map(family => `<option value="${esc(family)}" ${state.family === family ? 'selected' : ''}>${esc(family)}</option>`).join('')}
             </select>
-            <select data-cap-action="cap-product-load-sort" data-dept="${dept}">
+            <select autocomplete="off" data-cap-action="cap-product-load-sort" data-dept="${dept}">
               <option value="total" ${state.sortBy === 'total' ? 'selected' : ''}>Sort by total load</option>
               <option value="product" ${state.sortBy === 'product' ? 'selected' : ''}>Sort by product</option>
               <option value="family" ${state.sortBy === 'family' ? 'selected' : ''}>Sort by family</option>

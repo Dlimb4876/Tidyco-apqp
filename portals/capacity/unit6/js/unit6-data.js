@@ -737,6 +737,7 @@ window.unit6DataSubscribe = function() {
     {
       table: 'unit6_teams',
       onInsert: (row) => {
+        if (window.unit6DataSaveInProgress) return;
         const normalized = {
           id: row.id,
           name: row.name || '',
@@ -756,6 +757,7 @@ window.unit6DataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
+        if (window.unit6DataSaveInProgress) return;
         unit6DataState.team = unit6DataState.team.filter(member => member.id !== deleted.id);
         unit6ApplyRealtimeRender();
       }
@@ -763,6 +765,7 @@ window.unit6DataSubscribe = function() {
     {
       table: 'unit6_tasks',
       onInsert: (row) => {
+        if (window.unit6DataSaveInProgress) return;
         const normalized = {
           id: row.id,
           name: row.name || '',
@@ -784,6 +787,7 @@ window.unit6DataSubscribe = function() {
         }
       },
       onUpdate: (row) => {
+        if (window.unit6DataSaveInProgress) return;
         const normalized = {
           id: row.id,
           name: row.name || '',
@@ -805,6 +809,7 @@ window.unit6DataSubscribe = function() {
         unit6ApplyRealtimeRender();
       },
       onDelete: (deleted) => {
+        if (window.unit6DataSaveInProgress) return;
         unit6DataState.tasks = unit6DataState.tasks.filter(task => task.id !== deleted.id);
         unit6ApplyRealtimeRender();
       }
@@ -812,6 +817,7 @@ window.unit6DataSubscribe = function() {
     {
       table: 'unit6_products',
       onInsert: (row) => {
+        if (window.unit6DataSaveInProgress) return;
         const breakdown = meNormalizeProductSupportBreakdown(row, row.hours_per_week);
         const normalized = {
           id: row.id,
@@ -834,6 +840,7 @@ window.unit6DataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
+        if (window.unit6DataSaveInProgress) return;
         unit6DataState.products = unit6DataState.products.filter(product => product.id !== deleted.id);
         unit6ApplyRealtimeRender();
       }
@@ -841,6 +848,7 @@ window.unit6DataSubscribe = function() {
     {
       table: 'unit6_holidays',
       onInsert: (row) => {
+        if (window.unit6DataSaveInProgress) return;
         const normalized = meNormalizeHolidayRecord(row);
         if (!normalized) return;
         if (!unit6DataState.holidays.some(holiday => holiday.id === normalized.id)) {
@@ -850,6 +858,7 @@ window.unit6DataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
+        if (window.unit6DataSaveInProgress) return;
         unit6DataState.holidays = unit6DataState.holidays.filter(holiday => holiday.id !== deleted.id);
         unit6ApplyRealtimeRender();
       }
@@ -857,6 +866,7 @@ window.unit6DataSubscribe = function() {
     {
       table: 'unit6_product_support_history',
       onInsert: (row) => {
+        if (window.unit6DataSaveInProgress) return;
         const normalized = meNormalizeSupportHistoryRecord(row, 'UNIT6');
         if (!normalized) return;
         const idx = unit6DataState.productSupportHistory.findIndex(history => history.id === normalized.id);
@@ -867,6 +877,7 @@ window.unit6DataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
+        if (window.unit6DataSaveInProgress) return;
         unit6DataState.productSupportHistory = unit6DataState.productSupportHistory.filter(history => history.id !== deleted.id);
         unit6ApplyRealtimeRender();
       }

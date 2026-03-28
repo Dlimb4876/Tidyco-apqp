@@ -677,6 +677,7 @@ window.pmDataSubscribe = function() {
     {
       table: 'pm_teams',
       onInsert: (row) => {
+        if (window.pmDataSaveInProgress) return;
         const n = { id: row.id, name: row.name || '', hoursPerWeek: meGetHoursPerWeek(row.hours_per_week),
           utilisation: parseFloat(row.utilisation) || 80, jobTitle: row.job_title || '',
           group: row.team_group || '', department: 'PM', startDate: row.start_date || '',
@@ -688,6 +689,7 @@ window.pmDataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (d) => {
+        if (window.pmDataSaveInProgress) return;
         pmDataState.team = pmDataState.team.filter(t => t.id !== d.id);
         pmApplyRealtimeRender();
       }
@@ -695,6 +697,7 @@ window.pmDataSubscribe = function() {
     {
       table: 'pm_tasks',
       onInsert: (row) => {
+        if (window.pmDataSaveInProgress) return;
         const n = { id: row.id, name: row.name || '', category: row.category || 'NPI',
           type: row.type || 'standard', department: 'PM', assigneeId: row.assignee_id || '',
           productId: row.product_id || '', startDate: row.start_date || '', endDate: row.end_date || '',
@@ -706,6 +709,7 @@ window.pmDataSubscribe = function() {
         }
       },
       onUpdate: (row) => {
+        if (window.pmDataSaveInProgress) return;
         const n = { id: row.id, name: row.name || '', category: row.category || 'NPI',
           type: row.type || 'standard', department: 'PM', assigneeId: row.assignee_id || '',
           productId: row.product_id || '', startDate: row.start_date || '', endDate: row.end_date || '',
@@ -717,6 +721,7 @@ window.pmDataSubscribe = function() {
         pmApplyRealtimeRender();
       },
       onDelete: (d) => {
+        if (window.pmDataSaveInProgress) return;
         pmDataState.tasks = pmDataState.tasks.filter(t => t.id !== d.id);
         pmApplyRealtimeRender();
       }
@@ -724,6 +729,7 @@ window.pmDataSubscribe = function() {
     {
       table: 'pm_products',
       onInsert: (row) => {
+        if (window.pmDataSaveInProgress) return;
         const bd = meNormalizeProductSupportBreakdown(row, row.hours_per_week);
         const n = { id: row.id, name: row.name || '', productDatabaseId: row.product_database_id || '',
           hoursPerWeek: bd.hoursPerWeek, kittingHours: bd.kittingHours,
@@ -737,6 +743,7 @@ window.pmDataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (d) => {
+        if (window.pmDataSaveInProgress) return;
         pmDataState.products = pmDataState.products.filter(p => p.id !== d.id);
         pmApplyRealtimeRender();
       }
@@ -744,6 +751,7 @@ window.pmDataSubscribe = function() {
     {
       table: 'pm_holidays',
       onInsert: (row) => {
+        if (window.pmDataSaveInProgress) return;
         const n = meNormalizeHolidayRecord(row);
         if (!n) return;
         if (!pmDataState.holidays.some(h => h.id === n.id)) {
@@ -753,6 +761,7 @@ window.pmDataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (d) => {
+        if (window.pmDataSaveInProgress) return;
         pmDataState.holidays = pmDataState.holidays.filter(h => h.id !== d.id);
         pmApplyRealtimeRender();
       }
@@ -760,6 +769,7 @@ window.pmDataSubscribe = function() {
     {
       table: 'pm_product_support_history',
       onInsert: (row) => {
+        if (window.pmDataSaveInProgress) return;
         const n = meNormalizeSupportHistoryRecord(row);
         if (!n) return;
         const idx = pmDataState.productSupportHistory.findIndex(h => h.id === n.id);
@@ -770,6 +780,7 @@ window.pmDataSubscribe = function() {
       },
       onUpdate: () => {},
       onDelete: (d) => {
+        if (window.pmDataSaveInProgress) return;
         pmDataState.productSupportHistory = pmDataState.productSupportHistory.filter(h => h.id !== d.id);
         pmApplyRealtimeRender();
       }

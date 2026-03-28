@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-28T07:51:04.978Z
-> Files: 397 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-28T12:00:00.940Z
+> Files: 405 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -11,22 +11,23 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1835 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~23514 tok)
+- `CHANGELOG.md` — Change log (~23909 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~571 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
 - `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1317 tok)
-- `index.html` — Tidyco Operations Portal (~4552 tok)
+- `index.html` — Tidyco Operations Portal (~4682 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~340 tok)
+- `nul` (~0 tok)
 - `package-lock.json` — npm lock file (~61736 tok)
 - `package.json` — Node.js package manifest (~574 tok)
 - `README.md` — Project documentation (~6363 tok)
 - `SKILLS_GUIDE.md` — Tidyco APQP Development Skills Guide (~2715 tok)
 - `SKILLS_QUICK_REFERENCE.txt` — Declares in (~847 tok)
 - `SKILLS_SUMMARY.md` — Tidyco APQP Development Skills — Summary (~1594 tok)
-- `start-debug-site-and-wiki.bat` (~162 tok)
-- `start-debug-site.bat` (~136 tok)
+- `start-debug-site-and-wiki.bat` (~366 tok)
+- `start-debug-site.bat` (~305 tok)
 - `temp-server.js` — Temporary HTTP server for testing (~412 tok)
 - `test-holidays.html` — Test Bank Holidays 2026 (~1252 tok)
 - `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~6555 tok)
@@ -168,6 +169,7 @@
 - `product-allocation-heatmap-plan.md` — Per-Person Product Support Allocation for ME Heatmap (~1851 tok)
 - `realtime-render-centralization-audit.md` — Realtime Render Centralization Audit (~2695 tok)
 - `risk-and-regression-checklist.md` — Risk and Regression Checklist (~725 tok)
+- `sage-x3-visual-revamp-plan.md` — Sage X3 Visual Revamp Plan (~1279 tok)
 
 ## portals/action-centre/css/
 
@@ -177,13 +179,17 @@
 
 - `action-centre.js` — Navigate to MCS and auto-open a specific change. (~5313 tok)
 
+## portals/capacity/
+
+- `README.md` — Project documentation (~1690 tok)
+
 ## portals/capacity/css/
 
 - `capacity.css` — Styles: 59 rules, 3 media queries (~2293 tok)
 
 ## portals/capacity/js/
 
-- `capacity-events.js` — capActionTarget: capNum, capDefaultHoursPerWeek, capContextType + 20 more (~18846 tok)
+- `capacity-events.js` — capActionTarget: capNum, capDefaultHoursPerWeek, capContextType + 21 more (~18291 tok)
 - `capacity.js` — Capacity Management Portal Hub (~1721 tok)
 - `modals.js` — ═══════════════════════════════════ (~499 tok)
 
@@ -191,15 +197,15 @@
 
 - `log-capacity.js` — logGetCurrentMonthKey: logGetData, logGetLegacyCapacityFunction, logWithLegacyDepartment + 4 more (~3153 tok)
 - `log-data-relational.js` — Declares teamId (~3376 tok)
-- `log-data.js` — member: logGetProductSupportHistoryRows (~10510 tok)
+- `log-data.js` — member: logGetProductSupportHistoryRows (~10671 tok)
 
 ## portals/capacity/me/js/
 
-- `me-capacity.js` — Main render function for ME Capacity Portal (~3773 tok)
+- `me-capacity.js` — Main render function for ME Capacity Portal (~3696 tok)
 - `me-data-entities.js` — Declares member (~5066 tok)
 - `me-data-normalize.js` — meNormalizeDepartmentTag: meNormalizeMeTableDepartment, meNormalizeHolidayRecord, meNormalizeAndDedupeHolidays + 8 more (~2221 tok)
 - `me-data-persistence.js` — meBuildEmptyDataState: meBuildEmptyPendingDeletes, meInitTeamDates (~4862 tok)
-- `me-data-realtime.js` — meNormalizeTaskRow: meNormalizeTeamRow, meNormalizeProductRow, meIsCapacityFilterInputFocused, meApp (~3126 tok)
+- `me-data-realtime.js` — meNormalizeTaskRow: meNormalizeTeamRow, meNormalizeProductRow, meIsCapacityFilterInputFocused, meApplyRealtimeStateChange (~3254 tok)
 - `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeMeTableDepartment, meNormalizePersistedProductDepartment, meNormalizeIsoDate, meNormalizeD... (~5426 tok)
 - `me-data-support-history.js` — meApplyLatestSupportHistoryToProduct: meGetProductSupportHistoryRows, meEnsureProductSupportHistoryBaseline, meEnsureAllProductSupportHistoryBaselines (~2782 tok)
 - `me-data.js` — meCreateDataState: meCreatePendingDeletes, meUUID (~421 tok)
@@ -211,7 +217,7 @@
 ## portals/capacity/production/js/
 
 - `prod-capacity-dashboard.js` — ═══════════════════════════════════════════════════════════════ (~3176 tok)
-- `prod-capacity-data.js` — ═══════════════════════════════════════════════════════════════ (~5287 tok)
+- `prod-capacity-data.js` — ═══════════════════════════════════════════════════════════════ (~5363 tok)
 - `prod-capacity-detail.js` — ═══════════════════════════════════════════════════════════════ (~2746 tok)
 - `prod-capacity-settings.js` — ═══════════════════════════════════════════════════════════════ (~3734 tok)
 - `prod-capacity-workarea.js` — ═══════════════════════════════════════════════════════════════ (~3942 tok)
@@ -224,9 +230,9 @@
 
 ## portals/capacity/project-management/js/
 
-- `pm-capacity.js` — pmGetCurrentMonthKey: pmGetData, pmGetLegacyCapacityFunction, pmWithLegacyDepartment + 4 more (~3186 tok)
+- `pm-capacity.js` — pmGetCurrentMonthKey: pmGetData, pmGetLegacyCapacityFunction, pmWithLegacyDepartment + 4 more (~3164 tok)
 - `pm-data-relational.js` — Declares teamId (~3353 tok)
-- `pm-data.js` — Declares member (~10445 tok)
+- `pm-data.js` — Declares member (~10602 tok)
 
 ## portals/capacity/shared/css/
 
@@ -240,24 +246,24 @@
 
 ## portals/capacity/shared/js/
 
-- `cap-calculations.js` — Declares dateOnly (~4418 tok)
+- `cap-calculations.js` — Declares dateOnly (~4453 tok)
 - `cap-chart.js` — Declares dept (~1901 tok)
 - `cap-components.js` — Declares color (~1665 tok)
 - `cap-dashboard.js` — Declares dept (~873 tok)
 - `cap-data-utils.js` — normalized: supportHistoryTimestamp, pickPreferredRecord (~2332 tok)
 - `cap-heatmap.js` — Declares dept (~916 tok)
 - `cap-holidays.js` — y: capHolidayDeptLabel, capHolidayMonthLabel, capHolidayBankHolidayMap (~2360 tok)
-- `cap-product-taskload.js` — capProductLoadTableState: capProductLoadRefresh, capProductLoadResolveFamily (~3021 tok)
-- `cap-products.js` — capProductsTableState: capProductsNormalizeDepartmentKey, capProductsGetState, capProductsRefreshTable + 9 more (~8311 tok)
-- `cap-tasks.js` — dept: _capComputeFilteredTasks, _capRenderTaskRows, _capRenderTasksKPI (~8088 tok)
+- `cap-product-taskload.js` — capProductLoadTableState: capProductLoadRefresh, capProductLoadResolveFamily (~3037 tok)
+- `cap-products.js` — capProductsTableState: capProductsNormalizeDepartmentKey, capProductsGetState, capProductsRefreshTable + 9 more (~8387 tok)
+- `cap-tasks.js` — dept: _capComputeFilteredTasks, _capRenderTaskRows, _capRenderTasksKPI (~8115 tok)
 - `cap-team.js` — Declares dept (~1919 tok)
 - `cap-utils.js` — Declares parsed (~2872 tok)
 
 ## portals/capacity/unit6/js/
 
-- `unit6-capacity.js` — unit6GetCurrentMonthKey: unit6GetData, unit6GetLegacyCapacityFunction, unit6WithLegacyDepartment + 4 (~3237 tok)
+- `unit6-capacity.js` — unit6GetCurrentMonthKey: unit6GetData, unit6GetLegacyCapacityFunction, unit6WithLegacyDepartment + 4 more (~3237 tok)
 - `unit6-data-relational.js` — Declares teamId (~3417 tok)
-- `unit6-data.js` — Declares member (~10667 tok)
+- `unit6-data.js` — Declares member (~10833 tok)
 
 ## portals/feedback/css/
 
@@ -279,21 +285,21 @@
 
 ## portals/mcs/css/
 
-- `mcs-responsive.css` — Styles: 8 rules, 8 media queries (~2171 tok)
-- `mcs.css` — Styles: 83 rules, 6 vars (~10693 tok)
+- `mcs-responsive.css` — Styles: 8 rules, 8 media queries (~2192 tok)
+- `mcs.css` — Styles: 82 rules, 6 vars, 2 media queries (~11772 tok)
 
 ## portals/mcs/js/
 
 - `mcs-actions.js` — MCS Integration with Action Centre (~911 tok)
 - `mcs-approval.js` — MCS Approval Workflow (~2185 tok)
 - `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~4140 tok)
-- `mcs-main.js` — MCS (Manufacturing Change) - Main Portal (~7970 tok)
-- `mcs-modal-create.js` — MCS Modal — Create (~2762 tok)
-- `mcs-modal-edit.js` — MCS Modal — Edit & Save (~4975 tok)
-- `mcs-modal-shared.js` — MCS Modal Shared Helpers (~2670 tok)
-- `mcs-modal-view.js` — MCS Modal — View (~5379 tok)
+- `mcs-main.js` — MCS (Manufacturing Change) - Main Portal (~8070 tok)
+- `mcs-modal-create.js` — MCS Modal — Create (~2918 tok)
+- `mcs-modal-edit.js` — MCS Modal — Edit & Save (~5426 tok)
+- `mcs-modal-shared.js` — MCS Modal Shared Helpers (~3763 tok)
+- `mcs-modal-view.js` — MCS Modal — View (~5493 tok)
 - `mcs-pfmea.js` — MCS Integration with PFMEA History (~1528 tok)
-- `mcs-realtime.js` — MCS Real-time Subscriptions (~1538 tok)
+- `mcs-realtime.js` — MCS Real-time Subscriptions (~1640 tok)
 
 ## portals/mcs/templates/
 
@@ -309,7 +315,7 @@
 - `operations-dashboard-forecast-view.js` — ═══════════════════════════════════ (~5426 tok)
 - `operations-dashboard-main.js` — ═══════════════════════════════════ (~1753 tok)
 - `operations-dashboard-metrics.js` — ═══════════════════════════════════ (~5157 tok)
-- `operations-dashboard-realtime.js` — ═══════════════════════════════════ (~2247 tok)
+- `operations-dashboard-realtime.js` — ═══════════════════════════════════ (~2291 tok)
 - `operations-dashboard-render-core.js` — ═══════════════════════════════════ (~4556 tok)
 - `operations-dashboard-state.js` — ═══════════════════════════════════ (~214 tok)
 - `operations-forecast-data.js` — operations-forecast-data.js - Operations forecast opportunities (~3144 tok)
@@ -350,7 +356,7 @@
 - `npi-ctq.js` — ═══════════════════════════════════ (~4028 tok)
 - `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydratePfdRows (~13160 tok)
 - `npi-data.js` — ═══════════════════════════════════ (~10772 tok)
-- `npi-events.js` — ═══════════════════════════════════ (~5190 tok)
+- `npi-events.js` — ═══════════════════════════════════ (~5128 tok)
 - `npi-gates-editor.js` — ═══════════════════════════════════ (~3071 tok)
 - `npi-orchestrator.js` — ═══════════════════════════════════ (~1169 tok)
 - `npi-pfd.js` — ═══════════════════════════════════ (~13003 tok)
@@ -452,10 +458,12 @@
 
 ## tests/
 
+- `action-centre.test.js` — Declares fs (~5262 tok)
 - `apqp.test.js` — Declares fs (~977 tok)
 - `auth.test.js` — Declares fs (~2546 tok)
 - `bank-holidays.test.js` — Declares fs (~432 tok)
-- `capacity-events.test.js` — Declares fs (~6139 tok)
+- `bom.test.js` — Declares fs (~4510 tok)
+- `capacity-events.test.js` — Declares fs (~7172 tok)
 - `capacity-hub.test.js` — capacity-hub.test.js — Tests for portals/capacity/js/capacity.js (hub view) (~3117 tok)
 - `capacity-team-delete-persistence.test.js` — fs: loadScript, installSharedHelperStubs, installSupabaseDeleteMock (~1614 tok)
 - `chart-theme.test.js` — API routes: GET (1 endpoints) (~743 tok)
@@ -465,6 +473,7 @@
 - `feedback-constants.test.js` — feedback-constants.test.js — Tests for portals/feedback/js/feedback-constants.js (~1156 tok)
 - `feedback-data.test.js` — feedback-data.test.js — Tests for portals/feedback/js/feedback-data.js (~3070 tok)
 - `feedback-search-focus.test.js` — Declares fs (~644 tok)
+- `guide.test.js` — fs: showGuide (~2594 tok)
 - `helpers.test.js` — Declares fs (~2810 tok)
 - `hub.test.js` — hub.test.js — Tests for portals/hub/js/hub.js (~5074 tok)
 - `log-capacity.test.js` — log-capacity.test.js — Tests for portals/capacity/logistics/js/log-capacity.js (~1452 tok)
@@ -473,8 +482,8 @@
 - `mcs-approval-core.test.js` — Declares fs (~1226 tok)
 - `mcs-approval.test.js` — Declares fs (~929 tok)
 - `mcs-main.test.js` — Declares fs (~1904 tok)
+- `mcs-modal-shared.test.js` — Declares fs (~525 tok)
 - `mcs-overhaul-integration.test.js` — MCS + Overhaul History Integration Tests (~2273 tok)
-- `mcs-modal-shared.test.js` — Tests MCS shared modal helper parsing/building for Stage 3 impact checklist progress (~760 tok)
 - `me-calculations.test.js` — Declares fs (~2987 tok)
 - `me-chart.test.js` — Declares fs (~1707 tok)
 - `me-components.test.js` — me-components.test.js — Tests for portals/capacity/shared/js/cap-components.js (~2345 tok)
@@ -512,6 +521,7 @@
 - `realtime.test.js` — realtime.test.js — Tests for utils/js/realtime.js (~3652 tok)
 - `settings-email-name.test.js` — Declares fs (~662 tok)
 - `settings-portal.test.js` — settings-portal.test.js — Tests for portals/settings/js/settings.js (~9736 tok)
+- `state.test.js` — fs: prog, findProjectByProductId, getDefaultGateSelection, normalizeGateSelections (~2381 tok)
 - `supabase-rw.test.js` — SUPA_URL: fetchWithTimeout (~1645 tok)
 - `timing-core.test.js` — timing-core.test.js — Tests for portals/product-development/npi/js/timing.js (~1468 tok)
 - `unit6-capacity.test.js` — unit6-capacity.test.js — Tests for portals/capacity/unit6/js/unit6-capacity.js (~1479 tok)
@@ -520,7 +530,7 @@
 
 ## utils/js/
 
-- `guide.js` — ═══════════════════════════════════ (~19550 tok)
+- `guide.js` — ═══════════════════════════════════ (~19626 tok)
 - `helpers.js` — ═══════════════════════════════════ (~7230 tok)
 - `navigation.js` — Section labels for UI display (reserved for future use) (~9083 tok)
 - `realtime-patch.js` — Surgical Realtime DOM Patch Helpers (~845 tok)
