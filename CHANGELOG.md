@@ -3,7 +3,20 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-28 | Fix code review issues (network race condition, gate questions return value, input escaping, cleanup) | Remove premature optimistic health state in network detection; make gate questions data loader return promise; fix double-escaping in input values; add teardown function for memory cleanup
+
+## 2026-03-28 | Professional Wiki Content Rewrite | Updated 5 key wiki pages (Gates, MCS, Capacity, PFMEA, Action Centre) to an objective, encyclopedic tone as per reference guide standards.
+## 2026-03-28 | Align guide modals with live portal behavior | Updated guide copy and wired missing Logistics/Unit 6 guide buttons so on-page help stays accurate and accessible
+## 2026-03-28 | Add gate_question_definitions table | Extract hardcoded gate checklist questions into the database so questions can be added or amended without a code change
+
+## 2026-03-28 | Stabilize brittle Jest assertions in guide, state, action-centre, and bom suites | Align tests with current markup/state declaration patterns so valid runtime behavior does not fail CI
+
+## 2026-03-28 | Wiki tone and content update for Risk Tab, PFMEA, Quick Reference | Improve clarity and layering for new and experienced users
+
+## 2026-03-28 | Fix back button label accuracy | Label was based on current section only, not tab state — showed wrong destination (e.g. "Back to Capacity" when on root capacity going to Hub)
+
 ## 2026-03-28 | Block self-echo renders in all capacity realtime handlers | PM, LOG, UNIT6 realtime callbacks now have the same SaveInProgress guard as ME, stopping startup flicker across all capacity streams
+## 2026-03-28 | Make guide modal 15% wider | Improve readability by giving guide content more horizontal space
 ## 2026-03-28 | Block self-echo renders in ME capacity realtime | me_teams, me_tasks, me_products handlers now skip re-render while a local save is in progress, stopping the startup flicker
 ## 2026-03-28 | Add autocomplete="off" to capacity table inputs | Suppress 60k+ browser warnings about form fields with no id/name in cap-products, cap-product-taskload, cap-tasks
 

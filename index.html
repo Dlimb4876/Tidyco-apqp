@@ -83,11 +83,9 @@
       <button class="back-btn" id="returnHubBtn" style="display:none" onclick="navigateBack()">← Return to Portal</button>
       <span class="project-breadcrumb" id="projectName" style="display:none"></span>
     </div>
-    <div class="topbar-center">
-      <button class="bug-report-btn" onclick="navigate('action-centre')" title="My assigned actions across all projects">✅ My Actions</button>
-      <button class="bug-report-btn" onclick="navigate('feedback')">💬 Feedback & Bugs</button>
-    </div>
     <div class="topbar-actions">
+      <button class="tbtn tbtn-ghost desktop-only" onclick="navigate('action-centre')" title="My assigned actions across all projects">✅ My Actions</button>
+      <button class="tbtn tbtn-ghost desktop-only" onclick="navigate('feedback')">💬 Feedback & Bugs</button>
       <button class="tbtn tbtn-ghost" onclick="exportJSON()" style="display:none">⬇ Export</button>
       <button class="tbtn tbtn-ghost" onclick="document.getElementById('importInput').click()" style="display:none">⬆ Import</button>
       <input type="file" id="importInput" accept=".json" style="display:none" onchange="importJSON(event)">
@@ -146,7 +144,7 @@
 
 <!-- Guide Modal -->
 <div class="modal-bg" id="modalGuide" style="display:none">
-  <div class="modal modal-lg">
+  <div class="modal modal-lg guide-modal">
     <div class="modal-title" id="guideModalTitle">User Guide</div>
     <div class="modal-body" id="guideModalBody" style="max-height:70vh;overflow-y:auto">
       <!-- Content injected by showGuide() -->
@@ -255,6 +253,7 @@
 <script src="portals/settings/js/teams-data.js"></script>
 <script src="portals/settings/js/settings-teams.js"></script>
 <script src="portals/settings/js/settings-mcs.js"></script>
+<script src="portals/settings/js/settings-gate-questions.js"></script>
 <script src="portals/settings/js/settings.js"></script>
 
 <!-- NPI Portal: namespace root and centralized constants -->

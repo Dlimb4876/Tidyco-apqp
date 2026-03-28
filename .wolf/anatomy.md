@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-28T12:00:00.940Z
-> Files: 405 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-28T13:39:02.267Z
+> Files: 407 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -11,12 +11,12 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1835 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Change log (~23909 tok)
+- `CHANGELOG.md` — Changelog (~24157 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~571 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
 - `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1317 tok)
-- `index.html` — Tidyco Operations Portal (~4682 tok)
+- `index.html` — Tidyco Operations Portal (~4700 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~340 tok)
 - `nul` (~0 tok)
@@ -119,6 +119,9 @@
 - `style-and-conventions.md` (~140 tok)
 - `suggested_commands.md` (~116 tok)
 
+## Manual Update 2026-03-28
+
+
 ## core/css/
 
 - `components.css` — Styles: 84 rules, 2 media queries (~6028 tok)
@@ -190,7 +193,7 @@
 ## portals/capacity/js/
 
 - `capacity-events.js` — capActionTarget: capNum, capDefaultHoursPerWeek, capContextType + 21 more (~18291 tok)
-- `capacity.js` — Capacity Management Portal Hub (~1721 tok)
+- `capacity.js` — Capacity Management Portal Hub (~1740 tok)
 - `modals.js` — ═══════════════════════════════════ (~499 tok)
 
 ## portals/capacity/logistics/js/
@@ -313,7 +316,7 @@
 
 - `operations-dashboard-forecast-actions.js` — ═══════════════════════════════════ (~2086 tok)
 - `operations-dashboard-forecast-view.js` — ═══════════════════════════════════ (~5426 tok)
-- `operations-dashboard-main.js` — ═══════════════════════════════════ (~1753 tok)
+- `operations-dashboard-main.js` — ═══════════════════════════════════ (~1772 tok)
 - `operations-dashboard-metrics.js` — ═══════════════════════════════════ (~5157 tok)
 - `operations-dashboard-realtime.js` — ═══════════════════════════════════ (~2291 tok)
 - `operations-dashboard-render-core.js` — ═══════════════════════════════════ (~4556 tok)
@@ -325,7 +328,7 @@
 
 - `families-data.js` — Families Data Layer (~1689 tok)
 - `family-templates-data.js` — Family PFMEA Templates Data Layer (~3592 tok)
-- `product-development.js` — Product Development Portal Hub (~9014 tok)
+- `product-development.js` — Product Development Portal Hub (~9034 tok)
 - `product-management.js` — Product Management Page (~154 tok)
 
 ## portals/product-development/npi/css/
@@ -399,7 +402,7 @@
 
 - `data.js` — Production Planning Data Layer (~4478 tok)
 - `planning.js` — Production Planning Views (~7431 tok)
-- `production.js` — Production Planning Portal Hub (~2266 tok)
+- `production.js` — Production Planning Portal Hub (~2285 tok)
 - `products.js` — Product Master List Management (~2864 tok)
 - `scheduling.js` — Production Batch Scheduling (~10696 tok)
 
@@ -409,9 +412,10 @@
 
 ## portals/settings/js/
 
+- `settings-gate-questions.js` — ═══════════════════════════════════════════════════════════════ (~3234 tok)
 - `settings-mcs.js` — ═══════════════════════════════════════════════════════════════ (~3267 tok)
 - `settings-teams.js` — ═══════════════════════════════════════════════════════════════ (~5539 tok)
-- `settings.js` — ═══════════════════════════════════════════════════════════════ (~13076 tok)
+- `settings.js` — ═══════════════════════════════════════════════════════════════ (~13545 tok)
 - `teams-data.js` — ═══════════════════════════════════════════════════════════════ (~1400 tok)
 
 ## scripts/
@@ -532,7 +536,7 @@
 
 - `guide.js` — ═══════════════════════════════════ (~19626 tok)
 - `helpers.js` — ═══════════════════════════════════ (~7230 tok)
-- `navigation.js` — Section labels for UI display (reserved for future use) (~9083 tok)
+- `navigation.js` — Section labels for UI display (reserved for future use) (~9270 tok)
 - `realtime-patch.js` — Surgical Realtime DOM Patch Helpers (~845 tok)
 - `realtime.js` — Subscribe to real-time changes on a table (~1923 tok)
 - `render-scheduler.js` — Request a render for the given key. (~915 tok)
@@ -578,6 +582,7 @@
 ## wiki/content/getting-started/
 
 - `00-overview.md` — Getting Started (~566 tok)
+- `10-quick-reference.md` — Quick Reference Card (~1787 tok)
 
 ## wiki/content/learning-function/
 
@@ -606,7 +611,7 @@
 - `00-overview.md` — Operations (~228 tok)
 - `10-overview-tab.md` — Operations Overview Tab (~492 tok)
 - `20-flow-tab.md` — Operations Flow Tab (~480 tok)
-- `30-risk-tab.md` — Operations Risk Tab (~508 tok)
+- `30-risk-tab.md` — Operations Risk Tab (~1103 tok)
 - `40-people-tab.md` — Operations People Tab (~545 tok)
 - `50-actions-tab.md` — Operations Actions Tab (~492 tok)
 - `60-forecast-tab.md` — Operations Forecast Tab (~494 tok)
@@ -619,7 +624,7 @@
 - `110-gates.md` — APQP Gates (~867 tok)
 - `30-ctq.md` — CTQ Matrix (~784 tok)
 - `40-pfd.md` — Process Flow Diagram (~910 tok)
-- `50-pfmea.md` — PFMEA (~1155 tok)
+- `50-pfmea.md` — PFMEA (~1955 tok)
 - `51-pfmea-tool-workflow.md` — PFMEA in Tidyco: Tool Workflow (~915 tok)
 - `60-control-plan.md` — Control Plan (~969 tok)
 - `70-actions.md` — Action Tracker (~804 tok)

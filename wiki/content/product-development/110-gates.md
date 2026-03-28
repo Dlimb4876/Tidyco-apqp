@@ -1,53 +1,49 @@
-# APQP Gates
+# APQP Gate Management
 
-## What this page is for
-APQP Gates (0 through 5) are formal phase-gate reviews that track project readiness.
-They provide a structured checklist to verify that all required engineering, quality, and operational evidence is in place before the project moves to the next phase of development or production.
+## Overview
+**Advanced Product Quality Planning (APQP) Gates** serve as the primary governance framework for project progression within the manufacturing engineering lifecycle. The system utilizes a formal phase-gate methodology, requiring documented evidence and multi-disciplinary sign-off to mitigate technical and operational risks before advancing between project stages.
 
-## Before you start
-- Review the specific checklist items required for the active gate.
-- Ensure the underlying APQP work (PFD, PFMEA, Control Plan, etc.) is mature enough for review.
-- Identify who holds the required signatory roles for this project.
+## Access
+- **Portal:** Product Development
+- **Tab/Sub-tab:** Project Dashboard > Gates
+- **URL:** `index.html?portal=product-development&project=[id]&tab=gates`
 
-## Key components of a Gate Review
-- **Checklist Items:** Specific deliverables or criteria that must be verified (e.g., "PFMEA completed", "Suppliers approved").
-- **Evidence:** The actual documentation or data proving the checklist item is satisfied.
-- **Signatories:** Role-based approvals (e.g., ME Manager, Operations Director, Sales Director) who take accountability for the phase completion. Sign-off requires specific system permissions.
-- **Status:** The overall health of the gate (Not Started, In Progress, Ready for Sign-off, Complete).
+## Key Fields and Controls
+| Field/Control | Description | Functional Impact |
+|:---|:---|:---|
+| **Checklist Item** | A specific technical or quality deliverable. | Defines the mandatory criteria for phase completion. |
+| **Evidence Link** | Reference to supporting documentation. | Provides the audit trail for gate verification. |
+| **Signatory Role** | A designated authority (e.g., ME, Ops). | Ensures cross-departmental accountability. |
+| **Gate Status** | Categorical state (e.g., Pending, Signed). | Controls the availability of subsequent project phases. |
 
-## The gateway process
-1. **Prepare:** The project team works through the checklist, completing the necessary background work and gathering evidence.
-2. **Review:** The team reviews the checklist items, ensuring the quality of the work is acceptable, not just that a document exists.
-3. **Blockers:** If an item fails, create an action in the Action Tracker to resolve it. The gate cannot be signed until blockers are cleared.
-4. **Sign-off:** Authorized users (based on Settings > Teams permissions) formally sign the gate, locking the phase.
-5. **Advance:** The project officially moves into the next phase.
+## The Gate Review Process
+### Preparation and Documentation
+The project lead and relevant subject matter experts compile evidence for each checklist item. Evidence must demonstrate not only the existence of a deliverable (e.g., a Process Flow Diagram) but also its adherence to quality standards and project requirements.
 
-## Common mistakes to avoid
-- **Box-ticking:** Checking off items without verifying the quality of the underlying work (e.g., saying PFMEA is done when it has no controls listed).
-- **Rushed sign-offs:** Forcing signatories to approve a gate on the day of a deadline without giving them time to review the evidence.
-- **Skipping gates:** Moving into production (Gate 4/5) while Gate 2 is still unsigned.
+### Sign-off and Validation
+1. **Verification:** Signatories review the associated evidence for each checklist item within their functional domain.
+2. **Approval:** Authorized users apply a digital signature, which timestamps the approval and locks the associated record.
+3. **Blocker Resolution:** Incomplete items or negative findings generate high-priority tasks in the **Action Tracker**. All blockers must be resolved before a gate can achieve 'Complete' status.
+4. **Transition:** Upon final signature, the project transitions to the subsequent phase, enabling the next set of APQP activities.
 
-## The 6 Standard Gates
-| Gate | Name | Focus Area |
-|---|---|---|
-| **0** | Concept & Planning | Project initiation, scope, and team alignment |
-| **1** | Product Design | Requirements, specifications, and design feasibility |
-| **2** | Process Design | Manufacturing process, PFD, and PFMEA |
-| **3** | Process Validation | Capability studies, trial runs, and MSA |
-| **4** | Launch Readiness | Final checks, training, and go/no-go decision |
-| **5** | Production Follow-up | Issue resolution, stabilization, and lessons learned |
+## Standard Gate Definitions
+| Phase | Title | Primary Objective |
+|:---:|:---|:---|
+| **0** | Concept & Planning | Validates project scope, resource requirements, and team alignment. |
+| **1** | Product Design | Confirms technical specifications and design feasibility. |
+| **2** | Process Design | Establishes manufacturing workflows, PFD, and PFMEA maturity. |
+| **3** | Process Validation | Verifies capability through trial runs and measurement analysis. |
+| **4** | Launch Readiness | Finalizes training, equipment readiness, and go/no-go decisions. |
+| **5** | Production Follow-up | Assesses stabilization, issue resolution, and lessons learned. |
 
-## Quality checks for a passed Gate
-- Every checklist item is genuinely complete and backed by accessible evidence.
-- All required signatories have applied their approval.
-- Any minor open issues are logged in the Action Tracker and do not present a critical risk to the next phase.
-
-## How Gates connect to other pages
-- **Timing Plan:** The target dates for gate reviews are driven by the Timing Plan.
-- **Action Tracker:** Work required to pass a gate generates tasks in the Action Tracker.
-- **All APQP Tools:** The PFD, PFMEA, Control Plan, and CTQ matrix are the actual evidence reviewed during Gates 1, 2, and 3.
+## Common Issues and Resolutions
+| Issue | Potential Cause | Remediation |
+|:---|:---|:---|
+| **Gate remains 'Pending'** | Missing evidence or signatory absence. | Verify all checklist items are linked to valid data. |
+| **Unauthorized Sign-off** | Incorrect user permissions. | Adjust role-based access in **Settings > Teams**. |
+| **Stale Gate Dates** | Timing plan misalignment. | Synchronize gate milestones with the **Project Timing Plan**. |
 
 ## Related
-- [Timing Plan](./100-timing.md)
-- [NPI Projects](./10-npi-projects.md)
-- [Action Tracker](./70-actions.md)
+- [NPI Project Management](./10-npi-projects.md)
+- [Project Timing and Milestones](./100-timing.md)
+- [Action Tracker Integration](./70-actions.md)

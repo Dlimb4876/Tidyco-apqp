@@ -19,6 +19,7 @@ function setProductionTab(tab) {
     history.replaceState(null, '', hash);
   }
   render();
+  if (typeof updateBackButton === 'function') updateBackButton();
 }
 
 function prodNavBar() {

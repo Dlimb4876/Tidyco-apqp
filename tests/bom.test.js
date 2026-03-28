@@ -32,6 +32,7 @@ global.progId = 'test-proj';
 
 // Mock npi namespace
 global.npi = {
+  bom: {},
   data: {
     bom: {
       addRow: jest.fn(),
@@ -243,8 +244,8 @@ describe('BOM Module (bom.js)', () => {
       const p = {
         bom: {
           tree: [
-            { nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 2, unit: 'ea' },
-            { nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 3, unit: 'ea' }
+            { id: 't1', nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 2, unit: 'ea' },
+            { id: 't2', nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 3, unit: 'ea' }
           ],
           aaw_repair: []
         }
@@ -260,14 +261,14 @@ describe('BOM Module (bom.js)', () => {
       const p = {
         bom: {
           tree: [
-            { nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 2, unit: 'ea' }
+            { id: 't1', nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 2, unit: 'ea' }
           ],
           aaw_repair: [
             {
               tag: 'aaw',
               nodes: [
-                { nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 3, unit: 'ea' },
-                { nodeType: 'part', pn: 'PN002', desc: 'Part 2', qty: 1, unit: 'ea' }
+                { id: 'a1', nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 3, unit: 'ea' },
+                { id: 'a2', nodeType: 'part', pn: 'PN002', desc: 'Part 2', qty: 1, unit: 'ea' }
               ]
             }
           ]
@@ -288,13 +289,13 @@ describe('BOM Module (bom.js)', () => {
       const p = {
         bom: {
           tree: [
-            { nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 2, unit: 'ea' }
+            { id: 't1', nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 2, unit: 'ea' }
           ],
           aaw_repair: [
             {
               tag: 'aaw',
               nodes: [
-                { nodeType: 'part', pn: 'PN002', desc: 'Part 2', qty: 1, unit: 'ea' }
+                { id: 'a1', nodeType: 'part', pn: 'PN002', desc: 'Part 2', qty: 1, unit: 'ea' }
               ]
             }
           ]
@@ -312,13 +313,13 @@ describe('BOM Module (bom.js)', () => {
       const p = {
         bom: {
           tree: [
-            { nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 2, unit: 'ea' }
+            { id: 't1', nodeType: 'part', pn: 'PN001', desc: 'Part 1', qty: 2, unit: 'ea' }
           ],
           aaw_repair: [
             {
               tag: 'aaw',
               nodes: [
-                { nodeType: 'part', pn: 'PN002', desc: 'Part 2', qty: 1, unit: 'ea' }
+                { id: 'a1', nodeType: 'part', pn: 'PN002', desc: 'Part 2', qty: 1, unit: 'ea' }
               ]
             }
           ]
@@ -348,7 +349,7 @@ describe('BOM Module (bom.js)', () => {
       const p = {
         bom: {
           tree: [
-            { nodeType: 'part', pn: '', desc: 'Unnamed Part', qty: 2, unit: 'ea' }
+            { id: 't1', nodeType: 'part', pn: '', desc: 'Unnamed Part', qty: 2, unit: 'ea' }
           ],
           aaw_repair: []
         }

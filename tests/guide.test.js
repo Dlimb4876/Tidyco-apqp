@@ -104,8 +104,9 @@ describe('Guide Module (guide.js)', () => {
       expect(guideContent).toContain("'action-centre': {");
     });
 
-    test('should have guide content for settings', () => {
-      expect(guideContent).toContain('settings: {');
+    test('should have guide content for logistics and unit6 capacity', () => {
+      expect(guideContent).toContain("'capacity-logistics': {");
+      expect(guideContent).toContain("'capacity-unit6': {");
     });
   });
 
@@ -147,11 +148,12 @@ describe('Guide Module (guide.js)', () => {
       expect(guideContent).toContain('MCS');
     });
 
-    test('settings guide should cover all tabs', () => {
-      expect(guideContent).toContain('Families');
-      expect(guideContent).toContain('Work Areas');
-      expect(guideContent).toContain('Permissions');
-      expect(guideContent).toContain('Teams');
+    test('production guides should cover all production views', () => {
+      expect(guideContent).toContain('Production Planning');
+      expect(guideContent).toContain('Plan by Product');
+      expect(guideContent).toContain('Plan by Work Area');
+      expect(guideContent).toContain("'production-by-product': {");
+      expect(guideContent).toContain("'production-by-unit': {");
     });
   });
 
@@ -224,9 +226,9 @@ describe('Guide Module (guide.js)', () => {
   describe('Guide Modal HTML', () => {
     test('index.html should contain guide modal', () => {
       const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
-      expect(html).toContain("id='modalGuide'");
-      expect(html).toContain("id='guideModalTitle'");
-      expect(html).toContain("id='guideModalBody'");
+      expect(html).toMatch(/id=["']modalGuide["']/);
+      expect(html).toMatch(/id=["']guideModalTitle["']/);
+      expect(html).toMatch(/id=["']guideModalBody["']/);
     });
   });
 });

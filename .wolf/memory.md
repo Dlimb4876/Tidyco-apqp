@@ -8,6 +8,9 @@
 ## 2026-03-24
 ## 2026-03-25
 - Fixed load-order checker warnings by moving `core/js/chart-theme.js` and `utils/js/guide.js` in `index.html` to load after the core chain (`state/auth/db/helpers/navigation/realtime`); validated with `npm run check:load-order` (clean, no warnings).
+## 2026-03-28
+- Resolved failing Jest run by stabilizing brittle assertions in `tests/guide.test.js`, `tests/action-centre.test.js`, and `tests/state.test.js`, plus fixing BOM test bootstrap/fixture shape in `tests/bom.test.js`; validated with `npm test` (69/69 suites, 936/936 tests) and `npm run check:all` (exit 0).
+- Reviewed all guide modal mappings against live portal guide triggers, then fixed relevance gaps by wiring missing Logistics/Unit 6 guide buttons and updating stale Operations People + PM section guide copy in `utils/js/guide.js`; changelog updated.
 ## 2026-03-27
 - Added `start-debug-site-and-wiki.bat` so one double-click opens both the main app and the wiki on the local debug server; updated README/testing notes to mention the dual-launch option.
 - Updated `start-debug-site.bat` to auto-open `http://localhost:8000/index.html` after launch, and refreshed the README/testing notes so the no-VS-Code browser debug flow is one double-click.
@@ -1497,3 +1500,50 @@
 | 11:56 | Edited portals/capacity/unit6/js/unit6-data.js | added 11 condition(s) | ~1697 |
 | 11:56 | Edited CHANGELOG.md | 1→2 lines | ~107 |
 | 11:56 | Session end: 18 writes across 8 files (cap-products.js, cap-product-taskload.js, cap-tasks.js, CHANGELOG.md, me-data-realtime.js) | 26 reads | ~15773 tok |
+
+## Session: 2026-03-28 13:11
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 13:16 | Edited utils/js/navigation.js | added 7 condition(s) | ~444 |
+| 13:16 | Edited utils/js/navigation.js | removed 5 lines | ~6 |
+| 13:16 | Edited portals/capacity/js/capacity.js | added 1 condition(s) | ~31 |
+| 13:16 | Edited portals/production/js/production.js | added 1 condition(s) | ~30 |
+| 13:16 | Edited portals/product-development/js/product-development.js | added 1 condition(s) | ~34 |
+| 13:16 | Edited portals/operations/js/operations-dashboard-main.js | added 1 condition(s) | ~31 |
+| 13:16 | Edited CHANGELOG.md | 4→6 lines | ~95 |
+| 13:16 | Session end: 7 writes across 6 files (navigation.js, capacity.js, production.js, product-development.js, operations-dashboard-main.js) | 10 reads | ~62955 tok |
+
+## Session: 2026-03-28 13:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 13:19 | Created wiki/content/operations/30-risk-tab.md | — | ~1176 |
+| 13:20 | Created wiki/content/product-development/50-pfmea.md | — | ~2085 |
+| 13:20 | Created wiki/content/getting-started/10-quick-reference.md | — | ~1907 |
+| 13:21 | Edited CHANGELOG.md | 1→3 lines | ~51 |
+| 13:21 | Session end: 4 writes across 4 files (30-risk-tab.md, 50-pfmea.md, 10-quick-reference.md, CHANGELOG.md) | 4 reads | ~31241 tok |
+
+## Session: 2026-03-28 13:22
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 13:26 | Edited CHANGELOG.md | 4→6 lines | ~90 |
+| 13:26 | Session end: 1 writes across 1 files (CHANGELOG.md) | 4 reads | ~34939 tok |
+| 13:33 | Created portals/settings/js/settings-gate-questions.js | — | ~3238 |
+| 13:33 | Edited portals/settings/js/settings.js | added 1 condition(s) | ~86 |
+| 13:33 | Edited portals/settings/js/settings.js | 4→7 lines | ~152 |
+| 13:33 | Edited portals/settings/js/settings.js | 2→3 lines | ~111 |
+| 13:33 | Edited portals/settings/js/settings.js | 4→5 lines | ~57 |
+| 13:33 | Edited portals/settings/js/settings.js | added 1 condition(s) | ~119 |
+| 13:33 | Edited portals/settings/js/settings.js | added 8 condition(s) | ~304 |
+| 13:34 | Edited index.html | 2→3 lines | ~50 |
+| 13:34 | Edited CHANGELOG.md | 1→2 lines | ~89 |
+| 13:34 | Session end: 10 writes across 4 files (CHANGELOG.md, settings-gate-questions.js, settings.js, index.html) | 7 reads | ~60275 tok |
+| 13:39 | Edited portals/settings/js/settings-gate-questions.js | inline fix | ~3 |
+| 13:39 | Session end: 11 writes across 4 files (CHANGELOG.md, settings-gate-questions.js, settings.js, index.html) | 8 reads | ~69218 tok |
+
+## Session: 2026-03-28 13:44
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

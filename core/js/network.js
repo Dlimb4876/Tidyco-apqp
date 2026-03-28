@@ -48,7 +48,7 @@ function updateNetworkStatus() {
   }
 
   // Online: Everything good
-  el.className = 'bottombar-status';
+  el.className = 'bottombar-status online';
   el.textContent = '📡 online';
   el.title = 'Connected to Supabase';
 }
@@ -62,9 +62,7 @@ function setupNetworkDetection() {
 
   // Browser online/offline events (instant feedback)
   window.addEventListener('online', () => {
-    isSupabaseHealthy = true;
-    updateNetworkStatus();
-    // Immediately check Supabase when coming back online
+    // Don't optimistically set healthy - actually check Supabase first
     checkSupabaseHealth();
   });
 
