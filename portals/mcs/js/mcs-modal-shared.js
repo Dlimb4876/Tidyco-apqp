@@ -99,16 +99,74 @@ function mcsExtractNominatedApprover(notesValue) {
   return notesValue.replace('nominated_approver:', '').trim();
 }
 
+function mcsGetImpactFieldMap() {
+  return {
+    'mcs-imp-bom': 'BOM Change',
+    'mcs-imp-proc': 'Work Instructions',
+    'mcs-imp-tooling': 'Tooling Change',
+    'mcs-imp-training': 'Training Required',
+    'mcs-imp-customer': 'Customer Notification'
+  };
+}
+
+function mcsGetImpactProgressInputId(impactLabel) {
+  return `mcs-imp-progress-${String(impactLabel || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')}`;
+}
+
+function mcsBuildStage3ImpactChecklistHtml(impacts, progressMap) {
+  const selectedImpacts = Array.isArray(impacts) ? impacts : [];
+  if (!selectedImpacts.length) {
+    return `
+      <div class="mcs-stage-note mcs-stage-note-compact">
+        Select impact areas in Stage 1 to track implementation progress here.
+      </div>
+    `;
+  }
+
+  const safeProgress = progressMap && typeof progressMap === 'object' ? progressMap : {};
+  const completedCount = selectedImpacts.filter(label => safeProgress[label] === true).length;
+
+  const rows = selectedImpacts.map(label => {
+    const inputId = mcsGetImpactProgressInputId(label);
+    const checked = safeProgress[label] === true ? 'checked' : '';
+    return `
+      <div class="mcs-impact-progress-item">
+        <input
+          type="checkbox"
+          class="mcs-impact-progress-checkbox"
+          id="${esc(inputId)}"
+          data-impact-progress="${esc(label)}"
+          ${checked}
+        />
+        <label for="${esc(inputId)}">${esc(label)}</label>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="mcs-impact-progress-header">
+      <span class="mcs-impact-progress-title">Impact implementation checklist</span>
+      <span class="mcs-impact-progress-count">${completedCount}/${selectedImpacts.length} complete</span>
+    </div>
+    <div class="mcs-impact-progress-list">${rows}</div>
+  `;
+}
+
 function mcsParseExtendedJustification(rawValue) {
   const raw = String(rawValue || '');
   const impactMarker = '[ImpactAssessmentHours]';
   const docsMarker = '[DocumentsAffected]';
   const knockMarker = '[KnockOnEffect]';
+  const impactProgressMarker = '[ImpactProgressJson]';
 
   const markers = [
     { key: 'impactAssessmentHours', token: impactMarker, idx: raw.indexOf(impactMarker) },
     { key: 'documentsAffected', token: docsMarker, idx: raw.indexOf(docsMarker) },
-    { key: 'knockOnEffect', token: knockMarker, idx: raw.indexOf(knockMarker) }
+    { key: 'knockOnEffect', token: knockMarker, idx: raw.indexOf(knockMarker) },
+    { key: 'impactProgressRaw', token: impactProgressMarker, idx: raw.indexOf(impactProgressMarker) }
   ].filter(item => item.idx !== -1).sort((a, b) => a.idx - b.idx);
 
   if (markers.length === 0) {
@@ -116,7 +174,8 @@ function mcsParseExtendedJustification(rawValue) {
       core: raw,
       impactAssessmentHours: '',
       documentsAffected: '',
-      knockOnEffect: ''
+      knockOnEffect: '',
+      impactProgress: {}
     };
   }
 
@@ -124,7 +183,8 @@ function mcsParseExtendedJustification(rawValue) {
     core: raw.slice(0, markers[0].idx).trimEnd(),
     impactAssessmentHours: '',
     documentsAffected: '',
-    knockOnEffect: ''
+    knockOnEffect: '',
+    impactProgressRaw: ''
   };
 
   markers.forEach((marker, index) => {
@@ -133,16 +193,32 @@ function mcsParseExtendedJustification(rawValue) {
     parsed[marker.key] = raw.slice(start, end).trim();
   });
 
+  if (parsed.impactProgressRaw) {
+    try {
+      const rawObj = JSON.parse(parsed.impactProgressRaw);
+      parsed.impactProgress = rawObj && typeof rawObj === 'object' ? rawObj : {};
+    } catch (err) {
+      parsed.impactProgress = {};
+    }
+  } else {
+    parsed.impactProgress = {};
+  }
+
+  delete parsed.impactProgressRaw;
   return parsed;
 }
 
-function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockOnEffectValue, impactAssessmentHoursValue) {
+function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockOnEffectValue, impactAssessmentHoursValue, impactProgressValue) {
   const core = String(coreValue || '').trim();
   const documentsAffected = String(documentsAffectedValue || '').trim();
   const knockOnEffect = String(knockOnEffectValue || '').trim();
   const impactAssessmentHours = String(impactAssessmentHoursValue || '').trim();
+  const impactProgress = impactProgressValue && typeof impactProgressValue === 'object'
+    ? impactProgressValue
+    : {};
+  const hasImpactProgress = Object.keys(impactProgress).length > 0;
 
-  if (!documentsAffected && !knockOnEffect && !impactAssessmentHours) {
+  if (!documentsAffected && !knockOnEffect && !impactAssessmentHours && !hasImpactProgress) {
     return core;
   }
 
@@ -151,6 +227,7 @@ function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockO
   if (impactAssessmentHours) parts.push(`[ImpactAssessmentHours]\n${impactAssessmentHours}`);
   if (documentsAffected) parts.push(`[DocumentsAffected]\n${documentsAffected}`);
   if (knockOnEffect) parts.push(`[KnockOnEffect]\n${knockOnEffect}`);
+  if (hasImpactProgress) parts.push(`[ImpactProgressJson]\n${JSON.stringify(impactProgress)}`);
   return parts.join('\n\n').trim();
 }
 

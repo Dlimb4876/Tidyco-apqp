@@ -867,6 +867,7 @@ const GUIDE_CONTENT = {
           <li><strong>Implemented</strong> — Fully approved and closed out. Overhaul Trends updated automatically.</li>
           <li><strong>Closed</strong> — Change rejected or cancelled.</li>
         </ul>
+        <p>In the edit form, <strong>Stage 3 (Implement)</strong> now shows an implementation checklist that is automatically built from the impact areas selected in <strong>Stage 1</strong>. Tick each item as it is completed to track implementation progress.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Filters & Search</div>

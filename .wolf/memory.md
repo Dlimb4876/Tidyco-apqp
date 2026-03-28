@@ -286,6 +286,11 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+| 10:49 | Added MCS Stage 3 implementation checklist sourced from Stage 1 selected impacts | portals/mcs/js/mcs-modal-edit.js, portals/mcs/js/mcs-modal-shared.js, portals/mcs/js/mcs-modal-view.js, portals/mcs/css/mcs.css | Stage 3 now shows per-impact checkboxes and live completion count for better implementation tracking | ~980 |
+| 10:50 | Wired MCS progress persistence and hydration using structured justification payload + load/realtime parsing | portals/mcs/js/mcs-main.js, portals/mcs/js/mcs-realtime.js, portals/mcs/js/mcs-modal-shared.js | Checklist progress now persists and reloads from DB-backed change data without requiring a hard DB schema change | ~940 |
+| 10:50 | Added regression test and updated user guide/changelog for Stage 3 checklist behavior | tests/mcs-modal-shared.test.js, utils/js/guide.js, CHANGELOG.md | Coverage and docs updated to reflect new Stage 3 impact tracking workflow | ~620 |
+| 08:10 | Updated debug launchers to use dedicated Chrome user-data-dir profile plus incognito | start-debug-site.bat, start-debug-site-and-wiki.bat | Debug opens as separate signed-out taskbar Chrome instance, matching preferred workflow | ~460 |
+| 08:11 | Added matching changelog and OpenWolf buglog entry for profile-isolated launch behavior | CHANGELOG.md, .wolf/buglog.json | Preference captured for future launcher edits and regressions | ~300 |
 | 07:47 | Edited ../../../.serena/serena_config.yml | inline fix | ~10 |
 | 07:47 | Session end: 1 writes across 1 files (serena_config.yml) | 2 reads | ~10 tok |
 
@@ -1384,6 +1389,8 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+| 08:03 | Updated debug launchers to open Chrome in incognito windows by default | start-debug-site.bat, start-debug-site-and-wiki.bat | VS Code-like fresh private session behavior for local debug launches | ~420 |
+| 08:04 | Logged debug-launcher incognito behavior request and fix details | .wolf/buglog.json, CHANGELOG.md | OpenWolf records updated for future sessions and troubleshooting | ~360 |
 | 06:27 | Edited portals/capacity/shared/js/cap-tasks.js | 9→9 lines | ~331 |
 | 06:27 | Edited portals/capacity/shared/js/cap-tasks.js | inline fix | ~80 |
 | 06:27 | Edited portals/capacity/shared/js/cap-tasks.js | 9→9 lines | ~262 |
@@ -1451,3 +1458,18 @@
 | 07:51 | Session end: 45 writes across 19 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 19 reads | ~106831 tok |
 | 07:51 | Session end: 45 writes across 19 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 20 reads | ~108369 tok |
 | 07:54 | Session end: 45 writes across 19 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 21 reads | ~108441 tok |
+
+## Session: 2026-03-28 08:00
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-28 11:05
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-28 11:20
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

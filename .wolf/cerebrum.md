@@ -28,6 +28,9 @@
 - For Capacity Product Support, user expects the `📦 Bulk Save All Changes` control to sit on the right above the table across all streams (ME/PM/Logistics/Unit 6).
 - For settings portal work, user prioritizes reducing churn in `settings.js`; avoid broad rewrites and stabilize tests with explicit hooks/contracts to prevent scope collisions and brittle `settings-portal.test.js` coupling.
 - For Product Development architecture, user expects distinct tools like Parts Database to live as their own subsystem/folder rather than being hidden inside shared NPI implementation files.
+- User wants local debug batch launchers to match VS Code debug behavior by opening Chrome in a fresh Incognito session.
+- User prefers debug browser launches to use a separate Chrome profile instance (signed-out, separate taskbar icon), not only regular-profile tabs.
+- User wants MCS Stage 3 to mirror Stage 1 selected impacts as implementation checkboxes, with progress persisted to database-backed change data.
 
 ## Key Learnings
 
@@ -69,6 +72,9 @@
 <!-- [2026-03-27] Capacity realtime focus guard must cover search/filter controls as well as inline table editors. If defer logic only checks `isEditingInlineCell()`, startup realtime bursts can replace search inputs and eject cursor/focus repeatedly. -->
 <!-- [2026-03-27] Avoid full Capacity tasks-tab rerender on every search keystroke. Keep filter state immediate but debounce rerender and cancel stale pending timers when other task filters/sort controls trigger immediate refresh, or fast typing can stutter and drop characters. -->
 <!-- [2026-03-27] In Windows batch files, do not use `\"` as nested-quote escaping for `cmd`/`start` commands. CMD treats the backslashes literally, which can surface as “Windows can't find \\”. Use doubled CMD quotes or hand off the delayed browser launch to `powershell.exe` instead. -->
+<!-- [2026-03-28] For local debug launch parity with VS Code, batch launchers should prefer explicit Chrome launch with `--incognito --new-window` (not plain URL `Start-Process`) so a fresh private session is guaranteed. -->
+<!-- [2026-03-28] For stable separate-taskbar debug browser behavior, launch Chrome with a dedicated `--user-data-dir` plus `--incognito --new-window`; incognito alone may still attach to an existing profile/app identity. -->
+<!-- [2026-03-28] For MCS Stage 3 impact-progress persistence, avoid hard dependency on a new DB column unless migration is guaranteed. Persist checklist progress in existing persisted change data (e.g., structured tokens in justification) and parse on load to remain backward-compatible. -->
 
 ## Decision Log
 

@@ -1246,6 +1246,71 @@
   user-select: none;
 }
 
+.mcs-impact-progress-wrap {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+}
+
+.mcs-impact-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mcs-impact-progress-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mcs-impact-progress-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.mcs-impact-progress-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mcs-impact-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.mcs-impact-progress-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.mcs-impact-progress-item label {
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.mcs-stage-note-compact {
+  margin: 0;
+  font-size: 12px;
+}
+
 /* -- Timeline -- */
 .mcs-timeline {
   display: flex;

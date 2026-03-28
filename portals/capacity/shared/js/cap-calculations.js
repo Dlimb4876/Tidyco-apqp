@@ -238,6 +238,9 @@ window.capCalculateMonthData = function(monthKey, teamArray, tasksArray, product
   };
 };
 
+// Backwards compatibility alias used by operations dashboard
+window.meCalculateMonthData = window.capCalculateMonthData;
+
 // ── Week Utilisation Calculation (Per-Person) ────────────────
 window.capCalcWeekUtilisation = function(personId, weekStart, weekEnd, tasksArray, holidaysArray, teamArray) {
   const useTeam = Array.isArray(teamArray) ? teamArray : [];

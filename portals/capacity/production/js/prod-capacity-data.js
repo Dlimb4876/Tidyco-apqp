@@ -513,3 +513,9 @@ window.prodCapUnsubscribeAll = function() {
   prodCapUnsubscribeData();
   prodCapUnsubscribeUtilization();
 };
+
+// Export functions for operations dashboard
+window.prodCapGet24MonthKeys = prodCapGet24MonthKeys;
+window.prodCapGetWorkAreas = prodCapGetWorkAreas;
+window.prodCapCalcDemandMatrix = prodCapCalcDemandMatrix;
+window.prodCapCalcSupplyMatrix = prodCapCalcSupplyMatrix;

@@ -3,6 +3,14 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-28 | Fix operations dashboard capacity KPIs showing "Not Ready" | Added missing window exports for production capacity functions and backwards compatibility alias for meCalculateMonthData so ME, PM, LOG, and Unit 6 capacity metrics display correctly
+
+## 2026-03-28 | Add Stage 3 impact checklist tracking for MCS | Stage 3 now mirrors Stage 1 impact selections as implementation checkboxes and saves progress in persisted change data
+
+## 2026-03-28 | Isolate debug Chrome profile in batch launchers | Keep debug browser windows as a separate signed-out taskbar instance while still launching in incognito
+
+## 2026-03-28 | Launch debug batch files in Chrome Incognito | Match VS Code debug behavior by opening local debug URLs in a fresh private browser session
+
 ## 2026-03-28 | Fix Capacity task edit saving wrong row under filters | Task save now resolves by active editing task ID within current context, preventing cross-row updates when filtered/sorted views are active
 
 ## 2026-03-28 | Redesign MCS create change modal - wider layout and reorganized sections | Modal expanded from 1140px to 1400px, removed workflow rail, reorganized into 4 clear sections (Basic Info, Change Details, Impact Assessment, Implementation & Approval) for better professional appearance and easier form completion

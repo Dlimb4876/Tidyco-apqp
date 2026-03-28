@@ -257,10 +257,17 @@ async function mcsLoadChanges() {
       impactsByChange[imp.change_id].push(imp.impact_type);
     });
 
-    mcsList = (data || []).map(change => ({
-      ...change,
-      impacts: impactsByChange[change.id] || []
-    }));
+    mcsList = (data || []).map(change => {
+      const parsedJustification = mcsParseExtendedJustification(change.justification || '');
+      const impactProgress = change.impact_progress && typeof change.impact_progress === 'object'
+        ? change.impact_progress
+        : (parsedJustification.impactProgress || {});
+      return {
+        ...change,
+        impacts: impactsByChange[change.id] || [],
+        impact_progress: impactProgress
+      };
+    });
   } catch (err) {
     console.error('MCS load error:', err);
     mcsList = [];

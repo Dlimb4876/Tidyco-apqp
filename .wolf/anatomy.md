@@ -474,6 +474,7 @@
 - `mcs-approval.test.js` — Declares fs (~929 tok)
 - `mcs-main.test.js` — Declares fs (~1904 tok)
 - `mcs-overhaul-integration.test.js` — MCS + Overhaul History Integration Tests (~2273 tok)
+- `mcs-modal-shared.test.js` — Tests MCS shared modal helper parsing/building for Stage 3 impact checklist progress (~760 tok)
 - `me-calculations.test.js` — Declares fs (~2987 tok)
 - `me-chart.test.js` — Declares fs (~1707 tok)
 - `me-components.test.js` — me-components.test.js — Tests for portals/capacity/shared/js/cap-components.js (~2345 tok)
