@@ -466,6 +466,7 @@ function importJSON(e) {
       } else { showToast('Invalid file', 'error'); }
     } catch (x) { showToast('Invalid JSON', 'error'); }
   };
+  r.onerror = () => { showToast('Could not read file', 'error'); };
   r.readAsText(f);
   e.target.value = '';
 }
@@ -637,6 +638,7 @@ async function teamsDataLoadAll() {
     return data || [];
   } catch (err) {
     console.error('Failed to load teams:', err);
+    if (typeof showToast === 'function') showToast('Could not load teams', 'error');
     return [];
   }
 }
@@ -691,6 +693,7 @@ async function teamsDataAdd(team) {
     return data?.[0] || null;
   } catch (err) {
     console.error('Failed to create team:', err);
+    if (typeof showToast === 'function') showToast('Could not create team', 'error');
     return null;
   }
 }
@@ -710,6 +713,7 @@ async function teamsDataUpdate(teamId, updates) {
     return true;
   } catch (err) {
     console.error('Failed to update team:', err);
+    if (typeof showToast === 'function') showToast('Could not update team', 'error');
     return false;
   }
 }
@@ -725,6 +729,7 @@ async function teamsDataDelete(teamId) {
     return true;
   } catch (err) {
     console.error('Failed to delete team:', err);
+    if (typeof showToast === 'function') showToast('Could not delete team', 'error');
     return false;
   }
 }
@@ -755,6 +760,7 @@ async function teamPermissionsDataSave(teamId, permissions) {
     return true;
   } catch (err) {
     console.error('Failed to save team permissions:', err);
+    if (typeof showToast === 'function') showToast('Could not save team permissions', 'error');
     return false;
   }
 }

@@ -122,9 +122,9 @@ window.pmDataAddTask = function(name, category, assigneeId, startDate, endDate, 
   return true;
 };
 
-window.pmDataUpdateTask = function(idx, field, value) {
-  if (idx < 0 || idx >= pmDataState.tasks.length) return false;
-  const task = pmDataState.tasks[idx];
+window.pmDataUpdateTask = function(taskId, field, value) {
+  const task = pmDataState.tasks.find(t => t.id === taskId);
+  if (!task) return false;
   switch (field) {
     case 'name': task.name = value.trim(); break;
     case 'category': task.category = value || 'NPI'; break;
@@ -140,8 +140,9 @@ window.pmDataUpdateTask = function(idx, field, value) {
   return true;
 };
 
-window.pmDataDeleteTask = function(idx) {
-  if (idx < 0 || idx >= pmDataState.tasks.length) return false;
+window.pmDataDeleteTask = function(taskId) {
+  const idx = pmDataState.tasks.findIndex(t => t.id === taskId);
+  if (idx < 0) return false;
   const removed = pmDataState.tasks[idx];
   pmDataState.tasks.splice(idx, 1);
   if (removed && removed.id) {
@@ -646,12 +647,29 @@ window.pmDataReset = function() {
 // REALTIME
 // ─────────────────────────────────────────────────────────────
 
+let _pmRealtimeDebounceTimer = null;
+
+function pmIsCapacityFilterInputFocused() {
+  const active = document.activeElement;
+  if (!active || active === document.body) return false;
+  if (typeof active.matches !== 'function') return false;
+
+  return active.matches('[data-cap-action="cap-task-search"], [data-cap-action="cap-task-filter-category"], [data-cap-action="cap-task-filter-assignee"], [data-cap-action="cap-task-filter-product"], [data-cap-action="cap-task-filter-month"], [data-cap-action="cap-products-search"], [data-cap-action="cap-product-load-search"]');
+}
+
+function pmApplyRealtimeRender() {
+  clearTimeout(_pmRealtimeDebounceTimer);
+  _pmRealtimeDebounceTimer = setTimeout(function() {
+    if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+  }, 150);
+}
+
 window.pmDataSubscribe = function() {
   if (!currentUser) return;
   if (typeof createMultiTableRealtimeSubscription !== 'function') return;
 
   function pmShouldDeferRealtimeRender() {
-    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+    if ((typeof isEditingInlineCell === 'function' && isEditingInlineCell()) || pmIsCapacityFilterInputFocused()) {
       window.pmPendingRealTimeUpdate = true;
       return true;
     }
@@ -669,14 +687,14 @@ window.pmDataSubscribe = function() {
         if (!pmDataState.team.some(t => t.id === n.id)) {
           pmDataState.team.push(n);
           if (pmShouldDeferRealtimeRender()) return;
-          if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+          pmApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (d) => {
         pmDataState.team = pmDataState.team.filter(t => t.id !== d.id);
         if (pmShouldDeferRealtimeRender()) return;
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+        pmApplyRealtimeRender();
       }
     },
     {
@@ -690,7 +708,7 @@ window.pmDataSubscribe = function() {
         if (!pmDataState.tasks.some(t => t.id === n.id)) {
           pmDataState.tasks.push(n);
           if (pmShouldDeferRealtimeRender()) return;
-          if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+          pmApplyRealtimeRender();
         }
       },
       onUpdate: (row) => {
@@ -703,12 +721,12 @@ window.pmDataSubscribe = function() {
         if (idx < 0) { pmDataState.tasks.push(n); }
         else { pmDataState.tasks[idx] = { ...pmDataState.tasks[idx], ...n }; }
         if (pmShouldDeferRealtimeRender()) return;
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+        pmApplyRealtimeRender();
       },
       onDelete: (d) => {
         pmDataState.tasks = pmDataState.tasks.filter(t => t.id !== d.id);
         if (pmShouldDeferRealtimeRender()) return;
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+        pmApplyRealtimeRender();
       }
     },
     {
@@ -723,14 +741,14 @@ window.pmDataSubscribe = function() {
         if (!pmDataState.products.some(p => p.id === n.id)) {
           pmDataState.products.push(n);
           if (pmShouldDeferRealtimeRender()) return;
-          if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+          pmApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (d) => {
         pmDataState.products = pmDataState.products.filter(p => p.id !== d.id);
         if (pmShouldDeferRealtimeRender()) return;
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+        pmApplyRealtimeRender();
       }
     },
     {
@@ -741,14 +759,14 @@ window.pmDataSubscribe = function() {
         if (!pmDataState.holidays.some(h => h.id === n.id)) {
           pmDataState.holidays.push(n);
           if (pmShouldDeferRealtimeRender()) return;
-          if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+          pmApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (d) => {
         pmDataState.holidays = pmDataState.holidays.filter(h => h.id !== d.id);
         if (pmShouldDeferRealtimeRender()) return;
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+        pmApplyRealtimeRender();
       }
     },
     {
@@ -761,13 +779,13 @@ window.pmDataSubscribe = function() {
         else pmDataState.productSupportHistory.push(n);
         pmDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(pmDataState.productSupportHistory);
         if (pmShouldDeferRealtimeRender()) return;
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+        pmApplyRealtimeRender();
       },
       onUpdate: () => {},
       onDelete: (d) => {
         pmDataState.productSupportHistory = pmDataState.productSupportHistory.filter(h => h.id !== d.id);
         if (pmShouldDeferRealtimeRender()) return;
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
+        pmApplyRealtimeRender();
       }
     }
   ], 'pm-capacity-channel');
@@ -782,3 +800,9 @@ window.flushPmDataNow = function() {
     pmDataSave(false);
   }
 };
+
+function pmDataUnsubscribe() {
+  if (typeof removeRealtimeSubscription === 'function') {
+    removeRealtimeSubscription('pm-capacity-channel');
+  }
+}

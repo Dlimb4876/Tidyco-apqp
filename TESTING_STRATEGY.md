@@ -56,6 +56,30 @@ npm test -- tests/navigation.test.js
 npm test -- --coverage
 ```
 
+### Manual Browser Debug Run
+
+For a quick browser debug session without VS Code, start the local static server from the repo root:
+
+```bash
+start-debug-site.bat
+```
+
+That launcher starts the server and opens `http://localhost:8000/index.html` automatically.
+
+If you want both the main app and the standalone wiki open together, use:
+
+```bash
+start-debug-site-and-wiki.bat
+```
+
+Or run:
+
+```bash
+PowerShell -ExecutionPolicy Bypass -File .claude\serve.ps1
+```
+
+Then open `http://localhost:8000/index.html` and use the browser dev tools (`F12`) for debugging.
+
 ### Standalone Guide Wiki Validation
 
 The standalone guide wiki under `wiki/` is validated with lightweight static checks:

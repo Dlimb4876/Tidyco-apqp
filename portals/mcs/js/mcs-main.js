@@ -641,14 +641,16 @@ function mcsSetDateRange(value) {
  * KPI click: filter to Approval 1 (engineering review)
  */
 function mcsKpiFilterApproval1() {
-  mcsSetFilter('status', 'review', document.querySelector('[onclick*="mcsSetFilter(\'status\', \'review\'"]'));
+  const btn = document.querySelector('[onclick*="mcsSetFilter(\'status\', \'review\'"]')
+  mcsSetFilter('status', 'review', btn)
 }
 
 /**
  * KPI click: filter to Approval 2 (final review)
  */
 function mcsKpiFilterApproval2() {
-  mcsSetFilter('status', 'final_review', document.querySelector('[onclick*="mcsSetFilter(\'status\', \'final_review\'"]'));
+  const btn = document.querySelector('[onclick*="mcsSetFilter(\'status\', \'final_review\'"]')
+  mcsSetFilter('status', 'final_review', btn)
 }
 
 /**

@@ -146,6 +146,52 @@ window.meDataSave = async function(showAlert) {
         typeof meSaveProductRelational === 'function') {
       try {
 
+        // 0. Save holidays FIRST for immediate user feedback (fast operation)
+        // The table's unique key is (user_id, person_id, date), so global deletes are
+        // destructive and can wipe other users' rows if one user saves an empty state.
+        const _holSeen = new Set();
+        meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays);
+        const holidayData = (meDataState.holidays || [])
+          .filter(h => {
+            // Only save holidays owned by the current user — other users' holidays
+            // are loaded for display (shared data) but must not be re-inserted here
+            // as their DB rows were not deleted, which would cause a PK conflict.
+            if (h.userId && h.userId !== currentUser.id) return false;
+            const key = h.personId + '_' + h.date;
+            if (_holSeen.has(key)) return false;
+            _holSeen.add(key);
+            return true;
+          })
+          .map(h => {
+            const row = {
+              id: h.id,
+              user_id: currentUser.id,
+              person_id: h.personId,
+              date: h.date,
+              type: h.type,
+              department: meNormalizeMeTableDepartment(h.department)
+            };
+            return row;
+          });
+
+        const { error: delHolErr } = await supa
+          .from('me_holidays')
+          .delete()
+          .eq('user_id', currentUser.id);
+
+        if (delHolErr) {
+          console.warn('Failed to clear holidays:', delHolErr.message);
+          relationalSuccess = false;
+        } else if (holidayData.length > 0) {
+          const { error: insHolErr } = await supa
+            .from('me_holidays')
+            .insert(holidayData);
+          if (insHolErr) {
+            console.warn('Failed to insert holidays:', insHolErr.message);
+            relationalSuccess = false;
+          }
+        }
+
         // 1. Save products FIRST (tasks FK-reference products)
         for (let i = 0; i < meDataState.products.length; i++) {
           const success = await meSaveProductRelational(currentUser.id, meDataState.products[i]);
@@ -295,51 +341,7 @@ window.meDataSave = async function(showAlert) {
           }
         }
 
-        // 4. Save holidays for the current user only, then reload as shared data.
-        // The table's unique key is (user_id, person_id, date), so global deletes are
-        // destructive and can wipe other users' rows if one user saves an empty state.
-        const _holSeen = new Set();
-        meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays);
-        const holidayData = (meDataState.holidays || [])
-          .filter(h => {
-            // Only save holidays owned by the current user — other users' holidays
-            // are loaded for display (shared data) but must not be re-inserted here
-            // as their DB rows were not deleted, which would cause a PK conflict.
-            if (h.userId && h.userId !== currentUser.id) return false;
-            const key = h.personId + '_' + h.date;
-            if (_holSeen.has(key)) return false;
-            _holSeen.add(key);
-            return true;
-          })
-          .map(h => {
-            const row = {
-              id: h.id,
-              user_id: currentUser.id,
-              person_id: h.personId,
-              date: h.date,
-              type: h.type,
-              department: meNormalizeMeTableDepartment(h.department)
-            };
-            return row;
-          });
-
-        const { error: delHolErr } = await supa
-          .from('me_holidays')
-          .delete()
-          .eq('user_id', currentUser.id);
-
-        if (delHolErr) {
-          console.warn('Failed to clear holidays:', delHolErr.message);
-          relationalSuccess = false;
-        } else if (holidayData.length > 0) {
-          const { error: insHolErr } = await supa
-            .from('me_holidays')
-            .insert(holidayData);
-          if (insHolErr) {
-            console.warn('Failed to insert holidays:', insHolErr.message);
-            relationalSuccess = false;
-          }
-        }
+        // 4. Skip holidays - already saved in step 0 for faster feedback
 
         if (relationalSuccess) {
         } else {

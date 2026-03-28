@@ -128,11 +128,14 @@ window.capRenderHolidaysTab = function(holidaysArray, teamArray, monthKey, depar
     rowsHtml += '</tr>';
   });
 
+  const isSaving = typeof window.meDataSaveInProgress !== 'undefined' && window.meDataSaveInProgress;
+
   return `
     <div class="me-card">
       <div class="me-card-head">
         <span class="me-card-title">HOLIDAY PLANNER</span>
         <span style="font-size:11px;color:var(--muted)">5-day work week · Click cells: working → full day → half day → remove · Blue = bank holidays</span>
+        ${isSaving ? '<span style="font-size:11px;color:var(--primary);margin-left:auto;">Saving...</span>' : ''}
       </div>
       <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--overlay-light);border-bottom:1px solid var(--border);">
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-prev-month">← Prev</button>

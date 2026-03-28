@@ -4,7 +4,9 @@
 // ═══════════════════════════════════
 
 // ── Lane collapse state (persisted to localStorage) ──────────
-const npiCollapsedLanes = new Set(JSON.parse(localStorage.getItem('npi_collapsed_lanes') || '[]'))
+let _npiCollapsedLanesRaw = []
+try { _npiCollapsedLanesRaw = JSON.parse(localStorage.getItem('npi_collapsed_lanes') || '[]') } catch (_) { localStorage.removeItem('npi_collapsed_lanes') }
+const npiCollapsedLanes = new Set(Array.isArray(_npiCollapsedLanesRaw) ? _npiCollapsedLanesRaw : [])
 
 const NPI_PROJECTS_VIEW_MODE_KEY = 'npi_projects_view_mode'
 let npiProjectsViewMode = localStorage.getItem(NPI_PROJECTS_VIEW_MODE_KEY) || 'active'

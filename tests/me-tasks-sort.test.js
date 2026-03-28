@@ -177,9 +177,10 @@ describe('capRenderTasksTab() — HTML structure', () => {
     expect(html).toContain('TASKS');
   });
 
-  it('includes Add Task button', () => {
+  it('includes new-task top row with add action', () => {
     const html = window.capRenderTasksTab(SAMPLE_TASKS, SAMPLE_TEAM, SAMPLE_PRODUCTS, 'ME', window.capTasksFilters.ME, window.capTasksSort.ME, true);
     expect(html).toContain('cap-task-add');
+    expect(html).toContain('data-cap-new-task');
   });
 
   it('includes search filter input', () => {

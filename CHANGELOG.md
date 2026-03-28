@@ -3,6 +3,36 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-28 | Add name attributes to task form fields | Fix browser accessibility warning about form fields missing id/name
+
+## 2026-03-28 | Stabilize Capacity realtime rendering across PM/Logistics/Unit6 | Realtime updates could repeatedly replace tab HTML while users were filtering/typing, causing visible flicker; added focused-input deferral plus render coalescing to match stable NPI behavior
+
+## 2026-03-28 | Fix task save button not working when editing existing tasks | el.closest('[data-task-id]') returned the save button (which has data-task-id) instead of the table row, so form field queries returned null and no data was captured
+
+## 2026-03-27 | Fix task editing — wrong task updated when filtered; redesign to click-to-edit | Tasks used filtered array index as identifier; edits hit the wrong row when sorted/filtered. Replaced with task ID lookup, added per-row Edit/Save/Cancel flow and a persistent new-task input row at table top
+
+## 2026-03-27 | Optimize ME holiday save performance | Moved holiday save to execute FIRST (before products/teams/tasks) so users get immediate feedback; previously had to wait for all 30-50+ sequential DB calls to complete
+
+## 2026-03-27 | Add logo-only desktop icon generator | Make shortcut branding cleaner by trimming empty space and exporting a square icon from the company logo
+
+## 2026-03-27 | Fix Windows debug launcher quoting | The browser auto-open command used `\"` escaping that CMD treated as a broken `\` path instead of valid nested quotes
+
+## 2026-03-27 | Add app-plus-wiki debug launcher | Make local browser debugging quicker when checking both the main app and wiki together
+
+## 2026-03-27 | Auto-open browser in debug launcher | Make the no-VS-Code launcher even easier by opening the local site automatically
+
+## 2026-03-27 | Add no-VS-Code debug launcher | Make it easier to start the local site in a browser without opening VS Code
+
+## 2026-03-27 | Debounce ME realtime re-render | Page was flickering on load — each saved row echoed back a realtime event triggering a full DOM replace; debouncing collapses the burst into one render
+
+## 2026-03-27 | Harden error handling and fix realtime subscription leaks | Code review: safe JSON.parse in NPI dashboard, FileReader onerror, cleanup for log/pm/unit6 capacity channels, user-visible toasts on team data failures
+
+## 2026-03-27 | Fix Capacity tasks tab full re-render on every keypress | Tasks search was re-rendering the entire tab HTML on every keystroke; now only the KPIs and table are updated, preserving focus on filter controls
+
+## 2026-03-27 | Stabilize ME task search focus during startup realtime churn | ME realtime updates could re-render the Tasks tab while the search box was focused, ejecting the cursor for ~20 seconds; realtime repaint is now deferred while capacity search/filter inputs are active
+
+## 2026-03-27 | Fix ME capacity team member delete not persisting on refresh | Deleted team members came back after refresh because the DB delete was only queued in the save cycle (step 3-C); now fires immediately on delete and flushMEDataNow also sends pending deletes on beforeunload
+
 ## 2026-03-27 | Fill remaining desktop breakpoint gaps in portal CSS | Added explicit `min-width: 768px` refinements to the last partial portal stylesheets so the mobile audit is fully clean and desktop spacing is intentional in each feature area
 
 ## 2026-03-27 | Harden repository guardrail scripts against false positives | Replaced heuristic syntax checks with parser-backed validation and taught the subscription, mobile, and modal audits to respect real app patterns so `check:all` reports genuine issues instead of validator noise

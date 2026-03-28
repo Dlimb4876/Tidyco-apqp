@@ -66,6 +66,9 @@
 <!-- [2026-03-27] Before deleting legacy shared files in this repo, grep tests for direct `readFileSync(...old-file...)` + `eval` coupling. Runtime bootstrap can be clean while Jest still depends on deleted artifacts, so migrate those suites to the live shared file or wrapper contract first. -->
 <!-- [2026-03-27] When a user reports "data is in DB but UI is blank", run direct Supabase SQL first for the exact entity name to verify duplicate keys/rows before assuming frontend ID mapping only; duplicate projects can make cards open empty clones while historical rows still exist. -->
 <!-- [2026-03-27] In NPI, ensure dashboard project-open handlers call the duplicate-safe navigator path (`npi.nav.openProjectById`). Bypassing it with direct `progId = id; navigate('project')` can silently reopen empty clones. -->
+<!-- [2026-03-27] Capacity realtime focus guard must cover search/filter controls as well as inline table editors. If defer logic only checks `isEditingInlineCell()`, startup realtime bursts can replace search inputs and eject cursor/focus repeatedly. -->
+<!-- [2026-03-27] Avoid full Capacity tasks-tab rerender on every search keystroke. Keep filter state immediate but debounce rerender and cancel stale pending timers when other task filters/sort controls trigger immediate refresh, or fast typing can stutter and drop characters. -->
+<!-- [2026-03-27] In Windows batch files, do not use `\"` as nested-quote escaping for `cmd`/`start` commands. CMD treats the backslashes literally, which can surface as “Windows can't find \\”. Use doubled CMD quotes or hand off the delayed browser launch to `powershell.exe` instead. -->
 
 ## Decision Log
 

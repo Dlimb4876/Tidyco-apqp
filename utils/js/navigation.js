@@ -161,6 +161,9 @@ function navigate(sec, { pushHash = true } = {}) {
     if (typeof meDataUnsubscribe === 'function') meDataUnsubscribe();
     if (typeof prodCapUnsubscribeUtilization === 'function') prodCapUnsubscribeUtilization();
     if (typeof workAreasDataUnsubscribe === 'function') workAreasDataUnsubscribe();
+    if (typeof logDataUnsubscribe === 'function') logDataUnsubscribe();
+    if (typeof pmDataUnsubscribe === 'function') pmDataUnsubscribe();
+    if (typeof unit6DataUnsubscribe === 'function') unit6DataUnsubscribe();
   }
 
   // Clean up MCS subscriptions when leaving MCS

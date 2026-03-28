@@ -121,9 +121,9 @@ window.unit6DataAddTask = function(name, category, assigneeId, startDate, endDat
   return true;
 };
 
-window.unit6DataUpdateTask = function(idx, field, value) {
-  if (idx < 0 || idx >= unit6DataState.tasks.length) return false;
-  const task = unit6DataState.tasks[idx];
+window.unit6DataUpdateTask = function(taskId, field, value) {
+  const task = unit6DataState.tasks.find(t => t.id === taskId);
+  if (!task) return false;
   switch (field) {
     case 'name': task.name = value.trim(); break;
     case 'category': task.category = value || 'NPI'; break;
@@ -139,8 +139,9 @@ window.unit6DataUpdateTask = function(idx, field, value) {
   return true;
 };
 
-window.unit6DataDeleteTask = function(idx) {
-  if (idx < 0 || idx >= unit6DataState.tasks.length) return false;
+window.unit6DataDeleteTask = function(taskId) {
+  const idx = unit6DataState.tasks.findIndex(t => t.id === taskId);
+  if (idx < 0) return false;
   const removed = unit6DataState.tasks[idx];
   unit6DataState.tasks.splice(idx, 1);
   if (removed && removed.id) {
@@ -706,12 +707,29 @@ window.unit6DataReset = function() {
   window.unit6DataPendingDeletes = { tasks: [], teams: [], supportHistory: [] };
 };
 
+let _unit6RealtimeDebounceTimer = null;
+
+function unit6IsCapacityFilterInputFocused() {
+  const active = document.activeElement;
+  if (!active || active === document.body) return false;
+  if (typeof active.matches !== 'function') return false;
+
+  return active.matches('[data-cap-action="cap-task-search"], [data-cap-action="cap-task-filter-category"], [data-cap-action="cap-task-filter-assignee"], [data-cap-action="cap-task-filter-product"], [data-cap-action="cap-task-filter-month"], [data-cap-action="cap-products-search"], [data-cap-action="cap-product-load-search"]');
+}
+
+function unit6ApplyRealtimeRender() {
+  clearTimeout(_unit6RealtimeDebounceTimer);
+  _unit6RealtimeDebounceTimer = setTimeout(function() {
+    if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+  }, 150);
+}
+
 window.unit6DataSubscribe = function() {
   if (!currentUser) return;
   if (typeof createMultiTableRealtimeSubscription !== 'function') return;
 
   function unit6ShouldDeferRealtimeRender() {
-    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+    if ((typeof isEditingInlineCell === 'function' && isEditingInlineCell()) || unit6IsCapacityFilterInputFocused()) {
       window.unit6PendingRealTimeUpdate = true;
       return true;
     }
@@ -737,14 +755,14 @@ window.unit6DataSubscribe = function() {
         if (!unit6DataState.team.some(member => member.id === normalized.id)) {
           unit6DataState.team.push(normalized);
           if (unit6ShouldDeferRealtimeRender()) return;
-          if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+          unit6ApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         unit6DataState.team = unit6DataState.team.filter(member => member.id !== deleted.id);
         if (unit6ShouldDeferRealtimeRender()) return;
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+        unit6ApplyRealtimeRender();
       }
     },
     {
@@ -768,7 +786,7 @@ window.unit6DataSubscribe = function() {
         if (!unit6DataState.tasks.some(task => task.id === normalized.id)) {
           unit6DataState.tasks.push(normalized);
           if (unit6ShouldDeferRealtimeRender()) return;
-          if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+          unit6ApplyRealtimeRender();
         }
       },
       onUpdate: (row) => {
@@ -791,12 +809,12 @@ window.unit6DataSubscribe = function() {
         if (idx < 0) unit6DataState.tasks.push(normalized);
         else unit6DataState.tasks[idx] = { ...unit6DataState.tasks[idx], ...normalized };
         if (unit6ShouldDeferRealtimeRender()) return;
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+        unit6ApplyRealtimeRender();
       },
       onDelete: (deleted) => {
         unit6DataState.tasks = unit6DataState.tasks.filter(task => task.id !== deleted.id);
         if (unit6ShouldDeferRealtimeRender()) return;
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+        unit6ApplyRealtimeRender();
       }
     },
     {
@@ -820,14 +838,14 @@ window.unit6DataSubscribe = function() {
         if (!unit6DataState.products.some(product => product.id === normalized.id)) {
           unit6DataState.products.push(normalized);
           if (unit6ShouldDeferRealtimeRender()) return;
-          if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+          unit6ApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         unit6DataState.products = unit6DataState.products.filter(product => product.id !== deleted.id);
         if (unit6ShouldDeferRealtimeRender()) return;
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+        unit6ApplyRealtimeRender();
       }
     },
     {
@@ -838,14 +856,14 @@ window.unit6DataSubscribe = function() {
         if (!unit6DataState.holidays.some(holiday => holiday.id === normalized.id)) {
           unit6DataState.holidays.push(normalized);
           if (unit6ShouldDeferRealtimeRender()) return;
-          if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+          unit6ApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         unit6DataState.holidays = unit6DataState.holidays.filter(holiday => holiday.id !== deleted.id);
         if (unit6ShouldDeferRealtimeRender()) return;
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+        unit6ApplyRealtimeRender();
       }
     },
     {
@@ -858,13 +876,13 @@ window.unit6DataSubscribe = function() {
         else unit6DataState.productSupportHistory.push(normalized);
         unit6DataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(unit6DataState.productSupportHistory);
         if (unit6ShouldDeferRealtimeRender()) return;
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+        unit6ApplyRealtimeRender();
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         unit6DataState.productSupportHistory = unit6DataState.productSupportHistory.filter(history => history.id !== deleted.id);
         if (unit6ShouldDeferRealtimeRender()) return;
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
+        unit6ApplyRealtimeRender();
       }
     }
   ], 'unit6-capacity-channel');
@@ -875,3 +893,9 @@ window.flushUnit6DataNow = function() {
     unit6DataSave(false);
   }
 };
+
+function unit6DataUnsubscribe() {
+  if (typeof removeRealtimeSubscription === 'function') {
+    removeRealtimeSubscription('unit6-capacity-channel');
+  }
+}

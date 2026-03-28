@@ -32,6 +32,19 @@ Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and
 
 ---
 
+## Running locally without VS Code
+
+If you just want to open the site in your browser for debugging, you do not need VS Code open.
+
+- Double-click `start-debug-site.bat` in the repo root — it starts the local server and opens the site automatically
+- Double-click `start-debug-site-and-wiki.bat` to open both the main app and the standalone wiki
+- Or run `PowerShell -ExecutionPolicy Bypass -File .claude\serve.ps1`
+- Then open `http://localhost:8000/index.html`
+
+Press `Ctrl+C` in the launcher window when you want to stop the local server.
+
+---
+
 ## Responsive Design
 
 The application is designed with a **progressive enhancement** approach:

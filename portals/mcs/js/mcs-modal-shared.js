@@ -21,8 +21,8 @@ function mcsFormatTimelineEvents(rows) {
 function mcsRenderTimelineHtml(events) {
   if (!events.length) return '<div style="color: var(--text3); font-size: 12px; padding: 8px 0;">No activity recorded.</div>';
   return events.map(ev => `
-    <div class="mcs-tl-event ${ev.type || ''}">
-      <div class="mcs-tl-time">${ev.time || '—'}</div>
+    <div class="mcs-tl-event ${esc(ev.type || '')}">
+      <div class="mcs-tl-time">${esc(ev.time || '—')}</div>
       <div class="mcs-tl-text">${esc(ev.text || '')}</div>
       <div class="mcs-tl-author">${esc(ev.author || '')}</div>
     </div>

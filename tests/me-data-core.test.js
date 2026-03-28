@@ -650,8 +650,8 @@ describe('meDataInit()', () => {
     window.meDataState.tasks[0].id = 'task-delete-me';
     window.meDataState.tasks[1].id = 'task-keep-me';
 
-    // Simulate user deleting the first task in the Tasks tab.
-    window.meDataDeleteTask(0);
+    // Simulate user deleting the first task in the Tasks tab (now by ID).
+    window.meDataDeleteTask('task-delete-me');
 
     const eq = jest.fn().mockResolvedValue({ error: null });
     const del = jest.fn().mockReturnValue({ eq });
@@ -821,6 +821,7 @@ describe('meData realtime subscription callbacks', () => {
   }
 
   beforeEach(() => {
+    jest.useFakeTimers();
     tableConfigs = [];
     window.meDataReset();
     global.currentUser = { id: 'user-1' };
@@ -838,6 +839,8 @@ describe('meData realtime subscription callbacks', () => {
   });
 
   afterEach(() => {
+    jest.runAllTimers();
+    jest.useRealTimers();
     delete global.currentUser;
     delete global.render;
     delete global.createMultiTableRealtimeSubscription;
@@ -901,6 +904,7 @@ describe('meData realtime subscription callbacks', () => {
         endDate: '2026-03-20'
       })
     ]);
+    jest.runAllTimers();
     expect(global.meCapSmartRender).toHaveBeenCalledTimes(1);
   });
 
@@ -947,6 +951,7 @@ describe('meData realtime subscription callbacks', () => {
         notes: 'new note'
       })
     ]);
+    jest.runAllTimers();
     expect(global.meCapSmartRender).toHaveBeenCalledTimes(1);
   });
 
@@ -1023,7 +1028,39 @@ describe('meData realtime subscription callbacks', () => {
         supportEffectiveDate: '2026-03-05'
       })
     );
+    jest.runAllTimers();
     expect(global.meCapSmartRender).toHaveBeenCalledTimes(1);
+  });
+
+  it('defers realtime repaint while tasks search input is focused', () => {
+    const input = document.createElement('input');
+    input.setAttribute('data-cap-action', 'cap-task-search');
+    document.body.appendChild(input);
+    input.focus();
+
+    getTableConfig('me_tasks').onInsert({
+      id: 'task-search-focus',
+      name: 'Search focus guard',
+      category: 'NPI',
+      type: 'standard',
+      department: 'ME',
+      assignee_id: '',
+      product_id: '',
+      start_date: '',
+      end_date: '',
+      total_hours: 1,
+      status: 'SCHEDULED',
+      is_disabled: false,
+      created_at: '2026-03-01T00:00:00.000Z'
+    });
+
+    expect(window.meDataState.tasks).toEqual([
+      expect.objectContaining({ id: 'task-search-focus' })
+    ]);
+    expect(global.meCapSmartRender).not.toHaveBeenCalled();
+    expect(window.mePendingRealTimeUpdate).toBe(true);
+
+    input.remove();
   });
 
   it('updates existing holidays on realtime update events and repaints', () => {
@@ -1056,6 +1093,7 @@ describe('meData realtime subscription callbacks', () => {
         department: 'LOG'
       })
     ]);
+    jest.runAllTimers();
     expect(global.meCapSmartRender).toHaveBeenCalledTimes(1);
   });
 });

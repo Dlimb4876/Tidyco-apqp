@@ -63,17 +63,18 @@ window.meDataDeleteTeam = function(idx) {
   const removed = meDataState.team[idx];
   meDataState.team.splice(idx, 1);
   if (removed && removed.id) {
-    const pendingTasks = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.tasks)
-      ? window.meDataPendingDeletes.tasks
-      : [];
+    // Fire an immediate DB delete so it is committed even if the
+    // user refreshes before the full save cycle reaches step 3-C.
+    if (typeof meDeleteTeamRelational === 'function') {
+      meDeleteTeamRelational(removed.id).catch(function(err) {
+        console.warn('[ME] Immediate team delete failed, queued for retry on save:', err.message);
+      });
+    }
     const pendingTeams = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.teams)
       ? window.meDataPendingDeletes.teams
       : [];
     if (!pendingTeams.includes(removed.id)) pendingTeams.push(removed.id);
-    window.meDataPendingDeletes = {
-      tasks: pendingTasks,
-      teams: pendingTeams
-    };
+    window.meDataPendingDeletes = Object.assign({}, window.meDataPendingDeletes || {}, { teams: pendingTeams });
   }
   return true;
 };
@@ -108,9 +109,9 @@ window.meDataAddTask = function(name, category, assigneeId, startDate, endDate, 
   return true;
 };
 
-window.meDataUpdateTask = function(idx, field, value) {
-  if (idx < 0 || idx >= meDataState.tasks.length) return false;
-  const task = meDataState.tasks[idx];
+window.meDataUpdateTask = function(taskId, field, value) {
+  const task = meDataState.tasks.find(t => t.id === taskId);
+  if (!task) return false;
   switch (field) {
     case 'name':
       task.name = value.trim();
@@ -148,8 +149,9 @@ window.meDataUpdateTask = function(idx, field, value) {
   return true;
 };
 
-window.meDataDeleteTask = function(idx) {
-  if (idx < 0 || idx >= meDataState.tasks.length) return false;
+window.meDataDeleteTask = function(taskId) {
+  const idx = meDataState.tasks.findIndex(t => t.id === taskId);
+  if (idx < 0) return false;
   const removedTask = meDataState.tasks[idx];
   meDataState.tasks.splice(idx, 1);
   if (removedTask && removedTask.id) {

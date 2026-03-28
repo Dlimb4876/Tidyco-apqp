@@ -1,34 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-27T15:54:38.326Z
-> Files: 393 tracked | Anatomy hits: 0 | Misses: 0
-
-## Manual Update 2026-03-27
-
-- `portals/capacity/css/capacity.css` — added tablet-and-up spacing/layout rules for the estimation subsystem header/body so the last capacity root stylesheet warning now has a real desktop breakpoint.
-- `portals/capacity/shared/css/cap-tables.css` — added tablet-and-up gutter, add-row, and date-field sizing rules so shared capacity tables explicitly define both mobile and desktop behavior.
-- `portals/mcs/css/mcs.css` — added desktop spacing rules for the MCS sidebar, toolbar, and list so the base MCS stylesheet now owns a concrete `min-width: 768px` layout path.
-- `portals/product-development/npi/css/apqp-bom.css` and `portals/product-development/npi/css/rpn-chart.css` — added desktop breakpoint refinements for BOM tab/picker/tree spacing and RPN chart padding so both NPI partials now declare desktop behavior explicitly.
-- `portals/product-development/parts-database/css/parts-database.css` — added tablet-and-up spacing for ABC filters, info rows, and project column width so the Parts Database stylesheet now includes both responsive directions.
-
-- `scripts/syntax-validator.js` — replaced the heuristic line scanner with Node parser-backed `--check` validation so syntax audit failures now reflect real parse errors instead of false positives from nested scopes and multiline objects.
-- `scripts/subscription-cleanup-auditor.js` — normalized Windows paths, added persistent-subscription allowlisting, recognized prefix cleanup and multiline subscription calls, and matched cleanups by channel names so the audit reports actual realtime leaks.
-- `scripts/mobile-breakpoint-verifier.js` — now understands responsive companion stylesheets for split portal CSS bundles and only fails on missing responsive coverage rather than planned shared/responsive composition.
-- `scripts/modal-state-auditor.js` — now scans workspace-wide JS/HTML close handlers and the shared Escape-based modal closer instead of treating single-file `showModal()` calls as leaks by default.
-
-- `supabase/evm_phase3_wbs_migration.sql` — removed the orphaned `me_hub_evm_summary` view definition so the loose EVM Phase 3 SQL matches the live schema cleanup and no longer recreates dead DB scaffolding.
-- `CHANGELOG.md` — logged the `me_hub_evm_summary` view removal for schema traceability.
-
-- `tests/npi-navigation-open-project.test.js` — added focused regression coverage for duplicate-safe NPI project opening so `npi.nav.openProjectById` picks the sibling with relational data instead of opening empty clones.
-- `tests/npi-dashboard-search.test.js` — added paged-project hydration coverage for `npi.dashboard.ensureProductProjects`, including in-flight guard behavior to prevent duplicate hydration requests.
-- `tests/hub.test.js` — stabilized favourites rendering assertions by resetting `canViewPageKey` in the favourites-storage test setup to avoid cross-test permission leakage.
-
-- `portals/capacity/me/js/me-data.js` — completed the final Phase 7 facade pass so it now only owns ME bootstrap factories, save flags, and module-ownership notes for the extracted ME data files.
-- `portals/capacity/me/js/me-data-persistence.js` — now reuses the facade bootstrap factories when initializing and resetting ME state, keeping the pending-delete/state shape aligned with `me-data.js`.
-
-- Fixed NPI relational ID resolution in `portals/product-development/npi/js/npi-data-relational.js` so loads use `projects.prog_id` for NPI `project_id` foreign keys even when the active project is tracked by UUID.
-- Restored NPI project accessibility under paged loads by hydrating missing project rows from Supabase in `portals/product-development/npi/js/dashboard.js` and routing dashboard opens through duplicate-safe selection in `portals/product-development/npi/js/npi.js`.
-- Deduped `public.projects` by `product_id` in Supabase (with FK row repointing), and enforced one-project-per-product using partial unique index `uq_projects_product_id_not_null`.
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-28T06:28:15.792Z
+> Files: 395 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -36,25 +9,27 @@
 - `.mcp.json` (~320 tok)
 - `.nojekyll` (~0 tok)
 - `.prettierrc` — Prettier configuration (~31 tok)
-- `%TEMP%install-qwen.bat` (~2737 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1835 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~1645 tok)
-- `CHANGELOG.md` — Changelog (~21481 tok)
+- `CHANGELOG.md` — Changelog (~23167 tok)
 - `check_onclick.js` — fs: findJSFiles (~410 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~571 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
-- `index.html` — Tidyco Operations Portal (~11049 tok)
+- `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1317 tok)
+- `index.html` — Tidyco Operations Portal (~4538 tok)
 - `jest.config.js` — Jest test configuration (~26 tok)
 - `jest.setup.js` — Mock Supabase (~340 tok)
 - `package-lock.json` — npm lock file (~61736 tok)
 - `package.json` — Node.js package manifest (~574 tok)
-- `QWEN.md` — QWEN.md — Tidyco APQP Quality Tool (~3321 tok)
-- `README.md` — Project documentation (~6418 tok)
+- `README.md` — Project documentation (~6363 tok)
 - `SKILLS_GUIDE.md` — Tidyco APQP Development Skills Guide (~2715 tok)
 - `SKILLS_QUICK_REFERENCE.txt` — Declares in (~847 tok)
 - `SKILLS_SUMMARY.md` — Tidyco APQP Development Skills — Summary (~1594 tok)
+- `start-debug-site-and-wiki.bat` (~162 tok)
+- `start-debug-site.bat` (~136 tok)
+- `temp-server.js` — Temporary HTTP server for testing (~412 tok)
 - `test-holidays.html` — Test Bank Holidays 2026 (~1252 tok)
-- `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~5968 tok)
+- `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~6555 tok)
 
 ## .claude/
 
@@ -100,7 +75,7 @@
 
 ## .gemini/
 
-- `GEMINI.md` — Gemini Assistant Guide for Tidyco APQP Project (~2250 tok)
+- `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1317 tok)
 
 ## .github/
 
@@ -118,12 +93,9 @@
 
 - `testing.instructions.md` — Testing Guidelines (~225 tok)
 
-## .github/prompts/
-
-
 ## .github/skills/code-review/
 
-- `SKILL.md` — Code Review Skill (Tidyco APQP) (~891 tok)
+- `SKILL.md` — Code Review Skill (Tidyco APQP) (~874 tok)
 
 ## .github/workflows/
 
@@ -133,11 +105,6 @@
 
 - `.gitignore` — Git ignore rules (~12 tok)
 - `package.json` — Node.js package manifest (~18 tok)
-
-## .qwen/
-
-- `mcp-tools.md` — MCP Tools Configuration (~686 tok)
-- `QWEN.md` — Qwen Assistant Guide for Tidyco APQP Project (~1441 tok)
 
 ## .serena/
 
@@ -151,20 +118,6 @@
 - `style-and-conventions.md` (~140 tok)
 - `suggested_commands.md` (~116 tok)
 
-## Manual Update 2026-03-27
-
-- `portals/capacity/me/js/me-data-realtime.js` — extracted ME realtime row-normalization and subscription ownership out of `me-data.js`; loaded after `me-data-persistence.js` so the subscription layer can use the full ME state/save surface without changing the current `window.meData*` API.
-- `portals/capacity/me/js/me-data.js` — reduced further to the ME global state/flag bootstrap and `meUUID()` compatibility helper after the realtime split.
-- `portals/capacity/me/js/me-data-persistence.js` — extracted ME init/save/reset/diagnostic ownership out of `me-data.js`; load order now places it after entity/support-history helpers so persistence keeps the existing `window.meData*` contract intact.
-- `portals/capacity/me/js/me-data.js` — reduced to ME state/bootstrap and realtime ownership, then fixed existing-row realtime updates so team/product/support-history/holiday changes now mutate in-memory state and trigger the smart repaint path instead of being ignored.
-- `tests/me-data-core.test.js` — updated Phase 5 characterization to assert the corrected realtime update behavior, support-history-to-product sync, and the full reset pending-delete structure.
-- `portals/capacity/me/js/me-data-entities.js` — extracted ME entity CRUD ownership for teams, tasks, products, holidays, and department product autosync helpers; loaded after `me-data-support-history.js` to preserve the current product support-history coupling.
-- `portals/capacity/me/js/me-data-support-history.js` — extracted ME product support history ownership, including baseline sync, effective-dated support history CRUD, and support-rate lookup helpers loaded after `me-data.js`.
-- `portals/capacity/me/js/me-data-normalize.js` — extracted pure ME data normalization helpers (department/date/holiday/support-history shaping) loaded before `me-data.js`.
-- `tests/me-data-core.test.js` — expanded ME data characterization coverage for public API presence, current split support-field behaviour, and current realtime callback behaviour before structural extraction.
-- `plans/me-data-modularisation-plan.md` — phased non-behavioural split plan for `portals/capacity/me/js/me-data.js`, preserving the current `window.meData*` API while extracting normalization, support-history, CRUD, persistence, and realtime ownership.
-
-
 ## core/css/
 
 - `components.css` — Styles: 84 rules, 2 media queries (~6028 tok)
@@ -172,12 +125,12 @@
 
 ## core/js/
 
-- `app.js` — ═══════════════════════════════════ (~1594 tok)
-- `auth.js` — ═══════════════════════════════════ (~1240 tok)
+- `app.js` — ═══════════════════════════════════ (~1645 tok)
+- `auth.js` — ═══════════════════════════════════ (~1281 tok)
 - `chart-theme.js` — Return a resolved CSS variable value from :root (~720 tok)
-- `db.js` — ═══════════════════════════════════ (~8516 tok)
+- `db.js` — ═══════════════════════════════════ (~8940 tok)
 - `network.js` — Check if Supabase is reachable with a minimal query (~766 tok)
-- `state.js` — ═══════════════════════════════════ (~4726 tok)
+- `state.js` — ═══════════════════════════════════ (~4755 tok)
 
 ## dev/wiki/
 
@@ -185,6 +138,7 @@
 
 ## docs/
 
+- `permission-override-fix.md` — Permission Override Fix - Change Log (~1067 tok)
 - `README.md` — Project documentation (~207 tok)
 
 ## docs/guides/
@@ -202,35 +156,17 @@
 
 - `feedback-setup.md` — Feedback & Bug Reporting System — Setup Guide (~1504 tok)
 
-## me-hub/
-
-- `index.html` — ME Department Hub (~962 tok)
-
-## me-hub/css/
-
-- `me-hub.css` — Styles: 87 rules, 17 vars, 2 media queries (~5251 tok)
-
-## me-hub/js/
-
-- `me-hub-app.js` — ═══════════════════════════════════ (~6446 tok)
-- `me-hub-auth.js` — ═══════════════════════════════════ (~813 tok)
-- `me-hub-data.js` — ═══════════════════════════════════ (~2779 tok)
-
 ## plans/
 
-- `capacity-department-split.md` — Plan: Full Capacity Department Split (~3788 tok)
+- `capacity-department-split.md` — Plan: Full Capacity Department Split (~3826 tok)
 - `capacity-improvements-plan.md` — ME & PM Load Capacity Improvements Plan (~11114 tok)
-- `capacity-independance.md` — Plan: Capacity Independence — Eliminate Cross-Department Coupling (~7838 tok)
-- `capacity-isolated-streams-fixes.md` — Plan: Capacity Isolated Streams - Bug Fixes & Feature Parity (~1575 tok)
+- `capacity-independance.md` — Plan: Capacity Independence — Eliminate Cross-Department Coupling (~9530 tok)
 - `guide-system-implementation-plan.md` — Standalone User Guide Wiki - Implementation Plan (Revised) (~2213 tok)
 - `hub-improvements-plan.md` — Hub Portal Improvements Plan — UX Enhancement & Modernization (~8953 tok)
-- `master-current-state.md` — Master Current State (Live Baseline) (~762 tok)
+- `me-data-modularisation-plan.md` — Plan: ME Data Module Modularisation (~2970 tok)
 - `me-evm-capacity-plan.md` — Plan: ME Capacity - Bottom-Up Execution & EVM Integration (~2561 tok)
-- `next-implementation-sprint.md` — Next Implementation Sprint (~1107 tok)
-- `pfMEA-improvements-plan.md` — PFMEA Improvements Plan — AIAG-VDA Compliance & UX Enhancement (~7899 tok)
 - `product-allocation-heatmap-plan.md` — Per-Person Product Support Allocation for ME Heatmap (~1851 tok)
 - `risk-and-regression-checklist.md` — Risk and Regression Checklist (~725 tok)
-- `surgical-realtime-updates.md` — Plan: Surgical Realtime DOM Updates (~2508 tok)
 
 ## portals/action-centre/css/
 
@@ -242,52 +178,44 @@
 
 ## portals/capacity/css/
 
-- `capacity.css` — Styles: 58 rules, 2 media queries (~2226 tok)
-- `me-capacity-chart.css` — Styles: 32 rules, 1 media queries (~1138 tok)
-- `me-capacity-dashboard.css` — Styles: 41 rules (~1729 tok)
-- `me-capacity-heatmap.css` — Styles: 35 rules, 1 animations (~1474 tok)
-- `me-capacity-holidays.css` — Styles: 23 rules (~977 tok)
-- `me-capacity-responsive.css` — Styles: 2 rules, 2 media queries (~651 tok)
-- `me-capacity-shell.css` — Styles: 14 rules (~617 tok)
-- `me-capacity-tables.css` — Styles: 38 rules, 1 media queries (~1307 tok)
-- `prod-capacity.css` — Styles: 76 rules (~3602 tok)
+- `capacity.css` — Styles: 59 rules, 3 media queries (~2293 tok)
 
 ## portals/capacity/js/
 
-- `capacity-events.js` — capActionTarget: capNum, capContextType, capIsPM + 12 more (~11229 tok)
-- `capacity.js` — Capacity Management Portal Hub (~1653 tok)
-- `me-calculations.js` — Declares dateOnly (~4489 tok)
-- `me-capacity.js` — Main render function for ME Capacity Portal (~3994 tok)
-- `me-chart.js` — Declares meGetChartRefreshText (~7269 tok)
-- `me-components.js` — Declares color (~1714 tok)
-- `me-dashboard.js` — Draw mini 6-month capacity chart on dashboard (~2663 tok)
-- `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeMeTableDepartment, meNormalizePersistedProductDepartment, meNormalizeIsoDate, meNormalizeD... (~5281 tok)
-- `me-data.js` — meNormalizeDepartmentTag: meNormalizeMeTableDepartment, meNormalizeHolidayRecord, meNormalizeAndDedupeHolidays + 13 more (~17224 tok)
-- `me-heatmap.js` — monthLabel: meRenderDetailPanel (~2760 tok)
-- `me-holidays.js` — Declares y (~2984 tok)
-- `me-product-taskload.js` — meProductLoadTableState: meProductLoadGetState, meProductLoadRefreshTable, resolveFamilyLabel, resolveFamilyLabelForProduct (~4160 tok)
-- `me-products.js` — meProductsCreateState: meProductsNormalizeDepartmentKey, meProductsNormalizeRowIndex, meProductsBuildDraftCandidates + 6 more (~11737 tok)
-- `me-tasks.js` — Declares setState (~5492 tok)
-- `me-team.js` — Declares department (~2061 tok)
-- `me-utils.js` — Declares parsed (~2732 tok)
-- `prod-capacity-dashboard.js` — ═══════════════════════════════════════════════════════════════ (~3256 tok)
-- `prod-capacity-data.js` — ═══════════════════════════════════════════════════════════════ (~5434 tok)
-- `prod-capacity-detail.js` — ═══════════════════════════════════════════════════════════════ (~2811 tok)
-- `prod-capacity-settings.js` — ═══════════════════════════════════════════════════════════════ (~3826 tok)
-- `prod-capacity-workarea.js` — ═══════════════════════════════════════════════════════════════ (~4049 tok)
-- `prod-capacity.js` — ═══════════════════════════════════════════════════════════════ (~1128 tok)
-- `work-areas-data.js` — ═══════════════════════════════════════════════════════════════ (~1630 tok)
+- `capacity-events.js` — capActionTarget: capNum, capDefaultHoursPerWeek, capContextType + 20 more (~18846 tok)
+- `capacity.js` — Capacity Management Portal Hub (~1721 tok)
+- `modals.js` — ═══════════════════════════════════ (~499 tok)
 
 ## portals/capacity/logistics/js/
 
-- `log-capacity.js` — logGetCurrentMonthKey: logGetData, logGetTabContent, logRerenderChartTabForMonthChange (~2628 tok)
-- `log-data-relational.js` — Declares teamId (~3328 tok)
-- `log-data.js` — member: logGetProductSupportHistoryRows, logEnsureProductSupportHistoryBaseline (~10306 tok)
+- `log-capacity.js` — logGetCurrentMonthKey: logGetData, logGetLegacyCapacityFunction, logWithLegacyDepartment + 4 more (~3209 tok)
+- `log-data-relational.js` — Declares teamId (~3376 tok)
+- `log-data.js` — member: logGetProductSupportHistoryRows (~10594 tok)
 
 ## portals/capacity/me/js/
 
-- `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeMeTableDepartment, meNormalizePersistedProd (~5426 tok)
-- `me-data.js` — meNormalizeDepartmentTag: meNormalizeMeTableDepartment, meNormalizeHolidayRecord, meNormalizeAndDedu (~18559 tok)
+- `me-capacity.js` — Main render function for ME Capacity Portal (~3952 tok)
+- `me-data-entities.js` — Declares member (~5066 tok)
+- `me-data-normalize.js` — meNormalizeDepartmentTag: meNormalizeMeTableDepartment, meNormalizeHolidayRecord, meNormalizeAndDedupeHolidays + 8 more (~2221 tok)
+- `me-data-persistence.js` — meBuildEmptyDataState: meBuildEmptyPendingDeletes, meInitTeamDates (~4862 tok)
+- `me-data-realtime.js` — meNormalizeTaskRow: meNormalizeTeamRow, meNormalizeProductRow, meIsCapacityFilterInputFocused, meApplyRealtimeStateChange (~3165 tok)
+- `me-data-relational.js` — getTodayDateString: meNormalizeDepartmentTag, meNormalizeMeTableDepartment, meNormalizePersistedProductDepartment, meNormalizeIsoDate, meNormalizeD... (~5426 tok)
+- `me-data-support-history.js` — meApplyLatestSupportHistoryToProduct: meGetProductSupportHistoryRows, meEnsureProductSupportHistoryBaseline, meEnsureAllProductSupportHistoryBaselines (~2782 tok)
+- `me-data.js` — meCreateDataState: meCreatePendingDeletes, meUUID (~421 tok)
+
+## portals/capacity/production/css/
+
+- `prod-capacity.css` — Styles: 79 rules (~3416 tok)
+
+## portals/capacity/production/js/
+
+- `prod-capacity-dashboard.js` — ═══════════════════════════════════════════════════════════════ (~3176 tok)
+- `prod-capacity-data.js` — ═══════════════════════════════════════════════════════════════ (~5287 tok)
+- `prod-capacity-detail.js` — ═══════════════════════════════════════════════════════════════ (~2746 tok)
+- `prod-capacity-settings.js` — ═══════════════════════════════════════════════════════════════ (~3734 tok)
+- `prod-capacity-workarea.js` — ═══════════════════════════════════════════════════════════════ (~3942 tok)
+- `prod-capacity.js` — ═══════════════════════════════════════════════════════════════ (~1101 tok)
+- `work-areas-data.js` — ═══════════════════════════════════════════════════════════════ (~1582 tok)
 
 ## portals/capacity/project-management/css/
 
@@ -295,25 +223,44 @@
 
 ## portals/capacity/project-management/js/
 
-- `pm-capacity-data.js` (~162 tok)
-- `pm-capacity.js` — pmGetCurrentMonthKey: pmGetData, pmGetTabContent, pmRerenderChartTabForMonthChange (~2716 tok)
-- `pm-data-relational.js` — Declares teamId (~3305 tok)
-- `pm-data.js` — Declares member (~10241 tok)
+- `pm-capacity.js` — pmGetCurrentMonthKey: pmGetData, pmGetLegacyCapacityFunction, pmWithLegacyDepartment + 4 more (~3312 tok)
+- `pm-data-relational.js` — Declares teamId (~3353 tok)
+- `pm-data.js` — Declares member (~10524 tok)
+
+## portals/capacity/shared/css/
+
+- `cap-chart.css` — Styles: 32 rules, 1 media queries (~1138 tok)
+- `cap-dashboard.css` — Styles: 41 rules (~1729 tok)
+- `cap-heatmap.css` — Styles: 35 rules, 1 animations (~1474 tok)
+- `cap-holidays.css` — Styles: 23 rules (~977 tok)
+- `cap-responsive.css` — Styles: 2 rules, 2 media queries (~651 tok)
+- `cap-shell.css` — Styles: 14 rules (~617 tok)
+- `cap-tables.css` — Styles: 50 rules, 2 media queries (~1690 tok)
 
 ## portals/capacity/shared/js/
 
+- `cap-calculations.js` — Declares dateOnly (~4418 tok)
+- `cap-chart.js` — Declares dept (~1901 tok)
+- `cap-components.js` — Declares color (~1665 tok)
 - `cap-dashboard.js` — Declares dept (~873 tok)
+- `cap-data-utils.js` — normalized: supportHistoryTimestamp, pickPreferredRecord (~2332 tok)
 - `cap-heatmap.js` — Declares dept (~916 tok)
+- `cap-holidays.js` — y: capHolidayDeptLabel, capHolidayMonthLabel, capHolidayBankHolidayMap (~2360 tok)
+- `cap-product-taskload.js` — capProductLoadTableState: capProductLoadRefresh, capProductLoadResolveFamily (~3021 tok)
+- `cap-products.js` — capProductsTableState: capProductsNormalizeDepartmentKey, capProductsGetState, capProductsRefreshTable + 9 more (~8311 tok)
+- `cap-tasks.js` — dept: _capComputeFilteredTasks, _capRenderTaskRows, _capRenderTasksKPI (~8088 tok)
+- `cap-team.js` — Declares dept (~1919 tok)
+- `cap-utils.js` — Declares parsed (~2872 tok)
 
 ## portals/capacity/unit6/js/
 
-- `unit6-capacity.js` — unit6GetCurrentMonthKey: unit6GetData, unit6GetTabContent, unit6RerenderChartTabForMonthChange (~2697 tok)
-- `unit6-data-relational.js` — Declares teamId (~3368 tok)
-- `unit6-data.js` — member: unit6GetProductSupportHistoryRows, unit6EnsureProductSupportHistoryBaseline (~10472 tok)
+- `unit6-capacity.js` — unit6GetCurrentMonthKey: unit6GetData, unit6GetLegacyCapacityFunction, unit6WithLegacyDepartment + 4 more (~3297 tok)
+- `unit6-data-relational.js` — Declares teamId (~3417 tok)
+- `unit6-data.js` — Declares member (~10760 tok)
 
 ## portals/feedback/css/
 
-- `feedback.css` — Styles: 91 rules (~3446 tok)
+- `feedback.css` — Styles: 87 rules (~3497 tok)
 
 ## portals/feedback/js/
 
@@ -323,26 +270,26 @@
 
 ## portals/hub/css/
 
-- `hub.css` — Styles: 61 rules, 6 media queries (~2694 tok)
+- `hub.css` — Styles: 66 rules, 7 media queries (~2890 tok)
 
 ## portals/hub/js/
 
-- `hub.js` — js/features/hub.js (~4330 tok)
+- `hub.js` — js/features/hub.js (~4656 tok)
 
 ## portals/mcs/css/
 
 - `mcs-responsive.css` — Styles: 8 rules, 8 media queries (~2171 tok)
-- `mcs.css` — Styles: 83 rules, 6 vars (~10636 tok)
+- `mcs.css` — Styles: 83 rules, 6 vars (~10693 tok)
 
 ## portals/mcs/js/
 
 - `mcs-actions.js` — MCS Integration with Action Centre (~911 tok)
 - `mcs-approval.js` — MCS Approval Workflow (~2185 tok)
 - `mcs-approvers-data.js` — MCS Approver Configuration — Data Layer (~4140 tok)
-- `mcs-main.js` — MCS (Manufacturing Change) - Main Portal (~7959 tok)
+- `mcs-main.js` — MCS (Manufacturing Change) - Main Portal (~7970 tok)
 - `mcs-modal-create.js` — MCS Modal — Create (~2762 tok)
-- `mcs-modal-edit.js` — MCS Modal — Edit & Save (~4985 tok)
-- `mcs-modal-shared.js` — MCS Modal Shared Helpers (~2667 tok)
+- `mcs-modal-edit.js` — MCS Modal — Edit & Save (~4975 tok)
+- `mcs-modal-shared.js` — MCS Modal Shared Helpers (~2670 tok)
 - `mcs-modal-view.js` — MCS Modal — View (~5379 tok)
 - `mcs-pfmea.js` — MCS Integration with PFMEA History (~1528 tok)
 - `mcs-realtime.js` — MCS Real-time Subscriptions (~1538 tok)
@@ -360,7 +307,7 @@
 - `operations-dashboard-forecast-actions.js` — ═══════════════════════════════════ (~2086 tok)
 - `operations-dashboard-forecast-view.js` — ═══════════════════════════════════ (~5426 tok)
 - `operations-dashboard-main.js` — ═══════════════════════════════════ (~1832 tok)
-- `operations-dashboard-metrics.js` — ═══════════════════════════════════ (~5009 tok)
+- `operations-dashboard-metrics.js` — ═══════════════════════════════════ (~5157 tok)
 - `operations-dashboard-realtime.js` — ═══════════════════════════════════ (~2247 tok)
 - `operations-dashboard-render-core.js` — ═══════════════════════════════════ (~4556 tok)
 - `operations-dashboard-state.js` — ═══════════════════════════════════ (~225 tok)
@@ -371,12 +318,12 @@
 
 - `families-data.js` — Families Data Layer (~1689 tok)
 - `family-templates-data.js` — Family PFMEA Templates Data Layer (~3592 tok)
-- `product-development.js` — Product Development Portal Hub (~9187 tok)
+- `product-development.js` — Product Development Portal Hub (~9014 tok)
 - `product-management.js` — Product Management Page (~154 tok)
 
 ## portals/product-development/npi/css/
 
-- `apqp-bom.css` — Styles: 75 rules, 1 vars (~4034 tok)
+- `apqp-bom.css` — Styles: 64 rules, 1 vars, 2 media queries (~3191 tok)
 - `apqp-ctq.css` — Styles: 45 rules (~1817 tok)
 - `apqp-pfd.css` — Styles: 85 rules, 1 vars, 3 media queries (~3498 tok)
 - `apqp-responsive.css` — Styles: 3 rules, 3 media queries (~1083 tok)
@@ -385,32 +332,47 @@
 - `dashboard.css` — Styles: 84 rules, 3 media queries, 1 animations (~8965 tok)
 - `gantt.css` — Styles: 64 rules, 3 media queries (~2900 tok)
 - `pfmea.css` — Styles: 74 rules, 1 animations (~4030 tok)
-- `rpn-chart.css` — Styles: 5 rules, 1 media queries (~186 tok)
+- `rpn-chart.css` — Styles: 6 rules, 2 media queries (~213 tok)
 
 ## portals/product-development/npi/js/
 
 - `apqp.js` — ═══════════════════════════════════ (~2410 tok)
-- `bom-cclass.js` — ═══════════════════════════════════ (~5365 tok)
-- `bom.js` — ═══════════════════════════════════ (~13442 tok)
-- `dashboard.js` — ═══════════════════════════════════ (~15456 tok)
+- `bom-cclass.js` — ═══════════════════════════════════ (~538 tok)
+- `bom.js` — ═══════════════════════════════════ (~12113 tok)
+- `dashboard.js` — ═══════════════════════════════════ (~16052 tok)
 - `documents.js` — ═══════════════════════════════════ (~1269 tok)
-- `gates.js` — ═══════════════════════════════════ (~3031 tok)
-- `npi-components.js` — ═══════════════════════════════════ (~629 tok)
-- `npi-constants.js` — ═══════════════════════════════════ (~576 tok)
+- `gates.js` — ═══════════════════════════════════ (~2995 tok)
+- `modals.js` — ═══════════════════════════════════ (~4783 tok)
+- `npi-components.js` — ═══════════════════════════════════ (~616 tok)
+- `npi-constants.js` — ═══════════════════════════════════ (~564 tok)
 - `npi-cp.js` — ═══════════════════════════════════ (~1613 tok)
 - `npi-ctq.js` — ═══════════════════════════════════ (~4028 tok)
-- `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydratePfdRows (~13986 tok)
+- `npi-data-relational.js` — npiRelLooksLikeUuid: npiRelFindProject, npiRelIsHeaderStep, npiRelPersistedPfdStepNum, npiRelHydratePfdRows (~13160 tok)
 - `npi-data.js` — ═══════════════════════════════════ (~10772 tok)
 - `npi-events.js` — ═══════════════════════════════════ (~5190 tok)
 - `npi-gates-editor.js` — ═══════════════════════════════════ (~3071 tok)
-- `npi-orchestrator.js` — ═══════════════════════════════════ (~1190 tok)
+- `npi-orchestrator.js` — ═══════════════════════════════════ (~1169 tok)
 - `npi-pfd.js` — ═══════════════════════════════════ (~13003 tok)
-- `npi.js` — ═══════════════════════════════════ (~2312 tok)
+- `npi.js` — ═══════════════════════════════════ (~2916 tok)
 - `pfmea-state.js` — Declares PFMEA_RPN_FILTERS (~1898 tok)
 - `pfmea.js` — Declares v (~13522 tok)
 - `rpn-chart.js` — portals/npi/js/rpn-chart.js (~1068 tok)
 - `timing.js` — ═══════════════════════════════════ (~8495 tok)
 - `trackers.js` — ═══════════════════════════════════ (~5715 tok)
+
+## portals/product-development/parts-database/
+
+- `README.md` — Project documentation (~538 tok)
+
+## portals/product-development/parts-database/css/
+
+- `parts-database.css` — Styles: 21 rules, 2 media queries (~874 tok)
+
+## portals/product-development/parts-database/js/
+
+- `parts-data.js` — ═══════════════════════════════════ (~1276 tok)
+- `parts-database.js` — ═══════════════════════════════════ (~7511 tok)
+- `parts-modals.js` — ═══════════════════════════════════ (~2369 tok)
 
 ## portals/product-development/product-management/css/
 
@@ -418,21 +380,21 @@
 
 ## portals/product-development/product-management/js/
 
-- `products-data.js` — Products Data Layer (~5129 tok)
-- `products.js` — Products Management Portal (~7261 tok)
+- `products-data.js` — Products Data Layer (~5150 tok)
+- `products.js` — Products Management Portal (~7449 tok)
 - `trends-chart.js` — Overhaul Trends Chart & KPI visualization (~7295 tok)
 
 ## portals/production/css/
 
-- `production.css` — Styles: 89 rules (~8016 tok)
+- `production.css` — Styles: 90 rules (~8070 tok)
 
 ## portals/production/js/
 
-- `data.js` — Production Planning Data Layer (~4177 tok)
+- `data.js` — Production Planning Data Layer (~4441 tok)
 - `planning.js` — Production Planning Views (~7431 tok)
-- `production.js` — Production Planning Portal Hub (~2165 tok)
+- `production.js` — Production Planning Portal Hub (~2352 tok)
 - `products.js` — Product Master List Management (~2864 tok)
-- `scheduling.js` — Production Batch Scheduling (~9498 tok)
+- `scheduling.js` — Production Batch Scheduling (~10696 tok)
 
 ## portals/settings/css/
 
@@ -447,14 +409,15 @@
 
 ## scripts/
 
-- `load-order-checker.js` — Load Order Checker (~1883 tok)
-- `mobile-breakpoint-verifier.js` — Mobile Breakpoint Verifier (~1274 tok)
-- `modal-state-auditor.js` — Modal State Auditor (~1568 tok)
+- `load-order-checker.js` — Load Order Checker (~1967 tok)
+- `make-logo-ico.js` — fs: crc32, makeChunk, paethPredictor + 6 more (~2634 tok)
+- `mobile-breakpoint-verifier.js` — Mobile Breakpoint Verifier (~1672 tok)
+- `modal-state-auditor.js` — Modal State Auditor (~1890 tok)
 - `pre-commit-quality-hook.js` — readStdin: isGitCommitInvocation, emitDecision, runQualityChecks (~329 tok)
 - `rls-policy-checker.js` — RLS Policy Checker (~1302 tok)
-- `state-variable-tracker.js` — State Variable Tracker (~1873 tok)
-- `subscription-cleanup-auditor.js` — Subscription Cleanup Auditor (~1321 tok)
-- `syntax-validator.js` — Syntax Validator (~1446 tok)
+- `state-variable-tracker.js` — State Variable Tracker (~1926 tok)
+- `subscription-cleanup-auditor.js` — Subscription Cleanup Auditor (~2106 tok)
+- `syntax-validator.js` — Syntax Validator (~682 tok)
 - `test-coverage-reporter.js` — Test Coverage Reporter (~1621 tok)
 - `wiki-build-search-index.js` — fs: walk, parseMarkdownInfo, main (~616 tok)
 - `wiki-link-check.js` — fs: walk, extractLinks, main (~444 tok)
@@ -463,20 +426,21 @@
 ## supabase/
 
 - `capacity_dept_split.sql` — Capacity department split reference migration (~1817 tok)
-- `evm_phase2_migration.sql` — ═══════════════════════════════════════════════════════════════ (~715 tok)
-- `evm_phase3_wbs_migration.sql` — ═══════════════════════════════════════════════════════════════ (~1202 tok)
+- `evm_phase3_wbs_migration.sql` — ═══════════════════════════════════════════════════════════════ (~475 tok)
 - `hybrid_permissions_role_team_grants.sql` — hybrid_permissions_role_team_grants.sql (~1527 tok)
 - `logistics_product_support_history_split.sql` — Logistics Product Support Split Fields (~534 tok)
 - `mcs_changes_2step_migration.sql` — MCS Changes — 2-Step Approval Migration (~1552 tok)
 - `mcs_timeline_comment_types.sql` — MCS Timeline: add 'comment' and 'progress_update' event types (~248 tok)
 - `me_product_support_history.sql` — Effective-dated Product Support History (ME / PM Capacity) (~910 tok)
 - `me_tasks_disable_flag.sql` — Add task-level disable flag so records can be excluded from calculations (~83 tok)
+- `npi_bom_groups_add_pn_column.sql` — ════════════════════════════════════════════════════════════════════ (~155 tok)
 - `npi_pfd_flowchart_columns.sql` — Add PFD flowchart fields so step type and branch destinations persist. (~127 tok)
 - `operations_forecast_opportunities.sql` — Operations forecast opportunities table for the Operations dashboard forecast layer. (~473 tok)
 - `overhaul_history_mcs_columns.sql` — overhaul_history — Add MCS integration columns (~760 tok)
 - `overhaul_hours_rename_and_backfill.sql` — Overhaul Hours: rename _days columns to _hours + backfill baselines (~894 tok)
 - `pfmea_mcs_linking.sql` — ════════════════════════════════════════════════════════════════════ (~304 tok)
 - `phase3_optimisations.sql` — ════════════════════════════════════════════════════════════════════ (~1551 tok)
+- `products_unit_value.sql` — Add unit_value column to products table (~119 tok)
 - `realtime_missing_tables.sql` — Enable realtime publication for tables missing subscriptions (~72 tok)
 - `reset_support_baseline_20260101.sql` — Reset Product Support baseline for ME, PM, LOG, UNIT6 (~606 tok)
 - `rollback_normalize_rls_to_single_auth_policy.sql` — Rollback for migration: normalize_rls_to_single_auth_policy (~3919 tok)
@@ -489,9 +453,9 @@
 
 - `apqp.test.js` — Declares fs (~977 tok)
 - `auth.test.js` — Declares fs (~2546 tok)
-- `bank-holidays.test.js` — Declares fs (~430 tok)
-- `capacity-events.test.js` — Declares fs (~4848 tok)
-- `capacity-hub.test.js` — capacity-hub.test.js — Tests for portals/capacity/js/capacity.js (hub view) (~3204 tok)
+- `bank-holidays.test.js` — Declares fs (~432 tok)
+- `capacity-events.test.js` — Declares fs (~6139 tok)
+- `capacity-hub.test.js` — capacity-hub.test.js — Tests for portals/capacity/js/capacity.js (hub view) (~3117 tok)
 - `capacity-team-delete-persistence.test.js` — fs: loadScript, installSharedHelperStubs, installSupabaseDeleteMock (~1614 tok)
 - `chart-theme.test.js` — API routes: GET (1 endpoints) (~743 tok)
 - `db-gaps.test.js` — db-gaps.test.js — Additional tests for core/js/db.js (~3555 tok)
@@ -501,41 +465,42 @@
 - `feedback-data.test.js` — feedback-data.test.js — Tests for portals/feedback/js/feedback-data.js (~3070 tok)
 - `feedback-search-focus.test.js` — Declares fs (~644 tok)
 - `helpers.test.js` — Declares fs (~2810 tok)
-- `hub.test.js` — hub.test.js — Tests for portals/hub/js/hub.js (~4391 tok)
-- `log-capacity.test.js` — log-capacity.test.js — Tests for portals/capacity/logistics/js/log-capacity.js (~1334 tok)
+- `hub.test.js` — hub.test.js — Tests for portals/hub/js/hub.js (~5074 tok)
+- `log-capacity.test.js` — log-capacity.test.js — Tests for portals/capacity/logistics/js/log-capacity.js (~1452 tok)
 - `log-data-relational.test.js` — Declares fs (~900 tok)
 - `mcs-actions.test.js` — Declares fs (~1217 tok)
 - `mcs-approval-core.test.js` — Declares fs (~1226 tok)
 - `mcs-approval.test.js` — Declares fs (~929 tok)
 - `mcs-main.test.js` — Declares fs (~1904 tok)
 - `mcs-overhaul-integration.test.js` — MCS + Overhaul History Integration Tests (~2273 tok)
-- `me-calculations.test.js` — Declares fs (~2969 tok)
-- `me-chart.test.js` — Declares fs (~1861 tok)
-- `me-components.test.js` — me-components.test.js — Tests for portals/capacity/js/me-components.js (~2337 tok)
-- `me-data-core.test.js` — me-data-core.test.js — Tests for portals/capacity/js/me-data.js (~6755 tok)
-- `me-data-relational-queries.test.js` — me-data-relational-queries.test.js (~4271 tok)
+- `me-calculations.test.js` — Declares fs (~2987 tok)
+- `me-chart.test.js` — Declares fs (~1707 tok)
+- `me-components.test.js` — me-components.test.js — Tests for portals/capacity/shared/js/cap-components.js (~2345 tok)
+- `me-data-core.test.js` — me-data-core.test.js — Tests for portals/capacity/me/js/me-data.js (~10940 tok)
+- `me-data-relational-queries.test.js` — me-data-relational-queries.test.js (~4272 tok)
 - `me-heatmap.test.js` — Declares fs (~904 tok)
-- `me-holidays.test.js` — Declares fs (~875 tok)
-- `me-products-filters.test.js` — fs: renderSupportTable, renderLoadTable (~4442 tok)
-- `me-tasks-sort.test.js` — me-tasks-sort.test.js — Tests for portals/capacity/js/me-tasks.js (~2511 tok)
-- `me-team-render.test.js` — me-team-render.test.js — Tests for portals/capacity/js/me-team.js (~2041 tok)
+- `me-holidays.test.js` — Declares fs (~504 tok)
+- `me-products-filters.test.js` — Declares fs (~1532 tok)
+- `me-tasks-sort.test.js` — me-tasks-sort.test.js — Tests for portals/capacity/shared/js/cap-tasks.js (~2666 tok)
+- `me-team-render.test.js` — me-team-render.test.js — Tests for portals/capacity/shared/js/cap-team.js (~1870 tok)
 - `navigation.test.js` — fs: waitFor (~6194 tok)
-- `npi-dashboard-search.test.js` — Declares fs (~539 tok)
+- `npi-dashboard-search.test.js` — Declares fs (~1215 tok)
 - `npi-data-relational.test.js` — fs: makeCapturingSupa (~2354 tok)
 - `npi-events-search.test.js` — Declares fs (~695 tok)
 - `npi-gate-permissions.test.js` — Declares fs (~933 tok)
+- `npi-navigation-open-project.test.js` — Declares fs (~748 tok)
 - `npi-pfd-flowchart.test.js` — Declares fs (~2324 tok)
 - `npi-pfd-headers.test.js` — Declares fs (~1146 tok)
-- `operations-dashboard.test.js` — Declares fs (~6338 tok)
+- `operations-dashboard.test.js` — Declares fs (~6308 tok)
 - `operations-forecast-data.test.js` — Declares fs (~955 tok)
 - `operations-infographic.test.js` — Declares fs (~1110 tok)
+- `parts-database.test.js` — Declares fs (~817 tok)
 - `permissions-helpers.test.js` — Declares fs (~885 tok)
 - `pfmea.test.js` — Declares fs (~1927 tok)
-- `pm-capacity-data.test.js` — pm-capacity-data.test.js — Tests for portals/capacity/project-management/js/pm-capacity-data.js (~1078 tok)
-- `pm-capacity.test.js` — pm-capacity.test.js — Tests for portals/capacity/project-management/js/pm-capacity.js (~949 tok)
+- `pm-capacity.test.js` — pm-capacity.test.js — Tests for portals/capacity/project-management/js/pm-capacity.js (~1039 tok)
 - `pm-data-relational.test.js` — Declares fs (~894 tok)
-- `prod-capacity-data.test.js` — Declares fs (~1382 tok)
-- `product-development.test.js` — fs: renderProductDevelopmentShell (~1940 tok)
+- `prod-capacity-data.test.js` — Declares fs (~1352 tok)
+- `product-development.test.js` — fs: renderProductDevelopmentShell (~2068 tok)
 - `product-management.test.js` — Declares fs (~1044 tok)
 - `production-data.test.js` — production-data.test.js — Tests for portals/production/js/data.js (~1788 tok)
 - `production-planning-delegation.test.js` — Declares fs (~1243 tok)
@@ -547,19 +512,15 @@
 - `settings-portal.test.js` — settings-portal.test.js — Tests for portals/settings/js/settings.js (~9736 tok)
 - `supabase-rw.test.js` — SUPA_URL: fetchWithTimeout (~1645 tok)
 - `timing-core.test.js` — timing-core.test.js — Tests for portals/product-development/npi/js/timing.js (~1468 tok)
-- `unit6-capacity.test.js` — unit6-capacity.test.js — Tests for portals/capacity/unit6/js/unit6-capacity.js (~1360 tok)
+- `unit6-capacity.test.js` — unit6-capacity.test.js — Tests for portals/capacity/unit6/js/unit6-capacity.js (~1479 tok)
 - `unit6-data-relational.test.js` — Declares fs (~906 tok)
-- `work-areas-data.test.js` — work-areas-data.test.js (~1691 tok)
-
-## trello/
-
-- `index.html` — Tidyco Operations — Trello (~3742 tok)
+- `work-areas-data.test.js` — work-areas-data.test.js (~1646 tok)
 
 ## utils/js/
 
-- `guide.js` — ═══════════════════════════════════ (~19585 tok)
+- `guide.js` — ═══════════════════════════════════ (~19550 tok)
 - `helpers.js` — ═══════════════════════════════════ (~7230 tok)
-- `navigation.js` — Section labels for UI display (reserved for future use) (~8951 tok)
+- `navigation.js` — Section labels for UI display (reserved for future use) (~9083 tok)
 - `realtime-patch.js` — Surgical Realtime DOM Patch Helpers (~845 tok)
 - `realtime.js` — Subscribe to real-time changes on a table (~1923 tok)
 

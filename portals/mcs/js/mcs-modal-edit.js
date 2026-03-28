@@ -168,7 +168,7 @@ async function mcsSaveChange() {
       mcsToast(`Created: ${id}`);
     }
 
-    mcsCloseModal(mcsEditingId ? 'mcs-view-backdrop' : 'mcs-form-backdrop');
+    mcsCloseModal('mcs-form-backdrop');
     mcsRenderList();
   } catch (err) {
     console.error('Save error:', err);

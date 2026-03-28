@@ -305,9 +305,307 @@ function capHandleProductDraftChange(el, contextType) {
   })
 }
 
-// Re-render the tasks tab for the current ME or PM context.
+// Refresh only the tasks results (KPIs + table) without re-rendering the entire tab.
+// This preserves focus on filter controls during search operations.
 function capTaskRefresh(contextType) {
-  capSetTab(contextType, 'tasks')
+  const dept = capProductDraftDepartment(contextType)
+  const scope = document.querySelector('[data-cap-context="' + contextType + '"]')
+  if (!scope) {
+    capSetTab(contextType, 'tasks')
+    return
+  }
+
+  const kpiStrip = scope.querySelector('.me-kpi-strip')
+  const tableWrap = scope.querySelector('.me-tbl-wrap')
+  const cardHeadSpan = scope.querySelector('.me-card-head span:last-child')
+
+  if (!kpiStrip || !tableWrap) {
+    capSetTab(contextType, 'tasks')
+    return
+  }
+
+  // Get data for the current context
+  const tasks = (function() {
+    if (contextType === 'pm' && typeof window.pmDataGetTasks === 'function') return window.pmDataGetTasks()
+    if (contextType === 'log' && typeof window.logDataGetTasks === 'function') return window.logDataGetTasks()
+    if (contextType === 'unit6' && typeof window.unit6DataGetTasks === 'function') return window.unit6DataGetTasks()
+    if (typeof window.meDataGetTasks === 'function') return window.meDataGetTasks()
+    return []
+  })()
+
+  const team = (function() {
+    if (contextType === 'pm' && typeof window.pmDataGetTeam === 'function') return window.pmDataGetTeam()
+    if (contextType === 'log' && typeof window.logDataGetTeam === 'function') return window.logDataGetTeam()
+    if (contextType === 'unit6' && typeof window.unit6DataGetTeam === 'function') return window.unit6DataGetTeam()
+    if (typeof window.meDataGetTeam === 'function') return window.meDataGetTeam()
+    return []
+  })()
+
+  const products = (function() {
+    const api = capGetDataApi(contextType)
+    return typeof api.getProducts === 'function' ? api.getProducts() : []
+  })()
+
+  const filters = capTaskFilters(contextType) || {}
+  const sortState = capGetTaskSortState(contextType) || { column: '', direction: 'asc' }
+  const canEditFlag = typeof canEdit === 'function' ? canEdit() : true
+
+  // Apply filters
+  let filteredTasks = tasks.filter(function(t) {
+    const search = (filters.search || '').toLowerCase()
+    const cat = filters.category || 'all'
+    const assignee = filters.assignee || 'all'
+    const product = filters.product || 'all'
+    const hideCompleted = filters.hideCompleted || false
+    const month = filters.month || 'all'
+
+    if (search && !t.name.toLowerCase().includes(search)) return false
+    if (cat !== 'all' && t.category !== cat) return false
+    if (assignee !== 'all' && t.assigneeId !== assignee) return false
+    if (product !== 'all' && t.productId !== product) return false
+    if (month !== 'all') {
+      const monthStart = month + '-01'
+      const monthEnd = month + '-31'
+      if (!t.startDate || !t.endDate) return false
+      if (t.startDate > monthEnd) return false
+      if (t.endDate < monthStart) return false
+    }
+    if (hideCompleted && t.status === 'COMPLETED') return false
+    return true
+  })
+
+  // Apply sorting
+  if (sortState.column) {
+    const col = sortState.column
+    const dir = sortState.direction === 'asc' ? 1 : -1
+    const assigneeMap = new Map(team.map(function(m) { return [m.id, m.name] }))
+    const productMap = new Map(products.map(function(p) { return [p.id, p.name] }))
+
+    filteredTasks.sort(function(a, b) {
+      let valA, valB
+      switch (col) {
+        case 'name': valA = (a.name || '').toLowerCase(); valB = (b.name || '').toLowerCase(); break
+        case 'category': valA = (a.category || '').toLowerCase(); valB = (b.category || '').toLowerCase(); break
+        case 'assignee': valA = assigneeMap.get(a.assigneeId) || ''; valB = assigneeMap.get(b.assigneeId) || ''; break
+        case 'product': valA = productMap.get(a.productId) || ''; valB = productMap.get(b.productId) || ''; break
+        case 'startDate': valA = a.startDate || ''; valB = b.startDate || ''; break
+        case 'endDate': valA = a.endDate || ''; valB = b.endDate || ''; break
+        case 'hours': valA = a.totalHours || 0; valB = b.totalHours || 0; break
+        case 'status': valA = (a.status || 'SCHEDULED').toLowerCase(); valB = (b.status || 'SCHEDULED').toLowerCase(); break
+        default: valA = 0; valB = 0
+      }
+      if (valA < valB) return -1 * dir
+      if (valA > valB) return 1 * dir
+      return 0
+    })
+  }
+
+  // Calculate KPI values
+  let totalHoursValue = 0
+  filteredTasks.forEach(function(t) { totalHoursValue += t.totalHours || 0 })
+  const totalHours = totalHoursValue.toFixed(1)
+  const taskCount = filteredTasks.length
+  const unassignedCount = filteredTasks.filter(function(t) { return !t.assigneeId }).length
+  const avgHours = taskCount > 0 ? (totalHoursValue / taskCount).toFixed(1) : '0'
+
+  const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other']
+  const hoursByCategory = {}
+  ME_CATS.forEach(function(cat) {
+    hoursByCategory[cat] = filteredTasks.filter(function(t) { return t.category === cat })
+      .reduce(function(sum, t) { return sum + (t.totalHours || 0) }, 0).toFixed(1)
+  })
+  const topCategory = ME_CATS.reduce(function(top, cat) {
+    return parseFloat(hoursByCategory[cat]) > parseFloat(hoursByCategory[top]) ? cat : top
+  })
+
+  // Update KPI strip
+  kpiStrip.innerHTML =
+    '<div class="me-kpi" style="border-left: 4px solid var(--green);">' +
+      '<div class="me-kpi-value">' + totalHours + '</div>' +
+      '<div class="me-kpi-label">Total Hours</div>' +
+      '<div class="me-kpi-month">' + filteredTasks.length + ' tasks</div>' +
+    '</div>' +
+    '<div class="me-kpi" style="border-left: 4px solid var(--blue);">' +
+      '<div class="me-kpi-value">' + taskCount + '</div>' +
+      '<div class="me-kpi-label">Tasks</div>' +
+      '<div class="me-kpi-month">filtered</div>' +
+    '</div>' +
+    '<div class="me-kpi" style="border-left: 4px solid var(--amber);">' +
+      '<div class="me-kpi-value">' + avgHours + '</div>' +
+      '<div class="me-kpi-label">Average Hours</div>' +
+      '<div class="me-kpi-month">per task</div>' +
+    '</div>' +
+    '<div class="me-kpi" style="border-left: 4px solid var(--navy);">' +
+      '<div class="me-kpi-value">' + hoursByCategory[topCategory] + '</div>' +
+      '<div class="me-kpi-label">Top Category</div>' +
+      '<div class="me-kpi-month">' + topCategory + '</div>' +
+    '</div>' +
+    '<div class="me-kpi" style="border-left: 4px solid var(--red);">' +
+      '<div class="me-kpi-value">' + unassignedCount + '</div>' +
+      '<div class="me-kpi-label">Unassigned</div>' +
+      '<div class="me-kpi-month">filtered tasks</div>' +
+    '</div>'
+
+  // Update card header hours
+  if (cardHeadSpan) cardHeadSpan.textContent = totalHours + ' total hours'
+
+  // Build table rows (click-to-edit: read-only by default, edit mode when capTaskEditingId[dept] matches)
+  var editingId = (window.capTaskEditingId || {})[dept] || null
+  var teamMap = new Map(team.map(function(m) { return [m.id, m.name] }))
+  var productMap = new Map(products.map(function(p) { return [p.id, p.name] }))
+  let rows = ''
+  filteredTasks.forEach(function(task) {
+    const today = new Date(); today.setHours(0,0,0,0)
+    const startD = new Date(task.startDate || ''); startD.setHours(0,0,0,0)
+    const isOverdue = task.status === 'SCHEDULED' && task.startDate && startD <= today
+    const rowUrgencyClass = isOverdue ? 'batch-row-overdue' : ''
+    const disabledRowClass = task.isDisabled === true ? ' me-task-row-disabled' : ''
+
+    if (editingId === task.id) {
+      const catOpts = ME_CATS.map(function(c) {
+        return '<option value="' + c + '"' + (task.category === c ? ' selected' : '') + '>' + c + '</option>'
+      }).join('')
+      const memOpts = '<option value="">Unassigned</option>' + team.map(function(m) {
+        return '<option value="' + m.id + '"' + (task.assigneeId === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'
+      }).join('')
+      const prodOpts = '<option value="">— No Product</option>' + products.map(function(p) {
+        return '<option value="' + p.id + '"' + (task.productId === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>'
+      }).join('')
+      const statusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(function(s) {
+        return '<option value="' + s + '"' + (task.status === s ? ' selected' : '') + '>' + s[0] + s.slice(1).toLowerCase() + '</option>'
+      }).join('')
+      rows +=
+        '<tr class="me-task-row ' + rowUrgencyClass + disabledRowClass + '" data-task-id="' + esc(task.id) + '" style="background-color:var(--row-highlight-amber,#fffbeb);outline:2px solid var(--chart-amber-lt,#fbbf24);outline-offset:-2px;">' +
+          '<td><input name="task_name" data-task-field="name" value="' + esc(task.name) + '" placeholder="Task name" style="width:100%;"></td>' +
+          '<td><select name="task_category" data-task-field="category">' + catOpts + '</select></td>' +
+          '<td><select name="task_assigneeId" data-task-field="assigneeId">' + memOpts + '</select></td>' +
+          '<td><select name="task_productId" data-task-field="productId">' + prodOpts + '</select></td>' +
+          '<td><input type="date" name="task_startDate" data-task-field="startDate" value="' + (task.startDate || '') + '"></td>' +
+          '<td><input type="date" name="task_endDate" data-task-field="endDate" value="' + (task.endDate || '') + '"></td>' +
+          '<td><select name="task_status" data-task-field="status">' + statusOpts + '</select></td>' +
+          '<td style="text-align:center;"><input type="checkbox" name="task_isDisabled" data-task-field="isDisabled" aria-label="Disable task from calculations" style="width:14px;height:14px;"' + (task.isDisabled === true ? ' checked' : '') + '></td>' +
+          '<td><input type="number" name="task_totalHours" data-task-field="totalHours" value="' + (task.totalHours || 0) + '" step="0.5" style="width:70px;"></td>' +
+          '<td style="text-align:center;display:flex;gap:4px;justify-content:center;">' +
+            '<button class="btn-del" title="Save" data-cap-action="cap-task-save-edit" data-task-id="' + esc(task.id) + '">✓</button>' +
+            '<button class="btn-del" title="Cancel" data-cap-action="cap-task-cancel-edit">✕</button>' +
+          '</td>' +
+        '</tr>'
+    } else {
+      const assigneeName = teamMap.get(task.assigneeId) || '—'
+      const productName = productMap.get(task.productId) || '—'
+      const statusLabel = task.status ? task.status[0] + task.status.slice(1).toLowerCase() : '—'
+      const overdueBadge = isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''
+      const disabledBadge = task.isDisabled === true ? '<div class="batch-due-badge" style="background:var(--bg-soft);color:var(--muted);border-color:var(--line);">Disabled from calculations</div>' : ''
+      const checkedAttr = task.isDisabled === true ? ' checked' : ''
+      rows +=
+        '<tr class="me-task-row ' + rowUrgencyClass + disabledRowClass + '" data-task-id="' + esc(task.id) + '">' +
+          '<td>' + esc(task.name) + '</td>' +
+          '<td>' + esc(task.category) + '</td>' +
+          '<td>' + esc(assigneeName) + '</td>' +
+          '<td>' + esc(productName) + '</td>' +
+          '<td>' + (task.startDate || '—') + '</td>' +
+          '<td>' + (task.endDate || '—') + '</td>' +
+          '<td><span class="badge badge-' + task.status + '">' + statusLabel + '</span>' + overdueBadge + '</td>' +
+          '<td style="text-align:center;"><input type="checkbox" name="task_toggle_disabled" style="width:14px;height:14px;" aria-label="Disable task from calculations" data-cap-action="cap-task-toggle-disabled"' + checkedAttr + '>' + disabledBadge + '</td>' +
+          '<td>' + (task.totalHours || 0).toFixed(1) + '</td>' +
+          '<td style="text-align:center;display:flex;gap:4px;justify-content:center;">' +
+            (canEditFlag
+              ? '<button class="btn-del" title="Edit task" data-cap-action="cap-task-start-edit" data-task-id="' + esc(task.id) + '">✏️</button>' +
+                '<button class="me-del-btn" title="Delete task" data-cap-action="cap-task-del" data-task-id="' + esc(task.id) + '">✕</button>'
+              : '') +
+          '</td>' +
+        '</tr>'
+    }
+  })
+
+  // Get sort icons
+  const getSortIcon = typeof capGetSortIcon === 'function' ? capGetSortIcon : function() { return '↕' }
+
+  // Build new-task top row
+  var newTaskRow = ''
+  if (canEditFlag) {
+    var ME_CATS_NEW = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other']
+    var newCatOpts = ME_CATS_NEW.map(function(c) { return '<option value="' + c + '">' + c + '</option>' }).join('')
+    var newMemOpts = '<option value="">Unassigned</option>' + team.map(function(m) { return '<option value="' + m.id + '">' + esc(m.name) + '</option>' }).join('')
+    var newProdOpts = '<option value="">— No Product</option>' + products.map(function(p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>' }).join('')
+    var newStatusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(function(s) { return '<option value="' + s + '">' + s[0] + s.slice(1).toLowerCase() + '</option>' }).join('')
+    newTaskRow =
+      '<tr class="me-task-row" data-cap-new-task="1" style="background-color:var(--row-highlight-blue,#eff6ff);outline:2px solid var(--chart-blue-lt,#93c5fd);outline-offset:-2px;">' +
+        '<td><input name="task_name" data-task-field="name" placeholder="Task name" style="width:100%;"></td>' +
+        '<td><select name="task_category" data-task-field="category">' + newCatOpts + '</select></td>' +
+        '<td><select name="task_assigneeId" data-task-field="assigneeId">' + newMemOpts + '</select></td>' +
+        '<td><select name="task_productId" data-task-field="productId">' + newProdOpts + '</select></td>' +
+        '<td><input type="date" name="task_startDate" data-task-field="startDate"></td>' +
+        '<td><input type="date" name="task_endDate" data-task-field="endDate"></td>' +
+        '<td><select name="task_status" data-task-field="status">' + newStatusOpts + '</select></td>' +
+        '<td></td>' +
+        '<td><input type="number" name="task_totalHours" data-task-field="totalHours" placeholder="0" step="0.5" style="width:70px;"></td>' +
+        '<td style="text-align:center;"><button class="btn-del" title="Add task" data-cap-action="cap-task-add">✓</button></td>' +
+      '</tr>'
+  }
+
+  // Update table
+  tableWrap.innerHTML =
+    '<table class="me-tbl">' +
+      '<thead><tr>' +
+        '<th style="width:150px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">' + getSortIcon('name', dept) + ' Task Name</th>' +
+        '<th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">' + getSortIcon('category', dept) + ' Category</th>' +
+        '<th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="assignee" title="Sort by assignee">' + getSortIcon('assignee', dept) + ' Assignee</th>' +
+        '<th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">' + getSortIcon('product', dept) + ' Product</th>' +
+        '<th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">' + getSortIcon('startDate', dept) + ' Start Date</th>' +
+        '<th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">' + getSortIcon('endDate', dept) + ' End Date</th>' +
+        '<th style="width:120px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">' + getSortIcon('status', dept) + ' Status</th>' +
+        '<th style="width:90px">Disable</th>' +
+        '<th style="width:80px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="hours" title="Sort by hours">' + getSortIcon('hours', dept) + ' Hours</th>' +
+        '<th style="width:60px"></th>' +
+      '</tr></thead>' +
+      '<tbody>' +
+        newTaskRow +
+        (rows || '<tr><td colspan="10"><div style="text-align:center;padding:40px;color:var(--muted);">No tasks match the current filters</div></td></tr>') +
+      '</tbody>' +
+    '</table>'
+}
+
+const CAP_TASK_SEARCH_RENDER_DEBOUNCE_MS = 90
+const _capTaskSearchRefreshTimers = {
+  me: null,
+  pm: null,
+  log: null,
+  unit6: null
+}
+
+function capTaskSearchTimerKey(contextType) {
+  return contextType === 'pm' || contextType === 'log' || contextType === 'unit6'
+    ? contextType
+    : 'me'
+}
+
+function capCancelTaskSearchRefresh(contextType) {
+  const key = capTaskSearchTimerKey(contextType)
+  const existing = _capTaskSearchRefreshTimers[key]
+  if (existing) {
+    clearTimeout(existing)
+    _capTaskSearchRefreshTimers[key] = null
+  }
+}
+
+function capScheduleTaskSearchRefresh(contextType) {
+  const key = capTaskSearchTimerKey(contextType)
+  capCancelTaskSearchRefresh(key)
+
+  _capTaskSearchRefreshTimers[key] = setTimeout(function() {
+    _capTaskSearchRefreshTimers[key] = null
+
+    const scope = document.querySelector('[data-cap-context="' + key + '"]')
+    const searchInput = scope && typeof scope.querySelector === 'function'
+      ? scope.querySelector('[data-cap-action="cap-task-search"]')
+      : null
+    if (!searchInput) return
+
+    capPreserveSearchContinuity(searchInput, '[data-cap-action="cap-task-search"]', function() {
+      capTaskRefresh(key)
+    })
+  }, CAP_TASK_SEARCH_RENDER_DEBOUNCE_MS)
 }
 
 function capPreserveSearchContinuity(inputEl, replacementSelector, rerenderFn) {
@@ -469,32 +767,94 @@ window.capacityEvents._onClick = function(evt) {
 
   // ── ME Tasks ──────────────────────────────────────────────
   case 'cap-task-del': {
-    const idx = capNum(el.closest('[data-task-idx]')?.getAttribute('data-task-idx'), -1)
-    if (idx < 0) break
+    const taskId = el.getAttribute('data-task-id') || el.closest('[data-task-id]')?.getAttribute('data-task-id')
+    if (!taskId) break
     const api = capGetDataApi(contextType)
     if (confirm('Delete task?')) {
-      if (typeof api.deleteTask === 'function') api.deleteTask(idx)
+      if (typeof api.deleteTask === 'function') api.deleteTask(taskId)
       capRunSave(contextType)
       capTaskRefresh(contextType)
     }
     break
   }
   case 'cap-task-add': {
+    // Reads from the new-task top row inputs
+    const newRow = el.closest('[data-cap-new-task]')
+    if (!newRow) break
+    const newName = (newRow.querySelector('[data-task-field="name"]')?.value || '').trim()
+    if (!newName) { newRow.querySelector('[data-task-field="name"]')?.focus(); break }
     const api = capGetDataApi(contextType)
     if (typeof api.addTask === 'function') {
-      api.addTask('New Task', 'NPI', '', '', '', 0, '')
+      api.addTask(
+        newName,
+        newRow.querySelector('[data-task-field="category"]')?.value || 'NPI',
+        newRow.querySelector('[data-task-field="assigneeId"]')?.value || '',
+        newRow.querySelector('[data-task-field="startDate"]')?.value || '',
+        newRow.querySelector('[data-task-field="endDate"]')?.value || '',
+        parseFloat(newRow.querySelector('[data-task-field="totalHours"]')?.value) || 0,
+        newRow.querySelector('[data-task-field="productId"]')?.value || ''
+      )
       capRunSave(contextType)
-      capSetTab(contextType, 'tasks')
+      capTaskRefresh(contextType)
     }
     break
   }
+  case 'cap-task-start-edit': {
+    const dept = capProductDraftDepartment(contextType)
+    const taskId = el.getAttribute('data-task-id') || el.closest('[data-task-id]')?.getAttribute('data-task-id')
+    if (!taskId) break
+    if (!window.capTaskEditingId) window.capTaskEditingId = {}
+    window.capTaskEditingId[dept] = taskId
+    capTaskRefresh(contextType)
+    // Focus the name field in the now-rendered edit row
+    setTimeout(function() {
+      const editRow = document.querySelector('[data-task-id="' + taskId + '"] [data-task-field="name"]')
+      if (editRow) editRow.focus()
+    }, 0)
+    break
+  }
+  case 'cap-task-save-edit': {
+    const dept = capProductDraftDepartment(contextType)
+    const editRow = el.closest('tr[data-task-id]')
+    if (!editRow) break
+    const taskId = editRow.getAttribute('data-task-id')
+    if (!taskId) break
+    const savedName = (editRow.querySelector('[data-task-field="name"]')?.value || '').trim()
+    if (!savedName) { editRow.querySelector('[data-task-field="name"]')?.focus(); break }
+    const api = capGetDataApi(contextType)
+    if (typeof api.updateTask === 'function') {
+      api.updateTask(taskId, 'name', savedName)
+      api.updateTask(taskId, 'category', editRow.querySelector('[data-task-field="category"]')?.value || 'NPI')
+      api.updateTask(taskId, 'assigneeId', editRow.querySelector('[data-task-field="assigneeId"]')?.value || '')
+      api.updateTask(taskId, 'productId', editRow.querySelector('[data-task-field="productId"]')?.value || '')
+      api.updateTask(taskId, 'startDate', editRow.querySelector('[data-task-field="startDate"]')?.value || '')
+      api.updateTask(taskId, 'endDate', editRow.querySelector('[data-task-field="endDate"]')?.value || '')
+      api.updateTask(taskId, 'totalHours', editRow.querySelector('[data-task-field="totalHours"]')?.value || 0)
+      api.updateTask(taskId, 'status', editRow.querySelector('[data-task-field="status"]')?.value || 'SCHEDULED')
+      api.updateTask(taskId, 'isDisabled', editRow.querySelector('[data-task-field="isDisabled"]')?.checked || false)
+    }
+    if (!window.capTaskEditingId) window.capTaskEditingId = {}
+    window.capTaskEditingId[dept] = null
+    capRunSave(contextType)
+    capTaskRefresh(contextType)
+    break
+  }
+  case 'cap-task-cancel-edit': {
+    const dept = capProductDraftDepartment(contextType)
+    if (!window.capTaskEditingId) window.capTaskEditingId = {}
+    window.capTaskEditingId[dept] = null
+    capTaskRefresh(contextType)
+    break
+  }
   case 'cap-task-sort': {
+    capCancelTaskSearchRefresh(contextType)
     const key = el.getAttribute('data-sort-key')
     capToggleTaskSort(key, contextType)
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-search': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.search = ''
     const inp = document.querySelector('.me-filter-input')
@@ -503,30 +863,35 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-task-clear-category': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.category = 'all'
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-assignee': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.assignee = 'all'
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-product': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.product = 'all'
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-clear-month': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.month = 'all'
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-toggle-hide-completed': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     const storageKey = contextType === 'pm'
       ? 'pmTasksHideCompleted'
@@ -543,6 +908,7 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-task-clear-all-filters': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     const storageKey = contextType === 'pm'
       ? 'pmTasksHideCompleted'
@@ -821,57 +1187,40 @@ window.capacityEvents._onChange = function(evt) {
     break
   }
 
-  // ── ME Tasks update ───────────────────────────────────────
-  case 'cap-task-upd': {
-    const row = el.closest('[data-task-idx]')
-    const idx = capNum(row?.getAttribute('data-task-idx'), -1)
-    if (idx < 0) break
-    const field = el.getAttribute('data-field')
-    const api = capGetDataApi(contextType)
-    if (typeof api.updateTask === 'function') api.updateTask(idx, field, el.value)
-    capRunDebouncedSave(contextType)
-    break
-  }
-  case 'cap-task-status-upd': {
-    const row = el.closest('[data-task-idx]')
-    const idx = capNum(row?.getAttribute('data-task-idx'), -1)
-    if (idx < 0) break
-    const api = capGetDataApi(contextType)
-    if (typeof api.updateTask === 'function') api.updateTask(idx, 'status', el.value)
-    capRunDebouncedSave(contextType)
-    // Do NOT immediately call meSetTab/pmSetTab — the debounce and blur handler
-    // will re-render at the right time, preserving focus.
-    break
-  }
+  // ── ME Tasks — inline disable toggle (always available) ───
   case 'cap-task-toggle-disabled': {
-    const row = el.closest('[data-task-idx]')
-    const idx = capNum(row?.getAttribute('data-task-idx'), -1)
-    if (idx < 0) break
+    const row = el.closest('[data-task-id]')
+    const taskId = row?.getAttribute('data-task-id')
+    if (!taskId) break
     const api = capGetDataApi(contextType)
-    if (typeof api.updateTask === 'function') api.updateTask(idx, 'isDisabled', !!el.checked)
+    if (typeof api.updateTask === 'function') api.updateTask(taskId, 'isDisabled', !!el.checked)
     capRunDebouncedSave(contextType)
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-category': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.category = el.value
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-assignee': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.assignee = el.value
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-product': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.product = el.value
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-filter-month': {
+    capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
     if (f) f.month = el.value
     capTaskRefresh(contextType)
@@ -985,10 +1334,8 @@ window.capacityEvents._onInput = function(evt) {
   switch (action) {
   case 'cap-task-search': {
     const filterStateVar = capTaskFilters(contextType)
-    capPreserveSearchContinuity(el, '[data-cap-action="cap-task-search"]', function() {
-      if (filterStateVar) filterStateVar.search = el.value
-      capTaskRefresh(contextType)
-    })
+    if (filterStateVar) filterStateVar.search = el.value
+    capScheduleTaskSearchRefresh(contextType)
     break
   }
   case 'cap-products-search': {
@@ -1056,7 +1403,8 @@ window.capacityEvents._onFocusOut = function(evt) {
   // No pending re-renders to flush across any capacity portal
   if (!window.mePendingRealTimeUpdate && !window.mePendingRerender &&
       !window.pmPendingRealTimeUpdate && !window.pmPendingRerender &&
-      !window.logPendingRerender && !window.unit6PendingRerender &&
+      !window.logPendingRealTimeUpdate && !window.logPendingRerender &&
+      !window.unit6PendingRealTimeUpdate && !window.unit6PendingRerender &&
       !window.prodCapPendingRealTimeUpdate) return
 
   // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
@@ -1087,7 +1435,8 @@ window.capacityEvents._onFocusOut = function(evt) {
     }
 
     // ── Logistics Capacity flush ───────────────────────────
-    if (window.logPendingRerender) {
+    if (window.logPendingRealTimeUpdate || window.logPendingRerender) {
+      window.logPendingRealTimeUpdate = false
       window.logPendingRerender = false
       var activeLogBtn = document.querySelector('.log-shell .me-nav-btn.active')
       if (activeLogBtn && activeLogBtn.getAttribute('data-tab') === 'chart') {
@@ -1099,7 +1448,8 @@ window.capacityEvents._onFocusOut = function(evt) {
     }
 
     // ── Unit 6 Capacity flush ──────────────────────────────
-    if (window.unit6PendingRerender) {
+    if (window.unit6PendingRealTimeUpdate || window.unit6PendingRerender) {
+      window.unit6PendingRealTimeUpdate = false
       window.unit6PendingRerender = false
       var activeUnit6Btn = document.querySelector('.unit6-shell .me-nav-btn.active')
       if (activeUnit6Btn && activeUnit6Btn.getAttribute('data-tab') === 'chart') {

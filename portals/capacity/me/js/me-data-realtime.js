@@ -56,12 +56,27 @@ function meNormalizeProductRow(row) {
   };
 }
 
+function meIsCapacityFilterInputFocused() {
+  const active = document.activeElement;
+  if (!active || active === document.body) return false;
+  if (typeof active.matches !== 'function') return false;
+
+  return active.matches('[data-cap-action="cap-task-search"], [data-cap-action="cap-task-filter-category"], [data-cap-action="cap-task-filter-assignee"], [data-cap-action="cap-task-filter-product"], [data-cap-action="cap-task-filter-month"], [data-cap-action="cap-products-search"], [data-cap-action="cap-product-load-search"]');
+}
+
+let _meRealtimeDebounceTimer = null;
+
 function meApplyRealtimeStateChange() {
-  if (isEditingInlineCell()) {
+  if (isEditingInlineCell() || meIsCapacityFilterInputFocused()) {
     window.mePendingRealTimeUpdate = true;
     return;
   }
-  meCapSmartRender();
+  // Debounce so a burst of realtime events (e.g. one per saved row) collapses
+  // into a single re-render instead of rapidly replacing the DOM each time.
+  clearTimeout(_meRealtimeDebounceTimer);
+  _meRealtimeDebounceTimer = setTimeout(function() {
+    meCapSmartRender();
+  }, 150);
 }
 
 window.meDataSubscribe = function() {

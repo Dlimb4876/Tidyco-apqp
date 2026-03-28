@@ -304,7 +304,7 @@ function meDebouncedSave() {
     if (body) {
       body.innerHTML = meGetTabContent();
     }
-  }, 900);
+  }, 500);
 }
 
 // ── Initialization ─────────────────────────────────────────
@@ -331,6 +331,19 @@ window.addEventListener('beforeunload', (event) => {
 // Immediate synchronous save without debounce (for beforeunload)
 window.flushMEDataNow = function() {
   if (!supa || !currentUser) return;
+
+  // Fire pending team deletes so they are committed even if the debounce
+  // save cycle hasn't processed them yet.
+  const pendingTeams = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.teams)
+    ? window.meDataPendingDeletes.teams
+    : [];
+  if (pendingTeams.length > 0 && typeof meDeleteTeamRelational === 'function') {
+    pendingTeams.forEach(teamId => {
+      meDeleteTeamRelational(teamId).catch(err => {
+        console.warn('Failed to flush team delete', teamId, err.message);
+      });
+    });
+  }
 
   // Quick synchronous save for team members only (most critical)
   if (meDataState.team && meDataState.team.length > 0) {

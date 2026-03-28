@@ -121,9 +121,9 @@ window.logDataAddTask = function(name, category, assigneeId, startDate, endDate,
   return true;
 };
 
-window.logDataUpdateTask = function(idx, field, value) {
-  if (idx < 0 || idx >= logDataState.tasks.length) return false;
-  const task = logDataState.tasks[idx];
+window.logDataUpdateTask = function(taskId, field, value) {
+  const task = logDataState.tasks.find(t => t.id === taskId);
+  if (!task) return false;
   switch (field) {
     case 'name': task.name = value.trim(); break;
     case 'category': task.category = value || 'NPI'; break;
@@ -139,8 +139,9 @@ window.logDataUpdateTask = function(idx, field, value) {
   return true;
 };
 
-window.logDataDeleteTask = function(idx) {
-  if (idx < 0 || idx >= logDataState.tasks.length) return false;
+window.logDataDeleteTask = function(taskId) {
+  const idx = logDataState.tasks.findIndex(t => t.id === taskId);
+  if (idx < 0) return false;
   const removed = logDataState.tasks[idx];
   logDataState.tasks.splice(idx, 1);
   if (removed && removed.id) {
@@ -706,12 +707,29 @@ window.logDataReset = function() {
   window.logDataPendingDeletes = { tasks: [], teams: [], supportHistory: [] };
 };
 
+let _logRealtimeDebounceTimer = null;
+
+function logIsCapacityFilterInputFocused() {
+  const active = document.activeElement;
+  if (!active || active === document.body) return false;
+  if (typeof active.matches !== 'function') return false;
+
+  return active.matches('[data-cap-action="cap-task-search"], [data-cap-action="cap-task-filter-category"], [data-cap-action="cap-task-filter-assignee"], [data-cap-action="cap-task-filter-product"], [data-cap-action="cap-task-filter-month"], [data-cap-action="cap-products-search"], [data-cap-action="cap-product-load-search"]');
+}
+
+function logApplyRealtimeRender() {
+  clearTimeout(_logRealtimeDebounceTimer);
+  _logRealtimeDebounceTimer = setTimeout(function() {
+    if (typeof logCapSmartRender === 'function') logCapSmartRender();
+  }, 150);
+}
+
 window.logDataSubscribe = function() {
   if (!currentUser) return;
   if (typeof createMultiTableRealtimeSubscription !== 'function') return;
 
   function logShouldDeferRealtimeRender() {
-    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
+    if ((typeof isEditingInlineCell === 'function' && isEditingInlineCell()) || logIsCapacityFilterInputFocused()) {
       window.logPendingRealTimeUpdate = true;
       return true;
     }
@@ -737,14 +755,14 @@ window.logDataSubscribe = function() {
         if (!logDataState.team.some(member => member.id === normalized.id)) {
           logDataState.team.push(normalized);
           if (logShouldDeferRealtimeRender()) return;
-          if (typeof logCapSmartRender === 'function') logCapSmartRender();
+          logApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         logDataState.team = logDataState.team.filter(member => member.id !== deleted.id);
         if (logShouldDeferRealtimeRender()) return;
-        if (typeof logCapSmartRender === 'function') logCapSmartRender();
+        logApplyRealtimeRender();
       }
     },
     {
@@ -768,7 +786,7 @@ window.logDataSubscribe = function() {
         if (!logDataState.tasks.some(task => task.id === normalized.id)) {
           logDataState.tasks.push(normalized);
           if (logShouldDeferRealtimeRender()) return;
-          if (typeof logCapSmartRender === 'function') logCapSmartRender();
+          logApplyRealtimeRender();
         }
       },
       onUpdate: (row) => {
@@ -791,12 +809,12 @@ window.logDataSubscribe = function() {
         if (idx < 0) logDataState.tasks.push(normalized);
         else logDataState.tasks[idx] = { ...logDataState.tasks[idx], ...normalized };
         if (logShouldDeferRealtimeRender()) return;
-        if (typeof logCapSmartRender === 'function') logCapSmartRender();
+        logApplyRealtimeRender();
       },
       onDelete: (deleted) => {
         logDataState.tasks = logDataState.tasks.filter(task => task.id !== deleted.id);
         if (logShouldDeferRealtimeRender()) return;
-        if (typeof logCapSmartRender === 'function') logCapSmartRender();
+        logApplyRealtimeRender();
       }
     },
     {
@@ -820,14 +838,14 @@ window.logDataSubscribe = function() {
         if (!logDataState.products.some(product => product.id === normalized.id)) {
           logDataState.products.push(normalized);
           if (logShouldDeferRealtimeRender()) return;
-          if (typeof logCapSmartRender === 'function') logCapSmartRender();
+          logApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         logDataState.products = logDataState.products.filter(product => product.id !== deleted.id);
         if (logShouldDeferRealtimeRender()) return;
-        if (typeof logCapSmartRender === 'function') logCapSmartRender();
+        logApplyRealtimeRender();
       }
     },
     {
@@ -838,14 +856,14 @@ window.logDataSubscribe = function() {
         if (!logDataState.holidays.some(holiday => holiday.id === normalized.id)) {
           logDataState.holidays.push(normalized);
           if (logShouldDeferRealtimeRender()) return;
-          if (typeof logCapSmartRender === 'function') logCapSmartRender();
+          logApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         logDataState.holidays = logDataState.holidays.filter(holiday => holiday.id !== deleted.id);
         if (logShouldDeferRealtimeRender()) return;
-        if (typeof logCapSmartRender === 'function') logCapSmartRender();
+        logApplyRealtimeRender();
       }
     },
     {
@@ -858,13 +876,13 @@ window.logDataSubscribe = function() {
         else logDataState.productSupportHistory.push(normalized);
         logDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(logDataState.productSupportHistory);
         if (logShouldDeferRealtimeRender()) return;
-        if (typeof logCapSmartRender === 'function') logCapSmartRender();
+        logApplyRealtimeRender();
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         logDataState.productSupportHistory = logDataState.productSupportHistory.filter(history => history.id !== deleted.id);
         if (logShouldDeferRealtimeRender()) return;
-        if (typeof logCapSmartRender === 'function') logCapSmartRender();
+        logApplyRealtimeRender();
       }
     }
   ], 'log-capacity-channel');
@@ -875,3 +893,9 @@ window.flushLogDataNow = function() {
     logDataSave(false);
   }
 };
+
+function logDataUnsubscribe() {
+  if (typeof removeRealtimeSubscription === 'function') {
+    removeRealtimeSubscription('log-capacity-channel');
+  }
+}
