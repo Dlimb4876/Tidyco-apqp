@@ -707,8 +707,6 @@ window.unit6DataReset = function() {
   window.unit6DataPendingDeletes = { tasks: [], teams: [], supportHistory: [] };
 };
 
-let _unit6RealtimeDebounceTimer = null;
-
 function unit6IsCapacityFilterInputFocused() {
   const active = document.activeElement;
   if (!active || active === document.body) return false;
@@ -718,23 +716,22 @@ function unit6IsCapacityFilterInputFocused() {
 }
 
 function unit6ApplyRealtimeRender() {
-  clearTimeout(_unit6RealtimeDebounceTimer);
-  _unit6RealtimeDebounceTimer = setTimeout(function() {
-    if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender();
-  }, 150);
+  requestRender('unit6', {
+    trigger: 'realtime',
+    renderNow: function() {
+      if (unit6Tab !== 'chart' && typeof unit6RefreshCurrentTab === 'function') {
+        unit6RefreshCurrentTab();
+      }
+    },
+    isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
+    isFiltering: unit6IsCapacityFilterInputFocused(),
+    debounceMs: 150,
+  });
 }
 
 window.unit6DataSubscribe = function() {
   if (!currentUser) return;
   if (typeof createMultiTableRealtimeSubscription !== 'function') return;
-
-  function unit6ShouldDeferRealtimeRender() {
-    if ((typeof isEditingInlineCell === 'function' && isEditingInlineCell()) || unit6IsCapacityFilterInputFocused()) {
-      window.unit6PendingRealTimeUpdate = true;
-      return true;
-    }
-    return false;
-  }
 
   createMultiTableRealtimeSubscription([
     {
@@ -754,14 +751,12 @@ window.unit6DataSubscribe = function() {
         };
         if (!unit6DataState.team.some(member => member.id === normalized.id)) {
           unit6DataState.team.push(normalized);
-          if (unit6ShouldDeferRealtimeRender()) return;
           unit6ApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         unit6DataState.team = unit6DataState.team.filter(member => member.id !== deleted.id);
-        if (unit6ShouldDeferRealtimeRender()) return;
         unit6ApplyRealtimeRender();
       }
     },
@@ -785,7 +780,6 @@ window.unit6DataSubscribe = function() {
         };
         if (!unit6DataState.tasks.some(task => task.id === normalized.id)) {
           unit6DataState.tasks.push(normalized);
-          if (unit6ShouldDeferRealtimeRender()) return;
           unit6ApplyRealtimeRender();
         }
       },
@@ -808,12 +802,10 @@ window.unit6DataSubscribe = function() {
         const idx = unit6DataState.tasks.findIndex(task => task.id === normalized.id);
         if (idx < 0) unit6DataState.tasks.push(normalized);
         else unit6DataState.tasks[idx] = { ...unit6DataState.tasks[idx], ...normalized };
-        if (unit6ShouldDeferRealtimeRender()) return;
         unit6ApplyRealtimeRender();
       },
       onDelete: (deleted) => {
         unit6DataState.tasks = unit6DataState.tasks.filter(task => task.id !== deleted.id);
-        if (unit6ShouldDeferRealtimeRender()) return;
         unit6ApplyRealtimeRender();
       }
     },
@@ -837,14 +829,12 @@ window.unit6DataSubscribe = function() {
         };
         if (!unit6DataState.products.some(product => product.id === normalized.id)) {
           unit6DataState.products.push(normalized);
-          if (unit6ShouldDeferRealtimeRender()) return;
           unit6ApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         unit6DataState.products = unit6DataState.products.filter(product => product.id !== deleted.id);
-        if (unit6ShouldDeferRealtimeRender()) return;
         unit6ApplyRealtimeRender();
       }
     },
@@ -855,14 +845,12 @@ window.unit6DataSubscribe = function() {
         if (!normalized) return;
         if (!unit6DataState.holidays.some(holiday => holiday.id === normalized.id)) {
           unit6DataState.holidays.push(normalized);
-          if (unit6ShouldDeferRealtimeRender()) return;
           unit6ApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         unit6DataState.holidays = unit6DataState.holidays.filter(holiday => holiday.id !== deleted.id);
-        if (unit6ShouldDeferRealtimeRender()) return;
         unit6ApplyRealtimeRender();
       }
     },
@@ -875,13 +863,11 @@ window.unit6DataSubscribe = function() {
         if (idx >= 0) unit6DataState.productSupportHistory[idx] = normalized;
         else unit6DataState.productSupportHistory.push(normalized);
         unit6DataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(unit6DataState.productSupportHistory);
-        if (unit6ShouldDeferRealtimeRender()) return;
         unit6ApplyRealtimeRender();
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         unit6DataState.productSupportHistory = unit6DataState.productSupportHistory.filter(history => history.id !== deleted.id);
-        if (unit6ShouldDeferRealtimeRender()) return;
         unit6ApplyRealtimeRender();
       }
     }

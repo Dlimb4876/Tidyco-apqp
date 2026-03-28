@@ -7,15 +7,6 @@ let unit6Tab = 'chart';
 let unit6HolidayMonth = null;
 let unit6ChartStart = null;
 let unit6SaveTimer = null;
-let unit6ChartDirty = true;
-
-window.unit6CapSmartRender = function() {
-  if (unit6Tab === 'chart') {
-    unit6ChartDirty = true;
-    return;
-  }
-  unit6RefreshCurrentTab();
-};
 
 function unit6GetCurrentMonthKey() {
   const today = new Date();
@@ -162,7 +153,6 @@ window.unit6RenderCapacity = function() {
       </div>
     </div>`;
 
-  unit6ChartDirty = false;
   setTimeout(() => {
     if (unit6Tab === 'chart') {
       unit6DrawChartViews();
@@ -175,8 +165,6 @@ window.unit6RenderCapacity = function() {
 window.unit6SetTab = function(tab) {
   const prevUnit6Tab = unit6Tab;
   unit6Tab = tab;
-  if (tab === 'chart') unit6ChartDirty = false;
-
   const u6Parts = ['s=capacity', 'ct=unit6'];
   if (tab !== 'chart') u6Parts.push('u6t=' + encodeURIComponent(tab));
   if (typeof writeNavigationHistory === 'function') {
@@ -278,15 +266,14 @@ window.unit6DebouncedSave = function() {
   clearTimeout(unit6SaveTimer);
   unit6SaveTimer = setTimeout(async () => {
     await unit6OnSave(false);
-    if (unit6Tab === 'chart') {
-      unit6ChartDirty = true;
-      return;
-    }
-    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
-      window.unit6PendingRerender = true;
-      return;
-    }
-    unit6RefreshCurrentTab();
+    if (unit6Tab === 'chart') return;
+    requestRender('unit6', {
+      trigger: 'save',
+      renderNow: function() {
+        if (typeof unit6RefreshCurrentTab === 'function') unit6RefreshCurrentTab();
+      },
+      isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
+    });
   }, 900);
 };
 

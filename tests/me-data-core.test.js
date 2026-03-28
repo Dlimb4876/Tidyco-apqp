@@ -75,6 +75,12 @@ const meDataPersistenceSrc = fs.readFileSync(
 );
 eval(meDataPersistenceSrc); // eslint-disable-line no-eval
 
+// Stub render scheduler (loaded via render-scheduler.js in the browser)
+global.requestRender = jest.fn(({ renderNow, isEditing, isFiltering } = {}) => {
+  if (!isEditing && !isFiltering && typeof renderNow === 'function') renderNow();
+});
+global.flushDeferred = jest.fn();
+
 // Load me-data-realtime.js after persistence so the extracted subscription layer can
 // call the full ME data API/state setup without changing the public window contract.
 const meDataRealtimeSrc = fs.readFileSync(
@@ -831,9 +837,8 @@ describe('meData realtime subscription callbacks', () => {
       return { id: 'sub-1' };
     });
     global.removeRealtimeSubscription = jest.fn();
-    global.meCapSmartRender = jest.fn();
     global.isEditingInlineCell = jest.fn(() => false);
-    window.mePendingRealTimeUpdate = false;
+    global.requestRender.mockClear();
 
     window.meDataSubscribe();
   });
@@ -845,9 +850,7 @@ describe('meData realtime subscription callbacks', () => {
     delete global.render;
     delete global.createMultiTableRealtimeSubscription;
     delete global.removeRealtimeSubscription;
-    delete global.meCapSmartRender;
     delete global.isEditingInlineCell;
-    delete window.mePendingRealTimeUpdate;
     window.meDataReset();
   });
 
@@ -904,8 +907,7 @@ describe('meData realtime subscription callbacks', () => {
         endDate: '2026-03-20'
       })
     ]);
-    jest.runAllTimers();
-    expect(global.meCapSmartRender).toHaveBeenCalledTimes(1);
+    expect(global.requestRender).toHaveBeenCalledWith('me', expect.objectContaining({ trigger: 'realtime' }));
   });
 
   it('updates product rows for existing realtime events and repaints', () => {
@@ -951,8 +953,7 @@ describe('meData realtime subscription callbacks', () => {
         notes: 'new note'
       })
     ]);
-    jest.runAllTimers();
-    expect(global.meCapSmartRender).toHaveBeenCalledTimes(1);
+    expect(global.requestRender).toHaveBeenCalledWith('me', expect.objectContaining({ trigger: 'realtime' }));
   });
 
   it('updates support history state and matching product values on support history update events and repaints', () => {
@@ -1028,8 +1029,7 @@ describe('meData realtime subscription callbacks', () => {
         supportEffectiveDate: '2026-03-05'
       })
     );
-    jest.runAllTimers();
-    expect(global.meCapSmartRender).toHaveBeenCalledTimes(1);
+    expect(global.requestRender).toHaveBeenCalledWith('me', expect.objectContaining({ trigger: 'realtime' }));
   });
 
   it('defers realtime repaint while tasks search input is focused', () => {
@@ -1057,8 +1057,10 @@ describe('meData realtime subscription callbacks', () => {
     expect(window.meDataState.tasks).toEqual([
       expect.objectContaining({ id: 'task-search-focus' })
     ]);
-    expect(global.meCapSmartRender).not.toHaveBeenCalled();
-    expect(window.mePendingRealTimeUpdate).toBe(true);
+    expect(global.requestRender).toHaveBeenCalledWith('me', expect.objectContaining({
+      trigger: 'realtime',
+      isFiltering: true,
+    }));
 
     input.remove();
   });
@@ -1093,8 +1095,7 @@ describe('meData realtime subscription callbacks', () => {
         department: 'LOG'
       })
     ]);
-    jest.runAllTimers();
-    expect(global.meCapSmartRender).toHaveBeenCalledTimes(1);
+    expect(global.requestRender).toHaveBeenCalledWith('me', expect.objectContaining({ trigger: 'realtime' }));
   });
 });
 

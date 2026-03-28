@@ -182,13 +182,16 @@ function npiScheduleReload() {
   clearTimeout(npiReloadTimer)
   npiReloadTimer = setTimeout(() => {
     if (!progId || typeof npiRelLoad !== 'function') return
-    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
-      window.npiPendingRealTimeUpdate = true
-      return
-    }
-    npiRelLoad(progId).then(() => {
-      npiMarkRealtimeUpdate()
-      render()
+    requestRender('npi', {
+      trigger: 'realtime',
+      renderNow: function() {
+        npiRelLoad(progId).then(() => {
+          npiMarkRealtimeUpdate()
+          render()
+        })
+      },
+      isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
+      debounceMs: 0,
     })
   }, 600)
 }
@@ -216,16 +219,14 @@ function npiDataInit() {
       if (!upsertRealtimeProject(row)) return
       npiMarkRealtimeUpdate()
       if (shouldRenderForProject(row.prog_id)) {
-        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) { window.npiPendingRealTimeUpdate = true; return }
-        render()
+        requestRender('npi', { trigger: 'realtime', renderNow: render, isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(), debounceMs: 0 })
       }
     },
     onUpdate: (row) => {
       if (!upsertRealtimeProject(row)) return
       npiMarkRealtimeUpdate()
       if (shouldRenderForProject(row.prog_id)) {
-        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) { window.npiPendingRealTimeUpdate = true; return }
-        render()
+        requestRender('npi', { trigger: 'realtime', renderNow: render, isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(), debounceMs: 0 })
       }
     },
     onDelete: (row) => {
@@ -237,8 +238,7 @@ function npiDataInit() {
       npiMarkRealtimeUpdate()
       if (wasCurrentProject) progId = db.projects[0]?.id || null
       if (currentSection === 'projects' || wasCurrentProject) {
-        if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) { window.npiPendingRealTimeUpdate = true; return }
-        render()
+        requestRender('npi', { trigger: 'realtime', renderNow: render, isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(), debounceMs: 0 })
       }
     }
   })

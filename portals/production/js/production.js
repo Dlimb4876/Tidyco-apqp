@@ -193,14 +193,7 @@ function setupProductionPortalDelegation() {
   container.addEventListener('focusout', function(evt) {
     const nextFocus = evt.relatedTarget;
     if (nextFocus && nextFocus.closest('table')) return;
-    if (!window.prodPendingRealTimeUpdate) return;
-    setTimeout(function() {
-      if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return;
-      if (window.prodPendingRealTimeUpdate) {
-        window.prodPendingRealTimeUpdate = false;
-        if (typeof prodRefreshCurrentTab === 'function') prodRefreshCurrentTab();
-      }
-    }, 0);
+    if (typeof flushDeferred === 'function') flushDeferred('prod');
   });
 }
 

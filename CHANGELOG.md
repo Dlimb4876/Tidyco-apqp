@@ -3,6 +3,16 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-28 | Fix Capacity task edit saving wrong row under filters | Task save now resolves by active editing task ID within current context, preventing cross-row updates when filtered/sorted views are active
+
+## 2026-03-28 | Redesign MCS create change modal - wider layout and reorganized sections | Modal expanded from 1140px to 1400px, removed workflow rail, reorganized into 4 clear sections (Basic Info, Change Details, Impact Assessment, Implementation & Approval) for better professional appearance and easier form completion
+
+## 2026-03-28 | Migrate NPI, Production, and Operations to render scheduler | Replace all remaining pending globals and focusout flush logic with requestRender/flushDeferred; remove opsPendingRealTimeUpdate module variable
+## 2026-03-28 | Migrate LOG and UNIT6 Capacity to render scheduler | Replace pending globals, SmartRender, ShouldDefer, and chartDirty flags with requestRender/flushDeferred for both portals
+## 2026-03-28 | Migrate PM Capacity to render scheduler | Replace pmPendingRealTimeUpdate/pmPendingRerender globals, pmCapSmartRender, and pmShouldDeferRealtimeRender with requestRender/flushDeferred; remove pmChartDirty
+## 2026-03-28 | Migrate ME Capacity to render scheduler | Replace mePendingRealTimeUpdate/mePendingRerender globals and meCapSmartRender with requestRender/flushDeferred; remove meChartDirty (charts redraw on page open only)
+## 2026-03-28 | Add core render scheduler utility | Centralise deferred-render logic so all table-edit portals share one tested scheduler instead of duplicating pending flags and debounce timers
+
 ## 2026-03-28 | Add name attributes to task form fields | Fix browser accessibility warning about form fields missing id/name
 
 ## 2026-03-28 | Stabilize Capacity realtime rendering across PM/Logistics/Unit6 | Realtime updates could repeatedly replace tab HTML while users were filtering/typing, causing visible flicker; added focused-input deferral plus render coalescing to match stable NPI behavior

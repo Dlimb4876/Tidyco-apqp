@@ -64,19 +64,18 @@ function meIsCapacityFilterInputFocused() {
   return active.matches('[data-cap-action="cap-task-search"], [data-cap-action="cap-task-filter-category"], [data-cap-action="cap-task-filter-assignee"], [data-cap-action="cap-task-filter-product"], [data-cap-action="cap-task-filter-month"], [data-cap-action="cap-products-search"], [data-cap-action="cap-product-load-search"]');
 }
 
-let _meRealtimeDebounceTimer = null;
-
 function meApplyRealtimeStateChange() {
-  if (isEditingInlineCell() || meIsCapacityFilterInputFocused()) {
-    window.mePendingRealTimeUpdate = true;
-    return;
-  }
-  // Debounce so a burst of realtime events (e.g. one per saved row) collapses
-  // into a single re-render instead of rapidly replacing the DOM each time.
-  clearTimeout(_meRealtimeDebounceTimer);
-  _meRealtimeDebounceTimer = setTimeout(function() {
-    meCapSmartRender();
-  }, 150);
+  requestRender('me', {
+    trigger: 'realtime',
+    renderNow: function() {
+      if (meTab !== 'chart' && typeof meRefreshCurrentTab === 'function') {
+        meRefreshCurrentTab();
+      }
+    },
+    isEditing: isEditingInlineCell(),
+    isFiltering: meIsCapacityFilterInputFocused(),
+    debounceMs: 150,
+  });
 }
 
 window.meDataSubscribe = function() {

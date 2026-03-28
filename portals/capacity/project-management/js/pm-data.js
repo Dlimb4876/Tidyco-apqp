@@ -647,8 +647,6 @@ window.pmDataReset = function() {
 // REALTIME
 // ─────────────────────────────────────────────────────────────
 
-let _pmRealtimeDebounceTimer = null;
-
 function pmIsCapacityFilterInputFocused() {
   const active = document.activeElement;
   if (!active || active === document.body) return false;
@@ -658,23 +656,22 @@ function pmIsCapacityFilterInputFocused() {
 }
 
 function pmApplyRealtimeRender() {
-  clearTimeout(_pmRealtimeDebounceTimer);
-  _pmRealtimeDebounceTimer = setTimeout(function() {
-    if (typeof pmCapSmartRender === 'function') pmCapSmartRender();
-  }, 150);
+  requestRender('pm', {
+    trigger: 'realtime',
+    renderNow: function() {
+      if (pmTab !== 'chart' && typeof pmRefreshCurrentTab === 'function') {
+        pmRefreshCurrentTab();
+      }
+    },
+    isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
+    isFiltering: pmIsCapacityFilterInputFocused(),
+    debounceMs: 150,
+  });
 }
 
 window.pmDataSubscribe = function() {
   if (!currentUser) return;
   if (typeof createMultiTableRealtimeSubscription !== 'function') return;
-
-  function pmShouldDeferRealtimeRender() {
-    if ((typeof isEditingInlineCell === 'function' && isEditingInlineCell()) || pmIsCapacityFilterInputFocused()) {
-      window.pmPendingRealTimeUpdate = true;
-      return true;
-    }
-    return false;
-  }
 
   createMultiTableRealtimeSubscription([
     {
@@ -686,14 +683,12 @@ window.pmDataSubscribe = function() {
           endDate: row.end_date || '', createdAt: row.created_at };
         if (!pmDataState.team.some(t => t.id === n.id)) {
           pmDataState.team.push(n);
-          if (pmShouldDeferRealtimeRender()) return;
           pmApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (d) => {
         pmDataState.team = pmDataState.team.filter(t => t.id !== d.id);
-        if (pmShouldDeferRealtimeRender()) return;
         pmApplyRealtimeRender();
       }
     },
@@ -707,7 +702,6 @@ window.pmDataSubscribe = function() {
           isDisabled: row.is_disabled === true, createdAt: row.created_at };
         if (!pmDataState.tasks.some(t => t.id === n.id)) {
           pmDataState.tasks.push(n);
-          if (pmShouldDeferRealtimeRender()) return;
           pmApplyRealtimeRender();
         }
       },
@@ -720,12 +714,10 @@ window.pmDataSubscribe = function() {
         const idx = pmDataState.tasks.findIndex(t => t.id === n.id);
         if (idx < 0) { pmDataState.tasks.push(n); }
         else { pmDataState.tasks[idx] = { ...pmDataState.tasks[idx], ...n }; }
-        if (pmShouldDeferRealtimeRender()) return;
         pmApplyRealtimeRender();
       },
       onDelete: (d) => {
         pmDataState.tasks = pmDataState.tasks.filter(t => t.id !== d.id);
-        if (pmShouldDeferRealtimeRender()) return;
         pmApplyRealtimeRender();
       }
     },
@@ -740,14 +732,12 @@ window.pmDataSubscribe = function() {
           createdAt: row.created_at, updatedAt: row.updated_at || '' };
         if (!pmDataState.products.some(p => p.id === n.id)) {
           pmDataState.products.push(n);
-          if (pmShouldDeferRealtimeRender()) return;
           pmApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (d) => {
         pmDataState.products = pmDataState.products.filter(p => p.id !== d.id);
-        if (pmShouldDeferRealtimeRender()) return;
         pmApplyRealtimeRender();
       }
     },
@@ -758,14 +748,12 @@ window.pmDataSubscribe = function() {
         if (!n) return;
         if (!pmDataState.holidays.some(h => h.id === n.id)) {
           pmDataState.holidays.push(n);
-          if (pmShouldDeferRealtimeRender()) return;
           pmApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (d) => {
         pmDataState.holidays = pmDataState.holidays.filter(h => h.id !== d.id);
-        if (pmShouldDeferRealtimeRender()) return;
         pmApplyRealtimeRender();
       }
     },
@@ -778,13 +766,11 @@ window.pmDataSubscribe = function() {
         if (idx >= 0) pmDataState.productSupportHistory[idx] = n;
         else pmDataState.productSupportHistory.push(n);
         pmDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(pmDataState.productSupportHistory);
-        if (pmShouldDeferRealtimeRender()) return;
         pmApplyRealtimeRender();
       },
       onUpdate: () => {},
       onDelete: (d) => {
         pmDataState.productSupportHistory = pmDataState.productSupportHistory.filter(h => h.id !== d.id);
-        if (pmShouldDeferRealtimeRender()) return;
         pmApplyRealtimeRender();
       }
     }

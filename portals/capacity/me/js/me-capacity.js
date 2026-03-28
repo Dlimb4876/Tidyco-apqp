@@ -8,9 +8,6 @@ let meChartStart = null; // ISO month string (e.g., '2025-03')
 let meHolidayMonth = null; // Holiday planner month (independent from chart)
 let meChartInst = null;  // Chart.js instance
 let meSaveTimer = null;  // Debounce timer
-let meChartDirty = true; // Chart tab recalculates only when accessed
-window.mePendingRealTimeUpdate = false;  // Deferred real-time render waiting for blur
-window.mePendingRerender = false;        // Deferred post-save KPI re-render waiting for blur
 
 function meCanEditCapacity() {
   return typeof canEdit === 'function' ? canEdit() : true;
@@ -52,16 +49,6 @@ function meDrawChartViews() {
     if (typeof legacyDrawHeatmap === 'function') legacyDrawHeatmap();
   }
 }
-
-// ── Smart render: skips full re-render when on read-only chart tab ──
-window.meCapSmartRender = function() {
-  if (meTab === 'chart') {
-    // Chart stays static while open; refresh applies next time chart is opened.
-    meChartDirty = true;
-    return;
-  }
-  meRefreshCurrentTab();
-};
 
 // ── Entry point ────────────────────────────────────────────
 /**
@@ -114,7 +101,6 @@ window.renderMeCapacity = function() {
   `;
 
   // Draw chart and embedded heat map on initial render
-  meChartDirty = false;
   setTimeout(() => {
     if (meTab === 'chart') {
       meDrawChartViews();
@@ -129,8 +115,6 @@ window.meSetTab = function(tab) {
   if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart';
   const prevMeTab = meTab;
   meTab = tab;
-  if (tab === 'chart') meChartDirty = false;
-
   // Update URL so refresh restores this tab
   const meParts = ['s=capacity', 'ct=me'];
   if (tab !== 'chart') meParts.push('met=' + encodeURIComponent(tab));
@@ -288,22 +272,15 @@ function meDebouncedSave() {
   clearTimeout(meSaveTimer);
   meSaveTimer = setTimeout(async () => {
     await meDataSave(false);
-    // Chart tab is read-only — mark dirty and skip re-render
-    if (meTab === 'chart') {
-      meChartDirty = true;
-      return;
-    }
-    // Only re-render for KPI/sum updates if the user is not mid-edit.
-    // If they are, defer the re-render until they blur out of the table.
-    if (isEditingInlineCell()) {
-      window.mePendingRerender = true;
-      return;
-    }
-    // Re-render current tab to update KPIs and sums
-    const body = document.getElementById('meBody');
-    if (body) {
-      body.innerHTML = meGetTabContent();
-    }
+    if (meTab === 'chart') return;
+    requestRender('me', {
+      trigger: 'save',
+      renderNow: function() {
+        const body = document.getElementById('meBody');
+        if (body) body.innerHTML = meGetTabContent();
+      },
+      isEditing: isEditingInlineCell(),
+    });
   }, 500);
 }
 

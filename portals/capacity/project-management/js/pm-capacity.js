@@ -6,17 +6,6 @@ let pmTab = 'chart';
 let pmHolidayMonth = null;
 let pmChartStart = null;
 let pmSaveTimer = null;
-let pmChartDirty = true; // Chart tab recalculates only when accessed
-
-// ── Smart render: skips full re-render when on read-only chart tab ──
-window.pmCapSmartRender = function() {
-  if (pmTab === 'chart') {
-    // Chart stays static while open; refresh applies next time chart is opened.
-    pmChartDirty = true;
-    return;
-  }
-  pmRefreshCurrentTab();
-};
 
 function pmGetCurrentMonthKey() {
   const today = new Date();
@@ -169,7 +158,6 @@ window.pmRenderCapacity = function() {
       </div>
     </div>`;
 
-  pmChartDirty = false;
   setTimeout(() => {
     if (pmTab === 'chart') {
       pmDrawChartViews();
@@ -182,7 +170,6 @@ window.pmRenderCapacity = function() {
 window.pmSetTab = function(tab) {
   const prevPmTab = pmTab;
   pmTab = tab;
-  if (tab === 'chart') pmChartDirty = false;
 
   // Update URL so refresh restores this tab
   const pmParts = ['s=capacity', 'ct=projects'];
@@ -286,17 +273,14 @@ window.pmDebouncedSave = function() {
   clearTimeout(pmSaveTimer);
   pmSaveTimer = setTimeout(async () => {
     await pmOnSave(false);
-    // Chart tab is read-only — mark dirty and skip re-render
-    if (pmTab === 'chart') {
-      pmChartDirty = true;
-      return;
-    }
-    // Defer tab refresh if user is still editing an inline cell
-    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
-      window.pmPendingRerender = true;
-      return;
-    }
-    pmRefreshCurrentTab();
+    if (pmTab === 'chart') return;
+    requestRender('pm', {
+      trigger: 'save',
+      renderNow: function() {
+        if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab();
+      },
+      isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
+    });
   }, 900);
 };
 

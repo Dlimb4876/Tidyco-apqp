@@ -707,8 +707,6 @@ window.logDataReset = function() {
   window.logDataPendingDeletes = { tasks: [], teams: [], supportHistory: [] };
 };
 
-let _logRealtimeDebounceTimer = null;
-
 function logIsCapacityFilterInputFocused() {
   const active = document.activeElement;
   if (!active || active === document.body) return false;
@@ -718,23 +716,22 @@ function logIsCapacityFilterInputFocused() {
 }
 
 function logApplyRealtimeRender() {
-  clearTimeout(_logRealtimeDebounceTimer);
-  _logRealtimeDebounceTimer = setTimeout(function() {
-    if (typeof logCapSmartRender === 'function') logCapSmartRender();
-  }, 150);
+  requestRender('log', {
+    trigger: 'realtime',
+    renderNow: function() {
+      if (logTab !== 'chart' && typeof logRefreshCurrentTab === 'function') {
+        logRefreshCurrentTab();
+      }
+    },
+    isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
+    isFiltering: logIsCapacityFilterInputFocused(),
+    debounceMs: 150,
+  });
 }
 
 window.logDataSubscribe = function() {
   if (!currentUser) return;
   if (typeof createMultiTableRealtimeSubscription !== 'function') return;
-
-  function logShouldDeferRealtimeRender() {
-    if ((typeof isEditingInlineCell === 'function' && isEditingInlineCell()) || logIsCapacityFilterInputFocused()) {
-      window.logPendingRealTimeUpdate = true;
-      return true;
-    }
-    return false;
-  }
 
   createMultiTableRealtimeSubscription([
     {
@@ -754,14 +751,12 @@ window.logDataSubscribe = function() {
         };
         if (!logDataState.team.some(member => member.id === normalized.id)) {
           logDataState.team.push(normalized);
-          if (logShouldDeferRealtimeRender()) return;
           logApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         logDataState.team = logDataState.team.filter(member => member.id !== deleted.id);
-        if (logShouldDeferRealtimeRender()) return;
         logApplyRealtimeRender();
       }
     },
@@ -785,7 +780,6 @@ window.logDataSubscribe = function() {
         };
         if (!logDataState.tasks.some(task => task.id === normalized.id)) {
           logDataState.tasks.push(normalized);
-          if (logShouldDeferRealtimeRender()) return;
           logApplyRealtimeRender();
         }
       },
@@ -808,12 +802,10 @@ window.logDataSubscribe = function() {
         const idx = logDataState.tasks.findIndex(task => task.id === normalized.id);
         if (idx < 0) logDataState.tasks.push(normalized);
         else logDataState.tasks[idx] = { ...logDataState.tasks[idx], ...normalized };
-        if (logShouldDeferRealtimeRender()) return;
         logApplyRealtimeRender();
       },
       onDelete: (deleted) => {
         logDataState.tasks = logDataState.tasks.filter(task => task.id !== deleted.id);
-        if (logShouldDeferRealtimeRender()) return;
         logApplyRealtimeRender();
       }
     },
@@ -837,14 +829,12 @@ window.logDataSubscribe = function() {
         };
         if (!logDataState.products.some(product => product.id === normalized.id)) {
           logDataState.products.push(normalized);
-          if (logShouldDeferRealtimeRender()) return;
           logApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         logDataState.products = logDataState.products.filter(product => product.id !== deleted.id);
-        if (logShouldDeferRealtimeRender()) return;
         logApplyRealtimeRender();
       }
     },
@@ -855,14 +845,12 @@ window.logDataSubscribe = function() {
         if (!normalized) return;
         if (!logDataState.holidays.some(holiday => holiday.id === normalized.id)) {
           logDataState.holidays.push(normalized);
-          if (logShouldDeferRealtimeRender()) return;
           logApplyRealtimeRender();
         }
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         logDataState.holidays = logDataState.holidays.filter(holiday => holiday.id !== deleted.id);
-        if (logShouldDeferRealtimeRender()) return;
         logApplyRealtimeRender();
       }
     },
@@ -875,13 +863,11 @@ window.logDataSubscribe = function() {
         if (idx >= 0) logDataState.productSupportHistory[idx] = normalized;
         else logDataState.productSupportHistory.push(normalized);
         logDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(logDataState.productSupportHistory);
-        if (logShouldDeferRealtimeRender()) return;
         logApplyRealtimeRender();
       },
       onUpdate: () => {},
       onDelete: (deleted) => {
         logDataState.productSupportHistory = logDataState.productSupportHistory.filter(history => history.id !== deleted.id);
-        if (logShouldDeferRealtimeRender()) return;
         logApplyRealtimeRender();
       }
     }

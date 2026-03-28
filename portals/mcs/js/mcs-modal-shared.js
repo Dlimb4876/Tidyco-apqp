@@ -66,6 +66,33 @@ function mcsApproverSelectionHtml(preselectedEmail, includeTitle = true) {
     </div>`;
 }
 
+/**
+ * Build the approver select field only (for compact layouts).
+ * Returns just the select element, no wrapper divs.
+ */
+function mcsApproverSelectionFieldHtml(preselectedEmail, includeEmptyOption = true) {
+  const step1Approvers = (mcsApproverConfig && mcsApproverConfig.approval1) || [];
+
+  if (step1Approvers.length === 0) {
+    return `<select class="mcs-field-select" id="mcs-f-approver">
+      <option value="">No approvers configured</option>
+    </select>`;
+  }
+
+  const options = step1Approvers.map(a => {
+    const email = a.user_email || '';
+    const selected = preselectedEmail && email && email === preselectedEmail ? 'selected' : '';
+    return `<option value="${esc(email)}" data-id="${esc(a.user_id)}" ${selected}>${esc(a.user_name)}${email ? ' - ' + esc(email) : ''}</option>`;
+  }).join('');
+
+  const emptyOption = includeEmptyOption ? '<option value="">Any configured approver</option>' : '';
+
+  return `<select class="mcs-field-select" id="mcs-f-approver">
+    ${emptyOption}
+    ${options}
+  </select>`;
+}
+
 function mcsExtractNominatedApprover(notesValue) {
   if (!notesValue || typeof notesValue !== 'string') return '';
   if (!notesValue.startsWith('nominated_approver:')) return '';

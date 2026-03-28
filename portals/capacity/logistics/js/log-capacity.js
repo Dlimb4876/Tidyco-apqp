@@ -7,15 +7,6 @@ let logTab = 'chart';
 let logHolidayMonth = null;
 let logChartStart = null;
 let logSaveTimer = null;
-let logChartDirty = true;
-
-window.logCapSmartRender = function() {
-  if (logTab === 'chart') {
-    logChartDirty = true;
-    return;
-  }
-  logRefreshCurrentTab();
-};
 
 function logGetCurrentMonthKey() {
   const today = new Date();
@@ -162,7 +153,6 @@ window.logRenderCapacity = function() {
       </div>
     </div>`;
 
-  logChartDirty = false;
   setTimeout(() => {
     if (logTab === 'chart') {
       logDrawChartViews();
@@ -175,8 +165,6 @@ window.logRenderCapacity = function() {
 window.logSetTab = function(tab) {
   const prevLogTab = logTab;
   logTab = tab;
-  if (tab === 'chart') logChartDirty = false;
-
   const logParts = ['s=capacity', 'ct=logistics'];
   if (tab !== 'chart') logParts.push('lgt=' + encodeURIComponent(tab));
   if (typeof writeNavigationHistory === 'function') {
@@ -278,15 +266,14 @@ window.logDebouncedSave = function() {
   clearTimeout(logSaveTimer);
   logSaveTimer = setTimeout(async () => {
     await logOnSave(false);
-    if (logTab === 'chart') {
-      logChartDirty = true;
-      return;
-    }
-    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) {
-      window.logPendingRerender = true;
-      return;
-    }
-    logRefreshCurrentTab();
+    if (logTab === 'chart') return;
+    requestRender('log', {
+      trigger: 'save',
+      renderNow: function() {
+        if (typeof logRefreshCurrentTab === 'function') logRefreshCurrentTab();
+      },
+      isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
+    });
   }, 900);
 };
 

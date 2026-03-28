@@ -322,12 +322,5 @@ npi.events._onInput = function(evt) {
 npi.events._onFocusOut = function(evt) {
   const nextFocus = evt.relatedTarget
   if (nextFocus && nextFocus.closest('table')) return
-  if (!window.npiPendingRealTimeUpdate) return
-  setTimeout(function() {
-    if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return
-    if (window.npiPendingRealTimeUpdate) {
-      window.npiPendingRealTimeUpdate = false
-      render()
-    }
-  }, 0)
+  if (typeof flushDeferred === 'function') flushDeferred('npi')
 }

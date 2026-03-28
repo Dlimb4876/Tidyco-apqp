@@ -182,6 +182,22 @@ function capProductDraftDepartment(contextType) {
   return 'ME'
 }
 
+function capGetTaskEditScope(contextType) {
+  const scope = document.querySelector('[data-cap-context="' + contextType + '"]')
+  return scope || document
+}
+
+function capResolveTaskEditRow(taskId, contextType) {
+  if (!taskId) return null
+  const scope = capGetTaskEditScope(contextType)
+  const rowSelector = 'tr[data-task-id="' + taskId + '"]'
+  const row = scope && typeof scope.querySelector === 'function'
+    ? scope.querySelector(rowSelector)
+    : null
+  if (row) return row
+  return document.querySelector(rowSelector)
+}
+
 function capGetProductHelper(name) {
   const sharedHelper = window['capProducts' + name]
   if (typeof sharedHelper === 'function') return sharedHelper
@@ -808,17 +824,24 @@ window.capacityEvents._onClick = function(evt) {
     capTaskRefresh(contextType)
     // Focus the name field in the now-rendered edit row
     setTimeout(function() {
-      const editRow = document.querySelector('[data-task-id="' + taskId + '"] [data-task-field="name"]')
-      if (editRow) editRow.focus()
+      const taskRow = capResolveTaskEditRow(taskId, contextType)
+      const nameInput = taskRow && typeof taskRow.querySelector === 'function'
+        ? taskRow.querySelector('[data-task-field="name"]')
+        : null
+      if (nameInput) nameInput.focus()
     }, 0)
     break
   }
   case 'cap-task-save-edit': {
     const dept = capProductDraftDepartment(contextType)
-    const editRow = el.closest('tr[data-task-id]')
-    if (!editRow) break
-    const taskId = editRow.getAttribute('data-task-id')
+    const activeTaskId = window.capTaskEditingId && window.capTaskEditingId[dept]
+      ? window.capTaskEditingId[dept]
+      : ''
+    const clickedTaskId = el.getAttribute('data-task-id') || el.closest('[data-task-id]')?.getAttribute('data-task-id')
+    const taskId = activeTaskId || clickedTaskId
     if (!taskId) break
+    const editRow = capResolveTaskEditRow(taskId, contextType)
+    if (!editRow) break
     const savedName = (editRow.querySelector('[data-task-field="name"]')?.value || '').trim()
     if (!savedName) { editRow.querySelector('[data-task-field="name"]')?.focus(); break }
     const api = capGetDataApi(contextType)
@@ -1400,12 +1423,17 @@ window.capacityEvents._onFocusOut = function(evt) {
     : null
   // If moving to next cell in same table, no need to flush
   if (nextFocus && nextFocus.closest('table')) return
-  // No pending re-renders to flush across any capacity portal
-  if (!window.mePendingRealTimeUpdate && !window.mePendingRerender &&
-      !window.pmPendingRealTimeUpdate && !window.pmPendingRerender &&
-      !window.logPendingRealTimeUpdate && !window.logPendingRerender &&
-      !window.unit6PendingRealTimeUpdate && !window.unit6PendingRerender &&
-      !window.prodCapPendingRealTimeUpdate) return
+
+  // Scheduler-managed portals: flush deferred render (no-op if nothing pending)
+  if (typeof flushDeferred === 'function') {
+    flushDeferred('me')
+    flushDeferred('pm')
+    flushDeferred('log')
+    flushDeferred('unit6')
+  }
+
+  // No old-style portals pending — skip the setTimeout
+  if (!window.prodCapPendingRealTimeUpdate) return
 
   // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
   setTimeout(function() {
@@ -1419,66 +1447,6 @@ window.capacityEvents._onFocusOut = function(evt) {
         prodCapRefreshCurrentTab()
       }
       return
-    }
-
-    // ── PM Capacity flush ──────────────────────────────────
-    if (window.pmPendingRealTimeUpdate || window.pmPendingRerender) {
-      window.pmPendingRealTimeUpdate = false
-      window.pmPendingRerender = false
-      var activePMBtn = document.querySelector('.pm-shell .me-nav-btn.active')
-      if (activePMBtn && activePMBtn.getAttribute('data-tab') === 'chart') {
-        if (typeof pmCapSmartRender === 'function') pmCapSmartRender()
-        return
-      }
-      if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab()
-      return
-    }
-
-    // ── Logistics Capacity flush ───────────────────────────
-    if (window.logPendingRealTimeUpdate || window.logPendingRerender) {
-      window.logPendingRealTimeUpdate = false
-      window.logPendingRerender = false
-      var activeLogBtn = document.querySelector('.log-shell .me-nav-btn.active')
-      if (activeLogBtn && activeLogBtn.getAttribute('data-tab') === 'chart') {
-        if (typeof logCapSmartRender === 'function') logCapSmartRender()
-        return
-      }
-      if (typeof logRefreshCurrentTab === 'function') logRefreshCurrentTab()
-      return
-    }
-
-    // ── Unit 6 Capacity flush ──────────────────────────────
-    if (window.unit6PendingRealTimeUpdate || window.unit6PendingRerender) {
-      window.unit6PendingRealTimeUpdate = false
-      window.unit6PendingRerender = false
-      var activeUnit6Btn = document.querySelector('.unit6-shell .me-nav-btn.active')
-      if (activeUnit6Btn && activeUnit6Btn.getAttribute('data-tab') === 'chart') {
-        if (typeof unit6CapSmartRender === 'function') unit6CapSmartRender()
-        return
-      }
-      if (typeof unit6RefreshCurrentTab === 'function') unit6RefreshCurrentTab()
-      return
-    }
-
-    // ── ME Capacity flush ──────────────────────────────────
-    // Using render() here would call renderMeCapacity() → meDataAutoSyncProductionProducts()
-    // which schedules another meDataSave, creating a feedback loop that constantly
-    // redraws the capacity chart.
-    if (window.mePendingRealTimeUpdate || window.mePendingRerender) {
-      window.mePendingRealTimeUpdate = false
-      window.mePendingRerender = false
-      // Chart tab is read-only — mark dirty, recalculate when user navigates to it.
-      // Only query .me-shell here; PM has already been handled above.
-      var activeNavBtn = contextRoot
-        ? contextRoot.querySelector('.me-nav-btn.active')
-        : document.querySelector('.me-shell .me-nav-btn.active')
-      if (activeNavBtn && activeNavBtn.getAttribute('data-tab') === 'chart') {
-        if (typeof meCapSmartRender === 'function') meCapSmartRender()
-        return
-      }
-      if (typeof meRefreshCurrentTab === 'function') {
-        meRefreshCurrentTab()
-      }
     }
   }, 0)
 }

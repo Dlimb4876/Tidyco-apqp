@@ -563,3 +563,62 @@ describe('capacity events month routing', () => {
     expect(global.unit6OnNextMonth).toHaveBeenCalled()
   })
 })
+
+describe('capacity events task edit safety with filtered views', () => {
+  beforeAll(() => {
+    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
+    eval(script)
+  })
+
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    window.capTaskEditingId = { ME: null, PM: null, LOG: null, UNIT6: null }
+    global.meDataUpdateTask = jest.fn()
+    global.meOnSave = jest.fn()
+    global.meDataGetTasks = jest.fn(() => [])
+    global.meDataGetTeam = jest.fn(() => [])
+    global.meDataGetProducts = jest.fn(() => [])
+    global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  })
+
+  test('cap-task-save-edit updates the active editing task id even when another row is present', () => {
+    document.body.innerHTML = `
+      <div data-cap-context="me">
+        <div class="me-kpi-strip"></div>
+        <div class="me-card-head"><span>TASKS</span><span class="hours">0 total hours</span></div>
+        <div class="me-tbl-wrap">
+          <table class="me-tbl">
+            <tbody>
+              <tr data-task-id="task-target">
+                <td><input data-task-field="name" value="Correct Task Name"></td>
+                <td><select data-task-field="category"><option value="NPI" selected>NPI</option></select></td>
+                <td><select data-task-field="assigneeId"><option value="" selected>Unassigned</option></select></td>
+                <td><select data-task-field="productId"><option value="" selected>None</option></select></td>
+                <td><input data-task-field="startDate" value="2026-03-01"></td>
+                <td><input data-task-field="endDate" value="2026-03-02"></td>
+                <td><select data-task-field="status"><option value="SCHEDULED" selected>Scheduled</option></select></td>
+                <td><input type="checkbox" data-task-field="isDisabled"></td>
+                <td><input data-task-field="totalHours" value="12"></td>
+                <td><button data-cap-action="cap-task-save-edit" data-task-id="task-target">✓</button></td>
+              </tr>
+              <tr data-task-id="task-other">
+                <td><input data-task-field="name" value="Wrong Task Name"></td>
+                <td><button data-cap-action="cap-task-save-edit" data-task-id="task-other">✓</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+
+    window.capTaskEditingId.ME = 'task-target'
+
+    const wrongButton = document.querySelector('tr[data-task-id="task-other"] [data-cap-action="cap-task-save-edit"]')
+    window.capacityEvents._onClick({ target: wrongButton })
+
+    expect(global.meDataUpdateTask).toHaveBeenCalledWith('task-target', 'name', 'Correct Task Name')
+    expect(global.meDataUpdateTask).not.toHaveBeenCalledWith('task-other', 'name', expect.anything())
+    expect(window.capTaskEditingId.ME).toBe(null)
+    expect(global.meOnSave).toHaveBeenCalled()
+  })
+})

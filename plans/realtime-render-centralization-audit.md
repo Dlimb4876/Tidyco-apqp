@@ -192,37 +192,69 @@ These can keep using core subscription APIs directly; they do not need the full 
 
 ---
 
-## 5) Centralization boundary (recommended)
+## 5) Centralization boundary (decided)
 
-Centralize in core:
-- deferred render scheduler contract:
-  - `requestRender(key, { renderNow, isEditing, isFilterFocused, debounceMs, onDefer })`
-  - `flushDeferred(key)`
-  - optional `flushAllInScope(scopeKey)`
-- consistent pending-state handling (internal map instead of scattered globals)
-- optional focusout helper binder for table-edit screens
+### Scheduler contract
 
-Keep local:
+```javascript
+requestRender(key, { trigger, renderNow, isEditing, isFilterFocused, debounceMs })
+// trigger: 'realtime' | 'save'
+// renderNow: () => void  — always pulls fresh data, ignores event delta
+// isEditing / isFilterFocused: defer guards
+// debounceMs: coalescing window (default 150ms)
+
+flushDeferred(key)
+// flush a single key immediately
+```
+
+**Trigger type tracking:** The scheduler records whether the pending render was caused by a remote realtime event or a local save completing. When a render is deferred because the user is actively in that table, it logs to console:
+
+```
+[Scheduler] Render deferred (realtime) — you are editing this table
+[Scheduler] Render deferred (save) — your save is pending render
+```
+
+**Render granularity:** `renderNow` should patch at row/line level where possible, not re-render the full page. This is the target pattern globally.
+
+**Coalescing:** Multiple events arriving while deferred collapse into one render call on flush.
+
+### Centralize in core
+- scheduler internal state map (replaces scattered `window.*Pending*` globals)
+- deferred render with trigger-type tracking and console notifications
+- focusout flush binding helper
+
+### Keep local
 - portal-specific tab refresh functions (`pmRefreshCurrentTab`, `prodRefreshCurrentTab`, etc.)
-- chart dirty semantics (`markChartDirty`)
 - row patch strategies for lightweight settings modules
+
+### Remove entirely during migration
+- `markChartDirty` / `chartDirty` / `*CapSmartRender` callbacks — charts redraw on page open only, not on realtime/save events
 
 ---
 
-## 6) Migration order (safe)
+## 6) Migration order (decided)
 
-1. Add core scheduler utility (no behavior change yet).
-2. Migrate Capacity first (ME/PM/LOG/UNIT6 + prod-cap), because patterns are already aligned.
-3. Migrate NPI to same scheduler contract.
-4. Migrate Production and Operations.
-5. Leave patch-based modules on current simple realtime paths unless needed.
+Each portal is a clean git commit. No feature flags. No fallback code. Git is the rollback.
+
+1. Add core scheduler utility — no behavior change, no portal wiring yet.
+2. ME Capacity — migrate + move toward row-patch, remove `chartDirty` logic.
+3. PM Capacity — same.
+4. LOG Capacity — same.
+5. UNIT6 Capacity — same.
+6. NPI — migrate to scheduler.
+7. Production portal — migrate to scheduler.
+8. Operations — migrate to scheduler.
+9. **Production-capacity (A6) — excluded.** Stays on current `prodCapRefreshCurrentTab()` tab-refresh path as-is.
+10. Patch-based modules (Section 3) — excluded, stay on simple realtime paths.
 
 ---
 
 ## 7) Net result expected
 
 - One consistent user experience while editing (no flicker/cursor ejection).
-- Less duplicate pending/debounce code.
+- Less duplicate pending/debounce code — scattered `window.*Pending*` globals replaced by one internal scheduler map.
+- Console visibility into deferred renders and their trigger type.
+- Charts no longer tied to realtime events — simpler and more predictable.
 - Safer future realtime features (single tested scheduler logic).
 - Easier debugging: one place for deferred-render behavior.
 

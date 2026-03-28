@@ -1392,3 +1392,62 @@
 | 06:28 | Edited portals/capacity/js/capacity-events.js | 9→9 lines | ~252 |
 | 06:28 | Edited CHANGELOG.md | 4→6 lines | ~77 |
 | 06:28 | Session end: 7 writes across 3 files (cap-tasks.js, capacity-events.js, CHANGELOG.md) | 10 reads | ~96005 tok |
+
+## Session: 2026-03-28 06:52
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 07:03 | Edited plans/realtime-render-centralization-audit.md | expanded (+32 lines) | ~730 |
+| 07:03 | Session end: 1 writes across 1 files (realtime-render-centralization-audit.md) | 1 reads | ~782 tok |
+| 07:07 | Created utils/js/render-scheduler.js | — | ~915 |
+| 07:07 | Edited index.html | 2→3 lines | ~40 |
+| 07:08 | Edited CHANGELOG.md | 4→6 lines | ~96 |
+| 07:08 | Session end: 4 writes across 4 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md) | 3 reads | ~29547 tok |
+| 07:12 | Edited portals/capacity/me/js/me-data-realtime.js | modified meApplyRealtimeStateChange() | ~11 |
+| 07:12 | Edited portals/capacity/me/js/me-capacity.js | removed 4 lines | ~12 |
+| 07:12 | Edited portals/capacity/me/js/me-capacity.js | removed 11 lines | ~18 |
+| 07:12 | Edited portals/capacity/me/js/me-capacity.js | 3→2 lines | ~22 |
+| 07:12 | Edited portals/capacity/me/js/me-capacity.js | 3→1 lines | ~13 |
+| 07:13 | Edited tests/me-data-core.test.js | added 1 condition(s) | ~140 |
+| 07:14 | Edited tests/me-data-core.test.js | 3→2 lines | ~27 |
+| 07:14 | Edited tests/me-data-core.test.js | 5→3 lines | ~40 |
+| 07:14 | Edited tests/me-data-core.test.js | 2→1 lines | ~32 |
+| 07:14 | Edited tests/me-data-core.test.js | 2→4 lines | ~42 |
+| 07:14 | Edited CHANGELOG.md | 1→2 lines | ~112 |
+| 07:14 | Session end: 15 writes across 7 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 6 reads | ~48003 tok |
+| 07:22 | Edited portals/capacity/project-management/js/pm-data.js | modified pmIsCapacityFilterInputFocused() | ~12 |
+| 07:22 | Edited portals/capacity/project-management/js/pm-data.js | removed 9 lines | ~12 |
+| 07:22 | Edited portals/capacity/project-management/js/pm-data.js | 2→1 lines | ~10 |
+| 07:22 | Edited portals/capacity/project-management/js/pm-data.js | 2→1 lines | ~10 |
+| 07:22 | Edited portals/capacity/project-management/js/pm-capacity.js | removed 14 lines | ~16 |
+| 07:22 | Edited portals/capacity/project-management/js/pm-capacity.js | modified if() | ~54 |
+| 07:23 | Edited CHANGELOG.md | 1→2 lines | ~74 |
+| 07:23 | Session end: 22 writes across 9 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 8 reads | ~61951 tok |
+| 07:28 | Edited portals/capacity/logistics/js/log-data.js | modified logIsCapacityFilterInputFocused() | ~12 |
+| 07:28 | Edited portals/capacity/unit6/js/unit6-data.js | modified unit6IsCapacityFilterInputFocused() | ~13 |
+| 07:28 | Edited portals/capacity/logistics/js/log-data.js | removed 9 lines | ~12 |
+| 07:28 | Edited portals/capacity/unit6/js/unit6-data.js | removed 9 lines | ~12 |
+| 07:28 | Edited portals/capacity/logistics/js/log-data.js | 2→1 lines | ~10 |
+| 07:28 | Edited portals/capacity/unit6/js/unit6-data.js | 2→1 lines | ~10 |
+| 07:28 | Edited portals/capacity/logistics/js/log-data.js | — | ~0 |
+| 07:28 | Edited portals/capacity/unit6/js/unit6-data.js | — | ~0 |
+| 07:28 | Edited portals/capacity/logistics/js/log-capacity.js | modified logGetCurrentMonthKey() | ~17 |
+| 07:28 | Edited portals/capacity/unit6/js/unit6-capacity.js | modified unit6GetCurrentMonthKey() | ~18 |
+| 07:28 | Edited portals/capacity/logistics/js/log-capacity.js | 2→1 lines | ~6 |
+| 07:28 | Edited portals/capacity/logistics/js/log-capacity.js | 3→1 lines | ~5 |
+| 07:28 | Edited portals/capacity/unit6/js/unit6-capacity.js | 2→1 lines | ~6 |
+| 07:28 | Edited portals/capacity/unit6/js/unit6-capacity.js | 3→1 lines | ~5 |
+| 07:29 | Edited CHANGELOG.md | 1→2 lines | ~66 |
+| 07:29 | Session end: 37 writes across 13 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 12 reads | ~90097 tok |
+| 07:32 | Edited portals/product-development/npi/js/npi.js | render() → requestRender() | ~48 |
+| 07:32 | Edited portals/production/js/production.js | modified addEventListener() | ~86 |
+| 07:32 | Edited portals/operations/js/operations-dashboard-main.js | modified addEventListener() | ~84 |
+| 07:33 | Edited portals/operations/js/operations-dashboard-state.js | — | ~0 |
+| 07:33 | Edited portals/production/js/data.js | render() → requestRender() | ~70 |
+| 07:33 | Edited portals/production/js/data.js | render() → requestRender() | ~56 |
+| 07:33 | Edited CHANGELOG.md | 1→2 lines | ~78 |
+| 07:33 | Session end: 44 writes across 18 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 18 reads | ~104667 tok |
+| 07:51 | Created .claude/rules/realtime.md | — | ~1582 |
+| 07:51 | Session end: 45 writes across 19 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 19 reads | ~106831 tok |
+| 07:51 | Session end: 45 writes across 19 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 20 reads | ~108369 tok |
+| 07:54 | Session end: 45 writes across 19 files (realtime-render-centralization-audit.md, render-scheduler.js, index.html, CHANGELOG.md, me-data-realtime.js) | 21 reads | ~108441 tok |
