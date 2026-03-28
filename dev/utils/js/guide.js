@@ -160,7 +160,7 @@ const GUIDE_CONTENT = {
         <p><strong>Calculation:</strong> Available hours = (working days × hours per day per PM) minus approved holidays and UK bank holidays.</p>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">👷 Team / 📋 Tasks / � Product Support / 📦 Product Load / 🏖️ Holiday Planner</div>
+        <div class="guide-section-title">👷 Team / 📋 Tasks / 🚂 Product Support / 📦 Product Load / 🏖️ Holiday Planner</div>
         <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view. PM task rows also support the <strong>Disable</strong> checkbox to exclude a task from calculations without deleting it.</p>
         <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to toggle ascending/descending.</p>
         <p>The <strong>Current</strong> column in the Product Support tab shows the active saved rate (h/batch) so you can compare it with any new value before applying a change. Edit multiple rows, then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
@@ -818,7 +818,7 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">People</div>
-        <p>ME and PM capacity utilisation summary. Pulls from <strong>ME Capacity</strong> and <strong>PM Capacity</strong> — utilisation %, headroom hours, and team size.</p>
+        <p>Cross-stream capacity summary. Pulls from <strong>ME</strong>, <strong>PM</strong>, and <strong>Logistics</strong> capacity plus operations units (<strong>Unit 2</strong>, <strong>Unit 3</strong>, <strong>Unit 6</strong>) — utilisation %, headroom, and readiness.</p>
         <p><strong>Calculation:</strong> Utilisation = allocated hours ÷ available hours × 100%</p>
       </div>
       <div class="guide-section">

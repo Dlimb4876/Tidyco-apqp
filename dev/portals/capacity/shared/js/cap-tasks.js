@@ -377,34 +377,34 @@ window.capRenderTasksTab = function(tasksArray, teamArray, availableProducts, de
         <div class="me-card-body me-card-body-gutter">
           <div class="me-filters" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
             <div class="filter-chip">
-              <input type="text" class="me-filter-input" placeholder="🔍 Search tasks..." value="${esc(currentFilters.search || '')}"
+              <input type="text" autocomplete="off" class="me-filter-input" placeholder="🔍 Search tasks..." value="${esc(currentFilters.search || '')}"
                 data-cap-action="cap-task-search"
                 style="flex:1;min-width:180px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
               ${currentFilters.search ? `<button class="filter-clear" data-cap-action="cap-task-clear-search" title="Clear search">×</button>` : ''}
             </div>
             <div class="filter-chip">
-              <select class="me-filter-select" data-cap-action="cap-task-filter-category"
+              <select autocomplete="off" class="me-filter-select" data-cap-action="cap-task-filter-category"
                 style="min-width:130px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
                 ${catOpts}
               </select>
               ${currentFilters.category && currentFilters.category !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-category" title="Clear category filter">×</button>` : ''}
             </div>
             <div class="filter-chip">
-              <select class="me-filter-select" data-cap-action="cap-task-filter-assignee"
+              <select autocomplete="off" class="me-filter-select" data-cap-action="cap-task-filter-assignee"
                 style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
                 ${assigneeOpts}
               </select>
               ${currentFilters.assignee && currentFilters.assignee !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-assignee" title="Clear assignee filter">×</button>` : ''}
             </div>
             <div class="filter-chip">
-              <select class="me-filter-select" data-cap-action="cap-task-filter-product"
+              <select autocomplete="off" class="me-filter-select" data-cap-action="cap-task-filter-product"
                 style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
                 ${productOpts}
               </select>
               ${currentFilters.product && currentFilters.product !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-product" title="Clear product filter">×</button>` : ''}
             </div>
             <div class="filter-chip">
-              <select class="me-filter-select" data-cap-action="cap-task-filter-month"
+              <select autocomplete="off" class="me-filter-select" data-cap-action="cap-task-filter-month"
                 style="min-width:120px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
                 ${monthOpts}
               </select>

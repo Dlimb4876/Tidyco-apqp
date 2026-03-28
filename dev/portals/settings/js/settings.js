@@ -147,6 +147,9 @@ function renderSettings() {
       } else if (tab === 'mcs-approvers') {
         renderSettingsMcsTab();
         settingsEnsureMcsData();
+      } else if (tab === 'gate-questions') {
+        renderSettingsGateQuestionsTab();
+        settingsEnsureGateQuestionsData();
       } else if (tab === 'appearance') {
         renderSettingsAppearanceTab();
       } else if (tab === 'about') {
@@ -169,6 +172,9 @@ function renderSettings() {
           </button>
           <button class="settings-nav-item ${tab === 'work-areas' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="work-areas">
             <span class="nav-icon">🏭</span> Work Areas
+          </button>
+          <button class="settings-nav-item ${tab === 'gate-questions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="gate-questions">
+            <span class="nav-icon">✅</span> Gate Questions
           </button>
           <span class="settings-nav-group-label" style="margin-top:8px">Access</span>
           <button class="settings-nav-item ${tab === 'teams' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="teams">
@@ -195,6 +201,7 @@ function renderSettings() {
         <div class="settings-content">
           <div id="settingsFamiliesTab"        class="settings-tab-content ${tab === 'families'         ? 'active' : ''}"></div>
           <div id="settingsWorkAreasTab"       class="settings-tab-content ${tab === 'work-areas'       ? 'active' : ''}"></div>
+          <div id="settingsGateQuestionsTab"   class="settings-tab-content ${tab === 'gate-questions'   ? 'active' : ''}"></div>
           <div id="settingsTeamsTab"           class="settings-tab-content ${tab === 'teams'            ? 'active' : ''}"></div>
           <div id="settingsPermissionsTab"     class="settings-tab-content ${tab === 'permissions'      ? 'active' : ''}"></div>
           <div id="settingsRoleDefinitionsTab" class="settings-tab-content ${tab === 'role-definitions' ? 'active' : ''}"></div>
@@ -875,6 +882,7 @@ function setupSettingsEventListeners() {
       const tabMap = {
         families: 'settingsFamiliesTab',
         'work-areas': 'settingsWorkAreasTab',
+        'gate-questions': 'settingsGateQuestionsTab',
         teams: 'settingsTeamsTab',
         permissions: 'settingsPermissionsTab',
         'role-definitions': 'settingsRoleDefinitionsTab',
@@ -900,6 +908,9 @@ function setupSettingsEventListeners() {
       } else if (tab === 'mcs-approvers') {
         renderSettingsMcsTab();
         settingsEnsureMcsData();
+      } else if (tab === 'gate-questions') {
+        renderSettingsGateQuestionsTab();
+        settingsEnsureGateQuestionsData();
       } else if (tab === 'appearance') {
         renderSettingsAppearanceTab();
       } else if (tab === 'about') {
@@ -940,6 +951,16 @@ function setupSettingsEventListeners() {
     if (action === 'settings-mcs-remove-approver') { await settingsMcsRemoveApprover(actionEl.dataset.step || '', actionEl.dataset.userId || ''); return; }
     if (action === 'settings-gate-signoff-add') { await settingsMcsAddGateSignoff(actionEl.dataset.role || ''); return; }
     if (action === 'settings-gate-signoff-remove') { await settingsMcsRemoveGateSignoff(actionEl.dataset.role || '', actionEl.dataset.userId || ''); return; }
+
+    // Gate questions tab actions
+    if (action === 'settings-gq-retry')       { settingsEnsureGateQuestionsData(true); return; }
+    if (action === 'settings-gq-start-add')   { settingsGateQuestionsStartAdd(actionEl.dataset.gate || 0); return; }
+    if (action === 'settings-gq-cancel-add')  { settingsGateQuestionsCancelAdd(); return; }
+    if (action === 'settings-gq-confirm-add') { await settingsGateQuestionsConfirmAdd(actionEl.dataset.gate || 0); return; }
+    if (action === 'settings-gq-start-edit')  { settingsGateQuestionsStartEdit(actionEl.dataset.id || ''); return; }
+    if (action === 'settings-gq-cancel-edit') { settingsGateQuestionsCancelEdit(); return; }
+    if (action === 'settings-gq-save-edit')   { await settingsGateQuestionsSaveEdit(actionEl.dataset.id || ''); return; }
+    if (action === 'settings-gq-delete')      { await settingsGateQuestionsDelete(actionEl.dataset.id || '', actionEl.dataset.text || ''); return; }
 
     // Appearance tab actions
     if (action === 'settings-appearance-save')  { settingsAppearanceSave();  return; }

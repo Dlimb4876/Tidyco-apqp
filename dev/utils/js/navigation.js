@@ -33,22 +33,42 @@ const SECTION_LABELS = {
   mcs: 'Manufacturing Change'
 };
 
-// 1.5 Back button labels — defined once at module level
-const BACK_BUTTON_LABELS = {
-  capacity: '← Back to Capacity',
-  production: '← Back to Production',
-  'product-development': '← Back to Product Development',
-  operations: '← Back to Operations',
-  feedback: '← Back to Feedback & Bugs',
-  'action-centre': '← Back to Hub',
-  mcs: '← Back to Hub',
-  apqp: '← Back to Project',
-  actions: '← Back to Project',
-  risks: '← Back to Project',
-  bom: '← Back to Project',
-  timing: '← Back to Project',
-  documents: '← Back to Project'
-};
+/**
+ * Update the back button visibility and label based on current section and tab state.
+ * Called from navigate() and from each set*Tab() function so the label always reflects
+ * where pressing back will actually take the user.
+ */
+function updateBackButton() {
+  const returnBtn = document.getElementById('returnHubBtn');
+  if (!returnBtn) return;
+
+  const isTopLevel = currentSection === 'hub' || currentSection === 'projects' || currentSection === 'project';
+  returnBtn.style.display = isTopLevel ? 'none' : 'flex';
+  if (isTopLevel) return;
+
+  const npiSubSections = ['apqp', 'actions', 'risks', 'bom', 'timing', 'documents'];
+  if (npiSubSections.includes(currentSection) || currentSection.startsWith('gate_')) {
+    returnBtn.textContent = '← Back to Project';
+    return;
+  }
+  if (currentSection === 'capacity') {
+    returnBtn.textContent = (capacityTab && capacityTab !== 'root') ? '← Back to Capacity' : '← Back to Hub';
+    return;
+  }
+  if (currentSection === 'production') {
+    returnBtn.textContent = (productionTab && productionTab !== 'root') ? '← Back to Production' : '← Back to Hub';
+    return;
+  }
+  if (currentSection === 'product-development') {
+    returnBtn.textContent = (productDevelopmentTab && productDevelopmentTab !== 'root') ? '← Back to Product Development' : '← Back to Hub';
+    return;
+  }
+  if (currentSection === 'operations') {
+    returnBtn.textContent = (operationsTab && operationsTab !== 'overview') ? '← Back to Operations' : '← Back to Hub';
+    return;
+  }
+  returnBtn.textContent = '← Back to Hub';
+}
 
 const APP_HISTORY_STATE_KEY = '__tidycoNav';
 
@@ -283,11 +303,7 @@ function navigate(sec, { pushHash = true } = {}) {
     writeNavigationHistory(hash, { push: sec !== prevSection });
   }
 
-  // Show Return to Portal button on all feature pages (not hub, projects, or project home)
-  const returnBtn = document.getElementById('returnHubBtn');
-  returnBtn.style.display = (sec === 'hub' || sec === 'projects' || sec === 'project') ? 'none' : 'flex';
-  // 1.5 Dynamic back button text using module-level constant
-  returnBtn.textContent = BACK_BUTTON_LABELS[sec] || '← Return to Portal';
+  updateBackButton();
 
   // Update project name breadcrumb display
   updateProjectBreadcrumb();

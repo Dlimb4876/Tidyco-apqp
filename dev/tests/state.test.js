@@ -47,7 +47,7 @@ describe('State Module (state.js)', () => {
       expect(stateContent).toContain('let bomTreeExpanded =');
       
       // ABC Catalogue state
-      expect(stateContent).toContain('let abcCatalogueData =');
+      expect(stateContent).toMatch(/let\s+abcCatalogueData\s*=\s*\[/);
       expect(stateContent).toContain('let abcPickTarget =');
       
       // Action Centre state
@@ -120,10 +120,10 @@ describe('State Module (state.js)', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
       expect(stateContent).toContain('let ctqPickTarget = null');
-      expect(stateContent).toContain('let ctqPickSelected = []');
+      expect(stateContent).toMatch(/ctqPickSelected\s*=\s*\[\]/);
       expect(stateContent).toContain('let bomPickTarget = null');
-      expect(stateContent).toContain('let bomPickSelected = []');
-      expect(stateContent).toContain("let bomPickFilter = 'all'");
+      expect(stateContent).toMatch(/bomPickSelected\s*=\s*\[\]/);
+      expect(stateContent).toMatch(/bomPickFilter\s*=\s*'all'/);
     });
 
     test('should initialize collections as empty', () => {
@@ -132,7 +132,7 @@ describe('State Module (state.js)', () => {
       expect(stateContent).toContain('let bomTreeExpanded = new Set()');
       expect(stateContent).toContain('let bomAawTreeExpanded = new Set()');
       expect(stateContent).toContain('let collapsedGroups = new Set()');
-      expect(stateContent).toContain('let abcCatalogueData    = []');
+      expect(stateContent).toMatch(/let\s+abcCatalogueData\s*=\s*\[\]/);
       expect(stateContent).toContain('let abcPickResults = []');
       expect(stateContent).toContain('let abcPickSelected = []');
     });
@@ -171,8 +171,8 @@ describe('State Module (state.js)', () => {
       
       expect(stateContent).toContain("'admin' | 'editor' | 'viewer'");
       expect(stateContent).toContain('ctq|pfd|pfmea|cp');
-      expect(stateContent).toContain('all | A | B | C');
-      expect(stateContent).toContain('RPN ranges');
+      expect(stateContent).toMatch(/'all'\s*\|\s*'A'\s*\|\s*'B'\s*\|\s*'C'/);
+      expect(stateContent).toContain('all|high|r1_49|r50_99|r100_199|r200_plus');
     });
   });
 });

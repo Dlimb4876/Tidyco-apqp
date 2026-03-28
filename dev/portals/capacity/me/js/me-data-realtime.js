@@ -89,6 +89,7 @@ window.meDataSubscribe = function() {
     {
       table: 'me_teams',
       onInsert: (newTeam) => {
+        if (window.meDataSaveInProgress) return;
         const normalizedTeam = meNormalizeTeamRow(newTeam);
         if (!meDataState.team.some(t => t.id === normalizedTeam.id)) {
           meDataState.team.push(normalizedTeam);
@@ -96,6 +97,7 @@ window.meDataSubscribe = function() {
         }
       },
       onUpdate: (updatedTeam) => {
+        if (window.meDataSaveInProgress) return;
         const normalizedTeam = meNormalizeTeamRow(updatedTeam);
         const idx = meDataState.team.findIndex(t => t.id === normalizedTeam.id);
         if (idx < 0) {
@@ -106,6 +108,7 @@ window.meDataSubscribe = function() {
         meApplyRealtimeStateChange();
       },
       onDelete: (deleted) => {
+        if (window.meDataSaveInProgress) return;
         meDataState.team = meDataState.team.filter(t => t.id !== deleted.id);
         meApplyRealtimeStateChange();
       }
@@ -113,6 +116,7 @@ window.meDataSubscribe = function() {
     {
       table: 'me_tasks',
       onInsert: (newTask) => {
+        if (window.meDataSaveInProgress) return;
         const normalizedTask = meNormalizeTaskRow(newTask);
         if (!meDataState.tasks.some(t => t.id === normalizedTask.id)) {
           meDataState.tasks.push(normalizedTask);
@@ -120,6 +124,7 @@ window.meDataSubscribe = function() {
         }
       },
       onUpdate: (updatedTask) => {
+        if (window.meDataSaveInProgress) return;
         const normalizedTask = meNormalizeTaskRow(updatedTask);
 
         const idx = meDataState.tasks.findIndex(t => t.id === normalizedTask.id);
@@ -148,6 +153,7 @@ window.meDataSubscribe = function() {
         meApplyRealtimeStateChange();
       },
       onDelete: (deleted) => {
+        if (window.meDataSaveInProgress) return;
         meDataState.tasks = meDataState.tasks.filter(t => t.id !== deleted.id);
         meApplyRealtimeStateChange();
       }
@@ -155,6 +161,7 @@ window.meDataSubscribe = function() {
     {
       table: 'me_products',
       onInsert: (newProduct) => {
+        if (window.meDataSaveInProgress) return;
         const normalizedProduct = meNormalizeProductRow(newProduct);
         if (!meDataState.products.some(p => p.id === normalizedProduct.id)) {
           meDataState.products.push(normalizedProduct);
@@ -162,6 +169,7 @@ window.meDataSubscribe = function() {
         }
       },
       onUpdate: (updatedProduct) => {
+        if (window.meDataSaveInProgress) return;
         const normalizedProduct = meNormalizeProductRow(updatedProduct);
         const idx = meDataState.products.findIndex(p => p.id === normalizedProduct.id);
         if (idx < 0) {
@@ -172,6 +180,7 @@ window.meDataSubscribe = function() {
         meApplyRealtimeStateChange();
       },
       onDelete: (deleted) => {
+        if (window.meDataSaveInProgress) return;
         meDataState.products = meDataState.products.filter(p => p.id !== deleted.id);
         meApplyRealtimeStateChange();
       }

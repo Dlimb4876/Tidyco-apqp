@@ -168,12 +168,12 @@ function capProductsHistoryTable(productId, department, historyRows, state, isLo
         <tr class="cap-products-history-row" data-history-edit-row>
           <td colspan="${isLogContext ? 9 : 6}" style="padding:12px 16px;background:var(--overlay-light);">
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-              <input type="date" value="${capProductsEscape(draft.effectiveDate || '')}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="effectiveDate" data-dept="${department}">
-              ${isLogContext ? `<input type="number" step="0.1" value="${capProductsEscape(draft.kittingHours || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="kittingHours" data-dept="${department}" placeholder="Kitting">` : ''}
-              ${isLogContext ? `<input type="number" step="0.1" value="${capProductsEscape(draft.bookingInOutHours || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="bookingInOutHours" data-dept="${department}" placeholder="Booking In/Out">` : ''}
-              ${isLogContext ? `<input type="number" step="0.1" value="${capProductsEscape(draft.productMovementHours || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="productMovementHours" data-dept="${department}" placeholder="Product Movement">` : ''}
-              <input type="number" step="0.1" value="${capProductsEscape(draft.hoursPerWeek || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="hoursPerWeek" data-dept="${department}" ${isLogContext ? 'readonly' : ''}>
-              <input type="text" value="${capProductsEscape(draft.changeReason || '')}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="changeReason" data-dept="${department}" placeholder="Reason">
+              <input type="date" autocomplete="off" value="${capProductsEscape(draft.effectiveDate || '')}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="effectiveDate" data-dept="${department}">
+              ${isLogContext ? `<input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(draft.kittingHours || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="kittingHours" data-dept="${department}" placeholder="Kitting">` : ''}
+              ${isLogContext ? `<input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(draft.bookingInOutHours || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="bookingInOutHours" data-dept="${department}" placeholder="Booking In/Out">` : ''}
+              ${isLogContext ? `<input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(draft.productMovementHours || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="productMovementHours" data-dept="${department}" placeholder="Product Movement">` : ''}
+              <input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(draft.hoursPerWeek || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="hoursPerWeek" data-dept="${department}" ${isLogContext ? 'readonly' : ''}>
+              <input type="text" autocomplete="off" value="${capProductsEscape(draft.changeReason || '')}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="changeReason" data-dept="${department}" placeholder="Reason">
               <button class="btn btn-primary btn-sm" data-cap-action="cap-products-save-history-edit" data-history-id="${row.id}" data-dept="${department}">Save</button>
               <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-cancel-history-edit" data-dept="${department}">Cancel</button>
             </div>
@@ -289,8 +289,8 @@ window.capRenderProductsTab = function(productsArray, tasksArray, department, ta
         </div>
         <div class="me-card-body me-products-card-body">
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
-            <input type="text" value="${capProductsEscape(state.search || '')}" placeholder="Search products" data-cap-action="cap-products-search" data-dept="${dept}" style="min-width:220px;flex:1 1 220px;">
-            <select data-cap-action="cap-products-family-filter" data-dept="${dept}">
+            <input type="text" autocomplete="off" value="${capProductsEscape(state.search || '')}" placeholder="Search products" data-cap-action="cap-products-search" data-dept="${dept}" style="min-width:220px;flex:1 1 220px;">
+            <select autocomplete="off" data-cap-action="cap-products-family-filter" data-dept="${dept}">
               <option value="all">All families</option>
               ${familyOptions.map(family => `<option value="${capProductsEscape(family)}" ${state.family === family ? 'selected' : ''}>${capProductsEscape(family)}</option>`).join('')}
             </select>
@@ -317,12 +317,12 @@ window.capRenderProductsTab = function(productsArray, tasksArray, department, ta
                     <div style="font-size:11px;color:var(--muted);">${capProductsEscape(row.status)}</div>
                   </td>
                   <td>${capProductsEscape(row.family)}</td>
-                  ${isLogContext ? `<td><input type="number" step="0.1" value="${capProductsEscape(row.kittingHours)}" data-cap-action="cap-products-draft" data-field="kittingHours"></td>` : ''}
-                  ${isLogContext ? `<td><input type="number" step="0.1" value="${capProductsEscape(row.bookingInOutHours)}" data-cap-action="cap-products-draft" data-field="bookingInOutHours"></td>` : ''}
-                  ${isLogContext ? `<td><input type="number" step="0.1" value="${capProductsEscape(row.productMovementHours)}" data-cap-action="cap-products-draft" data-field="productMovementHours"></td>` : ''}
-                  <td><input type="number" step="0.1" value="${capProductsEscape(row.hoursPerWeek)}" data-cap-action="cap-products-draft" data-field="hoursPerWeek" ${isLogContext ? 'readonly' : ''}></td>
-                  <td><input type="date" value="${capProductsEscape(row.effectiveDate)}" data-cap-action="cap-products-draft" data-field="supportEffectiveDate"></td>
-                  <td><input type="text" value="${capProductsEscape(row.changeReason)}" data-cap-action="cap-products-draft" data-field="supportChangeReason" placeholder="Reason for change"></td>
+                  ${isLogContext ? `<td><input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(row.kittingHours)}" data-cap-action="cap-products-draft" data-field="kittingHours"></td>` : ''}
+                  ${isLogContext ? `<td><input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(row.bookingInOutHours)}" data-cap-action="cap-products-draft" data-field="bookingInOutHours"></td>` : ''}
+                  ${isLogContext ? `<td><input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(row.productMovementHours)}" data-cap-action="cap-products-draft" data-field="productMovementHours"></td>` : ''}
+                  <td><input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(row.hoursPerWeek)}" data-cap-action="cap-products-draft" data-field="hoursPerWeek" ${isLogContext ? 'readonly' : ''}></td>
+                  <td><input type="date" autocomplete="off" value="${capProductsEscape(row.effectiveDate)}" data-cap-action="cap-products-draft" data-field="supportEffectiveDate"></td>
+                  <td><input type="text" autocomplete="off" value="${capProductsEscape(row.changeReason)}" data-cap-action="cap-products-draft" data-field="supportChangeReason" placeholder="Reason for change"></td>
                   <td>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                       <button class="btn btn-primary btn-sm" data-cap-action="cap-products-apply-hours">Apply</button>

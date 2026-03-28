@@ -542,7 +542,7 @@ kbd {
 .presence-badge:nth-child(n+5){ background: var(--mid);    }
 
 /* ── User Guide Modal ──────────────────────────────────────── */
-.guide-modal { max-width: 600px; }
+.guide-modal { max-width: 805px; }
 
 .guide-modal-body {
   max-height: 65vh;

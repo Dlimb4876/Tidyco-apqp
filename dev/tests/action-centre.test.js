@@ -432,9 +432,9 @@ describe('Action Centre Module', () => {
       global.actionCentreTab = 'action';
       
       const result = renderActionCentre();
-      expect(result).toContain('Action');
-      expect(result).not.toContain('PFMEA');
-      expect(result).not.toContain('Risk');
+      expect(result).toContain('ac-chip-action');
+      expect(result).not.toContain('ac-chip-pfmea');
+      expect(result).not.toContain('ac-chip-risk');
     });
 
     test('should filter items by status', () => {

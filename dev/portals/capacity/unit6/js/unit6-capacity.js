@@ -137,6 +137,7 @@ window.unit6RenderCapacity = function() {
             <div class="me-topbar-sub">Unit 6 · Man-hours planning</div>
           </div>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('capacity-unit6')" title="User Guide">❓ Guide</button>
       </div>
 
       <div class="me-nav">

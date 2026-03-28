@@ -137,6 +137,7 @@ window.logRenderCapacity = function() {
             <div class="me-topbar-sub">Logistics · Man-hours planning</div>
           </div>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="showGuide('capacity-logistics')" title="User Guide">❓ Guide</button>
       </div>
 
       <div class="me-nav">
