@@ -1,5 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
 document.documentElement.innerHTML = html.toString();
@@ -16,6 +19,24 @@ global.operationsTab = 'overview';
 global.productionTab = 'root';
 global.productDevelopmentTab = 'root';
 global.productsActiveTab = 'list';
+
+// Bridge to appState for scripts that expect it
+global.appState = {
+  get progId() { return global.progId },
+  set progId(v) { global.progId = v },
+  get currentSection() { return global.currentSection },
+  set currentSection(v) { global.currentSection = v },
+  get operationsTab() { return global.operationsTab },
+  set operationsTab(v) { global.operationsTab = v },
+  get capacityTab() { return global.capacityTab },
+  set capacityTab(v) { global.capacityTab = v },
+  get productionTab() { return global.productionTab },
+  set productionTab(v) { global.productionTab = v },
+  get productDevelopmentTab() { return global.productDevelopmentTab },
+  set productDevelopmentTab(v) { global.productDevelopmentTab = v },
+  get npiTab() { return global.npiTab },
+  set npiTab(v) { global.npiTab = v }
+};
 
 global.prog = () => global.db.projects.find(p => p.id === global.progId) || null;
 
@@ -46,6 +67,11 @@ global.meLoadRelationalTeams = jest.fn().mockResolvedValue([]);
 global.meLoadRelationalTasks = jest.fn().mockResolvedValue([]);
 global.meLoadRelationalProducts = jest.fn().mockResolvedValue([]);
 global.meLoadRelationalHolidays = jest.fn().mockResolvedValue([]);
+global.meCalculateMonthData = jest.fn().mockReturnValue({
+  capacity: 0,
+  totalDemand: 0,
+  utilisation: 0
+});
 
 global.prodState = { products: [], batches: [] };
 global.meDataState = { team: [], tasks: [], products: [], holidays: [] };
@@ -66,6 +92,24 @@ global.renderHub = jest.fn().mockReturnValue('<div>Hub</div>');
 global.hubInit = jest.fn();
 global.meDrawChartNow = jest.fn();
 global.autoResizeAll = jest.fn();
+
+// Mock permissions
+global.canViewSection = jest.fn(() => true);
+global.canViewPortalTab = jest.fn(() => true);
+global.canViewPageKey = jest.fn(() => true);
+
+// Modern function names and dependencies
+global.renderOperationsDashboard = (...args) => global.renderOperations(...args);
+global.capCalculateMonthData = (...args) => global.meCalculateMonthData(...args);
+global.opsForecastManager = {
+  state: { mode: 'remote', lastError: '' },
+  getRows: jest.fn().mockReturnValue([]),
+  upsertOpportunity: jest.fn().mockResolvedValue({ ok: true })
+};
+global.opsCurrentMonthKey = (d) => {
+  const date = d || new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+};
 
 global.npi = {
   dashboard: {
@@ -95,14 +139,24 @@ const opsScript = [
   '../portals/operations/js/operations-dashboard-forecast-view.js',
   '../portals/operations/js/operations-dashboard-forecast-actions.js',
   '../portals/operations/js/operations-dashboard-main.js'
-].map((relativePath) => fs.readFileSync(path.resolve(__dirname, relativePath), 'utf8')).join('\n');
-const navScript = fs.readFileSync(
+].map((relativePath) => {
+  let content = fs.readFileSync(path.resolve(__dirname, relativePath), 'utf8');
+  // Strip imports (including multi-line) and exports for eval
+  content = content.replace(/import\s+[\s\S]*?from\s+['"].*?['"]\s*;?/g, '');
+  content = content.replace(/^\s*export\s+/gm, '');
+  return content;
+}).join('\n');
+
+const navScriptRaw = fs.readFileSync(
   path.resolve(__dirname, '../utils/js/navigation.js'),
   'utf8'
 );
+const navScript = navScriptRaw
+  .replace(/import\s+[\s\S]*?from\s+['"].*?['"]\s*;?/g, '')
+  .replace(/^\s*export\s+/gm, '');
 
-eval(opsScript);
-eval(navScript);
+(0, eval)(opsScript);
+(0, eval)(navScript);
 
 describe('Operations Dashboard', () => {
   beforeEach(() => {
@@ -410,7 +464,7 @@ describe('Operations Dashboard', () => {
     const html = renderOperationsDashboard();
 
     expect(html).toContain('opsForecastInline_opp-inline_title');
-    expect(html).toContain('opsForecastSaveInline');
+    expect(html).toContain('ops-forecast-save-inline');
   });
 
   test('opsForecastSaveInline updates row values', async () => {

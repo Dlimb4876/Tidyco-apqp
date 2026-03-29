@@ -4,114 +4,108 @@
  * Syncs with Supabase tables: products, overhaul_history
  */
 
-window.productsState = {
-  products: [],
-  history: {},  // product_id -> array of history records
-  loaded: false
-};
+import {
+  appState,
+  db,
+  getFamilies,
+  findFamilyRecord,
+  findProjectByProductId,
+  syncProjectFamily
+} from '../../../../core/js/state.js'
+import * as supa from '../../../../core/js/supa.js'
+import { save } from '../../../../core/js/db.js'
+import { navigate, render } from '../../../../utils/js/navigation.js'
+import { createRealtimeSubscription, removeRealtimeSubscription } from '../../../../utils/js/realtime.js'
 
-const PRODUCTS_CHANNEL = 'products_channel';
-const OVERHAUL_HISTORY_CHANNEL = 'overhaul_history_channel';
-let productsRealtimeActive = false;
-let overhaulRealtimeActive = false;
+export const productsState = {
+  products: [],
+  history: {}, // product_id -> array of history records
+  loaded: false
+}
+globalThis.productsState = productsState
+
+const PRODUCTS_CHANNEL = 'products_channel'
+const OVERHAUL_HISTORY_CHANNEL = 'overhaul_history_channel'
+let productsRealtimeActive = false
+let overhaulRealtimeActive = false
 
 function productsDataIsKanbanVisible() {
-  return currentSection === 'projects' ||
-    (currentSection === 'product-development' && productDevelopmentTab === 'npi');
+  return appState.currentSection === 'projects' ||
+    (appState.currentSection === 'product-development' && appState.productDevelopmentTab === 'npi')
 }
 
 function productsDataTriggerKanbanRefresh() {
-  if (!productsDataIsKanbanVisible()) return;
-  if (typeof render === 'function') render();
+  if (!productsDataIsKanbanVisible()) return
+  render()
 }
 
 function productsDataUpsertProduct(row) {
-  if (!row || !row.id) return;
-  const idx = productsState.products.findIndex(p => p.id === row.id);
+  if (!row || !row.id) return
+  const idx = productsState.products.findIndex(p => p.id === row.id)
   if (idx >= 0) {
-    productsState.products[idx] = row;
+    productsState.products[idx] = row
   } else {
-    productsState.products.push(row);
+    productsState.products.push(row)
   }
-  productsState.products.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  productsState.products.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 }
 
 function productsDataRemoveProduct(productId) {
-  if (!productId) return;
-  productsState.products = productsState.products.filter(p => p.id !== productId);
-  delete productsState.history[productId];
+  if (!productId) return
+  productsState.products = productsState.products.filter(p => p.id !== productId)
+  delete productsState.history[productId]
 }
 
 function productsDataSyncLinkedProjectFamily(productId, familyRef) {
-  if (!productId || !Array.isArray(db?.projects)) return false;
+  if (!productId || !Array.isArray(db?.projects)) return false
 
-  const linkedProject = typeof findProjectByProductId === 'function'
-    ? findProjectByProductId(productId)
-    : db.projects.find(p => p && p.product_id === productId);
+  const linkedProject = findProjectByProductId(productId)
+  if (!linkedProject) return false
 
-  if (!linkedProject) return false;
-
-  if (typeof syncProjectFamily === 'function') {
-    return syncProjectFamily(linkedProject, familyRef || '', linkedProject.family || 'Other');
-  }
-
-  const fallbackFamily = linkedProject.family || 'Other';
-  const normalizedFamily = typeof normalizeFamilyId === 'function'
-    ? normalizeFamilyId(familyRef || '', fallbackFamily)
-    : (familyRef || fallbackFamily);
-
-  if ((linkedProject.family || '') === normalizedFamily) return false;
-
-  linkedProject.family = normalizedFamily;
-  return true;
+  return syncProjectFamily(linkedProject, familyRef || '', linkedProject.family || 'Other')
 }
 
 function productsDataInitRealtime() {
-  if (productsRealtimeActive) return;
-  if (typeof createRealtimeSubscription !== 'function') return;
-
+  if (productsRealtimeActive) return
   const sub = createRealtimeSubscription('products', PRODUCTS_CHANNEL, {
     onInsert: (row) => {
-      productsDataUpsertProduct(row);
-      productsDataTriggerKanbanRefresh();
+      productsDataUpsertProduct(row)
+      productsDataTriggerKanbanRefresh()
     },
     onUpdate: (row) => {
-      productsDataUpsertProduct(row);
-      productsDataTriggerKanbanRefresh();
+      productsDataUpsertProduct(row)
+      productsDataTriggerKanbanRefresh()
     },
     onDelete: (row) => {
-      productsDataRemoveProduct(row?.id);
-      productsDataTriggerKanbanRefresh();
+      productsDataRemoveProduct(row?.id)
+      productsDataTriggerKanbanRefresh()
     }
-  });
+  })
 
-  productsRealtimeActive = !!sub;
+  productsRealtimeActive = !!sub
 }
 
 function productsDataInitOverhaulRealtime() {
-  if (overhaulRealtimeActive) return;
-  if (typeof createRealtimeSubscription !== 'function') return;
-
+  if (overhaulRealtimeActive) return
   const sub = createRealtimeSubscription('overhaul_history', OVERHAUL_HISTORY_CHANNEL, {
     onInsert: (row) => {
       if (!productsState.history[row.product_id]) {
-        productsState.history[row.product_id] = [];
+        productsState.history[row.product_id] = []
       }
-      // Avoid duplicates
       if (!productsState.history[row.product_id].find(h => h.id === row.id)) {
-        productsState.history[row.product_id].unshift(row);
+        productsState.history[row.product_id].unshift(row)
       }
-      if (currentSection === 'product-development' && productDevelopmentTab === 'npi') {
-        if (typeof render === 'function') render();
+      if (appState.currentSection === 'product-development' && appState.productDevelopmentTab === 'npi') {
+        render()
       }
     },
     onUpdate: (row) => {
       if (productsState.history[row.product_id]) {
-        const idx = productsState.history[row.product_id].findIndex(h => h.id === row.id);
+        const idx = productsState.history[row.product_id].findIndex(h => h.id === row.id)
         if (idx >= 0) {
-          productsState.history[row.product_id][idx] = row;
-          if (currentSection === 'product-development' && productDevelopmentTab === 'npi') {
-            if (typeof render === 'function') render();
+          productsState.history[row.product_id][idx] = row
+          if (appState.currentSection === 'product-development' && appState.productDevelopmentTab === 'npi') {
+            render()
           }
         }
       }
@@ -119,144 +113,134 @@ function productsDataInitOverhaulRealtime() {
     onDelete: (row) => {
       if (productsState.history[row.product_id]) {
         productsState.history[row.product_id] = productsState.history[row.product_id]
-          .filter(h => h.id !== row.id);
-        if (currentSection === 'product-development' && productDevelopmentTab === 'npi') {
-          if (typeof render === 'function') render();
+          .filter(h => h.id !== row.id)
+        if (appState.currentSection === 'product-development' && appState.productDevelopmentTab === 'npi') {
+          render()
         }
       }
     }
-  });
+  })
 
-  overhaulRealtimeActive = !!sub;
+  overhaulRealtimeActive = !!sub
 }
 
 /**
  * Initialize products data from Supabase
  */
-async function productsDataInit() {
-  if (!currentUser) return;
+export async function productsDataInit() {
+  const user = supa.currentUser
+  if (!user) return
   try {
-    // Load products
-    const prods = await supa.from('products').select('*').order('name', { ascending: true });
-    if (prods.error) throw prods.error;
-    productsState.products = prods.data || [];
+    const prods = await supa.supabase.from('products').select('*').order('name', { ascending: true })
+    if (prods.error) throw prods.error
+    productsState.products = prods.data || []
 
-    // Validate family references - warn about orphaned families
-    if (typeof getFamilies === 'function') {
-      const validFamilies = getFamilies().map(f => f.id);
-      productsState.products.forEach(p => {
-        const isValidFamily = typeof findFamilyRecord === 'function'
-          ? !!findFamilyRecord(p.family)
-          : validFamilies.includes(p.family);
-        if (p.family && !isValidFamily) {
-          console.warn(`⚠️ Product "${p.name}" has invalid family "${p.family}". Valid families: ${validFamilies.join(', ')}`);
-        }
-      });
-    }
+    const validFamilies = (typeof getFamilies === 'function' ? getFamilies() : []).map(f => f.id)
+    productsState.products.forEach(p => {
+      const isValidFamily = typeof findFamilyRecord === 'function'
+        ? !!findFamilyRecord(p.family)
+        : validFamilies.includes(p.family)
+      if (p.family && !isValidFamily) {
+        console.warn(`⚠️ Product "${p.name}" has invalid family "${p.family}". Valid families: ${validFamilies.join(', ')}`)
+      }
+    })
 
-    // Load overhaul history for all products
     if (productsState.products.length > 0) {
-      const productIds = productsState.products.map(p => p.id);
-      const hist = await supa.from('overhaul_history')
+      const productIds = productsState.products.map(p => p.id)
+      const hist = await supa.supabase.from('overhaul_history')
         .select('*')
         .in('product_id', productIds)
-        .order('effective_date', { ascending: false });
+        .order('effective_date', { ascending: false })
 
-      if (hist.error) throw hist.error;
+      if (hist.error) throw hist.error
 
-      // Group history by product_id
-      productsState.history = {};
-      (hist.data || []).forEach(record => {
+      productsState.history = {}
+      ;(hist.data || []).forEach(record => {
         if (!productsState.history[record.product_id]) {
-          productsState.history[record.product_id] = [];
+          productsState.history[record.product_id] = []
         }
-        productsState.history[record.product_id].push(record);
-      });
+        productsState.history[record.product_id].push(record)
+      })
     }
 
-    productsState.loaded = true;
-    productsDataInitRealtime();
-    productsDataInitOverhaulRealtime();
+    productsState.loaded = true
+    productsDataInitRealtime()
+    productsDataInitOverhaulRealtime()
   } catch (err) {
-    console.error('❌ Error initializing products:', err);
+    console.error('❌ Error initializing products:', err)
   }
 }
 
 /**
  * Get all products
  */
-window.productsDataGetAll = function() {
-  return productsState.products;
-};
+export function productsDataGetAll() {
+  return productsState.products
+}
 
 /**
  * Get single product with history
  */
-function productsDataGetProduct(productId) {
-  const product = productsState.products.find(p => p.id === productId);
-  const history = productsState.history[productId] || [];
-  return { product, history };
+export function productsDataGetProduct(productId) {
+  const product = productsState.products.find(p => p.id === productId)
+  const history = productsState.history[productId] || []
+  return { product, history }
 }
 
 /**
  * Get history for a product
  */
-function productsDataGetHistory(productId) {
-  return productsState.history[productId] || [];
+export function productsDataGetHistory(productId) {
+  return productsState.history[productId] || []
 }
 
 function productTenderStatusTriggered(productId, productData) {
-  let linkedProject = typeof findProjectByProductId === 'function'
-    ? findProjectByProductId(productId)
-    : db.projects.find(p => p.product_id === productId);
+  let linkedProject = findProjectByProductId(productId)
 
   if (!linkedProject && npi && npi.dashboard && typeof npi.dashboard.ensureProductProjects === 'function') {
-    npi.dashboard.ensureProductProjects();
-    linkedProject = typeof findProjectByProductId === 'function'
-      ? findProjectByProductId(productId)
-      : db.projects.find(p => p.product_id === productId);
+    npi.dashboard.ensureProductProjects()
+    linkedProject = findProjectByProductId(productId)
   }
 
   if (!linkedProject) {
-    console.warn('No linked project found for Tender product:', productId);
-    return;
+    console.warn('No linked project found for Tender product:', productId)
+    return
   }
 
-  if (typeof tenderGateScopeState === 'object' && tenderGateScopeState) {
-    tenderGateScopeState.projectId = linkedProject.id;
-    tenderGateScopeState.isOpen = false;
-    tenderGateScopeState.selectedGate = 0;
-    tenderGateScopeState.workingSelections = null;
+  appState.tenderGateScopeState.projectId = linkedProject.id
+  appState.tenderGateScopeState.isOpen = false
+  appState.tenderGateScopeState.selectedGate = 0
+  appState.tenderGateScopeState.workingSelections = null
+
+  if (typeof productsRealtimeHooks.openTenderGateSelectionModal === 'function') {
+    productsRealtimeHooks.openTenderGateSelectionModal(productId)
+    return
   }
 
-  if (typeof window !== 'undefined' && typeof window.openTenderGateSelectionModal === 'function') {
-    window.openTenderGateSelectionModal(productId);
-    return;
-  }
-
-  const productName = (productData && productData.name) || linkedProject.name || 'this product';
+  const productName = (productData && productData.name) || linkedProject.name || 'this product'
   const openLinkedProject = confirm(
     'Product "' + productName + '" moved to Tender.\n\nOpen the linked NPI project now to set gate scope?'
-  );
-  if (!openLinkedProject) return;
+  )
+  if (!openLinkedProject) return
 
   if (npi && npi.dashboard && typeof npi.dashboard.openProject === 'function') {
-    npi.dashboard.openProject(linkedProject.id);
-    return;
+    npi.dashboard.openProject(linkedProject.id)
+    return
   }
 
-  progId = linkedProject.id;
-  navigate('project');
+  appState.progId = linkedProject.id
+  navigate('project')
 }
 
 /**
  * Add new product
  */
-async function productsDataAddProduct(product) {
-  if (!currentUser) return;
+export async function productsDataAddProduct(product) {
+  const user = supa.currentUser
+  if (!user) return
   try {
     const newProduct = {
-      user_id: currentUser.id,
+      user_id: user.id,
       name: product.name,
       part_number: product.part_number,
       family: product.family || '',
@@ -268,177 +252,159 @@ async function productsDataAddProduct(product) {
       notes: product.notes || '',
       scope: product.scope || 'overhaul',
       unit_value: product.unit_value != null ? product.unit_value : 100
-    };
+    }
 
-    const result = await supa.from('products').insert([newProduct]).select().single();
-    if (result.error) throw result.error;
-    const data = result.data;
+    const result = await supa.supabase.from('products').insert([newProduct]).select().single()
+    if (result.error) throw result.error
+    const data = result.data
 
-    productsState.products.push(data);
-    productsState.products.sort((a, b) => a.name.localeCompare(b.name));
-    productsDataTriggerKanbanRefresh();
+    productsState.products.push(data)
+    productsState.products.sort((a, b) => a.name.localeCompare(b.name))
+    productsDataTriggerKanbanRefresh()
 
-    // Auto-create baseline overhaul_history entry so the trends chain starts here
     if (data.current_overhaul_hours > 0) {
       const baseline = {
-        user_id: currentUser.id,
+        user_id: user.id,
         product_id: data.id,
         overhaul_hours: data.current_overhaul_hours,
         time_impact_hours: data.current_overhaul_hours,
         effective_date: new Date().toISOString().split('T')[0],
         change_reason: 'Baseline',
         notes: 'Initial overhaul time recorded at product creation.',
-        created_by_name: currentUser.email || 'Unknown'
-      };
-      const bResult = await supa.from('overhaul_history').insert([baseline]).select().single();
+        created_by_name: user.email || 'Unknown'
+      }
+      const bResult = await supa.supabase.from('overhaul_history').insert([baseline]).select().single()
       if (!bResult.error) {
-        if (!productsState.history[data.id]) productsState.history[data.id] = [];
-        productsState.history[data.id].push(bResult.data);
+        if (!productsState.history[data.id]) productsState.history[data.id] = []
+        productsState.history[data.id].push(bResult.data)
       }
     }
 
-    return data;
+    return data
   } catch (err) {
-    console.error('❌ Error adding product:', err);
-    throw err;
+    console.error('❌ Error adding product:', err)
+    throw err
   }
 }
 
 /**
  * Update product
  */
-async function productsDataUpdateProduct(productId, updates) {
+export async function productsDataUpdateProduct(productId, updates) {
   try {
-    const existingProduct = productsState.products.find(p => p.id === productId);
-    const previousStatus = String((existingProduct && existingProduct.status) || '').toLowerCase();
+    const existingProduct = productsState.products.find(p => p.id === productId)
+    const previousStatus = String((existingProduct && existingProduct.status) || '').toLowerCase()
 
-    const result = await supa.from('products')
+    const result = await supa.supabase.from('products')
       .update({
         ...updates,
         updated_at: new Date().toISOString()
       })
       .eq('id', productId)
       .select()
-      .single();
+      .single()
 
-    if (result.error) throw result.error;
-    const data = result.data;
+    if (result.error) throw result.error
+    const data = result.data
 
-    const idx = productsState.products.findIndex(p => p.id === productId);
+    const idx = productsState.products.findIndex(p => p.id === productId)
     if (idx >= 0) {
-      productsState.products[idx] = data;
-      productsState.products.sort((a, b) => a.name.localeCompare(b.name));
+      productsState.products[idx] = data
+      productsState.products.sort((a, b) => a.name.localeCompare(b.name))
     }
 
-    const projectFamilyUpdated = productsDataSyncLinkedProjectFamily(productId, data.family);
-    if (projectFamilyUpdated && typeof save === 'function') save();
+    const projectFamilyUpdated = productsDataSyncLinkedProjectFamily(productId, data.family)
+    if (projectFamilyUpdated) save()
 
-    productsDataTriggerKanbanRefresh();
+    productsDataTriggerKanbanRefresh()
 
-    const nextStatus = String((data && data.status) || '').toLowerCase();
+    const nextStatus = String((data && data.status) || '').toLowerCase()
     if (previousStatus !== 'tender' && nextStatus === 'tender') {
-      productTenderStatusTriggered(productId, data);
+      productTenderStatusTriggered(productId, data)
     }
 
-    return data;
+    return data
   } catch (err) {
-    console.error('❌ Error updating product:', err);
-    throw err;
+    console.error('❌ Error updating product:', err)
+    throw err
   }
 }
 
 /**
  * Get counts of related data for a product
  */
-async function productsDataGetRelatedDataCounts(productId) {
+export async function productsDataGetRelatedDataCounts(productId) {
   const counts = {
     overhaulHistory: 0,
     npiProjects: 0,
     meProducts: 0,
     meTasks: 0
-  };
-
-  try {
-    // Count overhaul history
-    const historyCount = await supa
-      .from('overhaul_history')
-      .select('id', { count: 'exact', head: true })
-      .eq('product_id', productId);
-    counts.overhaulHistory = historyCount.count || 0;
-
-    // Count linked NPI projects
-    const projectsCount = await supa
-      .from('projects')
-      .select('id', { count: 'exact', head: true })
-      .eq('product_id', productId);
-    counts.npiProjects = projectsCount.count || 0;
-
-    // Count ME products (support records)
-    const meProductsCount = await supa
-      .from('me_products')
-      .select('id', { count: 'exact', head: true })
-      .eq('product_database_id', productId);
-    counts.meProducts = meProductsCount.count || 0;
-
-    // Count ME tasks
-    const meTasksCount = await supa
-      .from('me_tasks')
-      .select('id', { count: 'exact', head: true })
-      .eq('product_id', productId);
-    counts.meTasks = meTasksCount.count || 0;
-
-  } catch (err) {
-    console.warn('Warning: Could not count all related data:', err);
   }
 
-  return counts;
+  try {
+    const historyCount = await supa.supabase
+      .from('overhaul_history')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', productId)
+    counts.overhaulHistory = historyCount.count || 0
+
+    const projectsCount = await supa.supabase
+      .from('projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', productId)
+    counts.npiProjects = projectsCount.count || 0
+
+    const meProductsCount = await supa.supabase
+      .from('me_products')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_database_id', productId)
+    counts.meProducts = meProductsCount.count || 0
+
+    const meTasksCount = await supa.supabase
+      .from('me_tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('product_id', productId)
+    counts.meTasks = meTasksCount.count || 0
+  } catch (err) {
+    console.warn('Warning: Could not count all related data:', err)
+  }
+
+  return counts
 }
 
 /**
  * Delete product with full cascade (overhaul history, NPI projects, ME data)
  */
-async function productsDataDeleteProduct(productId) {
+export async function productsDataDeleteProduct(productId) {
   try {
-    // Find and delete linked NPI projects
-    const linkedProjects = await supa
+    const linkedProjects = await supa.supabase
       .from('projects')
       .select('id')
-      .eq('product_id', productId);
+      .eq('product_id', productId)
 
     if (linkedProjects.data && linkedProjects.data.length > 0) {
       for (const project of linkedProjects.data) {
-        // Delete all NPI relational data for this project
-        if (typeof window.npiRelClearAll === 'function') {
-          await window.npiRelClearAll(project.id);
+        if (typeof productsRealtimeHooks.npiRelClearAll === 'function') {
+          await productsRealtimeHooks.npiRelClearAll(project.id)
         }
-        // Delete the project itself
-        await supa.from('projects').delete().eq('id', project.id);
+        await supa.supabase.from('projects').delete().eq('id', project.id)
       }
     }
 
-    // Delete ME products (support records)
-    await supa.from('me_products').delete().eq('product_database_id', productId);
+    await supa.supabase.from('me_products').delete().eq('product_database_id', productId)
+    await supa.supabase.from('me_tasks').delete().eq('product_id', productId)
 
-    // Delete ME tasks
-    await supa.from('me_tasks').delete().eq('product_id', productId);
+    const result = await supa.supabase.from('products').delete().eq('id', productId)
+    if (result.error) throw result.error
 
-    // Delete the product itself (RLS cascade will delete overhaul_history)
-    const result = await supa.from('products').delete().eq('id', productId);
-    if (result.error) throw result.error;
-
-    // Clean up local state
-    productsState.products = productsState.products.filter(p => p.id !== productId);
-    delete productsState.history[productId];
-    productsDataTriggerKanbanRefresh();
-
+    productsState.products = productsState.products.filter(p => p.id !== productId)
+    delete productsState.history[productId]
+    productsDataTriggerKanbanRefresh()
   } catch (err) {
-    console.error('❌ Error deleting product:', err);
-    throw err;
+    console.error('❌ Error deleting product:', err)
+    throw err
   }
 }
-
-// Export for use by products.js
-window.productsDataGetRelatedDataCounts = productsDataGetRelatedDataCounts;
 
 /**
  * Add overhaul history record (additive — caller passes a delta in hours).
@@ -446,97 +412,95 @@ window.productsDataGetRelatedDataCounts = productsDataGetRelatedDataCounts;
  * The new absolute overhaul_hours is calculated as: current + delta.
  * current_overhaul_hours on the product is updated to the new absolute value.
  */
-async function productsDataAddHistory(productId, historyRecord) {
-  if (!currentUser) return;
+export async function productsDataAddHistory(productId, historyRecord) {
+  const user = supa.currentUser
+  if (!user) return
   try {
-    // Resolve current total from product state
-    const product = productsState.products.find(p => p.id === productId);
-    const currentHours = product ? (product.current_overhaul_hours || 0) : 0;
-    const delta = historyRecord.time_impact_hours || 0;
-    const newHours = Math.max(0, currentHours + delta);
+    const product = productsState.products.find(p => p.id === productId)
+    const currentHours = product ? (product.current_overhaul_hours || 0) : 0
+    const delta = historyRecord.time_impact_hours || 0
+    const newHours = Math.max(0, currentHours + delta)
 
     const newRecord = {
-      user_id: currentUser.id,
+      user_id: user.id,
       product_id: productId,
       overhaul_hours: newHours,
       time_impact_hours: delta,
-      effective_date: historyRecord.effective_date,  // YYYY-MM-DD
+      effective_date: historyRecord.effective_date,
       change_reason: historyRecord.change_reason || '',
       notes: historyRecord.notes || '',
-      created_by_name: currentUser.email || 'Unknown'
-    };
-
-    const result = await supa.from('overhaul_history').insert([newRecord]).select().single();
-    if (result.error) throw result.error;
-    const data = result.data;
-
-    // Add to state (newest first)
-    if (!productsState.history[productId]) {
-      productsState.history[productId] = [];
+      created_by_name: user.email || 'Unknown'
     }
-    productsState.history[productId].unshift(data);
 
-    // Keep current_overhaul_hours in sync with the new running total
+    const result = await supa.supabase.from('overhaul_history').insert([newRecord]).select().single()
+    if (result.error) throw result.error
+    const data = result.data
+
+    if (!productsState.history[productId]) {
+      productsState.history[productId] = []
+    }
+    productsState.history[productId].unshift(data)
+
     await productsDataUpdateProduct(productId, {
       current_overhaul_hours: newHours
-    });
+    })
 
-    return data;
+    return data
   } catch (err) {
-    console.error('❌ Error adding history record:', err);
-    throw err;
+    console.error('❌ Error adding history record:', err)
+    throw err
   }
 }
 
 /**
  * Delete history record
  */
-async function productsDataDeleteHistory(productId, historyId) {
+export async function productsDataDeleteHistory(productId, historyId) {
   try {
-    const result = await supa.from('overhaul_history').delete().eq('id', historyId);
-    if (result.error) throw result.error;
+    const result = await supa.supabase.from('overhaul_history').delete().eq('id', historyId)
+    if (result.error) throw result.error
 
     if (productsState.history[productId]) {
       productsState.history[productId] = productsState.history[productId]
-        .filter(h => h.id !== historyId);
+        .filter(h => h.id !== historyId)
     }
-
   } catch (err) {
-    console.error('❌ Error deleting history record:', err);
-    throw err;
+    console.error('❌ Error deleting history record:', err)
+    throw err
   }
 }
 
 /**
  * Get current overhaul time for a product
  */
-function productsDataGetCurrentOverhaulTime(productId) {
-  const product = productsState.products.find(p => p.id === productId);
-  return product ? product.current_overhaul_hours : 0;
+export function productsDataGetCurrentOverhaulTime(productId) {
+  const product = productsState.products.find(p => p.id === productId)
+  return product ? product.current_overhaul_hours : 0
 }
 
 /**
  * Get overhaul time effective on a specific date
  */
-function productsDataGetOverhaulTimeOnDate(productId, targetDate) {
-  const history = productsState.history[productId] || [];
+export function productsDataGetOverhaulTimeOnDate(productId, targetDate) {
+  const history = productsState.history[productId] || []
 
-  // Find the most recent record on or before targetDate
   const applicable = history
     .filter(h => new Date(h.effective_date) <= new Date(targetDate))
-    .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date));
+    .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))
 
-  return applicable.length > 0 ? applicable[0].overhaul_hours : 0;
+  return applicable.length > 0 ? applicable[0].overhaul_hours : 0
 }
 
 /**
  * Force save to ensure Supabase is synced
  */
-async function productsDataSave() {
+export async function productsDataSave() {
   // Data is auto-saved on each operation, but this can be called for explicit sync
 }
 
-window.productsDataUnsubscribeAll = function() {
-  removeRealtimeSubscription(PRODUCTS_CHANNEL);
-  removeRealtimeSubscription(OVERHAUL_HISTORY_CHANNEL);
-};
+export function productsDataUnsubscribeAll() {
+  removeRealtimeSubscription(PRODUCTS_CHANNEL)
+  removeRealtimeSubscription(OVERHAUL_HISTORY_CHANNEL)
+  productsRealtimeActive = false
+  overhaulRealtimeActive = false
+}

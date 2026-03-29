@@ -6,8 +6,8 @@
  * Ensures @media (max-width: 767px) and @media (min-width: 768px) for new files.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs'
+import path from 'node:path'
 
 // Known CSS files that should have breakpoints (portal features, not core)
 const PORTAL_CSS_PATTERN = /^portals\/.*\.css$/;

@@ -2,6 +2,9 @@
 // operations-infographic.js — capacity infographic generator
 // ═══════════════════════════════════
 
+import { esc } from '../../../utils/js/helpers.js'
+import { opsBuildMetrics } from './operations-dashboard-metrics.js'
+
 // ── Kept for test compatibility ──────────────────────────────────────────────
 
 function opsInfographicBar(pct, tone) {
@@ -230,7 +233,7 @@ async function opsGenerateInfographic() {
 </style>
 </head>
 <body>
-<button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+<button class="print-btn" onclick="print()">Print / Save PDF</button>
 <div class="page">
 
   <!-- HERO: health score as SVG ring + key headline stats -->
@@ -341,4 +344,14 @@ async function opsGenerateInfographic() {
 	win.document.close();
 }
 
-window.opsGenerateInfographic = opsGenerateInfographic;
+export {
+	opsInfographicBar,
+	opsInfographicTone,
+	opsInfographicRing,
+	opsInfographicHeroRing,
+	opsInfographicPipelineStage,
+	opsInfographicSeverityBar,
+	opsInfographicGateSteps,
+	opsInfographicUnitCards,
+	opsGenerateInfographic
+}

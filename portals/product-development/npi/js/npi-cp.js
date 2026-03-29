@@ -3,7 +3,11 @@
 // Depends on: npi.js, npi-data.js
 // ═══════════════════════════════════
 
-npi.cp = npi.cp || {}
+import { prog } from '../../../../core/js/state.js'
+import { calcRPN, esc, canEdit, emptyState, showToast } from '../../../../utils/js/helpers.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+import { npi } from './npi-shared.js'
+import { npiComponents } from './npi-components.js'
 
 npi.cp.calcCauseRpn = function(sev, occ, det) {
   if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })
@@ -31,7 +35,7 @@ npi.cp.render = function() {
       return ci >= 0 ? `<span class="tag tag-ctq" style="font-size:9px">C${ci + 1}</span>` : ''
     }).join('')
     const rpn = ca && ef ? npi.cp.calcCauseRpn(ef.sev, ca.occ, ca.det) : 0
-    const rpnBadge = rpn ? npi.components.rpnBadge(rpn) : ''
+    const rpnBadge = rpn ? npiComponents.rpnBadge(rpn) : ''
 
     return `<tr><td class="w100"><span class="tag tag-step" style="font-size:10px">${sl}</span></td>
       <td class="w140" style="font-size:11px;color:var(--mid)">${fr ? esc(fr.mode || '—') : '—'}${ef ? `<span style="color:var(--muted)"> → ${esc(ef.effect || '')}</span>` : ''}${ca ? `<div style="font-size:10px;color:var(--muted);margin-top:1px">Cause: ${esc(ca.cause || '')}</div>` : ''}${rpnBadge ? ` ${rpnBadge}` : ''}</td>
@@ -55,11 +59,18 @@ npi.cp.render = function() {
   ${syncBanner}
   <div class="card" style="overflow-x:auto">
   <div class="card-head"><span class="card-title">Control Plan</span><span class="card-meta">${p.cp.length} characteristics</span></div>
-  ${p.cp.length === 0 ? emptyState('📊', 'No entries yet', miss.length > 0 ? 'Use "Sync from PFMEA" to auto-populate' : 'Complete PFMEA first') : `<div class="sticky-table-wrap"><table class="tbl" style="min-width:1100px">${npi.components.tableHeader([{label:'Step'},{label:'FMEA/RPN'},{label:'Characteristic'},{label:'Type'},{label:'Spec'},{label:'Method'},{label:'Freq'},{label:'Resp'},{label:'Reaction Plan'},{label:'CTQs'},{label:''}])}<tbody>${rows}</tbody></table></div>`}
+   ${p.cp.length === 0 ? emptyState('📊', 'No entries yet', miss.length > 0 ? 'Use "Sync from PFMEA" to auto-populate' : 'Complete PFMEA first') : `<div class="sticky-table-wrap"><table class="tbl" style="min-width:1100px">${npiComponents.tableHeader([{label:'Step'},{label:'FMEA/RPN'},{label:'Characteristic'},{label:'Type'},{label:'Spec'},{label:'Method'},{label:'Freq'},{label:'Resp'},{label:'Reaction Plan'},{label:'CTQs'},{label:''}])}<tbody>${rows}</tbody></table></div>`}
   ${canEdit() ? `<button class="add-row" data-action="cp-add">＋ Add Row</button>` : ''}</div>`
 }
 
-npi.cp.syncFromPFMEA = function() { npi.data.cp.syncFromPFMEA() }
-npi.cp.add = function() { npi.data.cp.add() }
-npi.cp.upd = function(i, f, v) { npi.data.cp.upd(i, f, v) }
-npi.cp.del = function(i) { npi.data.cp.del(i) }
+npi.cp.syncFromPFMEA = function() { npiData.cp.syncFromPFMEA() }
+npi.cp.add = function() { npiData.cp.add() }
+npi.cp.upd = function(i, f, v) { npiData.cp.upd(i, f, v) }
+npi.cp.del = function(i) { npiData.cp.del(i) }
+
+export const npiCp = npi.cp
+export const renderCp = npi.cp.render
+export const syncCpFromPfmea = npi.cp.syncFromPFMEA
+export const addCp = npi.cp.add
+export const updateCp = npi.cp.upd
+export const deleteCp = npi.cp.del

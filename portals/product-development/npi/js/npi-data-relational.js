@@ -1,3 +1,8 @@
+import { supabase as supa, currentUser } from '../../../../core/js/supa.js'
+import { appState, db, prog, GATE_DEFS } from '../../../../core/js/state.js'
+import { showToast } from '../../../../utils/js/helpers.js'
+import { partsDataApi } from '../../parts-database/js/parts-data.js'
+
 /* ============================================================
    npi-data-relational.js — NPI Relational DB Operations
 
@@ -10,7 +15,7 @@
    All save functions use upsert (onConflict: 'id') so they work
    for both new inserts and updates without separate code paths.
 
-   Depends on: state.js (prog, progId, currentUser), auth.js (supa)
+   Depends on: state.js (prog, appState, currentUser), auth.js (supa)
    ============================================================ */
 
 function npiRelLooksLikeUuid(value) {
@@ -117,9 +122,7 @@ function npiRelHydratePfdRows(rows) {
   return executable.concat(headers);
 }
 
-window.npiRelHydratePfdRows = npiRelHydratePfdRows;
-
-window.npiRelResolveProjectId = async function(targetProgId) {
+export const npiRelResolveProjectId = async function(targetProgId) {
   if (!targetProgId) return null;
   const project = npiRelFindProject(targetProgId);
   // Foreign key relationships reference projects(prog_id), which is stored in the database
@@ -148,14 +151,14 @@ window.npiRelResolveProjectId = async function(targetProgId) {
     console.warn('npiRelResolveProjectId exception:', err.message);
     return targetProgId;
   }
-};
+}
 
 // ─────────────────────────────────────────────────────────────
 // LOAD — fetch all NPI tables for a project into memory
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelLoad = async function(pid) {
-  const projectId = await window.npiRelResolveProjectId(pid);
+export const npiRelLoad = async function(pid) {
+  const projectId = await npiRelResolveProjectId(pid);
   if (!projectId) return;
   const p = prog();
   if (!p) return;
@@ -441,14 +444,14 @@ window.npiRelLoad = async function(pid) {
   } catch (err) {
     console.warn('npiRelLoad exception:', err.message);
   }
-};
+}
 
 // ─────────────────────────────────────────────────────────────
 // CTQ
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveCTQ = async function(item) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveCTQ = async function(item) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!item || !item.id || !projectId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_ctq').upsert({
@@ -470,7 +473,7 @@ window.npiRelSaveCTQ = async function(item) {
   }
 };
 
-window.npiRelDeleteCTQ = async function(id) {
+export const npiRelDeleteCTQ = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_ctq').delete().eq('id', id);
@@ -484,8 +487,8 @@ window.npiRelDeleteCTQ = async function(id) {
 // PFD Steps
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSavePFDStep = async function(step) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSavePFDStep = async function(step) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!step || !step.id || !projectId || !currentUser) return;
   try {
     const persistedStepNum = npiRelPersistedPfdStepNum(step, prog().pfd || []);
@@ -512,7 +515,7 @@ window.npiRelSavePFDStep = async function(step) {
   }
 };
 
-window.npiRelDeletePFDStep = async function(id) {
+export const npiRelDeletePFDStep = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_pfd_steps').delete().eq('id', id);
@@ -526,8 +529,8 @@ window.npiRelDeletePFDStep = async function(id) {
 // PFMEA
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSavePFMEAMode = async function(mode) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSavePFMEAMode = async function(mode) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!mode || !mode.id || !projectId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_pfmea_modes').upsert({
@@ -547,8 +550,8 @@ window.npiRelSavePFMEAMode = async function(mode) {
   }
 };
 
-window.npiRelSavePFMEAEffect = async function(modeId, effect) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSavePFMEAEffect = async function(modeId, effect) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!effect || !effect.id || !projectId || !currentUser) return;
   try {
     const mode = (prog().pfmea || []).find(m => m.id === modeId);
@@ -569,8 +572,8 @@ window.npiRelSavePFMEAEffect = async function(modeId, effect) {
   }
 };
 
-window.npiRelSavePFMEACause = async function(effectId, cause) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSavePFMEACause = async function(effectId, cause) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!cause || !cause.id || !projectId || !currentUser) return;
   const act = cause.action || {};
   try {
@@ -585,7 +588,7 @@ window.npiRelSavePFMEACause = async function(effectId, cause) {
     }
     if (effObj && modeObj) {
       // Ensure parent row exists before inserting child row (effect_id FK).
-      await window.npiRelSavePFMEAEffect(modeObj.id, effObj);
+      await npiRelSavePFMEAEffect(modeObj.id, effObj);
     }
     const { error } = await supa.from('npi_pfmea_causes').upsert({
       id: cause.id,
@@ -612,8 +615,8 @@ window.npiRelSavePFMEACause = async function(effectId, cause) {
   }
 };
 
-window.npiRelSavePFMEAHistory = window.npiRelSavePFMEAHistory = async function(causeId, histEntry) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSavePFMEAHistory = async function(causeId, histEntry) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!histEntry || !causeId || !projectId || !currentUser) return;
   // History is append-only; assign a UUID if missing
   if (!histEntry.id) histEntry.id = crypto.randomUUID();
@@ -637,9 +640,9 @@ window.npiRelSavePFMEAHistory = window.npiRelSavePFMEAHistory = async function(c
   } catch (err) {
     console.warn('npiRelSavePFMEAHistory exception:', err.message);
   }
-};;
+};
 
-window.npiRelDeletePFMEAMode = async function(mode) {
+export const npiRelDeletePFMEAMode = async function(mode) {
   if (!mode || !mode.id) return;
   try {
     const causeIds = [];
@@ -662,7 +665,7 @@ window.npiRelDeletePFMEAMode = async function(mode) {
   }
 };
 
-window.npiRelDeletePFMEAEffect = async function(effect) {
+export const npiRelDeletePFMEAEffect = async function(effect) {
   if (!effect || !effect.id) return;
   try {
     const causeIds = (effect.causes || []).map(ca => ca.id);
@@ -677,7 +680,7 @@ window.npiRelDeletePFMEAEffect = async function(effect) {
   }
 };
 
-window.npiRelDeletePFMEACause = async function(cause) {
+export const npiRelDeletePFMEACause = async function(cause) {
   if (!cause || !cause.id) return;
   try {
     await supa.from('npi_pfmea_history').delete().eq('cause_id', cause.id);
@@ -692,8 +695,8 @@ window.npiRelDeletePFMEACause = async function(cause) {
 // Control Plan
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveCP = async function(item) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveCP = async function(item) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!item || !item.id || !projectId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_control_plan').upsert({
@@ -721,7 +724,7 @@ window.npiRelSaveCP = async function(item) {
   }
 };
 
-window.npiRelDeleteCP = async function(id) {
+export const npiRelDeleteCP = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_control_plan').delete().eq('id', id);
@@ -735,8 +738,8 @@ window.npiRelDeleteCP = async function(id) {
 // BOM Items
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveBOMItem = async function(type, item) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveBOMItem = async function(type, item) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!item || !item.id || !projectId || !currentUser) return;
   try {
     const cleanItem = { ...item };
@@ -780,7 +783,7 @@ window.npiRelSaveBOMItem = async function(type, item) {
   }
 };
 
-window.npiRelDeleteBOMItem = async function(id) {
+export const npiRelDeleteBOMItem = async function(id) {
   if (!id) return;
   try {
     // Kit items referencing this BOM item will also be deleted (or left as orphans — clean up too)
@@ -793,32 +796,24 @@ window.npiRelDeleteBOMItem = async function(id) {
 };
 
 // ── ABC Catalogue (central source of truth) ───────────────────
-window.npiRelFetchABCCatalogue = async function() {
-  if (window.partsDatabase && window.partsDatabase.data && typeof window.partsDatabase.data.fetchCatalogue === 'function') {
-    return window.partsDatabase.data.fetchCatalogue();
-  }
-  return [];
+export const npiRelFetchABCCatalogue = async function() {
+  return partsDataApi.fetchCatalogue()
 };
 
-window.npiRelSaveABCCatalogueEntry = async function(entry) {
-  if (window.partsDatabase && window.partsDatabase.data && typeof window.partsDatabase.data.saveCatalogueEntry === 'function') {
-    return window.partsDatabase.data.saveCatalogueEntry(entry);
-  }
-  return null;
+export const npiRelSaveABCCatalogueEntry = async function(entry) {
+  return partsDataApi.saveCatalogueEntry(entry)
 };
 
-window.npiRelDeleteABCCatalogueEntry = async function(id) {
-  if (window.partsDatabase && window.partsDatabase.data && typeof window.partsDatabase.data.deleteCatalogueEntry === 'function') {
-    return window.partsDatabase.data.deleteCatalogueEntry(id);
-  }
+export const npiRelDeleteABCCatalogueEntry = async function(id) {
+  return partsDataApi.deleteCatalogueEntry(id)
 };
 
 // ─────────────────────────────────────────────────────────────
 // BOM Kits
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveBOMKit = async function(kit) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveBOMKit = async function(kit) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!kit || !kit.id || !projectId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_bom_kits').upsert({
@@ -835,7 +830,7 @@ window.npiRelSaveBOMKit = async function(kit) {
   }
 };
 
-window.npiRelDeleteBOMKit = async function(id) {
+export const npiRelDeleteBOMKit = async function(id) {
   if (!id) return;
   try {
     await supa.from('npi_bom_kit_items').delete().eq('kit_id', id);
@@ -847,8 +842,8 @@ window.npiRelDeleteBOMKit = async function(id) {
 };
 
 // Save all kit items for a kit (delete-all then re-insert pattern)
-window.npiRelSaveKitItems = async function(kit) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveKitItems = async function(kit) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!kit || !kit.id || !projectId || !currentUser) return;
   try {
     await supa.from('npi_bom_kit_items').delete().eq('kit_id', kit.id);
@@ -876,8 +871,8 @@ window.npiRelSaveKitItems = async function(kit) {
 // BOM Tree
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveBomTreeNode = async function(node) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveBomTreeNode = async function(node) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!node || !node.id || !projectId || !currentUser) return;
   try {
     const payload = {
@@ -901,7 +896,7 @@ window.npiRelSaveBomTreeNode = async function(node) {
   }
 };
 
-window.npiRelDeleteBomTreeNode = async function(id) {
+export const npiRelDeleteBomTreeNode = async function(id) {
   if (!id) return;
   try {
     // Cascades to all child nodes via ON DELETE CASCADE
@@ -912,8 +907,8 @@ window.npiRelDeleteBomTreeNode = async function(id) {
   }
 };
 
-window.npiRelSaveBomGroup = async function(group) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveBomGroup = async function(group) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!group || !group.id || !projectId || !currentUser) return;
   try {
     const payload = {
@@ -931,7 +926,7 @@ window.npiRelSaveBomGroup = async function(group) {
   }
 };
 
-window.npiRelDeleteBomGroup = async function(id) {
+export const npiRelDeleteBomGroup = async function(id) {
   if (!id) return;
   try {
     // Cascades to all tree nodes in this group via ON DELETE CASCADE
@@ -946,8 +941,8 @@ window.npiRelDeleteBomGroup = async function(id) {
 // Gates
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveGate = async function(gateNum) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveGate = async function(gateNum) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!projectId || !currentUser) return;
   const p = prog();
   if (!p || !p.gates || !p.gates[gateNum]) return;
@@ -978,8 +973,8 @@ window.npiRelSaveGate = async function(gateNum) {
   }
 };
 
-window.npiRelSaveGateSig = async function(gateNum, sigIdx) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveGateSig = async function(gateNum, sigIdx) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!projectId || !currentUser) return;
   const p = prog();
   if (!p || !p.gates || !p.gates[gateNum]) return;
@@ -1046,8 +1041,8 @@ window.npiRelSaveGateSig = async function(gateNum, sigIdx) {
 // Actions
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveAction = async function(item) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveAction = async function(item) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!item || !item.id || !projectId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_actions').upsert({
@@ -1071,7 +1066,7 @@ window.npiRelSaveAction = async function(item) {
   }
 };
 
-window.npiRelDeleteAction = async function(id) {
+export const npiRelDeleteAction = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_actions').delete().eq('id', id);
@@ -1085,8 +1080,8 @@ window.npiRelDeleteAction = async function(id) {
 // Risks
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveRisk = async function(item) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveRisk = async function(item) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!item || !item.id || !projectId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_risks').upsert({
@@ -1110,7 +1105,7 @@ window.npiRelSaveRisk = async function(item) {
   }
 };
 
-window.npiRelDeleteRisk = async function(id) {
+export const npiRelDeleteRisk = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_risks').delete().eq('id', id);
@@ -1124,8 +1119,8 @@ window.npiRelDeleteRisk = async function(id) {
 // Gantt Rows
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveGanttRow = async function(row) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveGanttRow = async function(row) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!row || !row.id || !projectId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_gantt_rows').upsert({
@@ -1148,7 +1143,7 @@ window.npiRelSaveGanttRow = async function(row) {
   }
 };
 
-window.npiRelDeleteGanttRow = async function(id) {
+export const npiRelDeleteGanttRow = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_gantt_rows').delete().eq('id', id);
@@ -1162,8 +1157,8 @@ window.npiRelDeleteGanttRow = async function(id) {
 // Clear all NPI relational data for a project (for testing and cascade delete)
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelClearAll = async function(pid) {
-  const projectId = await window.npiRelResolveProjectId(pid);
+export const npiRelClearAll = async function(pid) {
+  const projectId = await npiRelResolveProjectId(pid);
   if (!projectId) return;
   const tables = [
     'npi_pfmea_history', 'npi_pfmea_causes', 'npi_pfmea_effects', 'npi_pfmea_modes',
@@ -1177,14 +1172,14 @@ window.npiRelClearAll = async function(pid) {
 };
 
 // Task 2-C: Public alias used by deleteProject() to cascade-delete NPI relational data
-window.npiRelDeleteAllForProject = window.npiRelClearAll;
+export const npiRelDeleteAllForProject = npiRelClearAll
 
 // ─────────────────────────────────────────────────────────────
 // Documents
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelSaveDoc = async function(item) {
-  const projectId = await window.npiRelResolveProjectId(progId);
+export const npiRelSaveDoc = async function(item) {
+  const projectId = await npiRelResolveProjectId(appState.progId);
   if (!item || !item.id || !projectId || !currentUser) return;
   try {
     const { error } = await supa.from('npi_documents').upsert({
@@ -1207,7 +1202,7 @@ window.npiRelSaveDoc = async function(item) {
   }
 };
 
-window.npiRelDeleteDoc = async function(id) {
+export const npiRelDeleteDoc = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_documents').delete().eq('id', id);
@@ -1221,9 +1216,6 @@ window.npiRelDeleteDoc = async function(id) {
 // Part Usage — Where Used functionality
 // ─────────────────────────────────────────────────────────────
 
-window.npiRelFetchPartUsage = async function(abcCatalogueId) {
-  if (window.partsDatabase && window.partsDatabase.data && typeof window.partsDatabase.data.fetchPartUsage === 'function') {
-    return window.partsDatabase.data.fetchPartUsage(abcCatalogueId);
-  }
-  return [];
+export const npiRelFetchPartUsage = async function(abcCatalogueId) {
+  return partsDataApi.fetchPartUsage(abcCatalogueId)
 };

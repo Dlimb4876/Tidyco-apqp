@@ -4,6 +4,17 @@
 // All functions under npi.gate.*
 // ═══════════════════════════════════
 
+import {
+  db,
+  prog,
+  GATE_DEFS,
+  getProjectGateSelection
+} from '../../../../core/js/state.js'
+import { esc } from '../../../../utils/js/helpers.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { npi } from './npi-shared.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+
 npi.gate.gateAllSigned = function(gd) {
   return gd.sigs && gd.sigs.length > 0 && gd.sigs.every(s => s.signed)
 }
@@ -126,3 +137,7 @@ npi.gate.toggleCheck = function(gi, ii, v) { npi.data.gate.toggleCheck(gi, ii, v
 npi.gate.updSig     = function(gi, si, f, v) { npi.data.gate.updSig(gi, si, f, v) }
 npi.gate.signOff    = function(gi, si) { npi.data.gate.signOff(gi, si); render() }
 npi.gate.unsign     = function(gi, si) { npi.data.gate.unsign(gi, si); render() }
+
+export const gateAllSigned = npi.gate.gateAllSigned
+export const resolveGateChecklistItems = npi.gate.resolveGateChecklistItems
+export const renderGatePage = npi.gate.renderGatePage

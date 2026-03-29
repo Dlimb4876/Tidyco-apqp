@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ─────────────────────────────────────────────────────────────
 // Minimal mocks for settings.js globals
@@ -19,7 +23,7 @@ global.familiesDataGetAll = () => [];
 global.workAreasDataInit = async () => {};
 global.requestAnimationFrame = cb => cb();
 
-// Load settings.js
+// Load settings.js using eval
 const script = fs.readFileSync(
   path.resolve(__dirname, '../portals/settings/js/settings.js'),
   'utf8'

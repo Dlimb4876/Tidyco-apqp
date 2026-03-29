@@ -1,11 +1,15 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('Production Products Delegation (products.js)', () => {
   let originalConfirm;
   let originalAlert;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
     document.documentElement.innerHTML = html.toString();
 
@@ -38,6 +42,7 @@ describe('Production Products Delegation (products.js)', () => {
     global.alert = jest.fn();
     global.showToast = jest.fn();
 
+    // Use eval with fs.readFile for non-ESM compatible loading
     const script = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/products.js'), 'utf8');
     eval(`${script}\nif (typeof renderProductMaster === 'function') global.renderProductMaster = renderProductMaster;`);
   });

@@ -3,37 +3,89 @@
 // Depends on: settings.js (shared helpers), teams-data.js
 // ═══════════════════════════════════════════════════════════════
 
-// ── Ensure teams data is loaded ──────────────────────────────
-async function settingsEnsureTeamsData(forceReload = false) {
-  if (settingsTeamsLoading) return;
-  if (!forceReload && settingsTeamsData !== null) return;
+import { appState, currentUserRole } from '../../../core/js/state.js'
+import { currentUser, supabase as supa } from '../../../core/js/supa.js'
+import { esc, getPermissionDefinitions, isAdmin, showToast } from '../../../utils/js/helpers.js'
+import {
+  settingsEmailToName,
+  settingsGetCoreState,
+  settingsLoadingState,
+  settingsSetCoreState
+} from './settings.js'
+import {
+  teamPermissionsDataSave,
+  teamsDataAdd,
+  teamsDataDelete,
+  teamsDataGetUserCount,
+  teamsDataLoadAll,
+  teamsDataLoadPermissions,
+  teamsDataLoadUserTeamMap,
+  teamsDataSetUserTeam
+} from './teams-data.js'
 
-  settingsTeamsLoading = true;
-  settingsTeamsError = null;
+let settingsPermissionsLoading = false
+let settingsPermissionsData = null
+let settingsPermissionsError = null
+let settingsPermissionsTeams = []
+let settingsTeamsPermissionsData = {}
+
+function syncCoreStateFromSource() {
+  const coreState = settingsGetCoreState()
+  settingsPermissionsLoading = coreState.settingsPermissionsLoading
+  settingsPermissionsData = coreState.settingsPermissionsData
+  settingsPermissionsError = coreState.settingsPermissionsError
+  settingsPermissionsTeams = coreState.settingsPermissionsTeams
+  settingsTeamsPermissionsData = coreState.settingsTeamsPermissionsData
+}
+
+function syncCoreStateToSource() {
+  settingsSetCoreState({
+    settingsPermissionsLoading,
+    settingsPermissionsData,
+    settingsPermissionsError,
+    settingsPermissionsTeams,
+    settingsTeamsPermissionsData
+  })
+}
+
+export function settingsGetPermissionsData() {
+  syncCoreStateFromSource()
+  return Array.isArray(settingsPermissionsData) ? settingsPermissionsData : []
+}
+
+// ── Ensure teams data is loaded ──────────────────────────────
+export async function settingsEnsureTeamsData(forceReload = false) {
+  if (appState.settingsTeamsLoading) return;
+  if (!forceReload && appState.settingsTeamsData !== null) return;
+
+  appState.settingsTeamsLoading = true;
+  appState.settingsTeamsError = null;
   renderSettingsTeamsTab();
 
   try {
-    settingsTeamsData = await teamsDataLoadAll();
+    appState.settingsTeamsData = await teamsDataLoadAll();
     // Load user counts for each team in parallel instead of sequentially
-    await Promise.all(settingsTeamsData.map(async (team) => {
+    await Promise.all(appState.settingsTeamsData.map(async (team) => {
       team.userCount = await teamsDataGetUserCount(team.id);
     }));
   } catch (err) {
-    settingsTeamsError = err?.message || 'Failed to load teams';
-    settingsTeamsData = [];
+    appState.settingsTeamsError = err?.message || 'Failed to load teams';
+    appState.settingsTeamsData = [];
   } finally {
-    settingsTeamsLoading = false;
+    appState.settingsTeamsLoading = false;
     renderSettingsTeamsTab();
   }
 }
 
 // ── Ensure permissions data is loaded ─────────────────────────
-async function settingsEnsurePermissionsData(forceReload = false) {
+export async function settingsEnsurePermissionsData(forceReload = false) {
+  syncCoreStateFromSource()
   if (settingsPermissionsLoading) return;
   if (!forceReload && settingsPermissionsData !== null) return;
 
   settingsPermissionsLoading = true;
   settingsPermissionsError = null;
+  syncCoreStateToSource()
   renderSettingsPermissionsTab();
 
   try {
@@ -60,12 +112,14 @@ async function settingsEnsurePermissionsData(forceReload = false) {
     settingsPermissionsTeams = [];
   } finally {
     settingsPermissionsLoading = false;
+    syncCoreStateToSource()
     renderSettingsPermissionsTab();
   }
 }
 
 // ── Change a user's role ───────────────────────────────────────
-async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
+export async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
+  syncCoreStateFromSource()
   if (!isAdmin()) { showToast('Only admins can change roles.', 'error'); return; }
   if (!userId || !newRole) return;
   if (isLastAdmin && newRole !== 'admin') {
@@ -81,6 +135,7 @@ async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
       const rec = settingsPermissionsData.find(u => u.id === userId);
       if (rec) rec.role = newRole;
     }
+    syncCoreStateToSource()
     showToast('Role updated. Change takes effect on that user\'s next login.', 'info');
     renderSettingsPermissionsTab();
   } catch (err) {
@@ -90,7 +145,8 @@ async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
 }
 
 // ── Change a user's team assignment ────────────────────────────
-async function settingsPermissionsChangeTeam(userId, teamId) {
+export async function settingsPermissionsChangeTeam(userId, teamId) {
+  syncCoreStateFromSource()
   if (!isAdmin()) { showToast('Only admins can change team assignments.', 'error'); return; }
   if (!userId || typeof teamsDataSetUserTeam !== 'function') return;
 
@@ -111,6 +167,7 @@ async function settingsPermissionsChangeTeam(userId, teamId) {
       }
     }
 
+    syncCoreStateToSource()
     showToast('Team assignment updated.', 'success');
     renderSettingsPermissionsTab();
   } catch (err) {
@@ -120,27 +177,27 @@ async function settingsPermissionsChangeTeam(userId, teamId) {
 }
 
 // ── Render teams tab ───────────────────────────────────────────
-function renderSettingsTeamsTab() {
+export function renderSettingsTeamsTab() {
   const container = document.getElementById('settingsTeamsTab');
   if (!container) return;
 
-  if (settingsTeamsLoading) {
+  if (appState.settingsTeamsLoading) {
     container.innerHTML = settingsLoadingState('Loading teams…');
     return;
   }
 
-  if (settingsTeamsError) {
+  if (appState.settingsTeamsError) {
     container.innerHTML = `
       <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
         <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load teams</div>
-        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsTeamsError)}</div>
+        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(appState.settingsTeamsError)}</div>
         <button class="btn btn-ghost" data-action="settings-teams-retry">Retry</button>
       </div>
     `;
     return;
   }
 
-  const teams = settingsTeamsData || [];
+  const teams = appState.settingsTeamsData || [];
   const DEFAULT_TEAMS = ['ME', 'PM', 'OPS', 'Admin', 'ReadOnly'];
 
   let tableBody = '';
@@ -198,7 +255,7 @@ function renderSettingsTeamsTab() {
 }
 
 // ── Team CRUD operations ────────────────────────────────────────
-async function settingsTeamsAdd() {
+export async function settingsTeamsAdd() {
   const name = prompt('Team name:');
   if (!name || !name.trim()) return;
 
@@ -226,7 +283,7 @@ async function settingsTeamsAdd() {
     }
 
     newTeam.userCount = 0;
-    settingsTeamsData.push(newTeam);
+    appState.settingsTeamsData.push(newTeam);
     showToast('Team created successfully', 'success');
     renderSettingsTeamsTab();
   } catch (err) {
@@ -234,10 +291,10 @@ async function settingsTeamsAdd() {
   }
 }
 
-async function settingsTeamsDelete(teamId) {
+export async function settingsTeamsDelete(teamId) {
   if (!teamId) return;
 
-  const team = settingsTeamsData.find(t => t.id === teamId);
+  const team = appState.settingsTeamsData.find(t => t.id === teamId);
   if (!team) return;
 
   if (team.userCount && team.userCount > 0) {
@@ -254,7 +311,7 @@ async function settingsTeamsDelete(teamId) {
       return;
     }
 
-    settingsTeamsData = settingsTeamsData.filter(t => t.id !== teamId);
+    appState.settingsTeamsData = appState.settingsTeamsData.filter(t => t.id !== teamId);
     showToast('Team deleted', 'success');
     renderSettingsTeamsTab();
   } catch (err) {
@@ -262,20 +319,23 @@ async function settingsTeamsDelete(teamId) {
   }
 }
 
-async function settingsTeamsEdit(teamId) {
+export async function settingsTeamsEdit(teamId) {
   if (!teamId) return;
 
-  settingsTeamsPermissionsEditingId = teamId;
+  appState.settingsTeamsPermissionsEditingId = teamId;
   try {
+    syncCoreStateFromSource()
     settingsTeamsPermissionsData[teamId] = await teamsDataLoadPermissions(teamId);
+    syncCoreStateToSource()
     renderSettingsTeamsPermissionsEditor();
   } catch (err) {
     showToast('Failed to load permissions: ' + err.message, 'error');
   }
 }
 
-async function settingsTeamsPermissionsSave() {
-  const teamId = settingsTeamsPermissionsEditingId;
+export async function settingsTeamsPermissionsSave() {
+  syncCoreStateFromSource()
+  const teamId = appState.settingsTeamsPermissionsEditingId;
   if (!teamId) return;
 
   const permissions = settingsTeamsPermissionsData[teamId] || [];
@@ -287,7 +347,7 @@ async function settingsTeamsPermissionsSave() {
     }
 
     showToast('Permissions saved', 'success');
-    settingsTeamsPermissionsEditingId = null;
+    appState.settingsTeamsPermissionsEditingId = null;
     settingsEnsureTeamsData(true);
     renderSettingsTeamsTab();
   } catch (err) {
@@ -295,12 +355,13 @@ async function settingsTeamsPermissionsSave() {
   }
 }
 
-function settingsTeamsPermissionsCancel() {
-  settingsTeamsPermissionsEditingId = null;
+export function settingsTeamsPermissionsCancel() {
+  appState.settingsTeamsPermissionsEditingId = null;
   renderSettingsTeamsTab();
 }
 
-function settingsTeamsPermissionsToggle(teamId, permission) {
+export function settingsTeamsPermissionsToggle(teamId, permission) {
+  syncCoreStateFromSource()
   if (!settingsTeamsPermissionsData[teamId]) return;
   const perm = settingsTeamsPermissionsData[teamId].find(p => p.permission === permission);
   if (perm) {
@@ -308,10 +369,11 @@ function settingsTeamsPermissionsToggle(teamId, permission) {
   } else {
     settingsTeamsPermissionsData[teamId].push({ permission, allowed: true });
   }
+  syncCoreStateToSource()
   renderSettingsTeamsPermissionsEditor();
 }
 
-function settingsGetTeamPermissionDefinitions() {
+export function settingsGetTeamPermissionDefinitions() {
   if (typeof getPermissionDefinitions === 'function') {
     return getPermissionDefinitions().map((def) => ({
       key: def.key,
@@ -334,11 +396,12 @@ function settingsGetTeamPermissionDefinitions() {
 }
 
 // ── Render permissions editor ──────────────────────────────────
-function renderSettingsTeamsPermissionsEditor() {
-  const teamId = settingsTeamsPermissionsEditingId;
+export function renderSettingsTeamsPermissionsEditor() {
+  syncCoreStateFromSource()
+  const teamId = appState.settingsTeamsPermissionsEditingId;
   if (!teamId) return;
 
-  const team = settingsTeamsData.find(t => t.id === teamId);
+  const team = appState.settingsTeamsData.find(t => t.id === teamId);
   if (!team) return;
 
   const permissions = settingsTeamsPermissionsData[teamId] || [];
@@ -403,7 +466,8 @@ function renderSettingsTeamsPermissionsEditor() {
 }
 
 // ── Render permissions tab ─────────────────────────────────────
-function renderSettingsPermissionsTab() {
+export function renderSettingsPermissionsTab() {
+  syncCoreStateFromSource()
   const container = document.getElementById('settingsPermissionsTab');
   if (!container) return;
 

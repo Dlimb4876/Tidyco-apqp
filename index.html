@@ -39,8 +39,16 @@
 <link rel="stylesheet" href="portals/product-development/npi/css/apqp-bom.css">
 <link rel="stylesheet" href="portals/product-development/npi/css/apqp-responsive.css">
 <link rel="stylesheet" href="portals/product-development/npi/css/rpn-chart.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm",
+    "chart.js": "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/+esm",
+    "mermaid": "https://cdn.jsdelivr.net/npm/mermaid@10.9.0/+esm"
+  }
+}
+</script>
+<script type="module" src="core/js/main.js"></script>
 </head>
 <body>
 
@@ -154,155 +162,6 @@
     </div>
   </div>
 </div>
-
-<!-- ═══════════════════════════════════
-     SCRIPTS — load order matters
-     state → auth → db → helpers → navigation →
-     hub → npi-constants → npi → rpn-chart → dashboard →
-     capacity → me-capacity →
-     gates → pfmea → apqp → bom → timing → trackers → app
-     ═══════════════════════════════════ -->
-
-<script src="core/js/state.js"></script>
-<script src="core/js/auth.js"></script>
-<script src="core/js/db.js"></script>
-
-<script src="utils/js/helpers.js"></script>
-<script src="utils/js/navigation.js"></script>
-<script src="utils/js/realtime.js"></script>
-<script src="utils/js/realtime-patch.js"></script>
-<script src="utils/js/render-scheduler.js"></script>
-<script src="core/js/chart-theme.js"></script>
-<script src="utils/js/guide.js"></script>
-<script src="core/js/network.js"></script>
-
-<script src="portals/hub/js/hub.js"></script>
-<script src="portals/operations/js/operations-forecast-data.js"></script>
-<script src="portals/operations/js/operations-dashboard-state.js"></script>
-<script src="portals/operations/js/operations-dashboard-metrics.js"></script>
-<script src="portals/operations/js/operations-dashboard-realtime.js"></script>
-<script src="portals/operations/js/operations-dashboard-render-core.js"></script>
-<script src="portals/operations/js/operations-dashboard-forecast-view.js"></script>
-<script src="portals/operations/js/operations-dashboard-forecast-actions.js"></script>
-<script src="portals/operations/js/operations-infographic.js"></script>
-<script src="portals/operations/js/operations-dashboard-main.js"></script>
-
-<!-- Load product management database first as it's used by production and capacity modules -->
-<script src="portals/product-development/js/families-data.js"></script>
-<script src="portals/product-development/js/family-templates-data.js"></script>
-<script src="portals/product-development/product-management/js/products-data.js"></script>
-<script src="portals/product-development/product-management/js/trends-chart.js"></script>
-
-<script src="portals/capacity/shared/js/cap-data-utils.js"></script>
-<script src="portals/capacity/shared/js/cap-utils.js"></script>
-<script src="portals/capacity/shared/js/cap-calculations.js"></script>
-<script src="portals/capacity/shared/js/cap-components.js"></script>
-<script src="portals/capacity/shared/js/cap-team.js"></script>
-<script src="portals/capacity/shared/js/cap-tasks.js"></script>
-<script src="portals/capacity/shared/js/cap-products.js"></script>
-<script src="portals/capacity/shared/js/cap-product-taskload.js"></script>
-<script src="portals/capacity/shared/js/cap-holidays.js"></script>
-<script src="portals/capacity/shared/js/cap-chart.js"></script>
-<script src="portals/capacity/shared/js/cap-heatmap.js"></script>
-<script src="portals/capacity/shared/js/cap-dashboard.js"></script>
-<script src="portals/capacity/me/js/me-data-relational.js"></script>
-<script src="portals/capacity/me/js/me-data-normalize.js"></script>
-<script src="portals/capacity/me/js/me-data.js"></script>
-<script src="portals/capacity/me/js/me-data-support-history.js"></script>
-<script src="portals/capacity/me/js/me-data-entities.js"></script>
-<script src="portals/capacity/me/js/me-data-persistence.js"></script>
-<script src="portals/capacity/me/js/me-data-realtime.js"></script>
-<script src="portals/capacity/me/js/me-capacity.js"></script>
-
-<script src="portals/capacity/project-management/js/pm-data-relational.js"></script>
-<script src="portals/capacity/project-management/js/pm-data.js"></script>
-<script src="portals/capacity/project-management/js/pm-capacity.js"></script>
-<script src="portals/capacity/logistics/js/log-data-relational.js"></script>
-<script src="portals/capacity/logistics/js/log-data.js"></script>
-<script src="portals/capacity/logistics/js/log-capacity.js"></script>
-<script src="portals/capacity/unit6/js/unit6-data-relational.js"></script>
-<script src="portals/capacity/unit6/js/unit6-data.js"></script>
-<script src="portals/capacity/unit6/js/unit6-capacity.js"></script>
-
-<script src="portals/capacity/production/js/prod-capacity-data.js"></script>
-<script src="portals/capacity/production/js/work-areas-data.js"></script>
-<script src="portals/capacity/production/js/prod-capacity-dashboard.js"></script>
-<script src="portals/capacity/production/js/prod-capacity-workarea.js"></script>
-<script src="portals/capacity/production/js/prod-capacity-settings.js"></script>
-<script src="portals/capacity/production/js/prod-capacity-detail.js"></script>
-<script src="portals/capacity/production/js/prod-capacity.js"></script>
-
-<script src="portals/capacity/js/modals.js"></script>
-<script src="portals/capacity/js/capacity.js"></script>
-<script src="portals/capacity/js/capacity-events.js"></script>
-
-<script src="portals/production/js/data.js"></script>
-<script src="portals/production/js/products.js"></script>
-<script src="portals/production/js/production.js"></script>
-<script src="portals/production/js/scheduling.js"></script>
-<script src="portals/production/js/planning.js"></script>
-
-<!-- products-data.js and trends-chart.js are already loaded above -->
-<script src="portals/product-development/product-management/js/products.js"></script>
-<script src="portals/product-development/parts-database/js/parts-data.js"></script>
-<script src="portals/product-development/parts-database/js/parts-modals.js"></script>
-<script src="portals/product-development/parts-database/js/parts-database.js"></script>
-
-<script src="portals/product-development/js/product-development.js"></script>
-<script src="portals/product-development/js/product-management.js"></script>
-<script src="portals/settings/js/teams-data.js"></script>
-<script src="portals/settings/js/settings-teams.js"></script>
-<script src="portals/settings/js/settings-mcs.js"></script>
-<script src="portals/settings/js/settings-gate-questions.js"></script>
-<script src="portals/settings/js/settings.js"></script>
-
-<!-- NPI Portal: namespace root and centralized constants -->
-<script src="portals/product-development/npi/js/npi-constants.js"></script>
-<script src="portals/product-development/npi/js/npi-data-relational.js"></script>
-<script src="portals/product-development/npi/js/modals.js"></script>
-<script src="portals/product-development/npi/js/npi.js"></script>
-<script src="portals/product-development/npi/js/npi-data.js"></script>
-<script src="portals/product-development/npi/js/npi-components.js"></script>
-<script src="portals/product-development/npi/js/npi-gates-editor.js"></script>
-<script src="portals/product-development/npi/js/rpn-chart.js"></script>
-<script src="portals/product-development/npi/js/dashboard.js"></script>
-
-<!-- NPI Portal: feature modules (all under npi.* namespace) -->
-<script src="portals/product-development/npi/js/gates.js"></script>
-<script src="portals/product-development/npi/js/pfmea-state.js"></script>
-<script src="portals/product-development/npi/js/pfmea.js"></script>
-<script src="portals/product-development/npi/js/npi-ctq.js"></script>
-<script src="portals/product-development/npi/js/npi-pfd.js"></script>
-<script src="portals/product-development/npi/js/npi-cp.js"></script>
-<script src="portals/product-development/npi/js/apqp.js"></script>
-<script src="portals/product-development/npi/js/bom.js"></script>
-<script src="portals/product-development/npi/js/bom-cclass.js"></script>
-<script src="portals/product-development/npi/js/timing.js"></script>
-<script src="portals/product-development/npi/js/trackers.js"></script>
-<script src="portals/product-development/npi/js/documents.js"></script>
-<script src="portals/product-development/npi/js/npi-orchestrator.js"></script>
-<script src="portals/product-development/npi/js/npi-events.js"></script>
-
-<script src="portals/feedback/js/feedback-constants.js"></script>
-<script src="portals/feedback/js/feedback-data.js"></script>
-<script src="portals/feedback/js/feedback.js"></script>
-
-<script src="portals/action-centre/js/action-centre.js"></script>
-
-<!-- MCS (Manufacturing Change) -->
-<script src="portals/mcs/js/mcs-realtime.js"></script>
-<script src="portals/mcs/js/mcs-approvers-data.js"></script>
-<script src="portals/mcs/js/mcs-approval.js"></script>
-<script src="portals/mcs/js/mcs-modal-shared.js"></script>
-<script src="portals/mcs/js/mcs-modal-create.js"></script>
-<script src="portals/mcs/js/mcs-modal-view.js"></script>
-<script src="portals/mcs/js/mcs-modal-edit.js"></script>
-<script src="portals/mcs/js/mcs-main.js"></script>
-<script src="portals/mcs/js/mcs-pfmea.js"></script>
-<script src="portals/mcs/js/mcs-actions.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
-<script src="core/js/app.js"></script>
 
 </body>
 </html>

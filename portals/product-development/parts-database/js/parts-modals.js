@@ -3,10 +3,10 @@
 // Dynamically injects Parts Database modal HTML into the document
 // ═══════════════════════════════════
 
-window.partsDatabaseModalsInjected = false
+let partsDatabaseModalsInjected = false
 
-function injectPartsDatabaseModals() {
-  if (window.partsDatabaseModalsInjected) return
+export function injectPartsDatabaseModals() {
+  if (partsDatabaseModalsInjected) return
   if (!document.body) return
 
   const modalContainer = document.createElement('div')
@@ -150,10 +150,10 @@ function injectPartsDatabaseModals() {
     </div>
   </div>
 </div>
-`
+  `
 
   document.body.appendChild(modalContainer)
-  window.partsDatabaseModalsInjected = true
+  partsDatabaseModalsInjected = true
 }
 
 if (document.readyState === 'loading') {

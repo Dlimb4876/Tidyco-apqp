@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('Project family sync', () => {
   beforeEach(() => {
@@ -37,6 +41,7 @@ describe('Project family sync', () => {
       }
     };
 
+    // Use eval with fs.readFile for non-ESM compatible loading
     const stateScript = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8')
       .replace(/^const /gm, 'var ');
     eval(stateScript);

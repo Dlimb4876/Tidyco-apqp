@@ -3,10 +3,12 @@
 // Dynamically injects modal HTML into the document
 // ═══════════════════════════════════
 
-window.npiModalsInjected = false
+import { npi } from './npi-shared.js'
 
-function injectNPIModals() {
-  if (window.npiModalsInjected) return
+let npiModalsInjected = false
+
+export function injectNPIModals() {
+  if (npiModalsInjected) return
   if (!document.body) return
 
   const modalContainer = document.createElement('div')
@@ -298,7 +300,7 @@ function injectNPIModals() {
   `
 
   document.body.appendChild(modalContainer)
-  window.npiModalsInjected = true
+  npiModalsInjected = true
 }
 
 // Auto-inject when DOM is ready
@@ -306,4 +308,9 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', injectNPIModals)
 } else {
   injectNPIModals()
+}
+
+if (npi) {
+  npi.modals = npi.modals || {}
+  npi.modals.inject = injectNPIModals
 }

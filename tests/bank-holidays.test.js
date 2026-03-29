@@ -1,8 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/shared/js/cap-utils.js'), 'utf8');
-eval(script);
+import { getBankHolidaysForYear } from '../portals/capacity/shared/js/cap-utils.js'
 
 describe('England bank holiday calculation', () => {
   test('does not include 2026-06-01 as a bank holiday', () => {

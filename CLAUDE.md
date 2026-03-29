@@ -15,7 +15,7 @@
 - Script and style load order source of truth is `index.html`.
 
 ## Hard Rules
-1. Preserve script order: `state.js -> auth.js -> db.js -> helpers.js -> navigation.js -> realtime.js -> portals -> app.js`.
+1. Use named ESM imports for every cross-file dependency. No `window.*` assignment bridges for module wiring.
 2. Never introduce duplicate `const` in the same scope.
 3. Keep global mutable state in `core/js/state.js` with defaults.
 4. Use `esc()` for user data rendered into HTML strings.

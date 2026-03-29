@@ -3,6 +3,11 @@
 // NPI still calls npi.bom.*, but Product Development owns the catalogue module
 // ═══════════════════════════════════
 
+import { npi } from './npi-shared.js'
+import { npiBom } from './bom.js'
+import { getPartsDatabase } from '../../parts-database/js/parts-database.js'
+const partsDatabase = getPartsDatabase()
+
 function bindPartsDatabaseCompatibility(target, source) {
   if (!target || !source) return
 
@@ -24,10 +29,14 @@ function bindPartsDatabaseCompatibility(target, source) {
   target.closeWhereUsed = function() { return source.closeWhereUsed() }
 }
 
-bindPartsDatabaseCompatibility(npi.bom, window.partsDatabase)
+bindPartsDatabaseCompatibility(npi.bom, partsDatabase)
 
-window.unsubscribeABCCatalogue = function() {
-  if (window.partsDatabase && typeof window.partsDatabase.unsubscribeCatalogue === 'function') {
-    window.partsDatabase.unsubscribeCatalogue()
+function unsubscribeABCCatalogue() {
+  if (partsDatabase && typeof partsDatabase.unsubscribeCatalogue === 'function') {
+    partsDatabase.unsubscribeCatalogue()
   }
 }
+
+npi.bom.unsubscribeABCCatalogue = unsubscribeABCCatalogue
+
+export { bindPartsDatabaseCompatibility, unsubscribeABCCatalogue }

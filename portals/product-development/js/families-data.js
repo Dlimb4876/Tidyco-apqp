@@ -2,96 +2,113 @@
 // Manages product families with Supabase persistence
 // Collaborative: all users see the same data, changes sync in real-time
 
-let familiesState = {
+import { db } from '../../../core/js/state.js'
+import { supabase as supa, currentUser } from '../../../core/js/supa.js'
+import { showToast } from '../../../utils/js/helpers.js'
+import { createRealtimeSubscription, removeRealtimeSubscription } from '../../../utils/js/realtime.js'
+import { realtimePatchInsert, realtimePatchUpdate, realtimePatchDelete } from '../../../utils/js/realtime-patch.js'
+import { familyTemplatesEnsureDefaultForFamily } from './family-templates-data.js'
+
+export const familiesState = {
   families: [],
   loading: false,
   error: null,
   subscription: null
-};
+}
+
+function syncFamiliesIntoDb() {
+  db.families = [...familiesState.families]
+}
+
+export function familiesDataSubscribe() {
+  if (familiesState.subscription) return familiesState.subscription
+
+  const sub = createRealtimeSubscription('families', 'families_changed', {
+    onInsert: (record) => {
+      familiesState.families.push(record)
+      familiesState.families.sort((a, b) => a.label.localeCompare(b.label))
+      syncFamiliesIntoDb()
+      if (typeof globalThis.settingsFamilyRenderRowHTML === 'function') {
+        realtimePatchInsert('#families-tbody', globalThis.settingsFamilyRenderRowHTML(record), {
+          sortFn: globalThis._familiesResortTbody
+        })
+      }
+    },
+    onUpdate: (record) => {
+      const idx = familiesState.families.findIndex(f => f.id === record.id)
+      if (idx >= 0) familiesState.families[idx] = record
+      familiesState.families.sort((a, b) => a.label.localeCompare(b.label))
+      syncFamiliesIntoDb()
+      if (typeof globalThis.settingsFamilyRenderRowHTML === 'function' &&
+          typeof globalThis.settingsFamiliesEditingId !== 'undefined' &&
+          globalThis.settingsFamiliesEditingId !== record.id) {
+        realtimePatchUpdate('#families-tbody', record.id, globalThis.settingsFamilyRenderRowHTML(record))
+        const tbody = document.getElementById('families-tbody')
+        if (tbody && typeof globalThis._familiesResortTbody === 'function') {
+          globalThis._familiesResortTbody(tbody)
+        }
+      }
+    },
+    onDelete: (record) => {
+      familiesState.families = familiesState.families.filter(f => f.id !== record.id)
+      syncFamiliesIntoDb()
+      realtimePatchDelete('#families-tbody', record.id)
+    }
+  })
+
+  familiesState.subscription = sub || 'families_changed'
+  return familiesState.subscription
+}
+
+export function familiesDataUnsubscribe() {
+  if (!familiesState.subscription) return
+  removeRealtimeSubscription(familiesState.subscription)
+  familiesState.subscription = null
+}
+
+// Backward-compatible alias used by existing navigation/settings wiring
+export const familiesDataCleanup = familiesDataUnsubscribe
 
 // Initialize families from Supabase with real-time subscription
-async function familiesDataInit() {
-  familiesState.loading = true;
-  familiesState.error = null;
+export async function familiesDataInit() {
+  familiesState.loading = true
+  familiesState.error = null
 
   try {
-    // Load initial data
-    await familiesDataLoad();
-
-    // Set up real-time subscription for collaborative editing
-    if (typeof createRealtimeSubscription === 'function') {
-      familiesState.subscription = createRealtimeSubscription(
-        'families',
-        'families_changed',
-        {
-          onInsert: (record) => {
-            familiesState.families.push(record);
-            familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
-            if (typeof settingsFamilyRenderRowHTML === 'function') {
-              realtimePatchInsert('#families-tbody', settingsFamilyRenderRowHTML(record), {
-                sortFn: _familiesResortTbody
-              });
-            }
-          },
-          onUpdate: (record) => {
-            const idx = familiesState.families.findIndex(f => f.id === record.id);
-            if (idx >= 0) familiesState.families[idx] = record;
-            familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
-            if (typeof settingsFamilyRenderRowHTML === 'function' &&
-                typeof settingsFamiliesEditingId !== 'undefined' &&
-                settingsFamiliesEditingId !== record.id) {
-              realtimePatchUpdate('#families-tbody', record.id, settingsFamilyRenderRowHTML(record));
-              const tbody = document.getElementById('families-tbody');
-              if (tbody && typeof _familiesResortTbody === 'function') _familiesResortTbody(tbody);
-            }
-          },
-          onDelete: (record) => {
-            familiesState.families = familiesState.families.filter(f => f.id !== record.id);
-            realtimePatchDelete('#families-tbody', record.id);
-          }
-        }
-      );
-    }
-
-    familiesState.loading = false;
-    return familiesState.families;
+    await familiesDataLoad()
+    familiesDataSubscribe()
+    familiesState.loading = false
+    return familiesState.families
   } catch (err) {
-    console.error('Error initializing families:', err);
-    familiesState.error = err.message;
-    familiesState.loading = false;
-    return [];
+    console.error('Error initializing families:', err)
+    familiesState.error = err.message
+    familiesState.loading = false
+    return []
   }
 }
 
 // Load families from Supabase
-async function familiesDataLoad() {
+export async function familiesDataLoad() {
   try {
     const { data, error } = await supa.from('families')
       .select('*')
-      .order('label', { ascending: true });
+      .order('label', { ascending: true })
 
-    if (error) throw error;
+    if (error) throw error
 
-    familiesState.families = data || [];
-    return familiesState.families;
+    familiesState.families = data || []
+    syncFamiliesIntoDb()
+    return familiesState.families
   } catch (err) {
-    console.error('Error loading families:', err);
-    familiesState.error = err.message;
-    throw err;
-  }
-}
-
-// Cleanup function for real-time subscription
-function familiesDataCleanup() {
-  if (familiesState.subscription && typeof removeRealtimeSubscription === 'function') {
-    removeRealtimeSubscription(familiesState.subscription);
-    familiesState.subscription = null;
+    console.error('Error loading families:', err)
+    familiesState.error = err.message
+    throw err
   }
 }
 
 // Add a new family
-window.familiesDataAddFamily = async function(name, label, icon, description) {
-  if (!name || !label) return null;
+export async function familiesDataAddFamily(name, label, icon, description) {
+  if (!name || !label || !currentUser?.id) return null
 
   const family = {
     user_id: currentUser.id,
@@ -99,37 +116,38 @@ window.familiesDataAddFamily = async function(name, label, icon, description) {
     label: label.trim(),
     icon: icon || '📋',
     description: description ? description.trim() : null
-  };
+  }
 
   try {
     const { data, error } = await supa.from('families')
       .insert([family])
-      .select();
+      .select()
 
-    if (error) throw error;
+    if (error) throw error
 
     if (data && data[0]) {
-      const newFamily = data[0];
-      familiesState.families.push(newFamily);
-      familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
+      const newFamily = data[0]
+      familiesState.families.push(newFamily)
+      familiesState.families.sort((a, b) => a.label.localeCompare(b.label))
+      syncFamiliesIntoDb()
 
       if (typeof familyTemplatesEnsureDefaultForFamily === 'function') {
-        await familyTemplatesEnsureDefaultForFamily(newFamily);
+        await familyTemplatesEnsureDefaultForFamily(newFamily)
       }
 
-      return newFamily;
+      return newFamily
     }
   } catch (err) {
-    console.error('Error adding family:', err);
-    showToast('Failed to add family: ' + err.message, 'error');
+    console.error('Error adding family:', err)
+    showToast('Failed to add family: ' + err.message, 'error')
   }
-  return null;
-};
+  return null
+}
 
 // Update a family
-window.familiesDataUpdateFamily = async function(familyId, updates) {
-  const family = familiesState.families.find(f => f.id === familyId);
-  if (!family) return false;
+export async function familiesDataUpdateFamily(familyId, updates) {
+  const family = familiesState.families.find(f => f.id === familyId)
+  if (!family) return false
 
   try {
     const { error } = await supa.from('families')
@@ -137,54 +155,55 @@ window.familiesDataUpdateFamily = async function(familyId, updates) {
         ...updates,
         updated_at: new Date().toISOString()
       })
-      .eq('id', familyId);
+      .eq('id', familyId)
 
-    if (error) throw error;
+    if (error) throw error
 
-    // Update local state
-    Object.assign(family, updates);
-    familiesState.families.sort((a, b) => a.label.localeCompare(b.label));
-    return true;
+    Object.assign(family, updates)
+    familiesState.families.sort((a, b) => a.label.localeCompare(b.label))
+    syncFamiliesIntoDb()
+    return true
   } catch (err) {
-    console.error('Error updating family:', err);
-    showToast('Failed to update family: ' + err.message, 'error');
+    console.error('Error updating family:', err)
+    showToast('Failed to update family: ' + err.message, 'error')
   }
-  return false;
-};
+  return false
+}
 
 // Delete a family
-window.familiesDataDeleteFamily = async function(familyId) {
-  const idx = familiesState.families.findIndex(f => f.id === familyId);
-  if (idx === -1) return false;
+export async function familiesDataDeleteFamily(familyId) {
+  const idx = familiesState.families.findIndex(f => f.id === familyId)
+  if (idx === -1) return false
 
   try {
     const { error } = await supa.from('families')
       .delete()
-      .eq('id', familyId);
+      .eq('id', familyId)
 
-    if (error) throw error;
+    if (error) throw error
 
-    familiesState.families.splice(idx, 1);
-    return true;
+    familiesState.families.splice(idx, 1)
+    syncFamiliesIntoDb()
+    return true
   } catch (err) {
-    console.error('Error deleting family:', err);
-    showToast('Failed to delete family: ' + err.message, 'error');
+    console.error('Error deleting family:', err)
+    showToast('Failed to delete family: ' + err.message, 'error')
   }
-  return false;
-};
+  return false
+}
 
 // Get family by ID
-window.familiesDataGetFamily = function(familyId) {
-  return familiesState.families.find(f => f.id === familyId);
-};
+export function familiesDataGetFamily(familyId) {
+  return familiesState.families.find(f => f.id === familyId)
+}
 
 // Get family label by ID
-window.familiesDataGetFamilyLabel = function(familyId) {
-  const family = familiesState.families.find(f => f.id === familyId);
-  return family ? family.label : 'Unknown';
-};
+export function familiesDataGetFamilyLabel(familyId) {
+  const family = familiesState.families.find(f => f.id === familyId)
+  return family ? family.label : 'Unknown'
+}
 
 // Get all families
-window.familiesDataGetAll = function() {
-  return [...familiesState.families];
-};
+export function familiesDataGetAll() {
+  return [...familiesState.families]
+}

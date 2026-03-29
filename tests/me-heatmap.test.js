@@ -1,8 +1,12 @@
-const fs = require('fs');
-const path = require('path');
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // Set up DOM
-const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
 document.documentElement.innerHTML = html.toString();
 
 global.esc = (v) => String(v ?? '')
@@ -24,11 +28,9 @@ global.capCalcWeekUtilisation = jest.fn((personId, weekStart) => {
   return { capacity: 8, demand: 10, utilisation: 125 };
 });
 
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/shared/js/cap-heatmap.js'),
-  'utf8'
-);
-eval(script);
+// Load module and expose to global scope
+const capHeatmapModule = await import('../portals/capacity/shared/js/cap-heatmap.js');
+Object.assign(global, capHeatmapModule);
 
 describe('Shared heatmap rendering and detail wrappers', () => {
   beforeEach(() => {

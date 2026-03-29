@@ -1,5 +1,8 @@
-const fs = require('fs')
-const path = require('path')
+import { readFileSync } from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 describe('NPI gate signoff permissions', () => {
   let activeProject
@@ -36,7 +39,7 @@ describe('NPI gate signoff permissions', () => {
       randomUUID: () => 'id-1'
     }
 
-    const src = fs.readFileSync(
+    const src = readFileSync(
       path.resolve(__dirname, '../portals/product-development/npi/js/npi-data.js'),
       'utf8'
     )

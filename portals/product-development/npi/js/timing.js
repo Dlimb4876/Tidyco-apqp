@@ -5,6 +5,21 @@
 // All functions under npi.timing.*
 // ═══════════════════════════════════
 
+import { prog } from '../../../../core/js/state.js'
+import { save } from '../../../../core/js/db.js'
+import { canEdit, esc, emptyState } from '../../../../utils/js/helpers.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { npi } from './npi-shared.js'
+import { npiData } from './npi-data.js'
+import {
+  GANTT_WEEKS,
+  GANTT_ROLES,
+  GANTT_SECTIONS,
+  PLAN_COLOR,
+  ACT_COLOR
+} from './npi-constants.js'
+
 // ── Timeline length — stored in localStorage, independent of project ──
 npi.timing.getWeeks = function() {
   return parseInt(localStorage.getItem('ganttWeeks') || String(GANTT_WEEKS), 10)
@@ -14,7 +29,7 @@ npi.timing.setWeeks = function(val) {
   render()
 }
 
-npi.timing.ganttNewRow = function(section) { return npi.data.ganttNewRow(section) }
+npi.timing.ganttNewRow = function(section) { return npiData.ganttNewRow(section) }
 
 npi.timing.ganttWeekDate = function(startStr, wi) {
   if (!startStr) return null
@@ -260,26 +275,26 @@ npi.timing.renderTimingPlan = function() {
   ${totalRows === 0 ? `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No tasks yet — click a section header to expand it, then <strong>＋ Add task</strong></div>` : ''}`
 }
 
-npi.timing.ganttTogglePlan    = function(id, wi)    { npi.data.timing.togglePlan(id, wi); render() }
-npi.timing.ganttToggleAct     = function(id, wi)    { npi.data.timing.toggleAct(id, wi); render() }
-npi.timing.ganttAddRow        = function(section)   { npi.data.timing.addRow(section); render() }
-npi.timing.ganttUpdTask       = function(id, val)   { npi.data.timing.updTask(id, val) }
-npi.timing.ganttUpdSec        = function(id, val)   { npi.data.timing.updSec(id, val); render() }
-npi.timing.ganttUpdRole       = function(id, val)   { npi.data.timing.updRole(id, val); render() }
-npi.timing.ganttUpdNotes      = function(id, val)   { npi.data.timing.updNotes(id, val) }
-npi.timing.ganttDelRow        = function(id)        { npi.data.timing.delRow(id); render() }
-npi.timing.ganttSetStart      = function(val)       { npi.data.timing.setStart(val); render() }
-npi.timing.ganttMoveRow       = function(id, dir)   { npi.data.timing.moveRow(id, dir); render() }
+npi.timing.ganttTogglePlan    = function(id, wi)    { npiData.timing.togglePlan(id, wi); render() }
+npi.timing.ganttToggleAct     = function(id, wi)    { npiData.timing.toggleAct(id, wi); render() }
+npi.timing.ganttAddRow        = function(section)   { npiData.timing.addRow(section); render() }
+npi.timing.ganttUpdTask       = function(id, val)   { npiData.timing.updTask(id, val) }
+npi.timing.ganttUpdSec        = function(id, val)   { npiData.timing.updSec(id, val); render() }
+npi.timing.ganttUpdRole       = function(id, val)   { npiData.timing.updRole(id, val); render() }
+npi.timing.ganttUpdNotes      = function(id, val)   { npiData.timing.updNotes(id, val) }
+npi.timing.ganttDelRow        = function(id)        { npiData.timing.delRow(id); render() }
+npi.timing.ganttSetStart      = function(val)       { npiData.timing.setStart(val); render() }
+npi.timing.ganttMoveRow       = function(id, dir)   { npiData.timing.moveRow(id, dir); render() }
 npi.timing.ganttAddMilestone  = function(week)      {
   const label = prompt('Milestone label (e.g. "G1 Gate Review"):')
   if (!label || !label.trim()) return
-  npi.data.timing.addMilestone(week, label.trim())
+  npiData.timing.addMilestone(week, label.trim())
   render()
 }
-npi.timing.ganttDelMilestone  = function(id)        { npi.data.timing.delMilestone(id); render() }
+npi.timing.ganttDelMilestone  = function(id)        { npiData.timing.delMilestone(id); render() }
 npi.timing.ganttClear         = function() {
   if (!confirm('Clear all timing plan tasks?')) return
-  npi.data.timing.clear()
+  npiData.timing.clear()
   render()
 }
 npi.timing.ganttExportPdf = async function() {
@@ -437,7 +452,7 @@ npi.timing.ganttExportPdf = async function() {
 </style>
 </head>
 <body>
-<button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+<button class="print-btn" onclick="globalThis.print()">Print / Save PDF</button>
 <div class="page">
 
   <!-- Header -->
@@ -512,7 +527,7 @@ npi.timing.ganttExportPdf = async function() {
 </body>
 </html>`
 
-  const win = window.open('', '_blank', 'width=1240,height=820,scrollbars=yes')
+  const win = globalThis.open('', '_blank', 'width=1240,height=820,scrollbars=yes')
   if (!win) {
     alert('Pop-up blocked. Please allow pop-ups for this page and try again.')
     return
@@ -520,3 +535,6 @@ npi.timing.ganttExportPdf = async function() {
   win.document.write(html)
   win.document.close()
 }
+
+export const npiTiming = npi.timing
+export const renderTimingPlan = npi.timing.renderTimingPlan

@@ -2,15 +2,20 @@
    cap-dashboard.js — Capacity Dashboard
    ============================================================ */
 
-window.capRenderDashboardTab = function(monthKey, teamArray, tasksArray, productsArray, holidaysArray, department) {
-  const dept = department || 'ME';
-  const monthData = capCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, holidaysArray);
-  const monthLabel = getMonthLabel(monthKey);
+import { capCalculateMonthData } from './cap-calculations.js'
+import { getMonthLabel } from './cap-utils.js'
+import { capDrawChartNow } from './cap-chart.js'
+import { capDrawHeatmapNow } from './cap-heatmap.js'
 
-  const capacity = monthData.capacity.toFixed(1);
-  const demand = monthData.totalDemand.toFixed(1);
-  const utilisation = monthData.utilisation;
-  const headroom = Math.max(0, monthData.capacity - monthData.totalDemand).toFixed(1);
+export function capRenderDashboardTab(monthKey, teamArray, tasksArray, productsArray, holidaysArray, department, options) {
+  const dept = department || 'ME'
+  const monthData = capCalculateMonthData(monthKey, teamArray, tasksArray, productsArray, holidaysArray, options)
+  const monthLabel = getMonthLabel(monthKey)
+
+  const capacity = monthData.capacity.toFixed(1)
+  const demand = monthData.totalDemand.toFixed(1)
+  const utilisation = monthData.utilisation
+  const headroom = Math.max(0, monthData.capacity - monthData.totalDemand).toFixed(1)
 
   return `
     <div class="me-dashboard">
@@ -54,9 +59,10 @@ window.capRenderDashboardTab = function(monthKey, teamArray, tasksArray, product
           </div>
         </div>
       </div>
-    </div>`;
-};
+    </div>`
+}
 
-window.capDashboardDrawMiniChart = function(_teamArray, _tasksArray, _productsArray, _holidaysArray) {
-  // Mini chart/heatmap rendering is handled by the department orchestrator
-};
+export function capDashboardDrawMiniChart(teamArray, tasksArray, productsArray, holidaysArray, monthKey, department, options) {
+  capDrawChartNow(teamArray, tasksArray, productsArray, holidaysArray, monthKey, department, options)
+  capDrawHeatmapNow(teamArray, tasksArray, productsArray, holidaysArray, monthKey, department)
+}

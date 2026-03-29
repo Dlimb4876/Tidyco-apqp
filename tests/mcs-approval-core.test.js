@@ -1,18 +1,18 @@
-const fs = require('fs');
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/mcs/js/mcs-approval.js'),
-  'utf8'
-);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('mcs-approval core workflow', () => {
   let fromMock;
   let updateMock;
   let eqMock;
   let insertMock;
+  let mcsApproveStep;
+  let mcsRejectStep;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     global.currentUser = { id: 'user-1', email: 'approver@test.com' };
     global.currentUserRole = 'approval1';
 
@@ -74,11 +74,14 @@ describe('mcs-approval core workflow', () => {
 
     global.supa = { from: fromMock };
 
-    eval(`${script}\n;globalThis.__mcsApproval = { mcsApproveStep, mcsRejectStep };`); // eslint-disable-line no-eval
+    // Import module after setting up mocks
+    const mcsApproval = await import('../portals/mcs/js/mcs-approval.js');
+    mcsApproveStep = mcsApproval.mcsApproveStep;
+    mcsRejectStep = mcsApproval.mcsRejectStep;
   });
 
   it('approves approval1 and advances status to implementing', async () => {
-    const ok = await globalThis.__mcsApproval.mcsApproveStep('ECR-1', 'approval1', 'looks good');
+    const ok = await mcsApproveStep('ECR-1', 'approval1', 'looks good');
 
     expect(ok).toBe(true);
     expect(updateMock).toHaveBeenCalled();
@@ -90,7 +93,7 @@ describe('mcs-approval core workflow', () => {
   });
 
   it('rejects approval1 and closes the change', async () => {
-    const ok = await globalThis.__mcsApproval.mcsRejectStep('ECR-1', 'approval1', 'missing risk detail');
+    const ok = await mcsRejectStep('ECR-1', 'approval1', 'missing risk detail');
 
     expect(ok).toBe(true);
 
@@ -100,13 +103,13 @@ describe('mcs-approval core workflow', () => {
   });
 
   it('returns false when status does not match active step', async () => {
-    const ok = await globalThis.__mcsApproval.mcsApproveStep('ECR-1', 'approval2', 'wrong state');
+    const ok = await mcsApproveStep('ECR-1', 'approval2', 'wrong state');
     expect(ok).toBe(false);
     expect(updateMock).not.toHaveBeenCalled();
   });
 
   it('approval2 creates overhaul entry and sets implemented status', async () => {
-    const ok = await globalThis.__mcsApproval.mcsApproveStep('ECR-2', 'approval2', 'approved for release');
+    const ok = await mcsApproveStep('ECR-2', 'approval2', 'approved for release');
 
     expect(ok).toBe(true);
 
@@ -120,7 +123,7 @@ describe('mcs-approval core workflow', () => {
   it('returns false on db update error', async () => {
     eqMock.mockResolvedValueOnce({ error: { message: 'db update failed' } });
 
-    const ok = await globalThis.__mcsApproval.mcsApproveStep('ECR-1', 'approval1', 'fail me');
+    const ok = await mcsApproveStep('ECR-1', 'approval1', 'fail me');
 
     expect(ok).toBe(false);
   });

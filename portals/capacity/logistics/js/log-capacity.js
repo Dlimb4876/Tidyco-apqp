@@ -1,130 +1,104 @@
 /* ============================================================
    log-capacity.js — Logistics Capacity Orchestrator
-  Dedicated logistics relational tables
    ============================================================ */
 
-let logTab = 'chart';
-let logHolidayMonth = null;
-let logChartStart = null;
-let logSaveTimer = null;
+import { canEdit, isEditingInlineCell } from '../../../../utils/js/helpers.js'
+import { appState } from '../../../../core/js/state.js'
+import { navigate, writeNavigationHistory } from '../../../../utils/js/navigation.js'
+import { requestRender } from '../../../../utils/js/render-scheduler.js'
+import { getBankHolidaysForYear as capGetBankHolidaysForYear } from '../../shared/js/cap-utils.js'
+import { capRenderTeamTab } from '../../shared/js/cap-team.js'
+import { capRenderTasksTab, capTasksFilters, capTasksSort } from '../../shared/js/cap-tasks.js'
+import { capRenderProductsTab, capProductsTableState } from '../../shared/js/cap-products.js'
+import {
+  capRenderProductTaskLoadTab,
+  capProductLoadTableState
+} from '../../shared/js/cap-product-taskload.js'
+import { capRenderHolidaysTab } from '../../shared/js/cap-holidays.js'
+import { capRenderChartTab, capDrawChartNow } from '../../shared/js/cap-chart.js'
+import { capDrawHeatmapNow } from '../../shared/js/cap-heatmap.js'
+import {
+  logDataInit,
+  logDataSave,
+  logDataAutoSyncLogProducts,
+  logDataGetTeam,
+  logDataGetTasks,
+  logDataGetProducts,
+  logDataGetHolidays,
+  logDataSubscribe,
+  logDataUnsubscribe,
+  setLogDataRealtimeHooks
+} from './log-data.js'
+
+export let logTab = 'chart'
+let logHolidayMonth = null
+let logChartStart = null
+let logSaveTimer = null
 
 function logGetCurrentMonthKey() {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const today = new Date()
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 }
 
 function logGetData() {
   return {
-    team: typeof logDataGetTeam === 'function' ? logDataGetTeam() : [],
-    tasks: typeof logDataGetTasks === 'function' ? logDataGetTasks() : [],
-    products: typeof logDataGetProducts === 'function' ? logDataGetProducts() : [],
-    holidays: typeof logDataGetHolidays === 'function' ? logDataGetHolidays() : []
-  };
-}
-
-function logGetLegacyCapacityFunction(name) {
-  return window['me' + name];
-}
-
-function logWithLegacyDepartment(callback) {
-  const contextKey = 'me' + 'CurrentDepartmentContext';
-  const previous = window[contextKey];
-  window[contextKey] = 'LOG';
-  try {
-    return callback();
-  } finally {
-    window[contextKey] = previous;
+    team: logDataGetTeam(),
+    tasks: logDataGetTasks(),
+    products: logDataGetProducts(),
+    holidays: logDataGetHolidays()
   }
-}
-
-function logRenderWithSharedFallback(sharedRenderer, legacyName, args, legacyArgs) {
-  if (typeof sharedRenderer === 'function') return sharedRenderer(...args);
-  const legacyRenderer = logGetLegacyCapacityFunction(legacyName);
-  return typeof legacyRenderer === 'function'
-    ? logWithLegacyDepartment(function() { return legacyRenderer(...legacyArgs); })
-    : '';
 }
 
 function logDrawChartViews() {
-  const { team, tasks, products, holidays } = logGetData();
-
-  if (typeof window.capDrawChartNow === 'function') {
-    window.capDrawChartNow(team, tasks, products, holidays, logChartStart, 'LOG');
-  } else {
-    const legacyDrawChart = logGetLegacyCapacityFunction('DrawChartNow');
-    if (typeof legacyDrawChart === 'function') {
-      logWithLegacyDepartment(function() { legacyDrawChart(); });
-    }
-  }
-
-  if (typeof window.capDrawHeatmapNow === 'function') {
-    window.capDrawHeatmapNow(team, tasks, products, holidays, logChartStart, 'LOG');
-  } else {
-    const legacyDrawHeatmap = logGetLegacyCapacityFunction('DrawHeatmapNow');
-    if (typeof legacyDrawHeatmap === 'function') {
-      logWithLegacyDepartment(function() { legacyDrawHeatmap(); });
-    }
-  }
+  const { team, tasks, products, holidays } = logGetData()
+  capDrawChartNow(team, tasks, products, holidays, logChartStart, 'LOG')
+  capDrawHeatmapNow(team, tasks, products, holidays, logChartStart, 'LOG')
 }
 
 function logGetTabContent() {
-  const { team, tasks, products, holidays } = logGetData();
+  const { team, tasks, products, holidays } = logGetData()
 
-  if (!logHolidayMonth) logHolidayMonth = logGetCurrentMonthKey();
-  if (!logChartStart)   logChartStart   = logGetCurrentMonthKey();
+  if (!logHolidayMonth) logHolidayMonth = logGetCurrentMonthKey()
+  if (!logChartStart) logChartStart = logGetCurrentMonthKey()
 
-  const taskFilters = window.capTasksFilters && window.capTasksFilters.LOG
-    ? window.capTasksFilters.LOG
-    : window['me' + 'TasksFilters'];
-  const taskSort = window.capTasksSort && window.capTasksSort.LOG
-    ? window.capTasksSort.LOG
-    : window['me' + 'TasksSort'];
-  const productsTableState = window.capProductsTableState && window.capProductsTableState.LOG
-    ? window.capProductsTableState.LOG
-    : undefined;
-  const productLoadTableState = window.capProductLoadTableState && window.capProductLoadTableState.LOG
-    ? window.capProductLoadTableState.LOG
-    : undefined;
-  const bankHolidays = typeof window.capGetBankHolidaysForYear === 'function'
-    ? window.capGetBankHolidaysForYear(Number((logHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
-    : (typeof window.meGetBankHolidaysForYear === 'function'
-      ? window.meGetBankHolidaysForYear(Number((logHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
-      : null);
+  const taskFilters = capTasksFilters.LOG
+  const taskSort = capTasksSort.LOG
+  const productsTableState = capProductsTableState.LOG
+  const productLoadTableState = capProductLoadTableState.LOG
+  const bankHolidays = capGetBankHolidaysForYear(
+    Number((logHolidayMonth || '').split('-')[0]) || new Date().getFullYear()
+  )
 
   switch (logTab) {
     case 'team':
-      return logRenderWithSharedFallback(window.capRenderTeamTab, 'RenderTeamTab', [team, holidays, logChartStart, 'LOG', canEdit()], [team]);
+      return capRenderTeamTab(team, holidays, logChartStart, 'LOG', canEdit())
     case 'tasks':
-      return logRenderWithSharedFallback(window.capRenderTasksTab, 'RenderTasksTab', [tasks, team, products, 'LOG', taskFilters, taskSort, canEdit()], [tasks, team, products]);
+      return capRenderTasksTab(tasks, team, products, 'LOG', taskFilters, taskSort, canEdit())
     case 'products':
-      return logRenderWithSharedFallback(window.capRenderProductsTab, 'RenderProductsTab', [products, tasks, 'LOG', productsTableState], [products, products, tasks]);
+      return capRenderProductsTab(products, tasks, 'LOG', productsTableState)
     case 'product-taskload':
-      return logRenderWithSharedFallback(window.capRenderProductTaskLoadTab, 'RenderProductTaskLoadTab', [tasks, products, 'LOG', productLoadTableState], [tasks, products]);
+      return capRenderProductTaskLoadTab(tasks, products, 'LOG', productLoadTableState)
     case 'holidays':
-      return logRenderWithSharedFallback(window.capRenderHolidaysTab, 'RenderHolidaysTab', [holidays, team, logHolidayMonth, 'LOG', bankHolidays, canEdit()], [holidays, team, logHolidayMonth]);
+      return capRenderHolidaysTab(holidays, team, logHolidayMonth, 'LOG', bankHolidays, canEdit())
     case 'chart':
     default:
-      return logRenderWithSharedFallback(window.capRenderChartTab, 'RenderChartTab', [logChartStart, team, tasks, products, holidays, 'LOG'], [logChartStart, team, tasks, products, holidays]);
+      return capRenderChartTab(logChartStart, team, tasks, products, holidays, 'LOG')
   }
 }
 
 function logRerenderChartTabForMonthChange() {
-  const body = document.getElementById('logBody');
-  if (!body) return;
-  body.innerHTML = logGetTabContent();
-  setTimeout(() => {
-    logDrawChartViews();
-  }, 100);
+  const body = document.getElementById('logBody')
+  if (!body) return
+  body.innerHTML = logGetTabContent()
+  setTimeout(() => logDrawChartViews(), 100)
 }
 
-window.logRenderCapacity = function() {
-  if (typeof logDataAutoSyncLogProducts === 'function') {
-    const synced = logDataAutoSyncLogProducts();
-    if (synced && window.logDataInitialized) {
-      setTimeout(() => {
-        if (typeof logDebouncedSave === 'function') logDebouncedSave();
-      }, 1000);
-    }
+export function renderLogCapacity() {
+  const synced = logDataAutoSyncLogProducts()
+  if (synced) {
+    setTimeout(() => {
+      logDebouncedSave()
+    }, 1000)
   }
 
   const html = `
@@ -141,145 +115,138 @@ window.logRenderCapacity = function() {
       </div>
 
       <div class="me-nav">
-        <button class="me-nav-btn ${logTab === 'chart'          ? 'active' : ''}" data-tab="chart"          data-cap-action="cap-log-set-tab">📊 Capacity Chart</button>
-        <button class="me-nav-btn ${logTab === 'team'           ? 'active' : ''}" data-tab="team"           data-cap-action="cap-log-set-tab">👷 Team</button>
-        <button class="me-nav-btn ${logTab === 'tasks'          ? 'active' : ''}" data-tab="tasks"          data-cap-action="cap-log-set-tab">📋 Tasks</button>
-        <button class="me-nav-btn ${logTab === 'products'       ? 'active' : ''}" data-tab="products"       data-cap-action="cap-log-set-tab">🚂 Product Support</button>
+        <button class="me-nav-btn ${logTab === 'chart' ? 'active' : ''}" data-tab="chart" data-cap-action="cap-log-set-tab">📊 Capacity Chart</button>
+        <button class="me-nav-btn ${logTab === 'team' ? 'active' : ''}" data-tab="team" data-cap-action="cap-log-set-tab">👷 Team</button>
+        <button class="me-nav-btn ${logTab === 'tasks' ? 'active' : ''}" data-tab="tasks" data-cap-action="cap-log-set-tab">📋 Tasks</button>
+        <button class="me-nav-btn ${logTab === 'products' ? 'active' : ''}" data-tab="products" data-cap-action="cap-log-set-tab">🚂 Product Support</button>
         <button class="me-nav-btn ${logTab === 'product-taskload' ? 'active' : ''}" data-tab="product-taskload" data-cap-action="cap-log-set-tab">📦 Product Load</button>
-        <button class="me-nav-btn ${logTab === 'holidays'       ? 'active' : ''}" data-tab="holidays"       data-cap-action="cap-log-set-tab">🏖️ Holiday Planner</button>
+        <button class="me-nav-btn ${logTab === 'holidays' ? 'active' : ''}" data-tab="holidays" data-cap-action="cap-log-set-tab">🏖️ Holiday Planner</button>
       </div>
 
       <div class="me-body" id="logBody">
         ${logGetTabContent()}
       </div>
-    </div>`;
+    </div>`
 
   setTimeout(() => {
-    if (logTab === 'chart') {
-      logDrawChartViews();
-    }
-  }, 100);
+    if (logTab === 'chart') logDrawChartViews()
+  }, 100)
 
-  return html;
-};
+  return html
+}
 
-window.logSetTab = function(tab) {
-  const prevLogTab = logTab;
-  logTab = tab;
-  const logParts = ['s=capacity', 'ct=logistics'];
-  if (tab !== 'chart') logParts.push('lgt=' + encodeURIComponent(tab));
-  if (typeof writeNavigationHistory === 'function') {
-    writeNavigationHistory('#' + logParts.join('&'), { push: prevLogTab !== tab });
-  }
+export function logSetTab(tab) {
+  const prevLogTab = logTab
+  logTab = tab
 
-  document.querySelectorAll('.log-shell .me-nav-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  const activeBtn = document.querySelector(`.log-shell .me-nav-btn[data-tab="${tab}"]`);
-  if (activeBtn) activeBtn.classList.add('active');
+  const logParts = ['s=capacity', 'ct=logistics']
+  if (tab !== 'chart') logParts.push('lgt=' + encodeURIComponent(tab))
+  writeNavigationHistory('#' + logParts.join('&'), { push: prevLogTab !== tab })
 
-  const body = document.getElementById('logBody');
+  document.querySelectorAll('.log-shell .me-nav-btn').forEach(btn => btn.classList.remove('active'))
+  const activeBtn = document.querySelector(`.log-shell .me-nav-btn[data-tab="${tab}"]`)
+  if (activeBtn) activeBtn.classList.add('active')
+
+  const body = document.getElementById('logBody')
   if (body) {
-    body.innerHTML = logGetTabContent();
+    body.innerHTML = logGetTabContent()
     setTimeout(() => {
-      if (tab === 'chart') {
-        logDrawChartViews();
-      }
-    }, 100);
+      if (tab === 'chart') logDrawChartViews()
+    }, 100)
   }
-};
+}
 
-window.logRefreshCurrentTab = function() {
-  // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
-  // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
+export function logRefreshCurrentTab() {
   if (logTab === 'chart') {
-    const monthInput = document.getElementById('meChartMonthInput');
-    if (monthInput && logChartStart) {
-      monthInput.value = logChartStart;
-    }
-    logDrawChartViews();
-    return;
+    const monthInput = document.getElementById('meChartMonthInput')
+    if (monthInput && logChartStart) monthInput.value = logChartStart
+    logDrawChartViews()
+    return
   }
 
-  const body = document.getElementById('logBody');
+  const body = document.getElementById('logBody')
   if (body) {
-    body.innerHTML = logGetTabContent();
+    body.innerHTML = logGetTabContent()
     setTimeout(() => {
-      if (logTab === 'chart') {
-        logDrawChartViews();
-      }
-    }, 100);
+      if (logTab === 'chart') logDrawChartViews()
+    }, 100)
   }
-};
+}
 
-window.logOnMonthChange = function(newMonth) {
+export function logOnMonthChange(newMonth) {
   if (logTab === 'chart') {
-    logChartStart = newMonth;
-    logRerenderChartTabForMonthChange();
-    return;
-  } else {
-    logHolidayMonth = newMonth;
+    logChartStart = newMonth
+    logRerenderChartTabForMonthChange()
+    return
   }
-  logRefreshCurrentTab();
-};
 
-window.logOnNextMonth = function() {
-  const isChart = logTab === 'chart';
-  const current = isChart ? (logChartStart || logGetCurrentMonthKey()) : (logHolidayMonth || logGetCurrentMonthKey());
-  const [year, month] = current.split('-').map(Number);
-  const date = new Date(year, month - 1, 1);
-  date.setMonth(date.getMonth() + 1);
-  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  logHolidayMonth = newMonth
+  logRefreshCurrentTab()
+}
+
+function logShiftMonth(direction) {
+  const isChart = logTab === 'chart'
+  const current = isChart
+    ? (logChartStart || logGetCurrentMonthKey())
+    : (logHolidayMonth || logGetCurrentMonthKey())
+
+  const [year, month] = current.split('-').map(Number)
+  const date = new Date(year, month - 1, 1)
+  date.setMonth(date.getMonth() + direction)
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+
   if (isChart) {
-    logChartStart = newMonth;
-    logRerenderChartTabForMonthChange();
-    return;
-  } else {
-    logHolidayMonth = newMonth;
+    logChartStart = newMonth
+    logRerenderChartTabForMonthChange()
+    return
   }
-  logRefreshCurrentTab();
-};
 
-window.logOnPrevMonth = function() {
-  const isChart = logTab === 'chart';
-  const current = isChart ? (logChartStart || logGetCurrentMonthKey()) : (logHolidayMonth || logGetCurrentMonthKey());
-  const [year, month] = current.split('-').map(Number);
-  const date = new Date(year, month - 1, 1);
-  date.setMonth(date.getMonth() - 1);
-  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  if (isChart) {
-    logChartStart = newMonth;
-    logRerenderChartTabForMonthChange();
-    return;
-  } else {
-    logHolidayMonth = newMonth;
-  }
-  logRefreshCurrentTab();
-};
+  logHolidayMonth = newMonth
+  logRefreshCurrentTab()
+}
 
-window.logOnSave = async function(showAlert = false) {
-  if (typeof logDataSave === 'function') {
-    await logDataSave(showAlert);
-  }
-};
+export function logOnNextMonth() {
+  logShiftMonth(1)
+}
 
-window.logDebouncedSave = function() {
-  clearTimeout(logSaveTimer);
+export function logOnPrevMonth() {
+  logShiftMonth(-1)
+}
+
+export async function logOnSave(showAlert = false) {
+  await logDataSave(showAlert)
+}
+
+export function logDebouncedSave() {
+  clearTimeout(logSaveTimer)
   logSaveTimer = setTimeout(async () => {
-    await logOnSave(false);
-    if (logTab === 'chart') return;
+    await logOnSave(false)
+    if (logTab === 'chart') return
+
     requestRender('log', {
       trigger: 'save',
-      renderNow: function() {
-        if (typeof logRefreshCurrentTab === 'function') logRefreshCurrentTab();
-      },
-      isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
-    });
-  }, 900);
-};
+      renderNow: () => logRefreshCurrentTab(),
+      isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell()
+    })
+  }, 900)
+}
 
-window.logRefresh = function() {
-  const mc = document.getElementById('mainContent');
-  if (!mc || currentSection !== 'capacity' || capacityTab !== 'logistics') return;
-  mc.innerHTML = `<div class="section-inner">${logRenderCapacity()}</div>`;
-};
+export function logRefresh() {
+  const mc = document.getElementById('mainContent')
+  if (!mc || currentSection !== 'capacity' || capacityTab !== 'logistics') return
+  mc.innerHTML = `<div class="section-inner">${renderLogCapacity()}</div>`
+}
+
+export function logBackToCapacity() {
+  navigate('capacity')
+}
+
+export const logCapacityDataSubscribe = logDataSubscribe
+export const logCapacityDataUnsubscribe = logDataUnsubscribe
+
+setLogDataRealtimeHooks({
+  getTab: () => logTab,
+  refreshCurrentTab: () => logRefreshCurrentTab()
+})
+
+export { logDataInit }

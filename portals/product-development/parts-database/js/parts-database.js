@@ -3,13 +3,35 @@
 // Product Development owns the catalogue UI; NPI consumes it through wrappers
 // ═══════════════════════════════════
 
-window.partsDatabase = window.partsDatabase || {}
+import { appState } from '../../../../core/js/state.js'
+import { showModal, closeModal, showToast, canEdit, esc } from '../../../../utils/js/helpers.js'
+import { createRealtimeSubscription, removeRealtimeSubscription } from '../../../../utils/js/realtime.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { partsDataApi } from './parts-data.js'
+import { injectPartsDatabaseModals } from './parts-modals.js'
+
+const partsDatabase = {}
+export function getPartsDatabase() { return partsDatabase }
+globalThis.partsDatabase = partsDatabase
 
 ;(function() {
-  const partsDb = window.partsDatabase
+  injectPartsDatabaseModals()
+  const partsDb = partsDatabase
   const channel = 'abc_catalogue_channel'
-  let inlineSaveTimer = null
   let usageCache = {}
+  let abcCatalogueData = []
+  let abcCatalogueLoading = false
+  let abcCatalogueLoaded = false
+  let abcCatalogueSearch = ''
+  let abcCatalogueClassFilter = 'all'
+  let abcCatalogueSort = { field: 'item_desc', ascending: true }
+  let abcEditTarget = null
+  let abcPickTarget = null
+  let abcPickResults = []
+  let abcPickLoading = false
+  let abcPickSearch = ''
+  let abcPickClassFilter = 'all'
+  let abcPickSelected = []
 
   function getFilteredRows() {
     const searchTerm = (abcCatalogueSearch || '').toLowerCase()
@@ -43,11 +65,11 @@ window.partsDatabase = window.partsDatabase || {}
   }
 
   function shouldRefreshActiveView() {
-    if (currentSection === 'product-development' && productDevelopmentTab === 'parts-database') {
+    if (appState.currentSection === 'product-development' && appState.productDevelopmentTab === 'parts-database') {
       return true
     }
 
-    if (currentSection === 'projects' && npiDashboardTab === 'abc-catalogue') {
+    if (appState.currentSection === 'projects' && appState.npiDashboardTab === 'abc-catalogue') {
       return true
     }
 
@@ -110,27 +132,13 @@ window.partsDatabase = window.partsDatabase || {}
         const usageCount = usageCache[row.id] !== undefined ? usageCache[row.id] : '-'
 
         return `<tr>
-          <td class="w110"><input class="cell-edit mono" value="${esc(row.pn || '')}"
-            onchange="partsDatabase.updateInline(${index}, 'pn', this.value)" placeholder="Tidyco PN" style="width:100%"></td>
-          <td class="w60 ctr">
-            <select class="abc-class-select abc-${row.abc_class || 'C'}"
-              onchange="partsDatabase.updateInline(${index}, 'abc_class', this.value); this.className='abc-class-select abc-' + this.value">
-              <option value="A" ${(row.abc_class || 'C') === 'A' ? 'selected' : ''}>A</option>
-              <option value="B" ${(row.abc_class || 'C') === 'B' ? 'selected' : ''}>B</option>
-              <option value="C" ${(row.abc_class || 'C') === 'C' ? 'selected' : ''}>C</option>
-            </select>
-          </td>
-          <td class="bom-col-desc"><input class="cell-edit" value="${esc(row.item_desc || '')}"
-            onchange="partsDatabase.updateInline(${index}, 'item_desc', this.value)" placeholder="Description" style="width:100%"></td>
-          <td class="w60"><input class="cell-edit" value="${esc(row.unit || 'ea')}"
-            onchange="partsDatabase.updateInline(${index}, 'unit', this.value)" placeholder="ea" style="width:100%"></td>
-          <td class="w110"><input class="cell-edit" value="${esc(row.manufacturer || '')}"
-            onchange="partsDatabase.updateInline(${index}, 'manufacturer', this.value)" placeholder="Manufacturer (OEM)" style="width:100%"></td>
-          <td class="w110"><input class="cell-edit mono" value="${esc(row.manufacturer_pn || '')}"
-            onchange="partsDatabase.updateInline(${index}, 'manufacturer_pn', this.value)" placeholder="Manufacturer PN" style="width:100%"></td>
-          <td class="w44 ctr"><input type="checkbox" ${row.in_sage ? 'checked' : ''}
-            onchange="partsDatabase.updateInline(${index}, 'in_sage', this.checked)"
-            style="accent-color:var(--green);width:15px;height:15px;cursor:pointer" title="Part in Sage (MRP)"></td>
+          <td class="w110"><code class="mono">${esc(row.pn || '—')}</code></td>
+          <td class="w60 ctr"><span class="abc-badge abc-${esc(row.abc_class || 'C')}">${esc(row.abc_class || 'C')}</span></td>
+          <td class="bom-col-desc">${esc(row.item_desc || '—')}</td>
+          <td class="w60">${esc(row.unit || 'ea')}</td>
+          <td class="w110">${esc(row.manufacturer || '—')}</td>
+          <td class="w110"><span class="mono">${esc(row.manufacturer_pn || '—')}</span></td>
+          <td class="w44 ctr">${row.in_sage ? '✅' : '—'}</td>
           <td class="w60 ctr" style="cursor:pointer" onclick="partsDatabase.showWhereUsed('${row.id}')" title="Click to see where used">
             <span class="flag bom-summary-pill" style="background:var(--bg);border:1px solid var(--line);color:var(--mid);font-size:11px;padding:2px 6px" data-usage-id="${row.id}">${usageCount}</span>
           </td>
@@ -164,6 +172,12 @@ window.partsDatabase = window.partsDatabase || {}
     if (!resultsEl) return
 
     resultsEl.innerHTML = partsDb.renderCatalogueResults()
+
+    // Sync chip active states without re-rendering the whole toolbar
+    document.querySelectorAll('#abcCatalogueToolbar .bom-abc-chip').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-cls') === abcCatalogueClassFilter)
+    })
+
     setTimeout(() => partsDb.loadPartUsageCounts(), 100)
   }
 
@@ -185,11 +199,12 @@ window.partsDatabase = window.partsDatabase || {}
       setTimeout(() => partsDb.loadPartUsageCounts(), 100)
     }
 
-    const toolbar = `<div class="bom-abc-filter-row" style="margin-bottom:14px">
+    const toolbar = `<div id="abcCatalogueToolbar" class="bom-abc-filter-row" style="margin-bottom:14px">
       <span class="bom-abc-filter-label">Class:</span>
       ${['all', 'A', 'B', 'C'].map((cls) =>
         `<button class="bom-abc-chip${abcCatalogueClassFilter === cls ? ' active' : ''}"
-          onclick="abcCatalogueClassFilter='${cls}';partsDatabase.refreshCatalogueResults()">${cls === 'all' ? 'All' : cls}</button>`
+          data-cls="${cls}"
+          onclick="partsDatabase.setClassFilter('${cls}');partsDatabase.refreshCatalogueResults()">${cls === 'all' ? 'All' : cls}</button>`
       ).join('')}
       <input type="text" class="cell-edit" id="abcCatalogueSearch" value="${esc(abcCatalogueSearch)}"
         oninput="partsDatabase.setSearch(this.value);partsDatabase.refreshCatalogueResults()"
@@ -266,6 +281,10 @@ window.partsDatabase = window.partsDatabase || {}
 
   partsDb.setSearch = function(value) {
     abcCatalogueSearch = value
+  }
+
+  partsDb.setClassFilter = function(value) {
+    abcCatalogueClassFilter = value || 'all'
   }
 
   partsDb.toggleSort = toggleSort
@@ -518,23 +537,11 @@ window.partsDatabase = window.partsDatabase || {}
     const normalizedUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`
     try {
       const parsed = new URL(normalizedUrl)
-      window.open(parsed.toString(), '_blank', 'noopener,noreferrer')
+      globalThis.open(parsed.toString(), '_blank', 'noopener,noreferrer')
     } catch (err) {
       console.error('[Parts Database] Invalid datasheet URL:', err)
       showToast('Enter a valid URL', 'warning')
     }
-  }
-
-  partsDb.updateInline = function(index, field, value) {
-    const entry = abcCatalogueData[index]
-    if (!entry) return
-
-    entry[field] = value
-    clearTimeout(inlineSaveTimer)
-    inlineSaveTimer = setTimeout(async () => {
-      await partsDb.data.saveCatalogueEntry(entry)
-      usageCache[entry.id] = undefined
-    }, 800)
   }
 
   partsDb.loadPartUsageCounts = async function() {
@@ -638,4 +645,16 @@ window.partsDatabase = window.partsDatabase || {}
   partsDb.closeWhereUsed = function() {
     closeModal('modalWhereUsed')
   }
+
+  partsDb.dataSubscribe = partsDb.subscribeCatalogue
+  partsDb.dataUnsubscribe = partsDb.unsubscribeCatalogue
+  partsDb.data = partsDataApi
 })()
+
+export function productDevelopmentDataSubscribe() {
+  partsDatabase.dataSubscribe()
+}
+
+export function productDevelopmentDataUnsubscribe() {
+  partsDatabase.dataUnsubscribe()
+}

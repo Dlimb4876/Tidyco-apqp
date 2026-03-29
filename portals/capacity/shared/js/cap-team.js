@@ -2,60 +2,61 @@
    cap-team.js — Team Tab Rendering
    ============================================================ */
 
-window.capRenderTeamTab = function(teamArray, holidaysArray, monthKey, department, canEditFlag) {
-  const dept = department || 'ME';
-  const isPmContext = dept === 'PM';
+import { capGetHoursPerWeek, getMonthLabel } from './cap-utils.js'
+import { esc } from '../../../../utils/js/helpers.js'
+
+export function capRenderTeamTab(teamArray, holidaysArray, monthKey, department, canEditFlag) {
+  const dept = department || 'ME'
+  const isPmContext = dept === 'PM'
   const teamTitle = isPmContext
     ? 'PM TEAM'
     : dept === 'LOG'
       ? 'LOGISTICS TECHNICIANS'
       : dept === 'UNIT6'
         ? 'TECHNICIAN TEAM'
-        : 'ENGINEERING TEAM';
+        : 'ENGINEERING TEAM'
   const memberPlural = isPmContext
     ? 'managers'
     : dept === 'LOG'
       ? 'logistics technicians'
       : dept === 'UNIT6'
         ? 'technicians'
-        : 'engineers';
+        : 'engineers'
   const addFirstLabel = isPmContext
     ? 'Manager'
     : dept === 'LOG'
       ? 'Logistics Technician'
       : dept === 'UNIT6'
         ? 'Technician'
-        : 'Engineer';
+        : 'Engineer'
 
-  // Calculate monthly capacity (4.33 weeks per month average) — single pass
-  const weeksPerMonth = 4.33;
-  const capTotals = teamArray.reduce((acc, member) => {
-    const c = capGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100) * weeksPerMonth;
-    acc.total += c;
-    if ((member.group || '') === 'NPI') acc.npi += c;
-    if ((member.group || '') === 'Production') acc.prod += c;
-    return acc;
-  }, { total: 0, npi: 0, prod: 0 });
-  const totalCapacity = capTotals.total.toFixed(1);
-  const npiCapacity = capTotals.npi.toFixed(1);
-  const prodCapacity = capTotals.prod.toFixed(1);
+  const weeksPerMonth = 4.33
+  const capTotals = (teamArray || []).reduce((acc, member) => {
+    const c = capGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100) * weeksPerMonth
+    acc.total += c
+    if ((member.group || '') === 'NPI') acc.npi += c
+    if ((member.group || '') === 'Production') acc.prod += c
+    return acc
+  }, { total: 0, npi: 0, prod: 0 })
+  const totalCapacity = capTotals.total.toFixed(1)
+  const npiCapacity = capTotals.npi.toFixed(1)
+  const prodCapacity = capTotals.prod.toFixed(1)
 
-  // Calculate holidays this month
-  const today = new Date();
-  const thisMonth = monthKey || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-  const holidays = holidaysArray || [];
-  const holidaysThisMonth = holidays.filter(h => h.date.substring(0, 7) === thisMonth);
+  const today = new Date()
+  const thisMonth = monthKey || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+  const holidays = holidaysArray || []
+  const holidaysThisMonth = holidays.filter(h => h.date.substring(0, 7) === thisMonth)
   const uniqueHolidayKeysThisMonth = new Set(
     holidaysThisMonth
       .map(h => `${h.personId || h.person_id || ''}|${h.date}`)
       .filter(key => !key.startsWith('|'))
-  );
+  )
 
-  let rows = '';
-  teamArray.forEach((member, idx) => {
-    const rowIndex = idx;
-    const effective = (capGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100)).toFixed(1);
-    const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option>';
+  let rows = ''
+  ;(teamArray || []).forEach((member, idx) => {
+    const rowIndex = idx
+    const effective = (capGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100)).toFixed(1)
+    const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option>'
     rows += `
       <tr data-member-idx="${rowIndex}">
         <td><input name="cap_team_${rowIndex}_name" value="${esc(member.name)}" data-cap-action="cap-team-upd" data-field="name"></td>
@@ -67,10 +68,10 @@ window.capRenderTeamTab = function(teamArray, holidaysArray, monthKey, departmen
         <td><input name="cap_team_${rowIndex}_utilisation" type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" data-cap-action="cap-team-upd" data-field="utilisation"></td>
         <td style="font-weight: bold;">${effective}</td>
         <td style="text-align: center;">${canEditFlag ? `<button class="me-del-btn" data-cap-action="cap-team-del">✕</button>` : ''}</td>
-      </tr>`;
-  });
+      </tr>`
+  })
 
-  const monthLabel = getMonthLabel(thisMonth);
+  const monthLabel = getMonthLabel(thisMonth)
 
   return `
     <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -129,5 +130,5 @@ window.capRenderTeamTab = function(teamArray, holidaysArray, monthKey, departmen
           </div>` : ''}
         </div>
       </div>
-    </div>`;
-};
+    </div>`
+}

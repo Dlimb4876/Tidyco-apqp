@@ -2,15 +2,78 @@
    me-capacity.js — ME Load Capacity Orchestrator
    ============================================================ */
 
-// ── Module state ───────────────────────────────────────────
-let meTab = 'chart';
-let meChartStart = null; // ISO month string (e.g., '2025-03')
-let meHolidayMonth = null; // Holiday planner month (independent from chart)
-let meChartInst = null;  // Chart.js instance
-let meSaveTimer = null;  // Debounce timer
+import { canEdit, isEditingInlineCell } from '../../../../utils/js/helpers.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+import { requestRender } from '../../../../utils/js/render-scheduler.js'
+import { currentUser } from '../../../../core/js/supa.js'
+import { meDataState, meDataInitialized } from './me-data.js'
+import {
+  meDataGetTeam,
+  meDataGetTasks,
+  meDataGetProducts,
+  meDataGetHolidays,
+  meDataAutoSyncProductionProducts,
+  meDataUpdateProduct
+} from './me-data-entities.js'
+import { meDataInit, meDataSave } from './me-data-persistence.js'
+import { setMeRealtimeHooks } from './me-data-realtime.js'
+import { meSaveTeamRelational } from './me-data-relational.js'
+import {
+  meDataGetProductSupportHistory,
+  meDataDeleteProductSupportHistoryEntry,
+  meDataUpdateProductSupportHistoryEntry,
+  meDataAddProductSupportHistory,
+  meDataGetProductSupportRateForDate
+} from './me-data-support-history.js'
+import { getBankHolidaysForYear } from '../../shared/js/cap-utils.js'
+import { setCapProductionBatchesResolver } from '../../shared/js/cap-calculations.js'
+import { capRenderTeamTab } from '../../shared/js/cap-team.js'
+import { capRenderTasksTab, capTasksFilters, capTasksSort } from '../../shared/js/cap-tasks.js'
+import { capRenderProductsTab, capProductsTableState, setCapProductsDependencies } from '../../shared/js/cap-products.js'
+import { capRenderProductTaskLoadTab, capProductLoadTableState, setCapProductLoadDependencies } from '../../shared/js/cap-product-taskload.js'
+import { productsDataGetAll } from '../../../product-development/product-management/js/products-data.js'
+import { prodState, prodDataInit } from '../../../production/js/data.js'
+import { capRenderHolidaysTab } from '../../shared/js/cap-holidays.js'
+import { capRenderChartTab, capDrawChartNow } from '../../shared/js/cap-chart.js'
+import { capDrawHeatmapNow } from '../../shared/js/cap-heatmap.js'
+
+export let meTab = 'chart'
+let meChartStart = null
+let meHolidayMonth = null
+let meSaveTimer = null
+let meProductDepsWired = false
+
+function meWireProductDependencies() {
+  if (meProductDepsWired) return
+  meProductDepsWired = true
+
+  function meRefreshByDept() {
+    meRefreshCurrentTab()
+  }
+
+  setCapProductsDependencies({
+    refreshByDepartment: meRefreshByDept,
+    getAllProducts: productsDataGetAll,
+    apiByDepartment: {
+      ME: {
+        getProducts: meDataGetProducts,
+        updateProduct: meDataUpdateProduct,
+        getHistory: meDataGetProductSupportHistory,
+        deleteSupportHistoryEntry: meDataDeleteProductSupportHistoryEntry,
+        updateSupportHistoryEntry: meDataUpdateProductSupportHistoryEntry,
+        addSupportHistoryEntry: meDataAddProductSupportHistory
+      }
+    }
+  })
+
+  setCapProductLoadDependencies({
+    refreshByDepartment: meRefreshByDept,
+    getAllProducts: productsDataGetAll
+  })
+}
 
 function meCanEditCapacity() {
-  return typeof canEdit === 'function' ? canEdit() : true;
+  return typeof canEdit === 'function' ? canEdit() : true
 }
 
 function meGetCapacityData() {
@@ -19,57 +82,32 @@ function meGetCapacityData() {
     tasks: meDataGetTasks(),
     products: meDataGetProducts(),
     holidays: meDataGetHolidays()
-  };
+  }
 }
 
-function meGetLegacyCapacityFunction(name) {
-  return window['me' + name];
-}
-
-function meRenderTabWithFallback(sharedRenderer, legacyName, args, legacyArgs) {
-  if (typeof sharedRenderer === 'function') return sharedRenderer(...args);
-  const legacyRenderer = meGetLegacyCapacityFunction(legacyName);
-  return typeof legacyRenderer === 'function' ? legacyRenderer(...legacyArgs) : '';
+function meGetCalcOptions() {
+  return { supportRateResolver: meDataGetProductSupportRateForDate }
 }
 
 function meDrawChartViews() {
-  const { team, tasks, products, holidays } = meGetCapacityData();
-
-  if (typeof window.capDrawChartNow === 'function') {
-    window.capDrawChartNow(team, tasks, products, holidays, meChartStart, 'ME');
-  } else {
-    const legacyDrawChart = meGetLegacyCapacityFunction('DrawChartNow');
-    if (typeof legacyDrawChart === 'function') legacyDrawChart();
-  }
-
-  if (typeof window.capDrawHeatmapNow === 'function') {
-    window.capDrawHeatmapNow(team, tasks, products, holidays, meChartStart, 'ME');
-  } else {
-    const legacyDrawHeatmap = meGetLegacyCapacityFunction('DrawHeatmapNow');
-    if (typeof legacyDrawHeatmap === 'function') legacyDrawHeatmap();
-  }
+  const { team, tasks, products, holidays } = meGetCapacityData()
+  const opts = meGetCalcOptions()
+  capDrawChartNow(team, tasks, products, holidays, meChartStart, 'ME', opts)
+  capDrawHeatmapNow(team, tasks, products, holidays, meChartStart, 'ME')
 }
 
-// ── Entry point ────────────────────────────────────────────
-/**
- * Main render function for ME Capacity Portal
- */
-window.renderMeCapacity = function() {
-  // Auto-sync ME products from Product Management database (all statuses).
-  // Guard: only save if meDataInit has completed so holidays are loaded.
-  // Saving before init completes would delete all holidays from the DB.
-  if (typeof meDataAutoSyncProductionProducts === 'function') {
-    const synced = meDataAutoSyncProductionProducts();
-    if (synced && window.meDataInitialized) {
-      setTimeout(() => {
-        if (typeof meDebouncedSave === 'function') meDebouncedSave();
-      }, 1000);
-    }
+export function renderMeCapacity() {
+  meWireProductDependencies()
+
+  const synced = meDataAutoSyncProductionProducts()
+  if (synced && meDataInitialized) {
+    setTimeout(() => {
+      meDebouncedSave()
+    }, 1000)
   }
 
   if (!meChartStart) {
-    // Load from localStorage, or default to January 2026
-    meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';
+    meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01'
   }
 
   const html = `
@@ -82,7 +120,7 @@ window.renderMeCapacity = function() {
             <div class="me-topbar-sub">Manufacturing Engineering · Man-hours planning</div>
           </div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="showGuide('capacity-me')" title="User Guide">❓ Guide</button>
+        <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-guide" title="User Guide">❓ Guide</button>
       </div>
 
       <div class="me-nav">
@@ -98,239 +136,181 @@ window.renderMeCapacity = function() {
         ${meGetTabContent()}
       </div>
     </div>
-  `;
+  `
 
-  // Draw chart and embedded heat map on initial render
   setTimeout(() => {
-    if (meTab === 'chart') {
-      meDrawChartViews();
-    }
-  }, 100);
+    if (meTab === 'chart') meDrawChartViews()
+  }, 100)
 
-  return html;
-};
+  return html
+}
 
-// ── Tab management ─────────────────────────────────────────
-window.meSetTab = function(tab) {
-  if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart';
-  const prevMeTab = meTab;
-  meTab = tab;
-  // Update URL so refresh restores this tab
-  const meParts = ['s=capacity', 'ct=me'];
-  if (tab !== 'chart') meParts.push('met=' + encodeURIComponent(tab));
-  if (typeof writeNavigationHistory === 'function') {
-    writeNavigationHistory('#' + meParts.join('&'), { push: prevMeTab !== tab });
-  }
+export function meSetTab(tab) {
+  if (tab === 'dashboard' || tab === 'heatmap') tab = 'chart'
+  meTab = tab
 
-  // Update nav button active states
+  const parts = ['s=capacity', 'ct=me']
+  if (tab !== 'chart') parts.push('met=' + encodeURIComponent(tab))
+  history.replaceState(null, '', '#' + parts.join('&'))
+
   document.querySelectorAll('.me-nav-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  const activeBtn = document.querySelector(`.me-nav-btn[data-tab="${tab}"]`);
-  if (activeBtn) activeBtn.classList.add('active');
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tab)
+  })
 
-  // Update body content
-  const body = document.getElementById('meBody');
+  const body = document.getElementById('meBody')
   if (body) {
-    body.innerHTML = meGetTabContent();
+    body.innerHTML = meGetTabContent()
     setTimeout(() => {
-      if (tab === 'chart') {
-        meDrawChartViews();
-      }
-    }, 100);
+      if (tab === 'chart') meDrawChartViews()
+    }, 100)
   }
-};
+}
 
-// Refresh current tab without switching tabs
-window.meRefreshCurrentTab = function() {
-  // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
-  // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
+export function getMeTab() {
+  return meTab
+}
+
+export function setMeTab(tab) {
+  if (!tab) return
+  meTab = tab
+}
+
+export function meRefreshCurrentTab() {
   if (meTab === 'chart') {
-    const monthInput = document.getElementById('meChartMonthInput');
-    if (monthInput && meChartStart) {
-      monthInput.value = meChartStart;
-    }
-    meDrawChartViews();
-    return;
+    const monthInput = document.getElementById('meChartMonthInput')
+    if (monthInput && meChartStart) monthInput.value = meChartStart
+    meDrawChartViews()
+    return
   }
 
-  const body = document.getElementById('meBody');
-  if (body) {
-    body.innerHTML = meGetTabContent();
-    setTimeout(() => {
-      if (meTab === 'chart') {
-        meDrawChartViews();
-      }
-    }, 100);
-  }
-};
+  const body = document.getElementById('meBody')
+  if (body) body.innerHTML = meGetTabContent()
+}
 
 function meGetTabContent() {
-  const { team, tasks, products, holidays } = meGetCapacityData();
+  const { team, tasks, products, holidays } = meGetCapacityData()
 
-  // Initialize holiday month on first view
   if (!meHolidayMonth) {
-    const today = new Date();
-    meHolidayMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const today = new Date()
+    meHolidayMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
   }
 
-  // Get available products from ME capacity database
-  const availableProducts = products || [];
-  const taskFilters = window.capTasksFilters && window.capTasksFilters.ME ? window.capTasksFilters.ME : undefined;
-  const taskSort = window.capTasksSort && window.capTasksSort.ME ? window.capTasksSort.ME : undefined;
-  const productsTableState = window.capProductsTableState && window.capProductsTableState.ME
-    ? window.capProductsTableState.ME
-    : undefined;
-  const productLoadTableState = window.capProductLoadTableState && window.capProductLoadTableState.ME
-    ? window.capProductLoadTableState.ME
-    : undefined;
-  const bankHolidays = typeof meGetBankHolidaysForYear === 'function'
-    ? meGetBankHolidaysForYear(Number((meHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
-    : null;
+  const taskFilters = capTasksFilters.ME
+  const taskSort = capTasksSort.ME
+  const productsTableState = capProductsTableState.ME
+  const productLoadTableState = capProductLoadTableState.ME
+  const bankHolidays = getBankHolidaysForYear(Number((meHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
 
   switch (meTab) {
     case 'team':
-      return meRenderTabWithFallback(window.capRenderTeamTab, 'RenderTeamTab', [team, holidays, meChartStart, 'ME', meCanEditCapacity()], [team]);
+      return capRenderTeamTab(team, holidays, meChartStart, 'ME', meCanEditCapacity())
     case 'tasks':
-      return meRenderTabWithFallback(window.capRenderTasksTab, 'RenderTasksTab', [tasks, team, availableProducts, 'ME', taskFilters, taskSort, meCanEditCapacity()], [tasks, team, availableProducts]);
+      return capRenderTasksTab(tasks, team, products, 'ME', taskFilters, taskSort, meCanEditCapacity())
     case 'products':
-      return meRenderTabWithFallback(window.capRenderProductsTab, 'RenderProductsTab', [products, tasks, 'ME', productsTableState], [products, availableProducts, tasks]);
+      return capRenderProductsTab(products, tasks, 'ME', productsTableState)
     case 'product-taskload':
-      return meRenderTabWithFallback(window.capRenderProductTaskLoadTab, 'RenderProductTaskLoadTab', [tasks, products, 'ME', productLoadTableState], [tasks, products]);
+      return capRenderProductTaskLoadTab(tasks, products, 'ME', productLoadTableState)
     case 'holidays':
-      return meRenderTabWithFallback(window.capRenderHolidaysTab, 'RenderHolidaysTab', [holidays, team, meHolidayMonth, 'ME', bankHolidays, meCanEditCapacity()], [holidays, team, meHolidayMonth]);
+      return capRenderHolidaysTab(holidays, team, meHolidayMonth, 'ME', bankHolidays, meCanEditCapacity())
     case 'chart':
     default:
-      return meRenderTabWithFallback(window.capRenderChartTab, 'RenderChartTab', [meChartStart, team, tasks, products, holidays, 'ME'], [meChartStart, team, tasks, products, holidays]);
+      return capRenderChartTab(meChartStart, team, tasks, products, holidays, 'ME', meGetCalcOptions())
   }
 }
 
 function meRerenderChartTabForMonthChange() {
-  const body = document.getElementById('meBody');
-  if (!body) return;
-  body.innerHTML = meGetTabContent();
-  setTimeout(() => {
-    meDrawChartViews();
-  }, 100);
+  const body = document.getElementById('meBody')
+  if (!body) return
+  body.innerHTML = meGetTabContent()
+  setTimeout(() => meDrawChartViews(), 100)
 }
 
-// ── Month navigation handlers ──────────────────────────────
-window.meOnMonthChange = function(newMonth) {
+export function meOnMonthChange(newMonth) {
   if (meTab === 'holidays') {
-    meHolidayMonth = newMonth;
+    meHolidayMonth = newMonth
   } else {
-    meChartStart = newMonth;
-    localStorage.setItem('meChartStartMonth', newMonth);
-    meRerenderChartTabForMonthChange();
-    return;
+    meChartStart = newMonth
+    localStorage.setItem('meChartStartMonth', newMonth)
+    meRerenderChartTabForMonthChange()
+    return
   }
-  meRefreshCurrentTab();
-};
+  meRefreshCurrentTab()
+}
 
-window.meOnNextMonth = function() {
-  const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart;
-  const [year, month] = currentMonth.split('-').map(Number);
-  const date = new Date(year, month - 1, 1);
-  date.setMonth(date.getMonth() + 1);
-  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+export function meOnNextMonth() {
+  const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart
+  const [year, month] = currentMonth.split('-').map(Number)
+  const date = new Date(year, month - 1, 1)
+  date.setMonth(date.getMonth() + 1)
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+  meOnMonthChange(newMonth)
+}
 
-  if (meTab === 'holidays') {
-    meHolidayMonth = newMonth;
-  } else {
-    meChartStart = newMonth;
-    localStorage.setItem('meChartStartMonth', newMonth);
-    meRerenderChartTabForMonthChange();
-    return;
-  }
-  meRefreshCurrentTab();
-};
+export function meOnPrevMonth() {
+  const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart
+  const [year, month] = currentMonth.split('-').map(Number)
+  const date = new Date(year, month - 1, 1)
+  date.setMonth(date.getMonth() - 1)
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+  meOnMonthChange(newMonth)
+}
 
-window.meOnPrevMonth = function() {
-  const currentMonth = meTab === 'holidays' ? meHolidayMonth : meChartStart;
-  const [year, month] = currentMonth.split('-').map(Number);
-  const date = new Date(year, month - 1, 1);
-  date.setMonth(date.getMonth() - 1);
-  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+export async function meOnSave(showAlert) {
+  await meDataSave(showAlert)
+}
 
-  if (meTab === 'holidays') {
-    meHolidayMonth = newMonth;
-  } else {
-    meChartStart = newMonth;
-    localStorage.setItem('meChartStartMonth', newMonth);
-    meRerenderChartTabForMonthChange();
-    return;
-  }
-  meRefreshCurrentTab();
-};
-
-// ── Persistence ────────────────────────────────────────────
-window.meOnSave = async function(showAlert) {
-  await meDataSave(showAlert);
-};
-
-function meDebouncedSave() {
-  clearTimeout(meSaveTimer);
+export function meDebouncedSave() {
+  clearTimeout(meSaveTimer)
   meSaveTimer = setTimeout(async () => {
-    await meDataSave(false);
-    if (meTab === 'chart') return;
+    await meDataSave(false)
+    if (meTab === 'chart') return
     requestRender('me', {
       trigger: 'save',
-      renderNow: function() {
-        const body = document.getElementById('meBody');
-        if (body) body.innerHTML = meGetTabContent();
+      renderNow: () => {
+        const body = document.getElementById('meBody')
+        if (body) body.innerHTML = meGetTabContent()
       },
-      isEditing: isEditingInlineCell(),
-    });
-  }, 500);
+      isEditing: isEditingInlineCell()
+    })
+  }, 500)
 }
 
-// ── Initialization ─────────────────────────────────────────
-window.meInit = async function() {
-  await meDataInit();
+export async function meInit() {
+  await meDataInit()
   if (!meChartStart) {
-    // Load from localStorage, or default to January 2026
-    meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01';
+    meChartStart = localStorage.getItem('meChartStartMonth') || '2026-01'
   }
-};
+  setCapProductionBatchesResolver(() => prodState?.batches || [])
+  prodDataInit().catch(err => console.warn('ME: could not load production batches for support chart', err))
+}
 
-// Auto-init
-meInit().catch(err => console.error('ME init failed:', err));
+export const meDrawChartNow = meDrawChartViews
 
-// Prevent data loss on page close by flushing debounce timer
-window.addEventListener('beforeunload', (event) => {
+export function flushMEDataNow() {
+  if (!currentUser) return
+  const pendingTeams = Array.isArray(meDataState.team) ? meDataState.team : []
+  pendingTeams.forEach(member => {
+    meSaveTeamRelational(currentUser.id, member).catch(err => {
+      console.warn('Failed to flush team member', member && member.id, err.message)
+    })
+  })
+}
+
+setMeRealtimeHooks({
+  getTab: () => meTab,
+  refreshCurrentTab: () => meRefreshCurrentTab()
+})
+
+document.addEventListener('click', event => {
+  const target = event.target.closest('[data-cap-action="cap-me-guide"]')
+  if (target) showGuide('capacity-me')
+})
+
+meInit().catch(err => console.error('ME init failed:', err))
+
+window.addEventListener('beforeunload', () => {
   if (meSaveTimer) {
-    clearTimeout(meSaveTimer);
-    // Flush pending save synchronously using XMLHttpRequest to ensure it completes
-    flushMEDataNow();
+    clearTimeout(meSaveTimer)
+    flushMEDataNow()
   }
-});
-
-// Immediate synchronous save without debounce (for beforeunload)
-window.flushMEDataNow = function() {
-  if (!supa || !currentUser) return;
-
-  // Fire pending team deletes so they are committed even if the debounce
-  // save cycle hasn't processed them yet.
-  const pendingTeams = window.meDataPendingDeletes && Array.isArray(window.meDataPendingDeletes.teams)
-    ? window.meDataPendingDeletes.teams
-    : [];
-  if (pendingTeams.length > 0 && typeof meDeleteTeamRelational === 'function') {
-    pendingTeams.forEach(teamId => {
-      meDeleteTeamRelational(teamId).catch(err => {
-        console.warn('Failed to flush team delete', teamId, err.message);
-      });
-    });
-  }
-
-  // Quick synchronous save for team members only (most critical)
-  if (meDataState.team && meDataState.team.length > 0) {
-    meDataState.team.forEach((member, i) => {
-      if (typeof meSaveTeamRelational === 'function') {
-        // Don't await, just fire and forget for unload
-        meSaveTeamRelational(currentUser.id, member).catch(err => {
-          console.warn('Failed to flush team member', i, err.message);
-        });
-      }
-    });
-  }
-};
+})

@@ -3,21 +3,33 @@
  * Opens the new change request form.
  */
 
-async function mcsShowCreateModal() {
-  const backdrop = document.createElement('div');
-  backdrop.className = 'mcs-modal-backdrop open';
-  backdrop.id = 'mcs-form-backdrop';
+import { appState } from '../../../core/js/state.js'
+import { currentUser } from '../../../core/js/supa.js'
+import { esc } from '../../../utils/js/helpers.js'
+import { productsState } from '../../product-development/product-management/js/products-data.js'
+import { mcsGetPfmeaCausesForLinking, mcsBuildPfmeaLinkingSection, mcsHandlePfmeaAction } from './mcs-pfmea.js'
+import { mcsSaveChange } from './mcs-modal-edit.js'
+import { mcsCloseModal, mcsApproverSelectionFieldHtml } from './mcs-modal-shared.js'
 
-  const pfmeaCauses = await mcsGetPfmeaCausesForLinking();
-  const emptyChange = { related_pfmea_cause_id: null };
-  const pfmeaLinkingHtml = mcsBuildPfmeaLinkingSection(emptyChange, pfmeaCauses);
+/**
+ * Show create modal and return created backdrop element.
+ */
+export async function mcsShowCreateModal() {
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mcs-modal-backdrop open'
+  backdrop.id = 'mcs-form-backdrop'
 
-  const initiatedBy = (currentUser && currentUser.email) ? currentUser.email : '';
-  const productOptions = (window.productsState && window.productsState.products || [])
+  const pfmeaCauses = await mcsGetPfmeaCausesForLinking()
+  const emptyChange = { related_pfmea_cause_id: null }
+  const pfmeaLinkingHtml = mcsBuildPfmeaLinkingSection(emptyChange, pfmeaCauses)
+
+  const initiatedBy = (currentUser && currentUser.email) ? currentUser.email : ''
+  const products = (appState.productsState && appState.productsState.products) || productsState.products || []
+  const productOptions = products
     .map(p => {
-      const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name);
-      return `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-part="${esc(p.part_number || '')}">${display}</option>`;
-    }).join('');
+      const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name)
+      return `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-part="${esc(p.part_number || '')}">${display}</option>`
+    }).join('')
 
   backdrop.innerHTML = `
     <div class="mcs-modal mcs-modal-wide" id="mcs-form-modal">
@@ -26,11 +38,10 @@ async function mcsShowCreateModal() {
         <div class="mcs-modal-titles">
           <div class="mcs-modal-title">Create Change Request</div>
         </div>
-        <button class="mcs-modal-close" onclick="mcsCloseModal('mcs-form-backdrop')">&times;</button>
+        <button class="mcs-modal-close" data-action="mcs-close-form">&times;</button>
       </div>
       <div class="mcs-modal-body">
         <div class="mcs-form-layout">
-          <!-- Basic Information -->
           <section class="mcs-form-section mcs-form-section-primary">
             <div class="mcs-form-section-header">
               <span class="mcs-form-section-number">1</span>
@@ -95,7 +106,6 @@ async function mcsShowCreateModal() {
             </div>
           </section>
 
-          <!-- Change Details -->
           <section class="mcs-form-section">
             <div class="mcs-form-section-header">
               <span class="mcs-form-section-number">2</span>
@@ -118,7 +128,6 @@ async function mcsShowCreateModal() {
             </div>
           </section>
 
-          <!-- Impact Assessment -->
           <section class="mcs-form-section">
             <div class="mcs-form-section-header">
               <span class="mcs-form-section-number">3</span>
@@ -155,7 +164,6 @@ async function mcsShowCreateModal() {
             </div>
           </section>
 
-          <!-- Implementation & Approval -->
           <section class="mcs-form-section mcs-form-section-final">
             <div class="mcs-form-section-header">
               <span class="mcs-form-section-number">4</span>
@@ -182,14 +190,29 @@ async function mcsShowCreateModal() {
         </div>
       </div>
       <div class="mcs-modal-footer">
-        <button class="mcs-btn mcs-btn-ghost" onclick="mcsCloseModal('mcs-form-backdrop')">Cancel</button>
-        <button class="mcs-btn mcs-btn-primary" onclick="mcsSaveChange()">Submit Change Request</button>
+        <button class="mcs-btn mcs-btn-ghost" data-action="mcs-cancel-form">Cancel</button>
+        <button class="mcs-btn mcs-btn-primary" data-action="mcs-save-change">Submit Change Request</button>
       </div>
     </div>
-  `;
+  `
 
-  document.body.appendChild(backdrop);
+  document.body.appendChild(backdrop)
   backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop');
-  });
+    if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop')
+  })
+
+  backdrop.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-action]')
+    if (!trigger) return
+    const action = trigger.dataset.action
+
+    if (mcsHandlePfmeaAction(action, trigger)) return
+    if (action === 'mcs-close-form' || action === 'mcs-cancel-form') {
+      mcsCloseModal('mcs-form-backdrop')
+      return
+    }
+    if (action === 'mcs-save-change') {
+      mcsSaveChange()
+    }
+  })
 }

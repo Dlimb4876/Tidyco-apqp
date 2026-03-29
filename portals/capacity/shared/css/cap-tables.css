@@ -2,6 +2,33 @@
  	 me-capacity-tables.css — tables and utility rows
  	 ============================================================ */
 
+/* ── Filter / Search Bar ─────────────────────────────────────── */
+.cap-filter-bar {
+	display: flex; gap: 10px; flex-wrap: wrap;
+	margin-bottom: 12px; align-items: center;
+}
+.cap-filter-bar input[type="text"] {
+	padding: 7px 10px; border: 1.5px solid var(--line2);
+	border-radius: 6px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif;
+	background: var(--white); color: var(--ink);
+	outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.cap-filter-bar input[type="text"]:focus {
+	border-color: var(--blue);
+	box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.08);
+}
+.cap-filter-bar select {
+	padding: 7px 10px; border: 1.5px solid var(--line2);
+	border-radius: 6px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif;
+	background: var(--white); color: var(--ink);
+	outline: none; cursor: pointer;
+	transition: border-color .15s, box-shadow .15s;
+}
+.cap-filter-bar select:focus {
+	border-color: var(--blue);
+	box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.08);
+}
+
 /* ── Inline-Editable Tables ──────────────────────────────────── */
 .me-products-card-body {
 	padding: 12px;
@@ -155,6 +182,14 @@
 	.me-card-body-gutter {
 		padding: 10px;
 	}
+
+	.cap-filter-bar {
+		gap: 8px;
+	}
+	.cap-filter-bar input[type="text"],
+	.cap-filter-bar select {
+		width: 100%; min-height: 38px;
+	}
 }
 
 @media (min-width: 768px) {
@@ -164,6 +199,10 @@
 
 	.me-card-body-gutter {
 		padding: 14px;
+	}
+
+	.cap-filter-bar input[type="text"] {
+		min-width: 220px; flex: 1 1 220px;
 	}
 
 	.me-add-row {

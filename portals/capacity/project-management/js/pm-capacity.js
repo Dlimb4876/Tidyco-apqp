@@ -2,133 +2,102 @@
    pm-capacity.js — Project Management Capacity Orchestrator
    ============================================================ */
 
-let pmTab = 'chart';
-let pmHolidayMonth = null;
-let pmChartStart = null;
-let pmSaveTimer = null;
+import { canEdit, isEditingInlineCell } from '../../../../utils/js/helpers.js'
+import { requestRender } from '../../../../utils/js/render-scheduler.js'
+import { appState } from '../../../../core/js/state.js'
+import { getBankHolidaysForYear as capGetBankHolidaysForYear } from '../../shared/js/cap-utils.js'
+import { capRenderTeamTab } from '../../shared/js/cap-team.js'
+import { capRenderTasksTab, capTasksFilters, capTasksSort } from '../../shared/js/cap-tasks.js'
+import { capRenderProductsTab, capProductsTableState } from '../../shared/js/cap-products.js'
+import {
+  capRenderProductTaskLoadTab,
+  capProductLoadTableState
+} from '../../shared/js/cap-product-taskload.js'
+import { capRenderHolidaysTab } from '../../shared/js/cap-holidays.js'
+import { capRenderChartTab, capDrawChartNow } from '../../shared/js/cap-chart.js'
+import { capDrawHeatmapNow } from '../../shared/js/cap-heatmap.js'
+import {
+  pmDataInit,
+  pmDataSave,
+  pmDataAutoSyncPMProducts,
+  pmDataGetTeam,
+  pmDataGetTasks,
+  pmDataGetProducts,
+  pmDataGetHolidays,
+  pmDataSubscribe,
+  pmDataUnsubscribe,
+  setPmDataRealtimeHooks
+} from './pm-data.js'
+
+export let pmTab = 'chart'
+let pmHolidayMonth = null
+let pmChartStart = null
+let pmSaveTimer = null
 
 function pmGetCurrentMonthKey() {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const today = new Date()
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
 }
 
 function pmGetData() {
   return {
-    team: typeof pmDataGetTeam === 'function' ? pmDataGetTeam() : [],
-    tasks: typeof pmDataGetTasks === 'function' ? pmDataGetTasks() : [],
-    products: typeof pmDataGetProducts === 'function' ? pmDataGetProducts() : [],
-    holidays: typeof pmDataGetHolidays === 'function' ? pmDataGetHolidays() : []
-  };
-}
-
-function pmGetLegacyCapacityFunction(name) {
-  return window['me' + name];
-}
-
-function pmWithLegacyDepartment(callback) {
-  const contextKey = 'me' + 'CurrentDepartmentContext';
-  const previous = window[contextKey];
-  window[contextKey] = 'PM';
-  try {
-    return callback();
-  } finally {
-    window[contextKey] = previous;
+    team: pmDataGetTeam(),
+    tasks: pmDataGetTasks(),
+    products: pmDataGetProducts(),
+    holidays: pmDataGetHolidays()
   }
-}
-
-function pmRenderWithSharedFallback(sharedRenderer, legacyName, args, legacyArgs) {
-  if (typeof sharedRenderer === 'function') return sharedRenderer(...args);
-  const legacyRenderer = pmGetLegacyCapacityFunction(legacyName);
-  return typeof legacyRenderer === 'function'
-    ? pmWithLegacyDepartment(function() { return legacyRenderer(...legacyArgs); })
-    : '';
 }
 
 function pmDrawChartViews() {
-  const { team, tasks, products, holidays } = pmGetData();
-
-  if (typeof window.capDrawChartNow === 'function') {
-    window.capDrawChartNow(team, tasks, products, holidays, pmChartStart, 'PM');
-  } else {
-    const legacyDrawChart = pmGetLegacyCapacityFunction('DrawChartNow');
-    if (typeof legacyDrawChart === 'function') {
-      pmWithLegacyDepartment(function() { legacyDrawChart(); });
-    }
-  }
-
-  if (typeof window.capDrawHeatmapNow === 'function') {
-    window.capDrawHeatmapNow(team, tasks, products, holidays, pmChartStart, 'PM');
-  } else {
-    const legacyDrawHeatmap = pmGetLegacyCapacityFunction('DrawHeatmapNow');
-    if (typeof legacyDrawHeatmap === 'function') {
-      pmWithLegacyDepartment(function() { legacyDrawHeatmap(); });
-    }
-  }
+  const { team, tasks, products, holidays } = pmGetData()
+  capDrawChartNow(team, tasks, products, holidays, pmChartStart, 'PM')
+  capDrawHeatmapNow(team, tasks, products, holidays, pmChartStart, 'PM')
 }
 
 function pmGetTabContent() {
-  const { team, tasks, products, holidays } = pmGetData();
+  const { team, tasks, products, holidays } = pmGetData()
 
-  if (!pmHolidayMonth) {
-    pmHolidayMonth = pmGetCurrentMonthKey();
-  }
+  if (!pmHolidayMonth) pmHolidayMonth = pmGetCurrentMonthKey()
+  if (!pmChartStart) pmChartStart = pmGetCurrentMonthKey()
 
-  if (!pmChartStart) pmChartStart = pmGetCurrentMonthKey();
-
-  const taskFilters = window.capTasksFilters && window.capTasksFilters.PM
-    ? window.capTasksFilters.PM
-    : window['pm' + 'TasksFilters'];
-  const taskSort = window.capTasksSort && window.capTasksSort.PM
-    ? window.capTasksSort.PM
-    : window['pm' + 'TasksSort'];
-  const productsTableState = window.capProductsTableState && window.capProductsTableState.PM
-    ? window.capProductsTableState.PM
-    : undefined;
-  const productLoadTableState = window.capProductLoadTableState && window.capProductLoadTableState.PM
-    ? window.capProductLoadTableState.PM
-    : undefined;
-  const bankHolidays = typeof window.capGetBankHolidaysForYear === 'function'
-    ? window.capGetBankHolidaysForYear(Number((pmHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
-    : (typeof window.meGetBankHolidaysForYear === 'function'
-      ? window.meGetBankHolidaysForYear(Number((pmHolidayMonth || '').split('-')[0]) || new Date().getFullYear())
-      : null);
+  const taskFilters = capTasksFilters.PM
+  const taskSort = capTasksSort.PM
+  const productsTableState = capProductsTableState.PM
+  const productLoadTableState = capProductLoadTableState.PM
+  const bankHolidays = capGetBankHolidaysForYear(
+    Number((pmHolidayMonth || '').split('-')[0]) || new Date().getFullYear()
+  )
 
   switch (pmTab) {
     case 'team':
-      return pmRenderWithSharedFallback(window.capRenderTeamTab, 'RenderTeamTab', [team, holidays, pmChartStart, 'PM', canEdit()], [team]);
+      return capRenderTeamTab(team, holidays, pmChartStart, 'PM', canEdit())
     case 'tasks':
-      return pmRenderWithSharedFallback(window.capRenderTasksTab, 'RenderTasksTab', [tasks, team, products, 'PM', taskFilters, taskSort, canEdit()], [tasks, team, products, true]);
+      return capRenderTasksTab(tasks, team, products, 'PM', taskFilters, taskSort, canEdit())
     case 'products':
-      return pmRenderWithSharedFallback(window.capRenderProductsTab, 'RenderProductsTab', [products, tasks, 'PM', productsTableState], [products, products, tasks]);
+      return capRenderProductsTab(products, tasks, 'PM', productsTableState)
     case 'product-taskload':
-      return pmRenderWithSharedFallback(window.capRenderProductTaskLoadTab, 'RenderProductTaskLoadTab', [tasks, products, 'PM', productLoadTableState], [tasks, products]);
+      return capRenderProductTaskLoadTab(tasks, products, 'PM', productLoadTableState)
     case 'holidays':
-      return pmRenderWithSharedFallback(window.capRenderHolidaysTab, 'RenderHolidaysTab', [holidays, team, pmHolidayMonth, 'PM', bankHolidays, canEdit()], [holidays, team, pmHolidayMonth]);
+      return capRenderHolidaysTab(holidays, team, pmHolidayMonth, 'PM', bankHolidays, canEdit())
     case 'chart':
     default:
-      return pmRenderWithSharedFallback(window.capRenderChartTab, 'RenderChartTab', [pmChartStart, team, tasks, products, holidays, 'PM'], [pmChartStart, team, tasks, products, holidays]);
+      return capRenderChartTab(pmChartStart, team, tasks, products, holidays, 'PM')
   }
 }
 
 function pmRerenderChartTabForMonthChange() {
-  const body = document.getElementById('pmBody');
-  if (!body) return;
-  body.innerHTML = pmGetTabContent();
-  setTimeout(() => {
-    pmDrawChartViews();
-  }, 100);
+  const body = document.getElementById('pmBody')
+  if (!body) return
+  body.innerHTML = pmGetTabContent()
+  setTimeout(() => pmDrawChartViews(), 100)
 }
 
-window.pmRenderCapacity = function() {
-  // Auto-sync PM products from the Product Management database (all statuses)
-  if (typeof pmDataAutoSyncPMProducts === 'function') {
-    const synced = pmDataAutoSyncPMProducts();
-    if (synced) {
-      // Persist any newly-added products to Supabase (debounced)
-      setTimeout(() => {
-        if (typeof pmDebouncedSave === 'function') pmDebouncedSave();
-      }, 1000);
-    }
+export function renderPmCapacity() {
+  const synced = pmDataAutoSyncPMProducts()
+  if (synced) {
+    setTimeout(() => {
+      pmDebouncedSave()
+    }, 1000)
   }
 
   const html = `
@@ -156,136 +125,134 @@ window.pmRenderCapacity = function() {
       <div class="me-body" id="pmBody">
         ${pmGetTabContent()}
       </div>
-    </div>`;
+    </div>`
 
   setTimeout(() => {
-    if (pmTab === 'chart') {
-      pmDrawChartViews();
-    }
-  }, 100);
+    if (pmTab === 'chart') pmDrawChartViews()
+  }, 100)
 
-  return html;
-};
+  return html
+}
 
-window.pmSetTab = function(tab) {
-  const prevPmTab = pmTab;
-  pmTab = tab;
+export function pmSetTab(tab) {
+  const prevPmTab = pmTab
+  pmTab = tab
 
-  // Update URL so refresh restores this tab
-  const pmParts = ['s=capacity', 'ct=projects'];
-  if (tab !== 'chart') pmParts.push('pmt=' + encodeURIComponent(tab));
-  if (typeof writeNavigationHistory === 'function') {
-    writeNavigationHistory('#' + pmParts.join('&'), { push: prevPmTab !== tab });
-  }
+  const pmParts = ['s=capacity', 'ct=projects']
+  if (tab !== 'chart') pmParts.push('pmt=' + encodeURIComponent(tab))
+  pmWriteNavigationHistory('#' + pmParts.join('&'), prevPmTab !== tab)
 
-  document.querySelectorAll('.pm-shell .me-nav-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  const activeBtn = document.querySelector(`.pm-shell .me-nav-btn[data-tab="${tab}"]`);
-  if (activeBtn) activeBtn.classList.add('active');
+  document.querySelectorAll('.pm-shell .me-nav-btn').forEach(btn => btn.classList.remove('active'))
+  const activeBtn = document.querySelector(`.pm-shell .me-nav-btn[data-tab="${tab}"]`)
+  if (activeBtn) activeBtn.classList.add('active')
 
-  const body = document.getElementById('pmBody');
+  const body = document.getElementById('pmBody')
   if (body) {
-    body.innerHTML = pmGetTabContent();
+    body.innerHTML = pmGetTabContent()
     setTimeout(() => {
-      if (tab === 'chart') {
-        pmDrawChartViews();
-      }
-    }, 100);
+      if (tab === 'chart') pmDrawChartViews()
+    }, 100)
   }
-};
+}
 
-window.pmRefreshCurrentTab = function() {
-  // OPTIMIZATION: When on chart tab, only redraw the chart without replacing the HTML.
-  // This prevents DOM thrashing that causes the chart to bounce during real-time updates.
+export function setPmTabState(tab) {
+  pmTab = tab || 'chart'
+}
+
+export function pmRefreshCurrentTab() {
   if (pmTab === 'chart') {
-    const monthInput = document.getElementById('meChartMonthInput');
-    if (monthInput && pmChartStart) {
-      monthInput.value = pmChartStart;
-    }
-    pmDrawChartViews();
-    return;
+    const monthInput = document.getElementById('meChartMonthInput')
+    if (monthInput && pmChartStart) monthInput.value = pmChartStart
+    pmDrawChartViews()
+    return
   }
 
-  const body = document.getElementById('pmBody');
+  const body = document.getElementById('pmBody')
   if (body) {
-    body.innerHTML = pmGetTabContent();
+    body.innerHTML = pmGetTabContent()
     setTimeout(() => {
-      if (pmTab === 'chart') {
-        pmDrawChartViews();
-      }
-    }, 100);
+      if (pmTab === 'chart') pmDrawChartViews()
+    }, 100)
   }
-};
+}
 
-window.pmOnMonthChange = function(newMonth) {
+export function pmOnMonthChange(newMonth) {
   if (pmTab === 'chart') {
-    pmChartStart = newMonth;
-    pmRerenderChartTabForMonthChange();
-    return;
-  } else {
-    pmHolidayMonth = newMonth;
+    pmChartStart = newMonth
+    pmRerenderChartTabForMonthChange()
+    return
   }
-  pmRefreshCurrentTab();
-};
 
-window.pmOnNextMonth = function() {
-  const isChart = pmTab === 'chart';
-  const current = isChart ? (pmChartStart || pmGetCurrentMonthKey()) : (pmHolidayMonth || pmGetCurrentMonthKey());
-  const [year, month] = current.split('-').map(Number);
-  const date = new Date(year, month - 1, 1);
-  date.setMonth(date.getMonth() + 1);
-  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  pmHolidayMonth = newMonth
+  pmRefreshCurrentTab()
+}
+
+function pmShiftMonth(direction) {
+  const isChart = pmTab === 'chart'
+  const current = isChart
+    ? (pmChartStart || pmGetCurrentMonthKey())
+    : (pmHolidayMonth || pmGetCurrentMonthKey())
+
+  const [year, month] = current.split('-').map(Number)
+  const date = new Date(year, month - 1, 1)
+  date.setMonth(date.getMonth() + direction)
+  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+
   if (isChart) {
-    pmChartStart = newMonth;
-    pmRerenderChartTabForMonthChange();
-    return;
-  } else {
-    pmHolidayMonth = newMonth;
+    pmChartStart = newMonth
+    pmRerenderChartTabForMonthChange()
+    return
   }
-  pmRefreshCurrentTab();
-};
 
-window.pmOnPrevMonth = function() {
-  const isChart = pmTab === 'chart';
-  const current = isChart ? (pmChartStart || pmGetCurrentMonthKey()) : (pmHolidayMonth || pmGetCurrentMonthKey());
-  const [year, month] = current.split('-').map(Number);
-  const date = new Date(year, month - 1, 1);
-  date.setMonth(date.getMonth() - 1);
-  const newMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  if (isChart) {
-    pmChartStart = newMonth;
-    pmRerenderChartTabForMonthChange();
-    return;
-  } else {
-    pmHolidayMonth = newMonth;
-  }
-  pmRefreshCurrentTab();
-};
+  pmHolidayMonth = newMonth
+  pmRefreshCurrentTab()
+}
 
-window.pmOnSave = async function(showAlert = false) {
-  if (typeof pmDataSave === 'function') {
-    await pmDataSave(showAlert);
-  }
-};
+export function pmOnNextMonth() {
+  pmShiftMonth(1)
+}
 
-window.pmDebouncedSave = function() {
-  clearTimeout(pmSaveTimer);
+export function pmOnPrevMonth() {
+  pmShiftMonth(-1)
+}
+
+export async function pmOnSave(showAlert = false) {
+  await pmDataSave(showAlert)
+}
+
+export function pmDebouncedSave() {
+  clearTimeout(pmSaveTimer)
   pmSaveTimer = setTimeout(async () => {
-    await pmOnSave(false);
-    if (pmTab === 'chart') return;
+    await pmOnSave(false)
+    if (pmTab === 'chart') return
+
     requestRender('pm', {
       trigger: 'save',
-      renderNow: function() {
-        if (typeof pmRefreshCurrentTab === 'function') pmRefreshCurrentTab();
-      },
-      isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell(),
-    });
-  }, 900);
-};
+      renderNow: () => pmRefreshCurrentTab(),
+      isEditing: typeof isEditingInlineCell === 'function' && isEditingInlineCell()
+    })
+  }, 900)
+}
 
-window.pmRefresh = function() {
-  const mc = document.getElementById('mainContent');
-  if (!mc || currentSection !== 'capacity' || capacityTab !== 'projects') return;
-  mc.innerHTML = `<div class="section-inner">${pmRenderCapacity()}</div>`;
-};
+export function pmRefresh() {
+  const mc = document.getElementById('mainContent')
+  if (!mc || appState.currentSection !== 'capacity' || appState.capacityTab !== 'projects') return
+  mc.innerHTML = `<div class="section-inner">${renderPmCapacity()}</div>`
+}
+
+export const pmCapacityDataSubscribe = pmDataSubscribe
+export const pmCapacityDataUnsubscribe = pmDataUnsubscribe
+
+setPmDataRealtimeHooks({
+  getTab: () => pmTab,
+  refreshCurrentTab: () => pmRefreshCurrentTab()
+})
+
+export { pmDataInit }
+function pmWriteNavigationHistory(hash, push) {
+  if (push) {
+    history.pushState(null, '', hash)
+  } else {
+    history.replaceState(null, '', hash)
+  }
+}

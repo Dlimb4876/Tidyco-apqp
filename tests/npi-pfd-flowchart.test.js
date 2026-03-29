@@ -1,5 +1,24 @@
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { jest } from '@jest/globals'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Helper to transpile ESM to eval-compatible code with global exports
+function transpileESMForEval(source) {
+  return source
+    .replace(/import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?\n?/g, '')
+    .replace(/export\s+async\s+function\s+(\w+)/g, 'global.$1 = async function $1')
+    .replace(/export\s+function\s+(\w+)/g, 'global.$1 = function $1')
+    .replace(/export\s+const\s+(\w+)/g, 'global.$1')
+    .replace(/export\s+let\s+(\w+)/g, 'global.$1')
+    .replace(/export\s+var\s+(\w+)/g, 'global.$1')
+    .replace(/export\s+class\s+(\w+)/g, 'global.$1 = class $1')
+    .replace(/export\s*\{/g, '// exports: {')
+    .replace(/\}\s*from\s*['"][^'"]+['"];?/g, '}')
+}
 
 describe('NPI PFD flowchart behavior', () => {
   let activeProject
@@ -46,6 +65,7 @@ describe('NPI PFD flowchart behavior', () => {
     global.closeModal = jest.fn()
     global.showToast = jest.fn()
     global.canEdit = jest.fn(() => true)
+    global.appState = { activeProject: null, user: null }
     global.mermaid = {
       initialize: jest.fn(),
       render: jest.fn().mockResolvedValue({ svg: '<svg>chart</svg>' })
@@ -63,8 +83,11 @@ describe('NPI PFD flowchart behavior', () => {
       'utf8'
     )
 
-    eval(dataScript)
-    eval(pfdScript)
+    const transpiledData = transpileESMForEval(dataScript)
+    const transpiledPfd = transpileESMForEval(pfdScript)
+
+    eval(transpiledData) // eslint-disable-line no-eval
+    eval(transpiledPfd) // eslint-disable-line no-eval
   })
 
   test('generates flowchart syntax with sequential and decision links', () => {

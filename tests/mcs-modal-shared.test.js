@@ -1,13 +1,15 @@
-const fs = require('fs')
-const path = require('path')
+import path from 'path'
+import { fileURLToPath } from 'url';
 
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/mcs/js/mcs-modal-shared.js'),
-  'utf8'
-)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('MCS modal shared helpers', () => {
-  beforeEach(() => {
+  let mcsBuildExtendedJustification;
+  let mcsParseExtendedJustification;
+  let mcsBuildStage3ImpactChecklistHtml;
+
+  beforeEach(async () => {
     global.esc = (v) => String(v ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -15,12 +17,11 @@ describe('MCS modal shared helpers', () => {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;')
 
-    eval(`${script}
-      ;globalThis.__mcsShared = {
-        mcsBuildExtendedJustification,
-        mcsParseExtendedJustification,
-        mcsBuildStage3ImpactChecklistHtml
-      };`) // eslint-disable-line no-eval
+    // Import module after setting up mocks
+    const mcsShared = await import('../portals/mcs/js/mcs-modal-shared.js')
+    mcsBuildExtendedJustification = mcsShared.mcsBuildExtendedJustification
+    mcsParseExtendedJustification = mcsShared.mcsParseExtendedJustification
+    mcsBuildStage3ImpactChecklistHtml = mcsShared.mcsBuildStage3ImpactChecklistHtml
   })
 
   it('stores and parses Stage 3 impact progress from justification', () => {
@@ -28,14 +29,14 @@ describe('MCS modal shared helpers', () => {
       'BOM Change': true,
       'Work Instructions': false
     }
-    const built = globalThis.__mcsShared.mcsBuildExtendedJustification(
+    const built = mcsBuildExtendedJustification(
       'Root cause text',
       'DOC-1',
       'No knock-on',
       '2',
       progress
     )
-    const parsed = globalThis.__mcsShared.mcsParseExtendedJustification(built)
+    const parsed = mcsParseExtendedJustification(built)
 
     expect(parsed.core).toBe('Root cause text')
     expect(parsed.impactAssessmentHours).toBe('2')
@@ -44,7 +45,7 @@ describe('MCS modal shared helpers', () => {
   })
 
   it('renders Stage 3 checklist with selected impacts and completion count', () => {
-    const html = globalThis.__mcsShared.mcsBuildStage3ImpactChecklistHtml(
+    const html = mcsBuildStage3ImpactChecklistHtml(
       ['BOM Change', 'Training Required'],
       { 'BOM Change': true, 'Training Required': false }
     )

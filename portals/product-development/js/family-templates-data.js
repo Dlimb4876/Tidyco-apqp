@@ -1,23 +1,31 @@
 // Family PFMEA Templates Data Layer
 // Manages PFMEA templates per product family with Supabase persistence
 
-let familyTemplatesState = {
+import { appState, getFamilies } from '../../../core/js/state.js'
+import { supabase as supa, currentUser } from '../../../core/js/supa.js'
+import { showToast } from '../../../utils/js/helpers.js'
+import { createRealtimeSubscription, removeRealtimeSubscription } from '../../../utils/js/realtime.js'
+import { realtimePatchInsert, realtimePatchUpdate, realtimePatchDelete } from '../../../utils/js/realtime-patch.js'
+import { render } from '../../../utils/js/navigation.js'
+
+export const familyTemplatesState = {
   templates: [],
   loading: false,
-  error: null
-};
+  error: null,
+  subscription: null
+}
 
-const DEFAULT_FAMILY_TEMPLATE_NAME = 'Standard Family PFMEA';
-const DEFAULT_FAMILY_FAILURE_MODE = 'Define key family failure mode';
+const DEFAULT_FAMILY_TEMPLATE_NAME = 'Standard Family PFMEA'
+const DEFAULT_FAMILY_FAILURE_MODE = 'Define key family failure mode'
 
 function sortFamilyTemplatesState() {
   familyTemplatesState.templates.sort((a, b) => {
-    const familyCompare = String(a.family_id || '').localeCompare(String(b.family_id || ''));
-    if (familyCompare !== 0) return familyCompare;
-    const nameCompare = String(a.template_name || '').localeCompare(String(b.template_name || ''));
-    if (nameCompare !== 0) return nameCompare;
-    return String(a.failure_mode || '').localeCompare(String(b.failure_mode || ''));
-  });
+    const familyCompare = String(a.family_id || '').localeCompare(String(b.family_id || ''))
+    if (familyCompare !== 0) return familyCompare
+    const nameCompare = String(a.template_name || '').localeCompare(String(b.template_name || ''))
+    if (nameCompare !== 0) return nameCompare
+    return String(a.failure_mode || '').localeCompare(String(b.failure_mode || ''))
+  })
 }
 
 function buildDefaultFamilyTemplateItem(familyId, familyLabel) {
@@ -34,125 +42,127 @@ function buildDefaultFamilyTemplateItem(familyId, familyLabel) {
     detection_control: null,
     detection: 3,
     notes: 'Auto-created when product family is added'
-  };
+  }
 }
 
-window.familyTemplatesEnsureDefaultForFamily = async function(family) {
-  if (!family || !family.id || !currentUser?.id) return false;
+export async function familyTemplatesEnsureDefaultForFamily(family) {
+  if (!family || !family.id || !currentUser?.id) return false
 
-  const hasTemplate = familyTemplatesState.templates.some(t => t.family_id === family.id);
-  if (hasTemplate) return false;
+  const hasTemplate = familyTemplatesState.templates.some(t => t.family_id === family.id)
+  if (hasTemplate) return false
 
   try {
-    const item = buildDefaultFamilyTemplateItem(family.id, family.label);
+    const item = buildDefaultFamilyTemplateItem(family.id, family.label)
     const { data, error } = await supa.from('family_pfmea_templates')
       .upsert([item], {
         onConflict: 'user_id,family_id,template_name,failure_mode',
         ignoreDuplicates: true
       })
-      .select();
+      .select()
 
-    if (error) throw error;
+    if (error) throw error
 
     if (data && data.length > 0) {
-      familyTemplatesState.templates.push(...data);
-      sortFamilyTemplatesState();
-      return true;
+      familyTemplatesState.templates.push(...data)
+      sortFamilyTemplatesState()
+      return true
     }
 
-    return false;
+    return false
   } catch (err) {
-    console.error('Error creating default family template:', err);
-    showToast('Family added, but default template setup failed: ' + err.message, 'warning');
-    return false;
+    console.error('Error creating default family template:', err)
+    showToast('Family added, but default template setup failed: ' + err.message, 'warning')
+    return false
   }
-};
+}
 
 async function familyTemplatesBackfillMissingFamilies() {
-  if (!currentUser?.id || !familiesState?.families?.length) return;
+  if (!currentUser?.id) return
+  const families = getFamilies() || []
+  if (!families.length) return
 
   const familiesWithTemplates = new Set(
     familyTemplatesState.templates.map(t => t.family_id)
-  );
-  const missingFamilies = familiesState.families
-    .filter(family => family?.id && !familiesWithTemplates.has(family.id));
+  )
+  const missingFamilies = families
+    .filter(family => family?.id && !familiesWithTemplates.has(family.id))
 
-  if (missingFamilies.length === 0) return;
+  if (missingFamilies.length === 0) return
 
   try {
     const defaults = missingFamilies.map(family =>
       buildDefaultFamilyTemplateItem(family.id, family.label)
-    );
+    )
 
     const { data, error } = await supa.from('family_pfmea_templates')
       .upsert(defaults, {
         onConflict: 'user_id,family_id,template_name,failure_mode',
         ignoreDuplicates: true
       })
-      .select();
+      .select()
 
-    if (error) throw error;
+    if (error) throw error
 
     if (data && data.length > 0) {
-      familyTemplatesState.templates.push(...data);
-      sortFamilyTemplatesState();
-      showToast('Backfilled default templates for ' + data.length + ' product family(s)', 'success');
+      familyTemplatesState.templates.push(...data)
+      sortFamilyTemplatesState()
+      showToast('Backfilled default templates for ' + data.length + ' product family(s)', 'success')
     }
   } catch (err) {
-    console.error('Error backfilling missing family templates:', err);
-    showToast('Failed to backfill family templates: ' + err.message, 'warning');
+    console.error('Error backfilling missing family templates:', err)
+    showToast('Failed to backfill family templates: ' + err.message, 'warning')
   }
 }
 
 // Initialize templates from Supabase
-async function familyTemplatesDataInit() {
-  familyTemplatesState.loading = true;
-  familyTemplatesState.error = null;
+export async function familyTemplatesDataInit() {
+  familyTemplatesState.loading = true
+  familyTemplatesState.error = null
 
   try {
     const { data, error } = await supa.from('family_pfmea_templates')
       .select('*')
-      .order('family_id,template_name', { ascending: true });
+      .order('family_id,template_name', { ascending: true })
 
-    if (error) throw error;
+    if (error) throw error
 
-    familyTemplatesState.templates = data || [];
-    await familyTemplatesBackfillMissingFamilies();
-    sortFamilyTemplatesState();
-    familyTemplatesState.loading = false;
-    familyTemplatesDataSubscribe();
-    return familyTemplatesState.templates;
+    familyTemplatesState.templates = data || []
+    await familyTemplatesBackfillMissingFamilies()
+    sortFamilyTemplatesState()
+    familyTemplatesState.loading = false
+    familyTemplatesDataSubscribe()
+    return familyTemplatesState.templates
   } catch (err) {
-    console.error('Error loading family templates:', err);
-    familyTemplatesState.error = err.message;
-    familyTemplatesState.loading = false;
-    return [];
+    console.error('Error loading family templates:', err)
+    familyTemplatesState.error = err.message
+    familyTemplatesState.loading = false
+    return []
   }
 }
 
 // Get all templates for a specific family
-window.familyTemplatesGetByFamily = function(familyId) {
-  return familyTemplatesState.templates.filter(t => t.family_id === familyId);
-};
+export function familyTemplatesGetByFamily(familyId) {
+  return familyTemplatesState.templates.filter(t => t.family_id === familyId)
+}
 
 // Get grouped templates for a family (grouped by template name)
-window.familyTemplatesGetGroupedByFamily = function(familyId) {
-  const templates = familyTemplatesGetByFamily(familyId);
-  const grouped = {};
+export function familyTemplatesGetGroupedByFamily(familyId) {
+  const templates = familyTemplatesGetByFamily(familyId)
+  const grouped = {}
 
   templates.forEach(t => {
     if (!grouped[t.template_name]) {
-      grouped[t.template_name] = [];
+      grouped[t.template_name] = []
     }
-    grouped[t.template_name].push(t);
-  });
+    grouped[t.template_name].push(t)
+  })
 
-  return grouped;
-};
+  return grouped
+}
 
 // Add a template item (single PFMEA row for a family)
-window.familyTemplatesAddItem = async function(familyId, templateName, failureMode, effect, severity, cause, occurrence, preventionControl, detectionControl, detection, notes) {
-  if (!familyId || !templateName || !failureMode) return null;
+export async function familyTemplatesAddItem(familyId, templateName, failureMode, effect, severity, cause, occurrence, preventionControl, detectionControl, detection, notes) {
+  if (!familyId || !templateName || !failureMode) return null
 
   const item = {
     user_id: currentUser.id,
@@ -167,100 +177,102 @@ window.familyTemplatesAddItem = async function(familyId, templateName, failureMo
     detection_control: detectionControl?.trim() || null,
     detection: detection || 3,
     notes: notes?.trim() || null
-  };
+  }
 
   try {
     const { data, error } = await supa.from('family_pfmea_templates')
       .insert([item])
-      .select();
+      .select()
 
-    if (error) throw error;
+    if (error) throw error
 
     if (data && data[0]) {
-      familyTemplatesState.templates.push(data[0]);
-      return data[0];
+      familyTemplatesState.templates.push(data[0])
+      sortFamilyTemplatesState()
+      return data[0]
     }
   } catch (err) {
-    console.error('Error adding template item:', err);
-    showToast('Failed to add template: ' + err.message, 'error');
+    console.error('Error adding template item:', err)
+    showToast('Failed to add template: ' + err.message, 'error')
   }
-  return null;
-};
+  return null
+}
 
 // Update a template item
-window.familyTemplatesUpdateItem = async function(itemId, updates) {
-  const item = familyTemplatesState.templates.find(t => t.id === itemId);
-  if (!item) return false;
+export async function familyTemplatesUpdateItem(itemId, updates) {
+  const item = familyTemplatesState.templates.find(t => t.id === itemId)
+  if (!item) return false
 
   try {
     const { error } = await supa.from('family_pfmea_templates')
       .update(updates)
-      .eq('id', itemId);
+      .eq('id', itemId)
 
-    if (error) throw error;
+    if (error) throw error
 
-    Object.assign(item, updates);
-    return true;
+    Object.assign(item, updates)
+    sortFamilyTemplatesState()
+    return true
   } catch (err) {
-    console.error('Error updating template item:', err);
-    showToast('Failed to update template: ' + err.message, 'error');
+    console.error('Error updating template item:', err)
+    showToast('Failed to update template: ' + err.message, 'error')
   }
-  return false;
-};
+  return false
+}
 
 // Delete a template item
-window.familyTemplatesDeleteItem = async function(itemId) {
-  const idx = familyTemplatesState.templates.findIndex(t => t.id === itemId);
-  if (idx === -1) return false;
+export async function familyTemplatesDeleteItem(itemId) {
+  const idx = familyTemplatesState.templates.findIndex(t => t.id === itemId)
+  if (idx === -1) return false
 
   try {
     const { error } = await supa.from('family_pfmea_templates')
       .delete()
-      .eq('id', itemId);
+      .eq('id', itemId)
 
-    if (error) throw error;
+    if (error) throw error
 
-    familyTemplatesState.templates.splice(idx, 1);
-    return true;
+    familyTemplatesState.templates.splice(idx, 1)
+    return true
   } catch (err) {
-    console.error('Error deleting template item:', err);
-    showToast('Failed to delete template: ' + err.message, 'error');
+    console.error('Error deleting template item:', err)
+    showToast('Failed to delete template: ' + err.message, 'error')
   }
-  return false;
-};
+  return false
+}
 
 // Delete entire template for a family
-window.familyTemplatesDeleteFamily = async function(familyId, templateName) {
+export async function familyTemplatesDeleteFamily(familyId, templateName) {
   const itemsToDelete = familyTemplatesState.templates
     .filter(t => t.family_id === familyId && t.template_name === templateName)
-    .map(t => t.id);
+    .map(t => t.id)
 
-  if (itemsToDelete.length === 0) return false;
+  if (itemsToDelete.length === 0) return false
 
   try {
     const { error } = await supa.from('family_pfmea_templates')
       .delete()
-      .in('id', itemsToDelete);
+      .in('id', itemsToDelete)
 
-    if (error) throw error;
+    if (error) throw error
 
     familyTemplatesState.templates = familyTemplatesState.templates
-      .filter(t => !itemsToDelete.includes(t.id));
+      .filter(t => !itemsToDelete.includes(t.id))
 
-    return true;
+    return true
   } catch (err) {
-    console.error('Error deleting family template:', err);
-    showToast('Failed to delete template: ' + err.message, 'error');
+    console.error('Error deleting family template:', err)
+    showToast('Failed to delete template: ' + err.message, 'error')
   }
-  return false;
-};
+  return false
+}
 
 // Copy template from one family to another (or create new version)
-window.familyTemplatesCopyTemplate = async function(sourceFamilyId, sourceTemplateName, targetFamilyId, newTemplateName) {
+export async function familyTemplatesCopyTemplate(sourceFamilyId, sourceTemplateName, targetFamilyId, newTemplateName) {
   const items = familyTemplatesGetByFamily(sourceFamilyId)
-    .filter(t => t.template_name === sourceTemplateName);
+    .filter(t => t.template_name === sourceTemplateName)
 
-  if (items.length === 0) return false;
+  if (items.length === 0) return false
 
   try {
     const newItems = items.map(item => ({
@@ -276,29 +288,30 @@ window.familyTemplatesCopyTemplate = async function(sourceFamilyId, sourceTempla
       detection_control: item.detection_control,
       detection: item.detection,
       notes: item.notes
-    }));
+    }))
 
     const { data, error } = await supa.from('family_pfmea_templates')
       .insert(newItems)
-      .select();
+      .select()
 
-    if (error) throw error;
+    if (error) throw error
 
     if (data) {
-      familyTemplatesState.templates.push(...data);
-      return true;
+      familyTemplatesState.templates.push(...data)
+      sortFamilyTemplatesState()
+      return true
     }
   } catch (err) {
-    console.error('Error copying template:', err);
-    showToast('Failed to copy template: ' + err.message, 'error');
+    console.error('Error copying template:', err)
+    showToast('Failed to copy template: ' + err.message, 'error')
   }
-  return false;
-};
+  return false
+}
 
 // Apply template to a project PFMEA (returns array of PFMEA objects)
-window.familyTemplatesApplyToProject = function(familyId, templateName) {
+export function familyTemplatesApplyToProject(familyId, templateName) {
   const items = familyTemplatesGetByFamily(familyId)
-    .filter(t => t.template_name === templateName);
+    .filter(t => t.template_name === templateName)
 
   return items.map(item => ({
     mode: item.failure_mode,
@@ -311,62 +324,68 @@ window.familyTemplatesApplyToProject = function(familyId, templateName) {
     det: item.detection || 3,
     actions: [],
     notes: item.notes || ''
-  }));
-};
+  }))
+}
 
 // ── Real-time subscription ───────────────────────────────────────
-function familyTemplatesDataSubscribe() {
-  createRealtimeSubscription('family_pfmea_templates', 'family_templates_channel', {
+export function familyTemplatesDataSubscribe() {
+  if (familyTemplatesState.subscription) return familyTemplatesState.subscription
+  const sub = createRealtimeSubscription('family_pfmea_templates', 'family_templates_channel', {
     onInsert: (record) => {
-      familyTemplatesState.templates.push(record);
-      sortFamilyTemplatesState();
+      familyTemplatesState.templates.push(record)
+      sortFamilyTemplatesState()
       // Patch the viewer tbody if it's showing this template
-      if (typeof templateViewerState !== 'undefined' &&
-          templateViewerState.isOpen &&
-          templateViewerState.familyId === record.family_id &&
-          templateViewerState.templateName === record.template_name &&
-          typeof familyTemplateViewerRowHTML === 'function') {
-        realtimePatchInsert('#tmpl-viewer-tbody', familyTemplateViewerRowHTML(record));
-      } else if (typeof templateManagerState !== 'undefined' && templateManagerState.isOpen &&
-                 templateManagerState.familyId === record.family_id) {
+      if (typeof globalThis.templateViewerState !== 'undefined' &&
+          globalThis.templateViewerState.isOpen &&
+          globalThis.templateViewerState.familyId === record.family_id &&
+          globalThis.templateViewerState.templateName === record.template_name &&
+          typeof globalThis.familyTemplateViewerRowHTML === 'function') {
+        realtimePatchInsert('#tmpl-viewer-tbody', globalThis.familyTemplateViewerRowHTML(record))
+      } else if (typeof globalThis.templateManagerState !== 'undefined' && globalThis.templateManagerState.isOpen &&
+                 globalThis.templateManagerState.familyId === record.family_id) {
         // Template manager shows groups — re-render only if this family's manager is open
-        render();
+        render()
       }
     },
     onUpdate: (record) => {
-      const idx = familyTemplatesState.templates.findIndex(t => t.id === record.id);
-      if (idx >= 0) familyTemplatesState.templates[idx] = record;
-      if (typeof templateViewerState !== 'undefined' &&
-          templateViewerState.isOpen &&
-          templateViewerState.familyId === record.family_id &&
-          templateViewerState.templateName === record.template_name &&
-          typeof familyTemplateViewerRowHTML === 'function') {
-        realtimePatchUpdate('#tmpl-viewer-tbody', record.id, familyTemplateViewerRowHTML(record));
+      const idx = familyTemplatesState.templates.findIndex(t => t.id === record.id)
+      if (idx >= 0) familyTemplatesState.templates[idx] = record
+      if (typeof globalThis.templateViewerState !== 'undefined' &&
+          globalThis.templateViewerState.isOpen &&
+          globalThis.templateViewerState.familyId === record.family_id &&
+          globalThis.templateViewerState.templateName === record.template_name &&
+          typeof globalThis.familyTemplateViewerRowHTML === 'function') {
+        realtimePatchUpdate('#tmpl-viewer-tbody', record.id, globalThis.familyTemplateViewerRowHTML(record))
       }
     },
     onDelete: (record) => {
-      familyTemplatesState.templates = familyTemplatesState.templates.filter(t => t.id !== record.id);
-      realtimePatchDelete('#tmpl-viewer-tbody', record.id);
+      familyTemplatesState.templates = familyTemplatesState.templates.filter(t => t.id !== record.id)
+      realtimePatchDelete('#tmpl-viewer-tbody', record.id)
     }
-  });
+  })
+
+  familyTemplatesState.subscription = sub || 'family_templates_channel'
+  return familyTemplatesState.subscription
 }
 
-window.familyTemplatesDataUnsubscribe = function() {
-  removeRealtimeSubscription('family_templates_channel');
-};
+export function familyTemplatesDataUnsubscribe() {
+  if (!familyTemplatesState.subscription) return
+  removeRealtimeSubscription(familyTemplatesState.subscription)
+  familyTemplatesState.subscription = null
+}
 
 // Get template statistics
-window.familyTemplatesGetStats = function(familyId) {
-  const items = familyTemplatesGetByFamily(familyId);
-  const templates = new Set(items.map(t => t.template_name));
+export function familyTemplatesGetStats(familyId) {
+  const items = familyTemplatesGetByFamily(familyId)
+  const templates = new Set(items.map(t => t.template_name))
   const avgRPN = items.length > 0
     ? items.reduce((sum, t) => sum + (t.severity * t.occurrence * t.detection), 0) / items.length
-    : 0;
+    : 0
 
   return {
     templateCount: templates.size,
     itemCount: items.length,
     averageRPN: Math.round(avgRPN * 10) / 10,
     templateNames: Array.from(templates)
-  };
-};
+  }
+}

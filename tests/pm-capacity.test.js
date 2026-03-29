@@ -4,8 +4,11 @@
  * Covers: PM chart month changes re-render chart-tab HTML so side panels update with selected month.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const TEAM_FIXTURE = [{ id: 'm1', name: 'PM A', department: 'PM' }];
 const TASKS_FIXTURE = [{ id: 't1', task: 'PM Task', department: 'PM' }];

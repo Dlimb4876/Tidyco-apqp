@@ -6,6 +6,24 @@
    renderRpnBurndown() is defined in rpn-chart.js (loaded before this file)
    ============================================================ */
 
+import { prog } from '../../../../core/js/state.js'
+import { save } from '../../../../core/js/db.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { esc, emptyState, showModal, showToast, canEdit, emailToDisplayName } from '../../../../utils/js/helpers.js'
+import { npi } from './npi-shared.js'
+import { npiComponents } from './npi-components.js'
+import {
+  RPN_HIGH,
+  RPN_CRITICAL,
+  PFMEA_SCORE_MIN,
+  PFMEA_SCORE_MAX,
+  SPECIAL_CHARS
+} from './npi-constants.js'
+
+npi.components = npiComponents
+import { renderRpnBurndown } from './rpn-chart.js'
+import './pfmea-state.js'
+
 // ══════════════════════════════════════
 // PFMEA — grouped by PFD step, multi-row per step
 // ══════════════════════════════════════
@@ -793,3 +811,7 @@ npi.pfmea.pfShowWarnings = function(warningsJson) {
 npi.pfmea.pfUpdSpecialChar = function(mi, ei, val) {
   npi.data.pfmea.updEffect(mi, ei, 'specialChar', val || null)
 }
+
+export const calcCauseRpn = npi.pfmea.calcCauseRpn
+export const renderPFMEA = npi.pfmea.renderPFMEA
+export const pfImplementAction = npi.pfmea.pfImplementAction

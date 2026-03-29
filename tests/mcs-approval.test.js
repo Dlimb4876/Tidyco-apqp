@@ -1,8 +1,12 @@
-const fs = require('fs');
-const path = require('path');
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
 
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/mcs/js/mcs-approvers-data.js'),
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+const script = readFileSync(
+  resolve(__dirname, '../portals/mcs/js/mcs-approvers-data.js'),
   'utf8'
 );
 

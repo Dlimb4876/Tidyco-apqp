@@ -4,8 +4,11 @@
  * Covers: UNIT6 capacity render, isolated data loading, tab switching, debounced save behavior.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const TEAM_FIXTURE = [{ id: 'm1', name: 'Unit6 A', department: 'UNIT6' }];
 

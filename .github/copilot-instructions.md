@@ -6,10 +6,10 @@ Use these rules for all work in this repository. Keep responses and changes in p
 ## Snapshot
 - Vanilla JavaScript SPA with no build pipeline.
 - Supabase backend (Auth, Postgres, Realtime).
-- `index.html` controls script load order.
+- ESM-first app bootstrap: `index.html` should load a single module entry (`core/js/main.js`).
 
 ## Non-Negotiables
-1. Keep script order exactly: `state.js -> auth.js -> db.js -> helpers.js -> navigation.js -> realtime.js -> portals -> app.js`.
+1. Use named ESM imports/exports for cross-file dependencies. Do not add `window.*` bridge assignments for module wiring.
 2. Never duplicate `const` in the same scope.
 3. Keep global mutable state in `core/js/state.js` with defaults.
 4. Use `esc()` for any user data rendered into HTML strings.

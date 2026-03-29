@@ -3,10 +3,15 @@
  * Utilities used across create, view, and edit modals.
  */
 
+import { appState } from '../../../core/js/state.js'
+import { esc } from '../../../utils/js/helpers.js'
+import { navigate } from '../../../utils/js/navigation.js'
+import './mcs-approval.js'
+
 /**
  * Map raw mcs_timeline DB rows to display-friendly event objects
  */
-function mcsFormatTimelineEvents(rows) {
+export function mcsFormatTimelineEvents(rows) {
   return rows.map(ev => ({
     time: new Date(ev.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
     text: ev.event_text || '',
@@ -18,7 +23,7 @@ function mcsFormatTimelineEvents(rows) {
 /**
  * Render timeline events array to HTML string
  */
-function mcsRenderTimelineHtml(events) {
+export function mcsRenderTimelineHtml(events) {
   if (!events.length) return '<div style="color: var(--text3); font-size: 12px; padding: 8px 0;">No activity recorded.</div>';
   return events.map(ev => `
     <div class="mcs-tl-event ${esc(ev.type || '')}">
@@ -35,8 +40,8 @@ function mcsRenderTimelineHtml(events) {
  * can nominate a specific reviewer. The nomination is stored in
  * eng_review_notes as "nominated_approver:<email>" when the change is saved.
  */
-function mcsApproverSelectionHtml(preselectedEmail, includeTitle = true) {
-  const step1Approvers = (mcsApproverConfig && mcsApproverConfig.approval1) || [];
+export function mcsApproverSelectionHtml(preselectedEmail, includeTitle = true) {
+  const step1Approvers = (appState.mcsApproverConfig && appState.mcsApproverConfig.approval1) || [];
   const titleHtml = includeTitle ? '<div class="mcs-section-title">Approval 1 Reviewer</div>' : '';
 
   if (step1Approvers.length === 0) {
@@ -70,8 +75,8 @@ function mcsApproverSelectionHtml(preselectedEmail, includeTitle = true) {
  * Build the approver select field only (for compact layouts).
  * Returns just the select element, no wrapper divs.
  */
-function mcsApproverSelectionFieldHtml(preselectedEmail, includeEmptyOption = true) {
-  const step1Approvers = (mcsApproverConfig && mcsApproverConfig.approval1) || [];
+export function mcsApproverSelectionFieldHtml(preselectedEmail, includeEmptyOption = true) {
+  const step1Approvers = (appState.mcsApproverConfig && appState.mcsApproverConfig.approval1) || [];
 
   if (step1Approvers.length === 0) {
     return `<select class="mcs-field-select" id="mcs-f-approver">
@@ -93,13 +98,13 @@ function mcsApproverSelectionFieldHtml(preselectedEmail, includeEmptyOption = tr
   </select>`;
 }
 
-function mcsExtractNominatedApprover(notesValue) {
+export function mcsExtractNominatedApprover(notesValue) {
   if (!notesValue || typeof notesValue !== 'string') return '';
   if (!notesValue.startsWith('nominated_approver:')) return '';
   return notesValue.replace('nominated_approver:', '').trim();
 }
 
-function mcsGetImpactFieldMap() {
+export function mcsGetImpactFieldMap() {
   return {
     'mcs-imp-bom': 'BOM Change',
     'mcs-imp-proc': 'Work Instructions',
@@ -109,14 +114,14 @@ function mcsGetImpactFieldMap() {
   };
 }
 
-function mcsGetImpactProgressInputId(impactLabel) {
+export function mcsGetImpactProgressInputId(impactLabel) {
   return `mcs-imp-progress-${String(impactLabel || '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')}`;
 }
 
-function mcsBuildStage3ImpactChecklistHtml(impacts, progressMap) {
+export function mcsBuildStage3ImpactChecklistHtml(impacts, progressMap) {
   const selectedImpacts = Array.isArray(impacts) ? impacts : [];
   if (!selectedImpacts.length) {
     return `
@@ -155,7 +160,7 @@ function mcsBuildStage3ImpactChecklistHtml(impacts, progressMap) {
   `;
 }
 
-function mcsParseExtendedJustification(rawValue) {
+export function mcsParseExtendedJustification(rawValue) {
   const raw = String(rawValue || '');
   const impactMarker = '[ImpactAssessmentHours]';
   const docsMarker = '[DocumentsAffected]';
@@ -208,7 +213,7 @@ function mcsParseExtendedJustification(rawValue) {
   return parsed;
 }
 
-function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockOnEffectValue, impactAssessmentHoursValue, impactProgressValue) {
+export function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockOnEffectValue, impactAssessmentHoursValue, impactProgressValue) {
   const core = String(coreValue || '').trim();
   const documentsAffected = String(documentsAffectedValue || '').trim();
   const knockOnEffect = String(knockOnEffectValue || '').trim();
@@ -231,7 +236,7 @@ function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockO
   return parts.join('\n\n').trim();
 }
 
-function mcsBuildWorkflowRail(stages) {
+export function mcsBuildWorkflowRail(stages) {
   const flowHtml = stages.map((stage, index) => {
     const cls = stage.status || '';
     const badge = stage.badge || String(index + 1);
@@ -260,7 +265,7 @@ function mcsBuildWorkflowRail(stages) {
   `;
 }
 
-function mcsBuildViewWorkflowStages(change) {
+export function mcsBuildViewWorkflowStages(change) {
   const openState = change.status === 'open' ? 'current' : 'done';
 
   let approval1State = 'pending';
@@ -325,7 +330,7 @@ function mcsBuildViewWorkflowStages(change) {
 /**
  * Close modal
  */
-function mcsCloseModal(id) {
+export function mcsCloseModal(id) {
   const el = document.getElementById(id);
   if (el) {
     el.classList.remove('open');
@@ -334,6 +339,6 @@ function mcsCloseModal(id) {
   // Clear the viewing ID when the view modal is closed so the realtime
   // subscription does not auto-reopen it after the user has dismissed it.
   if (id === 'mcs-view-backdrop') {
-    mcsViewingId = null;
+    appState.mcsViewingId = null;
   }
 }

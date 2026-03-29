@@ -3,12 +3,27 @@
 // 2-year scrollable grid: work areas (rows) × months (columns)
 // Each cell = number of staff for that area/month
 // 1 staff = working days (Mon-Fri, excluding UK bank holidays) x 8h
-// Depends on: prod-capacity-data.js
 // ═══════════════════════════════════════════════════════════════
 
-let prodCapSettingsSaveTimer = null;
+import { supabase as supa, currentUser } from '../../../../core/js/supa.js'
+import { appState } from '../../../../core/js/state.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { esc, canEdit, showToast } from '../../../../utils/js/helpers.js'
+import {
+  prodCapState,
+  prodCapGet24MonthKeys,
+  prodCapGetWorkAreas,
+  prodCapParseKey,
+  prodCapDataGetStaff,
+  prodCapDataSetStaff,
+  prodCapAvailableHours,
+  prodCapMonthLabelFull,
+  prodCapSaveUtilization
+} from './prod-capacity-data.js'
 
-function renderProdCapSettings() {
+let prodCapSettingsSaveTimer = null
+
+export function renderProdCapSettings() {
   const monthKeys = prodCapGet24MonthKeys();
   const workAreas = prodCapGetWorkAreas();
 
@@ -109,7 +124,7 @@ function renderProdCapSettings() {
     </td>`;
   }).join('');
 
-  const utilPercent = Math.round(prodCapUtilizationFactor * 100);
+  const utilPercent = Math.round(appState.prodCapUtilizationFactor * 100)
 
   // ── Month offset indicator
   const offsetLabel = prodCapMonthLabelFull(prodCapGet24MonthKeys()[0]);
@@ -151,7 +166,7 @@ function renderProdCapSettings() {
         <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>
         <div class="pc-window-label">${offsetLabel}</div>
         <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
-        ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
+        ${appState.prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
       </div>
 
       <div class="pc-card-header" style="margin-bottom:16px">
@@ -199,7 +214,7 @@ function renderProdCapSettings() {
 }
 
 // ── Cell update (debounced save) ──────────────────────────────
-async function prodCapSettingsUpdate(workArea, year, month, value) {
+export async function prodCapSettingsUpdate(workArea, year, month, value) {
   await prodCapDataSetStaff(workArea, year, month, value);
   // Update the hours label below the input
   const safeKey = btoa(workArea).replace(/=/g, '');
@@ -228,7 +243,7 @@ async function prodCapSettingsUpdate(workArea, year, month, value) {
 }
 
 // ── Keyboard navigation between cells ────────────────────────
-function prodCapSettingsNavKey(event, workArea, key) {
+export function prodCapSettingsNavKey(event, workArea, key) {
   const monthKeys = prodCapGet24MonthKeys();
   const workAreas = prodCapGetWorkAreas();
   const keyIdx    = monthKeys.indexOf(key);
@@ -262,8 +277,8 @@ function prodCapSettingsNavKey(event, workArea, key) {
 }
 
 // ── Fill forward: copy each cell's value to all subsequent months ─
-async function prodCapSettingsFillForward() {
-  if (!confirm('Fill each value forward — this will copy each cell\'s staff count to all following months in the same row that are currently empty. Continue?')) return;
+export async function prodCapSettingsFillForward() {
+  if (!confirm('Fill each value forward — this will copy each row\'s staff count to all following months, overwriting any existing values. Continue?')) return;
 
   const monthKeys = prodCapGet24MonthKeys();
   const workAreas = prodCapGetWorkAreas();
@@ -275,9 +290,9 @@ async function prodCapSettingsFillForward() {
       for (const key of monthKeys) {
         const { year, month } = prodCapParseKey(key);
         const current = prodCapDataGetStaff(wa, year, month);
-        if (current > 0) {
+        if (lastVal === 0 && current > 0) {
           lastVal = current;
-        } else if (lastVal > 0) {
+        } else if (lastVal > 0 && current !== lastVal) {
           await prodCapDataSetStaff(wa, year, month, lastVal);
           filled++;
         }
@@ -286,7 +301,7 @@ async function prodCapSettingsFillForward() {
     if (filled > 0) {
       showToast(`Filled ${filled} cell${filled === 1 ? '' : 's'} forward.`, 'success');
     } else {
-      showToast('No empty cells to fill — enter a value in the first month of each row first.', 'info');
+      showToast('No values to fill forward — enter a value in the first month of each row first.', 'info');
     }
   } catch (err) {
     console.error('Fill forward error:', err);
@@ -297,7 +312,7 @@ async function prodCapSettingsFillForward() {
 }
 
 // ── Clear all capacity records for confirmation ───────────────
-async function prodCapSettingsClearAll() {
+export async function prodCapSettingsClearAll() {
   if (!confirm('Clear ALL capacity settings? This cannot be undone.')) return;
   if (!currentUser) return;
 
@@ -316,8 +331,8 @@ async function prodCapSettingsClearAll() {
 }
 
 // ── Set utilization factor from slider ────────────────────────
-async function prodCapSettingsSetUtilization(percent) {
-  prodCapUtilizationFactor = Math.max(0, Math.min(100, parseInt(percent))) / 100;
-  await prodCapSaveUtilization(percent);
-  render();
+export async function prodCapSettingsSetUtilization(percent) {
+  appState.prodCapUtilizationFactor = Math.max(0, Math.min(100, parseInt(percent))) / 100
+  await prodCapSaveUtilization(percent)
+  render()
 }

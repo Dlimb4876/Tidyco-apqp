@@ -32,6 +32,9 @@ Thumbs.db
 # Local/personal settings (not for sharing)
 .claude/settings.local.json
 
+#Chrome Debug stuff
+.debug/
+
 # Trello exports/data
 trello/
 
@@ -71,3 +74,6 @@ scripts/pre-commit-quality-hook.js
 .wolf/hooks/_session.json
 .wolf/designqc-captures/
 nul
+
+# Supabase configuration (contains sensitive credentials)
+core/js/config.js

@@ -1,17 +1,22 @@
 // ═══════════════════════════════════════════════════════════════
 // work-areas-data.js — Work Areas Data Layer
 // Manages work areas (Unit 2, Unit 3, Unit 6, etc.) with Supabase persistence
-// Depends on: auth.js (supa, currentUser)
 // ═══════════════════════════════════════════════════════════════
 
-let workAreasState = {
+import { supabase as supa, currentUser } from '../../../../core/js/supa.js'
+import { appState } from '../../../../core/js/state.js'
+import { esc, showToast } from '../../../../utils/js/helpers.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { createRealtimeSubscription, removeRealtimeSubscription } from '../../../../utils/js/realtime.js'
+
+export const workAreasState = {
   workAreas: [],
   loading: false,
   error: null
-};
+}
 
 // ── Initialize work areas from Supabase ──────────────────────────
-async function workAreasDataInit() {
+export async function workAreasDataInit() {
   workAreasState.loading = true;
   workAreasState.error = null;
 
@@ -35,7 +40,7 @@ async function workAreasDataInit() {
 }
 
 // ── Add a new work area ──────────────────────────────────────────
-window.workAreasDataAddWorkArea = async function(name, description) {
+export async function workAreasDataAddWorkArea(name, description) {
   if (!name) return null;
 
   const workArea = {
@@ -61,10 +66,10 @@ window.workAreasDataAddWorkArea = async function(name, description) {
     showToast('Failed to add work area: ' + err.message, 'error');
   }
   return null;
-};
+}
 
 // ── Update a work area ───────────────────────────────────────────
-window.workAreasDataUpdateWorkArea = async function(workAreaId, updates) {
+export async function workAreasDataUpdateWorkArea(workAreaId, updates) {
   const workArea = workAreasState.workAreas.find(w => w.id === workAreaId);
   if (!workArea) return false;
 
@@ -83,10 +88,10 @@ window.workAreasDataUpdateWorkArea = async function(workAreaId, updates) {
     showToast('Failed to update work area: ' + err.message, 'error');
   }
   return false;
-};
+}
 
 // ── Delete a work area ───────────────────────────────────────────
-window.workAreasDataDeleteWorkArea = async function(workAreaId) {
+export async function workAreasDataDeleteWorkArea(workAreaId) {
   const idx = workAreasState.workAreas.findIndex(w => w.id === workAreaId);
   if (idx === -1) return false;
 
@@ -104,63 +109,62 @@ window.workAreasDataDeleteWorkArea = async function(workAreaId) {
     showToast('Failed to delete work area: ' + err.message, 'error');
   }
   return false;
-};
+}
 
 // ── Get work area by ID ──────────────────────────────────────────
-window.workAreasDataGetWorkArea = function(workAreaId) {
+export function workAreasDataGetWorkArea(workAreaId) {
   return workAreasState.workAreas.find(w => w.id === workAreaId);
-};
+}
 
 // ── Get work area name by ID ─────────────────────────────────────
-window.workAreasDataGetWorkAreaName = function(workAreaId) {
+export function workAreasDataGetWorkAreaName(workAreaId) {
   const workArea = workAreasState.workAreas.find(w => w.id === workAreaId);
   return workArea ? workArea.name : 'Unknown';
-};
+}
 
 // ── Get all work areas ───────────────────────────────────────────
-window.workAreasDataGetAll = function() {
+export function workAreasDataGetAll() {
   return [...workAreasState.workAreas];
-};
+}
 
 // ── Build <option> elements for all work area dropdowns ──────────
 // Usage: `<option value="">—</option>${getWorkAreaOptions(currentValue)}`
-window.getWorkAreaOptions = function(selected) {
+export function getWorkAreaOptions(selected) {
   return workAreasState.workAreas
     .map(w => `<option value="${esc(w.name)}" ${selected === w.name ? 'selected' : ''}>${esc(w.name)}</option>`)
     .join('');
-};
+}
 
 // ── Real-time subscription ───────────────────────────────────────
 function workAreasDataSubscribe() {
+  function patchSettingsWorkAreasRow(record) {
+    const tbody = document.getElementById('wa-tbody')
+    if (!tbody) return
+    if (appState.currentSection !== 'settings') return
+    const activeId = document.activeElement?.id || ''
+    if (activeId === 'waEdit-name' || activeId === 'waEdit-desc') return
+    if (typeof render === 'function') render()
+  }
+
   createRealtimeSubscription('work_areas', 'work_areas_channel', {
     onInsert: (record) => {
       workAreasState.workAreas.push(record);
       workAreasState.workAreas.sort((a, b) => a.name.localeCompare(b.name));
-      if (typeof settingsWARenderRowHTML === 'function') {
-        realtimePatchInsert('#wa-tbody', settingsWARenderRowHTML(record), {
-          sortFn: _waResortTbody
-        });
-      }
+      patchSettingsWorkAreasRow(record)
     },
     onUpdate: (record) => {
       const idx = workAreasState.workAreas.findIndex(w => w.id === record.id);
       if (idx >= 0) workAreasState.workAreas[idx] = record;
       workAreasState.workAreas.sort((a, b) => a.name.localeCompare(b.name));
-      if (typeof settingsWARenderRowHTML === 'function' && typeof settingsWorkAreasEditingId !== 'undefined' && settingsWorkAreasEditingId !== record.id) {
-        realtimePatchUpdate('#wa-tbody', record.id, settingsWARenderRowHTML(record));
-        if (typeof _waResortTbody === 'function') {
-          const tbody = document.getElementById('wa-tbody');
-          if (tbody) _waResortTbody(tbody);
-        }
-      }
+      patchSettingsWorkAreasRow(record)
     },
     onDelete: (record) => {
       workAreasState.workAreas = workAreasState.workAreas.filter(w => w.id !== record.id);
-      realtimePatchDelete('#wa-tbody', record.id);
+      patchSettingsWorkAreasRow(record)
     }
   });
 }
 
-window.workAreasDataUnsubscribe = function() {
+export function workAreasDataUnsubscribe() {
   removeRealtimeSubscription('work_areas_channel');
-};
+}

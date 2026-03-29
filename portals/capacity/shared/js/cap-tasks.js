@@ -2,44 +2,45 @@
    cap-tasks.js — Tasks Tab Rendering
    ============================================================ */
 
+import { esc } from '../../../../utils/js/helpers.js'
+
 // Track filter state for tasks tab (separate for each department)
-window.capTasksFilters = {
+export const capTasksFilters = {
   ME: { search: '', department: 'all', category: 'all', assignee: 'all', product: 'all', month: 'all', hideCompleted: localStorage.getItem('meTasksHideCompleted') === 'true' },
   PM: { search: '', category: 'all', assignee: 'all', product: 'all', month: 'all', hideCompleted: localStorage.getItem('pmTasksHideCompleted') === 'true' },
   LOG: { search: '', category: 'all', assignee: 'all', product: 'all', month: 'all', hideCompleted: false },
   UNIT6: { search: '', category: 'all', assignee: 'all', product: 'all', month: 'all', hideCompleted: false }
-};
+}
 
 // Track which task ID is currently in edit mode, per department
-window.capTaskEditingId = window.capTaskEditingId || { ME: null, PM: null, LOG: null, UNIT6: null };
+export const capTaskEditingId = { ME: null, PM: null, LOG: null, UNIT6: null }
 
 // Track sort state for tasks tab (separate for each department)
-window.capTasksSort = {
+export const capTasksSort = {
   ME: { column: '', direction: 'asc' },
   PM: { column: '', direction: 'asc' },
   LOG: { column: '', direction: 'asc' },
   UNIT6: { column: '', direction: 'asc' }
-};
+}
 
-window.capTasksSortBy = function(column, department) {
-  const dept = department || 'ME';
-  const setState = capTasksSort[dept];
+export function capTasksSortBy(column, department) {
+  const dept = department || 'ME'
+  const setState = capTasksSort[dept]
   
   if (setState.column === column) {
-    // Toggle direction or clear sort
-    setState.direction = setState.direction === 'asc' ? 'desc' : 'asc';
+    setState.direction = setState.direction === 'asc' ? 'desc' : 'asc'
   } else {
-    setState.column = column;
-    setState.direction = 'asc';
+    setState.column = column
+    setState.direction = 'asc'
   }
-};
+}
 
-window.capGetSortIcon = function(column, department) {
-  const dept = department || 'ME';
-  const sortState = capTasksSort[dept];
-  if (sortState.column !== column) return '↕';
-  return sortState.direction === 'asc' ? '↑' : '↓';
-};
+export function capGetSortIcon(column, department) {
+  const dept = department || 'ME'
+  const sortState = capTasksSort[dept]
+  if (sortState.column !== column) return '↕'
+  return sortState.direction === 'asc' ? '↑' : '↓'
+}
 
 function _capComputeFilteredTasks(pageTasks, activeFilters, activeSortState, teamArray, availableProducts) {
   // Apply filters
@@ -134,7 +135,7 @@ function _capComputeFilteredTasks(pageTasks, activeFilters, activeSortState, tea
 
 function _capRenderTaskRows(filteredTasks, teamArray, availableProducts, canEditFlag, dept) {
   const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other'];
-  const editingId = (window.capTaskEditingId || {})[dept] || null;
+  const editingId = capTaskEditingId[dept] || null
   const teamMap = new Map(teamArray.map(m => [m.id, m.name]));
   const productMap = new Map(availableProducts.map(p => [p.id, p.name]));
 
@@ -273,13 +274,13 @@ function _capRenderTasksTable(filteredTasks, teamArray, availableProducts, canEd
     </table>`;
 }
 
-window.capRenderTasksTab = function(tasksArray, teamArray, availableProducts, department, filters, sortState, canEditFlag) {
+export function capRenderTasksTab(tasksArray, teamArray, availableProducts, department, filters, sortState, canEditFlag) {
   availableProducts = availableProducts || [];
   const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other'];
   const pageTasks = Array.isArray(tasksArray) ? tasksArray : [];
   const dept = department || 'ME';
-  const activeFilters = filters || capTasksFilters[dept] || {};
-  const activeSortState = sortState || capTasksSort[dept] || { column: '', direction: 'asc' };
+  const activeFilters = filters || capTasksFilters[dept] || {}
+  const activeSortState = sortState || capTasksSort[dept] || { column: '', direction: 'asc' }
 
   const filteredTasks = _capComputeFilteredTasks(pageTasks, activeFilters, activeSortState, teamArray, availableProducts);
   
@@ -455,19 +456,19 @@ window.capRenderTasksTab = function(tasksArray, teamArray, availableProducts, de
        </div>
     </div>
     </div>`;
-};
+}
 
 /**
  * Render only the tasks results (KPIs + table) without the filters section.
  * Used for targeted re-renders during search/filter operations to avoid
  * re-rendering the entire tab and losing focus on input controls.
  */
-window.capRenderTasksResults = function(tasksArray, teamArray, availableProducts, department, filters, sortState, canEditFlag) {
+export function capRenderTasksResults(tasksArray, teamArray, availableProducts, department, filters, sortState, canEditFlag) {
   availableProducts = availableProducts || [];
   const pageTasks = Array.isArray(tasksArray) ? tasksArray : [];
   const dept = department || 'ME';
-  const activeFilters = filters || capTasksFilters[dept] || {};
-  const activeSortState = sortState || capTasksSort[dept] || { column: '', direction: 'asc' };
+  const activeFilters = filters || capTasksFilters[dept] || {}
+  const activeSortState = sortState || capTasksSort[dept] || { column: '', direction: 'asc' }
 
   const filteredTasks = _capComputeFilteredTasks(pageTasks, activeFilters, activeSortState, teamArray, availableProducts);
 
@@ -497,4 +498,4 @@ window.capRenderTasksResults = function(tasksArray, teamArray, availableProducts
         </div>` : ''}
       </div>
     </div>`;
-};
+}

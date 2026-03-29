@@ -2,133 +2,142 @@
    cap-holidays.js — Holiday Planner Tab Rendering
    ============================================================ */
 
-window.capFormatDate = function(date) {
-  if (!date || !(date instanceof Date)) return '';
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
+import { getMonthLabel, getBankHolidaysForYear } from './cap-utils.js'
+import { esc } from '../../../../utils/js/helpers.js'
+
+export function capFormatDate(date) {
+  if (!date || !(date instanceof Date)) return ''
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
 
 function capHolidayDeptLabel(department) {
-  if (department === 'PM') return 'Manager';
-  if (department === 'LOG') return 'Logistics Technician';
-  if (department === 'UNIT6') return 'Technician';
-  return 'Engineer';
+  if (department === 'PM') return 'Manager'
+  if (department === 'LOG') return 'Logistics Technician'
+  if (department === 'UNIT6') return 'Technician'
+  return 'Engineer'
 }
 
 function capHolidayMonthLabel(monthKey) {
-  const label = typeof window.getMonthLabel === 'function' ? window.getMonthLabel(monthKey) : monthKey;
-  if (Array.isArray(label)) return `${label[0]} ${label[1]}`;
-  return label || monthKey;
+  const label = getMonthLabel(monthKey)
+  if (Array.isArray(label)) return `${label[0]} ${label[1]}`
+  return label || monthKey
 }
 
 function capHolidayBankHolidayMap(selectedMonth, bankHolidays) {
-  const [year, month] = (selectedMonth || '').split('-').map(Number);
-  const holidayMap = {};
+  const [year, month] = (selectedMonth || '').split('-').map(Number)
+  const holidayMap = {}
 
   if (Array.isArray(bankHolidays)) {
     bankHolidays.forEach(entry => {
-      if (entry && entry.date) holidayMap[entry.date] = true;
-    });
+      if (entry && entry.date) holidayMap[entry.date] = true
+    })
   } else if (bankHolidays && typeof bankHolidays === 'object') {
     Object.keys(bankHolidays).forEach(key => {
-      if (bankHolidays[key]) holidayMap[key] = true;
-    });
+      if (bankHolidays[key]) holidayMap[key] = true
+    })
   }
 
-  if (typeof window.getBankHolidaysForYear === 'function' && Number.isFinite(year)) {
-    window.getBankHolidaysForYear(year).forEach(entry => {
-      if (entry && entry.date) holidayMap[entry.date] = true;
-    });
+  if (Number.isFinite(year)) {
+    getBankHolidaysForYear(year).forEach(entry => {
+      if (entry && entry.date) holidayMap[entry.date] = true
+    })
 
-    const nextMonthYear = month === 12 ? year + 1 : year;
+    const nextMonthYear = month === 12 ? year + 1 : year
     if (nextMonthYear !== year) {
-      window.getBankHolidaysForYear(nextMonthYear).forEach(entry => {
-        if (entry && entry.date) holidayMap[entry.date] = true;
-      });
+      getBankHolidaysForYear(nextMonthYear).forEach(entry => {
+        if (entry && entry.date) holidayMap[entry.date] = true
+      })
     }
   }
 
-  return holidayMap;
+  return holidayMap
 }
 
-window.capRenderHolidaysTab = function(holidaysArray, teamArray, monthKey, department, bankHolidays, canEditFlag) {
-  const dept = department || 'ME';
-  const selectedMonth = monthKey || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
-  const [year, month] = selectedMonth.split('-').map(Number);
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month + 1, 0);
-  const bankHolidayMap = capHolidayBankHolidayMap(selectedMonth, bankHolidays);
-  const canEditPlanner = canEditFlag !== false;
-  const dates = [];
+export function capRenderHolidaysTab(
+  holidaysArray,
+  teamArray,
+  monthKey,
+  department,
+  bankHolidays,
+  canEditFlag,
+  isSaving = false
+) {
+  const dept = department || 'ME'
+  const selectedMonth = monthKey || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+  const [year, month] = selectedMonth.split('-').map(Number)
+  const startDate = new Date(year, month - 1, 1)
+  const endDate = new Date(year, month + 1, 0)
+  const bankHolidayMap = capHolidayBankHolidayMap(selectedMonth, bankHolidays)
+  const canEditPlanner = canEditFlag !== false
+  const dates = []
 
   for (let cursor = new Date(startDate); cursor <= endDate; cursor.setDate(cursor.getDate() + 1)) {
-    const dateValue = new Date(cursor);
-    const dayOfWeek = dateValue.getDay();
+    const dateValue = new Date(cursor)
+    const dayOfWeek = dateValue.getDay()
     if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      dates.push(window.capFormatDate(dateValue));
+      dates.push(capFormatDate(dateValue))
     }
   }
 
-  const today = new Date();
-  const todayMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-  const isCurrentMonth = selectedMonth === todayMonthKey;
+  const today = new Date()
+  const todayMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+  const isCurrentMonth = selectedMonth === todayMonthKey
   let monthHeaderHtml = '';
-  let currentHeaderMonth = null;
-  let monthStartIndex = 0;
+  let currentHeaderMonth = null
+  let monthStartIndex = 0
 
   dates.forEach((date, index) => {
-    const dateValue = new Date(date);
-    const currentKey = `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, '0')}`;
+    const dateValue = new Date(date)
+    const currentKey = `${dateValue.getFullYear()}-${String(dateValue.getMonth() + 1).padStart(2, '0')}`
     if (currentKey !== currentHeaderMonth) {
       if (currentHeaderMonth !== null) {
-        monthHeaderHtml += `<th colspan="${index - monthStartIndex}" style="text-align:center;font-weight:bold;font-size:13px;background:var(--overlay-light);">${capHolidayMonthLabel(currentHeaderMonth)}</th>`;
+        monthHeaderHtml += `<th colspan="${index - monthStartIndex}" style="text-align:center;font-weight:bold;font-size:13px;background:var(--overlay-light);">${capHolidayMonthLabel(currentHeaderMonth)}</th>`
       }
-      currentHeaderMonth = currentKey;
-      monthStartIndex = index;
+      currentHeaderMonth = currentKey
+      monthStartIndex = index
     }
-  });
+  })
 
   if (currentHeaderMonth !== null) {
-    monthHeaderHtml += `<th colspan="${dates.length - monthStartIndex}" style="text-align:center;font-weight:bold;font-size:13px;background:var(--overlay-light);">${capHolidayMonthLabel(currentHeaderMonth)}</th>`;
+    monthHeaderHtml += `<th colspan="${dates.length - monthStartIndex}" style="text-align:center;font-weight:bold;font-size:13px;background:var(--overlay-light);">${capHolidayMonthLabel(currentHeaderMonth)}</th>`
   }
 
   let rowsHtml = '';
   (Array.isArray(teamArray) ? teamArray : []).forEach(member => {
-    rowsHtml += `<tr><th style="position:sticky;left:0;background:var(--white);z-index:9;text-align:left;padding:8px;width:130px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(member && member.name ? member.name : '')}">${esc(member && member.name ? member.name : '')}</th>`;
+    rowsHtml += `<tr><th style="position:sticky;left:0;background:var(--white);z-index:9;text-align:left;padding:8px;width:130px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(member && member.name ? member.name : '')}">${esc(member && member.name ? member.name : '')}</th>`
 
     dates.forEach(date => {
-      const isBankHoliday = !!bankHolidayMap[date];
-      const holiday = (holidaysArray || []).find(entry => entry && entry.personId === member.id && entry.date === date);
-      const state = holiday ? holiday.type : null;
-      const dateValue = new Date(date);
-      const isMonday = dateValue.getDay() === 1 ? ' week-start' : '';
+      const isBankHoliday = !!bankHolidayMap[date]
+      const holiday = (holidaysArray || []).find(entry => entry && entry.personId === member.id && entry.date === date)
+      const state = holiday ? holiday.type : null
+      const dateValue = new Date(date)
+      const isMonday = dateValue.getDay() === 1 ? ' week-start' : ''
 
-      let cellClass = `holiday-cell${isMonday}`;
-      let cellContent = '—';
+      let cellClass = `holiday-cell${isMonday}`
+      let cellContent = '—'
       if (isBankHoliday) {
-        cellClass += ' bank-holiday';
-        cellContent = 'BH';
+        cellClass += ' bank-holiday'
+        cellContent = 'BH'
       } else if (state === 'full') {
-        cellClass += ' holiday-full';
-        cellContent = 'F';
+        cellClass += ' holiday-full'
+        cellContent = 'F'
       } else if (state === 'half') {
-        cellClass += ' holiday-half';
-        cellContent = 'H';
+        cellClass += ' holiday-half'
+        cellContent = 'H'
       }
 
       const clickAttr = !isBankHoliday && canEditPlanner
         ? `data-cap-action="cap-me-toggle-holiday" data-member-id="${member.id}" data-date="${date}"`
-        : '';
+        : ''
 
-      rowsHtml += `<td class="${cellClass}" ${clickAttr} title="${date}">${cellContent}</td>`;
-    });
+      rowsHtml += `<td class="${cellClass}" ${clickAttr} title="${date}">${cellContent}</td>`
+    })
 
-    rowsHtml += '</tr>';
-  });
-
-  const isSaving = typeof window.meDataSaveInProgress !== 'undefined' && window.meDataSaveInProgress;
+    rowsHtml += '</tr>'
+  })
 
   return `
     <div class="me-card">
@@ -167,18 +176,18 @@ window.capRenderHolidaysTab = function(holidaysArray, teamArray, monthKey, depar
           </tbody>
         </table>
       </div>
-    </div>`;
-};
+    </div>`
+}
 
-window.capToggleHoliday = function(personId, date, holidaysArray, addFn, updateFn, deleteFn) {
-  const holidayRows = Array.isArray(holidaysArray) ? holidaysArray : [];
-  const holiday = holidayRows.find(h => h.personId === personId && h.date === date);
+export function capToggleHoliday(personId, date, holidaysArray, addFn, updateFn, deleteFn) {
+  const holidayRows = Array.isArray(holidaysArray) ? holidaysArray : []
+  const holiday = holidayRows.find(h => h.personId === personId && h.date === date)
   
   if (!holiday) {
-    if (addFn) addFn(personId, date, 'full');
+    if (addFn) addFn(personId, date, 'full')
   } else if (holiday.type === 'full') {
-    if (updateFn) updateFn(personId, date, 'half');
+    if (updateFn) updateFn(personId, date, 'half')
   } else {
-    if (deleteFn) deleteFn(personId, date);
+    if (deleteFn) deleteFn(personId, date)
   }
-};
+}

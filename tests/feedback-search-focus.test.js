@@ -1,8 +1,11 @@
-const fs = require('fs')
-const path = require('path')
+import path from 'path'
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('Feedback search typing continuity', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers()
 
     document.body.innerHTML = '<div id="mainContent"></div>'
@@ -18,10 +21,10 @@ describe('Feedback search typing continuity', () => {
     global.createRealtimeSubscription = jest.fn()
     global.removeRealtimeSubscription = jest.fn()
 
-    eval(fs.readFileSync(path.resolve(__dirname, '../portals/feedback/js/feedback-constants.js'), 'utf8'))
-    eval(fs.readFileSync(path.resolve(__dirname, '../portals/feedback/js/feedback-data.js'), 'utf8'))
-    eval(fs.readFileSync(path.resolve(__dirname, '../utils/js/helpers.js'), 'utf8'))
-    eval(fs.readFileSync(path.resolve(__dirname, '../portals/feedback/js/feedback.js'), 'utf8'))
+    await import('../portals/feedback/js/feedback-constants.js')
+    await import('../portals/feedback/js/feedback-data.js')
+    await import('../utils/js/helpers.js')
+    await import('../portals/feedback/js/feedback.js')
 
     window.feedbackDataManager.state.tab = 'browse'
     window.feedbackDataManager.state.feedback = [

@@ -1,8 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
 
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/mcs/js/mcs-main.js'),
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+// Read the script content - needed since internal functions aren't exported
+const script = readFileSync(
+  resolve(__dirname, '../portals/mcs/js/mcs-main.js'),
   'utf8'
 );
 
@@ -98,6 +103,8 @@ describe('MCS Main Portal', () => {
       dateRange: 'all',
     };
 
+    // Evaluate the script to expose internal functions for testing
+    // This maintains the original test behavior while using ESM for imports
     eval(`${script}\n;globalThis.__mcsMain = { mcsGetFiltered, mcStatusLabel, mcsIsOverdue, mcsClearFilters, mcsToggleQuickFilter };`); // eslint-disable-line no-eval
   });
 

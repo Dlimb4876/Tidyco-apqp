@@ -1,13 +1,15 @@
-const fs = require('fs');
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/mcs/js/mcs-actions.js'),
-  'utf8'
-);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('MCS Action Centre Integration', () => {
-  beforeEach(() => {
+  let mcsExtractApproveTasks;
+  let mcsIntegrateWithActionCentre;
+  let mcsNavigateFromActionCentre;
+
+  beforeEach(async () => {
     global.esc = (v) => String(v ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -68,11 +70,15 @@ describe('MCS Action Centre Integration', () => {
 
     global.mcsAutoViewId = null;
 
-    eval(`${script}\n;globalThis.__mcsActions = { mcsExtractApproveTasks, mcsIntegrateWithActionCentre, mcsNavigateFromActionCentre };`); // eslint-disable-line no-eval
+    // Import module after setting up mocks
+    const mcsActions = await import('../portals/mcs/js/mcs-actions.js');
+    mcsExtractApproveTasks = mcsActions.mcsExtractApproveTasks;
+    mcsIntegrateWithActionCentre = mcsActions.mcsIntegrateWithActionCentre;
+    mcsNavigateFromActionCentre = mcsActions.mcsNavigateFromActionCentre;
   });
 
   it('extracts pending approval tasks for assigned user and active stages', () => {
-    const tasks = globalThis.__mcsActions.mcsExtractApproveTasks();
+    const tasks = mcsExtractApproveTasks();
 
     expect(tasks).toHaveLength(2);
     expect(tasks[0].id).toContain('ECR-2026-0001');
@@ -82,16 +88,16 @@ describe('MCS Action Centre Integration', () => {
 
   it('returns empty when no approver config or no user', () => {
     global.mcsApproverConfig = null;
-    expect(globalThis.__mcsActions.mcsExtractApproveTasks()).toEqual([]);
+    expect(mcsExtractApproveTasks()).toEqual([]);
 
     global.mcsApproverConfig = { approval1: [] };
     global.currentUser = null;
-    expect(globalThis.__mcsActions.mcsExtractApproveTasks()).toEqual([]);
+    expect(mcsExtractApproveTasks()).toEqual([]);
   });
 
   it('integrates extracted tasks into action centre data under mcs_approvals', () => {
     const base = { actions: [], pfmea: [], risks: [] };
-    const merged = globalThis.__mcsActions.mcsIntegrateWithActionCentre(base);
+    const merged = mcsIntegrateWithActionCentre(base);
 
     expect(merged).toHaveProperty('mcs_approvals');
     expect(Array.isArray(merged.mcs_approvals)).toBe(true);
@@ -99,7 +105,7 @@ describe('MCS Action Centre Integration', () => {
   });
 
   it('sourceLink callback routes to MCS and sets auto-view id', () => {
-    const tasks = globalThis.__mcsActions.mcsExtractApproveTasks();
+    const tasks = mcsExtractApproveTasks();
     const task = tasks.find((t) => t.metadata.changeId === 'ECR-2026-0001');
 
     task.sourceLink();
@@ -109,7 +115,7 @@ describe('MCS Action Centre Integration', () => {
   });
 
   it('navigate helper sets auto-view id and routes to MCS', () => {
-    globalThis.__mcsActions.mcsNavigateFromActionCentre('ECR-2026-0002');
+    mcsNavigateFromActionCentre('ECR-2026-0002');
 
     expect(global.mcsAutoViewId).toBe('ECR-2026-0002');
     expect(global.navigate).toHaveBeenCalledWith('mcs');

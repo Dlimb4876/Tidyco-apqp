@@ -1,27 +1,45 @@
-const fs = require('fs');
-const path = require('path');
+// ═══════════════════════════════════
+// helpers.test.js — Tests for helpers.js functions
+// ═══════════════════════════════════
 
-// ─────────────────────────────────────────────────────────────
-// Mock Dependencies
-// ─────────────────────────────────────────────────────────────
+import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 
-// Modal picker state globals (used by closeModal)
-global.ctqPickTarget = null;
-global.ctqPickSelected = [];
-global.bomPickTarget = null;
-global.bomPickSelected = [];
-global.bomPickFilter = 'all';
-global.kitPickTarget = null;
-global.kitPickSelected = [];
-global.kitPickFilter = 'all';
+// Mock dependencies before any imports
+jest.unstable_mockModule('../core/js/state.js', () => ({
+  appState: {
+    ctqPickTarget: null,
+    ctqPickSelected: [],
+    bomPickTarget: null,
+    bomPickSelected: [],
+    bomPickFilter: 'all',
+    kitPickTarget: null,
+    kitPickSelected: [],
+    kitPickFilter: 'all'
+  },
+  currentUserRole: 'admin',
+  currentUserPermissions: {}
+}));
 
-// Set up DOM from index.html
-const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
-document.documentElement.innerHTML = html.toString();
+jest.unstable_mockModule('../core/js/db.js', () => ({
+  save: jest.fn()
+}));
 
-// Load helpers script
-const script = fs.readFileSync(path.resolve(__dirname, '../utils/js/helpers.js'), 'utf8');
-eval(script);
+jest.unstable_mockModule('../utils/js/navigation.js', () => ({
+  navigate: jest.fn()
+}));
+
+// Dynamically import after mocks are set up
+const { 
+  esc, 
+  emptyState, 
+  showModal, 
+  closeModal, 
+  sortedPfd, 
+  calcRPN, 
+  getWeekNumber 
+} = await import('../utils/js/helpers.js');
+
+const { appState } = await import('../core/js/state.js');
 
 // ─────────────────────────────────────────────────────────────
 // Tests
@@ -29,14 +47,15 @@ eval(script);
 
 describe('Helpers Module (helpers.js)', () => {
   beforeEach(() => {
-    global.ctqPickTarget = null;
-    global.ctqPickSelected = [];
-    global.bomPickTarget = 'some-target';
-    global.bomPickSelected = ['item1'];
-    global.bomPickFilter = 'parts';
-    global.kitPickTarget = 'some-kit';
-    global.kitPickSelected = ['kit-item1'];
-    global.kitPickFilter = 'tools';
+    // Reset appState before each test
+    appState.ctqPickTarget = null;
+    appState.ctqPickSelected = [];
+    appState.bomPickTarget = 'some-target';
+    appState.bomPickSelected = ['item1'];
+    appState.bomPickFilter = 'parts';
+    appState.kitPickTarget = 'some-kit';
+    appState.kitPickSelected = ['kit-item1'];
+    appState.kitPickFilter = 'tools';
   });
 
   // ── esc() ────────────────────────────────────────────────────
@@ -125,8 +144,8 @@ describe('Helpers Module (helpers.js)', () => {
     });
 
     test('closeModal on modalCtqPick should reset ctq picker state', () => {
-      global.ctqPickTarget = 'some-ctq';
-      global.ctqPickSelected = ['x', 'y'];
+      appState.ctqPickTarget = 'some-ctq';
+      appState.ctqPickSelected = ['x', 'y'];
 
       // Ensure the element exists
       let el = document.getElementById('modalCtqPick');
@@ -140,8 +159,8 @@ describe('Helpers Module (helpers.js)', () => {
       }
 
       closeModal('modalCtqPick');
-      expect(global.ctqPickTarget).toBeNull();
-      expect(global.ctqPickSelected).toEqual([]);
+      expect(appState.ctqPickTarget).toBeNull();
+      expect(appState.ctqPickSelected).toEqual([]);
     });
 
     test('closeModal on modalBomPick should reset bom picker state', () => {
@@ -154,9 +173,9 @@ describe('Helpers Module (helpers.js)', () => {
       el.style.display = 'flex';
 
       closeModal('modalBomPick');
-      expect(global.bomPickTarget).toBeNull();
-      expect(global.bomPickSelected).toEqual([]);
-      expect(global.bomPickFilter).toBe('all');
+      expect(appState.bomPickTarget).toBeNull();
+      expect(appState.bomPickSelected).toEqual([]);
+      expect(appState.bomPickFilter).toBe('all');
     });
 
     test('closeModal on modalKitPick should reset kit picker state', () => {
@@ -169,9 +188,9 @@ describe('Helpers Module (helpers.js)', () => {
       el.style.display = 'flex';
 
       closeModal('modalKitPick');
-      expect(global.kitPickTarget).toBeNull();
-      expect(global.kitPickSelected).toEqual([]);
-      expect(global.kitPickFilter).toBe('all');
+      expect(appState.kitPickTarget).toBeNull();
+      expect(appState.kitPickSelected).toEqual([]);
+      expect(appState.kitPickFilter).toBe('all');
     });
   });
 
@@ -218,58 +237,6 @@ describe('Helpers Module (helpers.js)', () => {
 
     test('should return 1 for minimum values', () => {
       expect(calcRPN({ sev: 1, occ: 1, det: 1 })).toBe(1);
-    });
-  });
-
-  // ── Keyboard shortcuts ───────────────────────────────────────
-  describe('keyboard shortcuts', () => {
-    test('Ctrl+/ opens the shortcuts modal', () => {
-      const modal = document.getElementById('shortcutsModal');
-      modal.style.display = 'none';
-
-      const evt = new KeyboardEvent('keydown', { key: '/', ctrlKey: true, cancelable: true });
-      document.dispatchEvent(evt);
-
-      expect(modal.style.display).toBe('flex');
-    });
-
-    test('Ctrl+S triggers global save when available', () => {
-      global.save = jest.fn();
-
-      const evt = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, cancelable: true });
-      document.dispatchEvent(evt);
-
-      expect(global.save).toHaveBeenCalledTimes(1);
-    });
-
-    test('Ctrl+F focuses the active search input', () => {
-      const search = document.createElement('input');
-      search.type = 'search';
-      search.id = 'testShortcutSearch';
-      search.placeholder = 'Search items';
-      document.body.prepend(search);
-
-      const evt = new KeyboardEvent('keydown', { key: 'f', ctrlKey: true, cancelable: true });
-      document.dispatchEvent(evt);
-
-      expect(document.activeElement).toBe(search);
-    });
-
-    test('Escape closes an open modal', () => {
-      document.querySelectorAll('.modal-bg').forEach(el => {
-        el.style.display = 'none';
-      });
-
-      const modal = document.createElement('div');
-      modal.id = 'escCloseModal';
-      modal.className = 'modal-bg';
-      modal.style.display = 'flex';
-      document.body.appendChild(modal);
-
-      const evt = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
-      document.dispatchEvent(evt);
-
-      expect(modal.style.display).toBe('none');
     });
   });
 

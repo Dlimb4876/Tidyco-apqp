@@ -1,10 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../core/js/chart-theme.js'),
-  'utf8'
-);
+import { ChartTheme } from '../core/js/chart-theme.js';
 
 describe('ChartTheme utility', () => {
   beforeEach(() => {
@@ -29,7 +23,8 @@ describe('ChartTheme utility', () => {
       }
     `;
     document.head.appendChild(style);
-    eval(script); // eslint-disable-line no-eval
+    // Make ChartTheme available on window for tests that expect it
+    window.ChartTheme = ChartTheme;
   });
 
   it('returns resolved css variables via get()', () => {

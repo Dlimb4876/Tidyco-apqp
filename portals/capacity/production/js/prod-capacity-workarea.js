@@ -1,13 +1,28 @@
 // ═══════════════════════════════════════════════════════════════
 // prod-capacity-workarea.js — Capacity by Work Area Tab
 // Per-area chart + monthly breakdown table + active batch list
-// Depends on: prod-capacity-data.js, Chart.js
 // ═══════════════════════════════════════════════════════════════
+
+import { Chart } from 'chart.js'
+import { appState } from '../../../../core/js/state.js'
+import { esc } from '../../../../utils/js/helpers.js'
+import { formatDisplayDate, prodState } from '../../../production/js/data.js'
+import {
+  prodCapGet24MonthKeys,
+  prodCapGetWorkAreas,
+  prodCapCalcDemandMatrix,
+  prodCapCalcSupplyMatrix,
+  prodCapParseKey,
+  prodCapDataGetStaff,
+  prodCapUtil,
+  prodCapMonthLabel,
+  prodCapMonthLabelFull
+} from './prod-capacity-data.js'
 
 let prodCapWorkAreaSelected = null
 let prodCapWorkAreaChartInst = null
 
-window.prodCapSetWorkArea = function (workArea) {
+export function prodCapSetWorkArea(workArea) {
   prodCapWorkAreaSelected = workArea || null
 }
 
@@ -58,7 +73,7 @@ function _renderProdCapKpiCards(kpis) {
   `
 }
 
-function renderProdCapWorkArea() {
+export function renderProdCapWorkArea() {
   const workAreas = prodCapGetWorkAreas()
 
   if (workAreas.length === 0) {
@@ -205,8 +220,8 @@ function renderProdCapWorkArea() {
               <td class="pc-tbl-mono">${prod ? esc(prod.code || '—') : '—'}</td>
               <td class="pc-tbl-num">${batch.quantity || '—'}</td>
               <td class="pc-tbl-mono">${
-                formatDisplayDate(batch.start_date) || '—'
-              } → ${formatDisplayDate(batch.due_date) || '—'}</td>
+                (typeof formatDisplayDate === 'function' ? formatDisplayDate(batch.start_date) : batch.start_date) || '—'
+              } → ${(typeof formatDisplayDate === 'function' ? formatDisplayDate(batch.due_date) : batch.due_date) || '—'}</td>
               <td class="pc-tbl-num">${
                 totalHours > 0 ? Math.round(totalHours).toLocaleString() + 'h' : '—'
               }</td>
@@ -241,7 +256,7 @@ function renderProdCapWorkArea() {
             <div class="pc-window-label">${offsetLabel}</div>
             <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
             ${
-              prodCapMonthOffset !== 0
+              appState.prodCapMonthOffset !== 0
                 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>`
                 : ''
             }
@@ -303,7 +318,7 @@ function renderProdCapWorkArea() {
   `
 }
 
-function prodCapDrawWorkAreaChart() {
+export function prodCapDrawWorkAreaChart() {
   const canvas = document.getElementById('prodCapWorkAreaChart')
   if (!canvas || !prodCapWorkAreaSelected) return
 

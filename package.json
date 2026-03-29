@@ -1,25 +1,27 @@
 {
   "name": "tidyco-apqp",
   "version": "1.0.0",
+  "type": "module",
   "description": "A Manufacturing Engineering tool for rail overhaul, managing APQP Gates 0–5 and broader operational workflows. Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and Supabase for persistence.",
   "main": "check_onclick.js",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "check:imports": "node scripts/import-checker.js",
+    "check:esm-coverage": "node scripts/esm-coverage.js",
     "lint:npi": "eslint portals/product-development/npi/**/*.js",
     "format:npi": "prettier --write portals/product-development/npi/**/*.js",
     "wiki:build-index": "node scripts/wiki-build-search-index.js",
     "wiki:audit-tokens": "node scripts/wiki-token-audit.js",
     "wiki:check-links": "node scripts/wiki-link-check.js",
     "wiki:check": "npm run wiki:build-index && npm run wiki:audit-tokens && npm run wiki:check-links",
-    "check:load-order": "node scripts/load-order-checker.js",
     "check:syntax": "node scripts/syntax-validator.js",
-    "check:rls": "node scripts/rls-policy-checker.js",
     "check:subscriptions": "node scripts/subscription-cleanup-auditor.js",
+    "check:state": "node scripts/state-variable-tracker.js",
+    "check:rls": "node scripts/rls-policy-checker.js",
     "check:mobile": "node scripts/mobile-breakpoint-verifier.js",
     "check:modals": "node scripts/modal-state-auditor.js",
-    "check:state": "node scripts/state-variable-tracker.js",
     "check:coverage": "node scripts/test-coverage-reporter.js",
-    "check:all": "npm run check:load-order && npm run check:syntax && npm run check:subscriptions && npm run check:mobile && npm run check:modals && npm run check:state && npm run check:coverage"
+    "check:all": "npm run check:syntax && npm run check:imports && npm run check:esm-coverage && npm run check:subscriptions && npm run check:state && npm run check:rls && npm run check:mobile && npm run check:modals && npm run check:coverage"
   },
   "repository": {
     "type": "git",

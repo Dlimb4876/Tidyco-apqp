@@ -7,22 +7,48 @@
  * columns in deletes, wrong camelCase mapping in load returns.
  */
 
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { jest } from '@jest/globals'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const USER_ID = 'user-uuid-123'
+
+// Helper to transpile ESM to eval-compatible code with global exports
+function transpileESMForEval(source) {
+  return source
+    .replace(/import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?\n?/g, '')
+    .replace(/export\s+async\s+function\s+(\w+)/g, 'global.$1 = async function $1')
+    .replace(/export\s+function\s+(\w+)/g, 'global.$1 = function $1')
+    .replace(/export\s+const\s+(\w+)/g, 'global.$1')
+    .replace(/export\s+let\s+(\w+)/g, 'global.$1')
+    .replace(/export\s+var\s+(\w+)/g, 'global.$1')
+    .replace(/export\s+class\s+(\w+)/g, 'global.$1 = class $1')
+    .replace(/export\s*\{/g, '// exports: {')
+    .replace(/\}\s*from\s*['"][^'"]+['"];?/g, '}')
+}
 
 // Globals required by the script at eval time
 global.currentUser = { id: USER_ID }
 global.meUUID = () => 'mock-uuid'
+global.capUUID = global.meUUID
 global.capacityTab = 'team'
 global.supa = { from: jest.fn() }
+global.supabase = global.supa
+global.capNormalizeDateRange = jest.fn((startDate, endDate, todayStr) => ({
+  safeStart: startDate || todayStr,
+  safeEnd: endDate || todayStr
+}))
 
 const script = fs.readFileSync(
   path.resolve(__dirname, '../portals/capacity/me/js/me-data-relational.js'),
   'utf8'
 )
-eval(script) // eslint-disable-line no-eval
+const transpiled = transpileESMForEval(script)
+eval(transpiled) // eslint-disable-line no-eval
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -53,7 +79,7 @@ describe('meSaveTeamRelational', () => {
     const { supa, upsertMock } = makeUpsertSupa()
     global.supa = supa
 
-    await meSaveTeamRelational(USER_ID, {
+    await global.meSaveTeamRelational(USER_ID, {
       name: 'Alice',
       hoursPerWeek: 40,
       utilisation: 0.8,
@@ -81,7 +107,7 @@ describe('meSaveTeamRelational', () => {
     const { supa, upsertMock } = makeUpsertSupa()
     global.supa = supa
 
-    await meSaveTeamRelational(USER_ID, { name: 'Bob', hoursPerWeek: 35, utilisation: 1, jobTitle: 'Tech', group: '', department: 'ME', startDate: '', endDate: '' })
+    await global.meSaveTeamRelational(USER_ID, { name: 'Bob', hoursPerWeek: 35, utilisation: 1, jobTitle: 'Tech', group: '', department: 'ME', startDate: '', endDate: '' })
 
     const [payload] = upsertMock.mock.calls[0][0]
     expect(payload).not.toHaveProperty('hoursPerWeek')
@@ -92,7 +118,7 @@ describe('meSaveTeamRelational', () => {
     const { supa, upsertMock } = makeUpsertSupa()
     global.supa = supa
 
-    await meSaveTeamRelational(USER_ID, {
+    await global.meSaveTeamRelational(USER_ID, {
       name: 'Logistics User',
       hoursPerWeek: 37,
       utilisation: 0.9,
@@ -116,7 +142,7 @@ describe('meSaveProductRelational', () => {
     const upsertMock = jest.fn().mockReturnValue({ select: selectAfterUpsert })
     global.supa = { from: jest.fn(() => ({ upsert: upsertMock })) }
 
-    await meSaveProductRelational(USER_ID, {
+    await global.meSaveProductRelational(USER_ID, {
       id: null,
       name: 'Widget',
       productDatabaseId: null, // triggers manual lookup path
@@ -141,7 +167,7 @@ describe('meSaveProductRelational', () => {
     const upsertMock = jest.fn().mockReturnValue({ select: selectAfterUpsert })
     global.supa = { from: jest.fn(() => ({ upsert: upsertMock })) }
 
-    await meSaveProductRelational(USER_ID, { id: null, name: 'W', productDatabaseId: null, hoursPerWeek: 5, department: 'ME', notes: null })
+    await global.meSaveProductRelational(USER_ID, { id: null, name: 'W', productDatabaseId: null, hoursPerWeek: 5, department: 'ME', notes: null })
 
     const [payload] = upsertMock.mock.calls[0][0]
     expect(payload).not.toHaveProperty('hoursPerWeek')
@@ -156,7 +182,7 @@ describe('meSaveProductRelational', () => {
     const upsertMock = jest.fn().mockReturnValue({ select: selectAfterUpsert })
     global.supa = { from: jest.fn(() => ({ select: selectLookup, upsert: upsertMock })) }
 
-    await meSaveProductRelational(USER_ID, { id: null, name: 'Widget', productDatabaseId: 'db-id-1', hoursPerWeek: 5, department: 'ME', notes: null })
+    await global.meSaveProductRelational(USER_ID, { id: null, name: 'Widget', productDatabaseId: 'db-id-1', hoursPerWeek: 5, department: 'ME', notes: null })
 
     expect(lookupEqMock).toHaveBeenCalledWith('product_database_id', 'db-id-1')
   })
@@ -169,7 +195,7 @@ describe('meSaveTaskRelational', () => {
     const { supa, upsertMock } = makeUpsertSupa()
     global.supa = supa
 
-    await meSaveTaskRelational(USER_ID, {
+    await global.meSaveTaskRelational(USER_ID, {
       name: 'Design Review',
       category: 'Engineering',
       type: 'standard',
@@ -200,7 +226,7 @@ describe('meSaveTaskRelational', () => {
     const { supa, upsertMock } = makeUpsertSupa()
     global.supa = supa
 
-    await meSaveTaskRelational(USER_ID, { name: 'T', category: 'C', type: 'standard', assigneeId: 'p1', productId: 'pr1', startDate: '2025-01-01', endDate: '2025-01-31', totalHours: 10, status: 'SCHEDULED', department: 'ME' })
+    await global.meSaveTaskRelational(USER_ID, { name: 'T', category: 'C', type: 'standard', assigneeId: 'p1', productId: 'pr1', startDate: '2025-01-01', endDate: '2025-01-31', totalHours: 10, status: 'SCHEDULED', department: 'ME' })
 
     const [payload] = upsertMock.mock.calls[0][0]
     expect(payload).not.toHaveProperty('assigneeId')
@@ -214,7 +240,7 @@ describe('meSaveTaskRelational', () => {
     const { supa, upsertMock } = makeUpsertSupa()
     global.supa = supa
 
-    await meSaveTaskRelational(USER_ID, {
+    await global.meSaveTaskRelational(USER_ID, {
       name: 'Logistics Task',
       category: 'Engineering',
       type: 'standard',
@@ -245,7 +271,7 @@ describe('meSaveProductSupportHistoryRelational', () => {
       }))
     }
 
-    await meSaveProductSupportHistoryRelational(USER_ID, [
+    await global.meSaveProductSupportHistoryRelational(USER_ID, [
       {
         productId: 'prod-1',
         hoursPerWeek: 5,
@@ -285,7 +311,7 @@ describe('meSaveProductSupportHistoryRelational', () => {
       }))
     }
 
-    await meSaveProductSupportHistoryRelational(USER_ID, [
+    await global.meSaveProductSupportHistoryRelational(USER_ID, [
       { productId: 'p1', hoursPerWeek: 1, effectiveDate: '2025-01-01', endDate: '', changeReason: '', notes: '', department: 'ME' }
     ])
 
@@ -304,7 +330,7 @@ describe('meSaveProductSupportHistoryRelational', () => {
       }))
     }
 
-    await meSaveProductSupportHistoryRelational(USER_ID, [
+    await global.meSaveProductSupportHistoryRelational(USER_ID, [
       {
         productId: 'prod-1',
         hoursPerWeek: 5,
@@ -327,7 +353,7 @@ describe('meDeleteTeamRelational', () => {
   test('deletes from me_teams filtered by id', async () => {
     const { supa, eqMock } = makeDeleteSupa()
     global.supa = supa
-    await meDeleteTeamRelational('team-abc')
+    await global.meDeleteTeamRelational('team-abc')
     expect(supa.from).toHaveBeenCalledWith('me_teams')
     expect(eqMock).toHaveBeenCalledWith('id', 'team-abc')
   })
@@ -337,7 +363,7 @@ describe('meDeleteTaskRelational', () => {
   test('deletes from me_tasks filtered by id', async () => {
     const { supa, eqMock } = makeDeleteSupa()
     global.supa = supa
-    await meDeleteTaskRelational('task-xyz')
+    await global.meDeleteTaskRelational('task-xyz')
     expect(supa.from).toHaveBeenCalledWith('me_tasks')
     expect(eqMock).toHaveBeenCalledWith('id', 'task-xyz')
   })
@@ -347,7 +373,7 @@ describe('meDeleteProductRelational', () => {
   test('deletes from me_products filtered by id', async () => {
     const { supa, eqMock } = makeDeleteSupa()
     global.supa = supa
-    await meDeleteProductRelational('prod-xyz')
+    await global.meDeleteProductRelational('prod-xyz')
     expect(supa.from).toHaveBeenCalledWith('me_products')
     expect(eqMock).toHaveBeenCalledWith('id', 'prod-xyz')
   })
@@ -357,7 +383,7 @@ describe('meDeleteHolidayRelational', () => {
   test('deletes from me_holidays filtered by id', async () => {
     const { supa, eqMock } = makeDeleteSupa()
     global.supa = supa
-    await meDeleteHolidayRelational('hol-xyz')
+    await global.meDeleteHolidayRelational('hol-xyz')
     expect(supa.from).toHaveBeenCalledWith('me_holidays')
     expect(eqMock).toHaveBeenCalledWith('id', 'hol-xyz')
   })
@@ -387,7 +413,7 @@ describe('meLoadRelationalTeams', () => {
       }))
     }
 
-    const result = await meLoadRelationalTeams(USER_ID)
+    const result = await global.meLoadRelationalTeams(USER_ID)
 
     expect(result[0]).toMatchObject({
       id: 'team-1',
@@ -428,7 +454,7 @@ describe('meLoadRelationalTasks', () => {
       }))
     }
 
-    const result = await meLoadRelationalTasks(USER_ID)
+    const result = await global.meLoadRelationalTasks(USER_ID)
 
     expect(result[0]).toMatchObject({
       id: 'task-1',

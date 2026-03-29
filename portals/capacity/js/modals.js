@@ -3,10 +3,12 @@
 // Dynamically injects modal HTML into the document
 // ═══════════════════════════════════
 
-window.capacityModalsInjected = false
+import { closeModal } from '../../../utils/js/helpers.js'
 
-function injectCapacityModals() {
-  if (window.capacityModalsInjected) return
+let capacityModalsInjected = false
+
+export function injectCapacityModals() {
+  if (capacityModalsInjected) return
   if (!document.body) return
 
   const modalContainer = document.createElement('div')
@@ -31,14 +33,14 @@ function injectCapacityModals() {
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-primary" onclick="closeModal('modalProdCapacityFormula')">Close</button>
+      <button class="btn btn-primary" data-cap-action="cap-prod-capacity-modal-close">Close</button>
     </div>
   </div>
 </div>
   `
 
   document.body.appendChild(modalContainer)
-  window.capacityModalsInjected = true
+  capacityModalsInjected = true
 }
 
 // Auto-inject when DOM is ready
@@ -46,4 +48,8 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', injectCapacityModals)
 } else {
   injectCapacityModals()
+}
+
+export function closeProdCapacityFormulaModal() {
+  closeModal('modalProdCapacityFormula')
 }

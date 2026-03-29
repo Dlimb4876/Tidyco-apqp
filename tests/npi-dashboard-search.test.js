@@ -1,5 +1,8 @@
-const fs = require('fs')
-const path = require('path')
+import { readFileSync } from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 describe('NPI dashboard search input behavior', () => {
   beforeEach(() => {
@@ -28,7 +31,7 @@ describe('NPI dashboard search input behavior', () => {
       mount.innerHTML = '<input class="npi-search-input" name="npi_projects_search" type="search" value="alpha">'
     })
 
-    const script = fs.readFileSync(
+    const script = readFileSync(
       path.resolve(__dirname, '../portals/product-development/npi/js/dashboard.js'),
       'utf8'
     )
@@ -97,7 +100,7 @@ describe('NPI dashboard ensureProductProjects hydration', () => {
       }))
     }
 
-    const script = fs.readFileSync(
+    const script = readFileSync(
       path.resolve(__dirname, '../portals/product-development/npi/js/dashboard.js'),
       'utf8'
     )

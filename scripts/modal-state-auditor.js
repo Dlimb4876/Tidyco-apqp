@@ -6,8 +6,8 @@
  * Prevents modal state pollution across reopenings.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs'
+import path from 'node:path'
 
 function walkDir(dir, extensions = ['.js'], exclude = ['node_modules', '.git', 'tests']) {
   const files = [];

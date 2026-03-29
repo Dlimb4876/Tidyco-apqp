@@ -1,7 +1,20 @@
 // ═══════════════════════════════════
 // db.js — Supabase persistence and data migration
-// Depends on: state.js, auth.js (supa, currentUser)
+// Depends on: state.js, auth.js (supabase, currentUser)
 // ═══════════════════════════════════
+
+import * as supa from './supa.js'
+import {
+  appState,
+  db,
+  GATE_DEFS,
+  newProgTemplate,
+  normalizeGateSelections,
+  setDb
+} from './state.js'
+import { render, navigate } from '../../utils/js/navigation.js'
+import { showToast } from '../../utils/js/helpers.js'
+import { createRealtimeSubscription } from '../../utils/js/realtime.js'
 
 let saveTimer = null;
 let projectsGateScopeColumnsSupported = true;
@@ -18,8 +31,9 @@ let dirtyProjects = new Set();
 // exactly the same fields (DRY — change once, both functions benefit).
 const PROG_BASE_SELECT = 'id,prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by';
 const PROG_GATE_SELECT = PROG_BASE_SELECT + ',gate_selections,gate_selection_locked,gate_selection_locked_at,gate_selection_locked_by';
+const presenceMap = appState.presenceMap
 
-function isGateScopeColumnError(err) {
+export function isGateScopeColumnError(err) {
   const msg = String((err && err.message) || '').toLowerCase();
   return msg.includes('gate_selections') ||
     msg.includes('gate_selection_locked') ||
@@ -27,7 +41,7 @@ function isGateScopeColumnError(err) {
     msg.includes('gate_selection_locked_by');
 }
 
-function buildProjectRow(p, now, email) {
+export function buildProjectRow(p, now, email) {
   const row = {
     prog_id:          p.id,
     name:             p.name,
@@ -63,7 +77,7 @@ function buildProjectRow(p, now, email) {
 // shape used throughout the app.  Used by loadRemote(), loadRemotePage(),
 // and the realtime onInsert handler so that adding a new column only
 // requires a change in one place.
-function rowToProject(row) {
+export function rowToProject(row) {
   return {
     dbId:                     row.id || null,
     id:                       row.prog_id,
@@ -89,7 +103,7 @@ function rowToProject(row) {
 }
 
 // ── Auto-resize textareas ─────────────────────────────────────
-function autoResizeAll() {
+export function autoResizeAll() {
   document.querySelectorAll('textarea[data-autoresize]').forEach(el => {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
@@ -105,8 +119,8 @@ document.addEventListener('input', e => {
 // ── Save ──────────────────────────────────────────────────────
 // Accepts optional extra project IDs to mark dirty (e.g. when two
 // linked projects are modified in the same operation).
-function save(...extraIds) {
-  if (progId) dirtyProjects.add(progId);
+export function save(...extraIds) {
+  if (appState.progId) dirtyProjects.add(appState.progId);
   extraIds.forEach(id => { if (id) dirtyProjects.add(id); });
   try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
     console.debug('localStorage save failed:', e)
@@ -121,9 +135,9 @@ function save(...extraIds) {
   }
 }
 
-async function saveRemote(attempt) {
-  if (!currentUser) return;
-  const email  = currentUser.email;
+export async function saveRemote(attempt) {
+  if (!supa.currentUser) return;
+  const email  = supa.currentUser.email;
   const now    = new Date().toISOString();
   const errors = [];
 
@@ -150,7 +164,7 @@ async function saveRemote(attempt) {
     for (const p of toSave) {
       let row = buildProjectRow(p, now, email);
 
-      let { data: updated, error: updErr } = await supa
+      let { data: updated, error: updErr } = await supa.supabase
         .from('projects')
         .update(row)
         .eq('prog_id', p.id)
@@ -159,7 +173,7 @@ async function saveRemote(attempt) {
       if (updErr && projectsGateScopeColumnsSupported && isGateScopeColumnError(updErr)) {
         projectsGateScopeColumnsSupported = false;
         row = buildProjectRow(p, now, email);
-        ({ data: updated, error: updErr } = await supa
+        ({ data: updated, error: updErr } = await supa.supabase
           .from('projects')
           .update(row)
           .eq('prog_id', p.id)
@@ -178,7 +192,7 @@ async function saveRemote(attempt) {
         p.dbId = updated[0].id;
       }
       if (!updated || updated.length === 0) {
-        let { data: inserted, error: insErr } = await supa
+        let { data: inserted, error: insErr } = await supa.supabase
           .from('projects')
           .insert(row)
           .select('id, prog_id');
@@ -186,7 +200,7 @@ async function saveRemote(attempt) {
         if (insErr && projectsGateScopeColumnsSupported && isGateScopeColumnError(insErr)) {
           projectsGateScopeColumnsSupported = false;
           row = buildProjectRow(p, now, email);
-          ({ data: inserted, error: insErr } = await supa
+          ({ data: inserted, error: insErr } = await supa.supabase
             .from('projects')
             .insert(row)
             .select('id, prog_id'));
@@ -227,17 +241,18 @@ async function saveRemote(attempt) {
   }
 }
 
-async function loadRemote() {
-  if (!currentUser) return;
+export async function loadRemote() {
+  console.debug('loadRemote() currentUser:', supa.currentUser ? supa.currentUser.email : 'null');
+  if (!supa.currentUser) return;
 
-  let { data, error } = await supa
+  let { data, error } = await supa.supabase
     .from('projects')
     .select(projectsGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
     .order('updated_at', { ascending: false });
 
   if (error && projectsGateScopeColumnsSupported && isGateScopeColumnError(error)) {
     projectsGateScopeColumnsSupported = false;
-    ({ data, error } = await supa
+    ({ data, error } = await supa.supabase
       .from('projects')
       .select(PROG_BASE_SELECT)
       .order('updated_at', { ascending: false }));
@@ -261,13 +276,13 @@ async function loadRemote() {
 // pages append to it, avoiding duplicate IDs.
 // Sets `projectsAllLoaded = true` when the returned page is smaller
 // than pageSize, indicating there are no more rows to fetch.
-async function loadRemotePage(page, pageSize = 50) {
-  if (!currentUser) return;
+export async function loadRemotePage(page, pageSize = 50) {
+  if (!supa.currentUser) return;
 
   const from  = page * pageSize;
   const to    = from + pageSize - 1;
 
-  let { data, error } = await supa
+  let { data, error } = await supa.supabase
     .from('projects')
     .select(projectsGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
     .order('updated_at', { ascending: false })
@@ -275,7 +290,7 @@ async function loadRemotePage(page, pageSize = 50) {
 
   if (error && projectsGateScopeColumnsSupported && isGateScopeColumnError(error)) {
     projectsGateScopeColumnsSupported = false;
-    ({ data, error } = await supa
+    ({ data, error } = await supa.supabase
       .from('projects')
       .select(PROG_BASE_SELECT)
       .order('updated_at', { ascending: false })
@@ -294,8 +309,8 @@ async function loadRemotePage(page, pageSize = 50) {
     rows.forEach(p => { if (!knownIds.has(p.id)) db.projects.push(p); });
   }
 
-  projectsPage       = page;
-  projectsAllLoaded  = rows.length < pageSize;
+  appState.projectsPage = page
+  appState.projectsAllLoaded = rows.length < pageSize
 
   if (rows.length > 0) {
     const last = data[0];
@@ -312,15 +327,15 @@ async function loadRemotePage(page, pageSize = 50) {
 }
 
 // Load the next page of projects (called from "Load more" button in hub).
-async function loadMoreProjects() {
-  if (projectsAllLoaded) return;
+export async function loadMoreProjects() {
+  if (appState.projectsAllLoaded) return;
   setSyncBadge('syncing', '● loading…');
-  await loadRemotePage(projectsPage + 1);
+  await loadRemotePage(appState.projectsPage + 1);
   initProgSelect();
   if (typeof render === 'function') render();
 }
 
-function setSyncBadge(state, text) {
+export function setSyncBadge(state, text) {
   const b = document.getElementById('syncBadge');
   if (b) {
     b.className   = 'sync-badge ' + state;
@@ -337,7 +352,7 @@ function setSyncBadge(state, text) {
   }
 }
 
-function setUnsavedIndicator(count) {
+export function setUnsavedIndicator(count) {
   const el = document.getElementById('bottombarUnsaved');
   if (!el) return;
 
@@ -351,7 +366,7 @@ function setUnsavedIndicator(count) {
 }
 
 // ── Migration ─────────────────────────────────────────────────
-function migrateprog(p) {
+export function migrateprog(p) {
   if (!p) return newProgTemplate('Untitled', '', '', 'Other', '', '', new Date().toISOString().slice(0, 10));
   if (!p.dbId) p.dbId = null;
   if (!p.product_id) p.product_id = null;
@@ -435,12 +450,12 @@ function migrateprog(p) {
 }
 
 // ── Legacy local load (fallback) ─────────────────────────────
-function load() {
+export function load() {
   ['tidyco_v7', 'tidyco_v6', 'tidyco_v5'].forEach(key => {
     if (db.projects && db.projects.length > 0) return;
     try {
       const s = localStorage.getItem(key);
-      if (s) { const d = JSON.parse(s); if (d.projects && d.projects.length > 0) db = d; }
+      if (s) { const d = JSON.parse(s); if (d.projects && d.projects.length > 0) setDb(d); }
     } catch (e) {
       console.debug('Failed to load from localStorage key', key, ':', e)
     }
@@ -449,7 +464,7 @@ function load() {
 }
 
 // ── Import / Export ───────────────────────────────────────────
-function exportJSON() {
+export function exportJSON() {
   const b = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(b);
@@ -457,14 +472,14 @@ function exportJSON() {
   a.click();
 }
 
-function importJSON(e) {
+export function importJSON(e) {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = async ev => {
     try {
       const d = JSON.parse(ev.target.result);
       if (d.projects) {
-        db = d;
+        setDb(d);
         db.projects = db.projects.map(p => migrateprog(p));
         // Mark all imported projects dirty so saveRemote writes every one.
         db.projects.forEach(p => dirtyProjects.add(p.id));
@@ -479,14 +494,14 @@ function importJSON(e) {
 
 // ── Project selector ────────────────────────────────────────
 // Only sets a default project if none is already selected (e.g., from URL hash)
-function initProgSelect() {
-  if (!progId && db.projects.length) progId = db.projects[0].id;
+export function initProgSelect() {
+  if (!appState.progId && db.projects.length) appState.progId = db.projects[0].id;
 }
 
 // ── Global real-time subscription for projects ──────────────
 // Keeps every user's hub / projects list live without a page refresh.
 // Called once from launchApp() after the initial loadRemote().
-function subscribeProjectsGlobally() {
+export function subscribeProjectsGlobally() {
   createRealtimeSubscription('projects', 'global_projects_channel', {
     onInsert: (row) => {
       if (db.projects.find(p => p.id === row.prog_id)) return; // already known
@@ -495,7 +510,7 @@ function subscribeProjectsGlobally() {
       try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
         console.debug('localStorage save failed:', e)
       }
-      if (currentSection === 'hub' || currentSection === 'projects') {
+      if (appState.currentSection === 'hub' || appState.currentSection === 'projects') {
         if (typeof render === 'function') render();
       }
     },
@@ -504,9 +519,9 @@ function subscribeProjectsGlobally() {
       if (idx < 0) return;
       // Skip echo of the local user's own save — the local state is already
       // up-to-date and applying the echo could discard in-progress edits.
-      if (row.updated_by === currentUser?.email) return;
+      if (row.updated_by === supa.currentUser?.email) return;
       // Task 2-B: Warn the current user when someone else updates the project they're viewing.
-      if (progId && row.prog_id === progId && row.updated_by && typeof showToast === 'function') {
+      if (appState.progId && row.prog_id === appState.progId && row.updated_by && typeof showToast === 'function') {
         showToast(`${row.updated_by.split('@')[0]} just updated this project's details`, 'info', 6000);
       }
       const p = db.projects[idx];
@@ -532,7 +547,7 @@ function subscribeProjectsGlobally() {
       try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
         console.debug('localStorage save failed:', e)
       }
-      if (currentSection === 'hub' || currentSection === 'projects') {
+      if (appState.currentSection === 'hub' || appState.currentSection === 'projects') {
         if (typeof render === 'function') render();
       }
     },
@@ -540,14 +555,14 @@ function subscribeProjectsGlobally() {
       const idx = db.projects.findIndex(p => p.id === row.prog_id);
       if (idx < 0) return;
       db.projects.splice(idx, 1);
-      if (progId === row.prog_id) {
-        progId = db.projects.length ? db.projects[0].id : null;
+      if (appState.progId === row.prog_id) {
+        appState.progId = db.projects.length ? db.projects[0].id : null;
       }
       try { localStorage.setItem('tidyco_v7', JSON.stringify(db)); } catch (e) {
         console.debug('localStorage save failed:', e)
       }
-      if (currentSection === 'hub' || currentSection === 'projects' ||
-          currentSection === 'project' || currentSection === 'apqp') {
+      if (appState.currentSection === 'hub' || appState.currentSection === 'projects' ||
+          appState.currentSection === 'project' || appState.currentSection === 'apqp') {
         if (typeof render === 'function') render();
       }
     }
@@ -562,7 +577,7 @@ let _presenceChannel = null;
 let _presenceInterval = null;
 const PRESENCE_TTL_MS = 90000; // Remove stale entries after 90 s
 
-function _getPresenceInitials(email) {
+export function _getPresenceInitials(email) {
   if (!email) return '?';
   const local = email.split('@')[0];
   const parts = local.split(/[._-]/);
@@ -570,14 +585,14 @@ function _getPresenceInitials(email) {
   return local.slice(0, 2).toUpperCase();
 }
 
-function broadcastPresence(pid) {
-  if (!pid || !currentUser) return;
+export function broadcastPresence(pid) {
+  if (!pid || !supa.currentUser) return;
   stopPresenceBroadcast();
 
   const channelName = 'presence:' + pid;
-  const email = currentUser.email;
+  const email = supa.currentUser.email;
 
-  const ch = supa.channel(channelName);
+  const ch = supa.supabase.channel(channelName);
   ch.on('broadcast', { event: 'user-here' }, ({ payload }) => {
     if (!payload || !payload.email) return;
     if (payload.email === email) return; // ignore own echo
@@ -591,11 +606,11 @@ function broadcastPresence(pid) {
     // Prune stale entries
     presenceMap[pid] = presenceMap[pid].filter(e => Date.now() - e.ts < PRESENCE_TTL_MS);
     // Re-render dashboard header if viewing this project
-    if (progId === pid && currentSection === 'project' && typeof render === 'function') render();
+    if (appState.progId === pid && appState.currentSection === 'project' && typeof render === 'function') render();
   }).on('broadcast', { event: 'user-gone' }, ({ payload }) => {
     if (!payload || !payload.email || !presenceMap[pid]) return;
     presenceMap[pid] = presenceMap[pid].filter(e => e.email !== payload.email);
-    if (progId === pid && currentSection === 'project' && typeof render === 'function') render();
+    if (appState.progId === pid && appState.currentSection === 'project' && typeof render === 'function') render();
   }).subscribe((status) => {
     if (status === 'SUBSCRIBED') {
       ch.send({ type: 'broadcast', event: 'user-here', payload: { email } });
@@ -611,17 +626,17 @@ function broadcastPresence(pid) {
   }, 30000);
 }
 
-function stopPresenceBroadcast() {
+export function stopPresenceBroadcast() {
   if (_presenceInterval) { clearInterval(_presenceInterval); _presenceInterval = null; }
   if (_presenceChannel) {
     try {
-      const email = currentUser?.email;
+      const email = supa.currentUser?.email;
       if (email) {
         _presenceChannel.send({ type: 'broadcast', event: 'user-gone', payload: { email } }).catch(err => {
           console.debug('presence user-gone send failed (channel may already be closing):', err);
         });
       }
-      supa.removeChannel(_presenceChannel);
+      supa.supabase.removeChannel(_presenceChannel);
     } catch (e) {
       console.debug('stopPresenceBroadcast cleanup error:', e);
     }
@@ -629,7 +644,7 @@ function stopPresenceBroadcast() {
   }
 }
 
-function getPresenceForProg(pid) {
+export function getPresenceForProg(pid) {
   if (!pid || !presenceMap[pid]) return [];
   // Return only non-stale entries
   presenceMap[pid] = presenceMap[pid].filter(e => Date.now() - e.ts < PRESENCE_TTL_MS);
@@ -639,10 +654,10 @@ function getPresenceForProg(pid) {
 // ── Teams Data Functions ───────────────────────────────────────
 // Team management: CRUD operations for teams and team permissions
 
-async function teamsDataLoadAll() {
-  if (!currentUser) return [];
+export async function teamsDataLoadAll() {
+  if (!supa.currentUser) return [];
   try {
-    const { data, error } = await supa
+    const { data, error } = await supa.supabase
       .from('teams')
       .select('id, name, team_type, description, created_at')
       .order('created_at', { ascending: true });
@@ -655,10 +670,10 @@ async function teamsDataLoadAll() {
   }
 }
 
-async function teamsDataLoadPermissions(teamId) {
-  if (!teamId || !currentUser) return [];
+export async function teamsDataLoadPermissions(teamId) {
+  if (!teamId || !supa.currentUser) return [];
   try {
-    const { data, error } = await supa
+    const { data, error } = await supa.supabase
       .from('team_permissions')
       .select('permission, allowed')
       .eq('team_id', teamId)
@@ -671,10 +686,10 @@ async function teamsDataLoadPermissions(teamId) {
   }
 }
 
-async function teamsDataGetUserCount(teamId) {
-  if (!teamId || !currentUser) return 0;
+export async function teamsDataGetUserCount(teamId) {
+  if (!teamId || !supa.currentUser) return 0;
   try {
-    const { count, error } = await supa
+    const { count, error } = await supa.supabase
       .from('profiles')
       .select('id', { count: 'exact' })
       .eq('team_id', teamId);
@@ -686,19 +701,19 @@ async function teamsDataGetUserCount(teamId) {
   }
 }
 
-async function teamsDataAdd(team) {
-  if (!currentUser || !team || !team.name || !team.team_type) {
+export async function teamsDataAdd(team) {
+  if (!supa.currentUser || !team || !team.name || !team.team_type) {
     console.error('teamsDataAdd: invalid team data');
     return null;
   }
   try {
-    const { data, error } = await supa
+    const { data, error } = await supa.supabase
       .from('teams')
       .insert([{
         name: team.name,
         team_type: team.team_type,
         description: team.description || '',
-        created_by: currentUser.id
+        created_by: supa.currentUser.id
       }])
       .select('id, name, team_type, description, created_at');
     if (error) throw error;
@@ -710,14 +725,14 @@ async function teamsDataAdd(team) {
   }
 }
 
-async function teamsDataUpdate(teamId, updates) {
-  if (!currentUser || !teamId || !updates) return false;
+export async function teamsDataUpdate(teamId, updates) {
+  if (!supa.currentUser || !teamId || !updates) return false;
   try {
-    const { error } = await supa
+    const { error } = await supa.supabase
       .from('teams')
       .update({
         ...updates,
-        updated_by: currentUser.id,
+        updated_by: supa.currentUser.id,
         updated_at: new Date().toISOString()
       })
       .eq('id', teamId);
@@ -730,10 +745,10 @@ async function teamsDataUpdate(teamId, updates) {
   }
 }
 
-async function teamsDataDelete(teamId) {
-  if (!currentUser || !teamId) return false;
+export async function teamsDataDelete(teamId) {
+  if (!supa.currentUser || !teamId) return false;
   try {
-    const { error } = await supa
+    const { error } = await supa.supabase
       .from('teams')
       .delete()
       .eq('id', teamId);
@@ -746,11 +761,11 @@ async function teamsDataDelete(teamId) {
   }
 }
 
-async function teamPermissionsDataSave(teamId, permissions) {
-  if (!currentUser || !teamId || !Array.isArray(permissions)) return false;
+export async function teamPermissionsDataSave(teamId, permissions) {
+  if (!supa.currentUser || !teamId || !Array.isArray(permissions)) return false;
   try {
     // Delete all existing permissions for this team
-    const { error: deleteError } = await supa
+    const { error: deleteError } = await supa.supabase
       .from('team_permissions')
       .delete()
       .eq('team_id', teamId);
@@ -762,9 +777,9 @@ async function teamPermissionsDataSave(teamId, permissions) {
         team_id: teamId,
         permission: p.permission,
         allowed: p.allowed,
-        updated_by: currentUser.id
+        updated_by: supa.currentUser.id
       }));
-      const { error: insertError } = await supa
+      const { error: insertError } = await supa.supabase
         .from('team_permissions')
         .insert(records);
       if (insertError) throw insertError;
@@ -777,20 +792,14 @@ async function teamPermissionsDataSave(teamId, permissions) {
   }
 }
 
-// Expose for use in navigation.js and dashboard.js
-window.broadcastPresence    = broadcastPresence;
-window.stopPresenceBroadcast = stopPresenceBroadcast;
-window.getPresenceForProg   = getPresenceForProg;
-window._getPresenceInitials = _getPresenceInitials;
-
 // ── Load specific project by ID ─────────────────────────────
 // Fetches a single project from Supabase when not in paginated memory
-async function loadProjectById(projectId) {
-  if (!projectId || !currentUser) return null
+export async function loadProjectById(projectId) {
+  if (!projectId || !supa.currentUser) return null
   if (db.projects.find(p => p.id === projectId)) return db.projects.find(p => p.id === projectId)
   
   try {
-    const { data, error } = await supa
+    const { data, error } = await supa.supabase
       .from('projects')
       .select(projectsGateScopeColumnsSupported ? PROG_GATE_SELECT : PROG_BASE_SELECT)
       .eq('prog_id', projectId)

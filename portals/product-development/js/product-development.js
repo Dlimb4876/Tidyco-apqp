@@ -1,15 +1,89 @@
 // Product Development Portal Hub
 // Entry point for NPI and product development
 
+import { appState } from '../../../core/js/state.js'
+import { currentUser } from '../../../core/js/supa.js'
+import { esc, canViewPortalTab, showToast } from '../../../utils/js/helpers.js'
+import { showGuide } from '../../../utils/js/guide.js'
+import { navigate, render, writeNavigationHistory, updateBackButton } from '../../../utils/js/navigation.js'
+import {
+  familiesState,
+  familiesDataAddFamily,
+  familiesDataUpdateFamily,
+  familiesDataDeleteFamily,
+  familiesDataSubscribe,
+  familiesDataUnsubscribe
+} from './families-data.js'
+import {
+  familyTemplatesGetByFamily,
+  familyTemplatesGetGroupedByFamily,
+  familyTemplatesDeleteFamily,
+  familyTemplatesGetStats,
+  familyTemplatesDataSubscribe,
+  familyTemplatesDataUnsubscribe
+} from './family-templates-data.js'
+import { renderProductManagement } from './product-management.js'
+import { setProductsTabSetter } from '../product-management/js/products.js'
+import { productsDataUnsubscribeAll } from '../product-management/js/products-data.js'
+import {
+  getPartsDatabase,
+  productDevelopmentDataSubscribe as partsDataSubscribe,
+  productDevelopmentDataUnsubscribe as partsDataUnsubscribe
+} from '../parts-database/js/parts-database.js'
+
 let productDevelopmentPortalDelegationContainer = null;
 
-function setProductDevelopmentTab(tab) {
+const PRODUCT_DEVELOPMENT_FAVOURITES_STORAGE_PREFIX = 'tidyco_favourites_v1_'
+
+function productDevelopmentGetFavouritesStorageKey() {
+  const email = (typeof currentUser !== 'undefined' && currentUser && currentUser.email)
+    ? String(currentUser.email).trim().toLowerCase()
+    : 'anonymous'
+  return PRODUCT_DEVELOPMENT_FAVOURITES_STORAGE_PREFIX + (email || 'anonymous')
+}
+
+function productDevelopmentLoadFavourites() {
+  try {
+    const raw = localStorage.getItem(productDevelopmentGetFavouritesStorageKey())
+    const parsed = raw ? JSON.parse(raw) : null
+    return {
+      version: 1,
+      pages: Array.isArray(parsed?.pages) ? parsed.pages : [],
+      products: Array.isArray(parsed?.products) ? parsed.products : [],
+      updatedAt: parsed?.updatedAt || new Date().toISOString()
+    }
+  } catch (_) {
+    return { version: 1, pages: [], products: [], updatedAt: new Date().toISOString() }
+  }
+}
+
+function productDevelopmentIsPageFavourite(pageKey) {
+  return productDevelopmentLoadFavourites().pages.includes(pageKey)
+}
+
+function productDevelopmentTogglePageFavourite(pageKey, evt) {
+  if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation()
+  if (!pageKey) return
+  const favourites = productDevelopmentLoadFavourites()
+  const set = new Set(favourites.pages)
+  if (set.has(pageKey)) set.delete(pageKey)
+  else set.add(pageKey)
+  const next = {
+    ...favourites,
+    pages: Array.from(set).slice(0, 4),
+    updatedAt: new Date().toISOString()
+  }
+  localStorage.setItem(productDevelopmentGetFavouritesStorageKey(), JSON.stringify(next))
+  render()
+}
+
+export function setProductDevelopmentTab(tab) {
   if (tab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('product-development', tab)) {
     return;
   }
 
-  const prevTab = productDevelopmentTab;
-  productDevelopmentTab = tab;
+  const prevTab = appState.productDevelopmentTab;
+  appState.productDevelopmentTab = tab;
   const parts = ['s=product-development'];
   if (tab !== 'root') parts.push('pdt=' + encodeURIComponent(tab));
   const hash = '#' + parts.join('&');
@@ -31,7 +105,7 @@ function productDevelopmentNavBar() {
   ].filter((tab) => typeof canViewPortalTab !== 'function' || canViewPortalTab('product-development', tab.key));
 
   const buttons = tabs
-    .map((tab) => `<button class="prod-nav-item ${productDevelopmentTab === tab.key ? 'active' : ''}" data-action="pd-nav-tab" data-tab="${tab.key}">${tab.icon} ${tab.label}</button>`)
+    .map((tab) => `<button class="prod-nav-item ${appState.productDevelopmentTab === tab.key ? 'active' : ''}" data-action="pd-nav-tab" data-tab="${tab.key}">${tab.icon} ${tab.label}</button>`)
     .join('');
 
   return `
@@ -45,14 +119,15 @@ function productDevelopmentNavBar() {
 function renderProductDevelopmentHubCard(tabKey, favouriteKey, icon, title, meta) {
   if (typeof canViewPortalTab === 'function' && !canViewPortalTab('product-development', tabKey)) return '';
 
-  const isFav = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite(favouriteKey);
+  const isFav = productDevelopmentIsPageFavourite(favouriteKey);
   return `
     <div class="proj-card hub-card" data-action="pd-hub-tab" data-tab="${tabKey}">
       <button
         class="hub-fav-toggle${isFav ? ' is-active' : ''}"
         type="button"
         title="${isFav ? 'Remove from favourites' : 'Add to favourites'}"
-        onclick="hubTogglePageFavourite('${favouriteKey}', event)">
+        data-action="pd-fav-toggle"
+        data-section="${favouriteKey}">
         ${isFav ? '★' : '☆'}
       </button>
       <div class="hub-card-content">
@@ -64,21 +139,27 @@ function renderProductDevelopmentHubCard(tabKey, favouriteKey, icon, title, meta
   `;
 }
 
-function renderProductDevelopment() {
+export function renderProductDevelopment() {
   const nav = productDevelopmentNavBar();
-  if (productDevelopmentTab === 'npi') {
+  if (appState.productDevelopmentTab === 'npi') {
     setTimeout(setupProductDevelopmentPortalDelegation, 0);
-    return `<div id="product-development-portal-container">${nav}${npi.dashboard.renderProjects()}</div>`;
+    const npiProjectsHtml = (globalThis.npi &&
+      globalThis.npi.dashboard &&
+      typeof globalThis.npi.dashboard.renderProjects === 'function')
+      ? globalThis.npi.dashboard.renderProjects()
+      : '<div style="padding:20px;text-align:center;color:var(--muted)">NPI dashboard is loading...</div>'
+    return `<div id="product-development-portal-container">${nav}${npiProjectsHtml}</div>`;
   }
-  if (productDevelopmentTab === 'product-management') {
+  if (appState.productDevelopmentTab === 'product-management') {
+    setProductsTabSetter(setProductDevelopmentTab)
     setTimeout(setupProductDevelopmentPortalDelegation, 0);
     return `<div id="product-development-portal-container">${nav}${renderProductManagement()}</div>`;
   }
-  if (productDevelopmentTab === 'product-family-db') {
+  if (appState.productDevelopmentTab === 'product-family-db') {
     setTimeout(setupProductDevelopmentPortalDelegation, 0);
     return `<div id="product-development-portal-container">${nav}${renderProductFamilyDatabase()}</div>`;
   }
-  if (productDevelopmentTab === 'parts-database') {
+  if (appState.productDevelopmentTab === 'parts-database') {
     setTimeout(setupProductDevelopmentPortalDelegation, 0);
     return `<div id="product-development-portal-container">${nav}${renderPartsDatabase()}</div>`;
   }
@@ -150,6 +231,14 @@ function setupProductDevelopmentPortalDelegation() {
       return;
     }
 
+    if (action === 'pd-fav-toggle') {
+      event.preventDefault()
+      event.stopPropagation()
+      const section = actionEl.dataset.section
+      if (section) productDevelopmentTogglePageFavourite(section)
+      return
+    }
+
     // Product Development specific actions
     if (action === 'pd-show-family-modal') {
       const familyId = actionEl.dataset.familyId || null;
@@ -211,7 +300,8 @@ function setupProductDevelopmentPortalDelegation() {
 }
 
 function renderPartsDatabase() {
-  if (typeof partsDatabase !== 'undefined' && partsDatabase && typeof partsDatabase.renderPortal === 'function') {
+  const partsDatabase = getPartsDatabase()
+  if (partsDatabase && typeof partsDatabase.renderPortal === 'function') {
     return partsDatabase.renderPortal();
   }
 
@@ -325,7 +415,7 @@ function renderProductFamilyDatabase() {
 }
 
 // Family modal state
-let familyModalState = { isOpen: false, familyId: null };
+export const familyModalState = { isOpen: false, familyId: null };
 
 function showFamilyModal(familyId = null) {
   familyModalState.isOpen = true;
@@ -366,7 +456,7 @@ async function saveFamilyModal() {
   closeFamilyModal();
 }
 
-function renderFamilyModal() {
+export function renderFamilyModal() {
   const family = familyModalState.familyId
     ? familiesState.families.find(f => f.id === familyModalState.familyId)
     : null;
@@ -416,8 +506,8 @@ function renderFamilyModal() {
 // FAMILY PFMEA TEMPLATE MANAGER
 // ═══════════════════════════════════
 
-let templateManagerState = { isOpen: false, familyId: null };
-let templateViewerState = { isOpen: false, familyId: null, templateName: null };
+export const templateManagerState = { isOpen: false, familyId: null };
+export const templateViewerState = { isOpen: false, familyId: null, templateName: null };
 
 function showTemplateManager(familyId) {
   templateManagerState.isOpen = true;
@@ -446,7 +536,7 @@ function closeTemplateViewer(shouldRender = true) {
   if (shouldRender) render();
 }
 
-function renderTemplateManager() {
+export function renderTemplateManager() {
   const family = familiesState.families.find(f => f.id === templateManagerState.familyId);
   if (!family) return '';
 
@@ -506,7 +596,7 @@ function renderTemplateManager() {
 }
 
 // Single PFMEA row for the template viewer — carries data-id for surgical patches.
-function familyTemplateViewerRowHTML(item) {
+export function familyTemplateViewerRowHTML(item) {
   const severity = item.severity || 3;
   const occurrence = item.occurrence || 3;
   const detection = item.detection || 3;
@@ -526,7 +616,7 @@ function familyTemplateViewerRowHTML(item) {
     </tr>`;
 }
 
-function renderTemplateViewer() {
+export function renderTemplateViewer() {
   if (!templateViewerState.isOpen) return '';
 
   const family = familiesState.families.find(f => f.id === templateViewerState.familyId);
@@ -654,4 +744,17 @@ function saveFamilyInlineEdit(familyId, field) {
 function cancelFamilyInlineEdit(familyId, field) {
   familyInlineEdit = { familyId: null, field: null };
   render();
+}
+
+export function productDevelopmentDataSubscribe() {
+  familiesDataSubscribe()
+  familyTemplatesDataSubscribe()
+  partsDataSubscribe()
+}
+
+export function productDevelopmentDataUnsubscribe() {
+  familiesDataUnsubscribe()
+  familyTemplatesDataUnsubscribe()
+  partsDataUnsubscribe()
+  productsDataUnsubscribeAll()
 }

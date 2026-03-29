@@ -1,21 +1,32 @@
 // ═══════════════════════════════════════════════════════════════
 // prod-capacity-data.js — Production Capacity Data Layer
 // Handles: production_capacity table CRUD, demand calculation engine
-// Depends on: auth.js (supa, currentUser), portals/production/js/data.js (prodState)
 // ═══════════════════════════════════════════════════════════════
 
-const PROD_CAP_HOURS_PER_DAY = 8;
-const PROD_CAP_DAYS_PER_WEEK = 5;
-const PROD_CAP_HOURS_PER_WEEK = PROD_CAP_HOURS_PER_DAY * PROD_CAP_DAYS_PER_WEEK;
-const PROD_CAP_DATA_CHANNEL = 'prod_cap_data_channel';
+import { supabase as supa, currentUser } from '../../../../core/js/supa.js'
+import { appState, getFamilies } from '../../../../core/js/state.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { isEditingInlineCell } from '../../../../utils/js/helpers.js'
+import { createRealtimeSubscription, removeRealtimeSubscription } from '../../../../utils/js/realtime.js'
+import { getBankHolidaysForYear } from '../../shared/js/cap-utils.js'
+import { workAreasState } from './work-areas-data.js'
+import { prodState } from '../../../production/js/data.js'
 
-let prodCapState = {
+const PROD_CAP_HOURS_PER_DAY = 8
+const PROD_CAP_DAYS_PER_WEEK = 5
+const PROD_CAP_HOURS_PER_WEEK = PROD_CAP_HOURS_PER_DAY * PROD_CAP_DAYS_PER_WEEK
+const PROD_CAP_DATA_CHANNEL = 'prod_cap_data_channel'
+
+export let prodCapPendingRealTimeUpdate = false
+let prodCapRefreshCurrentTabHandler = () => {}
+
+export const prodCapState = {
   capacityRecords: [], // { id, work_area, year, month, staff_count, notes }
   loaded: false
-};
+}
 
 // ── Initialise from Supabase ──────────────────────────────────
-async function prodCapDataInit() {
+export async function prodCapDataInit() {
   if (!currentUser) return;
   try {
     const { data, error } = await supa.from('production_capacity')
@@ -31,11 +42,11 @@ async function prodCapDataInit() {
     prodCapState.capacityRecords = [];
   }
   // Load perpetual month offset
-  prodCapLoadMonthOffset();
+  prodCapLoadMonthOffset()
 }
 
 // ── Load utilization factor from Supabase (global) or localStorage ────────
-async function prodCapLoadUtilization() {
+export async function prodCapLoadUtilization() {
   try {
     // Try to load from global_settings table (no user_id, system-wide setting)
     const { data, error } = await supa.from('global_settings')
@@ -46,9 +57,9 @@ async function prodCapLoadUtilization() {
     if (!error && data && data.setting_value) {
       const value = parseFloat(data.setting_value);
       if (!isNaN(value) && value >= 0 && value <= 1) {
-        prodCapUtilizationFactor = value;
-        prodCapSubscribeUtilization();
-        return;
+          appState.prodCapUtilizationFactor = value
+          prodCapSubscribeUtilization()
+          return
       }
     }
   } catch (err) {
@@ -57,13 +68,17 @@ async function prodCapLoadUtilization() {
   }
 
   // Fall back to localStorage
-  const stored = localStorage.getItem('prodCapUtilization');
+  const stored = localStorage.getItem('prodCapUtilization')
   if (stored) {
-    const value = parseFloat(stored);
+    const value = parseFloat(stored)
     if (!isNaN(value) && value >= 0 && value <= 1) {
-      prodCapUtilizationFactor = value;
+      appState.prodCapUtilizationFactor = value
     }
   }
+}
+
+export function setProdCapRefreshCurrentTab(handler) {
+  prodCapRefreshCurrentTabHandler = typeof handler === 'function' ? handler : () => {}
 }
 
 // ── Subscribe to utilization factor changes (real-time sync) ────────────
@@ -73,9 +88,9 @@ function prodCapSubscribeUtilization() {
       if (updated.setting_key === 'prod_cap_utilization') {
         const newValue = parseFloat(updated.setting_value);
         if (!isNaN(newValue) && newValue >= 0 && newValue <= 1) {
-          prodCapUtilizationFactor = newValue;
-          if (isEditingInlineCell()) { window.prodCapPendingRealTimeUpdate = true; return; }
-          if (typeof prodCapRefreshCurrentTab === 'function') prodCapRefreshCurrentTab();
+          appState.prodCapUtilizationFactor = newValue
+          if (isEditingInlineCell()) { prodCapPendingRealTimeUpdate = true; return }
+          prodCapRefreshCurrentTabHandler()
         }
       }
     }
@@ -85,7 +100,7 @@ function prodCapSubscribeUtilization() {
   });
 }
 
-function prodCapUnsubscribeUtilization() {
+export function prodCapUnsubscribeUtilization() {
   removeRealtimeSubscription('prod_cap_util_channel');
 }
 
@@ -96,9 +111,9 @@ function prodCapSubscribeData() {
       // Avoid duplicates
       if (!prodCapState.capacityRecords.find(r => r.id === row.id)) {
         prodCapState.capacityRecords.push(row);
-        if (currentSection === 'capacity' && capacityTab === 'production') {
-          if (isEditingInlineCell()) { window.prodCapPendingRealTimeUpdate = true; return; }
-          if (typeof prodCapRefreshCurrentTab === 'function') prodCapRefreshCurrentTab();
+        if (appState.currentSection === 'capacity' && appState.capacityTab === 'production') {
+          if (isEditingInlineCell()) { prodCapPendingRealTimeUpdate = true; return }
+          prodCapRefreshCurrentTabHandler()
         }
       }
     },
@@ -106,28 +121,36 @@ function prodCapSubscribeData() {
       const idx = prodCapState.capacityRecords.findIndex(r => r.id === row.id);
       if (idx >= 0) {
         prodCapState.capacityRecords[idx] = row;
-        if (currentSection === 'capacity' && capacityTab === 'production') {
-          if (isEditingInlineCell()) { window.prodCapPendingRealTimeUpdate = true; return; }
-          if (typeof prodCapRefreshCurrentTab === 'function') prodCapRefreshCurrentTab();
+        if (appState.currentSection === 'capacity' && appState.capacityTab === 'production') {
+          if (isEditingInlineCell()) { prodCapPendingRealTimeUpdate = true; return }
+          prodCapRefreshCurrentTabHandler()
         }
       }
     },
     onDelete: (row) => {
-      prodCapState.capacityRecords = prodCapState.capacityRecords.filter(r => r.id !== row.id);
-      if (currentSection === 'capacity' && capacityTab === 'production') {
-        if (isEditingInlineCell()) { window.prodCapPendingRealTimeUpdate = true; return; }
-        if (typeof prodCapRefreshCurrentTab === 'function') prodCapRefreshCurrentTab();
+      prodCapState.capacityRecords = prodCapState.capacityRecords.filter(r => r.id !== row.id)
+      if (appState.currentSection === 'capacity' && appState.capacityTab === 'production') {
+        if (isEditingInlineCell()) { prodCapPendingRealTimeUpdate = true; return }
+        prodCapRefreshCurrentTabHandler()
       }
     }
-  });
+  })
+}
+
+export function prodCapacityDataSubscribe() {
+  prodCapSubscribeData()
+}
+
+export function prodCapacityDataUnsubscribe() {
+  prodCapUnsubscribeData()
 }
 
 function prodCapUnsubscribeData() {
-  removeRealtimeSubscription(PROD_CAP_DATA_CHANNEL);
+  removeRealtimeSubscription(PROD_CAP_DATA_CHANNEL)
 }
 
 // ── Save utilization factor to Supabase (global) and localStorage ────────
-async function prodCapSaveUtilization(percent) {
+export async function prodCapSaveUtilization(percent) {
   const value = Math.max(0, Math.min(1, parseInt(percent) / 100));
 
   // Always save to localStorage as fallback
@@ -161,14 +184,14 @@ async function prodCapSaveUtilization(percent) {
 
 // ── Capacity record accessors ─────────────────────────────────
 
-function prodCapDataGetStaff(workArea, year, month) {
+export function prodCapDataGetStaff(workArea, year, month) {
   const rec = prodCapState.capacityRecords.find(
     r => r.work_area === workArea && r.year === year && r.month === month
   );
   return rec ? Number(rec.staff_count) : 0;
 }
 
-async function prodCapDataSetStaff(workArea, year, month, staffCount) {
+export async function prodCapDataSetStaff(workArea, year, month, staffCount) {
   if (!currentUser) return;
   const count = Math.max(0, parseFloat(staffCount) || 0);
 
@@ -223,15 +246,14 @@ function prodCapDateKey(date) {
 }
 
 function prodCapGetBankHolidaySetForYears(years) {
-  const set = new Set();
-  if (typeof window.getBankHolidaysForYear !== 'function') return set;
+  const set = new Set()
   years.forEach(year => {
-    const holidays = window.getBankHolidaysForYear(year) || [];
+    const holidays = getBankHolidaysForYear(year) || []
     holidays.forEach(holiday => {
-      if (holiday?.date) set.add(holiday.date);
-    });
-  });
-  return set;
+      if (holiday?.date) set.add(holiday.date)
+    })
+  })
+  return set
 }
 
 function prodCapGetBankHolidaySetForRange(startDate, endDate) {
@@ -272,38 +294,62 @@ function prodCapWorkingDays(year, month) {
 }
 
 // Available hours for a work area in a specific month
-function prodCapAvailableHours(workArea, year, month) {
+export function prodCapAvailableHours(workArea, year, month) {
   const staff = prodCapDataGetStaff(workArea, year, month);
   if (staff === 0) return 0;
   const workingDays = prodCapWorkingDays(year, month);
   const baseHours = staff * PROD_CAP_HOURS_PER_WEEK * (workingDays / PROD_CAP_DAYS_PER_WEEK);
   // Apply global utilization factor
-  return baseHours * prodCapUtilizationFactor;
+  return baseHours * appState.prodCapUtilizationFactor
 }
 
 // ── Work area accessors ───────────────────────────────────────
-function prodCapGetWorkAreas() {
+export function prodCapGetWorkAreas() {
   const areas = new Set();
 
   // Always include Unit 2, Unit 3, Unit 6 as default work areas
-  ['Unit 2', 'Unit 3', 'Unit 6'].forEach(u => areas.add(u));
-
-  // Get work areas from database (if loaded)
-  if (workAreasState?.workAreas && workAreasState.workAreas.length > 0) {
-    workAreasState.workAreas.forEach(w => areas.add(w.name));
-  } else {
-    // Fallback: discover from production data if work_areas table not available
-    // From products
-    const prods = prodState?.products || [];
-    prods.forEach(p => { if (p.work_location) areas.add(p.work_location); });
-    // From batches (may have a location not on any current product)
-    const batches = prodState?.batches || [];
-    batches.forEach(b => { if (b.work_location) areas.add(b.work_location); });
-    // From capacity records already set
-    prodCapState.capacityRecords.forEach(r => areas.add(r.work_area));
+  const defaultAreas = ['Unit 2', 'Unit 3', 'Unit 6'];
+  for (let i = 0; i < defaultAreas.length; i++) {
+    areas.add(defaultAreas[i]);
   }
 
-  return Array.from(areas).sort();
+  // Get work areas from database (if loaded)
+  if (typeof workAreasState !== 'undefined' && Array.isArray(workAreasState.workAreas)) {
+    const waList = workAreasState.workAreas;
+    for (let i = 0; i < waList.length; i++) {
+      if (waList[i] && waList[i].name) {
+        areas.add(waList[i].name);
+      }
+    }
+  } else {
+    // Fallback: discover from production data if work_areas table not available
+    const products = (typeof prodState !== 'undefined' && Array.isArray(prodState.products)) ? prodState.products : [];
+    for (let i = 0; i < products.length; i++) {
+      if (products[i] && products[i].work_location) {
+        areas.add(products[i].work_location);
+      }
+    }
+
+    const batches = (typeof prodState !== 'undefined' && Array.isArray(prodState.batches)) ? prodState.batches : [];
+    for (let i = 0; i < batches.length; i++) {
+      if (batches[i] && batches[i].work_location) {
+        areas.add(batches[i].work_location);
+      }
+    }
+
+    if (typeof prodCapState !== 'undefined' && Array.isArray(prodCapState.capacityRecords)) {
+      const records = prodCapState.capacityRecords;
+      for (let i = 0; i < records.length; i++) {
+        if (records[i] && records[i].work_area) {
+          areas.add(records[i].work_area);
+        }
+      }
+    }
+  }
+
+  const result = Array.from(areas);
+  result.sort();
+  return result;
 }
 
 // ── Month key helpers ─────────────────────────────────────────
@@ -316,28 +362,28 @@ function prodCapMonthKey(baseYear, baseMonth, offset) {
   return `${y}-${String(m).padStart(2, '0')}`;
 }
 
-function prodCapParseKey(key) {
-  const [y, m] = key.split('-').map(Number);
-  return { year: y, month: m };
+export function prodCapParseKey(key) {
+  const [y, m] = key.split('-').map(Number)
+  return { year: y, month: m }
 }
 
-function prodCapMonthLabel(key) {
+export function prodCapMonthLabel(key) {
   const { year, month } = prodCapParseKey(key);
   const d = new Date(year, month - 1, 1);
   return d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
 }
 
-function prodCapMonthLabelFull(key) {
+export function prodCapMonthLabelFull(key) {
   const { year, month } = prodCapParseKey(key);
   const d = new Date(year, month - 1, 1);
   return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
 // ── Generate ordered month keys for a 2-year window (perpetual, rolling) ──────────
-function prodCapGet24MonthKeys() {
+export function prodCapGet24MonthKeys() {
   const today = new Date();
   let baseYear  = today.getFullYear();
-  let baseMonth = today.getMonth() + 1 + prodCapMonthOffset;
+  let baseMonth = today.getMonth() + 1 + appState.prodCapMonthOffset;
   // Normalize base month
   while (baseMonth > 12) { baseMonth -= 12; baseYear++; }
   while (baseMonth < 1) { baseMonth += 12; baseYear--; }
@@ -350,25 +396,31 @@ function prodCapGet24MonthKeys() {
 
 // ── Demand matrix calculation ─────────────────────────────────
 // Returns { 'YYYY-MM': { workArea: hours, _total: hours } }
-function prodCapCalcDemandMatrix(monthKeys) {
-  const batches  = prodState?.batches  || [];
-  const products = prodState?.products || [];
+export function prodCapCalcDemandMatrix(monthKeys) {
+  const batches  = (typeof prodState !== 'undefined' && Array.isArray(prodState.batches)) ? prodState.batches : [];
+  const products = (typeof prodState !== 'undefined' && Array.isArray(prodState.products)) ? prodState.products : [];
 
   const productMap = {};
-  products.forEach(p => { productMap[p.id] = p; });
+  for (let i = 0; i < products.length; i++) {
+    const p = products[i];
+    if (p && p.id) productMap[p.id] = p;
+  }
 
   // Initialise matrix
   const matrix = {};
-  monthKeys.forEach(k => { matrix[k] = { _total: 0 }; });
+  for (let i = 0; i < monthKeys.length; i++) {
+    matrix[monthKeys[i]] = { _total: 0 };
+  }
 
-  batches.forEach(batch => {
-    if (!batch.start_date || !batch.due_date || !batch.product_id || !batch.quantity) return;
+  for (let i = 0; i < batches.length; i++) {
+    const batch = batches[i];
+    if (!batch || !batch.start_date || !batch.due_date || !batch.product_id || !batch.quantity) continue;
 
     const product = productMap[batch.product_id];
-    if (!product) return;
+    if (!product) continue;
 
     const hoursPerUnit = Number(product.current_overhaul_hours) || 0;
-    if (hoursPerUnit === 0) return;
+    if (hoursPerUnit === 0) continue;
 
     const totalHours = hoursPerUnit * Number(batch.quantity);
     const workArea   = batch.work_location || product.work_location || 'Unknown';
@@ -377,9 +429,10 @@ function prodCapCalcDemandMatrix(monthKeys) {
     const batchEnd   = new Date(batch.due_date   + 'T00:00:00');
     const bankHolSet = prodCapGetBankHolidaySetForRange(batchStart, batchEnd);
     const totalDays  = prodCapCountWorkingDaysBetween(batchStart, batchEnd, bankHolSet);
-    if (totalDays === 0) return;
+    if (totalDays === 0) continue;
 
-    monthKeys.forEach(key => {
+    for (let j = 0; j < monthKeys.length; j++) {
+      const key = monthKeys[j];
       const { year, month } = prodCapParseKey(key);
       const mStart = new Date(year, month - 1, 1);
       const mEnd   = new Date(year, month, 0);     // last day
@@ -387,17 +440,17 @@ function prodCapCalcDemandMatrix(monthKeys) {
       const overlapStart = batchStart > mStart ? batchStart : mStart;
       const overlapEnd   = batchEnd   < mEnd   ? batchEnd   : mEnd;
 
-      if (overlapStart > overlapEnd) return;
+      if (overlapStart > overlapEnd) continue;
 
       const overlapDays = prodCapCountWorkingDaysBetween(overlapStart, overlapEnd, bankHolSet);
-      if (overlapDays === 0) return;
+      if (overlapDays === 0) continue;
       const hours       = totalHours * (overlapDays / totalDays);
 
       if (!matrix[key][workArea]) matrix[key][workArea] = 0;
       matrix[key][workArea] += hours;
       matrix[key]._total    += hours;
-    });
-  });
+    }
+  }
 
   return matrix;
 }
@@ -405,10 +458,10 @@ function prodCapCalcDemandMatrix(monthKeys) {
 // ── Helper: resolve family ID to label for display ────────────
 function prodCapResolveFamilyLabel(familyIdOrName) {
   if (!familyIdOrName) return 'Other';
-  // Check if familiesState exists and has families
-  if (typeof familiesState !== 'undefined' && familiesState?.families) {
-    const family = familiesState.families.find(f => f.id === familyIdOrName);
-    if (family) return family.label;
+  const families = typeof getFamilies === 'function' ? getFamilies() : []
+  if (Array.isArray(families) && families.length > 0) {
+    const family = families.find(f => f.id === familyIdOrName)
+    if (family) return family.label
   }
   // Fall back to direct name (not a UUID)
   return familyIdOrName;
@@ -416,24 +469,30 @@ function prodCapResolveFamilyLabel(familyIdOrName) {
 
 // ── Family-grouped demand matrix ─────────────────────────────
 // Returns { 'YYYY-MM': { familyName: hours } }
-function prodCapCalcFamilyDemandMatrix(monthKeys) {
-  const batches  = prodState?.batches  || [];
-  const products = prodState?.products || [];
+export function prodCapCalcFamilyDemandMatrix(monthKeys) {
+  const batches  = (typeof prodState !== 'undefined' && Array.isArray(prodState.batches)) ? prodState.batches : [];
+  const products = (typeof prodState !== 'undefined' && Array.isArray(prodState.products)) ? prodState.products : [];
 
   const productMap = {};
-  products.forEach(p => { productMap[p.id] = p; });
+  for (let i = 0; i < products.length; i++) {
+    const p = products[i];
+    if (p && p.id) productMap[p.id] = p;
+  }
 
   const matrix = {};
-  monthKeys.forEach(k => { matrix[k] = {}; });
+  for (let i = 0; i < monthKeys.length; i++) {
+    matrix[monthKeys[i]] = {};
+  }
 
-  batches.forEach(batch => {
-    if (!batch.start_date || !batch.due_date || !batch.product_id || !batch.quantity) return;
+  for (let i = 0; i < batches.length; i++) {
+    const batch = batches[i];
+    if (!batch || !batch.start_date || !batch.due_date || !batch.product_id || !batch.quantity) continue;
 
     const product = productMap[batch.product_id];
-    if (!product) return;
+    if (!product) continue;
 
     const hoursPerUnit = Number(product.current_overhaul_hours) || 0;
-    if (hoursPerUnit === 0) return;
+    if (hoursPerUnit === 0) continue;
 
     const totalHours = hoursPerUnit * Number(batch.quantity);
     const family     = prodCapResolveFamilyLabel(product.family) || 'Other';
@@ -442,9 +501,10 @@ function prodCapCalcFamilyDemandMatrix(monthKeys) {
     const batchEnd   = new Date(batch.due_date   + 'T00:00:00');
     const bankHolSet = prodCapGetBankHolidaySetForRange(batchStart, batchEnd);
     const totalDays  = prodCapCountWorkingDaysBetween(batchStart, batchEnd, bankHolSet);
-    if (totalDays === 0) return;
+    if (totalDays === 0) continue;
 
-    monthKeys.forEach(key => {
+    for (let j = 0; j < monthKeys.length; j++) {
+      const key = monthKeys[j];
       const { year, month } = prodCapParseKey(key);
       const mStart = new Date(year, month - 1, 1);
       const mEnd   = new Date(year, month, 0);
@@ -452,23 +512,23 @@ function prodCapCalcFamilyDemandMatrix(monthKeys) {
       const overlapStart = batchStart > mStart ? batchStart : mStart;
       const overlapEnd   = batchEnd   < mEnd   ? batchEnd   : mEnd;
 
-      if (overlapStart > overlapEnd) return;
+      if (overlapStart > overlapEnd) continue;
 
       const overlapDays = prodCapCountWorkingDaysBetween(overlapStart, overlapEnd, bankHolSet);
-      if (overlapDays === 0) return;
+      if (overlapDays === 0) continue;
       const hours       = totalHours * (overlapDays / totalDays);
 
       if (!matrix[key][family]) matrix[key][family] = 0;
       matrix[key][family] += hours;
-    });
-  });
+    }
+  }
 
   return matrix;
 }
 
 // ── Capacity supply matrix ────────────────────────────────────
 // Returns { 'YYYY-MM': { workArea: hours, _total: hours } }
-function prodCapCalcSupplyMatrix(monthKeys, workAreas) {
+export function prodCapCalcSupplyMatrix(monthKeys, workAreas) {
   const matrix = {};
   monthKeys.forEach(key => {
     const { year, month } = prodCapParseKey(key);
@@ -483,39 +543,37 @@ function prodCapCalcSupplyMatrix(monthKeys, workAreas) {
 }
 
 // ── Utilisation helper ────────────────────────────────────────
-function prodCapUtil(demand, supply) {
+export function prodCapUtil(demand, supply) {
   if (!supply || supply === 0) return demand > 0 ? 999 : 0;
   return Math.round((demand / supply) * 100);
 }
 
 // ── Perpetual window adjustment ────────────────────────────────
-function prodCapShiftMonth(direction) {
+export function prodCapShiftMonth(direction) {
   const delta = direction === 'next' ? 1 : -1;
-  prodCapMonthOffset += delta;
-  localStorage.setItem('prodCapMonthOffset', prodCapMonthOffset.toString());
-  render();
+  appState.prodCapMonthOffset += delta
+  localStorage.setItem('prodCapMonthOffset', appState.prodCapMonthOffset.toString())
+  render()
 }
 
-function prodCapResetMonthOffset() {
-  prodCapMonthOffset = 0;
-  localStorage.setItem('prodCapMonthOffset', '0');
-  render();
+export function prodCapResetMonthOffset() {
+  appState.prodCapMonthOffset = 0
+  localStorage.setItem('prodCapMonthOffset', '0')
+  render()
 }
 
 function prodCapLoadMonthOffset() {
-  const stored = localStorage.getItem('prodCapMonthOffset');
+  const stored = localStorage.getItem('prodCapMonthOffset')
   if (stored) {
-    prodCapMonthOffset = parseInt(stored, 10);
+    appState.prodCapMonthOffset = parseInt(stored, 10)
   }
 }
 
-window.prodCapUnsubscribeAll = function() {
-  prodCapUnsubscribeData();
-  prodCapUnsubscribeUtilization();
-};
+export function prodCapUnsubscribeAll() {
+  prodCapUnsubscribeData()
+  prodCapUnsubscribeUtilization()
+}
 
-// Export functions for operations dashboard
-window.prodCapGet24MonthKeys = prodCapGet24MonthKeys;
-window.prodCapGetWorkAreas = prodCapGetWorkAreas;
-window.prodCapCalcDemandMatrix = prodCapCalcDemandMatrix;
-window.prodCapCalcSupplyMatrix = prodCapCalcSupplyMatrix;
+export function setProdCapPendingRealTimeUpdate(value) {
+  prodCapPendingRealTimeUpdate = !!value
+}

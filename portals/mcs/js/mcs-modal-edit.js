@@ -3,57 +3,74 @@
  * Edit modal renderer and shared save handler (create + update).
  */
 
+import { appState } from '../../../core/js/state.js'
+import { currentUser, supabase as supa } from '../../../core/js/supa.js'
+import { esc } from '../../../utils/js/helpers.js'
+import { productsState } from '../../product-development/product-management/js/products-data.js'
+import { mcsBuildPfmeaLinkingSection, mcsGetPfmeaCausesForLinking, mcsHandlePfmeaAction, mcsLinkToPfmeaCause } from './mcs-pfmea.js'
+import { mcsAddTimelineEntry } from './mcs-approval.js'
+import { mcsRenderList, mcsToast, mcStatusLabel } from './mcs-main.js'
+import {
+  mcsCloseModal,
+  mcsGetImpactFieldMap,
+  mcsBuildExtendedJustification,
+  mcsExtractNominatedApprover,
+  mcsParseExtendedJustification,
+  mcsBuildStage3ImpactChecklistHtml,
+  mcsBuildViewWorkflowStages,
+  mcsBuildWorkflowRail,
+  mcsApproverSelectionHtml,
+  mcsGetImpactProgressInputId
+} from './mcs-modal-shared.js'
+
 /**
  * Save change (create or update)
  */
-async function mcsSaveChange() {
-  const title = document.getElementById('mcs-f-title')?.value.trim();
-  const type = document.getElementById('mcs-f-type')?.value;
-  const priority = document.getElementById('mcs-f-priority')?.value;
-  const description = document.getElementById('mcs-f-description')?.value.trim();
+export async function mcsSaveChange() {
+  const title = document.getElementById('mcs-f-title')?.value.trim()
+  const type = document.getElementById('mcs-f-type')?.value
+  const priority = document.getElementById('mcs-f-priority')?.value
+  const description = document.getElementById('mcs-f-description')?.value.trim()
 
   if (!title || !type || !priority || !description) {
-    alert('Please fill in required fields (marked with *)');
-    return;
+    alert('Please fill in required fields (marked with *)')
+    return
   }
 
-  const impactMap = mcsGetImpactFieldMap();
-
+  const impactMap = mcsGetImpactFieldMap()
   const impacts = Object.entries(impactMap)
     .filter(([id]) => document.getElementById(id)?.checked)
-    .map(([, label]) => label);
-  const selectedImpactSet = new Set(impacts);
-  const impactProgress = {};
-  const progressInputs = document.querySelectorAll('input[data-impact-progress]');
+    .map(([, label]) => label)
+  const selectedImpactSet = new Set(impacts)
+  const impactProgress = {}
+  const progressInputs = document.querySelectorAll('input[data-impact-progress]')
   progressInputs.forEach(input => {
-    const label = input.getAttribute('data-impact-progress');
-    if (!label || !selectedImpactSet.has(label)) return;
-    impactProgress[label] = input.checked === true;
-  });
+    const label = input.getAttribute('data-impact-progress')
+    if (!label || !selectedImpactSet.has(label)) return
+    impactProgress[label] = input.checked === true
+  })
 
-  // Get selected PFMEA cause
-  const selectedPfmeaCauseId = document.getElementById('mcs-f-pfmea-cause')?.value || null;
-  const impactAssessmentEstimate = document.getElementById('mcs-f-impact-estimate')?.value || '';
-  const documentsAffected = document.getElementById('mcs-f-docs-affected')?.value || '';
-  const knockOnEffect = document.getElementById('mcs-f-knock-on')?.value || '';
+  const selectedPfmeaCauseId = document.getElementById('mcs-f-pfmea-cause')?.value || null
+  const impactAssessmentEstimate = document.getElementById('mcs-f-impact-estimate')?.value || ''
+  const documentsAffected = document.getElementById('mcs-f-docs-affected')?.value || ''
+  const knockOnEffect = document.getElementById('mcs-f-knock-on')?.value || ''
   const combinedJustification = mcsBuildExtendedJustification(
     document.getElementById('mcs-f-justification')?.value,
     documentsAffected,
     knockOnEffect,
     impactAssessmentEstimate,
     impactProgress
-  );
+  )
 
   try {
-    if (mcsEditingId) {
-      // Update existing
-      const changeIdx = mcsList.findIndex(c => c.id === mcsEditingId);
-      if (changeIdx === -1) return;
+    if (appState.mcsEditingId) {
+      const changeIdx = appState.mcsList.findIndex(c => c.id === appState.mcsEditingId)
+      if (changeIdx === -1) return
 
-      const partEl = document.getElementById('mcs-f-part');
-      const selectedPartOption = partEl?.options[partEl.selectedIndex];
-      const selectedProductId = partEl?.value || '';
-      const selectedProductName = selectedPartOption?.dataset.name || selectedPartOption?.text || partEl?.value || '';
+      const partEl = document.getElementById('mcs-f-part')
+      const selectedPartOption = partEl?.options[partEl.selectedIndex]
+      const selectedProductId = partEl?.value || ''
+      const selectedProductName = selectedPartOption?.dataset.name || selectedPartOption?.text || partEl?.value || ''
 
       const updateFields = {
         title,
@@ -66,69 +83,65 @@ async function mcsSaveChange() {
         estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: combinedJustification,
         updated_at: new Date().toISOString()
-      };
+      }
 
       const { error } = await supa
         .from('mcs_changes')
         .update(updateFields)
-        .eq('id', mcsEditingId);
+        .eq('id', appState.mcsEditingId)
 
-      if (error) throw error;
+      if (error) throw error
 
-      // Replace impacts: delete old rows, insert new ones
-      await supa.from('mcs_impacts').delete().eq('change_id', mcsEditingId);
+      await supa.from('mcs_impacts').delete().eq('change_id', appState.mcsEditingId)
       if (impacts.length > 0) {
-        const impactRows = impacts.map(impact_type => ({ change_id: mcsEditingId, impact_type }));
-        const { error: impErr } = await supa.from('mcs_impacts').insert(impactRows);
-        if (impErr) console.error('Error saving impacts:', impErr);
+        const impactRows = impacts.map(impact_type => ({ change_id: appState.mcsEditingId, impact_type }))
+        const { error: impErr } = await supa.from('mcs_impacts').insert(impactRows)
+        if (impErr) console.error('Error saving impacts:', impErr)
       }
-      // Handle PFMEA linking if changed
-      const oldLink = mcsList[changeIdx].related_pfmea_cause_id;
+
+      const oldLink = appState.mcsList[changeIdx].related_pfmea_cause_id
       if (selectedPfmeaCauseId !== oldLink) {
         if (selectedPfmeaCauseId) {
-          await mcsLinkToPfmeaCause(mcsEditingId, selectedPfmeaCauseId);
+          await mcsLinkToPfmeaCause(appState.mcsEditingId, selectedPfmeaCauseId)
         } else if (oldLink) {
-          // Unlink: clear both sides
-          await supa.from('mcs_changes').update({ related_pfmea_cause_id: null }).eq('id', mcsEditingId);
-          await supa.from('npi_pfmea_causes').update({ action_related_ecr_id: null }).eq('id', oldLink);
+          await supa.from('mcs_changes').update({ related_pfmea_cause_id: null }).eq('id', appState.mcsEditingId)
+          await supa.from('npi_pfmea_causes').update({ action_related_ecr_id: null }).eq('id', oldLink)
         }
       }
 
-      mcsList[changeIdx] = {
-        ...mcsList[changeIdx],
+      appState.mcsList[changeIdx] = {
+        ...appState.mcsList[changeIdx],
         ...updateFields,
         impacts,
         impact_progress: impactProgress,
         related_pfmea_cause_id: selectedPfmeaCauseId
-      };
-      mcsToast('Change updated successfully');
+      }
+      mcsToast('Change updated successfully')
     } else {
-      // Create new — query DB for highest existing ECR number this year to avoid duplicate key
-      const year = new Date().getFullYear();
-      const prefix = `ECR-${year}-`;
+      const year = new Date().getFullYear()
+      const prefix = `ECR-${year}-`
       const { data: existingIds } = await supa
         .from('mcs_changes')
         .select('id')
-        .ilike('id', `${prefix}%`);
-      let maxNum = 0;
+        .ilike('id', `${prefix}%`)
+      let maxNum = 0
       if (existingIds && existingIds.length > 0) {
         existingIds.forEach(row => {
-          const num = parseInt(row.id.replace(prefix, ''), 10);
-          if (!isNaN(num) && num > maxNum) maxNum = num;
-        });
+          const num = parseInt(row.id.replace(prefix, ''), 10)
+          if (!isNaN(num) && num > maxNum) maxNum = num
+        })
       }
-      const nextNum = String(maxNum + 1).padStart(4, '0');
-      const id = `${prefix}${nextNum}`;
-      const now = new Date().toISOString();
+      const nextNum = String(maxNum + 1).padStart(4, '0')
+      const id = `${prefix}${nextNum}`
+      const now = new Date().toISOString()
 
-      const initiatedBy = document.getElementById('mcs-f-author')?.value || 'Unknown';
+      const initiatedBy = document.getElementById('mcs-f-author')?.value || 'Unknown'
+      const nominatedApprover = document.getElementById('mcs-f-approver')?.value || ''
 
-      const nominatedApprover = document.getElementById('mcs-f-approver')?.value || '';
-
-      const partEl = document.getElementById('mcs-f-part');
-      const selectedPartOption = partEl?.options[partEl.selectedIndex];
-      const selectedProductId = partEl?.value || '';
-      const selectedProductName = selectedPartOption?.dataset.name || selectedPartOption?.text || partEl?.value || '';
+      const partEl = document.getElementById('mcs-f-part')
+      const selectedPartOption = partEl?.options[partEl.selectedIndex]
+      const selectedProductId = partEl?.value || ''
+      const selectedProductName = selectedPartOption?.dataset.name || selectedPartOption?.text || partEl?.value || ''
 
       const newChange = {
         id,
@@ -146,72 +159,69 @@ async function mcsSaveChange() {
         target_implementation: document.getElementById('mcs-f-target')?.value || null,
         estimated_time_impact_hours: parseFloat(document.getElementById('mcs-f-time-impact')?.value) || 0,
         justification: combinedJustification,
-        // Store nominated approver so mcsCanApproveStep can identify who was asked to review
         eng_review_notes: nominatedApprover ? 'nominated_approver:' + nominatedApprover : null,
         related_pfmea_cause_id: selectedPfmeaCauseId || null
-      };
+      }
 
       const { error } = await supa
         .from('mcs_changes')
-        .insert([newChange]);
+        .insert([newChange])
 
-      if (error) throw error;
+      if (error) throw error
 
-      // Save impact checkboxes to mcs_impacts table
       if (impacts.length > 0) {
-        const impactRows = impacts.map(impact_type => ({ change_id: id, impact_type }));
-        const { error: impErr } = await supa.from('mcs_impacts').insert(impactRows);
-        if (impErr) console.error('Error saving impacts:', impErr);
+        const impactRows = impacts.map(impact_type => ({ change_id: id, impact_type }))
+        const { error: impErr } = await supa.from('mcs_impacts').insert(impactRows)
+        if (impErr) console.error('Error saving impacts:', impErr)
       }
 
-      // Log the initial timeline entry to mcs_timeline
-      await mcsAddTimelineEntry(id, 'raised', 'Change request submitted.', initiatedBy);
+      await mcsAddTimelineEntry(id, 'raised', 'Change request submitted.', initiatedBy)
 
-      // If PFMEA link selected, link it now
       if (selectedPfmeaCauseId) {
-        await mcsLinkToPfmeaCause(id, selectedPfmeaCauseId);
+        await mcsLinkToPfmeaCause(id, selectedPfmeaCauseId)
       }
 
-      mcsList.unshift({ ...newChange, impacts, impact_progress: impactProgress, timeline: [] });
-      mcsToast(`Created: ${id}`);
+      appState.mcsList.unshift({ ...newChange, impacts, impact_progress: impactProgress, timeline: [] })
+      mcsToast(`Created: ${id}`)
     }
 
-    mcsCloseModal('mcs-form-backdrop');
-    mcsRenderList();
+    mcsCloseModal('mcs-form-backdrop')
+    mcsRenderList()
   } catch (err) {
-    console.error('Save error:', err);
-    alert('Error saving change: ' + err.message);
+    console.error('Save error:', err)
+    alert('Error saving change: ' + err.message)
   }
 }
 
 /**
  * Show edit modal
  */
-async function mcsShowEditModal(change) {
-  const backdrop = document.createElement('div');
-  backdrop.className = 'mcs-modal-backdrop open';
-  backdrop.id = 'mcs-form-backdrop';
+export async function mcsShowEditModal(change) {
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mcs-modal-backdrop open'
+  backdrop.id = 'mcs-form-backdrop'
 
-  const pfmeaCauses = await mcsGetPfmeaCausesForLinking();
-  const initiatedBy = change.initiated_by || (currentUser && currentUser.email) || '';
-  const preselectedApprover = mcsExtractNominatedApprover(change.eng_review_notes || '');
-  const extendedJustification = mcsParseExtendedJustification(change.justification || '');
+  const pfmeaCauses = await mcsGetPfmeaCausesForLinking()
+  const initiatedBy = change.initiated_by || (currentUser && currentUser.email) || ''
+  const preselectedApprover = mcsExtractNominatedApprover(change.eng_review_notes || '')
+  const extendedJustification = mcsParseExtendedJustification(change.justification || '')
   const stage3ChecklistHtml = mcsBuildStage3ImpactChecklistHtml(
     change.impacts || [],
     (change.impact_progress && typeof change.impact_progress === 'object')
       ? change.impact_progress
       : (extendedJustification.impactProgress || {})
-  );
+  )
 
-  const productOptions = (window.productsState && window.productsState.products || [])
+  const products = (appState.productsState && appState.productsState.products) || productsState.products || []
+  const productOptions = products
     .map(p => {
-      const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name);
-      const selected = (change.affected_product_id === p.id || change.part_drawing_no === p.name) ? 'selected' : '';
-      return `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-part="${esc(p.part_number || '')}" ${selected}>${display}</option>`;
-    }).join('');
+      const display = p.part_number ? `${esc(p.name)} (${esc(p.part_number)})` : esc(p.name)
+      const selected = (change.affected_product_id === p.id || change.part_drawing_no === p.name) ? 'selected' : ''
+      return `<option value="${esc(p.id)}" data-name="${esc(p.name)}" data-part="${esc(p.part_number || '')}" ${selected}>${display}</option>`
+    }).join('')
 
-  const pfmeaLinkingHtml = mcsBuildPfmeaLinkingSection(change, pfmeaCauses);
-  const workflowHtml = mcsBuildWorkflowRail(mcsBuildViewWorkflowStages(change));
+  const pfmeaLinkingHtml = mcsBuildPfmeaLinkingSection(change, pfmeaCauses)
+  const workflowHtml = mcsBuildWorkflowRail(mcsBuildViewWorkflowStages(change))
 
   backdrop.innerHTML = `
     <div class="mcs-modal">
@@ -224,7 +234,7 @@ async function mcsShowEditModal(change) {
             <span class="mcs-tag">${esc(change.change_type || 'Change')}</span>
           </div>
         </div>
-        <button class="mcs-modal-close" onclick="mcsCloseModal('mcs-form-backdrop')">&times;</button>
+        <button class="mcs-modal-close" data-action="mcs-close-form">&times;</button>
       </div>
       <div class="mcs-modal-body">
         <div class="mcs-staged-layout">
@@ -336,32 +346,46 @@ async function mcsShowEditModal(change) {
         </div>
       </div>
       <div class="mcs-modal-footer">
-        <button class="mcs-btn mcs-btn-ghost" onclick="mcsCloseModal('mcs-form-backdrop')">Cancel</button>
-        <button class="mcs-btn mcs-btn-primary" onclick="mcsSaveChange()">Save Changes</button>
+        <button class="mcs-btn mcs-btn-ghost" data-action="mcs-cancel-form">Cancel</button>
+        <button class="mcs-btn mcs-btn-primary" data-action="mcs-save-change">Save Changes</button>
       </div>
     </div>
-  `;
+  `
 
-  document.body.appendChild(backdrop);
+  document.body.appendChild(backdrop)
   backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop');
-  });
+    if (e.target === backdrop) mcsCloseModal('mcs-form-backdrop')
+  })
 
-  const stage1ImpactInputs = document.querySelectorAll('#mcs-form-backdrop .mcs-impact-grid input[type="checkbox"]');
-  stage1ImpactInputs.forEach(input => {
-    input.addEventListener('change', () => {
-      const impactMap = mcsGetImpactFieldMap();
-      const selectedImpacts = Object.entries(impactMap)
-        .filter(([id]) => document.getElementById(id)?.checked)
-        .map(([, label]) => label);
-      const progressMap = {};
-      selectedImpacts.forEach(label => {
-        const progressInput = document.getElementById(mcsGetImpactProgressInputId(label));
-        if (progressInput) progressMap[label] = progressInput.checked === true;
-      });
-      const host = document.querySelector('#mcs-form-backdrop .mcs-impact-progress-wrap');
-      if (!host) return;
-      host.innerHTML = mcsBuildStage3ImpactChecklistHtml(selectedImpacts, progressMap);
-    });
-  });
+  backdrop.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-action]')
+    if (!trigger) return
+    const action = trigger.dataset.action
+
+    if (mcsHandlePfmeaAction(action, trigger)) return
+    if (action === 'mcs-close-form' || action === 'mcs-cancel-form') {
+      mcsCloseModal('mcs-form-backdrop')
+      return
+    }
+    if (action === 'mcs-save-change') {
+      mcsSaveChange()
+    }
+  })
+
+  backdrop.addEventListener('change', (e) => {
+    const impactInput = e.target.closest('.mcs-impact-grid input[type="checkbox"]')
+    if (!impactInput) return
+    const impactMap = mcsGetImpactFieldMap()
+    const selectedImpacts = Object.entries(impactMap)
+      .filter(([id]) => document.getElementById(id)?.checked)
+      .map(([, label]) => label)
+    const progressMap = {}
+    selectedImpacts.forEach(label => {
+      const progressInput = document.getElementById(mcsGetImpactProgressInputId(label))
+      if (progressInput) progressMap[label] = progressInput.checked === true
+    })
+    const host = document.querySelector('#mcs-form-backdrop .mcs-impact-progress-wrap')
+    if (!host) return
+    host.innerHTML = mcsBuildStage3ImpactChecklistHtml(selectedImpacts, progressMap)
+  })
 }

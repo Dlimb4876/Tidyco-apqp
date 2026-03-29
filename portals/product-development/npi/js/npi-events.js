@@ -1,13 +1,19 @@
 // ═══════════════════════════════════
 // npi-events.js — Delegated UI event router for NPI portal
-// Depends on: npi.js and NPI feature modules
 // ═══════════════════════════════════
 
-npi.events = npi.events || {}
+import { preserveInputCaretAfterRender } from '../../../../utils/js/helpers.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+import { flushDeferred } from '../../../../utils/js/render-scheduler.js'
 
 let _npiEventsContainer = null
 let _pfmeaSearchTimer = null
 let _bomPickSearchTimer = null
+let npiRef = null
+
+function getNpi() {
+  return npiRef
+}
 
 function npiActionTarget(evt) {
   return evt && evt.target ? evt.target.closest('[data-action]') : null
@@ -18,31 +24,9 @@ function npiNum(v, fallback) {
   return Number.isFinite(n) ? n : fallback
 }
 
-npi.events.setup = function() {
-  const container = document.getElementById('npi-content')
-  if (!container) return
-  if (_npiEventsContainer === container) return
-  if (_npiEventsContainer) npi.events.teardown()
-
-  // Listen at document level so shared modal content outside #npi-content
-  // can still dispatch NPI data-action events (e.g. kit and BOM pickers).
-  document.addEventListener('click', npi.events._onClick)
-  document.addEventListener('change', npi.events._onChange)
-  document.addEventListener('input', npi.events._onInput)
-  container.addEventListener('focusout', npi.events._onFocusOut)
-  _npiEventsContainer = container
-}
-
-npi.events.teardown = function() {
-  if (!_npiEventsContainer) return
-  document.removeEventListener('click', npi.events._onClick)
-  document.removeEventListener('change', npi.events._onChange)
-  document.removeEventListener('input', npi.events._onInput)
-  _npiEventsContainer.removeEventListener('focusout', npi.events._onFocusOut)
-  _npiEventsContainer = null
-}
-
-npi.events._onClick = function(evt) {
+function onClick(evt) {
+  const npi = getNpi()
+  if (!npi) return
   const el = npiActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-action')
@@ -102,21 +86,21 @@ npi.events._onClick = function(evt) {
   case 'bom-register-set-view': npi.bom.setPartsRegisterView(el.getAttribute('data-view')); break
   case 'bom-add-row': npi.bom.addBomRow(el.getAttribute('data-type')); break
   case 'bom-del-row': npi.bom.delBom(el.getAttribute('data-type'), npiNum(el.getAttribute('data-idx'), -1)); break
-  case 'bom-tree-toggle':   npi.bom.toggleTreeNode(el.getAttribute('data-id')); break
-  case 'bom-tree-add-part':   npi.bom.openTreeAddPart(el.getAttribute('data-parent') || null); break
+  case 'bom-tree-toggle': npi.bom.toggleTreeNode(el.getAttribute('data-id')); break
+  case 'bom-tree-add-part': npi.bom.openTreeAddPart(el.getAttribute('data-parent') || null); break
   case 'bom-tree-add-subasm': npi.bom.openTreeAddSubAsm(el.getAttribute('data-parent') || null); break
-  case 'bom-tree-del-node':   npi.bom.delTreeNode(el.getAttribute('data-id')); break
+  case 'bom-tree-del-node': npi.bom.delTreeNode(el.getAttribute('data-id')); break
   case 'bom-open-abc-pick': npi.bom.openABCPick(); break
   case 'bom-abc-filter': npi.bom.setAbcFilter(el.getAttribute('data-cls')); break
   case 'bom-abc-info': npi.bom.showAbcInfo(); break
   case 'bom-import-abc': npi.bom.importABCPart(npiNum(el.getAttribute('data-idx'), -1)); break
 
-  case 'bom-aaw-add-group':      npi.bom.addAawGroup(); break
-  case 'bom-aaw-del-group':      npi.bom.delAawGroup(el.getAttribute('data-id')); break
-  case 'bom-aaw-tree-toggle':    npi.bom.toggleAawTreeNode(el.getAttribute('data-id')); break
-  case 'bom-aaw-tree-add-part':  npi.bom.openAawAddPart(el.getAttribute('data-group'), el.getAttribute('data-parent') || null); break
-  case 'bom-aaw-tree-add-subasm':npi.bom.openAawAddSubAsm(el.getAttribute('data-group'), el.getAttribute('data-parent') || null); break
-  case 'bom-aaw-tree-del-node':  npi.bom.delAawTreeNode(el.getAttribute('data-id'), el.getAttribute('data-group')); break
+  case 'bom-aaw-add-group': npi.bom.addAawGroup(); break
+  case 'bom-aaw-del-group': npi.bom.delAawGroup(el.getAttribute('data-id')); break
+  case 'bom-aaw-tree-toggle': npi.bom.toggleAawTreeNode(el.getAttribute('data-id')); break
+  case 'bom-aaw-tree-add-part': npi.bom.openAawAddPart(el.getAttribute('data-group'), el.getAttribute('data-parent') || null); break
+  case 'bom-aaw-tree-add-subasm': npi.bom.openAawAddSubAsm(el.getAttribute('data-group'), el.getAttribute('data-parent') || null); break
+  case 'bom-aaw-tree-del-node': npi.bom.delAawTreeNode(el.getAttribute('data-id'), el.getAttribute('data-group')); break
 
   case 'gantt-toggle-month': npi.timing.toggleMonth(npiNum(el.getAttribute('data-mi'), -1)); break
   case 'gantt-toggle-plan': npi.timing.ganttTogglePlan(el.getAttribute('data-id'), npiNum(el.getAttribute('data-wi'), -1)); break
@@ -125,7 +109,11 @@ npi.events._onClick = function(evt) {
   case 'gantt-del-row': npi.timing.ganttDelRow(el.getAttribute('data-id')); break
   case 'gantt-clear': npi.timing.ganttClear(); break
 
-  case 'show-guide': { const key = el.getAttribute('data-guide'); if (key && typeof showGuide === 'function') showGuide(key); break }
+  case 'show-guide': {
+    const key = el.getAttribute('data-guide')
+    if (key) showGuide(key)
+    break
+  }
 
   case 'npi-go-home': npi.nav.goHome(); break
   case 'npi-navigate': npi.nav.navigate(el.getAttribute('data-target')); break
@@ -141,7 +129,9 @@ npi.events._onClick = function(evt) {
   }
 }
 
-npi.events._onChange = function(evt) {
+function onChange(evt) {
+  const npi = getNpi()
+  if (!npi) return
   const el = npiActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-action')
@@ -232,7 +222,9 @@ npi.events._onChange = function(evt) {
   }
 }
 
-npi.events._onInput = function(evt) {
+function onInput(evt) {
+  const npi = getNpi()
+  if (!npi) return
   const el = npiActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-action')
@@ -243,16 +235,11 @@ npi.events._onInput = function(evt) {
     const searchInput = el
     const searchValue = el.value
     _pfmeaSearchTimer = setTimeout(() => {
-      if (typeof preserveInputCaretAfterRender === 'function') {
-        preserveInputCaretAfterRender(searchInput, () => {
-          npi.pfmea.pfSetExtraFilter('searchText', searchValue)
-        }, {
-          replacementSelector: 'input[data-action="pfmea-text-search"]'
-        })
-        return
-      }
-
-      npi.pfmea.pfSetExtraFilter('searchText', searchValue)
+      preserveInputCaretAfterRender(searchInput, () => {
+        npi.pfmea.pfSetExtraFilter('searchText', searchValue)
+      }, {
+        replacementSelector: 'input[data-action="pfmea-text-search"]'
+      })
     }, 300)
     break
   }
@@ -316,11 +303,43 @@ npi.events._onInput = function(evt) {
   }
 }
 
-// ── Focus Guard: Deferred Re-render Flush ─────────────────────────────
-// When user leaves an inline-editable NPI table cell, flush any pending
-// re-renders that were deferred by the focus guard in npi.js.
-npi.events._onFocusOut = function(evt) {
+function onFocusOut(evt) {
   const nextFocus = evt.relatedTarget
   if (nextFocus && nextFocus.closest('table')) return
-  if (typeof flushDeferred === 'function') flushDeferred('npi')
+  flushDeferred('npi')
+}
+
+export function setupNpiEvents() {
+  const container = document.getElementById('npi-content')
+  if (!container) return
+  if (_npiEventsContainer === container) return
+  if (_npiEventsContainer) teardownNpiEvents()
+
+  document.addEventListener('click', onClick)
+  document.addEventListener('change', onChange)
+  document.addEventListener('input', onInput)
+  container.addEventListener('focusout', onFocusOut)
+  _npiEventsContainer = container
+}
+
+export function teardownNpiEvents() {
+  if (!_npiEventsContainer) return
+  document.removeEventListener('click', onClick)
+  document.removeEventListener('change', onChange)
+  document.removeEventListener('input', onInput)
+  _npiEventsContainer.removeEventListener('focusout', onFocusOut)
+  _npiEventsContainer = null
+}
+
+export function initNpiEvents({ getNpi: getNpiFn } = {}) {
+  npiRef = getNpiFn()
+  if (!npiRef) return
+
+  npiRef.events = npiRef.events || {}
+  npiRef.events.setup = setupNpiEvents
+  npiRef.events.teardown = teardownNpiEvents
+  npiRef.events._onClick = onClick
+  npiRef.events._onChange = onChange
+  npiRef.events._onInput = onInput
+  npiRef.events._onFocusOut = onFocusOut
 }

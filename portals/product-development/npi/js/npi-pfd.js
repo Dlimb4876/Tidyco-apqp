@@ -3,16 +3,22 @@
 // Depends on: npi.js, npi-data.js
 // ═══════════════════════════════════
 
-npi.pfd = npi.pfd || {}
+import { appState, prog, BOM_TYPES } from '../../../../core/js/state.js'
+import { esc, canEdit, emptyState, showModal, closeModal, showToast } from '../../../../utils/js/helpers.js'
+import { npiRelSavePFDStep } from './npi-data-relational.js'
+import { npi } from './npi-shared.js'
+import { npiData } from './npi-data.js'
+import { npiBom } from './bom.js'
+import { RPN_HIGH } from './npi-constants.js'
 npi.pfd.viewMode = 'table' // 'table' or 'flowchart'
 npi.pfd.flowDirection = 'TD' // 'TD' (top-down) or 'LR' (left-right)
 
 function pfdStepType(step) {
-  return npi.data.pfdType.normalize(step && step.pfd_type)
+  return npiData.pfdType.normalize(step && step.pfd_type)
 }
 
 function pfdLinkValue(value) {
-  return npi.data.normalizePfdLink(value)
+  return npiData.normalizePfdLink(value)
 }
 
 function pfdStepNodeId(stepNum) {
@@ -29,11 +35,11 @@ function pfdMermaidLabel(step) {
 }
 
 function isHeaderStep(step) {
-  return npi.data.pfdType.isHeader(step.type)
+  return npiData.pfdType.isHeader(step.type)
 }
 
 function isExecutableStep(step) {
-  return npi.data.pfdType.isExecutable(step.type)
+  return npiData.pfdType.isExecutable(step.type)
 }
 
 function getSectionStepCount(sorted, headerIndex) {
@@ -54,7 +60,7 @@ function stepRowHTML(s, oi, p) {
   const pills = (s.bomRefs || []).map(ref => {
     // Handle aggregated parts from BOM tree
     if (ref.bomType === 'parts_agg') {
-      const aggregatedParts = npi.bom._aggregatePartsRegister ? npi.bom._aggregatePartsRegister(p) : []
+      const aggregatedParts = npiBom._aggregatePartsRegister ? npiBom._aggregatePartsRegister(p) : []
       const part = aggregatedParts.find(x => (x.pn || x.desc) === ref.itemId)
       if (!part) return ''
       const sources = Array.from(part.sources || [])
@@ -89,9 +95,9 @@ function stepRowHTML(s, oi, p) {
   }).join('')
 
   const stepType = pfdStepType(s)
-  const isDecision = npi.data.pfdType.isDecision(stepType)
-  const isInspection = npi.data.pfdType.isInspection(stepType)
-  const isTwoPath = npi.data.pfdType.isTwoPath(stepType)
+  const isDecision = npiData.pfdType.isDecision(stepType)
+  const isInspection = npiData.pfdType.isInspection(stepType)
+  const isTwoPath = npiData.pfdType.isTwoPath(stepType)
   const typeChipMap = { Process: 'PROC', Decision: 'DEC', Inspection: 'INSP', Rework: 'RWK', Transport: 'TRN' }
   const typeChip = `<span class="pfd-type-chip pfd-type-chip--${stepType.toLowerCase()}">${typeChipMap[stepType] || stepType}</span>`
   const flowControlHTML = `<div class="step-field f-flow">
@@ -141,7 +147,7 @@ function getInsertBounds(p, afterOi) {
   if (!anchor) return null
 
   const base = Number(anchor.stepNum) || 0
-  const nextExecutable = npi.data.sortedPfd(p.pfd)
+  const nextExecutable = npiData.sortedPfd(p.pfd)
     .filter(isExecutableStep)
     .find(s => Number(s.stepNum) > base)
 
@@ -175,7 +181,7 @@ npi.pfd._showDetail = function(s, p, anchorEl, canvasEl) {
   const pfCnt = p.pfmea.filter(r => r.pfdId === s.id).length
   const maxRpn = (p.pfmea || []).filter(r => r.pfdId === s.id).reduce((max, row) => {
     const rowMax = (row.effects || []).reduce((emax, ef) => {
-      const efMax = (ef.causes || []).reduce((cmax, c) => Math.max(cmax, npi.data.calcCauseRpn(ef.sev, c.occ, c.det)), 0)
+      const efMax = (ef.causes || []).reduce((cmax, c) => Math.max(cmax, npiData.calcCauseRpn(ef.sev, c.occ, c.det)), 0)
       return Math.max(emax, efMax)
     }, 0)
     return Math.max(max, rowMax)
@@ -210,14 +216,14 @@ npi.pfd._showDetail = function(s, p, anchorEl, canvasEl) {
         <span class="step-num-badge">${s.stepNum}</span>
         <span class="pfd-detail-title">${esc(s.op || 'Untitled Step')}</span>
         <span class="tag ${typeTagClass}" style="flex-shrink:0">${esc(stepType)}</span>
-        ${maxRpn >= (window.RPN_HIGH || 100) ? `<span class="tag tag-red" style="flex-shrink:0;font-size:10px">⚑ RPN ${maxRpn}</span>` : ''}
+        ${maxRpn >= RPN_HIGH ? `<span class="tag tag-red" style="flex-shrink:0;font-size:10px">⚑ RPN ${maxRpn}</span>` : ''}
         <button class="mini-btn pfd-detail-close" style="margin-left:auto">✕</button>
       </div>
       ${s.detail ? `<div class="pfd-detail-notes">${esc(s.detail)}</div>` : ''}
       ${ctqItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">CTQs</div><ul class="pfd-detail-list">${listHTML(ctqItems)}</ul></div>` : ''}
       ${docItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Documents</div><ul class="pfd-detail-list">${listHTML(docItems)}</ul></div>` : ''}
       ${resItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Resources</div><div style="display:flex;flex-wrap:wrap;gap:4px">${resItems.join('')}</div></div>` : ''}
-      ${pfCnt > 0 ? `<div class="pfd-detail-section"><div class="pfd-detail-label">PFMEA</div><span class="tag ${maxRpn >= (window.RPN_HIGH || 100) ? 'tag-red' : 'tag-amber'}">${pfCnt} failure mode${pfCnt > 1 ? 's' : ''}${maxRpn > 0 ? ` · max RPN ${maxRpn}` : ''}</span></div>` : ''}
+      ${pfCnt > 0 ? `<div class="pfd-detail-section"><div class="pfd-detail-label">PFMEA</div><span class="tag ${maxRpn >= RPN_HIGH ? 'tag-red' : 'tag-amber'}">${pfCnt} failure mode${pfCnt > 1 ? 's' : ''}${maxRpn > 0 ? ` · max RPN ${maxRpn}` : ''}</span></div>` : ''}
       ${ctqItems.length === 0 && docItems.length === 0 && resItems.length === 0 && pfCnt === 0 && !s.detail ? '<p style="color:var(--muted);font-size:13px;margin:0">No additional details recorded for this step.</p>' : ''}
     </div>`
 
@@ -254,7 +260,7 @@ npi.pfd.generateMermaidSyntax = function() {
   const p = prog()
   if (!p || !p.pfd) return 'graph LR\n  A["No PFD data available"];'
 
-  const sorted = npi.data.sortedPfd(p.pfd)
+  const sorted = npiData.sortedPfd(p.pfd)
   const executable = sorted.filter(isExecutableStep).sort((a, b) => a.stepNum - b.stepNum)
   if (executable.length === 0) return 'graph LR\n  A["No steps in PFD"];'
 
@@ -269,10 +275,10 @@ npi.pfd.generateMermaidSyntax = function() {
   const highRiskStepIds = new Set()
   ;(p.pfmea || []).forEach(row => {
     const rowMax = (row.effects || []).reduce((emax, ef) => {
-      const efMax = (ef.causes || []).reduce((cmax, c) => Math.max(cmax, npi.data.calcCauseRpn(ef.sev, c.occ, c.det)), 0)
+      const efMax = (ef.causes || []).reduce((cmax, c) => Math.max(cmax, npiData.calcCauseRpn(ef.sev, c.occ, c.det)), 0)
       return Math.max(emax, efMax)
     }, 0)
-    if (rowMax >= (window.RPN_HIGH || 100) && row.pfdId) {
+    if (rowMax >= RPN_HIGH && row.pfdId) {
       const step = p.pfd.find(s => s.id === row.pfdId)
       if (step && step.stepNum) highRiskStepIds.add(step.stepNum)
     }
@@ -313,10 +319,10 @@ npi.pfd.generateMermaidSyntax = function() {
       const riskMark = isRisk ? ' ⚑' : ''
       const nodeLabel = `${s.stepNum}: ${pfdMermaidLabel(s)}${riskMark}`
       const type = pfdStepType(s)
-      if (npi.data.pfdType.isDecision(type)) {
+      if (npiData.pfdType.isDecision(type)) {
         syntax += `    ${nodeId}{"${nodeLabel}"}\n`
         decisionNodeIds.push(nodeId)
-      } else if (npi.data.pfdType.isInspection(type)) {
+      } else if (npiData.pfdType.isInspection(type)) {
         syntax += `    ${nodeId}(("${nodeLabel}"))\n`
         inspectionNodeIds.push(nodeId)
       } else if (type === 'Rework') {
@@ -343,8 +349,8 @@ npi.pfd.generateMermaidSyntax = function() {
   executable.forEach((s, index) => {
     const nodeId = pfdStepNodeId(s.stepNum)
     const type = pfdStepType(s)
-    if (npi.data.pfdType.isTwoPath(type)) {
-      const isInsp = npi.data.pfdType.isInspection(type)
+    if (npiData.pfdType.isTwoPath(type)) {
+      const isInsp = npiData.pfdType.isInspection(type)
       const yesLabel = isInsp ? 'Pass' : 'Yes'
       const noLabel = isInsp ? 'Fail' : 'No'
       const yesTarget = pfdLinkValue(s.nextStepId_yes)
@@ -382,8 +388,8 @@ npi.pfd.generateMermaidSyntax = function() {
 
 npi.pfd.render = function() {
   const p = prog()
-  npi.data.pfd.ensureLeadingHeader()
-  const sorted = npi.data.sortedPfd(p.pfd)
+  npiData.pfd.ensureLeadingHeader()
+  const sorted = npiData.sortedPfd(p.pfd)
   const executable = sorted.filter(isExecutableStep)
 
   const showFlowchart = npi.pfd.viewMode === 'table'
@@ -432,7 +438,7 @@ npi.pfd.render = function() {
 
         const renderId = `npi-pfd-flow-${Date.now()}`
         const p = prog()
-        const execSteps = npi.data.sortedPfd(p.pfd).filter(isExecutableStep)
+        const execSteps = npiData.sortedPfd(p.pfd).filter(isExecutableStep)
         const stepMap = new Map(execSteps.map(s => [s.stepNum, s]))
         Promise.resolve(mermaid.render(renderId, syntax)).then(result => {
           if (!result || !result.svg) throw new Error('No SVG returned from Mermaid')
@@ -522,7 +528,7 @@ npi.pfd.render = function() {
     const oi = p.pfd.indexOf(s)
     if (isHeaderStep(s)) {
       activeSectionId = s.id
-      hideSectionRows = collapsedGroups.has(s.id)
+      hideSectionRows = appState.collapsedGroups.has(s.id)
       body += headerRowHTML(s, oi, {
         collapsed: hideSectionRows,
         stepCount: getSectionStepCount(sorted, sortedIndex)
@@ -555,15 +561,15 @@ npi.pfd.toggleLayout = function() {
   npi.notify('render')
 }
 
-npi.pfd.addMainStep = function() { npi.data.pfd.addMainStep() }
+npi.pfd.addMainStep = function() { npiData.pfd.addMainStep() }
 
 npi.pfd.addHeaderAfter = function(afterStepId) {
-  const result = npi.data.pfd.addSectionHeaderAfter(afterStepId)
+  const result = npiData.pfd.addSectionHeaderAfter(afterStepId)
   if (!result.ok) showToast(result.error, 'error')
 }
 
 npi.pfd.openInsert = function(afterOi) {
-  insertOriginIdx = afterOi
+  appState.insertOriginIdx = afterOi
   const p = prog()
   const ni = document.getElementById('insertNum')
   const hi = document.getElementById('insertNumHint')
@@ -575,7 +581,7 @@ npi.pfd.openInsert = function(afterOi) {
     ni.value = base + 1 <= ceil - 1 ? base + 1 : ''
     hi.textContent = `Available: ${base + 1}–${ceil - 1}`
   } else {
-    const n = npi.data.nextMainStepNum(p.pfd)
+    const n = npiData.nextMainStepNum(p.pfd)
     ni.value = n
     hi.textContent = `Next: ${n}`
   }
@@ -585,21 +591,21 @@ npi.pfd.openInsert = function(afterOi) {
 npi.pfd.confirmInsert = function() {
   const rawNum = document.getElementById('insertNum').value
   const num = rawNum === '' ? null : parseInt(rawNum, 10)
-  const result = npi.data.pfd.insertStep(num, 'step')
+  const result = npiData.pfd.insertStep(num, 'step')
   if (!result.ok) return showToast(result.error, 'error')
   closeModal('modalInsert')
 }
 
-npi.pfd.del = function(sid) { npi.data.pfd.del(sid) }
+npi.pfd.del = function(sid) { npiData.pfd.del(sid) }
 npi.pfd.upd = function(sid, f, v) {
-  npi.data.pfd.upd(sid, f, v)
+  npiData.pfd.upd(sid, f, v)
   if (f === 'pfd_type') {
     npi.notify('render')
   }
 }
 npi.pfd.scrollTo = function(sid) { const el = document.getElementById('pfd-row-' + sid); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
-npi.pfd.toggleGroup = function(key) { npi.data.pfd.toggleGroup(collapsedGroups, key) }
-npi.pfd.delBomRef = function(sid, bt, iid) { npi.data.pfd.delBomRef(sid, bt, iid) }
+npi.pfd.toggleGroup = function(key) { npiData.pfd.toggleGroup(appState.collapsedGroups, key) }
+npi.pfd.delBomRef = function(sid, bt, iid) { npiData.pfd.delBomRef(sid, bt, iid) }
 
 npi.pfd.openResourceEdit = function(stepId, bomType, itemId) {
   const p = prog()
@@ -609,14 +615,14 @@ npi.pfd.openResourceEdit = function(stepId, bomType, itemId) {
   const ref = (step.bomRefs || []).find(r => r.bomType === bomType && r.itemId === itemId)
   if (!ref) return
 
-  resourceEditTarget = { stepId, bomType, itemId }
-  resourceEditQty = ref.qty || 1
+  appState.resourceEditTarget = { stepId, bomType, itemId }
+  appState.resourceEditQty = ref.qty || 1
 
   let itemName = 'Resource'
   let itemDetails = ''
 
   if (bomType === 'parts_agg') {
-    const aggregatedParts = npi.bom._aggregatePartsRegister ? npi.bom._aggregatePartsRegister(p) : []
+    const aggregatedParts = npiBom._aggregatePartsRegister ? npiBom._aggregatePartsRegister(p) : []
     const part = aggregatedParts.find(x => (x.pn || x.desc) === itemId)
     if (part) {
       itemName = part.desc || part.pn || 'Part'
@@ -641,67 +647,67 @@ npi.pfd.openResourceEdit = function(stepId, bomType, itemId) {
   }
 
   document.getElementById('resourceEditTitle').textContent = `Edit Resource`
-  document.getElementById('resourceEditQty').value = resourceEditQty
+  document.getElementById('resourceEditQty').value = appState.resourceEditQty
   document.getElementById('resourceEditInfo').innerHTML = `<strong>${esc(itemName)}</strong><br>${esc(itemDetails)}`
 
   showModal('modalResourceEdit')
 }
 
 npi.pfd.saveResourceEdit = function() {
-  if (!resourceEditTarget) return
+  if (!appState.resourceEditTarget) return
   const qtyInput = document.getElementById('resourceEditQty')
   const qty = parseInt(qtyInput.value, 10) || 1
-  resourceEditQty = Math.max(1, qty)
+  appState.resourceEditQty = Math.max(1, qty)
 
-  npi.data.pfd.updateResourceQty(resourceEditTarget.stepId, resourceEditTarget.bomType, resourceEditTarget.itemId, resourceEditQty)
+  npiData.pfd.updateResourceQty(appState.resourceEditTarget.stepId, appState.resourceEditTarget.bomType, appState.resourceEditTarget.itemId, appState.resourceEditQty)
   closeModal('modalResourceEdit')
-  resourceEditTarget = null
+  appState.resourceEditTarget = null
 }
 
 npi.pfd.deleteResourceEdit = function() {
-  if (!resourceEditTarget) return
-  npi.data.pfd.delBomRef(resourceEditTarget.stepId, resourceEditTarget.bomType, resourceEditTarget.itemId)
+  if (!appState.resourceEditTarget) return
+  npiData.pfd.delBomRef(appState.resourceEditTarget.stepId, appState.resourceEditTarget.bomType, appState.resourceEditTarget.itemId)
   closeModal('modalResourceEdit')
-  resourceEditTarget = null
+  appState.resourceEditTarget = null
 }
 
 npi.pfd.openCtqPick = function(oi) {
-  const p = prog(); ctqPickTarget = oi; ctqPickSelected = [...(p.pfd[oi].ctqIds || [])]
+  const p = prog(); appState.ctqPickTarget = oi; appState.ctqPickSelected = [...(p.pfd[oi].ctqIds || [])]
   document.getElementById('ctqPickList').innerHTML = p.ctq.length === 0
     ? '<p style="color:var(--muted);font-size:13px">No CTQs defined.</p>'
-    : p.ctq.map((c, i) => `<label class="ctq-pick-label"><input type="checkbox" ${ctqPickSelected.includes(c.id) ? 'checked' : ''} data-action="pfd-toggle-ctq-pick" data-id="${c.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag tag-ctq">C${i + 1}</span><span style="font-size:12px;font-weight:600">${esc(c.req || 'Unnamed')}</span></div><div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px">${esc(c.spec)}</div></div></label>`).join('')
+    : p.ctq.map((c, i) => `<label class="ctq-pick-label"><input type="checkbox" ${appState.ctqPickSelected.includes(c.id) ? 'checked' : ''} data-action="pfd-toggle-ctq-pick" data-id="${c.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag tag-ctq">C${i + 1}</span><span style="font-size:12px;font-weight:600">${esc(c.req || 'Unnamed')}</span></div><div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px">${esc(c.spec)}</div></div></label>`).join('')
   showModal('modalCtqPick')
 }
 
 npi.pfd.toggleCtqPick = function(cid, checked) {
   if (checked) {
-    if (!ctqPickSelected.includes(cid)) ctqPickSelected.push(cid)
+    if (!appState.ctqPickSelected.includes(cid)) appState.ctqPickSelected.push(cid)
   } else {
-    ctqPickSelected = ctqPickSelected.filter(x => x !== cid)
+    appState.ctqPickSelected = appState.ctqPickSelected.filter(x => x !== cid)
   }
 }
 
 npi.pfd.saveCtqPick = function() {
-  npi.data.pfd.saveCtqPick(ctqPickTarget, ctqPickSelected)
+  npiData.pfd.saveCtqPick(appState.ctqPickTarget, appState.ctqPickSelected)
   closeModal('modalCtqPick')
 }
 
 npi.pfd.openDocPick = function(oi) {
-  const p = prog(); docPickTarget = oi; docPickSelected = [...(p.pfd[oi].docRefs || [])]
+  const p = prog(); appState.docPickTarget = oi; appState.docPickSelected = [...(p.pfd[oi].docRefs || [])]
   const docs = p.docs || []
   document.getElementById('docPickList').innerHTML = docs.length === 0
     ? '<p style="color:var(--muted);font-size:13px">No documents in register.</p>'
-    : docs.map((d, i) => `<label class="ctq-pick-label"><input type="checkbox" ${docPickSelected.includes(d.id) ? 'checked' : ''} data-action="pfd-toggle-doc-pick" data-id="${d.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag" style="font-size:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted)">${esc(d.docNumber || '—')}</span><span style="font-size:12px;font-weight:600">${esc(d.title || 'Untitled')}</span></div><div style="font-size:11px;color:var(--muted);margin-top:1px">${esc(d.type || '')}${d.issue ? ' · Issue ' + esc(String(d.issue)) : ''}</div></div></label>`).join('')
+    : docs.map((d, i) => `<label class="ctq-pick-label"><input type="checkbox" ${appState.docPickSelected.includes(d.id) ? 'checked' : ''} data-action="pfd-toggle-doc-pick" data-id="${d.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag" style="font-size:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted)">${esc(d.docNumber || '—')}</span><span style="font-size:12px;font-weight:600">${esc(d.title || 'Untitled')}</span></div><div style="font-size:11px;color:var(--muted);margin-top:1px">${esc(d.type || '')}${d.issue ? ' · Issue ' + esc(String(d.issue)) : ''}</div></div></label>`).join('')
   showModal('modalDocPick')
 }
 
 npi.pfd.toggleDocPick = function(docId, checked) {
-  if (checked) { if (!docPickSelected.includes(docId)) docPickSelected.push(docId) }
-  else { docPickSelected = docPickSelected.filter(x => x !== docId) }
+  if (checked) { if (!appState.docPickSelected.includes(docId)) appState.docPickSelected.push(docId) }
+  else { appState.docPickSelected = appState.docPickSelected.filter(x => x !== docId) }
 }
 
 npi.pfd.saveDocPick = function() {
-  npi.data.pfd.saveDocPick(docPickTarget, docPickSelected)
+  npiData.pfd.saveDocPick(appState.docPickTarget, appState.docPickSelected)
   closeModal('modalDocPick')
 }
 
@@ -716,10 +722,10 @@ npi.pfd.delDocRef = function(sid, docId) {
 npi.pfd.openBomPick = function(sid) {
   const p = prog(); if (!p) return
   const s = p.pfd.find(x => x.id === sid); if (!s) return
-  bomPickTarget = sid
-  bomPickSelected = [...(s.bomRefs || []).map(r => r.bomType + '|' + r.itemId)]
-  bomPickFilter = 'all'
-  bomPickSearch = ''
+  appState.bomPickTarget = sid
+  appState.bomPickSelected = [...(s.bomRefs || []).map(r => r.bomType + '|' + r.itemId)]
+  appState.bomPickFilter = 'all'
+  appState.bomPickSearch = ''
 
   const titleEl = document.getElementById('bomPickTitle')
   if (titleEl) titleEl.textContent = `Resources — Step ${s.stepNum}: ${s.op || '(unnamed)'}`
@@ -727,7 +733,7 @@ npi.pfd.openBomPick = function(sid) {
   const searchEl = document.getElementById('bomPickSearch')
   if (searchEl) searchEl.value = ''
 
-  npi.pfd.refreshBomPickModal(p, 'bomPickFilter', 'bomPickList', bomPickFilter, bomPickSearch)
+  npi.pfd.refreshBomPickModal(p, 'bomPickFilter', 'bomPickList', appState.bomPickFilter, appState.bomPickSearch)
   showModal('modalBomPick')
 }
 
@@ -740,7 +746,7 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, search
   const matchesSearch = (text) => !search || (text || '').toLowerCase().includes(search)
 
   // Aggregate parts from BOM tree and AAW groups
-  const aggregatedParts = npi.bom._aggregatePartsRegister ? npi.bom._aggregatePartsRegister(p) : []
+  const aggregatedParts = npiBom._aggregatePartsRegister ? npiBom._aggregatePartsRegister(p) : []
   
   // Get AAW/Repair groups (top-level only)
   const aawGroups = p.bom.aaw_repair || []
@@ -770,7 +776,7 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, search
       // Filter by search term
       if (!matchesSearch(name) && !matchesSearch(item.pn) && !matchesSearch(item.toolId) && !matchesSearch(item.equipId) && !matchesSearch(item.spec)) return
       
-      items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">${t.icon} ${esc(name || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">${t.label}</span></div>`)
+      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">${t.icon} ${esc(name || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">${t.label}</span></div>`)
     })
   })
   
@@ -787,7 +793,7 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, search
       // Filter by search term
       if (!matchesSearch(part.desc) && !matchesSearch(part.pn)) return
       
-      items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔩 ${esc(part.desc || part.pn || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Part</span></div>`)
+      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔩 ${esc(part.desc || part.pn || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Part</span></div>`)
     })
   }
   
@@ -804,7 +810,7 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, search
       // Filter by search term
       if (!matchesSearch(group.title)) return
       
-      items.push(`<div class="bom-pick-item${bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔧 ${esc(group.title || 'Unnamed Assembly')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap"><span class="${flagClass}">${tagLabel}</span></div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Assembly</span></div>`)
+      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔧 ${esc(group.title || 'Unnamed Assembly')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap"><span class="${flagClass}">${tagLabel}</span></div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Assembly</span></div>`)
     })
   }
 
@@ -817,27 +823,33 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, search
   }
 }
 
-npi.pfd.setBomFilter = function(f, fid, lid) { bomPickFilter = f; npi.pfd.refreshBomPickModal(prog(), fid, lid, f, bomPickSearch) }
+npi.pfd.setBomFilter = function(f, fid, lid) { appState.bomPickFilter = f; npi.pfd.refreshBomPickModal(prog(), fid, lid, f, appState.bomPickSearch) }
 
 npi.pfd.searchBomPick = function(query) {
-  bomPickSearch = query || ''
-  npi.pfd.refreshBomPickModal(prog(), 'bomPickFilter', 'bomPickList', bomPickFilter, bomPickSearch)
+  appState.bomPickSearch = query || ''
+  npi.pfd.refreshBomPickModal(prog(), 'bomPickFilter', 'bomPickList', appState.bomPickFilter, appState.bomPickSearch)
 }
 
 npi.pfd.toggleBomPick = function(key, el) {
   const chk = el.querySelector('input')
-  if (bomPickSelected.includes(key)) {
-    bomPickSelected = bomPickSelected.filter(x => x !== key)
+  if (appState.bomPickSelected.includes(key)) {
+    appState.bomPickSelected = appState.bomPickSelected.filter(x => x !== key)
     el.classList.remove('selected')
     if (chk) chk.checked = false
   } else {
-    bomPickSelected.push(key)
+    appState.bomPickSelected.push(key)
     el.classList.add('selected')
     if (chk) chk.checked = true
   }
 }
 
 npi.pfd.saveBomPick = function() {
-  npi.data.pfd.saveBomPick(bomPickTarget, bomPickSelected)
+  npiData.pfd.saveBomPick(appState.bomPickTarget, appState.bomPickSelected)
   closeModal('modalBomPick')
 }
+
+export const npiPfd = npi.pfd
+export const renderPfd = npi.pfd.render
+export const addMainPfdStep = npi.pfd.addMainStep
+export const updatePfdStep = npi.pfd.upd
+export const deletePfdStep = npi.pfd.del

@@ -1,5 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const script = fs.readFileSync(
   path.resolve(__dirname, '../portals/operations/js/operations-infographic.js'),
@@ -7,9 +10,10 @@ const script = fs.readFileSync(
 );
 
 describe('operations infographic', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     global.alert = jest.fn();
-    eval(`${script}\n;globalThis.__opsInfographic = { opsInfographicBar, opsInfographicTone, opsInfographicUnitCards };`); // eslint-disable-line no-eval
+    const module = await import(`data:text/javascript,${encodeURIComponent(script + '\n;globalThis.__opsInfographic = { opsInfographicBar, opsInfographicTone, opsInfographicUnitCards };')}`);
+    globalThis.__opsInfographic = module;
   });
 
   it('renders a clamped progress bar width and tone color', () => {

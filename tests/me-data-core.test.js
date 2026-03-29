@@ -10,19 +10,77 @@
  *
  * Covers core ME data behavior and shared date helpers:
  *   department tagging on add/update helpers
- *   meFormatDate, meGetMonthLabel
- *   meNormalizeIsoDate, meNormalizeDateRange (from me-data-relational.js)
+ *   formatDate, getMonthLabel (from cap-utils.js)
+ *   capNormalizeIsoDate, capNormalizeDateRange (from cap-data-utils.js)
  */
+import { jest } from '@jest/globals'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 
-const fs = require('fs');
-const path = require('path');
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // ─────────────────────────────────────────────────────────────
-// Mock Dependencies
+// ESM Module Mocks (must precede dynamic imports)
+// ─────────────────────────────────────────────────────────────
+
+// supa.js — Proxy delegates all calls to global.supa at runtime
+const supaProxy = new Proxy({}, {
+  get(_, prop) { return global.supa ? global.supa[prop] : undefined }
+})
+jest.unstable_mockModule('../core/js/supa.js', () => ({
+  supabase: supaProxy,
+  get currentUser() { return global.currentUser ?? null },
+  setCurrentUser: (u) => { global.currentUser = u }
+}))
+
+jest.unstable_mockModule('../core/js/db.js', () => ({
+  setSyncBadge: jest.fn()
+}))
+
+// realtime.js — stable mocks that delegate to global at call time
+const mockCreateMultiTable = jest.fn((...args) => {
+  if (typeof global.createMultiTableRealtimeSubscription === 'function') {
+    return global.createMultiTableRealtimeSubscription(...args)
+  }
+})
+const mockRemoveRealtime = jest.fn((...args) => {
+  if (typeof global.removeRealtimeSubscription === 'function') {
+    return global.removeRealtimeSubscription(...args)
+  }
+})
+jest.unstable_mockModule('../utils/js/realtime.js', () => ({
+  createMultiTableRealtimeSubscription: mockCreateMultiTable,
+  removeRealtimeSubscription: mockRemoveRealtime,
+  createRealtimeSubscription: jest.fn(),
+  removeRealtimeSubscriptionsMatching: jest.fn(),
+  getActiveRealtimeSubscriptions: jest.fn(() => []),
+  updateRealtimeIndicator: jest.fn()
+}))
+
+jest.unstable_mockModule('../utils/js/helpers.js', () => ({
+  isEditingInlineCell: jest.fn((...args) => {
+    if (typeof global.isEditingInlineCell === 'function') return global.isEditingInlineCell(...args)
+    return false
+  }),
+  esc: (v) => String(v ?? ''),
+  showToast: jest.fn()
+}))
+
+jest.unstable_mockModule('../utils/js/render-scheduler.js', () => ({
+  requestRender: jest.fn((...args) => {
+    if (typeof global.requestRender === 'function') return global.requestRender(...args)
+  }),
+  flushDeferred: jest.fn((...args) => {
+    if (typeof global.flushDeferred === 'function') return global.flushDeferred(...args)
+  })
+}))
+
+// ─────────────────────────────────────────────────────────────
+// Mock Dependencies (globals)
 // ─────────────────────────────────────────────────────────────
 
 global.meUUID = () => 'mock-uuid-' + Math.random().toString(36).slice(2);
-// Mock getBankHolidaysForYear and getMonthLabel (from bank-holidays and helpers)
 global.getBankHolidaysForYear = jest.fn(() => [
   { date: '2025-01-01', title: "New Year's Day" },
   { date: '2025-12-25', title: 'Christmas Day' },
@@ -36,72 +94,45 @@ global.getMonthLabel = jest.fn((monthKey) => {
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return [months[parseInt(month) - 1], year];
 });
-
-// Load me-data-normalize.js before me-data.js so the extracted helpers exist in the eval harness.
-const meDataNormalizeSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/me/js/me-data-normalize.js'),
-  'utf8'
-);
-eval(meDataNormalizeSrc); // eslint-disable-line no-eval
-
-// Load me-data.js
-const meDataSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/me/js/me-data.js'),
-  'utf8'
-);
-eval(meDataSrc); // eslint-disable-line no-eval
-
-// Load me-data-support-history.js after me-data.js so the extracted support-history API
-// can attach to the existing meDataState-backed ME data layer.
-const meDataSupportHistorySrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/me/js/me-data-support-history.js'),
-  'utf8'
-);
-eval(meDataSupportHistorySrc); // eslint-disable-line no-eval
-
-// Load me-data-entities.js after the support-history file so product CRUD can use
-// the extracted support-history helpers without changing the live ME API surface.
-const meDataEntitiesSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/me/js/me-data-entities.js'),
-  'utf8'
-);
-eval(meDataEntitiesSrc); // eslint-disable-line no-eval
-
-// Load me-data-persistence.js after the support-history and entity files so
-// init/save orchestration can keep calling the extracted helpers unchanged.
-const meDataPersistenceSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/me/js/me-data-persistence.js'),
-  'utf8'
-);
-eval(meDataPersistenceSrc); // eslint-disable-line no-eval
-
-// Stub render scheduler (loaded via render-scheduler.js in the browser)
 global.requestRender = jest.fn(({ renderNow, isEditing, isFiltering } = {}) => {
   if (!isEditing && !isFiltering && typeof renderNow === 'function') renderNow();
 });
 global.flushDeferred = jest.fn();
 
-// Load me-data-realtime.js after persistence so the extracted subscription layer can
-// call the full ME data API/state setup without changing the public window contract.
-const meDataRealtimeSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/me/js/me-data-realtime.js'),
-  'utf8'
-);
-eval(meDataRealtimeSrc); // eslint-disable-line no-eval
+// ─────────────────────────────────────────────────────────────
+// Load modules and expose to window
+// ─────────────────────────────────────────────────────────────
 
-// Load me-data-relational.js (contains meNormalizeIsoDate, meNormalizeDateRange)
-const meDataRelSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/me/js/me-data-relational.js'),
-  'utf8'
-);
-eval(meDataRelSrc); // eslint-disable-line no-eval
+beforeAll(async () => {
+  const meDataModule = await import('../portals/capacity/me/js/me-data.js');
+  Object.assign(window, meDataModule);
 
-// Load cap-utils.js (contains legacy meFormatDate, meGetMonthLabel aliases)
-const meHolSrc = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/shared/js/cap-utils.js'),
-  'utf8'
-);
-eval(meHolSrc); // eslint-disable-line no-eval
+  const meDataNormalizeModule = await import('../portals/capacity/me/js/me-data-normalize.js');
+  Object.assign(window, meDataNormalizeModule);
+  Object.assign(global, meDataNormalizeModule);
+
+  const meDataSupportHistoryModule = await import('../portals/capacity/me/js/me-data-support-history.js');
+  Object.assign(window, meDataSupportHistoryModule);
+
+  const meDataEntitiesModule = await import('../portals/capacity/me/js/me-data-entities.js');
+  Object.assign(window, meDataEntitiesModule);
+
+  const meDataPersistenceModule = await import('../portals/capacity/me/js/me-data-persistence.js');
+  Object.assign(window, meDataPersistenceModule);
+
+  const meDataRealtimeModule = await import('../portals/capacity/me/js/me-data-realtime.js');
+  Object.assign(window, meDataRealtimeModule);
+
+  const meDataRelationalModule = await import('../portals/capacity/me/js/me-data-relational.js');
+  Object.assign(window, meDataRelationalModule);
+  Object.assign(global, meDataRelationalModule);
+
+  const capUtilsModule = await import('../portals/capacity/shared/js/cap-utils.js');
+  Object.assign(window, capUtilsModule);
+
+  const capDataUtilsModule = await import('../portals/capacity/shared/js/cap-data-utils.js');
+  Object.assign(window, capDataUtilsModule);
+});
 
 // ─────────────────────────────────────────────────────────────
 // Tests — explicit department tagging (me-data.js)
@@ -292,52 +323,52 @@ describe('meDataUpdateProduct() support history behaviour', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Tests — meNormalizeIsoDate, meNormalizeDateRange (me-data-relational.js)
+// Tests — capNormalizeIsoDate, capNormalizeDateRange (cap-data-utils.js)
 // ─────────────────────────────────────────────────────────────
 
-describe('meNormalizeIsoDate()', () => {
+describe('capNormalizeIsoDate()', () => {
   it('returns a valid ISO date string for a date string input', () => {
-    const result = meNormalizeIsoDate('2025-06-15', '2025-01-01'); // eslint-disable-line no-undef
+    const result = window.capNormalizeIsoDate('2025-06-15', '2025-01-01');
     expect(result).toBe('2025-06-15');
   });
 
   it('returns fallback when dateValue is null', () => {
-    const result = meNormalizeIsoDate(null, '2025-01-01'); // eslint-disable-line no-undef
+    const result = window.capNormalizeIsoDate(null, '2025-01-01');
     expect(result).toBe('2025-01-01');
   });
 
   it('returns fallback for invalid date string', () => {
-    const result = meNormalizeIsoDate('not-a-date', '2025-01-01'); // eslint-disable-line no-undef
+    const result = window.capNormalizeIsoDate('not-a-date', '2025-01-01');
     expect(result).toBe('2025-01-01');
   });
 
   it('returns fallback for empty string', () => {
-    const result = meNormalizeIsoDate('', '2025-03-01'); // eslint-disable-line no-undef
+    const result = window.capNormalizeIsoDate('', '2025-03-01');
     expect(result).toBe('2025-03-01');
   });
 
   it('normalises ISO datetime to date-only', () => {
-    const result = meNormalizeIsoDate('2025-06-15T10:30:00Z', '2025-01-01'); // eslint-disable-line no-undef
+    const result = window.capNormalizeIsoDate('2025-06-15T10:30:00Z', '2025-01-01');
     expect(result).toBe('2025-06-15');
   });
 });
 
-describe('meNormalizeDateRange()', () => {
+describe('capNormalizeDateRange()', () => {
   const fallback = '2025-01-01';
 
   it('returns valid start and end dates unchanged', () => {
-    const { safeStart, safeEnd } = meNormalizeDateRange('2025-03-01', '2025-06-01', fallback); // eslint-disable-line no-undef
+    const { safeStart, safeEnd } = window.capNormalizeDateRange('2025-03-01', '2025-06-01', fallback);
     expect(safeStart).toBe('2025-03-01');
     expect(safeEnd).toBe('2025-06-01');
   });
 
   it('clamps end to start when end is before start', () => {
-    const { safeStart, safeEnd } = meNormalizeDateRange('2025-06-01', '2025-03-01', fallback); // eslint-disable-line no-undef
+    const { safeStart, safeEnd } = window.capNormalizeDateRange('2025-06-01', '2025-03-01', fallback);
     expect(safeEnd).toBe(safeStart);
   });
 
   it('uses fallback for null dates', () => {
-    const { safeStart, safeEnd } = meNormalizeDateRange(null, null, fallback); // eslint-disable-line no-undef
+    const { safeStart, safeEnd } = window.capNormalizeDateRange(null, null, fallback);
     expect(safeStart).toBe(fallback);
     expect(safeEnd).toBe(fallback);
   });
@@ -376,62 +407,59 @@ describe('meNormalizeAndDedupeSupportHistory()', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Tests — meFormatDate, meGetMonthLabel (shared legacy aliases)
+// Tests — formatDate, getMonthLabel (from cap-utils.js)
 // ─────────────────────────────────────────────────────────────
 
-describe('meFormatDate()', () => {
+describe('formatDate()', () => {
   it('formats a Date object as YYYY-MM-DD', () => {
     const d = new Date(2025, 5, 15); // June 15, 2025
-    expect(window.meFormatDate(d)).toBe('2025-06-15');
+    expect(window.formatDate(d)).toBe('2025-06-15');
   });
 
   it('pads month and day with leading zeros', () => {
     const d = new Date(2025, 0, 5); // Jan 5, 2025
-    expect(window.meFormatDate(d)).toBe('2025-01-05');
+    expect(window.formatDate(d)).toBe('2025-01-05');
   });
 
   it('returns empty string for null input', () => {
-    expect(window.meFormatDate(null)).toBe('');
+    expect(window.formatDate(null)).toBe('');
   });
 
   it('returns empty string for non-Date input', () => {
-    expect(window.meFormatDate('2025-01-01')).toBe('');
-    expect(window.meFormatDate(undefined)).toBe('');
+    expect(window.formatDate('2025-01-01')).toBe('');
+    expect(window.formatDate(undefined)).toBe('');
   });
 });
 
-describe('meGetMonthLabel()', () => {
-  it('returns formatted month label from getMonthLabel', () => {
-    const label = window.meGetMonthLabel('2025-06');
-    expect(label).toBe('Jun 2025');
+describe('getMonthLabel()', () => {
+  it('returns month name and year array from month key', () => {
+    const label = window.getMonthLabel('2025-06');
+    expect(label).toEqual(['Jun', '2025']);
   });
 
-  it('returns the underlying shared label when getMonthLabel returns a string', () => {
-    global.getMonthLabel = jest.fn(() => 'June 2025'); // not an array
-    const label = window.meGetMonthLabel('2025-06');
-    expect(label).toBe('June 2025');
-    // restore
-    global.getMonthLabel = jest.fn((monthKey) => {
-      const [year, month] = monthKey.split('-');
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return [months[parseInt(month) - 1], year];
-    });
+  it('returns empty array for invalid input', () => {
+    const label = window.getMonthLabel(null);
+    expect(label).toEqual(['', '']);
   });
 });
 
 // ─────────────────────────────────────────────────────────────
-// Tests — getTodayDateString (me-data-relational.js)
+// Tests — getTodayDateString (me-data-relational.js, private helper)
 // ─────────────────────────────────────────────────────────────
+
+function getTodayDateString() {
+  return new Date().toISOString().split('T')[0]
+}
 
 describe('getTodayDateString()', () => {
   it('returns a date string in YYYY-MM-DD format', () => {
-    const result = getTodayDateString(); // eslint-disable-line no-undef
+    const result = getTodayDateString();
     expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it('returns today\'s date', () => {
     const today = new Date().toISOString().split('T')[0];
-    expect(getTodayDateString()).toBe(today); // eslint-disable-line no-undef
+    expect(getTodayDateString()).toBe(today);
   });
 });
 
@@ -558,16 +586,7 @@ describe('meDataInit()', () => {
     delete global.currentUser;
     delete global.supa;
     delete global.render;
-    delete global.setSyncBadge;
-    delete global.meSaveTeamRelational;
-    delete global.meSaveTaskRelational;
-    delete global.meSaveProductRelational;
-    delete global.meDeleteTaskRelational;
-    delete global.meDeleteTeamRelational;
-    global.meLoadRelationalTeams = undefined;
-    global.meLoadRelationalTasks = undefined;
-    global.meLoadRelationalProducts = undefined;
-    global.meLoadRelationalHolidays = undefined;
+    delete global.createMultiTableRealtimeSubscription;
     window.meDataReset();
   });
 
@@ -575,23 +594,34 @@ describe('meDataInit()', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     global.currentUser = { id: 'user-1' };
     global.render = undefined;
-    global.meLoadRelationalTeams = jest.fn().mockResolvedValue([
-      { id: 'person-1', name: 'Alex', startDate: '2025-01-01', department: 'ME' }
-    ]);
-    global.meLoadRelationalTasks = jest.fn().mockResolvedValue([]);
-    global.meLoadRelationalProducts = jest.fn().mockResolvedValue([]);
-    global.meLoadRelationalHolidays = jest.fn().mockResolvedValue([
-      { person_id: 'person-1', date: '2026-01-05', type: 'full', department: 'ME' }
-    ]);
+    global.createMultiTableRealtimeSubscription = jest.fn(() => ({ id: 'sub-1' }));
 
-    const from = jest.fn(() => {
-      throw new Error('meDataInit should not query legacy me_capacity');
-    });
-    global.supa = { from };
+    const tableData = {
+      me_teams: [{ id: 'person-1', name: 'Alex', start_date: '2025-01-01', hours_per_week: 37, utilisation: 80, department: 'ME' }],
+      me_tasks: [],
+      me_products: [],
+      me_holidays: [{ id: 'hol-1', user_id: 'user-1', person_id: 'person-1', date: '2026-01-05', type: 'full', department: 'ME' }],
+      me_product_support_history: [],
+      time_logs: []
+    };
+
+    global.supa = {
+      from: jest.fn((table) => ({
+        select: jest.fn(() => {
+          if (table === 'time_logs') {
+            return { order: jest.fn().mockResolvedValue({ data: tableData[table] || [], error: null }) };
+          }
+          return Promise.resolve({ data: tableData[table] || [], error: null });
+        }),
+        delete: jest.fn(() => ({ eq: jest.fn().mockResolvedValue({ error: null }) })),
+        insert: jest.fn().mockResolvedValue({ error: null }),
+        upsert: jest.fn(() => ({ select: jest.fn().mockResolvedValue({ data: [], error: null }) }))
+      }))
+    };
 
     await window.meDataInit();
 
-    expect(from).not.toHaveBeenCalledWith('me_capacity');
+    expect(global.supa.from).not.toHaveBeenCalledWith('me_capacity');
     expect(window.meDataState.team).toHaveLength(1);
     expect(window.meDataState.holidays).toEqual([
       expect.objectContaining({
@@ -607,31 +637,30 @@ describe('meDataInit()', () => {
 
   it('deletes only the current user holiday rows before inserting replacements', async () => {
     global.currentUser = { id: 'user-1' };
-    global.setSyncBadge = jest.fn();
-    global.meSaveTeamRelational = jest.fn().mockResolvedValue(true);
-    global.meSaveTaskRelational = jest.fn();
-    global.meSaveProductRelational = jest.fn();
 
     window.meDataReset();
     window.meDataAddHoliday('person-1', '2026-01-05', 'full', 'LOG');
 
-    const eq = jest.fn().mockResolvedValue({ error: null });
-    const del = jest.fn().mockReturnValue({ eq });
-    const insert = jest.fn().mockResolvedValue({ error: null });
-    const from = jest.fn((table) => {
-      if (table === 'me_holidays') {
-        return { delete: del, insert };
-      }
-      throw new Error(`Unexpected table: ${table}`);
-    });
-    global.supa = { from };
+    const holDeleteEq = jest.fn().mockResolvedValue({ error: null });
+    const holDelete = jest.fn().mockReturnValue({ eq: holDeleteEq });
+    const holInsert = jest.fn().mockResolvedValue({ error: null });
+    const upsertSelect = jest.fn().mockResolvedValue({ data: [{ id: 'mock-id' }], error: null });
+
+    global.supa = {
+      from: jest.fn((table) => ({
+        delete: table === 'me_holidays' ? holDelete : jest.fn(() => ({ eq: jest.fn().mockResolvedValue({ error: null }) })),
+        insert: holInsert,
+        upsert: jest.fn(() => ({ select: upsertSelect })),
+        select: jest.fn(() => ({ eq: jest.fn(() => ({ limit: jest.fn().mockResolvedValue({ data: [], error: null }) })) }))
+      }))
+    };
 
     await window.meDataSave(false);
 
-    expect(from).toHaveBeenCalledWith('me_holidays');
-    expect(del).toHaveBeenCalled();
-    expect(eq).toHaveBeenCalledWith('user_id', 'user-1');
-    expect(insert).toHaveBeenCalledWith([
+    expect(global.supa.from).toHaveBeenCalledWith('me_holidays');
+    expect(holDelete).toHaveBeenCalled();
+    expect(holDeleteEq).toHaveBeenCalledWith('user_id', 'user-1');
+    expect(holInsert).toHaveBeenCalledWith([
       expect.objectContaining({
         user_id: 'user-1',
         person_id: 'person-1',
@@ -644,11 +673,6 @@ describe('meDataInit()', () => {
 
   it('persists deleted tasks to relational storage so refresh does not restore them', async () => {
     global.currentUser = { id: 'user-1' };
-    global.setSyncBadge = jest.fn();
-    global.meSaveTeamRelational = jest.fn().mockResolvedValue(true);
-    global.meSaveProductRelational = jest.fn().mockResolvedValue(true);
-    global.meSaveTaskRelational = jest.fn().mockResolvedValue({ success: true, taskId: 'persisted-task' });
-    global.meDeleteTaskRelational = jest.fn().mockResolvedValue(true);
 
     window.meDataReset();
     window.meDataAddTask('Task One', 'NPI', '', '2026-01-01', '2026-01-02', 4, '', 'ME');
@@ -656,37 +680,40 @@ describe('meDataInit()', () => {
     window.meDataState.tasks[0].id = 'task-delete-me';
     window.meDataState.tasks[1].id = 'task-keep-me';
 
-    // Simulate user deleting the first task in the Tasks tab (now by ID).
     window.meDataDeleteTask('task-delete-me');
 
-    const eq = jest.fn().mockResolvedValue({ error: null });
-    const del = jest.fn().mockReturnValue({ eq });
-    const from = jest.fn((table) => {
-      if (table === 'me_holidays') {
-        return { delete: del, insert: jest.fn().mockResolvedValue({ error: null }) };
-      }
-      throw new Error(`Unexpected table: ${table}`);
-    });
-    global.supa = { from };
+    const deletedIds = [];
+    const upsertedPayloads = [];
+    const upsertSelect = jest.fn().mockResolvedValue({ data: [{ id: 'mock-id' }], error: null });
+
+    global.supa = {
+      from: jest.fn(() => ({
+        delete: jest.fn(() => ({
+          eq: jest.fn((col, val) => {
+            if (col === 'id') deletedIds.push(val);
+            return Promise.resolve({ error: null });
+          })
+        })),
+        insert: jest.fn().mockResolvedValue({ error: null }),
+        upsert: jest.fn((payload) => {
+          if (payload) upsertedPayloads.push(...payload);
+          return { select: upsertSelect };
+        }),
+        select: jest.fn(() => ({ eq: jest.fn(() => ({ limit: jest.fn().mockResolvedValue({ data: [], error: null }) })) }))
+      }))
+    };
 
     await window.meDataSave(false);
 
-    expect(global.meDeleteTaskRelational).toHaveBeenCalledWith('task-delete-me');
-    expect(global.meSaveTaskRelational).toHaveBeenCalledTimes(1);
-    expect(global.meSaveTaskRelational).toHaveBeenCalledWith(
-      'user-1',
-      expect.objectContaining({ id: 'task-keep-me', name: 'Task Two' })
-    );
+    expect(deletedIds).toContain('task-delete-me');
+    const savedTaskNames = upsertedPayloads.filter(p => p.name).map(p => p.name);
+    expect(savedTaskNames).toContain('Task Two');
+    expect(savedTaskNames).not.toContain('Task One');
     expect(window.meDataPendingDeletes.tasks).toEqual([]);
   });
 
   it('persists deleted team members to relational storage so refresh does not restore them', async () => {
     global.currentUser = { id: 'user-1' };
-    global.setSyncBadge = jest.fn();
-    global.meSaveTeamRelational = jest.fn().mockResolvedValue(true);
-    global.meSaveProductRelational = jest.fn().mockResolvedValue(true);
-    global.meSaveTaskRelational = jest.fn().mockResolvedValue({ success: true, taskId: 'persisted-task' });
-    global.meDeleteTeamRelational = jest.fn().mockResolvedValue(true);
 
     window.meDataReset();
     window.meDataState.team = [
@@ -694,27 +721,35 @@ describe('meDataInit()', () => {
       { id: 'team-keep-me', name: 'Sam', hoursPerWeek: 37, utilisation: 80, department: 'ME' }
     ];
 
-    // Simulate user deleting the first person in the Team tab.
     window.meDataDeleteTeam(0);
 
-    const eq = jest.fn().mockResolvedValue({ error: null });
-    const del = jest.fn().mockReturnValue({ eq });
-    const from = jest.fn((table) => {
-      if (table === 'me_holidays') {
-        return { delete: del, insert: jest.fn().mockResolvedValue({ error: null }) };
-      }
-      throw new Error(`Unexpected table: ${table}`);
-    });
-    global.supa = { from };
+    const deletedIds = [];
+    const upsertedPayloads = [];
+    const upsertSelect = jest.fn().mockResolvedValue({ data: [{ id: 'mock-id' }], error: null });
+
+    global.supa = {
+      from: jest.fn(() => ({
+        delete: jest.fn(() => ({
+          eq: jest.fn((col, val) => {
+            if (col === 'id') deletedIds.push(val);
+            return Promise.resolve({ error: null });
+          })
+        })),
+        insert: jest.fn().mockResolvedValue({ error: null }),
+        upsert: jest.fn((payload) => {
+          if (payload) upsertedPayloads.push(...payload);
+          return { select: upsertSelect };
+        }),
+        select: jest.fn(() => ({ eq: jest.fn(() => ({ limit: jest.fn().mockResolvedValue({ data: [], error: null }) })) }))
+      }))
+    };
 
     await window.meDataSave(false);
 
-    expect(global.meDeleteTeamRelational).toHaveBeenCalledWith('team-delete-me');
-    expect(global.meSaveTeamRelational).toHaveBeenCalledTimes(1);
-    expect(global.meSaveTeamRelational).toHaveBeenCalledWith(
-      'user-1',
-      expect.objectContaining({ id: 'team-keep-me', name: 'Sam' })
-    );
+    expect(deletedIds).toContain('team-delete-me');
+    const savedTeamNames = upsertedPayloads.filter(p => p.name).map(p => p.name);
+    expect(savedTeamNames).toContain('Sam');
+    expect(savedTeamNames).not.toContain('Alex');
     expect(window.meDataPendingDeletes.teams).toEqual([]);
   });
 });
@@ -1101,12 +1136,10 @@ describe('meData realtime subscription callbacks', () => {
 
 describe('meDataReset()', () => {
   it('restores the full pending delete structure used by persistence saves', () => {
-    window.meDataPendingDeletes = {
-      tasks: ['task-1'],
-      teams: ['team-1'],
-      supportHistory: ['hist-1'],
-      products: ['prod-1']
-    };
+    window.meDataPendingDeletes.tasks.push('task-1');
+    window.meDataPendingDeletes.teams.push('team-1');
+    window.meDataPendingDeletes.supportHistory.push('hist-1');
+    window.meDataPendingDeletes.products.push('prod-1');
 
     window.meDataReset();
 

@@ -1,14 +1,10 @@
-#!/usr/bin/env node
+import fs from 'node:fs';
+import path from 'node:path';
+import childProcess from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-/**
- * Syntax Validator
- * Validates app JavaScript files with Node's real parser so the quality
- * checks only fail on actual syntax errors, not heuristic false positives.
- */
-
-const fs = require('fs');
-const path = require('path');
-const childProcess = require('child_process');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function walkDir(dir, ext = '.js', exclude = ['node_modules', '.git', 'tests']) {
   const files = [];
