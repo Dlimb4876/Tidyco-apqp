@@ -3,7 +3,7 @@
 // ═══════════════════════════════════
 
 import { createClient } from '@supabase/supabase-js'
-import { SUPA_URL, SUPA_KEY } from './config.js'
+import { SUPA_URL, SUPA_KEY } from './config.public.js'
 
 export const supabase = createClient(SUPA_URL, SUPA_KEY)
 

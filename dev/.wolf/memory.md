@@ -213,6 +213,8 @@
 
 | 2026-03-21 | Plans folder cleanup | plans/, plans/MASTER_PLAN.md, plans/NPI_PROJECT_FLOW_GUIDE.md, supabase/mcs_changes_2step_migration.sql | Removed stale completed plan/archive files and kept only active reference docs in `plans/` | ~2200 tok |
 
+| 12:45 | Fix hosted dev bootstrap config 404 | core/js/supa.js, core/js/config.public.js, core/js/config.example.js, README.md, TESTING_STRATEGY.md, CHANGELOG.md, .wolf/anatomy.md, .wolf/cerebrum.md, .wolf/buglog.json | Switched browser startup to tracked public Supabase config so hosted pages load without local config.js and `doLogin` can be wired | ~260 tok |
+
 | 2026-03-21 | Dark mode accessibility audit + fixes | core/css/components.css, core/css/main.css, portals/settings/css/settings.css | Fixed 2 WCAG AA contrast failures and 8 hardcoded light-palette colours | ~3500 tok |
 
 | 2026-03-21 | Fix tab URL memory for ME/ProdCap/PM capacity sub-tabs | me-capacity.js, prod-capacity.js, pm-capacity.js, navigation.js, app.js | meSetTab/setProdCapTab/pmSetTab now write met=/pct=/pmt= to URL; app.js+popstate restore them on refresh | ~400 tok |

@@ -33,6 +33,10 @@
 - `test-holidays.html` — Test Bank Holidays 2026 (~1252 tok)
 - `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~6555 tok)
 
+## core/js/
+
+- `config.public.js` — Browser-safe Supabase URL + publishable key for hosted/static bootstrap (~73 tok)
+
 ## .claude/
 
 - `AGENTS_QUICKSTART.md` — Agent Quickstart Guide (~1930 tok)

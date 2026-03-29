@@ -43,6 +43,17 @@ If you just want to open the site in your browser for debugging, you do not need
 
 Press `Ctrl+C` in the launcher window when you want to stop the local server.
 
+### Supabase browser config
+
+The browser app now reads `core/js/config.public.js` for its Supabase URL and
+publishable key.
+
+- This file is committed on purpose so hosted/dev pages do not 404 on startup
+- Do not make the live site depend on a private local `core/js/config.js`
+- If you need to point your own machine at a different project temporarily, use
+  `core/js/config.example.js` as a reference and change `config.public.js`
+  deliberately
+
 ---
 
 ## Responsive Design
@@ -180,7 +191,9 @@ These links are edited directly in the PFD table and used to build the graphical
 │   └── /js
 │       ├── app.js                    # Entry point and session initialisation
 │       ├── auth.js                   # Supabase authentication
+│       ├── config.public.js          # Browser-safe Supabase URL + publishable key
 │       ├── db.js                     # Persistence and data migration
+│       ├── supa.js                   # Shared Supabase client wrapper
 │       └── state.js                  # Global state and constant definitions
 ├── /me-hub                           # ME Department Hub (standalone shadow portal)
 │   ├── index.html                    # Standalone entry — own auth, CSS, JS
