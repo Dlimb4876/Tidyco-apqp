@@ -1,5 +1,8 @@
-const fs = require('fs')
-const path = require('path')
+import { readFileSync } from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 describe('NPI relational project UUID resolution', () => {
   beforeEach(() => {
@@ -30,7 +33,7 @@ describe('NPI relational project UUID resolution', () => {
       })
     }
 
-    const script = fs.readFileSync(
+    const script = readFileSync(
       path.resolve(__dirname, '../portals/product-development/npi/js/npi-data-relational.js'),
       'utf8'
     )
@@ -73,7 +76,7 @@ describe('NPI relational project UUID resolution', () => {
       })
     }
 
-    const script = fs.readFileSync(
+    const script = readFileSync(
       path.resolve(__dirname, '../portals/product-development/npi/js/npi-data-relational.js'),
       'utf8'
     )

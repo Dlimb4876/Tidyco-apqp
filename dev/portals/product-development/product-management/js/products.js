@@ -4,12 +4,35 @@
  * Uses inline editing — no modals
  */
 
+import { getFamilies } from '../../../../core/js/state.js'
+import { esc, canEdit, showToast } from '../../../../utils/js/helpers.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+import {
+  productsDataGetAll,
+  productsDataAddProduct,
+  productsDataUpdateProduct,
+  productsDataDeleteProduct,
+  productsDataGetRelatedDataCounts
+} from './products-data.js'
+import { renderAllProductsTrends } from './trends-chart.js'
+
+let productsSetProductDevelopmentTab = null
+
+export function setProductsTabSetter(setter) {
+  productsSetProductDevelopmentTab = typeof setter === 'function' ? setter : null
+}
+
 // Track which product row is currently being edited
 let productsEditingId = null;
 let productsPortalListenerRoot = null;
 
 // Track which products sub-tab is active so re-renders restore the correct tab
 let productsActiveTab = 'list'; // 'list' | 'trends'
+
+export function setProductsActiveTab(tab) {
+  productsActiveTab = tab === 'trends' ? 'trends' : 'list'
+}
 
 // 1.7 Persist search state across renders
 const PRODUCTS_SEARCH_KEY = 'products_search_state';
@@ -50,7 +73,7 @@ let productsFilters = loadProductsFilters();
 /**
  * Get products portal HTML
  */
-function renderProductsPortalHTML() {
+export function renderProductsPortalHTML() {
   const tab = productsActiveTab || 'list';
   return `
     <div class="products-portal" id="productsPortalRoot">
@@ -89,7 +112,7 @@ function renderProductsPortalHTML() {
 /**
  * Setup products portal after rendering
  */
-function renderProductsPortalSetup() {
+export function renderProductsPortalSetup() {
   setupProductsEventListeners();
   if (productsActiveTab === 'trends') {
     renderProductsTrends();
@@ -334,7 +357,7 @@ async function productsAddRow() {
 
   try {
     await productsDataAddProduct(productData);
-    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts()
     // 1.6 Clear fields for quick sequential entry; keep family/location/status
     const resetFields = {
       'pNew-name': '', 'pNew-partNumber': '', 'pNew-customer': '',
@@ -393,7 +416,7 @@ async function productsSaveEdit(productId) {
 
   try {
     await productsDataUpdateProduct(productId, updates);
-    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts()
   } catch (err) {
     showToast('Error saving product: ' + err.message, 'error');
   }
@@ -422,9 +445,7 @@ async function productsDeleteRow(productId, productName) {
   // Get counts of related data
   let counts = null;
   try {
-    if (typeof window.productsDataGetRelatedDataCounts === 'function') {
-      counts = await window.productsDataGetRelatedDataCounts(productId);
-    }
+    counts = await productsDataGetRelatedDataCounts(productId)
   } catch (err) {
     console.warn('Could not fetch related data counts:', err);
   }
@@ -475,7 +496,7 @@ async function productsDeleteRow(productId, productName) {
   try {
     showToast('Deleting product and all related data...', 'info');
     await productsDataDeleteProduct(productId);
-    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts()
     if (productsEditingId === productId) productsEditingId = null;
     renderProductsList();
     showToast(`Product "${productName}" and all related data deleted successfully`, 'success');
@@ -505,7 +526,7 @@ function setupProductsEventListeners() {
       const action = actionEl.dataset.action;
 
       if (action === 'products-back-root') {
-        setProductDevelopmentTab('root');
+        if (productsSetProductDevelopmentTab) productsSetProductDevelopmentTab('root')
         render();
         return;
       }

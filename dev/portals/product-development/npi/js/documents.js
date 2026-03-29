@@ -4,6 +4,12 @@
 // All functions under npi.docs.*
 // ═══════════════════════════════════
 
+import { prog } from '../../../../core/js/state.js'
+import { esc, canEdit, emptyState } from '../../../../utils/js/helpers.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { npi } from './npi-shared.js'
+import { npiData } from './npi-data.js'
+
 const DOC_TYPES = ['Drawing', 'Specification', 'Test Plan', 'Work Instruction', 'Report', 'Other']
 const DOC_STATUSES = ['Draft', 'Issue']
 
@@ -73,15 +79,21 @@ npi.docs.render = function() {
 }
 
 npi.docs.add = function() {
-  npi.data.docs.add()
+  npiData.docs.add()
   render()
 }
 
 npi.docs.upd = function(i, f, v) {
-  npi.data.docs.upd(i, f, v)
+  npiData.docs.upd(i, f, v)
 }
 
 npi.docs.del = function(i) {
-  npi.data.docs.del(i)
+  npiData.docs.del(i)
   render()
 }
+
+export const npiDocs = npi.docs
+export const renderDocuments = npi.docs.render
+export const addDocument = npi.docs.add
+export const updateDocument = npi.docs.upd
+export const deleteDocument = npi.docs.del

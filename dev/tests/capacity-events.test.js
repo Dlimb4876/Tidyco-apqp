@@ -1,10 +1,159 @@
-const fs = require('fs')
-const path = require('path')
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 describe('capacity events production work area', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    // capacity-events.js is a module that depends on other modules
+    // We need to mock its dependencies before importing
+    global.appState = {}
+    global.canEdit = () => true
+    global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    global.isEditingInlineCell = () => false
+    global.preserveInputCaretAfterRender = () => {}
+    global.showModal = () => {}
+    global.navigate = () => {}
+    global.render = () => {}
+    global.CAP_DEFAULT_HOURS_PER_WEEK = 37.5
+    global.capToggleHoliday = () => {}
+    global.capOpenHeatmapDetail = () => {}
+    global.capCloseHeatmapDetail = () => {}
+    global.capTasksFilters = { ME: { search: '' }, PM: { search: '' }, LOG: { search: '' }, UNIT6: { search: '' } }
+    global.capTaskEditingId = { ME: null, PM: null, LOG: null, UNIT6: null }
+    global.capTasksSort = { ME: { column: '', direction: 'asc' }, PM: { column: '', direction: 'asc' } }
+    global.capGetSortIcon = () => '↕'
+    global.capProductsTableState = {}
+    global.capProductsSetDraftValue = () => {}
+    global.capProductsClearDraft = () => {}
+    global.capProductsSetSearch = () => {}
+    global.capProductsSetFamilyFilter = () => {}
+    global.capProductsSetSort = () => {}
+    global.capProductsSortByColumn = () => {}
+    global.capProductsToggleSortDir = () => {}
+    global.capProductsClearFilters = () => {}
+    global.capProductsStartHistoryEdit = () => {}
+    global.capProductsCancelHistoryEdit = () => {}
+    global.capProductsSaveHistoryEdit = () => {}
+    global.capProductsToggleStatusFilter = () => {}
+    global.capProductsToggleHistory = () => {}
+    global.capProductsBulkSaveChanges = () => {}
+    global.capProductsUpdateHistoryEditDraft = () => {}
+    global.capProductLoadTableState = {}
+    global.capProductLoadSetSearch = () => {}
+    global.capProductLoadSetFamilyFilter = () => {}
+    global.capProductLoadSetSort = () => {}
+    global.capProductLoadToggleSortDir = () => {}
+    global.capProductLoadClearFilters = () => {}
+    global.setCapacityTab = () => {}
+    global.meDataAddTeam = () => {}
+    global.meDataUpdateTeam = () => {}
+    global.meDataDeleteTeam = () => {}
+    global.meDataAddTask = () => {}
+    global.meDataUpdateTask = () => {}
+    global.meDataDeleteTask = () => {}
+    global.meDataUpdateProduct = () => {}
+    global.meDataGetProducts = () => []
+    global.meDataGetTasks = () => []
+    global.meDataGetTeam = () => []
+    global.meDataGetHolidays = () => []
+    global.meDataAddHoliday = () => {}
+    global.meDataUpdateHoliday = () => {}
+    global.meDataDeleteHoliday = () => {}
+    global.meDataDeleteProductSupportHistoryEntry = () => {}
+    global.meSetTab = () => {}
+    global.meRefreshCurrentTab = () => {}
+    global.meOnSave = () => {}
+    global.meDebouncedSave = () => {}
+    global.meOnMonthChange = () => {}
+    global.meOnPrevMonth = () => {}
+    global.meOnNextMonth = () => {}
+    global.pmDataAddTeam = () => {}
+    global.pmDataUpdateTeam = () => {}
+    global.pmDataDeleteTeam = () => {}
+    global.pmDataAddTask = () => {}
+    global.pmDataUpdateTask = () => {}
+    global.pmDataDeleteTask = () => {}
+    global.pmDataUpdateProduct = () => {}
+    global.pmDataGetProducts = () => []
+    global.pmDataGetTasks = () => []
+    global.pmDataGetTeam = () => []
+    global.pmDataGetHolidays = () => []
+    global.pmDataAddHoliday = () => {}
+    global.pmDataUpdateHoliday = () => {}
+    global.pmDataDeleteHoliday = () => {}
+    global.pmDataDeleteProductSupportHistoryEntry = () => {}
+    global.pmSetTab = () => {}
+    global.pmRefreshCurrentTab = () => {}
+    global.pmOnSave = () => {}
+    global.pmDebouncedSave = () => {}
+    global.pmOnMonthChange = () => {}
+    global.pmOnPrevMonth = () => {}
+    global.pmOnNextMonth = () => {}
+    global.logDataAddTeam = () => {}
+    global.logDataUpdateTeam = () => {}
+    global.logDataDeleteTeam = () => {}
+    global.logDataAddTask = () => {}
+    global.logDataUpdateTask = () => {}
+    global.logDataDeleteTask = () => {}
+    global.logDataUpdateProduct = () => {}
+    global.logDataGetProducts = () => []
+    global.logDataGetTasks = () => []
+    global.logDataGetTeam = () => []
+    global.logDataGetHolidays = () => []
+    global.logDataAddHoliday = () => {}
+    global.logDataUpdateHoliday = () => {}
+    global.logDataDeleteHoliday = () => {}
+    global.logDataDeleteProductSupportHistoryEntry = () => {}
+    global.logSetTab = () => {}
+    global.logRefreshCurrentTab = () => {}
+    global.logOnSave = () => {}
+    global.logDebouncedSave = () => {}
+    global.logOnMonthChange = () => {}
+    global.logOnPrevMonth = () => {}
+    global.logOnNextMonth = () => {}
+    global.unit6DataAddTeam = () => {}
+    global.unit6DataUpdateTeam = () => {}
+    global.unit6DataDeleteTeam = () => {}
+    global.unit6DataAddTask = () => {}
+    global.unit6DataUpdateTask = () => {}
+    global.unit6DataDeleteTask = () => {}
+    global.unit6DataUpdateProduct = () => {}
+    global.unit6DataGetProducts = () => []
+    global.unit6DataGetTasks = () => []
+    global.unit6DataGetTeam = () => []
+    global.unit6DataGetHolidays = () => []
+    global.unit6DataAddHoliday = () => {}
+    global.unit6DataUpdateHoliday = () => {}
+    global.unit6DataDeleteHoliday = () => {}
+    global.unit6DataDeleteProductSupportHistoryEntry = () => {}
+    global.unit6SetTab = () => {}
+    global.unit6RefreshCurrentTab = () => {}
+    global.unit6OnSave = () => {}
+    global.unit6DebouncedSave = () => {}
+    global.unit6OnMonthChange = () => {}
+    global.unit6OnPrevMonth = () => {}
+    global.unit6OnNextMonth = () => {}
+    global.setProdCapTab = () => {}
+    global.prodCapShiftMonth = () => {}
+    global.prodCapResetMonthOffset = () => {}
+    global.prodCapPendingRealTimeUpdate = null
+    global.setProdCapPendingRealTimeUpdate = () => {}
+    global.prodCapSetWorkArea = () => {}
+    global.prodCapSettingsFillForward = () => {}
+    global.prodCapSettingsClearAll = () => {}
+    global.prodCapSettingsSetUtilization = () => {}
+    global.prodCapSettingsUpdate = () => {}
+    global.prodCapSettingsNavKey = () => {}
+    global.prodCapRefreshCurrentTab = () => {}
+    global.setProdCapDetailFilter = () => {}
+    global.flushDeferred = () => {}
+
+    // Import the module - in test environment we need to mock dependencies first
+    // Since capacity-events exports via module pattern, we'll test the internal functions via the window object
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {
@@ -27,9 +176,9 @@ describe('capacity events production work area', () => {
 })
 
 describe('capacity events task search', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {
@@ -136,9 +285,9 @@ describe('capacity events task search', () => {
 })
 
 describe('capacity events task disable toggle', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {
@@ -235,9 +384,9 @@ describe('capacity events task disable toggle', () => {
 })
 
 describe('capacity events product search', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {
@@ -311,9 +460,9 @@ describe('capacity events product search', () => {
 })
 
 describe('capacity events product support drafts', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {
@@ -397,9 +546,9 @@ describe('capacity events product support drafts', () => {
 })
 
 describe('capacity events product support sorting', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {
@@ -428,9 +577,9 @@ describe('capacity events product support sorting', () => {
 })
 
 describe('capacity events product support history routing', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {
@@ -522,9 +671,9 @@ describe('capacity events product support history routing', () => {
 })
 
 describe('capacity events month routing', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {
@@ -565,9 +714,9 @@ describe('capacity events month routing', () => {
 })
 
 describe('capacity events task edit safety with filtered views', () => {
-  beforeAll(() => {
-    const script = fs.readFileSync(path.resolve(__dirname, '../portals/capacity/js/capacity-events.js'), 'utf8')
-    eval(script)
+  beforeAll(async () => {
+    const module = await import('../portals/capacity/js/capacity-events.js')
+    window.capacityEvents = module
   })
 
   beforeEach(() => {

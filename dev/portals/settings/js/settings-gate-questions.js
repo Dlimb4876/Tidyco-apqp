@@ -3,6 +3,11 @@
 // Depends on: settings.js (shared helpers), supabase (auth.js)
 // ═══════════════════════════════════════════════════════════════
 
+import { GATE_DEFS, currentUserRole } from '../../../core/js/state.js'
+import { supabase as supa } from '../../../core/js/supa.js'
+import { esc, isAdmin, showToast } from '../../../utils/js/helpers.js'
+import { settingsLoadingState } from './settings.js'
+
 let settingsGateQuestionsLoading = false;
 let settingsGateQuestionsError   = null;
 let settingsGateQuestionsData    = null; // array of rows from gate_question_definitions
@@ -10,7 +15,7 @@ let settingsGateQuestionsEditing = null; // { id } of row currently in edit mode
 let settingsGateQuestionsAdding  = null; // gate_num of gate currently showing add form
 
 // ── Data loading ──────────────────────────────────────────────
-async function settingsEnsureGateQuestionsData(forceReload = false) {
+export async function settingsEnsureGateQuestionsData(forceReload = false) {
   if (settingsGateQuestionsLoading) return;
   if (!forceReload && settingsGateQuestionsData !== null) {
     renderSettingsGateQuestionsTab();
@@ -42,7 +47,7 @@ async function settingsEnsureGateQuestionsData(forceReload = false) {
 }
 
 // ── Render ─────────────────────────────────────────────────────
-function renderSettingsGateQuestionsTab() {
+export function renderSettingsGateQuestionsTab() {
   const container = document.getElementById('settingsGateQuestionsTab');
   if (!container) return;
 
@@ -166,7 +171,7 @@ function renderSettingsGateQuestionsTab() {
 }
 
 // ── Add ────────────────────────────────────────────────────────
-function settingsGateQuestionsStartAdd(gateNum) {
+export function settingsGateQuestionsStartAdd(gateNum) {
   if (!isAdmin()) { showToast('Only admins can add gate questions.', 'error'); return; }
   settingsGateQuestionsAdding  = Number(gateNum);
   settingsGateQuestionsEditing = null;
@@ -177,12 +182,12 @@ function settingsGateQuestionsStartAdd(gateNum) {
   });
 }
 
-function settingsGateQuestionsCancelAdd() {
+export function settingsGateQuestionsCancelAdd() {
   settingsGateQuestionsAdding = null;
   renderSettingsGateQuestionsTab();
 }
 
-async function settingsGateQuestionsConfirmAdd(gateNum) {
+export async function settingsGateQuestionsConfirmAdd(gateNum) {
   if (!isAdmin()) { showToast('Only admins can add gate questions.', 'error'); return; }
 
   const input = document.getElementById(`gq-add-text-${gateNum}`);
@@ -222,19 +227,19 @@ async function settingsGateQuestionsConfirmAdd(gateNum) {
 }
 
 // ── Edit ───────────────────────────────────────────────────────
-function settingsGateQuestionsStartEdit(id) {
+export function settingsGateQuestionsStartEdit(id) {
   if (!isAdmin()) { showToast('Only admins can edit gate questions.', 'error'); return; }
   settingsGateQuestionsEditing = id;
   settingsGateQuestionsAdding  = null;
   renderSettingsGateQuestionsTab();
 }
 
-function settingsGateQuestionsCancelEdit() {
+export function settingsGateQuestionsCancelEdit() {
   settingsGateQuestionsEditing = null;
   renderSettingsGateQuestionsTab();
 }
 
-async function settingsGateQuestionsSaveEdit(id) {
+export async function settingsGateQuestionsSaveEdit(id) {
   if (!isAdmin()) { showToast('Only admins can edit gate questions.', 'error'); return; }
 
   const textEl = document.getElementById(`gq-edit-text-${id}`);
@@ -264,7 +269,7 @@ async function settingsGateQuestionsSaveEdit(id) {
 }
 
 // ── Delete ─────────────────────────────────────────────────────
-async function settingsGateQuestionsDelete(id, text) {
+export async function settingsGateQuestionsDelete(id, text) {
   if (!isAdmin()) { showToast('Only admins can delete gate questions.', 'error'); return; }
   if (!confirm(`Delete this question?\n\n"${text}"\n\nThis cannot be undone.`)) return;
 
@@ -284,7 +289,7 @@ async function settingsGateQuestionsDelete(id, text) {
 }
 
 // ── Cleanup ────────────────────────────────────────────────────
-function teardownSettingsGateQuestions() {
+export function teardownSettingsGateQuestions() {
   settingsGateQuestionsLoading = false;
   settingsGateQuestionsError   = null;
   settingsGateQuestionsData    = null;

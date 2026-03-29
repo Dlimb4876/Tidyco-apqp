@@ -2,15 +2,38 @@
 // operations-dashboard-forecast-view.js — forecast visuals
 // ═══════════════════════════════════
 
+import { appState } from '../../../core/js/state.js'
+import { canEdit, esc } from '../../../utils/js/helpers.js'
+import { getWorkAreaOptions } from '../../capacity/production/js/work-areas-data.js'
+import {
+	prodCapGet24MonthKeys,
+	prodCapMonthLabelFull
+} from '../../capacity/production/js/prod-capacity-data.js'
+import {
+	opsMetricCard
+} from './operations-dashboard-render-core.js'
+import {
+	opsToNumber,
+	opsFormatHours
+} from './operations-dashboard-metrics.js'
+import {
+	opsForecastProbabilityBandFromPct,
+	opsForecastProbabilityLabel
+} from './operations-forecast-data.js'
+import {
+	operationsDashboardState,
+	opsForecastDomKey
+} from './operations-dashboard-state.js'
+
 function opsRenderForecastRows(rows) {
 	const safeRows = Array.isArray(rows) ? rows : [];
 
 	// Read filter/sort state
-	const filterText = (typeof opsForecastFilterText !== 'undefined' ? opsForecastFilterText : '').trim().toLowerCase();
-	const filterStatus = typeof opsForecastFilterStatus !== 'undefined' ? opsForecastFilterStatus : '';
-	const showArchived = typeof opsForecastShowArchived !== 'undefined' ? opsForecastShowArchived : false;
-	const sortCol = typeof opsForecastSortCol !== 'undefined' ? opsForecastSortCol : '';
-	const sortDir = typeof opsForecastSortDir !== 'undefined' ? opsForecastSortDir : 'asc';
+	const filterText = (operationsDashboardState.opsForecastFilterText || '').trim().toLowerCase();
+	const filterStatus = operationsDashboardState.opsForecastFilterStatus || '';
+	const showArchived = operationsDashboardState.opsForecastShowArchived || false;
+	const sortCol = operationsDashboardState.opsForecastSortCol || '';
+	const sortDir = operationsDashboardState.opsForecastSortDir || 'asc';
 
 	// Filter rows
 	let displayRows = safeRows.filter(row => {
@@ -54,10 +77,10 @@ function opsRenderForecastRows(rows) {
 				name="ops_forecast_filter_text"
 				type="text"
 				placeholder="Filter by title…"
-				value="${esc(opsForecastFilterText || '')}"
-				onchange="opsForecastSetFilterText(this.value)"
+				value="${esc(operationsDashboardState.opsForecastFilterText || '')}"
+				data-action="ops-forecast-filter-text"
 			/>
-			<select class="ops-forecast-filter-status" name="ops_forecast_filter_status" onchange="opsForecastSetFilterStatus(this.value)">
+			<select class="ops-forecast-filter-status" name="ops_forecast_filter_status" data-action="ops-forecast-filter-status">
 				<option value="">All statuses</option>
 				<option value="identified" ${filterStatus === 'identified' ? 'selected' : ''}>Identified</option>
 				<option value="quoted" ${filterStatus === 'quoted' ? 'selected' : ''}>Quoted</option>
@@ -66,7 +89,7 @@ function opsRenderForecastRows(rows) {
 				<option value="active" ${filterStatus === 'active' ? 'selected' : ''}>Active</option>
 				<option value="lost" ${filterStatus === 'lost' ? 'selected' : ''}>Lost</option>
 			</select>
-			<button class="btn btn-ghost ops-forecast-archived-toggle" onclick="opsForecastToggleArchived()">
+			<button class="btn btn-ghost ops-forecast-archived-toggle" data-action="ops-forecast-toggle-archived">
 				${showArchived ? 'Hide Archived' : `Show Archived${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
 			</button>
 		</div>`;
@@ -83,38 +106,38 @@ function opsRenderForecastRows(rows) {
 			<table class="ops-forecast-table">
 				<thead>
 					<tr>
-						<th class="ops-sortable" onclick="opsForecastSetSort('title')">Title ${sortIcon('title')}</th>
-						<th class="ops-sortable" onclick="opsForecastSetSort('status')">Status ${sortIcon('status')}</th>
-						<th class="ops-sortable" onclick="opsForecastSetSort('area')">Area ${sortIcon('area')}</th>
-						<th class="ops-sortable" onclick="opsForecastSetSort('start')">Start ${sortIcon('start')}</th>
-						<th class="ops-sortable" onclick="opsForecastSetSort('end')">End ${sortIcon('end')}</th>
-						<th class="ops-sortable" onclick="opsForecastSetSort('hours')">Total Hours ${sortIcon('hours')}</th>
-						<th class="ops-sortable" onclick="opsForecastSetSort('probability')">Probability ${sortIcon('probability')}</th>
+						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="title">Title ${sortIcon('title')}</th>
+						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="status">Status ${sortIcon('status')}</th>
+						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="area">Area ${sortIcon('area')}</th>
+						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="start">Start ${sortIcon('start')}</th>
+						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="end">End ${sortIcon('end')}</th>
+						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="hours">Total Hours ${sortIcon('hours')}</th>
+						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="probability">Probability ${sortIcon('probability')}</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					${displayRows.map(row => {
-						const inlineMode = opsForecastInlineEditId === row.id;
+						const inlineMode = operationsDashboardState.opsForecastInlineEditId === row.id;
 						const totalHours = opsToNumber(row.total_hours, 0);
 						const probability = Math.max(0, Math.min(100, opsToNumber(row.probability_pct, 0)));
-						const probabilityBand = typeof window.opsForecastProbabilityBandFromPct === 'function'
-							? window.opsForecastProbabilityBandFromPct(probability)
+						const probabilityBand = typeof opsForecastProbabilityBandFromPct === 'function'
+							? opsForecastProbabilityBandFromPct(probability)
 							: (probability <= 33 ? 'low' : probability <= 66 ? 'medium' : 'high');
-						const probabilityLabel = typeof window.opsForecastProbabilityLabel === 'function'
-							? window.opsForecastProbabilityLabel(probabilityBand)
+						const probabilityLabel = typeof opsForecastProbabilityLabel === 'function'
+							? opsForecastProbabilityLabel(probabilityBand)
 							: (probabilityBand.charAt(0).toUpperCase() + probabilityBand.slice(1));
 						const key = opsForecastDomKey(row.id);
 						return `
 							<tr>
 								<td>
 									${inlineMode
-										? `<input class="ops-forecast-inline" id="opsForecastInline_${key}_title" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')" value="${esc(row.title || '')}" />`
+										? `<input class="ops-forecast-inline" id="opsForecastInline_${key}_title" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.title || '')}" />`
 										: esc(row.title || '-')}
 								</td>
 								<td>
 									${inlineMode
-										? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_status" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')">
+										? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_status" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}">
 												<option value="identified" ${(row.status || '') === 'identified' ? 'selected' : ''}>Identified</option>
 												<option value="quoted" ${(row.status || '') === 'quoted' ? 'selected' : ''}>Quoted</option>
 												<option value="negotiation" ${(row.status || '') === 'negotiation' ? 'selected' : ''}>Negotiation</option>
@@ -127,27 +150,27 @@ function opsRenderForecastRows(rows) {
 								</td>
 								<td>
 									${inlineMode
-									? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_work_area" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')"><option value="">— Unassigned</option>${getWorkAreaOptions(row.work_area || '')}</select>`
+									? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_work_area" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}"><option value="">— Unassigned</option>${getWorkAreaOptions(row.work_area || '')}</select>`
 										: esc(row.work_area || 'Unassigned')}
 								</td>
 								<td>
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="date" id="opsForecastInline_${key}_start_date" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')" value="${esc(row.start_date || '')}" />`
+										? `<input class="ops-forecast-inline" type="date" id="opsForecastInline_${key}_start_date" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.start_date || '')}" />`
 										: esc(row.start_date || '-')}
 								</td>
 								<td>
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="date" id="opsForecastInline_${key}_due_date" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')" value="${esc(row.due_date || '')}" />`
+										? `<input class="ops-forecast-inline" type="date" id="opsForecastInline_${key}_due_date" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.due_date || '')}" />`
 										: esc(row.due_date || '-')}
 								</td>
 								<td>
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="number" min="0" step="1" id="opsForecastInline_${key}_total_hours" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')" value="${esc(totalHours)}" />`
+										? `<input class="ops-forecast-inline" type="number" min="0" step="1" id="opsForecastInline_${key}_total_hours" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(totalHours)}" />`
 										: esc(opsFormatHours(totalHours))}
 								</td>
 								<td>
 									${inlineMode
-										? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_probability_band" onkeydown="opsForecastInlineKeydown(event, '${esc(row.id)}')">
+										? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_probability_band" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}">
 												<option value="low" ${probabilityBand === 'low' ? 'selected' : ''}>Low</option>
 												<option value="medium" ${probabilityBand === 'medium' ? 'selected' : ''}>Medium</option>
 												<option value="high" ${probabilityBand === 'high' ? 'selected' : ''}>High</option>
@@ -156,11 +179,11 @@ function opsRenderForecastRows(rows) {
 								</td>
 								<td class="ops-forecast-actions">
 									${inlineMode
-										? `<button class="btn btn-primary" onclick="opsForecastSaveInline('${esc(row.id)}')">Save</button>
-											 <button class="btn btn-ghost" onclick="opsForecastCancelInline()">Cancel</button>`
-										: (canEdit() ? `<button class="btn btn-ghost" onclick="opsForecastStartInlineEdit('${esc(row.id)}')">Edit</button>` : '')}
-									${canEdit() ? `<button class="btn btn-ghost" onclick="opsForecastSetStatus('${esc(row.id)}', 'archived')">Archive</button>
-									<button class="btn btn-ghost" onclick="opsForecastDelete('${esc(row.id)}')">Delete</button>` : ''}
+										? `<button class="btn btn-primary" data-action="ops-forecast-save-inline" data-id="${esc(row.id)}">Save</button>
+											 <button class="btn btn-ghost" data-action="ops-forecast-cancel-inline">Cancel</button>`
+										: (canEdit() ? `<button class="btn btn-ghost" data-action="ops-forecast-start-inline" data-id="${esc(row.id)}">Edit</button>` : '')}
+									${canEdit() ? `<button class="btn btn-ghost" data-action="ops-forecast-archive" data-id="${esc(row.id)}">Archive</button>
+									<button class="btn btn-ghost" data-action="ops-forecast-delete" data-id="${esc(row.id)}">Delete</button>` : ''}
 								</td>
 							</tr>
 						`;
@@ -187,13 +210,13 @@ function opsRenderForecastView(metrics) {
 	const utilTone = forecast.utilisation24 >= 95 ? 'critical' : forecast.utilisation24 >= 85 ? 'watch' : 'good';
 	const headroomTone = forecast.headroom24h < 0 ? 'critical' : forecast.headroom24h < 250 ? 'watch' : 'good';
 	const modeText = forecast.mode === 'remote' ? 'Connected to shared forecast table' : 'Using local fallback mode';
-	const editingRow = (Array.isArray(forecast.rows) ? forecast.rows : []).find(row => row.id === opsForecastEditingId) || null;
+	const editingRow = (Array.isArray(forecast.rows) ? forecast.rows : []).find(row => row.id === operationsDashboardState.opsForecastEditingId) || null;
 	const formTitle = editingRow ? 'Edit Opportunity' : 'Add Opportunity';
 	const formSub = editingRow
 		? 'Update this opportunity and save changes to the forecast layer'
 		: 'Create a new forecast entry from active tenders and opportunities';
-	const editingProbabilityBand = typeof window.opsForecastProbabilityBandFromPct === 'function'
-		? window.opsForecastProbabilityBandFromPct(editingRow?.probability_pct ?? 0)
+	const editingProbabilityBand = typeof opsForecastProbabilityBandFromPct === 'function'
+		? opsForecastProbabilityBandFromPct(editingRow?.probability_pct ?? 0)
 		: ((editingRow?.probability_pct ?? 0) <= 33 ? 'low' : (editingRow?.probability_pct ?? 0) <= 66 ? 'medium' : 'high');
 
 	const forecastMonthLabel = typeof prodCapGet24MonthKeys === 'function' && typeof prodCapMonthLabelFull === 'function'
@@ -226,10 +249,10 @@ function opsRenderForecastView(metrics) {
 						<span>Baseline demand plus low, medium and high probability opportunity layers</span>
 					</div>
 					<div class="pc-window-controls" style="margin-bottom: 0; padding: 0; border: none; background: none;">
-						<button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('prev')" title="View previous month">← Previous</button>
+						<button class="btn btn-sm btn-ghost" data-action="ops-forecast-shift-month" data-direction="prev" title="View previous month">← Previous</button>
 						<div class="pc-window-label">${forecastMonthLabel}</div>
-						<button class="btn btn-sm btn-ghost" onclick="prodCapShiftMonth('next')" title="View next month">Next →</button>
-						${typeof prodCapMonthOffset !== 'undefined' && prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" onclick="prodCapResetMonthOffset()" title="Reset to current month">Reset</button>` : ''}
+						<button class="btn btn-sm btn-ghost" data-action="ops-forecast-shift-month" data-direction="next" title="View next month">Next →</button>
+						${appState.prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-action="ops-forecast-reset-month" title="Reset to current month">Reset</button>` : ''}
 					</div>
 				</div>
 				<div class="ops-forecast-chart-wrap">
@@ -242,7 +265,7 @@ function opsRenderForecastView(metrics) {
 					<h3>${esc(formTitle)}</h3>
 					<span>${esc(formSub)}</span>
 				</div>
-				<form class="ops-forecast-form" onsubmit="opsForecastSubmit(event)">
+				<form class="ops-forecast-form" data-action="ops-forecast-submit">
 					<input type="hidden" name="opportunity_id" value="${esc(editingRow?.id || '')}" />
 					<label>Title<input type="text" name="title" required maxlength="120" value="${esc(editingRow?.title || '')}" /></label>
 					<label>Owner<input type="text" name="owner" maxlength="80" value="${esc(editingRow?.owner || '')}" /></label>
@@ -275,7 +298,7 @@ function opsRenderForecastView(metrics) {
 					</label>
 					<label class="ops-forecast-notes">Notes<textarea name="notes" rows="2" maxlength="400">${esc(editingRow?.notes || '')}</textarea></label>
 					<div class="ops-forecast-form-actions">
-						${editingRow ? '<button class="btn btn-ghost" type="button" onclick="opsForecastCancelEdit()">Cancel Edit</button>' : ''}
+						${editingRow ? '<button class="btn btn-ghost" type="button" data-action="ops-forecast-cancel-edit">Cancel Edit</button>' : ''}
 						<button class="btn btn-primary" type="submit">${editingRow ? 'Save Changes' : 'Add Opportunity'}</button>
 					</div>
 				</form>
@@ -293,18 +316,19 @@ function opsRenderForecastView(metrics) {
 
 function opsRenderForecastChart(forecast) {
 	if (!forecast || !Array.isArray(forecast.monthSeries)) return;
-	if (typeof Chart !== 'function') return;
+	const ChartCtor = globalThis.Chart;
+	if (typeof ChartCtor !== 'function') return;
 
 	const canvas = document.getElementById('opsForecastTrendChart');
 	if (!canvas) return;
 
-	if (opsForecastChart) {
+	if (operationsDashboardState.opsForecastChart) {
 		try {
-			opsForecastChart.destroy();
+			operationsDashboardState.opsForecastChart.destroy();
 		} catch (err) {
 			console.warn('Could not reset operations forecast chart:', err && err.message ? err.message : err);
 		}
-		opsForecastChart = null;
+		operationsDashboardState.opsForecastChart = null;
 	}
 
 	const labels = forecast.monthSeries.map(row => row.label);
@@ -314,7 +338,7 @@ function opsRenderForecastChart(forecast) {
 	const forecastHigh = forecast.monthSeries.map(row => Math.round(row.forecastHigh));
 	const supply = forecast.monthSeries.map(row => Math.round(row.supply));
 
-	opsForecastChart = new Chart(canvas, {
+	operationsDashboardState.opsForecastChart = new ChartCtor(canvas, {
 		type: 'bar',
 		data: {
 			labels,
@@ -389,4 +413,10 @@ function opsRenderForecastChart(forecast) {
 			}
 		}
 	});
+}
+
+export {
+	opsRenderForecastRows,
+	opsRenderForecastView,
+	opsRenderForecastChart
 }

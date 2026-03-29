@@ -14,7 +14,8 @@ npm run check:all                 # Full validation suite (see below)
 
 ### Validation & Checks
 ```bash
-npm run check:load-order          # Verify script load order in index.html
+npm run check:imports             # Verify ESM import/export wiring
+npm run check:esm-coverage        # Track remaining non-ESM files
 npm run check:syntax              # Validate JavaScript syntax
 npm run check:rls                 # Audit RLS policies
 npm run check:subscriptions       # Check realtime cleanup
@@ -44,11 +45,11 @@ npm run wiki:check                # Full wiki validation
 - **Testing**: Jest with jsdom environment
 - **Linting**: ESLint (NPI portal)
 - **Formatting**: Prettier
-- **Script Load Order** (critical): `state.js → auth.js → db.js → helpers.js → navigation.js → realtime.js → portals → app.js`
+- **Bootstrap** (critical): `index.html` should load one module entry (`core/js/main.js`) via `<script type="module">`
 
 ## Hard Rules (Non-Negotiable)
 
-1. **Script Order**: Always preserve exact load order in `index.html`. Verify with `npm run check:load-order`.
+1. **ESM Wiring**: Use named ESM imports/exports for cross-file dependencies. Verify with `npm run check:imports` and `npm run check:esm-coverage`.
 2. **No Duplicate `const`**: Never introduce duplicate variable declarations in the same scope.
 3. **Global State**: Keep mutable state in `core/js/state.js` with defaults initialized.
 4. **HTML Escaping**: Use `esc()` helper for any user data rendered into HTML strings (prevents XSS).
@@ -63,7 +64,7 @@ npm run wiki:check                # Full wiki validation
 ## Code Style & Conventions
 
 ### Imports & Globals
-- No module imports (vanilla JS SPA). All dependencies loaded via `<script>` tags in `index.html`.
+- Use named ESM imports for cross-file dependencies. Avoid `window.*` assignment bridges for module wiring.
 - Global objects available: `supa` (Supabase client), `db`, `currentUser`, `GATE_DEFS`, `FAMILIES`, etc.
 - All ESLint-defined globals listed in `eslint.config.js` for NPI portal scope.
 
@@ -165,7 +166,7 @@ Before committing:
 1. Run `npm test` — ensure all tests pass
 2. Run `npm run check:all` — run full validation suite
 3. Add changelog entry to `CHANGELOG.md`
-4. Verify script order with `npm run check:load-order`
+4. Verify ESM wiring with `npm run check:imports` and `npm run check:esm-coverage`
 
 ## Canonical Detail Rules
 

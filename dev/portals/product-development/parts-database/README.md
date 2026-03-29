@@ -27,7 +27,7 @@ Product Development owns this subsystem. NPI consumes it when a user needs to ad
   Main UI/controller layer for:
   - catalogue rendering
   - picker rendering and selection
-  - inline editing
+  - modal-based add/edit actions (no inline table editing)
   - modal open/save/delete actions
   - realtime catalogue refresh
   - Where Used display

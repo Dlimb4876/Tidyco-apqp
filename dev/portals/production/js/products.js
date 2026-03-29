@@ -1,12 +1,23 @@
 // Product Master List Management
 
-let productMasterDelegationContainer = null;
+import { getFamilies } from '../../../core/js/state.js'
+import { esc, canEdit, showToast } from '../../../utils/js/helpers.js'
+import { getWorkAreaOptions } from '../../capacity/production/js/work-areas-data.js'
+import {
+  prodState,
+  prodDataAddProduct,
+  prodDataUpdateProduct,
+  prodDataDeleteProduct
+} from './data.js'
+import { setProductionTab } from './production.js'
 
-function renderProductMaster() {
-  const products = prodState.products;
-  const activeCount = products.filter(p => p.status === 'active').length;
+let productMasterDelegationContainer = null
 
-  let rows = '';
+export function renderProductMaster() {
+  const products = prodState.products
+  const activeCount = products.filter(p => p.status === 'active').length
+
+  let rows = ''
 
   // Quick-add empty row at the top (editors/admins only)
   if (canEdit()) rows += `
@@ -36,10 +47,10 @@ function renderProductMaster() {
       <td><textarea class="cell-edit" id="prod-new-notes" placeholder="Notes" data-action="new-row-keydown" data-field="notes"></textarea></td>
       <td class="w28 ctr"><button class="btn-del" data-action="add-product" title="Save (Ctrl+Enter)">✓</button></td>
     </tr>
-  `;
+  `
 
   products.forEach((prod, idx) => {
-    const isInactive = prod.status === 'inactive';
+    const isInactive = prod.status === 'inactive'
     rows += `
       <tr class="${isInactive ? 'row-inactive' : ''}">
         <td class="w28 ctr">${idx + 1}</td>
@@ -67,10 +78,10 @@ function renderProductMaster() {
         <td><textarea class="cell-edit" name="prod_${idx}_notes" data-action="update-product" data-idx="${idx}" data-field="notes" data-keydown="edit-row">${esc(prod.notes || '')}</textarea></td>
         <td class="w28 ctr">${canEdit() ? `<button class="btn-del" data-action="delete-product" data-idx="${idx}">✕</button>` : ''}</td>
       </tr>
-    `;
-  });
+    `
+  })
 
-  setTimeout(setupProductMasterEventDelegation, 0);
+  setTimeout(setupProductMasterEventDelegation, 0)
 
   return `
     <div class="prod-section" id="prod-master-container">
@@ -116,116 +127,131 @@ function renderProductMaster() {
         </tbody>
       </table>
     </div>
-  `;
+  `
 }
 
-function setupProductMasterEventDelegation() {
-  const container = document.getElementById('prod-master-container');
-  if (!container || productMasterDelegationContainer === container) return;
+export function setupProductMasterEventDelegation() {
+  const container = document.getElementById('prod-master-container')
+  if (!container || productMasterDelegationContainer === container) return
 
-  productMasterDelegationContainer = container;
+  productMasterDelegationContainer = container
 
   container.addEventListener('click', async (event) => {
-    const actionEl = event.target.closest('[data-action]');
-    if (!actionEl || !container.contains(actionEl)) return;
+    const actionEl = event.target.closest('[data-action]')
+    if (!actionEl || !container.contains(actionEl)) return
 
-    const action = actionEl.dataset.action;
+    const action = actionEl.dataset.action
     if (action === 'add-product') {
-      await addNewProductRow();
-      return;
+      await addNewProductRow()
+      return
     }
 
     if (action === 'delete-product') {
-      const idx = Number(actionEl.dataset.idx);
+      const idx = Number(actionEl.dataset.idx)
       if (!Number.isNaN(idx) && confirm('Delete product?')) {
-        await prodDataDeleteProduct(idx);
+        await prodDataDeleteProduct(idx)
       }
-      return;
+      return
     }
 
     if (action === 'focus-new-product') {
-      focusProdNewRow();
-      return;
+      focusProdNewRow()
+      return
     }
 
     if (action === 'set-production-tab') {
-      setProductionTab(actionEl.dataset.tab || 'root');
+      setProductionTab(actionEl.dataset.tab || 'root')
     }
-  });
+  })
 
   container.addEventListener('change', async (event) => {
-    const updateEl = event.target.closest('[data-action="update-product"]');
-    if (!updateEl || !container.contains(updateEl)) return;
+    const updateEl = event.target.closest('[data-action="update-product"]')
+    if (!updateEl || !container.contains(updateEl)) return
 
-    const idx = Number(updateEl.dataset.idx);
-    const field = updateEl.dataset.field;
-    if (Number.isNaN(idx) || !field) return;
+    const idx = Number(updateEl.dataset.idx)
+    const field = updateEl.dataset.field
+    if (Number.isNaN(idx) || !field) return
 
-    await prodDataUpdateProduct(idx, field, updateEl.value);
-  });
+    await prodDataUpdateProduct(idx, field, updateEl.value)
+  })
 
   container.addEventListener('keydown', (event) => {
-    const keydownEl = event.target.closest('[data-keydown], [data-action="new-row-keydown"]');
-    if (!keydownEl || !container.contains(keydownEl)) return;
+    const keydownEl = event.target.closest('[data-keydown], [data-action="new-row-keydown"]')
+    if (!keydownEl || !container.contains(keydownEl)) return
 
     if (keydownEl.dataset.action === 'new-row-keydown') {
-      handleProdRowKey(event, keydownEl.dataset.field);
-      return;
+      handleProdRowKey(event, keydownEl.dataset.field)
+      return
     }
 
     if (keydownEl.dataset.keydown === 'edit-row') {
-      handleCellKey(event);
+      handleProductCellKey(event)
     }
-  });
+  })
 }
 
 // Keyboard handlers for product row
-function handleProdRowKey(event, field) {
+export function handleProdRowKey(event, field) {
   if (event.key === 'Tab') {
-    event.preventDefault();
-    const fields = ['name', 'code', 'family', 'lead', 'status', 'unit', 'notes'];
-    const currentIdx = fields.indexOf(field);
+    event.preventDefault()
+    const fields = ['name', 'code', 'family', 'lead', 'status', 'unit', 'notes']
+    const currentIdx = fields.indexOf(field)
     if (event.shiftKey) {
-      if (currentIdx > 0) document.getElementById(`prod-new-${fields[currentIdx - 1]}`).focus();
+      if (currentIdx > 0) document.getElementById(`prod-new-${fields[currentIdx - 1]}`).focus()
     } else {
       if (currentIdx < fields.length - 1) {
-        document.getElementById(`prod-new-${fields[currentIdx + 1]}`).focus();
+        document.getElementById(`prod-new-${fields[currentIdx + 1]}`).focus()
       }
     }
   } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-    event.preventDefault();
-    addNewProductRow();
+    event.preventDefault()
+    addNewProductRow()
   }
 }
 
-function focusProdNewRow() {
-  setTimeout(() => document.getElementById('prod-new-name')?.focus(), 50);
+export function focusProdNewRow() {
+  setTimeout(() => document.getElementById('prod-new-name')?.focus(), 50)
 }
 
-async function addNewProductRow() {
-  const name = document.getElementById('prod-new-name')?.value;
-  const code = document.getElementById('prod-new-code')?.value;
-  const family = document.getElementById('prod-new-family')?.value;
-  const lead = document.getElementById('prod-new-lead')?.value;
-  const status = document.getElementById('prod-new-status')?.value || 'active';
-  const unit = document.getElementById('prod-new-unit')?.value;
-  const notes = document.getElementById('prod-new-notes')?.value;
+export async function addNewProductRow() {
+  const name = document.getElementById('prod-new-name')?.value
+  const code = document.getElementById('prod-new-code')?.value
+  const family = document.getElementById('prod-new-family')?.value
+  const lead = document.getElementById('prod-new-lead')?.value
+  const status = document.getElementById('prod-new-status')?.value || 'active'
+  const unit = document.getElementById('prod-new-unit')?.value
+  const notes = document.getElementById('prod-new-notes')?.value
 
   if (!name || !name.trim()) {
-    showToast('Product name is required', 'warning');
-    return;
+    showToast('Product name is required', 'warning')
+    return
   }
 
-  await prodDataAddProduct(name, code, family, lead, notes, status, unit);
+  await prodDataAddProduct(name, code, family, lead, notes, status, unit)
 
   // Reset new row fields
-  document.getElementById('prod-new-name').value = '';
-  document.getElementById('prod-new-code').value = '';
-  document.getElementById('prod-new-family').value = '';
-  document.getElementById('prod-new-lead').value = '';
-  document.getElementById('prod-new-status').value = 'active';
-  document.getElementById('prod-new-unit').value = '';
-  document.getElementById('prod-new-notes').value = '';
+  document.getElementById('prod-new-name').value = ''
+  document.getElementById('prod-new-code').value = ''
+  document.getElementById('prod-new-family').value = ''
+  document.getElementById('prod-new-lead').value = ''
+  document.getElementById('prod-new-status').value = 'active'
+  document.getElementById('prod-new-unit').value = ''
+  document.getElementById('prod-new-notes').value = ''
 
-  setTimeout(() => document.getElementById('prod-new-name')?.focus(), 50);
+  setTimeout(() => document.getElementById('prod-new-name')?.focus(), 50)
+}
+
+function handleProductCellKey(event) {
+  if (event.key !== 'Tab') return
+  event.preventDefault()
+  const cell = event.target.closest('td')
+  const row = cell?.closest('tr')
+  if (!row) return
+  const cells = row.querySelectorAll('input, select, textarea')
+  const currentIdx = Array.from(cells).indexOf(event.target)
+  if (event.shiftKey) {
+    if (currentIdx > 0) cells[currentIdx - 1].focus()
+  } else if (currentIdx < cells.length - 1) {
+    cells[currentIdx + 1].focus()
+  }
 }

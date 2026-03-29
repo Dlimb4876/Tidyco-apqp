@@ -1,17 +1,29 @@
 // ═══════════════════════════════════════════════════════════════
 // prod-capacity-detail.js — Batch Workload Breakdown Tab
 // Full list of all batches with monthly hour distribution
-// Depends on: prod-capacity-data.js
 // ═══════════════════════════════════════════════════════════════
 
-let prodCapDetailFilter = { status: '', family: '', workArea: '' };
+import { getFamilies } from '../../../../core/js/state.js'
+import { formatDisplayDate, prodState } from '../../../production/js/data.js'
+import { esc } from '../../../../utils/js/helpers.js'
+import {
+  prodCapGet24MonthKeys,
+  prodCapGetWorkAreas,
+  prodCapParseKey,
+  prodCapMonthLabel
+} from './prod-capacity-data.js'
+
+export let prodCapDetailFilter = { status: '', family: '', workArea: '' }
+export function setProdCapDetailFilter(partial = {}) {
+  prodCapDetailFilter = { ...prodCapDetailFilter, ...partial }
+}
 
 // ── Helper: resolve family ID to label ──────────────────────────
 function prodCapGetFamilyLabel(familyIdOrName) {
   if (!familyIdOrName) return 'Other';
-  // Check if familiesState exists and has families
-  if (typeof familiesState !== 'undefined' && familiesState?.families) {
-    const family = familiesState.families.find(f => f.id === familyIdOrName);
+  const families = typeof getFamilies === 'function' ? getFamilies() : []
+  if (Array.isArray(families) && families.length > 0) {
+    const family = families.find(f => f.id === familyIdOrName);
     if (family) return family.label;
   }
   // Fall back to direct name (not a UUID)
@@ -85,8 +97,8 @@ function getProdCapDetailViewData(filter) {
       family,
       workArea,
       quantity: batch.quantity || '—',
-      startDate: formatDisplayDate(batch.start_date) || '—',
-      dueDate: formatDisplayDate(batch.due_date) || '—',
+      startDate: (typeof formatDisplayDate === 'function' ? formatDisplayDate(batch.start_date) : batch.start_date) || '—',
+      dueDate: (typeof formatDisplayDate === 'function' ? formatDisplayDate(batch.due_date) : batch.due_date) || '—',
       hoursPerUnit,
       totalHours,
       hasHours: hoursPerUnit > 0 && batch.quantity,
@@ -147,7 +159,7 @@ function renderProdCapDetailRow(viewBatch) {
       </tr>`;
 }
 
-function renderProdCapDetail() {
+export function renderProdCapDetail() {
   const viewData = getProdCapDetailViewData(prodCapDetailFilter);
   const rows = viewData.batches.map(renderProdCapDetailRow).join('');
 

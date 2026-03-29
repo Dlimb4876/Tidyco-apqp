@@ -1,8 +1,11 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('pm-data-relational', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     global.meNormalizeDateRange = jest.fn((startDate, endDate, todayStr) => ({
       safeStart: startDate || todayStr,
       safeEnd: endDate || todayStr
@@ -13,7 +16,7 @@ describe('pm-data-relational', () => {
       path.resolve(__dirname, '../portals/capacity/project-management/js/pm-data-relational.js'),
       'utf8'
     );
-    eval(script); // eslint-disable-line no-eval
+    await import(`data:text/javascript,${encodeURIComponent(script)}`);
   });
 
   beforeEach(() => {

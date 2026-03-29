@@ -1,9 +1,12 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Set up DOM
-const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
-document.documentElement.innerHTML = html.toString();
+const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8')
+document.documentElement.innerHTML = html.toString()
 
 // Minimal globals required by pfmea.js
 global.npi = {
@@ -11,43 +14,72 @@ global.npi = {
   components: {
     rpnBadge: (value) => `<span>${value}</span>`
   }
-};
-global.RPN_HIGH = 100;
-global.RPN_CRITICAL = 200;
-global.PFMEA_SCORE_MIN = 1;
-global.PFMEA_SCORE_MAX = 10;
-global.save = jest.fn();
-global.render = jest.fn();
-global.alert = jest.fn();
-global.showModal = jest.fn();
-global.closeModal = jest.fn();
-global.showToast = jest.fn();
-global.confirm = jest.fn(() => true);
+}
+global.RPN_HIGH = 100
+global.RPN_CRITICAL = 200
+global.PFMEA_SCORE_MIN = 1
+global.PFMEA_SCORE_MAX = 10
+global.save = jest.fn()
+global.render = jest.fn()
+global.alert = jest.fn()
+global.showModal = jest.fn()
+global.closeModal = jest.fn()
+global.showToast = jest.fn()
+global.confirm = jest.fn(() => true)
 
 global.esc = (v) => String(v ?? '')
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#039;');
+  .replace(/'/g, '&#039;')
 
-let activeProject;
-global.prog = () => activeProject;
+// Initialize activeProject before loading scripts
+let activeProject = {
+  cp: [],
+  pfd: [
+    { id: 's1', stepNum: 10, op: 'Final assembly' }
+  ],
+  ctq: [],
+  pfmea: [
+    {
+      id: 'f1',
+      pfdId: 's1',
+      mode: 'Seal failure',
+      effects: [
+        {
+          id: 'e1',
+          sev: 8,
+          effect: 'Leakage',
+          causes: [
+            {
+              id: 'c1',
+              occ: 5,
+              det: 6,
+              action: { desc: 'Add check', newOcc: 3, newDet: 4 },
+              history: []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+global.prog = () => activeProject
 
-const stateScript = fs.readFileSync(
-  path.resolve(__dirname, '../portals/product-development/npi/js/pfmea-state.js'),
-  'utf8'
-);
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/product-development/npi/js/pfmea.js'),
-  'utf8'
-);
-eval(stateScript);
-eval(script);
+// Load pfmea-state.js first (dependency)
+const stateScriptPath = path.resolve(__dirname, '../portals/product-development/npi/js/pfmea-state.js')
+const stateScript = fs.readFileSync(stateScriptPath, 'utf8')
+eval(stateScript)
+
+// Load pfmea.js
+const scriptPath = path.resolve(__dirname, '../portals/product-development/npi/js/pfmea.js')
+const script = fs.readFileSync(scriptPath, 'utf8')
+eval(script)
 
 describe('PFMEA core rules', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.clearAllMocks()
     activeProject = {
       cp: [],
       pfd: [
@@ -77,15 +109,15 @@ describe('PFMEA core rules', () => {
           ]
         }
       ]
-    };
-  });
+    }
+  })
 
   test('normalizes score boundaries and blank values correctly', () => {
-    expect(npi.pfmea.pfNormalizeScore('99', false)).toBe(10);
-    expect(npi.pfmea.pfNormalizeScore('-2', false)).toBe(2);
-    expect(npi.pfmea.pfNormalizeScore('', false)).toBe(1);
-    expect(npi.pfmea.pfNormalizeScore('', true)).toBe('');
-  });
+    expect(npi.pfmea.pfNormalizeScore('99', false)).toBe(10)
+    expect(npi.pfmea.pfNormalizeScore('-2', false)).toBe(2)
+    expect(npi.pfmea.pfNormalizeScore('', false)).toBe(1)
+    expect(npi.pfmea.pfNormalizeScore('', true)).toBe('')
+  })
 
   test('calculates max RPN across all effects and causes', () => {
     const mode = {
@@ -93,18 +125,18 @@ describe('PFMEA core rules', () => {
         { sev: 4, causes: [{ occ: 3, det: 2 }] },
         { sev: 9, causes: [{ occ: 7, det: 2 }, { occ: 2, det: 2 }] }
       ]
-    };
-    expect(npi.pfmea.calcRPN(mode)).toBe(126);
-  });
+    }
+    expect(npi.pfmea.calcRPN(mode)).toBe(126)
+  })
 
   test('matches RPN values against configured ranges', () => {
-    expect(npi.pfmea.rpnInFilter(120, 'high')).toBe(true);
-    expect(npi.pfmea.rpnInFilter(80, 'high')).toBe(false);
-    expect(npi.pfmea.rpnInFilter(35, 'r1_49')).toBe(true);
-    expect(npi.pfmea.rpnInFilter(70, 'r50_99')).toBe(true);
-    expect(npi.pfmea.rpnInFilter(140, 'r100_199')).toBe(true);
-    expect(npi.pfmea.rpnInFilter(240, 'r200_plus')).toBe(true);
-  });
+    expect(npi.pfmea.rpnInFilter(120, 'high')).toBe(true)
+    expect(npi.pfmea.rpnInFilter(80, 'high')).toBe(false)
+    expect(npi.pfmea.rpnInFilter(35, 'r1_49')).toBe(true)
+    expect(npi.pfmea.rpnInFilter(70, 'r50_99')).toBe(true)
+    expect(npi.pfmea.rpnInFilter(140, 'r100_199')).toBe(true)
+    expect(npi.pfmea.rpnInFilter(240, 'r200_plus')).toBe(true)
+  })
 
   test('filters operation by max mode RPN', () => {
     const mode = {
@@ -112,22 +144,22 @@ describe('PFMEA core rules', () => {
         { sev: 3, causes: [{ occ: 2, det: 2 }] },
         { sev: 8, causes: [{ occ: 5, det: 4 }] }
       ]
-    };
+    }
 
-    expect(npi.pfmea.modeMatchesFilter(mode, 'high')).toBe(true);
-    expect(npi.pfmea.modeMatchesFilter(mode, 'r50_99')).toBe(false);
-    expect(npi.pfmea.modeMatchesFilter(mode, 'r100_199')).toBe(true);
-  });
+    expect(npi.pfmea.modeMatchesFilter(mode, 'high')).toBe(true)
+    expect(npi.pfmea.modeMatchesFilter(mode, 'r50_99')).toBe(false)
+    expect(npi.pfmea.modeMatchesFilter(mode, 'r100_199')).toBe(true)
+  })
 
   test('implements action, updates OCC/DET, and writes history', () => {
-    npi.pfmea.pfImplementAction(0, 0, 0);
+    npi.pfmea.pfImplementAction(0, 0, 0)
 
-    const cause = activeProject.pfmea[0].effects[0].causes[0];
-    expect(cause.occ).toBe(3);
-    expect(cause.det).toBe(4);
-    expect(cause.history).toHaveLength(1);
-    expect(cause.history[0].rpn).toBe(240);
-    expect(cause.history[0].newRpn).toBe(96);
+    const cause = activeProject.pfmea[0].effects[0].causes[0]
+    expect(cause.occ).toBe(3)
+    expect(cause.det).toBe(4)
+    expect(cause.history).toHaveLength(1)
+    expect(cause.history[0].rpn).toBe(240)
+    expect(cause.history[0].newRpn).toBe(96)
     expect(cause.action).toEqual({
       desc: '',
       taken: '',
@@ -135,71 +167,71 @@ describe('PFMEA core rules', () => {
       due: '',
       newOcc: '',
       newDet: ''
-    });
-    expect(save).toHaveBeenCalled();
-    expect(render).toHaveBeenCalled();
-  });
+    })
+    expect(save).toHaveBeenCalled()
+    expect(render).toHaveBeenCalled()
+  })
 
   test('alerts and aborts when no action fields are set', () => {
-    const cause = activeProject.pfmea[0].effects[0].causes[0];
-    cause.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' };
+    const cause = activeProject.pfmea[0].effects[0].causes[0]
+    cause.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
 
-    npi.pfmea.pfImplementAction(0, 0, 0);
+    npi.pfmea.pfImplementAction(0, 0, 0)
 
-    expect(showToast).toHaveBeenCalled();
-    expect(save).not.toHaveBeenCalled();
-    expect(render).not.toHaveBeenCalled();
-  });
+    expect(showToast).toHaveBeenCalled()
+    expect(save).not.toHaveBeenCalled()
+    expect(render).not.toHaveBeenCalled()
+  })
 
   test('opens centered PFMEA history modal from the history button', () => {
     activeProject.pfmea[0].effects[0].causes[0].history = [
       { rpn: 240, newRpn: 96, oldOcc: 5, newOcc: 3, oldDet: 6, newDet: 4, desc: 'Added check', date: '16 Mar 26' }
-    ];
+    ]
     document.body.innerHTML += [
       '<div id="modalPfmeaHistory" style="display:none"></div>',
       '<div id="pfmeaHistoryModalTitle"></div>',
       '<div id="pfmeaHistoryModalBody"></div>'
-    ].join('');
+    ].join('')
 
     const evt = {
       stopPropagation: jest.fn()
-    };
+    }
 
-    npi.pfmea.pfShowHist(evt, 'c1');
+    npi.pfmea.pfShowHist(evt, 'c1')
 
-    expect(showModal).toHaveBeenCalledWith('modalPfmeaHistory');
-    expect(document.getElementById('pfmeaHistoryModalTitle').textContent).toBe('PFMEA History — Step 10');
-    expect(document.getElementById('pfmeaHistoryModalBody').textContent).toContain('Final assembly');
-    expect(document.getElementById('pfmeaHistoryModalBody').textContent).toContain('Added check');
-    expect(evt.stopPropagation).toHaveBeenCalled();
-  });
+    expect(showModal).toHaveBeenCalledWith('modalPfmeaHistory')
+    expect(document.getElementById('pfmeaHistoryModalTitle').textContent).toBe('PFMEA History — Step 10')
+    expect(document.getElementById('pfmeaHistoryModalBody').textContent).toContain('Final assembly')
+    expect(document.getElementById('pfmeaHistoryModalBody').textContent).toContain('Added check')
+    expect(evt.stopPropagation).toHaveBeenCalled()
+  })
 
   test('collects PFMEA history entries for the shared history tab', () => {
     activeProject.pfmea[0].effects[0].causes[0].history = [
       { rpn: 240, newRpn: 96, oldOcc: 5, newOcc: 3, oldDet: 6, newDet: 4, desc: 'Added check', date: '16 Mar 26' }
-    ];
+    ]
 
-    const entries = npi.pfmea.collectHistoryEntries();
+    const entries = npi.pfmea.collectHistoryEntries()
 
-    expect(entries).toHaveLength(1);
-    expect(entries[0].stepNum).toBe(10);
-    expect(entries[0].stepName).toBe('Final assembly');
-    expect(entries[0].mode).toBe('Seal failure');
-    expect(entries[0].oldRpn).toBe(240);
-    expect(entries[0].newRpn).toBe(96);
-  });
+    expect(entries).toHaveLength(1)
+    expect(entries[0].stepNum).toBe(10)
+    expect(entries[0].stepName).toBe('Final assembly')
+    expect(entries[0].mode).toBe('Seal failure')
+    expect(entries[0].oldRpn).toBe(240)
+    expect(entries[0].newRpn).toBe(96)
+  })
 
   test('reveals live forecast badge when new PFMEA scores are entered', () => {
     document.body.innerHTML += [
       '<span id="forecast_wrap_0_0_0" style="display:inline-block;opacity:0">',
       '<span id="forecast_0_0_0" class="rpn rpn-lo">—</span>',
       '</span>'
-    ].join('');
+    ].join('')
 
-    npi.pfmea.pfLiveForecast(0, 0, 0);
+    npi.pfmea.pfLiveForecast(0, 0, 0)
 
-    expect(document.getElementById('forecast_0_0_0').textContent).toBe('96');
-    expect(document.getElementById('forecast_0_0_0').className).toBe('rpn rpn-lo');
-    expect(document.getElementById('forecast_wrap_0_0_0').style.opacity).toBe('1');
-  });
-});
+    expect(document.getElementById('forecast_0_0_0').textContent).toBe('96')
+    expect(document.getElementById('forecast_0_0_0').className).toBe('rpn rpn-lo')
+    expect(document.getElementById('forecast_wrap_0_0_0').style.opacity).toBe('1')
+  })
+})

@@ -2,6 +2,11 @@
  * MCS + Overhaul History Integration Tests
  * Tests for creating overhaul_history entries when MCS changes are implemented
  */
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 describe('MCS Overhaul History Integration', () => {
   beforeEach(() => {

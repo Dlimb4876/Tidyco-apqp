@@ -1,5 +1,25 @@
-const fs = require('fs')
-const path = require('path')
+import { readFileSync } from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+function loadNpiEventsHandlers() {
+  const script = readFileSync(
+    path.resolve(__dirname, '../portals/product-development/npi/js/npi-events.js'),
+    'utf8'
+  )
+  const strippedImports = script.replace(/^import\s+.*$/gm, '')
+  const cjsReady = strippedImports
+    .replace(/export function setupNpiEvents\s*\(/, 'function setupNpiEvents(')
+    .replace(/export function teardownNpiEvents\s*\(/, 'function teardownNpiEvents(')
+    .replace(/export function initNpiEvents\s*\(/, 'function initNpiEvents(')
+
+  eval(`${cjsReady}
+    ;globalThis.__npiEventsExports = { setupNpiEvents, teardownNpiEvents, initNpiEvents }
+  `)
+  return globalThis.__npiEventsExports
+}
 
 describe('NPI events PFMEA search continuity', () => {
   beforeEach(() => {
@@ -38,11 +58,13 @@ describe('NPI events PFMEA search continuity', () => {
       }, 0)
     }
 
-    const script = fs.readFileSync(
-      path.resolve(__dirname, '../portals/product-development/npi/js/npi-events.js'),
-      'utf8'
-    )
-    eval(script)
+    global.showGuide = jest.fn()
+    global.flushDeferred = jest.fn()
+
+    const { initNpiEvents } = loadNpiEventsHandlers()
+    initNpiEvents({
+      getNpi: () => global.npi
+    })
   })
 
   afterEach(() => {

@@ -6,7 +6,8 @@ All 8 development skills have been created and are ready to use! These tools aut
 
 | # | Skill | Command | Purpose |
 |---|-------|---------|---------|
-| 1 | Load Order Checker | `npm run check:load-order` | Verify script dependencies are loaded in correct order |
+| 1 | Import Checker | `npm run check:imports` | Verify ESM import/export wiring across files |
+| 1b | ESM Coverage Checker | `npm run check:esm-coverage` | Track remaining non-ESM files |
 | 2 | Syntax Validator | `npm run check:syntax` | Catch syntax errors that silently break files |
 | 3 | RLS Policy Checker | `npm run check:rls` | Verify Supabase row-level security is configured |
 | 4 | Subscription Cleanup Auditor | `npm run check:subscriptions` | Find memory leaks in real-time subscriptions |
@@ -24,7 +25,8 @@ npm run check:all
 
 ### Run Individual Checks
 ```bash
-npm run check:load-order      # 1 — Script load order
+npm run check:imports         # 1 — Import/export wiring
+npm run check:esm-coverage    # 1b — ESM migration coverage
 npm run check:syntax          # 2 — Syntax errors
 npm run check:subscriptions   # 3 — Memory leaks
 npm run check:mobile          # 4 — Responsive design
@@ -38,7 +40,8 @@ npm run check:coverage        # 8 — Test coverage
 
 ```
 scripts/
-  ├── load-order-checker.js           (79 lines)
+  ├── import-checker.js               (ESM import/export checks)
+  ├── esm-coverage.js                 (ESM migration coverage)
   ├── syntax-validator.js             (134 lines)
   ├── rls-policy-checker.js           (99 lines)
   ├── subscription-cleanup-auditor.js (156 lines)
@@ -69,7 +72,7 @@ npm test           # Run tests
 
 | Situation | Command |
 |-----------|---------|
-| Added new `.js` file | `npm run check:load-order` |
+| Added new `.js` file | `npm run check:imports` + `npm run check:esm-coverage` |
 | Seeing "function is not a function" error | `npm run check:syntax` |
 | Created new Supabase table | `npm run check:rls` |
 | Added real-time subscription | `npm run check:subscriptions` |
@@ -83,8 +86,8 @@ npm test           # Run tests
 Running `npm run check:all` immediately found real issues:
 
 ```
-❌ products.js depends on families-data.js, but loads BEFORE it
-❌ products.js is loaded twice in index.html
+❌ Missing/invalid import target paths
+❌ ESM coverage gaps (non-ESM files still present)
 ```
 
 **These skills are already paying for themselves!** They catch bugs that would otherwise cause runtime errors.
@@ -114,7 +117,7 @@ Three guides are included:
 This project has **no build pipeline** — code goes directly from source to browser. This means:
 - ✅ Fast feedback (edit → refresh)
 - ❌ Syntax errors hide silently (file fails to parse, no console warning)
-- ❌ Script ordering bugs cause "function not found" at runtime
+- ❌ Broken imports/exports cause "function not found" at runtime
 - ❌ RLS failures return empty data without error
 - ❌ Memory leaks accumulate (subscriptions never cleaned up)
 
@@ -123,14 +126,14 @@ This project has **no build pipeline** — code goes directly from source to bro
 ### Most Critical Skills
 
 1. **Syntax Validator** — A single syntax error kills entire file
-2. **Load Order Checker** — Dependencies must load in correct order
+2. **Import Checker** — Dependencies must be wired through valid imports/exports
 3. **Subscription Cleanup Auditor** — Memory leaks crash the app over time
 
 ### Most Common Bugs Prevented
 
 | Bug | Skill |
 |-----|-------|
-| "X is not a function" | Syntax Validator + Load Order |
+| "X is not a function" | Syntax Validator + Import Checker |
 | Silent empty queries | RLS Policy Checker |
 | App slowing down | Subscription Cleanup Auditor |
 | Mobile layout broken | Mobile Breakpoint Verifier |
@@ -144,7 +147,8 @@ All skills are integrated into `package.json`:
 ```json
 {
   "scripts": {
-    "check:load-order": "node scripts/load-order-checker.js",
+    "check:imports": "node scripts/import-checker.js",
+    "check:esm-coverage": "node scripts/esm-coverage.js",
     "check:syntax": "node scripts/syntax-validator.js",
     "check:subscriptions": "node scripts/subscription-cleanup-auditor.js",
     "check:mobile": "node scripts/mobile-breakpoint-verifier.js",
@@ -152,7 +156,7 @@ All skills are integrated into `package.json`:
     "check:state": "node scripts/state-variable-tracker.js",
     "check:rls": "node scripts/rls-policy-checker.js",
     "check:coverage": "node scripts/test-coverage-reporter.js",
-    "check:all": "npm run check:load-order && npm run check:syntax && ..."
+    "check:all": "npm run check:syntax && npm run check:imports && npm run check:esm-coverage && ..."
   }
 }
 ```
@@ -161,7 +165,7 @@ All skills are integrated into `package.json`:
 
 1. **Read SKILLS_QUICK_REFERENCE.txt** — Get familiar with all 8 skills
 2. **Run `npm run check:all`** — See them in action
-3. **Fix the load order issue** found in products.js
+3. **Fix import/export and ESM coverage issues** reported by checks
 4. **Use `npm run check:all` before each commit**
 5. **Bookmark SKILLS_GUIDE.md** — Reference when adding new features
 

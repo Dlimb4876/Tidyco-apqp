@@ -4,14 +4,24 @@
 // All functions under npi.bom.*
 // ═══════════════════════════════════
 
+import { appState, prog, BOM_TYPES } from '../../../../core/js/state.js'
+import { esc, canEdit, emptyState, showModal, closeModal, showToast } from '../../../../utils/js/helpers.js'
+import { render, writeNavigationHistory } from '../../../../utils/js/navigation.js'
+import { npiRelFetchABCCatalogue, npiRelSaveBOMItem } from './npi-data-relational.js'
+import { npi } from './npi-shared.js'
+import { npiData } from './npi-data.js'
+import { npiComponents } from './npi-components.js'
+import { getPartsDatabase } from '../../parts-database/js/parts-database.js'
+const partsDatabase = getPartsDatabase()
+
 npi.bom.renderBOM = function() {
   const p    = prog()
 
   // Fetch ABC catalogue data if not already loaded (needed for Parts Register)
-  if (!abcCatalogueData || abcCatalogueData.length === 0) {
+  if (!appState.abcCatalogueData || appState.abcCatalogueData.length === 0) {
     npiRelFetchABCCatalogue().then(data => {
-      abcCatalogueData = data || []
-      if (bomSubTab === 'register') render()
+      appState.abcCatalogueData = data || []
+      if (appState.bomSubTab === 'register') render()
     })
   }
 
@@ -29,28 +39,28 @@ npi.bom.renderBOM = function() {
     ...bomTypesFiltered
   ]
   const tabHTML = `<div class="bom-subnav">${
-    tabs.map(t => `<button class="bom-tab${bomSubTab === t.id ? ' active' : ''}" data-action="bom-set-tab" data-tab="${t.id}">${t.label} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:inherit;opacity:.7">(${t.count})</span></button>`).join('')
+    tabs.map(t => `<button class="bom-tab${appState.bomSubTab === t.id ? ' active' : ''}" data-action="bom-set-tab" data-tab="${t.id}">${t.label} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:inherit;opacity:.7">(${t.count})</span></button>`).join('')
   }</div>`
 
   let content
-  if (bomSubTab === 'tree') content = npi.bom.renderBomTree(p)
-  else if (bomSubTab === 'aaw_repair') content = npi.bom.renderBomAawRepair(p)
-  else if (bomSubTab === 'register') content = npi.bom.renderBomPartsRegister(p)
-  else content = npi.bom.renderBomTable(bomSubTab, p)
+  if (appState.bomSubTab === 'tree') content = npi.bom.renderBomTree(p)
+  else if (appState.bomSubTab === 'aaw_repair') content = npi.bom.renderBomAawRepair(p)
+  else if (appState.bomSubTab === 'register') content = npi.bom.renderBomPartsRegister(p)
+  else content = npi.bom.renderBomTable(appState.bomSubTab, p)
   return `<div class="sec-head"><div><div class="sec-eyebrow">Bill of Materials</div><div class="sec-title">📦 BoM &amp; Kits</div><div class="sec-desc">Master item registers and kit builder. Link items to PFD steps via ＋ Resource.</div></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-bom" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="npi-go-home">← Dashboard</button></div></div>${tabHTML}${content}`
 }
 
 npi.bom.setBomTab = function(t) {
-  const prevTab = bomSubTab
-  bomSubTab = t
+  const prevTab = appState.bomSubTab
+  appState.bomSubTab = t
   // Update URL hash to persist BOM tab state
-  const parts = ['p=' + encodeURIComponent(progId), 's=project']
-  if (typeof apqpTab !== 'undefined' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab))
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project']
+  if (appState.apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(appState.apqpTab))
   if (t !== 'tree') parts.push('bt=' + encodeURIComponent(t))
   writeNavigationHistory('#' + parts.join('&'), { push: prevTab !== t })
   render()
 }
-npi.bom.setPartsRegisterView = function(view) { bomPartsRegisterView = view; render() }
+npi.bom.setPartsRegisterView = function(view) { appState.bomPartsRegisterView = view; render() }
 
 // ══════════════════════════════════════
 // PARTS REGISTER AGGREGATION
@@ -107,9 +117,9 @@ npi.bom._aggregatePartsRegister = function(p) {
   let allParts = [...structureParts, ...aawParts]
   
   // Filter by view mode
-  if (bomPartsRegisterView === 'structure') {
+  if (appState.bomPartsRegisterView === 'structure') {
     allParts = structureParts
-  } else if (bomPartsRegisterView === 'aaw') {
+  } else if (appState.bomPartsRegisterView === 'aaw') {
     allParts = aawParts
   }
   
@@ -150,33 +160,33 @@ npi.bom.renderBomTable = function(type, p) {
   // ABC filter and visible items (parts only)
   let abcFilterBar = '', filterNote = '', visibleItems = items
   if (type === 'parts') {
-    visibleItems = bomAbcFilter !== 'all'
-      ? items.filter(r => r.abcClass === bomAbcFilter)
+    visibleItems = appState.bomAbcFilter !== 'all'
+      ? items.filter(r => r.abcClass === appState.bomAbcFilter)
       : items
 
     abcFilterBar = `<div class="bom-abc-filter-row">
       <span class="bom-abc-filter-label">ABC Class:</span>
       ${['all','A','B','C'].map(cls =>
-        `<button class="bom-abc-chip${bomAbcFilter === cls ? ' active' : ''}"
+        `<button class="bom-abc-chip${appState.bomAbcFilter === cls ? ' active' : ''}"
           data-action="bom-abc-filter" data-cls="${cls}">${cls === 'all' ? 'All' : cls}</button>`
       ).join('')}
       <button class="btn btn-ghost btn-sm" style="margin-left:auto"
         data-action="bom-abc-info">What are A / B / C? ℹ</button>
     </div>`;
 
-    filterNote = bomAbcFilter !== 'all'
-      ? `<span class="bom-abc-active-filter">Showing ${visibleItems.length} ${bomAbcFilter}-Class parts</span>`
+    filterNote = appState.bomAbcFilter !== 'all'
+      ? `<span class="bom-abc-active-filter">Showing ${visibleItems.length} ${appState.bomAbcFilter}-Class parts</span>`
       : '';
   }
 
   let thead = '', tbody = ''
   if (type === 'parts') {
-    thead = npi.components.tableHeader([{ label: 'Tidyco PN' }, { label: 'Supplier PN' }, { label: 'Description' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Sage' }, { label: 'Class' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
+    thead = npiComponents.tableHeader([{ label: 'Tidyco PN' }, { label: 'Supplier PN' }, { label: 'Description' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Sage' }, { label: 'Class' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
     tbody = visibleItems.map((r, i) => {
       const actualIdx = items.indexOf(r);
       const sageBadge = r.abcCatalogueId
         ? (() => {
-            const cat = abcCatalogueData.find(c => c.id === r.abcCatalogueId)
+            const cat = appState.abcCatalogueData.find(c => c.id === r.abcCatalogueId)
             return cat && cat.in_sage ? '<span style="color:var(--green);font-weight:bold">✓</span>' : '<span style="color:var(--muted)">—</span>'
           })()
         : '<span style="color:var(--muted)">—</span>'
@@ -198,7 +208,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="bom-del-row" data-type="parts" data-idx="${actualIdx}">×</button>` : ''}</td>
     </tr>`}).join('')
   } else if (type === 'tools') {
-    thead = npi.components.tableHeader([{ label: 'Tool ID' }, { label: 'Description' }, { label: 'Spec / PN' }, { label: 'Notes' }, { label: '' }])
+    thead = npiComponents.tableHeader([{ label: 'Tool ID' }, { label: 'Description' }, { label: 'Spec / PN' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" name="bom_tools_${i}_toolId" value="${esc(r.toolId)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="toolId" placeholder="TL-001"></td>
       <td class="bom-col-desc"><input class="cell-edit" name="bom_tools_${i}_desc" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="tools" data-idx="${i}" data-field="desc" placeholder="Description"></td>
@@ -207,7 +217,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="bom-del-row" data-type="tools" data-idx="${i}">×</button>` : ''}</td>
     </tr>`).join('')
   } else if (type === 'equip') {
-    thead = npi.components.tableHeader([{ label: 'Equip ID' }, { label: 'Description' }, { label: 'Location' }, { label: 'Notes' }, { label: '' }])
+    thead = npiComponents.tableHeader([{ label: 'Equip ID' }, { label: 'Description' }, { label: 'Location' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" name="bom_equip_${i}_equipId" value="${esc(r.equipId)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="equipId" placeholder="EQ-001"></td>
       <td class="bom-col-desc"><input class="cell-edit" name="bom_equip_${i}_desc" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="equip" data-idx="${i}" data-field="desc" placeholder="Description"></td>
@@ -216,7 +226,7 @@ npi.bom.renderBomTable = function(type, p) {
       <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="bom-del-row" data-type="equip" data-idx="${i}">×</button>` : ''}</td>
     </tr>`).join('')
   } else {
-    thead = npi.components.tableHeader([{ label: 'Part / Cat. No.' }, { label: 'Description' }, { label: 'Unit' }, { label: 'Qty/Unit' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
+    thead = npiComponents.tableHeader([{ label: 'Part / Cat. No.' }, { label: 'Description' }, { label: 'Unit' }, { label: 'Qty/Unit' }, { label: 'Std' }, { label: 'AAW' }, { label: 'Repair' }, { label: 'Notes' }, { label: '' }])
     tbody = items.map((r, i) => `<tr>
       <td class="w100"><input class="cell-edit mono" name="bom_${type}_${i}_pn" value="${esc(r.pn)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="pn" placeholder="PN"></td>
       <td class="bom-col-desc"><input class="cell-edit" name="bom_${type}_${i}_desc" value="${esc(r.desc)}" data-action="bom-upd-row" data-type="${type}" data-idx="${i}" data-field="desc" placeholder="Description"></td>
@@ -259,9 +269,9 @@ npi.bom.renderBomPartsRegister = function(p) {
   
   const viewToggleHtml = `<div class="bom-register-view-toggle" style="display:flex;gap:8px;margin-bottom:14px">
     <span style="color:var(--muted);font-size:13px;margin-right:8px">View:</span>
-    <button class="btn btn-sm${bomPartsRegisterView === 'total' ? ' btn-primary' : ' btn-ghost'}" data-action="bom-register-set-view" data-view="total">Total</button>
-    <button class="btn btn-sm${bomPartsRegisterView === 'structure' ? ' btn-primary' : ' btn-ghost'}" data-action="bom-register-set-view" data-view="structure">Core BoM Only</button>
-    <button class="btn btn-sm${bomPartsRegisterView === 'aaw' ? ' btn-primary' : ' btn-ghost'}" data-action="bom-register-set-view" data-view="aaw">AAW/Repair Only</button>
+    <button class="btn btn-sm${appState.bomPartsRegisterView === 'total' ? ' btn-primary' : ' btn-ghost'}" data-action="bom-register-set-view" data-view="total">Total</button>
+    <button class="btn btn-sm${appState.bomPartsRegisterView === 'structure' ? ' btn-primary' : ' btn-ghost'}" data-action="bom-register-set-view" data-view="structure">Core BoM Only</button>
+    <button class="btn btn-sm${appState.bomPartsRegisterView === 'aaw' ? ' btn-primary' : ' btn-ghost'}" data-action="bom-register-set-view" data-view="aaw">AAW/Repair Only</button>
   </div>`
   
   const statsHtml = `<div style="display:flex;gap:8px;margin-bottom:14px">
@@ -270,8 +280,8 @@ npi.bom.renderBomPartsRegister = function(p) {
   </div>`
   
   const cardContent = parts.length === 0
-    ? emptyState('📋', 'No parts in register', bomPartsRegisterView === 'total' ? 'Add parts to the Core BoM or AAW & Repair tabs to see them rolled up here.' : `No parts found in ${bomPartsRegisterView === 'structure' ? 'Core BoM' : 'AAW/Repair'} view.`)
-    : `<div style="overflow-x:auto"><table class="tbl bom-tbl" style="min-width:700px">${npi.components.tableHeader([
+    ? emptyState('📋', 'No parts in register', appState.bomPartsRegisterView === 'total' ? 'Add parts to the Core BoM or AAW & Repair tabs to see them rolled up here.' : `No parts found in ${appState.bomPartsRegisterView === 'structure' ? 'Core BoM' : 'AAW/Repair'} view.`)
+    : `<div style="overflow-x:auto"><table class="tbl bom-tbl" style="min-width:700px">${npiComponents.tableHeader([
         { label: 'Tidyco PN' },
         { label: 'Description' },
         { label: 'Qty' },
@@ -289,7 +299,7 @@ npi.bom.renderBomPartsRegister = function(p) {
 
         let classBadge = '<span style="color:var(--muted)">—</span>'
         if (part.abcCatalogueId) {
-          const cat = abcCatalogueData.find(c => c.id === part.abcCatalogueId)
+          const cat = appState.abcCatalogueData.find(c => c.id === part.abcCatalogueId)
           const abcClass = cat ? cat.abc_class : null
           if (abcClass) {
             classBadge = `<span class="abc-badge abc-${abcClass}">${abcClass}</span>`
@@ -315,13 +325,13 @@ npi.bom.renderBomPartsRegister = function(p) {
 }
 
 npi.bom.addBomRow = function(type) {
-  npi.data.bom.addRow(type)
+  npiData.bom.addRow(type)
   render()
   setTimeout(() => { const tbl = document.querySelector('.card table'); if (tbl) { const rows = tbl.querySelectorAll('tbody tr'); if (rows.length > 0) rows[rows.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' }) } }, 50)
 }
-npi.bom.updBom = function(type, i, f, v) { npi.data.bom.updRow(type, i, f, v) }
+npi.bom.updBom = function(type, i, f, v) { npiData.bom.updRow(type, i, f, v) }
 npi.bom.delBom = function(type, i) {
-  npi.data.bom.delRow(type, i)
+  npiData.bom.delRow(type, i)
   render()
 }
 
@@ -356,7 +366,7 @@ npi.bom._renderTreeChildren = function(nodes, depth) {
 
 npi.bom._renderTreeNode = function(node, depth) {
   const hasChildren = node.children && node.children.length > 0
-  const isExpanded  = bomTreeExpanded.has(node.id)
+  const isExpanded  = appState.bomTreeExpanded.has(node.id)
   const canAddKids  = depth < MAX_TREE_DEPTH
 
   const toggleHtml = node.nodeType === 'subassembly'
@@ -368,7 +378,7 @@ npi.bom._renderTreeNode = function(node, depth) {
   // ABC class badge for parts
   let abcClassHtml = ''
   if (node.nodeType === 'part' && node.abcCatalogueId) {
-    const cat = abcCatalogueData.find(c => c.id === node.abcCatalogueId)
+    const cat = appState.abcCatalogueData.find(c => c.id === node.abcCatalogueId)
     const abcClass = cat ? cat.abc_class : null
     if (abcClass) {
       abcClassHtml = `<span class="abc-badge abc-${abcClass}" style="margin-right:8px">${abcClass}</span>`
@@ -417,10 +427,10 @@ npi.bom._renderTreeNode = function(node, depth) {
 
 npi.bom.renderBomTree = function(p) {
   // Fetch ABC catalogue data if not already loaded (needed for part class badges)
-  if (!abcCatalogueData || abcCatalogueData.length === 0) {
+  if (!appState.abcCatalogueData || appState.abcCatalogueData.length === 0) {
     npiRelFetchABCCatalogue().then(data => {
-      abcCatalogueData = data || []
-      if (bomSubTab === 'tree') render()
+      appState.abcCatalogueData = data || []
+      if (appState.bomSubTab === 'tree') render()
     })
   }
 
@@ -440,7 +450,7 @@ npi.bom.renderBomTree = function(p) {
   // Auto-expand all subassembly nodes on load
   treeNodes.forEach(n => {
     if (n.nodeType === 'subassembly') {
-      bomTreeExpanded.add(n.id)
+      appState.bomTreeExpanded.add(n.id)
     }
   })
   const totalParts = treeNodes.filter(n => n.nodeType === 'part').length
@@ -482,23 +492,23 @@ npi.bom.toggleTreeNode = function(id) {
   if (!childEl) return
   const collapsed = childEl.classList.toggle('bom-tree-children--collapsed')
   if (toggleEl) toggleEl.textContent = collapsed ? '▶' : '▾'
-  if (collapsed) bomTreeExpanded.delete(id); else bomTreeExpanded.add(id)
+  if (collapsed) appState.bomTreeExpanded.delete(id); else appState.bomTreeExpanded.add(id)
 }
 
 npi.bom.openTreeAddPart = async function(parentId) {
   const p = prog()
   if (!p) return
-  bomAawActiveGroupId = null
-  bomAawGroupParentId = null
-  bomTreeAddParentId  = parentId || null
+  appState.bomAawActiveGroupId = null
+  appState.bomAawGroupParentId = null
+  appState.bomTreeAddParentId  = parentId || null
   await partsDatabase.openPick({
     progId: p.id,
     type: 'tree',
-    parentId: bomTreeAddParentId,
+    parentId: appState.bomTreeAddParentId,
     getAlreadyAddedIds: () => new Set(),
     onConfirm: (selectedRows) => {
       selectedRows.forEach((src) => {
-        npi.data.bom.addTreeNode(bomTreeAddParentId, 'part', {
+        npiData.bom.addTreeNode(appState.bomTreeAddParentId, 'part', {
           pn: src.pn || '',
           desc: src.item_desc || '',
           unit: src.unit || 'ea',
@@ -512,9 +522,9 @@ npi.bom.openTreeAddPart = async function(parentId) {
 }
 
 npi.bom.openTreeAddSubAsm = function(parentId) {
-  bomAawActiveGroupId = null
-  bomAawGroupParentId = null
-  bomTreeAddParentId  = parentId || null
+  appState.bomAawActiveGroupId = null
+  appState.bomAawGroupParentId = null
+  appState.bomTreeAddParentId  = parentId || null
   const pnEl   = document.getElementById('bomTreeSubAsmPn')
   const descEl = document.getElementById('bomTreeSubAsmDesc')
   if (pnEl)   pnEl.value   = ''
@@ -526,10 +536,10 @@ npi.bom.saveTreeSubAsm = function() {
   const pn   = (document.getElementById('bomTreeSubAsmPn')  || {}).value?.trim()
   const desc = (document.getElementById('bomTreeSubAsmDesc') || {}).value?.trim()
   if (!pn) { showToast('Part number is required', 'warning'); return }
-  if (bomAawActiveGroupId !== null) {
-    npi.data.bom.addAawTreeNode(bomAawActiveGroupId, bomAawGroupParentId, 'subassembly', { pn, desc: desc || '' })
+  if (appState.bomAawActiveGroupId !== null) {
+    npiData.bom.addAawTreeNode(appState.bomAawActiveGroupId, appState.bomAawGroupParentId, 'subassembly', { pn, desc: desc || '' })
   } else {
-    npi.data.bom.addTreeNode(bomTreeAddParentId, 'subassembly', { pn, desc: desc || '' })
+    npiData.bom.addTreeNode(appState.bomTreeAddParentId, 'subassembly', { pn, desc: desc || '' })
   }
   closeModal('modalBomTreeSubAsm')
   render()
@@ -545,22 +555,22 @@ npi.bom.delTreeNode = function(id) {
     ? `Remove this sub-assembly and all ${childCount} item(s) inside it?`
     : `Remove this item from the structure?`
   if (!confirm(msg)) return
-  npi.data.bom.delTreeNode(id)
+  npiData.bom.delTreeNode(id)
 }
 
 npi.bom.updTreeNodeQty = function(id, v) {
-  npi.data.bom.updTreeNode(id, 'qty', parseFloat(v) || 0)
+  npiData.bom.updTreeNode(id, 'qty', parseFloat(v) || 0)
 }
 
 npi.bom.updTreeNodeDesc = function(id, v) {
-  npi.data.bom.updTreeNode(id, 'desc', v)
+  npiData.bom.updTreeNode(id, 'desc', v)
 }
 
 // ══════════════════════════════════════
 // ABC Class Filter and Picker
 // ══════════════════════════════════════
 npi.bom.setAbcFilter = function(cls) {
-  bomAbcFilter = cls
+  appState.bomAbcFilter = cls
   render()
 }
 
@@ -616,10 +626,10 @@ npi.bom.toggleABCPick = function(idx) {
 
 npi.bom.renderBomAawRepair = function(p) {
   // Fetch ABC catalogue data if not already loaded (needed for part class badges)
-  if (!abcCatalogueData || abcCatalogueData.length === 0) {
+  if (!appState.abcCatalogueData || appState.abcCatalogueData.length === 0) {
     npiRelFetchABCCatalogue().then(data => {
-      abcCatalogueData = data || []
-      if (bomSubTab === 'aaw_repair') render()
+      appState.abcCatalogueData = data || []
+      if (appState.bomSubTab === 'aaw_repair') render()
     })
   }
 
@@ -645,7 +655,7 @@ npi.bom.renderBomAawRepair = function(p) {
     const nodes = group.nodes || []
     nodes.forEach(n => {
       if (n.nodeType === 'subassembly') {
-        bomAawTreeExpanded.add(n.id)
+        appState.bomAawTreeExpanded.add(n.id)
       }
     })
   })
@@ -657,8 +667,8 @@ npi.bom.renderBomAawRepair = function(p) {
     const totalSubAsm = treeNodes.filter(n => n.nodeType === 'subassembly').length
 
     const tagSelectorHtml = canEdit()
-      ? `<button type="button" class="bom-aaw-tag-pill${group.tag === 'aaw' ? ' active' : ''}" data-action="bom-aaw-upd-tag" data-id="${group.id}" data-tag="aaw" onclick="npi.data.bom.updAawGroupTag('${group.id}', 'aaw')">AAW</button>
-         <button type="button" class="bom-aaw-tag-pill${group.tag === 'repair' ? ' active' : ''}" data-action="bom-aaw-upd-tag" data-id="${group.id}" data-tag="repair" onclick="npi.data.bom.updAawGroupTag('${group.id}', 'repair')">Repair</button>`
+      ? `<button type="button" class="bom-aaw-tag-pill${group.tag === 'aaw' ? ' active' : ''}" data-action="bom-aaw-upd-tag" data-id="${group.id}" data-tag="aaw" onclick="npiData.bom.updAawGroupTag('${group.id}', 'aaw')">AAW</button>
+         <button type="button" class="bom-aaw-tag-pill${group.tag === 'repair' ? ' active' : ''}" data-action="bom-aaw-upd-tag" data-id="${group.id}" data-tag="repair" onclick="npiData.bom.updAawGroupTag('${group.id}', 'repair')">Repair</button>`
       : (group.tag ? `<span class="bom-aaw-tag-pill active" data-tag="${group.tag}">${TAG_LABELS[group.tag]}</span>` : '')
 
     const statsPillsHtml = `<div style="display:flex;gap:6px;align-items:center;margin-left:12px;flex-shrink:0;flex-wrap:wrap">
@@ -714,7 +724,7 @@ npi.bom._renderAawTreeChildren = function(nodes, groupId, depth) {
 
 npi.bom._renderAawTreeNode = function(node, groupId, depth) {
   const hasChildren = node.children && node.children.length > 0
-  const isExpanded  = bomAawTreeExpanded.has(node.id)
+  const isExpanded  = appState.bomAawTreeExpanded.has(node.id)
   const canAddKids  = depth < MAX_TREE_DEPTH
 
   const toggleHtml = node.nodeType === 'subassembly'
@@ -726,7 +736,7 @@ npi.bom._renderAawTreeNode = function(node, groupId, depth) {
   // ABC class badge for parts
   let abcClassHtml = ''
   if (node.nodeType === 'part' && node.abcCatalogueId) {
-    const cat = abcCatalogueData.find(c => c.id === node.abcCatalogueId)
+    const cat = appState.abcCatalogueData.find(c => c.id === node.abcCatalogueId)
     const abcClass = cat ? cat.abc_class : null
     if (abcClass) {
       abcClassHtml = `<span class="abc-badge abc-${abcClass}" style="margin-right:8px">${abcClass}</span>`
@@ -774,25 +784,25 @@ npi.bom._renderAawTreeNode = function(node, groupId, depth) {
 }
 
 npi.bom.addAawGroup = function() {
-  npi.data.bom.addAawGroup()
+  npiData.bom.addAawGroup()
 }
 
 npi.bom.delAawGroup = function(id) {
   if (!confirm('Delete this BoM and all its parts? This cannot be undone.')) return
-  npi.data.bom.delAawGroup(id)
+  npiData.bom.delAawGroup(id)
 }
 
 npi.bom.toggleAawTreeNode = function(id) {
-  if (bomAawTreeExpanded.has(id)) bomAawTreeExpanded.delete(id)
-  else bomAawTreeExpanded.add(id)
+  if (appState.bomAawTreeExpanded.has(id)) appState.bomAawTreeExpanded.delete(id)
+  else appState.bomAawTreeExpanded.add(id)
   render()
 }
 
 npi.bom.openAawAddPart = async function(groupId, parentId) {
   const p = prog()
   if (!p) return
-  bomAawActiveGroupId = groupId
-  bomAawGroupParentId = parentId || null
+  appState.bomAawActiveGroupId = groupId
+  appState.bomAawGroupParentId = parentId || null
   await partsDatabase.openPick({
     progId: p.id,
     type: 'aaw_tree',
@@ -801,7 +811,7 @@ npi.bom.openAawAddPart = async function(groupId, parentId) {
     getAlreadyAddedIds: () => new Set(),
     onConfirm: (selectedRows) => {
       selectedRows.forEach((src) => {
-        npi.data.bom.addAawTreeNode(groupId, parentId || null, 'part', {
+        npiData.bom.addAawTreeNode(groupId, parentId || null, 'part', {
           pn: src.pn || '',
           desc: src.item_desc || '',
           unit: src.unit || 'ea',
@@ -815,8 +825,8 @@ npi.bom.openAawAddPart = async function(groupId, parentId) {
 }
 
 npi.bom.openAawAddSubAsm = function(groupId, parentId) {
-  bomAawActiveGroupId = groupId
-  bomAawGroupParentId = parentId || null
+  appState.bomAawActiveGroupId = groupId
+  appState.bomAawGroupParentId = parentId || null
   const pnEl   = document.getElementById('bomTreeSubAsmPn')
   const descEl = document.getElementById('bomTreeSubAsmDesc')
   if (pnEl)   pnEl.value   = ''
@@ -825,17 +835,20 @@ npi.bom.openAawAddSubAsm = function(groupId, parentId) {
 }
 
 npi.bom.updAawTreeNodeQty = function(id, groupId, v) {
-  npi.data.bom.updAawTreeNode(groupId, id, 'qty', parseFloat(v) || 0)
+  npiData.bom.updAawTreeNode(groupId, id, 'qty', parseFloat(v) || 0)
 }
 
 npi.bom.updAawTreeNodeDesc = function(id, groupId, v) {
-  npi.data.bom.updAawTreeNode(groupId, id, 'desc', v)
+  npiData.bom.updAawTreeNode(groupId, id, 'desc', v)
 }
 
 npi.bom.delAawTreeNode = function(id, groupId) {
-  npi.data.bom.delAawTreeNode(groupId, id)
+  npiData.bom.delAawTreeNode(groupId, id)
 }
 
 npi.bom.confirmABCPick = function() {
   return partsDatabase.confirmPick()
 }
+
+export const npiBom = npi.bom
+export const renderBom = npi.bom.renderBOM

@@ -4,6 +4,8 @@
 // Depends on: state.js (supa), navigation.js (render)
 // ═══════════════════════════════════════════════════════════════
 
+import { supabase } from '../../core/js/supa.js';
+
 // Global registry of active subscriptions (for cleanup)
 let realtimeSubscriptions = {};
 
@@ -20,7 +22,7 @@ let realtimeSubscriptions = {};
  *   - options.events - Event types to listen for (default: ['INSERT', 'UPDATE', 'DELETE'])
  * @returns {object} subscription - Handle for unsubscribing
  */
-function createRealtimeSubscription(tableName, channelName, callbacks = {}, options = {}) {
+export function createRealtimeSubscription(tableName, channelName, callbacks = {}, options = {}) {
   if (!tableName || !channelName) {
     console.warn('⚠️ createRealtimeSubscription requires tableName and channelName');
     return null;
@@ -35,7 +37,7 @@ function createRealtimeSubscription(tableName, channelName, callbacks = {}, opti
   try {
     const { events = ['INSERT', 'UPDATE', 'DELETE'], filter } = options;
 
-    const subscription = supa
+    const subscription = supabase
       .channel(channelName)
       .on('postgres_changes', {
         event: '*',
@@ -76,11 +78,11 @@ function createRealtimeSubscription(tableName, channelName, callbacks = {}, opti
  * Unsubscribe from real-time changes
  * @param {string} channelName - The channel name to unsubscribe from
  */
-function removeRealtimeSubscription(channelName) {
+export function removeRealtimeSubscription(channelName) {
   if (!channelName || !realtimeSubscriptions[channelName]) return;
 
   try {
-    supa.removeChannel(realtimeSubscriptions[channelName]);
+    supabase.removeChannel(realtimeSubscriptions[channelName]);
     delete realtimeSubscriptions[channelName];
     updateRealtimeIndicator(); // Update bottombar
   } catch (err) {
@@ -93,7 +95,7 @@ function removeRealtimeSubscription(channelName) {
  * Useful when leaving a portal (e.g., stop all 'me_*' channels)
  * @param {string|RegExp} pattern - Channel name pattern to match
  */
-function removeRealtimeSubscriptionsMatching(pattern) {
+export function removeRealtimeSubscriptionsMatching(pattern) {
   const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
   Object.keys(realtimeSubscriptions).forEach(channelName => {
     if (regex.test(channelName)) {
@@ -106,14 +108,14 @@ function removeRealtimeSubscriptionsMatching(pattern) {
 /**
  * Get all active subscriptions (for debugging)
  */
-function getActiveRealtimeSubscriptions() {
+export function getActiveRealtimeSubscriptions() {
   return Object.keys(realtimeSubscriptions);
 }
 
 /**
  * Update the bottombar realtime subscription counter
  */
-function updateRealtimeIndicator() {
+export function updateRealtimeIndicator() {
   const el = document.getElementById('bottombarRealtime');
   if (!el) return;
   const count = Object.keys(realtimeSubscriptions).length;
@@ -133,7 +135,7 @@ function updateRealtimeIndicator() {
  * @param {string} channelName - Unique identifier for the consolidated channel.
  * @returns {object|null} Supabase channel subscription handle.
  */
-function createMultiTableRealtimeSubscription(tableConfigs, channelName) {
+export function createMultiTableRealtimeSubscription(tableConfigs, channelName) {
   if (!Array.isArray(tableConfigs) || tableConfigs.length === 0 ||
       !channelName || typeof channelName !== 'string') {
     console.warn('⚠️ createMultiTableRealtimeSubscription: invalid arguments');
@@ -146,7 +148,7 @@ function createMultiTableRealtimeSubscription(tableConfigs, channelName) {
   }
 
   try {
-    let channel = supa.channel(channelName);
+    let channel = supabase.channel(channelName);
 
     tableConfigs.forEach(({ table, onInsert, onUpdate, onDelete }) => {
       if (!table) return;

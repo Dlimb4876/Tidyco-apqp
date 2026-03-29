@@ -6,8 +6,11 @@
  *         feedbackDataUnsubscribe wrapper
  */
 
-const fs = require('fs');
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ─────────────────────────────────────────────────────────────
 // Mock Dependencies
@@ -35,11 +38,7 @@ global.createRealtimeSubscription = jest.fn();
 global.removeRealtimeSubscription = jest.fn();
 
 // Load module
-const src = fs.readFileSync(
-  path.resolve(__dirname, '../portals/feedback/js/feedback-data.js'),
-  'utf8'
-);
-eval(src); // eslint-disable-line no-eval
+await import('../portals/feedback/js/feedback-data.js');
 
 // ─────────────────────────────────────────────────────────────
 // Sample feedback data

@@ -7,13 +7,18 @@
  *                                                                          → implemented   [if approved → overhaul entry]
  */
 
+import { appState, currentUserRole } from '../../../core/js/state.js'
+import { supabase, currentUser } from '../../../core/js/supa.js'
+import { productsState, productsDataUpdateProduct } from '../../product-development/product-management/js/products-data.js'
+import { MCS_APPROVAL_STEPS } from './mcs-approvers-data.js'
+
 /**
  * Approve the active step for a change.
  * approval1 approved → status becomes 'implementing'
  * approval2 approved → status becomes 'implemented' + overhaul entry created
  */
-async function mcsApproveStep(changeId, step, notes) {
-  const change = mcsList.find(c => c.id === changeId);
+export async function mcsApproveStep(changeId, step, notes) {
+  const change = appState.mcsList.find(c => c.id === changeId);
   if (!change) return false;
 
   const stepDef = MCS_APPROVAL_STEPS.find(s => s.key === step);
@@ -45,16 +50,16 @@ async function mcsApproveStep(changeId, step, notes) {
       updateData.implementation_date = now.split('T')[0];
     }
 
-    const { error } = await supa
+    const { error } = await supabase
       .from('mcs_changes')
       .update(updateData)
       .eq('id', changeId);
 
     if (error) throw error;
 
-    const idx = mcsList.findIndex(c => c.id === changeId);
+    const idx = appState.mcsList.findIndex(c => c.id === changeId);
     if (idx !== -1) {
-      mcsList[idx] = { ...mcsList[idx], ...updateData };
+      appState.mcsList[idx] = { ...appState.mcsList[idx], ...updateData };
     }
 
     // Log timeline entry
@@ -80,8 +85,8 @@ async function mcsApproveStep(changeId, step, notes) {
  * approval1 rejected → status becomes 'closed' (MCO terminated)
  * approval2 rejected → status returns to 'implementing' (try again)
  */
-async function mcsRejectStep(changeId, step, reason) {
-  const change = mcsList.find(c => c.id === changeId);
+export async function mcsRejectStep(changeId, step, reason) {
+  const change = appState.mcsList.find(c => c.id === changeId);
   if (!change) return false;
 
   const stepDef = MCS_APPROVAL_STEPS.find(s => s.key === step);
@@ -117,16 +122,16 @@ async function mcsRejectStep(changeId, step, reason) {
       updateData.qa_review_notes = null;
     }
 
-    const { error } = await supa
+    const { error } = await supabase
       .from('mcs_changes')
       .update(updateData)
       .eq('id', changeId);
 
     if (error) throw error;
 
-    const idx = mcsList.findIndex(c => c.id === changeId);
+    const idx = appState.mcsList.findIndex(c => c.id === changeId);
     if (idx !== -1) {
-      mcsList[idx] = { ...mcsList[idx], ...updateData };
+      appState.mcsList[idx] = { ...appState.mcsList[idx], ...updateData };
     }
 
     const label = stepDef.label;
@@ -145,9 +150,9 @@ async function mcsRejectStep(changeId, step, reason) {
 /**
  * Add timeline entry
  */
-async function mcsAddTimelineEntry(changeId, eventType, text, actor) {
+export async function mcsAddTimelineEntry(changeId, eventType, text, actor) {
   try {
-    const { error } = await supa
+    const { error } = await supabase
       .from('mcs_timeline')
       .insert([{
         change_id: changeId,
@@ -173,19 +178,19 @@ async function mcsAddTimelineEntry(changeId, eventType, text, actor) {
  * overhaul_hours is calculated as: current product hours + estimated_time_impact_hours
  * so the trends chart immediately reflects the new overhaul time.
  */
-async function mcsCreateOverhaulHistoryEntry(change) {
+export async function mcsCreateOverhaulHistoryEntry(change) {
   try {
     const implDate = change.implementation_date || new Date().toISOString().split('T')[0];
 
     // Calculate new overhaul hours: current hours + time impact delta
-    const currentProduct = window.productsState && window.productsState.products
-      ? window.productsState.products.find(p => p.id === change.affected_product_id)
+    const currentProduct = productsState && productsState.products
+      ? productsState.products.find(p => p.id === change.affected_product_id)
       : null;
     const currentHours = currentProduct ? (currentProduct.current_overhaul_hours || 0) : 0;
     const timeImpact = change.estimated_time_impact_hours || 0;
     const newOverhaulHours = currentHours + timeImpact;
 
-    const { error } = await supa
+    const { error } = await supabase
       .from('overhaul_history')
       .insert([{
         product_id: change.affected_product_id,

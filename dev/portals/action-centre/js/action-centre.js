@@ -3,91 +3,93 @@
 // Depends on: state.js, auth.js, helpers.js, navigation.js, settings.js
 // ═══════════════════════════════════
 
-// ─────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────
+import { appState, db } from '../../../core/js/state.js'
+import { currentUser, supabase } from '../../../core/js/supa.js'
+import { esc, emptyState, emailToDisplayName, showToast } from '../../../utils/js/helpers.js'
+import { navigate, render } from '../../../utils/js/navigation.js'
+import { showGuide } from '../../../utils/js/guide.js'
+import { settingsGetCoreState } from '../../settings/js/settings.js'
+import { settingsEnsurePermissionsData } from '../../settings/js/settings-teams.js'
+import * as mcsApproversData from '../../mcs/js/mcs-approvers-data.js'
 
-// Returns the display name for the current logged-in user.
-function actionCentreGetMyName() {
-  if (!currentUser) return '';
-  if (typeof settingsPermissionsData !== 'undefined' && Array.isArray(settingsPermissionsData)) {
-    const profile = settingsPermissionsData.find(u => u.id === currentUser.id);
-    if (profile && profile.full_name) return profile.full_name;
+let actionCentreDelegationContainer = null
+
+function actionCentreRenderIfVisible() {
+  if (appState.currentSection === 'action-centre' || appState.currentSection === 'hub') {
+    render()
   }
-  return emailToDisplayName(currentUser.email);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Data Loading
-// ─────────────────────────────────────────────────────────────
+export function actionCentreGetMyName() {
+  if (!currentUser) return ''
+  const permissionsData = settingsGetCoreState().settingsPermissionsData
+  if (Array.isArray(permissionsData)) {
+    const profile = permissionsData.find(u => u.id === currentUser.id)
+    if (profile && profile.full_name) return profile.full_name
+  }
+  return emailToDisplayName(currentUser.email)
+}
 
-async function actionCentreLoad() {
-  if (actionCentreLoading) return;
-  actionCentreLoading = true;
-  if (currentSection === 'action-centre') render();
+export async function actionCentreLoad() {
+  if (appState.actionCentreLoading) return
+  appState.actionCentreLoading = true
+  if (appState.currentSection === 'action-centre') render()
 
   try {
-    // Ensure user profiles are loaded so the current user's name is known
-    if (typeof settingsEnsurePermissionsData === 'function') {
-      await settingsEnsurePermissionsData();
-    }
+    await settingsEnsurePermissionsData()
 
-    const myName = actionCentreGetMyName();
+    const myName = actionCentreGetMyName()
     if (!myName || !currentUser) {
-      actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], mcsApprovals: [], error: null };
-      return;
+      appState.actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], mcsApprovals: [], error: null }
+      return
     }
 
-    // Ensure MCS approver config is loaded so we know which steps this user approves
-    if (typeof mcsApproversLoad === 'function' && mcsApproverConfig === null && !mcsApproverConfigLoading) {
-      mcsApproverConfigLoading = true;
-      mcsApproverConfig = await mcsApproversLoad();
-      mcsApproverConfigLoading = false;
+    if (appState.mcsApproverConfig === null && !appState.mcsApproverConfigLoading) {
+      appState.mcsApproverConfigLoading = true
+      appState.mcsApproverConfig = await mcsApproversData.mcsApproversLoad()
+      appState.mcsApproverConfigLoading = false
     }
 
-    // Fetch all action types assigned to the current user in parallel
     const [actRes, pfmeaRes, riskRes] = await Promise.all([
-      supa.from('npi_actions')
+      supabase.from('npi_actions')
         .select('id, description, owner, due_date, status, priority, source, notes, project_id')
         .ilike('owner', myName),
-      supa.from('npi_pfmea_causes')
+      supabase.from('npi_pfmea_causes')
         .select('id, action_desc, action_taken, action_owner, action_due, project_id')
         .ilike('action_owner', myName)
         .neq('action_desc', ''),
-      supa.from('npi_risks')
+      supabase.from('npi_risks')
         .select('id, description, owner, category, likelihood, impact, status, project_id')
         .ilike('owner', myName)
-    ]);
+    ])
 
-    // Gather unique project IDs to resolve names in one query
     const projectIds = new Set([
       ...(actRes.data || []).map(r => r.project_id),
       ...(pfmeaRes.data || []).map(r => r.project_id),
-      ...(riskRes.data || []).map(r => r.project_id),
-    ].filter(Boolean));
+      ...(riskRes.data || []).map(r => r.project_id)
+    ].filter(Boolean))
 
-    let projectMap = {};
+    let projectMap = {}
     if (projectIds.size > 0) {
-      const { data: projects } = await supa
+      const { data: projects } = await supabase
         .from('projects')
         .select('prog_id, name')
-        .in('prog_id', [...projectIds]);
+        .in('prog_id', [...projectIds])
       if (projects) {
-        projects.forEach(p => { projectMap[p.prog_id] = p.name; });
+        projects.forEach(p => { projectMap[p.prog_id] = p.name })
       }
     }
 
-    const getProjectName = id => projectMap[id] || 'Unknown Project';
+    const getProjectName = id => projectMap[id] || 'Unknown Project'
 
-    // Load pending MCS approvals for this user's approver role(s)
-    let mcsApprovals = [];
-    if (typeof mcsGetPendingApprovalsForMe === 'function' && mcsApproverConfig && !mcsApproverConfig._tableNotFound) {
+    let mcsApprovals = []
+    if (appState.mcsApproverConfig && !appState.mcsApproverConfig._tableNotFound && typeof mcsApproversData.mcsGetPendingApprovalsForMe === 'function') {
       try {
-        mcsApprovals = await mcsGetPendingApprovalsForMe();
-      } catch (_) { /* non-fatal — MCS table may not exist */ }
+        mcsApprovals = await mcsApproversData.mcsGetPendingApprovalsForMe()
+      } catch (_) {}
     }
 
-    actionCentreData = {
+    appState.actionCentreData = {
       myName,
       error: null,
       actions: (actRes.data || []).map(r => ({
@@ -103,75 +105,58 @@ async function actionCentreLoad() {
         projectName: getProjectName(r.project_id)
       })),
       mcsApprovals
-    };
-  } catch (err) {
-    console.error('[ActionCentre] Load failed:', err);
-    actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], mcsApprovals: [], error: err.message };
-  } finally {
-    actionCentreLoading = false;
-    if (currentSection === 'action-centre' || currentSection === 'hub') render();
-  }
-}
-
-/** Navigate to MCS and auto-open a specific change. */
-function actionCentreGoToMcs(changeId) {
-  if (changeId) mcsAutoViewId = changeId;
-  navigate('mcs');
-}
-
-// ─────────────────────────────────────────────────────────────
-// Navigation helpers
-// ─────────────────────────────────────────────────────────────
-
-// Navigate to the project that owns a given action/risk/pfmea item, then to `section`.
-// Optionally scroll to a specific item by ID.
-//
-// NPI sub-tables (npi_actions, npi_pfmea_causes, npi_risks) store prog_id
-// as their project_id (the application-level UUID held as db.projects[i].id).
-// This function will find the matching project and navigate to it.
-function actionCentreGoTo(projectProgId, section, itemId) {
-  if (!projectProgId) return;
-
-  // Resolve: look up by progId (prog_id from NPI tables, stored as project.id in cache),
-  // then fall back to dbId match (database primary key, for compatibility).
-  const project = db.projects.find(p => p.id === projectProgId || p.dbId === projectProgId);
-  if (!project) {
-    showToast('Project not found — please refresh the page', 'warning');
-    return;
-  }
-  progId = project.id;
-
-  // Set the item to scroll to based on section type
-  if (section === 'actions') selectedActionId = itemId;
-  else if (section === 'apqp') selectedPfmeaCauseId = itemId;
-  else if (section === 'risks') selectedRiskId = itemId;
-
-  navigate(section);
-}
-
-// Update a single NPI action's status directly in Supabase.
-async function actionCentreUpdateActionStatus(id, newStatus) {
-  if (!id) return;
-  try {
-    const { error } = await supa.from('npi_actions').update({ status: newStatus }).eq('id', id);
-    if (error) { showToast('Could not update status: ' + error.message, 'error'); return; }
-    // Reflect change locally so we don't need a full reload
-    if (actionCentreData && actionCentreData.actions) {
-      const item = actionCentreData.actions.find(a => a.id === id);
-      if (item) item.status = newStatus;
     }
-    render();
   } catch (err) {
-    showToast('Could not update status: ' + err.message, 'error');
+    console.error('[ActionCentre] Load failed:', err)
+    appState.actionCentreData = { myName: '', actions: [], pfmea: [], risks: [], mcsApprovals: [], error: err.message }
+  } finally {
+    appState.actionCentreLoading = false
+    actionCentreRenderIfVisible()
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Render
-// ─────────────────────────────────────────────────────────────
+function actionCentreGoToMcs(changeId) {
+  if (changeId) appState.mcsAutoViewId = changeId
+  navigate('mcs')
+}
 
-function renderActionCentre() {
-  if (actionCentreLoading) {
+function actionCentreGoTo(projectProgId, section, itemId) {
+  if (!projectProgId) return
+
+  const project = db.projects.find(p => p.id === projectProgId || p.dbId === projectProgId)
+  if (!project) {
+    showToast('Project not found — please refresh the page', 'warning')
+    return
+  }
+  appState.progId = project.id
+
+  if (section === 'actions') appState.selectedActionId = itemId
+  else if (section === 'apqp') appState.selectedPfmeaCauseId = itemId
+  else if (section === 'risks') appState.selectedRiskId = itemId
+
+  navigate(section)
+}
+
+async function actionCentreUpdateActionStatus(id, newStatus) {
+  if (!id) return
+  try {
+    const { error } = await supabase.from('npi_actions').update({ status: newStatus }).eq('id', id)
+    if (error) {
+      showToast('Could not update status: ' + error.message, 'error')
+      return
+    }
+    if (appState.actionCentreData && appState.actionCentreData.actions) {
+      const item = appState.actionCentreData.actions.find(a => a.id === id)
+      if (item) item.status = newStatus
+    }
+    render()
+  } catch (err) {
+    showToast('Could not update status: ' + err.message, 'error')
+  }
+}
+
+export function renderActionCentre() {
+  if (appState.actionCentreLoading) {
     return `
       <div class="sec-head">
         <div><div class="sec-eyebrow">My Work</div><div class="sec-title">Action Centre</div></div>
@@ -179,28 +164,29 @@ function renderActionCentre() {
       <div style="padding:60px;text-align:center;color:var(--muted)">
         <div style="font-size:32px;margin-bottom:12px">⏳</div>
         Loading your actions…
-      </div>`;
+      </div>`
   }
 
-  if (!actionCentreData) {
+  if (!appState.actionCentreData) {
     return `
       <div class="sec-head">
         <div><div class="sec-eyebrow">My Work</div><div class="sec-title">Action Centre</div></div>
       </div>
-      ${emptyState('✅', 'Nothing here yet', 'Loading…')}`;
+      ${emptyState('✅', 'Nothing here yet', 'Loading…')}`
   }
 
-  const { myName, actions, pfmea, risks, mcsApprovals = [], error } = actionCentreData;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const { myName, actions, pfmea, risks, mcsApprovals = [], error } = appState.actionCentreData
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  const isOpen = item => item.status !== 'Closed';
+  const isOpen = item => item.status !== 'Closed'
   const isOverdue = (item, dueProp) => {
-    if (!item[dueProp]) return false;
-    const d = new Date(item[dueProp]); d.setHours(0, 0, 0, 0);
-    return d < today && isOpen(item);
-  };
+    if (!item[dueProp]) return false
+    const d = new Date(item[dueProp])
+    d.setHours(0, 0, 0, 0)
+    return d < today && isOpen(item)
+  }
 
-  // Build unified items list
   const allItems = [
     ...actions.map(a => ({
       id: a.id,
@@ -225,7 +211,7 @@ function renderActionCentre() {
       priority: '—',
       source: 'PFMEA',
       _overdue: p.action_due
-        ? (() => { const d = new Date(p.action_due); d.setHours(0,0,0,0); return d < today; })()
+        ? (() => { const d = new Date(p.action_due); d.setHours(0, 0, 0, 0); return d < today })()
         : false
     })),
     ...risks.map(r => ({
@@ -252,72 +238,66 @@ function renderActionCentre() {
       priority: change.priority || '—',
       source: `MCS — ${stepLabel}`,
       _overdue: change.target_implementation
-        ? (() => { const d = new Date(change.target_implementation); d.setHours(0,0,0,0); return d < today; })()
+        ? (() => { const d = new Date(change.target_implementation); d.setHours(0, 0, 0, 0); return d < today })()
         : false
     }))
-  ];
+  ]
 
-  // Status filter (MCS approvals are always 'pending' — shown in open/all, not closed)
-  const statusFiltered = actionCentreStatusFilter === 'open'
+  const statusFiltered = appState.actionCentreStatusFilter === 'open'
     ? allItems.filter(i => i.status !== 'Closed')
-    : actionCentreStatusFilter === 'closed'
-    ? allItems.filter(i => i.status === 'Closed' && i._type !== 'mcs-approval')
-    : allItems;
+    : appState.actionCentreStatusFilter === 'closed'
+      ? allItems.filter(i => i.status === 'Closed' && i._type !== 'mcs-approval')
+      : allItems
 
-  // Type tab filter
-  const tabFiltered = actionCentreTab === 'all'
+  const tabFiltered = appState.actionCentreTab === 'all'
     ? statusFiltered
-    : statusFiltered.filter(i => i._type === actionCentreTab);
+    : statusFiltered.filter(i => i._type === appState.actionCentreTab)
 
-  // KPI counts (always over all items, not filtered)
-  const totalOpen = allItems.filter(i => i.status !== 'Closed').length;
-  const totalOverdue = allItems.filter(i => i._overdue).length;
-  const totalClosed = allItems.filter(i => i.status === 'Closed').length;
+  const totalOpen = allItems.filter(i => i.status !== 'Closed').length
+  const totalOverdue = allItems.filter(i => i._overdue).length
+  const totalClosed = allItems.filter(i => i.status === 'Closed').length
 
-  // Build table rows
   const rows = tabFiltered.map(item => {
     const typeChip = item._type === 'pfmea'
       ? '<span class="ac-type-chip ac-chip-pfmea">PFMEA</span>'
       : item._type === 'risk'
-      ? '<span class="ac-type-chip ac-chip-risk">Risk</span>'
-      : item._type === 'mcs-approval'
-      ? '<span class="ac-type-chip ac-chip-mcs">MCS</span>'
-      : '<span class="ac-type-chip ac-chip-action">Action</span>';
+        ? '<span class="ac-type-chip ac-chip-risk">Risk</span>'
+        : item._type === 'mcs-approval'
+          ? '<span class="ac-type-chip ac-chip-mcs">MCS</span>'
+          : '<span class="ac-type-chip ac-chip-action">Action</span>'
 
     const dueCell = item.due
       ? `<span style="${item._overdue ? 'color:var(--red);font-weight:600' : ''}">${esc(item.due)}</span>`
-      : '<span style="color:var(--muted)">—</span>';
+      : '<span style="color:var(--muted)">—</span>'
 
-    let statusClass = 'ac-status-open';
-    if (item.status === 'Closed') statusClass = 'ac-status-closed';
-    else if (item.status === 'In Progress') statusClass = 'ac-status-progress';
-    else if (item.status === 'Blocked') statusClass = 'ac-status-blocked';
+    let statusClass = 'ac-status-open'
+    if (item.status === 'Closed') statusClass = 'ac-status-closed'
+    else if (item.status === 'In Progress') statusClass = 'ac-status-progress'
+    else if (item.status === 'Blocked') statusClass = 'ac-status-blocked'
 
-    // Only NPI actions support inline status change from here; MCS items show a fixed badge
     const statusCell = item._type === 'action'
-      ? `<select class="cell-edit" style="width:100%" onchange="actionCentreUpdateActionStatus('${esc(item.id)}',this.value)">
-          ${['Open','In Progress','Closed','Blocked'].map(s => `<option${item.status===s?' selected':''}>${s}</option>`).join('')}
+      ? `<select class="cell-edit ac-status-select" style="width:100%" data-hub-action="set-action-status" data-id="${esc(item.id)}">
+          ${['Open', 'In Progress', 'Closed', 'Blocked'].map(s => `<option${item.status === s ? ' selected' : ''}>${s}</option>`).join('')}
         </select>`
-      : `<span class="${statusClass}">${esc(item.status)}</span>`;
+      : `<span class="${statusClass}">${esc(item.status)}</span>`
 
-    const goSection = item._type === 'pfmea' ? 'apqp' : item._type === 'risk' ? 'risks' : 'actions';
+    const goSection = item._type === 'pfmea' ? 'apqp' : item._type === 'risk' ? 'risks' : 'actions'
     const goBtn = item._type === 'mcs-approval'
-      ? `<button class="btn btn-ghost btn-sm" onclick="actionCentreGoToMcs('${esc(item.id)}')">→ Review</button>`
-      : `<button class="btn btn-ghost btn-sm" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}','${esc(item.id)}')">→ Open</button>`;
+      ? `<button class="btn btn-ghost btn-sm" data-hub-action="go-mcs" data-id="${esc(item.id)}">→ Review</button>`
+      : `<button class="btn btn-ghost btn-sm" data-hub-action="go-item" data-project-id="${esc(item.project_id)}" data-section="${goSection}" data-id="${esc(item.id)}">→ Open</button>`
 
     return `<tr class="${item._overdue ? 'row-overdue' : ''}">
-      <td class="ac-col-project"><a class="ac-project-link" onclick="actionCentreGoTo('${esc(item.project_id)}','${goSection}','${esc(item.id)}')">${esc(item.projectName)}</a></td>
+      <td class="ac-col-project"><a class="ac-project-link" data-hub-action="go-item" data-project-id="${esc(item.project_id)}" data-section="${goSection}" data-id="${esc(item.id)}">${esc(item.projectName)}</a></td>
       <td class="ac-col-type">${typeChip}</td>
       <td class="ac-col-desc">${esc(item.description)}</td>
       <td class="ac-col-due">${dueCell}</td>
       <td class="ac-col-status">${statusCell}</td>
       <td class="ac-col-action">${goBtn}</td>
-    </tr>`;
-  }).join('');
+    </tr>`
+  }).join('')
 
   const tableOrEmpty = tabFiltered.length === 0
-    ? emptyState('✅', 'All clear!',
-        actionCentreStatusFilter === 'open' ? 'No open items assigned to you' : 'Nothing to show with this filter')
+    ? emptyState('✅', 'All clear!', appState.actionCentreStatusFilter === 'open' ? 'No open items assigned to you' : 'Nothing to show with this filter')
     : `<div class="ac-table-wrap">
         <table class="tbl ac-table">
           <thead>
@@ -332,16 +312,15 @@ function renderActionCentre() {
           </thead>
           <tbody>${rows}</tbody>
         </table>
-      </div>`;
+      </div>`
 
-  // Active approvals panel — shown only when the user has pending MCS approvals
   const activeApprovalsPanel = mcsApprovals.length > 0 ? (() => {
-    const approvalRows = mcsApprovals.map(({ change, stepKey, stepLabel }) => {
-      const priorityColor = { critical: 'var(--red)', high: 'var(--orange)', medium: 'var(--accent)', low: 'var(--text3)' }[change.priority] || 'var(--text3)';
-      const target = change.target_implementation || '—';
+    const approvalRows = mcsApprovals.map(({ change, stepLabel }) => {
+      const priorityColor = { critical: 'var(--red)', high: 'var(--orange)', medium: 'var(--accent)', low: 'var(--text3)' }[change.priority] || 'var(--text3)'
+      const target = change.target_implementation || '—'
       const targetOverdue = change.target_implementation
-        ? (() => { const d = new Date(change.target_implementation); d.setHours(0,0,0,0); return d < today; })()
-        : false;
+        ? (() => { const d = new Date(change.target_implementation); d.setHours(0, 0, 0, 0); return d < today })()
+        : false
       return `<tr>
         <td class="ac-col-ecrid"><span class="ac-ecr-badge">${esc(change.id)}</span></td>
         <td class="ac-col-desc" style="font-weight:500">${esc(change.title)}</td>
@@ -349,9 +328,9 @@ function renderActionCentre() {
         <td><span style="font-size:11px;font-weight:700;color:${priorityColor};text-transform:capitalize">${esc(change.priority || '—')}</span></td>
         <td><span class="ac-approvals-step-badge">${esc(stepLabel)}</span></td>
         <td style="font-family:var(--mono);font-size:12px;${targetOverdue ? 'color:var(--red);font-weight:600' : 'color:var(--text3)'}">${esc(target)}</td>
-        <td style="text-align:right"><button class="btn btn-primary btn-sm" onclick="actionCentreGoToMcs('${esc(change.id)}')">Review ECR →</button></td>
-      </tr>`;
-    }).join('');
+        <td style="text-align:right"><button class="btn btn-primary btn-sm" data-hub-action="go-mcs" data-id="${esc(change.id)}">Review ECR →</button></td>
+      </tr>`
+    }).join('')
 
     return `
       <div class="card ac-approvals-card">
@@ -363,7 +342,7 @@ function renderActionCentre() {
               <span class="card-meta">${mcsApprovals.length} ECR${mcsApprovals.length !== 1 ? 's' : ''} awaiting your sign-off</span>
             </div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="navigate('mcs')">View all ECRs →</button>
+          <button class="btn btn-ghost btn-sm" data-hub-action="go-mcs-list">View all ECRs →</button>
         </div>
         <div class="ac-table-wrap">
           <table class="tbl ac-table ac-approvals-table">
@@ -381,63 +360,121 @@ function renderActionCentre() {
             <tbody>${approvalRows}</tbody>
           </table>
         </div>
-      </div>`;
-  })() : '';
+      </div>`
+  })() : ''
 
   return `
-    <div class="sec-head">
-      <div>
-        <div class="sec-eyebrow">My Work</div>
-        <div class="sec-title">Action Centre</div>
-        <div class="sec-desc">All actions assigned to <strong>${esc(myName)}</strong> across every project.</div>
+    <div id="action-centre-container">
+      <div class="sec-head">
+        <div>
+          <div class="sec-eyebrow">My Work</div>
+          <div class="sec-title">Action Centre</div>
+          <div class="sec-desc">All actions assigned to <strong>${esc(myName)}</strong> across every project.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" data-hub-action="show-guide" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost btn-sm" data-hub-action="refresh">↺ Refresh</button>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;flex-shrink:0">
-        <button class="btn btn-ghost btn-sm" onclick="showGuide('action-centre')" title="User Guide">❓ Guide</button>
-        <button class="btn btn-ghost btn-sm" onclick="actionCentreData=null;actionCentreLoading=false;actionCentreLoad()">↺ Refresh</button>
-      </div>
-    </div>
 
-    ${error ? `<div style="margin-bottom:12px;padding:10px 14px;background:var(--status-red-bg);border:1px solid var(--chart-red-pale);border-radius:6px;font-size:0.82rem;color:var(--red)">Failed to load: ${esc(error)}</div>` : ''}
+      ${error ? `<div style="margin-bottom:12px;padding:10px 14px;background:var(--status-red-bg);border:1px solid var(--chart-red-pale);border-radius:6px;font-size:0.82rem;color:var(--red)">Failed to load: ${esc(error)}</div>` : ''}
 
-    ${activeApprovalsPanel}
+      ${activeApprovalsPanel}
 
-    <div class="ac-kpis">
-      <div class="kpi-card ac-kpi" style="--kpi-color:var(--amber)">
-        <div class="kpi-num" style="font-size:22px">${totalOpen}</div>
-        <div class="kpi-label">Open</div>
+      <div class="ac-kpis">
+        <div class="kpi-card ac-kpi" style="--kpi-color:var(--amber)">
+          <div class="kpi-num" style="font-size:22px">${totalOpen}</div>
+          <div class="kpi-label">Open</div>
+        </div>
+        <div class="kpi-card ac-kpi" style="--kpi-color:var(--red)">
+          <div class="kpi-num" style="font-size:22px;color:var(--red)">${totalOverdue}</div>
+          <div class="kpi-label">Overdue</div>
+        </div>
+        <div class="kpi-card ac-kpi" style="--kpi-color:var(--green)">
+          <div class="kpi-num" style="font-size:22px;color:var(--green)">${totalClosed}</div>
+          <div class="kpi-label">Done</div>
+        </div>
       </div>
-      <div class="kpi-card ac-kpi" style="--kpi-color:var(--red)">
-        <div class="kpi-num" style="font-size:22px;color:var(--red)">${totalOverdue}</div>
-        <div class="kpi-label">Overdue</div>
-      </div>
-      <div class="kpi-card ac-kpi" style="--kpi-color:var(--green)">
-        <div class="kpi-num" style="font-size:22px;color:var(--green)">${totalClosed}</div>
-        <div class="kpi-label">Done</div>
-      </div>
-    </div>
 
-    <div class="ac-filter-row">
-      <div class="ac-filter-group">
-        ${['open','all','closed'].map(f => `
-          <button class="btn btn-sm ${actionCentreStatusFilter === f ? 'btn-primary' : 'btn-ghost'}"
-            onclick="actionCentreStatusFilter='${f}';render()">
-            ${f === 'open' ? '🔵 Open' : f === 'closed' ? '✅ Closed' : '📋 All'}
-          </button>`).join('')}
+      <div class="ac-filter-row">
+        <div class="ac-filter-group">
+          ${['open', 'all', 'closed'].map(f => `
+            <button class="btn btn-sm ${appState.actionCentreStatusFilter === f ? 'btn-primary' : 'btn-ghost'}" data-hub-action="set-status-filter" data-filter="${f}">
+              ${f === 'open' ? '🔵 Open' : f === 'closed' ? '✅ Closed' : '📋 All'}
+            </button>`).join('')}
+        </div>
+        <div class="ac-filter-group">
+          ${[['all', 'All types'], ['action', 'Actions'], ['pfmea', 'PFMEA'], ['risk', 'Risks'], ['mcs-approval', 'MCS Approvals']].map(([t, l]) => `
+            <button class="btn btn-sm ${appState.actionCentreTab === t ? 'btn-primary' : 'btn-ghost'}" data-hub-action="set-tab-filter" data-filter="${t}">
+              ${esc(l)}
+            </button>`).join('')}
+        </div>
       </div>
-      <div class="ac-filter-group">
-        ${[['all','All types'],['action','Actions'],['pfmea','PFMEA'],['risk','Risks'],['mcs-approval', 'MCS Approvals']].map(([t,l]) => `
-          <button class="btn btn-sm ${actionCentreTab === t ? 'btn-primary' : 'btn-ghost'}"
-            onclick="actionCentreTab='${t}';render()">
-            ${esc(l)}
-          </button>`).join('')}
-      </div>
-    </div>
 
-    <div class="card" style="overflow-x:auto">
-      <div class="card-head">
-        <span class="card-title">Assigned to me</span>
-        <span class="card-meta">${tabFiltered.length} item${tabFiltered.length !== 1 ? 's' : ''}</span>
+      <div class="card" style="overflow-x:auto">
+        <div class="card-head">
+          <span class="card-title">Assigned to me</span>
+          <span class="card-meta">${tabFiltered.length} item${tabFiltered.length !== 1 ? 's' : ''}</span>
+        </div>
+        ${tableOrEmpty}
       </div>
-      ${tableOrEmpty}
-    </div>`;
+    </div>`
+}
+
+function setupActionCentreDelegation() {
+  const container = document.getElementById('action-centre-container')
+  if (!container || actionCentreDelegationContainer === container) return
+  actionCentreDelegationContainer = container
+
+  container.addEventListener('click', (event) => {
+    const actionEl = event.target.closest('[data-hub-action]')
+    if (!actionEl || !container.contains(actionEl)) return
+    const action = actionEl.dataset.hubAction
+
+    if (action === 'show-guide') {
+      showGuide('action-centre')
+      return
+    }
+    if (action === 'refresh') {
+      appState.actionCentreData = null
+      appState.actionCentreLoading = false
+      actionCentreLoad()
+      return
+    }
+    if (action === 'set-status-filter') {
+      appState.actionCentreStatusFilter = actionEl.dataset.filter || 'open'
+      render()
+      return
+    }
+    if (action === 'set-tab-filter') {
+      appState.actionCentreTab = actionEl.dataset.filter || 'all'
+      render()
+      return
+    }
+    if (action === 'go-item') {
+      actionCentreGoTo(actionEl.dataset.projectId || '', actionEl.dataset.section || 'actions', actionEl.dataset.id || '')
+      return
+    }
+    if (action === 'go-mcs') {
+      actionCentreGoToMcs(actionEl.dataset.id || '')
+      return
+    }
+    if (action === 'go-mcs-list') {
+      navigate('mcs')
+    }
+  })
+
+  container.addEventListener('change', (event) => {
+    const selectEl = event.target.closest('.ac-status-select')
+    if (!selectEl || !container.contains(selectEl)) return
+    actionCentreUpdateActionStatus(selectEl.dataset.id || '', selectEl.value)
+  })
+}
+
+export function actionCentreDataSubscribe() {
+  setupActionCentreDelegation()
+}
+
+export function actionCentreDataUnsubscribe() {
+  actionCentreDelegationContainer = null
 }

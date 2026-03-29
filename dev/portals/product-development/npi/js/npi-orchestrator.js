@@ -1,34 +1,41 @@
 // ═══════════════════════════════════
 // npi-orchestrator.js — NPI section orchestrator
-// Depends on: npi.js and all NPI feature modules
+// Depends on: NPI feature modules + state helpers
 // ═══════════════════════════════════
 
-npi.init = function() {
-  // Reset subscriptions each init to avoid stale handlers
-  npi._subs = {}
-  // Subscribe to render trigger from data layer
-  npi.watch('render', function() { render() })
-  // Async-safe init for data layer — errors are logged but won't crash navigation
-  if (typeof npiDataInit === 'function') {
-    Promise.resolve().then(() => npiDataInit()).catch(err => console.error('[NPI] init error:', err))
-  }
+import { prog } from '../../../../core/js/state.js'
+import { renderDashboard } from './dashboard.js'
+import { renderGatePage } from './gates.js'
+import { renderApqp } from './apqp.js'
+import { renderActions, renderRisks } from './trackers.js'
+import { renderBom } from './bom.js'
+import { renderTimingPlan } from './timing.js'
+import { renderDocuments } from './documents.js'
+
+export function initNpiOrchestrator({ watchRender, renderApp, npiDataSubscribe }) {
+  watchRender('render', function() {
+    renderApp()
+  })
+  Promise.resolve()
+    .then(() => npiDataSubscribe())
+    .catch(err => console.error('[NPI] init error:', err))
 }
 
-npi.cleanup = function() {
-  if (typeof npiDataUnsubscribe === 'function') npiDataUnsubscribe()
-  if (typeof npi.events.teardown === 'function') npi.events.teardown()
+export function cleanupNpiOrchestrator({ npiDataUnsubscribe, teardownEvents }) {
+  npiDataUnsubscribe()
+  teardownEvents()
 }
 
-npi.render = function(section) {
-  const inner = npi._renderInner(section)
+export function renderNpi(section) {
+  const inner = renderNpiSection(section)
   return `<div id="npi-content">${inner}</div>`
 }
 
-npi._renderInner = function(section) {
-  const p = typeof prog === 'function' ? prog() : null
+export function renderNpiSection(section) {
+  const p = prog()
   const isSubAssembly = !!(p && p.parentId)
 
-  if (section === 'project') return npi.dashboard.renderDashboard()
+  if (section === 'project') return renderDashboard()
 
   if (section && section.startsWith('gate_')) {
     if (isSubAssembly) {
@@ -36,39 +43,39 @@ npi._renderInner = function(section) {
     }
 
     const gateNum = Number(section.split('_')[1])
-    return Number.isFinite(gateNum) ? npi.gate.renderGatePage(gateNum) : ''
+    return Number.isFinite(gateNum) ? renderGatePage(gateNum) : ''
   }
 
-  if (section === 'apqp') return npi.apqp.renderAPQP()
+  if (section === 'apqp') return renderApqp()
 
   if (section === 'actions') {
     if (isSubAssembly) {
       return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Actions are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Open root actions to create or update items for this sub-assembly.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('actions')">Open Root Actions</button></div></div>`
     }
-    return npi.tracker.renderActions()
+    return renderActions()
   }
 
   if (section === 'risks') {
     if (isSubAssembly) {
       return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Risks are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Open root risks to create or update items for this sub-assembly.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('risks')">Open Root Risks</button></div></div>`
     }
-    return npi.tracker.renderRisks()
+    return renderRisks()
   }
 
-  if (section === 'bom') return npi.bom.renderBOM()
+  if (section === 'bom') return renderBom()
 
   if (section === 'timing') {
     if (isSubAssembly) {
       return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Timing is managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Sub-assembly timing is reviewed from the root project view.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('project')">Open Root Project</button></div></div>`
     }
-    return npi.timing.renderTimingPlan()
+    return renderTimingPlan()
   }
 
   if (section === 'documents') {
     if (isSubAssembly) {
       return `<div class="card" style="margin:16px"><div class="card-head"><span class="card-title">Documents are managed in the root project</span></div><div style="padding:12px;font-size:13px;color:var(--muted)">Use the root project for shared project-management documents.</div><div style="padding:0 12px 12px"><button class="btn btn-primary btn-sm" onclick="npi.nav.openParentSection('project')">Open Root Project</button></div></div>`
     }
-    return npi.docs.render()
+    return renderDocuments()
   }
 
   return ''

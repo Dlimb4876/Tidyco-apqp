@@ -4,9 +4,11 @@
  * Covers: capTasksSortBy, capGetSortIcon, capRenderTasksTab
  *         (filtering, KPI calculations, sort icon logic)
  */
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 
-const fs = require('fs');
-const path = require('path');
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // ─────────────────────────────────────────────────────────────
 // Mock Dependencies
@@ -16,12 +18,14 @@ global.esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
 
 // localStorage mock (jsdom provides it)
 
-// Load module
-const src = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/shared/js/cap-tasks.js'),
-  'utf8'
-);
-eval(src); // eslint-disable-line no-eval
+// ─────────────────────────────────────────────────────────────
+// Load module and expose to window
+// ─────────────────────────────────────────────────────────────
+
+beforeAll(async () => {
+  const capTasksModule = await import('../portals/capacity/shared/js/cap-tasks.js');
+  Object.assign(window, capTasksModule);
+});
 
 // ─────────────────────────────────────────────────────────────
 // Sample data

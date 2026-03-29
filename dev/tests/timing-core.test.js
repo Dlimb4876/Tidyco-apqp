@@ -5,8 +5,12 @@
  *   npi.timing.ganttWeekDate, npi.timing.fmtWeekDate, npi.timing.buildMonthGroups
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ─────────────────────────────────────────────────────────────
 // Mock Dependencies
@@ -36,7 +40,7 @@ global.prog  = jest.fn(() => ({ id: 'p1', gantt: [], ganttStart: '2025-01-06', g
 global.save  = jest.fn();
 global.render = jest.fn();
 
-// Load timing.js
+// Load timing.js using eval
 const src = fs.readFileSync(
   path.resolve(__dirname, '../portals/product-development/npi/js/timing.js'),
   'utf8'

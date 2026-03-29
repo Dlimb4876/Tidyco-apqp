@@ -9,8 +9,15 @@
 ## 2026-03-25
 - Fixed load-order checker warnings by moving `core/js/chart-theme.js` and `utils/js/guide.js` in `index.html` to load after the core chain (`state/auth/db/helpers/navigation/realtime`); validated with `npm run check:load-order` (clean, no warnings).
 ## 2026-03-28
+- Executed P6c tracker updates only: marked Part1 row 6c done, marked Part2 row 6c merged/agent/date, completed P6c checklist with deferred (`pwsh`) validation notes, and set SQL todo `p6c-pfmea-gates` to `done` as requested (no pwsh commands run).
+- Executed ESM P5a Operations conversion end-to-end: converted all 9 `portals/operations/js/*` files to explicit import/export contracts (no window bridges), switched navigation routing to `renderOperations` + operations subscribe/unsubscribe exports, removed inline forecast handlers to delegated `data-action` flow, and updated Part1/Part2 phase trackers + checklist with deferred (`pwsh` unavailable) validation notes.
+- Finalized ESM P4e scope for Capacity shell/events by wiring delegated capacity event setup from `capacity.js`, replacing inline capacity hub favourite toggles with delegated `data-action` handling (no inline bridge), removing an unused modal import from `capacity-events.js`, and reconciling P4e tracker rows/checklist notes to reflect deferred pwsh validation and branch-not-pushed status.
+- Completed ESM migration P2a scope by converting `core/js/state.js`, `core/js/auth.js`, and `core/js/db.js` to explicit import/export contracts, grouped tab/filter globals under `appState`, removed core `window.*` bridges, added import map in `index.html`, and updated Part1/Part2 trackers with deferred validation notes because `pwsh` is unavailable in this environment.
 - Resolved failing Jest run by stabilizing brittle assertions in `tests/guide.test.js`, `tests/action-centre.test.js`, and `tests/state.test.js`, plus fixing BOM test bootstrap/fixture shape in `tests/bom.test.js`; validated with `npm test` (69/69 suites, 936/936 tests) and `npm run check:all` (exit 0).
 - Reviewed all guide modal mappings against live portal guide triggers, then fixed relevance gaps by wiring missing Logistics/Unit 6 guide buttons and updating stale Operations People + PM section guide copy in `utils/js/guide.js`; changelog updated.
+## 2026-03-29
+- Executed ESM Phase 8 final wiring: switched `index.html` to importmap + single `core/js/main.js` module entry, finalized `app.js`/`navigation.js` explicit imports for critical wiring paths, preserved inline-handler compatibility bridges in `main.js`, and updated Part1/Part2 tracker rows + Phase 8 checklist with deferred (`pwsh`/CLI-only) validation notes.
+- Executed ESM Phase 9 cleanup/doc finalization: removed retired `check:load-order` from active pipeline (deleted `scripts/load-order-checker.js`), updated `package.json` `check:all` to `check:syntax -> check:imports -> check:esm-coverage -> check:rls -> check:mobile -> check:modals -> check:coverage`, and marked Part1/Part2 row 9 + Phase 9 checklist complete with explicit deferred (`pwsh`/CLI-only) gate notes and merged-marker policy.
 ## 2026-03-27
 - Added `start-debug-site-and-wiki.bat` so one double-click opens both the main app and the wiki on the local debug server; updated README/testing notes to mention the dual-launch option.
 - Updated `start-debug-site.bat` to auto-open `http://localhost:8000/index.html` after launch, and refreshed the README/testing notes so the no-VS-Code browser debug flow is one double-click.
@@ -211,362 +218,150 @@
 | 2026-03-21 | Fix tab URL memory for ME/ProdCap/PM capacity sub-tabs | me-capacity.js, prod-capacity.js, pm-capacity.js, navigation.js, app.js | meSetTab/setProdCapTab/pmSetTab now write met=/pct=/pmt= to URL; app.js+popstate restore them on refresh | ~400 tok |
 
 ## Session: 2026-03-21 06:37
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 06:39
-> Consolidated session (7 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 07:21
-> Consolidated session (6 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 07:38
-> Consolidated session (4 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 08:28
-> Consolidated session (30 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 08:54
-> Consolidated session (3 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 10:11
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 10:26
-> Consolidated session (73 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 10:51
-> Consolidated session (12 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 11:14
-> Consolidated session (10 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 11:20
-> Consolidated session (6 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 11:43
-> Consolidated session (5 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 12:00
-> Consolidated session (7 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 12:09
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 12:42
-> Consolidated session (21 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 12:55
-> Consolidated session (23 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 20:26
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 20:43
-> Consolidated session (3 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 21:01
-> Consolidated session (6 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 21:28
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 21:36
-> Consolidated session (4 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 21:46
-> Consolidated session (41 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 21:58
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 22:08
-> Consolidated session (4 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-21 22:13
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 07:47
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 10:49 | Added MCS Stage 3 implementation checklist sourced from Stage 1 selected impacts | portals/mcs/js/mcs-modal-edit.js, portals/mcs/js/mcs-modal-shared.js, portals/mcs/js/mcs-modal-view.js, portals/mcs/css/mcs.css | Stage 3 now shows per-impact checkboxes and live completion count for better implementation tracking | ~980 |
-| 10:50 | Wired MCS progress persistence and hydration using structured justification payload + load/realtime parsing | portals/mcs/js/mcs-main.js, portals/mcs/js/mcs-realtime.js, portals/mcs/js/mcs-modal-shared.js | Checklist progress now persists and reloads from DB-backed change data without requiring a hard DB schema change | ~940 |
-| 10:50 | Added regression test and updated user guide/changelog for Stage 3 checklist behavior | tests/mcs-modal-shared.test.js, utils/js/guide.js, CHANGELOG.md | Coverage and docs updated to reflect new Stage 3 impact tracking workflow | ~620 |
-| 08:10 | Updated debug launchers to use dedicated Chrome user-data-dir profile plus incognito | start-debug-site.bat, start-debug-site-and-wiki.bat | Debug opens as separate signed-out taskbar Chrome instance, matching preferred workflow | ~460 |
-| 08:11 | Added matching changelog and OpenWolf buglog entry for profile-isolated launch behavior | CHANGELOG.md, .wolf/buglog.json | Preference captured for future launcher edits and regressions | ~300 |
-| 07:47 | Edited ../../../.serena/serena_config.yml | inline fix | ~10 |
-| 07:47 | Session end: 1 writes across 1 files (serena_config.yml) | 2 reads | ~10 tok |
+> Consolidated session (7 actions)
 
 ## Session: 2026-03-22 07:59
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 08:02 | Created ../../../.claude/plans/valiant-puzzling-origami.md | — | ~1544 |
-| 08:05 | Edited portals/product-development/npi/css/apqp-pfd.css | modified media() | ~362 |
-| 08:05 | Edited portals/product-development/npi/css/apqp-pfd.css | CSS: max-width | ~34 |
-| 08:05 | Edited portals/product-development/npi/js/npi-pfd.js | inline fix | ~126 |
-| 08:06 | Edited portals/product-development/npi/js/npi-pfd.js | added 6 condition(s) | ~965 |
-| 08:06 | Edited portals/product-development/npi/js/npi-pfd.js | 7→7 lines | ~56 |
-| 08:06 | Edited portals/product-development/npi/js/npi-pfd.js | reduced (-7 lines) | ~36 |
-| 08:08 | Edited CHANGELOG.md | 1→3 lines | ~123 |
-| 08:08 | Session end: 8 writes across 4 files (valiant-puzzling-origami.md, apqp-pfd.css, npi-pfd.js, CHANGELOG.md) | 10 reads | ~56551 tok |
+> Consolidated session (9 actions)
 
 ## Session: 2026-03-22 08:11
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 08:24 | Created ../../../.claude/plans/cheerful-frolicking-ember.md | — | ~1695 |
-| 08:27 | Edited portals/product-development/npi/js/npi-data.js | modified isHeader() | ~188 |
-| 08:27 | Edited portals/product-development/npi/js/npi-pfd.js | expanded (+7 lines) | ~1090 |
-| 08:27 | Edited portals/product-development/npi/js/npi-data.js | isDecision() → isTwoPath() | ~44 |
-| 08:28 | Edited portals/product-development/npi/js/npi-pfd.js | added 10 condition(s) | ~1568 |
-| 08:29 | Edited portals/product-development/npi/js/npi-pfd.js | 2→3 lines | ~42 |
-| 08:29 | Edited portals/product-development/npi/js/npi-pfd.js | 2→4 lines | ~135 |
-| 08:29 | Edited portals/product-development/npi/js/npi-pfd.js | inline fix | ~88 |
-| 08:29 | Edited portals/product-development/npi/js/npi-pfd.js | 1→2 lines | ~305 |
-| 08:30 | Edited portals/product-development/npi/js/npi-pfd.js | modified function() | ~85 |
-| 08:30 | Edited portals/product-development/npi/js/npi-events.js | 1→2 lines | ~32 |
-| 08:30 | Edited portals/product-development/npi/js/npi-pfd.js | 3→7 lines | ~137 |
-| 08:30 | Edited portals/product-development/npi/js/npi-pfd.js | 1→2 lines | ~66 |
-| 08:30 | Edited portals/product-development/npi/js/npi-pfd.js | inline fix | ~81 |
-| 08:31 | Edited portals/product-development/npi/css/apqp-pfd.css | expanded (+54 lines) | ~566 |
-| 08:32 | Edited tests/npi-pfd-flowchart.test.js | expanded (+114 lines) | ~1228 |
-| 08:32 | Edited CHANGELOG.md | 1→3 lines | ~151 |
-| 08:33 | Session end: 17 writes across 7 files (cheerful-frolicking-ember.md, npi-data.js, npi-pfd.js, npi-events.js, apqp-pfd.css) | 17 reads | ~86055 tok |
-| 08:33 | Session end: 17 writes across 7 files (cheerful-frolicking-ember.md, npi-data.js, npi-pfd.js, npi-events.js, apqp-pfd.css) | 18 reads | ~86055 tok |
+> Consolidated session (19 actions)
 
 ## Session: 2026-03-22 10:11
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 10:11 | Created ../../../root/.claude/plans/keen-wibbling-island.md | — | ~609 |
-| 10:15 | Edited ../../../root/.claude/plans/keen-wibbling-island.md | modified 1() | ~623 |
+> Consolidated session (2 actions)
 
 ## Session: 2026-03-22 10:22
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 10:22 | Edited ../../../root/.claude/plans/keen-wibbling-island.md | added 5 condition(s) | ~1741 |
-| 10:24 | Edited index.html | expanded (+15 lines) | ~210 |
-| 10:24 | Edited core/css/main.css | modified media() | ~749 |
-| 10:24 | Edited core/js/db.js | added 1 condition(s) | ~138 |
-| 10:24 | Edited core/js/db.js | added 2 condition(s) | ~253 |
-| 10:25 | Edited utils/js/realtime.js | added 1 condition(s) | ~131 |
-| 10:25 | Edited utils/js/realtime.js | 3→4 lines | ~51 |
-| 10:25 | Edited utils/js/realtime.js | modified removeRealtimeSubscription() | ~109 |
-| 10:25 | Edited utils/js/realtime.js | modified removeRealtimeSubscriptionsMatching() | ~104 |
-| 10:28 | Created core/js/network.js | — | ~739 |
-| 10:28 | Edited index.html | 6→7 lines | ~72 |
-| 10:28 | Edited core/js/app.js | added 1 condition(s) | ~74 |
+> Consolidated session (12 actions)
 
 ## Session: 2026-03-22 10:34
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 10:35 | Edited index.html | 11→9 lines | ~223 |
-| 10:36 | Edited core/css/main.css | CSS: tbtn-primary | ~177 |
-| 10:36 | Edited core/css/main.css | 5→5 lines | ~62 |
+> Consolidated session (3 actions)
 
 ## Session: 2026-03-22 10:40
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 10:44 | Edited portals/hub/css/hub.css | modified media() | ~108 |
-| 10:44 | Edited portals/hub/css/hub.css | 7→7 lines | ~40 |
-| 10:44 | Edited CHANGELOG.md | 6→8 lines | ~148 |
+> Consolidated session (3 actions)
 
 ## Session: 2026-03-22 10:52
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 10:55 | Created ../../../root/.claude/plans/zippy-chasing-ritchie.md | — | ~1057 |
-| 10:59 | Edited core/css/components.css | modified media() | ~115 |
-| 10:59 | Edited core/css/main.css | expanded (+8 lines) | ~71 |
-| 10:59 | Edited core/css/components.css | expanded (+26 lines) | ~177 |
-| 10:59 | Edited core/css/main.css | 2→2 lines | ~18 |
-| 10:59 | Edited core/css/components.css | CSS: box-shadow | ~180 |
-| 10:59 | Edited core/css/main.css | expanded (+13 lines) | ~106 |
-| 10:59 | Edited core/css/components.css | CSS: max-width | ~109 |
-| 10:59 | Edited core/css/components.css | CSS: border-radius | ~122 |
-| 11:00 | Edited CHANGELOG.md | 6→8 lines | ~185 |
+> Consolidated session (10 actions)
 
 ## Session: 2026-03-22 11:07
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 11:10 | Edited core/css/main.css | CSS: theme, background | ~124 |
-| 11:10 | Edited CHANGELOG.md | 1→3 lines | ~87 |
+> Consolidated session (2 actions)
 
 ## Session: 2026-03-22 11:14
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 11:16 | Edited portals/capacity/css/me-capacity-heatmap.css | CSS: max-height, -webkit-overflow-scrolling, min-width | ~100 |
-| 11:16 | Edited portals/capacity/css/me-capacity-responsive.css | 13→13 lines | ~66 |
-| 11:16 | Edited CHANGELOG.md | 1→3 lines | ~93 |
+> Consolidated session (3 actions)
 
 ## Session: 2026-03-22 11:21
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 11:23 | Edited core/css/main.css | 10→13 lines | ~331 |
-| 11:23 | Edited index.html | inline fix | ~26 |
-| 11:23 | Edited core/css/main.css | 11→11 lines | ~71 |
-| 11:24 | Edited CHANGELOG.md | 4→6 lines | ~211 |
+> Consolidated session (4 actions)
 
 ## Session: 2026-03-22 11:28
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 11:29 | Edited index.html | 9→7 lines | ~60 |
-| 11:30 | Edited index.html | 7→9 lines | ~79 |
-| 11:30 | Edited core/css/main.css | — | ~0 |
-| 11:30 | Edited core/css/main.css | removed 4 lines | ~1 |
-| 11:30 | Edited CHANGELOG.md | 2→4 lines | ~87 |
-| 11:30 | Session end: 5 writes across 3 files (index.html, main.css, CHANGELOG.md) | 3 reads | ~18281 tok |
-| 11:32 | Edited core/css/main.css | inline fix | ~12 |
-| 11:32 | Edited core/css/main.css | 2→2 lines | ~38 |
-| 11:32 | Edited CHANGELOG.md | 1→3 lines | ~65 |
-| 11:32 | Session end: 8 writes across 3 files (index.html, main.css, CHANGELOG.md) | 3 reads | ~18396 tok |
+> Consolidated session (10 actions)
 
 ## Session: 2026-03-22 11:34
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 11:39 | Edited portals/mcs/js/mcs-approvers-data.js | added 8 condition(s) | ~1282 |
-| 11:39 | Edited portals/product-development/npi/js/npi-data.js | added 3 condition(s) | ~364 |
-| 11:40 | Edited portals/settings/js/settings.js | 3→3 lines | ~63 |
-| 11:40 | Edited portals/settings/js/settings.js | modified settingsEnsureMcsData() | ~251 |
-| 11:41 | Edited portals/settings/js/settings.js | modified renderSettingsMcsTab() | ~1808 |
-| 11:41 | Edited portals/settings/js/settings.js | added 10 condition(s) | ~773 |
-| 11:41 | Edited portals/settings/js/settings.js | added 2 condition(s) | ~182 |
-| 11:42 | Edited portals/product-development/npi/js/npi.js | added 1 condition(s) | ~159 |
-| 11:43 | Edited CHANGELOG.md | 5→7 lines | ~122 |
-| 11:43 | Session end: 9 writes across 5 files (mcs-approvers-data.js, npi-data.js, settings.js, npi.js, CHANGELOG.md) | 7 reads | ~15312 tok |
-| 11:44 | Session end: 9 writes across 5 files (mcs-approvers-data.js, npi-data.js, settings.js, npi.js, CHANGELOG.md) | 7 reads | ~15312 tok |
-| 11:56 | Created ../../../.claude/projects/c--Users-Tidyco-Documents-VScode-Tidyco-apqp/memory/feedback_use_serena.md | — | ~229 |
-| 11:56 | Created ../../../.claude/projects/c--Users-Tidyco-Documents-VScode-Tidyco-apqp/memory/MEMORY.md | — | ~73 |
-| 11:56 | Session end: 11 writes across 7 files (mcs-approvers-data.js, npi-data.js, settings.js, npi.js, CHANGELOG.md) | 8 reads | ~15635 tok |
-| 12:01 | Edited CLAUDE.md | 1→5 lines | ~94 |
-| 12:01 | Session end: 12 writes across 8 files (mcs-approvers-data.js, npi-data.js, settings.js, npi.js, CHANGELOG.md) | 9 reads | ~16219 tok |
+> Consolidated session (16 actions)
 
 ## Session: 2026-03-22 14:23
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 14:24 | Edited index.html | 4→4 lines | ~120 |
-| 14:24 | Edited CHANGELOG.md | 1→3 lines | ~66 |
+> Consolidated session (2 actions)
 
 ## Session: 2026-03-22 15:10
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 15:11 | Edited portals/hub/css/hub.css | CSS: cursor | ~91 |
-| 15:12 | Created tests/capacity-hub.test.js | — | ~2344 |
-| 15:12 | Edited tests/capacity-hub.test.js | 6→7 lines | ~96 |
-| 15:12 | Edited tests/capacity-hub.test.js | modified expect() | ~222 |
-| 15:12 | Edited tests/capacity-hub.test.js | 9→9 lines | ~75 |
-| 15:12 | Edited tests/capacity-hub.test.js | modified const() | ~300 |
-| 15:13 | Edited CHANGELOG.md | 6→8 lines | ~142 |
+> Consolidated session (7 actions)
 
 ## Session: 2026-03-22 18:34
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 18:36 | Edited README.md | inline fix | ~23 |
-| 18:36 | Edited README.md | inline fix | ~20 |
-| 18:36 | Edited index.html | inline fix | ~10 |
-| 18:36 | Edited portals/mcs/css/mcs.css | inline fix | ~14 |
-| 18:36 | Edited portals/mcs/js/mcs-main.js | 4→4 lines | ~35 |
-| 18:36 | Edited core/js/state.js | inline fix | ~16 |
-| 18:36 | Edited utils/js/navigation.js | "Manufacturing Change Syst" → "Manufacturing Change" | ~9 |
-| 18:36 | Edited utils/js/helpers.js | inline fix | ~26 |
-| 18:36 | Edited CHANGELOG.md | 4→6 lines | ~139 |
-| 18:44 | Edited portals/mcs/js/mcs-main.js | added 1 condition(s) | ~104 |
-| 18:44 | Edited portals/mcs/js/mcs-main.js | 18→22 lines | ~378 |
-| 18:44 | Edited portals/mcs/js/mcs-main.js | 6→7 lines | ~76 |
-| 18:44 | Edited portals/mcs/js/mcs-main.js | modified mcsKpiFilterApproval1() | ~169 |
-| 18:44 | Edited portals/mcs/css/mcs.css | 4→5 lines | ~93 |
-| 18:49 | Edited .gitignore | 6→7 lines | ~53 |
+> Consolidated session (15 actions)
 
 ## Session: 2026-03-22 19:10
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 19:12 | Created supabase/pfmea_mcs_linking.sql | — | ~278 |
-| 19:19 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~196 |
-| 20:02 | Edited core/js/state.js | 2→3 lines | ~48 |
-| 20:04 | Edited portals/mcs/js/mcs-main.js | expanded (+11 lines) | ~209 |
-| 20:04 | Edited portals/mcs/js/mcs-main.js | 3→4 lines | ~86 |
-| 20:04 | Edited CHANGELOG.md | 4→6 lines | ~66 |
-| 20:04 | Session end: 6 writes across 5 files (pfmea_mcs_linking.sql, pfmea.js, state.js, mcs-main.js, CHANGELOG.md) | 9 reads | ~46018 tok |
+> Consolidated session (7 actions)
 
 ## Session: 2026-03-22 20:13
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 20:17 | Edited plans/pfMEA-improvements-plan.md | modified field() | ~79 |
-| 20:17 | Edited plans/pfMEA-improvements-plan.md | modified delegation() | ~160 |
-| 20:17 | Edited plans/pfMEA-improvements-plan.md | modified column() | ~121 |
-| 20:18 | Edited plans/pfMEA-improvements-plan.md | modified object() | ~79 |
-| 20:18 | Edited plans/pfMEA-improvements-plan.md | modified delegation() | ~172 |
-| 20:18 | Edited plans/pfMEA-improvements-plan.md | 7→7 lines | ~157 |
-| 20:18 | Edited plans/pfMEA-improvements-plan.md | 32→31 lines | ~309 |
-| 20:18 | Edited plans/pfMEA-improvements-plan.md | 20→17 lines | ~187 |
-| 20:19 | Edited plans/pfMEA-improvements-plan.md | modified pfmeaInit() | ~454 |
-| 20:19 | Edited plans/pfMEA-improvements-plan.md | modified js() | ~71 |
-| 20:19 | Edited plans/pfMEA-improvements-plan.md | 4→3 lines | ~59 |
-| 20:19 | Edited plans/pfMEA-improvements-plan.md | modified js() | ~145 |
-| 20:19 | Edited plans/pfMEA-improvements-plan.md | 4→3 lines | ~55 |
-| 20:20 | Session end: 13 writes across 1 files (pfMEA-improvements-plan.md) | 2 reads | ~2193 tok |
+> Consolidated session (14 actions)
 
 ## Session: 2026-03-22 20:30
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 20:36 | Edited portals/product-development/npi/js/npi-data-relational.js | 6→7 lines | ~64 |
-| 20:36 | Edited portals/product-development/npi/js/npi-data-relational.js | 8→9 lines | ~79 |
-| 20:36 | Edited portals/product-development/npi/js/npi-constants.js | expanded (+8 lines) | ~150 |
-| 20:42 | Edited portals/product-development/npi/js/pfmea.js | added error handling | ~1912 |
-| 20:44 | Edited index.html | expanded (+14 lines) | ~155 |
-| 20:44 | Edited portals/product-development/npi/js/npi-events.js | 1→2 lines | ~17 |
-| 20:45 | Edited portals/product-development/npi/js/npi-events.js | 4→7 lines | ~202 |
-| 20:45 | Edited portals/product-development/npi/js/npi-events.js | 5→9 lines | ~356 |
-| 20:45 | Edited portals/product-development/npi/js/npi-events.js | modified switch() | ~68 |
-| 20:46 | Edited portals/product-development/npi/css/pfmea.css | modified media() | ~1012 |
-| 20:46 | Edited portals/product-development/npi/css/pfmea.css | modified media() | ~94 |
-| 20:47 | Edited CHANGELOG.md | 1→3 lines | ~120 |
-| 20:48 | Session end: 12 writes across 7 files (npi-data-relational.js, npi-constants.js, pfmea.js, index.html, npi-events.js) | 11 reads | ~30910 tok |
+> Consolidated session (13 actions)
 
 ## Session: 2026-03-22 20:58
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 21:01 | Edited portals/product-development/npi/js/npi-events.js | added 1 condition(s) | ~103 |
-| 21:01 | Edited portals/product-development/npi/js/npi-constants.js | 5→5 lines | ~82 |
-| 21:01 | Edited portals/product-development/npi/js/pfmea.js | 4→4 lines | ~100 |
-| 21:02 | Edited portals/product-development/npi/js/pfmea.js | 4→4 lines | ~104 |
-| 21:02 | Edited portals/product-development/npi/js/pfmea.js | 2→3 lines | ~128 |
-| 21:02 | Edited portals/product-development/npi/css/pfmea.css | expanded (+9 lines) | ~132 |
-| 21:03 | Edited utils/js/guide.js | expanded (+19 lines) | ~696 |
-| 21:03 | Edited CHANGELOG.md | 1→3 lines | ~126 |
-| 21:03 | Session end: 8 writes across 6 files (npi-events.js, npi-constants.js, pfmea.js, pfmea.css, guide.js) | 8 reads | ~34608 tok |
-| 21:14 | Edited portals/product-development/npi/js/pfmea.js | 4→4 lines | ~94 |
-| 21:15 | Session end: 9 writes across 6 files (npi-events.js, npi-constants.js, pfmea.js, pfmea.css, guide.js) | 8 reads | ~34748 tok |
+> Consolidated session (11 actions)
 
 ## Session: 2026-03-22 21:17
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 21:21 | Edited portals/product-development/npi/js/pfmea.js | "width:44px" → "width:60px" | ~12 |
-| 21:21 | Edited portals/product-development/npi/js/pfmea.js | inline fix | ~28 |
-| 21:21 | Edited CHANGELOG.md | 4→6 lines | ~104 |
-| 21:21 | Session end: 3 writes across 2 files (pfmea.js, CHANGELOG.md) | 3 reads | ~30298 tok |
+> Consolidated session (4 actions)
 
 ## Session: 2026-03-23 06:26
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+| 07:53 | Fixed post-login no-data crash from db Supabase namespace mismatch | core/js/db.js, CHANGELOG.md, .wolf/buglog.json | Replaced named supa import with namespace import so `supa.currentUser/supa.supabase` calls work | ~620 |
+| 07:50 | Fixed NPI BoM import crash and restored parts modal compatibility bridge | portals/product-development/npi/js/bom.js, portals/product-development/npi/js/bom-cclass.js, portals/product-development/parts-database/js/parts-database.js, CHANGELOG.md, .wolf/buglog.json | Added missing imports + `globalThis.partsDatabase` to stop startup abort chain | ~760 |
+| 07:46 | Fixed NPI dashboard namespace load-order crash causing follow-on login bridge failure | portals/product-development/npi/js/npi-shared.js, CHANGELOG.md, .wolf/buglog.json | Added full `npi.*` namespace initialization in shared module; startup no longer aborts at dashboard.js:81 | ~700 |
 | 06:30 | Created ../../../.claude/plans/polymorphic-waddling-shell.md | — | ~1370 |
 | 06:35 | Edited portals/production/js/scheduling.js | 1→2 lines | ~37 |
 | 06:37 | Edited portals/production/css/production.css | expanded (+26 lines) | ~228 |
@@ -1544,6 +1339,57 @@
 | 13:39 | Session end: 11 writes across 4 files (CHANGELOG.md, settings-gate-questions.js, settings.js, index.html) | 8 reads | ~69218 tok |
 
 ## Session: 2026-03-28 13:44
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:14 | Created plans/esm-migration-part1.md | — | ~12213 |
+| 21:17 | Created plans/esm-migration-part2.md | — | ~10196 |
+| 21:17 | Edited CHANGELOG.md | 1→3 lines | ~68 |
+| 21:17 | Session end: 3 writes across 3 files (esm-migration-part1.md, esm-migration-part2.md, CHANGELOG.md) | 21 reads | ~112798 tok |
+
+## Session: 2026-03-28 21:41
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 23:55 | Executed ESM P4a ME conversion (8 files) | portals/capacity/me/js/me-*.js | Converted ME capacity modules to explicit imports/exports with no window bridges in scope | ~18000 |
+| 23:56 | Updated migration trackers for P4a | plans/esm-migration-part1.md, plans/esm-migration-part2.md | Marked P4a done/merged and documented deferred pwsh validation commands | ~2500 |
+| 23:57 | Updated runtime import wiring + changelog | core/js/app.js, utils/js/navigation.js, CHANGELOG.md | Added minimal ESM import wiring for ME exports and recorded conversion in changelog | ~3500 |
+
+## Session: 2026-03-28 23:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 2026-03-29 10:52 | Executed ESM P7a (MCS data + shared modal) | portals/mcs/js/mcs-realtime.js, portals/mcs/js/mcs-approvers-data.js, portals/mcs/js/mcs-approval.js, portals/mcs/js/mcs-modal-shared.js | Converted scoped files to explicit imports/exports, removed in-scope window bridges, and exported subscribe/unsubscribe contracts | ~11000 |
+| 2026-03-29 10:54 | Updated P7a trackers/checklist + SQL todo states | plans/esm-migration-part1.md, plans/esm-migration-part2.md, CHANGELOG.md | Marked Part1 row 7a done, Part2 row 7a merged marker + agent/date, added deferred pwsh validation notes, and set SQL done/blocked | ~3500 |
+
+## Session: 2026-03-29 03:00
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 07:40 | Restored missing NPI shared module and logged runtime regression fix | portals/product-development/npi/js/npi-shared.js, CHANGELOG.md, .wolf/buglog.json, .wolf/anatomy.md | Fixed console-blocking 404/import chain and recorded OpenWolf updates | ~950 |
+
+## Session: 2026-03-29 03:53
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 03:55 | Edited portals/capacity/me/js/me-data-persistence.js | 4→5 lines | ~50 |
+| 03:55 | Edited portals/capacity/me/js/me-data-persistence.js | 6→5 lines | ~34 |
+| 03:55 | Edited CHANGELOG.md | 4→6 lines | ~115 |
+| 03:55 | Session end: 3 writes across 2 files (me-data-persistence.js, CHANGELOG.md) | 5 reads | ~207 tok |
+- | 04:27 | Fixed ESM login runtime failure by wiring auth->launchApp import and awaiting transition; added changelog entry and captured targeted validation/test-check limits | core/js/auth.js, CHANGELOG.md, .wolf/buglog.json | done | ~1200 |
+2 0 2 6 - 0 3 - 2 9   |   F i x e d   p r o j e c t   f a v o u r i t e s   s t o r a g e   k e y   m i s m a t c h   b e t w e e n   d a s h b o a r d   a n d   h u b   b y   u s i n g   i m p o r t e d   c u r r e n t U s e r   a n d   e n s u r i n g   g l o b a l   c o m p a t i b i l i t y  
+ 
+## Session: 2026-03-29 06:43
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-29 07:35
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-29 12:38
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|

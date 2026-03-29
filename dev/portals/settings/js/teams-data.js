@@ -5,8 +5,10 @@
 // Depends on: auth.js (supa, currentUser)
 // ═══════════════════════════════════════════════════════════════
 
+import { supabase as supa } from '../../../core/js/supa.js'
+
 // ── Load all teams ───────────────────────────────────────────────
-async function teamsDataLoadAll() {
+export async function teamsDataLoadAll() {
   const { data, error } = await supa
     .from('teams')
     .select('*')
@@ -17,7 +19,7 @@ async function teamsDataLoadAll() {
 }
 
 // ── Get user count for a team ────────────────────────────────────
-async function teamsDataGetUserCount(teamId) {
+export async function teamsDataGetUserCount(teamId) {
   if (!teamId) return 0;
 
   const { count, error } = await supa
@@ -33,7 +35,7 @@ async function teamsDataGetUserCount(teamId) {
 }
 
 // ── Add a new team ───────────────────────────────────────────────
-async function teamsDataAdd({ name, team_type, description = '' }) {
+export async function teamsDataAdd({ name, team_type, description = '' }) {
   if (!name || !team_type) return null;
 
   const { data, error } = await supa
@@ -46,7 +48,7 @@ async function teamsDataAdd({ name, team_type, description = '' }) {
 }
 
 // ── Update a team ────────────────────────────────────────────────
-async function teamsDataUpdate(teamId, updates) {
+export async function teamsDataUpdate(teamId, updates) {
   if (!teamId) return false;
 
   const { error } = await supa
@@ -59,7 +61,7 @@ async function teamsDataUpdate(teamId, updates) {
 }
 
 // ── Delete a team ────────────────────────────────────────────────
-async function teamsDataDelete(teamId) {
+export async function teamsDataDelete(teamId) {
   if (!teamId) return false;
 
   const { error } = await supa
@@ -72,7 +74,7 @@ async function teamsDataDelete(teamId) {
 }
 
 // ── Load permissions for a team ──────────────────────────────────
-async function teamsDataLoadPermissions(teamId) {
+export async function teamsDataLoadPermissions(teamId) {
   if (!teamId) return [];
 
   const { data, error } = await supa
@@ -85,7 +87,7 @@ async function teamsDataLoadPermissions(teamId) {
 }
 
 // ── Load user-to-team assignments ───────────────────────────────
-async function teamsDataLoadUserTeamMap() {
+export async function teamsDataLoadUserTeamMap() {
   const { data, error } = await supa
     .from('team_members')
     .select('user_id, team_id, teams(name)')
@@ -108,7 +110,7 @@ async function teamsDataLoadUserTeamMap() {
 }
 
 // ── Set a user's team assignment (single team) ─────────────────
-async function teamsDataSetUserTeam(userId, teamId) {
+export async function teamsDataSetUserTeam(userId, teamId) {
   if (!userId) return false;
 
   const { error: deleteError } = await supa
@@ -129,7 +131,7 @@ async function teamsDataSetUserTeam(userId, teamId) {
 }
 
 // ── Save (upsert) permissions for a team ─────────────────────────
-async function teamPermissionsDataSave(teamId, permissions) {
+export async function teamPermissionsDataSave(teamId, permissions) {
   if (!teamId || !Array.isArray(permissions)) return false;
 
   // Upsert all incoming permissions first so there is never a window

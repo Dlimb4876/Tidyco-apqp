@@ -1,8 +1,11 @@
-const fs = require('fs')
-const path = require('path')
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 describe('shared capacity product tables', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.resetModules()
     document.body.innerHTML = '<div id="root"></div>'
 
@@ -45,17 +48,63 @@ describe('shared capacity product tables', () => {
     global.unit6DataUpdateProduct = jest.fn()
     global.logDataUpdateProductSupportHistoryEntry = jest.fn()
 
-    const supportScript = fs.readFileSync(
-      path.resolve(__dirname, '../portals/capacity/shared/js/cap-products.js'),
-      'utf8'
-    )
-    const loadScript = fs.readFileSync(
-      path.resolve(__dirname, '../portals/capacity/shared/js/cap-product-taskload.js'),
-      'utf8'
-    )
+    // Load modules and expose to window
+    const capProductsModule = await import('../portals/capacity/shared/js/cap-products.js')
+    Object.assign(window, capProductsModule)
 
-    eval(supportScript) // eslint-disable-line no-eval
-    eval(loadScript) // eslint-disable-line no-eval
+    const capProductTaskloadModule = await import('../portals/capacity/shared/js/cap-product-taskload.js')
+    Object.assign(window, capProductTaskloadModule)
+
+    // Wire up dependency injection for the ESM modules
+    window.setCapProductsDependencies({
+      refreshByDepartment: (dept) => {
+        const key = (dept || 'ME').toUpperCase()
+        if (key === 'PM' && typeof global.pmRefreshCurrentTab === 'function') return global.pmRefreshCurrentTab()
+        if (key === 'LOG' && typeof global.logRefreshCurrentTab === 'function') return global.logRefreshCurrentTab()
+        if (key === 'UNIT6' && typeof global.unit6RefreshCurrentTab === 'function') return global.unit6RefreshCurrentTab()
+        if (typeof global.meRefreshCurrentTab === 'function') return global.meRefreshCurrentTab()
+      },
+      getAllProducts: global.productsDataGetAll,
+      apiByDepartment: {
+        ME: {
+          getProducts: global.meDataGetProducts,
+          updateProduct: global.meDataUpdateProduct,
+          getHistory: global.meDataGetProductSupportHistory,
+          debouncedSave: global.meDebouncedSave
+        },
+        PM: {
+          getProducts: () => [],
+          updateProduct: global.pmDataUpdateProduct,
+          getHistory: global.pmDataGetProductSupportHistory,
+          debouncedSave: global.pmDebouncedSave
+        },
+        LOG: {
+          getProducts: global.logDataGetProducts,
+          updateProduct: global.logDataUpdateProduct,
+          getHistory: global.logDataGetProductSupportHistory,
+          updateHistory: global.logDataUpdateProductSupportHistoryEntry,
+          debouncedSave: global.logDebouncedSave
+        },
+        UNIT6: {
+          getProducts: () => [],
+          updateProduct: global.unit6DataUpdateProduct,
+          debouncedSave: global.unit6DebouncedSave
+        }
+      }
+    })
+
+    if (typeof window.setCapProductLoadDependencies === 'function') {
+      window.setCapProductLoadDependencies({
+        refreshByDepartment: (dept) => {
+          const key = (dept || 'ME').toUpperCase()
+          if (key === 'PM' && typeof global.pmRefreshCurrentTab === 'function') return global.pmRefreshCurrentTab()
+          if (key === 'LOG' && typeof global.logRefreshCurrentTab === 'function') return global.logRefreshCurrentTab()
+          if (key === 'UNIT6' && typeof global.unit6RefreshCurrentTab === 'function') return global.unit6RefreshCurrentTab()
+          if (typeof global.meRefreshCurrentTab === 'function') return global.meRefreshCurrentTab()
+        },
+        getAllProducts: global.productsDataGetAll
+      })
+    }
   })
 
   test('renders shared product support rows instead of the legacy placeholder', () => {

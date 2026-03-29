@@ -4,6 +4,58 @@
 //             families-data.js, work-areas-data.js
 // ═══════════════════════════════════════════════════════════════
 
+import { appState, db } from '../../../core/js/state.js'
+import { esc, showToast, canEdit, emptyState } from '../../../utils/js/helpers.js'
+import { render } from '../../../utils/js/navigation.js'
+import {
+  familiesState,
+  familiesDataInit,
+  familiesDataGetAll,
+  familiesDataAddFamily,
+  familiesDataUpdateFamily,
+  familiesDataDeleteFamily
+} from '../../product-development/js/families-data.js'
+import {
+  workAreasState,
+  workAreasDataInit,
+  workAreasDataGetAll,
+  workAreasDataAddWorkArea,
+  workAreasDataUpdateWorkArea
+} from '../../capacity/production/js/work-areas-data.js'
+import {
+  renderSettingsGateQuestionsTab,
+  settingsEnsureGateQuestionsData,
+  settingsGateQuestionsCancelAdd,
+  settingsGateQuestionsCancelEdit,
+  settingsGateQuestionsConfirmAdd,
+  settingsGateQuestionsDelete,
+  settingsGateQuestionsSaveEdit,
+  settingsGateQuestionsStartAdd,
+  settingsGateQuestionsStartEdit
+} from './settings-gate-questions.js'
+import {
+  renderSettingsMcsTab,
+  settingsEnsureMcsData,
+  settingsMcsAddApprover,
+  settingsMcsAddGateSignoff,
+  settingsMcsRemoveApprover,
+  settingsMcsRemoveGateSignoff
+} from './settings-mcs.js'
+import {
+  renderSettingsPermissionsTab,
+  renderSettingsTeamsTab,
+  settingsEnsurePermissionsData,
+  settingsEnsureTeamsData,
+  settingsPermissionsChangeRole,
+  settingsPermissionsChangeTeam,
+  settingsTeamsAdd,
+  settingsTeamsDelete,
+  settingsTeamsEdit,
+  settingsTeamsPermissionsCancel,
+  settingsTeamsPermissionsSave,
+  settingsTeamsPermissionsToggle
+} from './settings-teams.js'
+
 let settingsEventListenerRoot = null;
 let settingsFamiliesEditingId = null;
 let settingsFamiliesLoading = false;
@@ -29,7 +81,7 @@ const SETTINGS_CORE_STATE_KEYS = new Set([
   'settingsTeamsPermissionsData',
 ]);
 
-function settingsSetCoreState(partial) {
+export function settingsSetCoreState(partial) {
   if (!partial || typeof partial !== 'object') return;
   Object.keys(partial).forEach((key) => {
     if (!SETTINGS_CORE_STATE_KEYS.has(key)) return;
@@ -45,7 +97,7 @@ function settingsSetCoreState(partial) {
   });
 }
 
-function settingsGetCoreState() {
+export function settingsGetCoreState() {
   return {
     settingsFamiliesEditingId,
     settingsFamiliesLoading,
@@ -59,17 +111,12 @@ function settingsGetCoreState() {
   };
 }
 
-if (typeof globalThis !== 'undefined') {
-  globalThis.settingsSetCoreState = settingsSetCoreState;
-  globalThis.settingsGetCoreState = settingsGetCoreState;
-}
-
-function settingsLoadingState(msg) {
+export function settingsLoadingState(msg) {
   if (typeof loadingState === 'function') return loadingState(msg);
   return `<div style="padding:40px;text-align:center;color:var(--muted)">${esc(msg)}</div>`;
 }
 
-function settingsLoadAppearancePrefs() {
+export function settingsLoadAppearancePrefs() {
   try {
     const raw = localStorage.getItem(APPEARANCE_STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -78,13 +125,13 @@ function settingsLoadAppearancePrefs() {
   }
 }
 
-function settingsSaveAppearancePrefs(prefs) {
+export function settingsSaveAppearancePrefs(prefs) {
   try {
     localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(prefs));
   } catch (_) { /* ignore storage errors */ }
 }
 
-function settingsApplyAppearance() {
+export function settingsApplyAppearance() {
   const prefs = settingsLoadAppearancePrefs();
   const theme = prefs.theme === 'dark' ? 'dark' : prefs.theme === 'terminal' ? 'terminal' : 'light';
 
@@ -103,7 +150,7 @@ function settingsApplyAppearance() {
   if (brandSub)  brandSub.textContent  = prefs.appSubtitle || 'Operations Portal';
 }
 
-function settingsAppearanceSetTheme(theme) {
+export function settingsAppearanceSetTheme(theme) {
   const nextTheme = theme === 'dark' ? 'dark' : theme === 'terminal' ? 'terminal' : 'light';
   const prefs = settingsLoadAppearancePrefs();
   settingsSaveAppearancePrefs({ ...prefs, theme: nextTheme });
@@ -124,39 +171,45 @@ function settingsAppearanceSetDensityCard(root, density) {
 settingsApplyAppearance();
 
 // ── Main settings page render ──────────────────────────────────
-function renderSettings() {
-  const tab = settingsActiveTab || 'families';
+export function renderSettings() {
+  const tab = appState.settingsActiveTab || 'families';
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setupSettingsEventListeners();
-      if (tab === 'families') {
-        renderSettingsFamiliesTab();
-        settingsEnsureFamiliesData();
-      } else if (tab === 'work-areas') {
-        renderSettingsWorkAreasTab();
-        settingsEnsureWorkAreasData();
-      } else if (tab === 'teams') {
-        renderSettingsTeamsTab();
-        settingsEnsureTeamsData();
-      } else if (tab === 'permissions') {
-        renderSettingsPermissionsTab();
-        settingsEnsurePermissionsData();
-      } else if (tab === 'role-definitions') {
-        renderSettingsRoleDefinitionsTab();
-      } else if (tab === 'mcs-approvers') {
-        renderSettingsMcsTab();
-        settingsEnsureMcsData();
-      } else if (tab === 'gate-questions') {
-        renderSettingsGateQuestionsTab();
-        settingsEnsureGateQuestionsData();
-      } else if (tab === 'appearance') {
-        renderSettingsAppearanceTab();
-      } else if (tab === 'about') {
-        renderSettingsAboutTab();
-      }
-    });
-  });
+  const hydrateSettingsDom = () => {
+    setupSettingsEventListeners();
+    if (tab === 'families') {
+      renderSettingsFamiliesTab();
+      settingsEnsureFamiliesData();
+    } else if (tab === 'work-areas') {
+      renderSettingsWorkAreasTab();
+      settingsEnsureWorkAreasData();
+    } else if (tab === 'teams') {
+      renderSettingsTeamsTab();
+      settingsEnsureTeamsData();
+    } else if (tab === 'permissions') {
+      renderSettingsPermissionsTab();
+      settingsEnsurePermissionsData();
+    } else if (tab === 'role-definitions') {
+      renderSettingsRoleDefinitionsTab();
+    } else if (tab === 'mcs-approvers') {
+      renderSettingsMcsTab();
+      settingsEnsureMcsData();
+    } else if (tab === 'gate-questions') {
+      renderSettingsGateQuestionsTab();
+      settingsEnsureGateQuestionsData();
+    } else if (tab === 'appearance') {
+      renderSettingsAppearanceTab();
+    } else if (tab === 'about') {
+      renderSettingsAboutTab();
+    }
+  };
+
+  // Use microtask hydration so handlers attach as soon as settings markup is inserted.
+  // This avoids click dead-zones caused by frame throttling where rAF callbacks are delayed.
+  if (typeof queueMicrotask === 'function') {
+    queueMicrotask(hydrateSettingsDom);
+  } else {
+    Promise.resolve().then(hydrateSettingsDom);
+  }
 
   return `
     <div class="settings-portal" id="settingsPortalRoot">
@@ -283,7 +336,7 @@ function _familiesResortTbody(tbody) {
   rows.forEach(r => tbody.appendChild(r));
 }
 
-function renderSettingsFamiliesTab() {
+export function renderSettingsFamiliesTab() {
   const container = document.getElementById('settingsFamiliesTab');
   if (!container) return;
 
@@ -400,7 +453,7 @@ async function settingsFamiliesAdd() {
   }
 }
 
-function settingsFamiliesStartEdit(familyId) {
+export function settingsFamiliesStartEdit(familyId) {
   settingsFamiliesEditingId = familyId;
   renderSettingsFamiliesTab();
   document.getElementById('sfEdit-label')?.focus();
@@ -430,7 +483,7 @@ async function settingsFamiliesSaveEdit(familyId) {
   renderSettingsFamiliesTab();
 }
 
-function settingsFamiliesCancelEdit() {
+export function settingsFamiliesCancelEdit() {
   settingsFamiliesEditingId = null;
   renderSettingsFamiliesTab();
 }
@@ -477,7 +530,7 @@ function _waResortTbody(tbody) {
   rows.forEach(r => tbody.appendChild(r));
 }
 
-function renderSettingsWorkAreasTab() {
+export function renderSettingsWorkAreasTab() {
   const container = document.getElementById('settingsWorkAreasTab');
   if (!container) return;
 
@@ -555,7 +608,7 @@ async function settingsWorkAreaAdd() {
   }
 }
 
-function settingsWorkAreaStartEdit(workAreaId) {
+export function settingsWorkAreaStartEdit(workAreaId) {
   settingsWorkAreasEditingId = workAreaId;
   renderSettingsWorkAreasTab();
   document.getElementById('waEdit-name')?.focus();
@@ -580,14 +633,14 @@ async function settingsWorkAreaSaveEdit(workAreaId) {
   renderSettingsWorkAreasTab();
 }
 
-function settingsWorkAreaCancelEdit() {
+export function settingsWorkAreaCancelEdit() {
   settingsWorkAreasEditingId = null;
   renderSettingsWorkAreasTab();
 }
 
 // ── Derive a display name from an email address prefix ────────
 // e.g. daniel.limb@tidyco.co.uk → "Daniel Limb"
-function settingsEmailToName(email) {
+export function settingsEmailToName(email) {
   if (!email) return '—';
   const local = email.split('@')[0];
   return local.split(/[._-]/).map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
@@ -596,7 +649,7 @@ function settingsEmailToName(email) {
 // Teams/permissions tab implementation moved to settings-teams.js
 
 // ── Render role definitions tab ────────────────────────────────
-function renderSettingsRoleDefinitionsTab() {
+export function renderSettingsRoleDefinitionsTab() {
   const container = document.getElementById('settingsRoleDefinitionsTab');
   if (!container) return;
 
@@ -645,7 +698,7 @@ function renderSettingsRoleDefinitionsTab() {
 }
 
 // ── Render appearance tab ──────────────────────────────────────
-function renderSettingsAppearanceTab() {
+export function renderSettingsAppearanceTab() {
   const container = document.getElementById('settingsAppearanceTab');
   if (!container) return;
 
@@ -766,7 +819,7 @@ function renderSettingsAppearanceTab() {
 }
 
 // ── Save / reset appearance preferences ───────────────────────
-function settingsAppearanceSave() {
+export function settingsAppearanceSave() {
   const theme       = document.querySelector('input[name="ap-theme"]:checked')?.value       || 'light';
   const orgName     = document.getElementById('ap-orgName')?.value.trim()     || '';
   const appSubtitle = document.getElementById('ap-appSubtitle')?.value.trim() || '';
@@ -787,7 +840,7 @@ function settingsAppearanceReset() {
 }
 
 // ── Render about tab ───────────────────────────────────────────
-function renderSettingsAboutTab() {
+export function renderSettingsAboutTab() {
   const container = document.getElementById('settingsAboutTab');
   if (!container) return;
 
@@ -850,7 +903,7 @@ function renderSettingsAboutTab() {
 
 // MCS approvals implementation moved to settings-mcs.js
 
-function setupSettingsEventListeners() {
+export function setupSettingsEventListeners() {
   const root = document.getElementById('settingsPortalRoot');
   if (!root || settingsEventListenerRoot === root) return;
   settingsEventListenerRoot = root;
@@ -875,7 +928,7 @@ function setupSettingsEventListeners() {
     if (action === 'settings-switch-tab') {
       const tab = actionEl.dataset.tab;
       if (!tab) return;
-      settingsActiveTab = tab;
+      appState.settingsActiveTab = tab;
       root.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
       root.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
       actionEl.classList.add('active');
@@ -940,7 +993,7 @@ function setupSettingsEventListeners() {
     if (action === 'settings-teams-delete') { await settingsTeamsDelete(actionEl.dataset.teamId || ''); return; }
     if (action === 'settings-teams-permissions-save') { await settingsTeamsPermissionsSave(); return; }
     if (action === 'settings-teams-permissions-cancel') { settingsTeamsPermissionsCancel(); return; }
-    if (action === 'settings-teams-permission-toggle') { settingsTeamsPermissionsToggle(settingsTeamsPermissionsEditingId, actionEl.dataset.permission || ''); return; }
+    if (action === 'settings-teams-permission-toggle') { settingsTeamsPermissionsToggle(appState.settingsTeamsPermissionsEditingId, actionEl.dataset.permission || ''); return; }
 
     // Permissions tab actions
     if (action === 'settings-permissions-retry') { settingsEnsurePermissionsData(true); return; }
@@ -1005,7 +1058,7 @@ function setupSettingsEventListeners() {
     }
 
     if (action === 'settings-teams-permission-toggle') {
-      settingsTeamsPermissionsToggle(settingsTeamsPermissionsEditingId, actionEl.dataset.permission || '');
+      settingsTeamsPermissionsToggle(appState.settingsTeamsPermissionsEditingId, actionEl.dataset.permission || '');
       return;
     }
   });

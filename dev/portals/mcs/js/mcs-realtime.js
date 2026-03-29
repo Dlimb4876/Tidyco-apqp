@@ -3,59 +3,36 @@
  * Handles live updates to MCS changes
  */
 
+import { appState } from '../../../core/js/state.js'
+import { supabase } from '../../../core/js/supa.js'
+import { createRealtimeSubscription, removeRealtimeSubscription } from '../../../utils/js/realtime.js'
+import { requestRender } from '../../../utils/js/render-scheduler.js'
+import { realtimePatchDelete, realtimePatchInsert, realtimePatchUpdate } from '../../../utils/js/realtime-patch.js'
+import { mcsParseExtendedJustification } from './mcs-modal-shared.js'
+import { mcsRenderCardHTML, mcsRenderList, mcsUpdateCounts, mcsToast, mcStatusLabel } from './mcs-main.js'
+import { mcsShowViewModal } from './mcs-modal-view.js'
+
 let mcsChangesSubscription = null;
 let mcsTimelineSubscription = null;
 
 /**
  * Setup MCS real-time subscriptions
  */
-function mcsSetupRealtimeSubscriptions() {
-  if (!supa) {
+export function mcsDataSubscribe() {
+  if (!supabase) {
     console.warn('Supabase not initialized for MCS realtime');
     return;
   }
 
-  // Subscribe to mcs_changes table for INSERT/UPDATE/DELETE events
-  mcsChangesSubscription = supa
-    .channel('mcs_changes_channel')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'mcs_changes'
-      },
-      (payload) => {
-        handleMcsChangesUpdate(payload);
-      }
-    )
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log('MCS changes subscription active');
-      } else if (status === 'CHANNEL_ERROR') {
-        console.error('MCS changes subscription error');
-      }
-    });
+  mcsChangesSubscription = createRealtimeSubscription('mcs_changes', 'mcs_changes_channel', {
+    onInsert: newRecord => handleMcsChangesUpdate({ eventType: 'INSERT', new: newRecord }),
+    onUpdate: newRecord => handleMcsChangesUpdate({ eventType: 'UPDATE', new: newRecord }),
+    onDelete: oldRecord => handleMcsChangesUpdate({ eventType: 'DELETE', old: oldRecord })
+  });
 
-  // Subscribe to mcs_timeline for new activity log entries
-  mcsTimelineSubscription = supa
-    .channel('mcs_timeline_channel')
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'mcs_timeline'
-      },
-      (payload) => {
-        handleMcsTimelineUpdate(payload);
-      }
-    )
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log('MCS timeline subscription active');
-      }
-    });
+  mcsTimelineSubscription = createRealtimeSubscription('mcs_timeline', 'mcs_timeline_channel', {
+    onInsert: timelineEntry => handleMcsTimelineUpdate({ new: timelineEntry })
+  }, { events: ['INSERT'] });
 }
 
 /**
@@ -69,7 +46,7 @@ function handleMcsChangesUpdate(payload) {
   if (eventType === 'INSERT') {
     // New change added — prepend for newest-first default sort.
     // If a non-default sort is active, fall back to full list re-render.
-    mcsList.unshift(newRecord);
+    appState.mcsList.unshift(newRecord);
     const sortKey = document.getElementById('mcs-sort-select')?.value || 'date-desc';
     if (sortKey === 'date-desc') {
       realtimePatchInsert('#mcs-list-container', mcsRenderCardHTML(newRecord), { prepend: true });
@@ -80,12 +57,12 @@ function handleMcsChangesUpdate(payload) {
     mcsToast('New change added: ' + newRecord.id);
   } else if (eventType === 'UPDATE') {
     // Change updated
-    const idx = mcsList.findIndex(c => c.id === newRecord.id);
+    const idx = appState.mcsList.findIndex(c => c.id === newRecord.id);
     if (idx !== -1) {
       // Preserve client-side-only fields (impacts, timeline) that aren't in the DB row
-      const existing = mcsList[idx];
+      const existing = appState.mcsList[idx];
       const parsedJustification = mcsParseExtendedJustification(newRecord.justification || '');
-      mcsList[idx] = {
+      appState.mcsList[idx] = {
         ...newRecord,
         impacts: existing.impacts || [],
         impact_progress: newRecord.impact_progress && typeof newRecord.impact_progress === 'object'
@@ -96,15 +73,15 @@ function handleMcsChangesUpdate(payload) {
 
       // Only refresh the open modal — don't auto-reopen a modal the user has closed.
       // mcsViewingId is cleared by mcsCloseModal, so a null here means no modal is open.
-      if (mcsViewingId === newRecord.id && document.getElementById('mcs-view-backdrop')) {
-        mcsShowViewModal(mcsList[idx]);
+      if (appState.mcsViewingId === newRecord.id && document.getElementById('mcs-view-backdrop')) {
+        mcsShowViewModal(appState.mcsList[idx]);
       }
 
       // Patch the card if it's currently visible in the list; otherwise run full re-render
       // in case filter/sort changes made it appear or disappear.
       const cardInDOM = document.querySelector(`#mcs-list-container [data-id="${CSS.escape(String(newRecord.id))}"]`);
       if (cardInDOM) {
-        realtimePatchUpdate('#mcs-list-container', newRecord.id, mcsRenderCardHTML(mcsList[idx]));
+        realtimePatchUpdate('#mcs-list-container', newRecord.id, mcsRenderCardHTML(appState.mcsList[idx]));
         mcsUpdateCounts();
       } else {
         mcsRenderList();
@@ -112,7 +89,7 @@ function handleMcsChangesUpdate(payload) {
     }
   } else if (eventType === 'DELETE') {
     // Change deleted
-    mcsList = mcsList.filter(c => c.id !== oldRecord.id);
+    appState.mcsList = appState.mcsList.filter(c => c.id !== oldRecord.id);
     realtimePatchDelete('#mcs-list-container', oldRecord.id);
     mcsUpdateCounts();
     mcsToast('Change deleted: ' + oldRecord.id);
@@ -128,8 +105,8 @@ function handleMcsTimelineUpdate(payload) {
   const timelineEntry = payload.new;
 
   // If we're viewing the change this timeline entry belongs to, refresh
-  if (mcsViewingId === timelineEntry.change_id) {
-    const change = mcsList.find(c => c.id === mcsViewingId);
+  if (appState.mcsViewingId === timelineEntry.change_id) {
+    const change = appState.mcsList.find(c => c.id === appState.mcsViewingId);
     if (change) {
       change.timeline = change.timeline || [];
       change.timeline.push(timelineEntry);
@@ -141,13 +118,13 @@ function handleMcsTimelineUpdate(payload) {
 /**
  * Cleanup MCS subscriptions
  */
-function mcsCleanupRealtimeSubscriptions() {
+export function mcsDataUnsubscribe() {
   if (mcsChangesSubscription) {
-    supa.removeChannel(mcsChangesSubscription);
+    removeRealtimeSubscription('mcs_changes_channel');
     mcsChangesSubscription = null;
   }
   if (mcsTimelineSubscription) {
-    supa.removeChannel(mcsTimelineSubscription);
+    removeRealtimeSubscription('mcs_timeline_channel');
     mcsTimelineSubscription = null;
   }
 }
@@ -163,7 +140,7 @@ function mcsStartPolling() {
 
   mcsPollInterval = setInterval(async () => {
     try {
-      const { data, error } = await supa
+      const { data, error } = await supabase
         .from('mcs_changes')
         .select('*')
         .order('created_at', { ascending: false });
@@ -175,8 +152,11 @@ function mcsStartPolling() {
 
       // Check for new/updated records
       if (data) {
-        mcsList = data;
-        mcsRenderList();
+        appState.mcsList = data;
+        requestRender('mcs', {
+          trigger: 'realtime',
+          renderNow: () => mcsRenderList()
+        });
       }
     } catch (err) {
       console.error('MCS poll error:', err);
@@ -184,7 +164,7 @@ function mcsStartPolling() {
   }, 10000);
 }
 
-function mcsStopPolling() {
+export function mcsStopPolling() {
   if (mcsPollInterval) {
     clearInterval(mcsPollInterval);
     mcsPollInterval = null;

@@ -4,12 +4,23 @@
 // All functions under npi.tracker.*
 // ═══════════════════════════════════
 
+import { appState, db, prog } from '../../../../core/js/state.js'
+import { esc, canEdit, emptyState, ownerSelectOptions, showModal } from '../../../../utils/js/helpers.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+import { render, writeNavigationHistory } from '../../../../utils/js/navigation.js'
+import { npi } from './npi-shared.js'
+import { npiComponents } from './npi-components.js'
+import { npiData } from './npi-data.js'
+import { npiRelSaveRisk } from './npi-data-relational.js'
+
+npi.components = npiComponents
+
 // Helper function to update tracker sub-assembly filter and URL
-function setTrackerSubAsmFilter(value) {
-  trackerSubAsmFilter = value || 'all'
+npi.tracker.setSubAsmFilter = function(value) {
+  appState.trackerSubAsmFilter = value || 'all'
   // Update URL to persist tracker filter
-  const parts = ['p=' + encodeURIComponent(progId), 's=project']
-  if (trackerSubAsmFilter !== 'all') parts.push('tsf=' + encodeURIComponent(trackerSubAsmFilter))
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project']
+  if (appState.trackerSubAsmFilter !== 'all') parts.push('tsf=' + encodeURIComponent(appState.trackerSubAsmFilter))
   writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
@@ -31,15 +42,15 @@ npi.tracker.renderActions = function() {
   }).filter(Boolean)
   const hasSubAsms = subAsms.length > 0
   // Validate filter value
-  if (!hasSubAsms || (trackerSubAsmFilter !== 'all' && trackerSubAsmFilter !== 'root' && !subAsms.find(s => s.id === trackerSubAsmFilter))) {
-    trackerSubAsmFilter = 'all'
+  if (!hasSubAsms || (appState.trackerSubAsmFilter !== 'all' && appState.trackerSubAsmFilter !== 'root' && !subAsms.find(s => s.id === appState.trackerSubAsmFilter))) {
+    appState.trackerSubAsmFilter = 'all'
   }
 
   // Filter chips markup
   const filterBar = hasSubAsms ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-    <button class="btn btn-sm ${trackerSubAsmFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('all')">All</button>
-    <button class="btn btn-sm ${trackerSubAsmFilter === 'root' ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('root')">Root only</button>
-    ${subAsms.map(s => `<button class="btn btn-sm ${trackerSubAsmFilter === s.id ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('${s.id}')">${esc(s.name)}</button>`).join('')}
+    <button class="btn btn-sm ${appState.trackerSubAsmFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="npi.tracker.setSubAsmFilter('all')">All</button>
+    <button class="btn btn-sm ${appState.trackerSubAsmFilter === 'root' ? 'btn-primary' : 'btn-ghost'}" onclick="npi.tracker.setSubAsmFilter('root')">Root only</button>
+    ${subAsms.map(s => `<button class="btn btn-sm ${appState.trackerSubAsmFilter === s.id ? 'btn-primary' : 'btn-ghost'}" onclick="npi.tracker.setSubAsmFilter('${s.id}')">${esc(s.name)}</button>`).join('')}
   </div>` : ''
 
   // Build visible rows (preserve original indices for in-place edits)
@@ -47,11 +58,11 @@ npi.tracker.renderActions = function() {
     ? `<option value="">Root</option>${subAsms.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}`
     : ''
   const allWithIdx = p.actions.map((a, i) => ({ a, i }))
-  const visible = trackerSubAsmFilter === 'all'
+  const visible = appState.trackerSubAsmFilter === 'all'
     ? allWithIdx
-    : trackerSubAsmFilter === 'root'
+    : appState.trackerSubAsmFilter === 'root'
     ? allWithIdx.filter(({ a }) => !a.subAsm || a.subAsm === '' || a.subAsm === 'root')
-    : allWithIdx.filter(({ a }) => a.subAsm === trackerSubAsmFilter)
+    : allWithIdx.filter(({ a }) => a.subAsm === appState.trackerSubAsmFilter)
   const rows  = visible.map(({ a, i }, vi) => {
     const overdue = a.status !== 'Closed' && a.due && new Date(a.due) < today
     const subAsmLabel = hasSubAsms
@@ -86,7 +97,7 @@ npi.tracker.renderActions = function() {
   </div>
   ${filterBar}
   <div class="card" style="overflow-x:auto">
-  <div class="card-head"><span class="card-title">All Actions</span><span class="card-meta">${visible.length}${trackerSubAsmFilter !== 'all' ? ` shown · ${p.actions.length} total` : ' total'}</span></div>
+  <div class="card-head"><span class="card-title">All Actions</span><span class="card-meta">${visible.length}${appState.trackerSubAsmFilter !== 'all' ? ` shown · ${p.actions.length} total` : ' total'}</span></div>
   ${p.actions.length === 0
     ? emptyState('✅', 'No actions yet', 'Click ＋ Add Action to start tracking')
     : visible.length === 0
@@ -95,14 +106,14 @@ npi.tracker.renderActions = function() {
   ${canEdit() ? `<button class="add-row" onclick="npi.tracker.addAction()">＋ Add Action</button>` : ''}</div>`
 }
 npi.tracker.addAction = function() {
-  npi.data.tracker.addAction()
+  npiData.tracker.addAction()
   render()
 }
 npi.tracker.updAction = function(i, f, v) {
-  npi.data.tracker.updAction(i, f, v)
+  npiData.tracker.updAction(i, f, v)
   if (f === 'status' || f === 'due') render()
 }
-npi.tracker.delAction = function(i) { npi.data.tracker.delAction(i); render() }
+npi.tracker.delAction = function(i) { npiData.tracker.delAction(i); render() }
 
 // ══════════════════════════════════════
 // RISK REGISTER
@@ -122,26 +133,26 @@ npi.tracker.renderRisks = function() {
   }).filter(Boolean)
   const hasSubAsms = subAsms.length > 0
   // Validate filter value (shared with actions tab)
-  if (!hasSubAsms || (trackerSubAsmFilter !== 'all' && trackerSubAsmFilter !== 'root' && !subAsms.find(s => s.id === trackerSubAsmFilter))) {
-    trackerSubAsmFilter = 'all'
+  if (!hasSubAsms || (appState.trackerSubAsmFilter !== 'all' && appState.trackerSubAsmFilter !== 'root' && !subAsms.find(s => s.id === appState.trackerSubAsmFilter))) {
+    appState.trackerSubAsmFilter = 'all'
   }
 
   // Filter chips markup
   const filterBar = hasSubAsms ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-    <button class="btn btn-sm ${trackerSubAsmFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('all')">All</button>
-    <button class="btn btn-sm ${trackerSubAsmFilter === 'root' ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('root')">Root only</button>
-    ${subAsms.map(s => `<button class="btn btn-sm ${trackerSubAsmFilter === s.id ? 'btn-primary' : 'btn-ghost'}" onclick="setTrackerSubAsmFilter('${s.id}')">${esc(s.name)}</button>`).join('')}
+    <button class="btn btn-sm ${appState.trackerSubAsmFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="npi.tracker.setSubAsmFilter('all')">All</button>
+    <button class="btn btn-sm ${appState.trackerSubAsmFilter === 'root' ? 'btn-primary' : 'btn-ghost'}" onclick="npi.tracker.setSubAsmFilter('root')">Root only</button>
+    ${subAsms.map(s => `<button class="btn btn-sm ${appState.trackerSubAsmFilter === s.id ? 'btn-primary' : 'btn-ghost'}" onclick="npi.tracker.setSubAsmFilter('${s.id}')">${esc(s.name)}</button>`).join('')}
   </div>` : ''
 
   const subAsmOpts = hasSubAsms
     ? `<option value="">Root</option>${subAsms.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}`
     : ''
   const allWithIdx = p.risks.map((r, i) => ({ r, i }))
-  const visible = trackerSubAsmFilter === 'all'
+  const visible = appState.trackerSubAsmFilter === 'all'
     ? allWithIdx
-    : trackerSubAsmFilter === 'root'
+    : appState.trackerSubAsmFilter === 'root'
     ? allWithIdx.filter(({ r }) => !r.subAsm || r.subAsm === '' || r.subAsm === 'root')
-    : allWithIdx.filter(({ r }) => r.subAsm === trackerSubAsmFilter)
+    : allWithIdx.filter(({ r }) => r.subAsm === appState.trackerSubAsmFilter)
   const rows = visible.map(({ r, i }, vi) => {
     const score = r.lik * r.imp
     const sc    = score >= 12 ? 'rpn-hi' : score >= 6 ? 'rpn-md' : 'rpn-lo'
@@ -176,7 +187,7 @@ npi.tracker.renderRisks = function() {
   </div>
   ${filterBar}
   <div class="card" style="overflow-x:auto">
-  <div class="card-head"><span class="card-title">Risk Register</span><span class="card-meta">${visible.length}${trackerSubAsmFilter !== 'all' ? ` shown · ${p.risks.length} total` : ' risks'} · L × I = Score</span></div>
+  <div class="card-head"><span class="card-title">Risk Register</span><span class="card-meta">${visible.length}${appState.trackerSubAsmFilter !== 'all' ? ` shown · ${p.risks.length} total` : ' risks'} · L × I = Score</span></div>
   ${p.risks.length === 0
     ? emptyState('🛡', 'No risks yet', 'Click ＋ Add Risk to start — all fields edit inline')
     : visible.length === 0
@@ -185,7 +196,7 @@ npi.tracker.renderRisks = function() {
   ${canEdit() ? `<button class="add-row" onclick="npi.tracker.addRisk()">＋ Add Risk</button>` : ''}</div>`
 }
 npi.tracker.addRisk = function() {
-  npi.data.tracker.addRisk()
+  npiData.tracker.addRisk()
   render()
 }
 npi.tracker.normalizeRiskScore = function(v) {
@@ -207,10 +218,10 @@ npi.tracker.riskScorePreview = function(inputEl, fallback) {
 }
 npi.tracker.updRisk = function(i, f, v) {
   const saveNow = arguments.length < 4 ? true : !!arguments[3]
-  npi.data.tracker.updRisk(i, f, v, saveNow)
+  npiData.tracker.updRisk(i, f, v, saveNow)
   if (f === 'status') render()
 }
-npi.tracker.delRisk = function(i) { npi.data.tracker.delRisk(i); render() }
+npi.tracker.delRisk = function(i) { npiData.tracker.delRisk(i); render() }
 npi.tracker.refreshRS = function(i, saveNow) {
   const r     = prog().risks[i]
   const score = r.lik * r.imp
@@ -223,3 +234,7 @@ npi.tracker.refreshRS = function(i, saveNow) {
   }
   if (saveNow !== false) npiRelSaveRisk(r)
 }
+
+export const npiTracker = npi.tracker
+export const renderActions = npi.tracker.renderActions
+export const renderRisks = npi.tracker.renderRisks

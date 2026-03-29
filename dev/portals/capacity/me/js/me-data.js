@@ -1,16 +1,10 @@
 /* ============================================================
-   me-data.js — ME Capacity Data Facade (Global Namespace)
-   Bootstrap state, save flags, and compatibility helpers only.
-
-   Ownership of extracted modules:
-   - me-data-normalize.js      => normalization helpers
-   - me-data-support-history.js => product support history logic
-   - me-data-entities.js       => team/task/product/holiday CRUD
-   - me-data-persistence.js    => init/save/reset/diagnostics
-   - me-data-realtime.js       => realtime subscriptions and row mapping
+   me-data.js — ME Capacity Data Facade (ESM state)
    ============================================================ */
 
-function meCreateDataState() {
+import { capUUID } from '../../shared/js/cap-data-utils.js'
+
+export function meCreateDataState() {
   return {
     team: [],
     tasks: [],
@@ -18,32 +12,37 @@ function meCreateDataState() {
     holidays: [],
     productSupportHistory: [],
     timeLogs: []
-  };
+  }
 }
 
-function meCreatePendingDeletes() {
+export function meCreatePendingDeletes() {
   return {
     tasks: [],
     teams: [],
     supportHistory: [],
     products: []
-  };
+  }
 }
 
-window.meDataState = meCreateDataState();
-window.meDataPendingDeletes = meCreatePendingDeletes();
+export const meDataState = meCreateDataState()
+export const meDataPendingDeletes = meCreatePendingDeletes()
 
-window.meDataSaveInProgress = false;
-window.meDataSaveQueued = false;
-window.meDataInitialized = false;
+export let meDataSaveInProgress = false
+export let meDataSaveQueued = false
+export let meDataInitialized = false
 
-function meUUID() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+export function setMeDataSaveInProgress(value) {
+  meDataSaveInProgress = Boolean(value)
+}
+
+export function setMeDataSaveQueued(value) {
+  meDataSaveQueued = Boolean(value)
+}
+
+export function setMeDataInitialized(value) {
+  meDataInitialized = Boolean(value)
+}
+
+export function meUUID() {
+  return capUUID()
 }

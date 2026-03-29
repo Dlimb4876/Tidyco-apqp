@@ -28,11 +28,15 @@ This document provides a comprehensive overview of the Tidyco APQP project, its 
 1.  `npm install`: Install dev dependencies (Jest, ESLint).
 2.  `npm test`: Run all Jest tests (expect ~600+ passing tests).
 3.  `npm run check:all`: **Mandatory before every commit.** Runs all quality audits:
-    - `check:load-order`: Verifies script order in `index.html`.
     - `check:syntax`: Validates JS syntax (parser-backed).
-    - `check:subscriptions`: Audits real-time cleanup.
+    - `check:imports`: Verifies ESM import/export wiring.
+    - `check:esm-coverage`: Tracks remaining non-ESM files.
+    - `check:subscriptions`: Audits real-time subscription cleanup.
+    - `check:state`: Tracks global state variable ownership.
+    - `check:rls`: Audits RLS policies.
     - `check:mobile`: Verifies CSS breakpoints.
     - `check:modals`: Audits modal state handling.
+    - `check:coverage`: Generates test coverage report.
 4.  `npm run lint:npi` / `npm run format:npi`: Lint and format NPI portal files.
 
 ---
@@ -40,9 +44,9 @@ This document provides a comprehensive overview of the Tidyco APQP project, its 
 ## 3. Architecture & Critical Rules
 
 ### 3.1 Source of Truth: `index.html`
-The script and CSS load order in `index.html` is the absolute source of truth. Dependencies MUST be loaded before the files that use them.
-**Standard Load Order**:
-`state.js` → `auth.js` → `db.js` → `helpers.js` → `navigation.js` → `realtime.js` → Portal-specific files → `app.js` (last).
+`index.html` is the bootstrap source of truth. Keep a single module entrypoint:
+`<script type="module" src="core/js/main.js"></script>`
+Cross-file dependencies must be wired through named ESM imports/exports (not `window.*` bridges).
 
 ### 3.2 Global State (`core/js/state.js`)
 All global state variables must be defined here with default values. Use `let` for mutable state. Never define new globals in feature files.
@@ -58,6 +62,9 @@ In this vanilla JS environment, a duplicate `const` in the global scope causes a
 - Use `navigate(section, options)` for all routing.
 - `navigate()` automatically handles cleanup for real-time subscriptions.
 - Store subscription references and ensure they are cleared before navigating away.
+
+### 3.6 Guide Content
+- When adding or changing a feature on any content page, update the matching entry in `GUIDE_CONTENT` inside `utils/js/guide.js` to reflect the change.
 
 ---
 

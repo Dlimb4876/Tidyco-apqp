@@ -2,6 +2,11 @@
 // operations-dashboard-render-core.js — core dashboard rendering
 // ═══════════════════════════════════
 
+import { esc } from '../../../utils/js/helpers.js'
+import {
+	opsStatusTone
+} from './operations-dashboard-metrics.js'
+
 function opsMetricCard(label, value, detail, tone = 'good', dest = '') {
 	const actionAttrs = dest
 		? ` data-action="metric-navigate" data-dest="${esc(dest)}" role="button" tabindex="0"`
@@ -32,7 +37,7 @@ function opsRenderUnitKpis(metrics) {
 				? `${Math.round(metrics.me.capacity)}h capacity / ${Math.round(metrics.me.demand)}h demand (${Math.round(metrics.me.headroom)}h headroom)`
 				: 'Open Capacity once to initialize',
 			meTone,
-			'capacity'
+			'capacity::me'
 		),
 		opsMetricCard(
 			'PM Utilisation',
@@ -41,7 +46,7 @@ function opsRenderUnitKpis(metrics) {
 				? `${Math.round(metrics.pm.capacity)}h capacity / ${Math.round(metrics.pm.demand)}h demand (${Math.round(metrics.pm.headroom)}h headroom)`
 				: 'Open Capacity once to initialize',
 			pmTone,
-			'capacity'
+			'capacity::projects'
 		),
 		opsMetricCard(
 			'LOG Utilisation',
@@ -50,7 +55,7 @@ function opsRenderUnitKpis(metrics) {
 				? `${Math.round(metrics.log.capacity)}h capacity / ${Math.round(metrics.log.demand)}h demand (${Math.round(metrics.log.headroom)}h headroom)`
 				: 'Open Capacity once to initialize',
 			logTone,
-			'capacity'
+			'capacity::logistics'
 		)
 	];
 
@@ -60,7 +65,7 @@ function opsRenderUnitKpis(metrics) {
 		const detailText = !unit.ready
 			? 'Open Capacity once to initialize'
 			: `${Math.round(unit.capacity)}h capacity / ${Math.round(unit.demand)}h demand (${Math.round(unit.headroom)}h headroom)`;
-		return opsMetricCard(`${unit.workArea} Utilisation`, statusLabel, detailText, tone, 'capacity');
+		return opsMetricCard(`${unit.workArea} Utilisation`, statusLabel, detailText, tone, 'capacity::production');
 	}).join('');
 
 	return `
@@ -102,20 +107,20 @@ function opsRenderPeopleUnitPanels(unitMetrics) {
 					<span>Capacity pressure and breathing room</span>
 				</div>
 				<div class="ops-metrics-grid">
-					${opsMetricCard(
-						`${unit.workArea} Utilisation`,
-						unit.ready ? `${unit.utilisation}%` : 'Not Ready',
-						unit.ready ? `${unit.capacity}h capacity / ${unit.demand}h demand` : 'Open Capacity once to initialize',
-						utilTone,
-						'capacity'
-					)}
-					${opsMetricCard(
-						`${unit.workArea} Headroom`,
-						unit.ready ? `${unit.headroom}h` : 'Not Ready',
-						'Current month available room',
-						headroomTone,
-						'capacity'
-					)}
+				${opsMetricCard(
+					`${unit.workArea} Utilisation`,
+					unit.ready ? `${unit.utilisation}%` : 'Not Ready',
+					unit.ready ? `${unit.capacity}h capacity / ${unit.demand}h demand` : 'Open Capacity once to initialize',
+					utilTone,
+					'capacity::production'
+				)}
+				${opsMetricCard(
+					`${unit.workArea} Headroom`,
+					unit.ready ? `${unit.headroom}h` : 'Not Ready',
+					'Current month available room',
+					headroomTone,
+					'capacity::production'
+				)}
 				</div>
 			</section>`;
 	});
@@ -132,7 +137,7 @@ function opsBuildPulseRows(metrics) {
 			? `Current utilisation is ${metrics.me.utilisation}% with ${metrics.me.headroom}h headroom this month.`
 			: 'ME capacity data has not been initialized yet. Open Capacity once to hydrate data.',
 		tone: metrics.me.ready ? (metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good') : 'watch',
-		dest: 'capacity'
+		dest: 'capacity::me'
 	});
 
 	rows.push({
@@ -141,7 +146,7 @@ function opsBuildPulseRows(metrics) {
 			? `Current utilisation is ${metrics.pm.utilisation}% with ${metrics.pm.headroom}h headroom this month.`
 			: 'PM capacity data has not been initialized yet. Open Capacity once to hydrate data.',
 		tone: metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch',
-		dest: 'capacity'
+		dest: 'capacity::projects'
 	});
 
 	rows.push({
@@ -150,7 +155,7 @@ function opsBuildPulseRows(metrics) {
 			? `Current utilisation is ${metrics.log.utilisation}% with ${metrics.log.headroom}h headroom this month.`
 			: 'Logistics capacity data has not been initialized yet. Open Capacity once to hydrate data.',
 		tone: metrics.log.ready ? (metrics.log.utilisation > 90 ? 'critical' : metrics.log.utilisation > 80 ? 'watch' : 'good') : 'watch',
-		dest: 'capacity'
+		dest: 'capacity::logistics'
 	});
 
 	rows.push({
@@ -222,11 +227,11 @@ function opsRenderQuickActions() {
 				<span>Jump directly to response screens</span>
 			</div>
 			<div class="ops-actions-grid">
-				<button class="btn btn-ghost" onclick="navigate('capacity'); setCapacityTab('me')">Open ME Capacity</button>
-				<button class="btn btn-ghost" onclick="navigate('capacity'); setCapacityTab('projects')">Open PM Capacity</button>
-				<button class="btn btn-ghost" onclick="navigate('production'); setProductionTab('scheduling')">Open Production Planner</button>
-				<button class="btn btn-ghost" onclick="navigate('product-development'); setProductDevelopmentTab('npi')">Open NPI Workspace</button>
-				<button class="btn btn-ghost" onclick="navigate('feedback')">Open Feedback & Bugs</button>
+				<button class="btn btn-ghost" data-action="ops-quick-nav" data-dest="capacity" data-tab-scope="capacity" data-tab-key="me">Open ME Capacity</button>
+				<button class="btn btn-ghost" data-action="ops-quick-nav" data-dest="capacity" data-tab-scope="capacity" data-tab-key="projects">Open PM Capacity</button>
+				<button class="btn btn-ghost" data-action="ops-quick-nav" data-dest="production" data-tab-scope="production" data-tab-key="scheduling">Open Production Planner</button>
+				<button class="btn btn-ghost" data-action="ops-quick-nav" data-dest="product-development" data-tab-scope="product-development" data-tab-key="npi">Open NPI Workspace</button>
+				<button class="btn btn-ghost" data-action="ops-quick-nav" data-dest="feedback">Open Feedback & Bugs</button>
 			</div>
 		</section>`;
 }
@@ -244,8 +249,8 @@ function opsRenderOverview(metrics) {
 					<p>One screen for delivery confidence, team pressure, production flow, and quality stability.</p>
 				</div>
 				<div class="ops-hero-actions">
-					<button class="btn btn-primary" onclick="setOperationsTab('risk')">View Risk Focus</button>
-					<button class="btn btn-primary" onclick="setOperationsTab('flow')">Open Flow Lens</button>
+					<button class="btn btn-primary" data-action="ops-set-tab" data-tab="risk">View Risk Focus</button>
+					<button class="btn btn-primary" data-action="ops-set-tab" data-tab="flow">Open Flow Lens</button>
 				</div>
 			</section>
 
@@ -308,8 +313,8 @@ function opsRenderPeopleView(metrics) {
 					<span>Manufacturing Engineering capacity pressure and breathing room</span>
 				</div>
 				<div class="ops-metrics-grid">
-					${opsMetricCard('ME Utilisation', metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready', metrics.me.ready ? `${metrics.me.capacity}h capacity / ${metrics.me.demand}h demand` : 'Open Capacity once to initialize', metrics.me.ready ? (metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good') : 'watch')}
-					${opsMetricCard('ME Headroom', metrics.me.ready ? `${metrics.me.headroom}h` : 'Not Ready', 'Current month available room', metrics.me.ready && metrics.me.headroom < 0 ? 'critical' : 'good')}
+				${opsMetricCard('ME Utilisation', metrics.me.ready ? `${metrics.me.utilisation}%` : 'Not Ready', metrics.me.ready ? `${metrics.me.capacity}h capacity / ${metrics.me.demand}h demand` : 'Open Capacity once to initialize', metrics.me.ready ? (metrics.me.utilisation > 90 ? 'critical' : metrics.me.utilisation > 80 ? 'watch' : 'good') : 'watch', 'capacity::me')}
+				${opsMetricCard('ME Headroom', metrics.me.ready ? `${metrics.me.headroom}h` : 'Not Ready', 'Current month available room', metrics.me.ready && metrics.me.headroom < 0 ? 'critical' : 'good', 'capacity::me')}
 				</div>
 			</section>
 			
@@ -319,8 +324,8 @@ function opsRenderPeopleView(metrics) {
 					<span>Project Management capacity pressure and breathing room</span>
 				</div>
 				<div class="ops-metrics-grid">
-					${opsMetricCard('PM Utilisation', metrics.pm.ready ? `${metrics.pm.utilisation}%` : 'Not Ready', metrics.pm.ready ? `${metrics.pm.capacity}h capacity / ${metrics.pm.demand}h demand` : 'Open Capacity once to initialize', metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch')}
-					${opsMetricCard('PM Headroom', metrics.pm.ready ? `${metrics.pm.headroom}h` : 'Not Ready', 'Current month available room', metrics.pm.ready && metrics.pm.headroom < 0 ? 'critical' : 'good')}
+				${opsMetricCard('PM Utilisation', metrics.pm.ready ? `${metrics.pm.utilisation}%` : 'Not Ready', metrics.pm.ready ? `${metrics.pm.capacity}h capacity / ${metrics.pm.demand}h demand` : 'Open Capacity once to initialize', metrics.pm.ready ? (metrics.pm.utilisation > 90 ? 'critical' : metrics.pm.utilisation > 80 ? 'watch' : 'good') : 'watch', 'capacity::projects')}
+				${opsMetricCard('PM Headroom', metrics.pm.ready ? `${metrics.pm.headroom}h` : 'Not Ready', 'Current month available room', metrics.pm.ready && metrics.pm.headroom < 0 ? 'critical' : 'good', 'capacity::projects')}
 				</div>
 			</section>
 
@@ -330,8 +335,8 @@ function opsRenderPeopleView(metrics) {
 					<span>Logistics capacity pressure and breathing room</span>
 				</div>
 				<div class="ops-metrics-grid">
-					${opsMetricCard('LOG Utilisation', metrics.log.ready ? `${metrics.log.utilisation}%` : 'Not Ready', metrics.log.ready ? `${metrics.log.capacity}h capacity / ${metrics.log.demand}h demand` : 'Open Capacity once to initialize', metrics.log.ready ? (metrics.log.utilisation > 90 ? 'critical' : metrics.log.utilisation > 80 ? 'watch' : 'good') : 'watch')}
-					${opsMetricCard('LOG Headroom', metrics.log.ready ? `${metrics.log.headroom}h` : 'Not Ready', 'Current month available room', metrics.log.ready && metrics.log.headroom < 0 ? 'critical' : 'good')}
+				${opsMetricCard('LOG Utilisation', metrics.log.ready ? `${metrics.log.utilisation}%` : 'Not Ready', metrics.log.ready ? `${metrics.log.capacity}h capacity / ${metrics.log.demand}h demand` : 'Open Capacity once to initialize', metrics.log.ready ? (metrics.log.utilisation > 90 ? 'critical' : metrics.log.utilisation > 80 ? 'watch' : 'good') : 'watch', 'capacity::logistics')}
+				${opsMetricCard('LOG Headroom', metrics.log.ready ? `${metrics.log.headroom}h` : 'Not Ready', 'Current month available room', metrics.log.ready && metrics.log.headroom < 0 ? 'critical' : 'good', 'capacity::logistics')}
 				</div>
 			</section>
 
@@ -350,11 +355,26 @@ function opsRenderActionsView(metrics) {
 					<span>What needs intervention right now</span>
 				</div>
 				<div class="ops-actions-grid">
-				<button class="btn btn-primary" onclick="navigate('action-centre')">Resolve Overdue Actions (${metrics.actions.overdue})</button>
-				<button class="btn btn-primary" onclick="navigate('product-development'); setProductDevelopmentTab('npi')">Review High RPN (${metrics.risk.highRpn})</button>
-				<button class="btn btn-primary" onclick="navigate('capacity'); setCapacityTab('me')">Balance Capacity (${metrics.me.ready ? metrics.me.utilisation + '%' : 'Pending'})</button>
+				<button class="btn btn-primary" data-action="ops-quick-nav" data-dest="action-centre">Resolve Overdue Actions (${metrics.actions.overdue})</button>
+				<button class="btn btn-primary" data-action="ops-quick-nav" data-dest="product-development" data-tab-scope="product-development" data-tab-key="npi">Review High RPN (${metrics.risk.highRpn})</button>
+				<button class="btn btn-primary" data-action="ops-quick-nav" data-dest="capacity" data-tab-scope="capacity" data-tab-key="me">Balance Capacity (${metrics.me.ready ? metrics.me.utilisation + '%' : 'Pending'})</button>
 				</div>
 			</section>
 			${opsRenderPulseFeed(metrics)}
 		</div>`;
+}
+
+export {
+	opsMetricCard,
+	opsRenderUnitKpis,
+	opsRenderPeopleUnitPanels,
+	opsBuildPulseRows,
+	opsRenderPulseFeed,
+	opsRenderRiskRadar,
+	opsRenderQuickActions,
+	opsRenderOverview,
+	opsRenderFlowView,
+	opsRenderRiskView,
+	opsRenderPeopleView,
+	opsRenderActionsView
 }

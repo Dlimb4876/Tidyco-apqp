@@ -1,5 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ─────────────────────────────────────────────────────────────
 // Tests for state.js — Global state initialisation
@@ -12,11 +15,11 @@ describe('State Module (state.js)', () => {
     // Read the file and check its structure
     const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
     
-    // Verify the file contains expected variable declarations
-    expect(stateContent).toContain('let db = { projects: [] }');
-    expect(stateContent).toContain("let currentSection = 'hub'");
-    expect(stateContent).toContain("let apqpTab = 'ctq'");
-    expect(stateContent).toContain("let bomSubTab = 'tree'");
+    // Verify the file contains expected variable declarations (ESM export syntax)
+    expect(stateContent).toContain('export let db = { projects: [] }');
+    expect(stateContent).toContain("currentSection: 'hub'");
+    expect(stateContent).toContain("apqpTab: 'ctq'");
+    expect(stateContent).toContain("bomSubTab: 'tree'");
   });
 
   // ── File Structure Tests ───────────────────────────────────
@@ -24,54 +27,54 @@ describe('State Module (state.js)', () => {
     test('should contain all major state variable declarations', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      // Core state
-      expect(stateContent).toContain('let db =');
-      expect(stateContent).toContain('let progId =');
-      expect(stateContent).toContain('let currentSection =');
-      expect(stateContent).toContain('let currentUserRole =');
+      // Core state (ESM export syntax)
+      expect(stateContent).toContain('export let db =');
+      expect(stateContent).toContain('progId:');
+      expect(stateContent).toContain('currentSection:');
+      expect(stateContent).toContain('export let currentUserRole =');
       
       // Tab states
-      expect(stateContent).toContain('let apqpTab =');
-      expect(stateContent).toContain('let bomSubTab =');
-      expect(stateContent).toContain('let capacityTab =');
-      expect(stateContent).toContain('let productionTab =');
+      expect(stateContent).toContain('apqpTab:');
+      expect(stateContent).toContain('bomSubTab:');
+      expect(stateContent).toContain('capacityTab:');
+      expect(stateContent).toContain('productionTab:');
       
       // Filter states
-      expect(stateContent).toContain('let pfmeaRpnFilter =');
-      expect(stateContent).toContain('let ctqSourceFilter =');
-      expect(stateContent).toContain('let ctqCoverageFilter =');
+      expect(stateContent).toContain('pfmeaRpnFilter:');
+      expect(stateContent).toContain('ctqSourceFilter:');
+      expect(stateContent).toContain('ctqCoverageFilter:');
       
       // Modal picker state
-      expect(stateContent).toContain('let ctqPickTarget =');
-      expect(stateContent).toContain('let bomPickTarget =');
-      expect(stateContent).toContain('let bomTreeExpanded =');
+      expect(stateContent).toContain('ctqPickTarget:');
+      expect(stateContent).toContain('bomPickTarget:');
+      expect(stateContent).toContain('bomTreeExpanded:');
       
       // ABC Catalogue state
-      expect(stateContent).toMatch(/let\s+abcCatalogueData\s*=\s*\[/);
-      expect(stateContent).toContain('let abcPickTarget =');
+      expect(stateContent).toMatch(/abcCatalogueData\s*:\s*\[/);
+      expect(stateContent).toContain('abcPickTarget:');
       
       // Action Centre state
-      expect(stateContent).toContain('let actionCentreData =');
-      expect(stateContent).toContain('let actionCentreLoading =');
-      expect(stateContent).toContain('let actionCentreTab =');
+      expect(stateContent).toContain('actionCentreData:');
+      expect(stateContent).toContain('actionCentreLoading:');
+      expect(stateContent).toContain('actionCentreTab:');
       
       // Settings state
-      expect(stateContent).toContain('let settingsActiveTab =');
-      expect(stateContent).toContain('let settingsTeamsData =');
+      expect(stateContent).toContain('settingsActiveTab:');
+      expect(stateContent).toContain('settingsTeamsData:');
       
       // MCS state
-      expect(stateContent).toContain('let mcsApproverConfig =');
-      expect(stateContent).toContain('let mcsList =');
-      expect(stateContent).toContain('let mcsCurrentFilter =');
+      expect(stateContent).toContain('mcsApproverConfig:');
+      expect(stateContent).toContain('mcsList:');
+      expect(stateContent).toContain('mcsCurrentFilter:');
     });
 
     test('should contain helper functions', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain('function prog()');
-      expect(stateContent).toContain('function findProjectByProductId(');
-      expect(stateContent).toContain('function getDefaultGateSelection(');
-      expect(stateContent).toContain('function normalizeGateSelections(');
+      expect(stateContent).toContain('export function prog()');
+      expect(stateContent).toContain('export function findProjectByProductId(');
+      expect(stateContent).toContain('export function getDefaultGateSelection(');
+      expect(stateContent).toContain('export function normalizeGateSelections(');
     });
 
     test('should contain GATE_DEFS reference', () => {
@@ -85,81 +88,81 @@ describe('State Module (state.js)', () => {
     test('should have correct default values for navigation state', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain("let currentSection = 'hub'");
-      expect(stateContent).toContain('let progId = null');
+      expect(stateContent).toContain("currentSection: 'hub'");
+      expect(stateContent).toContain('progId: null');
     });
 
     test('should have correct default values for APQP/BOM', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain("let apqpTab = 'ctq'");
-      expect(stateContent).toContain("let bomSubTab = 'tree'");
-      expect(stateContent).toContain("let bomPartsRegisterView = 'total'");
-      expect(stateContent).toContain("let bomAbcFilter = 'all'");
+      expect(stateContent).toContain("apqpTab: 'ctq'");
+      expect(stateContent).toContain("bomSubTab: 'tree'");
+      expect(stateContent).toContain("bomPartsRegisterView: 'total'");
+      expect(stateContent).toContain("bomAbcFilter: 'all'");
     });
 
     test('should have correct default values for capacity', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain("let capacityTab = 'root'");
-      expect(stateContent).toContain("let prodCapTab  = 'dashboard'");
-      expect(stateContent).toContain("let pmCapTab = 'tasks'");
-      expect(stateContent).toContain('let prodCapUtilizationFactor = 1.0');
+      expect(stateContent).toContain("capacityTab: 'root'");
+      expect(stateContent).toContain("prodCapTab: 'dashboard'");
+      expect(stateContent).toContain("pmCapTab: 'tasks'");
+      expect(stateContent).toContain('prodCapUtilizationFactor: 1.0');
     });
 
     test('should have correct default values for filters', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain("let pfmeaRpnFilter = 'all'");
-      expect(stateContent).toContain("let ctqSourceFilter = 'all'");
-      expect(stateContent).toContain("let ctqCoverageFilter = 'all'");
-      expect(stateContent).toContain("let trackerSubAsmFilter = 'all'");
+      expect(stateContent).toContain("pfmeaRpnFilter: 'all'");
+      expect(stateContent).toContain("ctqSourceFilter: 'all'");
+      expect(stateContent).toContain("ctqCoverageFilter: 'all'");
+      expect(stateContent).toContain("trackerSubAsmFilter: 'all'");
     });
 
     test('should initialize picker state correctly', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain('let ctqPickTarget = null');
-      expect(stateContent).toMatch(/ctqPickSelected\s*=\s*\[\]/);
-      expect(stateContent).toContain('let bomPickTarget = null');
-      expect(stateContent).toMatch(/bomPickSelected\s*=\s*\[\]/);
-      expect(stateContent).toMatch(/bomPickFilter\s*=\s*'all'/);
+      expect(stateContent).toContain('ctqPickTarget: null');
+      expect(stateContent).toMatch(/ctqPickSelected\s*:\s*\[\]/);
+      expect(stateContent).toContain('bomPickTarget: null');
+      expect(stateContent).toMatch(/bomPickSelected\s*:\s*\[\]/);
+      expect(stateContent).toMatch(/bomPickFilter\s*:\s*'all'/);
     });
 
     test('should initialize collections as empty', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain('let bomTreeExpanded = new Set()');
-      expect(stateContent).toContain('let bomAawTreeExpanded = new Set()');
-      expect(stateContent).toContain('let collapsedGroups = new Set()');
-      expect(stateContent).toMatch(/let\s+abcCatalogueData\s*=\s*\[\]/);
-      expect(stateContent).toContain('let abcPickResults = []');
-      expect(stateContent).toContain('let abcPickSelected = []');
+      expect(stateContent).toContain('bomTreeExpanded: new Set()');
+      expect(stateContent).toContain('bomAawTreeExpanded: new Set()');
+      expect(stateContent).toContain('collapsedGroups: new Set()');
+      expect(stateContent).toMatch(/abcCatalogueData\s*:\s*\[\]/);
+      expect(stateContent).toContain('abcPickResults: []');
+      expect(stateContent).toContain('abcPickSelected: []');
     });
 
     test('should have correct defaults for Action Centre', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain('let actionCentreData = null');
-      expect(stateContent).toContain('let actionCentreLoading = false');
-      expect(stateContent).toContain("let actionCentreTab = 'all'");
-      expect(stateContent).toContain("let actionCentreStatusFilter = 'open'");
+      expect(stateContent).toContain('actionCentreData: null');
+      expect(stateContent).toContain('actionCentreLoading: false');
+      expect(stateContent).toContain("actionCentreTab: 'all'");
+      expect(stateContent).toContain("actionCentreStatusFilter: 'open'");
     });
 
     test('should have correct defaults for Settings', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain("let settingsActiveTab = 'families'");
-      expect(stateContent).toContain('let settingsTeamsData = null');
-      expect(stateContent).toContain('let settingsTeamsLoading = false');
+      expect(stateContent).toContain("settingsActiveTab: 'families'");
+      expect(stateContent).toContain('settingsTeamsData: null');
+      expect(stateContent).toContain('settingsTeamsLoading: false');
     });
 
     test('should have correct defaults for MCS', () => {
       const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
       
-      expect(stateContent).toContain('let mcsApproverConfig = null');
-      expect(stateContent).toContain('let mcsApproverConfigLoading = false');
-      expect(stateContent).toContain('let mcsList = []');
+      expect(stateContent).toContain('mcsApproverConfig: null');
+      expect(stateContent).toContain('mcsApproverConfigLoading: false');
+      expect(stateContent).toContain('mcsList: []');
       expect(stateContent).toContain("status: 'all'");
     });
   });

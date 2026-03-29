@@ -2,31 +2,33 @@
 // prod-capacity.js — Production Load Capacity Portal
 // Entry point: nav bar + tab dispatcher
 // Tabs: dashboard | by-work-area | settings | detail
-// Depends on: prod-capacity-data.js, prod-capacity-dashboard.js,
-//             prod-capacity-workarea.js, prod-capacity-settings.js,
-//             prod-capacity-detail.js
 // ═══════════════════════════════════════════════════════════════
 
-// Tab state lives in state.js: let prodCapTab = 'dashboard'
+import { appState } from '../../../../core/js/state.js'
+import { render, writeNavigationHistory } from '../../../../utils/js/navigation.js'
+import { prodState } from '../../../production/js/data.js'
+import { renderProdCapDashboard, prodCapDrawDashChart } from './prod-capacity-dashboard.js'
+import { renderProdCapWorkArea, prodCapDrawWorkAreaChart } from './prod-capacity-workarea.js'
+import { renderProdCapSettings } from './prod-capacity-settings.js'
+import { renderProdCapDetail } from './prod-capacity-detail.js'
+import { setProdCapRefreshCurrentTab } from './prod-capacity-data.js'
 
-function setProdCapTab(tab) {
-  const prevPct = prodCapTab;
-  prodCapTab = tab;
-  const pctParts = ['s=capacity', 'ct=production'];
-  if (tab !== 'dashboard') pctParts.push('pct=' + encodeURIComponent(tab));
-  if (typeof writeNavigationHistory === 'function') {
-    writeNavigationHistory('#' + pctParts.join('&'), { push: prevPct !== tab });
-  }
-  render();
+export function setProdCapTab(tab) {
+  const prevPct = appState.prodCapTab
+  appState.prodCapTab = tab
+  const pctParts = ['s=capacity', 'ct=production']
+  if (tab !== 'dashboard') pctParts.push('pct=' + encodeURIComponent(tab))
+  writeNavigationHistory('#' + pctParts.join('&'), { push: prevPct !== tab })
+  render()
 }
 
-function renderProdCapacity() {
+export function renderProdCapacity() {
   // Body content
   let body = '';
-  if      (prodCapTab === 'dashboard')   body = renderProdCapDashboard();
-  else if (prodCapTab === 'by-work-area') body = renderProdCapWorkArea();
-  else if (prodCapTab === 'settings')    body = renderProdCapSettings();
-  else if (prodCapTab === 'detail')      body = renderProdCapDetail();
+  if      (appState.prodCapTab === 'dashboard')   body = renderProdCapDashboard();
+  else if (appState.prodCapTab === 'by-work-area') body = renderProdCapWorkArea();
+  else if (appState.prodCapTab === 'settings')    body = renderProdCapSettings();
+  else if (appState.prodCapTab === 'detail')      body = renderProdCapDetail();
   else                                   body = renderProdCapDashboard();
 
   const tabs = [
@@ -37,7 +39,7 @@ function renderProdCapacity() {
   ];
 
   const navBtns = tabs.map(t => `
-    <button class="pc-nav-btn ${prodCapTab === t.id ? 'active' : ''}" data-cap-action="cap-prod-set-tab" data-tab="${t.id}">
+    <button class="pc-nav-btn ${appState.prodCapTab === t.id ? 'active' : ''}" data-cap-action="cap-prod-set-tab" data-tab="${t.id}">
       ${t.icon} ${t.label}
     </button>`).join('');
 
@@ -49,11 +51,11 @@ function renderProdCapacity() {
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-back">← Back</button>
           <div>
             <div class="pc-topbar-title">Production Load Capacity</div>
-            <div class="pc-topbar-sub">Schedule-driven capacity plan · ${(prodState?.batches||[]).length} batches · ${(prodState?.products||[]).filter(p=>p.status==='active').length} active products</div>
+            <div class="pc-topbar-sub">Schedule-driven capacity plan · ${(prodState?.batches || []).length} batches · ${(prodState?.products || []).filter(p => p.status === 'active').length} active products</div>
           </div>
         </div>
         <div class="pc-topbar-actions">
-          <button class="btn btn-ghost btn-sm" onclick="showGuide('capacity-production')" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="capacity-production" title="User Guide">❓ Guide</button>
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-open-schedule">↗ Open Schedule</button>
         </div>
       </div>
@@ -70,26 +72,28 @@ function renderProdCapacity() {
 
   // Post-render chart drawing
   setTimeout(() => {
-    if (prodCapTab === 'dashboard')    prodCapDrawDashChart();
-    if (prodCapTab === 'by-work-area') prodCapDrawWorkAreaChart();
+    if (appState.prodCapTab === 'dashboard')    prodCapDrawDashChart();
+    if (appState.prodCapTab === 'by-work-area') prodCapDrawWorkAreaChart();
   }, 80);
 
   return html;
 }
 
 // ── Tab-level refresh (DOM body swap only — avoids full render() feedback loop) ──
-window.prodCapRefreshCurrentTab = function() {
+export function prodCapRefreshCurrentTab() {
   const body = document.getElementById('pcBody');
   if (!body) return;
   let content = '';
-  if      (prodCapTab === 'dashboard')    content = renderProdCapDashboard();
-  else if (prodCapTab === 'by-work-area') content = renderProdCapWorkArea();
-  else if (prodCapTab === 'settings')     content = renderProdCapSettings();
-  else if (prodCapTab === 'detail')       content = renderProdCapDetail();
+  if      (appState.prodCapTab === 'dashboard')    content = renderProdCapDashboard();
+  else if (appState.prodCapTab === 'by-work-area') content = renderProdCapWorkArea();
+  else if (appState.prodCapTab === 'settings')     content = renderProdCapSettings();
+  else if (appState.prodCapTab === 'detail')       content = renderProdCapDetail();
   else                                    content = renderProdCapDashboard();
   body.innerHTML = content;
   setTimeout(() => {
-    if (prodCapTab === 'dashboard')    prodCapDrawDashChart();
-    if (prodCapTab === 'by-work-area') prodCapDrawWorkAreaChart();
+    if (appState.prodCapTab === 'dashboard')    prodCapDrawDashChart();
+    if (appState.prodCapTab === 'by-work-area') prodCapDrawWorkAreaChart();
   }, 80);
-};
+}
+
+setProdCapRefreshCurrentTab(prodCapRefreshCurrentTab)

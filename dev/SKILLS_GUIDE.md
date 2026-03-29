@@ -9,7 +9,8 @@ This guide explains the 8 development skills available to prevent common bugs an
 npm run check:all
 
 # Or run individual checks
-npm run check:load-order      # Verify script load order
+npm run check:imports         # Verify ESM import/export wiring
+npm run check:esm-coverage    # Track remaining non-ESM files
 npm run check:syntax          # Check for syntax errors
 npm run check:subscriptions   # Find memory leaks in subscriptions
 npm run check:mobile          # Verify responsive design breakpoints
@@ -21,31 +22,29 @@ npm run check:coverage        # Run tests and coverage report
 
 ---
 
-## 1. Load Order Checker
+## 1. Import Checker
 
-**Command:** `npm run check:load-order`
+**Command:** `npm run check:imports`
 
-Verifies script load order in `index.html` matches dependencies.
+Verifies ESM import/export wiring and flags missing/invalid module references.
 
 ### What It Catches
 - ❌ Missing dependencies (script A needs script B, but B isn't loaded)
-- ❌ Wrong positioning (script loads before its dependencies)
-- ❌ Duplicate scripts (same file loaded twice)
-- ❌ app.js doesn't load last (must be final script)
+- ❌ Invalid import targets
+- ❌ Missing exports/imports
+- ❌ Broken cross-file module wiring
 
 ### Example Output
 ```
- 1: state.js
- 2: auth.js (needs: state.js)          ✅ Correct
- 3: db.js (needs: state.js, auth.js)   ✅ Correct
- 4: helpers.js
- 5: navigation.js (needs: helpers.js)  ✅ Correct
+ ✓ All imports resolve
+ ✓ Named exports found
+ ✓ Module graph is valid
 ```
 
 ### When To Use
 - After adding a new feature file (`*.js`)
 - Before committing code
-- If you see "function not found" errors at runtime
+- If you see import/export errors at runtime
 
 ---
 
@@ -326,12 +325,12 @@ npm run check:all
 ```
 
 This runs (in order):
-1. Load Order Checker
-2. Syntax Validator
-3. Subscription Cleanup Auditor
-4. Mobile Breakpoint Verifier
-5. Modal State Auditor
-6. State Variable Tracker
+1. Syntax Validator
+2. Import Checker
+3. ESM Coverage Checker
+4. Subscription Cleanup Auditor
+5. Mobile Breakpoint Verifier
+6. Modal State Auditor
 7. Test Coverage Reporter
 
 **Use this before committing!**
@@ -342,7 +341,7 @@ This runs (in order):
 
 | Bug | Skill | Prevention |
 |-----|-------|-----------|
-| "function is not a function" | Syntax, Load Order | Check file parses, deps load first |
+| "function is not a function" | Syntax, Import Checker | Check file parses, imports/exports wire correctly |
 | Silent empty queries | RLS Checker | Verify RLS enabled |
 | App slows/crashes | Subscription Auditor | Find memory leaks |
 | Layout breaks on mobile | Mobile Verifier | Verify breakpoints |
@@ -363,7 +362,7 @@ npm test
 ### After Syntax Errors
 ```bash
 npm run check:syntax   # Find the problem
-npm run check:load-order  # Verify dependencies
+npm run check:imports  # Verify module wiring
 ```
 
 ### After Adding Subscriptions

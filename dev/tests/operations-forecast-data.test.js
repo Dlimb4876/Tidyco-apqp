@@ -1,8 +1,11 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Operations Forecast Data', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     localStorage.clear();
     global.currentUser = null;
     global.supa = null;
@@ -11,7 +14,7 @@ describe('Operations Forecast Data', () => {
       path.resolve(__dirname, '../portals/operations/js/operations-forecast-data.js'),
       'utf8'
     );
-    eval(script);
+    await import(`data:text/javascript,${encodeURIComponent(script)}`);
   });
 
   test('forecast matrix uses total hours for single month', () => {

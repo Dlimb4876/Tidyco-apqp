@@ -3,6 +3,8 @@
 // Depends on: auth.js, realtime.js (subscriptions wired by operations-dashboard.js)
 // =============================================================
 
+import { supabase as supa, currentUser } from '../../../core/js/supa.js'
+
 const OPS_FORECAST_TABLE = 'operations_forecast_opportunities';
 const OPS_FORECAST_FALLBACK_KEY = 'opsForecastRows';
 const OPS_FORECAST_ACTIVE_STATUSES = ['identified', 'quoted', 'negotiation', 'won', 'active'];
@@ -144,7 +146,7 @@ function opsForecastBuildWeightedMatrix(monthKeys, rows) {
   return matrix;
 }
 
-window.opsForecastManager = {
+export const opsForecastManager = {
   state: {
     rows: [],
     ready: false,
@@ -323,10 +325,12 @@ window.opsForecastManager = {
       return false;
     }
   }
-};
+}
 
-window.opsForecastBuildWeightedMatrix = opsForecastBuildWeightedMatrix;
-window.opsForecastIsActiveStatus = opsForecastIsActiveStatus;
-window.opsForecastProbabilityBandFromPct = opsForecastProbabilityBandFromPct;
-window.opsForecastProbabilityPctFromBand = opsForecastProbabilityPctFromBand;
-window.opsForecastProbabilityLabel = opsForecastProbabilityLabel;
+export {
+  opsForecastBuildWeightedMatrix,
+  opsForecastIsActiveStatus,
+  opsForecastProbabilityBandFromPct,
+  opsForecastProbabilityPctFromBand,
+  opsForecastProbabilityLabel
+}

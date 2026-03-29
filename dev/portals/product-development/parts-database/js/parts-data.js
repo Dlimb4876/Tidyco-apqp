@@ -3,9 +3,9 @@
 // Central source of truth for the standalone Parts Database subsystem
 // ═══════════════════════════════════
 
-window.partsDatabase = window.partsDatabase || {}
+import { supabase as supa, currentUser } from '../../../../core/js/supa.js'
 
-window.partsDatabase.data = {
+export const partsDataApi = {
   async fetchCatalogue() {
     try {
       const { data, error } = await supa

@@ -3,6 +3,118 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-29 | Fix Settings Work Areas edit button responsiveness | Replaced delayed double-rAF settings hydration with microtask hydration so Work Areas row edit clicks bind immediately and no longer appear to do nothing
+
+## 2026-03-29 | Tidy production schedule header controls | Moved Show/Hide Completed into the filter bar and removed redundant top-bar Add Batch button to simplify scheduling controls
+
+## 2026-03-29 | Fix parts database class filter not responding | Class filter buttons wrote to global scope instead of IIFE-scoped state variable; added partsDb.setClassFilter() setter and updated onclick to call it
+
+
+## 2026-03-29 | Fix MCS and NPI PFD runtime errors | Fixed `ReferenceError: mcsRenderCardHTML is not defined` in MCS real-time by adding missing imports and exports; fixed `ReferenceError: npiBom is not defined` in NPI PFD by importing `npiBom` from `bom.js`.
+
+## 2026-03-29 | Fix NPI PFMEA and Timing runtime errors | Imported missing `npiComponents` in `pfmea.js`, `dashboard.js`, `trackers.js` and fixed missing `GANTT_WEEKS` constants in `timing.js` to resolve TypeError and ReferenceError during NPI portal navigation.
+
+## 2026-03-29 | Fix db remote loader `supa` ReferenceError | Switched `core/js/db.js` to module-namespace import (`import * as supa`) so all existing `supa.currentUser`/`supa.supabase` calls resolve correctly and project data loads after login
+
+## 2026-03-29 | Disable inline edits in Parts Database table | Converted parts table rows to read-only values and removed `updateInline` autosave path so catalogue changes only happen through explicit Edit/Add modal actions
+
+## 2026-03-29 | Fix Settings families/work areas state references | Added missing ESM imports in `settings.js` for `familiesState`/`workAreasState` and related data functions so Settings tabs render without `ReferenceError` crashes
+
+## 2026-03-29 | Restore APQP add buttons data wiring | Imported shared `npi` namespace in `npi-data.js` and bound `npi.data = npiData` unconditionally so CTQ add and PFMEA add mode actions can call `npi.data.*` without silent failures
+
+## 2026-03-29 | Fix CTQ/PFMEA missing module references | Added missing `npiData` + navigation imports in `npi-ctq.js` and imported `pfmea-state.js` in `pfmea.js` so CTQ add actions and PFMEA filters/views work without runtime errors
+
+## 2026-03-29 | Fix APQP Control Plan tab reference error | Replaced stale `npiCp.render()` call in `apqp.js` with `npi.cp.render()` guard so APQP tab switching no longer crashes with `npiCp is not defined`
+
+## 2026-03-29 | Fix products init and dashboard product wiring | Switched products data to `import * as supa` (matching `supa.currentUser` + `supa.supabase`) and added missing `productsDataGetAll` import in NPI dashboard to stop startup crashes
+
+## 2026-03-29 | Fix products data startup auth crash | Replaced invalid `supa.getCurrentUser()` calls in products data with the shared `currentUser` state from `supa.js` so product data init and saves no longer throw at launch
+
+## 2026-03-29 | Fix NPI BoM parts database wiring crash | Added missing `getPartsDatabase` imports in `bom.js`/`bom-cclass.js` and restored `globalThis.partsDatabase` bridge in `parts-database.js` for existing modal inline handlers, preventing startup abort that also blocked `doLogin` bridge setup
+
+## 2026-03-29 | Fix NPI dashboard namespace init crash | Initialized all expected `npi.*` namespaces in `npi-shared.js` so early-loaded modules (like dashboard) can safely assign methods before `npi.js` completes, preventing startup abort and restoring `doLogin` bridge setup
+
+## 2026-03-29 | Fill Forward now overwrites existing values in prod capacity settings | Previously refused to run when cells were already filled; now propagates first row value over any existing values
+
+## 2026-03-29 | Fix missing NPI shared module import | Restored `portals/product-development/npi/js/npi-shared.js` so NPI module graph loads cleanly and login global bridges initialize (fixes `npi-shared.js` 404 + follow-on `doLogin is not defined`)
+
+## 2026-03-29 | Fix product support hours calculation | Reverted bad fallback that multiplied per-batch hours by weeks-in-month; wired setCapProductionBatchesResolver in ME init to pull from prodState.batches so batch-driven support hours flow correctly to charts and product load tab
+
+## 2026-03-29 | Fix product support hours missing from capacity charts | Support hours were never reaching charts because batch lookup returned empty and there was no fallback; added weekly-rate proration when no production schedule exists, and wired ME support-rate resolver through chart pipeline
+
+## 2026-03-29 | Fix Operations Capacity KPI navigation | Operations Capacity by Area KPIs were navigating to the capacity hub instead of the actual capacity plan; updated destinations to capacity::me, capacity::projects, capacity::logistics, and capacity::production
+
+## 2026-03-29 | Fix infinite recursion in login | imported doLogin explicitly in app.js to avoid hitting the global wrapper recursively
+
+## 2026-03-29 | Fix ME Capacity tab selector active state | Nav buttons were outside #meBody so active class never updated on tab switch
+
+## 2026-03-29 | Fix ME Capacity search/filter/sort on Product Support and Product Load tabs | Wire up setCapProductsDependencies and setCapProductLoadDependencies with refresh callbacks, product lookups, and API methods so search, family filter, and sorting actually update the DOM; add styled .cap-filter-bar CSS with responsive breakpoints; fix test dependency wiring
+
+## 2026-03-29 | Restore ME Capacity summary tables | Two tables (Demand Breakdown and Capacity Per Engineer) were lost during the capacity code restructure; restored to cap-chart.js
+
+
+## 2026-03-29 | Fix holiday planner runtime error | Resolved "Uncaught TypeError: "" is not a function" in cap-holidays.js caused by a missing semicolon before a parenthesis, which led to a string assignment being incorrectly interpreted as a function call.
+
+## 2026-03-29 | Align AI helper docs to ESM rules | Replace outdated load-order/CommonJS guidance with current ESM import and coverage checks so all assistants follow the same module standard
+
+## 2026-03-29 | Fix operations dashboard tabs and test functionality | Operations dashboard tabs were non-functional due to 'globalThis.render' being undefined. Fixed by exposing 'render' in main.js and adding the '.ops-tab-body' wrapper in the dashboard for efficient refreshes. Also restored the broken 'tests/operations-dashboard.test.js' by bridging ESM gaps and mapping renamed functions.
+
+## 2026-03-29 | Fix project favourites storage key mismatch | Favourites saved in the NPI dashboard were not appearing on the Hub portal because dashboard.js was using an incorrect 'globalThis.currentUser' fallback (saving to anonymous bucket) while the Hub was using the correctly imported 'currentUser' from supa.js. Fixed by using the imported currentUser in dashboard.js and ensuring supa.js populates the global variable for compatibility.
+
+## 2026-03-29 | Fix NPI dashboard loading hang | Dashboard was stuck on "loading" due to missing imports in dashboard.js, undefined npiTab (replaced with appState.npiTab), and disconnected globalThis.npi object across modules (pfmea.js and dashboard.js).
+
+## 2026-03-29 | Fix ESM login launchApp wiring | Login succeeded at auth level but crashed on undefined launchApp in module scope, blocking app shell transition after sign-in
+
+## 2026-03-29 | Unblock ESM test/check runtime boot | Fix npm/Jest launch path for Windows ESM, restore Jest global in setup, and convert failing check scripts from CommonJS require to ESM imports so validation commands run under type:module
+
+## 2026-03-29 | Fix broken ESM import in me-data-persistence.js | meDataDeleteProductSupportHistoryEntry was imported from wrong module (me-data-entities.js instead of me-data-support-history.js), causing cascading failure that broke doLogin and the whole app on load
+
+## 2026-03-29 | Execute ESM Phase 8 final wiring | Complete final module bootstrap wiring by switching index.html to importmap + main module entry, resolving app/navigation explicit imports, and updating phase trackers with deferred pwsh/browser gates
+## 2026-03-29 | Execute ESM Phase 9 cleanup and tracker finalization | Finalize cleanup docs/check pipeline updates and mark Part1/Part2 row 9 complete with explicit deferred pwsh/CLI-only gate notes and merged-marker policy
+## 2026-03-29 | Execute ESM P7b MCS UI conversion | Convert 6 scoped MCS UI files to explicit ESM with P7a-safe wrappers, remove inline handlers via data-action delegation, and update migration trackers with deferred pwsh validation
+## 2026-03-29 | Execute ESM P7a MCS data/shared modal conversion | Convert the 4 scoped MCS files to explicit imports/exports with no in-scope window bridges, update migration trackers, and record deferred pwsh validation as non-blocking
+## 2026-03-29 | Execute ESM P6b NPI tools conversion | Convert all 9 scoped NPI tool modules to explicit ESM imports/exports, remove in-scope window bridges, switch index scripts to modules, and mark trackers with deferred pwsh validation
+## 2026-03-29 | Execute ESM P6d NPI wiring conversion | Finalize npi.js/npi-orchestrator.js/npi-events.js as module wiring, update app/navigation hooks to exported APIs, and mark trackers with deferred pwsh validation
+## 2026-03-29 | Mark P6c tracker completion with deferred validation | Update Part1/Part2 migration trackers and P6c checklist to done/merged state with explicit non-blocking pwsh defer notes per environment limits
+## 2026-03-29 | Finalize ESM P6a NPI foundation state | Normalize npi-data into coherent ESM form, export npi relational API directly, add P6a bridge wiring in index, and align trackers/checklists with deferred pwsh validation policy
+## 2026-03-28 | Execute ESM P6a NPI foundation conversion | Convert npi constants/data/components foundation files to explicit ESM import/export contracts, remove in-scope window bridges, and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5e product-development conversion | Finalize Product Development/Parts/Product Management ESM wiring for the 10-file scope, remove remaining scoped bridge usage, and update trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5d settings conversion | Convert 5 settings portal files to explicit imports/exports with no window bridges and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5c hub/feedback/action-centre conversion | Convert 5 scoped portal files to explicit imports/exports without window bridges, patch coupled callers, and mark tracker/checklist rows with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5a operations conversion | Convert 9 operations portal files to explicit imports/exports with no window bridges in scope, wire navigation to ESM exports, and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5b production conversion | Convert 5 production portal files to explicit imports/exports with no window bridges and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Finalize ESM P4e capacity shell/events cleanup | Remove remaining in-scope global bridge usage from capacity shell routing and complete deferred P4e tracker accuracy
+
+## 2026-03-28 | Execute ESM P4a ME capacity conversion | Convert ME capacity data/orchestrator files to explicit ESM imports/exports with no window bridges in scope, and update P4a trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P4d UNIT6 capacity conversion | Convert UNIT6 capacity relational/data/orchestrator files to explicit imports/exports with no window bridges, and update P4d trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P4b PM capacity conversion | Convert PM capacity relational/data/orchestrator files to explicit ESM imports/exports with no window bridges, and update P4b trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM Phase 3 capacity shared conversion | Convert 13 capacity shared files to explicit ESM imports/exports, remove window bridges in scope, and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P2b core outer conversion | Convert helpers/navigation/realtime/render-scheduler/chart-theme/guide/network/app to ESM exports/imports, add core/js/main.js entry point, and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P2a core inner conversion | Convert state/auth/db to explicit ESM contracts and add CDN import map while deferring command validation due to missing pwsh
+
+## 2026-03-28 | Complete ESM P2b outer core pass | Finalize helpers→app scoped ESM consistency, add core main.js entrypoint, and mark phase trackers done with deferred pwsh validation
+
+## 2026-03-28 | Add check:imports script for P1c | Introduce import-checker guardrail and npm script wiring for ESM migration phase 1c
+
+## 2026-03-28 | Retire legacy validation script checks for P1b | Replace old load-order/state/subscription enforcement with ESM migration stubs and align check:all phase order
+
+## 2026-03-28 | Add ESM coverage progress checker | Add check:esm-coverage script and phase tracker updates for P1d
+
+## 2026-03-28 | Add /fleet coordination contract to ESM migration plans | Standardize phase claiming, branch ownership, handoff format, and merge gates so parallel Copilot agents can coordinate safely and quickly
+
+## 2026-03-28 | ESM migration plan documented | Full site migration from global scripts to ES modules planned across 9 phases in plans/esm-migration-part1.md and plans/esm-migration-part2.md
+
 ## 2026-03-28 | Replace silent error handling with proper logging | Code review found empty catch blocks swallowing errors; added console.error/console.debug to 9 locations so failures are visible for debugging
 
 ## 2026-03-28 | Fix code review issues (network race condition, gate questions return value, input escaping, cleanup) | Remove premature optimistic health state in network detection; make gate questions data loader return promise; fix double-escaping in input values; add teardown function for memory cleanup
@@ -137,6 +249,9 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 ## 2026-03-27 | Verify ME capacity database saves working correctly | User reported data not posting; investigation confirmed all saves working (67 products, 6 team, 80 tasks); removed verbose debug logging that was added for diagnosis
 
 ## 2026-03-27 | Finish Parts Database subsystem split | Moved the Add from Parts Database picker and ABC-specific styling into the standalone Parts Database module so Product Development owns the full catalogue flow instead of relying on shared NPI internals
+# CHANGELOG
+
+## 2026-03-29 | Fix cap-chart.js SyntaxError | Convert portals/capacity/shared/js/cap-chart.js to proper ESM module with named exports to fix SyntaxError in capacity orchestrators (ME, PM, LOG, UNIT6).
 
 ## 2026-03-27 | Phase 1: Create shared capacity files | Create portals/capacity/shared/ folder with 12 JS and 7 CSS files copied from ME portal and renamed from me* to cap*; shared utilities (cap-utils.js, cap-components.js, cap-calculations.js, cap-data-utils.js) and renderers (cap-team.js, cap-tasks.js, cap-products.js, cap-product-taskload.js, cap-holidays.js, cap-chart.js, cap-heatmap.js, cap-dashboard.js) ready for Phase 2 refactoring
 

@@ -1,8 +1,12 @@
-const fs = require('fs');
-const path = require('path');
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // Set up DOM
-const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
 document.documentElement.innerHTML = html.toString();
 
 // Global stubs used by cap-chart.js
@@ -25,11 +29,9 @@ global.capCalculateMonthData = jest.fn(() => ({
   utilisation: 63
 }));
 
-const script = fs.readFileSync(
-  path.resolve(__dirname, '../portals/capacity/shared/js/cap-chart.js'),
-  'utf8'
-);
-eval(script);
+// Load module and expose to window
+const capChartModule = await import('../portals/capacity/shared/js/cap-chart.js');
+Object.assign(window, capChartModule);
 
 describe('Shared chart tab rendering', () => {
   beforeEach(() => {
@@ -70,7 +72,7 @@ describe('Shared chart tab rendering', () => {
   test('uses selected chart month for KPI calculations', () => {
     capRenderChartTab('2026-08', [], [], [], [], 'ME');
 
-    expect(global.capCalculateMonthData).toHaveBeenCalledWith('2026-08', [], [], [], []);
+    expect(global.capCalculateMonthData).toHaveBeenCalledWith('2026-08', [], [], [], [], undefined);
     expect(global.getMonthLabel).toHaveBeenCalledWith('2026-08');
   });
 

@@ -3,7 +3,11 @@
    Depends on: npi.js (npi namespace), navigation.js (render)
    ============================================================ */
 
-npi.pfmea = npi.pfmea || {}
+import { npi } from './npi-shared.js'
+import { appState } from '../../../../core/js/state.js'
+import { writeNavigationHistory, render } from '../../../../utils/js/navigation.js'
+
+export const pfmeaState = {}
 
 const PFMEA_RPN_FILTERS = ['all', 'high', 'r1_49', 'r50_99', 'r100_199', 'r200_plus']
 const PFMEA_VIEWS = ['worksheet', 'history']
@@ -15,54 +19,54 @@ const PFMEA_COLUMN_VISIBILITY = {
   full:     { name: 'full',     function: true,  prevent: true,  detect: true,  action: true,  owner: true,  due: true,  newOcc: true,  newDet: true,  forecast: true,  implement: true  }
 }
 
-npi.pfmea.getRpnFilter = function() {
-  const cur = (globalThis.pfmeaRpnFilter || 'all').toString()
+pfmeaState.getRpnFilter = function() {
+  const cur = (appState.pfmeaRpnFilter || 'all').toString()
   return PFMEA_RPN_FILTERS.includes(cur) ? cur : 'all'
 }
 
-npi.pfmea.setRpnFilter = function(nextFilter) {
-  const prevFilter = globalThis.pfmeaRpnFilter || 'all'
+pfmeaState.setRpnFilter = function(nextFilter) {
+  const prevFilter = appState.pfmeaRpnFilter || 'all'
   const safe = (nextFilter || 'all').toString()
-  globalThis.pfmeaRpnFilter = PFMEA_RPN_FILTERS.includes(safe) ? safe : 'all'
+  appState.pfmeaRpnFilter = PFMEA_RPN_FILTERS.includes(safe) ? safe : 'all'
   // Update URL to persist PFMEA RPN filter
-  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=pfmea']
-  if (globalThis.pfmeaRpnFilter !== 'all') parts.push('pfr=' + encodeURIComponent(globalThis.pfmeaRpnFilter))
-  if (globalThis.pfmeaView !== 'worksheet') parts.push('pfv=' + encodeURIComponent(globalThis.pfmeaView))
-  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=pfmea']
+  if (appState.pfmeaRpnFilter !== 'all') parts.push('pfr=' + encodeURIComponent(appState.pfmeaRpnFilter))
+  if (appState.pfmeaView !== 'worksheet') parts.push('pfv=' + encodeURIComponent(appState.pfmeaView))
+  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
   writeNavigationHistory('#' + parts.join('&'), { push: prevFilter !== safe })
   render()
 }
 
-npi.pfmea.getView = function() {
-  const cur = (globalThis.pfmeaView || 'worksheet').toString()
+pfmeaState.getView = function() {
+  const cur = (appState.pfmeaView || 'worksheet').toString()
   return PFMEA_VIEWS.includes(cur) ? cur : 'worksheet'
 }
 
-npi.pfmea.setView = function(nextView) {
-  const prevView = globalThis.pfmeaView || 'worksheet'
+pfmeaState.setView = function(nextView) {
+  const prevView = appState.pfmeaView || 'worksheet'
   const safe = (nextView || 'worksheet').toString()
-  globalThis.pfmeaView = PFMEA_VIEWS.includes(safe) ? safe : 'worksheet'
+  appState.pfmeaView = PFMEA_VIEWS.includes(safe) ? safe : 'worksheet'
   // Update URL to persist PFMEA view
-  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=pfmea']
-  if (globalThis.pfmeaRpnFilter !== 'all') parts.push('pfr=' + encodeURIComponent(globalThis.pfmeaRpnFilter))
-  if (globalThis.pfmeaView !== 'worksheet') parts.push('pfv=' + encodeURIComponent(globalThis.pfmeaView))
-  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=pfmea']
+  if (appState.pfmeaRpnFilter !== 'all') parts.push('pfr=' + encodeURIComponent(appState.pfmeaRpnFilter))
+  if (appState.pfmeaView !== 'worksheet') parts.push('pfv=' + encodeURIComponent(appState.pfmeaView))
+  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
   writeNavigationHistory('#' + parts.join('&'), { push: prevView !== safe })
   render()
 }
 
-npi.pfmea.getColumnView = function() {
-  const cur = (globalThis.pfmeaColumnView || 'standard').toString()
+pfmeaState.getColumnView = function() {
+  const cur = (appState.pfmeaColumnView || 'standard').toString()
   return PFMEA_COLUMN_VISIBILITY[PFMEA_COLUMN_VIEWS.includes(cur) ? cur : 'standard']
 }
 
-npi.pfmea.setColumnView = function(viewName) {
-  globalThis.pfmeaColumnView = PFMEA_COLUMN_VIEWS.includes(viewName) ? viewName : 'standard'
+pfmeaState.setColumnView = function(viewName) {
+  appState.pfmeaColumnView = PFMEA_COLUMN_VIEWS.includes(viewName) ? viewName : 'standard'
   render()
 }
 
 // Total visible column count (used for colspan calculations)
-npi.pfmea.pfColCount = function(vis) {
+pfmeaState.pfColCount = function(vis) {
   let cols = 6 // always: mode + effect + sev + cause + occ + del
   if (vis.function) cols++
   if (vis.prevent) cols++
@@ -78,7 +82,7 @@ npi.pfmea.pfColCount = function(vis) {
 }
 
 // Approximate min-width in px for horizontal scroll container
-npi.pfmea.pfColMinWidth = function(vis) {
+pfmeaState.pfColMinWidth = function(vis) {
   let width = 672 // base: mode(180)+effect(180)+sev(60)+cause(180)+occ(44)+del(28)
   if (vis.function) width += 200
   if (vis.prevent) width += 180
@@ -93,32 +97,32 @@ npi.pfmea.pfColMinWidth = function(vis) {
   return width
 }
 
-npi.pfmea.pfGetExtraFilters = function() {
+pfmeaState.pfGetExtraFilters = function() {
   return {
-    owner: globalThis.pfmeaOwnerFilter || null,
-    overdueOnly: globalThis.pfmeaOverdueFilter || false,
-    specialChar: globalThis.pfmeaScFilter || null,
-    searchText: globalThis.pfmeaSearchFilter || ''
+    owner: appState.pfmeaOwnerFilter || null,
+    overdueOnly: appState.pfmeaOverdueFilter || false,
+    specialChar: appState.pfmeaScFilter || null,
+    searchText: appState.pfmeaSearchFilter || ''
   }
 }
 
-npi.pfmea.pfSetExtraFilter = function(key, value) {
-  if (key === 'owner') globalThis.pfmeaOwnerFilter = value || null
-  if (key === 'overdueOnly') globalThis.pfmeaOverdueFilter = !!value
-  if (key === 'specialChar') globalThis.pfmeaScFilter = value || null
-  if (key === 'searchText') globalThis.pfmeaSearchFilter = value || ''
+pfmeaState.pfSetExtraFilter = function(key, value) {
+  if (key === 'owner') appState.pfmeaOwnerFilter = value || null
+  if (key === 'overdueOnly') appState.pfmeaOverdueFilter = !!value
+  if (key === 'specialChar') appState.pfmeaScFilter = value || null
+  if (key === 'searchText') appState.pfmeaSearchFilter = value || ''
   render()
 }
 
-npi.pfmea.pfClearExtraFilters = function() {
-  globalThis.pfmeaOwnerFilter = null
-  globalThis.pfmeaOverdueFilter = false
-  globalThis.pfmeaScFilter = null
-  globalThis.pfmeaSearchFilter = ''
+pfmeaState.pfClearExtraFilters = function() {
+  appState.pfmeaOwnerFilter = null
+  appState.pfmeaOverdueFilter = false
+  appState.pfmeaScFilter = null
+  appState.pfmeaSearchFilter = ''
   render()
 }
 
-npi.pfmea.pfModeMatchesExtraFilters = function(mode, xf) {
+pfmeaState.pfModeMatchesExtraFilters = function(mode, xf) {
   const effects = mode.effects || []
 
   if (xf.owner) {
@@ -155,10 +159,15 @@ npi.pfmea.pfModeMatchesExtraFilters = function(mode, xf) {
   return true
 }
 
-npi.pfmea.pfGetUniqueOwners = function(project) {
+pfmeaState.pfGetUniqueOwners = function(project) {
   const owners = new Set()
   ;(project.pfmea || []).forEach(mode => (mode.effects || []).forEach(ef => (ef.causes || []).forEach(ca => {
     if (ca.action && ca.action.owner) owners.add(ca.action.owner)
   })))
   return [...owners].sort()
+}
+
+if (npi) {
+  npi.pfmea = npi.pfmea || {}
+  Object.assign(npi.pfmea, pfmeaState)
 }

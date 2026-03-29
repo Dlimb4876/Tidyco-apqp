@@ -3,7 +3,13 @@
 // Depends on: npi.js, npi-data.js
 // ═══════════════════════════════════
 
-npi.ctq = npi.ctq || {}
+import { appState, prog } from '../../../../core/js/state.js'
+import { esc, canEdit, emptyState } from '../../../../utils/js/helpers.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+import { writeNavigationHistory, render } from '../../../../utils/js/navigation.js'
+import { npi } from './npi-shared.js'
+import { npiComponents } from './npi-components.js'
+import { npiData } from './npi-data.js'
 
 const CTQ_SOURCES = ['Customer Spec', 'OEM Data', 'Internal Standard', 'Regulatory', 'Drawing']
 const CTQ_OOS_ACTIONS = ['Repair', 'Replace', 'Scrap', 'Review', 'TBD']
@@ -19,19 +25,19 @@ npi.ctq.getCoverage = function(ctqId, p) {
 }
 
 npi.ctq.getCoverageFilter = function() {
-  const cur = (globalThis.ctqCoverageFilter || 'all').toString()
+  const cur = (appState.ctqCoverageFilter || 'all').toString()
   return CTQ_COVERAGE_OPTIONS.includes(cur) ? cur : 'all'
 }
 
 npi.ctq.setCoverageFilter = function(v) {
   const safe = (v || 'all').toString()
-  globalThis.ctqCoverageFilter = CTQ_COVERAGE_OPTIONS.includes(safe) ? safe : 'all'
-  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=ctq']
-  if (globalThis.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(globalThis.ctqSourceFilter))
-  if (globalThis.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(globalThis.ctqOosFilter))
-  if (globalThis.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(globalThis.ctqAgreedFilter))
-  if (globalThis.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(globalThis.ctqCoverageFilter))
-  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  appState.ctqCoverageFilter = CTQ_COVERAGE_OPTIONS.includes(safe) ? safe : 'all'
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
+  if (appState.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter))
+  if (appState.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter))
+  if (appState.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter))
+  if (appState.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter))
+  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
   writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
@@ -45,66 +51,66 @@ npi.ctq.matchesCoverageFilter = function(r, p, coverageFilter) {
 }
 
 npi.ctq.getSourceFilter = function() {
-  const cur = (globalThis.ctqSourceFilter || 'all').toString()
+  const cur = (appState.ctqSourceFilter || 'all').toString()
   return ['all', ...CTQ_SOURCES].includes(cur) ? cur : 'all'
 }
 
 npi.ctq.setSourceFilter = function(v) {
   const safe = (v || 'all').toString()
-  globalThis.ctqSourceFilter = ['all', ...CTQ_SOURCES].includes(safe) ? safe : 'all'
-  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=ctq']
-  if (globalThis.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(globalThis.ctqSourceFilter))
-  if (globalThis.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(globalThis.ctqOosFilter))
-  if (globalThis.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(globalThis.ctqAgreedFilter))
-  if (globalThis.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(globalThis.ctqCoverageFilter))
-  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  appState.ctqSourceFilter = ['all', ...CTQ_SOURCES].includes(safe) ? safe : 'all'
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
+  if (appState.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter))
+  if (appState.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter))
+  if (appState.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter))
+  if (appState.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter))
+  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
   writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
 
 npi.ctq.getOosFilter = function() {
-  const cur = (globalThis.ctqOosFilter || 'all').toString()
+  const cur = (appState.ctqOosFilter || 'all').toString()
   return ['all', ...CTQ_OOS_ACTIONS].includes(cur) ? cur : 'all'
 }
 
 npi.ctq.setOosFilter = function(v) {
   const safe = (v || 'all').toString()
-  globalThis.ctqOosFilter = ['all', ...CTQ_OOS_ACTIONS].includes(safe) ? safe : 'all'
-  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=ctq']
-  if (globalThis.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(globalThis.ctqSourceFilter))
-  if (globalThis.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(globalThis.ctqOosFilter))
-  if (globalThis.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(globalThis.ctqAgreedFilter))
-  if (globalThis.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(globalThis.ctqCoverageFilter))
-  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  appState.ctqOosFilter = ['all', ...CTQ_OOS_ACTIONS].includes(safe) ? safe : 'all'
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
+  if (appState.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter))
+  if (appState.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter))
+  if (appState.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter))
+  if (appState.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter))
+  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
   writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
 
 npi.ctq.getAgreedFilter = function() {
-  const cur = (globalThis.ctqAgreedFilter || 'all').toString()
+  const cur = (appState.ctqAgreedFilter || 'all').toString()
   return ['all', 'yes', 'no'].includes(cur) ? cur : 'all'
 }
 
 npi.ctq.setAgreedFilter = function(v) {
   const safe = (v || 'all').toString()
-  globalThis.ctqAgreedFilter = ['all', 'yes', 'no'].includes(safe) ? safe : 'all'
-  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=ctq']
-  if (globalThis.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(globalThis.ctqSourceFilter))
-  if (globalThis.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(globalThis.ctqOosFilter))
-  if (globalThis.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(globalThis.ctqAgreedFilter))
-  if (globalThis.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(globalThis.ctqCoverageFilter))
-  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  appState.ctqAgreedFilter = ['all', 'yes', 'no'].includes(safe) ? safe : 'all'
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
+  if (appState.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter))
+  if (appState.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter))
+  if (appState.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter))
+  if (appState.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter))
+  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
   writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
 
 npi.ctq.clearFilters = function() {
-  globalThis.ctqSourceFilter = 'all'
-  globalThis.ctqOosFilter = 'all'
-  globalThis.ctqAgreedFilter = 'all'
-  globalThis.ctqCoverageFilter = 'all'
-  const parts = ['p=' + encodeURIComponent(progId), 's=project', 't=ctq']
-  if (globalThis.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(globalThis.bomSubTab))
+  appState.ctqSourceFilter = 'all'
+  appState.ctqOosFilter = 'all'
+  appState.ctqAgreedFilter = 'all'
+  appState.ctqCoverageFilter = 'all'
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
+  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
   writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
@@ -196,7 +202,7 @@ npi.ctq.render = function() {
     ? emptyState('🎯', 'No CTQs yet', canEdit() ? 'Add critical requirements' : 'No CTQs defined yet')
     : filteredIdx.length === 0
       ? emptyState('🔍', 'No matches', `${p.ctq.length} CTQ${p.ctq.length !== 1 ? 's' : ''} exist but none match the active filters.`) + `<div style="text-align:center;margin-top:8px"><button class="btn btn-ghost btn-sm" data-action="ctq-filter-clear">Clear filters</button></div>`
-      : `<div class="sticky-table-wrap"><table class="tbl ctq-tbl" style="min-width:960px;table-layout:fixed;width:100%"><colgroup><col style="width:40px"><col style="width:20%"><col style="width:13%"><col style="width:16%"><col style="width:12%"><col style="width:12%"><col style="width:90px"><col style="width:80px"><col style="width:30px"></colgroup>${npi.components.tableHeader([{label:'Ref'},{label:'Requirement'},{label:'Target / Tolerance'},{label:'Test Method'},{label:'Source'},{label:'Out-of-Spec Action'},{label:'Customer Accepted',style:'text-align:center'},{label:'Coverage',style:'text-align:center'},{label:''}])}<tbody>${rows}</tbody></table></div>`
+      : `<div class="sticky-table-wrap"><table class="tbl ctq-tbl" style="min-width:960px;table-layout:fixed;width:100%"><colgroup><col style="width:40px"><col style="width:20%"><col style="width:13%"><col style="width:16%"><col style="width:12%"><col style="width:12%"><col style="width:90px"><col style="width:80px"><col style="width:30px"></colgroup>${npiComponents.tableHeader([{label:'Ref'},{label:'Requirement'},{label:'Target / Tolerance'},{label:'Test Method'},{label:'Source'},{label:'Out-of-Spec Action'},{label:'Customer Accepted',style:'text-align:center'},{label:'Coverage',style:'text-align:center'},{label:''}])}<tbody>${rows}</tbody></table></div>`
 
   const coverageBanner = p.ctq.length > 0
     ? `<div class="coverage-banner"><span class="coverage-stat"><span class="tag tag-green">${linkedCount}</span> linked</span><span class="coverage-stat"><span class="tag tag-amber">${orphanedCount}</span> orphaned</span>${orphanedCount > 0 ? ' <a href="#" data-action="npi-set-apqp" data-tab="pfd" style="color:var(--blue)">Link to PFD →</a>' : ''}</div>`
@@ -211,6 +217,12 @@ npi.ctq.render = function() {
   ${p.ctq.length > 0 ? `<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" data-action="npi-set-apqp" data-tab="pfd" style="color:var(--blue)">Process Flow →</a></div>` : ''}`
 }
 
-npi.ctq.add = function() { npi.data.ctq.add() }
-npi.ctq.upd = function(i, f, v) { npi.data.ctq.upd(i, f, v) }
-npi.ctq.del = function(i) { npi.data.ctq.del(i) }
+npi.ctq.add = function() { npiData.ctq.add() }
+npi.ctq.upd = function(i, f, v) { npiData.ctq.upd(i, f, v) }
+npi.ctq.del = function(i) { npiData.ctq.del(i) }
+
+export const npiCtq = npi.ctq
+export const renderCtq = npi.ctq.render
+export const addCtq = npi.ctq.add
+export const updateCtq = npi.ctq.upd
+export const deleteCtq = npi.ctq.del

@@ -4,6 +4,164 @@
    Depends on: capacity.js, me-*.js, prod-capacity-*.js, pm-capacity.js
    ============================================================ */
 
+import { appState } from '../../../core/js/state.js'
+import { canEdit, esc, isEditingInlineCell, preserveInputCaretAfterRender, showModal } from '../../../utils/js/helpers.js'
+import { navigate, render } from '../../../utils/js/navigation.js'
+import { flushDeferred } from '../../../utils/js/render-scheduler.js'
+import { CAP_DEFAULT_HOURS_PER_WEEK } from '../shared/js/cap-utils.js'
+import { capToggleHoliday } from '../shared/js/cap-holidays.js'
+import { capOpenHeatmapDetail, capCloseHeatmapDetail } from '../shared/js/cap-heatmap.js'
+import { capTasksFilters, capTaskEditingId, capTasksSort, capGetSortIcon } from '../shared/js/cap-tasks.js'
+import {
+  capProductsTableState,
+  capProductsSetDraftValue,
+  capProductsClearDraft,
+  capProductsSetSearch,
+  capProductsSetFamilyFilter,
+  capProductsSetSort,
+  capProductsSortByColumn,
+  capProductsToggleSortDir,
+  capProductsClearFilters,
+  capProductsStartHistoryEdit,
+  capProductsCancelHistoryEdit,
+  capProductsSaveHistoryEdit,
+  capProductsToggleStatusFilter,
+  capProductsToggleHistory,
+  capProductsBulkSaveChanges,
+  capProductsUpdateHistoryEditDraft
+} from '../shared/js/cap-products.js'
+import {
+  capProductLoadTableState,
+  capProductLoadSetSearch,
+  capProductLoadSetFamilyFilter,
+  capProductLoadSetSort,
+  capProductLoadToggleSortDir,
+  capProductLoadClearFilters,
+  capProductLoadSortByColumn
+} from '../shared/js/cap-product-taskload.js'
+import { setCapacityTab } from './capacity.js'
+import {
+  meDataAddTeam,
+  meDataUpdateTeam,
+  meDataDeleteTeam,
+  meDataAddTask,
+  meDataUpdateTask,
+  meDataDeleteTask,
+  meDataUpdateProduct,
+  meDataGetProducts,
+  meDataGetTasks,
+  meDataGetTeam,
+  meDataGetHolidays,
+  meDataAddHoliday,
+  meDataUpdateHoliday,
+  meDataDeleteHoliday,
+  meDataDeleteProductSupportHistoryEntry
+} from '../me/js/me-data-persistence.js'
+import {
+  meSetTab,
+  meRefreshCurrentTab,
+  meOnSave,
+  meDebouncedSave,
+  meOnMonthChange,
+  meOnPrevMonth,
+  meOnNextMonth
+} from '../me/js/me-capacity.js'
+import {
+  pmDataAddTeam,
+  pmDataUpdateTeam,
+  pmDataDeleteTeam,
+  pmDataAddTask,
+  pmDataUpdateTask,
+  pmDataDeleteTask,
+  pmDataUpdateProduct,
+  pmDataGetProducts,
+  pmDataGetTasks,
+  pmDataGetTeam,
+  pmDataGetHolidays,
+  pmDataAddHoliday,
+  pmDataUpdateHoliday,
+  pmDataDeleteHoliday,
+  pmDataDeleteProductSupportHistoryEntry
+} from '../project-management/js/pm-data.js'
+import {
+  pmSetTab,
+  pmRefreshCurrentTab,
+  pmOnSave,
+  pmDebouncedSave,
+  pmOnMonthChange,
+  pmOnPrevMonth,
+  pmOnNextMonth
+} from '../project-management/js/pm-capacity.js'
+import {
+  logDataAddTeam,
+  logDataUpdateTeam,
+  logDataDeleteTeam,
+  logDataAddTask,
+  logDataUpdateTask,
+  logDataDeleteTask,
+  logDataUpdateProduct,
+  logDataGetProducts,
+  logDataGetTasks,
+  logDataGetTeam,
+  logDataGetHolidays,
+  logDataAddHoliday,
+  logDataUpdateHoliday,
+  logDataDeleteHoliday,
+  logDataDeleteProductSupportHistoryEntry
+} from '../logistics/js/log-data.js'
+import {
+  logSetTab,
+  logRefreshCurrentTab,
+  logOnSave,
+  logDebouncedSave,
+  logOnMonthChange,
+  logOnPrevMonth,
+  logOnNextMonth
+} from '../logistics/js/log-capacity.js'
+import {
+  unit6DataAddTeam,
+  unit6DataUpdateTeam,
+  unit6DataDeleteTeam,
+  unit6DataAddTask,
+  unit6DataUpdateTask,
+  unit6DataDeleteTask,
+  unit6DataUpdateProduct,
+  unit6DataGetProducts,
+  unit6DataGetTasks,
+  unit6DataGetTeam,
+  unit6DataGetHolidays,
+  unit6DataAddHoliday,
+  unit6DataUpdateHoliday,
+  unit6DataDeleteHoliday,
+  unit6DataDeleteProductSupportHistoryEntry
+} from '../unit6/js/unit6-data.js'
+import {
+  unit6SetTab,
+  unit6RefreshCurrentTab,
+  unit6OnSave,
+  unit6DebouncedSave,
+  unit6OnMonthChange,
+  unit6OnPrevMonth,
+  unit6OnNextMonth
+} from '../unit6/js/unit6-capacity.js'
+import { setProdCapTab } from '../production/js/prod-capacity.js'
+import {
+  prodCapShiftMonth,
+  prodCapResetMonthOffset,
+  prodCapPendingRealTimeUpdate,
+  setProdCapPendingRealTimeUpdate
+} from '../production/js/prod-capacity-data.js'
+import { prodCapSetWorkArea } from '../production/js/prod-capacity-workarea.js'
+import {
+  prodCapSettingsFillForward,
+  prodCapSettingsClearAll,
+  prodCapSettingsSetUtilization,
+  prodCapSettingsUpdate,
+  prodCapSettingsNavKey
+} from '../production/js/prod-capacity-settings.js'
+import { prodCapRefreshCurrentTab } from '../production/js/prod-capacity.js'
+import { setProdCapDetailFilter } from '../production/js/prod-capacity-detail.js'
+
 let _capEventsContainer = null
 
 function capActionTarget(evt) {
@@ -17,7 +175,6 @@ function capNum(v, fallback) {
 
 function capDefaultHoursPerWeek() {
   if (typeof CAP_DEFAULT_HOURS_PER_WEEK === 'number') return CAP_DEFAULT_HOURS_PER_WEEK
-  if (typeof ME_DEFAULT_HOURS_PER_WEEK === 'number') return ME_DEFAULT_HOURS_PER_WEEK
   return 37.5
 }
 
@@ -38,118 +195,194 @@ function capIsPM(contextType) {
 function capGetDataApi(contextType) {
   if (contextType === 'pm') {
     return {
-      addTeam: window.pmDataAddTeam,
-      updateTeam: window.pmDataUpdateTeam,
-      deleteTeam: window.pmDataDeleteTeam,
-      addTask: window.pmDataAddTask,
-      updateTask: window.pmDataUpdateTask,
-      deleteTask: window.pmDataDeleteTask,
-      updateProduct: window.pmDataUpdateProduct,
-      getProducts: window.pmDataGetProducts
+      addTeam: pmDataAddTeam,
+      updateTeam: pmDataUpdateTeam,
+      deleteTeam: pmDataDeleteTeam,
+      addTask: pmDataAddTask,
+      updateTask: pmDataUpdateTask,
+      deleteTask: pmDataDeleteTask,
+      updateProduct: pmDataUpdateProduct,
+      getProducts: pmDataGetProducts
     }
   }
   if (contextType === 'log') {
     return {
-      addTeam: window.logDataAddTeam,
-      updateTeam: window.logDataUpdateTeam,
-      deleteTeam: window.logDataDeleteTeam,
-      addTask: window.logDataAddTask,
-      updateTask: window.logDataUpdateTask,
-      deleteTask: window.logDataDeleteTask,
-      updateProduct: window.logDataUpdateProduct,
-      getProducts: window.logDataGetProducts
+      addTeam: logDataAddTeam,
+      updateTeam: logDataUpdateTeam,
+      deleteTeam: logDataDeleteTeam,
+      addTask: logDataAddTask,
+      updateTask: logDataUpdateTask,
+      deleteTask: logDataDeleteTask,
+      updateProduct: logDataUpdateProduct,
+      getProducts: logDataGetProducts
     }
   }
   if (contextType === 'unit6') {
     return {
-      addTeam: window.unit6DataAddTeam,
-      updateTeam: window.unit6DataUpdateTeam,
-      deleteTeam: window.unit6DataDeleteTeam,
-      addTask: window.unit6DataAddTask,
-      updateTask: window.unit6DataUpdateTask,
-      deleteTask: window.unit6DataDeleteTask,
-      updateProduct: window.unit6DataUpdateProduct,
-      getProducts: window.unit6DataGetProducts
+      addTeam: unit6DataAddTeam,
+      updateTeam: unit6DataUpdateTeam,
+      deleteTeam: unit6DataDeleteTeam,
+      addTask: unit6DataAddTask,
+      updateTask: unit6DataUpdateTask,
+      deleteTask: unit6DataDeleteTask,
+      updateProduct: unit6DataUpdateProduct,
+      getProducts: unit6DataGetProducts
     }
   }
   return {
-    addTeam: window.meDataAddTeam,
-    updateTeam: window.meDataUpdateTeam,
-    deleteTeam: window.meDataDeleteTeam,
-    addTask: window.meDataAddTask,
-    updateTask: window.meDataUpdateTask,
-    deleteTask: window.meDataDeleteTask,
-    updateProduct: window.meDataUpdateProduct,
-    getProducts: window.meDataGetProducts
+    addTeam: meDataAddTeam,
+    updateTeam: meDataUpdateTeam,
+    deleteTeam: meDataDeleteTeam,
+    addTask: meDataAddTask,
+    updateTask: meDataUpdateTask,
+    deleteTask: meDataDeleteTask,
+    updateProduct: meDataUpdateProduct,
+    getProducts: meDataGetProducts
   }
 }
 
 function capRunSave(contextType) {
-  if (contextType === 'pm' && typeof window.pmOnSave === 'function') return window.pmOnSave()
-  if (contextType === 'log' && typeof window.logOnSave === 'function') return window.logOnSave()
-  if (contextType === 'unit6' && typeof window.unit6OnSave === 'function') return window.unit6OnSave()
-  if (typeof window.meOnSave === 'function') return window.meOnSave()
-  return null
+  if (contextType === 'pm') return pmOnSave()
+  if (contextType === 'log') return logOnSave()
+  if (contextType === 'unit6') return unit6OnSave()
+  return meOnSave()
 }
 
 function capRunDebouncedSave(contextType) {
-  if (contextType === 'pm' && typeof window.pmDebouncedSave === 'function') return window.pmDebouncedSave()
-  if (contextType === 'log' && typeof window.logDebouncedSave === 'function') return window.logDebouncedSave()
-  if (contextType === 'unit6' && typeof window.unit6DebouncedSave === 'function') return window.unit6DebouncedSave()
-  if (typeof window.meDebouncedSave === 'function') return window.meDebouncedSave()
-  return null
+  if (contextType === 'pm') return pmDebouncedSave()
+  if (contextType === 'log') return logDebouncedSave()
+  if (contextType === 'unit6') return unit6DebouncedSave()
+  return meDebouncedSave()
 }
 
 function capSetTab(contextType, tabName) {
-  if (contextType === 'pm' && typeof window.pmSetTab === 'function') return window.pmSetTab(tabName)
-  if (contextType === 'log' && typeof window.logSetTab === 'function') return window.logSetTab(tabName)
-  if (contextType === 'unit6' && typeof window.unit6SetTab === 'function') return window.unit6SetTab(tabName)
-  if (typeof window.meSetTab === 'function') return window.meSetTab(tabName)
-  return null
+  if (contextType === 'pm') return pmSetTab(tabName)
+  if (contextType === 'log') return logSetTab(tabName)
+  if (contextType === 'unit6') return unit6SetTab(tabName)
+  return meSetTab(tabName)
 }
 
 function capRefreshCurrentTab(contextType) {
-  if (contextType === 'pm' && typeof window.pmRefreshCurrentTab === 'function') return window.pmRefreshCurrentTab()
-  if (contextType === 'log' && typeof window.logRefreshCurrentTab === 'function') return window.logRefreshCurrentTab()
-  if (contextType === 'unit6' && typeof window.unit6RefreshCurrentTab === 'function') return window.unit6RefreshCurrentTab()
-  if (typeof window.meRefreshCurrentTab === 'function') return window.meRefreshCurrentTab()
-  return null
+  if (contextType === 'pm') return pmRefreshCurrentTab()
+  if (contextType === 'log') return logRefreshCurrentTab()
+  if (contextType === 'unit6') return unit6RefreshCurrentTab()
+  return meRefreshCurrentTab()
 }
 
 function capRunMonthChange(contextType, newMonth) {
-  if (contextType === 'pm' && typeof window.pmOnMonthChange === 'function') return window.pmOnMonthChange(newMonth)
-  if (contextType === 'log' && typeof window.logOnMonthChange === 'function') return window.logOnMonthChange(newMonth)
-  if (contextType === 'unit6' && typeof window.unit6OnMonthChange === 'function') return window.unit6OnMonthChange(newMonth)
-  if (typeof window.meOnMonthChange === 'function') return window.meOnMonthChange(newMonth)
-  return null
+  if (contextType === 'pm') return pmOnMonthChange(newMonth)
+  if (contextType === 'log') return logOnMonthChange(newMonth)
+  if (contextType === 'unit6') return unit6OnMonthChange(newMonth)
+  return meOnMonthChange(newMonth)
 }
 
 function capRunPrevMonth(contextType) {
-  if (contextType === 'pm' && typeof window.pmOnPrevMonth === 'function') return window.pmOnPrevMonth()
-  if (contextType === 'log' && typeof window.logOnPrevMonth === 'function') return window.logOnPrevMonth()
-  if (contextType === 'unit6' && typeof window.unit6OnPrevMonth === 'function') return window.unit6OnPrevMonth()
-  if (typeof window.meOnPrevMonth === 'function') return window.meOnPrevMonth()
-  return null
+  if (contextType === 'pm') return pmOnPrevMonth()
+  if (contextType === 'log') return logOnPrevMonth()
+  if (contextType === 'unit6') return unit6OnPrevMonth()
+  return meOnPrevMonth()
 }
 
 function capRunNextMonth(contextType) {
-  if (contextType === 'pm' && typeof window.pmOnNextMonth === 'function') return window.pmOnNextMonth()
-  if (contextType === 'log' && typeof window.logOnNextMonth === 'function') return window.logOnNextMonth()
-  if (contextType === 'unit6' && typeof window.unit6OnNextMonth === 'function') return window.unit6OnNextMonth()
-  if (typeof window.meOnNextMonth === 'function') return window.meOnNextMonth()
-  return null
+  if (contextType === 'pm') return pmOnNextMonth()
+  if (contextType === 'log') return logOnNextMonth()
+  if (contextType === 'unit6') return unit6OnNextMonth()
+  return meOnNextMonth()
 }
 
 function capGetTaskSortState(contextType) {
   const department = capProductDraftDepartment(contextType)
-  if (window.capTasksSort && window.capTasksSort[department]) {
-    return window.capTasksSort[department]
+  if (capTasksSort[department]) {
+    return capTasksSort[department]
   }
 
-  const legacyKey = contextType === 'pm'
-    ? 'pm' + 'TasksSort'
-    : 'me' + 'TasksSort'
-  return window[legacyKey] || null
+  return contextType === 'pm' ? capTasksSort.PM : capTasksSort.ME
+}
+
+function capTaskFilters(contextType) {
+  const department = capProductDraftDepartment(contextType)
+  if (capTasksFilters[department]) {
+    return capTasksFilters[department]
+  }
+
+  return contextType === 'pm' ? capTasksFilters.PM : capTasksFilters.ME
+}
+
+function capGetProductHelper(name) {
+  const productHelpers = {
+    UpdateHistoryEditDraft: capProductsUpdateHistoryEditDraft,
+    SetDraftValue: capProductsSetDraftValue,
+    ClearDraft: capProductsClearDraft,
+    SetSearch: capProductsSetSearch,
+    SetFamilyFilter: capProductsSetFamilyFilter,
+    SetSort: capProductsSetSort,
+    SortByColumn: capProductsSortByColumn,
+    ToggleSortDir: capProductsToggleSortDir,
+    ClearFilters: capProductsClearFilters,
+    StartHistoryEdit: capProductsStartHistoryEdit,
+    CancelHistoryEdit: capProductsCancelHistoryEdit,
+    SaveHistoryEdit: capProductsSaveHistoryEdit,
+    ToggleStatusFilter: capProductsToggleStatusFilter,
+    ToggleHistory: capProductsToggleHistory,
+    BulkSaveChanges: capProductsBulkSaveChanges
+  }
+  return productHelpers[name] || null
+}
+
+function capGetProductLoadHelper(name) {
+  const productLoadHelpers = {
+    SetSearch: capProductLoadSetSearch,
+    SetFamilyFilter: capProductLoadSetFamilyFilter,
+    SetSort: capProductLoadSetSort,
+    ToggleSortDir: capProductLoadToggleSortDir,
+    ClearFilters: capProductLoadClearFilters,
+    SortByColumn: capProductLoadSortByColumn
+  }
+  return productLoadHelpers[name] || null
+}
+
+function capGetHeatmapHelper(name) {
+  const heatmapHelpers = {
+    OpenHeatmapDetail: capOpenHeatmapDetail,
+    CloseHeatmapDetail: capCloseHeatmapDetail
+  }
+  return heatmapHelpers[name] || null
+}
+
+function capGetHolidayApi(contextType) {
+  if (contextType === 'pm') {
+    return {
+      holidays: pmDataGetHolidays(),
+      add: pmDataAddHoliday,
+      update: pmDataUpdateHoliday,
+      remove: pmDataDeleteHoliday
+    }
+  }
+
+  if (contextType === 'log') {
+    return {
+      holidays: logDataGetHolidays(),
+      add: logDataAddHoliday,
+      update: logDataUpdateHoliday,
+      remove: logDataDeleteHoliday
+    }
+  }
+
+  if (contextType === 'unit6') {
+    return {
+      holidays: unit6DataGetHolidays(),
+      add: unit6DataAddHoliday,
+      update: unit6DataUpdateHoliday,
+      remove: unit6DataDeleteHoliday
+    }
+  }
+
+  return {
+    holidays: meDataGetHolidays(),
+    add: meDataAddHoliday,
+    update: meDataUpdateHoliday,
+    remove: meDataDeleteHoliday
+  }
 }
 
 function capToggleTaskSort(column, contextType) {
@@ -161,18 +394,6 @@ function capToggleTaskSort(column, contextType) {
     sortState.column = column
     sortState.direction = 'asc'
   }
-}
-
-function capTaskFilters(contextType) {
-  const department = capProductDraftDepartment(contextType)
-  if (window.capTasksFilters && window.capTasksFilters[department]) {
-    return window.capTasksFilters[department]
-  }
-
-  const legacyKey = contextType === 'pm'
-    ? 'pm' + 'TasksFilters'
-    : 'me' + 'TasksFilters'
-  return window[legacyKey] || null
 }
 
 function capProductDraftDepartment(contextType) {
@@ -196,66 +417,6 @@ function capResolveTaskEditRow(taskId, contextType) {
     : null
   if (row) return row
   return document.querySelector(rowSelector)
-}
-
-function capGetProductHelper(name) {
-  const sharedHelper = window['capProducts' + name]
-  if (typeof sharedHelper === 'function') return sharedHelper
-
-  const legacyHelper = window['me' + 'Products' + name]
-  return typeof legacyHelper === 'function' ? legacyHelper : null
-}
-
-function capGetProductLoadHelper(name) {
-  const sharedHelper = window['capProductLoad' + name]
-  if (typeof sharedHelper === 'function') return sharedHelper
-
-  const legacyHelper = window['me' + 'ProductLoad' + name]
-  return typeof legacyHelper === 'function' ? legacyHelper : null
-}
-
-function capGetHeatmapHelper(name) {
-  const sharedHelper = window['cap' + name]
-  if (typeof sharedHelper === 'function') return sharedHelper
-
-  const legacyHelper = window['me' + name]
-  return typeof legacyHelper === 'function' ? legacyHelper : null
-}
-
-function capGetHolidayApi(contextType) {
-  if (contextType === 'pm') {
-    return {
-      holidays: typeof window.pmDataGetHolidays === 'function' ? window.pmDataGetHolidays() : [],
-      add: window.pmDataAddHoliday,
-      update: window.pmDataUpdateHoliday,
-      remove: window.pmDataDeleteHoliday
-    }
-  }
-
-  if (contextType === 'log') {
-    return {
-      holidays: typeof window.logDataGetHolidays === 'function' ? window.logDataGetHolidays() : [],
-      add: window.logDataAddHoliday,
-      update: window.logDataUpdateHoliday,
-      remove: window.logDataDeleteHoliday
-    }
-  }
-
-  if (contextType === 'unit6') {
-    return {
-      holidays: typeof window.unit6DataGetHolidays === 'function' ? window.unit6DataGetHolidays() : [],
-      add: window.unit6DataAddHoliday,
-      update: window.unit6DataUpdateHoliday,
-      remove: window.unit6DataDeleteHoliday
-    }
-  }
-
-  return {
-    holidays: typeof window.meDataGetHolidays === 'function' ? window.meDataGetHolidays() : [],
-    add: window.meDataAddHoliday,
-    update: window.meDataUpdateHoliday,
-    remove: window.meDataDeleteHoliday
-  }
 }
 
 function capSetProductDraft(row, contextType, patch) {
@@ -341,21 +502,21 @@ function capTaskRefresh(contextType) {
   }
 
   // Get data for the current context
-  const tasks = (function() {
-    if (contextType === 'pm' && typeof window.pmDataGetTasks === 'function') return window.pmDataGetTasks()
-    if (contextType === 'log' && typeof window.logDataGetTasks === 'function') return window.logDataGetTasks()
-    if (contextType === 'unit6' && typeof window.unit6DataGetTasks === 'function') return window.unit6DataGetTasks()
-    if (typeof window.meDataGetTasks === 'function') return window.meDataGetTasks()
-    return []
-  })()
+  const tasks = contextType === 'pm'
+    ? pmDataGetTasks()
+    : contextType === 'log'
+      ? logDataGetTasks()
+      : contextType === 'unit6'
+        ? unit6DataGetTasks()
+        : meDataGetTasks()
 
-  const team = (function() {
-    if (contextType === 'pm' && typeof window.pmDataGetTeam === 'function') return window.pmDataGetTeam()
-    if (contextType === 'log' && typeof window.logDataGetTeam === 'function') return window.logDataGetTeam()
-    if (contextType === 'unit6' && typeof window.unit6DataGetTeam === 'function') return window.unit6DataGetTeam()
-    if (typeof window.meDataGetTeam === 'function') return window.meDataGetTeam()
-    return []
-  })()
+  const team = contextType === 'pm'
+    ? pmDataGetTeam()
+    : contextType === 'log'
+      ? logDataGetTeam()
+      : contextType === 'unit6'
+        ? unit6DataGetTeam()
+        : meDataGetTeam()
 
   const products = (function() {
     const api = capGetDataApi(contextType)
@@ -466,7 +627,7 @@ function capTaskRefresh(contextType) {
   if (cardHeadSpan) cardHeadSpan.textContent = totalHours + ' total hours'
 
   // Build table rows (click-to-edit: read-only by default, edit mode when capTaskEditingId[dept] matches)
-  var editingId = (window.capTaskEditingId || {})[dept] || null
+  var editingId = (capTaskEditingId || {})[dept] || null
   var teamMap = new Map(team.map(function(m) { return [m.id, m.name] }))
   var productMap = new Map(products.map(function(p) { return [p.id, p.name] }))
   let rows = ''
@@ -664,33 +825,7 @@ function capPreserveSearchContinuity(inputEl, replacementSelector, rerenderFn) {
   }, 0)
 }
 
-window.capacityEvents = {}
-
-window.capacityEvents.setup = function() {
-  const container = document.getElementById('mainContent')
-  if (!container) return
-  if (_capEventsContainer === container) return
-  if (_capEventsContainer) window.capacityEvents.teardown()
-
-  container.addEventListener('click', window.capacityEvents._onClick)
-  container.addEventListener('change', window.capacityEvents._onChange)
-  container.addEventListener('input', window.capacityEvents._onInput)
-  container.addEventListener('keydown', window.capacityEvents._onKeydown)
-  container.addEventListener('focusout', window.capacityEvents._onFocusOut)
-  _capEventsContainer = container
-}
-
-window.capacityEvents.teardown = function() {
-  if (!_capEventsContainer) return
-  _capEventsContainer.removeEventListener('click', window.capacityEvents._onClick)
-  _capEventsContainer.removeEventListener('change', window.capacityEvents._onChange)
-  _capEventsContainer.removeEventListener('input', window.capacityEvents._onInput)
-  _capEventsContainer.removeEventListener('keydown', window.capacityEvents._onKeydown)
-  _capEventsContainer.removeEventListener('focusout', window.capacityEvents._onFocusOut)
-  _capEventsContainer = null
-}
-
-window.capacityEvents._onClick = function(evt) {
+function onCapacityClick(evt) {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
@@ -700,7 +835,11 @@ window.capacityEvents._onClick = function(evt) {
   switch (action) {
   // ── Navigation ─────────────────────────────────────────────
   case 'cap-nav-hub': navigate('hub'); break
-  case 'cap-nav-production-schedule': navigate('production'); setProductionTab('scheduling'); break
+  case 'cap-nav-production-schedule':
+    navigate('production')
+    appState.productionTab = 'scheduling'
+    render()
+    break
   case 'cap-set-tab': setCapacityTab(el.getAttribute('data-tab')); break
 
   // ── ME tabs ────────────────────────────────────────────────
@@ -715,25 +854,17 @@ window.capacityEvents._onClick = function(evt) {
     break
   }
   case 'cap-me-toggle-holiday': {
-    const toggleHoliday = typeof window.capToggleHoliday === 'function'
-      ? window.capToggleHoliday
-      : null
-    if (toggleHoliday) {
-      const holidayApi = capGetHolidayApi(contextType)
-      toggleHoliday(
-        el.getAttribute('data-member-id'),
-        el.getAttribute('data-date'),
-        holidayApi.holidays,
-        holidayApi.add,
-        holidayApi.update,
-        holidayApi.remove
-      )
-      capRunDebouncedSave(contextType)
-      capSetTab(contextType, 'holidays')
-    } else {
-      const legacyToggle = window['me' + 'ToggleHoliday']
-      if (typeof legacyToggle === 'function') legacyToggle(el.getAttribute('data-member-id'), el.getAttribute('data-date'))
-    }
+    const holidayApi = capGetHolidayApi(contextType)
+    capToggleHoliday(
+      el.getAttribute('data-member-id'),
+      el.getAttribute('data-date'),
+      holidayApi.holidays,
+      holidayApi.add,
+      holidayApi.update,
+      holidayApi.remove
+    )
+    capRunDebouncedSave(contextType)
+    capSetTab(contextType, 'holidays')
     break
   }
   case 'cap-me-heatmap-open': {
@@ -819,8 +950,7 @@ window.capacityEvents._onClick = function(evt) {
     const dept = capProductDraftDepartment(contextType)
     const taskId = el.getAttribute('data-task-id') || el.closest('[data-task-id]')?.getAttribute('data-task-id')
     if (!taskId) break
-    if (!window.capTaskEditingId) window.capTaskEditingId = {}
-    window.capTaskEditingId[dept] = taskId
+    capTaskEditingId[dept] = taskId
     capTaskRefresh(contextType)
     // Focus the name field in the now-rendered edit row
     setTimeout(function() {
@@ -834,9 +964,7 @@ window.capacityEvents._onClick = function(evt) {
   }
   case 'cap-task-save-edit': {
     const dept = capProductDraftDepartment(contextType)
-    const activeTaskId = window.capTaskEditingId && window.capTaskEditingId[dept]
-      ? window.capTaskEditingId[dept]
-      : ''
+    const activeTaskId = capTaskEditingId[dept] ? capTaskEditingId[dept] : ''
     const clickedTaskId = el.getAttribute('data-task-id') || el.closest('[data-task-id]')?.getAttribute('data-task-id')
     const taskId = activeTaskId || clickedTaskId
     if (!taskId) break
@@ -856,16 +984,14 @@ window.capacityEvents._onClick = function(evt) {
       api.updateTask(taskId, 'status', editRow.querySelector('[data-task-field="status"]')?.value || 'SCHEDULED')
       api.updateTask(taskId, 'isDisabled', editRow.querySelector('[data-task-field="isDisabled"]')?.checked || false)
     }
-    if (!window.capTaskEditingId) window.capTaskEditingId = {}
-    window.capTaskEditingId[dept] = null
+    capTaskEditingId[dept] = null
     capRunSave(contextType)
     capTaskRefresh(contextType)
     break
   }
   case 'cap-task-cancel-edit': {
     const dept = capProductDraftDepartment(contextType)
-    if (!window.capTaskEditingId) window.capTaskEditingId = {}
-    window.capTaskEditingId[dept] = null
+    capTaskEditingId[dept] = null
     capTaskRefresh(contextType)
     break
   }
@@ -1093,12 +1219,12 @@ window.capacityEvents._onClick = function(evt) {
     if (!historyId) break
     if (!confirm('Delete this support history entry? This cannot be undone.')) break
     const deleteFn = deleteContextType === 'pm'
-      ? window.pmDataDeleteProductSupportHistoryEntry
+      ? pmDataDeleteProductSupportHistoryEntry
       : deleteContextType === 'log'
-        ? window.logDataDeleteProductSupportHistoryEntry
+        ? logDataDeleteProductSupportHistoryEntry
         : deleteContextType === 'unit6'
-          ? window.unit6DataDeleteProductSupportHistoryEntry
-          : window.meDataDeleteProductSupportHistoryEntry
+          ? unit6DataDeleteProductSupportHistoryEntry
+          : meDataDeleteProductSupportHistoryEntry
     if (typeof deleteFn === 'function') {
       deleteFn(historyId)
     }
@@ -1135,6 +1261,15 @@ window.capacityEvents._onClick = function(evt) {
   }
 
   // ── ME Product Taskload ───────────────────────────────────
+  case 'cap-product-load-sort-column': {
+    const key = el.getAttribute('data-sort-key')
+    const dept = el.getAttribute('data-dept') || 'ME'
+    const sortByColumn = capGetProductLoadHelper('SortByColumn')
+    if (typeof sortByColumn === 'function') {
+      sortByColumn(key, dept)
+    }
+    break
+  }
   case 'cap-product-load-sort-dir': {
     const toggleSortDir = capGetProductLoadHelper('ToggleSortDir')
     if (typeof toggleSortDir === 'function') toggleSortDir(el.getAttribute('data-dept'))
@@ -1161,7 +1296,11 @@ window.capacityEvents._onClick = function(evt) {
   // ── Production Capacity ───────────────────────────────────
   case 'cap-prod-set-tab': if (typeof setProdCapTab === 'function') setProdCapTab(el.getAttribute('data-tab')); break
   case 'cap-prod-back': setCapacityTab('root'); break
-  case 'cap-prod-open-schedule': navigate('production'); setProductionTab('scheduling'); break
+  case 'cap-prod-open-schedule':
+    navigate('production')
+    appState.productionTab = 'scheduling'
+    render()
+    break
   case 'cap-prod-prev-month': if (typeof prodCapShiftMonth === 'function') prodCapShiftMonth('prev'); break
   case 'cap-prod-next-month': if (typeof prodCapShiftMonth === 'function') prodCapShiftMonth('next'); break
   case 'cap-prod-reset-month': if (typeof prodCapResetMonthOffset === 'function') prodCapResetMonthOffset(); break
@@ -1171,13 +1310,8 @@ window.capacityEvents._onClick = function(evt) {
   }
   case 'cap-prod-set-workarea': {
     const wa = el.getAttribute('data-workarea')
-    if (typeof window.prodCapSetWorkArea === 'function') {
-      window.prodCapSetWorkArea(wa)
-      render()
-    } else if (typeof prodCapWorkAreaSelected !== 'undefined') {
-      prodCapWorkAreaSelected = wa
-      render()
-    }
+    prodCapSetWorkArea(wa)
+    render()
     break
   }
   case 'cap-prod-settings-fill-forward': if (typeof prodCapSettingsFillForward === 'function') prodCapSettingsFillForward(); break
@@ -1187,7 +1321,7 @@ window.capacityEvents._onClick = function(evt) {
   }
 }
 
-window.capacityEvents._onChange = function(evt) {
+function onCapacityChange(evt) {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
@@ -1328,9 +1462,18 @@ window.capacityEvents._onChange = function(evt) {
   }
 
   // ── Production Capacity ────────────────────────────────────
-  case 'cap-prod-detail-filter-status': if (typeof prodCapDetailFilter !== 'undefined') { prodCapDetailFilter.status = el.value; render() } break
-  case 'cap-prod-detail-filter-family': if (typeof prodCapDetailFilter !== 'undefined') { prodCapDetailFilter.family = el.value; render() } break
-  case 'cap-prod-detail-filter-workarea': if (typeof prodCapDetailFilter !== 'undefined') { prodCapDetailFilter.workArea = el.value; render() } break
+  case 'cap-prod-detail-filter-status':
+    setProdCapDetailFilter({ status: el.value })
+    render()
+    break
+  case 'cap-prod-detail-filter-family':
+    setProdCapDetailFilter({ family: el.value })
+    render()
+    break
+  case 'cap-prod-detail-filter-workarea':
+    setProdCapDetailFilter({ workArea: el.value })
+    render()
+    break
   case 'cap-prod-settings-capacity': {
     const wa = el.getAttribute('data-workarea')
     const year = capNum(el.getAttribute('data-year'), 0)
@@ -1347,7 +1490,7 @@ window.capacityEvents._onChange = function(evt) {
   }
 }
 
-window.capacityEvents._onInput = function(evt) {
+function onCapacityInput(evt) {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
@@ -1394,7 +1537,7 @@ window.capacityEvents._onInput = function(evt) {
   }
 }
 
-window.capacityEvents._onKeydown = function(evt) {
+function onCapacityKeydown(evt) {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
@@ -1410,13 +1553,7 @@ window.capacityEvents._onKeydown = function(evt) {
   }
 }
 
-// ── Focus Guard: Deferred Re-render Flush ──────────────────
-/**
- * When user leaves an inline-editable table cell, flush any pending re-renders
- * that were deferred by the focus guard logic in me-capacity.js, me-data.js,
- * pm-capacity.js, and prod-capacity-data.js
- */
-window.capacityEvents._onFocusOut = function(evt) {
+function onCapacityFocusOut(evt) {
   const nextFocus = evt.relatedTarget
   const contextRoot = evt.target && typeof evt.target.closest === 'function'
     ? evt.target.closest('[data-cap-context]')
@@ -1433,7 +1570,7 @@ window.capacityEvents._onFocusOut = function(evt) {
   }
 
   // No old-style portals pending — skip the setTimeout
-  if (!window.prodCapPendingRealTimeUpdate) return
+  if (!prodCapPendingRealTimeUpdate) return
 
   // Use setTimeout(0) to let browser settle focus (handles select dropdown quirk)
   setTimeout(function() {
@@ -1441,12 +1578,36 @@ window.capacityEvents._onFocusOut = function(evt) {
     if (typeof isEditingInlineCell === 'function' && isEditingInlineCell()) return
 
     // ── Production Capacity flush ──────────────────────────
-    if (window.prodCapPendingRealTimeUpdate) {
-      window.prodCapPendingRealTimeUpdate = false
-      if (capacityTab === 'production' && typeof prodCapRefreshCurrentTab === 'function') {
+    if (prodCapPendingRealTimeUpdate) {
+      setProdCapPendingRealTimeUpdate(false)
+      if (appState.capacityTab === 'production' && typeof prodCapRefreshCurrentTab === 'function') {
         prodCapRefreshCurrentTab()
       }
       return
     }
   }, 0)
+}
+
+export function setupCapacityEvents() {
+  const container = document.getElementById('mainContent')
+  if (!container) return
+  if (_capEventsContainer === container) return
+  if (_capEventsContainer) teardownCapacityEvents()
+
+  container.addEventListener('click', onCapacityClick)
+  container.addEventListener('change', onCapacityChange)
+  container.addEventListener('input', onCapacityInput)
+  container.addEventListener('keydown', onCapacityKeydown)
+  container.addEventListener('focusout', onCapacityFocusOut)
+  _capEventsContainer = container
+}
+
+export function teardownCapacityEvents() {
+  if (!_capEventsContainer) return
+  _capEventsContainer.removeEventListener('click', onCapacityClick)
+  _capEventsContainer.removeEventListener('change', onCapacityChange)
+  _capEventsContainer.removeEventListener('input', onCapacityInput)
+  _capEventsContainer.removeEventListener('keydown', onCapacityKeydown)
+  _capEventsContainer.removeEventListener('focusout', onCapacityFocusOut)
+  _capEventsContainer = null
 }

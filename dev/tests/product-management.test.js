@@ -1,8 +1,11 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Product Management Event Delegation', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.resetModules();
     document.body.innerHTML = '<div id="mount"></div>';
 
@@ -58,11 +61,7 @@ describe('Product Management Event Delegation', () => {
       path.resolve(__dirname, '../portals/product-development/product-management/js/products.js'),
       'utf8'
     );
-    eval(`${script}
-window.renderProductsPortalHTML = renderProductsPortalHTML;
-window.renderProductsPortalSetup = renderProductsPortalSetup;
-window.renderProductsList = renderProductsList;
-window.setupProductsEventListeners = setupProductsEventListeners;`);
+    const module = await import(`data:text/javascript,${encodeURIComponent(script + '\nwindow.renderProductsPortalHTML = renderProductsPortalHTML;\nwindow.renderProductsPortalSetup = renderProductsPortalSetup;\nwindow.renderProductsList = renderProductsList;\nwindow.setupProductsEventListeners = setupProductsEventListeners;')}`);
   });
 
   test('renderProductsPortalHTML has delegated actions and no inline onclick', () => {

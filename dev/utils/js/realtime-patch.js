@@ -18,7 +18,7 @@
  * @param {Function} [options.sortFn] optional — called with the container after insert so the
  *                                    caller can re-sort children (alpha-sorted lists)
  */
-function realtimePatchInsert(containerSelector, itemHTML, options = {}) {
+export function realtimePatchInsert(containerSelector, itemHTML, options = {}) {
   const container = document.querySelector(containerSelector);
   if (!container) return;
 
@@ -45,11 +45,14 @@ function realtimePatchInsert(containerSelector, itemHTML, options = {}) {
  * @param {string|number} recordId    The record's id value
  * @param {string} itemHTML           Rendered HTML for the updated record
  */
-function realtimePatchUpdate(containerSelector, recordId, itemHTML) {
+export function realtimePatchUpdate(containerSelector, recordId, itemHTML) {
   const container = document.querySelector(containerSelector);
   if (!container) return;
 
-  const existing = container.querySelector(`[data-id="${CSS.escape(String(recordId))}"]`);
+  const safeId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+    ? CSS.escape(String(recordId))
+    : String(recordId).replace(/"/g, '\\"');
+  const existing = container.querySelector(`[data-id="${safeId}"]`);
   if (!existing) return;
 
   const tmp = document.createElement('template');
@@ -69,11 +72,14 @@ function realtimePatchUpdate(containerSelector, recordId, itemHTML) {
  * @param {object} [options]
  * @param {Function} [options.onEmpty] called (with container) if list becomes empty after removal
  */
-function realtimePatchDelete(containerSelector, recordId, options = {}) {
+export function realtimePatchDelete(containerSelector, recordId, options = {}) {
   const container = document.querySelector(containerSelector);
   if (!container) return;
 
-  const existing = container.querySelector(`[data-id="${CSS.escape(String(recordId))}"]`);
+  const safeId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+    ? CSS.escape(String(recordId))
+    : String(recordId).replace(/"/g, '\\"');
+  const existing = container.querySelector(`[data-id="${safeId}"]`);
   if (existing) existing.remove();
 
   if (typeof options.onEmpty === 'function' && container.children.length === 0) {

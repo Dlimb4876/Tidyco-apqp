@@ -6,8 +6,12 @@
  *   loadRemotePage, _getPresenceInitials, setSyncBadge
  */
 
-const fs = require('fs');
-const path = require('path');
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // ─────────────────────────────────────────────────────────────
 // Mock Dependencies
@@ -48,7 +52,7 @@ beforeEach(() => {
 });
 
 // DOM setup
-const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
 document.documentElement.innerHTML = html.toString();
 
 if (!document.getElementById('syncBadge')) {
@@ -57,18 +61,16 @@ if (!document.getElementById('syncBadge')) {
   document.body.appendChild(el);
 }
 
-// Load state.js
-const stateScript = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8')
-  .replace(/^const /gm, 'var ');
-eval(stateScript); // eslint-disable-line no-eval
-global.GATE_DEFS = GATE_DEFS; // eslint-disable-line no-undef
-global.newProgTemplate = newProgTemplate; // eslint-disable-line no-undef
-global.FAMILIES = FAMILIES; // eslint-disable-line no-undef
-global.BOM_TYPES = BOM_TYPES; // eslint-disable-line no-undef
+// Import state.js
+const stateModule = await import('../core/js/state.js');
+global.GATE_DEFS = stateModule.GATE_DEFS;
+global.newProgTemplate = stateModule.newProgTemplate;
+global.FAMILIES = stateModule.FAMILIES;
+global.BOM_TYPES = stateModule.BOM_TYPES;
 
-// Load db.js
-const dbScript = fs.readFileSync(path.resolve(__dirname, '../core/js/db.js'), 'utf8');
-eval(dbScript); // eslint-disable-line no-eval
+// Import db.js
+const dbModule = await import('../core/js/db.js');
+const { migrateprog, load, save, loadRemote, initProgSelect, saveRemote, buildProjectRow, isGateScopeColumnError, setSyncBadge, _getPresenceInitials, loadRemotePage } = dbModule;
 
 // ─────────────────────────────────────────────────────────────
 // Helpers

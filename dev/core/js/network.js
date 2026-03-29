@@ -4,6 +4,8 @@
 // Depends on: db.js (supa), bottombar element
 // ═══════════════════════════════════════════════════════════════
 
+import { supabase } from './supa.js';
+
 let isSupabaseHealthy = true;
 let networkCheckInterval = null;
 
@@ -12,7 +14,7 @@ let networkCheckInterval = null;
  */
 async function checkSupabaseHealth() {
   try {
-    const { error } = await supa
+    const { error } = await supabase
       .from('teams')
       .select('id', { count: 'exact' })
       .limit(1);
@@ -56,7 +58,7 @@ function updateNetworkStatus() {
 /**
  * Start network detection: browser API + periodic Supabase health checks
  */
-function setupNetworkDetection() {
+export function setupNetworkDetection() {
   // Initial status check
   updateNetworkStatus();
 
@@ -81,7 +83,7 @@ function setupNetworkDetection() {
 /**
  * Stop network detection (cleanup)
  */
-function teardownNetworkDetection() {
+export function teardownNetworkDetection() {
   if (networkCheckInterval) {
     clearInterval(networkCheckInterval);
     networkCheckInterval = null;

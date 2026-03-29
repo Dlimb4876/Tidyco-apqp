@@ -1,12 +1,25 @@
 // ═══════════════════════════════════════════════════════════════
 // prod-capacity-dashboard.js — Production Capacity Dashboard Tab
 // 2-year stacked bar chart (demand by family), capacity line, KPI row, alerts
-// Depends on: prod-capacity-data.js, Chart.js
 // ═══════════════════════════════════════════════════════════════
 
-let prodCapDashChartInst = null;
+import { Chart } from 'chart.js'
+import { appState } from '../../../../core/js/state.js'
+import { prodState } from '../../../production/js/data.js'
+import {
+  prodCapGet24MonthKeys,
+  prodCapGetWorkAreas,
+  prodCapCalcDemandMatrix,
+  prodCapCalcFamilyDemandMatrix,
+  prodCapCalcSupplyMatrix,
+  prodCapUtil,
+  prodCapMonthLabel,
+  prodCapMonthLabelFull
+} from './prod-capacity-data.js'
 
-function renderProdCapDashboard() {
+let prodCapDashChartInst = null
+
+export function renderProdCapDashboard() {
   const monthKeys  = prodCapGet24MonthKeys();
   const workAreas  = prodCapGetWorkAreas();
   const demandMx   = prodCapCalcDemandMatrix(monthKeys);
@@ -113,7 +126,7 @@ function renderProdCapDashboard() {
             <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-prev-month" title="View previous month">← Previous</button>
             <div class="pc-window-label">${offsetLabel}</div>
             <button class="btn btn-sm btn-ghost" data-cap-action="cap-prod-next-month" title="View next month">Next →</button>
-            ${prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
+            ${appState.prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-cap-action="cap-prod-reset-month" title="Reset to current month">Reset</button>` : ''}
           </div>
         </div>
         <div class="pc-chart-wrap">
@@ -186,7 +199,7 @@ function _prodCapDashSummaryTable(monthKeys, demandMx, supplyMx) {
 }
 
 // ── Chart drawing (called after render via setTimeout) ────────
-function prodCapDrawDashChart() {
+export function prodCapDrawDashChart() {
   const canvas = document.getElementById('prodCapDashChart');
   if (!canvas) return;
 

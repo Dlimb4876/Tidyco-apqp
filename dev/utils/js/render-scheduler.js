@@ -14,17 +14,16 @@
 
 'use strict';
 
-(function () {
-  // Internal state — keyed by portal key (e.g. 'me', 'pm', 'npi')
-  // Entry shape: { trigger, renderNow, timer, pending }
-  const _state = {};
+// Internal state — keyed by portal key (e.g. 'me', 'pm', 'npi')
+// Entry shape: { trigger, renderNow, timer, pending }
+const _state = {};
 
   /**
    * Request a render for the given key.
    * If the user is editing or filtering, the render is deferred and a console
    * message is logged so the team can see what is waiting.
    */
-  function requestRender(key, options) {
+export function requestRender(key, options) {
     const {
       trigger = 'realtime',
       renderNow,
@@ -59,7 +58,7 @@
    * Flush any pending deferred render for the given key immediately.
    * Typically called from a focusout handler.
    */
-  function flushDeferred(key) {
+export function flushDeferred(key) {
     const entry = _state[key];
     if (!entry || !entry.pending) return;
 
@@ -73,24 +72,18 @@
 
   // ─── internal ────────────────────────────────────────────────────────────────
 
-  function _scheduleRender(key, trigger, renderNow, debounceMs) {
-    if (!_state[key]) _state[key] = {};
-    // Keep renderNow fresh in case it changed between events
-    _state[key].renderNow = renderNow;
-    _state[key].trigger = trigger;
+function _scheduleRender(key, trigger, renderNow, debounceMs) {
+  if (!_state[key]) _state[key] = {};
+  // Keep renderNow fresh in case it changed between events
+  _state[key].renderNow = renderNow;
+  _state[key].trigger = trigger;
 
-    clearTimeout(_state[key].timer);
-    _state[key].timer = setTimeout(function () {
-      try {
-        renderNow();
-      } catch (err) {
-        console.error(`[Scheduler] renderNow threw for key "${key}":`, err);
-      }
-    }, debounceMs);
-  }
-
-  // ─── exports ─────────────────────────────────────────────────────────────────
-
-  window.requestRender = requestRender;
-  window.flushDeferred = flushDeferred;
-})();
+  clearTimeout(_state[key].timer);
+  _state[key].timer = setTimeout(function () {
+    try {
+      renderNow();
+    } catch (err) {
+      console.error(`[Scheduler] renderNow threw for key "${key}":`, err);
+    }
+  }, debounceMs);
+}

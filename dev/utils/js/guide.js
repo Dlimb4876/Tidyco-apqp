@@ -3,7 +3,9 @@
 // Provides showGuide(key) to open context-sensitive help modals
 // ═══════════════════════════════════
 
-const GUIDE_CONTENT = {
+import { showModal } from './helpers.js';
+
+export const GUIDE_CONTENT = {
 
   // ── Hub ──────────────────────────────────────────────────────
   hub: {
@@ -698,6 +700,10 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">Linking to Projects</div>
         <p>In any project's BOM, click <em>＋ Add from Parts Database</em> to search and add catalogue parts. This keeps part numbers consistent across all projects.</p>
       </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Editing Safety</div>
+        <p>Parts table rows are read-only. To change a part, use the <em>✏️ Edit</em> button so updates are reviewed in the edit modal before saving.</p>
+      </div>
     `
   },
 
@@ -749,6 +755,10 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">Real-Time Sync</div>
         <p>All users see schedule changes immediately. Batch edits are saved automatically after a short delay and broadcast to all connected users.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Filters</div>
+        <p>Use the filter bar to narrow by family, product, work area, date range, and whether completed batches are shown.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Used By</div>
@@ -1020,7 +1030,7 @@ const GUIDE_CONTENT = {
  * Opens the shared guide modal populated with content for the given key.
  * @param {string} key - Content key from GUIDE_CONTENT
  */
-function showGuide(key) {
+export function showGuide(key) {
   const content = GUIDE_CONTENT[key]
   if (!content) return
   const titleEl = document.getElementById('guideModalTitle')

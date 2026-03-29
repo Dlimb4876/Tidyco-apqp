@@ -5,8 +5,11 @@
  *         prodState structure, prodDataReloadProducts (error handling)
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ─────────────────────────────────────────────────────────────
 // Mock Dependencies
@@ -46,7 +49,7 @@ const src = fs.readFileSync(
   path.resolve(__dirname, '../portals/production/js/data.js'),
   'utf8'
 );
-eval(src); // eslint-disable-line no-eval
+await import(`data:text/javascript,${encodeURIComponent(src)}`);
 
 // ─────────────────────────────────────────────────────────────
 // Tests

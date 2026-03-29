@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // ─────────────────────────────────────────────────────────────
 // Mock Dependencies
@@ -23,8 +27,8 @@ global.progId = null;
 global.navigate = jest.fn();
 global.render = jest.fn();
 
-// DOM setup — needed before state.js eval (uses crypto.randomUUID)
-const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+// DOM setup — needed before importing state.js (uses crypto.randomUUID)
+const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
 document.documentElement.innerHTML = html.toString();
 
 if (!document.getElementById('syncBadge')) {
@@ -33,20 +37,17 @@ if (!document.getElementById('syncBadge')) {
   document.body.appendChild(el);
 }
 
-// Load state.js — replace `const` with `var` so declarations leak into eval scope as globals
-const stateScript = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8')
-  .replace(/^const /gm, 'var ');
-eval(stateScript);
-// Now assign to globals so test body can reference them
-global.GATE_DEFS = GATE_DEFS; // eslint-disable-line no-undef
-global.newProgTemplate = newProgTemplate; // eslint-disable-line no-undef
-global.FAMILIES = FAMILIES; // eslint-disable-line no-undef
-global.getFamilies = getFamilies; // eslint-disable-line no-undef
-global.BOM_TYPES = BOM_TYPES; // eslint-disable-line no-undef
+// Import state.js — need to assign exports to globals so test body can reference them
+const stateModule = await import('../core/js/state.js');
+global.GATE_DEFS = stateModule.GATE_DEFS;
+global.newProgTemplate = stateModule.newProgTemplate;
+global.FAMILIES = stateModule.FAMILIES;
+global.getFamilies = stateModule.getFamilies;
+global.BOM_TYPES = stateModule.BOM_TYPES;
 
-// Load db script
-const dbScript = fs.readFileSync(path.resolve(__dirname, '../core/js/db.js'), 'utf8');
-eval(dbScript);
+// Import db.js — it has ESM exports
+const dbModule = await import('../core/js/db.js');
+const { migrateprog, load, save, loadRemote, initProgSelect, saveRemote, buildProjectRow, isGateScopeColumnError, setSyncBadge, _getPresenceInitials } = dbModule;
 
 // Helper to build a minimal valid project for tests (without needing GATE_DEFS in test body)
 function makeTestProg(overrides = {}) {

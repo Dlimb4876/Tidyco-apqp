@@ -3,10 +3,77 @@
 // Depends on: state.js, helpers.js, all feature renderers
 // ═══════════════════════════════════
 
+import { appState, db, prog } from '../../core/js/state.js';
+import { currentUser } from '../../core/js/supa.js';
+import { autoResizeAll, broadcastPresence, stopPresenceBroadcast } from '../../core/js/db.js'
+import {
+  esc,
+  canViewSection,
+  canViewPortalTab,
+  isEditingInlineCell
+} from './helpers.js';
+import { renderMeCapacity, meDrawChartNow, meTab, setMeTab } from '../../portals/capacity/me/js/me-capacity.js'
+import { meCapacityDataUnsubscribe } from '../../portals/capacity/me/js/me-data-realtime.js'
+import { renderCapacity, setCapacityTab } from '../../portals/capacity/js/capacity.js'
+import { setupCapacityEvents } from '../../portals/capacity/js/capacity-events.js'
+import { renderProdCapacity } from '../../portals/capacity/production/js/prod-capacity.js'
+import {
+  prodCapUnsubscribeUtilization
+} from '../../portals/capacity/production/js/prod-capacity-data.js'
+import { workAreasDataUnsubscribe } from '../../portals/capacity/production/js/work-areas-data.js'
+import { logDataUnsubscribe } from '../../portals/capacity/logistics/js/log-data.js'
+import { pmDataUnsubscribe } from '../../portals/capacity/project-management/js/pm-data.js'
+import { pmTab, renderPmCapacity, setPmTabState } from '../../portals/capacity/project-management/js/pm-capacity.js'
+import { unit6CapacityDataUnsubscribe } from '../../portals/capacity/unit6/js/unit6-data.js'
+import {
+  setProductDevelopmentTab,
+  renderProductDevelopment,
+  familyModalState,
+  templateManagerState,
+  templateViewerState,
+  renderFamilyModal,
+  renderTemplateManager,
+  renderTemplateViewer,
+  productDevelopmentDataUnsubscribe
+} from '../../portals/product-development/js/product-development.js'
+import { renderHub, hubInit } from '../../portals/hub/js/hub.js'
+import { renderFeedback, feedbackDataSubscribe, feedbackDataUnsubscribe } from '../../portals/feedback/js/feedback.js'
+import {
+  renderActionCentre,
+  actionCentreLoad,
+  actionCentreDataSubscribe,
+  actionCentreDataUnsubscribe
+} from '../../portals/action-centre/js/action-centre.js'
+import { renderSettings } from '../../portals/settings/js/settings.js'
+import {
+  renderOperations,
+  setOperationsTab,
+  operationsDataSubscribe,
+  operationsDataUnsubscribe
+} from '../../portals/operations/js/operations-dashboard-main.js'
+import {
+  renderProduction,
+  productionDataUnsubscribe,
+  setProductionTab
+} from '../../portals/production/js/production.js'
+import { setProductsActiveTab } from '../../portals/product-development/product-management/js/products.js'
+import {
+  cleanupNpi,
+  initNpi,
+  renderNpi,
+  renderNpiSection
+} from '../../portals/product-development/npi/js/npi.js'
+import { mcsStopPolling } from '../../portals/mcs/js/mcs-realtime.js'
+import { mcsDataUnsubscribe, mcsLoadChanges, renderMcs } from '../../portals/mcs/js/mcs-main.js'
+
+function getNpiGlobal() {
+  return globalThis.npi || {}
+}
+
 /**
  * Section labels for UI display (reserved for future use)
  */
-const SECTION_LABELS = {
+export const SECTION_LABELS = {
   apqp:    'APQP',
   actions: 'Action Tracker',
   risks:   'Risk Register',
@@ -38,33 +105,33 @@ const SECTION_LABELS = {
  * Called from navigate() and from each set*Tab() function so the label always reflects
  * where pressing back will actually take the user.
  */
-function updateBackButton() {
+export function updateBackButton() {
   const returnBtn = document.getElementById('returnHubBtn');
   if (!returnBtn) return;
 
-  const isTopLevel = currentSection === 'hub' || currentSection === 'projects' || currentSection === 'project';
+  const isTopLevel = appState.currentSection === 'hub' || appState.currentSection === 'projects' || appState.currentSection === 'project';
   returnBtn.style.display = isTopLevel ? 'none' : 'flex';
   if (isTopLevel) return;
 
   const npiSubSections = ['apqp', 'actions', 'risks', 'bom', 'timing', 'documents'];
-  if (npiSubSections.includes(currentSection) || currentSection.startsWith('gate_')) {
+  if (npiSubSections.includes(appState.currentSection) || appState.currentSection.startsWith('gate_')) {
     returnBtn.textContent = '← Back to Project';
     return;
   }
-  if (currentSection === 'capacity') {
-    returnBtn.textContent = (capacityTab && capacityTab !== 'root') ? '← Back to Capacity' : '← Back to Hub';
+  if (appState.currentSection === 'capacity') {
+    returnBtn.textContent = (appState.capacityTab && appState.capacityTab !== 'root') ? '← Back to Capacity' : '← Back to Hub';
     return;
   }
-  if (currentSection === 'production') {
-    returnBtn.textContent = (productionTab && productionTab !== 'root') ? '← Back to Production' : '← Back to Hub';
+  if (appState.currentSection === 'production') {
+    returnBtn.textContent = (appState.productionTab && appState.productionTab !== 'root') ? '← Back to Production' : '← Back to Hub';
     return;
   }
-  if (currentSection === 'product-development') {
-    returnBtn.textContent = (productDevelopmentTab && productDevelopmentTab !== 'root') ? '← Back to Product Development' : '← Back to Hub';
+  if (appState.currentSection === 'product-development') {
+    returnBtn.textContent = (appState.productDevelopmentTab && appState.productDevelopmentTab !== 'root') ? '← Back to Product Development' : '← Back to Hub';
     return;
   }
-  if (currentSection === 'operations') {
-    returnBtn.textContent = (operationsTab && operationsTab !== 'overview') ? '← Back to Operations' : '← Back to Hub';
+  if (appState.currentSection === 'operations') {
+    returnBtn.textContent = (appState.operationsTab && appState.operationsTab !== 'overview') ? '← Back to Operations' : '← Back to Hub';
     return;
   }
   returnBtn.textContent = '← Back to Hub';
@@ -92,7 +159,7 @@ function ensureNavigationHistoryState() {
   history.replaceState(buildNavigationHistoryState(0), '');
 }
 
-function writeNavigationHistory(hash, { push = false } = {}) {
+export function writeNavigationHistory(hash, { push = false } = {}) {
   ensureNavigationHistoryState();
   const currentIndex = getNavigationHistoryIndex();
   const nextIndex = push ? currentIndex + 1 : currentIndex;
@@ -118,7 +185,7 @@ function canNavigateBackInApp() {
  * // Hash: #p=uuid&s=apqp&t=ctq
  * // Returns: { p: 'uuid', s: 'apqp', t: 'ctq' }
  */
-function parseHash() {
+export function parseHash() {
   const hash = window.location.hash.slice(1);
   if (!hash) return {};
   return Object.fromEntries(hash.split('&').map(p => {
@@ -145,158 +212,149 @@ function isNpiLiveSection(sec) {
  * - Return button visibility management
  * - Feedback data initialization
  */
-function navigate(sec, { pushHash = true } = {}) {
+export function navigate(sec, { pushHash = true } = {}) {
   if (sec === 'home') sec = 'project';
 
   // Keep NPI project pages live-updated across all users.
-  const leavingNpiLiveSection = isNpiLiveSection(currentSection) && !isNpiLiveSection(sec);
-  const enteringNpiLiveSection = !isNpiLiveSection(currentSection) && isNpiLiveSection(sec);
+  const leavingNpiLiveSection = isNpiLiveSection(appState.currentSection) && !isNpiLiveSection(sec);
+  const enteringNpiLiveSection = !isNpiLiveSection(appState.currentSection) && isNpiLiveSection(sec);
 
   if (leavingNpiLiveSection) {
-    if (typeof npi?.cleanup === 'function') npi.cleanup();
-    else if (typeof npiDataUnsubscribe === 'function') npiDataUnsubscribe();
+    cleanupNpi();
     // Task 2-A: stop broadcasting presence when leaving NPI project view
-    if (typeof stopPresenceBroadcast === 'function') stopPresenceBroadcast();
+    stopPresenceBroadcast()
   }
 
   if (enteringNpiLiveSection) {
-    if (typeof npi?.init === 'function') npi.init();
-    else if (typeof npiDataInit === 'function') npiDataInit();
+    initNpi();
     // Task 2-A: start broadcasting presence when entering NPI project view
-    if (progId && typeof broadcastPresence === 'function') broadcastPresence(progId);
+    if (appState.progId) broadcastPresence(appState.progId)
   }
 
   // Clean up subscriptions when leaving feedback
-  if (currentSection === 'feedback' && sec !== 'feedback' && typeof feedbackDataUnsubscribe === 'function') {
+  if (appState.currentSection === 'feedback' && sec !== 'feedback') {
     feedbackDataUnsubscribe();
   }
 
   // Initialize feedback data when navigating TO feedback
-  if (sec === 'feedback' && currentSection !== 'feedback' && typeof feedbackDataManager !== 'undefined') {
-    feedbackDataManager.init().catch(err => console.error('Failed to initialize feedback:', err));
+  if (sec === 'feedback' && appState.currentSection !== 'feedback') {
+    feedbackDataSubscribe().catch(err => console.error('Failed to initialize feedback:', err));
+  }
+
+  if (appState.currentSection === 'action-centre' && sec !== 'action-centre') {
+    actionCentreDataUnsubscribe()
   }
 
   // Clean up subscriptions when leaving capacity
-  if (currentSection === 'capacity' && sec !== 'capacity') {
-    if (typeof meDataUnsubscribe === 'function') meDataUnsubscribe();
-    if (typeof prodCapUnsubscribeUtilization === 'function') prodCapUnsubscribeUtilization();
-    if (typeof workAreasDataUnsubscribe === 'function') workAreasDataUnsubscribe();
-    if (typeof logDataUnsubscribe === 'function') logDataUnsubscribe();
-    if (typeof pmDataUnsubscribe === 'function') pmDataUnsubscribe();
-    if (typeof unit6DataUnsubscribe === 'function') unit6DataUnsubscribe();
+  if (appState.currentSection === 'capacity' && sec !== 'capacity') {
+    meCapacityDataUnsubscribe();
+    prodCapUnsubscribeUtilization()
+    workAreasDataUnsubscribe()
+    logDataUnsubscribe()
+    pmDataUnsubscribe()
+    unit6CapacityDataUnsubscribe()
   }
 
   // Clean up MCS subscriptions when leaving MCS
-  if (currentSection === 'mcs' && sec !== 'mcs') {
-    if (typeof mcsCleanupRealtimeSubscriptions === 'function') mcsCleanupRealtimeSubscriptions();
-    if (typeof mcsStopPolling === 'function') mcsStopPolling();
-  }
-
-  // Setup MCS subscriptions when entering MCS
-  if (sec === 'mcs' && currentSection !== 'mcs') {
-    if (typeof mcsSetupRealtimeSubscriptions === 'function') {
-      setTimeout(() => mcsSetupRealtimeSubscriptions(), 100);
-    }
+  if (appState.currentSection === 'mcs' && sec !== 'mcs') {
+    mcsDataUnsubscribe()
+    mcsStopPolling()
   }
 
   // Clean up subscriptions when leaving production
-  if (currentSection === 'production' && sec !== 'production') {
-    if (typeof prodDataUnsubscribe === 'function') prodDataUnsubscribe();
+  if (appState.currentSection === 'production' && sec !== 'production') {
+    productionDataUnsubscribe();
   }
 
   // Clean up subscriptions when leaving operations
-  if (currentSection === 'operations' && sec !== 'operations') {
-    if (typeof opsRealtimeCleanup === 'function') opsRealtimeCleanup();
+  if (appState.currentSection === 'operations' && sec !== 'operations') {
+    operationsDataUnsubscribe();
   }
 
-  // Clean up families subscription when leaving product-development
-  if (currentSection === 'product-development' && sec !== 'product-development' && typeof familiesDataCleanup === 'function') {
-    familiesDataCleanup();
-  }
-  if (currentSection === 'product-development' && sec !== 'product-development' && typeof familyTemplatesDataUnsubscribe === 'function') {
-    familyTemplatesDataUnsubscribe();
+  // Clean up product-development subscriptions when leaving product-development
+  if (appState.currentSection === 'product-development' && sec !== 'product-development') {
+    productDevelopmentDataUnsubscribe();
   }
 
   // Clean up subscriptions when leaving settings
-  if (currentSection === 'settings' && sec !== 'settings') {
-    if (typeof familiesDataCleanup === 'function') familiesDataCleanup();
-    if (typeof workAreasDataUnsubscribe === 'function') workAreasDataUnsubscribe();
+  if (appState.currentSection === 'settings' && sec !== 'settings') {
+    workAreasDataUnsubscribe()
   }
 
   // Initialize operations real-time subscriptions when entering operations.
-  if (sec === 'operations' && currentSection !== 'operations' && typeof opsRealtimeInit === 'function') {
-    opsRealtimeInit();
+  if (sec === 'operations' && appState.currentSection !== 'operations') {
+    operationsDataSubscribe();
   }
 
-  const prevSection = currentSection;
-  currentSection = sec;
+  const prevSection = appState.currentSection;
+  appState.currentSection = sec;
 
   if (pushHash) {
     // Reset portal tabs to 'root' only for new user-driven navigations (not back/forward restores).
     // This intentionally runs after prevSection is captured so the check is correct.
-    if (sec === 'capacity' && prevSection !== 'capacity') capacityTab = 'root';
-    if (sec === 'operations' && prevSection !== 'operations') operationsTab = 'overview';
-    if (sec === 'production' && prevSection !== 'production') productionTab = 'root';
+    if (sec === 'capacity' && prevSection !== 'capacity') appState.capacityTab = 'root';
+    if (sec === 'operations' && prevSection !== 'operations') appState.operationsTab = 'overview';
+    if (sec === 'production' && prevSection !== 'production') appState.productionTab = 'root';
     if (sec === 'product-development' && prevSection !== 'product-development') {
-      productDevelopmentTab = 'root';
-      if (typeof productsActiveTab !== 'undefined') productsActiveTab = 'list';
+      appState.productDevelopmentTab = 'root';
+      setProductsActiveTab('list')
     }
 
     const parts = [];
-    if (progId)             parts.push('p=' + encodeURIComponent(progId));
+    if (appState.progId)             parts.push('p=' + encodeURIComponent(appState.progId));
     if (sec !== 'projects') parts.push('s=' + encodeURIComponent(sec));
-    if (sec === 'projects' && npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab));
-    if (sec === 'apqp' && apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(apqpTab));
-    if (sec === 'capacity' && capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(capacityTab));
-    if (sec === 'capacity' && capacityTab === 'me' && typeof meTab !== 'undefined' && meTab !== 'chart') parts.push('met=' + encodeURIComponent(meTab));
-    if (sec === 'capacity' && capacityTab === 'production' && prodCapTab !== 'dashboard') parts.push('pct=' + encodeURIComponent(prodCapTab));
-    if (sec === 'capacity' && capacityTab === 'projects' && typeof pmTab !== 'undefined' && pmTab !== 'chart') parts.push('pmt=' + encodeURIComponent(pmTab));
-    if (sec === 'operations' && operationsTab !== 'overview') parts.push('od=' + encodeURIComponent(operationsTab));
-    if (sec === 'production' && productionTab !== 'root') parts.push('pt=' + encodeURIComponent(productionTab));
-    if (sec === 'product-development' && productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(productDevelopmentTab));
+    if (sec === 'projects' && appState.npiTab !== 'all') parts.push('nft=' + encodeURIComponent(appState.npiTab));
+    if (sec === 'apqp' && appState.apqpTab !== 'ctq') parts.push('t=' + encodeURIComponent(appState.apqpTab));
+    if (sec === 'capacity' && appState.capacityTab !== 'root') parts.push('ct=' + encodeURIComponent(appState.capacityTab));
+    if (sec === 'capacity' && appState.capacityTab === 'me' && meTab !== 'chart') parts.push('met=' + encodeURIComponent(meTab));
+    if (sec === 'capacity' && appState.capacityTab === 'production' && appState.prodCapTab !== 'dashboard') parts.push('pct=' + encodeURIComponent(appState.prodCapTab));
+    if (sec === 'capacity' && appState.capacityTab === 'projects' && pmTab !== 'chart') parts.push('pmt=' + encodeURIComponent(pmTab));
+    if (sec === 'operations' && appState.operationsTab !== 'overview') parts.push('od=' + encodeURIComponent(appState.operationsTab));
+    if (sec === 'production' && appState.productionTab !== 'root') parts.push('pt=' + encodeURIComponent(appState.productionTab));
+    if (sec === 'product-development' && appState.productDevelopmentTab !== 'root') parts.push('pdt=' + encodeURIComponent(appState.productDevelopmentTab));
 
     // NPI Projects Dashboard filters
     if (sec === 'projects') {
-      if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch));
-      if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter));
-      if (npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(npiProjectsStatusFilter));
-      if (npiProjectsViewMode !== 'active') parts.push('pvm=' + encodeURIComponent(npiProjectsViewMode));
+      if (appState.npiProjectsSearch) parts.push('ps=' + encodeURIComponent(appState.npiProjectsSearch));
+      if (appState.npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(appState.npiProjectsFamilyFilter));
+      if (appState.npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(appState.npiProjectsStatusFilter));
+      if (appState.npiProjectsViewMode !== 'active') parts.push('pvm=' + encodeURIComponent(appState.npiProjectsViewMode));
     }
 
     // BOM sub-tab
-    if (sec === 'project' && typeof bomSubTab !== 'undefined' && bomSubTab !== 'tree') {
-      parts.push('bt=' + encodeURIComponent(bomSubTab));
+    if (sec === 'project' && typeof appState.bomSubTab !== 'undefined' && appState.bomSubTab !== 'tree') {
+      parts.push('bt=' + encodeURIComponent(appState.bomSubTab));
     }
 
     // PFMEA filters
-    if (sec === 'project' && typeof apqpTab !== 'undefined' && apqpTab === 'pfmea') {
-      if (typeof pfmeaRpnFilter !== 'undefined' && pfmeaRpnFilter !== 'all') {
-        parts.push('pfr=' + encodeURIComponent(pfmeaRpnFilter));
+    if (sec === 'project' && typeof appState.apqpTab !== 'undefined' && appState.apqpTab === 'pfmea') {
+      if (typeof appState.pfmeaRpnFilter !== 'undefined' && appState.pfmeaRpnFilter !== 'all') {
+        parts.push('pfr=' + encodeURIComponent(appState.pfmeaRpnFilter));
       }
-      if (typeof pfmeaView !== 'undefined' && pfmeaView !== 'worksheet') {
-        parts.push('pfv=' + encodeURIComponent(pfmeaView));
+      if (typeof appState.pfmeaView !== 'undefined' && appState.pfmeaView !== 'worksheet') {
+        parts.push('pfv=' + encodeURIComponent(appState.pfmeaView));
       }
     }
 
     // CTQ filters
-    if (sec === 'project' && typeof apqpTab !== 'undefined' && apqpTab === 'ctq') {
-      if (typeof ctqSourceFilter !== 'undefined' && ctqSourceFilter !== 'all') {
-        parts.push('csf=' + encodeURIComponent(ctqSourceFilter));
+    if (sec === 'project' && typeof appState.apqpTab !== 'undefined' && appState.apqpTab === 'ctq') {
+      if (typeof appState.ctqSourceFilter !== 'undefined' && appState.ctqSourceFilter !== 'all') {
+        parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter));
       }
-      if (typeof ctqOosFilter !== 'undefined' && ctqOosFilter !== 'all') {
-        parts.push('cof=' + encodeURIComponent(ctqOosFilter));
+      if (typeof appState.ctqOosFilter !== 'undefined' && appState.ctqOosFilter !== 'all') {
+        parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter));
       }
-      if (typeof ctqAgreedFilter !== 'undefined' && ctqAgreedFilter !== 'all') {
-        parts.push('caf=' + encodeURIComponent(ctqAgreedFilter));
+      if (typeof appState.ctqAgreedFilter !== 'undefined' && appState.ctqAgreedFilter !== 'all') {
+        parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter));
       }
-      if (typeof ctqCoverageFilter !== 'undefined' && ctqCoverageFilter !== 'all') {
-        parts.push('ccf=' + encodeURIComponent(ctqCoverageFilter));
+      if (typeof appState.ctqCoverageFilter !== 'undefined' && appState.ctqCoverageFilter !== 'all') {
+        parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter));
       }
     }
 
     // Tracker sub-assembly filter
-    if (sec === 'project' && typeof trackerSubAsmFilter !== 'undefined' && trackerSubAsmFilter !== 'all') {
-      parts.push('tsf=' + encodeURIComponent(trackerSubAsmFilter));
+    if (sec === 'project' && typeof appState.trackerSubAsmFilter !== 'undefined' && appState.trackerSubAsmFilter !== 'all') {
+      parts.push('tsf=' + encodeURIComponent(appState.trackerSubAsmFilter));
     }
 
     const hash = parts.length ? '#' + parts.join('&') : '#';
@@ -315,20 +373,20 @@ function navigate(sec, { pushHash = true } = {}) {
  * Update project name display in topbar breadcrumb
  * Shows project name when inside a project-specific section
  */
-function updateProjectBreadcrumb() {
+export function updateProjectBreadcrumb() {
   const projectNameEl = document.getElementById('projectName');
   if (!projectNameEl) return;
 
   const p = prog();
-  const isProjectSection = progId && p && (
-    currentSection === 'project' ||
-    currentSection === 'apqp' ||
-    currentSection === 'actions' ||
-    currentSection === 'risks' ||
-    currentSection === 'bom' ||
-    currentSection === 'timing' ||
-    currentSection === 'documents' ||
-    currentSection.startsWith('gate_')
+  const isProjectSection = appState.progId && p && (
+    appState.currentSection === 'project' ||
+    appState.currentSection === 'apqp' ||
+    appState.currentSection === 'actions' ||
+    appState.currentSection === 'risks' ||
+    appState.currentSection === 'bom' ||
+    appState.currentSection === 'timing' ||
+    appState.currentSection === 'documents' ||
+    appState.currentSection.startsWith('gate_')
   );
 
   if (isProjectSection && p) {
@@ -342,12 +400,12 @@ function updateProjectBreadcrumb() {
 /**
  * Navigate to projects list
  */
-function goProjects() { navigate('projects'); }
+export function goProjects() { navigate('projects'); }
 
 /**
  * Navigate to current project home (dashboard)
  */
-function goHome()     { navigate('project'); }
+export function goHome()     { navigate('project'); }
 
 /**
  * Intelligent back navigation
@@ -356,10 +414,10 @@ function goHome()     { navigate('project'); }
  * NPI sub-sections (apqp, actions, risks, bom, timing, gates) → active project dashboard
  * All other sections → hub
  */
-function navigateBack() {
+export function navigateBack() {
   // Always return to project dashboard when inside any NPI project section
   const npiSections = ['apqp', 'actions', 'risks', 'bom', 'timing', 'documents'];
-  if (npiSections.includes(currentSection) || currentSection.startsWith('gate_')) {
+  if (npiSections.includes(appState.currentSection) || appState.currentSection.startsWith('gate_')) {
     navigate('project');
     return;
   }
@@ -370,23 +428,23 @@ function navigateBack() {
   }
 
   // Step back to portal root before going all the way to hub
-  if (currentSection === 'capacity' && capacityTab !== 'root') {
+  if (appState.currentSection === 'capacity' && appState.capacityTab !== 'root') {
     setCapacityTab('root');
     return;
   }
-  if (currentSection === 'production' && productionTab !== 'root') {
+  if (appState.currentSection === 'production' && appState.productionTab !== 'root') {
     setProductionTab('root');
     return;
   }
-  if (currentSection === 'operations' && operationsTab !== 'overview') {
+  if (appState.currentSection === 'operations' && appState.operationsTab !== 'overview') {
     setOperationsTab('overview');
     return;
   }
-  if (currentSection === 'product-development' && productDevelopmentTab !== 'root') {
+  if (appState.currentSection === 'product-development' && appState.productDevelopmentTab !== 'root') {
     setProductDevelopmentTab('root');
     return;
   }
-  if (currentSection === 'project') {
+  if (appState.currentSection === 'project') {
     navigate('projects');
     return;
   }
@@ -397,10 +455,10 @@ function navigateBack() {
  * Set APQP sub-tab and update URL hash
  * @param {string} t - Tab name (ctq, pfd, pfmea, cp)
  */
-function setApqpTab(t) {
-  const prevTab = apqpTab;
-  apqpTab = t;
-  const parts = ['p=' + encodeURIComponent(progId), 's=apqp'];
+export function setApqpTab(t) {
+  const prevTab = appState.apqpTab;
+  appState.apqpTab = t;
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=apqp'];
   if (t !== 'ctq') parts.push('t=' + encodeURIComponent(t));
   writeNavigationHistory('#' + parts.join('&'), { push: prevTab !== t });
   render();
@@ -429,17 +487,25 @@ function renderAccessDenied(sectionKey) {
  * 3. NPI section routing (apqp, actions, risks, bom, timing, gates)
  * 4. Post-render hooks (auto-resize textareas)
  */
-function render() {
+export function render() {
   const mc = document.getElementById('mainContent');
-  if (typeof canViewSection === 'function' && !canViewSection(currentSection)) {
-    mc.innerHTML = renderAccessDenied(currentSection);
+  if (!canViewSection(appState.currentSection)) {
+    mc.innerHTML = renderAccessDenied(appState.currentSection);
     return;
   }
 
-  if (currentSection === 'projects') { mc.innerHTML = npi.dashboard.renderProjects(); return; }
-  if (currentSection === 'product-development') {
-    if (productDevelopmentTab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('product-development', productDevelopmentTab)) {
-      mc.innerHTML = renderAccessDenied(`product-development::${productDevelopmentTab}`);
+  if (appState.currentSection === 'projects') {
+    const npiGlobal = getNpiGlobal()
+    if (typeof npiGlobal?.dashboard?.renderProjects === 'function') {
+      mc.innerHTML = npiGlobal.dashboard.renderProjects()
+    } else {
+      mc.innerHTML = '<div class="section-inner"><div class="card" style="padding:20px;max-width:760px;margin:20px auto">Projects are loading…</div></div>'
+    }
+    return
+  }
+  if (appState.currentSection === 'product-development') {
+    if (appState.productDevelopmentTab !== 'root' && !canViewPortalTab('product-development', appState.productDevelopmentTab)) {
+      mc.innerHTML = renderAccessDenied(`product-development::${appState.productDevelopmentTab}`);
       return;
     }
     mc.innerHTML = `<div class="section-inner">${renderProductDevelopment()}</div>`;
@@ -457,78 +523,79 @@ function render() {
     }
     return;
   }
-  if (currentSection === 'production') {
-    if (productionTab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('production', productionTab)) {
-      mc.innerHTML = renderAccessDenied(`production::${productionTab}`);
+  if (appState.currentSection === 'production') {
+    if (appState.productionTab !== 'root' && !canViewPortalTab('production', appState.productionTab)) {
+      mc.innerHTML = renderAccessDenied(`production::${appState.productionTab}`);
       return;
     }
     mc.innerHTML = `<div class="section-inner">${renderProduction()}</div>`;
     return;
   }
-  if (currentSection === 'operations') {
-    mc.innerHTML = `<div class="section-inner">${renderOperationsDashboard()}</div>`;
+  if (appState.currentSection === 'operations') {
+    mc.innerHTML = `<div class="section-inner">${renderOperations()}</div>`;
     return;
   }
-  if (currentSection === 'feedback') {
+  if (appState.currentSection === 'feedback') {
     mc.innerHTML = `<div class="section-inner">${renderFeedback()}</div>`;
     return;
   }
-  if (currentSection === 'settings') {
+  if (appState.currentSection === 'settings') {
     mc.innerHTML = `<div class="section-inner">${renderSettings()}</div>`;
     return;
   }
-  if (currentSection === 'action-centre') {
+  if (appState.currentSection === 'action-centre') {
     mc.innerHTML = `<div class="section-inner">${renderActionCentre()}</div>`;
-    if (!actionCentreData && !actionCentreLoading) actionCentreLoad();
+    actionCentreDataSubscribe()
+    if (!appState.actionCentreData && !appState.actionCentreLoading) actionCentreLoad();
     return;
   }
-  if (currentSection === 'mcs') {
+  if (appState.currentSection === 'mcs') {
     renderMcs();
-    if (!mcsList || mcsList.length === 0) mcsLoadChanges();
+    if (!appState.mcsList || appState.mcsList.length === 0) mcsLoadChanges();
     return;
   }
-  if (currentSection === 'capacity') {
-    if (capacityTab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('capacity', capacityTab)) {
-      mc.innerHTML = renderAccessDenied(`capacity::${capacityTab}`);
+  if (appState.currentSection === 'capacity') {
+    if (appState.capacityTab !== 'root' && !canViewPortalTab('capacity', appState.capacityTab)) {
+      mc.innerHTML = renderAccessDenied(`capacity::${appState.capacityTab}`);
       return;
     }
-    if (capacityTab === 'root') mc.innerHTML = renderCapacity();
-    else if (capacityTab === 'me') mc.innerHTML = `<div class="section-inner">${renderMeCapacity()}</div>`;
-    else if (capacityTab === 'production') mc.innerHTML = `<div class="section-inner">${renderProdCapacity()}</div>`;
-    else if (capacityTab === 'projects') {
-      if (typeof pmRenderCapacity === 'function') {
-        mc.innerHTML = `<div class="section-inner">${pmRenderCapacity()}</div>`;
-      } else {
-        mc.innerHTML = `<div class="section-inner"><div style="padding: 20px; text-align: center; color: var(--muted);">Project Management Capacity unavailable</div></div>`;
-      }
+    if (appState.capacityTab === 'root') mc.innerHTML = renderCapacity();
+    else if (appState.capacityTab === 'me') mc.innerHTML = `<div class="section-inner">${renderMeCapacity()}</div>`;
+    else if (appState.capacityTab === 'production') mc.innerHTML = `<div class="section-inner">${renderProdCapacity()}</div>`;
+    else if (appState.capacityTab === 'projects') {
+      mc.innerHTML = `<div class="section-inner">${renderPmCapacity()}</div>`;
     }
     else mc.innerHTML = renderCapacity();
     // Draw chart after ME Capacity is rendered
-    if (capacityTab === 'me') {
+    if (appState.capacityTab === 'me') {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          if (typeof meDrawChartNow === 'function') meDrawChartNow();
-          if (typeof capacityEvents?.setup === 'function') capacityEvents.setup();
+          meDrawChartNow()
+          setupCapacityEvents()
         });
       });
     } else {
-      if (typeof capacityEvents?.setup === 'function') capacityEvents.setup();
+      setupCapacityEvents()
     }
     return;
   }
-  if (currentSection === 'hub') { mc.innerHTML = renderHub(); hubInit(); return; }
+  if (appState.currentSection === 'hub') { mc.innerHTML = renderHub(); hubInit(); return; }
 
   // Allow missing project only when coming from URL hash (project may not be loaded yet)
   const hasHashProject = typeof window !== 'undefined' && window.location &&
-    window.location.hash.includes('p=') && progId;
-  if (!prog() && !hasHashProject) { mc.innerHTML = npi.dashboard.renderProjects(); return; }
+    window.location.hash.includes('p=') && appState.progId;
+  if (!prog() && !hasHashProject) {
+    const npiGlobal = getNpiGlobal()
+    if (typeof npiGlobal?.dashboard?.renderProjects === 'function') {
+      mc.innerHTML = npiGlobal.dashboard.renderProjects()
+    } else {
+      mc.innerHTML = '<div class="section-inner"><div class="card" style="padding:20px;max-width:760px;margin:20px auto">Projects are loading…</div></div>'
+    }
+    return
+  }
 
-  if (currentSection === 'project' || currentSection.startsWith('gate_')) {
-    mc.innerHTML = typeof npi?.render === 'function'
-      ? npi.render(currentSection)
-      : (currentSection === 'project'
-        ? npi.dashboard.renderDashboard()
-        : npi.gate.renderGatePage(+currentSection.split('_')[1]));
+  if (appState.currentSection === 'project' || appState.currentSection.startsWith('gate_')) {
+    mc.innerHTML = renderNpi(appState.currentSection);
   } else {
     mc.innerHTML = `<div class="section-inner">${renderSection()}</div>`;
   }
@@ -539,7 +606,8 @@ function render() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       autoResizeAll();
-      if (typeof npi?.events?.setup === 'function') npi.events.setup();
+      const npiGlobal = getNpiGlobal()
+      if (typeof npiGlobal?.events?.setup === 'function') npiGlobal.events.setup();
 
       // Scroll to selected item when navigating from Action Centre
       scrollToSelectedItem();
@@ -555,14 +623,7 @@ function render() {
  * @returns {string} HTML content for the current section
  */
 function renderSection() {
-  if (typeof npi?.render === 'function') return npi.render(currentSection);
-  if (currentSection === 'apqp') return npi.apqp.renderAPQP();
-  if (currentSection === 'actions') return npi.tracker.renderActions();
-  if (currentSection === 'risks') return npi.tracker.renderRisks();
-  if (currentSection === 'bom') return npi.bom.renderBOM();
-  if (currentSection === 'timing') return npi.timing.renderTimingPlan();
-  if (currentSection === 'documents') return npi.docs.render();
-  return '';
+  return renderNpiSection(appState.currentSection);
 }
 
 /**
@@ -575,44 +636,44 @@ function renderSection() {
  */
 function scrollToSelectedItem() {
   // npiLoadedProgId (state.js) is set to progId when npiRelLoad completes.
-  const npiDataReady = npiLoadedProgId === progId;
+  const npiDataReady = appState.npiLoadedProgId === appState.progId;
 
-  if (currentSection === 'actions' && selectedActionId) {
-    const targetRow = document.querySelector(`tr[data-action-id="${selectedActionId}"]`);
+  if (appState.currentSection === 'actions' && appState.selectedActionId) {
+    const targetRow = document.querySelector(`tr[data-action-id="${appState.selectedActionId}"]`);
     if (targetRow) {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       targetRow.classList.add('pulse');
       setTimeout(() => targetRow.classList.remove('pulse'), 2000);
-      selectedActionId = null;
+      appState.selectedActionId = null;
     } else if (npiDataReady) {
       // Data is loaded but row not found — item was deleted or ID is wrong; stop retrying.
-      selectedActionId = null;
+      appState.selectedActionId = null;
     }
     // If data not yet loaded, keep selectedActionId so the post-load render retries.
   }
 
-  if (currentSection === 'risks' && selectedRiskId) {
-    const targetRow = document.querySelector(`tr[data-risk-id="${selectedRiskId}"]`);
+  if (appState.currentSection === 'risks' && appState.selectedRiskId) {
+    const targetRow = document.querySelector(`tr[data-risk-id="${appState.selectedRiskId}"]`);
     if (targetRow) {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       targetRow.classList.add('pulse');
       setTimeout(() => targetRow.classList.remove('pulse'), 2000);
-      selectedRiskId = null;
+      appState.selectedRiskId = null;
     } else if (npiDataReady) {
-      selectedRiskId = null;
+      appState.selectedRiskId = null;
     }
   }
 
-  if (currentSection === 'apqp' && selectedPfmeaCauseId) {
+  if (appState.currentSection === 'apqp' && appState.selectedPfmeaCauseId) {
     // For PFMEA, scroll to the row containing the cause
-    const targetRow = document.querySelector(`tr[data-cause-id="${selectedPfmeaCauseId}"]`);
+    const targetRow = document.querySelector(`tr[data-cause-id="${appState.selectedPfmeaCauseId}"]`);
     if (targetRow) {
       targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
       targetRow.classList.add('pulse');
       setTimeout(() => targetRow.classList.remove('pulse'), 2000);
-      selectedPfmeaCauseId = null;
+      appState.selectedPfmeaCauseId = null;
     } else if (npiDataReady) {
-      selectedPfmeaCauseId = null;
+      appState.selectedPfmeaCauseId = null;
     }
   }
 }
@@ -625,54 +686,54 @@ function scrollToSelectedItem() {
 window.addEventListener('popstate', () => {
   if (!currentUser) return;
   const h = parseHash();
-  npiTab = h.nft || 'all';
+  appState.npiTab = h.nft || 'all';
   // Always restore all tab state from hash before navigating.
   // navigate() with pushHash:false will NOT reset tabs, so these values stick.
-  capacityTab          = h.ct  || 'root';
-  operationsTab        = h.od  || 'overview';
-  productionTab        = h.pt  || 'root';
-  productDevelopmentTab = h.pdt || 'root';
-  if (h.met && typeof meTab !== 'undefined') meTab = h.met;
-  if (h.pct) prodCapTab = h.pct;
-  if (h.pmt && typeof pmTab !== 'undefined') pmTab = h.pmt;
-  if (h.t) apqpTab = h.t;
+  appState.capacityTab          = h.ct  || 'root';
+  appState.operationsTab        = h.od  || 'overview';
+  appState.productionTab        = h.pt  || 'root';
+  appState.productDevelopmentTab = h.pdt || 'root';
+  if (h.met) setMeTab(h.met);
+  if (h.pct) appState.prodCapTab = h.pct;
+  if (h.pmt) setPmTabState(h.pmt)
+  if (h.t) appState.apqpTab = h.t;
 
   // Restore NPI Projects Dashboard filters
-  if (h.ps)  npiProjectsSearch       = decodeURIComponent(h.ps);
-  else       npiProjectsSearch       = '';
-  if (h.pf)  npiProjectsFamilyFilter = decodeURIComponent(h.pf);
-  else       npiProjectsFamilyFilter = 'all';
-  if (h.pst) npiProjectsStatusFilter = decodeURIComponent(h.pst);
-  else       npiProjectsStatusFilter = 'all';
-  if (h.pvm) npiProjectsViewMode     = decodeURIComponent(h.pvm);
-  else       npiProjectsViewMode     = 'active';
+  if (h.ps)  appState.npiProjectsSearch       = decodeURIComponent(h.ps);
+  else       appState.npiProjectsSearch       = '';
+  if (h.pf)  appState.npiProjectsFamilyFilter = decodeURIComponent(h.pf);
+  else       appState.npiProjectsFamilyFilter = 'all';
+  if (h.pst) appState.npiProjectsStatusFilter = decodeURIComponent(h.pst);
+  else       appState.npiProjectsStatusFilter = 'all';
+  if (h.pvm) appState.npiProjectsViewMode     = decodeURIComponent(h.pvm);
+  else       appState.npiProjectsViewMode     = 'active';
 
   // Restore BOM sub-tab
-  if (h.bt)  bomSubTab               = decodeURIComponent(h.bt);
-  else       bomSubTab               = 'tree';
+  if (h.bt)  appState.bomSubTab               = decodeURIComponent(h.bt);
+  else       appState.bomSubTab               = 'tree';
 
   // Restore PFMEA filters
-  if (h.pfr) pfmeaRpnFilter          = decodeURIComponent(h.pfr);
-  else       pfmeaRpnFilter          = 'all';
-  if (h.pfv) pfmeaView               = decodeURIComponent(h.pfv);
-  else       pfmeaView               = 'worksheet';
+  if (h.pfr) appState.pfmeaRpnFilter          = decodeURIComponent(h.pfr);
+  else       appState.pfmeaRpnFilter          = 'all';
+  if (h.pfv) appState.pfmeaView               = decodeURIComponent(h.pfv);
+  else       appState.pfmeaView               = 'worksheet';
 
   // Restore CTQ filters
-  if (h.csf) ctqSourceFilter         = decodeURIComponent(h.csf);
-  else       ctqSourceFilter         = 'all';
-  if (h.cof) ctqOosFilter            = decodeURIComponent(h.cof);
-  else       ctqOosFilter            = 'all';
-  if (h.caf) ctqAgreedFilter         = decodeURIComponent(h.caf);
-  else       ctqAgreedFilter         = 'all';
-  if (h.ccf) ctqCoverageFilter       = decodeURIComponent(h.ccf);
-  else       ctqCoverageFilter       = 'all';
+  if (h.csf) appState.ctqSourceFilter         = decodeURIComponent(h.csf);
+  else       appState.ctqSourceFilter         = 'all';
+  if (h.cof) appState.ctqOosFilter            = decodeURIComponent(h.cof);
+  else       appState.ctqOosFilter            = 'all';
+  if (h.caf) appState.ctqAgreedFilter         = decodeURIComponent(h.caf);
+  else       appState.ctqAgreedFilter         = 'all';
+  if (h.ccf) appState.ctqCoverageFilter       = decodeURIComponent(h.ccf);
+  else       appState.ctqCoverageFilter       = 'all';
 
   // Restore tracker sub-assembly filter
-  if (h.tsf) trackerSubAsmFilter     = decodeURIComponent(h.tsf);
-  else       trackerSubAsmFilter     = 'all';
+  if (h.tsf) appState.trackerSubAsmFilter     = decodeURIComponent(h.tsf);
+  else       appState.trackerSubAsmFilter     = 'all';
 
   if (h.p && db.projects.find(p => p.id === h.p)) {
-    progId = h.p;
+    appState.progId = h.p;
     navigate(h.s || 'project', { pushHash: false });
   } else if (h.s) {
     navigate(h.s, { pushHash: false });
@@ -728,7 +789,7 @@ function hasVisibleModal() {
  * @returns {Function|null}
  */
 function getHubKeyAction(key) {
-  if (currentSection === 'hub') {
+  if (appState.currentSection === 'hub') {
     const hubRoutes = {
       '1': () => navigate('capacity'),
       '2': () => navigate('product-development'),
@@ -739,7 +800,7 @@ function getHubKeyAction(key) {
     return hubRoutes[key] || null;
   }
 
-  if (currentSection === 'capacity' && capacityTab === 'root') {
+  if (appState.currentSection === 'capacity' && appState.capacityTab === 'root') {
     const capacityRoutes = {
       '1': () => setCapacityTab('production'),
       '2': () => setCapacityTab('me'),
@@ -748,7 +809,7 @@ function getHubKeyAction(key) {
     return capacityRoutes[key] || null;
   }
 
-  if (currentSection === 'product-development' && productDevelopmentTab === 'root') {
+  if (appState.currentSection === 'product-development' && appState.productDevelopmentTab === 'root') {
     const productDevelopmentRoutes = {
       '1': () => setProductDevelopmentTab('npi'),
       '2': () => setProductDevelopmentTab('product-management'),
@@ -758,7 +819,7 @@ function getHubKeyAction(key) {
     return productDevelopmentRoutes[key] || null;
   }
 
-  if (currentSection === 'production' && productionTab === 'root') {
+  if (appState.currentSection === 'production' && appState.productionTab === 'root') {
     const productionRoutes = {
       '1': () => setProductionTab('scheduling'),
       '2': () => setProductionTab('by-product'),
