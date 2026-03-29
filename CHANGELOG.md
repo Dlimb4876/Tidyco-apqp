@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-29 | Fix hosted dev bootstrap config 404 | Switched Supabase browser startup to tracked `core/js/config.public.js` with the project publishable key so hosted/dev pages no longer abort before `doLogin` is wired
+
 ## 2026-03-29 | Fix Settings Work Areas edit button responsiveness | Replaced delayed double-rAF settings hydration with microtask hydration so Work Areas row edit clicks bind immediately and no longer appear to do nothing
 
 ## 2026-03-29 | Tidy production schedule header controls | Moved Show/Hide Completed into the filter bar and removed redundant top-bar Add Batch button to simplify scheduling controls

@@ -44,6 +44,7 @@
 - **OpenWolf cron + Claude CLI:** AI cron tasks require `claude` CLI on PATH (`cron-engine.js` only checks for `claude`). On Windows, `winget install --id Anthropic.ClaudeCode --exact` installs `claude.exe` under `%LOCALAPPDATA%\Microsoft\WinGet\Packages\Anthropic.ClaudeCode_*`; restart the daemon with that directory on PATH to recover.
 - `.gemini/GEMINI.md` must be kept aligned with OpenWolf protocol when workflow requirements change.
 - **ESM migration (consolidated):** P7a: export `mcsDataSubscribe`/`mcsDataUnsubscribe` from `mcs-realtime.js`, remove in-scope `window.*` usage. Phase 8: `index.html` uses single module entry (`core/js/main.js`); inline HTML handlers need safe `globalThis` bridges (`doLogin`, `navigate`, modal helpers) until removed. Phase 9: guardrails are now `check:imports` + `check:esm-coverage`. If `auth.js` calls `launchApp()`, it must import it explicitly from `core/js/app.js` — legacy global lookup causes `ReferenceError` after sign-in. Remove all window-bridge assignments in scoped files; route actions through delegated handlers, not inline `onclick`.
+- **Hosted Supabase bootstrap:** Static/browser builds must read a tracked public config module (`core/js/config.public.js`). Pointing runtime at gitignored `core/js/config.js` causes a hosted 404, aborts module startup, and leaves inline login handlers like `doLogin()` undefined.
 
 ## Do-Not-Repeat
 
@@ -68,6 +69,7 @@
 <!-- [2026-03-27] In Windows batch files, do not use `\"` as nested-quote escaping for `cmd`/`start` commands. Use doubled CMD quotes or hand off the browser launch to `powershell.exe`. -->
 <!-- [2026-03-28] For MCS Stage 3 impact-progress persistence, avoid hard dependency on a new DB column unless migration is guaranteed. Persist in existing change data and parse on load. -->
 <!-- [2026-03-29] Before converting many files to import from a new shared module (e.g., `npi-shared.js`), ensure the shared file exists first; missing shared modules can abort bootstrap and hide as unrelated runtime errors like missing global login handlers. -->
+<!-- [2026-03-29] Do not make the browser app depend on gitignored core/js/config.js. Hosted/static environments cannot see local-only files, so the missing config aborts main.js before doLogin and other global bridges are assigned. -->
 
 ## Decision Log
 

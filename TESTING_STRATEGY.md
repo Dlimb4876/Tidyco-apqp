@@ -80,6 +80,14 @@ PowerShell -ExecutionPolicy Bypass -File .claude\serve.ps1
 
 Then open `http://localhost:8000/index.html` and use the browser dev tools (`F12`) for debugging.
 
+### Browser bootstrap config
+
+The live SPA now reads `core/js/config.public.js` at module-load time.
+
+- Hosted pages must not depend on a private local `core/js/config.js`
+- When testing modules that import `core/js/supa.js`, mock `supa.js` or
+  `config.public.js` explicitly instead of assuming a personal config file
+
 ### Standalone Guide Wiki Validation
 
 The standalone guide wiki under `wiki/` is validated with lightweight static checks:
