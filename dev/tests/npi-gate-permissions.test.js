@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -44,7 +45,7 @@ describe('NPI gate signoff permissions', () => {
       'utf8'
     )
 
-    eval(src) // eslint-disable-line no-eval
+    eval(toEvalFriendlyModuleSource(src)) // eslint-disable-line no-eval
   })
 
   it('maps signoff roles to dedicated permission keys', () => {
@@ -97,3 +98,4 @@ describe('NPI gate signoff permissions', () => {
     expect(npiRelSaveGateSig).toHaveBeenCalledWith(0, 1)
   })
 })
+

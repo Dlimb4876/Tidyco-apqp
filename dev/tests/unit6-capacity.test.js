@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,7 +47,7 @@ const src = fs.readFileSync(
   path.resolve(__dirname, '../portals/capacity/unit6/js/unit6-capacity.js'),
   'utf8'
 );
-eval(src); // eslint-disable-line no-eval
+eval(toEvalFriendlyModuleSource(src)); // eslint-disable-line no-eval
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -158,3 +159,4 @@ describe('unit6DebouncedSave()', () => {
     expect(refreshSpy).not.toHaveBeenCalled();
   });
 });
+

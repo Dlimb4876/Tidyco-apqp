@@ -105,6 +105,13 @@ export function capRenderHolidaysTab(
     monthHeaderHtml += `<th colspan="${dates.length - monthStartIndex}" style="text-align:center;font-weight:bold;font-size:13px;background:var(--overlay-light);">${capHolidayMonthLabel(currentHeaderMonth)}</th>`
   }
 
+  const legendItems = [
+    { swatchClass: 'holiday-legend-working', label: 'Working day', marker: '—' },
+    { swatchClass: 'holiday-legend-full', label: 'Full day leave', marker: 'F' },
+    { swatchClass: 'holiday-legend-half', label: 'Half day leave', marker: 'H' },
+    { swatchClass: 'holiday-legend-bank', label: 'Bank holiday', marker: 'BH' }
+  ]
+
   let rowsHtml = '';
   (Array.isArray(teamArray) ? teamArray : []).forEach(member => {
     rowsHtml += `<tr><th style="position:sticky;left:0;background:var(--white);z-index:9;text-align:left;padding:8px;width:130px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(member && member.name ? member.name : '')}">${esc(member && member.name ? member.name : '')}</th>`
@@ -143,7 +150,7 @@ export function capRenderHolidaysTab(
     <div class="me-card">
       <div class="me-card-head">
         <span class="me-card-title">HOLIDAY PLANNER</span>
-        <span style="font-size:11px;color:var(--muted)">5-day work week · Click cells: working → full day → half day → remove · Blue = bank holidays</span>
+        <span style="font-size:11px;color:var(--muted)">5-day work week · Click cells: working → full day → half day → remove</span>
         ${isSaving ? '<span style="font-size:11px;color:var(--primary);margin-left:auto;">Saving...</span>' : ''}
       </div>
       <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--overlay-light);border-bottom:1px solid var(--border);">
@@ -153,6 +160,14 @@ export function capRenderHolidaysTab(
         <button class="btn btn-ghost btn-sm" data-cap-action="cap-me-today" ${isCurrentMonth ? 'disabled style="opacity:0.4;"' : 'style="color:var(--primary);"'}>Today</button>
       </div>
       <div class="me-card-body me-card-body-gutter" style="overflow-x:auto;">
+        <div class="holiday-legend" aria-label="Holiday planner legend">
+          ${legendItems.map(item => `
+            <span class="holiday-legend-item">
+              <span class="holiday-legend-swatch ${item.swatchClass}">${item.marker}</span>
+              <span class="holiday-legend-text">${item.label}</span>
+            </span>
+          `).join('')}
+        </div>
         <table class="holiday-matrix">
           <thead>
             <tr>

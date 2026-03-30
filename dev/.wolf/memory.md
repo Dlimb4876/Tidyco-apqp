@@ -16,6 +16,7 @@
 - Resolved failing Jest run by stabilizing brittle assertions in `tests/guide.test.js`, `tests/action-centre.test.js`, and `tests/state.test.js`, plus fixing BOM test bootstrap/fixture shape in `tests/bom.test.js`; validated with `npm test` (69/69 suites, 936/936 tests) and `npm run check:all` (exit 0).
 - Reviewed all guide modal mappings against live portal guide triggers, then fixed relevance gaps by wiring missing Logistics/Unit 6 guide buttons and updating stale Operations People + PM section guide copy in `utils/js/guide.js`; changelog updated.
 ## 2026-03-29
+- | 20:44 | Added a visual legend to the shared Capacity holiday planner and updated guide/tests | portals/capacity/shared/js/cap-holidays.js, portals/capacity/shared/css/cap-holidays.css, utils/js/guide.js, tests/me-holidays.test.js, CHANGELOG.md | Focused Jest passed; repo-wide checks still show pre-existing failures | ~1200 |
 - Executed ESM Phase 8 final wiring: switched `index.html` to importmap + single `core/js/main.js` module entry, finalized `app.js`/`navigation.js` explicit imports for critical wiring paths, preserved inline-handler compatibility bridges in `main.js`, and updated Part1/Part2 tracker rows + Phase 8 checklist with deferred (`pwsh`/CLI-only) validation notes.
 - Executed ESM Phase 9 cleanup/doc finalization: removed retired `check:load-order` from active pipeline (deleted `scripts/load-order-checker.js`), updated `package.json` `check:all` to `check:syntax -> check:imports -> check:esm-coverage -> check:rls -> check:mobile -> check:modals -> check:coverage`, and marked Part1/Part2 row 9 + Phase 9 checklist complete with explicit deferred (`pwsh`/CLI-only) gate notes and merged-marker policy.
 ## 2026-03-27
@@ -295,255 +296,115 @@
 > Consolidated session (0 actions)
 
 ## Session: 2026-03-22 07:47
-> Consolidated session (7 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 07:59
-> Consolidated session (9 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 08:11
-> Consolidated session (19 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 10:11
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 10:22
-> Consolidated session (12 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 10:34
-> Consolidated session (3 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 10:40
-> Consolidated session (3 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 10:52
-> Consolidated session (10 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 11:07
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 11:14
-> Consolidated session (3 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 11:21
-> Consolidated session (4 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 11:28
-> Consolidated session (10 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 11:34
-> Consolidated session (16 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 14:23
-> Consolidated session (2 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 15:10
-> Consolidated session (7 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 18:34
-> Consolidated session (15 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 19:10
-> Consolidated session (7 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 20:13
-> Consolidated session (14 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 20:30
-> Consolidated session (13 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 20:58
-> Consolidated session (11 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-22 21:17
-> Consolidated session (4 actions)
+> Consolidated session (0 actions)
 
 ## Session: 2026-03-23 06:26
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 07:53 | Fixed post-login no-data crash from db Supabase namespace mismatch | core/js/db.js, CHANGELOG.md, .wolf/buglog.json | Replaced named supa import with namespace import so `supa.currentUser/supa.supabase` calls work | ~620 |
-| 07:50 | Fixed NPI BoM import crash and restored parts modal compatibility bridge | portals/product-development/npi/js/bom.js, portals/product-development/npi/js/bom-cclass.js, portals/product-development/parts-database/js/parts-database.js, CHANGELOG.md, .wolf/buglog.json | Added missing imports + `globalThis.partsDatabase` to stop startup abort chain | ~760 |
-| 07:46 | Fixed NPI dashboard namespace load-order crash causing follow-on login bridge failure | portals/product-development/npi/js/npi-shared.js, CHANGELOG.md, .wolf/buglog.json | Added full `npi.*` namespace initialization in shared module; startup no longer aborts at dashboard.js:81 | ~700 |
-| 06:30 | Created ../../../.claude/plans/polymorphic-waddling-shell.md | — | ~1370 |
-| 06:35 | Edited portals/production/js/scheduling.js | 1→2 lines | ~37 |
-| 06:37 | Edited portals/production/css/production.css | expanded (+26 lines) | ~228 |
-| 06:38 | Edited CHANGELOG.md | 2→4 lines | ~75 |
-| 06:38 | Session end: 4 writes across 4 files (polymorphic-waddling-shell.md, scheduling.js, production.css, CHANGELOG.md) | 11 reads | ~65814 tok |
-| 16:02 | Edited portals/capacity/js/me-data.js | removed dead me_capacity fallback and scoped holiday delete to current user | ~365 |
-| 16:03 | Edited tests/me-data-core.test.js | replaced fallback regression with init/save protection tests | ~170 |
-| 16:05 | Edited CHANGELOG.md | updated holiday persistence entry | ~46 |
+> Consolidated session (11 actions)
 
 ## Session: 2026-03-23 10:38
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 10:43 | Edited portals/capacity/js/me-data.js | 2→3 lines | ~30 |
-| 10:43 | Edited portals/capacity/js/me-data.js | modified catch() | ~59 |
-| 10:43 | Edited portals/capacity/js/me-capacity.js | modified if() | ~144 |
-| 10:44 | Edited CHANGELOG.md | 1→3 lines | ~134 |
-| 10:44 | Session end: 4 writes across 3 files (me-data.js, me-capacity.js, CHANGELOG.md) | 9 reads | ~31595 tok |
+> Consolidated session (5 actions)
 
 ## Session: 2026-03-23 10:56
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 11:06 | Edited CHANGELOG.md | 1→3 lines | ~69 |
-| 11:06 | Session end: 1 writes across 1 files (CHANGELOG.md) | 1 reads | ~12216 tok |
+> Consolidated session (2 actions)
 
 ## Session: 2026-03-23 11:46
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 11:48 | Edited portals/capacity/css/me-capacity-heatmap.css | 20 → 52 | ~14 |
-| 11:48 | Edited portals/capacity/js/me-heatmap.js | inline fix | ~23 |
-| 11:48 | Edited portals/capacity/js/me-heatmap.js | 20 → 52 | ~13 |
-| 11:48 | Edited CHANGELOG.md | 2→4 lines | ~72 |
-| 11:48 | Session end: 4 writes across 3 files (me-capacity-heatmap.css, me-heatmap.js, CHANGELOG.md) | 4 reads | ~16415 tok |
+> Consolidated session (5 actions)
 
 ## Session: 2026-03-23 12:06
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 12:09 | Edited portals/capacity/js/me-tasks.js | 16→18 lines | ~114 |
-| 12:09 | Edited portals/capacity/js/me-tasks.js | added 4 condition(s) | ~236 |
-| 12:09 | Edited portals/capacity/js/me-tasks.js | added 3 condition(s) | ~397 |
-| 12:10 | Edited portals/capacity/js/me-tasks.js | expanded (+7 lines) | ~334 |
-| 12:10 | Edited portals/capacity/js/capacity-events.js | added 1 condition(s) | ~78 |
-| 12:10 | Edited portals/capacity/js/capacity-events.js | added 1 condition(s) | ~80 |
-| 12:10 | Edited portals/capacity/js/capacity-events.js | inline fix | ~36 |
-| 12:10 | Edited CHANGELOG.md | 4→6 lines | ~80 |
-| 12:11 | Session end: 8 writes across 3 files (me-tasks.js, capacity-events.js, CHANGELOG.md) | 3 reads | ~23423 tok |
+> Consolidated session (9 actions)
 
 ## Session: 2026-03-23 12:36
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 12:39 | Edited portals/capacity/js/me-calculations.js | added 4 condition(s) | ~292 |
-| 12:39 | Edited CHANGELOG.md | 1→3 lines | ~66 |
-| 12:40 | Session end: 2 writes across 2 files (me-calculations.js, CHANGELOG.md) | 4 reads | ~18893 tok |
+> Consolidated session (3 actions)
 
 ## Session: 2026-03-23 13:09
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 18:31 | Edited portals/capacity/js/me-data-relational.js | added 3 condition(s) | ~82 |
-| 18:31 | Edited portals/capacity/js/me-data.js | added 3 condition(s) | ~82 |
-| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~134 |
-| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~153 |
-| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~142 |
-| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~154 |
-| 18:31 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~141 |
-| 18:32 | Edited portals/capacity/js/me-capacity.js | added 2 condition(s) | ~141 |
-| 18:32 | Created portals/capacity/logistics/js/log-capacity.js | — | ~2256 |
-| 18:33 | Created portals/capacity/unit6/js/unit6-capacity.js | — | ~2314 |
-| 18:33 | Edited portals/capacity/js/capacity.js | modified capacityNavBar() | ~261 |
-| 18:33 | Edited portals/capacity/js/capacity.js | added 2 condition(s) | ~156 |
-| 18:34 | Edited portals/capacity/js/capacity.js | 5→7 lines | ~170 |
-| 18:34 | Edited portals/capacity/js/capacity.js | expanded (+30 lines) | ~580 |
-| 18:34 | Edited portals/capacity/js/capacity-events.js | added 2 condition(s) | ~196 |
-| 18:34 | Edited portals/capacity/js/capacity-events.js | 4→5 lines | ~92 |
-| 18:34 | Edited portals/capacity/js/capacity-events.js | added 4 condition(s) | ~485 |
-| 18:35 | Edited index.html | 3→5 lines | ~97 |
-| 18:35 | Edited core/js/state.js | inline fix | ~21 |
-| 18:35 | Edited CHANGELOG.md | 1→3 lines | ~139 |
-| 18:36 | Session end: 20 writes across 10 files (me-data-relational.js, me-data.js, me-capacity.js, log-capacity.js, unit6-capacity.js) | 13 reads | ~61105 tok |
-| 18:36 | Diagnosed OpenWolf cerebrum-reflection cron failure | .wolf/cron-state.json, .wolf/daemon.log, .wolf/config.json, C:/Users/Tidyco/AppData/Roaming/npm/node_modules/openwolf/dist/src/daemon/cron-engine.js | confirmed AI cron tasks fail when `claude` CLI is missing from PATH | ~1800 tok |
-| 18:48 | Installed Claude Code and verified OpenWolf cron recovery | .wolf/cron-state.json, .wolf/daemon.log | installed Claude Code 2.1.81 via winget, verified `claude -p`, restarted daemon with updated PATH, and confirmed `cerebrum-reflection` succeeded | ~2200 tok |
+> Consolidated session (23 actions)
 
 ## Session: 2026-03-23 18:55
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 19:00 | Created portals/mcs/js/mcs-modal-shared.js | — | ~3486 |
-| 19:00 | Created portals/mcs/js/mcs-modal-create.js | — | ~2728 |
-| 19:01 | Created portals/mcs/js/mcs-modal-view.js | — | ~5331 |
-| 19:02 | Created portals/mcs/js/mcs-modal-edit.js | — | ~4964 |
-| 19:03 | Edited index.html | 1→4 lines | ~62 |
-| 19:03 | Edited CHANGELOG.md | 4→6 lines | ~94 |
-| 19:03 | Session end: 6 writes across 6 files (mcs-modal-shared.js, mcs-modal-create.js, mcs-modal-view.js, mcs-modal-edit.js, index.html) | 3 reads | ~56393 tok |
-| 19:04 | Session end: 6 writes across 6 files (mcs-modal-shared.js, mcs-modal-create.js, mcs-modal-view.js, mcs-modal-edit.js, index.html) | 3 reads | ~56393 tok |
+> Consolidated session (8 actions)
 
 ## Session: 2026-03-23 19:08
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 19:12 | Edited .mcp.json | 12→14 lines | ~83 |
-| 19:12 | Session end: 1 writes across 1 files (.mcp.json) | 2 reads | ~262 tok |
+> Consolidated session (2 actions)
 
 ## Session: 2026-03-23 19:27
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 19:29 | Edited portals/capacity/js/me-data.js | 8→9 lines | ~82 |
-| 19:29 | Session end: 1 writes across 1 files (me-data.js) | 3 reads | ~29566 tok |
+> Consolidated session (2 actions)
 
 ## Session: 2026-03-23 19:33
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 19:37 | Edited portals/capacity/js/me-data.js | modified if() | ~221 |
-| 19:37 | Edited CHANGELOG.md | 4→6 lines | ~86 |
-| 19:37 | Session end: 2 writes across 2 files (me-data.js, CHANGELOG.md) | 4 reads | ~29906 tok |
+> Consolidated session (3 actions)
 
 ## Session: 2026-03-23 19:40
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 19:47 | Edited portals/capacity/js/me-data.js | inline fix | ~28 |
-| 19:47 | Edited portals/capacity/js/me-data.js | modified function() | ~169 |
-| 19:47 | Edited portals/capacity/logistics/js/log-capacity.js | added 3 condition(s) | ~106 |
-| 19:47 | Edited portals/capacity/unit6/js/unit6-capacity.js | added 3 condition(s) | ~108 |
-| 19:47 | Edited CHANGELOG.md | 4→6 lines | ~116 |
-| 19:47 | Session end: 5 writes across 4 files (me-data.js, log-capacity.js, unit6-capacity.js, CHANGELOG.md) | 8 reads | ~38970 tok |
+> Consolidated session (6 actions)
 
 ## Session: 2026-03-23 20:03
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 20:55 | Edited CHANGELOG.md | 1→3 lines | ~123 |
-| 20:56 | Session end: 1 writes across 1 files (CHANGELOG.md) | 3 reads | ~28042 tok |
-| 21:00 | Edited tests/npi-data-relational.test.js | added 1 condition(s) | ~566 |
-| 21:01 | Edited CHANGELOG.md | 1→3 lines | ~81 |
-| 21:01 | Session end: 3 writes across 2 files (CHANGELOG.md, npi-data-relational.test.js) | 5 reads | ~30557 tok |
+> Consolidated session (5 actions)
 
 ## Session: 2026-03-23 21:08
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 21:10 | Created tests/me-data-relational-queries.test.js | — | ~3553 |
-| 21:11 | Edited tests/prod-capacity-data.test.js | expanded (+63 lines) | ~840 |
-| 21:11 | Created tests/work-areas-data.test.js | — | ~1643 |
-| 21:12 | Edited CHANGELOG.md | 1→3 lines | ~107 |
-| 21:12 | Session end: 4 writes across 4 files (me-data-relational-queries.test.js, prod-capacity-data.test.js, work-areas-data.test.js, CHANGELOG.md) | 2 reads | ~20755 tok |
+> Consolidated session (5 actions)
 
 ## Session: 2026-03-23 21:17
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 21:55 | Edited utils/js/guide.js | 2→2 lines | ~75 |
-| 21:56 | Edited utils/js/guide.js | expanded (+8 lines) | ~450 |
-| 21:56 | Edited utils/js/guide.js | inline fix | ~92 |
-| 21:56 | Edited utils/js/guide.js | 12→16 lines | ~440 |
-| 21:56 | Edited utils/js/guide.js | inline fix | ~119 |
-| 21:57 | Edited utils/js/guide.js | expanded (+70 lines) | ~1204 |
-| 21:57 | Edited CHANGELOG.md | 4→6 lines | ~115 |
-| 21:57 | Session end: 7 writes across 2 files (guide.js, CHANGELOG.md) | 4 reads | ~32397 tok |
-| 21:59 | Edited utils/js/guide.js | 18→22 lines | ~475 |
-| 22:00 | Edited CHANGELOG.md | inline fix | ~78 |
-| 22:00 | Session end: 9 writes across 2 files (guide.js, CHANGELOG.md) | 4 reads | ~34636 tok |
+> Consolidated session (11 actions)
 
 ## Session: 2026-03-23 22:17
-
-| Time | Action | File(s) | Outcome | ~Tokens |
-|------|--------|---------|---------|--------|
-| 22:18 | Edited index.html | 3→4 lines | ~95 |
-| 22:18 | Edited core/css/main.css | CSS: opacity, wiki-btn, opacity | ~228 |
-| 22:19 | Edited CHANGELOG.md | 6→8 lines | ~186 |
-| 22:20 | Session end: 3 writes across 3 files (index.html, main.css, CHANGELOG.md) | 4 reads | ~33599 tok |
-| 22:25 | Edited index.html | 2→1 lines | ~26 |
-| 22:25 | Edited index.html | inline fix | ~24 |
-| 22:25 | Edited CHANGELOG.md | 4→6 lines | ~82 |
-| 22:25 | Session end: 7 writes across 4 files (index.html, main.css, CHANGELOG.md, app.js) | 5 reads | ~35603 tok |
+> Consolidated session (8 actions)
 
 ## Session: 2026-03-24 06:00
 
@@ -1395,3 +1256,112 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+
+## Session: 2026-03-29 21:45
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:52 | Added sortable headers to Capacity team table and kept original row index wiring for edits/deletes | portals/capacity/shared/js/cap-team.js; portals/capacity/js/capacity-events.js; tests/me-team-render.test.js; CHANGELOG.md | Implemented and verified with targeted ME team render tests | ~2200 |
+| 21:52 | Edited portals/capacity/me/js/me-data-persistence.js | inline fix | ~33 |
+| 21:52 | Edited CHANGELOG.md | 4→6 lines | ~91 |
+| 21:52 | Session end: 2 writes across 2 files (me-data-persistence.js, CHANGELOG.md) | 3 reads | ~28035 tok |
+| 21:55 | Edited portals/capacity/logistics/js/log-data.js | 2→2 lines | ~53 |
+| 21:55 | Edited portals/capacity/project-management/js/pm-data.js | 2→2 lines | ~53 |
+| 21:55 | Edited portals/capacity/unit6/js/unit6-data.js | 2→2 lines | ~54 |
+| 21:55 | Edited CHANGELOG.md | inline fix | ~50 |
+| 21:55 | Session end: 6 writes across 5 files (me-data-persistence.js, CHANGELOG.md, log-data.js, pm-data.js, unit6-data.js) | 6 reads | ~28248 tok |
+| 21:59 | Session end: 6 writes across 5 files (me-data-persistence.js, CHANGELOG.md, log-data.js, pm-data.js, unit6-data.js) | 6 reads | ~28248 tok |
+| 22:00 | Session end: 6 writes across 5 files (me-data-persistence.js, CHANGELOG.md, log-data.js, pm-data.js, unit6-data.js) | 6 reads | ~28248 tok |
+
+## Session: 2026-03-29 22:09
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:15 | Edited portals/capacity/shared/css/cap-tables.css | CSS: table-layout | ~26 |
+| 22:15 | Session end: 1 writes across 1 files (cap-tables.css) | 2 reads | ~26 tok |
+| 22:16 | Edited portals/capacity/shared/css/cap-tables.css | inline fix | ~16 |
+| 22:16 | Edited portals/capacity/shared/css/cap-tables.css | inline fix | ~15 |
+| 22:16 | Edited portals/capacity/shared/css/cap-tables.css | 4→4 lines | ~24 |
+| 22:16 | Session end: 4 writes across 1 files (cap-tables.css) | 2 reads | ~2129 tok |
+| 22:18 | Session end: 4 writes across 1 files (cap-tables.css) | 2 reads | ~2129 tok |
+| 22:19 | Edited portals/capacity/shared/js/cap-tasks.js | 4→4 lines | ~201 |
+| 22:19 | Edited portals/capacity/shared/js/cap-tasks.js | 7→7 lines | ~154 |
+| 22:20 | Edited portals/capacity/shared/js/cap-tasks.js | 4→4 lines | ~208 |
+| 22:20 | Edited portals/capacity/shared/js/cap-tasks.js | 7→7 lines | ~151 |
+| 22:20 | Session end: 8 writes across 2 files (cap-tables.css, cap-tasks.js) | 3 reads | ~11089 tok |
+
+## Session: 2026-03-29 22:59
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 23:19 | Edited ../../../.claude/projects/C--Users-Tidyco-Documents-VScode-Tidyco-apqp/memory/MEMORY.md | 4→5 lines | ~183 |
+| 23:20 | Session end: 1 writes across 1 files (MEMORY.md) | 8 reads | ~23319 tok |
+| 23:26 | Session end: 1 writes across 1 files (MEMORY.md) | 8 reads | ~23319 tok |
+| 23:27 | Session end: 1 writes across 1 files (MEMORY.md) | 8 reads | ~23319 tok |
+| 23:29 | Created plans/capacity-sync-engine-api.md | — | ~3940 |
+| 23:29 | Session end: 2 writes across 2 files (MEMORY.md, capacity-sync-engine-api.md) | 8 reads | ~27541 tok |
+| 23:41 | Session end: 2 writes across 2 files (MEMORY.md, capacity-sync-engine-api.md) | 8 reads | ~27541 tok |
+
+## Session: 2026-03-29 23:42
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 23:57 | Edited .claude/rules/code-style.md | expanded (+34 lines) | ~374 |
+| 23:58 | Edited CLAUDE.md | 12→13 lines | ~249 |
+| 23:58 | Edited CLAUDE.md | 8→9 lines | ~111 |
+| 23:58 | Edited .github/copilot-instructions.md | 12→13 lines | ~252 |
+| 23:58 | Edited .github/copilot-instructions.md | 7→8 lines | ~96 |
+| 23:58 | Session end: 5 writes across 3 files (code-style.md, CLAUDE.md, copilot-instructions.md) | 4 reads | ~1929 tok |
+| 00:01 | Session end: 5 writes across 3 files (code-style.md, CLAUDE.md, copilot-instructions.md) | 4 reads | ~1929 tok |
+
+## Session: 2026-03-29 00:02
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-30 04:00
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-30 05:52
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 05:57 | Edited tests/settings-portal.test.js | 32→36 lines | ~408 |
+| 05:58 | Edited CHANGELOG.md | 6→8 lines | ~232 |
+| 05:59 | Session end: 2 writes across 2 files (settings-portal.test.js, CHANGELOG.md) | 3 reads | ~28843 tok |
+| 06:02 | Edited portals/settings/js/settings.js | 2→2 lines | ~43 |
+| 06:03 | Edited tests/settings-portal.test.js | 5→6 lines | ~100 |
+| 06:03 | Edited tests/settings-portal.test.js | 4→7 lines | ~131 |
+| 06:03 | Edited tests/settings-portal.test.js | 3→2 lines | ~26 |
+| 06:04 | Edited tests/settings-portal.test.js | 7→4 lines | ~85 |
+| 06:04 | Edited tests/settings-portal.test.js | 5→6 lines | ~108 |
+| 06:04 | Edited portals/settings/js/settings.js | 2→2 lines | ~45 |
+| 06:04 | Edited tests/settings-portal.test.js | 6→6 lines | ~112 |
+| 06:05 | Edited tests/settings-portal.test.js | expanded (+7 lines) | ~140 |
+| 06:05 | Edited tests/settings-portal.test.js | unstable_mockModule() → renderSettings() | ~180 |
+| 06:05 | Edited tests/settings-portal.test.js | expanded (+10 lines) | ~198 |
+| 06:05 | Edited portals/settings/js/settings.js | 2→2 lines | ~43 |
+| 06:06 | Edited tests/settings-portal.test.js | reduced (-9 lines) | ~114 |
+| 06:06 | Edited tests/settings-portal.test.js | 12→7 lines | ~63 |
+| 06:06 | Edited tests/settings-portal.test.js | expanded (+7 lines) | ~196 |
+| 06:06 | Edited tests/settings-portal.test.js | 15→18 lines | ~200 |
+| 06:06 | Edited tests/settings-portal.test.js | modified const() | ~218 |
+| 06:07 | Edited tests/settings-portal.test.js | 15→13 lines | ~163 |
+| 06:08 | Edited CHANGELOG.md | 6→8 lines | ~168 |
+| 06:08 | Session end: 21 writes across 3 files (settings-portal.test.js, CHANGELOG.md, settings.js) | 4 reads | ~53829 tok |
+| 06:15 | Session end: 21 writes across 3 files (settings-portal.test.js, CHANGELOG.md, settings.js) | 4 reads | ~53829 tok |
+
+## Session: 2026-03-30 08:15
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:17 | Created tests/bootstrap-load-order.test.js | — | ~900 |
+| 08:17 | Edited tests/bootstrap-load-order.test.js | added error handling | ~1090 |
+| 08:18 | Edited tests/__mocks__/chart.js | expanded (+14 lines) | ~211 |
+| 08:18 | Edited tests/bootstrap-load-order.test.js | modified catch() | ~1383 |
+| 08:18 | Edited tests/__mocks__/@supabase/supabase-js.js | modified createQueryBuilder() | ~388 |
+| 08:19 | Edited tests/bootstrap-load-order.test.js | modified catch() | ~919 |
+| 08:19 | Edited tests/bootstrap-load-order.test.js | added 1 import(s) | ~991 |
+| 08:22 | Session end: 7 writes across 3 files (bootstrap-load-order.test.js, chart.js, supabase-js.js) | 5 reads | ~5961 tok |

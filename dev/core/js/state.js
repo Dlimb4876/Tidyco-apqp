@@ -208,7 +208,7 @@ export function isGateSelectionLocked(projectId) {
   return !!(project && project.gate_selection_locked)
 }
 
-export function canEditGateSelections(projectId) {
+function canEditGateSelections(projectId) {
   return !isGateSelectionLocked(projectId)
 }
 

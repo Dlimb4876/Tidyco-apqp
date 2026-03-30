@@ -17,8 +17,8 @@ import {
 } from '../../mcs/js/mcs-approvers-data.js'
 import {
   settingsEmailToName,
-  settingsGetCoreState,
-  settingsLoadingState
+  settingsLoadingState,
+  settingsState
 } from './settings.js'
 import { settingsEnsurePermissionsData } from './settings-teams.js'
 
@@ -83,7 +83,7 @@ export function renderSettingsMcsTab() {
     return;
   }
 
-  const users = settingsGetCoreState().settingsPermissionsData || [];
+  const users = settingsState.settingsPermissionsData || [];
 
   // ── MCS approval steps ────────────────────────────────────────
   const mcsStepsHtml = MCS_APPROVAL_STEPS.map(step => {

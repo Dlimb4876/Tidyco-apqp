@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 import { dirname, resolve } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -105,7 +106,7 @@ describe('MCS Main Portal', () => {
 
     // Evaluate the script to expose internal functions for testing
     // This maintains the original test behavior while using ESM for imports
-    eval(`${script}\n;globalThis.__mcsMain = { mcsGetFiltered, mcStatusLabel, mcsIsOverdue, mcsClearFilters, mcsToggleQuickFilter };`); // eslint-disable-line no-eval
+    eval(`${toEvalFriendlyModuleSource(script)}\n;globalThis.__mcsMain = { mcsGetFiltered, mcStatusLabel, mcsIsOverdue, mcsClearFilters, mcsToggleQuickFilter };`); // eslint-disable-line no-eval
   });
 
   it('filters by status and includes legacy approved/rejected when closed is selected', () => {
@@ -183,3 +184,4 @@ describe('MCS Main Portal', () => {
     expect(document.getElementById('mcs-list-count').textContent).toBe('(0)');
   });
 });
+

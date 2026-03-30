@@ -12,6 +12,7 @@ import { CAP_DEFAULT_HOURS_PER_WEEK } from '../shared/js/cap-utils.js'
 import { capToggleHoliday } from '../shared/js/cap-holidays.js'
 import { capOpenHeatmapDetail, capCloseHeatmapDetail } from '../shared/js/cap-heatmap.js'
 import { capTasksFilters, capTaskEditingId, capTasksSort, capGetSortIcon } from '../shared/js/cap-tasks.js'
+import { capTeamSortBy } from '../shared/js/cap-team.js'
 import {
   capProductsTableState,
   capProductsSetDraftValue,
@@ -911,6 +912,13 @@ function onCapacityClick(evt) {
     break
   }
   case 'cap-team-holidays': capSetTab(contextType, 'holidays'); break
+  case 'cap-team-sort': {
+    const key = el.getAttribute('data-sort-key')
+    const dept = capProductDraftDepartment(contextType)
+    capTeamSortBy(key, dept)
+    capRefreshCurrentTab(contextType)
+    break
+  }
 
   // ── ME Tasks ──────────────────────────────────────────────
   case 'cap-task-del': {

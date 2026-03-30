@@ -83,7 +83,7 @@ export function setupNetworkDetection() {
 /**
  * Stop network detection (cleanup)
  */
-export function teardownNetworkDetection() {
+function teardownNetworkDetection() {
   if (networkCheckInterval) {
     clearInterval(networkCheckInterval);
     networkCheckInterval = null;

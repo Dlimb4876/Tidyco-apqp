@@ -735,7 +735,7 @@ export async function pmDataSave() {
 
     for (let i = 0; i < pmDataState.tasks.length; i += 1) {
       const task = pmDataState.tasks[i]
-      if (task.productId && !validProductIds.has(task.productId)) task.productId = ''
+      if (validProductIds.size > 0 && task.productId && !validProductIds.has(task.productId)) task.productId = ''
       const result = await pmSaveTaskRelational(currentUser.id, task)
       if (!result.success) ok = false
       else if (!task.id && result.taskId) task.id = result.taskId

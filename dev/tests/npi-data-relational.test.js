@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -37,7 +38,7 @@ describe('NPI relational project UUID resolution', () => {
       path.resolve(__dirname, '../portals/product-development/npi/js/npi-data-relational.js'),
       'utf8'
     )
-    eval(script)
+    eval(toEvalFriendlyModuleSource(script))
   })
 
   test('uses project prog_id (not dbId) for document saves', async () => {
@@ -80,7 +81,7 @@ describe('NPI relational project UUID resolution', () => {
       path.resolve(__dirname, '../portals/product-development/npi/js/npi-data-relational.js'),
       'utf8'
     )
-    eval(script)
+    eval(toEvalFriendlyModuleSource(script))
 
     await npiRelSaveDoc({ id: '33333333-3333-4333-8333-333333333333' })
 
@@ -250,3 +251,4 @@ describe('NPI relational project UUID resolution', () => {
     })
   })
 })
+

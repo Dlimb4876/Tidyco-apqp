@@ -3,6 +3,39 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-30 | Fix action-centre.test.js — all 33 tests now pass | P1-B: added missing exports to action-centre.js, rewrote test setup to use shared ESM module state (appState, setCurrentUser, realSupabase, settingsState), updated assertions from flat-global mocks to DOM/state checks
+
+
+## 2026-03-30 | Update programme-family-sync eval loading for ESM state module | P1-D: switched state/products eval to `toEvalFriendlyModuleSource` and aligned test setup to `appState` + `db.families` so `state.js` exports no longer break eval
+
+## 2026-03-30 | Export NPI PFD hydrate helper for relational tests | P1-C required `npiRelHydratePfdRows` to be a named export; `npiRelSaveDoc` was verified as already implemented/exported
+
+## 2026-03-30 | Export hub favourites helpers for test imports | P1-A fixes missing named exports in `hub.js` so tests can import `hubGetFavouriteProducts`, `hubRemovePageFavourite`, and `hubRemoveProductFavourite`
+
+## 2026-03-30 | Rename Configuration to Site Configuration and restrict admin-only tabs | Site Configuration now clearly labels admin tasks (Product Families, Work Areas, Gate Questions); non-admin users are redirected to Access tabs (Teams, Permissions, etc.)
+
+## 2026-03-30 | Fix Settings/Work Areas edit button test | Work areas tests were using mocked global state instead of real module state; updated test setup to use realWorkAreasState for accurate testing
+
+## 2026-07-15 | Settings module anti-pattern refactor | Remove 7 categories of AI-generated anti-patterns: replace syncCoreState let-variable bridge with shared settingsState object, remove microtask DOM hydration race condition (explicit initSettings call), fix N+1 team-count query (single Supabase join), fix JSON.stringify HTML-escaping hack (use esc helper), remove dead typeof guards on ESM imports, deduplicate tab-activation logic, remove dead _familiesResortTbody and _waResortTbody functions
+
+## 2026-07-15 | Dead code sweep and export cleanup | Remove 8 dead files, fix npi-cp.js wiring bug (Control Plan tab never loaded), de-export 22 internal-only symbols across 11 files, fix package.json main field
+
+## 2026-03-29 | Expand capacity heatmap to 26 weeks (6 months) | Better forward visibility for planning
+
+## 2026-03-29 | Fix capacity heatmap mobile overflow | cap-responsive.css had repeat(20, 40px) overriding the correct 12-column layout, making the grid 900px wide and causing content to spill out
+
+## 2026-03-29 | Expand Capacity heatmap to 3 months | Show a fuller forward planning view by extending heatmap coverage from 12 to 13 weeks
+
+## 2026-03-29 | Tighten Capacity chart section spacing | Make chart, tables, and heatmap spacing consistent and slightly more compact on the Capacity charts page
+
+## 2026-03-29 | Guard task product-ref wipe across all departments | ME, LOG, PM, Unit6 save routines were stripping product_id from all tasks if products failed to load (empty set bug)
+
+## 2026-03-29 | Heatmap visual overhaul and cell-click detail modal | Replaced 3 hard colour bands with 5 graduated bands, softened grid aesthetics, added legend strip, today-week highlight, and wired the previously empty capOpenHeatmapDetail stub so clicking any cell shows a task breakdown panel
+
+## 2026-03-29 | Add holiday planner legend in Capacity | Makes the holiday planner easier to read by showing clear labels for working days, full days, half days, and bank holidays
+
+## 2026-03-29 | Add sorting to Capacity team table | Let ME team planning rows be reordered from the table headers instead of staying fixed
+
 ## 2026-03-29 | Fix hosted dev bootstrap config 404 | Switched Supabase browser startup to tracked `core/js/config.public.js` with the project publishable key so hosted/dev pages no longer abort before `doLogin` is wired
 
 ## 2026-03-29 | Fix Settings Work Areas edit button responsiveness | Replaced delayed double-rAF settings hydration with microtask hydration so Work Areas row edit clicks bind immediately and no longer appear to do nothing
@@ -869,3 +902,4 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 ## 2026-03-21 | Fix misleading 0% coverage output in check:coverage | Coverage script now detects empty Jest coverage artifacts and reports coverage as unavailable instead of implying real 0% source coverage
 
 ## 2026-03-21 | Split Operations unit cards into separate boxes in People and Infographic views | Unit 2, Unit 3, and Unit 6 are now rendered as individual cards/panels for clearer side-by-side comparison
+

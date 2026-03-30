@@ -44,6 +44,8 @@ global.db = { projects: [] }
 global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 global.showToast = jest.fn()
 global.canEdit = () => true
+// Mock currentUserRole for isAdmin() checks; set to 'admin' so admin-only tabs are visible
+global.currentUserRole = 'admin'
 
 // Mock families data
 global.familiesState = {
@@ -112,10 +114,16 @@ global.appState.settingsNpiGateSignoffConfig = null
 global.appState.settingsMcsLoading = false
 global.appState.settingsMcsError = null
 
+// Import state module to set currentUserRole before importing settings
+const stateModule = await import('../core/js/state.js')
+// Use setCurrentUserRole to properly set the role for isAdmin() checks
+stateModule.setCurrentUserRole('admin') // Start with admin role for tests
+
 // Import settings modules
 const settingsModule = await import('../portals/settings/js/settings.js')
 const { 
   renderSettings, 
+  initSettings,
   settingsFamiliesStartEdit, 
   settingsFamiliesCancelEdit,
   settingsWorkAreaStartEdit,
@@ -124,15 +132,13 @@ const {
   renderSettingsWorkAreasTab,
   renderSettingsPermissionsTab,
   renderSettingsRoleDefinitionsTab,
-  renderSettingsTeamsTab,
   renderSettingsAppearanceTab,
   settingsLoadAppearancePrefs,
   settingsSaveAppearancePrefs,
   settingsAppearanceSetTheme,
   settingsAppearanceSave,
   settingsApplyAppearance,
-  settingsSetCoreState,
-  settingsGetCoreState,
+  settingsState,
   settingsLoadingState,
   settingsEmailToName,
   renderSettingsAboutTab,
@@ -141,7 +147,7 @@ const {
 
 const settingsTeamsModule = await import('../portals/settings/js/settings-teams.js')
 const {
-  renderSettingsTeamsTab: renderSettingsTeamsTabFn,
+  renderSettingsTeamsTab,
   renderSettingsTeamsPermissionsEditor,
   settingsEnsurePermissionsData,
   settingsEnsureTeamsData
@@ -153,21 +159,17 @@ const workAreasDataModule = await import('../portals/capacity/production/js/work
 const { workAreasState: realWorkAreasState } = workAreasDataModule
 
 // Helper to set state from test scope
-const settingsCoreKeys = new Set([
-  'settingsFamiliesEditingId',
-  'settingsFamiliesLoading',
-  'settingsFamiliesLoadError',
-  'settingsWorkAreasEditingId',
-  'settingsPermissionsLoading',
-  'settingsPermissionsData',
-  'settingsPermissionsError',
-  'settingsPermissionsTeams',
-  'settingsTeamsPermissionsData',
-])
+const appStateKeys = ['settingsTeamsData', 'settingsTeamsLoading', 'settingsTeamsError',
+  'settingsTeamsPermissionsEditingId', 'settingsMcsLoading', 'settingsMcsError',
+  'mcsApproverConfig', 'settingsNpiGateSignoffConfig', 'settingsActiveTab']
 
 function setInternal(name, value) {
-  if (settingsCoreKeys.has(name) && typeof settingsSetCoreState === 'function') {
-    settingsSetCoreState({ [name]: value })
+  if (name in settingsState) {
+    settingsState[name] = value
+    return
+  }
+  if (appStateKeys.includes(name) || name in appState) {
+    appState[name] = value
     return
   }
   global.__settingsTestValue = value
@@ -384,15 +386,19 @@ describe('renderSettingsWorkAreasTab()', () => {
       document.body.appendChild(el)
     }
     setInternal('settingsWorkAreasEditingId', null)
-    global.workAreasState.loading = false
+    realWorkAreasState.workAreas = [
+      { id: 'wa-1', name: 'Unit 2', description: 'Main assembly' },
+      { id: 'wa-2', name: 'Unit 3', description: 'Testing bay' },
+    ]
+    realWorkAreasState.loading = false
   })
 
   it('renders loading state when workAreasState.loading is true', () => {
-    global.workAreasState.loading = true
+    realWorkAreasState.loading = true
     renderSettingsWorkAreasTab()
     const container = document.getElementById('settingsWorkAreasTab')
     expect(container.innerHTML).toContain('Loading work areas')
-    global.workAreasState.loading = false
+    realWorkAreasState.loading = false
   })
 
   it('renders work area rows', () => {
@@ -651,12 +657,12 @@ describe('Teams Tab - Permissions Editor', () => {
     const html = container.innerHTML
     expect(html).toContain('View all project data')
     expect(html).toContain('Edit projects')
-    expect(html).toContain('Add &amp; delete records')  // HTML entities
+    expect(html).toContain('Add and delete records')
     expect(html).toContain('Manage product families')
     expect(html).toContain('Manage work areas')
     expect(html).toContain('Manage capacity')
     expect(html).toContain('Change user roles')
-    expect(html).toContain('Access Settings page')
+    expect(html).toContain('Edit Settings content')
     expect(html).toContain('Lets the user change another user\'s role or team assignment.')
   })
 })

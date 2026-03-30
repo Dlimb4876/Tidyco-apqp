@@ -758,7 +758,7 @@ export async function unit6DataSave(showAlert) {
 
     for (let i = 0; i < unit6DataState.tasks.length; i++) {
       const task = unit6DataState.tasks[i]
-      if (task.productId && !validProductIds.has(task.productId)) task.productId = ''
+      if (validProductIds.size > 0 && task.productId && !validProductIds.has(task.productId)) task.productId = ''
       const result = await unit6SaveTaskRelational(currentUser.id, task)
       if (!result.success) ok = false
       else if (!task.id && result.taskId) task.id = result.taskId

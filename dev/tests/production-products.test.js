@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,7 +45,7 @@ describe('Production Products Delegation (products.js)', () => {
 
     // Use eval with fs.readFile for non-ESM compatible loading
     const script = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/products.js'), 'utf8');
-    eval(`${script}\nif (typeof renderProductMaster === 'function') global.renderProductMaster = renderProductMaster;`);
+    eval(`${toEvalFriendlyModuleSource(script)}\nif (typeof renderProductMaster === 'function') global.renderProductMaster = renderProductMaster;`);
   });
 
   afterAll(() => {
@@ -150,3 +151,4 @@ describe('Production Products Delegation (products.js)', () => {
     expect(handleCellKey).toHaveBeenCalled();
   });
 });
+

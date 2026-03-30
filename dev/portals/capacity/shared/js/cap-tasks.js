@@ -254,13 +254,13 @@ function _capRenderTasksTable(filteredTasks, teamArray, availableProducts, canEd
   return `
     <table class="me-tbl">
       <thead><tr>
-        <th style="width:150px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">${capGetSortIcon('name', dept)} Task Name</th>
-        <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">${capGetSortIcon('category', dept)} Category</th>
+        <th style="width:190px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">${capGetSortIcon('name', dept)} Task Name</th>
+        <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">${capGetSortIcon('category', dept)} Category</th>
         <th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="assignee" title="Sort by assignee">${capGetSortIcon('assignee', dept)} Assignee</th>
-        <th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${capGetSortIcon('product', dept)} Product</th>
-        <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">${capGetSortIcon('startDate', dept)} Start Date</th>
-        <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">${capGetSortIcon('endDate', dept)} End Date</th>
-        <th style="width:120px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">${capGetSortIcon('status', dept)} Status</th>
+        <th style="width:170px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${capGetSortIcon('product', dept)} Product</th>
+        <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">${capGetSortIcon('startDate', dept)} Start Date</th>
+        <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">${capGetSortIcon('endDate', dept)} End Date</th>
+        <th style="width:100px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">${capGetSortIcon('status', dept)} Status</th>
         <th style="width:90px">Disable</th>
         <th style="width:80px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="hours" title="Sort by hours">${capGetSortIcon('hours', dept)} Hours</th>
         <th style="width:60px"></th>
@@ -419,13 +419,13 @@ export function capRenderTasksTab(tasksArray, teamArray, availableProducts, depa
         <div class="me-tbl-wrap">
           <table class="me-tbl">
             <thead><tr>
-              <th style="width:150px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">${capGetSortIcon('name', dept)} Task Name</th>
-              <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">${capGetSortIcon('category', dept)} Category</th>
+              <th style="width:190px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">${capGetSortIcon('name', dept)} Task Name</th>
+              <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">${capGetSortIcon('category', dept)} Category</th>
               <th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="assignee" title="Sort by assignee">${capGetSortIcon('assignee', dept)} Assignee</th>
-              <th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${capGetSortIcon('product', dept)} Product</th>
-              <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">${capGetSortIcon('startDate', dept)} Start Date</th>
-              <th style="width:110px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">${capGetSortIcon('endDate', dept)} End Date</th>
-              <th style="width:120px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">${capGetSortIcon('status', dept)} Status</th>
+              <th style="width:170px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${capGetSortIcon('product', dept)} Product</th>
+              <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">${capGetSortIcon('startDate', dept)} Start Date</th>
+              <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">${capGetSortIcon('endDate', dept)} End Date</th>
+              <th style="width:100px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">${capGetSortIcon('status', dept)} Status</th>
               <th style="width:90px">Disable</th>
               <th style="width:80px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="hours" title="Sort by hours">${capGetSortIcon('hours', dept)} Hours</th>
               <th style="width:60px"></th>

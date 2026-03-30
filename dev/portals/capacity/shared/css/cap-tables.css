@@ -40,7 +40,7 @@
 
 .me-tbl-wrap { overflow-x: auto; }
 .me-tbl {
-	width: 100%; border-collapse: collapse; font-size: 13px;
+	width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed;
 }
 .me-tbl thead th {
 	padding: var(--table-head-py) var(--table-head-px);
@@ -74,7 +74,7 @@
 	box-shadow: 0 0 0 2px rgba(0,102,204,.08);
 }
 .me-tbl td input[type="number"] { text-align: right; }
-.me-tbl td input[type="date"]   { min-width: 120px; }
+.me-tbl td input[type="date"]   { min-width: 110px; }
 
 /* Inline editable cells - tbl class (used in product support tables) */
 .tbl td input,
@@ -93,7 +93,7 @@
 	box-shadow: 0 0 0 2px rgba(0,102,204,.08);
 }
 .tbl td input[type="number"] { text-align: right; }
-.tbl td input[type="date"]   { min-width: 120px; }
+.tbl td input[type="date"]   { min-width: 110px; }
 
 /* Calculated fields should not show editable hover/focus treatment. */
 .me-tbl td input.me-calculated-field,
@@ -211,6 +211,6 @@
 
 	.me-tbl td input[type="date"],
 	.tbl td input[type="date"] {
-		min-width: 136px;
+		min-width: 110px;
 	}
 }

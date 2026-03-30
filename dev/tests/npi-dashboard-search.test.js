@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -36,7 +37,7 @@ describe('NPI dashboard search input behavior', () => {
       'utf8'
     )
 
-    eval(script)
+    eval(toEvalFriendlyModuleSource(script))
   })
 
   afterEach(() => {
@@ -105,7 +106,7 @@ describe('NPI dashboard ensureProductProjects hydration', () => {
       'utf8'
     )
 
-    eval(script)
+    eval(toEvalFriendlyModuleSource(script))
   })
 
   test('hydrates missing projects from Supabase when project paging is partial', async () => {
@@ -134,3 +135,4 @@ describe('NPI dashboard ensureProductProjects hydration', () => {
     expect(global.supa.from).not.toHaveBeenCalled()
   })
 })
+

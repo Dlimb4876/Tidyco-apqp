@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,10 +60,10 @@ const dataScript = fs.readFileSync(path.resolve(__dirname, '../portals/productio
 const schedulingScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/scheduling.js'), 'utf8');
 const planningScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/planning.js'), 'utf8');
 const productionScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/production.js'), 'utf8');
-eval(dataScript);
-eval(schedulingScript);
-eval(planningScript);
-eval(productionScript);
+eval(toEvalFriendlyModuleSource(dataScript));
+eval(toEvalFriendlyModuleSource(schedulingScript));
+eval(toEvalFriendlyModuleSource(planningScript));
+eval(toEvalFriendlyModuleSource(productionScript));
 
 describe('Production Portal', () => {
   beforeEach(() => {
@@ -233,3 +234,4 @@ describe('Production Portal', () => {
     });
   });
 });
+

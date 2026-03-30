@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,8 +42,8 @@ describe('Production Hub and Planning Delegation', () => {
     const planningScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/planning.js'), 'utf8');
     const productionScript = fs.readFileSync(path.resolve(__dirname, '../portals/production/js/production.js'), 'utf8');
 
-    eval(`${planningScript}\nif (typeof renderPlanByProduct === 'function') global.renderPlanByProduct = renderPlanByProduct;`);
-    eval(`${productionScript}\nif (typeof renderProduction === 'function') global.renderProduction = renderProduction;`);
+    eval(`${toEvalFriendlyModuleSource(planningScript)}\nif (typeof renderPlanByProduct === 'function') global.renderPlanByProduct = renderPlanByProduct;`);
+    eval(`${toEvalFriendlyModuleSource(productionScript)}\nif (typeof renderProduction === 'function') global.renderProduction = renderProduction;`);
   });
 
   beforeEach(() => {
@@ -116,3 +117,4 @@ describe('Production Hub and Planning Delegation', () => {
     expect(render).toHaveBeenCalled();
   });
 });
+

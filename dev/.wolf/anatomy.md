@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-29T11:00:00.699Z
-> Files: 540 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T07:19:41.787Z
+> Files: 541 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -9,33 +9,25 @@
 - `.mcp.json` (~320 tok)
 - `.nojekyll` (~0 tok)
 - `.prettierrc` — Prettier configuration (~31 tok)
-- `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1915 tok)
+- `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1376 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~2217 tok)
-- `CHANGELOG.md` — Change log (~27695 tok)
-- `check_onclick.js` — fs: findJSFiles (~427 tok)
-- `CLAUDE.md` — Tidyco APQP Core Router (~567 tok)
+- `CHANGELOG.md` — Changelog (~28561 tok)
+- `CLAUDE.md` — Tidyco APQP Core Router (~624 tok)
 - `code-review-report.md` — Code Review & Scalability Report: Tidyco APQP Project (~1351 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
-- `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1317 tok)
-- `index.html` — Tidyco Operations Portal (~2404 tok)
+- `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1404 tok)
+- `index.html` — Tidyco Operations Portal (~2383 tok)
 - `jest.config.js` — Jest test configuration (~79 tok)
 - `jest.setup.js` — Declares __filename (~449 tok)
-- `nul` (~0 tok)
 - `package-lock.json` — npm lock file (~61736 tok)
-- `package.json` — Node.js package manifest (~570 tok)
-- `README.md` — Project documentation (~6363 tok)
+- `package.json` — Node.js package manifest (~624 tok)
+- `README.md` — Project documentation (~6517 tok)
 - `SKILLS_GUIDE.md` — Tidyco APQP Development Skills Guide (~2691 tok)
 - `SKILLS_QUICK_REFERENCE.txt` — Declares in (~908 tok)
 - `SKILLS_SUMMARY.md` — Tidyco APQP Development Skills — Summary (~1680 tok)
 - `start-debug-site-and-wiki.bat` (~366 tok)
 - `start-debug-site.bat` (~305 tok)
-- `temp-server.js` — Temporary HTTP server for testing (~412 tok)
-- `test-holidays.html` — Test Bank Holidays 2026 (~1252 tok)
-- `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~6555 tok)
-
-## core/js/
-
-- `config.public.js` — Browser-safe Supabase URL + publishable key for hosted/static bootstrap (~73 tok)
+- `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~6637 tok)
 
 ## .claude/
 
@@ -67,7 +59,7 @@
 ## .claude/rules/
 
 - `agents.md` — Agent Development Patterns (~358 tok)
-- `code-style.md` — Code Style & Critical Rules (~204 tok)
+- `code-style.md` — Code Style & Critical Rules (~526 tok)
 - `components.md` — UI Components & Patterns (~1082 tok)
 - `database.md` — Database & Supabase Patterns (~402 tok)
 - `navigation.md` — Navigation & Routing (~472 tok)
@@ -86,7 +78,7 @@
 - `first_party_sets.db-journal` (~0 tok)
 - `Last Browser` (~29 tok)
 - `Last Version` (~4 tok)
-- `Local State` (~36840 tok)
+- `Local State` (~36837 tok)
 - `lockfile` (~0 tok)
 - `Variations` (~23 tok)
 
@@ -117,13 +109,13 @@
 
 - `verified_contents.json` (~508 tok)
 
-## .debug/chrome-profile/CertificateRevocation/10431/
+## .debug/chrome-profile/CertificateRevocation/10432/
 
-- `crl-set` (~224894 tok)
+- `crl-set` (~226666 tok)
 - `LICENSE` — Project license (~416 tok)
 - `manifest.json` (~28 tok)
 
-## .debug/chrome-profile/CertificateRevocation/10431/_metadata/
+## .debug/chrome-profile/CertificateRevocation/10432/_metadata/
 
 - `verified_contents.json` (~432 tok)
 
@@ -166,8 +158,8 @@
 - `Login Data-journal` (~0 tok)
 - `Network Action Predictor` (~14200 tok)
 - `Network Action Predictor-journal` (~0 tok)
-- `passkey_enclave_state` (~16 tok)
-- `Preferences` (~4098 tok)
+- `passkey_enclave_state` (~18 tok)
+- `Preferences` (~4147 tok)
 - `PreferredApps` (~9 tok)
 - `Secure Preferences` (~6663 tok)
 - `ServerCertificate` (~5462 tok)
@@ -1167,7 +1159,7 @@
 
 ## .debug/chrome-profile/Default/Local Storage/leveldb/
 
-- `000003.log` (~24 tok)
+- `000003.log` (~29 tok)
 - `CURRENT` (~5 tok)
 - `LOG` (~96 tok)
 - `LOG.old` (~96 tok)
@@ -1178,11 +1170,11 @@
 - `Cookies-journal` (~0 tok)
 - `Device Bound Sessions` (~5462 tok)
 - `Device Bound Sessions-journal` (~0 tok)
-- `Network Persistent State` (~989 tok)
+- `Network Persistent State` (~996 tok)
 - `NetworkDataMigrated` (~0 tok)
 - `Reporting and NEL` (~9830 tok)
 - `Reporting and NEL-journal` (~0 tok)
-- `TransportSecurity` (~140 tok)
+- `TransportSecurity` (~139 tok)
 - `Trust Tokens` (~9831 tok)
 - `Trust Tokens-journal` (~0 tok)
 
@@ -1360,7 +1352,7 @@
 
 ## .debug/chrome-profile/Default/shared_proto_db/
 
-- `000003.log` (~36042 tok)
+- `000003.log` (~39024 tok)
 - `CURRENT` (~5 tok)
 - `LOG` (~93 tok)
 - `LOG.old` (~93 tok)
@@ -1368,7 +1360,7 @@
 
 ## .debug/chrome-profile/Default/shared_proto_db/metadata/
 
-- `000003.log` (~312 tok)
+- `000003.log` (~321 tok)
 - `CURRENT` (~5 tok)
 - `LOG` (~98 tok)
 - `LOG.old` (~98 tok)
@@ -1377,7 +1369,7 @@
 ## .debug/chrome-profile/component_crx_cache/
 
 - `07e998f5c2a913c0dec3c64aca04f525020a0737c5ab620979fb50282cd1ef6b` (~119265 tok)
-- `1937af078e7e178a4ebd295398b995374913020e5ab1d5fed6798092d693061f` (~226216 tok)
+- `249be6db7eb7cfc00952ca3bbe3ac5a55d9c662a7c864f5844117ac35c51355e` (~227993 tok)
 - `261bea60d22ebca3a95ce335c03ec751a0b58b2b7bdbd6ea51dfa54381b07775` (~3015 tok)
 - `36e024c7a5d88bc727caac2d70308364938e107b43bfd58f35dc25b2da6ab3b4` (~62510 tok)
 - `3eb16d6c28b502ac4cfee8f4a148df05f4d93229fa36a71db8b08d06329ff18a` (~1369 tok)
@@ -1392,3 +1384,20 @@
 - `f8929f38e4311c5717f1a0d4a0bc4fb0277329557a1a5aecb93317808669ba4f` (~197270 tok)
 - `fd8fd38c229ab33755ff429ccc9919eba21b566551cbfb17d8e11e35e941ee0e` (~3879 tok)
 - `metadata.json` (~580 tok)
+
+## portals/settings/js/
+
+- `settings.js` — ═══════════════════════════════════════════════════════════════ (~13175 tok)
+
+## tests/
+
+- `bootstrap-load-order.test.js` — Bootstrap Load Order Test (~992 tok)
+- `settings-portal.test.js` — settings-portal.test.js — Tests for portals/settings/js/settings.js (~9556 tok)
+
+## tests/__mocks__/
+
+- `chart.js` — Mock for chart.js (~211 tok)
+
+## tests/__mocks__/@supabase/
+
+- `supabase-js.js` — Mock for @supabase/supabase-js (~388 tok)

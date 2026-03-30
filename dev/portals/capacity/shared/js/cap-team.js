@@ -5,8 +5,52 @@
 import { capGetHoursPerWeek, getMonthLabel } from './cap-utils.js'
 import { esc } from '../../../../utils/js/helpers.js'
 
+export const capTeamSort = {
+  ME: { column: '', direction: 'asc' },
+  PM: { column: '', direction: 'asc' },
+  LOG: { column: '', direction: 'asc' },
+  UNIT6: { column: '', direction: 'asc' }
+}
+
+function capTeamNormalizeDepartment(department) {
+  const dept = (department || 'ME').toString().toUpperCase()
+  if (dept === 'PM' || dept === 'LOG' || dept === 'UNIT6') return dept
+  return 'ME'
+}
+
+export function capTeamSortBy(column, department) {
+  const dept = capTeamNormalizeDepartment(department)
+  const sortState = capTeamSort[dept]
+  if (sortState.column === column) {
+    sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortState.column = column
+    sortState.direction = 'asc'
+  }
+}
+
+export function capGetTeamSortIcon(column, department) {
+  const dept = capTeamNormalizeDepartment(department)
+  const sortState = capTeamSort[dept]
+  if (sortState.column !== column) return '↕'
+  return sortState.direction === 'asc' ? '↑' : '↓'
+}
+
+function capTeamCompareValues(left, right, isNumeric = false) {
+  if (isNumeric) return (Number(left) || 0) - (Number(right) || 0)
+
+  const leftValue = String(left || '').trim().toLowerCase()
+  const rightValue = String(right || '').trim().toLowerCase()
+
+  if (!leftValue && !rightValue) return 0
+  if (!leftValue) return 1
+  if (!rightValue) return -1
+
+  return leftValue.localeCompare(rightValue, undefined, { numeric: true, sensitivity: 'base' })
+}
+
 export function capRenderTeamTab(teamArray, holidaysArray, monthKey, department, canEditFlag) {
-  const dept = department || 'ME'
+  const dept = capTeamNormalizeDepartment(department)
   const isPmContext = dept === 'PM'
   const teamTitle = isPmContext
     ? 'PM TEAM'
@@ -52,10 +96,50 @@ export function capRenderTeamTab(teamArray, holidaysArray, monthKey, department,
       .filter(key => !key.startsWith('|'))
   )
 
+  const sortState = capTeamSort[dept]
+  const rowsData = (teamArray || []).map((member, idx) => {
+    const hoursPerWeek = capGetHoursPerWeek(member.hoursPerWeek)
+    const utilisation = Number(member.utilisation || 80)
+    return {
+      member,
+      rowIndex: idx,
+      hoursPerWeek,
+      utilisation,
+      effective: Number((hoursPerWeek * (utilisation / 100)).toFixed(1))
+    }
+  })
+
+  if (sortState.column) {
+    const direction = sortState.direction === 'asc' ? 1 : -1
+    rowsData.sort((left, right) => {
+      switch (sortState.column) {
+        case 'name':
+          return capTeamCompareValues(left.member.name, right.member.name) * direction
+        case 'jobTitle':
+          return capTeamCompareValues(left.member.jobTitle, right.member.jobTitle) * direction
+        case 'group':
+          return capTeamCompareValues(left.member.group, right.member.group) * direction
+        case 'startDate':
+          return capTeamCompareValues(left.member.startDate, right.member.startDate) * direction
+        case 'endDate':
+          return capTeamCompareValues(left.member.endDate, right.member.endDate) * direction
+        case 'hoursPerWeek':
+          return capTeamCompareValues(left.hoursPerWeek, right.hoursPerWeek, true) * direction
+        case 'utilisation':
+          return capTeamCompareValues(left.utilisation, right.utilisation, true) * direction
+        case 'effective':
+          return capTeamCompareValues(left.effective, right.effective, true) * direction
+        default:
+          return 0
+      }
+    })
+  }
+
+  const sortHeader = (label, key, width) =>
+    `<th style="width:${width};cursor:pointer;" data-cap-action="cap-team-sort" data-sort-key="${key}" title="Sort by ${label.toLowerCase()}">${capGetTeamSortIcon(key, dept)} ${label}</th>`
+
   let rows = ''
-  ;(teamArray || []).forEach((member, idx) => {
-    const rowIndex = idx
-    const effective = (capGetHoursPerWeek(member.hoursPerWeek) * ((member.utilisation || 80) / 100)).toFixed(1)
+  rowsData.forEach(({ member, rowIndex, hoursPerWeek, utilisation, effective }) => {
     const groupOpts = '<option value="">—</option><option value="NPI" ' + ((member.group || '') === 'NPI' ? 'selected' : '') + '>NPI</option><option value="Production" ' + ((member.group || '') === 'Production' ? 'selected' : '') + '>Production</option>'
     rows += `
       <tr data-member-idx="${rowIndex}">
@@ -64,9 +148,9 @@ export function capRenderTeamTab(teamArray, holidaysArray, monthKey, department,
         <td><select name="cap_team_${rowIndex}_group" data-cap-action="cap-team-upd" data-field="group">${groupOpts}</select></td>
         <td><input name="cap_team_${rowIndex}_startDate" type="date" value="${member.startDate || ''}" data-cap-action="cap-team-upd" data-field="startDate"></td>
         <td><input name="cap_team_${rowIndex}_endDate" type="date" value="${member.endDate || ''}" data-cap-action="cap-team-upd" data-field="endDate"></td>
-        <td><input name="cap_team_${rowIndex}_hoursPerWeek" type="number" value="${capGetHoursPerWeek(member.hoursPerWeek)}" min="1" max="80" step="0.5" data-cap-action="cap-team-upd" data-field="hoursPerWeek"></td>
-        <td><input name="cap_team_${rowIndex}_utilisation" type="number" value="${member.utilisation || 80}" min="0" max="100" step="5" data-cap-action="cap-team-upd" data-field="utilisation"></td>
-        <td style="font-weight: bold;">${effective}</td>
+        <td><input name="cap_team_${rowIndex}_hoursPerWeek" type="number" value="${hoursPerWeek}" min="1" max="80" step="0.5" data-cap-action="cap-team-upd" data-field="hoursPerWeek"></td>
+        <td><input name="cap_team_${rowIndex}_utilisation" type="number" value="${utilisation}" min="0" max="100" step="5" data-cap-action="cap-team-upd" data-field="utilisation"></td>
+        <td style="font-weight: bold;">${effective.toFixed(1)}</td>
         <td style="text-align: center;">${canEditFlag ? `<button class="me-del-btn" data-cap-action="cap-team-del">✕</button>` : ''}</td>
       </tr>`
   })
@@ -107,14 +191,14 @@ export function capRenderTeamTab(teamArray, holidaysArray, monthKey, department,
           <div class="me-tbl-wrap">
             <table class="me-tbl">
               <thead><tr>
-                <th style="width:120px">Name</th>
-                <th style="width:110px">Job Title</th>
-                <th style="width:100px">Group</th>
-                <th style="width:100px">Start Date</th>
-                <th style="width:100px">End Date</th>
-                <th style="width:100px">Hours / Week</th>
-                <th style="width:100px">Utilisation %</th>
-                <th style="width:110px">Effective h/wk</th>
+                ${sortHeader('Name', 'name', '120px')}
+                ${sortHeader('Job Title', 'jobTitle', '110px')}
+                ${sortHeader('Group', 'group', '100px')}
+                ${sortHeader('Start Date', 'startDate', '100px')}
+                ${sortHeader('End Date', 'endDate', '100px')}
+                ${sortHeader('Hours / Week', 'hoursPerWeek', '100px')}
+                ${sortHeader('Utilisation %', 'utilisation', '100px')}
+                ${sortHeader('Effective h/wk', 'effective', '110px')}
                 <th style="width:36px"></th>
               </tr></thead>
               <tbody>

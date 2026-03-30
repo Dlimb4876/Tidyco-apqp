@@ -83,7 +83,7 @@ export const ChartTheme = {
   },
 };
 
-export function applyGlobalChartTheme() {
+function applyGlobalChartTheme() {
   if (!ChartJs || !ChartJs.defaults) return;
   const c = ChartTheme.getColors();
   ChartJs.defaults.color = c.ink || ChartJs.defaults.color;

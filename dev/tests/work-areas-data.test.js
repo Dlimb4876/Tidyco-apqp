@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,7 +25,7 @@ const script = fs.readFileSync(
   path.resolve(__dirname, '../portals/capacity/production/js/work-areas-data.js'),
   'utf8'
 );
-eval(script); // eslint-disable-line no-eval
+eval(toEvalFriendlyModuleSource(script)); // eslint-disable-line no-eval
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -168,3 +169,4 @@ describe('workAreasDataDeleteWorkArea', () => {
     expect(global.supa.from).not.toHaveBeenCalled();
   });
 });
+

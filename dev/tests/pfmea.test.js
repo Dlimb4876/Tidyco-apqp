@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -70,12 +71,12 @@ global.prog = () => activeProject
 // Load pfmea-state.js first (dependency)
 const stateScriptPath = path.resolve(__dirname, '../portals/product-development/npi/js/pfmea-state.js')
 const stateScript = fs.readFileSync(stateScriptPath, 'utf8')
-eval(stateScript)
+eval(toEvalFriendlyModuleSource(stateScript))
 
 // Load pfmea.js
 const scriptPath = path.resolve(__dirname, '../portals/product-development/npi/js/pfmea.js')
 const script = fs.readFileSync(scriptPath, 'utf8')
-eval(script)
+eval(toEvalFriendlyModuleSource(script))
 
 describe('PFMEA core rules', () => {
   beforeEach(() => {
@@ -235,3 +236,4 @@ describe('PFMEA core rules', () => {
     expect(document.getElementById('forecast_wrap_0_0_0').style.opacity).toBe('1')
   })
 })
+

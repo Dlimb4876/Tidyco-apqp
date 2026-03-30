@@ -7,7 +7,7 @@ import { save } from '../../core/js/db.js';
 import { navigate } from './navigation.js';
 
 // ── Permission helpers ─────────────────────────────────────────
-export const HYBRID_PERMISSION_DEFINITIONS = [
+const HYBRID_PERMISSION_DEFINITIONS = [
   { key: 'portal_hub_view', label: 'Access Hub', description: 'Lets the user open the main hub and use its shortcut cards.', group: 'Portal access' },
   { key: 'portal_projects_view', label: 'Access Projects and APQP pages', description: 'Lets the user open project records and APQP working pages.', group: 'Portal access' },
   { key: 'portal_capacity_view', label: 'Access Capacity portal', description: 'Lets the user open the capacity planning area.', group: 'Portal access' },
@@ -46,7 +46,7 @@ export const HYBRID_PERMISSION_DEFINITIONS = [
   { key: 'data_scope_global', label: 'Global data scope', description: 'Gives access to the shared data set used across the portal.', group: 'Data scope' }
 ];
 
-export const LEGACY_TEAM_PERMISSION_MAP = {
+const LEGACY_TEAM_PERMISSION_MAP = {
   view_all_project_data: 'feature_view_all_project_data',
   edit_projects_tasks_schedules: 'feature_edit_projects_tasks_schedules',
   add_delete_records: 'feature_add_delete_records',
@@ -57,7 +57,7 @@ export const LEGACY_TEAM_PERMISSION_MAP = {
   access_settings: 'feature_access_settings'
 };
 
-export const SECTION_VIEW_PERMISSION_MAP = {
+const SECTION_VIEW_PERMISSION_MAP = {
   hub: 'portal_hub_view',
   projects: 'portal_projects_view',
   project: 'portal_projects_view',
@@ -77,7 +77,7 @@ export const SECTION_VIEW_PERMISSION_MAP = {
   settings: 'portal_settings_view'
 };
 
-export const SECTION_EDIT_PERMISSION_MAP = {
+const SECTION_EDIT_PERMISSION_MAP = {
   settings: 'feature_access_settings',
   capacity: 'feature_manage_capacity',
   mcs: 'feature_mcs_approve',
@@ -90,7 +90,7 @@ export const SECTION_EDIT_PERMISSION_MAP = {
   documents: 'feature_edit_projects_tasks_schedules'
 };
 
-export const PORTAL_TAB_VIEW_PERMISSION_MAP = {
+const PORTAL_TAB_VIEW_PERMISSION_MAP = {
   'capacity::production': 'portal_capacity_production_view',
   'capacity::me': 'portal_capacity_me_view',
   'capacity::projects': 'portal_capacity_projects_view',
@@ -166,7 +166,7 @@ export function getRoleBaselinePermissions(role) {
   return editor;
 }
 
-export function getEffectivePermissionMap() {
+function getEffectivePermissionMap() {
   const baseline = getRoleBaselinePermissions(typeof currentUserRole === 'undefined' ? null : currentUserRole);
   const resolved = { ...baseline };
   const source = (typeof currentUserPermissions === 'object' && currentUserPermissions) ? currentUserPermissions : null;
@@ -198,12 +198,12 @@ export function canViewSection(sectionKey) {
   return hasPermission(permissionKey);
 }
 
-export function getPortalTabViewPermission(sectionKey, tabKey) {
+function getPortalTabViewPermission(sectionKey, tabKey) {
   if (!sectionKey || !tabKey || tabKey === 'root') return '';
   return PORTAL_TAB_VIEW_PERMISSION_MAP[`${sectionKey}::${tabKey}`] || '';
 }
 
-export function hasConfiguredPortalTabPolicy(sectionKey) {
+function hasConfiguredPortalTabPolicy(sectionKey) {
   const source = (typeof currentUserPermissions === 'object' && currentUserPermissions)
     ? currentUserPermissions
     : null;
@@ -387,7 +387,7 @@ export function showToast(message, type = 'info', duration = 4000) {
 }
 
 // ── 1.10 Keyboard Shortcuts ───────────────────────────────────
-export function isInputFocused() {
+function isInputFocused() {
   const active = document.activeElement;
   return active && (
     active.tagName === 'INPUT' ||
@@ -448,11 +448,11 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ── 1.11 Smart Date Entry Helper ──────────────────────────────
-export function formatDateISO(date) {
+function formatDateISO(date) {
   return date.toISOString().split('T')[0];
 }
 
-export function parseSmartDate(input) {
+function parseSmartDate(input) {
   if (!input) return null;
   const today = new Date();
   const lower = input.toLowerCase().trim();
@@ -533,7 +533,7 @@ export function emailToDisplayName(email) {
 
 // Returns a list of user display names loaded from profiles.
 // Falls back gracefully when profiles haven't loaded yet.
-export function getProfileNames() {
+function getProfileNames() {
   if (typeof settingsPermissionsData !== 'undefined' && Array.isArray(settingsPermissionsData)) {
     return settingsPermissionsData.map(u => u.full_name || emailToDisplayName(u.email)).filter(Boolean);
   }

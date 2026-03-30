@@ -373,7 +373,7 @@ export function navigate(sec, { pushHash = true } = {}) {
  * Update project name display in topbar breadcrumb
  * Shows project name when inside a project-specific section
  */
-export function updateProjectBreadcrumb() {
+function updateProjectBreadcrumb() {
   const projectNameEl = document.getElementById('projectName');
   if (!projectNameEl) return;
 

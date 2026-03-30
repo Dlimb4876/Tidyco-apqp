@@ -8,9 +8,8 @@ import { currentUser, supabase as supa } from '../../../core/js/supa.js'
 import { esc, getPermissionDefinitions, isAdmin, showToast } from '../../../utils/js/helpers.js'
 import {
   settingsEmailToName,
-  settingsGetCoreState,
   settingsLoadingState,
-  settingsSetCoreState
+  settingsState
 } from './settings.js'
 import {
   teamPermissionsDataSave,
@@ -18,39 +17,14 @@ import {
   teamsDataDelete,
   teamsDataGetUserCount,
   teamsDataLoadAll,
+  teamsDataLoadAllWithCounts,
   teamsDataLoadPermissions,
   teamsDataLoadUserTeamMap,
   teamsDataSetUserTeam
 } from './teams-data.js'
 
-let settingsPermissionsLoading = false
-let settingsPermissionsData = null
-let settingsPermissionsError = null
-let settingsPermissionsTeams = []
-let settingsTeamsPermissionsData = {}
-
-function syncCoreStateFromSource() {
-  const coreState = settingsGetCoreState()
-  settingsPermissionsLoading = coreState.settingsPermissionsLoading
-  settingsPermissionsData = coreState.settingsPermissionsData
-  settingsPermissionsError = coreState.settingsPermissionsError
-  settingsPermissionsTeams = coreState.settingsPermissionsTeams
-  settingsTeamsPermissionsData = coreState.settingsTeamsPermissionsData
-}
-
-function syncCoreStateToSource() {
-  settingsSetCoreState({
-    settingsPermissionsLoading,
-    settingsPermissionsData,
-    settingsPermissionsError,
-    settingsPermissionsTeams,
-    settingsTeamsPermissionsData
-  })
-}
-
 export function settingsGetPermissionsData() {
-  syncCoreStateFromSource()
-  return Array.isArray(settingsPermissionsData) ? settingsPermissionsData : []
+  return Array.isArray(settingsState.settingsPermissionsData) ? settingsState.settingsPermissionsData : []
 }
 
 // ── Ensure teams data is loaded ──────────────────────────────
@@ -63,12 +37,8 @@ export async function settingsEnsureTeamsData(forceReload = false) {
   renderSettingsTeamsTab();
 
   try {
-    appState.settingsTeamsData = await teamsDataLoadAll();
-    // Load user counts for each team in parallel instead of sequentially
-    await Promise.all(appState.settingsTeamsData.map(async (team) => {
-      team.userCount = await teamsDataGetUserCount(team.id);
-    }));
-  } catch (err) {
+    appState.settingsTeamsData = await teamsDataLoadAllWithCounts()
+  }catch (err) {
     appState.settingsTeamsError = err?.message || 'Failed to load teams';
     appState.settingsTeamsData = [];
   } finally {
@@ -79,26 +49,24 @@ export async function settingsEnsureTeamsData(forceReload = false) {
 
 // ── Ensure permissions data is loaded ─────────────────────────
 export async function settingsEnsurePermissionsData(forceReload = false) {
-  syncCoreStateFromSource()
-  if (settingsPermissionsLoading) return;
-  if (!forceReload && settingsPermissionsData !== null) return;
+  if (settingsState.settingsPermissionsLoading) return;
+  if (!forceReload && settingsState.settingsPermissionsData !== null) return;
 
-  settingsPermissionsLoading = true;
-  settingsPermissionsError = null;
-  syncCoreStateToSource()
+  settingsState.settingsPermissionsLoading = true;
+  settingsState.settingsPermissionsError = null;
   renderSettingsPermissionsTab();
 
   try {
     const [{ data: profiles, error }, teams, teamMap] = await Promise.all([
       supa.from('profiles').select('id, email, full_name, role, created_at').order('created_at', { ascending: true }),
-      typeof teamsDataLoadAll === 'function' ? teamsDataLoadAll() : Promise.resolve([]),
-      typeof teamsDataLoadUserTeamMap === 'function' ? teamsDataLoadUserTeamMap() : Promise.resolve({})
+      teamsDataLoadAll(),
+      teamsDataLoadUserTeamMap()
     ]);
 
     if (error) throw error;
 
-    settingsPermissionsTeams = Array.isArray(teams) ? teams : [];
-    settingsPermissionsData = (profiles || []).map((user) => {
+    settingsState.settingsPermissionsTeams = Array.isArray(teams) ? teams : [];
+    settingsState.settingsPermissionsData = (profiles || []).map((user) => {
       const assignment = teamMap?.[user.id] || null;
       return {
         ...user,
@@ -107,19 +75,17 @@ export async function settingsEnsurePermissionsData(forceReload = false) {
       };
     });
   } catch (err) {
-    settingsPermissionsError = err?.message || 'Failed to load user accounts';
-    settingsPermissionsData = [];
-    settingsPermissionsTeams = [];
+    settingsState.settingsPermissionsError = err?.message || 'Failed to load user accounts';
+    settingsState.settingsPermissionsData = [];
+    settingsState.settingsPermissionsTeams = [];
   } finally {
-    settingsPermissionsLoading = false;
-    syncCoreStateToSource()
+    settingsState.settingsPermissionsLoading = false;
     renderSettingsPermissionsTab();
   }
 }
 
 // ── Change a user's role ───────────────────────────────────────
 export async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin) {
-  syncCoreStateFromSource()
   if (!isAdmin()) { showToast('Only admins can change roles.', 'error'); return; }
   if (!userId || !newRole) return;
   if (isLastAdmin && newRole !== 'admin') {
@@ -131,11 +97,10 @@ export async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin
     const { error } = await supa.from('profiles').update({ role: newRole }).eq('id', userId);
     if (error) throw error;
     // Update local cache so the UI stays consistent without a full reload
-    if (settingsPermissionsData) {
-      const rec = settingsPermissionsData.find(u => u.id === userId);
+    if (settingsState.settingsPermissionsData) {
+      const rec = settingsState.settingsPermissionsData.find(u => u.id === userId);
       if (rec) rec.role = newRole;
     }
-    syncCoreStateToSource()
     showToast('Role updated. Change takes effect on that user\'s next login.', 'info');
     renderSettingsPermissionsTab();
   } catch (err) {
@@ -146,9 +111,8 @@ export async function settingsPermissionsChangeRole(userId, newRole, isLastAdmin
 
 // ── Change a user's team assignment ────────────────────────────
 export async function settingsPermissionsChangeTeam(userId, teamId) {
-  syncCoreStateFromSource()
   if (!isAdmin()) { showToast('Only admins can change team assignments.', 'error'); return; }
-  if (!userId || typeof teamsDataSetUserTeam !== 'function') return;
+  if (!userId) return
 
   try {
     const nextTeamId = teamId || '';
@@ -158,16 +122,15 @@ export async function settingsPermissionsChangeTeam(userId, teamId) {
       return;
     }
 
-    if (settingsPermissionsData) {
-      const rec = settingsPermissionsData.find((u) => u.id === userId);
-      const teamRec = settingsPermissionsTeams.find((t) => t.id === nextTeamId);
+    if (settingsState.settingsPermissionsData) {
+      const rec = settingsState.settingsPermissionsData.find((u) => u.id === userId);
+      const teamRec = settingsState.settingsPermissionsTeams.find((t) => t.id === nextTeamId);
       if (rec) {
         rec.team_id = nextTeamId;
         rec.team_name = teamRec?.name || '';
       }
     }
 
-    syncCoreStateToSource()
     showToast('Team assignment updated.', 'success');
     renderSettingsPermissionsTab();
   } catch (err) {
@@ -324,9 +287,7 @@ export async function settingsTeamsEdit(teamId) {
 
   appState.settingsTeamsPermissionsEditingId = teamId;
   try {
-    syncCoreStateFromSource()
-    settingsTeamsPermissionsData[teamId] = await teamsDataLoadPermissions(teamId);
-    syncCoreStateToSource()
+    settingsState.settingsTeamsPermissionsData[teamId] = await teamsDataLoadPermissions(teamId);
     renderSettingsTeamsPermissionsEditor();
   } catch (err) {
     showToast('Failed to load permissions: ' + err.message, 'error');
@@ -334,11 +295,10 @@ export async function settingsTeamsEdit(teamId) {
 }
 
 export async function settingsTeamsPermissionsSave() {
-  syncCoreStateFromSource()
   const teamId = appState.settingsTeamsPermissionsEditingId;
   if (!teamId) return;
 
-  const permissions = settingsTeamsPermissionsData[teamId] || [];
+  const permissions = settingsState.settingsTeamsPermissionsData[teamId] || [];
   try {
     const success = await teamPermissionsDataSave(teamId, permissions);
     if (!success) {
@@ -361,50 +321,34 @@ export function settingsTeamsPermissionsCancel() {
 }
 
 export function settingsTeamsPermissionsToggle(teamId, permission) {
-  syncCoreStateFromSource()
-  if (!settingsTeamsPermissionsData[teamId]) return;
-  const perm = settingsTeamsPermissionsData[teamId].find(p => p.permission === permission);
+  if (!settingsState.settingsTeamsPermissionsData[teamId]) return;
+  const perm = settingsState.settingsTeamsPermissionsData[teamId].find(p => p.permission === permission);
   if (perm) {
     perm.allowed = !perm.allowed;
   } else {
-    settingsTeamsPermissionsData[teamId].push({ permission, allowed: true });
+    settingsState.settingsTeamsPermissionsData[teamId].push({ permission, allowed: true });
   }
-  syncCoreStateToSource()
   renderSettingsTeamsPermissionsEditor();
 }
 
 export function settingsGetTeamPermissionDefinitions() {
-  if (typeof getPermissionDefinitions === 'function') {
-    return getPermissionDefinitions().map((def) => ({
-      key: def.key,
-      label: def.label,
-      description: def.description || '',
-      group: def.group || 'Other'
-    }));
-  }
-
-  return [
-    { key: 'view_all_project_data', label: 'View all project data', description: 'Lets the user see project records, schedules, and related planning data.', group: 'Legacy' },
-    { key: 'edit_projects_tasks_schedules', label: 'Edit projects, tasks & schedules', description: 'Lets the user change project details, task lists, and schedule information.', group: 'Legacy' },
-    { key: 'add_delete_records', label: 'Add & delete records', description: 'Lets the user create new records and remove existing ones.', group: 'Legacy' },
-    { key: 'manage_families', label: 'Manage product families', description: 'Lets the user add, edit, and organise product family records.', group: 'Legacy' },
-    { key: 'manage_work_areas', label: 'Manage work areas', description: 'Lets the user maintain production work areas and their settings.', group: 'Legacy' },
-    { key: 'manage_capacity', label: 'Manage capacity planning', description: 'Lets the user update capacity teams, loads, and planning settings.', group: 'Legacy' },
-    { key: 'manage_user_roles', label: 'Change user roles', description: 'Lets the user change another user\'s role or team assignment.', group: 'Legacy' },
-    { key: 'access_settings', label: 'Access Settings page', description: 'Lets the user open and edit the Settings area.', group: 'Legacy' }
-  ];
+  return getPermissionDefinitions().map((def) => ({
+    key: def.key,
+    label: def.label,
+    description: def.description || '',
+    group: def.group || 'Other'
+  }))
 }
 
 // ── Render permissions editor ──────────────────────────────────
 export function renderSettingsTeamsPermissionsEditor() {
-  syncCoreStateFromSource()
   const teamId = appState.settingsTeamsPermissionsEditingId;
   if (!teamId) return;
 
   const team = appState.settingsTeamsData.find(t => t.id === teamId);
   if (!team) return;
 
-  const permissions = settingsTeamsPermissionsData[teamId] || [];
+  const permissions = settingsState.settingsTeamsPermissionsData[teamId] || [];
   const definitions = settingsGetTeamPermissionDefinitions();
 
   let permRows = '';
@@ -467,24 +411,23 @@ export function renderSettingsTeamsPermissionsEditor() {
 
 // ── Render permissions tab ─────────────────────────────────────
 export function renderSettingsPermissionsTab() {
-  syncCoreStateFromSource()
   const container = document.getElementById('settingsPermissionsTab');
   if (!container) return;
 
-  if (settingsPermissionsLoading) {
+  if (settingsState.settingsPermissionsLoading) {
     container.innerHTML = settingsLoadingState('Loading user accounts…');
     return;
   }
 
-  const users = settingsPermissionsData || [];
-  const teams = settingsPermissionsTeams || [];
+  const users = settingsState.settingsPermissionsData || [];
+  const teams = settingsState.settingsPermissionsTeams || [];
   const currentEmail = currentUser?.email || '';
 
   const adminCount = users.filter(u => (u.role || 'editor') === 'admin').length;
   const viewerIsAdmin = isAdmin();
 
   let tableBody = '';
-  if (users.length === 0 && !settingsPermissionsError) {
+  if (users.length === 0 && !settingsState.settingsPermissionsError) {
     tableBody = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">No user accounts found.</td></tr>`;
   } else {
     tableBody = users.map(u => {
@@ -527,9 +470,9 @@ export function renderSettingsPermissionsTab() {
     }).join('');
   }
 
-  const errorBanner = settingsPermissionsError ? `
+  const errorBanner = settingsState.settingsPermissionsError ? `
     <div style="margin-bottom:12px;padding:10px 14px;background:var(--status-red-bg);border:1px solid var(--red);border-radius:6px;font-size:0.82rem;color:var(--red)">
-      Could not load user accounts: ${esc(settingsPermissionsError)}
+      Could not load user accounts: ${esc(settingsState.settingsPermissionsError)}
       <button class="btn btn-ghost" style="margin-left:12px;font-size:0.8rem;padding:2px 8px" data-action="settings-permissions-retry">Retry</button>
     </div>
   ` : '';

@@ -139,7 +139,7 @@ export function renderCapacity() {
   `
 }
 
-export function renderCapacitySection() {
+function renderCapacitySection() {
   return renderCapacity()
 }
 

@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 import { dirname, resolve } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -25,7 +26,7 @@ describe('MCS Approver Permissions', () => {
 
     global.canEdit = jest.fn(() => false);
 
-    eval(`${script}\n;globalThis.__mcsApprover = { mcsCanApproveStep, mcsGetActiveStepKey, mcsGetMyApproverSteps };`); // eslint-disable-line no-eval
+    eval(`${toEvalFriendlyModuleSource(script)}\n;globalThis.__mcsApprover = { mcsCanApproveStep, mcsGetActiveStepKey, mcsGetMyApproverSteps };`); // eslint-disable-line no-eval
   });
 
   describe('mcsCanApproveStep', () => {
@@ -84,3 +85,4 @@ describe('MCS Approver Permissions', () => {
     });
   });
 });
+

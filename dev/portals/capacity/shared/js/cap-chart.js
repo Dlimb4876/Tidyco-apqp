@@ -149,7 +149,7 @@ export function capRenderChartTab(monthKey, teamArray, tasksArray, productsArray
         </div>
       </div>
 
-      <div class="me-card" style="margin-bottom:20px;">
+      <div class="me-card">
         <div class="me-card-head">
           <div>
             <div class="me-card-title">TEAM CAPACITY FORECAST</div>

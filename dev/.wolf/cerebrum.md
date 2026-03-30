@@ -32,6 +32,8 @@
 
 ## Key Learnings
 
+- Capacity holiday planner UX is shared across ME/PM/Logistics/Unit 6 through `portals/capacity/shared/js/cap-holidays.js` and `portals/capacity/shared/css/cap-holidays.css`; clarity changes there affect all four streams at once.
+- Capacity team tables can be made sortable safely by sorting rendered row metadata while keeping each row bound to its original `data-member-idx`; direct reindexing would make inline edits/delete actions hit the wrong team member.
 - **Project:** tidyco-apqp — Manufacturing Engineering SPA for rail overhaul, managing APQP Gates 0–5. Stack: vanilla JavaScript, Chart.js, Supabase.
 - Serena MCP context is client-specific: OpenCode/Codex expects `--context codex`, Claude Code expects `--context claude-code`. A single `claude-code` entry can appear visible in OpenCode but still be rejected as incompatible.
 - Wiki compatibility: keep legacy `/dev/wiki/` URL functional (redirect to `/wiki/`) and avoid raw `./content/...` bootstrap fetch paths that depend on trailing-slash URL shape.

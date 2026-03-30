@@ -107,7 +107,8 @@ function getProductsStateList() {
   return state && Array.isArray(state.products) ? state.products : []
 }
 
-function hubGetFavouriteProducts() {
+// Bug fix: export favourites helpers so Jest named imports resolve in hub.test.js.
+export function hubGetFavouriteProducts() {
   const products = getProductsStateList()
   const byId = new Map(products.map((p) => [String(p.id), p]))
   const favourites = hubLoadFavourites()
@@ -170,7 +171,7 @@ export function hubToggleProductFavourite(productId, evt) {
   render()
 }
 
-export function hubOpenFavouriteProduct(productId) {
+function hubOpenFavouriteProduct(productId) {
   const key = String(productId || '').trim()
   if (!key) return
 
@@ -212,14 +213,16 @@ export function hubOpenFavouritePage(pageKey) {
   navigate(pageKey)
 }
 
-function hubRemovePageFavourite(section) {
+// Bug fix: export delete handler used by favourites tests and delegated actions.
+export function hubRemovePageFavourite(section) {
   const favourites = hubLoadFavourites()
   const pages = favourites.pages.filter((p) => p !== section)
   hubSaveFavourites({ ...favourites, pages })
   render()
 }
 
-function hubRemoveProductFavourite(productId) {
+// Bug fix: export product delete handler used by favourites tests and delegated actions.
+export function hubRemoveProductFavourite(productId) {
   const key = String(productId || '').trim()
   if (!key) return
   const favourites = hubLoadFavourites()

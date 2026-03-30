@@ -84,18 +84,15 @@ export function renderSettingsGateQuestionsTab() {
       const isEditing = settingsGateQuestionsEditing === row.id;
 
       if (isEditing) {
-        // Use JSON.stringify for safe attribute values (prevents double-escaping)
-        const safeText = JSON.stringify(row.question_text || '');
-        const safeSort = JSON.stringify(String(row.sort_order));
         return `
           <div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)">
             <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--muted);padding-top:8px;min-width:28px">Q${i+1}.</span>
             <input id="gq-edit-text-${esc(row.id)}"
-              value=${safeText}
+              value="${esc(row.question_text || '')}"
               style="flex:1;padding:6px 9px;border:1px solid var(--blue);border-radius:5px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none"
               placeholder="Question text">
             <input id="gq-edit-sort-${esc(row.id)}" type="number" min="1"
-              value=${safeSort}
+              value="${esc(String(row.sort_order))}"
               style="width:60px;padding:6px 9px;border:1px solid var(--blue);border-radius:5px;font-size:13px;text-align:center;font-family:'IBM Plex Sans',sans-serif;outline:none"
               title="Sort order">
             <button class="btn btn-sm btn-primary"
