@@ -1,11 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T10:23:21.858Z
-> Files: 545 tracked | Anatomy hits: 0 | Misses: 0
-
-## ../../../.claude/plans/
-
-- `sequential-bouncing-beaver.md` — Plan: Rebuild Test Suite from Scratch (~3912 tok)
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T11:20:29.426Z
+> Files: 552 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -15,14 +11,15 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1376 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~2217 tok)
-- `CHANGELOG.md` — Changelog (~29106 tok)
+- `CHANGELOG.md` — Change log (~29321 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~624 tok)
 - `code-review-report.md` — Code Review & Scalability Report: Tidyco APQP Project (~1351 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
-- `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1404 tok)
+- `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1454 tok)
 - `index.html` — Tidyco Operations Portal (~2383 tok)
 - `jest.config.js` — Jest test configuration (~79 tok)
 - `jest.setup.js` — Declares __filename (~449 tok)
+- `operations-dashboard-assessment.md` — Operations Dashboard Code Assessment Report (~4402 tok)
 - `package-lock.json` — npm lock file (~61736 tok)
 - `package.json` — Node.js package manifest (~624 tok)
 - `README.md` — Project documentation (~6517 tok)
@@ -31,7 +28,7 @@
 - `SKILLS_SUMMARY.md` — Tidyco APQP Development Skills — Summary (~1680 tok)
 - `start-debug-site-and-wiki.bat` (~366 tok)
 - `start-debug-site.bat` (~305 tok)
-- `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~6637 tok)
+- `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~1824 tok)
 
 ## .claude/
 
@@ -82,7 +79,7 @@
 - `first_party_sets.db-journal` (~0 tok)
 - `Last Browser` (~29 tok)
 - `Last Version` (~4 tok)
-- `Local State` (~36837 tok)
+- `Local State` (~36864 tok)
 - `lockfile` (~0 tok)
 - `Variations` (~23 tok)
 
@@ -163,7 +160,7 @@
 - `Network Action Predictor` (~14200 tok)
 - `Network Action Predictor-journal` (~0 tok)
 - `passkey_enclave_state` (~18 tok)
-- `Preferences` (~4147 tok)
+- `Preferences` (~4182 tok)
 - `PreferredApps` (~9 tok)
 - `Secure Preferences` (~6663 tok)
 - `ServerCertificate` (~5462 tok)
@@ -1174,11 +1171,11 @@
 - `Cookies-journal` (~0 tok)
 - `Device Bound Sessions` (~5462 tok)
 - `Device Bound Sessions-journal` (~0 tok)
-- `Network Persistent State` (~996 tok)
+- `Network Persistent State` (~1019 tok)
 - `NetworkDataMigrated` (~0 tok)
 - `Reporting and NEL` (~9830 tok)
 - `Reporting and NEL-journal` (~0 tok)
-- `TransportSecurity` (~139 tok)
+- `TransportSecurity` (~184 tok)
 - `Trust Tokens` (~9831 tok)
 - `Trust Tokens-journal` (~0 tok)
 
@@ -1389,28 +1386,20 @@
 - `fd8fd38c229ab33755ff429ccc9919eba21b566551cbfb17d8e11e35e941ee0e` (~3879 tok)
 - `metadata.json` (~580 tok)
 
-## portals/capacity/shared/css/
-
-- `cap-heatmap.css` — Styles: 71 rules (~2461 tok)
-
-## portals/capacity/shared/js/
-
-- `cap-heatmap.js` — Exports capRenderHeatmapTab, capDrawHeatmapNow, capOpenHeatmapDetail, capCloseHeatmapDetail (~3019 tok)
-
-## portals/settings/js/
-
-- `settings.js` — ═══════════════════════════════════════════════════════════════ (~13175 tok)
-
 ## tests/
 
-- `bootstrap-load-order.test.js` — Bootstrap Load Order Test (~992 tok)
-- `me-heatmap.test.js` — Declares __filename (~1485 tok)
-- `settings-portal.test.js` — settings-portal.test.js — Tests for portals/settings/js/settings.js (~9556 tok)
-
-## tests/__mocks__/
-
-- `chart.js` — Mock for chart.js (~211 tok)
-
-## tests/__mocks__/@supabase/
-
-- `supabase-js.js` — Mock for @supabase/supabase-js (~388 tok)
+- `apqp.test.js` (~468 tok)
+- `bom.test.js` (~436 tok)
+- `families-data-core.test.js` (~424 tok)
+- `guide.test.js` — Declares __dirname (~353 tok)
+- `helpers.test.js` — Declares result (~272 tok)
+- `mcs-approval-core.test.js` (~341 tok)
+- `me-components.test.js` — Declares html (~492 tok)
+- `me-heatmap.test.js` — Declares html (~295 tok)
+- `npi-dashboard-search.test.js` — Declares input (~364 tok)
+- `npi-data-relational.test.js` (~325 tok)
+- `parts-database.test.js` (~49 tok)
+- `pfmea.test.js` (~405 tok)
+- `product-management.test.js` — Declares table (~495 tok)
+- `production-data.test.js` (~272 tok)
+- `settings-portal.test.js` (~280 tok)

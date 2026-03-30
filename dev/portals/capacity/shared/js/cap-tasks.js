@@ -42,6 +42,45 @@ export function capGetSortIcon(column, department) {
   return sortState.direction === 'asc' ? '↑' : '↓'
 }
 
+export function capBuildTaskProductLookup(availableProducts) {
+  const products = Array.isArray(availableProducts) ? availableProducts : []
+  const sortedProducts = [...products].sort((left, right) =>
+    (left?.name || '').localeCompare(right?.name || '')
+  )
+  const byId = new Map(sortedProducts.map(product => [product.id, product.name || '']))
+  const byNameLower = new Map(
+    sortedProducts.map(product => [(product.name || '').trim().toLowerCase(), product.id || ''])
+  )
+  return { sortedProducts, byId, byNameLower }
+}
+
+export function capRenderTaskProductDatalist(sortedProducts, dept) {
+  const options = sortedProducts
+    .map(product => `<option value="${esc(product.name || '')}"></option>`)
+    .join('')
+  return `<datalist id="cap-task-products-${dept}">${options}</datalist>`
+}
+
+export function capRenderTaskProductPickerCell(task, dept, mode, productLookup) {
+  const selectedId = task && task.productId ? task.productId : ''
+  // Empty when no product so the placeholder shows and users can type straight away.
+  const selectedLabel = selectedId ? (productLookup.byId.get(selectedId) || '') : ''
+  const hiddenAttrs = mode === 'inline'
+    ? 'data-cap-action="cap-task-upd" data-field="productId"'
+    : 'data-task-field="productId"'
+  return `<div class="cap-task-product-picker">
+    <input type="text"
+      name="task_productLookup"
+      class="cap-task-product-lookup"
+      data-cap-action="cap-task-product-input"
+      list="cap-task-products-${dept}"
+      value="${esc(selectedLabel)}"
+      placeholder="Search product"
+      autocomplete="off">
+    <input type="hidden" name="task_productId" ${hiddenAttrs} value="${esc(selectedId)}">
+  </div>`
+}
+
 function _capComputeFilteredTasks(pageTasks, activeFilters, activeSortState, teamArray, availableProducts) {
   // Apply filters
   let filteredTasks = pageTasks.filter(t => {
@@ -133,11 +172,12 @@ function _capComputeFilteredTasks(pageTasks, activeFilters, activeSortState, tea
   return filteredTasks;
 }
 
-function _capRenderTaskRows(filteredTasks, teamArray, availableProducts, canEditFlag, dept) {
+// Exported so capTaskRefresh in capacity-events.js reuses the same inline-editing rows.
+export function _capRenderTaskRows(filteredTasks, teamArray, availableProducts, canEditFlag, dept) {
   const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other'];
-  const editingId = capTaskEditingId[dept] || null
   const teamMap = new Map(teamArray.map(m => [m.id, m.name]));
-  const productMap = new Map(availableProducts.map(p => [p.id, p.name]));
+  const productLookup = capBuildTaskProductLookup(availableProducts)
+  const productMap = productLookup.byId
 
   let rows = '';
   filteredTasks.forEach(task => {
@@ -147,28 +187,27 @@ function _capRenderTaskRows(filteredTasks, teamArray, availableProducts, canEdit
     const rowUrgencyClass = isOverdue ? 'batch-row-overdue' : '';
     const disabledRowClass = task.isDisabled === true ? ' me-task-row-disabled' : '';
 
-    if (editingId === task.id) {
-      // ── EDIT ROW ──────────────────────────────────────────
+    if (canEditFlag) {
+      // Inline editing restored so task rows can be edited directly without mode switching.
       const catOpts = ME_CATS.map(c => `<option value="${c}" ${task.category === c ? 'selected' : ''}>${c}</option>`).join('');
       const memOpts = '<option value="">Unassigned</option>' + teamArray.map(m => `<option value="${m.id}" ${task.assigneeId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
-      const prodOpts = '<option value="">— No Product</option>' + availableProducts.map(p => `<option value="${p.id}" ${task.productId === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
       const statusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(s =>
         `<option value="${s}"${task.status === s ? ' selected' : ''}>${s[0] + s.slice(1).toLowerCase()}</option>`
       ).join('');
+      const disabledBadge = task.isDisabled === true ? '<div class="batch-due-badge" style="background:var(--bg-soft);color:var(--muted);border-color:var(--line);">Disabled from calculations</div>' : '';
       rows += `
-        <tr class="me-task-row ${rowUrgencyClass}${disabledRowClass}" data-task-id="${esc(task.id)}" style="background-color:var(--row-highlight-amber,#fffbeb);outline:2px solid var(--chart-amber-lt,#fbbf24);outline-offset:-2px;">
-          <td><input name="task_name" data-task-field="name" value="${esc(task.name)}" placeholder="Task name" style="width:100%;"></td>
-          <td><select name="task_category" data-task-field="category">${catOpts}</select></td>
-          <td><select name="task_assigneeId" data-task-field="assigneeId">${memOpts}</select></td>
-          <td><select name="task_productId" data-task-field="productId">${prodOpts}</select></td>
-          <td><input type="date" name="task_startDate" data-task-field="startDate" value="${task.startDate || ''}"></td>
-          <td><input type="date" name="task_endDate" data-task-field="endDate" value="${task.endDate || ''}"></td>
-          <td><select name="task_status" data-task-field="status">${statusOpts}</select></td>
-          <td style="text-align:center;"><input type="checkbox" name="task_isDisabled" data-task-field="isDisabled" aria-label="Disable task from calculations" style="width:14px;height:14px;" ${task.isDisabled === true ? 'checked' : ''}></td>
-          <td><input type="number" name="task_totalHours" data-task-field="totalHours" value="${task.totalHours || 0}" step="0.5" style="width:70px;"></td>
+        <tr class="me-task-row ${rowUrgencyClass}${disabledRowClass}" data-task-id="${esc(task.id)}">
+          <td><input name="task_name" data-cap-action="cap-task-upd" data-field="name" value="${esc(task.name)}" placeholder="Task name" style="width:100%;"></td>
+          <td><select name="task_category" data-cap-action="cap-task-upd" data-field="category">${catOpts}</select></td>
+          <td><select name="task_assigneeId" data-cap-action="cap-task-upd" data-field="assigneeId">${memOpts}</select></td>
+          <td>${capRenderTaskProductPickerCell(task, dept, 'inline', productLookup)}</td>
+          <td><input type="date" name="task_startDate" data-cap-action="cap-task-upd" data-field="startDate" value="${task.startDate || ''}"></td>
+          <td><input type="date" name="task_endDate" data-cap-action="cap-task-upd" data-field="endDate" value="${task.endDate || ''}"></td>
+          <td><select name="task_status" data-cap-action="cap-task-upd" data-field="status">${statusOpts}</select></td>
+          <td style="text-align:center;"><input type="checkbox" name="task_isDisabled" data-cap-action="cap-task-upd" data-field="isDisabled" aria-label="Disable task from calculations" style="width:14px;height:14px;" ${task.isDisabled === true ? 'checked' : ''}>${disabledBadge}</td>
+          <td><input type="number" name="task_totalHours" class="cap-task-hours-input" data-cap-action="cap-task-upd" data-field="totalHours" value="${task.totalHours || 0}" step="0.5" style="width:70px;"></td>
           <td style="text-align:center;display:flex;gap:4px;justify-content:center;">
-            <button class="btn-del" title="Save" data-cap-action="cap-task-save-edit" data-task-id="${esc(task.id)}">✓</button>
-            <button class="btn-del" title="Cancel" data-cap-action="cap-task-cancel-edit">✕</button>
+            <button class="me-del-btn" title="Delete task" data-cap-action="cap-task-del" data-task-id="${esc(task.id)}">✕</button>
           </td>
         </tr>`;
     } else {
@@ -250,6 +289,7 @@ function _capRenderTasksKPI(filteredTasks, dept) {
 
 function _capRenderTasksTable(filteredTasks, teamArray, availableProducts, canEditFlag, dept) {
   const rows = _capRenderTaskRows(filteredTasks, teamArray, availableProducts, canEditFlag, dept);
+  const productLookup = capBuildTaskProductLookup(availableProducts)
   
   return `
     <table class="me-tbl">
@@ -271,11 +311,13 @@ function _capRenderTasksTable(filteredTasks, teamArray, availableProducts, canEd
             ${canEditFlag ? `<button class="btn btn-primary btn-sm" data-cap-action="cap-task-add">＋ Add Task</button>` : ''}
           </div></td></tr>`}
       </tbody>
-    </table>`;
+    </table>
+    ${capRenderTaskProductDatalist(productLookup.sortedProducts, dept)}`;
 }
 
 export function capRenderTasksTab(tasksArray, teamArray, availableProducts, department, filters, sortState, canEditFlag) {
   availableProducts = availableProducts || [];
+  const productLookup = capBuildTaskProductLookup(availableProducts)
   const ME_CATS = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other'];
   const pageTasks = Array.isArray(tasksArray) ? tasksArray : [];
   const dept = department || 'ME';
@@ -434,27 +476,27 @@ export function capRenderTasksTab(tasksArray, teamArray, availableProducts, depa
               ${canEditFlag ? (() => {
                 const newCatOpts = ME_CATS.map(c => `<option value="${c}">${c}</option>`).join('');
                 const newMemOpts = '<option value="">Unassigned</option>' + teamArray.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
-                const newProdOpts = '<option value="">— No Product</option>' + availableProducts.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
                 const newStatusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(s => `<option value="${s}">${s[0] + s.slice(1).toLowerCase()}</option>`).join('');
                 return `<tr class="me-task-row" data-cap-new-task="1" style="background-color:var(--row-highlight-blue,#eff6ff);outline:2px solid var(--chart-blue-lt,#93c5fd);outline-offset:-2px;">
                   <td><input name="task_name" data-task-field="name" placeholder="Task name" style="width:100%;"></td>
                   <td><select name="task_category" data-task-field="category">${newCatOpts}</select></td>
                   <td><select name="task_assigneeId" data-task-field="assigneeId">${newMemOpts}</select></td>
-                  <td><select name="task_productId" data-task-field="productId">${newProdOpts}</select></td>
+                  <td>${capRenderTaskProductPickerCell({}, dept, 'draft', productLookup)}</td>
                   <td><input type="date" name="task_startDate" data-task-field="startDate"></td>
                   <td><input type="date" name="task_endDate" data-task-field="endDate"></td>
                   <td><select name="task_status" data-task-field="status">${newStatusOpts}</select></td>
                   <td></td>
-                  <td><input type="number" name="task_totalHours" data-task-field="totalHours" placeholder="0" step="0.5" style="width:70px;"></td>
+                  <td><input type="number" name="task_totalHours" class="cap-task-hours-input" data-task-field="totalHours" placeholder="0" step="0.5" style="width:70px;"></td>
                   <td style="text-align:center;"><button class="btn-del" title="Add task" data-cap-action="cap-task-add">✓</button></td>
                 </tr>`;
               })() : ''}
               ${rows || `<tr><td colspan="10"><div style="text-align:center;padding:40px;color:var(--muted);">No tasks match the current filters</div></td></tr>`}
             </tbody>
           </table>
+          ${capRenderTaskProductDatalist(productLookup.sortedProducts, dept)}
+         </div>
         </div>
-       </div>
-    </div>
+     </div>
     </div>`;
 }
 

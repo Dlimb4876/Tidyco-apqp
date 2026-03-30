@@ -76,6 +76,27 @@
 .me-tbl td input[type="number"] { text-align: right; }
 .me-tbl td input[type="date"]   { min-width: 110px; }
 
+/* Product picker scales better than giant native select lists for large product catalogs. */
+.cap-task-product-picker {
+	position: relative;
+}
+.cap-task-product-picker .cap-task-product-lookup {
+	width: 100%;
+}
+.cap-task-product-picker input[name='task_productId'] {
+	display: none;
+}
+
+/* Remove browser spinwheel controls for hours fields to match inline-table editing UX. */
+.cap-task-hours-input[type='number'] {
+	-moz-appearance: textfield;
+}
+.cap-task-hours-input[type='number']::-webkit-outer-spin-button,
+.cap-task-hours-input[type='number']::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
 /* Inline editable cells - tbl class (used in product support tables) */
 .tbl td input,
 .tbl td select {

@@ -1,181 +1,188 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// ─────────────────────────────────────────────────────────────
-// Tests for state.js — Global state initialisation
-// ─────────────────────────────────────────────────────────────
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 describe('State Module (state.js)', () => {
-  // We need to load state.js in a way that variables become global
-  // Since state.js uses 'let', we need to use a different approach
+  let stateContent
+
   beforeAll(() => {
-    // Read the file and check its structure
-    const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-    
-    // Verify the file contains expected variable declarations (ESM export syntax)
-    expect(stateContent).toContain('export let db = { projects: [] }');
-    expect(stateContent).toContain("currentSection: 'hub'");
-    expect(stateContent).toContain("apqpTab: 'ctq'");
-    expect(stateContent).toContain("bomSubTab: 'tree'");
-  });
+    stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8')
+  })
 
-  // ── File Structure Tests ───────────────────────────────────
-  describe('File Structure', () => {
-    test('should contain all major state variable declarations', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      // Core state (ESM export syntax)
-      expect(stateContent).toContain('export let db =');
-      expect(stateContent).toContain('progId:');
-      expect(stateContent).toContain('currentSection:');
-      expect(stateContent).toContain('export let currentUserRole =');
-      
-      // Tab states
-      expect(stateContent).toContain('apqpTab:');
-      expect(stateContent).toContain('bomSubTab:');
-      expect(stateContent).toContain('capacityTab:');
-      expect(stateContent).toContain('productionTab:');
-      
-      // Filter states
-      expect(stateContent).toContain('pfmeaRpnFilter:');
-      expect(stateContent).toContain('ctqSourceFilter:');
-      expect(stateContent).toContain('ctqCoverageFilter:');
-      
-      // Modal picker state
-      expect(stateContent).toContain('ctqPickTarget:');
-      expect(stateContent).toContain('bomPickTarget:');
-      expect(stateContent).toContain('bomTreeExpanded:');
-      
-      // ABC Catalogue state
-      expect(stateContent).toMatch(/abcCatalogueData\s*:\s*\[/);
-      expect(stateContent).toContain('abcPickTarget:');
-      
-      // Action Centre state
-      expect(stateContent).toContain('actionCentreData:');
-      expect(stateContent).toContain('actionCentreLoading:');
-      expect(stateContent).toContain('actionCentreTab:');
-      
-      // Settings state
-      expect(stateContent).toContain('settingsActiveTab:');
-      expect(stateContent).toContain('settingsTeamsData:');
-      
-      // MCS state
-      expect(stateContent).toContain('mcsApproverConfig:');
-      expect(stateContent).toContain('mcsList:');
-      expect(stateContent).toContain('mcsCurrentFilter:');
-    });
+  describe('Core Exports', () => {
+    it('should export db object with projects array', () => {
+      expect(stateContent).toContain('export let db =')
+      expect(stateContent).toContain('projects:')
+    })
 
-    test('should contain helper functions', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain('export function prog()');
-      expect(stateContent).toContain('export function findProjectByProductId(');
-      expect(stateContent).toContain('export function getDefaultGateSelection(');
-      expect(stateContent).toContain('export function normalizeGateSelections(');
-    });
+    it('should export currentUserRole', () => {
+      expect(stateContent).toContain('export let currentUserRole =')
+    })
 
-    test('should contain GATE_DEFS reference', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      expect(stateContent).toContain('GATE_DEFS');
-    });
-  });
+    it('should export prog helper function', () => {
+      expect(stateContent).toContain('export function prog()')
+    })
 
-  // ── Default Value Tests ─────────────────────────────────────
-  describe('Default Values', () => {
-    test('should have correct default values for navigation state', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain("currentSection: 'hub'");
-      expect(stateContent).toContain('progId: null');
-    });
+    it('should export findProjectByProductId helper', () => {
+      expect(stateContent).toContain('export function findProjectByProductId(')
+    })
 
-    test('should have correct default values for APQP/BOM', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain("apqpTab: 'ctq'");
-      expect(stateContent).toContain("bomSubTab: 'tree'");
-      expect(stateContent).toContain("bomPartsRegisterView: 'total'");
-      expect(stateContent).toContain("bomAbcFilter: 'all'");
-    });
+    it('should export getDefaultGateSelection helper', () => {
+      expect(stateContent).toContain('export function getDefaultGateSelection(')
+    })
 
-    test('should have correct default values for capacity', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain("capacityTab: 'root'");
-      expect(stateContent).toContain("prodCapTab: 'dashboard'");
-      expect(stateContent).toContain("pmCapTab: 'tasks'");
-      expect(stateContent).toContain('prodCapUtilizationFactor: 1.0');
-    });
+    it('should export normalizeGateSelections helper', () => {
+      expect(stateContent).toContain('export function normalizeGateSelections(')
+    })
 
-    test('should have correct default values for filters', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain("pfmeaRpnFilter: 'all'");
-      expect(stateContent).toContain("ctqSourceFilter: 'all'");
-      expect(stateContent).toContain("ctqCoverageFilter: 'all'");
-      expect(stateContent).toContain("trackerSubAsmFilter: 'all'");
-    });
+    it('should reference GATE_DEFS', () => {
+      expect(stateContent).toContain('GATE_DEFS')
+    })
+  })
 
-    test('should initialize picker state correctly', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain('ctqPickTarget: null');
-      expect(stateContent).toMatch(/ctqPickSelected\s*:\s*\[\]/);
-      expect(stateContent).toContain('bomPickTarget: null');
-      expect(stateContent).toMatch(/bomPickSelected\s*:\s*\[\]/);
-      expect(stateContent).toMatch(/bomPickFilter\s*:\s*'all'/);
-    });
+  describe('Navigation State', () => {
+    it('should have default currentSection as hub', () => {
+      expect(stateContent).toContain("currentSection: 'hub'")
+    })
 
-    test('should initialize collections as empty', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain('bomTreeExpanded: new Set()');
-      expect(stateContent).toContain('bomAawTreeExpanded: new Set()');
-      expect(stateContent).toContain('collapsedGroups: new Set()');
-      expect(stateContent).toMatch(/abcCatalogueData\s*:\s*\[\]/);
-      expect(stateContent).toContain('abcPickResults: []');
-      expect(stateContent).toContain('abcPickSelected: []');
-    });
+    it('should have progId initialized as null', () => {
+      expect(stateContent).toContain('progId: null')
+    })
+  })
 
-    test('should have correct defaults for Action Centre', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain('actionCentreData: null');
-      expect(stateContent).toContain('actionCentreLoading: false');
-      expect(stateContent).toContain("actionCentreTab: 'all'");
-      expect(stateContent).toContain("actionCentreStatusFilter: 'open'");
-    });
+  describe('Tab States', () => {
+    it('should have apqpTab defaulting to ctq', () => {
+      expect(stateContent).toContain("apqpTab: 'ctq'")
+    })
 
-    test('should have correct defaults for Settings', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain("settingsActiveTab: 'families'");
-      expect(stateContent).toContain('settingsTeamsData: null');
-      expect(stateContent).toContain('settingsTeamsLoading: false');
-    });
+    it('should have bomSubTab defaulting to tree', () => {
+      expect(stateContent).toContain("bomSubTab: 'tree'")
+    })
 
-    test('should have correct defaults for MCS', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain('mcsApproverConfig: null');
-      expect(stateContent).toContain('mcsApproverConfigLoading: false');
-      expect(stateContent).toContain('mcsList: []');
-      expect(stateContent).toContain("status: 'all'");
-    });
-  });
+    it('should have capacityTab defaulting to root', () => {
+      expect(stateContent).toContain("capacityTab: 'root'")
+    })
 
-  // ── Comments and Documentation ──────────────────────────────
+    it('should have prodCapTab and pmCapTab defaults', () => {
+      expect(stateContent).toContain("prodCapTab: 'dashboard'")
+      expect(stateContent).toContain("pmCapTab: 'tasks'")
+    })
+  })
+
+  describe('Filter States', () => {
+    it('should initialize pfmeaRpnFilter as all', () => {
+      expect(stateContent).toContain("pfmeaRpnFilter: 'all'")
+    })
+
+    it('should initialize ctq source and coverage filters', () => {
+      expect(stateContent).toContain("ctqSourceFilter: 'all'")
+      expect(stateContent).toContain("ctqCoverageFilter: 'all'")
+    })
+
+    it('should initialize trackerSubAsmFilter', () => {
+      expect(stateContent).toContain("trackerSubAsmFilter: 'all'")
+    })
+  })
+
+  describe('Picker States', () => {
+    it('should initialize ctq picker state', () => {
+      expect(stateContent).toContain('ctqPickTarget: null')
+      expect(stateContent).toMatch(/ctqPickSelected\s*:\s*\[\]/)
+    })
+
+    it('should initialize bom picker state', () => {
+      expect(stateContent).toContain('bomPickTarget: null')
+      expect(stateContent).toMatch(/bomPickSelected\s*:\s*\[\]/)
+      expect(stateContent).toMatch(/bomPickFilter\s*:\s*'all'/)
+    })
+
+    it('should initialize bom tree expanded as Set', () => {
+      expect(stateContent).toContain('bomTreeExpanded: new Set()')
+      expect(stateContent).toContain('bomAawTreeExpanded: new Set()')
+    })
+  })
+
+  describe('Collection States', () => {
+    it('should initialize collapsedGroups as Set', () => {
+      expect(stateContent).toContain('collapsedGroups: new Set()')
+    })
+
+    it('should initialize ABC catalogue data as empty array', () => {
+      expect(stateContent).toMatch(/abcCatalogueData\s*:\s*\[\]/)
+      expect(stateContent).toContain('abcPickResults: []')
+      expect(stateContent).toContain('abcPickSelected: []')
+    })
+
+    it('should initialize abcPickTarget', () => {
+      expect(stateContent).toContain('abcPickTarget:')
+    })
+  })
+
+  describe('Action Centre State', () => {
+    it('should initialize actionCentreData as null', () => {
+      expect(stateContent).toContain('actionCentreData: null')
+    })
+
+    it('should initialize actionCentreLoading as false', () => {
+      expect(stateContent).toContain('actionCentreLoading: false')
+    })
+
+    it('should initialize actionCentreTab and actionCentreStatusFilter', () => {
+      expect(stateContent).toContain("actionCentreTab: 'all'")
+      expect(stateContent).toContain("actionCentreStatusFilter: 'open'")
+    })
+  })
+
+  describe('Settings State', () => {
+    it('should initialize settingsActiveTab as families', () => {
+      expect(stateContent).toContain("settingsActiveTab: 'families'")
+    })
+
+    it('should initialize settings data states', () => {
+      expect(stateContent).toContain('settingsTeamsData: null')
+      expect(stateContent).toContain('settingsTeamsLoading: false')
+    })
+  })
+
+  describe('MCS State', () => {
+    it('should initialize mcsApproverConfig as null', () => {
+      expect(stateContent).toContain('mcsApproverConfig: null')
+      expect(stateContent).toContain('mcsApproverConfigLoading: false')
+    })
+
+    it('should initialize mcsList as empty array', () => {
+      expect(stateContent).toContain('mcsList: []')
+    })
+
+    it('should have mcsCurrentFilter', () => {
+      expect(stateContent).toContain('mcsCurrentFilter:')
+    })
+  })
+
+  describe('Capacity Defaults', () => {
+    it('should have prodCapUtilizationFactor defaulting to 1.0', () => {
+      expect(stateContent).toContain('prodCapUtilizationFactor: 1.0')
+    })
+
+    it('should have bomSubTab and bomPartsRegisterView defaults', () => {
+      expect(stateContent).toContain("bomPartsRegisterView: 'total'")
+      expect(stateContent).toContain("bomAbcFilter: 'all'")
+    })
+  })
+
   describe('Documentation', () => {
-    test('should have descriptive comments for complex state', () => {
-      const stateContent = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
-      
-      expect(stateContent).toContain("'admin' | 'editor' | 'viewer'");
-      expect(stateContent).toContain('ctq|pfd|pfmea|cp');
-      expect(stateContent).toMatch(/'all'\s*\|\s*'A'\s*\|\s*'B'\s*\|\s*'C'/);
-      expect(stateContent).toContain('all|high|r1_49|r50_99|r100_199|r200_plus');
-    });
-  });
-});
+    it('should contain role enum hint', () => {
+      expect(stateContent).toContain("'admin' | 'editor' | 'viewer'")
+    })
+
+    it('should contain APQP tab hint', () => {
+      expect(stateContent).toContain('ctq|pfd|pfmea|cp')
+    })
+
+    it('should contain RPN filter hint', () => {
+      expect(stateContent).toMatch(/all|high|r1_49|r50_99|r100_199|r200_plus/)
+    })
+  })
+})

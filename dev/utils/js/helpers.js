@@ -184,6 +184,41 @@ export function isAdmin() {
   return typeof currentUserRole !== 'undefined' && currentUserRole === 'admin';
 }
 
+// ── Error filtering for permission-related Supabase errors ──────────
+// These errors are expected when users have limited permissions and should
+// not clutter the console. Returns true if error is permission-related.
+export function isPermissionError(error) {
+  if (!error) return false;
+  const message = String(error.message || error).toLowerCase();
+  const code = String(error.code || '').toLowerCase();
+
+  // RLS/permission error patterns
+  const permissionPatterns = [
+    /violates row-level security/i,
+    /new row violates/i,
+    /permission denied/i,
+    /insufficient privilege/i,
+    /42501/, // Postgres insufficient_privilege
+    /pgrst116/i, // Supabase: row not found (often RLS)
+  ];
+
+  return permissionPatterns.some(pattern =>
+    pattern.test(message) || pattern.test(code)
+  );
+}
+
+// Safe console warn that filters permission errors
+export function safeWarn(label, error) {
+  if (isPermissionError(error)) return;
+  console.warn(label, error?.message || error);
+}
+
+// Safe console error that filters permission errors  
+export function safeError(label, error) {
+  if (isPermissionError(error)) return;
+  console.error(label, error?.message || error);
+}
+
 export function hasPermission(permissionKey) {
   const key = normalizePermissionKey(permissionKey);
   if (!key) return false;

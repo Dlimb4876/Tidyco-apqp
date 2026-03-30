@@ -4,12 +4,13 @@
 
 import { supabase as supa, currentUser } from '../../../../core/js/supa.js'
 import { capUUID, capNormalizeDateRange } from '../../shared/js/cap-data-utils.js'
+import { safeWarn } from '../../../../utils/js/helpers.js'
 
 export async function unit6LoadRelationalTeams() {
   try {
     const { data, error } = await supa.from('unit6_teams').select('*')
     if (error) {
-      console.warn('unit6LoadRelationalTeams error:', error.message)
+      safeWarn('unit6LoadRelationalTeams error:', error)
       return []
     }
     return (data || []).map(t => ({
@@ -25,7 +26,7 @@ export async function unit6LoadRelationalTeams() {
       createdAt: t.created_at
     }))
   } catch (err) {
-    console.warn('unit6LoadRelationalTeams exception:', err.message)
+    safeWarn('unit6LoadRelationalTeams exception:', err)
     return []
   }
 }
@@ -34,7 +35,7 @@ export async function unit6LoadRelationalProducts() {
   try {
     const { data, error } = await supa.from('unit6_products').select('*')
     if (error) {
-      console.warn('unit6LoadRelationalProducts error:', error.message)
+      safeWarn('unit6LoadRelationalProducts error:', error)
       return []
     }
     return (data || []).map(mp => ({
@@ -48,7 +49,7 @@ export async function unit6LoadRelationalProducts() {
       updatedAt: mp.updated_at
     }))
   } catch (err) {
-    console.warn('unit6LoadRelationalProducts exception:', err.message)
+    safeWarn('unit6LoadRelationalProducts exception:', err)
     return []
   }
 }
@@ -57,7 +58,7 @@ export async function unit6LoadRelationalProductSupportHistory() {
   try {
     const { data, error } = await supa.from('unit6_product_support_history').select('*')
     if (error) {
-      console.warn('unit6LoadRelationalProductSupportHistory error:', error.message)
+      safeWarn('unit6LoadRelationalProductSupportHistory error:', error)
       return []
     }
     return (data || []).map(row => ({
@@ -77,7 +78,7 @@ export async function unit6LoadRelationalProductSupportHistory() {
       updatedAt: row.updated_at
     }))
   } catch (err) {
-    console.warn('unit6LoadRelationalProductSupportHistory exception:', err.message)
+    safeWarn('unit6LoadRelationalProductSupportHistory exception:', err)
     return []
   }
 }
@@ -86,7 +87,7 @@ export async function unit6LoadRelationalHolidays() {
   try {
     const { data, error } = await supa.from('unit6_holidays').select('*')
     if (error) {
-      console.warn('unit6LoadRelationalHolidays error:', error.message)
+      safeWarn('unit6LoadRelationalHolidays error:', error)
       return []
     }
     return (data || []).map(h => ({
@@ -99,7 +100,7 @@ export async function unit6LoadRelationalHolidays() {
       createdAt: h.created_at
     }))
   } catch (err) {
-    console.warn('unit6LoadRelationalHolidays exception:', err.message)
+    safeWarn('unit6LoadRelationalHolidays exception:', err)
     return []
   }
 }
@@ -108,7 +109,7 @@ export async function unit6LoadRelationalTasks() {
   try {
     const { data, error } = await supa.from('unit6_tasks').select('*')
     if (error) {
-      console.warn('unit6LoadRelationalTasks error:', error.message)
+      safeWarn('unit6LoadRelationalTasks error:', error)
       return []
     }
     return (data || []).map(t => ({
@@ -127,7 +128,7 @@ export async function unit6LoadRelationalTasks() {
       createdAt: t.created_at
     }))
   } catch (err) {
-    console.warn('unit6LoadRelationalTasks exception:', err.message)
+    safeWarn('unit6LoadRelationalTasks exception:', err)
     return []
   }
 }
@@ -149,13 +150,13 @@ export async function unit6SaveTeamRelational(userId, teamMember) {
     }
     const { data, error } = await supa.from('unit6_teams').upsert([payload], { onConflict: 'id' }).select('id')
     if (error) {
-      console.warn('unit6SaveTeamRelational error:', error.message)
+      safeWarn('unit6SaveTeamRelational error:', error)
       return false
     }
     teamMember.id = data && data.length > 0 ? data[0].id : teamId
     return true
   } catch (err) {
-    console.warn('unit6SaveTeamRelational exception:', err.message)
+    safeWarn('unit6SaveTeamRelational exception:', err)
     return false
   }
 }
@@ -188,13 +189,13 @@ export async function unit6SaveProductRelational(userId, product) {
     }
     const { data, error } = await supa.from('unit6_products').upsert([payload], { onConflict: 'id' }).select('id')
     if (error) {
-      console.warn('unit6SaveProductRelational error:', error.message)
+      safeWarn('unit6SaveProductRelational error:', error)
       return false
     }
     product.id = data && data.length > 0 ? data[0].id : productId
     return true
   } catch (err) {
-    console.warn('unit6SaveProductRelational exception:', err.message)
+    safeWarn('unit6SaveProductRelational exception:', err)
     return false
   }
 }
@@ -204,7 +205,7 @@ export async function unit6SaveProductSupportHistoryRelational(userId, historyRo
     const rows = Array.isArray(historyRows) ? historyRows : []
     const { error: deleteError } = await supa.from('unit6_product_support_history').delete().eq('user_id', userId)
     if (deleteError) {
-      console.warn('unit6SavePSH delete error:', deleteError.message)
+      safeWarn('unit6SavePSH delete error:', deleteError)
       return false
     }
     if (rows.length === 0) return true
@@ -230,12 +231,12 @@ export async function unit6SaveProductSupportHistoryRelational(userId, historyRo
 
     const { error: insertError } = await supa.from('unit6_product_support_history').insert(payload)
     if (insertError) {
-      console.warn('unit6SavePSH insert error:', insertError.message)
+      safeWarn('unit6SavePSH insert error:', insertError)
       return false
     }
     return true
   } catch (err) {
-    console.warn('unit6SavePSH exception:', err.message)
+    safeWarn('unit6SavePSH exception:', err)
     return false
   }
 }
@@ -266,13 +267,13 @@ export async function unit6SaveTaskRelational(userId, task) {
     }
     const { data, error } = await supa.from('unit6_tasks').upsert([payload], { onConflict: 'id' }).select('id')
     if (error) {
-      console.warn('unit6SaveTaskRelational error:', error.message)
+      safeWarn('unit6SaveTaskRelational error:', error)
       return { success: false, taskId: null }
     }
     task.id = data && data.length > 0 ? data[0].id : taskId
     return { success: true, taskId: task.id }
   } catch (err) {
-    console.warn('unit6SaveTaskRelational exception:', err.message)
+    safeWarn('unit6SaveTaskRelational exception:', err)
     return { success: false, taskId: null }
   }
 }
@@ -281,12 +282,12 @@ export async function unit6DeleteTeamRelational(teamId) {
   try {
     const { error } = await supa.from('unit6_teams').delete().eq('id', teamId)
     if (error) {
-      console.warn('unit6DeleteTeamRelational error:', error.message)
+      safeWarn('unit6DeleteTeamRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('unit6DeleteTeamRelational exception:', err.message)
+    safeWarn('unit6DeleteTeamRelational exception:', err)
     return false
   }
 }
@@ -295,12 +296,12 @@ export async function unit6DeleteTaskRelational(taskId) {
   try {
     const { error } = await supa.from('unit6_tasks').delete().eq('id', taskId)
     if (error) {
-      console.warn('unit6DeleteTaskRelational error:', error.message)
+      safeWarn('unit6DeleteTaskRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('unit6DeleteTaskRelational exception:', err.message)
+    safeWarn('unit6DeleteTaskRelational exception:', err)
     return false
   }
 }
@@ -309,12 +310,12 @@ export async function unit6DeleteProductRelational(productId) {
   try {
     const { error } = await supa.from('unit6_products').delete().eq('id', productId)
     if (error) {
-      console.warn('unit6DeleteProductRelational error:', error.message)
+      safeWarn('unit6DeleteProductRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('unit6DeleteProductRelational exception:', err.message)
+    safeWarn('unit6DeleteProductRelational exception:', err)
     return false
   }
 }
@@ -323,12 +324,12 @@ export async function unit6DeleteHolidayRelational(holidayId) {
   try {
     const { error } = await supa.from('unit6_holidays').delete().eq('id', holidayId)
     if (error) {
-      console.warn('unit6DeleteHolidayRelational error:', error.message)
+      safeWarn('unit6DeleteHolidayRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('unit6DeleteHolidayRelational exception:', err.message)
+    safeWarn('unit6DeleteHolidayRelational exception:', err)
     return false
   }
 }
@@ -337,12 +338,12 @@ export async function unit6DeleteSupportHistoryRelational(historyId) {
   try {
     const { error } = await supa.from('unit6_product_support_history').delete().eq('id', historyId)
     if (error) {
-      console.warn('unit6DeleteSupportHistoryRelational error:', error.message)
+      safeWarn('unit6DeleteSupportHistoryRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('unit6DeleteSupportHistoryRelational exception:', err.message)
+    safeWarn('unit6DeleteSupportHistoryRelational exception:', err)
     return false
   }
 }

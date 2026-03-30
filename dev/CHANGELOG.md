@@ -3,6 +3,18 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-30 | Remove "No Product" default text from task product picker | Empty fields now show placeholder instead of requiring users to delete pre-filled text before searching
+
+## 2026-03-30 | Fix capacity tasks reverting to read-only after edit | capTaskRefresh() was using old click-to-edit row builder instead of shared inline-editing renderer
+
+## 2026-03-30 | Add searchable product picker in Capacity tasks | Reduce task add/edit friction caused by very large product dropdown lists across ME/PM/Logistics/Unit6
+
+## 2026-03-30 | Filter permission-related console errors | Prevent console spam for users with reduced team permissions - RLS violations are expected behavior, not genuine errors. Added isPermissionError(), safeWarn(), safeError() helpers and updated 200+ console.warn statements across data-relational files
+
+## 2026-03-30 | Restore inline editing for Capacity tasks tables | Re-enable direct row editing and remove Hours spinwheel controls because the inline flow was more efficient for planning updates
+
+## 2026-03-30 | Close wiki coverage and depth gaps | Add missing navigation topics, new practical detail pages, and richer process guidance without touching wiki test-tooling workstream
+
 ## 2026-03-30 | Refresh Product Development deep wiki pages | Improve NPI, Control Plan, Actions, and Risk guidance with clearer workflows and detailed calculation sections
 
 ## 2026-03-30 | Refresh Action Centre, MCS, and Operations wiki overviews | Expand practical usage guidance and add detailed metric/calculation sections for clearer decision support

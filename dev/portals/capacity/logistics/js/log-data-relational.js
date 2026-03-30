@@ -4,6 +4,7 @@
 
 import { supabase, currentUser } from '../../../../core/js/supa.js'
 import { capUUID, capNormalizeDateRange } from '../../shared/js/cap-data-utils.js'
+import { safeWarn } from '../../../../utils/js/helpers.js'
 
 const LOG_DEPARTMENT = 'LOG'
 
@@ -19,7 +20,7 @@ export async function logLoadRelationalTeams() {
   try {
     const { data, error } = await supabase.from('log_teams').select('*')
     if (error) {
-      console.warn('logLoadRelationalTeams error:', error.message)
+      safeWarn('logLoadRelationalTeams error:', error)
       return []
     }
 
@@ -36,7 +37,7 @@ export async function logLoadRelationalTeams() {
       createdAt: t.created_at
     }))
   } catch (err) {
-    console.warn('logLoadRelationalTeams exception:', err.message)
+    safeWarn('logLoadRelationalTeams exception:', err)
     return []
   }
 }
@@ -45,7 +46,7 @@ export async function logLoadRelationalProducts() {
   try {
     const { data, error } = await supabase.from('log_products').select('*')
     if (error) {
-      console.warn('logLoadRelationalProducts error:', error.message)
+      safeWarn('logLoadRelationalProducts error:', error)
       return []
     }
 
@@ -60,7 +61,7 @@ export async function logLoadRelationalProducts() {
       updatedAt: row.updated_at
     }))
   } catch (err) {
-    console.warn('logLoadRelationalProducts exception:', err.message)
+    safeWarn('logLoadRelationalProducts exception:', err)
     return []
   }
 }
@@ -69,7 +70,7 @@ export async function logLoadRelationalProductSupportHistory() {
   try {
     const { data, error } = await supabase.from('log_product_support_history').select('*')
     if (error) {
-      console.warn('logLoadRelationalProductSupportHistory error:', error.message)
+      safeWarn('logLoadRelationalProductSupportHistory error:', error)
       return []
     }
 
@@ -90,7 +91,7 @@ export async function logLoadRelationalProductSupportHistory() {
       updatedAt: row.updated_at
     }))
   } catch (err) {
-    console.warn('logLoadRelationalProductSupportHistory exception:', err.message)
+    safeWarn('logLoadRelationalProductSupportHistory exception:', err)
     return []
   }
 }
@@ -99,7 +100,7 @@ export async function logLoadRelationalHolidays() {
   try {
     const { data, error } = await supabase.from('log_holidays').select('*')
     if (error) {
-      console.warn('logLoadRelationalHolidays error:', error.message)
+      safeWarn('logLoadRelationalHolidays error:', error)
       return []
     }
 
@@ -113,7 +114,7 @@ export async function logLoadRelationalHolidays() {
       createdAt: h.created_at
     }))
   } catch (err) {
-    console.warn('logLoadRelationalHolidays exception:', err.message)
+    safeWarn('logLoadRelationalHolidays exception:', err)
     return []
   }
 }
@@ -122,7 +123,7 @@ export async function logLoadRelationalTasks() {
   try {
     const { data, error } = await supabase.from('log_tasks').select('*')
     if (error) {
-      console.warn('logLoadRelationalTasks error:', error.message)
+      safeWarn('logLoadRelationalTasks error:', error)
       return []
     }
 
@@ -142,7 +143,7 @@ export async function logLoadRelationalTasks() {
       createdAt: t.created_at
     }))
   } catch (err) {
-    console.warn('logLoadRelationalTasks exception:', err.message)
+    safeWarn('logLoadRelationalTasks exception:', err)
     return []
   }
 }
@@ -171,14 +172,14 @@ export async function logSaveTeamRelational(userId, teamMember) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('logSaveTeamRelational error:', error.message)
+      safeWarn('logSaveTeamRelational error:', error)
       return false
     }
 
     teamMember.id = data && data.length > 0 ? data[0].id : teamId
     return true
   } catch (err) {
-    console.warn('logSaveTeamRelational exception:', err.message)
+    safeWarn('logSaveTeamRelational exception:', err)
     return false
   }
 }
@@ -199,7 +200,7 @@ export async function logSaveProductRelational(userId, product) {
         .limit(1)
 
       if (lookupError) {
-        console.warn('logSaveProductRelational lookup error:', lookupError.message)
+        safeWarn('logSaveProductRelational lookup error:', lookupError)
         return false
       }
 
@@ -225,14 +226,14 @@ export async function logSaveProductRelational(userId, product) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('logSaveProductRelational error:', error.message)
+      safeWarn('logSaveProductRelational error:', error)
       return false
     }
 
     product.id = data && data.length > 0 ? data[0].id : productId
     return true
   } catch (err) {
-    console.warn('logSaveProductRelational exception:', err.message)
+    safeWarn('logSaveProductRelational exception:', err)
     return false
   }
 }
@@ -248,7 +249,7 @@ export async function logSaveProductSupportHistoryRelational(userId, historyRows
       .delete()
       .eq('user_id', resolvedUserId)
     if (deleteError) {
-      console.warn('logSavePSH delete error:', deleteError.message)
+      safeWarn('logSavePSH delete error:', deleteError)
       return false
     }
 
@@ -276,13 +277,13 @@ export async function logSaveProductSupportHistoryRelational(userId, historyRows
 
     const { error: insertError } = await supabase.from('log_product_support_history').insert(payload)
     if (insertError) {
-      console.warn('logSavePSH insert error:', insertError.message)
+      safeWarn('logSavePSH insert error:', insertError)
       return false
     }
 
     return true
   } catch (err) {
-    console.warn('logSavePSH exception:', err.message)
+    safeWarn('logSavePSH exception:', err)
     return false
   }
 }
@@ -321,14 +322,14 @@ export async function logSaveTaskRelational(userId, task) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('logSaveTaskRelational error:', error.message)
+      safeWarn('logSaveTaskRelational error:', error)
       return { success: false, taskId: null }
     }
 
     task.id = data && data.length > 0 ? data[0].id : taskId
     return { success: true, taskId: task.id }
   } catch (err) {
-    console.warn('logSaveTaskRelational exception:', err.message)
+    safeWarn('logSaveTaskRelational exception:', err)
     return { success: false, taskId: null }
   }
 }
@@ -337,12 +338,12 @@ export async function logDeleteTeamRelational(teamId) {
   try {
     const { error } = await supabase.from('log_teams').delete().eq('id', teamId)
     if (error) {
-      console.warn('logDeleteTeamRelational error:', error.message)
+      safeWarn('logDeleteTeamRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('logDeleteTeamRelational exception:', err.message)
+    safeWarn('logDeleteTeamRelational exception:', err)
     return false
   }
 }
@@ -351,12 +352,12 @@ export async function logDeleteTaskRelational(taskId) {
   try {
     const { error } = await supabase.from('log_tasks').delete().eq('id', taskId)
     if (error) {
-      console.warn('logDeleteTaskRelational error:', error.message)
+      safeWarn('logDeleteTaskRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('logDeleteTaskRelational exception:', err.message)
+    safeWarn('logDeleteTaskRelational exception:', err)
     return false
   }
 }
@@ -365,12 +366,12 @@ export async function logDeleteProductRelational(productId) {
   try {
     const { error } = await supabase.from('log_products').delete().eq('id', productId)
     if (error) {
-      console.warn('logDeleteProductRelational error:', error.message)
+      safeWarn('logDeleteProductRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('logDeleteProductRelational exception:', err.message)
+    safeWarn('logDeleteProductRelational exception:', err)
     return false
   }
 }
@@ -379,12 +380,12 @@ export async function logDeleteHolidayRelational(holidayId) {
   try {
     const { error } = await supabase.from('log_holidays').delete().eq('id', holidayId)
     if (error) {
-      console.warn('logDeleteHolidayRelational error:', error.message)
+      safeWarn('logDeleteHolidayRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('logDeleteHolidayRelational exception:', err.message)
+    safeWarn('logDeleteHolidayRelational exception:', err)
     return false
   }
 }
@@ -393,12 +394,12 @@ export async function logDeleteSupportHistoryRelational(historyId) {
   try {
     const { error } = await supabase.from('log_product_support_history').delete().eq('id', historyId)
     if (error) {
-      console.warn('logDeleteSupportHistoryRelational error:', error.message)
+      safeWarn('logDeleteSupportHistoryRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('logDeleteSupportHistoryRelational exception:', err.message)
+    safeWarn('logDeleteSupportHistoryRelational exception:', err)
     return false
   }
 }

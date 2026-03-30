@@ -4,7 +4,8 @@
     "icon": "🧠",
     "title": "Learning Function",
     "topics": [
-      { "file": "00-overview", "title": "Function Lens Overview" }
+      { "file": "00-overview", "title": "Function Lens Overview" },
+      { "file": "10-apqp-gates", "title": "Understanding APQP Gates" }
     ]
   },
   {
@@ -29,7 +30,8 @@
     "icon": "🏠",
     "title": "Getting Started",
     "topics": [
-      { "file": "00-overview", "title": "Overview" }
+      { "file": "00-overview", "title": "Overview" },
+      { "file": "10-quick-reference", "title": "Quick Reference Card" }
     ]
   },
   {
@@ -108,6 +110,7 @@
     "title": "MCS",
     "topics": [
       { "file": "00-overview", "title": "MCS Overview" },
+      { "file": "10-raising-change-requests", "title": "Raising Change Requests" },
       { "file": "30-approval-workflow", "title": "Approval Workflow" }
     ]
   },
@@ -116,7 +119,8 @@
     "icon": "✅",
     "title": "Action Centre",
     "topics": [
-      { "file": "00-overview", "title": "Action Centre Overview" }
+      { "file": "00-overview", "title": "Action Centre Overview" },
+      { "file": "10-daily-triage-and-ownership", "title": "Daily Triage and Ownership" }
     ]
   },
   {
@@ -124,7 +128,8 @@
     "icon": "💬",
     "title": "Feedback and Bugs",
     "topics": [
-      { "file": "00-overview", "title": "Feedback Overview" }
+      { "file": "00-overview", "title": "Feedback Overview" },
+      { "file": "10-writing-good-reports", "title": "How to Write Good Bug Reports" }
     ]
   },
   {
@@ -132,7 +137,8 @@
     "icon": "⚙️",
     "title": "Settings",
     "topics": [
-      { "file": "00-overview", "title": "Settings Overview" }
+      { "file": "00-overview", "title": "Settings Overview" },
+      { "file": "10-permissions-and-teams", "title": "Permissions and Teams" }
     ]
   }
 ]

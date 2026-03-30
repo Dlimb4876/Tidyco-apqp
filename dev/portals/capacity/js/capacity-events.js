@@ -11,7 +11,7 @@ import { flushDeferred } from '../../../utils/js/render-scheduler.js'
 import { CAP_DEFAULT_HOURS_PER_WEEK } from '../shared/js/cap-utils.js'
 import { capToggleHoliday } from '../shared/js/cap-holidays.js'
 import { capOpenHeatmapDetail, capCloseHeatmapDetail } from '../shared/js/cap-heatmap.js'
-import { capTasksFilters, capTaskEditingId, capTasksSort, capGetSortIcon } from '../shared/js/cap-tasks.js'
+import { capTasksFilters, capTaskEditingId, capTasksSort, capGetSortIcon, _capRenderTaskRows, capBuildTaskProductLookup, capRenderTaskProductDatalist, capRenderTaskProductPickerCell } from '../shared/js/cap-tasks.js'
 import { capTeamSortBy } from '../shared/js/cap-team.js'
 import {
   capProductsTableState,
@@ -527,6 +527,7 @@ function capTaskRefresh(contextType) {
   const filters = capTaskFilters(contextType) || {}
   const sortState = capGetTaskSortState(contextType) || { column: '', direction: 'asc' }
   const canEditFlag = typeof canEdit === 'function' ? canEdit() : true
+  const productLookup = capBuildTaskProductLookup(products)
 
   // Apply filters
   let filteredTasks = tasks.filter(function(t) {
@@ -627,74 +628,9 @@ function capTaskRefresh(contextType) {
   // Update card header hours
   if (cardHeadSpan) cardHeadSpan.textContent = totalHours + ' total hours'
 
-  // Build table rows (click-to-edit: read-only by default, edit mode when capTaskEditingId[dept] matches)
-  var editingId = (capTaskEditingId || {})[dept] || null
-  var teamMap = new Map(team.map(function(m) { return [m.id, m.name] }))
-  var productMap = new Map(products.map(function(p) { return [p.id, p.name] }))
-  let rows = ''
-  filteredTasks.forEach(function(task) {
-    const today = new Date(); today.setHours(0,0,0,0)
-    const startD = new Date(task.startDate || ''); startD.setHours(0,0,0,0)
-    const isOverdue = task.status === 'SCHEDULED' && task.startDate && startD <= today
-    const rowUrgencyClass = isOverdue ? 'batch-row-overdue' : ''
-    const disabledRowClass = task.isDisabled === true ? ' me-task-row-disabled' : ''
-
-    if (editingId === task.id) {
-      const catOpts = ME_CATS.map(function(c) {
-        return '<option value="' + c + '"' + (task.category === c ? ' selected' : '') + '>' + c + '</option>'
-      }).join('')
-      const memOpts = '<option value="">Unassigned</option>' + team.map(function(m) {
-        return '<option value="' + m.id + '"' + (task.assigneeId === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'
-      }).join('')
-      const prodOpts = '<option value="">— No Product</option>' + products.map(function(p) {
-        return '<option value="' + p.id + '"' + (task.productId === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>'
-      }).join('')
-      const statusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(function(s) {
-        return '<option value="' + s + '"' + (task.status === s ? ' selected' : '') + '>' + s[0] + s.slice(1).toLowerCase() + '</option>'
-      }).join('')
-      rows +=
-        '<tr class="me-task-row ' + rowUrgencyClass + disabledRowClass + '" data-task-id="' + esc(task.id) + '" style="background-color:var(--row-highlight-amber,#fffbeb);outline:2px solid var(--chart-amber-lt,#fbbf24);outline-offset:-2px;">' +
-          '<td><input name="task_name" data-task-field="name" value="' + esc(task.name) + '" placeholder="Task name" style="width:100%;"></td>' +
-          '<td><select name="task_category" data-task-field="category">' + catOpts + '</select></td>' +
-          '<td><select name="task_assigneeId" data-task-field="assigneeId">' + memOpts + '</select></td>' +
-          '<td><select name="task_productId" data-task-field="productId">' + prodOpts + '</select></td>' +
-          '<td><input type="date" name="task_startDate" data-task-field="startDate" value="' + (task.startDate || '') + '"></td>' +
-          '<td><input type="date" name="task_endDate" data-task-field="endDate" value="' + (task.endDate || '') + '"></td>' +
-          '<td><select name="task_status" data-task-field="status">' + statusOpts + '</select></td>' +
-          '<td style="text-align:center;"><input type="checkbox" name="task_isDisabled" data-task-field="isDisabled" aria-label="Disable task from calculations" style="width:14px;height:14px;"' + (task.isDisabled === true ? ' checked' : '') + '></td>' +
-          '<td><input type="number" name="task_totalHours" data-task-field="totalHours" value="' + (task.totalHours || 0) + '" step="0.5" style="width:70px;"></td>' +
-          '<td style="text-align:center;display:flex;gap:4px;justify-content:center;">' +
-            '<button class="btn-del" title="Save" data-cap-action="cap-task-save-edit" data-task-id="' + esc(task.id) + '">✓</button>' +
-            '<button class="btn-del" title="Cancel" data-cap-action="cap-task-cancel-edit">✕</button>' +
-          '</td>' +
-        '</tr>'
-    } else {
-      const assigneeName = teamMap.get(task.assigneeId) || '—'
-      const productName = productMap.get(task.productId) || '—'
-      const statusLabel = task.status ? task.status[0] + task.status.slice(1).toLowerCase() : '—'
-      const overdueBadge = isOverdue ? '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>' : ''
-      const disabledBadge = task.isDisabled === true ? '<div class="batch-due-badge" style="background:var(--bg-soft);color:var(--muted);border-color:var(--line);">Disabled from calculations</div>' : ''
-      const checkedAttr = task.isDisabled === true ? ' checked' : ''
-      rows +=
-        '<tr class="me-task-row ' + rowUrgencyClass + disabledRowClass + '" data-task-id="' + esc(task.id) + '">' +
-          '<td>' + esc(task.name) + '</td>' +
-          '<td>' + esc(task.category) + '</td>' +
-          '<td>' + esc(assigneeName) + '</td>' +
-          '<td>' + esc(productName) + '</td>' +
-          '<td>' + (task.startDate || '—') + '</td>' +
-          '<td>' + (task.endDate || '—') + '</td>' +
-          '<td><span class="badge badge-' + task.status + '">' + statusLabel + '</span>' + overdueBadge + '</td>' +
-          '<td style="text-align:center;"><input type="checkbox" name="task_toggle_disabled" style="width:14px;height:14px;" aria-label="Disable task from calculations" data-cap-action="cap-task-toggle-disabled"' + checkedAttr + '>' + disabledBadge + '</td>' +
-          '<td>' + (task.totalHours || 0).toFixed(1) + '</td>' +
-          '<td style="text-align:center;display:flex;gap:4px;justify-content:center;">' +
-            (canEditFlag
-              ? '<button class="btn-del" title="Edit task" data-cap-action="cap-task-start-edit" data-task-id="' + esc(task.id) + '">✏️</button>' +
-                '<button class="me-del-btn" title="Delete task" data-cap-action="cap-task-del" data-task-id="' + esc(task.id) + '">✕</button>'
-              : '') +
-          '</td>' +
-        '</tr>'
-    }
-  })
+  // Build table rows — reuse the shared inline-editing renderer so rows stay
+  // editable after save instead of reverting to the old read-only format.
+  const rows = _capRenderTaskRows(filteredTasks, team, products, canEditFlag, dept)
 
   // Get sort icons
   const getSortIcon = typeof capGetSortIcon === 'function' ? capGetSortIcon : function() { return '↕' }
@@ -705,14 +641,13 @@ function capTaskRefresh(contextType) {
     var ME_CATS_NEW = ['NPI', 'Improvement', 'Tendering', 'Support', 'Other']
     var newCatOpts = ME_CATS_NEW.map(function(c) { return '<option value="' + c + '">' + c + '</option>' }).join('')
     var newMemOpts = '<option value="">Unassigned</option>' + team.map(function(m) { return '<option value="' + m.id + '">' + esc(m.name) + '</option>' }).join('')
-    var newProdOpts = '<option value="">— No Product</option>' + products.map(function(p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>' }).join('')
     var newStatusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(function(s) { return '<option value="' + s + '">' + s[0] + s.slice(1).toLowerCase() + '</option>' }).join('')
     newTaskRow =
       '<tr class="me-task-row" data-cap-new-task="1" style="background-color:var(--row-highlight-blue,#eff6ff);outline:2px solid var(--chart-blue-lt,#93c5fd);outline-offset:-2px;">' +
         '<td><input name="task_name" data-task-field="name" placeholder="Task name" style="width:100%;"></td>' +
         '<td><select name="task_category" data-task-field="category">' + newCatOpts + '</select></td>' +
         '<td><select name="task_assigneeId" data-task-field="assigneeId">' + newMemOpts + '</select></td>' +
-        '<td><select name="task_productId" data-task-field="productId">' + newProdOpts + '</select></td>' +
+        '<td>' + capRenderTaskProductPickerCell({}, dept, 'draft', productLookup) + '</td>' +
         '<td><input type="date" name="task_startDate" data-task-field="startDate"></td>' +
         '<td><input type="date" name="task_endDate" data-task-field="endDate"></td>' +
         '<td><select name="task_status" data-task-field="status">' + newStatusOpts + '</select></td>' +
@@ -741,7 +676,8 @@ function capTaskRefresh(contextType) {
         newTaskRow +
         (rows || '<tr><td colspan="10"><div style="text-align:center;padding:40px;color:var(--muted);">No tasks match the current filters</div></td></tr>') +
       '</tbody>' +
-    '</table>'
+    '</table>' +
+    capRenderTaskProductDatalist(productLookup.sortedProducts, dept)
 }
 
 const CAP_TASK_SEARCH_RENDER_DEBOUNCE_MS = 90
@@ -1363,6 +1299,36 @@ function onCapacityChange(evt) {
     capTaskRefresh(contextType)
     break
   }
+  case 'cap-task-upd': {
+    const row = el.closest('[data-task-id]')
+    const taskId = row?.getAttribute('data-task-id')
+    const field = el.getAttribute('data-field')
+    if (!taskId || !field) break
+    const api = capGetDataApi(contextType)
+    if (typeof api.updateTask === 'function') {
+      // Inline edit restore: persist each cell change directly from the task row.
+      let nextValue = el.value
+      if (field === 'isDisabled') nextValue = !!el.checked
+      if (field === 'totalHours') {
+        const parsedHours = Number.parseFloat(el.value)
+        nextValue = Number.isFinite(parsedHours) ? parsedHours : 0
+      }
+      if (field === 'name') {
+        const trimmedName = (el.value || '').trim()
+        if (!trimmedName) {
+          // Keep task names non-empty and immediately restore persisted value in the row UI.
+          capTaskRefresh(contextType)
+          break
+        }
+        nextValue = trimmedName
+        el.value = trimmedName
+      }
+      api.updateTask(taskId, field, nextValue)
+    }
+    capRunDebouncedSave(contextType)
+    capTaskRefresh(contextType)
+    break
+  }
   case 'cap-task-filter-category': {
     capCancelTaskSearchRefresh(contextType)
     const f = capTaskFilters(contextType)
@@ -1506,6 +1472,29 @@ function onCapacityInput(evt) {
   const isPM = capIsPM(contextType)
 
   switch (action) {
+  case 'cap-task-product-input': {
+    const row = el.closest('tr')
+    const picker = el.closest('.cap-task-product-picker')
+    const hiddenInput = picker ? picker.querySelector('input[name="task_productId"]') : null
+    if (!hiddenInput || !row) break
+    const label = (el.value || '').trim()
+    const normalized = label.toLowerCase()
+    const api = capGetDataApi(contextType)
+    const products = typeof api.getProducts === 'function' ? api.getProducts() : []
+    const lookup = capBuildTaskProductLookup(products)
+    let nextId = ''
+    // Empty input clears product; otherwise resolve name to ID via lookup.
+    if (normalized) {
+      nextId = lookup.byNameLower.get(normalized) || ''
+    }
+    if (hiddenInput.value === nextId) break
+    hiddenInput.value = nextId
+    if (hiddenInput.getAttribute('data-cap-action') === 'cap-task-upd') {
+      // Why: keep existing inline autosave flow by routing selection changes through cap-task-upd.
+      hiddenInput.dispatchEvent(new Event('change', { bubbles: true }))
+    }
+    break
+  }
   case 'cap-task-search': {
     const filterStateVar = capTaskFilters(contextType)
     if (filterStateVar) filterStateVar.search = el.value

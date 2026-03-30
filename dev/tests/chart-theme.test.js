@@ -1,9 +1,12 @@
-import { ChartTheme } from '../core/js/chart-theme.js';
+import { jest } from '@jest/globals'
 
-describe('ChartTheme utility', () => {
+const { ChartTheme } = await import('../core/js/chart-theme.js')
+
+describe('ChartTheme', () => {
   beforeEach(() => {
-    document.documentElement.innerHTML = '';
-    const style = document.createElement('style');
+    // Set up CSS variables in the DOM
+    document.documentElement.innerHTML = ''
+    const style = document.createElement('style')
     style.textContent = `
       :root {
         --chart-blue: #1f77b4;
@@ -21,53 +24,60 @@ describe('ChartTheme utility', () => {
         --muted: #5f6f7f;
         --white: #ffffff;
       }
-    `;
-    document.head.appendChild(style);
-    // Make ChartTheme available on window for tests that expect it
-    window.ChartTheme = ChartTheme;
-  });
+    `
+    document.head.appendChild(style)
+  })
 
-  it('returns resolved css variables via get()', () => {
-    expect(window.ChartTheme.get('--chart-blue')).toBe('#1f77b4');
-  });
+  it('should resolve CSS variables via get()', () => {
+    expect(ChartTheme.get('--chart-blue')).toBe('#1f77b4')
+    expect(ChartTheme.get('--chart-green')).toBe('#2ca02c')
+    expect(ChartTheme.get('--white')).toBe('#ffffff')
+  })
 
-  it('returns a full color object via getColors()', () => {
-    const colors = window.ChartTheme.getColors();
-    expect(colors.blue).toBe('#1f77b4');
-    expect(colors.green).toBe('#2ca02c');
-    expect(colors.white).toBe('#ffffff');
-  });
+  it('should return color object via getColors()', () => {
+    const colors = ChartTheme.getColors()
+    expect(colors.blue).toBe('#1f77b4')
+    expect(colors.green).toBe('#2ca02c')
+    expect(colors.amber).toBe('#ffbf00')
+    expect(colors.pink).toBe('#e377c2')
+    expect(colors.purple).toBe('#9467bd')
+    expect(colors.red).toBe('#d62728')
+    expect(colors.white).toBe('#ffffff')
+  })
 
-  it('cycles palette entries when count exceeds base colors', () => {
-    const palette = window.ChartTheme.getPalette(8);
-    expect(palette).toHaveLength(8);
-    expect(palette[0]).toBe('#1f77b4');
-    expect(palette[6]).toBe('#1f77b4');
-  });
+  it('should cycle palette colors when count exceeds available colors', () => {
+    const palette = ChartTheme.getPalette(8)
+    expect(palette).toHaveLength(8)
+    // First few should be distinct colors
+    expect(palette[0]).toBe('#1f77b4') // blue
+    // Should cycle back to blue
+    expect(palette[6]).toBe('#1f77b4')
+  })
 
-  it('returns plugin and scale defaults with theme colors', () => {
-    const scales = window.ChartTheme.getScaleDefaults();
-    const plugins = window.ChartTheme.getPluginDefaults();
+  it('should return scale defaults with theme colors', () => {
+    const scales = ChartTheme.getScaleDefaults()
+    expect(scales.x.grid.color).toBe('#d8dee5') // --line
+    expect(scales.y.ticks.color).toBe('#5f6f7f') // --muted
+  })
 
-    expect(scales.x.grid.color).toBe('#d8dee5');
-    expect(scales.y.ticks.color).toBe('#5f6f7f');
-    expect(plugins.legend.labels.color).toBe('#102030');
-    expect(plugins.tooltip.borderColor).toBe('#d8dee5');
-  });
+  it('should return plugin defaults with theme colors', () => {
+    const plugins = ChartTheme.getPluginDefaults()
+    expect(plugins.legend.labels.color).toBe('#102030') // --ink
+    expect(plugins.tooltip.borderColor).toBe('#d8dee5') // --line
+  })
 
-  it('merges overrides into getDefaultOptions()', () => {
-    const options = window.ChartTheme.getDefaultOptions({
+  it('should merge overrides into getDefaultOptions()', () => {
+    const options = ChartTheme.getDefaultOptions({
       responsive: false,
-      plugins: { legend: { display: false } },
-    });
+      plugins: { legend: { display: false } }
+    })
+    expect(options.responsive).toBe(false)
+    expect(options.maintainAspectRatio).toBe(false)
+    expect(options.plugins.legend.display).toBe(false)
+  })
 
-    expect(options.responsive).toBe(false);
-    expect(options.maintainAspectRatio).toBe(false);
-    expect(options.plugins.legend.display).toBe(false);
-  });
-
-  it('handles missing css vars without throwing', () => {
-    document.documentElement.style.removeProperty('--chart-blue');
-    expect(() => window.ChartTheme.getColors()).not.toThrow();
-  });
-});
+  it('should handle missing CSS variables gracefully', () => {
+    document.documentElement.style.removeProperty('--chart-blue')
+    expect(() => ChartTheme.getColors()).not.toThrow()
+  })
+})

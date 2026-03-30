@@ -89,7 +89,8 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>
-        <p>Log ongoing tasks and projects. Each task has an estimated duration (using 3-point PERT estimation: optimistic, most likely, pessimistic). Tasks are assigned to a month range and contribute to the capacity chart.</p>
+        <p>Log ongoing tasks and projects. Task rows are editable inline in the table so you can update name, assignment, dates, status, disable flag, and hours directly without switching into a separate edit mode.</p>
+        <p>The Product field now uses a searchable picker. Start typing part of a product name, then pick from the suggestions to avoid scrolling through very long dropdown lists.</p>
         <p><strong>PERT formula:</strong> Expected duration = (Optimistic + 4 × Most Likely + Pessimistic) ÷ 6</p>
         <p>Use the <strong>Disable</strong> checkbox on a task row to keep the task in the list but remove it from capacity calculations. Re-enable it any time by unticking the same checkbox.</p>
       </div>
@@ -170,7 +171,7 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">👷 Team / 📋 Tasks / 🚂 Product Support / 📦 Product Load / 🏖️ Holiday Planner</div>
-        <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view. PM task rows also support the <strong>Disable</strong> checkbox to exclude a task from calculations without deleting it.</p>
+        <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view. PM task rows are editable inline and support the <strong>Disable</strong> checkbox to exclude a task from calculations without deleting it.</p>
         <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to toggle ascending/descending.</p>
         <p>The <strong>Current</strong> column in the Product Support tab shows the active saved rate (h/batch) so you can compare it with any new value before applying a change. Edit multiple rows, then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
         <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Each entry has <strong>Edit</strong> and <strong>Delete</strong> buttons so you can correct or remove a past entry. Edits require a valid effective date and a reason (min 3 characters).</p>
@@ -950,7 +951,8 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>
-        <p>Log ongoing tasks. Each task uses 3-point PERT estimation (optimistic, most likely, pessimistic) and contributes to the capacity chart across its assigned month range.</p>
+        <p>Log ongoing tasks. Task rows are editable inline in the table so you can update name, assignment, dates, status, disable flag, and hours directly without opening an edit mode.</p>
+        <p>The Product field uses a searchable picker, so you can type part of a product name and choose from matching suggestions.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Product Support</div>
@@ -987,7 +989,8 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>
-        <p>Log ongoing tasks using 3-point PERT estimation. Tasks contribute to the capacity chart across their assigned month range.</p>
+        <p>Log ongoing tasks. Task rows are editable inline in the table so you can update name, assignment, dates, status, disable flag, and hours directly without opening an edit mode.</p>
+        <p>The Product field uses a searchable picker, so you can type part of a product name and choose from matching suggestions.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Product Support</div>

@@ -4,6 +4,7 @@
 
 import { supabase, currentUser } from '../../../../core/js/supa.js'
 import { capUUID, capNormalizeDateRange } from '../../shared/js/cap-data-utils.js'
+import { safeWarn } from '../../../../utils/js/helpers.js'
 
 const ME_DEPARTMENT = 'ME'
 
@@ -23,7 +24,7 @@ export async function meLoadRelationalTeams() {
   try {
     const { data, error } = await supabase.from('me_teams').select('*')
     if (error) {
-      console.warn('meLoadRelationalTeams error:', error.message)
+      safeWarn('meLoadRelationalTeams error:', error)
       return []
     }
 
@@ -40,7 +41,7 @@ export async function meLoadRelationalTeams() {
       createdAt: t.created_at
     }))
   } catch (err) {
-    console.warn('meLoadRelationalTeams exception:', err.message)
+    safeWarn('meLoadRelationalTeams exception:', err)
     return []
   }
 }
@@ -49,7 +50,7 @@ export async function meLoadRelationalProducts() {
   try {
     const { data, error } = await supabase.from('me_products').select('*')
     if (error) {
-      console.warn('meLoadRelationalProducts error:', error.message)
+      safeWarn('meLoadRelationalProducts error:', error)
       return []
     }
 
@@ -64,7 +65,7 @@ export async function meLoadRelationalProducts() {
       updatedAt: row.updated_at
     }))
   } catch (err) {
-    console.warn('meLoadRelationalProducts exception:', err.message)
+    safeWarn('meLoadRelationalProducts exception:', err)
     return []
   }
 }
@@ -73,7 +74,7 @@ export async function meLoadRelationalProductSupportHistory() {
   try {
     const { data, error } = await supabase.from('me_product_support_history').select('*')
     if (error) {
-      console.warn('meLoadRelationalProductSupportHistory error:', error.message)
+      safeWarn('meLoadRelationalProductSupportHistory error:', error)
       return []
     }
 
@@ -94,7 +95,7 @@ export async function meLoadRelationalProductSupportHistory() {
       updatedAt: row.updated_at
     }))
   } catch (err) {
-    console.warn('meLoadRelationalProductSupportHistory exception:', err.message)
+    safeWarn('meLoadRelationalProductSupportHistory exception:', err)
     return []
   }
 }
@@ -103,7 +104,7 @@ export async function meLoadRelationalHolidays() {
   try {
     const { data, error } = await supabase.from('me_holidays').select('*')
     if (error) {
-      console.warn('meLoadRelationalHolidays error:', error.message)
+      safeWarn('meLoadRelationalHolidays error:', error)
       return []
     }
 
@@ -117,7 +118,7 @@ export async function meLoadRelationalHolidays() {
       createdAt: h.created_at
     }))
   } catch (err) {
-    console.warn('meLoadRelationalHolidays exception:', err.message)
+    safeWarn('meLoadRelationalHolidays exception:', err)
     return []
   }
 }
@@ -126,7 +127,7 @@ export async function meLoadRelationalTasks() {
   try {
     const { data, error } = await supabase.from('me_tasks').select('*')
     if (error) {
-      console.warn('meLoadRelationalTasks error:', error.message)
+      safeWarn('meLoadRelationalTasks error:', error)
       return []
     }
 
@@ -147,7 +148,7 @@ export async function meLoadRelationalTasks() {
       createdAt: t.created_at
     }))
   } catch (err) {
-    console.warn('meLoadRelationalTasks exception:', err.message)
+    safeWarn('meLoadRelationalTasks exception:', err)
     return []
   }
 }
@@ -160,7 +161,7 @@ export async function meLoadTimeLogs() {
       .order('log_date', { ascending: false })
 
     if (error) {
-      console.warn('meLoadTimeLogs error:', error.message)
+      safeWarn('meLoadTimeLogs error:', error)
       return []
     }
 
@@ -174,7 +175,7 @@ export async function meLoadTimeLogs() {
       createdAt: row.created_at
     }))
   } catch (err) {
-    console.warn('meLoadTimeLogs exception:', err.message)
+    safeWarn('meLoadTimeLogs exception:', err)
     return []
   }
 }
@@ -203,14 +204,14 @@ export async function meSaveTeamRelational(userId, teamMember) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('meSaveTeamRelational error:', error.message)
+      safeWarn('meSaveTeamRelational error:', error)
       return false
     }
 
     teamMember.id = data && data.length > 0 ? data[0].id : teamId
     return true
   } catch (err) {
-    console.warn('meSaveTeamRelational exception:', err.message)
+    safeWarn('meSaveTeamRelational exception:', err)
     return false
   }
 }
@@ -231,7 +232,7 @@ export async function meSaveProductRelational(userId, product) {
         .limit(1)
 
       if (lookupError) {
-        console.warn('meSaveProductRelational lookup error:', lookupError.message)
+        safeWarn('meSaveProductRelational lookup error:', lookupError)
         return false
       }
 
@@ -257,14 +258,14 @@ export async function meSaveProductRelational(userId, product) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('meSaveProductRelational error:', error.message)
+      safeWarn('meSaveProductRelational error:', error)
       return false
     }
 
     product.id = data && data.length > 0 ? data[0].id : productId
     return true
   } catch (err) {
-    console.warn('meSaveProductRelational exception:', err.message)
+    safeWarn('meSaveProductRelational exception:', err)
     return false
   }
 }
@@ -280,12 +281,13 @@ export async function meSaveProductSupportHistoryRelational(userId, historyRows)
       .delete()
       .eq('user_id', resolvedUserId)
     if (deleteError) {
-      console.warn('meSaveProductSupportHistoryRelational delete error:', deleteError.message)
+      safeWarn('meSaveProductSupportHistoryRelational delete error:', deleteError)
       return false
     }
 
     if (rows.length === 0) return true
 
+    const seenIds = new Set()
     const payload = rows
       .filter(row => row && row.productId && row.effectiveDate)
       .map(row => ({
@@ -303,18 +305,23 @@ export async function meSaveProductSupportHistoryRelational(userId, historyRows)
         notes: row.notes || null,
         updated_at: new Date().toISOString()
       }))
+      .filter(row => {
+        if (seenIds.has(row.id)) return false
+        seenIds.add(row.id)
+        return true
+      })
 
     if (payload.length === 0) return true
 
     const { error: insertError } = await supabase.from('me_product_support_history').insert(payload)
     if (insertError) {
-      console.warn('meSaveProductSupportHistoryRelational insert error:', insertError.message)
+      safeWarn('meSaveProductSupportHistoryRelational insert error:', insertError)
       return false
     }
 
     return true
   } catch (err) {
-    console.warn('meSaveProductSupportHistoryRelational exception:', err.message)
+    safeWarn('meSaveProductSupportHistoryRelational exception:', err)
     return false
   }
 }
@@ -354,14 +361,14 @@ export async function meSaveTaskRelational(userId, task) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('meSaveTaskRelational error:', error.message)
+      safeWarn('meSaveTaskRelational error:', error)
       return { success: false, taskId: null }
     }
 
     task.id = data && data.length > 0 ? data[0].id : taskId
     return { success: true, taskId: task.id }
   } catch (err) {
-    console.warn('meSaveTaskRelational exception:', err.message)
+    safeWarn('meSaveTaskRelational exception:', err)
     return { success: false, taskId: null }
   }
 }
@@ -370,12 +377,12 @@ export async function meDeleteTeamRelational(teamId) {
   try {
     const { error } = await supabase.from('me_teams').delete().eq('id', teamId)
     if (error) {
-      console.warn('meDeleteTeamRelational error:', error.message)
+      safeWarn('meDeleteTeamRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('meDeleteTeamRelational exception:', err.message)
+    safeWarn('meDeleteTeamRelational exception:', err)
     return false
   }
 }
@@ -384,12 +391,12 @@ export async function meDeleteTaskRelational(taskId) {
   try {
     const { error } = await supabase.from('me_tasks').delete().eq('id', taskId)
     if (error) {
-      console.warn('meDeleteTaskRelational error:', error.message)
+      safeWarn('meDeleteTaskRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('meDeleteTaskRelational exception:', err.message)
+    safeWarn('meDeleteTaskRelational exception:', err)
     return false
   }
 }
@@ -398,12 +405,12 @@ export async function meDeleteProductRelational(productId) {
   try {
     const { error } = await supabase.from('me_products').delete().eq('id', productId)
     if (error) {
-      console.warn('meDeleteProductRelational error:', error.message)
+      safeWarn('meDeleteProductRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('meDeleteProductRelational exception:', err.message)
+    safeWarn('meDeleteProductRelational exception:', err)
     return false
   }
 }
@@ -412,12 +419,12 @@ export async function meDeleteHolidayRelational(holidayId) {
   try {
     const { error } = await supabase.from('me_holidays').delete().eq('id', holidayId)
     if (error) {
-      console.warn('meDeleteHolidayRelational error:', error.message)
+      safeWarn('meDeleteHolidayRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('meDeleteHolidayRelational exception:', err.message)
+    safeWarn('meDeleteHolidayRelational exception:', err)
     return false
   }
 }
@@ -426,12 +433,12 @@ export async function meDeleteSupportHistoryRelational(historyId) {
   try {
     const { error } = await supabase.from('me_product_support_history').delete().eq('id', historyId)
     if (error) {
-      console.warn('meDeleteSupportHistoryRelational error:', error.message)
+      safeWarn('meDeleteSupportHistoryRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('meDeleteSupportHistoryRelational exception:', err.message)
+    safeWarn('meDeleteSupportHistoryRelational exception:', err)
     return false
   }
 }
@@ -488,7 +495,7 @@ export async function meMigrateJsonToRelational(userId, jsonData) {
 
     return results
   } catch (err) {
-    console.warn('meMigrateJsonToRelational exception:', err.message)
+    safeWarn('meMigrateJsonToRelational exception:', err)
     return { error: err.message }
   }
 }
