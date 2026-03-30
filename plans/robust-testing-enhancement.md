@@ -26,7 +26,7 @@ This plan addresses critical gaps in the Tidyco APQP testing suite, moving beyon
   - Verify the UI does **not** update local state on a failed write (the codebase is mostly pessimistic — write first, update UI after). Focus on the NPI relational layer (`npi-data-relational.js`) which has an explicit "Revert optimistic local update" path.
   - Verify a "Permission Denied" message is shown to the user via `showToast`.
 
-- [ ] **1.3: Save Failure & Retry Behaviour**
+- [x] **1.3: Save Failure & Retry Behaviour**
   - Add tests to `tests/db.test.js` (or a new file) to verify behaviour when `saveRemote()` fails.
   - Verify badge transitions: `#syncBadge` shows `'syncing'` → then `'error'` with the error name on failure.
   - Verify the **single automatic retry**: `saveRemote` retries once after **1500ms** when the first attempt fails (controlled by the `attempt` parameter).

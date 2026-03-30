@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-30 | Add error-handling-save.test.js (11 tests) | Phase 1.3 of robust testing plan — covers saveRemote() badge transitions (syncing→error), single automatic 1500ms retry, no-further-retry after retry fails, exception-path retry, and success control case
+
 ## 2026-03-30 | Add error-handling-auth.test.js (28 tests) | Phase 1.2 of robust testing plan — covers RLS/auth 42501 rejections, optimistic revert on gate-sig conflict, and guard clauses in npi-data-relational.js
 
 
