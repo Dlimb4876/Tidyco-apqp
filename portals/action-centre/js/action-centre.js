@@ -8,7 +8,7 @@ import { currentUser, supabase } from '../../../core/js/supa.js'
 import { esc, emptyState, emailToDisplayName, showToast } from '../../../utils/js/helpers.js'
 import { navigate, render } from '../../../utils/js/navigation.js'
 import { showGuide } from '../../../utils/js/guide.js'
-import { settingsGetCoreState } from '../../settings/js/settings.js'
+import { settingsState } from '../../settings/js/settings.js'
 import { settingsEnsurePermissionsData } from '../../settings/js/settings-teams.js'
 import * as mcsApproversData from '../../mcs/js/mcs-approvers-data.js'
 
@@ -22,7 +22,7 @@ function actionCentreRenderIfVisible() {
 
 export function actionCentreGetMyName() {
   if (!currentUser) return ''
-  const permissionsData = settingsGetCoreState().settingsPermissionsData
+  const permissionsData = settingsState.settingsPermissionsData
   if (Array.isArray(permissionsData)) {
     const profile = permissionsData.find(u => u.id === currentUser.id)
     if (profile && profile.full_name) return profile.full_name

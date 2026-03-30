@@ -79,7 +79,7 @@
 	}
 
 	.me-heatmap-grid {
-		grid-template-columns: 100px repeat(20, 40px);
+		grid-template-columns: 100px repeat(26, 40px);
 	}
 
 	.me-heatmap-cell {

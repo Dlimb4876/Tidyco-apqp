@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "A Manufacturing Engineering tool for rail overhaul, managing APQP Gates 0–5 and broader operational workflows. Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and Supabase for persistence.",
-  "main": "check_onclick.js",
+  "main": "core/js/main.js",
   "scripts": {
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "check:imports": "node scripts/import-checker.js",

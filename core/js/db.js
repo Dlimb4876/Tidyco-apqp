@@ -352,7 +352,7 @@ export function setSyncBadge(state, text) {
   }
 }
 
-export function setUnsavedIndicator(count) {
+function setUnsavedIndicator(count) {
   const el = document.getElementById('bottombarUnsaved');
   if (!el) return;
 

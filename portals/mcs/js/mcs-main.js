@@ -506,7 +506,7 @@ function mcsKpiFilterApproval2() {
   mcsSetFilter('status', 'final_review', btn)
 }
 
-export function mcsKpiFilterAwaiting() {
+function mcsKpiFilterAwaiting() {
   mcsKpiFilterApproval1()
 }
 

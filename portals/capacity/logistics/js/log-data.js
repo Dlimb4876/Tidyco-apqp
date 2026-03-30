@@ -735,7 +735,7 @@ export async function logDataSave() {
 
     for (let i = 0; i < logDataState.tasks.length; i += 1) {
       const task = logDataState.tasks[i]
-      if (task.productId && !validProductIds.has(task.productId)) task.productId = ''
+      if (validProductIds.size > 0 && task.productId && !validProductIds.has(task.productId)) task.productId = ''
       const result = await logSaveTaskRelational(currentUser.id, task)
       if (!result.success) ok = false
       else if (!task.id && result.taskId) task.id = result.taskId

@@ -16,6 +16,7 @@
 - Resolved failing Jest run by stabilizing brittle assertions in `tests/guide.test.js`, `tests/action-centre.test.js`, and `tests/state.test.js`, plus fixing BOM test bootstrap/fixture shape in `tests/bom.test.js`; validated with `npm test` (69/69 suites, 936/936 tests) and `npm run check:all` (exit 0).
 - Reviewed all guide modal mappings against live portal guide triggers, then fixed relevance gaps by wiring missing Logistics/Unit 6 guide buttons and updating stale Operations People + PM section guide copy in `utils/js/guide.js`; changelog updated.
 ## 2026-03-29
+- | 20:44 | Added a visual legend to the shared Capacity holiday planner and updated guide/tests | portals/capacity/shared/js/cap-holidays.js, portals/capacity/shared/css/cap-holidays.css, utils/js/guide.js, tests/me-holidays.test.js, CHANGELOG.md | Focused Jest passed; repo-wide checks still show pre-existing failures | ~1200 |
 - Executed ESM Phase 8 final wiring: switched `index.html` to importmap + single `core/js/main.js` module entry, finalized `app.js`/`navigation.js` explicit imports for critical wiring paths, preserved inline-handler compatibility bridges in `main.js`, and updated Part1/Part2 tracker rows + Phase 8 checklist with deferred (`pwsh`/CLI-only) validation notes.
 - Executed ESM Phase 9 cleanup/doc finalization: removed retired `check:load-order` from active pipeline (deleted `scripts/load-order-checker.js`), updated `package.json` `check:all` to `check:syntax -> check:imports -> check:esm-coverage -> check:rls -> check:mobile -> check:modals -> check:coverage`, and marked Part1/Part2 row 9 + Phase 9 checklist complete with explicit deferred (`pwsh`/CLI-only) gate notes and merged-marker policy.
 ## 2026-03-27
@@ -1392,6 +1393,68 @@
 |------|--------|---------|---------|--------|
 
 ## Session: 2026-03-29 12:38
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-29 21:45
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 21:52 | Added sortable headers to Capacity team table and kept original row index wiring for edits/deletes | portals/capacity/shared/js/cap-team.js; portals/capacity/js/capacity-events.js; tests/me-team-render.test.js; CHANGELOG.md | Implemented and verified with targeted ME team render tests | ~2200 |
+| 21:52 | Edited portals/capacity/me/js/me-data-persistence.js | inline fix | ~33 |
+| 21:52 | Edited CHANGELOG.md | 4→6 lines | ~91 |
+| 21:52 | Session end: 2 writes across 2 files (me-data-persistence.js, CHANGELOG.md) | 3 reads | ~28035 tok |
+| 21:55 | Edited portals/capacity/logistics/js/log-data.js | 2→2 lines | ~53 |
+| 21:55 | Edited portals/capacity/project-management/js/pm-data.js | 2→2 lines | ~53 |
+| 21:55 | Edited portals/capacity/unit6/js/unit6-data.js | 2→2 lines | ~54 |
+| 21:55 | Edited CHANGELOG.md | inline fix | ~50 |
+| 21:55 | Session end: 6 writes across 5 files (me-data-persistence.js, CHANGELOG.md, log-data.js, pm-data.js, unit6-data.js) | 6 reads | ~28248 tok |
+| 21:59 | Session end: 6 writes across 5 files (me-data-persistence.js, CHANGELOG.md, log-data.js, pm-data.js, unit6-data.js) | 6 reads | ~28248 tok |
+| 22:00 | Session end: 6 writes across 5 files (me-data-persistence.js, CHANGELOG.md, log-data.js, pm-data.js, unit6-data.js) | 6 reads | ~28248 tok |
+
+## Session: 2026-03-29 22:09
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 22:15 | Edited portals/capacity/shared/css/cap-tables.css | CSS: table-layout | ~26 |
+| 22:15 | Session end: 1 writes across 1 files (cap-tables.css) | 2 reads | ~26 tok |
+| 22:16 | Edited portals/capacity/shared/css/cap-tables.css | inline fix | ~16 |
+| 22:16 | Edited portals/capacity/shared/css/cap-tables.css | inline fix | ~15 |
+| 22:16 | Edited portals/capacity/shared/css/cap-tables.css | 4→4 lines | ~24 |
+| 22:16 | Session end: 4 writes across 1 files (cap-tables.css) | 2 reads | ~2129 tok |
+| 22:18 | Session end: 4 writes across 1 files (cap-tables.css) | 2 reads | ~2129 tok |
+| 22:19 | Edited portals/capacity/shared/js/cap-tasks.js | 4→4 lines | ~201 |
+| 22:19 | Edited portals/capacity/shared/js/cap-tasks.js | 7→7 lines | ~154 |
+| 22:20 | Edited portals/capacity/shared/js/cap-tasks.js | 4→4 lines | ~208 |
+| 22:20 | Edited portals/capacity/shared/js/cap-tasks.js | 7→7 lines | ~151 |
+| 22:20 | Session end: 8 writes across 2 files (cap-tables.css, cap-tasks.js) | 3 reads | ~11089 tok |
+
+## Session: 2026-03-29 22:59
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 23:19 | Edited ../../../.claude/projects/C--Users-Tidyco-Documents-VScode-Tidyco-apqp/memory/MEMORY.md | 4→5 lines | ~183 |
+| 23:20 | Session end: 1 writes across 1 files (MEMORY.md) | 8 reads | ~23319 tok |
+| 23:26 | Session end: 1 writes across 1 files (MEMORY.md) | 8 reads | ~23319 tok |
+| 23:27 | Session end: 1 writes across 1 files (MEMORY.md) | 8 reads | ~23319 tok |
+| 23:29 | Created plans/capacity-sync-engine-api.md | — | ~3940 |
+| 23:29 | Session end: 2 writes across 2 files (MEMORY.md, capacity-sync-engine-api.md) | 8 reads | ~27541 tok |
+| 23:41 | Session end: 2 writes across 2 files (MEMORY.md, capacity-sync-engine-api.md) | 8 reads | ~27541 tok |
+
+## Session: 2026-03-29 23:42
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 23:57 | Edited .claude/rules/code-style.md | expanded (+34 lines) | ~374 |
+| 23:58 | Edited CLAUDE.md | 12→13 lines | ~249 |
+| 23:58 | Edited CLAUDE.md | 8→9 lines | ~111 |
+| 23:58 | Edited .github/copilot-instructions.md | 12→13 lines | ~252 |
+| 23:58 | Edited .github/copilot-instructions.md | 7→8 lines | ~96 |
+| 23:58 | Session end: 5 writes across 3 files (code-style.md, CLAUDE.md, copilot-instructions.md) | 4 reads | ~1929 tok |
+| 00:01 | Session end: 5 writes across 3 files (code-style.md, CLAUDE.md, copilot-instructions.md) | 4 reads | ~1929 tok |
+
+## Session: 2026-03-29 00:02
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|

@@ -20,7 +20,7 @@ global.getMonthLabel = jest.fn(() => 'Jun 2025')
 
 // Import modules (ESM exports)
 await import(resolve(__dirname, '../portals/capacity/shared/js/cap-utils.js'))
-const { capRenderTeamTab } = await import(
+const { capRenderTeamTab, capTeamSort, capTeamSortBy } = await import(
   resolve(__dirname, '../portals/capacity/shared/js/cap-team.js')
 )
 
@@ -40,6 +40,10 @@ const SAMPLE_TEAM = [
 beforeEach(() => {
   jest.clearAllMocks()
   global.getMonthLabel = jest.fn(() => 'Jun 2025')
+  Object.values(capTeamSort).forEach(sortState => {
+    sortState.column = ''
+    sortState.direction = 'asc'
+  })
 })
 
 describe('capRenderTeamTab()', () => {
@@ -150,6 +154,26 @@ describe('capRenderTeamTab()', () => {
     const html = capRenderTeamTab(SAMPLE_TEAM, [], '2025-06', 'ME', true)
     expect(html).toContain('NPI')
     expect(html).toContain('Production')
+  })
+
+  it('renders sortable team column headers', () => {
+    const html = capRenderTeamTab(SAMPLE_TEAM, [], '2025-06', 'ME', true)
+    expect(html).toContain('data-cap-action="cap-team-sort"')
+    expect(html).toContain('data-sort-key="name"')
+    expect(html).toContain('↕ Name')
+  })
+
+  it('sorts team rows by name ascending and keeps original member index wiring', () => {
+    capTeamSortBy('name', 'ME')
+    const html = capRenderTeamTab([
+      { id: 'm2', name: 'Zoe', jobTitle: 'Engineer', group: 'NPI', hoursPerWeek: 37.5, utilisation: 80, startDate: '2024-02-01', endDate: '' },
+      { id: 'm1', name: 'Alice', jobTitle: 'Engineer', group: 'Production', hoursPerWeek: 35, utilisation: 90, startDate: '2024-01-01', endDate: '' }
+    ], [], '2025-06', 'ME', true)
+
+    expect(html.indexOf('value="Alice"')).toBeLessThan(html.indexOf('value="Zoe"'))
+    expect(html).toContain('data-member-idx="1"')
+    expect(html).toContain('data-member-idx="0"')
+    expect(html).toContain('↑ Name')
   })
 
   it('counts unique holidays from the supplied month data', () => {

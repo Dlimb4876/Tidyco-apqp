@@ -1,91 +1,135 @@
-import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-// Set up DOM
-const html = readFileSync(resolve(__dirname, '../index.html'), 'utf8');
-document.documentElement.innerHTML = html.toString();
+// Mocks needed before importing the module
+global.canEdit = jest.fn(() => true)
 
-global.esc = (v) => String(v ?? '')
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#039;');
+// capRenderHeatmapTab uses getMonthLabel which is an ESM import — mock it at module level
+// by providing a global shim that the module resolution will find in the jsdom env
+// (cap-heatmap imports getMonthLabel from cap-utils.js which is a real function — no mock needed)
 
-global.meGetMonthLabel = jest.fn(() => 'Mar 2026');
-global.getMonthLabel = jest.fn(() => 'Mar 2026');
-global.capGetWeekRange = jest.fn(() => [
-  { start: '2026-03-02', end: '2026-03-08' },
-  { start: '2026-03-09', end: '2026-03-15' }
-]);
-global.capCalcWeekUtilisation = jest.fn((personId, weekStart) => {
-  if (personId !== 'p1') return { capacity: 0, demand: 0, utilisation: 0 };
-  if (weekStart === '2026-03-02') return { capacity: 10, demand: 6, utilisation: 60 };
-  return { capacity: 8, demand: 10, utilisation: 125 };
-});
+const {
+  capRenderHeatmapTab,
+  capDrawHeatmapNow,
+  capOpenHeatmapDetail,
+  capCloseHeatmapDetail
+} = await import(
+  resolve(__dirname, '../portals/capacity/shared/js/cap-heatmap.js')
+)
 
-// Load module and expose to global scope
-const capHeatmapModule = await import('../portals/capacity/shared/js/cap-heatmap.js');
-Object.assign(global, capHeatmapModule);
+const TEAM = [
+  { id: 'p1', name: 'Alex Smith', startDate: '2026-01-01', hoursPerWeek: 37.5, utilisation: 80 }
+]
 
-describe('Shared heatmap rendering and detail wrappers', () => {
+describe('capRenderHeatmapTab()', () => {
+  test('renders card shell with title', () => {
+    const html = capRenderHeatmapTab('2026-03', [], [], [], [], 'ME')
+    expect(typeof html).toBe('string')
+    expect(html).toContain('TEAM UTILISATION HEAT MAP')
+    expect(html).toContain('capHeatmapGrid')
+  })
+
+  test('renders a legend with all 5 bands plus No data', () => {
+    const html = capRenderHeatmapTab('2026-03', [], [], [], [], 'ME')
+    expect(html).toContain('Heatmap utilisation legend')
+    expect(html).toContain('Clear')
+    expect(html).toContain('Good')
+    expect(html).toContain('Caution')
+    expect(html).toContain('Near full')
+    expect(html).toContain('Over')
+    expect(html).toContain('No data')
+  })
+
+  test('includes click instruction in subtitle', () => {
+    const html = capRenderHeatmapTab('2026-03', [], [], [], [], 'ME')
+    expect(html).toContain('Click a cell to see task detail')
+  })
+})
+
+describe('capDrawHeatmapNow()', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    document.body.innerHTML = `
-      <div id="capHeatmapGrid"></div>
-      <div id="meDetailModal" style="display:none"></div>
-      <div id="meDetailTitle"></div>
-      <div id="meDetailSubtitle"></div>
-      <div id="meDetailBody"></div>
-    `;
-  });
+    document.body.innerHTML = '<div id="capHeatmapGrid"></div>'
+  })
 
-  test('renders heatmap panel shell with month and department', () => {
-    const html = capRenderHeatmapTab('2026-03', [], [], [], [], 'ME');
+  test('renders person row with cells', () => {
+    capDrawHeatmapNow(TEAM, [], [], [], '2026-03')
+    const grid = document.getElementById('capHeatmapGrid')
+    expect(grid.innerHTML).toContain('Alex Smith')
+    const cells = grid.querySelectorAll('.me-heatmap-cell')
+    expect(cells.length).toBe(26)
+  })
 
-    expect(html).toContain('TEAM UTILISATION HEAT MAP');
-    expect(html).toContain('capHeatmapGrid');
-    expect(html).toContain('Mar 2026');
-  });
+  test('cells have click delegation attributes', () => {
+    capDrawHeatmapNow(TEAM, [], [], [], '2026-03')
+    const cells = document.querySelectorAll('[data-cap-action="cap-me-heatmap-open"]')
+    expect(cells.length).toBe(26)
+    cells.forEach(cell => {
+      expect(cell.getAttribute('data-member-id')).toBe('p1')
+      expect(cell.getAttribute('data-start')).toBeTruthy()
+      expect(cell.getAttribute('data-end')).toBeTruthy()
+    })
+  })
 
-  test('draws heatmap cells with utilisation classes', () => {
+  test('highlights the current week column', () => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2026-03-10'))
+
+    capDrawHeatmapNow(TEAM, [], [], [], '2026-03')
+    const todayHeaders = document.querySelectorAll('.me-heatmap-week-today')
+    expect(todayHeaders.length).toBeGreaterThanOrEqual(1)
+    const todayCells = document.querySelectorAll('.me-heatmap-cell-today')
+    expect(todayCells.length).toBe(1)
+
+    jest.useRealTimers()
+  })
+
+  test('skips members without a startDate', () => {
     capDrawHeatmapNow(
-      [
-        { id: 'p1', name: 'Alex', startDate: '2026-01-01' },
-        { id: 'p2', name: 'NoStart' }
-      ],
-      [],
-      [],
-      [],
-      '2026-03',
-      'ME'
-    );
+      [...TEAM, { id: 'p2', name: 'No Start' }],
+      [], [], [], '2026-03'
+    )
+    expect(document.getElementById('capHeatmapGrid').innerHTML).not.toContain('No Start')
+  })
 
-    const cells = document.querySelectorAll('.me-heatmap-cell');
-    expect(cells.length).toBe(2);
+  test('applies no-capacity class when capacity is zero', () => {
+    const noWorkMember = [{ id: 'p1', name: 'Alex Smith', startDate: '2099-01-01', hoursPerWeek: 37.5, utilisation: 80 }]
+    capDrawHeatmapNow(noWorkMember, [], [], [], '2026-03')
+    const cells = document.querySelectorAll('.me-heatmap-no-capacity')
+    expect(cells.length).toBe(26)
+  })
+})
 
-    expect(cells[0].className).toContain('me-heatmap-util-low');
-    expect(cells[1].className).toContain('me-heatmap-util-high');
-    expect(document.getElementById('capHeatmapGrid').innerHTML).toContain('Alex');
-    expect(document.getElementById('capHeatmapGrid').innerHTML).not.toContain('NoStart');
-  });
+describe('capOpenHeatmapDetail() and capCloseHeatmapDetail()', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="capHeatmapGrid"></div>'
+  })
 
-  test('uses no-capacity style when weekly capacity is zero', () => {
-    global.capCalcWeekUtilisation = jest.fn(() => ({ capacity: 0, demand: 0, utilisation: 0 }));
+  test('open injects modal after draw context is set', () => {
+    capDrawHeatmapNow(TEAM, [], [], [], '2026-03')
+    capOpenHeatmapDetail('p1', '2026-03-09', '2026-03-15')
+    expect(document.getElementById('capHeatmapDetailModal')).not.toBeNull()
+  })
 
-    capDrawHeatmapNow([{ id: 'p1', name: 'Alex', startDate: '2026-01-01' }], [], [], [], '2026-03', 'ME');
+  test('modal shows person name and week range', () => {
+    capDrawHeatmapNow(TEAM, [], [], [], '2026-03')
+    capOpenHeatmapDetail('p1', '2026-03-09', '2026-03-15')
+    const modal = document.getElementById('capHeatmapDetailModal')
+    expect(modal.innerHTML).toContain('Alex Smith')
+    expect(modal.innerHTML).toContain('utilised')
+  })
 
-    const cells = document.querySelectorAll('.me-heatmap-cell');
-    expect(cells.length).toBe(2);
-    expect(cells[0].className).toContain('me-heatmap-no-capacity');
-  });
+  test('close removes the modal', () => {
+    capDrawHeatmapNow(TEAM, [], [], [], '2026-03')
+    capOpenHeatmapDetail('p1', '2026-03-09', '2026-03-15')
+    expect(document.getElementById('capHeatmapDetailModal')).not.toBeNull()
+    capCloseHeatmapDetail()
+    expect(document.getElementById('capHeatmapDetailModal')).toBeNull()
+  })
 
-  test('capOpenHeatmapDetail and capCloseHeatmapDetail are callable without error', () => {
-    expect(() => capOpenHeatmapDetail('p1', '2026-03-02', '2026-03-08')).not.toThrow();
-    expect(() => capCloseHeatmapDetail()).not.toThrow();
-  });
-});
+  test('open is safe when called without draw context (no crash)', () => {
+    expect(() => capOpenHeatmapDetail('unknown', '2026-03-09', '2026-03-15')).not.toThrow()
+  })
+})

@@ -26,6 +26,7 @@
 	 - `@media (max-width: 767px)`
 	 - `@media (min-width: 768px)`
 9. When adding or changing a feature on any content page, update the matching entry in `GUIDE_CONTENT` inside `utils/js/guide.js` to reflect the change.
+10. Add a brief comment explaining *why* code was added or changed (bug fix, new feature, optimization, workaround, etc.). See `.claude/rules/code-style.md` for details.
 
 ## Validation Commands
 - `npm install` (fresh clone only)
@@ -43,6 +44,7 @@
 ## Scoped Detail Owners
 - Core guardrails: `.github/copilot-instructions.md`
 - Testing details: `.github/instructions/testing.instructions.md`
+- Code style & comments: `.claude/rules/code-style.md`
 - Security: `.claude/rules/security.md`
 - Database and RLS: `.claude/rules/database.md`
 - Navigation: `.claude/rules/navigation.md`

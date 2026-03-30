@@ -231,7 +231,7 @@ export async function meDataSave(showAlert) {
 
     for (let i = 0; i < meDataState.tasks.length; i += 1) {
       const task = meDataState.tasks[i]
-      if (task.productId && !validProductIds.has(task.productId)) task.productId = ''
+      if (validProductIds.size > 0 && task.productId && !validProductIds.has(task.productId)) task.productId = ''
       const result = await meSaveTaskRelational(currentUser.id, task)
       if (!result.success) relationalSuccess = false
     }

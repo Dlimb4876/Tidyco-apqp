@@ -34,7 +34,22 @@ export async function teamsDataGetUserCount(teamId) {
   return count || 0;
 }
 
-// ── Add a new team ───────────────────────────────────────────────
+// ── Load all teams with member counts in a single query ─────────
+export async function teamsDataLoadAllWithCounts() {
+  const { data, error } = await supa
+    .from('teams')
+    .select('*, team_members(count)')
+    .order('name', { ascending: true })
+
+  if (error) throw error
+  return (data || []).map(team => ({
+    ...team,
+    userCount: team.team_members?.[0]?.count ?? 0,
+    team_members: undefined
+  }))
+}
+
+// ── Add a new team───────────────────────────────────────────────
 export async function teamsDataAdd({ name, team_type, description = '' }) {
   if (!name || !team_type) return null;
 

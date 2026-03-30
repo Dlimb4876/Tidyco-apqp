@@ -50,6 +50,6 @@ if (document.readyState === 'loading') {
   injectCapacityModals()
 }
 
-export function closeProdCapacityFormulaModal() {
+function closeProdCapacityFormulaModal() {
   closeModal('modalProdCapacityFormula')
 }

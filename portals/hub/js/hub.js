@@ -170,7 +170,7 @@ export function hubToggleProductFavourite(productId, evt) {
   render()
 }
 
-export function hubOpenFavouriteProduct(productId) {
+function hubOpenFavouriteProduct(productId) {
   const key = String(productId || '').trim()
   if (!key) return
 

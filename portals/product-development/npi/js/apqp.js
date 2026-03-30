@@ -14,6 +14,8 @@ import { npiCtq } from './npi-ctq.js'
 import { npiPfd } from './npi-pfd.js'
 import { npi } from './npi-shared.js'
 import './pfmea.js'
+// Bug fix: npi-cp.js was never imported — CP tab side-effects (npi.cp.*) never fired
+import './npi-cp.js'
 
 
 npi.apqp.renderAPQP = function() {

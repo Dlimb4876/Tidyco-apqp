@@ -106,8 +106,15 @@ export const GUIDE_CONTENT = {
         <p>View the total ME hours attributed to each product, broken down by task and support entries.</p>
       </div>
       <div class="guide-section">
+        <div class="guide-section-title">🌡️ Heat Map</div>
+        <p>A 12-week team utilisation grid showing how loaded each person is week by week. Colour-coded in 5 bands: <strong>clear (under 60%)</strong>, <strong>good (60–79%)</strong>, <strong>caution (80–94%)</strong>, <strong>near full (95–99%)</strong>, and <strong>over capacity (100%+)</strong>. A legend above the grid explains the scale at a glance.</p>
+        <p><strong>Click any cell</strong> to open a detail panel showing which tasks are contributing to that person's load that week, their prorated hours, and any leave recorded.</p>
+        <p>The current week is highlighted with a blue border so you can instantly see where you are in the timeline.</p>
+      </div>
+      <div class="guide-section">
         <div class="guide-section-title">🏖️ Holiday Planner</div>
         <p>Record approved annual leave for each team member by month. Holidays reduce available capacity on the chart. UK bank holidays are automatically deducted.</p>
+        <p>A legend above the planner explains each cell state at a glance: working day, full day leave, half day leave, and bank holiday.</p>
       </div>
     `
   },

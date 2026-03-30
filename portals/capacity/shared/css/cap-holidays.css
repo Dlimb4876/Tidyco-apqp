@@ -3,6 +3,58 @@
 	 ============================================================ */
 
 /* ── Holiday Planner ─────────────────────────────────────────── */
+.holiday-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 14px;
+	align-items: center;
+	padding: 0 0 12px;
+	color: var(--ink);
+}
+
+.holiday-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12px;
+}
+
+.holiday-legend-swatch {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	min-width: 34px;
+	height: 24px;
+	border: 1px solid var(--table-border);
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.holiday-legend-working {
+	background: var(--surface);
+	color: var(--muted);
+}
+
+.holiday-legend-full {
+	background: var(--amber);
+	color: var(--white);
+	border-color: var(--amber);
+}
+
+.holiday-legend-half {
+	background: var(--amber-pale);
+	color: var(--amber);
+	border-color: var(--amber);
+}
+
+.holiday-legend-bank {
+	background: var(--teal-pale);
+	color: var(--blue);
+	border-color: var(--blue);
+}
+
 .holiday-matrix-wrap {
 	overflow-x: auto; overflow-y: auto; max-height: 68vh; padding: 0;
 }
@@ -89,4 +141,20 @@
 }
 .holiday-cell.week-start {
 	border-left: 2px solid var(--table-border);
+}
+
+@media (max-width: 767px) {
+	.holiday-legend {
+		gap: 8px 10px;
+	}
+
+	.holiday-legend-item {
+		font-size: 11px;
+	}
+}
+
+@media (min-width: 768px) {
+	.holiday-legend {
+		gap: 10px 14px;
+	}
 }

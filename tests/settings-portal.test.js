@@ -131,8 +131,7 @@ const {
   settingsAppearanceSetTheme,
   settingsAppearanceSave,
   settingsApplyAppearance,
-  settingsSetCoreState,
-  settingsGetCoreState,
+  settingsState,
   settingsLoadingState,
   settingsEmailToName,
   renderSettingsAboutTab,
@@ -153,21 +152,17 @@ const workAreasDataModule = await import('../portals/capacity/production/js/work
 const { workAreasState: realWorkAreasState } = workAreasDataModule
 
 // Helper to set state from test scope
-const settingsCoreKeys = new Set([
-  'settingsFamiliesEditingId',
-  'settingsFamiliesLoading',
-  'settingsFamiliesLoadError',
-  'settingsWorkAreasEditingId',
-  'settingsPermissionsLoading',
-  'settingsPermissionsData',
-  'settingsPermissionsError',
-  'settingsPermissionsTeams',
-  'settingsTeamsPermissionsData',
-])
+const appStateKeys = ['settingsTeamsData', 'settingsTeamsLoading', 'settingsTeamsError',
+  'settingsTeamsPermissionsEditingId', 'settingsMcsLoading', 'settingsMcsError',
+  'mcsApproverConfig', 'settingsNpiGateSignoffConfig', 'settingsActiveTab']
 
 function setInternal(name, value) {
-  if (settingsCoreKeys.has(name) && typeof settingsSetCoreState === 'function') {
-    settingsSetCoreState({ [name]: value })
+  if (name in settingsState) {
+    settingsState[name] = value
+    return
+  }
+  if (appStateKeys.includes(name) || name in appState) {
+    appState[name] = value
     return
   }
   global.__settingsTestValue = value

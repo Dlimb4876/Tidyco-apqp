@@ -57,62 +57,23 @@ import {
 } from './settings-teams.js'
 
 let settingsEventListenerRoot = null;
-let settingsFamiliesEditingId = null;
-let settingsFamiliesLoading = false;
-let settingsFamiliesLoadError = null;
-let settingsWorkAreasEditingId = null;
-let settingsPermissionsLoading = false;
-let settingsPermissionsData = null;
-let settingsPermissionsError = null;
-let settingsPermissionsTeams = [];
-let settingsTeamsPermissionsData = {};
+export const settingsState = {
+  settingsFamiliesEditingId: null,
+  settingsFamiliesLoading: false,
+  settingsFamiliesLoadError: null,
+  settingsWorkAreasEditingId: null,
+  settingsPermissionsLoading: false,
+  settingsPermissionsData: null,
+  settingsPermissionsError: null,
+  settingsPermissionsTeams: [],
+  settingsTeamsPermissionsData: {},
+}
 
 // ── Appearance preferences (persisted to localStorage) ─────────
 const APPEARANCE_STORAGE_KEY = 'tidyco_prefs';
-const SETTINGS_CORE_STATE_KEYS = new Set([
-  'settingsFamiliesEditingId',
-  'settingsFamiliesLoading',
-  'settingsFamiliesLoadError',
-  'settingsWorkAreasEditingId',
-  'settingsPermissionsLoading',
-  'settingsPermissionsData',
-  'settingsPermissionsError',
-  'settingsPermissionsTeams',
-  'settingsTeamsPermissionsData',
-]);
 
-export function settingsSetCoreState(partial) {
-  if (!partial || typeof partial !== 'object') return;
-  Object.keys(partial).forEach((key) => {
-    if (!SETTINGS_CORE_STATE_KEYS.has(key)) return;
-    if (key === 'settingsFamiliesEditingId') settingsFamiliesEditingId = partial[key];
-    else if (key === 'settingsFamiliesLoading') settingsFamiliesLoading = partial[key];
-    else if (key === 'settingsFamiliesLoadError') settingsFamiliesLoadError = partial[key];
-    else if (key === 'settingsWorkAreasEditingId') settingsWorkAreasEditingId = partial[key];
-    else if (key === 'settingsPermissionsLoading') settingsPermissionsLoading = partial[key];
-    else if (key === 'settingsPermissionsData') settingsPermissionsData = partial[key];
-    else if (key === 'settingsPermissionsError') settingsPermissionsError = partial[key];
-    else if (key === 'settingsPermissionsTeams') settingsPermissionsTeams = partial[key];
-    else if (key === 'settingsTeamsPermissionsData') settingsTeamsPermissionsData = partial[key];
-  });
-}
-
-export function settingsGetCoreState() {
-  return {
-    settingsFamiliesEditingId,
-    settingsFamiliesLoading,
-    settingsFamiliesLoadError,
-    settingsWorkAreasEditingId,
-    settingsPermissionsLoading,
-    settingsPermissionsData,
-    settingsPermissionsError,
-    settingsPermissionsTeams,
-    settingsTeamsPermissionsData,
-  };
-}
 
 export function settingsLoadingState(msg) {
-  if (typeof loadingState === 'function') return loadingState(msg);
   return `<div style="padding:40px;text-align:center;color:var(--muted)">${esc(msg)}</div>`;
 }
 
@@ -170,38 +131,42 @@ function settingsAppearanceSetDensityCard(root, density) {
 
 settingsApplyAppearance();
 
+function settingsActivateTab(tab) {
+  if (tab === 'families') {
+    renderSettingsFamiliesTab()
+    settingsEnsureFamiliesData()
+  } else if (tab === 'work-areas') {
+    renderSettingsWorkAreasTab()
+    settingsEnsureWorkAreasData()
+  } else if (tab === 'teams') {
+    renderSettingsTeamsTab()
+    settingsEnsureTeamsData()
+  } else if (tab === 'permissions') {
+    renderSettingsPermissionsTab()
+    settingsEnsurePermissionsData()
+  } else if (tab === 'role-definitions') {
+    renderSettingsRoleDefinitionsTab()
+  } else if (tab === 'mcs-approvers') {
+    renderSettingsMcsTab()
+    settingsEnsureMcsData()
+  } else if (tab === 'gate-questions') {
+    renderSettingsGateQuestionsTab()
+    settingsEnsureGateQuestionsData()
+  } else if (tab === 'appearance') {
+    renderSettingsAppearanceTab()
+  } else if (tab === 'about') {
+    renderSettingsAboutTab()
+  }
+}
+
 // ── Main settings page render ──────────────────────────────────
 export function renderSettings() {
   const tab = appState.settingsActiveTab || 'families';
 
   const hydrateSettingsDom = () => {
-    setupSettingsEventListeners();
-    if (tab === 'families') {
-      renderSettingsFamiliesTab();
-      settingsEnsureFamiliesData();
-    } else if (tab === 'work-areas') {
-      renderSettingsWorkAreasTab();
-      settingsEnsureWorkAreasData();
-    } else if (tab === 'teams') {
-      renderSettingsTeamsTab();
-      settingsEnsureTeamsData();
-    } else if (tab === 'permissions') {
-      renderSettingsPermissionsTab();
-      settingsEnsurePermissionsData();
-    } else if (tab === 'role-definitions') {
-      renderSettingsRoleDefinitionsTab();
-    } else if (tab === 'mcs-approvers') {
-      renderSettingsMcsTab();
-      settingsEnsureMcsData();
-    } else if (tab === 'gate-questions') {
-      renderSettingsGateQuestionsTab();
-      settingsEnsureGateQuestionsData();
-    } else if (tab === 'appearance') {
-      renderSettingsAppearanceTab();
-    } else if (tab === 'about') {
-      renderSettingsAboutTab();
-    }
-  };
+    setupSettingsEventListeners()
+    settingsActivateTab(tab)
+  }
 
   // Use microtask hydration so handlers attach as soon as settings markup is inserted.
   // This avoids click dead-zones caused by frame throttling where rAF callbacks are delayed.
@@ -269,23 +234,19 @@ export function renderSettings() {
 
 // ── Ensure families data is loaded ────────────────────────────
 async function settingsEnsureFamiliesData(forceReload = false) {
-  if (settingsFamiliesLoading) return;
+  if (settingsState.settingsFamiliesLoading) return;
   if (!forceReload && Array.isArray(familiesState?.families) && familiesState.families.length > 0) return;
 
-  settingsFamiliesLoading = true;
-  settingsFamiliesLoadError = null;
+  settingsState.settingsFamiliesLoading = true;
+  settingsState.settingsFamiliesLoadError = null;
   renderSettingsFamiliesTab();
 
   try {
-    if (typeof familiesDataLoad === 'function') {
-      await familiesDataLoad();
-    } else if (typeof familiesDataInit === 'function') {
-      await familiesDataInit();
-    }
+    await familiesDataInit()
   } catch (err) {
-    settingsFamiliesLoadError = err?.message || 'Failed to load families';
+    settingsState.settingsFamiliesLoadError = err?.message || 'Failed to load families';
   } finally {
-    settingsFamiliesLoading = false;
+    settingsState.settingsFamiliesLoading = false;
     renderSettingsFamiliesTab();
   }
 }
@@ -325,31 +286,21 @@ function settingsFamilyRenderRowHTML(f, usage) {
   </tr>`;
 }
 
-// Re-sort families data rows inside #families-tbody alphabetically by label.
-function _familiesResortTbody(tbody) {
-  const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
-  rows.sort((a, b) => {
-    const na = (a.querySelector('strong')?.textContent || '').trim();
-    const nb = (b.querySelector('strong')?.textContent || '').trim();
-    return na.localeCompare(nb);
-  });
-  rows.forEach(r => tbody.appendChild(r));
-}
 
 export function renderSettingsFamiliesTab() {
   const container = document.getElementById('settingsFamiliesTab');
   if (!container) return;
 
-  if (settingsFamiliesLoading || familiesState.loading) {
+  if (settingsState.settingsFamiliesLoading || familiesState.loading) {
     container.innerHTML = settingsLoadingState('Loading families…');
     return;
   }
 
-  if (settingsFamiliesLoadError) {
+  if (settingsState.settingsFamiliesLoadError) {
     container.innerHTML = `
       <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
         <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load product families</div>
-        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsFamiliesLoadError)}</div>
+        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsState.settingsFamiliesLoadError)}</div>
         <button class="btn btn-ghost" data-action="settings-families-retry">Retry</button>
       </div>
     `;
@@ -362,7 +313,7 @@ export function renderSettingsFamiliesTab() {
     return;
   }
 
-  const families = typeof familiesDataGetAll === 'function' ? familiesDataGetAll() : [...familiesState.families];
+  const families = familiesDataGetAll()
 
   const usageMap = {};
   (db.projects || []).forEach(p => {
@@ -410,7 +361,7 @@ export function renderSettingsFamiliesTab() {
             <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No families defined yet. Add one above.</td></tr>
           ` : families.map(f => {
             const usage = usageMap[f.id] || 0;
-            if (settingsFamiliesEditingId === f.id) {
+            if (settingsState.settingsFamiliesEditingId === f.id) {
               return `
               <tr class="row-new" style="background-color:var(--row-highlight-amber);border-top:2px solid var(--amber)">
                 <td><input class="cell-edit" id="sfEdit-icon" value="${esc(f.icon || '📋')}" style="width:50px;text-align:center"></td>
@@ -454,7 +405,7 @@ async function settingsFamiliesAdd() {
 }
 
 export function settingsFamiliesStartEdit(familyId) {
-  settingsFamiliesEditingId = familyId;
+  settingsState.settingsFamiliesEditingId = familyId;
   renderSettingsFamiliesTab();
   document.getElementById('sfEdit-label')?.focus();
 }
@@ -479,12 +430,12 @@ async function settingsFamiliesSaveEdit(familyId) {
     showToast('Error saving family: ' + err.message, 'error');
   }
 
-  settingsFamiliesEditingId = null;
+  settingsState.settingsFamiliesEditingId = null;
   renderSettingsFamiliesTab();
 }
 
 export function settingsFamiliesCancelEdit() {
-  settingsFamiliesEditingId = null;
+  settingsState.settingsFamiliesEditingId = null;
   renderSettingsFamiliesTab();
 }
 
@@ -498,7 +449,7 @@ async function settingsFamiliesDelete(familyId, familyLabel) {
 
   try {
     await familiesDataDeleteFamily(familyId);
-    if (settingsFamiliesEditingId === familyId) settingsFamiliesEditingId = null;
+    if (settingsState.settingsFamiliesEditingId === familyId) settingsState.settingsFamiliesEditingId = null;
     renderSettingsFamiliesTab();
   } catch (err) {
     showToast('Error deleting family: ' + err.message, 'error');
@@ -519,16 +470,6 @@ function settingsWARenderRowHTML(w) {
   </tr>`;
 }
 
-// Re-sort data rows inside #wa-tbody alphabetically by name.
-function _waResortTbody(tbody) {
-  const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
-  rows.sort((a, b) => {
-    const na = (a.querySelector('strong')?.textContent || '').trim();
-    const nb = (b.querySelector('strong')?.textContent || '').trim();
-    return na.localeCompare(nb);
-  });
-  rows.forEach(r => tbody.appendChild(r));
-}
 
 export function renderSettingsWorkAreasTab() {
   const container = document.getElementById('settingsWorkAreasTab');
@@ -539,7 +480,7 @@ export function renderSettingsWorkAreasTab() {
     return;
   }
 
-  const areas = typeof workAreasDataGetAll === 'function' ? workAreasDataGetAll() : [...workAreasState.workAreas];
+  const areas = workAreasDataGetAll()
 
   container.innerHTML = `
     <div class="settings-section-header">
@@ -571,7 +512,7 @@ export function renderSettingsWorkAreasTab() {
           ${areas.length === 0 ? `
             <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">No work areas defined yet. Add one above.</td></tr>
           ` : areas.map(w => {
-            if (settingsWorkAreasEditingId === w.id) {
+            if (settingsState.settingsWorkAreasEditingId === w.id) {
               return `
               <tr class="row-new" style="background-color:var(--row-highlight-amber);border-top:2px solid var(--amber)">
                 <td><input class="cell-edit" id="waEdit-name" value="${esc(w.name)}"></td>
@@ -609,7 +550,7 @@ async function settingsWorkAreaAdd() {
 }
 
 export function settingsWorkAreaStartEdit(workAreaId) {
-  settingsWorkAreasEditingId = workAreaId;
+  settingsState.settingsWorkAreasEditingId = workAreaId;
   renderSettingsWorkAreasTab();
   document.getElementById('waEdit-name')?.focus();
 }
@@ -629,12 +570,12 @@ async function settingsWorkAreaSaveEdit(workAreaId) {
     showToast('Error saving work area: ' + err.message, 'error');
   }
 
-  settingsWorkAreasEditingId = null;
+  settingsState.settingsWorkAreasEditingId = null;
   renderSettingsWorkAreasTab();
 }
 
 export function settingsWorkAreaCancelEdit() {
-  settingsWorkAreasEditingId = null;
+  settingsState.settingsWorkAreasEditingId = null;
   renderSettingsWorkAreasTab();
 }
 
@@ -944,31 +885,7 @@ export function setupSettingsEventListeners() {
         about: 'settingsAboutTab',
       };
       document.getElementById(tabMap[tab])?.classList.add('active');
-      if (tab === 'families') {
-        renderSettingsFamiliesTab();
-        settingsEnsureFamiliesData();
-      } else if (tab === 'work-areas') {
-        renderSettingsWorkAreasTab();
-        settingsEnsureWorkAreasData();
-      } else if (tab === 'teams') {
-        renderSettingsTeamsTab();
-        settingsEnsureTeamsData();
-      } else if (tab === 'permissions') {
-        renderSettingsPermissionsTab();
-        settingsEnsurePermissionsData();
-      } else if (tab === 'role-definitions') {
-        renderSettingsRoleDefinitionsTab();
-      } else if (tab === 'mcs-approvers') {
-        renderSettingsMcsTab();
-        settingsEnsureMcsData();
-      } else if (tab === 'gate-questions') {
-        renderSettingsGateQuestionsTab();
-        settingsEnsureGateQuestionsData();
-      } else if (tab === 'appearance') {
-        renderSettingsAppearanceTab();
-      } else if (tab === 'about') {
-        renderSettingsAboutTab();
-      }
+      settingsActivateTab(tab)
       return;
     }
 

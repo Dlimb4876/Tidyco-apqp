@@ -3,6 +3,24 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-07-15 | Dead code sweep and export cleanup | Remove 8 dead files, fix npi-cp.js wiring bug (Control Plan tab never loaded), de-export 22 internal-only symbols across 11 files, fix package.json main field
+
+## 2026-03-29 | Expand capacity heatmap to 26 weeks (6 months) | Better forward visibility for planning
+
+## 2026-03-29 | Fix capacity heatmap mobile overflow | cap-responsive.css had repeat(20, 40px) overriding the correct 12-column layout, making the grid 900px wide and causing content to spill out
+
+## 2026-03-29 | Expand Capacity heatmap to 3 months | Show a fuller forward planning view by extending heatmap coverage from 12 to 13 weeks
+
+## 2026-03-29 | Tighten Capacity chart section spacing | Make chart, tables, and heatmap spacing consistent and slightly more compact on the Capacity charts page
+
+## 2026-03-29 | Guard task product-ref wipe across all departments | ME, LOG, PM, Unit6 save routines were stripping product_id from all tasks if products failed to load (empty set bug)
+
+## 2026-03-29 | Heatmap visual overhaul and cell-click detail modal | Replaced 3 hard colour bands with 5 graduated bands, softened grid aesthetics, added legend strip, today-week highlight, and wired the previously empty capOpenHeatmapDetail stub so clicking any cell shows a task breakdown panel
+
+## 2026-03-29 | Add holiday planner legend in Capacity | Makes the holiday planner easier to read by showing clear labels for working days, full days, half days, and bank holidays
+
+## 2026-03-29 | Add sorting to Capacity team table | Let ME team planning rows be reordered from the table headers instead of staying fixed
+
 ## 2026-03-29 | Fix hosted dev bootstrap config 404 | Switched Supabase browser startup to tracked `core/js/config.public.js` with the project publishable key so hosted/dev pages no longer abort before `doLogin` is wired
 
 ## 2026-03-29 | Fix Settings Work Areas edit button responsiveness | Replaced delayed double-rAF settings hydration with microtask hydration so Work Areas row edit clicks bind immediately and no longer appear to do nothing
@@ -869,3 +887,4 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 ## 2026-03-21 | Fix misleading 0% coverage output in check:coverage | Coverage script now detects empty Jest coverage artifacts and reports coverage as unavailable instead of implying real 0% source coverage
 
 ## 2026-03-21 | Split Operations unit cards into separate boxes in People and Infographic views | Unit 2, Unit 3, and Unit 6 are now rendered as individual cards/panels for clearer side-by-side comparison
+

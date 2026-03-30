@@ -20,6 +20,7 @@ Use these rules for all work in this repository. Keep responses and changes in p
    - `@media (max-width: 767px)`
    - `@media (min-width: 768px)`
 9. When adding or changing a feature on any content page, update the matching entry in `GUIDE_CONTENT` inside `utils/js/guide.js` to reflect the change.
+10. Add a brief comment explaining *why* code was added or changed (bug fix, new feature, optimization, etc.). See `.claude/rules/code-style.md` for format details.
 
 ## Validation
 Run in this order when needed:
@@ -33,6 +34,7 @@ Run in this order when needed:
 
 ## Scoped Details (Canonical)
 - Test rules: `.github/instructions/testing.instructions.md`
+- Code style & comments: `.claude/rules/code-style.md`
 - Security: `.claude/rules/security.md`
 - Database/RLS: `.claude/rules/database.md`
 - Navigation: `.claude/rules/navigation.md`

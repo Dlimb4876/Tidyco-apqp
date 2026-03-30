@@ -83,4 +83,21 @@ describe('capRenderHolidaysTab()', () => {
     expect(html).toContain('HOLIDAY PLANNER')
     expect(html).toContain('John Doe')
   })
+
+  test('renders a legend that explains planner cell states', () => {
+    const html = capRenderHolidaysTab(
+      [],
+      [{ id: '1', name: 'John Doe' }],
+      '2026-03',
+      'ME',
+      [],
+      true
+    )
+
+    expect(html).toContain('Holiday planner legend')
+    expect(html).toContain('Working day')
+    expect(html).toContain('Full day leave')
+    expect(html).toContain('Half day leave')
+    expect(html).toContain('Bank holiday')
+  })
 })

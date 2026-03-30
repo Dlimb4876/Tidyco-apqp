@@ -154,7 +154,7 @@ export function mcsBuildPfmeaLinkBadge(change) {
  * Show MCS link in PFMEA history view
  * Called from NPI PFMEA history render
  */
-export function mcsGetLinkedChange(pfmeaCauseId) {
+function mcsGetLinkedChange(pfmeaCauseId) {
   // Find MCS change linked to this PFMEA cause
   const change = mcsGetList().find(c => c.related_pfmea_cause_id === pfmeaCauseId)
   if (!change) return null
