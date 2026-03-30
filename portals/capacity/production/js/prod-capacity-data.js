@@ -78,7 +78,7 @@ export async function prodCapLoadUtilization() {
 }
 
 export function setProdCapRefreshCurrentTab(handler) {
-  prodCapInternal.refreshCurrentTabHandler = typeof handler === 'function' ? handler : () => {}
+  prodCapRefreshCurrentTabHandler = typeof handler === 'function' ? handler : () => {}
 }
 
 // ── Subscribe to utilization factor changes (real-time sync) ────────────
