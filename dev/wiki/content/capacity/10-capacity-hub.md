@@ -1,7 +1,15 @@
 # Capacity Management Hub
 
 ## Overview
-The **Capacity Management Hub** is the central interface for coordinating resource availability and demand across distinct operational streams. It facilitates the alignment of labor hours with production requirements and project tasks, enabling data-driven decision-making for Manufacturing Engineering (ME), Product Management (PM), Logistics, and Production Support teams.
+The **Capacity Management Hub** is the main page for balancing available people hours against planned work demand.
+
+It supports four streams:
+- Manufacturing Engineering (ME)
+- Product Management (PM)
+- Logistics
+- Unit 6
+
+Use this page to answer one core question: **Do we have enough capacity to deliver the planned work?**
 
 ## Access
 - **Portal:** Capacity
@@ -16,24 +24,45 @@ The **Capacity Management Hub** is the central interface for coordinating resour
 | **Total Demand** | Sum of task-based and product-support hours. | Defines the total resource requirement for a given period. |
 | **Utilisation %** | Ratio of Total Demand to Available Hours. | Triggers visual alerts (Red/Amber/Green) for load balancing. |
 
-## The Capacity Calculation Model
-### Supply-Side: Available Hours
-The system calculates net availability by aggregating individual team member schedules and subtracting non-productive time:
-- **Base Capacity:** (Total Team Members × Working Days × Daily Hours).
-- **Absence Deductions:** Automation-integrated subtraction of Bank Holidays and approved annual leave.
-- **Contractual Adjustments:** Prorated calculations for part-time or flexible working arrangements.
+## High-level workflow
+1. Select the stream you are planning for.
+2. Check available hours for the period.
+3. Review task and product support demand.
+4. Identify overloads using utilisation and headroom.
+5. Rebalance demand (move dates, reassign work, or adjust plan assumptions).
 
-### Demand-Side: Total Requirement
-Resource demand is derived from two primary sources:
-1. **Task-Based Demand:** Manually allocated hours for specific projects, NPI activities, or MCS implementation tasks.
-2. **Product Support Demand:** Algorithmic calculation based on the **Production Schedule** (Batch Quantity × Support Hours per Unit).
+## Calculations (detailed)
+### 1) Available Hours
+Available hours represent net team capacity after planned absences.
 
-### Performance Metrics
-- **Headroom:** The remaining unallocated hours available for contingency or new work.
-- **Utilisation Thresholds:**
-  - **< 80% (Green):** Sustainable loading; capacity exists for additional tasks.
-  - **80% - 100% (Amber):** Optimal loading; requires active monitoring of task completion.
-  - **> 100% (Red):** Overload state; requires immediate resource reallocation or schedule adjustment.
+```text
+Available Hours = Base Team Hours - Planned Absence Hours
+```
+
+Where:
+- **Base Team Hours** reflects planned working time for the team in the selected period
+- **Planned Absence Hours** includes holidays and other non-working periods
+
+### 2) Total Demand
+Total demand combines planned task effort and product-support effort.
+
+```text
+Total Demand = Task Demand Hours + Product Support Hours
+```
+
+Product support is linked to the Production Schedule and product support assumptions.
+
+### 3) Utilisation %
+Utilisation compares demand to available capacity.
+
+```text
+Utilisation % = (Total Demand / Available Hours) × 100
+```
+
+Interpretation:
+- **Under 80%:** Capacity headroom available
+- **80% to 100%:** High but manageable load
+- **Over 100%:** Overloaded; action needed
 
 ## Operational Workflow
 ### Resource Load Balancing

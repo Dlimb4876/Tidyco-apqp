@@ -1,8 +1,13 @@
 # Schedule
 
 ## What this page is for
-The Schedule is the master production planning table.
-It defines every production batch, serving as the operational source of truth for what will be made, when, and where.
+The Schedule is the master production planning page.
+
+It is the source of truth for:
+- What is being produced
+- Where work will happen
+- When each batch starts and is due
+- How much volume is planned
 
 ## Before you start
 - Ensure all required products exist in the Product Catalogue.
@@ -22,6 +27,11 @@ It defines every production batch, serving as the operational source of truth fo
 4. **Track progress:** Update the Status as the batch moves through the shop floor.
 5. **Close out:** Mark the batch as Complete once all units are delivered.
 
+## High-level usage guidance
+- Use this page first when planning future delivery.
+- Keep statuses up to date to avoid misleading downstream dashboards.
+- Treat date changes as cross-functional changes because they affect capacity demand.
+
 ## Common mistakes to avoid
 - **Stale statuses:** Leaving completed work as "In Progress", which skews Flow metrics.
 - **Missing work areas:** Creating batches without a designated area, making them invisible in area-based planning views.
@@ -37,6 +47,23 @@ It defines every production batch, serving as the operational source of truth fo
 - **Capacity Product Support:** Monthly support demand is calculated directly from these scheduled batch counts.
 - **Operations Flow:** Batch statuses drive the throughput and delivery health metrics.
 - **Plan by Product / Work Area:** These views group and visualize the raw data from this schedule.
+
+## Calculations (detailed)
+The Schedule itself is data-entry driven, but downstream pages use its values for planning calculations.
+
+### Capacity-linked product support demand
+When product support is configured, planned schedule volume contributes to capacity demand:
+
+```text
+Support Demand Hours = Batch Quantity × Support Hours per Unit
+```
+
+If several batches exist in the same planning period, those support-demand hours are aggregated.
+
+### Why this matters
+- Increasing quantity increases support demand proportionally.
+- Pulling a batch forward can increase near-term utilisation in capacity views.
+- Marking batches complete improves flow and delivery reporting accuracy.
 
 ## Related
 - [Plan by Product](./20-plan-by-product.md)

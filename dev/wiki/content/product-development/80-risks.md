@@ -4,6 +4,13 @@
 The Risk Register tracks project-level uncertainty and ensures mitigation efforts are visible and managed.
 While PFMEA handles process-specific failures, the Risk Register handles broader project threats (e.g., supply chain delays, resourcing bottlenecks, technical feasibility).
 
+## High-level workflow
+1. Identify and describe risk clearly (cause and consequence).
+2. Score impact and likelihood.
+3. Define mitigation and owner.
+4. Link mitigation to actions.
+5. Reassess scores at regular review points.
+
 ## Before you start
 - Gather input from cross-functional team members (supply chain, engineering, operations).
 - Understand the project's critical path and key dependencies.
@@ -20,6 +27,25 @@ While PFMEA handles process-specific failures, the Risk Register handles broader
 3. **Score:** Rate the inherent Impact and Likelihood before any mitigation.
 4. **Mitigate:** Develop a plan to handle the risk and assign specific actions to execute that plan.
 5. **Review:** Regularly reassess the risk scores as mitigations are completed or as the project progresses.
+
+## Calculations (detailed)
+### Basic risk score
+```text
+Risk Score = Impact × Likelihood
+```
+
+### Residual risk score
+```text
+Residual Risk Score = Residual Impact × Residual Likelihood
+```
+
+### Risk reduction
+```text
+Risk Reduction % =
+((Initial Risk Score - Residual Risk Score) / Initial Risk Score) × 100
+```
+
+These calculations help teams show whether mitigations are working, not just whether they were started.
 
 ## Common mistakes to avoid
 - **Vague risks:** Just writing "Supply Chain" instead of specifying which part and what the consequence is.

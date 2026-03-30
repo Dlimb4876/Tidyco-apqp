@@ -20,7 +20,7 @@ function actionCentreRenderIfVisible() {
   }
 }
 
-export function actionCentreGetMyName() {
+export let actionCentreGetMyName = function() {
   if (!currentUser) return ''
   const permissionsData = settingsState.settingsPermissionsData
   if (Array.isArray(permissionsData)) {
@@ -30,7 +30,11 @@ export function actionCentreGetMyName() {
   return emailToDisplayName(currentUser.email)
 }
 
-export async function actionCentreLoad() {
+export function setActionCentreGetMyName(fn) {
+  actionCentreGetMyName = fn
+}
+
+export let actionCentreLoad = async function() {
   if (appState.actionCentreLoading) return
   appState.actionCentreLoading = true
   if (appState.currentSection === 'action-centre') render()
@@ -113,6 +117,10 @@ export async function actionCentreLoad() {
     appState.actionCentreLoading = false
     actionCentreRenderIfVisible()
   }
+}
+
+export function setActionCentreLoad(fn) {
+  actionCentreLoad = fn
 }
 
 export function actionCentreGoToMcs(changeId) {

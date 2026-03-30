@@ -76,6 +76,14 @@ Forward-looking commitments and assumptions:
 
 **Best for:** Strategic planning and customer communication
 
+## High-level workflow
+1. Start on Overview for health and alerts.
+2. Check Flow for schedule pressure.
+3. Check Risk and Actions for open exposure.
+4. Check People for overload and headroom.
+5. Use Forecast to plan next decisions.
+6. Convert findings into owned actions.
+
 ## The control tower concept
 
 ### Situational awareness
@@ -165,6 +173,29 @@ When issues need senior attention, Operations provides the evidence:
 - **Directional arrows:** Improving (▲), stable (▶), worsening (▼)
 - **Sparkline charts:** Mini charts showing recent history
 - **Variance indicators:** Actual vs plan comparison
+
+## Calculations (detailed)
+These formulas are commonly used to interpret Operations performance.
+
+### Schedule adherence
+```text
+Schedule Adherence % = (Batches Completed On or Before Due Date / Total Completed Batches) × 100
+```
+
+### Capacity utilisation (aggregate)
+```text
+Aggregate Utilisation % = (Total Demand Hours / Total Available Hours) × 100
+```
+
+### Action closure rate
+```text
+Action Closure Rate % = (Actions Closed in Period / Actions Created in Period) × 100
+```
+
+### High-risk containment
+```text
+Containment Rate % = (High Risks with Active Mitigation / Total High Risks) × 100
+```
 
 ## Common Operations mistakes
 

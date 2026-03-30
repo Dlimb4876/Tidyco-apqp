@@ -74,33 +74,45 @@
 	font-family: 'IBM Plex Mono', monospace;
 }
 
-/* ── 5-band colour scale ─────────────────────────────────── */
+/* ── 7-band colour scale ─────────────────────────────────── */
+.me-heatmap-util-very-clear {
+	background: #a5d6a7;
+}
+.me-heatmap-util-very-clear .me-heatmap-cell-value,
+.me-heatmap-util-very-clear.me-heatmap-legend-swatch { color: #1b5e20; }
+
 .me-heatmap-util-clear {
-	background: #e8f5e9;
+	background: #81c784;
 }
 .me-heatmap-util-clear .me-heatmap-cell-value,
-.me-heatmap-util-clear.me-heatmap-legend-swatch { color: #2e7d32; }
+.me-heatmap-util-clear.me-heatmap-legend-swatch { color: #1b5e20; }
 
 .me-heatmap-util-good {
-	background: #c8e6c9;
+	background: #9ccc65;
 }
 .me-heatmap-util-good .me-heatmap-cell-value,
-.me-heatmap-util-good.me-heatmap-legend-swatch { color: #1b5e20; }
+.me-heatmap-util-good.me-heatmap-legend-swatch { color: #33691e; }
 
 .me-heatmap-util-caution {
-	background: #fff3e0;
+	background: #ffee58;
 }
 .me-heatmap-util-caution .me-heatmap-cell-value,
-.me-heatmap-util-caution.me-heatmap-legend-swatch { color: #e65100; }
+.me-heatmap-util-caution.me-heatmap-legend-swatch { color: #f57f17; }
+
+.me-heatmap-util-warning {
+	background: #ffb74d;
+}
+.me-heatmap-util-warning .me-heatmap-cell-value,
+.me-heatmap-util-warning.me-heatmap-legend-swatch { color: #e65100; }
 
 .me-heatmap-util-near {
-	background: #ffe0b2;
+	background: #ff9800;
 }
 .me-heatmap-util-near .me-heatmap-cell-value,
-.me-heatmap-util-near.me-heatmap-legend-swatch { color: #bf360c; }
+.me-heatmap-util-near.me-heatmap-legend-swatch { color: var(--white); }
 
 .me-heatmap-util-over {
-	background: var(--red);
+	background: #e53935;
 }
 .me-heatmap-util-over .me-heatmap-cell-value,
 .me-heatmap-util-over.me-heatmap-legend-swatch { color: var(--white); }

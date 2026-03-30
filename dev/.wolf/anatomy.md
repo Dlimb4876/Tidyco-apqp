@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T07:19:41.787Z
-> Files: 541 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T09:45:14.772Z
+> Files: 544 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -11,7 +11,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1376 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~2217 tok)
-- `CHANGELOG.md` — Changelog (~28561 tok)
+- `CHANGELOG.md` — Changelog (~29106 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~624 tok)
 - `code-review-report.md` — Code Review & Scalability Report: Tidyco APQP Project (~1351 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
@@ -1385,6 +1385,14 @@
 - `fd8fd38c229ab33755ff429ccc9919eba21b566551cbfb17d8e11e35e941ee0e` (~3879 tok)
 - `metadata.json` (~580 tok)
 
+## portals/capacity/shared/css/
+
+- `cap-heatmap.css` — Styles: 71 rules (~2461 tok)
+
+## portals/capacity/shared/js/
+
+- `cap-heatmap.js` — Exports capRenderHeatmapTab, capDrawHeatmapNow, capOpenHeatmapDetail, capCloseHeatmapDetail (~3019 tok)
+
 ## portals/settings/js/
 
 - `settings.js` — ═══════════════════════════════════════════════════════════════ (~13175 tok)
@@ -1392,6 +1400,7 @@
 ## tests/
 
 - `bootstrap-load-order.test.js` — Bootstrap Load Order Test (~992 tok)
+- `me-heatmap.test.js` — Declares __filename (~1485 tok)
 - `settings-portal.test.js` — settings-portal.test.js — Tests for portals/settings/js/settings.js (~9556 tok)
 
 ## tests/__mocks__/

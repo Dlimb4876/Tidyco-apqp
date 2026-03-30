@@ -178,37 +178,7 @@ export async function meDataSave(showAlert) {
     setSyncBadge('syncing', 'Saving...')
     let relationalSuccess = true
 
-    const seen = new Set()
-    meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays)
-    const holidayData = (meDataState.holidays || [])
-      .filter(h => {
-        if (h.userId && h.userId !== currentUser.id) return false
-        const key = `${h.personId}_${h.date}`
-        if (seen.has(key)) return false
-        seen.add(key)
-        return true
-      })
-      .map(h => ({
-        id: h.id,
-        user_id: currentUser.id,
-        person_id: h.personId,
-        date: h.date,
-        type: h.type,
-        department: 'ME'
-      }))
-
-    const { error: delHolErr } = await supabase.from('me_holidays').delete().eq('user_id', currentUser.id)
-    if (delHolErr) {
-      console.warn('Failed to clear holidays:', delHolErr.message)
-      relationalSuccess = false
-    } else if (holidayData.length > 0) {
-      const { error: insHolErr } = await supabase.from('me_holidays').insert(holidayData)
-      if (insHolErr) {
-        console.warn('Failed to insert holidays:', insHolErr.message)
-        relationalSuccess = false
-      }
-    }
-
+    // Save products, team, tasks, and pending deletes FIRST so all FKs exist before holiday insert
     for (let i = 0; i < meDataState.products.length; i += 1) {
       const success = await meSaveProductRelational(currentUser.id, meDataState.products[i])
       if (!success) relationalSuccess = false
@@ -224,6 +194,7 @@ export async function meDataSave(showAlert) {
       if (!ok) relationalSuccess = false
     }
 
+    // Team upserted before holidays so person_id FK is valid for any new team member
     for (let i = 0; i < meDataState.team.length; i += 1) {
       const success = await meSaveTeamRelational(currentUser.id, meDataState.team[i])
       if (!success) relationalSuccess = false
@@ -265,6 +236,38 @@ export async function meDataSave(showAlert) {
         meDataPendingDeletes.products.slice(),
         meDeleteProductRelational
       )
+    }
+
+    // Holidays saved last — team members are guaranteed to exist in me_teams by this point
+    const seen = new Set()
+    meDataState.holidays = meNormalizeAndDedupeHolidays(meDataState.holidays)
+    const holidayData = (meDataState.holidays || [])
+      .filter(h => {
+        if (h.userId && h.userId !== currentUser.id) return false
+        const key = `${h.personId}_${h.date}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      .map(h => ({
+        id: h.id,
+        user_id: currentUser.id,
+        person_id: h.personId,
+        date: h.date,
+        type: h.type,
+        department: 'ME'
+      }))
+
+    const { error: delHolErr } = await supabase.from('me_holidays').delete().eq('user_id', currentUser.id)
+    if (delHolErr) {
+      console.warn('Failed to clear holidays:', delHolErr.message)
+      relationalSuccess = false
+    } else if (holidayData.length > 0) {
+      const { error: insHolErr } = await supabase.from('me_holidays').insert(holidayData)
+      if (insHolErr) {
+        console.warn('Failed to insert holidays:', insHolErr.message)
+        relationalSuccess = false
+      }
     }
 
     if (relationalSuccess) {

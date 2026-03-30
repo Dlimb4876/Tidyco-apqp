@@ -43,7 +43,6 @@ function hubGetCurrentUserEmailForFavourites() {
 function hubGetFavouritesStorageKey() {
   return HUB_FAVOURITES_STORAGE_PREFIX + hubGetCurrentUserEmailForFavourites()
 }
-
 function hubDefaultFavourites() {
   return {
     version: 1,
@@ -97,7 +96,10 @@ function hubSaveFavourites(next) {
     updatedAt: new Date().toISOString()
   })
   try {
-    localStorage.setItem(hubGetFavouritesStorageKey(), JSON.stringify(clean))
+    const key = hubGetFavouritesStorageKey()
+    const val = JSON.stringify(clean)
+    // if (globalThis.process?.env?.NODE_ENV === 'test') console.log('[HubDebug] hubSaveFavourites key:', key, 'val:', val)
+    localStorage.setItem(key, val)
   } catch (_) {}
   return clean
 }
@@ -193,20 +195,23 @@ export function hubOpenFavouritePage(pageKey) {
   if (!canViewPageKey(pageKey)) return
 
   if (pageKey.startsWith('capacity::')) {
-    appState.capacityTab = pageKey.split('::')[1] || 'root'
     navigate('capacity')
+    appState.capacityTab = pageKey.split('::')[1] || 'root'
+    render()
     return
   }
 
   if (pageKey.startsWith('product-development::')) {
-    appState.productDevelopmentTab = pageKey.split('::')[1] || 'root'
     navigate('product-development')
+    appState.productDevelopmentTab = pageKey.split('::')[1] || 'root'
+    render()
     return
   }
 
   if (pageKey.startsWith('production::')) {
-    appState.productionTab = pageKey.split('::')[1] || 'root'
     navigate('production')
+    appState.productionTab = pageKey.split('::')[1] || 'root'
+    render()
     return
   }
 

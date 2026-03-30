@@ -78,7 +78,7 @@ export async function prodCapLoadUtilization() {
 }
 
 export function setProdCapRefreshCurrentTab(handler) {
-  prodCapRefreshCurrentTabHandler = typeof handler === 'function' ? handler : () => {}
+  prodCapInternal.refreshCurrentTabHandler = typeof handler === 'function' ? handler : () => {}
 }
 
 // ── Subscribe to utilization factor changes (real-time sync) ────────────
@@ -90,7 +90,7 @@ function prodCapSubscribeUtilization() {
         if (!isNaN(newValue) && newValue >= 0 && newValue <= 1) {
           appState.prodCapUtilizationFactor = newValue
           if (isEditingInlineCell()) { prodCapPendingRealTimeUpdate = true; return }
-          prodCapRefreshCurrentTabHandler()
+          if (typeof prodCapRefreshCurrentTabHandler === 'function') prodCapRefreshCurrentTabHandler()
         }
       }
     }
@@ -113,7 +113,7 @@ function prodCapSubscribeData() {
         prodCapState.capacityRecords.push(row);
         if (appState.currentSection === 'capacity' && appState.capacityTab === 'production') {
           if (isEditingInlineCell()) { prodCapPendingRealTimeUpdate = true; return }
-          prodCapRefreshCurrentTabHandler()
+          if (typeof prodCapRefreshCurrentTabHandler === 'function') prodCapRefreshCurrentTabHandler()
         }
       }
     },
@@ -123,7 +123,7 @@ function prodCapSubscribeData() {
         prodCapState.capacityRecords[idx] = row;
         if (appState.currentSection === 'capacity' && appState.capacityTab === 'production') {
           if (isEditingInlineCell()) { prodCapPendingRealTimeUpdate = true; return }
-          prodCapRefreshCurrentTabHandler()
+          if (typeof prodCapRefreshCurrentTabHandler === 'function') prodCapRefreshCurrentTabHandler()
         }
       }
     },
@@ -131,7 +131,7 @@ function prodCapSubscribeData() {
       prodCapState.capacityRecords = prodCapState.capacityRecords.filter(r => r.id !== row.id)
       if (appState.currentSection === 'capacity' && appState.capacityTab === 'production') {
         if (isEditingInlineCell()) { prodCapPendingRealTimeUpdate = true; return }
-        prodCapRefreshCurrentTabHandler()
+        if (typeof prodCapRefreshCurrentTabHandler === 'function') prodCapRefreshCurrentTabHandler()
       }
     }
   })

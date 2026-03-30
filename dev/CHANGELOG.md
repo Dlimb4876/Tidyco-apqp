@@ -3,6 +3,22 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-30 | Refresh Product Development deep wiki pages | Improve NPI, Control Plan, Actions, and Risk guidance with clearer workflows and detailed calculation sections
+
+## 2026-03-30 | Refresh Action Centre, MCS, and Operations wiki overviews | Expand practical usage guidance and add detailed metric/calculation sections for clearer decision support
+
+## 2026-03-30 | Refresh four core wiki pages for usability | Improve onboarding and day-to-day clarity with high-level workflows plus detailed calculation guidance
+
+## 2026-03-30 | Add wiki README authoring guidance | Set clear writing standards so wiki articles stay accessible for new and existing users
+
+## 2026-03-30 | Expand capacity heatmap from 5-band to 7-band color scale | Better visual differentiation for capacity planning: added "Very clear" (<50%) and "Warning" (90-95%) bands to provide more granular utilization indicators across teams
+
+## 2026-03-30 | Fix holidays not persisting on refresh in capacity | RLS policies had conflicting rules: broad "Allow authenticated users to read holidays" policy overrode user-specific policy causing all users to load all holidays; dropped broad policies and enforced user_id filtering for me_holidays, pm_holidays, log_holidays, unit6_holidays
+
+## 2026-03-30 | Update TESTING_STRATEGY.md for ESM and current status | Documentation sync: modernized test templates for ESM, updated QA scripts list, and acknowledged current suite growth (910 tests) and 302 failures due to ongoing migration.
+
+## 2026-07-14 | Fix ME holidays not saving after add/update | Two bugs: (1) holidays were saved before team members causing FK violations for new team members; (2) realtime onDelete matched by (personId, date) and could remove a newly-created holiday when a DELETE event arrived for an old row with the same person+date — now matches by id only, aligning ME with PM/LOG/UNIT6 patterns
+
 ## 2026-03-30 | Fix action-centre.test.js — all 33 tests now pass | P1-B: added missing exports to action-centre.js, rewrote test setup to use shared ESM module state (appState, setCurrentUser, realSupabase, settingsState), updated assertions from flat-global mocks to DOM/state checks
 
 

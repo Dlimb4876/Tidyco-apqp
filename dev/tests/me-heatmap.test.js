@@ -32,13 +32,15 @@ describe('capRenderHeatmapTab()', () => {
     expect(html).toContain('capHeatmapGrid')
   })
 
-  test('renders a legend with all 5 bands plus No data', () => {
+  test('renders a legend with all 7 bands plus No data', () => {
     const html = capRenderHeatmapTab('2026-03', [], [], [], [], 'ME')
     expect(html).toContain('Heatmap utilisation legend')
+    expect(html).toContain('Very clear')
     expect(html).toContain('Clear')
     expect(html).toContain('Good')
     expect(html).toContain('Caution')
-    expect(html).toContain('Near full')
+    expect(html).toContain('Warning')
+    expect(html).toContain('Nearly full')
     expect(html).toContain('Over')
     expect(html).toContain('No data')
   })
