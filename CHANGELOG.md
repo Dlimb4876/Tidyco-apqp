@@ -3,6 +3,350 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-30 | Add error-handling-save.test.js (11 tests) | Phase 1.3 of robust testing plan — covers saveRemote() badge transitions (syncing→error), single automatic 1500ms retry, no-further-retry after retry fails, exception-path retry, and success control case
+
+## 2026-03-30 | Add error-handling-auth.test.js (28 tests) | Phase 1.2 of robust testing plan — covers RLS/auth 42501 rejections, optimistic revert on gate-sig conflict, and guard clauses in npi-data-relational.js
+
+
+## 2026-03-30 | Add Phase 1.1 database connection failure tests | New test file tests/error-handling-db.test.js covering graceful error handling for loadRemote, loadRemotePage, loadProjectById, teamsDataLoadAll, teamsDataLoadPermissions, teamsDataGetUserCount, and setSyncBadge badge transitions (16 tests, all passing)
+
+## 2025-07-22 | Capacity portal code & CSS review fixes | Wired modal close handler, removed dead fn, fixed localStorage bool, added hub event cleanup, added try/catch to event dispatchers, replaced all hardcoded hex/rgba in CSS with theme-aware variables for light/dark/terminal support
+
+## 2026-03-30 | Fix Operations dashboard PM utilization KPI showing 0% | PM metrics were incorrectly using ME data state; added PM data loading and realtime subscriptions to Operations portal.
+
+## 2026-03-30 | Remove "No Product" default text from task product picker | Empty fields now show placeholder instead of requiring users to delete pre-filled text before searching
+
+## 2026-03-30 | Fix capacity tasks reverting to read-only after edit | capTaskRefresh() was using old click-to-edit row builder instead of shared inline-editing renderer
+
+## 2026-03-30 | Add searchable product picker in Capacity tasks | Reduce task add/edit friction caused by very large product dropdown lists across ME/PM/Logistics/Unit6
+
+## 2026-03-30 | Filter permission-related console errors | Prevent console spam for users with reduced team permissions - RLS violations are expected behavior, not genuine errors. Added isPermissionError(), safeWarn(), safeError() helpers and updated 200+ console.warn statements across data-relational files
+
+## 2026-03-30 | Restore inline editing for Capacity tasks tables | Re-enable direct row editing and remove Hours spinwheel controls because the inline flow was more efficient for planning updates
+
+## 2026-03-30 | Close wiki coverage and depth gaps | Add missing navigation topics, new practical detail pages, and richer process guidance without touching wiki test-tooling workstream
+
+## 2026-03-30 | Refresh Product Development deep wiki pages | Improve NPI, Control Plan, Actions, and Risk guidance with clearer workflows and detailed calculation sections
+
+## 2026-03-30 | Refresh Action Centre, MCS, and Operations wiki overviews | Expand practical usage guidance and add detailed metric/calculation sections for clearer decision support
+
+## 2026-03-30 | Refresh four core wiki pages for usability | Improve onboarding and day-to-day clarity with high-level workflows plus detailed calculation guidance
+
+## 2026-03-30 | Add wiki README authoring guidance | Set clear writing standards so wiki articles stay accessible for new and existing users
+
+## 2026-03-30 | Expand capacity heatmap from 5-band to 7-band color scale | Better visual differentiation for capacity planning: added "Very clear" (<50%) and "Warning" (90-95%) bands to provide more granular utilization indicators across teams
+
+## 2026-03-30 | Fix holidays not persisting on refresh in capacity | RLS policies had conflicting rules: broad "Allow authenticated users to read holidays" policy overrode user-specific policy causing all users to load all holidays; dropped broad policies and enforced user_id filtering for me_holidays, pm_holidays, log_holidays, unit6_holidays
+
+## 2026-03-30 | Update TESTING_STRATEGY.md for ESM and current status | Documentation sync: modernized test templates for ESM, updated QA scripts list, and acknowledged current suite growth (910 tests) and 302 failures due to ongoing migration.
+
+## 2026-07-14 | Fix ME holidays not saving after add/update | Two bugs: (1) holidays were saved before team members causing FK violations for new team members; (2) realtime onDelete matched by (personId, date) and could remove a newly-created holiday when a DELETE event arrived for an old row with the same person+date — now matches by id only, aligning ME with PM/LOG/UNIT6 patterns
+
+## 2026-03-30 | Fix action-centre.test.js — all 33 tests now pass | P1-B: added missing exports to action-centre.js, rewrote test setup to use shared ESM module state (appState, setCurrentUser, realSupabase, settingsState), updated assertions from flat-global mocks to DOM/state checks
+
+
+## 2026-03-30 | Update programme-family-sync eval loading for ESM state module | P1-D: switched state/products eval to `toEvalFriendlyModuleSource` and aligned test setup to `appState` + `db.families` so `state.js` exports no longer break eval
+
+## 2026-03-30 | Export NPI PFD hydrate helper for relational tests | P1-C required `npiRelHydratePfdRows` to be a named export; `npiRelSaveDoc` was verified as already implemented/exported
+
+## 2026-03-30 | Export hub favourites helpers for test imports | P1-A fixes missing named exports in `hub.js` so tests can import `hubGetFavouriteProducts`, `hubRemovePageFavourite`, and `hubRemoveProductFavourite`
+
+## 2026-03-30 | Rename Configuration to Site Configuration and restrict admin-only tabs | Site Configuration now clearly labels admin tasks (Product Families, Work Areas, Gate Questions); non-admin users are redirected to Access tabs (Teams, Permissions, etc.)
+
+## 2026-03-30 | Fix Settings/Work Areas edit button test | Work areas tests were using mocked global state instead of real module state; updated test setup to use realWorkAreasState for accurate testing
+
+## 2026-07-15 | Settings module anti-pattern refactor | Remove 7 categories of AI-generated anti-patterns: replace syncCoreState let-variable bridge with shared settingsState object, remove microtask DOM hydration race condition (explicit initSettings call), fix N+1 team-count query (single Supabase join), fix JSON.stringify HTML-escaping hack (use esc helper), remove dead typeof guards on ESM imports, deduplicate tab-activation logic, remove dead _familiesResortTbody and _waResortTbody functions
+
+## 2026-07-15 | Dead code sweep and export cleanup | Remove 8 dead files, fix npi-cp.js wiring bug (Control Plan tab never loaded), de-export 22 internal-only symbols across 11 files, fix package.json main field
+
+## 2026-03-29 | Expand capacity heatmap to 26 weeks (6 months) | Better forward visibility for planning
+
+## 2026-03-29 | Fix capacity heatmap mobile overflow | cap-responsive.css had repeat(20, 40px) overriding the correct 12-column layout, making the grid 900px wide and causing content to spill out
+
+## 2026-03-29 | Expand Capacity heatmap to 3 months | Show a fuller forward planning view by extending heatmap coverage from 12 to 13 weeks
+
+## 2026-03-29 | Tighten Capacity chart section spacing | Make chart, tables, and heatmap spacing consistent and slightly more compact on the Capacity charts page
+
+## 2026-03-29 | Guard task product-ref wipe across all departments | ME, LOG, PM, Unit6 save routines were stripping product_id from all tasks if products failed to load (empty set bug)
+
+## 2026-03-29 | Heatmap visual overhaul and cell-click detail modal | Replaced 3 hard colour bands with 5 graduated bands, softened grid aesthetics, added legend strip, today-week highlight, and wired the previously empty capOpenHeatmapDetail stub so clicking any cell shows a task breakdown panel
+
+## 2026-03-29 | Add holiday planner legend in Capacity | Makes the holiday planner easier to read by showing clear labels for working days, full days, half days, and bank holidays
+
+## 2026-03-29 | Add sorting to Capacity team table | Let ME team planning rows be reordered from the table headers instead of staying fixed
+
+## 2026-03-29 | Fix hosted dev bootstrap config 404 | Switched Supabase browser startup to tracked `core/js/config.public.js` with the project publishable key so hosted/dev pages no longer abort before `doLogin` is wired
+
+## 2026-03-29 | Fix Settings Work Areas edit button responsiveness | Replaced delayed double-rAF settings hydration with microtask hydration so Work Areas row edit clicks bind immediately and no longer appear to do nothing
+
+## 2026-03-29 | Tidy production schedule header controls | Moved Show/Hide Completed into the filter bar and removed redundant top-bar Add Batch button to simplify scheduling controls
+
+## 2026-03-29 | Fix parts database class filter not responding | Class filter buttons wrote to global scope instead of IIFE-scoped state variable; added partsDb.setClassFilter() setter and updated onclick to call it
+
+
+## 2026-03-29 | Fix MCS and NPI PFD runtime errors | Fixed `ReferenceError: mcsRenderCardHTML is not defined` in MCS real-time by adding missing imports and exports; fixed `ReferenceError: npiBom is not defined` in NPI PFD by importing `npiBom` from `bom.js`.
+
+## 2026-03-29 | Fix NPI PFMEA and Timing runtime errors | Imported missing `npiComponents` in `pfmea.js`, `dashboard.js`, `trackers.js` and fixed missing `GANTT_WEEKS` constants in `timing.js` to resolve TypeError and ReferenceError during NPI portal navigation.
+
+## 2026-03-29 | Fix db remote loader `supa` ReferenceError | Switched `core/js/db.js` to module-namespace import (`import * as supa`) so all existing `supa.currentUser`/`supa.supabase` calls resolve correctly and project data loads after login
+
+## 2026-03-29 | Disable inline edits in Parts Database table | Converted parts table rows to read-only values and removed `updateInline` autosave path so catalogue changes only happen through explicit Edit/Add modal actions
+
+## 2026-03-29 | Fix Settings families/work areas state references | Added missing ESM imports in `settings.js` for `familiesState`/`workAreasState` and related data functions so Settings tabs render without `ReferenceError` crashes
+
+## 2026-03-29 | Restore APQP add buttons data wiring | Imported shared `npi` namespace in `npi-data.js` and bound `npi.data = npiData` unconditionally so CTQ add and PFMEA add mode actions can call `npi.data.*` without silent failures
+
+## 2026-03-29 | Fix CTQ/PFMEA missing module references | Added missing `npiData` + navigation imports in `npi-ctq.js` and imported `pfmea-state.js` in `pfmea.js` so CTQ add actions and PFMEA filters/views work without runtime errors
+
+## 2026-03-29 | Fix APQP Control Plan tab reference error | Replaced stale `npiCp.render()` call in `apqp.js` with `npi.cp.render()` guard so APQP tab switching no longer crashes with `npiCp is not defined`
+
+## 2026-03-29 | Fix products init and dashboard product wiring | Switched products data to `import * as supa` (matching `supa.currentUser` + `supa.supabase`) and added missing `productsDataGetAll` import in NPI dashboard to stop startup crashes
+
+## 2026-03-29 | Fix products data startup auth crash | Replaced invalid `supa.getCurrentUser()` calls in products data with the shared `currentUser` state from `supa.js` so product data init and saves no longer throw at launch
+
+## 2026-03-29 | Fix NPI BoM parts database wiring crash | Added missing `getPartsDatabase` imports in `bom.js`/`bom-cclass.js` and restored `globalThis.partsDatabase` bridge in `parts-database.js` for existing modal inline handlers, preventing startup abort that also blocked `doLogin` bridge setup
+
+## 2026-03-29 | Fix NPI dashboard namespace init crash | Initialized all expected `npi.*` namespaces in `npi-shared.js` so early-loaded modules (like dashboard) can safely assign methods before `npi.js` completes, preventing startup abort and restoring `doLogin` bridge setup
+
+## 2026-03-29 | Fill Forward now overwrites existing values in prod capacity settings | Previously refused to run when cells were already filled; now propagates first row value over any existing values
+
+## 2026-03-29 | Fix missing NPI shared module import | Restored `portals/product-development/npi/js/npi-shared.js` so NPI module graph loads cleanly and login global bridges initialize (fixes `npi-shared.js` 404 + follow-on `doLogin is not defined`)
+
+## 2026-03-29 | Fix product support hours calculation | Reverted bad fallback that multiplied per-batch hours by weeks-in-month; wired setCapProductionBatchesResolver in ME init to pull from prodState.batches so batch-driven support hours flow correctly to charts and product load tab
+
+## 2026-03-29 | Fix product support hours missing from capacity charts | Support hours were never reaching charts because batch lookup returned empty and there was no fallback; added weekly-rate proration when no production schedule exists, and wired ME support-rate resolver through chart pipeline
+
+## 2026-03-29 | Fix Operations Capacity KPI navigation | Operations Capacity by Area KPIs were navigating to the capacity hub instead of the actual capacity plan; updated destinations to capacity::me, capacity::projects, capacity::logistics, and capacity::production
+
+## 2026-03-29 | Fix infinite recursion in login | imported doLogin explicitly in app.js to avoid hitting the global wrapper recursively
+
+## 2026-03-29 | Fix ME Capacity tab selector active state | Nav buttons were outside #meBody so active class never updated on tab switch
+
+## 2026-03-29 | Fix ME Capacity search/filter/sort on Product Support and Product Load tabs | Wire up setCapProductsDependencies and setCapProductLoadDependencies with refresh callbacks, product lookups, and API methods so search, family filter, and sorting actually update the DOM; add styled .cap-filter-bar CSS with responsive breakpoints; fix test dependency wiring
+
+## 2026-03-29 | Restore ME Capacity summary tables | Two tables (Demand Breakdown and Capacity Per Engineer) were lost during the capacity code restructure; restored to cap-chart.js
+
+
+## 2026-03-29 | Fix holiday planner runtime error | Resolved "Uncaught TypeError: "" is not a function" in cap-holidays.js caused by a missing semicolon before a parenthesis, which led to a string assignment being incorrectly interpreted as a function call.
+
+## 2026-03-29 | Align AI helper docs to ESM rules | Replace outdated load-order/CommonJS guidance with current ESM import and coverage checks so all assistants follow the same module standard
+
+## 2026-03-29 | Fix operations dashboard tabs and test functionality | Operations dashboard tabs were non-functional due to 'globalThis.render' being undefined. Fixed by exposing 'render' in main.js and adding the '.ops-tab-body' wrapper in the dashboard for efficient refreshes. Also restored the broken 'tests/operations-dashboard.test.js' by bridging ESM gaps and mapping renamed functions.
+
+## 2026-03-29 | Fix project favourites storage key mismatch | Favourites saved in the NPI dashboard were not appearing on the Hub portal because dashboard.js was using an incorrect 'globalThis.currentUser' fallback (saving to anonymous bucket) while the Hub was using the correctly imported 'currentUser' from supa.js. Fixed by using the imported currentUser in dashboard.js and ensuring supa.js populates the global variable for compatibility.
+
+## 2026-03-29 | Fix NPI dashboard loading hang | Dashboard was stuck on "loading" due to missing imports in dashboard.js, undefined npiTab (replaced with appState.npiTab), and disconnected globalThis.npi object across modules (pfmea.js and dashboard.js).
+
+## 2026-03-29 | Fix ESM login launchApp wiring | Login succeeded at auth level but crashed on undefined launchApp in module scope, blocking app shell transition after sign-in
+
+## 2026-03-29 | Unblock ESM test/check runtime boot | Fix npm/Jest launch path for Windows ESM, restore Jest global in setup, and convert failing check scripts from CommonJS require to ESM imports so validation commands run under type:module
+
+## 2026-03-29 | Fix broken ESM import in me-data-persistence.js | meDataDeleteProductSupportHistoryEntry was imported from wrong module (me-data-entities.js instead of me-data-support-history.js), causing cascading failure that broke doLogin and the whole app on load
+
+## 2026-03-29 | Execute ESM Phase 8 final wiring | Complete final module bootstrap wiring by switching index.html to importmap + main module entry, resolving app/navigation explicit imports, and updating phase trackers with deferred pwsh/browser gates
+## 2026-03-29 | Execute ESM Phase 9 cleanup and tracker finalization | Finalize cleanup docs/check pipeline updates and mark Part1/Part2 row 9 complete with explicit deferred pwsh/CLI-only gate notes and merged-marker policy
+## 2026-03-29 | Execute ESM P7b MCS UI conversion | Convert 6 scoped MCS UI files to explicit ESM with P7a-safe wrappers, remove inline handlers via data-action delegation, and update migration trackers with deferred pwsh validation
+## 2026-03-29 | Execute ESM P7a MCS data/shared modal conversion | Convert the 4 scoped MCS files to explicit imports/exports with no in-scope window bridges, update migration trackers, and record deferred pwsh validation as non-blocking
+## 2026-03-29 | Execute ESM P6b NPI tools conversion | Convert all 9 scoped NPI tool modules to explicit ESM imports/exports, remove in-scope window bridges, switch index scripts to modules, and mark trackers with deferred pwsh validation
+## 2026-03-29 | Execute ESM P6d NPI wiring conversion | Finalize npi.js/npi-orchestrator.js/npi-events.js as module wiring, update app/navigation hooks to exported APIs, and mark trackers with deferred pwsh validation
+## 2026-03-29 | Mark P6c tracker completion with deferred validation | Update Part1/Part2 migration trackers and P6c checklist to done/merged state with explicit non-blocking pwsh defer notes per environment limits
+## 2026-03-29 | Finalize ESM P6a NPI foundation state | Normalize npi-data into coherent ESM form, export npi relational API directly, add P6a bridge wiring in index, and align trackers/checklists with deferred pwsh validation policy
+## 2026-03-28 | Execute ESM P6a NPI foundation conversion | Convert npi constants/data/components foundation files to explicit ESM import/export contracts, remove in-scope window bridges, and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5e product-development conversion | Finalize Product Development/Parts/Product Management ESM wiring for the 10-file scope, remove remaining scoped bridge usage, and update trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5d settings conversion | Convert 5 settings portal files to explicit imports/exports with no window bridges and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5c hub/feedback/action-centre conversion | Convert 5 scoped portal files to explicit imports/exports without window bridges, patch coupled callers, and mark tracker/checklist rows with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5a operations conversion | Convert 9 operations portal files to explicit imports/exports with no window bridges in scope, wire navigation to ESM exports, and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P5b production conversion | Convert 5 production portal files to explicit imports/exports with no window bridges and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Finalize ESM P4e capacity shell/events cleanup | Remove remaining in-scope global bridge usage from capacity shell routing and complete deferred P4e tracker accuracy
+
+## 2026-03-28 | Execute ESM P4a ME capacity conversion | Convert ME capacity data/orchestrator files to explicit ESM imports/exports with no window bridges in scope, and update P4a trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P4d UNIT6 capacity conversion | Convert UNIT6 capacity relational/data/orchestrator files to explicit imports/exports with no window bridges, and update P4d trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P4b PM capacity conversion | Convert PM capacity relational/data/orchestrator files to explicit ESM imports/exports with no window bridges, and update P4b trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM Phase 3 capacity shared conversion | Convert 13 capacity shared files to explicit ESM imports/exports, remove window bridges in scope, and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P2b core outer conversion | Convert helpers/navigation/realtime/render-scheduler/chart-theme/guide/network/app to ESM exports/imports, add core/js/main.js entry point, and update phase trackers with deferred pwsh validation
+
+## 2026-03-28 | Execute ESM P2a core inner conversion | Convert state/auth/db to explicit ESM contracts and add CDN import map while deferring command validation due to missing pwsh
+
+## 2026-03-28 | Complete ESM P2b outer core pass | Finalize helpers→app scoped ESM consistency, add core main.js entrypoint, and mark phase trackers done with deferred pwsh validation
+
+## 2026-03-28 | Add check:imports script for P1c | Introduce import-checker guardrail and npm script wiring for ESM migration phase 1c
+
+## 2026-03-28 | Retire legacy validation script checks for P1b | Replace old load-order/state/subscription enforcement with ESM migration stubs and align check:all phase order
+
+## 2026-03-28 | Add ESM coverage progress checker | Add check:esm-coverage script and phase tracker updates for P1d
+
+## 2026-03-28 | Add /fleet coordination contract to ESM migration plans | Standardize phase claiming, branch ownership, handoff format, and merge gates so parallel Copilot agents can coordinate safely and quickly
+
+## 2026-03-28 | ESM migration plan documented | Full site migration from global scripts to ES modules planned across 9 phases in plans/esm-migration-part1.md and plans/esm-migration-part2.md
+
+## 2026-03-28 | Replace silent error handling with proper logging | Code review found empty catch blocks swallowing errors; added console.error/console.debug to 9 locations so failures are visible for debugging
+
+## 2026-03-28 | Fix code review issues (network race condition, gate questions return value, input escaping, cleanup) | Remove premature optimistic health state in network detection; make gate questions data loader return promise; fix double-escaping in input values; add teardown function for memory cleanup
+
+## 2026-03-28 | Professional Wiki Content Rewrite | Updated 5 key wiki pages (Gates, MCS, Capacity, PFMEA, Action Centre) to an objective, encyclopedic tone as per reference guide standards.
+## 2026-03-28 | Align guide modals with live portal behavior | Updated guide copy and wired missing Logistics/Unit 6 guide buttons so on-page help stays accurate and accessible
+## 2026-03-28 | Add gate_question_definitions table | Extract hardcoded gate checklist questions into the database so questions can be added or amended without a code change
+
+## 2026-03-28 | Stabilize brittle Jest assertions in guide, state, action-centre, and bom suites | Align tests with current markup/state declaration patterns so valid runtime behavior does not fail CI
+
+## 2026-03-28 | Wiki tone and content update for Risk Tab, PFMEA, Quick Reference | Improve clarity and layering for new and experienced users
+
+## 2026-03-28 | Fix back button label accuracy | Label was based on current section only, not tab state — showed wrong destination (e.g. "Back to Capacity" when on root capacity going to Hub)
+
+## 2026-03-28 | Block self-echo renders in all capacity realtime handlers | PM, LOG, UNIT6 realtime callbacks now have the same SaveInProgress guard as ME, stopping startup flicker across all capacity streams
+## 2026-03-28 | Make guide modal 15% wider | Improve readability by giving guide content more horizontal space
+## 2026-03-28 | Block self-echo renders in ME capacity realtime | me_teams, me_tasks, me_products handlers now skip re-render while a local save is in progress, stopping the startup flicker
+## 2026-03-28 | Add autocomplete="off" to capacity table inputs | Suppress 60k+ browser warnings about form fields with no id/name in cap-products, cap-product-taskload, cap-tasks
+
+## 2026-03-28 | Fix operations dashboard capacity KPIs showing "Not Ready" | Added missing window exports for production capacity functions and backwards compatibility alias for meCalculateMonthData so ME, PM, LOG, and Unit 6 capacity metrics display correctly
+
+## 2026-03-28 | Add Stage 3 impact checklist tracking for MCS | Stage 3 now mirrors Stage 1 impact selections as implementation checkboxes and saves progress in persisted change data
+
+## 2026-03-28 | Isolate debug Chrome profile in batch launchers | Keep debug browser windows as a separate signed-out taskbar instance while still launching in incognito
+
+## 2026-03-28 | Launch debug batch files in Chrome Incognito | Match VS Code debug behavior by opening local debug URLs in a fresh private browser session
+
+## 2026-03-28 | Fix Capacity task edit saving wrong row under filters | Task save now resolves by active editing task ID within current context, preventing cross-row updates when filtered/sorted views are active
+
+## 2026-03-28 | Redesign MCS create change modal - wider layout and reorganized sections | Modal expanded from 1140px to 1400px, removed workflow rail, reorganized into 4 clear sections (Basic Info, Change Details, Impact Assessment, Implementation & Approval) for better professional appearance and easier form completion
+
+## 2026-03-28 | Migrate NPI, Production, and Operations to render scheduler | Replace all remaining pending globals and focusout flush logic with requestRender/flushDeferred; remove opsPendingRealTimeUpdate module variable
+## 2026-03-28 | Migrate LOG and UNIT6 Capacity to render scheduler | Replace pending globals, SmartRender, ShouldDefer, and chartDirty flags with requestRender/flushDeferred for both portals
+## 2026-03-28 | Migrate PM Capacity to render scheduler | Replace pmPendingRealTimeUpdate/pmPendingRerender globals, pmCapSmartRender, and pmShouldDeferRealtimeRender with requestRender/flushDeferred; remove pmChartDirty
+## 2026-03-28 | Migrate ME Capacity to render scheduler | Replace mePendingRealTimeUpdate/mePendingRerender globals and meCapSmartRender with requestRender/flushDeferred; remove meChartDirty (charts redraw on page open only)
+## 2026-03-28 | Add core render scheduler utility | Centralise deferred-render logic so all table-edit portals share one tested scheduler instead of duplicating pending flags and debounce timers
+
+## 2026-03-28 | Add name attributes to task form fields | Fix browser accessibility warning about form fields missing id/name
+
+## 2026-03-28 | Stabilize Capacity realtime rendering across PM/Logistics/Unit6 | Realtime updates could repeatedly replace tab HTML while users were filtering/typing, causing visible flicker; added focused-input deferral plus render coalescing to match stable NPI behavior
+
+## 2026-03-28 | Fix task save button not working when editing existing tasks | el.closest('[data-task-id]') returned the save button (which has data-task-id) instead of the table row, so form field queries returned null and no data was captured
+
+## 2026-03-27 | Fix task editing — wrong task updated when filtered; redesign to click-to-edit | Tasks used filtered array index as identifier; edits hit the wrong row when sorted/filtered. Replaced with task ID lookup, added per-row Edit/Save/Cancel flow and a persistent new-task input row at table top
+
+## 2026-03-27 | Optimize ME holiday save performance | Moved holiday save to execute FIRST (before products/teams/tasks) so users get immediate feedback; previously had to wait for all 30-50+ sequential DB calls to complete
+
+## 2026-03-27 | Add logo-only desktop icon generator | Make shortcut branding cleaner by trimming empty space and exporting a square icon from the company logo
+
+## 2026-03-27 | Fix Windows debug launcher quoting | The browser auto-open command used `\"` escaping that CMD treated as a broken `\` path instead of valid nested quotes
+
+## 2026-03-27 | Add app-plus-wiki debug launcher | Make local browser debugging quicker when checking both the main app and wiki together
+
+## 2026-03-27 | Auto-open browser in debug launcher | Make the no-VS-Code launcher even easier by opening the local site automatically
+
+## 2026-03-27 | Add no-VS-Code debug launcher | Make it easier to start the local site in a browser without opening VS Code
+
+## 2026-03-27 | Debounce ME realtime re-render | Page was flickering on load — each saved row echoed back a realtime event triggering a full DOM replace; debouncing collapses the burst into one render
+
+## 2026-03-27 | Harden error handling and fix realtime subscription leaks | Code review: safe JSON.parse in NPI dashboard, FileReader onerror, cleanup for log/pm/unit6 capacity channels, user-visible toasts on team data failures
+
+## 2026-03-27 | Fix Capacity tasks tab full re-render on every keypress | Tasks search was re-rendering the entire tab HTML on every keystroke; now only the KPIs and table are updated, preserving focus on filter controls
+
+## 2026-03-27 | Stabilize ME task search focus during startup realtime churn | ME realtime updates could re-render the Tasks tab while the search box was focused, ejecting the cursor for ~20 seconds; realtime repaint is now deferred while capacity search/filter inputs are active
+
+## 2026-03-27 | Fix ME capacity team member delete not persisting on refresh | Deleted team members came back after refresh because the DB delete was only queued in the save cycle (step 3-C); now fires immediately on delete and flushMEDataNow also sends pending deletes on beforeunload
+
+## 2026-03-27 | Fill remaining desktop breakpoint gaps in portal CSS | Added explicit `min-width: 768px` refinements to the last partial portal stylesheets so the mobile audit is fully clean and desktop spacing is intentional in each feature area
+
+## 2026-03-27 | Harden repository guardrail scripts against false positives | Replaced heuristic syntax checks with parser-backed validation and taught the subscription, mobile, and modal audits to respect real app patterns so `check:all` reports genuine issues instead of validator noise
+
+## 2026-03-27 | Remove orphaned me_hub_evm_summary DB view | The live view was no longer referenced by app code, so removing it avoids stale schema drift and accidental reintroduction from the loose SQL script
+
+## 2026-03-27 | Bridge test gaps for NPI duplicate project flows | Added focused regression coverage for paged-project hydration and duplicate-safe project opening, plus stabilized hub favourites assertions
+
+## 2026-03-27 | Complete ME data modularisation Phase 7 | Convert `me-data.js` into the final facade/bootstrap layer and align persistence/reset with the same shared ME state shape
+
+## 2026-03-27 | Deduplicate projects and enforce one-project-per-product at DB level | Removed dangerous duplicate project rows, repointed relational NPI rows to canonical project IDs, restored dashboard access under paged loads, and added a unique partial index on projects.product_id to prevent recurrence
+
+## 2026-03-27 | Fix NPI duplicate project opening and stop duplicate auto-creation on partial loads | Multiple projects with the same product were being created/opened from paged data, causing dashboard cards to land on empty clones while real APQP rows existed on an older project id
+
+## 2026-03-27 | Fix NPI project pages loading blank relational data | NPI relational loads were querying NPI tables with project UUIDs instead of projects.prog_id, so BoM/APQP/actions/risks came back empty despite rows existing
+
+## 2026-03-27 | Complete ME data modularisation Phase 6 | Extract the ME realtime row-normalization and subscription wiring into its own file while keeping the current ME data API and behavior intact
+
+## 2026-03-27 | Complete ME data modularisation Phase 5 | Extract the ME init/save/reset/diagnostic orchestration into its own file, then fix the reviewed realtime and support-history sync regressions so the split stays safe
+
+## 2026-03-27 | Complete ME data modularisation Phase 4 | Extract the ME entity CRUD and department product autosync logic into their own file while keeping the current ME data API and behaviour intact
+
+## 2026-03-27 | Complete ME data modularisation Phase 3 | Extract the ME product support history logic into its own file while keeping the current ME data API and behaviour intact
+
+## 2026-03-27 | Complete ME data modularisation Phase 2 | Extract the pure ME data normalization helpers into a separate file without changing the live ME API or behaviour
+
+## 2026-03-27 | Fix favourites navigation loading wrong project on refresh | Hash project ID was only restored if already in paginated data (first 50), causing random project fallback; now trust URL hash and don't redirect to kanban if project not yet loaded
+
+## 2026-03-27 | Complete ME data modularisation Phase 1 | Lock the current ME data API and realtime behaviour with characterization tests before extracting code out of me-data.js
+
+## 2026-03-27 | Add ME data modularisation plan | Capture a phased non-behavioural split plan for the oversized ME data module before making structural changes
+
+## 2026-03-27 | Capacity independence cleanup | Fix remaining gaps from plan review: strip redundant department field from ME relational save payloads; remove dead legacy bridges from cap-dashboard.js and cap-heatmap.js; update heatmap test to match new non-bridged behaviour
+
+## 2026-03-27 | Fix ME capacity deletes not persisting to database | meDataDeleteTask was overwriting the pending deletes object and losing queued team deletions; meDataDeleteProduct had no queue at all
+## 2026-03-27 | Finish capacity independence cleanup | Remove the last ME context bridges, decouple Operations from ME-only department filters, and align tests and guide text with the final isolated-stream design
+## 2026-03-27 | Fix ME capacity saves not persisting to database | department field was missing from all three upsert payloads (me_teams, me_tasks, me_products), causing DB constraint failures on insert
+
+## 2026-03-27 | Restore shared capacity runtime after Phase 10 cut-over | Replace the remaining shared placeholder tabs, fix stream-aware month navigation, realign ME team saves with the isolated-stream model, and repair Windows validation scripts that were silently scanning zero files
+
+## 2026-03-27 | Complete capacity independence Phase 10 | Delete the old ME shared JS/CSS copies now that the shared bootstrap is live, and migrate direct Jest file loads onto shared `cap-*` files or shared wrapper coverage
+
+## 2026-03-27 | Complete capacity independence Phase 9 | Cut `index.html` over to the shared capacity bootstrap so live capacity pages load `cap-*` CSS/JS before stream-specific orchestrators instead of relying on the old ME shared include set
+
+## 2026-03-27 | Complete capacity independence Phase 8 | Move shared data/date/normalization utility ownership into the shared `cap-*` layer so ME, PM, Logistics, and Unit 6 data files no longer depend on ME as the source of generic helpers
+
+## 2026-03-27 | Complete capacity independence Phases 4 to 7 | Move PM, Logistics, and Unit 6 orchestrators onto shared-capacity entry points and make the capacity event router DOM-context driven before the shared bootstrap cut-over
+
+## 2026-03-27 | Replace shared capacity placeholder renderers | Finish the Phase 3 shared-tab gap by routing the shared products, task-load, holidays, dashboard, and heatmap files through the working runtime-safe capacity implementations
+
+## 2026-03-27 | Make Parts Database table sortable | Allow users to click column headers to sort by Tidyco PN, Class, Description, Units, Manufacturer, or Manufacturer PN
+
+## 2026-03-27 | Correct capacity independence Phase 3 status wording | Phase 3 decoupled the ME orchestrator, but the plan needed to state that a runtime-safe fallback bridge remains until the shared layer is fully cut over
+
+## 2026-03-27 | Complete capacity independence Phase 3 | Move the ME orchestrator onto shared-capacity entry points and remove cross-stream context delegation while keeping a runtime-safe bridge until the shared script cut-over
+
+## 2026-03-27 | Complete capacity independence Phase 2 | Remove shared-layer context/data fallbacks and make shared task rendering use explicit filter and sort inputs before the orchestrator cut-over
+
+## 2026-03-27 | Finish capacity independence Phase 1 cleanup | Remove the last ME-prefixed shared references so the shared capacity copies are ready for Phase 2 without changing the live app bootstrap
+
+## 2026-03-27 | Fix ME Capacity team member duplicate key error | meSaveTeamRelational now checks for existing team member by name before inserting to avoid violating the unique (user_id, name) constraint
+
+## 2026-03-27 | Add Parts Database folder README | Document the standalone Parts Database subsystem so its ownership, files, and integration points are easy to find
+
+## 2026-03-27 | Verify ME capacity database saves working correctly | User reported data not posting; investigation confirmed all saves working (67 products, 6 team, 80 tasks); removed verbose debug logging that was added for diagnosis
+
+## 2026-03-27 | Finish Parts Database subsystem split | Moved the Add from Parts Database picker and ABC-specific styling into the standalone Parts Database module so Product Development owns the full catalogue flow instead of relying on shared NPI internals
+# CHANGELOG
+
+## 2026-03-29 | Fix cap-chart.js SyntaxError | Convert portals/capacity/shared/js/cap-chart.js to proper ESM module with named exports to fix SyntaxError in capacity orchestrators (ME, PM, LOG, UNIT6).
+
+## 2026-03-27 | Phase 1: Create shared capacity files | Create portals/capacity/shared/ folder with 12 JS and 7 CSS files copied from ME portal and renamed from me* to cap*; shared utilities (cap-utils.js, cap-components.js, cap-calculations.js, cap-data-utils.js) and renderers (cap-team.js, cap-tasks.js, cap-products.js, cap-product-taskload.js, cap-holidays.js, cap-chart.js, cap-heatmap.js, cap-dashboard.js) ready for Phase 2 refactoring
+
+## 2026-03-27 | Split Parts Database into its own Product Development subsystem | The parts catalogue had been embedded in shared NPI files; moving ownership into a dedicated folder makes the feature easier to find, maintain, and evolve independently
+
+## 2026-03-27 | Remove inline production schedule add-batch click | Production portal render output needed to stay on delegated controls so the production test passes and behavior stays consistent
+
+## 2026-03-26 | Restructure capacity portal folders | Move ME and Production files into their own named subfolders (me/, production/) so every capacity stream has a consistent folder structure
+
+## 2026-03-26 | Fix production schedule virtual scroll jumping to top | Scroll position was lost on every re-render; new-row inputs were also at risk of being wiped on scroll updates
+
+## 2026-03-26 | Add Unit Value (£) column to Product Management | Track per-unit monetary value for each product; defaults to £100 for all existing and new products; editable inline in the product list table
+
+## 2026-03-26 | Fix product support history not displaying in PM/LOG/UNIT6 capacity | Two issues: 1) getProductHistoryRows() was incorrectly passing product.department to meGetDepartmentFromContext(), 2) meRenderProductsTab() only checked for meDataGetProductSupportHistory but PM/LOG/UNIT6 use their own functions (pmDataGetProductSupportHistory, etc.); both fixed so history now displays correctly
+
+## 2026-03-26 | Phase 3: Work Breakdown Structure & EVM Integration | New me_hub_subtasks table with EVM tracking columns; WBS interface in ME-Hub for breaking down tasks into subtasks with progress sliders; inline time logging with quick-entry form; Management View tab showing EAC calculations and variance status; full EVM math (BAC, EV, ETC, EAC) implemented in hub
+
+## 2026-03-26 | Update README.md | Reflect new project structure, ME Hub, BoM overhaul, CTQ Coverage, Parts Where Used, URL params, and capacity sub-modules added since last documentation update
+
+## 2026-03-26 | Fix NPI Products favourites resetting when data not loaded | hubGetFavouriteProducts() now checks productsState.loaded before removing stale products, preventing favorites from being cleared when products data hasn't finished loading yet
+
 ## 2026-03-26 | Make sub-assembly descriptions editable in Core and AAW/Repair BoMs | Description field is now an editable input for all tree nodes (parts and sub-assemblies) in both Core BoM and AAW/Repair BoM views
 
 ## 2026-03-26 | Add top-level Part Number field to AAW/Repair BoMs | Each AAW/Repair BoM group now has a dedicated Part Number input field displayed in the header; stored in pn column of npi_bom_groups table
@@ -597,3 +941,4 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 ## 2026-03-21 | Fix misleading 0% coverage output in check:coverage | Coverage script now detects empty Jest coverage artifacts and reports coverage as unavailable instead of implying real 0% source coverage
 
 ## 2026-03-21 | Split Operations unit cards into separate boxes in People and Infographic views | Unit 2, Unit 3, and Unit 6 are now rendered as individual cards/panels for clearer side-by-side comparison
+

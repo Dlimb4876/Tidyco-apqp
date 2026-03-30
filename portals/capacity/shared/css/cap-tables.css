@@ -1,0 +1,237 @@
+/* ============================================================
+ 	 me-capacity-tables.css — tables and utility rows
+ 	 ============================================================ */
+
+/* ── Filter / Search Bar ─────────────────────────────────────── */
+.cap-filter-bar {
+	display: flex; gap: 10px; flex-wrap: wrap;
+	margin-bottom: 12px; align-items: center;
+}
+.cap-filter-bar input[type="text"] {
+	padding: 7px 10px; border: 1.5px solid var(--line2);
+	border-radius: 6px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif;
+	background: var(--white); color: var(--ink);
+	outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.cap-filter-bar input[type="text"]:focus {
+	border-color: var(--blue);
+	box-shadow: 0 0 0 2px var(--field-shadow-focus);
+}
+.cap-filter-bar select {
+	padding: 7px 10px; border: 1.5px solid var(--line2);
+	border-radius: 6px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif;
+	background: var(--white); color: var(--ink);
+	outline: none; cursor: pointer;
+	transition: border-color .15s, box-shadow .15s;
+}
+.cap-filter-bar select:focus {
+	border-color: var(--blue);
+	box-shadow: 0 0 0 2px var(--field-shadow-focus);
+}
+
+/* ── Inline-Editable Tables ──────────────────────────────────── */
+.me-products-card-body {
+	padding: 12px;
+}
+
+.me-card-body-gutter {
+	padding: 12px;
+}
+
+.me-tbl-wrap { overflow-x: auto; }
+.me-tbl {
+	width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed;
+}
+.me-tbl thead th {
+	padding: var(--table-head-py) var(--table-head-px);
+	background: var(--table-head-bg);
+	font-family: 'IBM Plex Mono', monospace; font-size: var(--table-head-font-size); font-weight: 600;
+	color: var(--table-head-ink); letter-spacing: 1px; text-transform: uppercase;
+	border-bottom: 1px solid var(--table-border); text-align: left; white-space: nowrap;
+	position: sticky; top: 0; z-index: 15;
+}
+.me-tbl tbody tr { border-bottom: 1px solid var(--table-border); }
+.me-tbl tbody tr:last-child { border-bottom: none; }
+.me-tbl tbody tr:hover { background: var(--table-row-hover); }
+.me-tbl td {
+	padding: var(--table-cell-py) var(--table-cell-px); vertical-align: middle; color: var(--ink);
+}
+
+/* Inline editable cells - me-tbl class */
+.me-tbl td input,
+.me-tbl td select {
+	width: 100%; border: 1px solid transparent; background: transparent;
+	padding: 3px 5px; border-radius: 4px; font-size: var(--table-cell-font-size); color: var(--ink);
+	font-family: 'IBM Plex Sans', sans-serif; outline: none;
+	transition: border-color .12s, background .12s;
+	min-height: var(--table-input-min-h);
+}
+.me-tbl td input:hover,
+.me-tbl td select:hover { border-color: var(--line2); background: var(--white); }
+.me-tbl td input:focus,
+.me-tbl td select:focus {
+	border-color: var(--blue); background: var(--white);
+	box-shadow: 0 0 0 2px var(--field-shadow-focus);
+}
+.me-tbl td input[type="number"] { text-align: right; }
+.me-tbl td input[type="date"]   { min-width: 110px; }
+
+/* Product picker scales better than giant native select lists for large product catalogs. */
+.cap-task-product-picker {
+	position: relative;
+}
+.cap-task-product-picker .cap-task-product-lookup {
+	width: 100%;
+}
+.cap-task-product-picker input[name='task_productId'] {
+	display: none;
+}
+
+/* Remove browser spinwheel controls for hours fields to match inline-table editing UX. */
+.cap-task-hours-input[type='number'] {
+	-moz-appearance: textfield;
+}
+.cap-task-hours-input[type='number']::-webkit-outer-spin-button,
+.cap-task-hours-input[type='number']::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+/* Inline editable cells - tbl class (used in product support tables) */
+.tbl td input,
+.tbl td select {
+	width: 100%; border: 1px solid transparent; background: transparent;
+	padding: 3px 5px; border-radius: 4px; font-size: var(--table-cell-font-size); color: var(--ink);
+	font-family: 'IBM Plex Sans', sans-serif; outline: none;
+	transition: border-color .12s, background .12s;
+	min-height: var(--table-input-min-h);
+}
+.tbl td input:hover,
+.tbl td select:hover { border-color: var(--line2); background: var(--white); }
+.tbl td input:focus,
+.tbl td select:focus {
+	border-color: var(--blue); background: var(--white);
+	box-shadow: 0 0 0 2px var(--field-shadow-focus);
+}
+.tbl td input[type="number"] { text-align: right; }
+.tbl td input[type="date"]   { min-width: 110px; }
+
+/* Calculated fields should not show editable hover/focus treatment. */
+.me-tbl td input.me-calculated-field,
+.me-tbl td input.me-calculated-field:hover,
+.me-tbl td input.me-calculated-field:focus {
+	border-color: transparent;
+	background: transparent;
+	box-shadow: none;
+	cursor: default;
+}
+
+/* Calculated fields - tbl class */
+.tbl td input.me-calculated-field,
+.tbl td input.me-calculated-field:hover,
+.tbl td input.me-calculated-field:focus {
+	border-color: transparent;
+	background: transparent;
+	box-shadow: none;
+	cursor: default;
+}
+
+/* Add row */
+.me-add-row {
+	display: flex; align-items: center; gap: 8px;
+	padding: 8px 12px; border-top: 1px solid var(--line);
+	background: var(--bg-soft);
+}
+.me-add-row button {
+	font-size: 12px; padding: 5px 12px;
+}
+
+/* Delete button */
+.me-del-btn {
+	width: 24px; height: 24px; border-radius: 4px; border: none;
+	background: transparent; cursor: pointer; color: var(--muted);
+	display: flex; align-items: center; justify-content: center;
+	font-size: 14px; transition: all .12s; flex-shrink: 0;
+}
+.me-del-btn:hover { background: var(--red-pale); color: var(--red); }
+
+/* Category badge */
+.me-cat {
+	display: inline-block; padding: 2px 7px; border-radius: 3px;
+	font-size: 11px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+	white-space: nowrap;
+}
+.me-cat-npi      { background: var(--blue-pale);   color: var(--blue); }
+.me-cat-improve  { background: var(--green-pale);  color: var(--green); }
+.me-cat-tender   { background: var(--amber-pale);  color: var(--amber); }
+.me-cat-support  { background: var(--teal-pale);   color: var(--teal); }
+.me-cat-other    { background: var(--purple-pale); color: var(--purple); }
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.me-empty {
+	padding: 48px 20px; text-align: center; color: var(--muted);
+}
+.me-empty-icon { font-size: 36px; margin-bottom: 8px; }
+.me-empty-title { font-size: 14px; font-weight: 600; color: var(--mid); margin-bottom: 4px; }
+.me-empty-sub   { font-size: 12px; }
+
+/* ── Section label ───────────────────────────────────────────── */
+.me-section-label {
+	font-size: 10px; font-weight: 600; letter-spacing: 1.2px;
+	text-transform: uppercase; color: var(--muted);
+	font-family: 'IBM Plex Mono', monospace;
+	padding: 10px 16px 6px; border-bottom: 1px solid var(--line);
+}
+
+/* ── Util row (hrs effective calc display) ───────────────────── */
+.me-eff-display {
+	font-size: 12px; color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── Loading indicator ───────────────────────────────────────── */
+.me-saving {
+	font-size: 11px; color: var(--muted);
+	font-family: 'IBM Plex Mono', monospace;
+	padding: 4px 8px;
+}
+
+@media (max-width: 767px) {
+	.me-products-card-body {
+		padding: 10px;
+	}
+
+	.me-card-body-gutter {
+		padding: 10px;
+	}
+
+	.cap-filter-bar {
+		gap: 8px;
+	}
+	.cap-filter-bar input[type="text"],
+	.cap-filter-bar select {
+		width: 100%; min-height: 38px;
+	}
+}
+
+@media (min-width: 768px) {
+	.me-products-card-body {
+		padding: 14px;
+	}
+
+	.me-card-body-gutter {
+		padding: 14px;
+	}
+
+	.cap-filter-bar input[type="text"] {
+		min-width: 220px; flex: 1 1 220px;
+	}
+
+	.me-add-row {
+		justify-content: space-between;
+	}
+
+	.me-tbl td input[type="date"],
+	.tbl td input[type="date"] {
+		min-width: 110px;
+	}
+}

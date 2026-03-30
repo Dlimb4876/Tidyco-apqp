@@ -3,10 +3,15 @@
  * Utilities used across create, view, and edit modals.
  */
 
+import { appState } from '../../../core/js/state.js'
+import { esc } from '../../../utils/js/helpers.js'
+import { navigate } from '../../../utils/js/navigation.js'
+import './mcs-approval.js'
+
 /**
  * Map raw mcs_timeline DB rows to display-friendly event objects
  */
-function mcsFormatTimelineEvents(rows) {
+export function mcsFormatTimelineEvents(rows) {
   return rows.map(ev => ({
     time: new Date(ev.created_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
     text: ev.event_text || '',
@@ -18,11 +23,11 @@ function mcsFormatTimelineEvents(rows) {
 /**
  * Render timeline events array to HTML string
  */
-function mcsRenderTimelineHtml(events) {
+export function mcsRenderTimelineHtml(events) {
   if (!events.length) return '<div style="color: var(--text3); font-size: 12px; padding: 8px 0;">No activity recorded.</div>';
   return events.map(ev => `
-    <div class="mcs-tl-event ${ev.type || ''}">
-      <div class="mcs-tl-time">${ev.time || '—'}</div>
+    <div class="mcs-tl-event ${esc(ev.type || '')}">
+      <div class="mcs-tl-time">${esc(ev.time || '—')}</div>
       <div class="mcs-tl-text">${esc(ev.text || '')}</div>
       <div class="mcs-tl-author">${esc(ev.author || '')}</div>
     </div>
@@ -35,8 +40,8 @@ function mcsRenderTimelineHtml(events) {
  * can nominate a specific reviewer. The nomination is stored in
  * eng_review_notes as "nominated_approver:<email>" when the change is saved.
  */
-function mcsApproverSelectionHtml(preselectedEmail, includeTitle = true) {
-  const step1Approvers = (mcsApproverConfig && mcsApproverConfig.approval1) || [];
+export function mcsApproverSelectionHtml(preselectedEmail, includeTitle = true) {
+  const step1Approvers = (appState.mcsApproverConfig && appState.mcsApproverConfig.approval1) || [];
   const titleHtml = includeTitle ? '<div class="mcs-section-title">Approval 1 Reviewer</div>' : '';
 
   if (step1Approvers.length === 0) {
@@ -66,22 +71,107 @@ function mcsApproverSelectionHtml(preselectedEmail, includeTitle = true) {
     </div>`;
 }
 
-function mcsExtractNominatedApprover(notesValue) {
+/**
+ * Build the approver select field only (for compact layouts).
+ * Returns just the select element, no wrapper divs.
+ */
+export function mcsApproverSelectionFieldHtml(preselectedEmail, includeEmptyOption = true) {
+  const step1Approvers = (appState.mcsApproverConfig && appState.mcsApproverConfig.approval1) || [];
+
+  if (step1Approvers.length === 0) {
+    return `<select class="mcs-field-select" id="mcs-f-approver">
+      <option value="">No approvers configured</option>
+    </select>`;
+  }
+
+  const options = step1Approvers.map(a => {
+    const email = a.user_email || '';
+    const selected = preselectedEmail && email && email === preselectedEmail ? 'selected' : '';
+    return `<option value="${esc(email)}" data-id="${esc(a.user_id)}" ${selected}>${esc(a.user_name)}${email ? ' - ' + esc(email) : ''}</option>`;
+  }).join('');
+
+  const emptyOption = includeEmptyOption ? '<option value="">Any configured approver</option>' : '';
+
+  return `<select class="mcs-field-select" id="mcs-f-approver">
+    ${emptyOption}
+    ${options}
+  </select>`;
+}
+
+export function mcsExtractNominatedApprover(notesValue) {
   if (!notesValue || typeof notesValue !== 'string') return '';
   if (!notesValue.startsWith('nominated_approver:')) return '';
   return notesValue.replace('nominated_approver:', '').trim();
 }
 
-function mcsParseExtendedJustification(rawValue) {
+export function mcsGetImpactFieldMap() {
+  return {
+    'mcs-imp-bom': 'BOM Change',
+    'mcs-imp-proc': 'Work Instructions',
+    'mcs-imp-tooling': 'Tooling Change',
+    'mcs-imp-training': 'Training Required',
+    'mcs-imp-customer': 'Customer Notification'
+  };
+}
+
+export function mcsGetImpactProgressInputId(impactLabel) {
+  return `mcs-imp-progress-${String(impactLabel || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')}`;
+}
+
+export function mcsBuildStage3ImpactChecklistHtml(impacts, progressMap) {
+  const selectedImpacts = Array.isArray(impacts) ? impacts : [];
+  if (!selectedImpacts.length) {
+    return `
+      <div class="mcs-stage-note mcs-stage-note-compact">
+        Select impact areas in Stage 1 to track implementation progress here.
+      </div>
+    `;
+  }
+
+  const safeProgress = progressMap && typeof progressMap === 'object' ? progressMap : {};
+  const completedCount = selectedImpacts.filter(label => safeProgress[label] === true).length;
+
+  const rows = selectedImpacts.map(label => {
+    const inputId = mcsGetImpactProgressInputId(label);
+    const checked = safeProgress[label] === true ? 'checked' : '';
+    return `
+      <div class="mcs-impact-progress-item">
+        <input
+          type="checkbox"
+          class="mcs-impact-progress-checkbox"
+          id="${esc(inputId)}"
+          data-impact-progress="${esc(label)}"
+          ${checked}
+        />
+        <label for="${esc(inputId)}">${esc(label)}</label>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="mcs-impact-progress-header">
+      <span class="mcs-impact-progress-title">Impact implementation checklist</span>
+      <span class="mcs-impact-progress-count">${completedCount}/${selectedImpacts.length} complete</span>
+    </div>
+    <div class="mcs-impact-progress-list">${rows}</div>
+  `;
+}
+
+export function mcsParseExtendedJustification(rawValue) {
   const raw = String(rawValue || '');
   const impactMarker = '[ImpactAssessmentHours]';
   const docsMarker = '[DocumentsAffected]';
   const knockMarker = '[KnockOnEffect]';
+  const impactProgressMarker = '[ImpactProgressJson]';
 
   const markers = [
     { key: 'impactAssessmentHours', token: impactMarker, idx: raw.indexOf(impactMarker) },
     { key: 'documentsAffected', token: docsMarker, idx: raw.indexOf(docsMarker) },
-    { key: 'knockOnEffect', token: knockMarker, idx: raw.indexOf(knockMarker) }
+    { key: 'knockOnEffect', token: knockMarker, idx: raw.indexOf(knockMarker) },
+    { key: 'impactProgressRaw', token: impactProgressMarker, idx: raw.indexOf(impactProgressMarker) }
   ].filter(item => item.idx !== -1).sort((a, b) => a.idx - b.idx);
 
   if (markers.length === 0) {
@@ -89,7 +179,8 @@ function mcsParseExtendedJustification(rawValue) {
       core: raw,
       impactAssessmentHours: '',
       documentsAffected: '',
-      knockOnEffect: ''
+      knockOnEffect: '',
+      impactProgress: {}
     };
   }
 
@@ -97,7 +188,8 @@ function mcsParseExtendedJustification(rawValue) {
     core: raw.slice(0, markers[0].idx).trimEnd(),
     impactAssessmentHours: '',
     documentsAffected: '',
-    knockOnEffect: ''
+    knockOnEffect: '',
+    impactProgressRaw: ''
   };
 
   markers.forEach((marker, index) => {
@@ -106,16 +198,32 @@ function mcsParseExtendedJustification(rawValue) {
     parsed[marker.key] = raw.slice(start, end).trim();
   });
 
+  if (parsed.impactProgressRaw) {
+    try {
+      const rawObj = JSON.parse(parsed.impactProgressRaw);
+      parsed.impactProgress = rawObj && typeof rawObj === 'object' ? rawObj : {};
+    } catch (err) {
+      parsed.impactProgress = {};
+    }
+  } else {
+    parsed.impactProgress = {};
+  }
+
+  delete parsed.impactProgressRaw;
   return parsed;
 }
 
-function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockOnEffectValue, impactAssessmentHoursValue) {
+export function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockOnEffectValue, impactAssessmentHoursValue, impactProgressValue) {
   const core = String(coreValue || '').trim();
   const documentsAffected = String(documentsAffectedValue || '').trim();
   const knockOnEffect = String(knockOnEffectValue || '').trim();
   const impactAssessmentHours = String(impactAssessmentHoursValue || '').trim();
+  const impactProgress = impactProgressValue && typeof impactProgressValue === 'object'
+    ? impactProgressValue
+    : {};
+  const hasImpactProgress = Object.keys(impactProgress).length > 0;
 
-  if (!documentsAffected && !knockOnEffect && !impactAssessmentHours) {
+  if (!documentsAffected && !knockOnEffect && !impactAssessmentHours && !hasImpactProgress) {
     return core;
   }
 
@@ -124,10 +232,11 @@ function mcsBuildExtendedJustification(coreValue, documentsAffectedValue, knockO
   if (impactAssessmentHours) parts.push(`[ImpactAssessmentHours]\n${impactAssessmentHours}`);
   if (documentsAffected) parts.push(`[DocumentsAffected]\n${documentsAffected}`);
   if (knockOnEffect) parts.push(`[KnockOnEffect]\n${knockOnEffect}`);
+  if (hasImpactProgress) parts.push(`[ImpactProgressJson]\n${JSON.stringify(impactProgress)}`);
   return parts.join('\n\n').trim();
 }
 
-function mcsBuildWorkflowRail(stages) {
+export function mcsBuildWorkflowRail(stages) {
   const flowHtml = stages.map((stage, index) => {
     const cls = stage.status || '';
     const badge = stage.badge || String(index + 1);
@@ -156,7 +265,7 @@ function mcsBuildWorkflowRail(stages) {
   `;
 }
 
-function mcsBuildViewWorkflowStages(change) {
+export function mcsBuildViewWorkflowStages(change) {
   const openState = change.status === 'open' ? 'current' : 'done';
 
   let approval1State = 'pending';
@@ -221,7 +330,7 @@ function mcsBuildViewWorkflowStages(change) {
 /**
  * Close modal
  */
-function mcsCloseModal(id) {
+export function mcsCloseModal(id) {
   const el = document.getElementById(id);
   if (el) {
     el.classList.remove('open');
@@ -230,6 +339,6 @@ function mcsCloseModal(id) {
   // Clear the viewing ID when the view modal is closed so the realtime
   // subscription does not auto-reopen it after the user has dismissed it.
   if (id === 'mcs-view-backdrop') {
-    mcsViewingId = null;
+    appState.mcsViewingId = null;
   }
 }

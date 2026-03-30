@@ -3,6 +3,14 @@
  * Portfolio-level KPIs with year selector + per-product chart and inline history management
  */
 
+import { esc, showToast } from '../../../../utils/js/helpers.js'
+import {
+  productsDataGetAll,
+  productsDataGetHistory,
+  productsDataDeleteHistory,
+  productsDataAddHistory
+} from './products-data.js'
+
 let trendsChartInstance = null;
 let trendsSelectedYear = null; // Will be set to first year on render
 let trendsPreSelectProductId = null; // Set externally (e.g. from 📊 button) before calling renderAllProductsTrends
@@ -447,7 +455,7 @@ function renderProductDetail(productId) {
 
 // ── Main Trends Tab Render ─────────────────────────────────────────────────
 
-function renderAllProductsTrends() {
+export function renderAllProductsTrends() {
   const container = document.getElementById('productsTrends');
   const products = productsDataGetAll();
 
@@ -640,4 +648,8 @@ function renderAllProductsTrends() {
       return;
     }
   });
+}
+
+export function setTrendsPreSelectProductId(productId) {
+  trendsPreSelectProductId = productId || null
 }

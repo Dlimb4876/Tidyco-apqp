@@ -211,6 +211,10 @@
   .mcs-impact-cell label {
     font-size: 13px;
   }
+
+  .mcs-impact-progress-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 767px) {

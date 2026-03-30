@@ -1,31 +1,68 @@
 // Production Batch Scheduling
 
-let prodSchedulingSort = { field: 'start_date', ascending: true };
-let prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFrom: '', dateTo: '' };
-let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true';
-let selectedBatchIds = new Set();
+import { getFamilies } from '../../../core/js/state.js'
+import { render } from '../../../utils/js/navigation.js'
+import { esc, canEdit } from '../../../utils/js/helpers.js'
+import { getWorkAreaOptions } from '../../capacity/production/js/work-areas-data.js'
+import {
+  prodState,
+  formatDisplayDate,
+  parseDisplayDate,
+  prodDataAddBatch,
+  prodDataUpdateBatch,
+  prodDataDeleteBatch,
+  prodDataGetProductById,
+  setProdDataSchedulingRenderHelpers
+} from './data.js'
+import { setProductionTab } from './production.js'
+
+let prodSchedulingSort = { field: 'start_date', ascending: true }
+let prodSchedulingFilters = { family: '', product: '', workLocation: '', dateFrom: '', dateTo: '' }
+let prodSchedulingHideComplete = localStorage.getItem('prodSchedulingHideComplete') === 'true'
+let selectedBatchIds = new Set()
+
+// Virtual scrolling configuration
+const VISIBLE_ROW_COUNT = 30
+const BUFFER_ROW_COUNT = 10
+const ROW_HEIGHT = 44
+let prodSchedulingScrollOffset = 0
+let prodSchedulingScrollHeight = 0
+
+export function getProdSchedulingScrollOffset() {
+  return prodSchedulingScrollOffset
+}
+
+export function setProdSchedulingScrollOffset(value) {
+  prodSchedulingScrollOffset = Number(value) || 0
+}
+
+function getVirtualSlice(batches) {
+  const totalHeight = batches.length * ROW_HEIGHT
+  const startIdx = Math.max(0, Math.floor(prodSchedulingScrollOffset / ROW_HEIGHT) - BUFFER_ROW_COUNT)
+  const endIdx = Math.min(batches.length, startIdx + VISIBLE_ROW_COUNT + BUFFER_ROW_COUNT * 2)
+  return { startIdx, endIdx, totalHeight }
+}
 
 function flashSaved(el) {
-  el.classList.add('cell-saved');
-  setTimeout(() => el.classList.remove('cell-saved'), 1000);
+  el.classList.add('cell-saved')
+  setTimeout(() => el.classList.remove('cell-saved'), 1000)
 }
 
 function updateBulkToolbar() {
-  const toolbar = document.getElementById('bulk-toolbar');
-  const countEl = document.getElementById('bulk-count');
-  if (!toolbar) return;
+  const toolbar = document.getElementById('bulk-toolbar')
+  const countEl = document.getElementById('bulk-count')
+  if (!toolbar) return
   if (selectedBatchIds.size > 0) {
-    toolbar.classList.remove('hidden');
-    if (countEl) countEl.textContent = `${selectedBatchIds.size} selected`;
+    toolbar.classList.remove('hidden')
+    if (countEl) countEl.textContent = `${selectedBatchIds.size} selected`
   } else {
-    toolbar.classList.add('hidden');
+    toolbar.classList.add('hidden')
   }
 }
 
 function renderSchedulingNewRow() {
-  // Defensive check: ensure prodState exists
-  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
-  
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : []
+
   return `
     <tr class="row-new" id="batch-new-row" style="background-color:var(--row-highlight-blue);border-top:2px solid var(--blue)">
       <td class="w28 ctr">+</td>
@@ -58,54 +95,56 @@ function renderSchedulingNewRow() {
       <td><textarea class="cell-edit" id="batch-new-notes" placeholder="Notes" data-field="notes"></textarea></td>
       <td class="w28 ctr"><button class="btn-del" id="batch-new-save" title="Save (Ctrl+Enter)">✓</button></td>
     </tr>
-  `;
+  `
 }
 
 function addSchedulingNewRowEventListeners() {
   document.getElementById('batch-new-product').addEventListener('change', () => {
-    calcBatchDueDate();
-    updateFamilyDisplay('new');
-    autoPopulateWorkLocation();
-  });
-  document.getElementById('batch-new-start').addEventListener('change', calcBatchDueDate);
-  document.getElementById('batch-new-start').addEventListener('blur', () => smartDateFormat('batch-new-start', calcBatchDueDate));
-  document.getElementById('batch-new-due').addEventListener('blur', () => smartDateFormat('batch-new-due'));
-  document.getElementById('batch-new-save').addEventListener('click', addNewBatchRow);
+    calcBatchDueDate()
+    updateFamilyDisplay('new')
+    autoPopulateWorkLocation()
+  })
+  document.getElementById('batch-new-start').addEventListener('change', calcBatchDueDate)
+  document.getElementById('batch-new-start').addEventListener('blur', () => smartDateFormat('batch-new-start', calcBatchDueDate))
+  document.getElementById('batch-new-due').addEventListener('blur', () => smartDateFormat('batch-new-due'))
+  document.getElementById('batch-new-save').addEventListener('click', addNewBatchRow)
 
-  const fields = ['product', 'qty', 'start', 'due', 'status', 'notes'];
+  const fields = ['product', 'qty', 'start', 'due', 'status', 'notes']
   fields.forEach(field => {
-    document.getElementById(`batch-new-${field}`).addEventListener('keydown', (event) => handleBatchRowKey(event, field));
-  });
+    document.getElementById(`batch-new-${field}`).addEventListener('keydown', (event) => handleBatchRowKey(event, field))
+  })
 }
 
-function renderSchedulingRow(batch, idx, activeBatches, productMap, allFamilies) {
-  const product = productMap ? productMap.get(batch.product_id) : prodDataGetProductById(batch.product_id);
-  const batchIdx = (prodState && Array.isArray(prodState.batches)) ? prodState.batches.indexOf(batch) : -1;
+export function renderSchedulingRow(batch, idx, activeBatches, productMap, allFamilies) {
+  const product = productMap ? productMap.get(batch.product_id) : prodDataGetProductById(batch.product_id)
+  const batchIdx = (prodState && Array.isArray(prodState.batches)) ? prodState.batches.indexOf(batch) : -1
 
-  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
-  const families = allFamilies || getFamilies();
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : []
+  const families = allFamilies || getFamilies()
 
-  let workLocation = batch.work_location;
+  let workLocation = batch.work_location
   if (!workLocation && product && product.work_location) {
-    workLocation = product.work_location;
+    workLocation = product.work_location
   }
 
-  let dueBadge = '';
-  let rowUrgencyClass = '';
+  let dueBadge = ''
+  let rowUrgencyClass = ''
   if (batch.due_date && batch.status !== 'Complete') {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const due = new Date(batch.due_date); due.setHours(0,0,0,0);
-    const daysLeft = Math.round((due - today) / 86400000);
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const due = new Date(batch.due_date)
+    due.setHours(0, 0, 0, 0)
+    const daysLeft = Math.round((due - today) / 86400000)
     if (daysLeft < 0) {
-      dueBadge = `<div class="batch-due-badge batch-overdue">⚠ Overdue</div>`;
-      rowUrgencyClass = 'batch-row-overdue';
+      dueBadge = '<div class="batch-due-badge batch-overdue">⚠ Overdue</div>'
+      rowUrgencyClass = 'batch-row-overdue'
     } else if (daysLeft <= 7) {
-      dueBadge = `<div class="batch-due-badge batch-due-soon">⚠ Due soon</div>`;
-      rowUrgencyClass = 'batch-row-due-soon';
+      dueBadge = '<div class="batch-due-badge batch-due-soon">⚠ Due soon</div>'
+      rowUrgencyClass = 'batch-row-due-soon'
     }
   }
 
-  const isSelected = selectedBatchIds.has(batch.id);
+  const isSelected = selectedBatchIds.has(batch.id)
 
   return `
     <tr id="batch-row-${batchIdx}" data-id="${esc(batch.id)}" class="${rowUrgencyClass}${isSelected ? ' batch-row-selected' : ''}">
@@ -144,60 +183,80 @@ function renderSchedulingRow(batch, idx, activeBatches, productMap, allFamilies)
         <button class="btn-del" data-action="delete" title="Delete batch">✕</button>` : ''}
       </td>
     </tr>
-  `;
+  `
 }
 
 function addSchedulingRowEventListeners(batch) {
-  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
-  const batchIdx = batches.indexOf(batch);
-  const row = document.getElementById(`batch-row-${batchIdx}`);
-  if (!row) return;
+  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : []
+  const batchIdx = batches.indexOf(batch)
+  const row = document.getElementById(`batch-row-${batchIdx}`)
+  if (!row) return
 
   row.querySelectorAll('[data-field]').forEach(input => {
     input.addEventListener('change', async (e) => {
-      const field = e.target.getAttribute('data-field');
-      if (field === 'start_date' || field === 'due_date') return;
-      const value = e.target.value;
-      const ok = await prodDataUpdateBatch(batchIdx, field, value);
-      if (ok) flashSaved(e.target);
+      const field = e.target.getAttribute('data-field')
+      if (field === 'start_date' || field === 'due_date') return
+      const value = e.target.value
+      const ok = await prodDataUpdateBatch(batchIdx, field, value)
+      if (ok) flashSaved(e.target)
       if (field === 'product_id') {
-        autoPopulateWorkLocationForBatch(batchIdx, value);
+        autoPopulateWorkLocationForBatch(batchIdx, value)
       }
-    });
-    input.addEventListener('keydown', handleCellKey);
-  });
+    })
+    input.addEventListener('keydown', handleSchedulingCellKey)
+  })
 
-  row.querySelector(`[data-field="start_date"]`).addEventListener('blur', (e) => smartDateFormat(e.target.id, async () => {
-    const ok = await prodDataUpdateBatch(batchIdx, 'start_date', parseDisplayDate(e.target.value));
-    if (ok) flashSaved(e.target);
-  }));
-  row.querySelector(`[data-field="due_date"]`).addEventListener('blur', (e) => smartDateFormat(e.target.id, async () => {
-    const ok = await prodDataUpdateBatch(batchIdx, 'due_date', parseDisplayDate(e.target.value));
-    if (ok) flashSaved(e.target);
-  }));
+  row.querySelector('[data-field="start_date"]').addEventListener('blur', (e) => smartDateFormat(e.target.id, async () => {
+    const ok = await prodDataUpdateBatch(batchIdx, 'start_date', parseDisplayDate(e.target.value))
+    if (ok) flashSaved(e.target)
+  }))
+  row.querySelector('[data-field="due_date"]').addEventListener('blur', (e) => smartDateFormat(e.target.id, async () => {
+    const ok = await prodDataUpdateBatch(batchIdx, 'due_date', parseDisplayDate(e.target.value))
+    if (ok) flashSaved(e.target)
+  }))
 
-  row.querySelector('[data-action="duplicate"]').addEventListener('click', () => duplicateBatchRow(batchIdx));
+  row.querySelector('[data-action="duplicate"]').addEventListener('click', () => duplicateBatchRow(batchIdx))
   row.querySelector('[data-action="delete"]').addEventListener('click', () => {
     if (confirm('Delete batch?')) {
-      prodDataDeleteBatch(batchIdx);
+      prodDataDeleteBatch(batchIdx)
     }
-  });
+  })
 }
 
-function renderScheduling() {
-  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
-  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
-  const activeBatches = getFilteredBatches();
+export function renderScheduling() {
+  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : []
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : []
+  const activeBatches = getFilteredBatches()
 
   // Build lookup maps once for all rows
-  const productMap = new Map(products.map(p => [p.id, p]));
-  const allFamilies = getFamilies();
+  const productMap = new Map(products.map(p => [p.id, p]))
+  const allFamilies = getFamilies()
 
-  let rows = canEdit() ? renderSchedulingNewRow() : '';
+  // Virtual scrolling: calculate visible slice
+  const { startIdx, endIdx, totalHeight } = getVirtualSlice(activeBatches)
+  const visibleBatches = activeBatches.slice(startIdx, endIdx)
+  const topSpacerHeight = startIdx * ROW_HEIGHT
+  const bottomSpacerHeight = (activeBatches.length - endIdx) * ROW_HEIGHT
+  prodSchedulingScrollHeight = totalHeight
 
-  activeBatches.forEach((batch, idx) => {
-    rows += renderSchedulingRow(batch, idx, activeBatches, productMap, allFamilies);
-  });
+  const newRowHTML = canEdit() ? renderSchedulingNewRow() : ''
+
+  let dataRows = ''
+
+  // Add top spacer for virtual scroll
+  if (topSpacerHeight > 0) {
+    dataRows += `<tr style="height:${topSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`
+  }
+
+  visibleBatches.forEach((batch, idx) => {
+    const actualIdx = startIdx + idx
+    dataRows += renderSchedulingRow(batch, actualIdx, activeBatches, productMap, allFamilies)
+  })
+
+  // Add bottom spacer for virtual scroll
+  if (bottomSpacerHeight > 0) {
+    dataRows += `<tr style="height:${bottomSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`
+  }
 
   const html = `
     <div class="prod-section">
@@ -208,11 +267,7 @@ function renderScheduling() {
           <div class="sec-desc">${activeBatches.length} of ${batches.length} batches — Click cells to edit, Tab/Enter to navigate</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn ${prodSchedulingHideComplete ? 'btn-primary' : 'btn-ghost'}" id="toggle-hide-complete">
-            ${prodSchedulingHideComplete ? '✓ Hide Complete' : '○ Show All'}
-          </button>
           <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-scheduling" title="User Guide">❓ Guide</button>
-          <button class="btn btn-primary" id="add-batch-button">➕ Add Batch</button>
           <button class="btn btn-ghost" id="back-to-prod-hub">← Back</button>
         </div>
       </div>
@@ -247,6 +302,12 @@ function renderScheduling() {
             <span style="display:flex;align-items:center">–</span>
             <input type="date" id="date-to-filter" value="${prodSchedulingFilters.dateTo}">
           </div>
+        </div>
+        <div class="filter-group">
+          <label>Completed:</label>
+          <button class="btn ${prodSchedulingHideComplete ? 'btn-primary' : 'btn-ghost'} btn-sm" id="toggle-hide-complete">
+            ${prodSchedulingHideComplete ? 'Hide Completed' : 'Show Completed'}
+          </button>
         </div>
       </div>
 
@@ -299,348 +360,418 @@ function renderScheduling() {
             <th></th>
           </tr>
         </thead>
+        <tbody id="prod-sched-new-tbody">
+          ${newRowHTML}
+        </tbody>
         <tbody id="prod-sched-tbody">
-          ${rows || `<tr><td colspan="10" style="text-align:center;padding:32px">
+          ${dataRows || `<tr><td colspan="10" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No batches scheduled yet.</div>
-            <button class="btn btn-primary btn-sm" onclick="focusBatchNewRow()">＋ Schedule First Batch</button>
+            <button class="btn btn-primary btn-sm" data-action="focus-new-batch">＋ Schedule First Batch</button>
           </td></tr>`}
         </tbody>
       </table>
       </div>
     </div>
-  `;
+  `
 
   setTimeout(() => {
-    addSchedulingNewRowEventListeners();
-    activeBatches.forEach(addSchedulingRowEventListeners);
+    addSchedulingNewRowEventListeners()
+    activeBatches.forEach(addSchedulingRowEventListeners)
 
-    document.getElementById('toggle-hide-complete')?.addEventListener('click', toggleHideCompleteBatches);
-    document.getElementById('add-batch-button')?.addEventListener('click', focusBatchNewRow);
-    document.getElementById('back-to-prod-hub')?.addEventListener('click', () => setProductionTab('root'));
+    document.getElementById('toggle-hide-complete')?.addEventListener('click', toggleHideCompleteBatches)
+    document.querySelectorAll('[data-action="focus-new-batch"]').forEach(button => {
+      button.addEventListener('click', focusBatchNewRow)
+    })
+    document.getElementById('back-to-prod-hub')?.addEventListener('click', () => setProductionTab('root'))
 
     document.getElementById('family-filter')?.addEventListener('change', (e) => {
-      prodSchedulingFilters.family = e.target.value;
+      prodSchedulingFilters.family = e.target.value
       // Only clear product filter if the selected product doesn't belong to the new family
       if (prodSchedulingFilters.product) {
-        const selectedProduct = products.find(p => p.id === prodSchedulingFilters.product);
+        const selectedProduct = products.find(p => p.id === prodSchedulingFilters.product)
         if (!selectedProduct || (e.target.value && selectedProduct.family !== e.target.value)) {
-          prodSchedulingFilters.product = '';
+          prodSchedulingFilters.product = ''
         }
       }
-      render();
-    });
+      prodSchedulingScrollOffset = 0
+      render()
+    })
     document.getElementById('product-filter')?.addEventListener('change', (e) => {
-      prodSchedulingFilters.product = e.target.value;
-      render();
-    });
+      prodSchedulingFilters.product = e.target.value
+      prodSchedulingScrollOffset = 0
+      render()
+    })
     document.getElementById('work-location-filter')?.addEventListener('change', (e) => {
-      prodSchedulingFilters.workLocation = e.target.value;
-      render();
-    });
+      prodSchedulingFilters.workLocation = e.target.value
+      prodSchedulingScrollOffset = 0
+      render()
+    })
     document.getElementById('date-from-filter')?.addEventListener('change', (e) => {
-      prodSchedulingFilters.dateFrom = e.target.value;
-      render();
-    });
+      prodSchedulingFilters.dateFrom = e.target.value
+      prodSchedulingScrollOffset = 0
+      render()
+    })
     document.getElementById('date-to-filter')?.addEventListener('change', (e) => {
-      prodSchedulingFilters.dateTo = e.target.value;
-      render();
-    });
+      prodSchedulingFilters.dateTo = e.target.value
+      prodSchedulingScrollOffset = 0
+      render()
+    })
 
     document.querySelectorAll('th[data-sort-field]').forEach(th => {
-      th.addEventListener('click', () => toggleSort(th.getAttribute('data-sort-field')));
-    });
+      th.addEventListener('click', () => toggleSort(th.getAttribute('data-sort-field')))
+    })
 
     // Select-all checkbox
     document.getElementById('select-all-batches')?.addEventListener('change', (e) => {
       if (e.target.checked) {
-        activeBatches.forEach(b => selectedBatchIds.add(b.id));
+        activeBatches.forEach(b => selectedBatchIds.add(b.id))
       } else {
-        selectedBatchIds.clear();
+        selectedBatchIds.clear()
       }
       document.querySelectorAll('.batch-select-cb').forEach(cb => {
-        cb.checked = e.target.checked;
-        const row = cb.closest('tr');
+        cb.checked = e.target.checked
+        const row = cb.closest('tr')
         if (row) {
-          if (e.target.checked) row.classList.add('batch-row-selected');
-          else row.classList.remove('batch-row-selected');
+          if (e.target.checked) row.classList.add('batch-row-selected')
+          else row.classList.remove('batch-row-selected')
         }
-      });
-      updateBulkToolbar();
-    });
+      })
+      updateBulkToolbar()
+    })
 
     // Individual row checkboxes
     document.querySelectorAll('.batch-select-cb').forEach(cb => {
       cb.addEventListener('change', (e) => {
-        const batchId = e.target.getAttribute('data-batch-id');
+        const batchId = e.target.getAttribute('data-batch-id')
         if (e.target.checked) {
-          selectedBatchIds.add(batchId);
-          e.target.closest('tr')?.classList.add('batch-row-selected');
+          selectedBatchIds.add(batchId)
+          e.target.closest('tr')?.classList.add('batch-row-selected')
         } else {
-          selectedBatchIds.delete(batchId);
-          e.target.closest('tr')?.classList.remove('batch-row-selected');
+          selectedBatchIds.delete(batchId)
+          e.target.closest('tr')?.classList.remove('batch-row-selected')
         }
-        updateBulkToolbar();
-      });
-    });
+        updateBulkToolbar()
+      })
+    })
 
     // Bulk delete
     document.getElementById('bulk-delete-btn')?.addEventListener('click', async () => {
-      if (!selectedBatchIds.size) return;
-      if (!confirm(`Delete ${selectedBatchIds.size} batch${selectedBatchIds.size > 1 ? 'es' : ''}?`)) return;
-      const ids = Array.from(selectedBatchIds);
+      if (!selectedBatchIds.size) return
+      if (!confirm(`Delete ${selectedBatchIds.size} batch${selectedBatchIds.size > 1 ? 'es' : ''}?`)) return
+      const ids = Array.from(selectedBatchIds)
       for (const batchId of ids) {
-        const idx = prodState.batches.findIndex(b => b.id === batchId);
-        if (idx >= 0) await prodDataDeleteBatch(idx);
+        const idx = prodState.batches.findIndex(b => b.id === batchId)
+        if (idx >= 0) await prodDataDeleteBatch(idx)
       }
-      selectedBatchIds.clear();
-      render();
-    });
+      selectedBatchIds.clear()
+      render()
+    })
 
     // Bulk status update
     document.getElementById('bulk-status-apply')?.addEventListener('click', async () => {
-      const newStatus = document.getElementById('bulk-status-select').value;
-      if (!newStatus || !selectedBatchIds.size) return;
-      const ids = Array.from(selectedBatchIds);
+      const newStatus = document.getElementById('bulk-status-select').value
+      if (!newStatus || !selectedBatchIds.size) return
+      const ids = Array.from(selectedBatchIds)
       for (const batchId of ids) {
-        const idx = prodState.batches.findIndex(b => b.id === batchId);
-        if (idx >= 0) await prodDataUpdateBatch(idx, 'status', newStatus);
+        const idx = prodState.batches.findIndex(b => b.id === batchId)
+        if (idx >= 0) await prodDataUpdateBatch(idx, 'status', newStatus)
       }
-      selectedBatchIds.clear();
-      render();
-    });
+      selectedBatchIds.clear()
+      render()
+    })
 
     // Bulk clear selection
     document.getElementById('bulk-clear-btn')?.addEventListener('click', () => {
-      selectedBatchIds.clear();
-      render();
-    });
+      selectedBatchIds.clear()
+      render()
+    })
 
-  }, 0);
+    // Virtual scroll handler — restore position and attach listener
+    const tableWrap = document.querySelector('.scheduling-table-wrap')
+    if (tableWrap) {
+      tableWrap.scrollTop = prodSchedulingScrollOffset
+      tableWrap.addEventListener('scroll', handleSchedulingScroll, { passive: true })
+    }
+  }, 0)
 
-  return html;
+  return html
 }
 
+// Update only the data tbody with the correct slice for the current scroll position
+function updateSchedulingVisibleRows() {
+  const tbody = document.getElementById('prod-sched-tbody')
+  if (!tbody) return
 
-function getFilteredBatches() {
-  if (!prodState || !Array.isArray(prodState.batches)) {
-    return [];
+  // Don't disrupt an active cell edit
+  if (tbody.contains(document.activeElement)) return
+
+  const activeBatches = getFilteredBatches()
+  if (!activeBatches.length) return
+
+  const { startIdx, endIdx } = getVirtualSlice(activeBatches)
+  const visibleBatches = activeBatches.slice(startIdx, endIdx)
+  const topSpacerHeight = startIdx * ROW_HEIGHT
+  const bottomSpacerHeight = (activeBatches.length - endIdx) * ROW_HEIGHT
+
+  const productMap = new Map((prodState?.products || []).map(p => [p.id, p]))
+  const allFamilies = getFamilies()
+
+  let rows = ''
+  if (topSpacerHeight > 0) {
+    rows += `<tr style="height:${topSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`
   }
-  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
+  visibleBatches.forEach((batch, idx) => {
+    rows += renderSchedulingRow(batch, startIdx + idx, activeBatches, productMap, allFamilies)
+  })
+  if (bottomSpacerHeight > 0) {
+    rows += `<tr style="height:${bottomSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`
+  }
 
-  let filtered = prodState.batches;
+  tbody.innerHTML = rows
+  visibleBatches.forEach(addSchedulingRowEventListeners)
+}
+
+let schedulingScrollTimer = null
+
+// Virtual scroll handler
+function handleSchedulingScroll(event) {
+  prodSchedulingScrollOffset = event.target.scrollTop
+  clearTimeout(schedulingScrollTimer)
+  schedulingScrollTimer = setTimeout(updateSchedulingVisibleRows, 50)
+}
+
+export function getFilteredBatches() {
+  if (!prodState || !Array.isArray(prodState.batches)) {
+    return []
+  }
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : []
+
+  let filtered = prodState.batches
 
   if (prodSchedulingFilters.family) {
-    const familyProducts = products.filter(p => p.family === prodSchedulingFilters.family).map(p => p.id);
-    filtered = filtered.filter(b => familyProducts.includes(b.product_id));
+    const familyProducts = products.filter(p => p.family === prodSchedulingFilters.family).map(p => p.id)
+    filtered = filtered.filter(b => familyProducts.includes(b.product_id))
   }
 
   if (prodSchedulingFilters.product) {
-    filtered = filtered.filter(b => b.product_id === prodSchedulingFilters.product);
+    filtered = filtered.filter(b => b.product_id === prodSchedulingFilters.product)
   }
 
   if (prodSchedulingFilters.workLocation) {
-    filtered = filtered.filter(b => b.work_location === prodSchedulingFilters.workLocation);
+    filtered = filtered.filter(b => b.work_location === prodSchedulingFilters.workLocation)
   }
 
   if (prodSchedulingFilters.dateFrom) {
-    filtered = filtered.filter(b => !b.start_date || b.start_date >= prodSchedulingFilters.dateFrom);
+    filtered = filtered.filter(b => !b.start_date || b.start_date >= prodSchedulingFilters.dateFrom)
   }
 
   if (prodSchedulingFilters.dateTo) {
-    filtered = filtered.filter(b => !b.start_date || b.start_date <= prodSchedulingFilters.dateTo);
+    filtered = filtered.filter(b => !b.start_date || b.start_date <= prodSchedulingFilters.dateTo)
   }
 
   if (prodSchedulingHideComplete) {
-    filtered = filtered.filter(b => b.status !== 'Complete');
+    filtered = filtered.filter(b => b.status !== 'Complete')
   }
 
-  // Cache families once before sort to avoid repeated calls inside the comparator
-  const allFamilies = prodSchedulingSort.field === 'family' ? getFamilies() : [];
+  // Build lookup maps for efficient sorting
+  const productMap = new Map(products.map(p => [p.id, p]))
+  const allFamilies = prodSchedulingSort.field === 'family' ? getFamilies() : []
+  const familyMap = new Map(allFamilies.map(f => [f.id, f]))
 
   filtered.sort((a, b) => {
-    let aVal, bVal;
+    let aVal
+    let bVal
 
     if (prodSchedulingSort.field === 'family') {
-      const productA = products.find(p => p.id === a.product_id);
-      const productB = products.find(p => p.id === b.product_id);
-      const familyA = productA ? allFamilies.find(f => f.id === productA.family) : null;
-      const familyB = productB ? allFamilies.find(f => f.id === productB.family) : null;
-      aVal = familyA?.label || '';
-      bVal = familyB?.label || '';
+      const productA = productMap.get(a.product_id)
+      const productB = productMap.get(b.product_id)
+      const familyA = productA ? familyMap.get(productA.family) : null
+      const familyB = productB ? familyMap.get(productB.family) : null
+      aVal = familyA?.label || ''
+      bVal = familyB?.label || ''
+    } else if (prodSchedulingSort.field === 'product_id') {
+      // Sort by product name instead of ID
+      const productA = productMap.get(a.product_id)
+      const productB = productMap.get(b.product_id)
+      aVal = productA?.name || ''
+      bVal = productB?.name || ''
     } else {
-      aVal = a[prodSchedulingSort.field];
-      bVal = b[prodSchedulingSort.field];
+      aVal = a[prodSchedulingSort.field]
+      bVal = b[prodSchedulingSort.field]
     }
 
-    if (aVal === null || aVal === undefined) aVal = '';
-    if (bVal === null || bVal === undefined) bVal = '';
+    if (aVal === null || aVal === undefined) aVal = ''
+    if (bVal === null || bVal === undefined) bVal = ''
 
     if (typeof aVal === 'string') {
-      return prodSchedulingSort.ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-    } else {
-      return prodSchedulingSort.ascending ? aVal - bVal : bVal - aVal;
+      return prodSchedulingSort.ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
     }
-  });
+    return prodSchedulingSort.ascending ? aVal - bVal : bVal - aVal
+  })
 
-  return filtered;
+  return filtered
 }
 
 function toggleSort(field) {
   if (prodSchedulingSort.field === field) {
-    prodSchedulingSort.ascending = !prodSchedulingSort.ascending;
+    prodSchedulingSort.ascending = !prodSchedulingSort.ascending
   } else {
-    prodSchedulingSort.field = field;
-    prodSchedulingSort.ascending = true;
+    prodSchedulingSort.field = field
+    prodSchedulingSort.ascending = true
   }
-  render();
+  // Reset scroll position on sort
+  prodSchedulingScrollOffset = 0
+  const tableWrap = document.querySelector('.scheduling-table-wrap')
+  if (tableWrap) tableWrap.scrollTop = 0
+  render()
 }
 
 // Keyboard handlers for inline editing
-function handleCellKey(event) {
+function handleSchedulingCellKey(event) {
   if (event.key === 'Tab') {
-    event.preventDefault();
-    const cell = event.target.closest('td');
-    const row = cell.closest('tr');
-    const cells = row.querySelectorAll('input, select, textarea');
-    const currentIdx = Array.from(cells).indexOf(event.target);
+    event.preventDefault()
+    const cell = event.target.closest('td')
+    const row = cell.closest('tr')
+    const cells = row.querySelectorAll('input, select, textarea')
+    const currentIdx = Array.from(cells).indexOf(event.target)
     if (event.shiftKey) {
-      if (currentIdx > 0) cells[currentIdx - 1].focus();
+      if (currentIdx > 0) cells[currentIdx - 1].focus()
     } else {
-      if (currentIdx < cells.length - 1) cells[currentIdx + 1].focus();
+      if (currentIdx < cells.length - 1) cells[currentIdx + 1].focus()
     }
   }
 }
 
 function handleBatchRowKey(event, field) {
   if (event.key === 'Tab') {
-    event.preventDefault();
-    const fields = ['product', 'work-location', 'qty', 'start', 'due', 'status', 'notes'];
-    const currentIdx = fields.indexOf(field);
+    event.preventDefault()
+    const fields = ['product', 'work-location', 'qty', 'start', 'due', 'status', 'notes']
+    const currentIdx = fields.indexOf(field)
     if (event.shiftKey) {
-      if (currentIdx > 0) document.getElementById(`batch-new-${fields[currentIdx - 1]}`).focus();
+      if (currentIdx > 0) document.getElementById(`batch-new-${fields[currentIdx - 1]}`).focus()
     } else {
       if (currentIdx < fields.length - 1) {
-        document.getElementById(`batch-new-${fields[currentIdx + 1]}`).focus();
+        document.getElementById(`batch-new-${fields[currentIdx + 1]}`).focus()
       }
     }
   } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-    event.preventDefault();
-    addNewBatchRow();
+    event.preventDefault()
+    addNewBatchRow()
   }
 }
 
 function focusBatchNewRow() {
-  setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50);
+  setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50)
 }
 
 async function addNewBatchRow() {
-  const productId = document.getElementById('batch-new-product')?.value;
-  const workLocationDiv = document.getElementById('batch-new-work-location');
-  const workLocation = workLocationDiv?.textContent?.trim();
-  const qty = document.getElementById('batch-new-qty')?.value;
-  const startInput = document.getElementById('batch-new-start')?.value;
-  const dueInput = document.getElementById('batch-new-due')?.value;
-  const status = document.getElementById('batch-new-status')?.value || 'Planned';
-  const notes = document.getElementById('batch-new-notes')?.value;
+  const productId = document.getElementById('batch-new-product')?.value
+  const workLocationDiv = document.getElementById('batch-new-work-location')
+  const workLocation = workLocationDiv?.textContent?.trim()
+  const qty = document.getElementById('batch-new-qty')?.value
+  const startInput = document.getElementById('batch-new-start')?.value
+  const dueInput = document.getElementById('batch-new-due')?.value
+  const status = document.getElementById('batch-new-status')?.value || 'Planned'
+  const notes = document.getElementById('batch-new-notes')?.value
 
   if (!productId || !workLocation || workLocation === '—') {
-    const productEl = document.getElementById('batch-new-product');
-    productEl.style.borderColor = 'var(--red)';
-    productEl.title = 'Product and Work Location are required';
+    const productEl = document.getElementById('batch-new-product')
+    productEl.style.borderColor = 'var(--red)'
+    productEl.title = 'Product and Work Location are required'
     setTimeout(() => {
-      productEl.style.borderColor = '';
-      productEl.title = '';
-    }, 2000);
-    return;
+      productEl.style.borderColor = ''
+      productEl.title = ''
+    }, 2000)
+    return
   }
 
   // Parse dates from DD/MM/YYYY to YYYY-MM-DD format
-  const start = startInput ? parseDisplayDate(startInput) : null;
-  const due = dueInput ? parseDisplayDate(dueInput) : null;
+  const start = startInput ? parseDisplayDate(startInput) : null
+  const due = dueInput ? parseDisplayDate(dueInput) : null
 
   // Validate dates if provided
   if (startInput && !start) {
-    const startEl = document.getElementById('batch-new-start');
-    startEl.style.borderColor = 'var(--red)';
-    startEl.title = `Invalid start date format: "${startInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`;
+    const startEl = document.getElementById('batch-new-start')
+    startEl.style.borderColor = 'var(--red)'
+    startEl.title = `Invalid start date format: "${startInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`
     setTimeout(() => {
-        startEl.style.borderColor = '';
-        startEl.title = '';
-    }, 2000);
-    startEl.focus();
-    return;
+      startEl.style.borderColor = ''
+      startEl.title = ''
+    }, 2000)
+    startEl.focus()
+    return
   }
   if (dueInput && !due) {
-    const dueEl = document.getElementById('batch-new-due');
-    dueEl.style.borderColor = 'var(--red)';
-    dueEl.title = `Invalid due date format: "${dueInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`;
+    const dueEl = document.getElementById('batch-new-due')
+    dueEl.style.borderColor = 'var(--red)'
+    dueEl.title = `Invalid due date format: "${dueInput}"\n\nUse DD/MM/YYYY, t (today), or +7/-3 (relative dates)`
     setTimeout(() => {
-        dueEl.style.borderColor = '';
-        dueEl.title = '';
-    }, 2000);
-    dueEl.focus();
-    return;
+      dueEl.style.borderColor = ''
+      dueEl.title = ''
+    }, 2000)
+    dueEl.focus()
+    return
   }
 
-  await prodDataAddBatch(productId, workLocation, qty, start, due, status, notes);
+  await prodDataAddBatch(productId, workLocation, qty, start, due, status, notes)
 
   // Reset new row fields
-  document.getElementById('batch-new-product').value = '';
-  document.getElementById('batch-new-work-location').textContent = '—';
-  document.getElementById('batch-new-qty').value = '';
-  document.getElementById('batch-new-start').value = '';
-  document.getElementById('batch-new-due').value = '';
-  document.getElementById('batch-new-status').value = 'Planned';
-  document.getElementById('batch-new-notes').value = '';
+  document.getElementById('batch-new-product').value = ''
+  document.getElementById('batch-new-work-location').textContent = '—'
+  document.getElementById('batch-new-qty').value = ''
+  document.getElementById('batch-new-start').value = ''
+  document.getElementById('batch-new-due').value = ''
+  document.getElementById('batch-new-status').value = 'Planned'
+  document.getElementById('batch-new-notes').value = ''
 
-  setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50);
+  setTimeout(() => document.getElementById('batch-new-product')?.focus(), 50)
 }
 
 function calcBatchDueDate() {
-  const productSelect = document.getElementById('batch-new-product');
-  const startInput = document.getElementById('batch-new-start');
-  const dueInput = document.getElementById('batch-new-due');
+  const productSelect = document.getElementById('batch-new-product')
+  const startInput = document.getElementById('batch-new-start')
+  const dueInput = document.getElementById('batch-new-due')
 
-  if (!productSelect || !startInput || !dueInput) return;
+  if (!productSelect || !startInput || !dueInput) return
 
-  const productId = productSelect.value;
-  const startDisplayDate = startInput.value;
+  const productId = productSelect.value
+  const startDisplayDate = startInput.value
 
-  if (!productId || !startDisplayDate) return;
+  if (!productId || !startDisplayDate) return
 
   // Parse display date to ISO format
-  const startIso = parseDisplayDate(startDisplayDate);
-  if (!startIso) return;
+  const startIso = parseDisplayDate(startDisplayDate)
+  if (!startIso) return
 
-  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
-  const product = products.find(p => p.id === productId);
-  if (!product) return;
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : []
+  const product = products.find(p => p.id === productId)
+  if (!product) return
 
   // Calculate due date: start date + lead time days (or just start date if no lead time)
-  const start = new Date(startIso);
-  const due = new Date(start);
+  const start = new Date(startIso)
+  const due = new Date(start)
   if (product.lead_time_days && parseInt(product.lead_time_days) > 0) {
-    due.setDate(due.getDate() + parseInt(product.lead_time_days));
+    due.setDate(due.getDate() + parseInt(product.lead_time_days))
   }
 
   // Format as DD/MM/YYYY for display
-  const year = due.getFullYear();
-  const month = String(due.getMonth() + 1).padStart(2, '0');
-  const day = String(due.getDate()).padStart(2, '0');
-  dueInput.value = `${day}/${month}/${year}`;
+  const year = due.getFullYear()
+  const month = String(due.getMonth() + 1).padStart(2, '0')
+  const day = String(due.getDate()).padStart(2, '0')
+  dueInput.value = `${day}/${month}/${year}`
 }
 
 function toggleHideCompleteBatches() {
-  prodSchedulingHideComplete = !prodSchedulingHideComplete;
-  localStorage.setItem('prodSchedulingHideComplete', prodSchedulingHideComplete);
-  render();
+  prodSchedulingHideComplete = !prodSchedulingHideComplete
+  localStorage.setItem('prodSchedulingHideComplete', prodSchedulingHideComplete)
+  render()
 }
 
 async function duplicateBatchRow(batchIdx) {
-  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : [];
-  if (batchIdx < 0 || batchIdx >= batches.length) return;
+  const batches = (prodState && Array.isArray(prodState.batches)) ? prodState.batches : []
+  if (batchIdx < 0 || batchIdx >= batches.length) return
 
-  const source = batches[batchIdx];
+  const source = batches[batchIdx]
   await prodDataAddBatch(
     source.product_id,
     source.work_location,
@@ -649,155 +780,128 @@ async function duplicateBatchRow(batchIdx) {
     source.due_date,
     source.status,
     source.notes
-  );
+  )
 }
 
 // ── Smart date input helpers ─────────────────────────────
-function handleDateInput(event, fieldId, fieldType, batchIdx) {
-  if (event.key === 'Tab') {
-    // Handle relative date input on blur/tab
-    const input = event.target;
-    const val = input.value.trim().toLowerCase();
-
-    if (val && !val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-      const parsed = parseDateInput(val);
-      if (parsed) {
-        input.value = formatDisplayDate(parsed);
-        event.preventDefault();
-        // Trigger change event
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    }
-
-    // Then handle normal tab navigation
-    handleCellKey(event);
-  }
-}
-
-function setDateToday(fieldId) {
-  const today = new Date().toISOString().split('T')[0];
-  const field = document.getElementById(fieldId);
-  if (field) {
-    field.value = formatDisplayDate(today);
-    field.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-}
-
 function parseDateInput(input) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
   // Handle "t" or "today"
   if (input === 't' || input === 'today') {
-    return formatDate(today);
+    return formatDate(today)
   }
 
   // Handle relative dates: +7, -3, etc.
-  const relMatch = input.match(/^([+-])(\d+)$/);
+  const relMatch = input.match(/^([+-])(\d+)$/)
   if (relMatch) {
-    const offset = parseInt(relMatch[1] + relMatch[2]);
-    const date = new Date(today);
-    date.setDate(date.getDate() + offset);
-    return formatDate(date);
+    const offset = parseInt(relMatch[1] + relMatch[2])
+    const date = new Date(today)
+    date.setDate(date.getDate() + offset)
+    return formatDate(date)
   }
 
   // Handle "next Friday" style (optional enhancement)
-  return null;
+  return null
 }
 
 function formatDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 // Smart date format: auto-correct or prompt invalid format
 function smartDateFormat(fieldId, callback) {
-  const input = document.getElementById(fieldId);
-  if (!input) return;
+  const input = document.getElementById(fieldId)
+  if (!input) return
 
-  const val = input.value.trim().toLowerCase();
+  const val = input.value.trim().toLowerCase()
   if (!val) {
     // Empty is valid — save the cleared value so the date is removed from DB
-    if (callback) callback();
-    return;
+    if (callback) callback()
+    return
   }
 
   // Already in correct display format
   if (val.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-    if (callback) callback();
-    return;
+    if (callback) callback()
+    return
   }
 
   // Try to parse shorthand
-  const parsed = parseDateInput(val);
+  const parsed = parseDateInput(val)
   if (parsed) {
-    input.value = formatDisplayDate(parsed);
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-    if (callback) callback();
-    return;
+    input.value = formatDisplayDate(parsed)
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    if (callback) callback()
+    return
   }
 
   // Invalid format - just clear and show inline hint (no blocking alert)
-  input.style.borderColor = 'var(--red)';
-  input.title = `Invalid format. Use DD/MM/YYYY, t/today, or +7/-3 for relative dates`;
+  input.style.borderColor = 'var(--red)'
+  input.title = 'Invalid format. Use DD/MM/YYYY, t/today, or +7/-3 for relative dates'
   setTimeout(() => {
-    input.style.borderColor = '';
-    input.title = '';
-  }, 2000);
+    input.style.borderColor = ''
+    input.title = ''
+  }, 2000)
 }
 
 // Update family display when product changes
 function updateFamilyDisplay(scope) {
-  let productSelect, familyDisplay;
+  let productSelect
+  let familyDisplay
 
   if (scope === 'new') {
-    productSelect = document.getElementById('batch-new-product');
-    familyDisplay = document.getElementById('batch-new-family');
+    productSelect = document.getElementById('batch-new-product')
+    familyDisplay = document.getElementById('batch-new-family')
   } else {
     // For existing rows, called from product change
-    return; // Handled in render
+    return // Handled in render
   }
 
-  if (!productSelect || !familyDisplay) return;
+  if (!productSelect || !familyDisplay) return
 
-  const productId = productSelect.value;
-  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
-  const product = products.find(p => p.id === productId);
+  const productId = productSelect.value
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : []
+  const product = products.find(p => p.id === productId)
 
   if (product && product.family) {
-    const family = getFamilies().find(f => f.id === product.family);
-    familyDisplay.textContent = family ? family.label : '—';
+    const family = getFamilies().find(f => f.id === product.family)
+    familyDisplay.textContent = family ? family.label : '—'
   } else {
-    familyDisplay.textContent = '—';
+    familyDisplay.textContent = '—'
   }
 }
 
 // Auto-populate work location from selected product (new row)
 function autoPopulateWorkLocation() {
-  const productSelect = document.getElementById('batch-new-product');
-  const workLocationDiv = document.getElementById('batch-new-work-location');
+  const productSelect = document.getElementById('batch-new-product')
+  const workLocationDiv = document.getElementById('batch-new-work-location')
 
-  if (!productSelect || !workLocationDiv) return;
+  if (!productSelect || !workLocationDiv) return
 
-  const productId = productSelect.value;
-  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
-  const product = products.find(p => p.id === productId);
+  const productId = productSelect.value
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : []
+  const product = products.find(p => p.id === productId)
 
   if (product && product.work_location) {
-    workLocationDiv.textContent = product.work_location;
+    workLocationDiv.textContent = product.work_location
   } else {
-    workLocationDiv.textContent = '—';
+    workLocationDiv.textContent = '—'
   }
 }
 
 // Auto-populate work location from selected product (existing batch row)
 function autoPopulateWorkLocationForBatch(batchIdx, productId) {
-  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : [];
-  const product = products.find(p => p.id === productId);
+  const products = (prodState && Array.isArray(prodState.products)) ? prodState.products : []
+  const product = products.find(p => p.id === productId)
 
   if (product && product.work_location) {
-    prodDataUpdateBatch(batchIdx, 'work_location', product.work_location);
+    prodDataUpdateBatch(batchIdx, 'work_location', product.work_location)
   }
 }
+
+setProdDataSchedulingRenderHelpers({ renderSchedulingRow, getFilteredBatches })

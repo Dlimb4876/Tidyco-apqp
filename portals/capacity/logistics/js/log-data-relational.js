@@ -1,228 +1,405 @@
 /* ============================================================
    log-data-relational.js — Logistics Capacity Relational DB Operations
-
-   Handles all Supabase table operations for:
-   - log_teams, log_tasks, log_products, log_holidays,
-     log_product_support_history
-
-   Called by log-data.js during logDataInit() and logDataSave()
    ============================================================ */
 
-// ─────────────────────────────────────────────────────────────
-// LOAD OPERATIONS
-// ─────────────────────────────────────────────────────────────
+import { supabase, currentUser } from '../../../../core/js/supa.js'
+import { capUUID, capNormalizeDateRange } from '../../shared/js/cap-data-utils.js'
+import { safeWarn } from '../../../../utils/js/helpers.js'
 
-window.logLoadRelationalTeams = async function() {
+const LOG_DEPARTMENT = 'LOG'
+
+function resolveUserId(userId) {
+  return userId || (currentUser && currentUser.id) || null
+}
+
+function resolveUuid() {
+  return typeof capUUID === 'function' ? capUUID() : crypto.randomUUID()
+}
+
+export async function logLoadRelationalTeams() {
   try {
-    const { data, error } = await supa.from('log_teams').select('*');
-    if (error) { console.warn('logLoadRelationalTeams error:', error.message); return []; }
+    const { data, error } = await supabase.from('log_teams').select('*')
+    if (error) {
+      safeWarn('logLoadRelationalTeams error:', error)
+      return []
+    }
+
     return (data || []).map(t => ({
-      id: t.id, name: t.name, hoursPerWeek: t.hours_per_week,
-      utilisation: t.utilisation, jobTitle: t.job_title || '',
-      group: t.team_group || '', department: 'LOG',
-      startDate: t.start_date || '', endDate: t.end_date || '',
+      id: t.id,
+      name: t.name,
+      hoursPerWeek: t.hours_per_week,
+      utilisation: t.utilisation,
+      jobTitle: t.job_title || '',
+      group: t.team_group || '',
+      department: LOG_DEPARTMENT,
+      startDate: t.start_date || '',
+      endDate: t.end_date || '',
       createdAt: t.created_at
-    }));
-  } catch (err) { console.warn('logLoadRelationalTeams exception:', err.message); return []; }
-};
+    }))
+  } catch (err) {
+    safeWarn('logLoadRelationalTeams exception:', err)
+    return []
+  }
+}
 
-window.logLoadRelationalProducts = async function() {
+export async function logLoadRelationalProducts() {
   try {
-    const { data, error } = await supa.from('log_products').select('*');
-    if (error) { console.warn('logLoadRelationalProducts error:', error.message); return []; }
-    return (data || []).map(mp => ({
-      id: mp.id, name: mp.name || '(Unknown Product)',
-      productDatabaseId: mp.product_database_id,
-      hoursPerWeek: mp.hours_per_week, department: 'LOG',
-      notes: mp.notes, createdAt: mp.created_at, updatedAt: mp.updated_at
-    }));
-  } catch (err) { console.warn('logLoadRelationalProducts exception:', err.message); return []; }
-};
+    const { data, error } = await supabase.from('log_products').select('*')
+    if (error) {
+      safeWarn('logLoadRelationalProducts error:', error)
+      return []
+    }
 
-window.logLoadRelationalProductSupportHistory = async function() {
-  try {
-    const { data, error } = await supa.from('log_product_support_history').select('*');
-    if (error) { console.warn('logLoadRelationalProductSupportHistory error:', error.message); return []; }
     return (data || []).map(row => ({
-      id: row.id, productId: row.product_id,
+      id: row.id,
+      name: row.name || '(Unknown Product)',
+      productDatabaseId: row.product_database_id,
+      hoursPerWeek: row.hours_per_week,
+      department: LOG_DEPARTMENT,
+      notes: row.notes,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }))
+  } catch (err) {
+    safeWarn('logLoadRelationalProducts exception:', err)
+    return []
+  }
+}
+
+export async function logLoadRelationalProductSupportHistory() {
+  try {
+    const { data, error } = await supabase.from('log_product_support_history').select('*')
+    if (error) {
+      safeWarn('logLoadRelationalProductSupportHistory error:', error)
+      return []
+    }
+
+    return (data || []).map(row => ({
+      id: row.id,
+      productId: row.product_id,
       hoursPerWeek: row.hours_per_week,
       kittingHours: row.kitting_hours ?? row.kitting_time_booking_hours,
       bookingInOutHours: row.booking_in_out_hours,
       kittingTimeBookingHours: row.kitting_hours ?? row.kitting_time_booking_hours,
       productMovementHours: row.product_movement_hours,
-      effectiveDate: row.effective_date, endDate: row.end_date || '',
-      changeReason: row.change_reason || '', notes: row.notes || '',
-      department: 'LOG', createdAt: row.created_at, updatedAt: row.updated_at
-    }));
-  } catch (err) { console.warn('logLoadRelationalProductSupportHistory exception:', err.message); return []; }
-};
+      effectiveDate: row.effective_date,
+      endDate: row.end_date || '',
+      changeReason: row.change_reason || '',
+      notes: row.notes || '',
+      department: LOG_DEPARTMENT,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }))
+  } catch (err) {
+    safeWarn('logLoadRelationalProductSupportHistory exception:', err)
+    return []
+  }
+}
 
-window.logLoadRelationalHolidays = async function() {
+export async function logLoadRelationalHolidays() {
   try {
-    const { data, error } = await supa.from('log_holidays').select('*');
-    if (error) { console.warn('logLoadRelationalHolidays error:', error.message); return []; }
+    const { data, error } = await supabase.from('log_holidays').select('*')
+    if (error) {
+      safeWarn('logLoadRelationalHolidays error:', error)
+      return []
+    }
+
     return (data || []).map(h => ({
-      id: h.id, userId: h.user_id, personId: h.person_id,
-      date: h.date, type: h.type, department: 'LOG', createdAt: h.created_at
-    }));
-  } catch (err) { console.warn('logLoadRelationalHolidays exception:', err.message); return []; }
-};
+      id: h.id,
+      userId: h.user_id,
+      personId: h.person_id,
+      date: h.date,
+      type: h.type,
+      department: LOG_DEPARTMENT,
+      createdAt: h.created_at
+    }))
+  } catch (err) {
+    safeWarn('logLoadRelationalHolidays exception:', err)
+    return []
+  }
+}
 
-window.logLoadRelationalTasks = async function() {
+export async function logLoadRelationalTasks() {
   try {
-    const { data, error } = await supa.from('log_tasks').select('*');
-    if (error) { console.warn('logLoadRelationalTasks error:', error.message); return []; }
+    const { data, error } = await supabase.from('log_tasks').select('*')
+    if (error) {
+      safeWarn('logLoadRelationalTasks error:', error)
+      return []
+    }
+
     return (data || []).map(t => ({
-      id: t.id, name: t.name, category: t.category,
-      type: t.type || 'standard', assigneeId: t.assignee_id || '',
-      productId: t.product_id || '', startDate: t.start_date || '',
-      endDate: t.end_date || '', totalHours: t.total_hours || 0,
-      status: t.status || 'SCHEDULED', isDisabled: t.is_disabled === true,
-      department: 'LOG', createdAt: t.created_at
-    }));
-  } catch (err) { console.warn('logLoadRelationalTasks exception:', err.message); return []; }
-};
+      id: t.id,
+      name: t.name,
+      category: t.category,
+      type: t.type || 'standard',
+      assigneeId: t.assignee_id || '',
+      productId: t.product_id || '',
+      startDate: t.start_date || '',
+      endDate: t.end_date || '',
+      totalHours: t.total_hours || 0,
+      status: t.status || 'SCHEDULED',
+      isDisabled: t.is_disabled === true,
+      department: LOG_DEPARTMENT,
+      createdAt: t.created_at
+    }))
+  } catch (err) {
+    safeWarn('logLoadRelationalTasks exception:', err)
+    return []
+  }
+}
 
-// ─────────────────────────────────────────────────────────────
-// SAVE OPERATIONS
-// ─────────────────────────────────────────────────────────────
-
-window.logSaveTeamRelational = async function(userId, teamMember) {
+export async function logSaveTeamRelational(userId, teamMember) {
   try {
-    const teamId = teamMember.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
+    const resolvedUserId = resolveUserId(userId)
+    if (!resolvedUserId) return false
+
+    const teamId = teamMember.id || resolveUuid()
     const payload = {
-      id: teamId, user_id: userId, name: teamMember.name,
-      hours_per_week: teamMember.hoursPerWeek, utilisation: teamMember.utilisation,
-      job_title: teamMember.jobTitle, team_group: teamMember.group,
+      id: teamId,
+      user_id: resolvedUserId,
+      name: teamMember.name,
+      hours_per_week: teamMember.hoursPerWeek,
+      utilisation: teamMember.utilisation,
+      job_title: teamMember.jobTitle,
+      team_group: teamMember.group,
       start_date: teamMember.startDate || null,
-      end_date: teamMember.endDate || null, updated_at: new Date().toISOString()
-    };
-    const { data, error } = await supa.from('log_teams').upsert([payload], { onConflict: 'id' }).select('id');
-    if (error) { console.warn('logSaveTeamRelational error:', error.message); return false; }
-    teamMember.id = data && data.length > 0 ? data[0].id : teamId;
-    return true;
-  } catch (err) { console.warn('logSaveTeamRelational exception:', err.message); return false; }
-};
+      end_date: teamMember.endDate || null,
+      updated_at: new Date().toISOString()
+    }
 
-window.logSaveProductRelational = async function(userId, product) {
+    const { data, error } = await supabase
+      .from('log_teams')
+      .upsert([payload], { onConflict: 'id' })
+      .select('id')
+    if (error) {
+      safeWarn('logSaveTeamRelational error:', error)
+      return false
+    }
+
+    teamMember.id = data && data.length > 0 ? data[0].id : teamId
+    return true
+  } catch (err) {
+    safeWarn('logSaveTeamRelational exception:', err)
+    return false
+  }
+}
+
+export async function logSaveProductRelational(userId, product) {
   try {
-    const productDatabaseId = product.productDatabaseId || product.product_database_id || null;
-    let productId = product.id || null;
+    const resolvedUserId = resolveUserId(userId)
+    if (!resolvedUserId) return false
+
+    const productDatabaseId = product.productDatabaseId || product.product_database_id || null
+    let productId = product.id || null
 
     if (productDatabaseId) {
-      const { data: existing, error: lookupErr } = await supa
-        .from('log_products').select('id').eq('product_database_id', productDatabaseId).limit(1);
-      if (!lookupErr && Array.isArray(existing) && existing.length > 0) {
-        productId = existing[0].id;
+      const { data: existingRows, error: lookupError } = await supabase
+        .from('log_products')
+        .select('id')
+        .eq('product_database_id', productDatabaseId)
+        .limit(1)
+
+      if (lookupError) {
+        safeWarn('logSaveProductRelational lookup error:', lookupError)
+        return false
+      }
+
+      if (Array.isArray(existingRows) && existingRows.length > 0 && existingRows[0].id) {
+        productId = existingRows[0].id
       }
     }
-    if (!productId) productId = typeof meUUID === 'function' ? meUUID() : crypto.randomUUID();
+
+    if (!productId) productId = resolveUuid()
 
     const payload = {
-      id: productId, user_id: userId, name: product.name || '',
+      id: productId,
+      user_id: resolvedUserId,
+      name: product.name || '',
       product_database_id: productDatabaseId,
       hours_per_week: product.hoursPerWeek || product.hours_per_week || 0,
       notes: product.notes || null,
       updated_at: new Date().toISOString()
-    };
-    const { data, error } = await supa.from('log_products').upsert([payload], { onConflict: 'id' }).select('id');
-    if (error) { console.warn('logSaveProductRelational error:', error.message); return false; }
-    product.id = data && data.length > 0 ? data[0].id : productId;
-    return true;
-  } catch (err) { console.warn('logSaveProductRelational exception:', err.message); return false; }
-};
+    }
 
-window.logSaveProductSupportHistoryRelational = async function(userId, historyRows) {
+    const { data, error } = await supabase
+      .from('log_products')
+      .upsert([payload], { onConflict: 'id' })
+      .select('id')
+    if (error) {
+      safeWarn('logSaveProductRelational error:', error)
+      return false
+    }
+
+    product.id = data && data.length > 0 ? data[0].id : productId
+    return true
+  } catch (err) {
+    safeWarn('logSaveProductRelational exception:', err)
+    return false
+  }
+}
+
+export async function logSaveProductSupportHistoryRelational(userId, historyRows) {
   try {
-    const rows = Array.isArray(historyRows) ? historyRows : [];
-    const { error: deleteError } = await supa.from('log_product_support_history').delete().eq('user_id', userId);
-    if (deleteError) { console.warn('logSavePSH delete error:', deleteError.message); return false; }
-    if (rows.length === 0) return true;
+    const resolvedUserId = resolveUserId(userId)
+    if (!resolvedUserId) return false
+
+    const rows = Array.isArray(historyRows) ? historyRows : []
+    const { error: deleteError } = await supabase
+      .from('log_product_support_history')
+      .delete()
+      .eq('user_id', resolvedUserId)
+    if (deleteError) {
+      safeWarn('logSavePSH delete error:', deleteError)
+      return false
+    }
+
+    if (rows.length === 0) return true
 
     const payload = rows
       .filter(row => row && row.productId && row.effectiveDate)
       .map(row => ({
-        id: row.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID()),
-        user_id: userId, product_id: row.productId,
+        id: row.id || resolveUuid(),
+        user_id: resolvedUserId,
+        product_id: row.productId,
         hours_per_week: Number(row.hoursPerWeek || 0) || 0,
         kitting_hours: Number((row.kittingHours ?? row.kittingTimeBookingHours) || 0) || 0,
         booking_in_out_hours: Number(row.bookingInOutHours || 0) || 0,
         kitting_time_booking_hours: Number((row.kittingHours ?? row.kittingTimeBookingHours) || 0) || 0,
         product_movement_hours: Number(row.productMovementHours || 0) || 0,
-        effective_date: row.effectiveDate, end_date: row.endDate || null,
-        change_reason: row.changeReason || null, notes: row.notes || null,
+        effective_date: row.effectiveDate,
+        end_date: row.endDate || null,
+        change_reason: row.changeReason || null,
+        notes: row.notes || null,
         updated_at: new Date().toISOString()
-      }));
-    if (payload.length === 0) return true;
+      }))
 
-    const { error: insertError } = await supa.from('log_product_support_history').insert(payload);
-    if (insertError) { console.warn('logSavePSH insert error:', insertError.message); return false; }
-    return true;
-  } catch (err) { console.warn('logSavePSH exception:', err.message); return false; }
-};
+    if (payload.length === 0) return true
 
-window.logSaveTaskRelational = async function(userId, task) {
+    const { error: insertError } = await supabase.from('log_product_support_history').insert(payload)
+    if (insertError) {
+      safeWarn('logSavePSH insert error:', insertError)
+      return false
+    }
+
+    return true
+  } catch (err) {
+    safeWarn('logSavePSH exception:', err)
+    return false
+  }
+}
+
+export async function logSaveTaskRelational(userId, task) {
   try {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const { safeStart, safeEnd } = meNormalizeDateRange(task.startDate, task.endDate, todayStr);
-    const taskId = task.id || (typeof meUUID === 'function' ? meUUID() : crypto.randomUUID());
-    task.id = taskId; task.startDate = safeStart; task.endDate = safeEnd;
+    const resolvedUserId = resolveUserId(userId)
+    if (!resolvedUserId) return { success: false, taskId: null }
+
+    const today = new Date().toISOString().split('T')[0]
+    const { safeStart, safeEnd } = capNormalizeDateRange(task.startDate, task.endDate, today)
+    const taskId = task.id || resolveUuid()
+
+    task.id = taskId
+    task.startDate = safeStart
+    task.endDate = safeEnd
 
     const payload = {
-      id: taskId, user_id: userId, name: task.name, category: task.category,
-      type: task.type || 'standard', assignee_id: task.assigneeId || null,
-      product_id: task.productId || null, start_date: safeStart, end_date: safeEnd,
-      total_hours: task.totalHours || 0, status: task.status || 'SCHEDULED',
+      id: taskId,
+      user_id: resolvedUserId,
+      name: task.name,
+      category: task.category,
+      type: task.type || 'standard',
+      assignee_id: task.assigneeId || null,
+      product_id: task.productId || null,
+      start_date: safeStart,
+      end_date: safeEnd,
+      total_hours: task.totalHours || 0,
+      status: task.status || 'SCHEDULED',
       is_disabled: task.isDisabled === true,
       updated_at: new Date().toISOString()
-    };
-    const { data, error } = await supa.from('log_tasks').upsert([payload], { onConflict: 'id' }).select('id');
-    if (error) { console.warn('logSaveTaskRelational error:', error.message); return { success: false, taskId: null }; }
-    task.id = data && data.length > 0 ? data[0].id : taskId;
-    return { success: true, taskId: task.id };
-  } catch (err) { console.warn('logSaveTaskRelational exception:', err.message); return { success: false, taskId: null }; }
-};
+    }
 
-// ─────────────────────────────────────────────────────────────
-// DELETE OPERATIONS
-// ─────────────────────────────────────────────────────────────
+    const { data, error } = await supabase
+      .from('log_tasks')
+      .upsert([payload], { onConflict: 'id' })
+      .select('id')
+    if (error) {
+      safeWarn('logSaveTaskRelational error:', error)
+      return { success: false, taskId: null }
+    }
 
-window.logDeleteTeamRelational = async function(teamId) {
+    task.id = data && data.length > 0 ? data[0].id : taskId
+    return { success: true, taskId: task.id }
+  } catch (err) {
+    safeWarn('logSaveTaskRelational exception:', err)
+    return { success: false, taskId: null }
+  }
+}
+
+export async function logDeleteTeamRelational(teamId) {
   try {
-    const { error } = await supa.from('log_teams').delete().eq('id', teamId);
-    if (error) { console.warn('logDeleteTeamRelational error:', error.message); return false; }
-    return true;
-  } catch (err) { console.warn('logDeleteTeamRelational exception:', err.message); return false; }
-};
+    const { error } = await supabase.from('log_teams').delete().eq('id', teamId)
+    if (error) {
+      safeWarn('logDeleteTeamRelational error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    safeWarn('logDeleteTeamRelational exception:', err)
+    return false
+  }
+}
 
-window.logDeleteTaskRelational = async function(taskId) {
+export async function logDeleteTaskRelational(taskId) {
   try {
-    const { error } = await supa.from('log_tasks').delete().eq('id', taskId);
-    if (error) { console.warn('logDeleteTaskRelational error:', error.message); return false; }
-    return true;
-  } catch (err) { console.warn('logDeleteTaskRelational exception:', err.message); return false; }
-};
+    const { error } = await supabase.from('log_tasks').delete().eq('id', taskId)
+    if (error) {
+      safeWarn('logDeleteTaskRelational error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    safeWarn('logDeleteTaskRelational exception:', err)
+    return false
+  }
+}
 
-window.logDeleteProductRelational = async function(productId) {
+export async function logDeleteProductRelational(productId) {
   try {
-    const { error } = await supa.from('log_products').delete().eq('id', productId);
-    if (error) { console.warn('logDeleteProductRelational error:', error.message); return false; }
-    return true;
-  } catch (err) { console.warn('logDeleteProductRelational exception:', err.message); return false; }
-};
+    const { error } = await supabase.from('log_products').delete().eq('id', productId)
+    if (error) {
+      safeWarn('logDeleteProductRelational error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    safeWarn('logDeleteProductRelational exception:', err)
+    return false
+  }
+}
 
-window.logDeleteHolidayRelational = async function(holidayId) {
+export async function logDeleteHolidayRelational(holidayId) {
   try {
-    const { error } = await supa.from('log_holidays').delete().eq('id', holidayId);
-    if (error) { console.warn('logDeleteHolidayRelational error:', error.message); return false; }
-    return true;
-  } catch (err) { console.warn('logDeleteHolidayRelational exception:', err.message); return false; }
-};
+    const { error } = await supabase.from('log_holidays').delete().eq('id', holidayId)
+    if (error) {
+      safeWarn('logDeleteHolidayRelational error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    safeWarn('logDeleteHolidayRelational exception:', err)
+    return false
+  }
+}
 
-window.logDeleteSupportHistoryRelational = async function(historyId) {
+export async function logDeleteSupportHistoryRelational(historyId) {
   try {
-    const { error } = await supa.from('log_product_support_history').delete().eq('id', historyId);
-    if (error) { console.warn('logDeleteSupportHistoryRelational error:', error.message); return false; }
-    return true;
-  } catch (err) { console.warn('logDeleteSupportHistoryRelational exception:', err.message); return false; }
-};
+    const { error } = await supabase.from('log_product_support_history').delete().eq('id', historyId)
+    if (error) {
+      safeWarn('logDeleteSupportHistoryRelational error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    safeWarn('logDeleteSupportHistoryRelational exception:', err)
+    return false
+  }
+}

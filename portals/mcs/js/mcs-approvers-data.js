@@ -14,8 +14,12 @@
  *   4. Approval 2  → REJECT = Back to Implementing | APPROVE → Implemented
  */
 
+import { appState } from '../../../core/js/state.js'
+import { supabase, currentUser } from '../../../core/js/supa.js'
+import { canEdit } from '../../../utils/js/helpers.js'
+
 // Canonical step definitions — order matters (sequential approval chain)
-const MCS_APPROVAL_STEPS = [
+export const MCS_APPROVAL_STEPS = [
   { key: 'approval1', label: 'Approval 1',  field: 'eng_review_status', byField: 'eng_review_by', atField: 'eng_review_at', notesField: 'eng_review_notes',  activeStatus: 'review' },
   { key: 'approval2', label: 'Approval 2',  field: 'qa_review_status',  byField: 'qa_review_by',  atField: 'qa_review_at',  notesField: 'qa_review_notes',   activeStatus: 'final_review' }
 ];
@@ -40,11 +44,11 @@ function _mcsParseSetting(value) {
  * Reads from global_settings, falls back to localStorage.
  * Returns { approval1: [{user_id, user_name}], approval2: [] }
  */
-async function mcsApproversLoad() {
+export async function mcsApproversLoad() {
   const config = { approval1: [], approval2: [] };
 
   try {
-    const { data, error } = await supa
+    const { data, error } = await supabase
       .from('global_settings')
       .select('setting_key, setting_value')
       .in('setting_key', Object.values(MCS_APPROVER_SETTING_KEYS));
@@ -69,6 +73,7 @@ async function mcsApproversLoad() {
       } else {
         config.approval2 = _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS.approval2));
       }
+      appState.mcsApproverConfig = config
       return config;
     }
   } catch (err) {
@@ -78,6 +83,7 @@ async function mcsApproversLoad() {
   // Fallback: localStorage
   config.approval1 = _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS.approval1));
   config.approval2 = _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS.approval2));
+  appState.mcsApproverConfig = config
   return config;
 }
 
@@ -90,19 +96,19 @@ async function _mcsSaveApproverList(stepKey, list) {
   localStorage.setItem(settingKey, json);
 
   try {
-    const { data: existing } = await supa
+    const { data: existing } = await supabase
       .from('global_settings')
       .select('id')
       .eq('setting_key', settingKey)
       .maybeSingle();
 
     if (existing) {
-      await supa
+      await supabase
         .from('global_settings')
         .update({ setting_value: json, updated_at: new Date().toISOString() })
         .eq('id', existing.id);
     } else {
-      await supa
+      await supabase
         .from('global_settings')
         .insert([{ setting_key: settingKey, setting_value: json }]);
     }
@@ -112,8 +118,8 @@ async function _mcsSaveApproverList(stepKey, list) {
 }
 
 /** Add a user as an approver for a step. */
-async function mcsApproversAdd(stepKey, userId, userName, userEmail) {
-  const current = (mcsApproverConfig && mcsApproverConfig[stepKey]) ||
+export async function mcsApproversAdd(stepKey, userId, userName, userEmail) {
+  const current = (appState.mcsApproverConfig && appState.mcsApproverConfig[stepKey]) ||
     _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS[stepKey]));
 
   // Skip duplicates
@@ -127,8 +133,8 @@ async function mcsApproversAdd(stepKey, userId, userName, userEmail) {
 }
 
 /** Remove a user as an approver for a step. */
-async function mcsApproversRemove(stepKey, userId) {
-  const current = (mcsApproverConfig && mcsApproverConfig[stepKey]) ||
+export async function mcsApproversRemove(stepKey, userId) {
+  const current = (appState.mcsApproverConfig && appState.mcsApproverConfig[stepKey]) ||
     _mcsParseSetting(localStorage.getItem(MCS_APPROVER_SETTING_KEYS[stepKey]));
 
   const newList = current.filter(u => u.user_id !== userId);
@@ -141,13 +147,13 @@ async function mcsApproversRemove(stepKey, userId) {
  * e.g. ['approval1'] or ['approval1', 'approval2']
  * Checks both user_id and user_email to match how mcsCanApproveStep works.
  */
-function mcsGetMyApproverSteps() {
-  if (!mcsApproverConfig || !currentUser) return [];
+export function mcsGetMyApproverSteps() {
+  if (!appState.mcsApproverConfig || !currentUser) return [];
   const myId = currentUser.id;
   const myEmail = (currentUser.email || '').toLowerCase();
   return MCS_APPROVAL_STEPS
     .map(s => s.key)
-    .filter(key => (mcsApproverConfig[key] || []).some(u =>
+    .filter(key => (appState.mcsApproverConfig[key] || []).some(u =>
       (myId && u.user_id && u.user_id === myId) ||
       (myEmail && u.user_email && u.user_email.toLowerCase() === myEmail)
     ));
@@ -163,7 +169,7 @@ function mcsGetMyApproverSteps() {
  * @param {object} [change] - The specific change being viewed (optional).
  *   When provided, also checks if the current user was nominated for this change.
  */
-function mcsCanApproveStep(stepKey, change) {
+export function mcsCanApproveStep(stepKey, change) {
   if (!stepKey || !currentUser) return false;
 
   const myId = currentUser.id;
@@ -180,13 +186,13 @@ function mcsCanApproveStep(stepKey, change) {
   }
 
   // Config not loaded yet — fall back to role-based edit permission
-  if (!mcsApproverConfig) {
-    return typeof canEdit === 'function' && canEdit();
+  if (!appState.mcsApproverConfig) {
+    return canEdit();
   }
-  const assigned = mcsApproverConfig[stepKey] || [];
+  const assigned = appState.mcsApproverConfig[stepKey] || [];
   // No approvers assigned → anyone who can edit may approve
   if (assigned.length === 0) {
-    return typeof canEdit === 'function' && canEdit();
+    return canEdit();
   }
   return assigned.some(u =>
     (myId && u.user_id && u.user_id === myId) ||
@@ -199,7 +205,7 @@ function mcsCanApproveStep(stepKey, change) {
  * approval1 is active when status = 'review'
  * approval2 is active when status = 'final_review'
  */
-function mcsGetActiveStepKey(change) {
+export function mcsGetActiveStepKey(change) {
   if (!change) return null;
   if (change.status === 'review') return 'approval1';
   if (change.status === 'final_review') return 'approval2';
@@ -211,8 +217,8 @@ function mcsGetActiveStepKey(change) {
  * Uses mcsList (global) when populated; falls back to a Supabase query.
  * Returns array of { change, stepKey, stepLabel }.
  */
-async function mcsGetPendingApprovalsForMe() {
-  if (!currentUser || !mcsApproverConfig) return [];
+export async function mcsGetPendingApprovalsForMe() {
+  if (!currentUser || !appState.mcsApproverConfig) return [];
 
   const mySteps = mcsGetMyApproverSteps();
   if (mySteps.length === 0) return [];
@@ -225,7 +231,7 @@ async function mcsGetPendingApprovalsForMe() {
     return !s || s === 'pending';
   }
 
-  const source = Array.isArray(mcsList) && mcsList.length > 0 ? mcsList : null;
+  const source = Array.isArray(appState.mcsList) && appState.mcsList.length > 0 ? appState.mcsList : null;
 
   if (source) {
     const pending = [];
@@ -242,7 +248,7 @@ async function mcsGetPendingApprovalsForMe() {
 
   // Fallback: query Supabase directly
   try {
-    const { data, error } = await supa
+    const { data, error } = await supabase
       .from('mcs_changes')
       .select('*')
       .in('status', ['review', 'final_review']);
@@ -272,7 +278,7 @@ async function mcsGetPendingApprovalsForMe() {
 // If no individuals are assigned to a role, the check falls back to team permissions.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const NPI_GATE_SIGNOFF_ROLES = [
+export const NPI_GATE_SIGNOFF_ROLES = [
   { key: 'me_manager',          label: 'ME Manager' },
   { key: 'operations_director', label: 'Operations Director' },
   { key: 'sales_director',      label: 'Sales Director' },
@@ -290,12 +296,12 @@ let npiGateSignoffConfig = null;
  * Load gate signoff assignments from global_settings (falls back to localStorage).
  * Returns { me_manager: [{user_id, user_name, user_email?}], operations_director: [], sales_director: [] }
  */
-async function npiGateSignoffLoad() {
+export async function npiGateSignoffLoad() {
   const config = {};
   NPI_GATE_SIGNOFF_ROLES.forEach(r => { config[r.key] = []; });
 
   try {
-    const { data, error } = await supa
+    const { data, error } = await supabase
       .from('global_settings')
       .select('setting_key, setting_value')
       .in('setting_key', Object.values(NPI_GATE_SIGNOFF_SETTING_KEYS));
@@ -317,6 +323,7 @@ async function npiGateSignoffLoad() {
           config[r.key] = _mcsParseSetting(localStorage.getItem(sk));
         }
       });
+      npiGateSignoffConfig = config
       return config;
     }
   } catch (err) {
@@ -326,6 +333,7 @@ async function npiGateSignoffLoad() {
   NPI_GATE_SIGNOFF_ROLES.forEach(r => {
     config[r.key] = _mcsParseSetting(localStorage.getItem(NPI_GATE_SIGNOFF_SETTING_KEYS[r.key]));
   });
+  npiGateSignoffConfig = config
   return config;
 }
 
@@ -335,17 +343,17 @@ async function _npiGateSignoffSaveList(roleKey, list) {
   const json = JSON.stringify(list);
   localStorage.setItem(settingKey, json);
   try {
-    const { data: existing } = await supa
+    const { data: existing } = await supabase
       .from('global_settings')
       .select('id')
       .eq('setting_key', settingKey)
       .maybeSingle();
     if (existing) {
-      await supa.from('global_settings')
+      await supabase.from('global_settings')
         .update({ setting_value: json, updated_at: new Date().toISOString() })
         .eq('id', existing.id);
     } else {
-      await supa.from('global_settings')
+      await supabase.from('global_settings')
         .insert([{ setting_key: settingKey, setting_value: json }]);
     }
   } catch (err) {
@@ -354,7 +362,7 @@ async function _npiGateSignoffSaveList(roleKey, list) {
 }
 
 /** Add a user as an assignee for a gate signoff role. */
-async function npiGateSignoffAdd(roleKey, userId, userName, userEmail) {
+export async function npiGateSignoffAdd(roleKey, userId, userName, userEmail) {
   if (!NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey]) return false;
   const current = (npiGateSignoffConfig && npiGateSignoffConfig[roleKey]) ||
     _mcsParseSetting(localStorage.getItem(NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey]));
@@ -366,7 +374,7 @@ async function npiGateSignoffAdd(roleKey, userId, userName, userEmail) {
 }
 
 /** Remove a user as an assignee for a gate signoff role. */
-async function npiGateSignoffRemove(roleKey, userId) {
+export async function npiGateSignoffRemove(roleKey, userId) {
   if (!NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey]) return false;
   const current = (npiGateSignoffConfig && npiGateSignoffConfig[roleKey]) ||
     _mcsParseSetting(localStorage.getItem(NPI_GATE_SIGNOFF_SETTING_KEYS[roleKey]));

@@ -3,26 +3,39 @@
 // Depends on: npi.js, npi-ctq.js, npi-pfd.js, pfmea.js, npi-cp.js
 // ═══════════════════════════════════
 
-npi.apqp = npi.apqp || {}
+import { appState, prog } from '../../../../core/js/state.js'
+import { save } from '../../../../core/js/db.js'
+import { showToast } from '../../../../utils/js/helpers.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { npiData } from './npi-data.js'
+import { APQP_TABS, RPN_HIGH } from './npi-constants.js'
+import { npiRelDeleteCP, npiRelSaveCP } from './npi-data-relational.js'
+import { npiCtq } from './npi-ctq.js'
+import { npiPfd } from './npi-pfd.js'
+import { npi } from './npi-shared.js'
+import './pfmea.js'
+// Bug fix: npi-cp.js was never imported — CP tab side-effects (npi.cp.*) never fired
+import './npi-cp.js'
+
 
 npi.apqp.renderAPQP = function() {
   const p = prog()
   const highRPN = p.pfmea.filter(r => npi.pfmea.calcRPN(r) >= RPN_HIGH).length
   const tabs = [
     { id: APQP_TABS.CTQ, label: 'CTQ Matrix', badge: p.ctq.length },
-    { id: APQP_TABS.PFD, label: 'Process Flow', badge: p.pfd.filter(s => npi.data.pfdType.isExecutable(s.type)).length },
+    { id: APQP_TABS.PFD, label: 'Process Flow', badge: p.pfd.filter(s => npiData.pfdType.isExecutable(s.type)).length },
     { id: APQP_TABS.PFMEA, label: 'PFMEA', badge: p.pfmea.length, warn: highRPN > 0 },
     { id: APQP_TABS.CP, label: 'Control Plan', badge: p.cp.length }
   ]
 
   const tabNav = `<div class="apqp-tabs-shell">${
-    tabs.map(t => `<button class="apqp-tab-btn ${apqpTab === t.id ? 'active' : ''}" onclick="npi.nav.setApqpTab('${t.id}')">${t.label}${t.badge > 0 ? `<span class="apqp-tab-badge">(${t.badge})</span>` : ''}${t.warn ? `<span class="apqp-tab-warning">⚠</span>` : ''}</button>`).join('')
+    tabs.map(t => `<button class="apqp-tab-btn ${appState.apqpTab === t.id ? 'active' : ''}" onclick="npi.nav.setApqpTab('${t.id}')">${t.label}${t.badge > 0 ? `<span class="apqp-tab-badge">(${t.badge})</span>` : ''}${t.warn ? `<span class="apqp-tab-warning">⚠</span>` : ''}</button>`).join('')
   }</div>`
 
-  const inner = apqpTab === APQP_TABS.CTQ ? npi.ctq.render()
-    : apqpTab === APQP_TABS.PFD ? npi.pfd.render()
-    : apqpTab === APQP_TABS.PFMEA ? npi.pfmea.renderPFMEA()
-    : npi.cp.render()
+  const inner = appState.apqpTab === APQP_TABS.CTQ ? npiCtq.render()
+    : appState.apqpTab === APQP_TABS.PFD ? npiPfd.render()
+    : appState.apqpTab === APQP_TABS.PFMEA ? npi.pfmea.renderPFMEA()
+    : (typeof npi.cp?.render === 'function' ? npi.cp.render() : '')
 
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">APQP</div><div class="sec-desc">CTQ requirements, process flow, PFMEA and control plan in one place.</div></div><div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-apqp')" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button></div></div>
   ${tabNav}
@@ -62,8 +75,8 @@ npi.apqp.saveDocPick = function() { return typeof npi.pfd?.saveDocPick === 'func
 npi.apqp.renderCP = function() { return typeof npi.cp?.render === 'function' ? npi.cp.render() : '' }
 npi.apqp.syncFromPFMEA = function() {
   if (typeof npi.cp?.syncFromPFMEA === 'function') return npi.cp.syncFromPFMEA()
-  if (typeof npi.data?.cp?.syncFromPFMEA === 'function') {
-    const added = npi.data.cp.syncFromPFMEA()
+  if (typeof npiData?.cp?.syncFromPFMEA === 'function') {
+    const added = npiData.cp.syncFromPFMEA()
     if (added === 0) showToast('All PFMEA causes already in control plan.', 'info')
     render()
     return
@@ -99,7 +112,7 @@ npi.apqp.syncFromPFMEA = function() {
 }
 npi.apqp.addCP = function() {
   if (typeof npi.cp?.add === 'function') return npi.cp.add()
-  if (typeof npi.data?.cp?.add === 'function') { npi.data.cp.add(); render(); return }
+  if (typeof npiData?.cp?.add === 'function') { npiData.cp.add(); render(); return }
   const item = { id: crypto.randomUUID(), pfmeaId: '', pfdId: '', char: '', type: 'Process', spec: '', method: '', freq: '', resp: '', reaction: '', ctqIds: [] }
   prog().cp.push(item)
   if (typeof npiRelSaveCP === 'function') npiRelSaveCP(item)
@@ -108,7 +121,7 @@ npi.apqp.addCP = function() {
 }
 npi.apqp.updCP = function(i, f, v) {
   if (typeof npi.cp?.upd === 'function') return npi.cp.upd(i, f, v)
-  if (typeof npi.data?.cp?.upd === 'function') return npi.data.cp.upd(i, f, v)
+  if (typeof npiData?.cp?.upd === 'function') return npiData.cp.upd(i, f, v)
   if (!prog().cp[i]) return
   prog().cp[i][f] = v
   if (typeof npiRelSaveCP === 'function') npiRelSaveCP(prog().cp[i])
@@ -116,7 +129,7 @@ npi.apqp.updCP = function(i, f, v) {
 }
 npi.apqp.delCP = function(i) {
   if (typeof npi.cp?.del === 'function') return npi.cp.del(i)
-  if (typeof npi.data?.cp?.del === 'function') { npi.data.cp.del(i); render(); return }
+  if (typeof npiData?.cp?.del === 'function') { npiData.cp.del(i); render(); return }
   if (!prog().cp[i]) return
   const id = prog().cp[i].id
   prog().cp.splice(i, 1)
@@ -124,3 +137,6 @@ npi.apqp.delCP = function(i) {
   else if (typeof save === 'function') save()
   render()
 }
+
+export const npiApqp = npi.apqp
+export const renderApqp = npi.apqp.renderAPQP

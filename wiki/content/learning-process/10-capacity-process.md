@@ -14,6 +14,25 @@
 3. Validate task demand.
 4. Review chart outcomes and pressure months.
 
+## Inputs, outputs, and handoffs
+| Stage | Main input | Output | Handoff to |
+|---|---|---|---|
+| Availability setup | Team and holiday data | Real available hours | Stream planner |
+| Demand setup | Tasks and support assumptions | Allocated hours | Team leads |
+| Review | Utilisation and headroom | Rebalance actions | Action Centre / managers |
+
+## Weekly operating cadence
+1. Recheck holiday and absence changes.
+2. Recheck production-driven demand changes.
+3. Confirm owners for overload mitigation actions.
+4. Publish a short summary of top risk months.
+
+## Common process failures
+- Updating demand without updating leave
+- Using old product-support assumptions after schedule changes
+- Leaving overload visible but without an owner
+- Treating a single-month view as enough for planning
+
 ## Related function pages
 - [Capacity Overview](../capacity/00-overview.md)
 - [ME Capacity](../capacity/20-me-capacity.md)

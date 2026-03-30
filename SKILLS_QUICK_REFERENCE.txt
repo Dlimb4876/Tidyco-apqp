@@ -9,13 +9,21 @@ RUN ALL CHECKS:
 
 INDIVIDUAL SKILLS:
 
-1️⃣  LOAD ORDER CHECKER
-   npm run check:load-order
-   ↳ Verifies script load order in index.html
-   ✓ Finds missing dependencies
-   ✓ Detects wrong positioning
-   ✓ Checks app.js loads last
+1️⃣  IMPORT CHECKER
+   npm run check:imports
+   ↳ Verifies ESM import/export wiring
+   ✓ Finds missing/invalid imports
+   ✓ Detects export mismatches
+   ✓ Catches broken module wiring
    When: After adding new JS file
+
+1️⃣.5  ESM COVERAGE CHECKER
+   npm run check:esm-coverage
+   ↳ Reports files not yet migrated to ESM
+   ✓ Tracks migration progress
+   ✓ Lists remaining non-ESM files
+   ✓ Prevents hidden CommonJS drift
+   When: During/after ESM migration work
 
 2️⃣  SYNTAX VALIDATOR
    npm run check:syntax
@@ -79,7 +87,7 @@ COMMON BUG PATTERNS:
 
 Bug: "function is not a function"
 → npm run check:syntax
-→ npm run check:load-order
+→ npm run check:imports
 
 Bug: Empty data from Supabase query
 → npm run check:rls

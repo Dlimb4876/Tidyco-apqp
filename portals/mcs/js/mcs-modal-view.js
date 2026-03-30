@@ -3,15 +3,46 @@
  * Read-only detail modal, activity log, approval actions, and status advancement.
  */
 
+import { appState } from '../../../core/js/state.js'
+import { currentUser, supabase as supa } from '../../../core/js/supa.js'
+import { esc, canEdit } from '../../../utils/js/helpers.js'
+import { mcsShowEditModal } from './mcs-modal-edit.js'
+import { mcsBuildPfmeaLinkBadge, mcsHandlePfmeaAction } from './mcs-pfmea.js'
+import { mcsCanApproveStep } from './mcs-approvers-data.js'
+import {
+  mcsBuildWorkflowRail,
+  mcsBuildViewWorkflowStages,
+  mcsParseExtendedJustification,
+  mcsBuildStage3ImpactChecklistHtml,
+  mcsRenderTimelineHtml,
+  mcsFormatTimelineEvents,
+  mcsCloseModal
+} from './mcs-modal-shared.js'
+import { mcsApproveStep, mcsRejectStep, mcsAddTimelineEntry } from './mcs-approval.js'
+import { mcsRenderList, mcsToast, mcStatusLabel } from './mcs-main.js'
+
+async function mcsRefreshActionCentreList() {
+  try {
+    appState.actionCentreData = null
+    const acModule = await import('../../action-centre/js/action-centre.js')
+    if (acModule && typeof acModule.actionCentreLoad === 'function') {
+      acModule.actionCentreLoad()
+    }
+  } catch (_) {}
+}
+
 /**
  * Show view/detail modal
  */
-function mcsShowViewModal(change) {
-  const backdrop = document.createElement('div');
-  backdrop.className = 'mcs-modal-backdrop open';
-  backdrop.id = 'mcs-view-backdrop';
+export function mcsShowViewModal(change) {
+  const existing = document.getElementById('mcs-view-backdrop')
+  if (existing) existing.remove()
 
-  const workflowHtml = mcsBuildWorkflowRail(mcsBuildViewWorkflowStages(change));
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mcs-modal-backdrop open'
+  backdrop.id = 'mcs-view-backdrop'
+
+  const workflowHtml = mcsBuildWorkflowRail(mcsBuildViewWorkflowStages(change))
 
   const impactIconMap = {
     'BOM Change': '[BOM]',
@@ -19,20 +50,25 @@ function mcsShowViewModal(change) {
     'Tooling Change': '[TL]',
     'Training Required': '[TR]',
     'Customer Notification': '[CN]'
-  };
+  }
 
   const impactsHtml = (change.impacts || []).length > 0
     ? (change.impacts || []).map(imp => `<span class="mcs-impact-tag">${impactIconMap[imp] || '[*]'} ${esc(imp)}</span>`).join('')
-    : '<span class="mcs-impact-none">No impact areas selected</span>';
+    : '<span class="mcs-impact-none">No impact areas selected</span>'
 
-  const extendedJustification = mcsParseExtendedJustification(change.justification || '');
+  const extendedJustification = mcsParseExtendedJustification(change.justification || '')
+  const stage3ProgressMap = change.impact_progress && typeof change.impact_progress === 'object'
+    ? change.impact_progress
+    : (extendedJustification.impactProgress || {})
+  const stage3ChecklistHtml = mcsBuildStage3ImpactChecklistHtml(change.impacts || [], stage3ProgressMap)
 
-  const timelineHtml = mcsRenderTimelineHtml(change.timeline || []);
-  const approval1Notes = (change.eng_review_notes || '').startsWith('nominated_approver:') ? '' : (change.eng_review_notes || '');
-  const approval2Notes = change.qa_review_notes || '';
+  const timelineHtml = mcsRenderTimelineHtml(change.timeline || [])
+  const approval1Notes = (change.eng_review_notes || '').startsWith('nominated_approver:') ? '' : (change.eng_review_notes || '')
+  const approval2Notes = change.qa_review_notes || ''
+  const pfmeaBadgeHtml = mcsBuildPfmeaLinkBadge(change)
 
   backdrop.innerHTML = `
-    <div class="mcs-modal" id="mcs-view-modal">
+    <div class="mcs-modal" id="mcs-view-modal" data-change-id="${esc(change.id)}">
       <div class="mcs-modal-header">
         <div class="mcs-modal-ref-badge">${esc(change.id)}</div>
         <div class="mcs-modal-titles">
@@ -42,7 +78,7 @@ function mcsShowViewModal(change) {
             <span class="mcs-tag">${esc(change.change_type)}</span>
           </div>
         </div>
-        <button class="mcs-modal-close" onclick="mcsCloseModal('mcs-view-backdrop')">&times;</button>
+        <button class="mcs-modal-close" data-action="mcs-close-view">&times;</button>
       </div>
       <div class="mcs-modal-body">
         <div class="mcs-staged-layout">
@@ -91,6 +127,7 @@ function mcsShowViewModal(change) {
                   <div class="mcs-field-label">Knock-on Effect for Other Products</div>
                   <div class="mcs-stage-readonly">${esc(extendedJustification.knockOnEffect || 'Not specified.')}</div>
                 </div>
+                ${pfmeaBadgeHtml}
               </div>
             </section>
 
@@ -123,7 +160,7 @@ function mcsShowViewModal(change) {
 
             <section class="mcs-stage-block" data-stage="implement">
               <div class="mcs-stage-title">Stage 3: Implement</div>
-              <div class="mcs-stage-subtitle">Implementation target and overhaul impact.</div>
+              <div class="mcs-stage-subtitle">Implementation target, impact checklist progress, and overhaul impact.</div>
               <div class="mcs-modal-grid">
                 <div class="mcs-field-group">
                   <div class="mcs-field-label">Target Implementation</div>
@@ -136,6 +173,7 @@ function mcsShowViewModal(change) {
                   </div>
                 </div>
               </div>
+              <div class="mcs-impact-progress-wrap">${stage3ChecklistHtml}</div>
             </section>
 
             <section class="mcs-stage-block" data-stage="approval2">
@@ -173,40 +211,53 @@ function mcsShowViewModal(change) {
               <option value="comment">Comment</option>
               <option value="progress_update">Progress Update</option>
             </select>
-            <button class="mcs-btn mcs-btn-primary mcs-comment-post-btn" onclick="mcsPostComment('${esc(change.id)}')">Post</button>
+            <button class="mcs-btn mcs-btn-primary mcs-comment-post-btn" data-action="mcs-post-comment">Post</button>
           </div>
           <textarea class="mcs-field-textarea mcs-comment-textarea" id="mcs-comment-text" placeholder="Add a comment or progress update..." rows="2"></textarea>
         </div>
       </div>
       <div class="mcs-modal-footer">
-        <button class="mcs-btn mcs-btn-danger" onclick="mcsDeleteChange('${esc(change.id)}')">Delete</button>
-        <button class="mcs-btn mcs-btn-ghost" onclick="mcsEditChange('${esc(change.id)}')">Edit</button>
+        <button class="mcs-btn mcs-btn-danger" data-action="mcs-delete-change">Delete</button>
+        <button class="mcs-btn mcs-btn-ghost" data-action="mcs-edit-change">Edit</button>
         ${mcsModalFooterButtons(change)}
       </div>
     </div>
-  `;
+  `
 
-  document.body.appendChild(backdrop);
+  document.body.appendChild(backdrop)
   backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) mcsCloseModal('mcs-view-backdrop');
-  });
+    if (e.target === backdrop) mcsCloseModal('mcs-view-backdrop')
+  })
+  backdrop.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-action]')
+    if (!trigger) return
+    const action = trigger.dataset.action
+    if (mcsHandlePfmeaAction(action, trigger)) return
+    const changeId = trigger.dataset.changeId || change.id
+    const stepKey = trigger.dataset.step || ''
+
+    if (action === 'mcs-close-view') return mcsCloseModal('mcs-view-backdrop')
+    if (action === 'mcs-post-comment') return mcsPostComment(changeId)
+    if (action === 'mcs-delete-change') return mcsDeleteChange(changeId)
+    if (action === 'mcs-edit-change') return mcsEditChange(changeId)
+    if (action === 'mcs-advance-status') return mcsAdvanceStatus(changeId)
+    if (action === 'mcs-approve-step') return mcsApproveStepWithPrompt(changeId, stepKey)
+    if (action === 'mcs-reject-step') return mcsRejectStepWithPrompt(changeId, stepKey)
+  })
 }
 
-/**
- * Post a comment or progress update to the activity log
- */
 async function mcsPostComment(changeId) {
-  const textEl = document.getElementById('mcs-comment-text');
-  const typeEl = document.getElementById('mcs-comment-type');
-  const text = textEl ? textEl.value.trim() : '';
-  const eventType = typeEl ? typeEl.value : 'comment';
+  const textEl = document.getElementById('mcs-comment-text')
+  const typeEl = document.getElementById('mcs-comment-type')
+  const text = textEl ? textEl.value.trim() : ''
+  const eventType = typeEl ? typeEl.value : 'comment'
 
   if (!text) {
-    textEl && textEl.focus();
-    return;
+    textEl && textEl.focus()
+    return
   }
 
-  const actor = (currentUser && (currentUser.user_metadata?.full_name || currentUser.email)) || 'Unknown';
+  const actor = (currentUser && (currentUser.user_metadata?.full_name || currentUser.email)) || 'Unknown'
 
   try {
     const { error } = await supa
@@ -216,226 +267,163 @@ async function mcsPostComment(changeId) {
         event_type: eventType,
         event_text: text,
         actor_name: actor
-      }]);
+      }])
+    if (error) throw error
+    if (textEl) textEl.value = ''
 
-    if (error) throw error;
-
-    if (textEl) textEl.value = '';
-
-    // Reload timeline and re-render in-place
     const { data: timelineData } = await supa
       .from('mcs_timeline')
       .select('*')
       .eq('change_id', changeId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
 
-    const events = mcsFormatTimelineEvents(timelineData || []);
+    const events = mcsFormatTimelineEvents(timelineData || [])
+    const timelineEl = document.getElementById('mcs-view-timeline')
+    if (timelineEl) timelineEl.innerHTML = mcsRenderTimelineHtml(events)
 
-    const timelineEl = document.getElementById('mcs-view-timeline');
-    if (timelineEl) {
-      timelineEl.innerHTML = mcsRenderTimelineHtml(events);
-    }
-
-    // Also update the in-memory change object
-    const change = mcsList.find(c => c.id === changeId);
-    if (change) change.timeline = events;
-
+    const localChange = appState.mcsList.find(c => c.id === changeId)
+    if (localChange) localChange.timeline = events
   } catch (err) {
-    console.error('Error posting comment:', err);
-    alert('Error saving: ' + err.message);
+    console.error('Error posting comment:', err)
+    alert('Error saving: ' + err.message)
   }
 }
 
-/**
- * Delete change
- */
 async function mcsDeleteChange(id) {
-  if (!confirm('Permanently delete this change request?')) return;
-
+  if (!confirm('Permanently delete this change request?')) return
   try {
-    const { error } = await supa
-      .from('mcs_changes')
-      .delete()
-      .eq('id', id);
+    const { error } = await supa.from('mcs_changes').delete().eq('id', id)
+    if (error) throw error
 
-    if (error) throw error;
-
-    mcsList = mcsList.filter(c => c.id !== id);
-    mcsToast('Change deleted');
-    mcsCloseModal('mcs-view-backdrop');
-    mcsRenderList();
+    appState.mcsList = appState.mcsList.filter(c => c.id !== id)
+    mcsToast('Change deleted')
+    mcsCloseModal('mcs-view-backdrop')
+    mcsRenderList()
   } catch (err) {
-    console.error('Delete error:', err);
-    alert('Error deleting change: ' + err.message);
+    console.error('Delete error:', err)
+    alert('Error deleting change: ' + err.message)
   }
 }
 
-/**
- * Edit change
- */
 async function mcsEditChange(id) {
-  const change = mcsList.find(c => c.id === id);
-  if (!change) return;
+  const change = appState.mcsList.find(c => c.id === id)
+  if (!change) return
 
-  mcsEditingId = id;
-  mcsCloseModal('mcs-view-backdrop');
-
-  // Close and reopen with form
+  appState.mcsEditingId = id
+  mcsCloseModal('mcs-view-backdrop')
   setTimeout(async () => {
-    await mcsShowEditModal(change);
-  }, 100);
+    await mcsShowEditModal(change)
+  }, 100)
 }
 
-/**
- * Build the correct footer action buttons based on the change status and
- * whether the current user is an assigned approver for the active step.
- */
 function mcsModalFooterButtons(change) {
   if (change.status === 'open') {
-    // ME/editor sends to Approval 1
     return canEdit()
-      ? `<button class="mcs-btn mcs-btn-primary" onclick="mcsAdvanceStatus('${esc(change.id)}')">Send to Approval 1 →</button>`
-      : '';
+      ? `<button class="mcs-btn mcs-btn-primary" data-action="mcs-advance-status" data-change-id="${esc(change.id)}">Send to Approval 1 →</button>`
+      : ''
   }
 
   if (change.status === 'review') {
-    // Waiting for Approval 1
-    const canApprove = typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('approval1', change);
+    const canApprove = mcsCanApproveStep('approval1', change)
     if (!canApprove) {
-      return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting Approval 1</span>`;
+      return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting Approval 1</span>`
     }
     return `
-      <button class="mcs-btn mcs-btn-ghost" style="color:var(--red)" onclick="mcsRejectStepWithPrompt('${esc(change.id)}','approval1')">Reject ✗</button>
-      <button class="mcs-btn mcs-btn-primary" onclick="mcsApproveStepWithPrompt('${esc(change.id)}','approval1')">Approve ✓</button>
-    `;
+      <button class="mcs-btn mcs-btn-ghost" style="color:var(--red)" data-action="mcs-reject-step" data-step="approval1" data-change-id="${esc(change.id)}">Reject ✗</button>
+      <button class="mcs-btn mcs-btn-primary" data-action="mcs-approve-step" data-step="approval1" data-change-id="${esc(change.id)}">Approve ✓</button>
+    `
   }
 
   if (change.status === 'implementing') {
-    // ME submits for Approval 2 once implementation is done
     return canEdit()
-      ? `<button class="mcs-btn mcs-btn-primary" onclick="mcsAdvanceStatus('${esc(change.id)}')">Submit for Approval 2 →</button>`
-      : `<span style="font-size:12px;color:var(--text3);align-self:center">Being implemented</span>`;
+      ? `<button class="mcs-btn mcs-btn-primary" data-action="mcs-advance-status" data-change-id="${esc(change.id)}">Submit for Approval 2 →</button>`
+      : `<span style="font-size:12px;color:var(--text3);align-self:center">Being implemented</span>`
   }
 
   if (change.status === 'final_review') {
-    // Waiting for Approval 2
-    const canApprove = typeof mcsCanApproveStep === 'function' && mcsCanApproveStep('approval2', change);
+    const canApprove = mcsCanApproveStep('approval2', change)
     if (!canApprove) {
-      return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting Approval 2</span>`;
+      return `<span style="font-size:12px;color:var(--text3);align-self:center">Awaiting Approval 2</span>`
     }
     return `
-      <button class="mcs-btn mcs-btn-ghost" style="color:var(--red)" onclick="mcsRejectStepWithPrompt('${esc(change.id)}','approval2')">Reject ✗</button>
-      <button class="mcs-btn mcs-btn-primary" onclick="mcsApproveStepWithPrompt('${esc(change.id)}','approval2')">Approve ✓</button>
-    `;
+      <button class="mcs-btn mcs-btn-ghost" style="color:var(--red)" data-action="mcs-reject-step" data-step="approval2" data-change-id="${esc(change.id)}">Reject ✗</button>
+      <button class="mcs-btn mcs-btn-primary" data-action="mcs-approve-step" data-step="approval2" data-change-id="${esc(change.id)}">Approve ✓</button>
+    `
   }
 
-  return '';
+  return ''
 }
 
-/**
- * Prompt for approval notes then approve the active step.
- */
-function mcsApproveStepWithPrompt(changeId, stepKey) {
-  const notes = prompt('Approval notes (optional):') || '';
-  mcsApproveStep(changeId, stepKey, notes).then(success => {
-    if (success) {
-      mcsToast('Step approved');
-      mcsCloseModal('mcs-view-backdrop');
-      mcsRenderList();
-      // Refresh action centre data so the item disappears from the list
-      if (typeof actionCentreData !== 'undefined') {
-        actionCentreData = null;
-        if (typeof actionCentreLoad === 'function') actionCentreLoad();
-      }
-    } else {
-      alert('Could not approve — you may not be assigned as an approver for this step.');
-    }
-  });
+async function mcsApproveStepWithPrompt(changeId, stepKey) {
+  const notes = prompt('Approval notes (optional):') || ''
+  const success = await mcsApproveStep(changeId, stepKey, notes)
+  if (success) {
+    mcsToast('Step approved')
+    mcsCloseModal('mcs-view-backdrop')
+    mcsRenderList()
+    mcsRefreshActionCentreList()
+  } else {
+    alert('Could not approve — you may not be assigned as an approver for this step.')
+  }
 }
 
-/**
- * Prompt for a rejection reason then reject the active step.
- */
-function mcsRejectStepWithPrompt(changeId, stepKey) {
-  const reason = prompt('Rejection reason (required):');
-  if (!reason || !reason.trim()) return;
-  mcsRejectStep(changeId, stepKey, reason).then(success => {
-    if (success) {
-      mcsToast('Step rejected');
-      mcsCloseModal('mcs-view-backdrop');
-      mcsRenderList();
-      if (typeof actionCentreData !== 'undefined') {
-        actionCentreData = null;
-        if (typeof actionCentreLoad === 'function') actionCentreLoad();
-      }
-    } else {
-      alert('Could not reject — you may not be assigned as an approver for this step.');
-    }
-  });
+async function mcsRejectStepWithPrompt(changeId, stepKey) {
+  const reason = prompt('Rejection reason (required):')
+  if (!reason || !reason.trim()) return
+  const success = await mcsRejectStep(changeId, stepKey, reason)
+  if (success) {
+    mcsToast('Step rejected')
+    mcsCloseModal('mcs-view-backdrop')
+    mcsRenderList()
+    mcsRefreshActionCentreList()
+  } else {
+    alert('Could not reject — you may not be assigned as an approver for this step.')
+  }
 }
 
-/**
- * Advance change status
- */
 async function mcsAdvanceStatus(id) {
-  const change = mcsList.find(c => c.id === id);
-  if (!change) return;
+  const change = appState.mcsList.find(c => c.id === id)
+  if (!change) return
 
-  // open → review (send to Approval 1)
-  // implementing → final_review (submit for Approval 2)
-  const statusFlow = { open: 'review', implementing: 'final_review' };
-  const nextStatus = statusFlow[change.status];
-  if (!nextStatus) return;
+  const statusFlow = { open: 'review', implementing: 'final_review' }
+  const nextStatus = statusFlow[change.status]
+  if (!nextStatus) return
 
   try {
-    const now = new Date().toISOString();
-    const updateData = {
-      status: nextStatus,
-      updated_at: now
-    };
+    const now = new Date().toISOString()
+    const updateData = { status: nextStatus, updated_at: now }
 
     if (nextStatus === 'review') {
-      // Reset Approval 1 fields so the chain starts cleanly.
-      // Preserve eng_review_notes only if it holds a nominated_approver marker.
-      updateData.eng_review_status = 'pending';
-      updateData.eng_review_by = null;
-      updateData.eng_review_at = null;
-      const existingNotes = change.eng_review_notes || '';
-      if (!existingNotes.startsWith('nominated_approver:')) {
-        updateData.eng_review_notes = null;
-      }
+      updateData.eng_review_status = 'pending'
+      updateData.eng_review_by = null
+      updateData.eng_review_at = null
+      const existingNotes = change.eng_review_notes || ''
+      if (!existingNotes.startsWith('nominated_approver:')) updateData.eng_review_notes = null
     } else if (nextStatus === 'final_review') {
-      // Reset Approval 2 fields so approver sees a fresh request
-      updateData.qa_review_status = 'pending';
-      updateData.qa_review_by = null;
-      updateData.qa_review_at = null;
-      updateData.qa_review_notes = null;
+      updateData.qa_review_status = 'pending'
+      updateData.qa_review_by = null
+      updateData.qa_review_at = null
+      updateData.qa_review_notes = null
     }
 
-    const { error } = await supa
-      .from('mcs_changes')
-      .update(updateData)
-      .eq('id', id);
+    const { error } = await supa.from('mcs_changes').update(updateData).eq('id', id)
+    if (error) throw error
 
-    if (error) throw error;
+    const idx = appState.mcsList.findIndex(c => c.id === id)
+    if (idx !== -1) appState.mcsList[idx] = { ...appState.mcsList[idx], ...updateData }
 
-    const idx = mcsList.findIndex(c => c.id === id);
-    if (idx !== -1) {
-      mcsList[idx] = { ...mcsList[idx], ...updateData };
-    }
-
-    const actor = (currentUser && currentUser.email) ? currentUser.email : 'System';
+    const actor = (currentUser && currentUser.email) ? currentUser.email : 'System'
     if (nextStatus === 'review') {
-      await mcsAddTimelineEntry(id, 'raised', 'Submitted for Approval 1.', actor);
+      await mcsAddTimelineEntry(id, 'raised', 'Submitted for Approval 1.', actor)
     } else if (nextStatus === 'final_review') {
-      await mcsAddTimelineEntry(id, 'edited', 'Implementation complete — submitted for Approval 2.', actor);
+      await mcsAddTimelineEntry(id, 'edited', 'Implementation complete — submitted for Approval 2.', actor)
     }
 
-    mcsToast(`Status updated to: ${mcStatusLabel(nextStatus)}`);
-    mcsCloseModal('mcs-view-backdrop');
-    mcsRenderList();
+    mcsToast(`Status updated to: ${mcStatusLabel(nextStatus)}`)
+    mcsCloseModal('mcs-view-backdrop')
+    mcsRenderList()
   } catch (err) {
-    console.error('Error advancing status:', err);
-    alert('Error: ' + err.message);
+    console.error('Error advancing status:', err)
+    alert('Error: ' + err.message)
   }
 }

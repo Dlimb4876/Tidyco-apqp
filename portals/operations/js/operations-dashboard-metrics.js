@@ -2,6 +2,26 @@
 // operations-dashboard-metrics.js — calculations and scoring
 // ═══════════════════════════════════
 
+import { db } from '../../../core/js/state.js'
+import { meDataState } from '../../capacity/me/js/me-data.js'
+import { pmDataState } from '../../capacity/project-management/js/pm-data.js'
+import { capCalculateMonthData } from '../../capacity/shared/js/cap-calculations.js'
+import { logDataState } from '../../capacity/logistics/js/log-data.js'
+import {
+  prodCapGet24MonthKeys,
+  prodCapGetWorkAreas,
+  prodCapCalcDemandMatrix,
+  prodCapCalcSupplyMatrix,
+  prodCapUtil,
+  prodCapMonthLabel
+} from '../../capacity/production/js/prod-capacity-data.js'
+import {
+  opsForecastManager,
+  opsForecastBuildWeightedMatrix,
+  opsForecastIsActiveStatus
+} from './operations-forecast-data.js'
+import { operationsDashboardState } from './operations-dashboard-state.js'
+
 function opsParseDateSafe(raw) {
 	if (!raw) return null;
 	const parsed = new Date(raw);
@@ -25,14 +45,14 @@ function opsParseIsoDateOnly(raw) {
 }
 
 function opsResolveReportingDateIso() {
-	const parsed = opsParseIsoDateOnly(opsReportingDateIso);
-	if (parsed) return opsReportingDateIso;
+	const parsed = opsParseIsoDateOnly(operationsDashboardState.opsReportingDateIso);
+	if (parsed) return operationsDashboardState.opsReportingDateIso;
 	return opsTodayIso();
 }
 
 function opsSetReportingDate(rawIso) {
 	const parsed = opsParseIsoDateOnly(rawIso);
-	opsReportingDateIso = parsed
+	operationsDashboardState.opsReportingDateIso = parsed
 		? `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`
 		: '';
 	return opsResolveReportingDateIso();
@@ -65,20 +85,35 @@ function opsStatusTone(value) {
 	return 'critical';
 }
 
+function opsNormalizeDepartment(value, fallback = 'ME') {
+	const normalized = (value || fallback || 'ME').toString().trim().toUpperCase();
+	if (normalized === 'PM') return 'PM';
+	if (normalized === 'LOG') return 'LOG';
+	if (normalized === 'UNIT6') return 'UNIT6';
+	return 'ME';
+}
+
+function opsFilterByDepartment(list, department, fallback = 'ME') {
+	if (!Array.isArray(list)) return [];
+	const target = opsNormalizeDepartment(department, fallback);
+	return list.filter(item => opsNormalizeDepartment(item && item.department, fallback) === target);
+}
+
 function opsMetricsDependencies(overrides = {}) {
 	return {
 		products: Array.isArray(overrides.products)
 			? overrides.products
-			: (Array.isArray(window.productsState?.products) ? window.productsState.products : []),
+			: (Array.isArray(globalThis.productsState?.products) ? globalThis.productsState.products : []),
 		feedback: Array.isArray(overrides.feedback)
 			? overrides.feedback
-			: (Array.isArray(window.feedbackDataManager?.state?.feedback)
-				? window.feedbackDataManager.state.feedback
+			: (Array.isArray(globalThis.feedbackDataManager?.state?.feedback)
+				? globalThis.feedbackDataManager.state.feedback
 				: []),
-		meDataState: overrides.meDataState || window.meDataState || null,
-		meCalculateMonthData: overrides.meCalculateMonthData || window.meCalculateMonthData,
-		meFilterByDepartment: overrides.meFilterByDepartment || window.meFilterByDepartment,
-		logDataState: overrides.logDataState || window.logDataState || null
+		meDataState: overrides.meDataState || meDataState || null,
+		pmDataState: overrides.pmDataState || pmDataState || null,
+		meCalculateMonthData: overrides.meCalculateMonthData || capCalculateMonthData,
+		departmentFilter: overrides.departmentFilter || opsFilterByDepartment,
+		logDataState: overrides.logDataState || logDataState || null
 	};
 }
 
@@ -200,17 +235,17 @@ function opsCalcDepartmentCapacity(department, dependencies = {}, monthKeyOverri
 	const products = Array.isArray(deps.meDataState.products) ? deps.meDataState.products : [];
 	const holidays = Array.isArray(deps.meDataState.holidays) ? deps.meDataState.holidays : [];
 
-	const teamFiltered = typeof deps.meFilterByDepartment === 'function'
-		? deps.meFilterByDepartment(team, department, 'ME')
+	const teamFiltered = typeof deps.departmentFilter === 'function'
+		? deps.departmentFilter(team, department, 'ME')
 		: team;
-	const tasksFiltered = typeof deps.meFilterByDepartment === 'function'
-		? deps.meFilterByDepartment(tasks, department, 'ME')
+	const tasksFiltered = typeof deps.departmentFilter === 'function'
+		? deps.departmentFilter(tasks, department, 'ME')
 		: tasks;
-	const productsFiltered = typeof deps.meFilterByDepartment === 'function'
-		? deps.meFilterByDepartment(products, department, 'ME')
+	const productsFiltered = typeof deps.departmentFilter === 'function'
+		? deps.departmentFilter(products, department, 'ME')
 		: products;
-	const holidaysFiltered = typeof deps.meFilterByDepartment === 'function'
-		? deps.meFilterByDepartment(holidays, department, 'ME')
+	const holidaysFiltered = typeof deps.departmentFilter === 'function'
+		? deps.departmentFilter(holidays, department, 'ME')
 		: holidays;
 
 	const monthData = deps.meCalculateMonthData(monthKey, teamFiltered, tasksFiltered, productsFiltered, holidaysFiltered);
@@ -233,15 +268,16 @@ function opsCalcMeCapacity(dependencies = {}, monthKeyOverride = '') {
 }
 
 function opsCalcPmCapacity(dependencies = {}, monthKeyOverride = '') {
-	return opsCalcDepartmentCapacity('PM', dependencies, monthKeyOverride);
+	const deps = opsMetricsDependencies(dependencies);
+	const pmDeps = { ...deps, meDataState: deps.pmDataState || pmDataState };
+	return opsCalcDepartmentCapacity('PM', pmDeps, monthKeyOverride);
 }
 
 function opsCalcLogCapacity(dependencies = {}, monthKeyOverride = '') {
-	if (typeof window.meCalculateMonthData !== 'function') {
+	if (typeof capCalculateMonthData !== 'function') {
 		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
 	}
 
-	const logDataState = window.logDataState;
 	if (!logDataState || (!Array.isArray(logDataState.team) || logDataState.team.length === 0)) {
 		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
 	}
@@ -256,7 +292,7 @@ function opsCalcLogCapacity(dependencies = {}, monthKeyOverride = '') {
 		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
 	}
 
-	const monthData = window.meCalculateMonthData(monthKey, team, tasks, products, holidays);
+	const monthData = capCalculateMonthData(monthKey, team, tasks, products, holidays);
 	const capacity = opsToNumber(monthData.capacity);
 	const demand = opsToNumber(monthData.totalDemand);
 	const utilisation = Math.max(0, Math.round(opsToNumber(monthData.utilisation)));
@@ -273,10 +309,10 @@ function opsCalcLogCapacity(dependencies = {}, monthKeyOverride = '') {
 
 function opsCalcOperationsUnitCapacity(workArea, monthKeyOverride = '') {
 	if (
-		typeof window.prodCapGet24MonthKeys !== 'function' ||
-		typeof window.prodCapGetWorkAreas !== 'function' ||
-		typeof window.prodCapCalcDemandMatrix !== 'function' ||
-		typeof window.prodCapCalcSupplyMatrix !== 'function'
+		typeof prodCapGet24MonthKeys !== 'function' ||
+		typeof prodCapGetWorkAreas !== 'function' ||
+		typeof prodCapCalcDemandMatrix !== 'function' ||
+		typeof prodCapCalcSupplyMatrix !== 'function'
 	) {
 		return {
 			ready: false,
@@ -289,8 +325,8 @@ function opsCalcOperationsUnitCapacity(workArea, monthKeyOverride = '') {
 	}
 
 	const monthKey = monthKeyOverride || opsCurrentMonthKey();
-	const monthKeys = window.prodCapGet24MonthKeys();
-	const workAreas = window.prodCapGetWorkAreas();
+	const monthKeys = prodCapGet24MonthKeys();
+	const workAreas = prodCapGetWorkAreas();
 	if (!monthKeys.includes(monthKey) || !workAreas.includes(workArea)) {
 		return {
 			ready: false,
@@ -302,12 +338,12 @@ function opsCalcOperationsUnitCapacity(workArea, monthKeyOverride = '') {
 		};
 	}
 
-	const demandMx = window.prodCapCalcDemandMatrix(monthKeys);
-	const supplyMx = window.prodCapCalcSupplyMatrix(monthKeys, workAreas);
+	const demandMx = prodCapCalcDemandMatrix(monthKeys);
+	const supplyMx = prodCapCalcSupplyMatrix(monthKeys, workAreas);
 	const demand = opsToNumber(demandMx[monthKey]?.[workArea], 0);
 	const capacity = opsToNumber(supplyMx[monthKey]?.[workArea], 0);
-	const utilFn = typeof window.prodCapUtil === 'function'
-		? window.prodCapUtil
+	const utilFn = typeof prodCapUtil === 'function'
+		? prodCapUtil
 		: (demandHours, supplyHours) => (supplyHours <= 0 ? (demandHours > 0 ? 999 : 0) : Math.round((demandHours / supplyHours) * 100));
 
 	return {
@@ -326,7 +362,7 @@ function opsCalcOperationsUnits(monthKeyOverride = '') {
 }
 
 function opsCalcProductionFlow() {
-	const batches = Array.isArray(window.prodState?.batches) ? window.prodState.batches : [];
+	const batches = Array.isArray(globalThis.prodState?.batches) ? globalThis.prodState.batches : [];
 	const total = batches.length;
 	const active = batches.filter(batch => ['planned', 'in progress', 'active', 'queued'].includes((batch.status || '').toString().toLowerCase())).length;
 	const completed = batches.filter(batch => ['done', 'complete', 'completed', 'closed'].includes((batch.status || '').toString().toLowerCase())).length;
@@ -337,10 +373,10 @@ function opsCalcProductionFlow() {
 
 function opsCalcForecastProduction() {
 	if (
-		typeof window.prodCapGet24MonthKeys !== 'function' ||
-		typeof window.prodCapGetWorkAreas !== 'function' ||
-		typeof window.prodCapCalcDemandMatrix !== 'function' ||
-		typeof window.prodCapCalcSupplyMatrix !== 'function'
+		typeof prodCapGet24MonthKeys !== 'function' ||
+		typeof prodCapGetWorkAreas !== 'function' ||
+		typeof prodCapCalcDemandMatrix !== 'function' ||
+		typeof prodCapCalcSupplyMatrix !== 'function'
 	) {
 		return {
 			ready: false,
@@ -357,16 +393,16 @@ function opsCalcForecastProduction() {
 		};
 	}
 
-	const monthKeys = window.prodCapGet24MonthKeys();
-	const workAreas = window.prodCapGetWorkAreas();
-	const baselineMatrix = window.prodCapCalcDemandMatrix(monthKeys);
-	const supplyMatrix = window.prodCapCalcSupplyMatrix(monthKeys, workAreas);
-	const rows = window.opsForecastManager && typeof window.opsForecastManager.getRows === 'function'
-		? window.opsForecastManager.getRows()
+	const monthKeys = prodCapGet24MonthKeys();
+	const workAreas = prodCapGetWorkAreas();
+	const baselineMatrix = prodCapCalcDemandMatrix(monthKeys);
+	const supplyMatrix = prodCapCalcSupplyMatrix(monthKeys, workAreas);
+	const rows = opsForecastManager && typeof opsForecastManager.getRows === 'function'
+		? opsForecastManager.getRows()
 		: [];
 
-	const weightedMatrix = typeof window.opsForecastBuildWeightedMatrix === 'function'
-		? window.opsForecastBuildWeightedMatrix(monthKeys, rows)
+	const weightedMatrix = typeof opsForecastBuildWeightedMatrix === 'function'
+		? opsForecastBuildWeightedMatrix(monthKeys, rows)
 		: {};
 
 	const monthSeries = monthKeys.map((key, idx) => {
@@ -377,8 +413,8 @@ function opsCalcForecastProduction() {
 		const forecastHigh = opsToNumber(weightedMatrix[key]?._bands?.high, 0);
 		const supply = opsToNumber(supplyMatrix[key]?._total, 0);
 		const totalDemand = baseline + forecastAdd;
-		const label = typeof window.prodCapMonthLabel === 'function'
-			? window.prodCapMonthLabel(key)
+		const label = typeof prodCapMonthLabel === 'function'
+			? prodCapMonthLabel(key)
 			: `${idx + 1}`;
 
 		return { key, label, baseline, forecastAdd, forecastLow, forecastMedium, forecastHigh, supply, totalDemand };
@@ -388,15 +424,15 @@ function opsCalcForecastProduction() {
 	const forecast24h = monthSeries.reduce((sum, row) => sum + row.forecastAdd, 0);
 	const total24h = baseline24h + forecast24h;
 	const supply24h = monthSeries.reduce((sum, row) => sum + row.supply, 0);
-	const utilFn = typeof window.prodCapUtil === 'function'
-		? window.prodCapUtil
+	const utilFn = typeof prodCapUtil === 'function'
+		? prodCapUtil
 		: (demand, supply) => (supply <= 0 ? (demand > 0 ? 999 : 0) : Math.round((demand / supply) * 100));
 	const utilisation24 = utilFn(total24h, supply24h);
-	const activeOpportunities = Array.isArray(rows) && typeof window.opsForecastIsActiveStatus === 'function'
-		? rows.filter(row => window.opsForecastIsActiveStatus(row.status)).length
+	const activeOpportunities = Array.isArray(rows) && typeof opsForecastIsActiveStatus === 'function'
+		? rows.filter(row => opsForecastIsActiveStatus(row.status)).length
 		: 0;
-	const mode = window.opsForecastManager?.state?.mode || 'local';
-	const error = window.opsForecastManager?.state?.lastError || '';
+	const mode = opsForecastManager?.state?.mode || 'local';
+	const error = opsForecastManager?.state?.lastError || '';
 
 	return {
 		ready: true,
@@ -472,6 +508,12 @@ function opsBuildMetrics() {
 	};
 }
 
-window.opsSetReportingDate = opsSetReportingDate;
-window.opsResolveReportingDateIso = opsResolveReportingDateIso;
-window.opsFormatReportingDate = opsFormatReportingDate;
+export {
+	opsSetReportingDate,
+	opsResolveReportingDateIso,
+	opsFormatReportingDate,
+	opsToNumber,
+	opsFormatHours,
+	opsStatusTone,
+	opsBuildMetrics
+}

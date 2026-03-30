@@ -92,6 +92,15 @@
   --chart-purple: #7c3aed; --chart-purple-pale: rgba(124,58,237,0.12); --chart-purple-lt: rgba(124,58,237,0.15);
   --chart-red: #ef4444; --chart-red-pale: rgba(239,68,68,0.12);
 
+  /* Heatmap utilisation scale */
+  --heatmap-very-clear-bg: #a5d6a7; --heatmap-very-clear-text: #1b5e20;
+  --heatmap-clear-bg: #81c784; --heatmap-clear-text: #1b5e20;
+  --heatmap-good-bg: #9ccc65; --heatmap-good-text: #33691e;
+  --heatmap-caution-bg: #ffee58; --heatmap-caution-text: #f57f17;
+  --heatmap-warning-bg: #ffb74d; --heatmap-warning-text: #e65100;
+  --heatmap-near-bg: #ff9800; --heatmap-near-text: #ffffff;
+  --heatmap-over-bg: #e53935; --heatmap-over-text: #ffffff;
+
   /* Gray Scale */
   --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
   --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
@@ -104,6 +113,8 @@
   --row-highlight-amber: rgba(255,191,0,0.05);
   --overlay-light: rgba(0,0,0,0.02);
   --overlay-medium: rgba(0,0,0,0.1);
+  --badge-overlay: rgba(255,255,255,0.2);
+  --badge-overlay-active: rgba(255,255,255,0.25);
 
   /* Status Colors */
   --status-green-bg: #d1fae5; --status-green-text: #065f46;
@@ -201,6 +212,15 @@
   --chart-purple: #a78bfa; --chart-purple-pale: rgba(167,139,250,0.15); --chart-purple-lt: rgba(167,139,250,0.2);
   --chart-red: #ef4444; --chart-red-pale: rgba(239,68,68,0.15);
 
+  /* Heatmap utilisation scale — dark */
+  --heatmap-very-clear-bg: rgba(102,187,106,0.30); --heatmap-very-clear-text: #a5d6a7;
+  --heatmap-clear-bg: rgba(76,175,80,0.35); --heatmap-clear-text: #81c784;
+  --heatmap-good-bg: rgba(139,195,74,0.30); --heatmap-good-text: #aed581;
+  --heatmap-caution-bg: rgba(255,238,88,0.25); --heatmap-caution-text: #fff176;
+  --heatmap-warning-bg: rgba(255,183,77,0.30); --heatmap-warning-text: #ffcc80;
+  --heatmap-near-bg: rgba(255,152,0,0.40); --heatmap-near-text: #ffe0b2;
+  --heatmap-over-bg: rgba(229,57,53,0.45); --heatmap-over-text: #ffcdd2;
+
   /* Gray Scale - Dark (inverted) */
   --gray-50: #1f2937; --gray-100: #374151; --gray-200: #4b5563;
   --gray-300: #6b7280; --gray-400: #9ca3af; --gray-500: #d1d5db;
@@ -213,6 +233,8 @@
   --row-highlight-amber: rgba(234,88,12,0.08);
   --overlay-light: rgba(255,255,255,0.02);
   --overlay-medium: rgba(255,255,255,0.08);
+  --badge-overlay: rgba(255,255,255,0.15);
+  --badge-overlay-active: rgba(255,255,255,0.22);
 
   /* Status Colors - Dark */
   --status-green-bg: rgba(16,185,129,0.15); --status-green-text: #6ee7b7;
@@ -314,6 +336,15 @@
   --chart-purple: #cc00ff; --chart-purple-pale: rgba(204,0,255,0.25); --chart-purple-lt: rgba(204,0,255,0.35);
   --chart-red: #ff2222; --chart-red-pale: rgba(255,34,34,0.25);
 
+  /* Heatmap utilisation scale — terminal (green-tinted) */
+  --heatmap-very-clear-bg: rgba(0,255,65,0.12); --heatmap-very-clear-text: #00ff41;
+  --heatmap-clear-bg: rgba(0,255,65,0.20); --heatmap-clear-text: #00ff41;
+  --heatmap-good-bg: rgba(0,255,65,0.28); --heatmap-good-text: #00ff41;
+  --heatmap-caution-bg: rgba(255,238,88,0.25); --heatmap-caution-text: #ffee58;
+  --heatmap-warning-bg: rgba(255,183,77,0.30); --heatmap-warning-text: #ffb74d;
+  --heatmap-near-bg: rgba(255,152,0,0.40); --heatmap-near-text: #ffe0b2;
+  --heatmap-over-bg: rgba(255,34,34,0.50); --heatmap-over-text: #ff6666;
+
   /* Gray Scale - Terminal */
   --gray-50: #050d05; --gray-100: #0a140a; --gray-200: #0f1a0f;
   --gray-300: #1a2a1a; --gray-400: #2a4a2a; --gray-500: #4a7a4a;
@@ -326,6 +357,8 @@
   --row-highlight-amber: rgba(255,204,0,0.06);
   --overlay-light: rgba(0,255,65,0.02);
   --overlay-medium: rgba(0,255,65,0.08);
+  --badge-overlay: rgba(0,255,65,0.12);
+  --badge-overlay-active: rgba(0,255,65,0.18);
 
   /* Status Colors - Terminal */
   --status-green-bg: rgba(0,255,65,0.12); --status-green-text: #00ff41;
@@ -362,8 +395,8 @@ body {
 .topbar {
   height: 52px;
   background: linear-gradient(135deg, var(--topbar-bg-start) 0%, var(--topbar-bg-mid) 55%, var(--topbar-bg-end) 100%);
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   padding: 0 20px;
   flex-shrink: 0;
@@ -388,14 +421,19 @@ body {
 
 .back-btn {
   display: flex; align-items: center; gap: 6px;
-  padding: 5px 12px; border-radius: 4px;
+  padding: 8px 14px;
   font-size: 12px; font-weight: 500; cursor: pointer;
-  border: 1px solid var(--topbar-control-border);
-  background: var(--topbar-control-bg);
+  border: none;
+  background: rgba(255,255,255,0.06);
   color: var(--topbar-control-text);
-  font-family: 'IBM Plex Sans', sans-serif; transition: all .12s; white-space: nowrap;
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: background 0.15s ease;
+  white-space: nowrap;
 }
-.back-btn:hover { background: var(--topbar-control-bg-hover); color: var(--topbar-control-text-hover); border-color: var(--topbar-control-border-hover); }
+.back-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--topbar-control-text-hover);
+}
 
 .section-crumb {
   font-size: 12px;
@@ -417,41 +455,69 @@ body {
 
 .prog-selector { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .prog-select-wrap select {
-  background: var(--topbar-control-bg-strong);
-  border: 1px solid var(--topbar-control-border);
+  background: rgba(255,255,255,0.06);
+  border: none;
   color: var(--topbar-project-crumb);
-  padding: 5px 10px; border-radius: 4px; font-size: 12px;
+  padding: 8px 14px;
+  font-size: 12px;
   font-family: 'IBM Plex Sans', sans-serif; outline: none; cursor: pointer;
   appearance: none; max-width: 240px;
+  transition: background 0.15s ease;
+  font-weight: 500;
 }
-.prog-select-wrap select:focus { border-color: var(--topbar-control-border-hover-strong); }
-
-.topbar-center { display: flex; justify-content: center; align-items: center; min-width: 200px; }
-.bug-report-btn {
-  background: var(--topbar-control-bg-strong);
-  border: 1px solid var(--topbar-control-border);
-  color: var(--topbar-control-text-strong);
-  font-size: 13px; font-weight: 500; padding: 6px 16px;
-  border-radius: 6px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
-  transition: all .12s; white-space: nowrap;
-  position: relative; z-index: 10;
+.prog-select-wrap select:hover { 
+  background: rgba(255,255,255,0.12);
 }
-.bug-report-btn:hover { background: var(--topbar-control-bg-hover-strong); color: var(--topbar-control-text-hover); border-color: var(--topbar-control-border-hover-strong); }
-.bug-report-btn:active { transform: scale(0.98); }
+.prog-select-wrap select:focus { 
+  background: rgba(255,255,255,0.15);
+}
 
-.topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.topbar-actions { 
+  display: flex; 
+  gap: 0;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
 .tbtn.mobile-quick-btn { display: none; }
 .tbtn {
-  padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
-  cursor: pointer; border: 1px solid transparent; font-family: 'IBM Plex Sans', sans-serif; transition: all .15s ease;
-  letter-spacing: 0.3px; height: 36px; display: flex; align-items: center; justify-content: center;
-  white-space: nowrap;
+  padding: 10px 16px; 
+  font-size: 12px; 
+  font-weight: 500;
+  cursor: pointer; 
+  border: none; 
+  border-right: 1px solid rgba(255,255,255,0.08);
+  font-family: 'IBM Plex Sans', sans-serif; 
+  transition: background 0.15s ease;
+  height: 40px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  white-space: nowrap; 
+  background: transparent; 
+  color: var(--topbar-control-text);
 }
-.tbtn:active { transform: scale(0.98); }
-.tbtn-ghost { background: var(--topbar-control-bg); color: var(--topbar-control-text); border-color: var(--topbar-control-border); }
-.tbtn-ghost:hover { background: var(--topbar-control-bg-hover); color: var(--topbar-control-text-hover); border-color: var(--topbar-control-border-hover); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
-.tbtn-primary { background: var(--topbar-control-bg-strong); color: var(--topbar-control-text-strong); border-color: var(--topbar-control-border); }
-.tbtn-primary:hover { background: var(--topbar-control-bg-hover-strong); color: var(--topbar-control-text-hover); border-color: var(--topbar-control-border-hover-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.tbtn:last-child {
+  border-right: none;
+}
+.tbtn:hover {
+  color: var(--topbar-control-text-hover);
+}
+.tbtn-ghost { 
+  color: var(--topbar-control-text);
+  background: transparent;
+}
+.tbtn-ghost:hover { 
+  background: rgba(255,255,255,0.06);
+}
+.tbtn-primary { 
+  color: var(--topbar-control-text-strong);
+  background: rgba(255,255,255,0.08);
+}
+.tbtn-primary:hover {
+  background: rgba(255,255,255,0.14);
+  color: var(--topbar-control-text-hover);
+}
 
 /* Hidden wiki button - visible on hover */
 .wiki-btn { opacity: 0.5; }
@@ -571,6 +637,7 @@ body {
 }
 
 .bottombar-status.saved { color: #15803d; }
+.bottombar-status.online { color: #047857; }
 .bottombar-status.unsaved { color: #b45309; }
 .bottombar-status.syncing { color: #1d4ed8; }
 .bottombar-status.error { color: #b91c1c; }
@@ -583,14 +650,18 @@ body {
 }
 
 :root[data-theme="dark"] .bottombar-status.saved { color: #10b981; }
+:root[data-theme="dark"] .bottombar-status.online { color: #34d399; }
 :root[data-theme="dark"] .bottombar-status.unsaved { color: #f59e0b; }
 :root[data-theme="dark"] .bottombar-status.syncing { color: #3b82f6; }
 :root[data-theme="dark"] .bottombar-status.error { color: #ef7f78; }
+:root[data-theme="dark"] .bottombar-status.offline { color: #ef7f78; }
 
 :root[data-theme="terminal"] .bottombar-status.saved { color: #00ff41; }
+:root[data-theme="terminal"] .bottombar-status.online { color: #00ff41; }
 :root[data-theme="terminal"] .bottombar-status.unsaved { color: #ffcc00; }
 :root[data-theme="terminal"] .bottombar-status.syncing { color: #00eeff; }
 :root[data-theme="terminal"] .bottombar-status.error { color: #ff4444; }
+:root[data-theme="terminal"] .bottombar-status.offline { color: #ff4444; }
 
 .bottombar-btn {
   background: transparent;
@@ -670,15 +741,19 @@ body {
     min-width: 0;
     overflow: hidden;
   }
-  /* Hide "My Actions" and "Feedback & Bugs" centre buttons on mobile.
-     They remain accessible from the Hub. */
-  .topbar-center { display: none; }
+  /* Hide desktop-only buttons on mobile */
+  .desktop-only { display: none !important; }
 
   /* Hide keyboard shortcuts button — not useful on mobile (no physical keyboard) */
   .shortcuts-btn { display: none; }
 
   /* Show compact icon-only shortcut buttons in the action strip */
-  .tbtn.mobile-quick-btn { display: flex; align-items: center; }
+  .tbtn.mobile-quick-btn { 
+    display: flex; 
+    align-items: center; 
+    padding: 8px;
+    min-width: 36px;
+  }
 
   /* Trim brand text so it doesn't overflow */
   .brand-sub, .brand-sep { display: none; }
@@ -686,10 +761,11 @@ body {
   /* Condense back button */
   .back-btn {
     font-size: 11px;
-    padding: 4px 8px;
-    max-width: 110px;
+    padding: 6px 10px;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
+    gap: 4px;
   }
 
   /* Hide project breadcrumb to keep topbar tight */
@@ -699,15 +775,22 @@ body {
   .sync-badge { display: none; }
 
   /* Tighten action button strip */
-  .topbar-actions { gap: 6px; }
+  .topbar-actions { 
+    gap: 0;
+    padding: 0;
+  }
   .tbtn {
-    padding: 8px 12px;
-    min-height: 36px;
-    min-width: 36px;
+    padding: 6px 10px;
+    min-height: 34px;
+    min-width: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 11px;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .tbtn:last-child {
+    border-right: none;
   }
 
   :root {

@@ -6,8 +6,8 @@
  * Identifies untested edge cases specific to this project.
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
+import { execSync } from 'node:child_process'
+import fs from 'node:fs'
 
 function readJsonSafe(filePath) {
   try {

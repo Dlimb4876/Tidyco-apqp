@@ -4,6 +4,25 @@
  * Uses inline editing — no modals
  */
 
+import { getFamilies } from '../../../../core/js/state.js'
+import { esc, canEdit, showToast } from '../../../../utils/js/helpers.js'
+import { render } from '../../../../utils/js/navigation.js'
+import { showGuide } from '../../../../utils/js/guide.js'
+import {
+  productsDataGetAll,
+  productsDataAddProduct,
+  productsDataUpdateProduct,
+  productsDataDeleteProduct,
+  productsDataGetRelatedDataCounts
+} from './products-data.js'
+import { renderAllProductsTrends } from './trends-chart.js'
+
+let productsSetProductDevelopmentTab = null
+
+export function setProductsTabSetter(setter) {
+  productsSetProductDevelopmentTab = typeof setter === 'function' ? setter : null
+}
+
 // Track which product row is currently being edited
 let productsEditingId = null;
 let productsPortalListenerRoot = null;
@@ -11,13 +30,19 @@ let productsPortalListenerRoot = null;
 // Track which products sub-tab is active so re-renders restore the correct tab
 let productsActiveTab = 'list'; // 'list' | 'trends'
 
+export function setProductsActiveTab(tab) {
+  productsActiveTab = tab === 'trends' ? 'trends' : 'list'
+}
+
 // 1.7 Persist search state across renders
 const PRODUCTS_SEARCH_KEY = 'products_search_state';
 function loadProductsSearch() {
   try { return localStorage.getItem(PRODUCTS_SEARCH_KEY) || ''; } catch { return ''; }
 }
 function saveProductsSearch(val) {
-  try { localStorage.setItem(PRODUCTS_SEARCH_KEY, val); } catch(e) {}
+  try { localStorage.setItem(PRODUCTS_SEARCH_KEY, val); } catch(e) {
+    console.debug('Failed to save products search:', e)
+  }
 }
 
 const PRODUCTS_FILTERS_KEY = 'products_filters_state';
@@ -39,14 +64,16 @@ function loadProductsFilters() {
   }
 }
 function saveProductsFilters() {
-  try { localStorage.setItem(PRODUCTS_FILTERS_KEY, JSON.stringify(productsFilters)); } catch (e) {}
+  try { localStorage.setItem(PRODUCTS_FILTERS_KEY, JSON.stringify(productsFilters)); } catch (e) {
+    console.debug('Failed to save products filters:', e)
+  }
 }
 let productsFilters = loadProductsFilters();
 
 /**
  * Get products portal HTML
  */
-function renderProductsPortalHTML() {
+export function renderProductsPortalHTML() {
   const tab = productsActiveTab || 'list';
   return `
     <div class="products-portal" id="productsPortalRoot">
@@ -85,7 +112,7 @@ function renderProductsPortalHTML() {
 /**
  * Setup products portal after rendering
  */
-function renderProductsPortalSetup() {
+export function renderProductsPortalSetup() {
   setupProductsEventListeners();
   if (productsActiveTab === 'trends') {
     renderProductsTrends();
@@ -207,6 +234,7 @@ function renderProductsList() {
           <col style="min-width:140px">
           <col style="min-width:120px">
           <col style="min-width:120px">
+          <col style="min-width:110px">
           <col style="min-width:200px">
           <col style="min-width:100px">
           <col style="min-width:110px">
@@ -221,6 +249,7 @@ function renderProductsList() {
           <th>Customer</th>
           <th class="ctr">Overhaul (hrs)</th>
           <th class="ctr">Turnaround (days)</th>
+          <th class="ctr">Unit Value (£)</th>
           <th>Notes</th>
           <th>Status</th>
           <th>Scope</th>
@@ -237,6 +266,7 @@ function renderProductsList() {
           <td><input class="cell-edit" id="pNew-customer" placeholder="Customer"></td>
           <td><input class="cell-edit cell-num" id="pNew-hours" type="number" min="0" step="0.5" placeholder="0"></td>
           <td><input class="cell-edit cell-num" id="pNew-turnaround" type="number" min="0" step="1" placeholder="—"></td>
+          <td><input class="cell-edit cell-num" id="pNew-unitValue" type="number" min="0" step="0.01" placeholder="100"></td>
           <td><input class="cell-edit" id="pNew-notes" placeholder="Notes"></td>
           <td><select class="cell-edit" id="pNew-status">${buildStatusOptions('Tender')}</select></td>
           <td><select class="cell-edit" id="pNew-scope">${buildScopeOptions('overhaul')}</select></td>
@@ -245,7 +275,7 @@ function renderProductsList() {
           </td>
         </tr>` : ''}
         ${filtered.length === 0 ? `
-          <tr><td colspan="11" style="text-align:center;padding:32px">
+          <tr><td colspan="12" style="text-align:center;padding:32px">
             <div style="color:var(--muted);margin-bottom:12px">No products found.</div>
             ${canEdit() ? '<button class="btn btn-primary btn-sm" data-action="products-focus-add">＋ Add First Product</button>' : ''}
           </td></tr>
@@ -261,6 +291,7 @@ function renderProductsList() {
               <td><input class="cell-edit" id="pEdit-customer" value="${esc(p.customer || '')}"></td>
               <td><span class="cell-display" style="font-variant-numeric:tabular-nums;" title="Overhaul time is maintained automatically via MCS changes and the Overhaul Trends history. Edit is disabled.">${(p.current_overhaul_hours || 0).toFixed(1)} h</span></td>
               <td><input class="cell-edit cell-num" id="pEdit-turnaround" type="number" min="0" step="1" value="${p.turnaround_days || ''}"></td>
+              <td><input class="cell-edit cell-num" id="pEdit-unitValue" type="number" min="0" step="0.01" value="${p.unit_value != null ? p.unit_value : 100}"></td>
               <td><input class="cell-edit" id="pEdit-notes" value="${esc(p.notes || '')}"></td>
               <td><select class="cell-edit" id="pEdit-status">${buildStatusOptions(p.status || 'Tender')}</select></td>
               <td><select class="cell-edit" id="pEdit-scope">${buildScopeOptions(p.scope || 'overhaul')}</select></td>
@@ -279,6 +310,7 @@ function renderProductsList() {
             <td>${esc(p.customer || '')}</td>
             <td class="ctr">${(p.current_overhaul_hours || 0).toFixed(1)}</td>
             <td class="ctr">${p.turnaround_days ? Math.round(p.turnaround_days) : '—'}</td>
+            <td class="ctr">£${p.unit_value != null ? Number(p.unit_value).toFixed(2) : '100.00'}</td>
             <td><div class="cell-display" title="${esc(p.notes || '')}">${p.notes ? esc(p.notes).substring(0, 40) + (p.notes.length > 40 ? '…' : '') : '—'}</div></td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
             <td><span class="badge badge-scope-${esc(p.scope || 'overhaul')}">${(p.scope || 'overhaul').charAt(0).toUpperCase() + (p.scope || 'overhaul').slice(1)}</span></td>
@@ -319,12 +351,13 @@ async function productsAddRow() {
     turnaround_days: parseFloat(document.getElementById('pNew-turnaround')?.value) || null,
     notes: document.getElementById('pNew-notes')?.value.trim() || '',
     status: document.getElementById('pNew-status')?.value || 'Tender',
-    scope: document.getElementById('pNew-scope')?.value || 'overhaul'
+    scope: document.getElementById('pNew-scope')?.value || 'overhaul',
+    unit_value: parseFloat(document.getElementById('pNew-unitValue')?.value) || 100
   };
 
   try {
     await productsDataAddProduct(productData);
-    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts()
     // 1.6 Clear fields for quick sequential entry; keep family/location/status
     const resetFields = {
       'pNew-name': '', 'pNew-partNumber': '', 'pNew-customer': '',
@@ -377,12 +410,13 @@ async function productsSaveEdit(productId) {
     turnaround_days: parseFloat(document.getElementById('pEdit-turnaround')?.value) || null,
     notes: document.getElementById('pEdit-notes')?.value.trim() || '',
     status: document.getElementById('pEdit-status')?.value || 'Tender',
-    scope: document.getElementById('pEdit-scope')?.value || 'overhaul'
+    scope: document.getElementById('pEdit-scope')?.value || 'overhaul',
+    unit_value: parseFloat(document.getElementById('pEdit-unitValue')?.value) || 100
   };
 
   try {
     await productsDataUpdateProduct(productId, updates);
-    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts()
   } catch (err) {
     showToast('Error saving product: ' + err.message, 'error');
   }
@@ -411,9 +445,7 @@ async function productsDeleteRow(productId, productName) {
   // Get counts of related data
   let counts = null;
   try {
-    if (typeof window.productsDataGetRelatedDataCounts === 'function') {
-      counts = await window.productsDataGetRelatedDataCounts(productId);
-    }
+    counts = await productsDataGetRelatedDataCounts(productId)
   } catch (err) {
     console.warn('Could not fetch related data counts:', err);
   }
@@ -464,7 +496,7 @@ async function productsDeleteRow(productId, productName) {
   try {
     showToast('Deleting product and all related data...', 'info');
     await productsDataDeleteProduct(productId);
-    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts();
+    if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts()
     if (productsEditingId === productId) productsEditingId = null;
     renderProductsList();
     showToast(`Product "${productName}" and all related data deleted successfully`, 'success');
@@ -494,7 +526,7 @@ function setupProductsEventListeners() {
       const action = actionEl.dataset.action;
 
       if (action === 'products-back-root') {
-        setProductDevelopmentTab('root');
+        if (productsSetProductDevelopmentTab) productsSetProductDevelopmentTab('root')
         render();
         return;
       }

@@ -32,6 +32,30 @@ Built as a Single Page Application (SPA) using vanilla JavaScript, Chart.js, and
 
 ---
 
+## Running locally without VS Code
+
+If you just want to open the site in your browser for debugging, you do not need VS Code open.
+
+- Double-click `start-debug-site.bat` in the repo root — it starts the local server and opens the site automatically
+- Double-click `start-debug-site-and-wiki.bat` to open both the main app and the standalone wiki
+- Or run `PowerShell -ExecutionPolicy Bypass -File .claude\serve.ps1`
+- Then open `http://localhost:8000/index.html`
+
+Press `Ctrl+C` in the launcher window when you want to stop the local server.
+
+### Supabase browser config
+
+The browser app now reads `core/js/config.public.js` for its Supabase URL and
+publishable key.
+
+- This file is committed on purpose so hosted/dev pages do not 404 on startup
+- Do not make the live site depend on a private local `core/js/config.js`
+- If you need to point your own machine at a different project temporarily, use
+  `core/js/config.example.js` as a reference and change `config.public.js`
+  deliberately
+
+---
+
 ## Responsive Design
 
 The application is designed with a **progressive enhancement** approach:
@@ -62,6 +86,14 @@ When adding features, always account for:
 
 See **CLAUDE.md** "Adding New Features" section for full workflow.
 
+### Capacity Bootstrap
+
+`index.html` now loads the shared capacity `cap-*` CSS/JS layer first, then the stream-specific ME/PM/Logistics/Unit 6 data and orchestrator files, then Production, and finally `capacity.js` / `capacity-events.js`. Treat that shared-first order as the live source of truth for capacity bootstrap changes.
+
+The shared runtime now owns the live chart month controls, embedded heatmap, Product Support table, Product Load table, and Holiday Planner rendering. Do not reintroduce ME-only placeholder bridges for those tabs.
+
+The old ME shared render/style copies were removed in Capacity Independence Phase 10. Under `portals/capacity/me/`, only `me-data.js`, `me-data-relational.js`, and `me-capacity.js` remain as ME-specific files.
+
 ---
 
 ## Portals
@@ -71,7 +103,7 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | Portal | Route | Description |
 |--------|-------|-------------|
 | **Hub** | `hub` | Operations Portal — landing page with navigation to all portals |
-| **Capacity** | `capacity` | Load Capacity Management (Production & ME streams) |
+| **Capacity** | `capacity` | Load Capacity Management (Production, ME, Project Management, Logistics, and Unit 6 streams) |
 | **Product Development** | `product-development` | NPI (APQP) and Product Management |
 | **Production** | `production` | Production planning, scheduling, and plan views |
 | **Operations** | `operations` | Operations Dashboard and Forecast |
@@ -79,18 +111,6 @@ The app is organised into discrete portals, all accessible from the central Hub.
 | **MCS** | `mcs` | Manufacturing Change — ECR workflow and schedule impact tracking |
 | **Settings** | `settings` | User management, teams, permissions, appearance, work areas, and families |
 | **Feedback** | `feedback` | User feedback and bug reporting (real-time) |
-
----
-
-## Capacity Change Rule
-
-When changing the ME Capacity plan, make the equivalent change in the PM Capacity plan under `portals/capacity/project-management/` unless the request explicitly says not to.
-
-This applies to UI, routing, shared data handling, and persistence changes so the two capacity plans do not drift apart.
-
-Capacity streams now persist through isolated data layers: ME continues to use the `me_*` tables, while PM, Logistics, and Unit 6 use their own `pm_*`, `log_*`, and `unit6_*` tables plus matching JS state modules. Shared chart and heatmap components still exist, but they now read from the active stream's isolated state instead of filtering everything out of ME memory.
-
-Logistics Product Support now captures `Kitting`, `Booking In/Out`, and `Product Movement` separately, with `Hours/Batch` shown as the computed sum of those component values when a support change is applied. The row history view shows all component values as well as the total.
 
 ---
 
@@ -110,6 +130,28 @@ npm run wiki:audit-tokens
 npm run wiki:check-links
 npm run wiki:check
 ```
+
+---
+
+## ME Department Hub (Shadow Portal)
+
+A standalone ME department hub lives at `me-hub/index.html`. It has its own auth, CSS, and JS layers and is **not linked from the main portal**.
+
+- Reads `me_tasks` one-directionally (read-only consumer of the ME capacity plan).
+- EVM foundation is in place: `percent_complete` on tasks, `time_logs` table, and `hubGetActuals()` function.
+- Charting and full EVM views are deferred to later phases.
+
+---
+
+## CTQ Coverage Tracking
+
+The CTQ table shows a **Coverage** column indicating whether each CTQ is referenced in at least one PFD step or PFMEA entry (green = linked, amber = orphaned). A **Coverage filter** dropdown lets users show All / Linked / Orphaned CTQs, and a stats banner displays the linked/orphaned counts. The active filter persists via the `ccf` URL param.
+
+---
+
+## Parts Database — Where Used
+
+Each part in the Parts Database shows a **Used In** count of active projects referencing it. Clicking the count opens a modal listing the project names, locations (BoM section / assembly), and quantities. Usage data is loaded asynchronously and cached per session.
 
 ---
 
@@ -149,30 +191,53 @@ These links are edited directly in the PFD table and used to build the graphical
 │   └── /js
 │       ├── app.js                    # Entry point and session initialisation
 │       ├── auth.js                   # Supabase authentication
+│       ├── config.public.js          # Browser-safe Supabase URL + publishable key
 │       ├── db.js                     # Persistence and data migration
+│       ├── supa.js                   # Shared Supabase client wrapper
 │       └── state.js                  # Global state and constant definitions
+├── /me-hub                           # ME Department Hub (standalone shadow portal)
+│   ├── index.html                    # Standalone entry — own auth, CSS, JS
+│   ├── /css
+│   └── /js                           # Reads me_tasks one-directionally; EVM foundation
 ├── /portals
 │   ├── /hub                          # Central Operations Portal
 │   │   ├── /css/hub.css
 │   │   └── /js/hub.js
 │   ├── /capacity                     # Load Capacity Management
 │   │   ├── /css
-│   │   │   ├── capacity.css          # Capacity portal shell styles
-│   │   │   └── me-capacity.css       # ME capacity module styles
-│   │   └── /js
-│   │       ├── capacity.js           # Portal entry and sub-tab routing
-│   │       ├── me-data.js            # ME data layer and Supabase sync
-│   │       ├── /project-management/js/pm-data.js # PM isolated data layer and sync
-│   │       ├── /logistics/js/log-data.js # Logistics isolated data layer and sync
-│   │       ├── /unit6/js/unit6-data.js # Unit 6 isolated data layer and sync
-│   │       ├── me-team.js            # Team member management
-│   │       ├── me-tasks.js           # Task and project allocation
-│   │       ├── me-products.js        # Product loading for ME capacity
-│   │       ├── me-holidays.js        # Holiday planner
-│   │       ├── me-chart.js           # Capacity bar chart (Chart.js)
-│   │       ├── me-heatmap.js         # Engineer load heat map
-│   │       ├── me-dashboard.js       # ME capacity dashboard summary
-│   │       └── me-capacity.js        # ME capacity orchestrator
+│   │   │   └── capacity.css          # Capacity portal shell styles
+│   │   ├── /shared                   # Shared capacity UI/calculation layer
+│   │   │   ├── /css                  # Shared capacity shell/table/chart/dashboard/heatmap styles
+│   │   │   └── /js                   # Shared cap-* renderers, utilities, and calculations
+│   │   ├── /js
+│   │   │   ├── capacity.js           # Portal entry and sub-tab routing
+│   │   │   ├── capacity-events.js    # Delegated event handler for all capacity streams
+│   │   │   └── modals.js             # Capacity portal modal injection
+│   │   ├── /me/js                    # ME-specific data + orchestrator layer
+│   │   │   ├── me-capacity.js
+│   │   │   ├── me-data.js
+│   │   │   └── me-data-relational.js
+│   │   ├── /production/js            # Production capacity files
+│   │   │   ├── prod-capacity.js
+│   │   │   ├── prod-capacity-dashboard.js
+│   │   │   ├── prod-capacity-data.js
+│   │   │   ├── prod-capacity-detail.js
+│   │   │   ├── prod-capacity-settings.js
+│   │   │   ├── prod-capacity-workarea.js
+│   │   │   └── work-areas-data.js
+│   │   ├── /project-management/js    # PM isolated data layer
+│   │   │   ├── pm-data.js
+│   │   │   ├── pm-data-relational.js
+│   │   │   ├── pm-capacity-data.js
+│   │   │   └── pm-capacity.js
+│   │   ├── /logistics/js             # Logistics isolated data layer
+│   │   │   ├── log-capacity.js
+│   │   │   ├── log-data.js
+│   │   │   └── log-data-relational.js
+│   │   └── /unit6/js                 # Unit 6 isolated data layer
+│   │       ├── unit6-capacity.js
+│   │       ├── unit6-data.js
+│   │       └── unit6-data-relational.js
 │   ├── /product-development          # NPI & Product Management
 │   │   ├── /js
 │   │   │   ├── product-development.js  # Portal hub and sub-tab routing
@@ -181,18 +246,32 @@ These links are edited directly in the PFD table and used to build the graphical
 │   │   │   ├── /css
 │   │   │   │   ├── dashboard.css     # KPI grid, gate strip, project list
 │   │   │   │   ├── pfmea.css         # PFMEA table, RPN badges, sticky headers
-│   │   │   │   ├── gantt.css         # Gantt timeline and kit builder
+│   │   │   │   ├── gantt.css         # Gantt timeline
 │   │   │   │   ├── apqp.css          # PFD steps, CTQ table, BOM picker, resource pills
 │   │   │   │   └── rpn-chart.css     # RPN trend chart styles
 │   │   │   └── /js
+│   │   │       ├── apqp.js           # APQP tab router (CTQ, PFD, Control Plan)
+│   │   │       ├── bom.js            # BoM editor (Structure / AAW-Repair / Parts Register)
+│   │   │       ├── bom-cclass.js     # ABC Part Class catalogue integration
 │   │   │       ├── dashboard.js      # Project list and KPI summary
+│   │   │       ├── documents.js      # Document attachments
 │   │   │       ├── gates.js          # Gate review checklists and sign-off
+│   │   │       ├── npi.js            # NPI section orchestrator
+│   │   │       ├── npi-components.js # Shared NPI UI components
+│   │   │       ├── npi-constants.js  # NPI-wide constants
+│   │   │       ├── npi-cp.js         # Control Plan view
+│   │   │       ├── npi-ctq.js        # CTQ editor with coverage tracking
+│   │   │       ├── npi-data.js       # NPI project data layer
+│   │   │       ├── npi-data-relational.js # Relational data (BOM, PFMEA, time logs)
+│   │   │       ├── npi-events.js     # Delegated event handler for NPI actions
+│   │   │       ├── npi-gates-editor.js # Gate sign-off UI
+│   │   │       ├── npi-orchestrator.js # NPI section bootstrap and teardown
+│   │   │       ├── npi-pfd.js        # PFD editor and flowchart view
 │   │   │       ├── pfmea.js          # PFMEA editor (modes, effects, causes, RPN)
-│   │   │       ├── apqp.js           # CTQ, PFD, and Control Plan views
-│   │   │       ├── bom.js            # Bill of Materials editor and kit builder
+│   │   │       ├── pfmea-state.js    # PFMEA local state helpers
+│   │   │       ├── rpn-chart.js      # RPN trend chart (Chart.js)
 │   │   │       ├── timing.js         # Gantt timing plan
-│   │   │       ├── trackers.js       # Action and issue trackers
-│   │   │       └── rpn-chart.js      # RPN trend chart (Chart.js)
+│   │   │       └── trackers.js       # Action and issue trackers
 │   │   └── /product-management       # Product registry within Product Development
 │   │       ├── /css/products.css
 │   │       └── /js
@@ -246,6 +325,7 @@ These links are edited directly in the PFD table and used to build the graphical
 ├── /plans                            # Live planning baseline (current state, next sprint, risk checklist)
 ├── /scripts                          # Quality-check scripts (check:all)
 ├── /supabase                         # SQL migrations and RLS policies
+├── /wiki                             # Standalone guide wiki (not linked from portal yet)
 ├── index.html                        # Main application entry point
 └── README.md
 ```
@@ -255,10 +335,14 @@ These links are edited directly in the PFD table and used to build the graphical
 ## Core Data Model
 
 - **Project**: Root object containing metadata (customer, unit, family) and child arrays.
-- **CTQ**: Critical-to-Quality requirements (id, req, spec, testMethod).
+- **CTQ**: Critical-to-Quality requirements (id, req, spec, testMethod). Includes **Coverage** status — whether each CTQ is linked to a PFD step or PFMEA entry (linked / orphaned).
 - **PFD**: Process Flow steps. Includes `bomRefs`, `ctqIds`, `pfd_type`, and optional next-step links for flowchart rendering.
 - **PFMEA**: Nested structure: Failure Mode → Effects → Causes (with RPN/Action history).
-- **BOM**: Categorised into `parts`, `tools`, `equip`, `mat`, `cons`, and `kits`.
+- **BOM**: Three-tab structure:
+  - **Structure** — hierarchical product tree (parts from Parts Database, sub-assemblies with manual PNs, up to 4 levels deep). Replaces the old flat Kits view.
+  - **AAW / Repair** — multiple named BoM groups for after-warranty and repair scopes, each with its own tree and a top-level Part Number field. Groups are tagged AAW or Repair.
+  - **Parts Register** — rolled-up view of unique parts from Structure and AAW/Repair with summed quantities. Supports Total / Structure-only / AAW-Repair-only filters.
+  - Part Class (ABC) badges display on all BoM views for parts linked to the Parts Database catalogue.
 
 For complete state variables reference, see **CLAUDE.md "State Management"** section.
 
@@ -296,6 +380,18 @@ The application uses hash-based routing with the following parameters:
 | `ct` | Capacity sub-tab | `ct=root`, `ct=me`, `ct=overhaul`, `ct=projects` |
 | `pt` | Production sub-tab | `pt=root`, `pt=products`, `pt=scheduling` |
 | `pdt` | Product Development sub-tab | `pdt=root`, `pdt=npi`, `pdt=product-management` |
+| `pvm` | NPI projects view mode | `pvm=list`, `pvm=grid` |
+| `ps` | NPI projects search text | `ps=HVAC` |
+| `pf` | NPI projects family filter | `pf=Pneumatics` |
+| `pst` | NPI projects status filter | `pst=active` |
+| `bt` | BOM sub-tab | `bt=tree`, `bt=register`, `bt=tools`, `bt=equip`, `bt=cons` |
+| `pfr` | PFMEA RPN filter | `pfr=high` |
+| `pfv` | PFMEA view mode | `pfv=compact` |
+| `csf` | CTQ source filter | `csf=customer` |
+| `cof` | CTQ OOS filter | `cof=true` |
+| `caf` | CTQ agreed filter | `caf=true` |
+| `ccf` | CTQ coverage filter | `ccf=orphaned`, `ccf=linked` |
+| `tsf` | Tracker sub-assembly filter | `tsf=<sub-assembly-id>` |
 
 ### Example URLs
 
@@ -450,4 +546,3 @@ action-centre.css → mcs.css → settings.css → feedback.css
 4. **Avoid common mistakes** — duplicate `const`, wrong load order, missing RLS, subscription leaks
 5. **Write tests** — see TESTING_STRATEGY.md for patterns and guidelines
 6. **Update CHANGELOG.md** — add a 2-line entry for every logical change you make
-

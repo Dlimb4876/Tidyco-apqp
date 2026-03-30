@@ -2,7 +2,10 @@
 // ── Shared: RPN Burndown Chart ─────────────────────────────────────────────
 // Logic extracted to standalone file for use in Dashboard and PFMEA
 
-window.renderRpnBurndown = function(compact) {
+import { npi } from './npi-shared.js'
+import { prog } from '../../../../core/js/state.js'
+
+export function renderRpnBurndown(compact) {
   const p = prog();
   if (!p.pfmea || p.pfmea.length === 0) {
     return compact ? '' : `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No PFMEA rows yet — add failure modes to see RPN chart.</div>`;
@@ -68,4 +71,9 @@ window.renderRpnBurndown = function(compact) {
   }
 
   return `<svg viewBox="0 0 ${vbW} ${svgH}" style="width:100%; height:auto; max-height:${compact ? 72 : 100}px; display:block;">${bars}</svg>`;
+}
+
+if (npi) {
+  npi.pfmea = npi.pfmea || {}
+  npi.pfmea.renderRpnBurndown = renderRpnBurndown
 }

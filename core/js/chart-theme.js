@@ -3,7 +3,9 @@
    Reads CSS custom properties so charts respect light/dark mode.
    ============================================================ */
 
-window.ChartTheme = {
+import { Chart as ChartJs } from 'chart.js';
+
+export const ChartTheme = {
   /** Return a resolved CSS variable value from :root */
   get(variable) {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -80,3 +82,10 @@ window.ChartTheme = {
     };
   },
 };
+
+function applyGlobalChartTheme() {
+  if (!ChartJs || !ChartJs.defaults) return;
+  const c = ChartTheme.getColors();
+  ChartJs.defaults.color = c.ink || ChartJs.defaults.color;
+  ChartJs.defaults.borderColor = c.line || ChartJs.defaults.borderColor;
+}

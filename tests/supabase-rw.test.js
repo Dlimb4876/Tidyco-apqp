@@ -20,6 +20,11 @@
  * test suite does not fail when run in an offline/sandboxed environment. The
  * tests are only meaningful when the Supabase endpoint can be reached.
  */
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // ─────────────────────────────────────────────────────────────
 // Credentials — from core/js/auth.js (anon key, safe to expose)

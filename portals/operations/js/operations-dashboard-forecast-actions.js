@@ -2,32 +2,36 @@
 // operations-dashboard-forecast-actions.js — forecast interactions
 // ═══════════════════════════════════
 
+import { appState } from '../../../core/js/state.js'
+import { showToast } from '../../../utils/js/helpers.js'
+import { opsToNumber } from './operations-dashboard-metrics.js'
+import {
+	opsForecastManager,
+	opsForecastProbabilityPctFromBand
+} from './operations-forecast-data.js'
+import {
+	operationsDashboardState,
+	opsForecastInlineFieldId
+} from './operations-dashboard-state.js'
+
 function opsForecastInlineKeydown(event, id) {
 	if (!event) return;
 
 	if (event.key === 'Enter') {
 		event.preventDefault();
-		if (typeof window.opsForecastSaveInline === 'function') {
-			window.opsForecastSaveInline(id);
-		} else {
-			opsForecastSaveInline(id);
-		}
+		opsForecastSaveInline(id);
 		return;
 	}
 
 	if (event.key === 'Escape') {
 		event.preventDefault();
-		if (typeof window.opsForecastCancelInline === 'function') {
-			window.opsForecastCancelInline();
-		} else {
-			opsForecastCancelInline();
-		}
+		opsForecastCancelInline();
 	}
 }
 
 async function opsForecastSubmit(event) {
 	event.preventDefault();
-	if (!window.opsForecastManager || typeof window.opsForecastManager.upsertOpportunity !== 'function') return;
+	if (!opsForecastManager || typeof opsForecastManager.upsertOpportunity !== 'function') return;
 
 	const form = event.target;
 	const fd = new FormData(form);
@@ -37,8 +41,8 @@ async function opsForecastSubmit(event) {
 	const dueDate = (fd.get('due_date') || '').toString();
 	const totalHours = opsToNumber(fd.get('total_hours'), 0);
 	const probabilityBand = (fd.get('probability_band') || '').toString().trim().toLowerCase();
-	const probabilityPct = probabilityBand && typeof window.opsForecastProbabilityPctFromBand === 'function'
-		? window.opsForecastProbabilityPctFromBand(probabilityBand)
+	const probabilityPct = probabilityBand && typeof opsForecastProbabilityPctFromBand === 'function'
+		? opsForecastProbabilityPctFromBand(probabilityBand)
 		: Math.max(0, Math.min(100, opsToNumber(fd.get('probability_pct'), 0)));
 
 	if (!title) {
@@ -54,7 +58,7 @@ async function opsForecastSubmit(event) {
 		return;
 	}
 
-	await window.opsForecastManager.upsertOpportunity({
+	await opsForecastManager.upsertOpportunity({
 		...(existingId ? { id: existingId } : {}),
 		title,
 		owner: (fd.get('owner') || '').toString().trim(),
@@ -69,54 +73,58 @@ async function opsForecastSubmit(event) {
 	});
 
 	form.reset();
-	opsForecastEditingId = '';
-	opsForecastInlineEditId = '';
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastEditingId = '';
+	operationsDashboardState.opsForecastInlineEditId = '';
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 async function opsForecastDelete(id) {
-	if (!id || !window.opsForecastManager || typeof window.opsForecastManager.deleteOpportunity !== 'function') return;
+	if (!id || !opsForecastManager || typeof opsForecastManager.deleteOpportunity !== 'function') return;
 	if (!confirm('Delete this forecast opportunity?')) return;
 
-	await window.opsForecastManager.deleteOpportunity(id);
-	if (opsForecastEditingId === id) opsForecastEditingId = '';
-	if (opsForecastInlineEditId === id) opsForecastInlineEditId = '';
-	if (currentSection === 'operations') render();
+	await opsForecastManager.deleteOpportunity(id);
+	if (operationsDashboardState.opsForecastEditingId === id) operationsDashboardState.opsForecastEditingId = '';
+	if (operationsDashboardState.opsForecastInlineEditId === id) operationsDashboardState.opsForecastInlineEditId = '';
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 async function opsForecastSetStatus(id, status) {
-	if (!id || !status || !window.opsForecastManager || typeof window.opsForecastManager.getRows !== 'function') return;
+	if (!id || !status || !opsForecastManager || typeof opsForecastManager.getRows !== 'function') return;
 
-	const row = window.opsForecastManager.getRows().find(item => item.id === id);
+	const row = opsForecastManager.getRows().find(item => item.id === id);
 	if (!row) return;
 
-	await window.opsForecastManager.upsertOpportunity({
+	await opsForecastManager.upsertOpportunity({
 		...row,
 		status
 	});
 
-	if (status === 'archived' && opsForecastEditingId === id) opsForecastEditingId = '';
-	if (status === 'archived' && opsForecastInlineEditId === id) opsForecastInlineEditId = '';
+	if (status === 'archived' && operationsDashboardState.opsForecastEditingId === id) {
+		operationsDashboardState.opsForecastEditingId = '';
+	}
+	if (status === 'archived' && operationsDashboardState.opsForecastInlineEditId === id) {
+		operationsDashboardState.opsForecastInlineEditId = '';
+	}
 
-	if (currentSection === 'operations') render();
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 function opsForecastStartInlineEdit(id) {
 	if (!id) return;
-	opsForecastInlineEditId = id;
-	opsForecastEditingId = '';
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastInlineEditId = id;
+	operationsDashboardState.opsForecastEditingId = '';
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 function opsForecastCancelInline() {
-	opsForecastInlineEditId = '';
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastInlineEditId = '';
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 async function opsForecastSaveInline(id) {
-	if (!id || !window.opsForecastManager || typeof window.opsForecastManager.getRows !== 'function') return;
+	if (!id || !opsForecastManager || typeof opsForecastManager.getRows !== 'function') return;
 
-	const row = window.opsForecastManager.getRows().find(item => item.id === id);
+	const row = opsForecastManager.getRows().find(item => item.id === id);
 	if (!row) return;
 
 	const titleEl = document.getElementById(opsForecastInlineFieldId(id, 'title'));
@@ -133,8 +141,8 @@ async function opsForecastSaveInline(id) {
 	const nextDue = (dueEl?.value || '').toString();
 	const nextTotalHours = Math.max(0, opsToNumber(totalEl?.value, 0));
 	const nextProbabilityBand = (probBandEl?.value || '').toString().trim().toLowerCase();
-	const nextProbability = nextProbabilityBand && typeof window.opsForecastProbabilityPctFromBand === 'function'
-		? window.opsForecastProbabilityPctFromBand(nextProbabilityBand)
+	const nextProbability = nextProbabilityBand && typeof opsForecastProbabilityPctFromBand === 'function'
+		? opsForecastProbabilityPctFromBand(nextProbabilityBand)
 		: Math.max(0, Math.min(100, opsToNumber(probEl?.value, 0)));
 
 	if (!nextTitle) {
@@ -152,7 +160,7 @@ async function opsForecastSaveInline(id) {
 		return;
 	}
 
-	await window.opsForecastManager.upsertOpportunity({
+	await opsForecastManager.upsertOpportunity({
 		...row,
 		title: nextTitle,
 		status: (statusEl?.value || row.status || 'identified').toString(),
@@ -164,45 +172,61 @@ async function opsForecastSaveInline(id) {
 		probability_pct: nextProbability
 	});
 
-	opsForecastInlineEditId = '';
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastInlineEditId = '';
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 function opsForecastStartEdit(id) {
 	if (!id) return;
-	opsForecastEditingId = id;
-	opsForecastInlineEditId = '';
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastEditingId = id;
+	operationsDashboardState.opsForecastInlineEditId = '';
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 function opsForecastCancelEdit() {
-	opsForecastEditingId = '';
-	opsForecastInlineEditId = '';
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastEditingId = '';
+	operationsDashboardState.opsForecastInlineEditId = '';
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 function opsForecastSetSort(col) {
 	if (!col) return;
-	if (opsForecastSortCol === col) {
-		opsForecastSortDir = opsForecastSortDir === 'asc' ? 'desc' : 'asc';
+	if (operationsDashboardState.opsForecastSortCol === col) {
+		operationsDashboardState.opsForecastSortDir = operationsDashboardState.opsForecastSortDir === 'asc' ? 'desc' : 'asc';
 	} else {
-		opsForecastSortCol = col;
-		opsForecastSortDir = 'asc';
+		operationsDashboardState.opsForecastSortCol = col;
+		operationsDashboardState.opsForecastSortDir = 'asc';
 	}
-	if (currentSection === 'operations') render();
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 function opsForecastSetFilterStatus(val) {
-	opsForecastFilterStatus = (val || '').toString();
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastFilterStatus = (val || '').toString();
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 function opsForecastSetFilterText(val) {
-	opsForecastFilterText = (val || '').toString().trim();
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastFilterText = (val || '').toString().trim();
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
 function opsForecastToggleArchived() {
-	opsForecastShowArchived = !opsForecastShowArchived;
-	if (currentSection === 'operations') render();
+	operationsDashboardState.opsForecastShowArchived = !operationsDashboardState.opsForecastShowArchived;
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
+}
+
+export {
+	opsForecastInlineKeydown,
+	opsForecastSubmit,
+	opsForecastDelete,
+	opsForecastSetStatus,
+	opsForecastStartInlineEdit,
+	opsForecastCancelInline,
+	opsForecastSaveInline,
+	opsForecastStartEdit,
+	opsForecastCancelEdit,
+	opsForecastSetSort,
+	opsForecastSetFilterStatus,
+	opsForecastSetFilterText,
+	opsForecastToggleArchived
 }

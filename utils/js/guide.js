@@ -3,7 +3,9 @@
 // Provides showGuide(key) to open context-sensitive help modals
 // ═══════════════════════════════════
 
-const GUIDE_CONTENT = {
+import { showModal } from './helpers.js';
+
+export const GUIDE_CONTENT = {
 
   // ── Hub ──────────────────────────────────────────────────────
   hub: {
@@ -54,15 +56,15 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📅 Project Management (PM)</div>
-        <p>Same structure as ME Capacity but filtered to the PM department. Shares the same underlying data table, separated by department tag.</p>
+        <p>Same structure as ME Capacity but for the PM department. PM has its own independent data store for teams, tasks, products, and holidays.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚚 Logistics</div>
-        <p>Same structure as ME Capacity but for the Logistics department. Tracks kitting and product movement workload alongside team tasks and product support hours.</p>
+        <p>Same structure as ME Capacity but for the Logistics department. Logistics has its own independent data store.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🏭 Unit 6</div>
-        <p>Same structure as ME Capacity but for the Unit 6 department. Tracks team loading, tasks, and product support for that work area.</p>
+        <p>Same structure as ME Capacity but for the Unit 6 department. Unit 6 has its own independent data store.</p>
       </div>
     `
   },
@@ -72,7 +74,7 @@ const GUIDE_CONTENT = {
     title: '🧑‍🔧 ME Load Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>ME Capacity</strong> plan tracks Manufacturing Engineering workload against available hours. Data is shared in real time across all logged-in users. The Logistics and Unit 6 departments use the same tab structure — their data is stored in the same underlying tables, separated by department tag.</p>
+        <p>The <strong>ME Capacity</strong> plan tracks Manufacturing Engineering workload against available hours. Data is shared in real time across all logged-in users. Each department has its own independent data store.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
@@ -83,11 +85,12 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">👷 Team</div>
-        <p>Add and manage ME team members. Set each person's hours per day (e.g. 7.5h) and department tag. Team members appear as rows in the capacity calculations.</p>
+        <p>Add and manage ME team members. Set each person's hours per day (e.g. 7.5h). Team members appear as rows in the capacity calculations.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>
-        <p>Log ongoing tasks and projects. Each task has an estimated duration (using 3-point PERT estimation: optimistic, most likely, pessimistic). Tasks are assigned to a month range and contribute to the capacity chart.</p>
+        <p>Log ongoing tasks and projects. Task rows are editable inline in the table so you can update name, assignment, dates, status, disable flag, and hours directly without switching into a separate edit mode.</p>
+        <p>The Product field now uses a searchable picker. Start typing part of a product name, then pick from the suggestions to avoid scrolling through very long dropdown lists.</p>
         <p><strong>PERT formula:</strong> Expected duration = (Optimistic + 4 × Most Likely + Pessimistic) ÷ 6</p>
         <p>Use the <strong>Disable</strong> checkbox on a task row to keep the task in the list but remove it from capacity calculations. Re-enable it any time by unticking the same checkbox.</p>
       </div>
@@ -104,8 +107,15 @@ const GUIDE_CONTENT = {
         <p>View the total ME hours attributed to each product, broken down by task and support entries.</p>
       </div>
       <div class="guide-section">
+        <div class="guide-section-title">🌡️ Heat Map</div>
+        <p>A 12-week team utilisation grid showing how loaded each person is week by week. Colour-coded in 5 bands: <strong>clear (under 60%)</strong>, <strong>good (60–79%)</strong>, <strong>caution (80–94%)</strong>, <strong>near full (95–99%)</strong>, and <strong>over capacity (100%+)</strong>. A legend above the grid explains the scale at a glance.</p>
+        <p><strong>Click any cell</strong> to open a detail panel showing which tasks are contributing to that person's load that week, their prorated hours, and any leave recorded.</p>
+        <p>The current week is highlighted with a blue border so you can instantly see where you are in the timeline.</p>
+      </div>
+      <div class="guide-section">
         <div class="guide-section-title">🏖️ Holiday Planner</div>
         <p>Record approved annual leave for each team member by month. Holidays reduce available capacity on the chart. UK bank holidays are automatically deducted.</p>
+        <p>A legend above the planner explains each cell state at a glance: working day, full day leave, half day leave, and bank holiday.</p>
       </div>
     `
   },
@@ -146,11 +156,11 @@ const GUIDE_CONTENT = {
     title: '📅 Project Management Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>PM Capacity</strong> plan tracks Project Manager workload against available hours. It uses the same data structure as ME Capacity, filtered to the PM department tag.</p>
+        <p>The <strong>PM Capacity</strong> plan tracks Project Manager workload against available hours. PM has its own independent data store for teams, tasks, products, and holidays.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Data Sources</div>
-        <p>Shares the same underlying dataset as ME Capacity (teams, tasks, products, holidays) but only displays records tagged as <strong>PM</strong> department.</p>
+        <p>PM maintains its own independent tables for team, tasks, products, and holidays. Data is not shared with other departments.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
@@ -160,8 +170,8 @@ const GUIDE_CONTENT = {
         <p><strong>Calculation:</strong> Available hours = (working days × hours per day per PM) minus approved holidays and UK bank holidays.</p>
       </div>
       <div class="guide-section">
-        <div class="guide-section-title">👷 Team / 📋 Tasks / � Product Support / 📦 Product Load / 🏖️ Holiday Planner</div>
-        <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view. PM task rows also support the <strong>Disable</strong> checkbox to exclude a task from calculations without deleting it.</p>
+        <div class="guide-section-title">👷 Team / 📋 Tasks / 🚂 Product Support / 📦 Product Load / 🏖️ Holiday Planner</div>
+        <p>Same as ME Capacity — see ME guide for details. All entries made here are tagged PM so they don't appear in the ME view. PM task rows are editable inline and support the <strong>Disable</strong> checkbox to exclude a task from calculations without deleting it.</p>
         <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to toggle ascending/descending.</p>
         <p>The <strong>Current</strong> column in the Product Support tab shows the active saved rate (h/batch) so you can compare it with any new value before applying a change. Edit multiple rows, then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
         <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Each entry has <strong>Edit</strong> and <strong>Delete</strong> buttons so you can correct or remove a past entry. Edits require a valid effective date and a reason (min 3 characters).</p>
@@ -639,6 +649,7 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">Product List</div>
         <p>All products with inline editing. Click any field to edit it directly. Changes are saved automatically after a short delay.</p>
         <p><strong>Status options:</strong> Tender → NPI → Production → Closed. Changing status here moves the product card between lanes in the NPI Projects view.</p>
+        <p><strong>Unit Value (£):</strong> The monetary value of one overhaul unit for this product. Used for contract and revenue reporting. Defaults to £100.00 — update to reflect actual contract pricing.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Overhaul Trends</div>
@@ -697,6 +708,10 @@ const GUIDE_CONTENT = {
         <div class="guide-section-title">Linking to Projects</div>
         <p>In any project's BOM, click <em>＋ Add from Parts Database</em> to search and add catalogue parts. This keeps part numbers consistent across all projects.</p>
       </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Editing Safety</div>
+        <p>Parts table rows are read-only. To change a part, use the <em>✏️ Edit</em> button so updates are reviewed in the edit modal before saving.</p>
+      </div>
     `
   },
 
@@ -748,6 +763,10 @@ const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">Real-Time Sync</div>
         <p>All users see schedule changes immediately. Batch edits are saved automatically after a short delay and broadcast to all connected users.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Filters</div>
+        <p>Use the filter bar to narrow by family, product, work area, date range, and whether completed batches are shown.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Used By</div>
@@ -817,7 +836,7 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">People</div>
-        <p>ME and PM capacity utilisation summary. Pulls from <strong>ME Capacity</strong> and <strong>PM Capacity</strong> — utilisation %, headroom hours, and team size.</p>
+        <p>Cross-stream capacity summary. Pulls from <strong>ME</strong>, <strong>PM</strong>, and <strong>Logistics</strong> capacity plus operations units (<strong>Unit 2</strong>, <strong>Unit 3</strong>, <strong>Unit 6</strong>) — utilisation %, headroom, and readiness.</p>
         <p><strong>Calculation:</strong> Utilisation = allocated hours ÷ available hours × 100%</p>
       </div>
       <div class="guide-section">
@@ -866,6 +885,7 @@ const GUIDE_CONTENT = {
           <li><strong>Implemented</strong> — Fully approved and closed out. Overhaul Trends updated automatically.</li>
           <li><strong>Closed</strong> — Change rejected or cancelled.</li>
         </ul>
+        <p>In the edit form, <strong>Stage 3 (Implement)</strong> now shows an implementation checklist that is automatically built from the impact areas selected in <strong>Stage 1</strong>. Tick each item as it is completed to track implementation progress.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Filters & Search</div>
@@ -918,7 +938,7 @@ const GUIDE_CONTENT = {
     title: '🚚 Logistics Load Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Logistics Capacity</strong> plan tracks the Logistics department's workload against available hours. It uses the same tab structure as ME Capacity, with data separated by department tag.</p>
+        <p>The <strong>Logistics Capacity</strong> plan tracks the Logistics department's workload against available hours. Logistics has its own independent data store.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
@@ -927,11 +947,12 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">👷 Team</div>
-        <p>Add and manage Logistics team members. Set each person's hours per day and department tag. Team members appear as rows in the capacity calculations.</p>
+        <p>Add and manage Logistics team members. Set each person's hours per day. Team members appear as rows in the capacity calculations.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>
-        <p>Log ongoing tasks. Each task uses 3-point PERT estimation (optimistic, most likely, pessimistic) and contributes to the capacity chart across its assigned month range.</p>
+        <p>Log ongoing tasks. Task rows are editable inline in the table so you can update name, assignment, dates, status, disable flag, and hours directly without opening an edit mode.</p>
+        <p>The Product field uses a searchable picker, so you can type part of a product name and choose from matching suggestions.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Product Support</div>
@@ -955,7 +976,7 @@ const GUIDE_CONTENT = {
     title: '🏭 Unit 6 Load Capacity — User Guide',
     body: `
       <div class="guide-section">
-        <p>The <strong>Unit 6 Capacity</strong> plan tracks the Unit 6 department's workload against available hours. It uses the same tab structure as ME Capacity, with data separated by department tag.</p>
+        <p>The <strong>Unit 6 Capacity</strong> plan tracks the Unit 6 department's workload against available hours. Unit 6 has its own independent data store.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
@@ -964,11 +985,12 @@ const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">👷 Team</div>
-        <p>Add and manage Unit 6 team members. Set each person's hours per day and department tag.</p>
+        <p>Add and manage Unit 6 team members. Set each person's hours per day.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📋 Tasks</div>
-        <p>Log ongoing tasks using 3-point PERT estimation. Tasks contribute to the capacity chart across their assigned month range.</p>
+        <p>Log ongoing tasks. Task rows are editable inline in the table so you can update name, assignment, dates, status, disable flag, and hours directly without opening an edit mode.</p>
+        <p>The Product field uses a searchable picker, so you can type part of a product name and choose from matching suggestions.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🚂 Product Support</div>
@@ -1018,7 +1040,7 @@ const GUIDE_CONTENT = {
  * Opens the shared guide modal populated with content for the given key.
  * @param {string} key - Content key from GUIDE_CONTENT
  */
-function showGuide(key) {
+export function showGuide(key) {
   const content = GUIDE_CONTENT[key]
   if (!content) return
   const titleEl = document.getElementById('guideModalTitle')

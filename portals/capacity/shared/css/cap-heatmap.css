@@ -1,0 +1,296 @@
+/* ============================================================
+	 me-capacity-heatmap.css — heatmap and detail modal
+	 ============================================================ */
+
+/* ── Heat Map ────────────────────────────────────────────── */
+.me-heatmap-container {
+	display: flex; flex-direction: column; height: 100%;
+}
+
+.me-heatmap-wrapper {
+	overflow: auto; border: 1px solid var(--table-border);
+	border-radius: 8px; background: var(--bg-soft);
+	margin: 0 0 8px; max-height: 520px;
+	-webkit-overflow-scrolling: touch;
+}
+
+.me-heatmap-grid {
+	display: grid;
+	grid-template-columns: 150px repeat(26, 44px);
+	gap: 2px; background: var(--bg-soft);
+	padding: 2px;
+	min-width: max-content;
+}
+
+.me-heatmap-person-header {
+	grid-column: 1; position: sticky; top: 0; left: 0;
+	background: var(--table-head-bg); border-radius: 4px;
+	z-index: 3; height: 48px;
+}
+
+.me-heatmap-person-label {
+	grid-column: 1; position: sticky; left: 0;
+	background: var(--white); border-radius: 4px;
+	z-index: 2;
+	padding: 6px 10px; font-weight: 500; color: var(--ink);
+	white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	font-size: 12px; display: flex; align-items: center;
+	min-height: 44px;
+}
+
+.me-heatmap-week-header {
+	position: sticky; top: 0; background: var(--table-head-bg);
+	border-radius: 4px;
+	display: flex; align-items: center; justify-content: center;
+	z-index: 2; min-height: 48px;
+	text-align: center; color: var(--table-head-ink);
+	font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+	font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px;
+	padding: 4px 2px; line-height: 1.4;
+}
+
+.me-heatmap-week-header.me-heatmap-week-today {
+	background: var(--blue-pale); color: var(--blue);
+	outline: 2px solid var(--blue); outline-offset: -2px;
+}
+
+.me-heatmap-cell {
+	height: 44px; width: 44px; display: flex; align-items: center; justify-content: center;
+	border-radius: 4px;
+	cursor: pointer; user-select: none;
+	transition: box-shadow .12s, opacity .12s; position: relative;
+}
+
+.me-heatmap-cell:hover {
+	box-shadow: 0 0 0 2px var(--blue); opacity: 0.9; z-index: 1;
+}
+
+.me-heatmap-cell.me-heatmap-cell-today {
+	outline: 2px solid var(--blue); outline-offset: -2px;
+}
+
+.me-heatmap-cell-value {
+	font-size: 12px; font-weight: 700;
+	font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── 7-band colour scale (theme-aware via CSS variables) ── */
+.me-heatmap-util-very-clear {
+	background: var(--heatmap-very-clear-bg);
+}
+.me-heatmap-util-very-clear .me-heatmap-cell-value,
+.me-heatmap-util-very-clear.me-heatmap-legend-swatch { color: var(--heatmap-very-clear-text); }
+
+.me-heatmap-util-clear {
+	background: var(--heatmap-clear-bg);
+}
+.me-heatmap-util-clear .me-heatmap-cell-value,
+.me-heatmap-util-clear.me-heatmap-legend-swatch { color: var(--heatmap-clear-text); }
+
+.me-heatmap-util-good {
+	background: var(--heatmap-good-bg);
+}
+.me-heatmap-util-good .me-heatmap-cell-value,
+.me-heatmap-util-good.me-heatmap-legend-swatch { color: var(--heatmap-good-text); }
+
+.me-heatmap-util-caution {
+	background: var(--heatmap-caution-bg);
+}
+.me-heatmap-util-caution .me-heatmap-cell-value,
+.me-heatmap-util-caution.me-heatmap-legend-swatch { color: var(--heatmap-caution-text); }
+
+.me-heatmap-util-warning {
+	background: var(--heatmap-warning-bg);
+}
+.me-heatmap-util-warning .me-heatmap-cell-value,
+.me-heatmap-util-warning.me-heatmap-legend-swatch { color: var(--heatmap-warning-text); }
+
+.me-heatmap-util-near {
+	background: var(--heatmap-near-bg);
+}
+.me-heatmap-util-near .me-heatmap-cell-value,
+.me-heatmap-util-near.me-heatmap-legend-swatch { color: var(--heatmap-near-text); }
+
+.me-heatmap-util-over {
+	background: var(--heatmap-over-bg);
+}
+.me-heatmap-util-over .me-heatmap-cell-value,
+.me-heatmap-util-over.me-heatmap-legend-swatch { color: var(--heatmap-over-text); }
+
+.me-heatmap-no-capacity {
+	background: var(--overlay-light);
+}
+.me-heatmap-no-capacity .me-heatmap-cell-value,
+.me-heatmap-no-capacity.me-heatmap-legend-swatch { color: var(--muted); }
+
+/* ── Legend ──────────────────────────────────────────────── */
+.me-heatmap-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 14px;
+	align-items: center;
+	padding: 8px 0 10px;
+	color: var(--ink);
+}
+
+.me-heatmap-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+}
+
+/* Legend swatches — compact badge, just taller than the text */
+.me-heatmap-legend-swatch {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2px 10px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 700;
+	font-family: 'IBM Plex Mono', monospace;
+	line-height: 1.4;
+	cursor: default;
+}
+
+/* ── Utilisation bar in modal ────────────────────────────── */
+.me-detail-util-bar-wrap {
+	background: var(--overlay-light); border-radius: 6px;
+	height: 10px; overflow: hidden; margin: 8px 0 4px;
+}
+.me-detail-util-bar {
+	height: 100%; border-radius: 6px;
+	transition: width .3s ease-out;
+}
+.me-detail-util-label {
+	font-size: 11px; color: var(--muted);
+	font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 767px) {
+	.me-heatmap-grid {
+		grid-template-columns: 110px repeat(26, 36px);
+	}
+	.me-heatmap-cell {
+		height: 36px; width: 36px;
+	}
+	.me-heatmap-cell-value { font-size: 10px; }
+	.me-heatmap-person-header { height: 40px; }
+	.me-heatmap-week-header { min-height: 40px; font-size: 9px; }
+	.me-heatmap-person-label { min-height: 36px; font-size: 11px; }
+	.me-heatmap-legend { gap: 6px 10px; }
+	.me-heatmap-legend-item { font-size: 11px; }
+}
+
+@media (min-width: 768px) {
+	.me-heatmap-grid {
+		grid-template-columns: 150px repeat(26, 44px);
+	}
+}
+
+/* ── Detail Modal ────────────────────────────────────────── */
+.me-detail-modal {
+	position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+	display: flex; align-items: center; justify-content: center;
+	z-index: 1000; background: var(--overlay-bg);
+	animation: fadeIn .15s ease-out;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+.me-detail-modal-overlay {
+	position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+	cursor: pointer;
+}
+
+.me-detail-modal-content {
+	position: relative; background: var(--white); border-radius: 12px;
+	box-shadow: var(--modal-shadow); width: 90%; max-width: 500px;
+	max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column;
+	z-index: 1001;
+}
+
+.me-detail-header {
+	display: flex; align-items: center; gap: 12px; padding: 16px;
+	border-bottom: 1px solid var(--line); flex-shrink: 0;
+}
+
+.me-detail-header > div {
+	flex: 1;
+}
+
+.me-detail-title {
+	font-size: 14px; font-weight: 600; color: var(--ink);
+}
+
+.me-detail-subtitle {
+	font-size: 12px; color: var(--muted); margin-top: 2px;
+}
+
+.me-detail-body {
+	padding: 16px; flex: 1; overflow-y: auto;
+}
+
+.me-detail-stats {
+	display: flex; flex-direction: column; gap: 12px;
+}
+
+.me-detail-empty {
+	text-align: center; color: var(--muted); padding: 24px 0;
+	font-size: 13px; font-style: italic;
+}
+
+.me-detail-task-count {
+	font-size: 11px; font-weight: 600; text-transform: uppercase;
+	color: var(--muted); letter-spacing: 0.5px;
+}
+
+.me-detail-tasks {
+	display: flex; flex-direction: column; gap: 12px;
+}
+
+.me-detail-task-row {
+	padding: 10px; background: var(--bg-soft); border: 1px solid var(--line);
+	border-radius: 6px;
+}
+
+.me-detail-task-header {
+	display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+
+.me-detail-task-name {
+	font-weight: 500; color: var(--ink); font-size: 13px;
+}
+
+.me-detail-task-hours {
+	font-size: 12px; font-weight: 600; color: var(--blue);
+	font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-detail-task-dates {
+	font-size: 11px; color: var(--muted); margin-top: 4px;
+	font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-detail-holidays {
+	margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line);
+}
+
+.me-detail-section-label {
+	font-size: 10px; font-weight: 600; text-transform: uppercase;
+	color: var(--muted); letter-spacing: 0.5px; margin-bottom: 8px;
+}
+
+.me-detail-holiday {
+	font-size: 12px; color: var(--ink); padding: 6px 0;
+	font-family: 'IBM Plex Mono', monospace;
+}
+
+.me-detail-holiday::before {
+	content: '🏖️ '; margin-right: 4px;
+}

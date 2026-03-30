@@ -3,68 +3,91 @@
 // Depends on: settings.js (shared helpers), mcs approvers data module
 // ═══════════════════════════════════════════════════════════════
 
+import { appState, currentUserRole } from '../../../core/js/state.js'
+import { esc, isAdmin, showToast } from '../../../utils/js/helpers.js'
+import {
+  MCS_APPROVAL_STEPS,
+  NPI_GATE_SIGNOFF_ROLES,
+  mcsApproversAdd,
+  mcsApproversLoad,
+  mcsApproversRemove,
+  npiGateSignoffAdd,
+  npiGateSignoffLoad,
+  npiGateSignoffRemove
+} from '../../mcs/js/mcs-approvers-data.js'
+import {
+  settingsEmailToName,
+  settingsLoadingState,
+  settingsState
+} from './settings.js'
+import { settingsEnsurePermissionsData } from './settings-teams.js'
+
+let settingsNpiGateSignoffConfig = null
+
 // ── Ensure approvals data is loaded ───────────────────────────
-async function settingsEnsureMcsData(forceReload = false) {
-  if (settingsMcsLoading) return;
-  if (!forceReload && mcsApproverConfig !== null && npiGateSignoffConfig !== null) {
+export async function settingsEnsureMcsData(forceReload = false) {
+  if (appState.settingsMcsLoading) return;
+  if (!forceReload && appState.mcsApproverConfig !== null && settingsNpiGateSignoffConfig !== null) {
     await settingsEnsurePermissionsData();
     renderSettingsMcsTab();
     return;
   }
 
-  settingsMcsLoading = true;
-  settingsMcsError = null;
+  appState.settingsMcsLoading = true;
+  appState.settingsMcsError = null;
   renderSettingsMcsTab();
 
   try {
     await settingsEnsurePermissionsData();
-    [mcsApproverConfig, npiGateSignoffConfig] = await Promise.all([
+    const [approverConfig, signoffConfig] = await Promise.all([
       mcsApproversLoad(),
       npiGateSignoffLoad(),
     ]);
-    if (!mcsApproverConfig) {
-      settingsMcsError = 'Failed to load approver config';
-      mcsApproverConfig = null;
+    appState.mcsApproverConfig = approverConfig;
+    settingsNpiGateSignoffConfig = signoffConfig;
+    if (!appState.mcsApproverConfig) {
+      appState.settingsMcsError = 'Failed to load approver config';
+      appState.mcsApproverConfig = null;
     }
   } catch (err) {
-    settingsMcsError = err?.message || 'Failed to load';
+    appState.settingsMcsError = err?.message || 'Failed to load';
   } finally {
-    settingsMcsLoading = false;
+    appState.settingsMcsLoading = false;
     renderSettingsMcsTab();
   }
 }
 
 // ── Render Approvals tab ───────────────────────────────────────
-function renderSettingsMcsTab() {
+export function renderSettingsMcsTab() {
   const container = document.getElementById('settingsMcsTab');
   if (!container) return;
 
-  if (settingsMcsLoading) {
+  if (appState.settingsMcsLoading) {
     container.innerHTML = settingsLoadingState('Loading…');
     return;
   }
 
-  if (settingsMcsError) {
+  if (appState.settingsMcsError) {
     container.innerHTML = `
       <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
         <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load approvals config</div>
-        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsMcsError)}</div>
+        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(appState.settingsMcsError)}</div>
         <button class="btn btn-ghost" data-action="settings-mcs-retry">Retry</button>
       </div>`;
     return;
   }
 
-  if (!mcsApproverConfig || !npiGateSignoffConfig) {
+  if (!appState.mcsApproverConfig || !settingsNpiGateSignoffConfig) {
     container.innerHTML = settingsLoadingState('Loading…');
     settingsEnsureMcsData(true);
     return;
   }
 
-  const users = settingsPermissionsData || [];
+  const users = settingsState.settingsPermissionsData || [];
 
   // ── MCS approval steps ────────────────────────────────────────
   const mcsStepsHtml = MCS_APPROVAL_STEPS.map(step => {
-    const approvers = mcsApproverConfig[step.key] || [];
+    const approvers = appState.mcsApproverConfig[step.key] || [];
     const availableUsers = users.filter(u => !approvers.some(a => a.user_id === u.id));
 
     const approverRows = approvers.length === 0
@@ -104,7 +127,7 @@ function renderSettingsMcsTab() {
 
   // ── NPI gate signoff roles ────────────────────────────────────
   const gateStepsHtml = NPI_GATE_SIGNOFF_ROLES.map(role => {
-    const assignees = npiGateSignoffConfig[role.key] || [];
+    const assignees = settingsNpiGateSignoffConfig[role.key] || [];
     const availableUsers = users.filter(u => !assignees.some(a => a.user_id === u.id));
 
     const assigneeRows = assignees.length === 0
@@ -162,7 +185,7 @@ function renderSettingsMcsTab() {
 }
 
 // ── MCS approver CRUD ─────────────────────────────────────────
-async function settingsMcsAddApprover(stepKey) {
+export async function settingsMcsAddApprover(stepKey) {
   if (!isAdmin()) { showToast('Only admins can change approvers.', 'error'); return; }
   const select = document.getElementById(`mcs-add-user-${stepKey}`);
   if (!select || !select.value) return;
@@ -176,19 +199,19 @@ async function settingsMcsAddApprover(stepKey) {
   if (!ok) { showToast('Failed to add approver', 'error'); return; }
 
   // Update local state
-  if (mcsApproverConfig && mcsApproverConfig[stepKey]) {
+  if (appState.mcsApproverConfig && appState.mcsApproverConfig[stepKey]) {
     const entry = { user_id: userId, user_name: userName };
     if (userEmail) entry.user_email = userEmail;
-    mcsApproverConfig[stepKey].push(entry);
+    appState.mcsApproverConfig[stepKey].push(entry);
   }
   showToast(`${esc(userName)} added as ${stepKey} approver`, 'success');
   renderSettingsMcsTab();
 }
 
-async function settingsMcsRemoveApprover(stepKey, userId) {
+export async function settingsMcsRemoveApprover(stepKey, userId) {
   if (!isAdmin()) { showToast('Only admins can change approvers.', 'error'); return; }
 
-  const approver = (mcsApproverConfig?.[stepKey] || []).find(a => a.user_id === userId);
+  const approver = (appState.mcsApproverConfig?.[stepKey] || []).find(a => a.user_id === userId);
   const name = approver?.user_name || userId;
 
   if (!confirm(`Remove ${name} as an approver for ${stepKey}?`)) return;
@@ -196,15 +219,15 @@ async function settingsMcsRemoveApprover(stepKey, userId) {
   const ok = await mcsApproversRemove(stepKey, userId);
   if (!ok) { showToast('Failed to remove approver', 'error'); return; }
 
-  if (mcsApproverConfig && mcsApproverConfig[stepKey]) {
-    mcsApproverConfig[stepKey] = mcsApproverConfig[stepKey].filter(a => a.user_id !== userId);
+  if (appState.mcsApproverConfig && appState.mcsApproverConfig[stepKey]) {
+    appState.mcsApproverConfig[stepKey] = appState.mcsApproverConfig[stepKey].filter(a => a.user_id !== userId);
   }
   showToast('Approver removed', 'info');
   renderSettingsMcsTab();
 }
 
 // ── Gate signoff CRUD ─────────────────────────────────────────
-async function settingsMcsAddGateSignoff(roleKey) {
+export async function settingsMcsAddGateSignoff(roleKey) {
   if (!isAdmin()) { showToast('Only admins can change assignments.', 'error'); return; }
   const select = document.getElementById(`gate-signoff-add-user-${roleKey}`);
   if (!select || !select.value) return;
@@ -217,21 +240,21 @@ async function settingsMcsAddGateSignoff(roleKey) {
   const ok = await npiGateSignoffAdd(roleKey, userId, userName, userEmail);
   if (!ok) { showToast('Failed to add assignee', 'error'); return; }
 
-  if (npiGateSignoffConfig) {
-    if (!npiGateSignoffConfig[roleKey]) npiGateSignoffConfig[roleKey] = [];
+  if (settingsNpiGateSignoffConfig) {
+    if (!settingsNpiGateSignoffConfig[roleKey]) settingsNpiGateSignoffConfig[roleKey] = [];
     const entry = { user_id: userId, user_name: userName };
     if (userEmail) entry.user_email = userEmail;
-    npiGateSignoffConfig[roleKey].push(entry);
+    settingsNpiGateSignoffConfig[roleKey].push(entry);
   }
   const role = NPI_GATE_SIGNOFF_ROLES.find(r => r.key === roleKey);
   showToast(`${esc(userName)} added as ${role ? role.label : roleKey} sign-off`, 'success');
   renderSettingsMcsTab();
 }
 
-async function settingsMcsRemoveGateSignoff(roleKey, userId) {
+export async function settingsMcsRemoveGateSignoff(roleKey, userId) {
   if (!isAdmin()) { showToast('Only admins can change assignments.', 'error'); return; }
 
-  const assignee = (npiGateSignoffConfig?.[roleKey] || []).find(a => a.user_id === userId);
+  const assignee = (settingsNpiGateSignoffConfig?.[roleKey] || []).find(a => a.user_id === userId);
   const name = assignee?.user_name || userId;
   const role = NPI_GATE_SIGNOFF_ROLES.find(r => r.key === roleKey);
   const roleLabel = role?.label || roleKey;
@@ -241,8 +264,8 @@ async function settingsMcsRemoveGateSignoff(roleKey, userId) {
   const ok = await npiGateSignoffRemove(roleKey, userId);
   if (!ok) { showToast('Failed to remove assignee', 'error'); return; }
 
-  if (npiGateSignoffConfig && npiGateSignoffConfig[roleKey]) {
-    npiGateSignoffConfig[roleKey] = npiGateSignoffConfig[roleKey].filter(a => a.user_id !== userId);
+  if (settingsNpiGateSignoffConfig && settingsNpiGateSignoffConfig[roleKey]) {
+    settingsNpiGateSignoffConfig[roleKey] = settingsNpiGateSignoffConfig[roleKey].filter(a => a.user_id !== userId);
   }
   showToast('Assignee removed', 'info');
   renderSettingsMcsTab();

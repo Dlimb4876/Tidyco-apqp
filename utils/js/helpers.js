@@ -2,6 +2,10 @@
 // helpers.js — Escaping, UI utils, and modal helpers
 // ═══════════════════════════════════
 
+import { appState, currentUserRole, currentUserPermissions } from '../../core/js/state.js';
+import { save } from '../../core/js/db.js';
+import { navigate } from './navigation.js';
+
 // ── Permission helpers ─────────────────────────────────────────
 const HYBRID_PERMISSION_DEFINITIONS = [
   { key: 'portal_hub_view', label: 'Access Hub', description: 'Lets the user open the main hub and use its shortcut cards.', group: 'Portal access' },
@@ -101,16 +105,16 @@ const PORTAL_TAB_VIEW_PERMISSION_MAP = {
   'product-development::parts-database': 'portal_product_development_parts_database_view'
 };
 
-function getPermissionDefinitions() {
+export function getPermissionDefinitions() {
   return HYBRID_PERMISSION_DEFINITIONS.slice();
 }
 
-function normalizePermissionKey(permissionKey) {
+export function normalizePermissionKey(permissionKey) {
   if (!permissionKey) return '';
   return LEGACY_TEAM_PERMISSION_MAP[permissionKey] || permissionKey;
 }
 
-function getRoleBaselinePermissions(role) {
+export function getRoleBaselinePermissions(role) {
   const viewer = {
     portal_hub_view: true,
     portal_projects_view: true,
@@ -176,11 +180,46 @@ function getEffectivePermissionMap() {
   return resolved;
 }
 
-function isAdmin() {
+export function isAdmin() {
   return typeof currentUserRole !== 'undefined' && currentUserRole === 'admin';
 }
 
-function hasPermission(permissionKey) {
+// ── Error filtering for permission-related Supabase errors ──────────
+// These errors are expected when users have limited permissions and should
+// not clutter the console. Returns true if error is permission-related.
+export function isPermissionError(error) {
+  if (!error) return false;
+  const message = String(error.message || error).toLowerCase();
+  const code = String(error.code || '').toLowerCase();
+
+  // RLS/permission error patterns
+  const permissionPatterns = [
+    /violates row-level security/i,
+    /new row violates/i,
+    /permission denied/i,
+    /insufficient privilege/i,
+    /42501/, // Postgres insufficient_privilege
+    /pgrst116/i, // Supabase: row not found (often RLS)
+  ];
+
+  return permissionPatterns.some(pattern =>
+    pattern.test(message) || pattern.test(code)
+  );
+}
+
+// Safe console warn that filters permission errors
+export function safeWarn(label, error) {
+  if (isPermissionError(error)) return;
+  console.warn(label, error?.message || error);
+}
+
+// Safe console error that filters permission errors  
+export function safeError(label, error) {
+  if (isPermissionError(error)) return;
+  console.error(label, error?.message || error);
+}
+
+export function hasPermission(permissionKey) {
   const key = normalizePermissionKey(permissionKey);
   if (!key) return false;
   if (isAdmin()) return true;
@@ -188,7 +227,7 @@ function hasPermission(permissionKey) {
   return !!resolved[key];
 }
 
-function canViewSection(sectionKey) {
+export function canViewSection(sectionKey) {
   const permissionKey = SECTION_VIEW_PERMISSION_MAP[sectionKey];
   if (!permissionKey) return true;
   return hasPermission(permissionKey);
@@ -220,7 +259,7 @@ function hasConfiguredPortalTabPolicy(sectionKey) {
   });
 }
 
-function canViewPortalTab(sectionKey, tabKey) {
+export function canViewPortalTab(sectionKey, tabKey) {
   if (!sectionKey) return false;
   if (!canViewSection(sectionKey)) return false;
   const permissionKey = getPortalTabViewPermission(sectionKey, tabKey);
@@ -235,7 +274,7 @@ function canViewPortalTab(sectionKey, tabKey) {
   return false;
 }
 
-function canViewPageKey(pageKey) {
+export function canViewPageKey(pageKey) {
   const key = String(pageKey || '').trim();
   if (!key) return false;
   if (!key.includes('::')) return canViewSection(key);
@@ -246,7 +285,7 @@ function canViewPageKey(pageKey) {
 
 // Returns true if the current user can create, edit, or delete data.
 // Backward-compatible: canEdit() with no argument keeps legacy behavior.
-function canEdit(scopeKey = '') {
+export function canEdit(scopeKey = '') {
   if (!scopeKey) {
     return (typeof currentUserRole !== 'undefined') && (currentUserRole === 'admin' || currentUserRole === 'editor');
   }
@@ -262,7 +301,7 @@ function canEdit(scopeKey = '') {
   return (typeof currentUserRole !== 'undefined') && (currentUserRole === 'admin' || currentUserRole === 'editor');
 }
 
-function esc(s) {
+export function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -271,34 +310,34 @@ function esc(s) {
     .replace(/'/g, '&#039;');
 }
 
-function emptyState(icon, title, desc) {
+export function emptyState(icon, title, desc) {
   return `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
 }
 
-function loadingState(msg = 'Loading...') {
+export function loadingState(msg = 'Loading...') {
   return `<div class="loading-state">${esc(msg)}</div>`;
 }
 
-function closeModal(id) {
+export function closeModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.style.display = 'none';
   // Clear picker state to prevent carry-over between opens
   if (id === 'modalCtqPick') {
-    ctqPickTarget = null;
-    ctqPickSelected = [];
+    appState.ctqPickTarget = null;
+    appState.ctqPickSelected = [];
   } else if (id === 'modalBomPick') {
-    bomPickTarget = null;
-    bomPickSelected = [];
-    bomPickFilter = 'all';
+    appState.bomPickTarget = null;
+    appState.bomPickSelected = [];
+    appState.bomPickFilter = 'all';
   } else if (id === 'modalKitPick') {
-    kitPickTarget = null;
-    kitPickSelected = [];
-    kitPickFilter = 'all';
+    appState.kitPickTarget = null;
+    appState.kitPickSelected = [];
+    appState.kitPickFilter = 'all';
   }
 }
 
-function showModal(id) {
+export function showModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.style.display = 'flex';
@@ -309,7 +348,7 @@ function showModal(id) {
   }, 50);
 }
 // Helper to sort Process Flow steps by their step number
-function sortedPfd(pfd) {
+export function sortedPfd(pfd) {
   return [...pfd].sort((a, b) => a.stepNum - b.stepNum);
 }
 // js/utils/helpers.js
@@ -318,12 +357,12 @@ function sortedPfd(pfd) {
  * Shared utility to calculate RPN (Risk Priority Number).
  * Required by dashboard.js, apqp.js, and pfmea.js.
  */
-function calcRPN(r) {
+export function calcRPN(r) {
   return (r.sev || 1) * (r.occ || 1) * (r.det || 1);
 }
 
 // Preserve typing continuity when an input-triggered action re-renders UI.
-function preserveInputCaretAfterRender(inputEl, rerenderFn, options = {}) {
+export function preserveInputCaretAfterRender(inputEl, rerenderFn, options = {}) {
   if (typeof rerenderFn !== 'function') return;
 
   const selectionStart = inputEl && typeof inputEl.selectionStart === 'number'
@@ -361,7 +400,7 @@ function preserveInputCaretAfterRender(inputEl, rerenderFn, options = {}) {
 }
 
 
-function getWeekNumber(d) {
+export function getWeekNumber(d) {
   d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -369,7 +408,7 @@ function getWeekNumber(d) {
 }
 
 // ── 1.3 Toast Notifications ───────────────────────────────────
-function showToast(message, type = 'info', duration = 4000) {
+export function showToast(message, type = 'info', duration = 4000) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
   const toast = document.createElement('div');
@@ -407,11 +446,7 @@ document.addEventListener('keydown', function(e) {
   // Save current work when supported by the active screen.
   if (hasModifier && key === 's') {
     e.preventDefault();
-    if (typeof save === 'function') {
-      save();
-    } else {
-      document.dispatchEvent(new CustomEvent('app:save'));
-    }
+    save();
     return;
   }
 
@@ -443,9 +478,7 @@ document.addEventListener('keydown', function(e) {
     const openModal = document.querySelector('.modal-bg[style*="display: flex"], .modal-bg[style*="display:flex"], .modal-bg[style*="display: block"], .modal-bg[style*="display:block"]');
     if (openModal) return;
     e.preventDefault();
-    if (typeof navigate === 'function') {
-      navigate('hub');
-    }
+    navigate('hub');
   }
 });
 
@@ -495,7 +528,7 @@ function parseSmartDate(input) {
   return null;
 }
 
-function setupSmartDateInputs() {
+export function setupSmartDateInputs() {
   document.querySelectorAll('input[type="date"]').forEach(input => {
     if (input.hasAttribute('data-smart-date')) return;
     input.setAttribute('data-smart-date', '');
@@ -516,7 +549,7 @@ function setupSmartDateInputs() {
  * (any input, select, or textarea inside a <table> element).
  * Used by focus-guard logic to defer re-renders that would eject cursor.
  */
-function isEditingInlineCell() {
+export function isEditingInlineCell() {
   const active = document.activeElement;
   if (!active || active === document.body) return false;
   const tag = active.tagName;
@@ -527,7 +560,7 @@ function isEditingInlineCell() {
 // ── Owner/person helpers ───────────────────────────────────────
 // Derives a display name from an email address prefix.
 // e.g. daniel.limb@tidyco.co.uk → "Daniel Limb"
-function emailToDisplayName(email) {
+export function emailToDisplayName(email) {
   if (!email) return '';
   const local = email.split('@')[0];
   return local.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join(' ');
@@ -544,7 +577,7 @@ function getProfileNames() {
 
 // Builds <option> tags for an owner <select> from loaded profiles.
 // Always includes "— Unassigned —" and preserves any legacy free-text value.
-function ownerSelectOptions(currentOwner) {
+export function ownerSelectOptions(currentOwner) {
   const names = getProfileNames();
   let opts = '<option value="">— Unassigned —</option>';
   if (names.length === 0 && currentOwner) {

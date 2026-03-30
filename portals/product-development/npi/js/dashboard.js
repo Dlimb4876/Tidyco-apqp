@@ -3,8 +3,41 @@
 // Depends on: state.js, helpers.js, navigation.js, npi-constants.js, npi.js, gates.js, pfmea.js
 // ═══════════════════════════════════
 
+import { openTenderGateSelectionModal } from './npi-gates-editor.js'
+import { renderRpnBurndown } from './rpn-chart.js'
+import { RPN_HIGH } from './npi-constants.js'
+import {
+  appState,
+  db,
+  prog,
+  findProjectByProductId,
+  normalizeFamilyId,
+  syncProjectFamily,
+  getFamilies,
+  findFamilyRecord,
+  GATE_DEFS,
+  getProjectGateSelection,
+  getDefaultGateSelection,
+  getAllProjectGateSelections,
+  isGateSelectionLocked,
+  BOM_TYPES
+} from '../../../../core/js/state.js'
+import { currentUser, supabase as supa } from '../../../../core/js/supa.js'
+import { migrateprog, rowToProject, save } from '../../../../core/js/db.js'
+import { navigate, render, writeNavigationHistory } from '../../../../utils/js/navigation.js'
+import { productsDataGetAll } from '../../product-management/js/products-data.js'
+import { npi } from './npi-shared.js'
+import { npiComponents } from './npi-components.js'
+import { canEdit, esc, showToast } from '../../../../utils/js/helpers.js'
+
+npi.components = npiComponents
+
+const tenderGateScopeState = appState.tenderGateScopeState
+
 // ── Lane collapse state (persisted to localStorage) ──────────
-const npiCollapsedLanes = new Set(JSON.parse(localStorage.getItem('npi_collapsed_lanes') || '[]'))
+let _npiCollapsedLanesRaw = []
+try { _npiCollapsedLanesRaw = JSON.parse(localStorage.getItem('npi_collapsed_lanes') || '[]') } catch (_) { localStorage.removeItem('npi_collapsed_lanes') }
+const npiCollapsedLanes = new Set(Array.isArray(_npiCollapsedLanesRaw) ? _npiCollapsedLanesRaw : [])
 
 const NPI_PROJECTS_VIEW_MODE_KEY = 'npi_projects_view_mode'
 let npiProjectsViewMode = localStorage.getItem(NPI_PROJECTS_VIEW_MODE_KEY) || 'active'
@@ -16,6 +49,60 @@ let npiProjectsSearch = ''
 let npiProjectsFamilyFilter = 'all'
 let npiProjectsStatusFilter = 'all'
 
+function npiDashboardFavouritesStorageKey() {
+  const email = (currentUser && currentUser.email)
+    ? String(currentUser.email).trim().toLowerCase()
+    : 'anonymous'
+  return 'tidyco_favourites_v1_' + (email || 'anonymous')
+}
+
+function npiDashboardLoadFavourites() {
+  try {
+    const raw = localStorage.getItem(npiDashboardFavouritesStorageKey())
+    const parsed = raw ? JSON.parse(raw) : null
+    return {
+      pages: Array.isArray(parsed?.pages) ? parsed.pages : [],
+      products: Array.isArray(parsed?.products) ? parsed.products : []
+    }
+  } catch (_) {
+    return { pages: [], products: [] }
+  }
+}
+
+function npiDashboardSaveFavourites(next) {
+  const clean = {
+    version: 1,
+    pages: Array.isArray(next?.pages) ? next.pages : [],
+    products: Array.isArray(next?.products) ? next.products : [],
+    updatedAt: new Date().toISOString()
+  }
+  try {
+    localStorage.setItem(npiDashboardFavouritesStorageKey(), JSON.stringify(clean))
+  } catch (_) {}
+  return clean
+}
+
+npi.dashboard.isProductFavourite = function (productId) {
+  const key = String(productId || '').trim()
+  if (!key) return false
+  return npiDashboardLoadFavourites().products.includes(key)
+}
+
+npi.dashboard.toggleProductFavourite = function (productId, evt) {
+  if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation()
+  const key = String(productId || '').trim()
+  if (!key) return
+
+  const favourites = npiDashboardLoadFavourites()
+  const set = new Set(favourites.products)
+  if (set.has(key)) set.delete(key)
+  else set.add(key)
+
+  const products = Array.from(set).slice(0, 4)
+  npiDashboardSaveFavourites({ ...favourites, products })
+  render()
+}
+
 npi.dashboard.setProjectsViewMode = function (mode) {
   if (!['active', 'all', 'completed'].includes(mode)) return
   npiProjectsViewMode = mode
@@ -23,7 +110,7 @@ npi.dashboard.setProjectsViewMode = function (mode) {
   npiProjectsStatusFilter = 'all'
   // Update URL to persist view mode
   const parts = ['s=projects']
-  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (appState.npiTab !== 'all') parts.push('nft=' + encodeURIComponent(appState.npiTab))
   if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch))
   if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter))
   if (mode !== 'active') parts.push('pvm=' + encodeURIComponent(mode))
@@ -35,7 +122,7 @@ npi.dashboard.setProjectsSearch = function (value) {
   npiProjectsSearch = (value || '').trim().toLowerCase()
   // Update URL to persist search (use replace to avoid flooding history)
   const parts = ['s=projects']
-  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (appState.npiTab !== 'all') parts.push('nft=' + encodeURIComponent(appState.npiTab))
   if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch))
   if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter))
   if (npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(npiProjectsStatusFilter))
@@ -88,7 +175,7 @@ npi.dashboard.setProjectsFamilyFilter = function (value) {
   npiProjectsFamilyFilter = value || 'all'
   // Update URL to persist family filter
   const parts = ['s=projects']
-  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (appState.npiTab !== 'all') parts.push('nft=' + encodeURIComponent(appState.npiTab))
   if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch))
   if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter))
   if (npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(npiProjectsStatusFilter))
@@ -101,7 +188,7 @@ npi.dashboard.setProjectsStatusFilter = function (value) {
   npiProjectsStatusFilter = value || 'all'
   // Update URL to persist status filter
   const parts = ['s=projects']
-  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (appState.npiTab !== 'all') parts.push('nft=' + encodeURIComponent(appState.npiTab))
   if (npiProjectsSearch) parts.push('ps=' + encodeURIComponent(npiProjectsSearch))
   if (npiProjectsFamilyFilter !== 'all') parts.push('pf=' + encodeURIComponent(npiProjectsFamilyFilter))
   if (npiProjectsStatusFilter !== 'all') parts.push('pst=' + encodeURIComponent(npiProjectsStatusFilter))
@@ -116,7 +203,7 @@ npi.dashboard.clearProjectFilters = function () {
   npiProjectsStatusFilter = 'all'
   // Update URL to clear filters
   const parts = ['s=projects']
-  if (npiTab !== 'all') parts.push('nft=' + encodeURIComponent(npiTab))
+  if (appState.npiTab !== 'all') parts.push('nft=' + encodeURIComponent(appState.npiTab))
   writeNavigationHistory('#' + parts.join('&'), { push: true })
   render()
 }
@@ -128,9 +215,60 @@ npi.dashboard.setDashTab = function (tab) {
 }
 
 // ── Auto-create projects for all products ───────────────────
+npi.dashboard._hydratedProductIds = new Set()
+
 npi.dashboard.ensureProductProjects = function () {
   const products = productsDataGetAll()
   if (!products || products.length === 0) return
+
+  const loadedByProduct = new Set(
+    (db.projects || []).filter((p) => p && p.product_id).map((p) => p.product_id)
+  )
+  const missingProductIds = products
+    .map((product) => product && product.id)
+    .filter((id) => id && !loadedByProduct.has(id) && !npi.dashboard._hydratedProductIds.has(id))
+
+  // When project paging is partial, fetch missing projects from Supabase first
+  // so cards remain accessible without creating duplicate empty projects.
+  if (
+    missingProductIds.length > 0 &&
+    typeof appState.projectsAllLoaded === 'boolean' &&
+    appState.projectsAllLoaded === false &&
+    typeof supa !== 'undefined'
+  ) {
+    if (npi.dashboard._missingProjectHydrationInFlight) return
+    npi.dashboard._missingProjectHydrationInFlight = true
+
+    const toHydrate = [...new Set(missingProductIds)]
+    toHydrate.forEach(id => npi.dashboard._hydratedProductIds.add(id))
+
+    Promise.resolve()
+      .then(async () => {
+        const { data, error } = await supa
+          .from('projects')
+          .select('id,prog_id,name,customer,unit_name,family,lead,pm,start_date,gantt_start,gantt_collapsed,sub_assembly_ids,prog_status,q_number,part_number,product_id,updated_at,updated_by')
+          .in('product_id', toHydrate)
+
+        if (error || !Array.isArray(data)) return
+
+        const known = new Set((db.projects || []).map((p) => p.id))
+        data.forEach((row) => {
+          const project = migrateprog(rowToProject(row))
+          if (known.has(project.id)) return
+          known.add(project.id)
+          db.projects.push(project)
+        })
+      })
+      .catch((err) => {
+        console.warn('[NPI] project hydration failed:', err && err.message ? err.message : err)
+      })
+      .finally(() => {
+        npi.dashboard._missingProjectHydrationInFlight = false
+        if (typeof render === 'function') render()
+      })
+
+    return
+  }
 
   let created = 0
   let updated = 0
@@ -419,7 +557,7 @@ npi.dashboard.renderProjects = function () {
   }
 
   // 3-A: "Load more" footer — only shown when more pages are available
-  if (typeof projectsAllLoaded !== 'undefined' && !projectsAllLoaded) {
+  if (typeof appState.projectsAllLoaded !== 'undefined' && !appState.projectsAllLoaded) {
     html += `<div class="npi-load-more-row">
       <button class="btn btn-ghost" onclick="loadMoreProjects()">⬇ Load more projects</button>
     </div>`
@@ -431,9 +569,7 @@ npi.dashboard.renderProjects = function () {
 
 // ── Slim card for a product + its linked project ────────────
 npi.dashboard.renderNpiSlimCard = function (product, project) {
-  const isFavourite = typeof hubIsProductFavourite === 'function'
-    ? hubIsProductFavourite(product.id)
-    : false
+  const isFavourite = npi.dashboard.isProductFavourite(product.id)
   let pipsHtml = ''
   let gateScopeBadge = ''
   if (project) {
@@ -492,7 +628,7 @@ npi.dashboard.renderNpiSlimCard = function (product, project) {
       type="button"
       title="${isFavourite ? 'Remove from favourites' : 'Add to favourites'}"
       data-product-id="${esc(product.id || '')}"
-      onclick="npi.nav.stopEvent(event);hubToggleProductFavourite(this.dataset.productId, event)">
+      onclick="npi.nav.stopEvent(event);npi.dashboard.toggleProductFavourite(this.dataset.productId, event)">
       ${isFavourite ? '★' : '☆'}
     </button>
     <div class="npi-slim-card-name">${esc(product.name)}</div>
@@ -733,10 +869,8 @@ npi.dashboard.renderDashboard = function () {
     typeof findFamilyRecord === 'function' ? findFamilyRecord(p.family || 'Other') : null
   const famIcon = familyInfo?.icon || '📋'
   const famLabel = familyInfo?.label || familyInfo?.name || p.family || 'Other'
-  const linkedProduct =
-    p.product_id && productsState
-      ? productsState.products.find((pr) => pr.id === p.product_id)
-      : null
+  const allProducts = productsDataGetAll() || []
+  const linkedProduct = p.product_id ? allProducts.find((pr) => pr.id === p.product_id) : null
   const linkedPartNumber = linkedProduct?.part_number || p.partNumber || ''
   const linkedScope = linkedProduct ? linkedProduct.scope || 'overhaul' : null
   const scopeDisplayIcons = { overhaul: '🔄', repair: '🔧', assembly: '🔩' }
@@ -747,7 +881,7 @@ npi.dashboard.renderDashboard = function () {
   const liveUpdateBadge =
     typeof npiRealtimeIndicatorHTML === 'function' ? npiRealtimeIndicatorHTML() : ''
   // Task 2-A: presence badges — other users viewing this project
-  const presenceUsers = typeof getPresenceForProg === 'function' ? getPresenceForProg(progId) : []
+  const presenceUsers = typeof getPresenceForProg === 'function' ? getPresenceForProg(appState.progId) : []
   const presenceBadgesHTML =
     presenceUsers.length > 0
       ? presenceUsers
@@ -930,7 +1064,11 @@ npi.dashboard.renderDashboard = function () {
 
 // ── Project CRUD ──────────────────────────────────────────────
 npi.dashboard.openProject = function (id) {
-  progId = id
+  if (npi && npi.nav && typeof npi.nav.openProjectById === 'function') {
+    npi.nav.openProjectById(id)
+    return
+  }
+  appState.progId = id
   navigate('project')
 }
 npi.dashboard.openProjectOrRender = function (id) {
@@ -947,11 +1085,7 @@ npi.dashboard.openGateScopeEditor = function () {
   if (typeof tenderGateScopeState === 'object' && tenderGateScopeState) {
     tenderGateScopeState.projectId = p.id
   }
-  if (typeof window.openTenderGateSelectionModal === 'function') {
-    window.openTenderGateSelectionModal(p.product_id || null)
-    return
-  }
-  showToast('Gate scope editor is not available yet. Please refresh and try again.', 'warning')
+  openTenderGateSelectionModal(p.product_id || null)
 }
 
 npi.dashboard.newProjectInFamily = function (famId) {
@@ -1007,7 +1141,7 @@ npi.dashboard.createProg = function () {
       if (!parent.subAssemblies.find((x) => x.id === id)) parent.subAssemblies.push({ id })
     }
   }
-  progId = id
+  appState.progId = id
   save()
   closeModal('modalNewProj')
   navigate('project')
@@ -1051,7 +1185,7 @@ npi.dashboard.deleteProject = async function () {
   const p = prog()
   if (!p) return
   if (!confirm(`Permanently delete "${p.name}"? This cannot be undone.`)) return
-  const deletedId = progId
+  const deletedId = appState.progId
   // Remove from Supabase first; abort the local delete if it fails.
   if (typeof supa !== 'undefined') {
     const { error } = await supa.from('projects').delete().eq('prog_id', deletedId)
@@ -1068,9 +1202,8 @@ npi.dashboard.deleteProject = async function () {
     }
   }
   db.projects = db.projects.filter((x) => x.id !== deletedId)
-  progId = db.projects.length ? db.projects[0].id : null
+  appState.progId = db.projects.length ? db.projects[0].id : null
   // Save any remaining dirty projects but do not mark the deleted one.
-  if (dirtyProjects.has(deletedId)) dirtyProjects.delete(deletedId)
   if (db.projects.length > 0) save()
   closeModal('modalEditProj')
   navigate('projects')
@@ -1180,7 +1313,7 @@ npi.dashboard.linkSubAsm = function (id) {
 
   if (!p.subAssemblies) p.subAssemblies = []
   if (!p.subAssemblies.find((x) => x.id === id)) p.subAssemblies.push({ id })
-  child.parentId = progId
+  child.parentId = appState.progId
   child.gates = []
 
   npi.dashboard.ensureSubAsmKit(child)
@@ -1225,8 +1358,6 @@ npi.dashboard.deleteSubAsm = async function (li) {
 
   p.subAssemblies.splice(li, 1)
   db.projects = db.projects.filter((x) => x.id !== child.id)
-  if (dirtyProjects.has(child.id)) dirtyProjects.delete(child.id)
-
   save()
   render()
   showToast(`Sub-assembly "${child.name}" deleted.`, 'success')
@@ -1240,3 +1371,8 @@ npi.dashboard.closeSubAsmModal = function () {
   const el = document.getElementById('subAsmModalBg')
   if (el) el.remove()
 }
+
+export const renderDashboard = npi.dashboard.renderDashboard
+export const renderProjects = npi.dashboard.renderProjects
+export const openGateScopeEditor = npi.dashboard.openGateScopeEditor
+export const ensureProductProjects = npi.dashboard.ensureProductProjects

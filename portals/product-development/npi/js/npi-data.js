@@ -3,21 +3,59 @@
 // Depends on: state.js, npi.js, npi-data-relational.js
 // ═══════════════════════════════════
 
-npi.data = npi.data || {}
+import { prog, appState, currentUserRole } from '../../../../core/js/state.js'
+import { currentUser } from '../../../../core/js/supa.js'
+import { save } from '../../../../core/js/db.js'
+import { calcRPN, hasPermission, showToast } from '../../../../utils/js/helpers.js'
+import { GANTT_WEEKS } from './npi-constants.js'
+import { npi } from './npi-shared.js'
+import {
+  npiRelSaveCTQ,
+  npiRelDeleteCTQ,
+  npiRelSavePFDStep,
+  npiRelDeletePFDStep,
+  npiRelSavePFMEAMode,
+  npiRelSavePFMEAEffect,
+  npiRelSavePFMEACause,
+  npiRelSavePFMEAHistory,
+  npiRelDeletePFMEAMode,
+  npiRelDeletePFMEAEffect,
+  npiRelDeletePFMEACause,
+  npiRelSaveCP,
+  npiRelDeleteCP,
+  npiRelSaveBOMItem,
+  npiRelDeleteBOMItem,
+  npiRelSaveBomTreeNode,
+  npiRelDeleteBomTreeNode,
+  npiRelSaveBomGroup,
+  npiRelDeleteBomGroup,
+  npiRelSaveAction,
+  npiRelDeleteAction,
+  npiRelSaveRisk,
+  npiRelDeleteRisk,
+  npiRelSaveGate,
+  npiRelSaveGateSig,
+  npiRelSaveGanttRow,
+  npiRelDeleteGanttRow,
+  npiRelSaveDoc,
+  npiRelDeleteDoc
+} from './npi-data-relational.js'
 
-npi.data.calcCauseRpn = function(sev, occ, det) {
+export const npiData = {}
+
+npiData.calcCauseRpn = function(sev, occ, det) {
   if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })
   return (sev || 1) * (occ || 1) * (det || 1)
 }
 
-npi.data.prog = function() { return prog() }
+npiData.prog = function() { return prog() }
 
-npi.data.pfdType = {
+npiData.pfdType = {
   isHeader(type) {
     return type === 'header' || type === 'group'
   },
   isExecutable(type) {
-    return !npi.data.pfdType.isHeader(type)
+    return !npiData.pfdType.isHeader(type)
   },
   isDecision(type) {
     return type === 'Decision'
@@ -30,7 +68,7 @@ npi.data.pfdType = {
   },
   normalize(type) {
     const known = ['Process', 'Decision', 'Inspection', 'Rework', 'Transport']
-    return known.includes(type) ? type : npi.data.pfdType.Process
+    return known.includes(type) ? type : npiData.pfdType.Process
   },
   Process: 'Process',
   Decision: 'Decision',
@@ -39,21 +77,21 @@ npi.data.pfdType = {
   Transport: 'Transport'
 }
 
-npi.data.normalizePfdLink = function(value) {
+npiData.normalizePfdLink = function(value) {
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
-npi.data.firstExecutableStep = function(pfd) {
+npiData.firstExecutableStep = function(pfd) {
   return [...(pfd || [])]
-    .filter(s => npi.data.pfdType.isExecutable(s.type))
+    .filter(s => npiData.pfdType.isExecutable(s.type))
     .sort((a, b) => a.stepNum - b.stepNum)[0] || null
 }
 
-npi.data.sortedPfd = function(pfd) {
+npiData.sortedPfd = function(pfd) {
   const rows = [...(pfd || [])]
   const executable = rows
-    .filter(s => npi.data.pfdType.isExecutable(s.type))
+    .filter(s => npiData.pfdType.isExecutable(s.type))
     .sort((a, b) => a.stepNum - b.stepNum)
 
   const headersByBeforeAnchor = new Map()
@@ -61,7 +99,7 @@ npi.data.sortedPfd = function(pfd) {
   const orphans = []
 
   rows.forEach((step, sourceIndex) => {
-    if (!npi.data.pfdType.isHeader(step.type)) return
+    if (!npiData.pfdType.isHeader(step.type)) return
     const bucket = step.beforeStepId
       ? (headersByBeforeAnchor.get(step.beforeStepId) || [])
       : step.afterStepId
@@ -94,21 +132,21 @@ npi.data.sortedPfd = function(pfd) {
 
   return sorted
 }
-npi.data.nextMainStepNum = function(pfd) {
+npiData.nextMainStepNum = function(pfd) {
   const tens = (pfd || [])
-    .filter(s => npi.data.pfdType.isExecutable(s.type))
+    .filter(s => npiData.pfdType.isExecutable(s.type))
     .filter(s => Number.isFinite(s.stepNum) && s.stepNum % 10 === 0)
     .map(s => s.stepNum)
   return tens.length ? Math.max(...tens) + 10 : 10
 }
-npi.data.stepNumConflict = function(pfd, num, opts) {
+npiData.stepNumConflict = function(pfd, num, opts) {
   const includeHeaders = !!(opts && opts.includeHeaders)
   return (pfd || []).some(s => {
-    if (!includeHeaders && !npi.data.pfdType.isExecutable(s.type)) return false
+    if (!includeHeaders && !npiData.pfdType.isExecutable(s.type)) return false
     return s.stepNum === num
   })
 }
-npi.data.ganttNewRow = function(section) {
+npiData.ganttNewRow = function(section) {
   return {
     id: crypto.randomUUID(),
     task: '', section: section || 's1', role: 'ME',
@@ -118,7 +156,7 @@ npi.data.ganttNewRow = function(section) {
   }
 }
 
-npi.data.ctq = {
+npiData.ctq = {
   add() {
     const item = { id: crypto.randomUUID(), req: '', spec: '', testMethod: '', source: 'Customer Spec', oos_action: 'TBD', customerAgreed: false }
     prog().ctq.push(item)
@@ -145,14 +183,14 @@ npi.data.ctq = {
   }
 }
 
-npi.data.pfd = {
+npiData.pfd = {
   ensureLeadingHeader(notify = false) {
     const p = prog()
-    const firstExecutable = npi.data.firstExecutableStep(p.pfd)
+    const firstExecutable = npiData.firstExecutableStep(p.pfd)
     if (!firstExecutable) return null
 
     const existing = p.pfd.find(step =>
-      npi.data.pfdType.isHeader(step.type) && step.beforeStepId === firstExecutable.id
+      npiData.pfdType.isHeader(step.type) && step.beforeStepId === firstExecutable.id
     )
     if (existing) return existing
 
@@ -179,17 +217,17 @@ npi.data.pfd = {
   },
   addMainStep() {
     const p = prog()
-    const hadExecutable = p.pfd.some(s => npi.data.pfdType.isExecutable(s.type))
-    const step = { id: crypto.randomUUID(), stepNum: npi.data.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [], pfd_type: npi.data.pfdType.Process, nextStepId: null, nextStepId_yes: null, nextStepId_no: null }
+    const hadExecutable = p.pfd.some(s => npiData.pfdType.isExecutable(s.type))
+    const step = { id: crypto.randomUUID(), stepNum: npiData.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [], pfd_type: npiData.pfdType.Process, nextStepId: null, nextStepId_yes: null, nextStepId_no: null }
     p.pfd.push(step)
-    if (!hadExecutable) npi.data.pfd.ensureLeadingHeader()
+    if (!hadExecutable) npiData.pfd.ensureLeadingHeader()
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
     npi.notify('render')
     return step
   },
   addSectionHeaderAfter(afterStepId) {
     const p = prog()
-    const anchor = p.pfd.find(s => s.id === afterStepId && npi.data.pfdType.isExecutable(s.type))
+    const anchor = p.pfd.find(s => s.id === afterStepId && npiData.pfdType.isExecutable(s.type))
     if (!anchor) return { ok: false, error: 'Choose a process step first' }
 
     const step = {
@@ -215,15 +253,15 @@ npi.data.pfd = {
   insertStep(num, type) {
     const p = prog()
     const nextType = type || 'step'
-    const isHeader = npi.data.pfdType.isHeader(nextType)
+    const isHeader = npiData.pfdType.isHeader(nextType)
 
     let nextNum = Number(num)
     if (!Number.isFinite(nextNum) || nextNum < 1) {
       if (!isHeader) return { ok: false, error: 'Enter valid number' }
-      nextNum = npi.data.nextMainStepNum(p.pfd)
+      nextNum = npiData.nextMainStepNum(p.pfd)
     }
 
-    if (npi.data.stepNumConflict(p.pfd, nextNum, { includeHeaders: false })) {
+    if (npiData.stepNumConflict(p.pfd, nextNum, { includeHeaders: false })) {
       return { ok: false, error: `Step ${nextNum} exists` }
     }
 
@@ -236,7 +274,7 @@ npi.data.pfd = {
       ctqIds: [],
       bomRefs: [],
       docRefs: [],
-      pfd_type: npi.data.pfdType.Process,
+      pfd_type: npiData.pfdType.Process,
       nextStepId: null,
       nextStepId_yes: null,
       nextStepId_no: null
@@ -251,20 +289,20 @@ npi.data.pfd = {
     const i = p.pfd.findIndex(s => s.id === sid)
     if (i < 0) return
     const step = p.pfd[i]
-    collapsedGroups.delete(sid)
-    if (npi.data.pfdType.isExecutable(step.type)) {
+    appState.collapsedGroups.delete(sid)
+    if (npiData.pfdType.isExecutable(step.type)) {
       const remainingExecutable = p.pfd
-        .filter(s => s.id !== sid && npi.data.pfdType.isExecutable(s.type))
+        .filter(s => s.id !== sid && npiData.pfdType.isExecutable(s.type))
         .sort((a, b) => a.stepNum - b.stepNum)
 
       p.pfd
-        .filter(s => npi.data.pfdType.isHeader(s.type) && s.beforeStepId === sid)
+        .filter(s => npiData.pfdType.isHeader(s.type) && s.beforeStepId === sid)
         .forEach(header => {
           if (remainingExecutable.length > 0) {
             header.beforeStepId = remainingExecutable[0].id
             Promise.resolve().then(() => npiRelSavePFDStep(header)).catch(err => console.error('[NPI] save PFD step failed:', err))
           } else {
-            collapsedGroups.delete(header.id)
+            appState.collapsedGroups.delete(header.id)
             p.pfd = p.pfd.filter(item => item.id !== header.id)
             Promise.resolve().then(() => npiRelDeletePFDStep(header.id)).catch(err => console.error('[NPI] delete PFD step failed:', err))
           }
@@ -280,14 +318,14 @@ npi.data.pfd = {
     if (!s) return
 
     if (f === 'pfd_type') {
-      s.pfd_type = npi.data.pfdType.normalize(v)
-      if (npi.data.pfdType.isTwoPath(s.pfd_type)) s.nextStepId = null
+      s.pfd_type = npiData.pfdType.normalize(v)
+      if (npiData.pfdType.isTwoPath(s.pfd_type)) s.nextStepId = null
       else {
         s.nextStepId_yes = null
         s.nextStepId_no = null
       }
     } else if (f === 'nextStepId' || f === 'nextStepId_yes' || f === 'nextStepId_no') {
-      s[f] = npi.data.normalizePfdLink(v)
+      s[f] = npiData.normalizePfdLink(v)
     } else {
       s[f] = v
     }
@@ -343,7 +381,7 @@ npi.data.pfd = {
   }
 }
 
-npi.data.cp = {
+npiData.cp = {
   syncFromPFMEA() {
     const p = prog()
     const ex = new Set(p.cp.map(r => r.pfmeaCauseId || r.pfmeaEffectId || r.pfmeaId))
@@ -394,7 +432,7 @@ npi.data.cp = {
   }
 }
 
-npi.data.bom = {
+npiData.bom = {
   addRow(type) {
     const p = prog()
     if (!p.bom[type]) return null
@@ -569,7 +607,7 @@ npi.data.bom = {
   }
 }
 
-npi.data.tracker = {
+npiData.tracker = {
   addAction() {
     const item = { id: crypto.randomUUID(), desc: '', owner: '', due: '', status: 'Open', priority: 'Medium', source: 'General', notes: '', subAsm: '' }
     prog().actions.push(item)
@@ -616,7 +654,7 @@ npi.data.tracker = {
   }
 }
 
-npi.data.gate = {
+npiData.gate = {
   rolePermissionKey(role) {
     const roleLabel = String(role || '').trim().toLowerCase()
     const ROLE_PERMISSION_MAP = {
@@ -650,7 +688,7 @@ npi.data.gate = {
     }
 
     // Fall back to team permission check
-    const permissionKey = npi.data.gate.rolePermissionKey(role)
+    const permissionKey = npiData.gate.rolePermissionKey(role)
     if (!permissionKey) return true
     if (typeof hasPermission === 'function') return hasPermission(permissionKey)
     return (typeof currentUserRole !== 'undefined') && (currentUserRole === 'admin' || currentUserRole === 'editor')
@@ -660,7 +698,7 @@ npi.data.gate = {
     const gate = p && p.gates ? p.gates[gi] : null
     const sig = gate && gate.sigs ? gate.sigs[si] : null
     if (!sig) return false
-    return npi.data.gate.canCurrentUserSignRole(sig.role)
+    return npiData.gate.canCurrentUserSignRole(sig.role)
   },
   unauthorizedMessage(role) {
     const roleLabel = String(role || 'this role').trim()
@@ -675,8 +713,8 @@ npi.data.gate = {
     const p = prog()
     const sig = p && p.gates && p.gates[gi] && p.gates[gi].sigs ? p.gates[gi].sigs[si] : null
     if (!sig) return false
-    if (!npi.data.gate.canCurrentUserEditSig(gi, si)) {
-      if (typeof showToast === 'function') showToast(npi.data.gate.unauthorizedMessage(sig.role), 'error')
+    if (!npiData.gate.canCurrentUserEditSig(gi, si)) {
+      if (typeof showToast === 'function') showToast(npiData.gate.unauthorizedMessage(sig.role), 'error')
       return false
     }
     sig[f] = v
@@ -687,8 +725,8 @@ npi.data.gate = {
     const p = prog()
     const sig = p && p.gates && p.gates[gi] && p.gates[gi].sigs ? p.gates[gi].sigs[si] : null
     if (!sig) return false
-    if (!npi.data.gate.canCurrentUserEditSig(gi, si)) {
-      if (typeof showToast === 'function') showToast(npi.data.gate.unauthorizedMessage(sig.role), 'error')
+    if (!npiData.gate.canCurrentUserEditSig(gi, si)) {
+      if (typeof showToast === 'function') showToast(npiData.gate.unauthorizedMessage(sig.role), 'error')
       return false
     }
     sig.signed = true
@@ -701,8 +739,8 @@ npi.data.gate = {
     const p = prog()
     const sig = p && p.gates && p.gates[gi] && p.gates[gi].sigs ? p.gates[gi].sigs[si] : null
     if (!sig) return false
-    if (!npi.data.gate.canCurrentUserEditSig(gi, si)) {
-      if (typeof showToast === 'function') showToast(npi.data.gate.unauthorizedMessage(sig.role), 'error')
+    if (!npiData.gate.canCurrentUserEditSig(gi, si)) {
+      if (typeof showToast === 'function') showToast(npiData.gate.unauthorizedMessage(sig.role), 'error')
       return false
     }
     sig.signed = false
@@ -712,7 +750,7 @@ npi.data.gate = {
   }
 }
 
-npi.data.timing = {
+npiData.timing = {
   togglePlan(id, wi) {
     const p = prog(); const row = p.gantt.find(r => r.id === id); if (!row) return
     if (!row.planned || row.planned.length < GANTT_WEEKS) row.planned = Array(GANTT_WEEKS).fill(0).map((_, i) => (row.planned || [])[i] || 0)
@@ -729,7 +767,7 @@ npi.data.timing = {
   },
   addRow(section) {
     const p = prog(); if (!p.gantt) p.gantt = []
-    const row = npi.data.ganttNewRow(section)
+    const row = npiData.ganttNewRow(section)
     p.gantt.push(row)
     Promise.resolve().then(() => npiRelSaveGanttRow(row)).catch(err => console.error('[NPI] save gantt row failed:', err))
     npi.notify('render')
@@ -775,7 +813,7 @@ npi.data.timing = {
   }
 }
 
-npi.data.pfmea = {
+npiData.pfmea = {
   addMode(pfdId) {
     const ca = { id: crypto.randomUUID(), cause: '', occ: 1, det: 1, prevent: '', detect: '', action: { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }, history: [] }
     const ef = { id: crypto.randomUUID(), effect: '', sev: 1, specialChar: null, causes: [ca] }
@@ -848,10 +886,10 @@ npi.data.pfmea = {
     const mode = p.pfmea[mi]; const ef = mode.effects[ei]; const ca = ef.causes[ci]
     const act = ca.action || {}
     if (!act.desc && !act.newOcc && !act.newDet) return { ok: false, error: 'missing-action' }
-    const oldRpn = npi.data.calcCauseRpn(ef.sev, ca.occ, ca.det)
+    const oldRpn = npiData.calcCauseRpn(ef.sev, ca.occ, ca.det)
     const newOcc = act.newOcc ? +act.newOcc : ca.occ
     const newDet = act.newDet ? +act.newDet : ca.det
-    const newRpn = npi.data.calcCauseRpn(ef.sev, newOcc, newDet)
+    const newRpn = npiData.calcCauseRpn(ef.sev, newOcc, newDet)
     if (!ca.history) ca.history = []
     const histEntry = {
       rpn: oldRpn,
@@ -878,7 +916,7 @@ npi.data.pfmea = {
   }
 }
 
-npi.data.docs = {
+npiData.docs = {
   add() {
     const item = { id: crypto.randomUUID(), docNumber: '', title: '', type: 'Other', issue: '', owner: '', status: 'Draft', notes: '' }
     const p = prog()
@@ -903,3 +941,5 @@ npi.data.docs = {
     npi.notify('render')
   }
 }
+
+npi.data = npiData

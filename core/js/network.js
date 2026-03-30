@@ -4,6 +4,8 @@
 // Depends on: db.js (supa), bottombar element
 // ═══════════════════════════════════════════════════════════════
 
+import { supabase } from './supa.js';
+
 let isSupabaseHealthy = true;
 let networkCheckInterval = null;
 
@@ -12,7 +14,7 @@ let networkCheckInterval = null;
  */
 async function checkSupabaseHealth() {
   try {
-    const { error } = await supa
+    const { error } = await supabase
       .from('teams')
       .select('id', { count: 'exact' })
       .limit(1);
@@ -48,7 +50,7 @@ function updateNetworkStatus() {
   }
 
   // Online: Everything good
-  el.className = 'bottombar-status';
+  el.className = 'bottombar-status online';
   el.textContent = '📡 online';
   el.title = 'Connected to Supabase';
 }
@@ -56,15 +58,13 @@ function updateNetworkStatus() {
 /**
  * Start network detection: browser API + periodic Supabase health checks
  */
-function setupNetworkDetection() {
+export function setupNetworkDetection() {
   // Initial status check
   updateNetworkStatus();
 
   // Browser online/offline events (instant feedback)
   window.addEventListener('online', () => {
-    isSupabaseHealthy = true;
-    updateNetworkStatus();
-    // Immediately check Supabase when coming back online
+    // Don't optimistically set healthy - actually check Supabase first
     checkSupabaseHealth();
   });
 

@@ -1,30 +1,42 @@
 // Capacity Management Portal Hub
 // Entry point for capacity management module
 
-let capacityPortalDelegationContainer = null;
+import { appState } from '../../../core/js/state.js'
+import { canViewPortalTab } from '../../../utils/js/helpers.js'
+import { showGuide } from '../../../utils/js/guide.js'
+import { navigate, render, writeNavigationHistory, updateBackButton } from '../../../utils/js/navigation.js'
+import { hubIsPageFavourite, hubTogglePageFavourite } from '../../hub/js/hub.js'
+import { renderMeCapacity } from '../me/js/me-capacity.js'
+import { renderPmCapacity } from '../project-management/js/pm-capacity.js'
+import { renderLogCapacity } from '../logistics/js/log-capacity.js'
+import { renderUnit6Capacity } from '../unit6/js/unit6-capacity.js'
+import { renderProdCapacity } from '../production/js/prod-capacity.js'
+import { injectCapacityModals } from './modals.js'
+import { setupCapacityEvents } from './capacity-events.js'
 
-function setCapacityTab(tab) {
-  if (tab !== 'root' && typeof canViewPortalTab === 'function' && !canViewPortalTab('capacity', tab)) {
-    return;
-  }
+let capacityPortalDelegationContainer = null
+let _capPortalClickHandler = null
 
-  const prevTab = capacityTab;
-  capacityTab = tab;
-  const parts = ['s=capacity'];
-  if (tab !== 'root') parts.push('ct=' + encodeURIComponent(tab));
-  const hash = '#' + parts.join('&');
-  if (typeof writeNavigationHistory === 'function') {
-    writeNavigationHistory(hash, { push: prevTab !== tab });
-  } else {
-    history.replaceState(null, '', hash);
-  }
-  render();
+function isCapacityPageFavourite(pageKey) {
+  return hubIsPageFavourite(pageKey)
+}
+
+export function setCapacityTab(tab) {
+  if (tab !== 'root' && !canViewPortalTab('capacity', tab)) return
+
+  const prevTab = appState.capacityTab
+  appState.capacityTab = tab
+
+  const parts = ['s=capacity']
+  if (tab !== 'root') parts.push('ct=' + encodeURIComponent(tab))
+  writeNavigationHistory('#' + parts.join('&'), { push: prevTab !== tab })
+
+  render()
+  updateBackButton()
 }
 
 function capacityNavBar() {
-  if (capacityTab === 'logistics' || capacityTab === 'unit6') {
-    return '';
-  }
+  if (appState.capacityTab === 'logistics' || appState.capacityTab === 'unit6') return ''
 
   const tabs = [
     { key: 'production', icon: '🚂', label: 'Production' },
@@ -32,31 +44,37 @@ function capacityNavBar() {
     { key: 'projects', icon: '📅', label: 'Projects' },
     { key: 'logistics', icon: '🚚', label: 'Logistics' },
     { key: 'unit6', icon: '🏭', label: 'Unit 6' }
-  ].filter((tab) => typeof canViewPortalTab !== 'function' || canViewPortalTab('capacity', tab.key));
+  ].filter(tab => canViewPortalTab('capacity', tab.key))
 
-  const buttons = tabs
-    .map((tab) => `<button class="prod-nav-item ${capacityTab === tab.key ? 'active' : ''}" data-cap-action="cap-set-tab" data-tab="${tab.key}">${tab.icon} ${tab.label}</button>`)
-    .join('');
+  const buttons = tabs.map(tab => `
+    <button
+      class="prod-nav-item ${appState.capacityTab === tab.key ? 'active' : ''}"
+      data-cap-action="cap-set-tab"
+      data-tab="${tab.key}">
+      ${tab.icon} ${tab.label}
+    </button>
+  `).join('')
 
   return `
     <div class="prod-nav-bar">
       <button class="prod-nav-item prod-nav-back" data-cap-action="cap-set-tab" data-tab="root">← Back</button>
       ${buttons}
     </div>
-  `;
+  `
 }
 
 function renderCapacityHubCard(tabKey, favouriteKey, icon, title, meta) {
-  if (typeof canViewPortalTab === 'function' && !canViewPortalTab('capacity', tabKey)) return '';
+  if (!canViewPortalTab('capacity', tabKey)) return ''
 
-  const isFav = typeof hubIsPageFavourite === 'function' && hubIsPageFavourite(favouriteKey);
+  const isFav = isCapacityPageFavourite(favouriteKey)
   return `
     <div class="proj-card hub-card" data-cap-action="cap-set-tab" data-tab="${tabKey}">
       <button
         class="hub-fav-toggle${isFav ? ' is-active' : ''}"
         type="button"
         title="${isFav ? 'Remove from favourites' : 'Add to favourites'}"
-        onclick="hubTogglePageFavourite('${favouriteKey}', event)">
+        data-action="cap-toggle-favourite"
+        data-favourite-key="${favouriteKey}">
         ${isFav ? '★' : '☆'}
       </button>
       <div class="hub-card-content">
@@ -65,41 +83,44 @@ function renderCapacityHubCard(tabKey, favouriteKey, icon, title, meta) {
         <div class="proj-card-meta">${meta}</div>
       </div>
     </div>
-  `;
+  `
 }
 
-function renderCapacity() {
-  const nav = capacityNavBar();
-  if (capacityTab === 'production') {
-    setTimeout(setupCapacityPortalDelegation, 0);
-    return `<div id="capacity-portal-container">${nav}${renderProdCapacity()}</div>`;
+export function renderCapacity() {
+  injectCapacityModals()
+  setTimeout(setupCapacityEvents, 0)
+  const nav = capacityNavBar()
+
+  if (appState.capacityTab === 'production') {
+    setTimeout(setupCapacityPortalDelegation, 0)
+    return `<div id="capacity-portal-container">${nav}${renderProdCapacity()}</div>`
   }
-  if (capacityTab === 'me') {
-    setTimeout(setupCapacityPortalDelegation, 0);
-    return `<div id="capacity-portal-container">${nav}${renderMeCapacity()}</div>`;
+  if (appState.capacityTab === 'me') {
+    setTimeout(setupCapacityPortalDelegation, 0)
+    return `<div id="capacity-portal-container">${nav}${renderMeCapacity()}</div>`
   }
-  if (capacityTab === 'projects') {
-    setTimeout(setupCapacityPortalDelegation, 0);
-    return `<div id="capacity-portal-container">${nav}${pmRenderCapacity()}</div>`;
+  if (appState.capacityTab === 'projects') {
+    setTimeout(setupCapacityPortalDelegation, 0)
+    return `<div id="capacity-portal-container">${nav}${renderPmCapacity()}</div>`
   }
-  if (capacityTab === 'logistics') {
-    setTimeout(setupCapacityPortalDelegation, 0);
-    return `<div id="capacity-portal-container">${nav}${logRenderCapacity()}</div>`;
+  if (appState.capacityTab === 'logistics') {
+    setTimeout(setupCapacityPortalDelegation, 0)
+    return `<div id="capacity-portal-container">${nav}${renderLogCapacity()}</div>`
   }
-  if (capacityTab === 'unit6') {
-    setTimeout(setupCapacityPortalDelegation, 0);
-    return `<div id="capacity-portal-container">${nav}${unit6RenderCapacity()}</div>`;
+  if (appState.capacityTab === 'unit6') {
+    setTimeout(setupCapacityPortalDelegation, 0)
+    return `<div id="capacity-portal-container">${nav}${renderUnit6Capacity()}</div>`
   }
 
-  // Root hub view
-  setTimeout(setupCapacityPortalDelegation, 0);
+  setTimeout(setupCapacityPortalDelegation, 0)
   const cards = [
     renderCapacityHubCard('production', 'capacity::production', '🚂', 'Production', 'Production load capacity plan'),
     renderCapacityHubCard('me', 'capacity::me', '🧑‍🔧', 'Manufacturing Engineering', 'Manufacturing Engineering load capacity plan'),
     renderCapacityHubCard('projects', 'capacity::projects', '📅', 'Project Management', 'Project Management load capacity plan'),
     renderCapacityHubCard('logistics', 'capacity::logistics', '🚚', 'Logistics', 'Logistics load capacity plan'),
     renderCapacityHubCard('unit6', 'capacity::unit6', '🏭', 'Unit 6', 'Unit 6 load capacity plan')
-  ].filter(Boolean).join('');
+  ].filter(Boolean).join('')
+
   return `
     <div class="proj-home" id="capacity-portal-container">
       <div class="proj-home-header">
@@ -112,38 +133,53 @@ function renderCapacity() {
           <button class="btn btn-ghost" data-action="cap-nav-hub">← Back to Portal</button>
         </div>
       </div>
-
       <div class="proj-cards hub-grid">
-        ${cards || `<div class="hub-favs-empty">No capacity streams are available for your current permissions.</div>`}
+        ${cards || '<div class="hub-favs-empty">No capacity streams are available for your current permissions.</div>'}
       </div>
     </div>
-  `;
+  `
 }
 
 function setupCapacityPortalDelegation() {
-  const container = document.getElementById('capacity-portal-container');
-  if (!container || capacityPortalDelegationContainer === container) return;
+  const container = document.getElementById('capacity-portal-container')
+  if (!container || capacityPortalDelegationContainer === container) return
 
-  capacityPortalDelegationContainer = container;
+  // Extract handler so it can be removed on teardown
+  _capPortalClickHandler = event => {
+    const actionEl = event.target.closest('[data-action]')
+    if (!actionEl || !container.contains(actionEl)) return
 
-  container.addEventListener('click', (event) => {
-    const actionEl = event.target.closest('[data-action]');
-    if (!actionEl || !container.contains(actionEl)) return;
-
-    const action = actionEl.dataset.action;
+    const action = actionEl.dataset.action
     if (action === 'cap-nav-root') {
-      setCapacityTab('root');
-      return;
+      setCapacityTab('root')
+      return
     }
-
     if (action === 'cap-nav-hub') {
-      navigate('hub');
-      return;
+      navigate('hub')
+      return
     }
-
     if (action === 'show-guide') {
-      const key = actionEl.dataset.guideKey;
-      if (key && typeof showGuide === 'function') showGuide(key);
+      const key = actionEl.dataset.guideKey
+      if (key) showGuide(key)
+      return
     }
-  });
+    if (action === 'cap-toggle-favourite') {
+      event.stopPropagation()
+      const key = actionEl.dataset.favouriteKey
+      if (key) {
+        hubTogglePageFavourite(key)
+      }
+    }
+  }
+
+  capacityPortalDelegationContainer = container
+  container.addEventListener('click', _capPortalClickHandler)
+}
+
+// Remove hub-level delegation listener on navigation away
+export function teardownCapacityPortalDelegation() {
+  if (!capacityPortalDelegationContainer || !_capPortalClickHandler) return
+  capacityPortalDelegationContainer.removeEventListener('click', _capPortalClickHandler)
+  capacityPortalDelegationContainer = null
+  _capPortalClickHandler = null
 }

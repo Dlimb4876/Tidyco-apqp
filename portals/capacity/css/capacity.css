@@ -19,7 +19,7 @@
 
 .capacity-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    box-shadow: var(--card-shadow-hover);
     border-color: var(--blue);
 }
 
@@ -60,6 +60,21 @@
 
   .capacity-card .proj-card-meta {
     font-size: 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .me-subsystem-topbar {
+    justify-content: space-between;
+    padding: 18px 28px;
+  }
+
+  .me-estimation-body {
+    padding: 28px;
+  }
+
+  .me-complexity-factors {
+    max-width: 760px;
   }
 }
 

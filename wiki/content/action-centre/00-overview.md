@@ -1,39 +1,67 @@
-# Action Centre
+# Centralized Action Centre
 
-## What this area is for
-The Action Centre is the shared execution queue across projects and modules.
-It aggregates your specific commitments from NPI Projects, PFMEA, Risks, and MCS into a single view, helping you prioritize what needs action now without hunting through individual portals.
+## Overview
+The **Action Centre** is the shared place where work items are tracked and completed.
 
-## Before you start
-- Remember that the Action Centre is a *view* of data from other places. When you update an action here, it updates the source record.
-- Ensure your team is actively assigning actions to your named user account, otherwise they won't appear here.
+It combines actions from multiple areas (NPI, PFMEA, MCS, and Operations) so users can:
+- see what is due now
+- prioritize important items
+- record progress clearly
+- close work with evidence
 
-## Key components
-- **Overdue Tasks:** Items past their committed date across all projects.
-- **NPI Actions:** General project tasks created in the Action Tracker.
-- **PFMEA Mitigations:** Risk reduction actions generated from process analysis.
-- **MCS Approvals:** Pending engineering changes requiring your sign-off.
-- **Source Links:** Direct shortcuts to jump back to the original project or risk record.
+## Access
+- **Portal:** Action Centre
+- **Tab/Sub-tab:** Personal Queue / Departmental Overview
+- **URL:** `index.html?portal=action-centre`
 
-## The execution process
-1. **Triage:** Start with the "Overdue" and "High Priority" filters.
-2. **Review:** Check the context of the action using the source link if needed.
-3. **Update:** Add progress notes and change the status to "In Progress".
-4. **Resolve:** Document exactly what was done in the resolution notes before marking the action as "Done".
+## Key Fields and Controls
+| Field/Control | Description | Functional Impact |
+|:---|:---|:---|
+| **Source Module** | Origin of the action (e.g., PFMEA, MCS). | Provides technical context for the task. |
+| **Priority Level** | Categorization of urgency (High, Medium, Low). | Governs the sorting order within the queue. |
+| **Due Date** | The committed completion milestone. | Triggers 'Overdue' alerts and reporting escalations. |
+| **Status** | Current lifecycle state (Open, In Progress, Resolved). | Updates the status in the source project or module. |
 
-## Common mistakes to avoid
-- **Vague updates:** Changing status to "In Progress" without adding a note explaining what is actually happening.
-- **Ignoring source context:** Trying to complete a complex PFMEA mitigation without clicking the source link to read the actual failure mode.
-- **False closures:** Marking an item "Done" before the physical work (e.g., tooling modification) is actually complete on the floor.
+## High-level workflow
+1. Open your queue and filter to your ownership.
+2. Sort by overdue and high priority first.
+3. Open each action and review the source context.
+4. Add progress notes as work moves forward.
+5. Set final status and closure evidence when complete.
 
-## Quick example
-| Source Type | Action Description | Due Date | Status | Next Step |
-|---|---|---|---|---|
-| PFMEA (Project X) | Install automated tool interlock | 2026-04-15 | Open | Source vendor quote |
-| Gate 2 (Project Y) | Update drawing tolerance | 2026-03-30 | Overdue | Follow up with Design |
-| MCS Approval | ECR-2026-004: Alternative Seal | 2026-04-10 | Pending | Review impact assessment |
+## How to prioritize effectively
+Use this order for daily triage:
+1. **Overdue actions**
+2. **High-priority actions**
+3. **Actions linked to high-severity risk**
+4. **Approvals blocking other work**
+
+## Calculations and metrics (detailed)
+These are common management calculations used with Action Centre data.
+
+### Overdue rate
+```text
+Overdue Rate % = (Overdue Actions / Total Open Actions) × 100
+```
+
+### Closure rate
+```text
+Closure Rate % = (Actions Closed in Period / Actions Created in Period) × 100
+```
+
+Interpretation:
+- **100%+**: team is reducing backlog
+- **Below 100%**: backlog is likely growing
+
+## Common Issues and Resolutions
+| Issue | Potential Cause | Remediation |
+|:---|:---|:---|
+| **Missing Actions** | Incorrect user assignment in the source module. | Verify account assignment in the original project or MCS record. |
+| **Stale Task Data** | Failure to update status after task completion. | Perform a weekly triage review to close completed actions. |
+| **Ambiguous Context** | Insufficient detail in the 'Action Description'. | Utilize the 'Source Link' to review the full technical requirements. |
 
 ## Related
-- [Operations Actions Tab](../operations/50-actions-tab.md)
-- [MCS Overview](../mcs/00-overview.md)
-- [Product Development Actions](../product-development/70-actions.md)
+- [Operations Performance Dashboard](../operations/00-overview.md)
+- [Manufacturing Change System (MCS)](../mcs/00-overview.md)
+- [NPI Project Management](../product-development/10-npi-projects.md)
+- [PFMEA Risk Management](../product-development/50-pfmea.md)
