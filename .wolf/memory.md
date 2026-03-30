@@ -16,6 +16,7 @@
 - Resolved failing Jest run by stabilizing brittle assertions in `tests/guide.test.js`, `tests/action-centre.test.js`, and `tests/state.test.js`, plus fixing BOM test bootstrap/fixture shape in `tests/bom.test.js`; validated with `npm test` (69/69 suites, 936/936 tests) and `npm run check:all` (exit 0).
 - Reviewed all guide modal mappings against live portal guide triggers, then fixed relevance gaps by wiring missing Logistics/Unit 6 guide buttons and updating stale Operations People + PM section guide copy in `utils/js/guide.js`; changelog updated.
 ## 2026-03-29
+| 11:10 | Added searchable Capacity task product picker for large product lists | portals/capacity/shared/js/cap-tasks.js, portals/capacity/js/capacity-events.js, portals/capacity/shared/css/cap-tables.css, utils/js/guide.js, tests/me-tasks-sort.test.js, CHANGELOG.md | Implemented and validated with npm test; check:all still has pre-existing import guardrail failures unrelated to this task | ~1700 |
 - | 20:44 | Added a visual legend to the shared Capacity holiday planner and updated guide/tests | portals/capacity/shared/js/cap-holidays.js, portals/capacity/shared/css/cap-holidays.css, utils/js/guide.js, tests/me-holidays.test.js, CHANGELOG.md | Focused Jest passed; repo-wide checks still show pre-existing failures | ~1200 |
 - Executed ESM Phase 8 final wiring: switched `index.html` to importmap + single `core/js/main.js` module entry, finalized `app.js`/`navigation.js` explicit imports for critical wiring paths, preserved inline-handler compatibility bridges in `main.js`, and updated Part1/Part2 tracker rows + Phase 8 checklist with deferred (`pwsh`/CLI-only) validation notes.
 - Executed ESM Phase 9 cleanup/doc finalization: removed retired `check:load-order` from active pipeline (deleted `scripts/load-order-checker.js`), updated `package.json` `check:all` to `check:syntax -> check:imports -> check:esm-coverage -> check:rls -> check:mobile -> check:modals -> check:coverage`, and marked Part1/Part2 row 9 + Phase 9 checklist complete with explicit deferred (`pwsh`/CLI-only) gate notes and merged-marker policy.
@@ -1386,3 +1387,106 @@
 | 10:12 | Refreshed 4 more wiki pages (Action Centre, MCS, Operations) | wiki/content/action-centre/00-overview.md, wiki/content/mcs/00-overview.md, wiki/content/mcs/30-approval-workflow.md, wiki/content/operations/00-overview.md, CHANGELOG.md | Added high-level workflows and detailed calculations/metrics sections for practical use | ~4300 |
 | 10:14 | Refreshed 4 Product Development deep pages | wiki/content/product-development/10-npi-projects.md, wiki/content/product-development/60-control-plan.md, wiki/content/product-development/70-actions.md, wiki/content/product-development/80-risks.md, CHANGELOG.md | Added practical high-level workflows and explicit calculation/monitoring guidance | ~3900 |
 | 11:23 | Created ../../../.claude/plans/sequential-bouncing-beaver.md | — | ~4173 |
+| 11:37 | Session end: 1 writes across 1 files (sequential-bouncing-beaver.md) | 76 reads | ~23669 tok |
+| 11:42 | Created tests/state.test.js | — | ~1780 |
+| 11:43 | Created tests/chart-theme.test.js | — | ~814 |
+| 11:43 | Created tests/bank-holidays.test.js | — | ~567 |
+| 11:43 | Edited tests/bank-holidays.test.js | 5→6 lines | ~73 |
+| 11:43 | Created tests/feedback-constants.test.js | — | ~743 |
+| 11:44 | Created tests/me-calculations.test.js | — | ~1995 |
+| 11:44 | Created tests/permissions-helpers.test.js | — | ~948 |
+| 11:44 | Edited tests/me-calculations.test.js | removed 55 lines | ~99 |
+| 11:45 | Created tests/permissions-helpers.test.js | — | ~435 |
+| 11:45 | Edited tests/me-calculations.test.js | 14→14 lines | ~138 |
+| 11:45 | Edited tests/me-calculations.test.js | 16→13 lines | ~132 |
+| 11:46 | Created tests/operations-forecast-data.test.js | — | ~376 |
+| 11:46 | Created tests/operations-infographic.test.js | — | ~435 |
+| 11:46 | Created tests/timing-core.test.js | — | ~966 |
+| 11:46 | Created tests/mcs-approval.test.js | — | ~528 |
+| 11:46 | Created tests/mcs-modal-shared.test.js | — | ~654 |
+- | 10:59 | Completed wiki gap closure (excluding test-tooling fixes per user request): added missing nav topics, created detail pages for thin areas, expanded short process docs, and regenerated wiki search metadata | wiki/content/_meta/areas.json, wiki/content/_meta/search-index.json, wiki/content/settings/10-permissions-and-teams.md, wiki/content/action-centre/10-daily-triage-and-ownership.md, wiki/content/mcs/10-raising-change-requests.md, wiki/content/learning-process/*.md, wiki/content/capacity/50-unit6-capacity.md, wiki/content/product-management/00-overview.md, CHANGELOG.md | Coverage/depth gaps closed and topic orphans removed; validation-script fixes intentionally excluded | ~1800 |
+| 11:47 | Created tests/mcs-overhaul-integration.test.js | — | ~503 |
+| 11:47 | Created tests/npi-pfd-flowchart.test.js | — | ~207 |
+| 11:47 | Created tests/npi-pfd-headers.test.js | — | ~245 |
+| 11:47 | Created tests/npi-gate-permissions.test.js | — | ~429 |
+| 11:47 | Created tests/npi-navigation-open-project.test.js | — | ~448 |
+| 11:47 | Created tests/timing-core.test.js | — | ~434 |
+| 11:48 | Edited tests/npi-pfd-headers.test.js | startsWith() → toBeGreaterThan() | ~56 |
+| 11:48 | Session end: 24 writes across 17 files (sequential-bouncing-beaver.md, state.test.js, chart-theme.test.js, bank-holidays.test.js, feedback-constants.test.js) | 76 reads | ~36674 tok |
+| 11:54 | Created tests/auth.test.js | — | ~513 |
+| 11:54 | Created tests/db.test.js | — | ~448 |
+| 11:55 | Created tests/db-gaps.test.js | — | ~489 |
+| 11:55 | Created tests/realtime.test.js | — | ~464 |
+| 11:55 | Created tests/feedback-data.test.js | — | ~403 |
+| 11:55 | Created tests/families-data-core.test.js | — | ~483 |
+| 11:55 | Created tests/me-data-relational-queries.test.js | — | ~447 |
+| 11:55 | Created tests/log-data-relational.test.js | — | ~236 |
+| 11:55 | Created tests/pm-data-relational.test.js | — | ~236 |
+| 11:56 | Created tests/unit6-data-relational.test.js | — | ~239 |
+| 11:56 | Created tests/work-areas-data.test.js | — | ~375 |
+| 11:56 | Created tests/prod-capacity-data.test.js | — | ~366 |
+| 11:56 | Created tests/npi-data-relational.test.js | — | ~428 |
+| 11:56 | Created tests/mcs-approval-core.test.js | — | ~324 |
+| 11:56 | Created tests/production-data.test.js | — | ~397 |
+| 11:57 | Edited tests/prod-capacity-data.test.js | expanded (+9 lines) | ~113 |
+| 11:57 | Edited tests/npi-data-relational.test.js | expanded (+10 lines) | ~158 |
+| 11:57 | Created tests/families-data-core.test.js | — | ~508 |
+| 11:57 | Created tests/me-data-relational-queries.test.js | — | ~410 |
+| 11:57 | Created tests/log-data-relational.test.js | — | ~276 |
+| 11:57 | Created tests/pm-data-relational.test.js | — | ~276 |
+| 11:58 | Created tests/unit6-data-relational.test.js | — | ~275 |
+| 11:58 | Created tests/prod-capacity-data.test.js | — | ~299 |
+| 11:58 | Created tests/npi-data-relational.test.js | — | ~354 |
+| 11:58 | Created tests/work-areas-data.test.js | — | ~383 |
+| 11:58 | Created tests/mcs-approval-core.test.js | — | ~389 |
+| 11:59 | Edited tests/db.test.js | 8→3 lines | ~26 |
+| 12:00 | Created tests/families-data-core.test.js | — | ~424 |
+| 12:00 | Created tests/npi-data-relational.test.js | — | ~325 |
+| 12:00 | Created tests/mcs-approval-core.test.js | — | ~341 |
+| 12:00 | Created tests/production-data.test.js | — | ~272 |
+| 12:00 | Session end: 55 writes across 32 files (sequential-bouncing-beaver.md, state.test.js, chart-theme.test.js, bank-holidays.test.js, feedback-constants.test.js) | 76 reads | ~47351 tok |
+| 12:06 | Created tests/me-components.test.js | — | ~492 |
+| 12:06 | Created tests/guide.test.js | — | ~353 |
+| 12:06 | Created tests/me-heatmap.test.js | — | ~295 |
+
+## Session: 2026-03-30 12:07
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:10 | Edited tests/settings-portal.test.js | 11→11 lines | ~107 |
+| 12:10 | Edited tests/parts-database.test.js | 7→7 lines | ~77 |
+| 12:10 | Edited tests/apqp.test.js | 22→22 lines | ~212 |
+| 12:10 | Edited tests/bom.test.js | 12→12 lines | ~132 |
+| 12:10 | Edited tests/pfmea.test.js | expanded (+34 lines) | ~400 |
+| 12:10 | Edited tests/pfmea.test.js | reduced (-11 lines) | ~188 |
+| 12:10 | Edited tests/pfmea.test.js | reduced (-8 lines) | ~179 |
+| 12:10 | Edited tests/parts-database.test.js | removed 30 lines | ~48 |
+| 12:11 | Edited tests/parts-database.test.js | reduced (-12 lines) | ~48 |
+| 12:11 | Edited tests/apqp.test.js | reduced (-11 lines) | ~48 |
+| 12:11 | Edited tests/bom.test.js | reduced (-11 lines) | ~50 |
+| 12:11 | Edited tests/pfmea.test.js | reduced (-12 lines) | ~60 |
+| 12:14 | Session end: 12 writes across 5 files (settings-portal.test.js, parts-database.test.js, apqp.test.js, bom.test.js, pfmea.test.js) | 18 reads | ~1687 tok |
+| 12:14 | Session end: 12 writes across 5 files (settings-portal.test.js, parts-database.test.js, apqp.test.js, bom.test.js, pfmea.test.js) | 18 reads | ~1687 tok |
+## 2026-03-30 | Expanded Capacity wiki pages (ME, PM, Logistics, Support) with detailed sections and formulas.
+| 12:15 | Edited tests/helpers.test.js | 3→3 lines | ~26 |
+| 12:16 | Session end: 13 writes across 6 files (settings-portal.test.js, parts-database.test.js, apqp.test.js, bom.test.js, pfmea.test.js) | 19 reads | ~1713 tok |
+| 12:18 | Session end: 13 writes across 6 files (settings-portal.test.js, parts-database.test.js, apqp.test.js, bom.test.js, pfmea.test.js) | 19 reads | ~1713 tok |
+| 12:19 | Session end: 13 writes across 6 files (settings-portal.test.js, parts-database.test.js, apqp.test.js, bom.test.js, pfmea.test.js) | 19 reads | ~1713 tok |
+| 12:20 | Edited tests/npi-dashboard-search.test.js | reduced (-89 lines) | ~349 |
+| 12:20 | Edited tests/product-management.test.js | reduced (-37 lines) | ~495 |
+| 12:21 | Session end: 15 writes across 8 files (settings-portal.test.js, parts-database.test.js, apqp.test.js, bom.test.js, pfmea.test.js) | 21 reads | ~2557 tok |
+
+## Session: 2026-03-30 12:27
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-30 13:26
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-30 13:40
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

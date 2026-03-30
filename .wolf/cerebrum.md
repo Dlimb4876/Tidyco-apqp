@@ -15,6 +15,7 @@
 - For Operations dashboard unit capacity displays, user prefers one box per unit (not grouped into a single shared panel/card).
 - User expects README.md and TESTING_STRATEGY.md to be updated in the same logical change whenever implementation changes affect behavior, workflow, or test reality.
 - User may request proactive "wiki work" and prefers the agent to take initiative by improving multiple high-value pages in one pass.
+- For wiki gap passes, user may explicitly exclude validation/testing-script fixes when that work is owned by a separate workstream.
 - For NPI PFD flowchart UX: compact preview even for 100+ steps, fixed 211% zoom, left-to-right layout, strong visual distinction between process/decision nodes, professional polished look.
 - For MCS staged modals: wider dialog, bordered collapsible stage cards, fixed title banner during scroll, colored header bar, visible separators. Status is global — top bar only. Stage badges must be explicit HTML. Footer must stay light and high-contrast.
 - For MCS approvals, Stage 1 Impact Assessment needs its own estimated time impact separate from Stage 3 implementation time.
@@ -33,6 +34,7 @@
 
 ## Key Learnings
 
+- Capacity Tasks product selection scales better as a searchable text + hidden-id picker (with datalist suggestions) than native full-length `<select>` lists; keep persisted value as `productId`.
 - Capacity holiday planner UX is shared across ME/PM/Logistics/Unit 6 through `portals/capacity/shared/js/cap-holidays.js` and `portals/capacity/shared/css/cap-holidays.css`; clarity changes there affect all four streams at once.
 - Capacity team tables can be made sortable safely by sorting rendered row metadata while keeping each row bound to its original `data-member-idx`; direct reindexing would make inline edits/delete actions hit the wrong team member.
 - **Project:** tidyco-apqp — Manufacturing Engineering SPA for rail overhaul, managing APQP Gates 0–5. Stack: vanilla JavaScript, Chart.js, Supabase.

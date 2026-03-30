@@ -1,6 +1,6 @@
 import { supabase as supa, currentUser } from '../../../../core/js/supa.js'
 import { appState, db, prog, GATE_DEFS } from '../../../../core/js/state.js'
-import { showToast } from '../../../../utils/js/helpers.js'
+import { showToast, safeWarn } from '../../../../utils/js/helpers.js'
 import { partsDataApi } from '../../parts-database/js/parts-data.js'
 
 /* ============================================================
@@ -141,7 +141,7 @@ export const npiRelResolveProjectId = async function(targetProgId) {
       .eq(isUuid ? 'id' : 'prog_id', targetProgId)
       .limit(1);
     if (error) {
-      console.warn('npiRelResolveProjectId error:', error.message);
+      safeWarn('npiRelResolveProjectId error:', error);
       return targetProgId;
     }
     // Return prog_id from the database row (required by NPI table foreign keys).
@@ -149,7 +149,7 @@ export const npiRelResolveProjectId = async function(targetProgId) {
     const resolved = data && data[0] ? data[0].prog_id : null;
     return resolved || targetProgId;
   } catch (err) {
-    console.warn('npiRelResolveProjectId exception:', err.message);
+    safeWarn('npiRelResolveProjectId exception:', err);
     return targetProgId;
   }
 }
@@ -443,7 +443,7 @@ export const npiRelLoad = async function(pid) {
     }
 
   } catch (err) {
-    console.warn('npiRelLoad exception:', err.message);
+    safeWarn('npiRelLoad exception:', err);
   }
 }
 
@@ -468,9 +468,9 @@ export const npiRelSaveCTQ = async function(item) {
       customer_agreed: item.customerAgreed || false,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveCTQ error:', error.message);
+    if (error) safeWarn('npiRelSaveCTQ error:', error);
   } catch (err) {
-    console.warn('npiRelSaveCTQ exception:', err.message);
+    safeWarn('npiRelSaveCTQ exception:', err);
   }
 };
 
@@ -478,9 +478,9 @@ export const npiRelDeleteCTQ = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_ctq').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteCTQ error:', error.message);
+    if (error) safeWarn('npiRelDeleteCTQ error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteCTQ exception:', err.message);
+    safeWarn('npiRelDeleteCTQ exception:', err);
   }
 };
 
@@ -510,9 +510,9 @@ export const npiRelSavePFDStep = async function(step) {
       next_step_num_no: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId_no != null ? step.nextStepId_no : null),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSavePFDStep error:', error.message);
+    if (error) safeWarn('npiRelSavePFDStep error:', error);
   } catch (err) {
-    console.warn('npiRelSavePFDStep exception:', err.message);
+    safeWarn('npiRelSavePFDStep exception:', err);
   }
 };
 
@@ -520,9 +520,9 @@ export const npiRelDeletePFDStep = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_pfd_steps').delete().eq('id', id);
-    if (error) console.warn('npiRelDeletePFDStep error:', error.message);
+    if (error) safeWarn('npiRelDeletePFDStep error:', error);
   } catch (err) {
-    console.warn('npiRelDeletePFDStep exception:', err.message);
+    safeWarn('npiRelDeletePFDStep exception:', err);
   }
 };
 
@@ -545,9 +545,9 @@ export const npiRelSavePFMEAMode = async function(mode) {
       sort_order: (prog().pfmea || []).indexOf(mode),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSavePFMEAMode error:', error.message);
+    if (error) safeWarn('npiRelSavePFMEAMode error:', error);
   } catch (err) {
-    console.warn('npiRelSavePFMEAMode exception:', err.message);
+    safeWarn('npiRelSavePFMEAMode exception:', err);
   }
 };
 
@@ -567,9 +567,9 @@ export const npiRelSavePFMEAEffect = async function(modeId, effect) {
       sort_order: mode ? (mode.effects || []).indexOf(effect) : 0,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSavePFMEAEffect error:', error.message);
+    if (error) safeWarn('npiRelSavePFMEAEffect error:', error);
   } catch (err) {
-    console.warn('npiRelSavePFMEAEffect exception:', err.message);
+    safeWarn('npiRelSavePFMEAEffect exception:', err);
   }
 };
 
@@ -610,9 +610,9 @@ export const npiRelSavePFMEACause = async function(effectId, cause) {
       sort_order: effObj ? (effObj.causes || []).indexOf(cause) : 0,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSavePFMEACause error:', error.message);
+    if (error) safeWarn('npiRelSavePFMEACause error:', error);
   } catch (err) {
-    console.warn('npiRelSavePFMEACause exception:', err.message);
+    safeWarn('npiRelSavePFMEACause exception:', err);
   }
 };
 
@@ -637,9 +637,9 @@ export const npiRelSavePFMEAHistory = async function(causeId, histEntry) {
       event_date: histEntry.date || '',
       related_ecr_id: histEntry.relatedEcrId || null
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSavePFMEAHistory error:', error.message);
+    if (error) safeWarn('npiRelSavePFMEAHistory error:', error);
   } catch (err) {
-    console.warn('npiRelSavePFMEAHistory exception:', err.message);
+    safeWarn('npiRelSavePFMEAHistory exception:', err);
   }
 };
 
@@ -660,9 +660,9 @@ export const npiRelDeletePFMEAMode = async function(mode) {
       await supa.from('npi_pfmea_effects').delete().in('id', effectIds);
     }
     const { error } = await supa.from('npi_pfmea_modes').delete().eq('id', mode.id);
-    if (error) console.warn('npiRelDeletePFMEAMode error:', error.message);
+    if (error) safeWarn('npiRelDeletePFMEAMode error:', error);
   } catch (err) {
-    console.warn('npiRelDeletePFMEAMode exception:', err.message);
+    safeWarn('npiRelDeletePFMEAMode exception:', err);
   }
 };
 
@@ -675,9 +675,9 @@ export const npiRelDeletePFMEAEffect = async function(effect) {
       await supa.from('npi_pfmea_causes').delete().in('id', causeIds);
     }
     const { error } = await supa.from('npi_pfmea_effects').delete().eq('id', effect.id);
-    if (error) console.warn('npiRelDeletePFMEAEffect error:', error.message);
+    if (error) safeWarn('npiRelDeletePFMEAEffect error:', error);
   } catch (err) {
-    console.warn('npiRelDeletePFMEAEffect exception:', err.message);
+    safeWarn('npiRelDeletePFMEAEffect exception:', err);
   }
 };
 
@@ -686,9 +686,9 @@ export const npiRelDeletePFMEACause = async function(cause) {
   try {
     await supa.from('npi_pfmea_history').delete().eq('cause_id', cause.id);
     const { error } = await supa.from('npi_pfmea_causes').delete().eq('id', cause.id);
-    if (error) console.warn('npiRelDeletePFMEACause error:', error.message);
+    if (error) safeWarn('npiRelDeletePFMEACause error:', error);
   } catch (err) {
-    console.warn('npiRelDeletePFMEACause exception:', err.message);
+    safeWarn('npiRelDeletePFMEACause exception:', err);
   }
 };
 
@@ -719,9 +719,9 @@ export const npiRelSaveCP = async function(item) {
       sort_order: (prog().cp || []).indexOf(item),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveCP error:', error.message);
+    if (error) safeWarn('npiRelSaveCP error:', error);
   } catch (err) {
-    console.warn('npiRelSaveCP exception:', err.message);
+    safeWarn('npiRelSaveCP exception:', err);
   }
 };
 
@@ -729,9 +729,9 @@ export const npiRelDeleteCP = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_control_plan').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteCP error:', error.message);
+    if (error) safeWarn('npiRelDeleteCP error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteCP exception:', err.message);
+    safeWarn('npiRelDeleteCP exception:', err);
   }
 };
 
@@ -774,13 +774,13 @@ export const npiRelSaveBOMItem = async function(type, item) {
     const { error } = await supa.from('npi_bom_items').upsert(payload, { onConflict: 'id' });
     if (error) {
       if (error.message && error.message.includes('supplier_pn')) {
-        console.warn('npiRelSaveBOMItem schema mismatch (supplier_pn). Ensure npi_bom_items does not reference legacy supplier_pn payloads.', error.message);
+        safeWarn('npiRelSaveBOMItem schema mismatch (supplier_pn). Ensure npi_bom_items does not reference legacy supplier_pn payloads.', error);
       } else {
-        console.warn('npiRelSaveBOMItem error:', error.message);
+        safeWarn('npiRelSaveBOMItem error:', error);
       }
     }
   } catch (err) {
-    console.warn('npiRelSaveBOMItem exception:', err.message);
+    safeWarn('npiRelSaveBOMItem exception:', err);
   }
 };
 
@@ -790,9 +790,9 @@ export const npiRelDeleteBOMItem = async function(id) {
     // Kit items referencing this BOM item will also be deleted (or left as orphans — clean up too)
     await supa.from('npi_bom_kit_items').delete().eq('bom_item_id', id);
     const { error } = await supa.from('npi_bom_items').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteBOMItem error:', error.message);
+    if (error) safeWarn('npiRelDeleteBOMItem error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteBOMItem exception:', err.message);
+    safeWarn('npiRelDeleteBOMItem exception:', err);
   }
 };
 
@@ -825,9 +825,9 @@ export const npiRelSaveBOMKit = async function(kit) {
       sort_order: (prog().bom.kits || []).indexOf(kit),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveBOMKit error:', error.message);
+    if (error) safeWarn('npiRelSaveBOMKit error:', error);
   } catch (err) {
-    console.warn('npiRelSaveBOMKit exception:', err.message);
+    safeWarn('npiRelSaveBOMKit exception:', err);
   }
 };
 
@@ -836,9 +836,9 @@ export const npiRelDeleteBOMKit = async function(id) {
   try {
     await supa.from('npi_bom_kit_items').delete().eq('kit_id', id);
     const { error } = await supa.from('npi_bom_kits').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteBOMKit error:', error.message);
+    if (error) safeWarn('npiRelDeleteBOMKit error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteBOMKit exception:', err.message);
+    safeWarn('npiRelDeleteBOMKit exception:', err);
   }
 };
 
@@ -861,10 +861,10 @@ export const npiRelSaveKitItems = async function(kit) {
         };
       });
       const { error } = await supa.from('npi_bom_kit_items').insert(rows);
-      if (error) console.warn('npiRelSaveKitItems insert error:', error.message);
+      if (error) safeWarn('npiRelSaveKitItems insert error:', error);
     }
   } catch (err) {
-    console.warn('npiRelSaveKitItems exception:', err.message);
+    safeWarn('npiRelSaveKitItems exception:', err);
   }
 };
 
@@ -891,9 +891,9 @@ export const npiRelSaveBomTreeNode = async function(node) {
       sort_order: node.sortOrder || 0
     };
     const { error } = await supa.from('npi_bom_tree').upsert(payload, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveBomTreeNode error:', error.message);
+    if (error) safeWarn('npiRelSaveBomTreeNode error:', error);
   } catch (err) {
-    console.warn('npiRelSaveBomTreeNode exception:', err.message);
+    safeWarn('npiRelSaveBomTreeNode exception:', err);
   }
 };
 
@@ -902,9 +902,9 @@ export const npiRelDeleteBomTreeNode = async function(id) {
   try {
     // Cascades to all child nodes via ON DELETE CASCADE
     const { error } = await supa.from('npi_bom_tree').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteBomTreeNode error:', error.message);
+    if (error) safeWarn('npiRelDeleteBomTreeNode error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteBomTreeNode exception:', err.message);
+    safeWarn('npiRelDeleteBomTreeNode exception:', err);
   }
 };
 
@@ -921,9 +921,9 @@ export const npiRelSaveBomGroup = async function(group) {
       tag: group.tag || null
     };
     const { error } = await supa.from('npi_bom_groups').upsert(payload, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveBomGroup error:', error.message);
+    if (error) safeWarn('npiRelSaveBomGroup error:', error);
   } catch (err) {
-    console.warn('npiRelSaveBomGroup exception:', err.message);
+    safeWarn('npiRelSaveBomGroup exception:', err);
   }
 };
 
@@ -932,9 +932,9 @@ export const npiRelDeleteBomGroup = async function(id) {
   try {
     // Cascades to all tree nodes in this group via ON DELETE CASCADE
     const { error } = await supa.from('npi_bom_groups').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteBomGroup error:', error.message);
+    if (error) safeWarn('npiRelDeleteBomGroup error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteBomGroup exception:', err.message);
+    safeWarn('npiRelDeleteBomGroup exception:', err);
   }
 };
 
@@ -953,7 +953,7 @@ export const npiRelSaveGate = async function(gateNum) {
       const { error } = await supa.from('npi_gates')
         .update({ checks: gate.checks, updated_at: new Date().toISOString() })
         .eq('id', gate._dbId);
-      if (error) console.warn('npiRelSaveGate update error:', error.message);
+      if (error) safeWarn('npiRelSaveGate update error:', error);
     } else {
       const { data, error } = await supa.from('npi_gates')
         .insert({
@@ -964,13 +964,13 @@ export const npiRelSaveGate = async function(gateNum) {
         })
         .select('id');
       if (error) {
-        console.warn('npiRelSaveGate insert error:', error.message);
+        safeWarn('npiRelSaveGate insert error:', error);
       } else if (data && data[0]) {
         gate._dbId = data[0].id;
       }
     }
   } catch (err) {
-    console.warn('npiRelSaveGate exception:', err.message);
+    safeWarn('npiRelSaveGate exception:', err);
   }
 };
 
@@ -1022,19 +1022,19 @@ export const npiRelSaveGateSig = async function(gateNum, sigIdx) {
       const { error } = await supa.from('npi_gate_sigs')
         .update({ sig_name: sig.name || '', sig_date: sig.date || null, signed: sig.signed || false })
         .eq('id', sig._id);
-      if (error) console.warn('npiRelSaveGateSig update error:', error.message);
+      if (error) safeWarn('npiRelSaveGateSig update error:', error);
     } else {
       const { data, error } = await supa.from('npi_gate_sigs')
         .insert(sigData)
         .select('id');
       if (error) {
-        console.warn('npiRelSaveGateSig insert error:', error.message);
+        safeWarn('npiRelSaveGateSig insert error:', error);
       } else if (data && data[0]) {
         sig._id = data[0].id;
       }
     }
   } catch (err) {
-    console.warn('npiRelSaveGateSig exception:', err.message);
+    safeWarn('npiRelSaveGateSig exception:', err);
   }
 };
 
@@ -1061,9 +1061,9 @@ export const npiRelSaveAction = async function(item) {
       sort_order: (prog().actions || []).indexOf(item),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveAction error:', error.message);
+    if (error) safeWarn('npiRelSaveAction error:', error);
   } catch (err) {
-    console.warn('npiRelSaveAction exception:', err.message);
+    safeWarn('npiRelSaveAction exception:', err);
   }
 };
 
@@ -1071,9 +1071,9 @@ export const npiRelDeleteAction = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_actions').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteAction error:', error.message);
+    if (error) safeWarn('npiRelDeleteAction error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteAction exception:', err.message);
+    safeWarn('npiRelDeleteAction exception:', err);
   }
 };
 
@@ -1100,9 +1100,9 @@ export const npiRelSaveRisk = async function(item) {
       sort_order: (prog().risks || []).indexOf(item),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveRisk error:', error.message);
+    if (error) safeWarn('npiRelSaveRisk error:', error);
   } catch (err) {
-    console.warn('npiRelSaveRisk exception:', err.message);
+    safeWarn('npiRelSaveRisk exception:', err);
   }
 };
 
@@ -1110,9 +1110,9 @@ export const npiRelDeleteRisk = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_risks').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteRisk error:', error.message);
+    if (error) safeWarn('npiRelDeleteRisk error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteRisk exception:', err.message);
+    safeWarn('npiRelDeleteRisk exception:', err);
   }
 };
 
@@ -1138,9 +1138,9 @@ export const npiRelSaveGanttRow = async function(row) {
       sort_order: (prog().gantt || []).indexOf(row),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveGanttRow error:', error.message);
+    if (error) safeWarn('npiRelSaveGanttRow error:', error);
   } catch (err) {
-    console.warn('npiRelSaveGanttRow exception:', err.message);
+    safeWarn('npiRelSaveGanttRow exception:', err);
   }
 };
 
@@ -1148,9 +1148,9 @@ export const npiRelDeleteGanttRow = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_gantt_rows').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteGanttRow error:', error.message);
+    if (error) safeWarn('npiRelDeleteGanttRow error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteGanttRow exception:', err.message);
+    safeWarn('npiRelDeleteGanttRow exception:', err);
   }
 };
 
@@ -1198,9 +1198,9 @@ export const npiRelSaveDoc = async function(item) {
       sort_order: p ? (p.docs || []).indexOf(item) : 0,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
-    if (error) console.warn('npiRelSaveDoc error:', error.message);
+    if (error) safeWarn('npiRelSaveDoc error:', error);
   } catch (err) {
-    console.warn('npiRelSaveDoc exception:', err.message);
+    safeWarn('npiRelSaveDoc exception:', err);
   }
 };
 
@@ -1208,9 +1208,9 @@ export const npiRelDeleteDoc = async function(id) {
   if (!id) return;
   try {
     const { error } = await supa.from('npi_documents').delete().eq('id', id);
-    if (error) console.warn('npiRelDeleteDoc error:', error.message);
+    if (error) safeWarn('npiRelDeleteDoc error:', error);
   } catch (err) {
-    console.warn('npiRelDeleteDoc exception:', err.message);
+    safeWarn('npiRelDeleteDoc exception:', err);
   }
 };
 

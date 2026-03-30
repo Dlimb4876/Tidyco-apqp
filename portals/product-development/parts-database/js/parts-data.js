@@ -4,6 +4,7 @@
 // ═══════════════════════════════════
 
 import { supabase as supa, currentUser } from '../../../../core/js/supa.js'
+import { safeWarn } from '../../../../utils/js/helpers.js'
 
 export const partsDataApi = {
   async fetchCatalogue() {
@@ -14,13 +15,13 @@ export const partsDataApi = {
         .order('item_desc')
 
       if (error) {
-        console.warn('partsDatabase.fetchCatalogue error:', error.message)
+        safeWarn('partsDatabase.fetchCatalogue error:', error)
         return []
       }
 
       return data || []
     } catch (err) {
-      console.warn('partsDatabase.fetchCatalogue exception:', err.message)
+      safeWarn('partsDatabase.fetchCatalogue exception:', err)
       return []
     }
   },
@@ -46,13 +47,13 @@ export const partsDataApi = {
       }, { onConflict: 'id' }).select('*')
 
       if (error) {
-        console.warn('partsDatabase.saveCatalogueEntry error:', error.message)
+        safeWarn('partsDatabase.saveCatalogueEntry error:', error)
         return null
       }
 
       return (data && data[0]) || null
     } catch (err) {
-      console.warn('partsDatabase.saveCatalogueEntry exception:', err.message)
+      safeWarn('partsDatabase.saveCatalogueEntry exception:', err)
       return null
     }
   },
@@ -62,9 +63,9 @@ export const partsDataApi = {
 
     try {
       const { error } = await supa.from('abc_catalogue').delete().eq('id', id)
-      if (error) console.warn('partsDatabase.deleteCatalogueEntry error:', error.message)
+      if (error) safeWarn('partsDatabase.deleteCatalogueEntry error:', error)
     } catch (err) {
-      console.warn('partsDatabase.deleteCatalogueEntry exception:', err.message)
+      safeWarn('partsDatabase.deleteCatalogueEntry exception:', err)
     }
   },
 
@@ -78,7 +79,7 @@ export const partsDataApi = {
         .eq('abc_catalogue_id', abcCatalogueId)
 
       if (itemsError) {
-        console.warn('partsDatabase.fetchPartUsage items error:', itemsError.message)
+        safeWarn('partsDatabase.fetchPartUsage items error:', itemsError)
       }
 
       const { data: treeData, error: treeError } = await supa
@@ -87,7 +88,7 @@ export const partsDataApi = {
         .eq('abc_catalogue_id', abcCatalogueId)
 
       if (treeError) {
-        console.warn('partsDatabase.fetchPartUsage tree error:', treeError.message)
+        safeWarn('partsDatabase.fetchPartUsage tree error:', treeError)
       }
 
       const projectProgIds = new Set()
@@ -102,7 +103,7 @@ export const partsDataApi = {
           .in('prog_id', Array.from(projectProgIds))
 
         if (projectsError) {
-          console.warn('partsDatabase.fetchPartUsage projects error:', projectsError.message)
+          safeWarn('partsDatabase.fetchPartUsage projects error:', projectsError)
         }
 
         ;(projectsData || []).forEach((project) => {
@@ -128,7 +129,7 @@ export const partsDataApi = {
 
       return [...itemUsage, ...treeUsage]
     } catch (err) {
-      console.warn('partsDatabase.fetchPartUsage exception:', err.message)
+      safeWarn('partsDatabase.fetchPartUsage exception:', err)
       return []
     }
   }

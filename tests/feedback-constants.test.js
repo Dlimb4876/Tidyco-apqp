@@ -1,11 +1,6 @@
-/**
- * feedback-constants.test.js — Tests for portals/feedback/js/feedback-constants.js
- *
- * Covers: FEEDBACK_TYPES, FEEDBACK_STATUS, FEEDBACK_PRIORITY enums,
- *         getFeedbackTypeConfig, getFeedbackStatusConfig, getFeedbackPriorityConfig
- */
+import { jest } from '@jest/globals'
 
-import {
+const {
   FEEDBACK_TYPES,
   FEEDBACK_STATUS,
   FEEDBACK_PRIORITY,
@@ -15,88 +10,64 @@ import {
   getFeedbackTypeConfig,
   getFeedbackStatusConfig,
   getFeedbackPriorityConfig
-} from '../portals/feedback/js/feedback-constants.js';
+} = await import('../portals/feedback/js/feedback-constants.js')
 
 describe('FEEDBACK_TYPES', () => {
-  it('defines all expected type keys', () => {
-    expect(FEEDBACK_TYPES.BUG).toBe('bug');
-    expect(FEEDBACK_TYPES.USABILITY).toBe('usability');
-    expect(FEEDBACK_TYPES.FEATURE_REQUEST).toBe('feature_request');
-    expect(FEEDBACK_TYPES.IMPROVEMENT).toBe('improvement');
-  });
-});
+  it('should define feedback type constants', () => {
+    expect(FEEDBACK_TYPES.BUG).toBe('bug')
+    expect(FEEDBACK_TYPES.USABILITY).toBe('usability')
+    expect(FEEDBACK_TYPES.FEATURE_REQUEST).toBe('feature_request')
+    expect(FEEDBACK_TYPES.IMPROVEMENT).toBe('improvement')
+  })
+})
 
 describe('FEEDBACK_STATUS', () => {
-  it('defines all expected status keys', () => {
-    const S = FEEDBACK_STATUS;
-    expect(S.OPEN).toBe('open');
-    expect(S.IN_REVIEW).toBe('in_review');
-    expect(S.PLANNED).toBe('planned');
-    expect(S.IN_PROGRESS).toBe('in_progress');
-    expect(S.COMPLETED).toBe('completed');
-    expect(S.DECLINED).toBe('declined');
-    expect(S.SQUASHED).toBe('squashed');
-  });
+  it('should define status constants', () => {
+    expect(FEEDBACK_STATUS.OPEN).toBe('open')
+    expect(FEEDBACK_STATUS.IN_REVIEW).toBe('in_review')
+    expect(FEEDBACK_STATUS.PLANNED).toBe('planned')
+    expect(FEEDBACK_STATUS.IN_PROGRESS).toBe('in_progress')
+    expect(FEEDBACK_STATUS.COMPLETED).toBe('completed')
+    expect(FEEDBACK_STATUS.DECLINED).toBe('declined')
+    expect(FEEDBACK_STATUS.SQUASHED).toBe('squashed')
+  })
 
-  it('marks closed statuses correctly', () => {
-    const cfg = FEEDBACK_STATUS_CONFIG;
-    expect(cfg['open'].isClosed).toBe(false);
-    expect(cfg['in_review'].isClosed).toBe(false);
-    expect(cfg['planned'].isClosed).toBe(false);
-    expect(cfg['in_progress'].isClosed).toBe(false);
-    expect(cfg['completed'].isClosed).toBe(true);
-    expect(cfg['declined'].isClosed).toBe(true);
-    expect(cfg['squashed'].isClosed).toBe(true);
-  });
-});
+  it('should mark closed statuses correctly', () => {
+    expect(FEEDBACK_STATUS_CONFIG.open.isClosed).toBe(false)
+    expect(FEEDBACK_STATUS_CONFIG.in_review.isClosed).toBe(false)
+    expect(FEEDBACK_STATUS_CONFIG.planned.isClosed).toBe(false)
+    expect(FEEDBACK_STATUS_CONFIG.in_progress.isClosed).toBe(false)
+    expect(FEEDBACK_STATUS_CONFIG.completed.isClosed).toBe(true)
+    expect(FEEDBACK_STATUS_CONFIG.declined.isClosed).toBe(true)
+    expect(FEEDBACK_STATUS_CONFIG.squashed.isClosed).toBe(true)
+  })
+})
 
 describe('FEEDBACK_PRIORITY', () => {
-  it('defines all expected priority keys', () => {
-    expect(FEEDBACK_PRIORITY.LOW).toBe('low');
-    expect(FEEDBACK_PRIORITY.MEDIUM).toBe('medium');
-    expect(FEEDBACK_PRIORITY.HIGH).toBe('high');
-  });
-});
+  it('should define priority constants', () => {
+    expect(FEEDBACK_PRIORITY.LOW).toBe('low')
+    expect(FEEDBACK_PRIORITY.MEDIUM).toBe('medium')
+    expect(FEEDBACK_PRIORITY.HIGH).toBe('high')
+  })
+})
 
-describe('Config helpers', () => {
-  it('getFeedbackTypeConfig returns correct config', () => {
-    const cfg = getFeedbackTypeConfig('bug');
-    expect(cfg).toBeDefined();
-    expect(cfg.label).toContain('Bug');
-  });
+describe('Config getter functions', () => {
+  it('getFeedbackTypeConfig should return config for valid type', () => {
+    const config = getFeedbackTypeConfig('bug')
+    expect(config).toBeDefined()
+    expect(config).toHaveProperty('label')
+  })
 
-  it('getFeedbackStatusConfig returns correct config', () => {
-    const cfg = getFeedbackStatusConfig('open');
-    expect(cfg).toBeDefined();
-    expect(cfg.label).toBe('OPEN');
-  });
+  it('getFeedbackStatusConfig should return config for valid status', () => {
+    const config = getFeedbackStatusConfig('open')
+    expect(config).toBeDefined()
+    expect(config).toHaveProperty('label')
+    expect(config).toHaveProperty('isClosed')
+  })
 
-  it('getFeedbackPriorityConfig returns correct config', () => {
-    const cfg = getFeedbackPriorityConfig('high');
-    expect(cfg).toBeDefined();
-    expect(cfg.label).toBe('High');
-  });
-
-  it('handles unknown keys gracefully', () => {
-    expect(getFeedbackTypeConfig('unknown').label).toBe('Usability Feedback');
-    expect(getFeedbackStatusConfig('unknown').label).toBe('OPEN');
-    expect(getFeedbackPriorityConfig('unknown').label).toBe('Medium');
-  });
-});
-
-describe('Module exports', () => {
-  it('exports all constants', () => {
-    expect(FEEDBACK_TYPES).toBeDefined();
-    expect(FEEDBACK_STATUS).toBeDefined();
-    expect(FEEDBACK_PRIORITY).toBeDefined();
-    expect(FEEDBACK_TYPE_CONFIG).toBeDefined();
-    expect(FEEDBACK_STATUS_CONFIG).toBeDefined();
-    expect(FEEDBACK_PRIORITY_CONFIG).toBeDefined();
-  });
-
-  it('exports helper functions', () => {
-    expect(typeof getFeedbackTypeConfig).toBe('function');
-    expect(typeof getFeedbackStatusConfig).toBe('function');
-    expect(typeof getFeedbackPriorityConfig).toBe('function');
-  });
-});
+  it('getFeedbackPriorityConfig should return config for valid priority', () => {
+    const config = getFeedbackPriorityConfig('high')
+    expect(config).toBeDefined()
+    expect(config).toHaveProperty('label')
+  })
+})

@@ -4,6 +4,7 @@
 
 import { supabase, currentUser } from '../../../../core/js/supa.js'
 import { capUUID, capNormalizeDateRange } from '../../shared/js/cap-data-utils.js'
+import { safeWarn } from '../../../../utils/js/helpers.js'
 
 const PM_DEPARTMENT = 'PM'
 
@@ -19,7 +20,7 @@ export async function pmLoadRelationalTeams() {
   try {
     const { data, error } = await supabase.from('pm_teams').select('*')
     if (error) {
-      console.warn('pmLoadRelationalTeams error:', error.message)
+      safeWarn('pmLoadRelationalTeams error:', error)
       return []
     }
 
@@ -36,7 +37,7 @@ export async function pmLoadRelationalTeams() {
       createdAt: t.created_at
     }))
   } catch (err) {
-    console.warn('pmLoadRelationalTeams exception:', err.message)
+    safeWarn('pmLoadRelationalTeams exception:', err)
     return []
   }
 }
@@ -45,7 +46,7 @@ export async function pmLoadRelationalProducts() {
   try {
     const { data, error } = await supabase.from('pm_products').select('*')
     if (error) {
-      console.warn('pmLoadRelationalProducts error:', error.message)
+      safeWarn('pmLoadRelationalProducts error:', error)
       return []
     }
 
@@ -60,7 +61,7 @@ export async function pmLoadRelationalProducts() {
       updatedAt: row.updated_at
     }))
   } catch (err) {
-    console.warn('pmLoadRelationalProducts exception:', err.message)
+    safeWarn('pmLoadRelationalProducts exception:', err)
     return []
   }
 }
@@ -69,7 +70,7 @@ export async function pmLoadRelationalProductSupportHistory() {
   try {
     const { data, error } = await supabase.from('pm_product_support_history').select('*')
     if (error) {
-      console.warn('pmLoadRelationalProductSupportHistory error:', error.message)
+      safeWarn('pmLoadRelationalProductSupportHistory error:', error)
       return []
     }
 
@@ -90,7 +91,7 @@ export async function pmLoadRelationalProductSupportHistory() {
       updatedAt: row.updated_at
     }))
   } catch (err) {
-    console.warn('pmLoadRelationalProductSupportHistory exception:', err.message)
+    safeWarn('pmLoadRelationalProductSupportHistory exception:', err)
     return []
   }
 }
@@ -99,7 +100,7 @@ export async function pmLoadRelationalHolidays() {
   try {
     const { data, error } = await supabase.from('pm_holidays').select('*')
     if (error) {
-      console.warn('pmLoadRelationalHolidays error:', error.message)
+      safeWarn('pmLoadRelationalHolidays error:', error)
       return []
     }
 
@@ -113,7 +114,7 @@ export async function pmLoadRelationalHolidays() {
       createdAt: h.created_at
     }))
   } catch (err) {
-    console.warn('pmLoadRelationalHolidays exception:', err.message)
+    safeWarn('pmLoadRelationalHolidays exception:', err)
     return []
   }
 }
@@ -122,7 +123,7 @@ export async function pmLoadRelationalTasks() {
   try {
     const { data, error } = await supabase.from('pm_tasks').select('*')
     if (error) {
-      console.warn('pmLoadRelationalTasks error:', error.message)
+      safeWarn('pmLoadRelationalTasks error:', error)
       return []
     }
 
@@ -142,7 +143,7 @@ export async function pmLoadRelationalTasks() {
       createdAt: t.created_at
     }))
   } catch (err) {
-    console.warn('pmLoadRelationalTasks exception:', err.message)
+    safeWarn('pmLoadRelationalTasks exception:', err)
     return []
   }
 }
@@ -171,14 +172,14 @@ export async function pmSaveTeamRelational(userId, teamMember) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('pmSaveTeamRelational error:', error.message)
+      safeWarn('pmSaveTeamRelational error:', error)
       return false
     }
 
     teamMember.id = data && data.length > 0 ? data[0].id : teamId
     return true
   } catch (err) {
-    console.warn('pmSaveTeamRelational exception:', err.message)
+    safeWarn('pmSaveTeamRelational exception:', err)
     return false
   }
 }
@@ -199,7 +200,7 @@ export async function pmSaveProductRelational(userId, product) {
         .limit(1)
 
       if (lookupError) {
-        console.warn('pmSaveProductRelational lookup error:', lookupError.message)
+        safeWarn('pmSaveProductRelational lookup error:', lookupError)
         return false
       }
 
@@ -225,14 +226,14 @@ export async function pmSaveProductRelational(userId, product) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('pmSaveProductRelational error:', error.message)
+      safeWarn('pmSaveProductRelational error:', error)
       return false
     }
 
     product.id = data && data.length > 0 ? data[0].id : productId
     return true
   } catch (err) {
-    console.warn('pmSaveProductRelational exception:', err.message)
+    safeWarn('pmSaveProductRelational exception:', err)
     return false
   }
 }
@@ -248,7 +249,7 @@ export async function pmSaveProductSupportHistoryRelational(userId, historyRows)
       .delete()
       .eq('user_id', resolvedUserId)
     if (deleteError) {
-      console.warn('pmSavePSH delete error:', deleteError.message)
+      safeWarn('pmSavePSH delete error:', deleteError)
       return false
     }
 
@@ -276,13 +277,13 @@ export async function pmSaveProductSupportHistoryRelational(userId, historyRows)
 
     const { error: insertError } = await supabase.from('pm_product_support_history').insert(payload)
     if (insertError) {
-      console.warn('pmSavePSH insert error:', insertError.message)
+      safeWarn('pmSavePSH insert error:', insertError)
       return false
     }
 
     return true
   } catch (err) {
-    console.warn('pmSavePSH exception:', err.message)
+    safeWarn('pmSavePSH exception:', err)
     return false
   }
 }
@@ -321,14 +322,14 @@ export async function pmSaveTaskRelational(userId, task) {
       .upsert([payload], { onConflict: 'id' })
       .select('id')
     if (error) {
-      console.warn('pmSaveTaskRelational error:', error.message)
+      safeWarn('pmSaveTaskRelational error:', error)
       return { success: false, taskId: null }
     }
 
     task.id = data && data.length > 0 ? data[0].id : taskId
     return { success: true, taskId: task.id }
   } catch (err) {
-    console.warn('pmSaveTaskRelational exception:', err.message)
+    safeWarn('pmSaveTaskRelational exception:', err)
     return { success: false, taskId: null }
   }
 }
@@ -337,12 +338,12 @@ export async function pmDeleteTeamRelational(teamId) {
   try {
     const { error } = await supabase.from('pm_teams').delete().eq('id', teamId)
     if (error) {
-      console.warn('pmDeleteTeamRelational error:', error.message)
+      safeWarn('pmDeleteTeamRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('pmDeleteTeamRelational exception:', err.message)
+    safeWarn('pmDeleteTeamRelational exception:', err)
     return false
   }
 }
@@ -351,12 +352,12 @@ export async function pmDeleteTaskRelational(taskId) {
   try {
     const { error } = await supabase.from('pm_tasks').delete().eq('id', taskId)
     if (error) {
-      console.warn('pmDeleteTaskRelational error:', error.message)
+      safeWarn('pmDeleteTaskRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('pmDeleteTaskRelational exception:', err.message)
+    safeWarn('pmDeleteTaskRelational exception:', err)
     return false
   }
 }
@@ -365,12 +366,12 @@ export async function pmDeleteProductRelational(productId) {
   try {
     const { error } = await supabase.from('pm_products').delete().eq('id', productId)
     if (error) {
-      console.warn('pmDeleteProductRelational error:', error.message)
+      safeWarn('pmDeleteProductRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('pmDeleteProductRelational exception:', err.message)
+    safeWarn('pmDeleteProductRelational exception:', err)
     return false
   }
 }
@@ -379,12 +380,12 @@ export async function pmDeleteHolidayRelational(holidayId) {
   try {
     const { error } = await supabase.from('pm_holidays').delete().eq('id', holidayId)
     if (error) {
-      console.warn('pmDeleteHolidayRelational error:', error.message)
+      safeWarn('pmDeleteHolidayRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('pmDeleteHolidayRelational exception:', err.message)
+    safeWarn('pmDeleteHolidayRelational exception:', err)
     return false
   }
 }
@@ -393,12 +394,12 @@ export async function pmDeleteSupportHistoryRelational(historyId) {
   try {
     const { error } = await supabase.from('pm_product_support_history').delete().eq('id', historyId)
     if (error) {
-      console.warn('pmDeleteSupportHistoryRelational error:', error.message)
+      safeWarn('pmDeleteSupportHistoryRelational error:', error)
       return false
     }
     return true
   } catch (err) {
-    console.warn('pmDeleteSupportHistoryRelational exception:', err.message)
+    safeWarn('pmDeleteSupportHistoryRelational exception:', err)
     return false
   }
 }
