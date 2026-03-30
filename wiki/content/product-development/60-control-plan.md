@@ -28,6 +28,31 @@ A strong control plan utilizes both, but prioritizes prevention:
 3. **Assign the control:** Determine the best method, frequency, and owner to verify that standard.
 4. **Write the reaction plan:** Define the exact escalation path if the control fails.
 
+## High-level workflow
+1. Start from current PFMEA and CTQ.
+2. Map each critical/special characteristic to a control.
+3. Define method, frequency, and ownership.
+4. Validate that reaction plans are executable on the shop floor.
+5. Review regularly when PFMEA or process flow changes.
+
+## Calculations and control logic (detailed)
+### Defect rate
+```text
+Defect Rate % = (Defects Found / Units Checked) × 100
+```
+
+### First pass yield (FPY)
+```text
+FPY % = (Units Passing First Time / Total Units Processed) × 100
+```
+
+### Inspection effort estimate
+```text
+Inspection Hours = (Units Checked × Time per Check in minutes) / 60
+```
+
+These calculations help teams set realistic frequencies and confirm control plans are practical.
+
 ## Common mistakes to avoid
 - **Vague Reaction Plans:** Writing "Rework" or "Inform Supervisor" without specifying what to do with the suspect parts.
 - **Copy-Pasting from PFMEA:** The Control Plan needs shop-floor specifics. "Visual check" in PFMEA must become "Visual check against boundary sample #123" in the Control Plan.

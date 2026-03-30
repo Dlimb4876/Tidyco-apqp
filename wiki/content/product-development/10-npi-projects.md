@@ -4,6 +4,13 @@
 NPI Projects is the front door to active and historical projects.
 Use it to find the right project quickly and move into dashboard or APQP work.
 
+## High-level workflow
+1. Search or filter to find the project.
+2. Review KPI and gate trajectory for current health.
+3. Open the project dashboard.
+4. Move into APQP pages (PFMEA, risks, actions, gates) as needed.
+5. Return to NPI Projects for portfolio-level monitoring.
+
 ## How teams typically use it
 - **Filter by project status or family** to focus on the current phase.
 - **Search by project name or reference** when working in reviews or meetings.
@@ -53,6 +60,21 @@ When you need to set up a new NPI project:
 4. **Assign Core Team:** Project manager, manufacturing engineer, quality engineer.
 5. **Define Assemblies:** Add sub-assemblies if this is a multi-module product.
 6. **Save and Configure:** The project is created with default timing plan templates.
+
+## Calculations and interpretation (detailed)
+### Portfolio action pressure
+```text
+Overdue Action Share % = (Overdue Actions / Total Open Actions) × 100
+```
+
+### Gate readiness (simplified)
+```text
+Gate Readiness % = (Completed Required Evidence / Total Required Evidence) × 100
+```
+
+Interpretation:
+- High overdue share indicates delivery pressure and likely slippage risk.
+- Lower readiness indicates evidence gaps before the next gate review.
 
 ## Navigation Tips
 

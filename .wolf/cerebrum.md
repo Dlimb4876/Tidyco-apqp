@@ -14,6 +14,7 @@
 - **OpenWolf protocol is non-negotiable, even mid-flow.** Cerebrum, buglog, anatomy, and memory updates are mandatory checkpoints — not optional wrap-up.
 - For Operations dashboard unit capacity displays, user prefers one box per unit (not grouped into a single shared panel/card).
 - User expects README.md and TESTING_STRATEGY.md to be updated in the same logical change whenever implementation changes affect behavior, workflow, or test reality.
+- User may request proactive "wiki work" and prefers the agent to take initiative by improving multiple high-value pages in one pass.
 - For NPI PFD flowchart UX: compact preview even for 100+ steps, fixed 211% zoom, left-to-right layout, strong visual distinction between process/decision nodes, professional polished look.
 - For MCS staged modals: wider dialog, bordered collapsible stage cards, fixed title banner during scroll, colored header bar, visible separators. Status is global — top bar only. Stage badges must be explicit HTML. Footer must stay light and high-contrast.
 - For MCS approvals, Stage 1 Impact Assessment needs its own estimated time impact separate from Stage 3 implementation time.

@@ -149,8 +149,8 @@ export async function teamsDataSetUserTeam(userId, teamId) {
 export async function teamPermissionsDataSave(teamId, permissions) {
   if (!teamId || !Array.isArray(permissions)) return false;
 
-  // Upsert all incoming permissions first so there is never a window
-  // with no permissions (avoids the delete-then-insert race condition).
+  // Upsert all permissions (both allowed and denied) so that unchecked
+  // permissions explicitly override role baseline grants
   if (permissions.length > 0) {
     const rows = permissions.map(p => ({
       team_id: teamId,
@@ -163,26 +163,6 @@ export async function teamPermissionsDataSave(teamId, permissions) {
       .upsert(rows, { onConflict: 'team_id,permission' });
 
     if (upsertError) throw upsertError;
-  }
-
-  // Remove any permissions that are no longer in the new set
-  const keepPermissions = permissions.map(p => p.permission);
-  if (keepPermissions.length > 0) {
-    const { error: delError } = await supa
-      .from('team_permissions')
-      .delete()
-      .eq('team_id', teamId)
-      .not('permission', 'in', `(${keepPermissions.map(p => `"${p}"`).join(',')})`);
-
-    if (delError) throw delError;
-  } else {
-    // No permissions to keep — delete them all
-    const { error: delError } = await supa
-      .from('team_permissions')
-      .delete()
-      .eq('team_id', teamId);
-
-    if (delError) throw delError;
   }
 
   return true;

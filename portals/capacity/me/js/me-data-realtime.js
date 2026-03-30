@@ -235,12 +235,9 @@ export function meCapacityDataSubscribe() {
       },
       onDelete: deleted => {
         if (meDataSaveInProgress) return
-        const normalized = meNormalizeHolidayRecord(deleted)
-        meDataState.holidays = meDataState.holidays.filter(h => {
-          if (h.id === deleted.id) return false
-          if (normalized && h.personId === normalized.personId && h.date === normalized.date) return false
-          return true
-        })
+        // Match by id only — matching by personId+date could remove a new holiday that
+        // replaced a deleted one for the same person+date (different id)
+        meDataState.holidays = meDataState.holidays.filter(h => h.id !== deleted.id)
         meApplyRealtimeStateChange()
       }
     }

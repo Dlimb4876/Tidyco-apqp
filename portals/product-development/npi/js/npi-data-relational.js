@@ -1182,6 +1182,7 @@ export const npiRelDeleteAllForProject = npiRelClearAll
 export const npiRelSaveDoc = async function(item) {
   const projectId = await npiRelResolveProjectId(appState.progId);
   if (!item || !item.id || !projectId || !currentUser) return;
+  const p = prog();
   try {
     const { error } = await supa.from('npi_documents').upsert({
       id: item.id,
@@ -1194,7 +1195,7 @@ export const npiRelSaveDoc = async function(item) {
       owner: item.owner || '',
       status: item.status || 'Draft',
       notes: item.notes || '',
-      sort_order: (prog().docs || []).indexOf(item),
+      sort_order: p ? (p.docs || []).indexOf(item) : 0,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
     if (error) console.warn('npiRelSaveDoc error:', error.message);

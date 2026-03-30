@@ -287,7 +287,19 @@ export async function settingsTeamsEdit(teamId) {
 
   appState.settingsTeamsPermissionsEditingId = teamId;
   try {
-    settingsState.settingsTeamsPermissionsData[teamId] = await teamsDataLoadPermissions(teamId);
+    const savedPermissions = await teamsDataLoadPermissions(teamId);
+    const definitions = settingsGetTeamPermissionDefinitions();
+    
+    // Initialize ALL permissions with allowed: false, then override with saved values
+    const allPermissions = definitions.map(def => {
+      const saved = savedPermissions.find(p => p.permission === def.key);
+      return {
+        permission: def.key,
+        allowed: saved ? saved.allowed : false
+      };
+    });
+    
+    settingsState.settingsTeamsPermissionsData[teamId] = allPermissions;
     renderSettingsTeamsPermissionsEditor();
   } catch (err) {
     showToast('Failed to load permissions: ' + err.message, 'error');
@@ -395,7 +407,7 @@ export function renderSettingsTeamsPermissionsEditor() {
       <thead>
         <tr>
           <th>Permission</th>
-          <th style="width:80px;text-align:center">Allowed</th>
+          <th style="width:80px;text-align:center" title="Check to allow this permission for the team">Allow?</th>
         </tr>
       </thead>
       <tbody>

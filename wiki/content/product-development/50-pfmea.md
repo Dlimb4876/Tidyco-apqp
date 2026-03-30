@@ -1,7 +1,13 @@
 # Process Failure Mode and Effects Analysis (PFMEA)
 
 ## Overview
-**Process Failure Mode and Effects Analysis (PFMEA)** is a systematic, proactive methodology used to identify potential failure modes within a manufacturing or assembly process. The primary objective is to evaluate the causes and effects of these failures, assess the adequacy of current controls, and prioritize corrective actions to mitigate operational, quality, and safety risks.
+**Process Failure Mode and Effects Analysis (PFMEA)** is used to identify process risk before failures happen.
+
+In practical terms, PFMEA helps teams:
+- describe how a process could fail
+- understand the impact if it fails
+- rate how likely it is
+- decide which actions are needed first
 
 ## Access
 - **Portal:** Product Development
@@ -18,26 +24,36 @@
 | **Current Controls** | Existing prevention or detection mechanisms. | Determines the **Detection (D)** score. |
 | **RPN** | Risk Priority Number (S × O × D). | Quantifies the relative risk level (Max: 1000). |
 
-## Risk Assessment Framework
-### Scoring Criteria
-The PFMEA utilizes a 1-10 scale for three critical dimensions:
-1. **Severity (S):** Measures the impact of the failure effect. High scores (9-10) indicate potential safety or regulatory violations.
-2. **Occurrence (O):** Estimates the likelihood of the failure cause appearing during the process lifecycle, based on historical data or technical analysis.
-3. **Detection (D):** Evaluates the effectiveness of current controls in identifying the failure mode or cause before it reaches the customer.
+## High-level workflow
+1. Select the process step (normally linked to the PFD).
+2. Add failure mode, effect, and cause.
+3. Score Severity, Occurrence, and Detection.
+4. Review RPN and severity-critical items.
+5. Create and assign actions where risk is too high.
+6. Re-score after action implementation.
 
-### Prioritization Strategy
-Operational priority is determined by two primary factors:
-- **High Severity:** Any item with a Severity score of 9 or 10 requires immediate review, regardless of the aggregate RPN.
-- **RPN Thresholds:** Higher RPN values indicate greater cumulative risk, necessitating documented mitigation actions.
+## Calculations (detailed)
+### PFMEA scoring model
+PFMEA uses a 1–10 score for:
+1. **Severity (S):** impact if failure occurs
+2. **Occurrence (O):** likelihood of cause happening
+3. **Detection (D):** ability of controls to detect/prevent escape
 
-## The PFMEA Lifecycle
-### Analysis and Documentation
-The multi-disciplinary team reviews each step defined in the **Process Flow Diagram (PFD)**. For every failure mode identified, the team documents the potential effects and root causes. Current manufacturing controls—such as physical interlocks (poka-yoke), automated inspections, or manual checks—are recorded and scored.
+### RPN formula
+```text
+RPN = Severity × Occurrence × Detection
+```
 
-### Mitigation and Verification
-1. **Action Assignment:** If the RPN or Severity exceeds acceptable thresholds, a mitigation action is generated and assigned to a responsible owner within the **Action Tracker**.
-2. **Score Forecasting:** The team estimates revised 'Forecast' scores for Occurrence and Detection, assuming the successful implementation of the proposed action.
-3. **Closure:** Upon completion of the action, the forecast scores are validated against actual process performance, and the PFMEA record is updated to reflect the new residual risk.
+Example:
+```text
+S = 8, O = 6, D = 5
+RPN = 8 × 6 × 5 = 240
+```
+
+### Prioritization guidance
+- **Severity 9 or 10:** treat as urgent, regardless of RPN
+- **Higher RPN:** generally higher priority for mitigation
+- **After action:** re-score to verify risk reduction
 
 ## Common Issues and Resolutions
 | Issue | Potential Cause | Remediation |

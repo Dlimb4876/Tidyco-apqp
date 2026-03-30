@@ -104,9 +104,11 @@ Data is persisted to Supabase via a **debounced save cycle (800-900ms)**. Ensure
 - **Location**: All tests reside in `tests/*.test.js`.
 - **Environment**: Jest with `jsdom` and global mocks (see `jest.setup.js`).
 - **Patterns**:
+  - **ESM-First**: Use `jest.unstable_mockModule` and dynamic `import()` for all module tests.
   - Test behavior, not internals.
-  - Use `jest.useFakeTimers()` for debounced save tests.
-  - Mock Supabase client (`supa`) and global `db` object.
+  - Use `jest.useFakeTimers()` for debounced save tests (800ms).
+  - Mock Supabase client (`supa`) and global `appState` object.
+- **State**: Prefer mocking `appState` in `core/js/state.js` over individual globals.
 
 ---
 

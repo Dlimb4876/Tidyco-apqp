@@ -4,6 +4,13 @@
 The Action Tracker is where project commitments are recorded, assigned, and followed through to completion.
 It serves as the operational bridge between identifying an issue (like a risk or a PFMEA vulnerability) and proving it has been resolved.
 
+## High-level workflow
+1. Create action with a clear verb-led description.
+2. Assign one owner and one realistic due date.
+3. Update progress as work happens.
+4. Escalate blocked or overdue actions quickly.
+5. Close only with clear evidence in "Action Taken".
+
 ## Before you start
 - Ensure you have clear context on *why* the action is needed (e.g., a specific risk, a failed gate check).
 - Confirm the person being assigned actually has the capacity and authority to complete the work.
@@ -21,6 +28,26 @@ It serves as the operational bridge between identifying an issue (like a risk or
 3. **Monitor:** Review open actions regularly, focusing on overdue or blocked items.
 4. **Update:** Owners update the status and provide progress notes.
 5. **Close:** When complete, document exactly what was done in the "Action Taken" field before marking it Done.
+
+## Calculations and monitoring (detailed)
+### Action ageing (days)
+```text
+Action Age (days) = Today - Action Created Date
+```
+
+### On-time completion rate
+```text
+On-Time Completion % = (Actions Closed On/Before Due Date / Total Closed Actions) × 100
+```
+
+### Backlog growth indicator
+```text
+Net Backlog Change = Actions Created in Period - Actions Closed in Period
+```
+
+Interpretation:
+- Positive backlog change means open workload is growing.
+- Lower on-time completion usually means dates, capacity, or scope need review.
 
 ## Common mistakes to avoid
 - **Vague descriptions:** Writing "Look into bearing issue" instead of "Identify root cause of bearing misalignment and propose a design fix".

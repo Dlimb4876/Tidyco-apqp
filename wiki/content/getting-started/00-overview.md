@@ -1,37 +1,56 @@
 # Getting Started
 
-## What this wiki is for
-This wiki explains the platform in plain language for everyday users.
-It is designed as a quick reference for what each area does, how key features work, and how data flows between systems (like how Production scheduling affects Capacity load).
+## Purpose of this wiki
+This wiki is the shared reference for Tidyco APQP users.
 
-## Before you start
-- This is a standalone reference wiki, separate from the main app routing.
-- It is divided into two learning paths: **Function** (what things mean) and **Process** (how to click through the tool).
+It is written for both:
+- **New users** who need to learn what each area does
+- **Existing users** who need fast, reliable reminders for day-to-day work
 
-## Key components of the system
-- **Capacity Hub:** Plans people hours against planned work and production support.
-- **Product Development (NPI):** Manages APQP setup, PFMEA, and Gate sign-offs.
-- **Production:** The master schedule of active overhaul batches on the shop floor.
-- **Operations:** The cross-functional dashboard showing live system health, bottlenecks, and risks.
-- **Manufacturing Change (MCS):** The centralized ECR (Engineering Change Request) management workflow and schedule impact tracker.
+Each page uses plain language and focuses on practical use, not technical setup.
 
-## The learning process
-1. **Find your area:** Choose the domain relevant to your role (e.g., Capacity, NPI).
-2. **Understand the function:** Read the area overview to understand *why* the tools exist.
-3. **Follow the workflows:** Use the step-by-step guides when you need to perform data entry in the system.
-4. **Check the connections:** Note how your data entry affects other teams (e.g., changing a product's support hours immediately changes the PM capacity forecast).
+## How to use this wiki
+Use this three-step approach:
 
-## Common mistakes to avoid
-- **Jumping straight to data entry:** Trying to fill out a PFMEA or Capacity plan without understanding the underlying math or methodology.
-- **Working in silos:** Forgetting that an action logged in NPI immediately shows up in the assignee's Action Centre.
+1. **Start with an overview page** for your area (for example, Capacity or Product Development).
+2. **Read the feature page** for the exact tool you are using (for example, Schedule, PFMEA, or Actions).
+3. **Use the detailed sections** for formulas, status rules, and decision guidance when needed.
 
-## Access and Navigation
-- URL: /wiki/index.html
-- This is a standalone wiki page (separate from app hash routing).
-- Use the sidebar to jump between functional areas.
-- Use the search bar (top right) to quickly find specific terms, acronyms, or forms.
+This structure helps you understand both the "what" and the "how".
 
-## Related
+## Core platform areas at a glance
+| Area | What it is used for | Typical users |
+|---|---|---|
+| **Capacity** | Planning available hours against planned demand | Team leads, planners, engineering managers |
+| **Product Development (NPI)** | APQP planning, risk control, and gate readiness | Engineers, quality, project teams |
+| **Production** | Managing batches, dates, and work-area loading | Production planners, operations leads |
+| **Operations** | Monitoring delivery, flow, risks, and people data | Managers and cross-functional leaders |
+| **MCS** | Managing change requests and approvals | Change owners, approvers, affected teams |
+| **Action Centre** | Tracking open work, owners, and due dates | Everyone with assigned actions |
+
+## What good usage looks like
+- Keep records current as work changes (status, dates, ownership)
+- Use one source of truth per area (for example, Schedule for batches)
+- Check linked pages when decisions affect other teams
+
+## Common errors and how to prevent them
+- **Error:** Updating data without checking impact on connected areas  
+  **Prevention:** Review each page's "Related" links before final save.
+
+- **Error:** Treating help pages as optional  
+  **Prevention:** Use feature overviews first, then workflow steps.
+
+- **Error:** Guessing formula meaning  
+  **Prevention:** Use the "Calculations" sections on feature pages.
+
+## Access and navigation
+- URL: `/wiki/index.html`
+- Open from browser as a standalone wiki
+- Use sidebar categories to move by function
+- Use search for keywords, acronyms, and form names
+
+## Recommended first pages
+- [Quick Reference Card](./10-quick-reference.md)
 - [Capacity Overview](../capacity/00-overview.md)
 - [Product Development Overview](../product-development/00-overview.md)
-- [Operations Overview](../operations/00-overview.md)
+- [Production Overview](../production/00-overview.md)

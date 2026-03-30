@@ -1365,3 +1365,23 @@
 | 08:19 | Edited tests/bootstrap-load-order.test.js | modified catch() | ~919 |
 | 08:19 | Edited tests/bootstrap-load-order.test.js | added 1 import(s) | ~991 |
 | 08:22 | Session end: 7 writes across 3 files (bootstrap-load-order.test.js, chart.js, supabase-js.js) | 5 reads | ~5961 tok |
+
+## Session: 2026-03-30 10:39
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 10:41 | Edited portals/capacity/shared/css/cap-heatmap.css | expanded (+12 lines) | ~357 |
+| 10:42 | Edited portals/capacity/shared/js/cap-heatmap.js | 10→10 lines | ~180 |
+| 10:42 | Edited tests/me-heatmap.test.js | 10→12 lines | ~143 |
+| 10:42 | Edited CHANGELOG.md | 6→8 lines | ~202 |
+| 10:42 | Session end: 4 writes across 4 files (cap-heatmap.css, cap-heatmap.js, me-heatmap.test.js, CHANGELOG.md) | 4 reads | ~29457 tok |
+| 10:45 | Edited portals/capacity/shared/css/cap-heatmap.css | 42→42 lines | ~356 |
+| 10:45 | Session end: 5 writes across 4 files (cap-heatmap.css, cap-heatmap.js, me-heatmap.test.js, CHANGELOG.md) | 4 reads | ~29813 tok |
+
+## Session: 2026-03-30 10:59
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 10:06 | Refreshed 4 core wiki pages for accessible guidance and formulas | wiki/content/getting-started/00-overview.md, wiki/content/capacity/10-capacity-hub.md, wiki/content/production/10-schedule.md, wiki/content/product-development/50-pfmea.md, CHANGELOG.md, .wolf/cerebrum.md | Completed proactive wiki content uplift aligned to new authoring standards | ~5200 |
+| 10:12 | Refreshed 4 more wiki pages (Action Centre, MCS, Operations) | wiki/content/action-centre/00-overview.md, wiki/content/mcs/00-overview.md, wiki/content/mcs/30-approval-workflow.md, wiki/content/operations/00-overview.md, CHANGELOG.md | Added high-level workflows and detailed calculations/metrics sections for practical use | ~4300 |
+| 10:14 | Refreshed 4 Product Development deep pages | wiki/content/product-development/10-npi-projects.md, wiki/content/product-development/60-control-plan.md, wiki/content/product-development/70-actions.md, wiki/content/product-development/80-risks.md, CHANGELOG.md | Added practical high-level workflows and explicit calculation/monitoring guidance | ~3900 |

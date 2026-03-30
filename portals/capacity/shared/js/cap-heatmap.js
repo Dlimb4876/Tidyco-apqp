@@ -10,19 +10,23 @@ import { esc } from '../../../../utils/js/helpers.js'
 let _heatmapCtx = null
 
 const LEGEND_ITEMS = [
-  { cls: 'me-heatmap-util-clear',   label: '< 60%',   note: 'Clear' },
-  { cls: 'me-heatmap-util-good',    label: '60–79%',  note: 'Good' },
-  { cls: 'me-heatmap-util-caution', label: '80–94%',  note: 'Caution' },
-  { cls: 'me-heatmap-util-near',    label: '95–99%',  note: 'Near full' },
-  { cls: 'me-heatmap-util-over',    label: '≥ 100%',  note: 'Over' },
-  { cls: 'me-heatmap-no-capacity',  label: '—',       note: 'No data' }
+  { cls: 'me-heatmap-util-very-clear', label: '< 50%',   note: 'Very clear' },
+  { cls: 'me-heatmap-util-clear',      label: '50–65%',  note: 'Clear' },
+  { cls: 'me-heatmap-util-good',       label: '65–80%',  note: 'Good' },
+  { cls: 'me-heatmap-util-caution',    label: '80–90%',  note: 'Caution' },
+  { cls: 'me-heatmap-util-warning',    label: '90–95%',  note: 'Warning' },
+  { cls: 'me-heatmap-util-near',       label: '95–99%',  note: 'Nearly full' },
+  { cls: 'me-heatmap-util-over',       label: '≥ 100%',  note: 'Over' },
+  { cls: 'me-heatmap-no-capacity',     label: '—',       note: 'No data' }
 ]
 
 function utilClass(utilisation, capacity) {
   if (capacity === 0) return 'me-heatmap-no-capacity'
-  if (utilisation < 60)  return 'me-heatmap-util-clear'
+  if (utilisation < 50)  return 'me-heatmap-util-very-clear'
+  if (utilisation < 65)  return 'me-heatmap-util-clear'
   if (utilisation < 80)  return 'me-heatmap-util-good'
-  if (utilisation < 95)  return 'me-heatmap-util-caution'
+  if (utilisation < 90)  return 'me-heatmap-util-caution'
+  if (utilisation < 95)  return 'me-heatmap-util-warning'
   if (utilisation < 100) return 'me-heatmap-util-near'
   return 'me-heatmap-util-over'
 }
