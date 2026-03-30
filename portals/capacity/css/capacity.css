@@ -19,7 +19,7 @@
 
 .capacity-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    box-shadow: var(--card-shadow-hover);
     border-color: var(--blue);
 }
 

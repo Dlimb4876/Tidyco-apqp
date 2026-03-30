@@ -29,7 +29,7 @@
 	font-family: 'IBM Plex Sans', sans-serif; transition: all .15s;
 	white-space: nowrap;
 }
-.me-nav-btn:hover  { color: var(--blue); background: rgba(0, 102, 204, 0.05); }
+.me-nav-btn:hover  { color: var(--blue); background: var(--blue-pale); }
 .me-nav-btn.active { color: var(--blue); border-bottom-color: var(--blue); background: var(--blue-pale); font-weight: 600; }
 
 .me-body {

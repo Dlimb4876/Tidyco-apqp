@@ -74,56 +74,48 @@
 	font-family: 'IBM Plex Mono', monospace;
 }
 
-/* ── 7-band colour scale ─────────────────────────────────── */
+/* ── 7-band colour scale (theme-aware via CSS variables) ── */
 .me-heatmap-util-very-clear {
-	background: #a5d6a7;
+	background: var(--heatmap-very-clear-bg);
 }
 .me-heatmap-util-very-clear .me-heatmap-cell-value,
-.me-heatmap-util-very-clear.me-heatmap-legend-swatch { color: #1b5e20; }
+.me-heatmap-util-very-clear.me-heatmap-legend-swatch { color: var(--heatmap-very-clear-text); }
 
 .me-heatmap-util-clear {
-	background: #81c784;
+	background: var(--heatmap-clear-bg);
 }
 .me-heatmap-util-clear .me-heatmap-cell-value,
-.me-heatmap-util-clear.me-heatmap-legend-swatch { color: #1b5e20; }
+.me-heatmap-util-clear.me-heatmap-legend-swatch { color: var(--heatmap-clear-text); }
 
 .me-heatmap-util-good {
-	background: #9ccc65;
+	background: var(--heatmap-good-bg);
 }
 .me-heatmap-util-good .me-heatmap-cell-value,
-.me-heatmap-util-good.me-heatmap-legend-swatch { color: #33691e; }
+.me-heatmap-util-good.me-heatmap-legend-swatch { color: var(--heatmap-good-text); }
 
 .me-heatmap-util-caution {
-	background: #ffee58;
+	background: var(--heatmap-caution-bg);
 }
 .me-heatmap-util-caution .me-heatmap-cell-value,
-.me-heatmap-util-caution.me-heatmap-legend-swatch { color: #f57f17; }
+.me-heatmap-util-caution.me-heatmap-legend-swatch { color: var(--heatmap-caution-text); }
 
 .me-heatmap-util-warning {
-	background: #ffb74d;
+	background: var(--heatmap-warning-bg);
 }
 .me-heatmap-util-warning .me-heatmap-cell-value,
-.me-heatmap-util-warning.me-heatmap-legend-swatch { color: #e65100; }
+.me-heatmap-util-warning.me-heatmap-legend-swatch { color: var(--heatmap-warning-text); }
 
 .me-heatmap-util-near {
-	background: #ff9800;
+	background: var(--heatmap-near-bg);
 }
 .me-heatmap-util-near .me-heatmap-cell-value,
-.me-heatmap-util-near.me-heatmap-legend-swatch { color: var(--white); }
+.me-heatmap-util-near.me-heatmap-legend-swatch { color: var(--heatmap-near-text); }
 
 .me-heatmap-util-over {
-	background: #e53935;
+	background: var(--heatmap-over-bg);
 }
 .me-heatmap-util-over .me-heatmap-cell-value,
-.me-heatmap-util-over.me-heatmap-legend-swatch { color: var(--white); }
-
-/* Legacy aliases — keep so any external references still work */
-.me-heatmap-util-low { background: #e8f5e9; }
-.me-heatmap-util-low .me-heatmap-cell-value { color: #2e7d32; }
-.me-heatmap-util-mid { background: #fff3e0; }
-.me-heatmap-util-mid .me-heatmap-cell-value { color: #e65100; }
-.me-heatmap-util-high { background: var(--red); }
-.me-heatmap-util-high .me-heatmap-cell-value { color: var(--white); }
+.me-heatmap-util-over.me-heatmap-legend-swatch { color: var(--heatmap-over-text); }
 
 .me-heatmap-no-capacity {
 	background: var(--overlay-light);
@@ -218,7 +210,7 @@
 
 .me-detail-modal-content {
 	position: relative; background: var(--white); border-radius: 12px;
-	box-shadow: 0 10px 40px rgba(0,0,0,0.15); width: 90%; max-width: 500px;
+	box-shadow: var(--modal-shadow); width: 90%; max-width: 500px;
 	max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column;
 	z-index: 1001;
 }

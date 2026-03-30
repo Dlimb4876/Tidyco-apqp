@@ -3,6 +3,15 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-30 | Add error-handling-auth.test.js (28 tests) | Phase 1.2 of robust testing plan — covers RLS/auth 42501 rejections, optimistic revert on gate-sig conflict, and guard clauses in npi-data-relational.js
+
+
+## 2026-03-30 | Add Phase 1.1 database connection failure tests | New test file tests/error-handling-db.test.js covering graceful error handling for loadRemote, loadRemotePage, loadProjectById, teamsDataLoadAll, teamsDataLoadPermissions, teamsDataGetUserCount, and setSyncBadge badge transitions (16 tests, all passing)
+
+## 2025-07-22 | Capacity portal code & CSS review fixes | Wired modal close handler, removed dead fn, fixed localStorage bool, added hub event cleanup, added try/catch to event dispatchers, replaced all hardcoded hex/rgba in CSS with theme-aware variables for light/dark/terminal support
+
+## 2026-03-30 | Fix Operations dashboard PM utilization KPI showing 0% | PM metrics were incorrectly using ME data state; added PM data loading and realtime subscriptions to Operations portal.
+
 ## 2026-03-30 | Remove "No Product" default text from task product picker | Empty fields now show placeholder instead of requiring users to delete pre-filled text before searching
 
 ## 2026-03-30 | Fix capacity tasks reverting to read-only after edit | capTaskRefresh() was using old click-to-edit row builder instead of shared inline-editing renderer

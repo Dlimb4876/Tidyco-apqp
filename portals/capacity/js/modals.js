@@ -50,6 +50,7 @@ if (document.readyState === 'loading') {
   injectCapacityModals()
 }
 
-function closeProdCapacityFormulaModal() {
+// Export so capacity-events.js can call it from the modal close action
+export function closeProdCapacityFormulaModal() {
   closeModal('modalProdCapacityFormula')
 }

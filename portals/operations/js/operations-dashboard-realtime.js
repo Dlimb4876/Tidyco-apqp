@@ -24,12 +24,20 @@ import {
 } from './operations-dashboard-render-core.js'
 import { opsRenderForecastView } from './operations-dashboard-forecast-view.js'
 import { opsForecastManager } from './operations-forecast-data.js'
+import { meDataState } from '../../capacity/me/js/me-data.js'
+import { pmDataState } from '../../capacity/project-management/js/pm-data.js'
 import {
 	meLoadRelationalTeams,
 	meLoadRelationalTasks,
 	meLoadRelationalProducts,
 	meLoadRelationalHolidays
 } from '../../capacity/me/js/me-data-relational.js'
+import {
+	pmLoadRelationalTeams,
+	pmLoadRelationalTasks,
+	pmLoadRelationalProducts,
+	pmLoadRelationalHolidays
+} from '../../capacity/project-management/js/pm-data-relational.js'
 
 function opsScheduleRefresh(key, refreshFn, delayMs = 120) {
 	if (operationsDashboardState.opsRefreshTimers[key]) {
@@ -113,7 +121,9 @@ async function opsRefreshProductionProducts() {
 }
 
 async function opsRefreshMeData() {
-	if (!currentUser || !globalThis.meDataState) return;
+	if (!currentUser) return;
+	const target = globalThis.meDataState || meDataState;
+	if (!target) return;
 
 	if (typeof meLoadRelationalTeams !== 'function') return;
 
@@ -124,10 +134,30 @@ async function opsRefreshMeData() {
 		meLoadRelationalHolidays(currentUser.id)
 	]);
 
-	globalThis.meDataState.team = teams || [];
-	globalThis.meDataState.tasks = tasks || [];
-	globalThis.meDataState.products = products || [];
-	globalThis.meDataState.holidays = Array.isArray(holidays) ? holidays : [];
+	target.team = teams || [];
+	target.tasks = tasks || [];
+	target.products = products || [];
+	target.holidays = Array.isArray(holidays) ? holidays : [];
+}
+
+async function opsRefreshPmData() {
+	if (!currentUser) return;
+	const target = globalThis.pmDataState || pmDataState;
+	if (!target) return;
+
+	if (typeof pmLoadRelationalTeams !== 'function') return;
+
+	const [teams, tasks, products, holidays] = await Promise.all([
+		pmLoadRelationalTeams(currentUser.id),
+		pmLoadRelationalTasks(currentUser.id),
+		pmLoadRelationalProducts(currentUser.id),
+		pmLoadRelationalHolidays(currentUser.id)
+	]);
+
+	target.team = teams || [];
+	target.tasks = tasks || [];
+	target.products = products || [];
+	target.holidays = Array.isArray(holidays) ? holidays : [];
 }
 
 async function opsRefreshBugs() {
@@ -172,6 +202,28 @@ function opsRealtimeInit() {
 		onUpdate: () => opsScheduleRefresh('me_data', opsRefreshMeData),
 		onDelete: () => opsScheduleRefresh('me_data', opsRefreshMeData)
 	})
+
+	createRealtimeSubscription('pm_teams', 'ops_pm_teams_channel', {
+		onInsert: () => opsScheduleRefresh('pm_data', opsRefreshPmData),
+		onUpdate: () => opsScheduleRefresh('pm_data', opsRefreshPmData),
+		onDelete: () => opsScheduleRefresh('pm_data', opsRefreshPmData)
+	})
+	createRealtimeSubscription('pm_tasks', 'ops_pm_tasks_channel', {
+		onInsert: () => opsScheduleRefresh('pm_data', opsRefreshPmData),
+		onUpdate: () => opsScheduleRefresh('pm_data', opsRefreshPmData),
+		onDelete: () => opsScheduleRefresh('pm_data', opsRefreshPmData)
+	})
+	createRealtimeSubscription('pm_products', 'ops_pm_products_channel', {
+		onInsert: () => opsScheduleRefresh('pm_data', opsRefreshPmData),
+		onUpdate: () => opsScheduleRefresh('pm_data', opsRefreshPmData),
+		onDelete: () => opsScheduleRefresh('pm_data', opsRefreshPmData)
+	})
+	createRealtimeSubscription('pm_holidays', 'ops_pm_holidays_channel', {
+		onInsert: () => opsScheduleRefresh('pm_data', opsRefreshPmData),
+		onUpdate: () => opsScheduleRefresh('pm_data', opsRefreshPmData),
+		onDelete: () => opsScheduleRefresh('pm_data', opsRefreshPmData)
+	})
+
 	createRealtimeSubscription('production_batches', 'ops_prod_batches_channel', {
 		onInsert: () => opsScheduleRefresh('production_batches', opsRefreshProductionBatches),
 		onUpdate: () => opsScheduleRefresh('production_batches', opsRefreshProductionBatches),
@@ -202,6 +254,7 @@ function opsRealtimeInit() {
 	opsScheduleRefresh('production_batches', opsRefreshProductionBatches, 10);
 	opsScheduleRefresh('products', opsRefreshProductionProducts, 10);
 	opsScheduleRefresh('me_data', opsRefreshMeData, 10);
+	opsScheduleRefresh('pm_data', opsRefreshPmData, 10);
 	opsScheduleRefresh('bugs', opsRefreshBugs, 10);
 	opsScheduleRefresh('forecast', opsRefreshForecast, 10);
 
@@ -218,6 +271,12 @@ function opsRealtimeCleanup() {
 	removeRealtimeSubscription('ops_me_tasks_channel');
 	removeRealtimeSubscription('ops_me_products_channel');
 	removeRealtimeSubscription('ops_me_holidays_channel');
+
+	removeRealtimeSubscription('ops_pm_teams_channel');
+	removeRealtimeSubscription('ops_pm_tasks_channel');
+	removeRealtimeSubscription('ops_pm_products_channel');
+	removeRealtimeSubscription('ops_pm_holidays_channel');
+
 	removeRealtimeSubscription('ops_prod_batches_channel');
 	removeRealtimeSubscription('ops_prod_products_channel');
 	removeRealtimeSubscription('ops_projects_channel');

@@ -15,6 +15,7 @@ import { injectCapacityModals } from './modals.js'
 import { setupCapacityEvents } from './capacity-events.js'
 
 let capacityPortalDelegationContainer = null
+let _capPortalClickHandler = null
 
 function isCapacityPageFavourite(pageKey) {
   return hubIsPageFavourite(pageKey)
@@ -139,16 +140,12 @@ export function renderCapacity() {
   `
 }
 
-function renderCapacitySection() {
-  return renderCapacity()
-}
-
 function setupCapacityPortalDelegation() {
   const container = document.getElementById('capacity-portal-container')
   if (!container || capacityPortalDelegationContainer === container) return
 
-  capacityPortalDelegationContainer = container
-  container.addEventListener('click', event => {
+  // Extract handler so it can be removed on teardown
+  _capPortalClickHandler = event => {
     const actionEl = event.target.closest('[data-action]')
     if (!actionEl || !container.contains(actionEl)) return
 
@@ -173,5 +170,16 @@ function setupCapacityPortalDelegation() {
         hubTogglePageFavourite(key)
       }
     }
-  })
+  }
+
+  capacityPortalDelegationContainer = container
+  container.addEventListener('click', _capPortalClickHandler)
+}
+
+// Remove hub-level delegation listener on navigation away
+export function teardownCapacityPortalDelegation() {
+  if (!capacityPortalDelegationContainer || !_capPortalClickHandler) return
+  capacityPortalDelegationContainer.removeEventListener('click', _capPortalClickHandler)
+  capacityPortalDelegationContainer = null
+  _capPortalClickHandler = null
 }

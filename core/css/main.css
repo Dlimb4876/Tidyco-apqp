@@ -92,6 +92,15 @@
   --chart-purple: #7c3aed; --chart-purple-pale: rgba(124,58,237,0.12); --chart-purple-lt: rgba(124,58,237,0.15);
   --chart-red: #ef4444; --chart-red-pale: rgba(239,68,68,0.12);
 
+  /* Heatmap utilisation scale */
+  --heatmap-very-clear-bg: #a5d6a7; --heatmap-very-clear-text: #1b5e20;
+  --heatmap-clear-bg: #81c784; --heatmap-clear-text: #1b5e20;
+  --heatmap-good-bg: #9ccc65; --heatmap-good-text: #33691e;
+  --heatmap-caution-bg: #ffee58; --heatmap-caution-text: #f57f17;
+  --heatmap-warning-bg: #ffb74d; --heatmap-warning-text: #e65100;
+  --heatmap-near-bg: #ff9800; --heatmap-near-text: #ffffff;
+  --heatmap-over-bg: #e53935; --heatmap-over-text: #ffffff;
+
   /* Gray Scale */
   --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
   --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
@@ -104,6 +113,8 @@
   --row-highlight-amber: rgba(255,191,0,0.05);
   --overlay-light: rgba(0,0,0,0.02);
   --overlay-medium: rgba(0,0,0,0.1);
+  --badge-overlay: rgba(255,255,255,0.2);
+  --badge-overlay-active: rgba(255,255,255,0.25);
 
   /* Status Colors */
   --status-green-bg: #d1fae5; --status-green-text: #065f46;
@@ -201,6 +212,15 @@
   --chart-purple: #a78bfa; --chart-purple-pale: rgba(167,139,250,0.15); --chart-purple-lt: rgba(167,139,250,0.2);
   --chart-red: #ef4444; --chart-red-pale: rgba(239,68,68,0.15);
 
+  /* Heatmap utilisation scale — dark */
+  --heatmap-very-clear-bg: rgba(102,187,106,0.30); --heatmap-very-clear-text: #a5d6a7;
+  --heatmap-clear-bg: rgba(76,175,80,0.35); --heatmap-clear-text: #81c784;
+  --heatmap-good-bg: rgba(139,195,74,0.30); --heatmap-good-text: #aed581;
+  --heatmap-caution-bg: rgba(255,238,88,0.25); --heatmap-caution-text: #fff176;
+  --heatmap-warning-bg: rgba(255,183,77,0.30); --heatmap-warning-text: #ffcc80;
+  --heatmap-near-bg: rgba(255,152,0,0.40); --heatmap-near-text: #ffe0b2;
+  --heatmap-over-bg: rgba(229,57,53,0.45); --heatmap-over-text: #ffcdd2;
+
   /* Gray Scale - Dark (inverted) */
   --gray-50: #1f2937; --gray-100: #374151; --gray-200: #4b5563;
   --gray-300: #6b7280; --gray-400: #9ca3af; --gray-500: #d1d5db;
@@ -213,6 +233,8 @@
   --row-highlight-amber: rgba(234,88,12,0.08);
   --overlay-light: rgba(255,255,255,0.02);
   --overlay-medium: rgba(255,255,255,0.08);
+  --badge-overlay: rgba(255,255,255,0.15);
+  --badge-overlay-active: rgba(255,255,255,0.22);
 
   /* Status Colors - Dark */
   --status-green-bg: rgba(16,185,129,0.15); --status-green-text: #6ee7b7;
@@ -314,6 +336,15 @@
   --chart-purple: #cc00ff; --chart-purple-pale: rgba(204,0,255,0.25); --chart-purple-lt: rgba(204,0,255,0.35);
   --chart-red: #ff2222; --chart-red-pale: rgba(255,34,34,0.25);
 
+  /* Heatmap utilisation scale — terminal (green-tinted) */
+  --heatmap-very-clear-bg: rgba(0,255,65,0.12); --heatmap-very-clear-text: #00ff41;
+  --heatmap-clear-bg: rgba(0,255,65,0.20); --heatmap-clear-text: #00ff41;
+  --heatmap-good-bg: rgba(0,255,65,0.28); --heatmap-good-text: #00ff41;
+  --heatmap-caution-bg: rgba(255,238,88,0.25); --heatmap-caution-text: #ffee58;
+  --heatmap-warning-bg: rgba(255,183,77,0.30); --heatmap-warning-text: #ffb74d;
+  --heatmap-near-bg: rgba(255,152,0,0.40); --heatmap-near-text: #ffe0b2;
+  --heatmap-over-bg: rgba(255,34,34,0.50); --heatmap-over-text: #ff6666;
+
   /* Gray Scale - Terminal */
   --gray-50: #050d05; --gray-100: #0a140a; --gray-200: #0f1a0f;
   --gray-300: #1a2a1a; --gray-400: #2a4a2a; --gray-500: #4a7a4a;
@@ -326,6 +357,8 @@
   --row-highlight-amber: rgba(255,204,0,0.06);
   --overlay-light: rgba(0,255,65,0.02);
   --overlay-medium: rgba(0,255,65,0.08);
+  --badge-overlay: rgba(0,255,65,0.12);
+  --badge-overlay-active: rgba(0,255,65,0.18);
 
   /* Status Colors - Terminal */
   --status-green-bg: rgba(0,255,65,0.12); --status-green-text: #00ff41;

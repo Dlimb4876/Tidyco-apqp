@@ -14,8 +14,8 @@ import {
 } from './helpers.js';
 import { renderMeCapacity, meDrawChartNow, meTab, setMeTab } from '../../portals/capacity/me/js/me-capacity.js'
 import { meCapacityDataUnsubscribe } from '../../portals/capacity/me/js/me-data-realtime.js'
-import { renderCapacity, setCapacityTab } from '../../portals/capacity/js/capacity.js'
-import { setupCapacityEvents } from '../../portals/capacity/js/capacity-events.js'
+import { renderCapacity, setCapacityTab, teardownCapacityPortalDelegation } from '../../portals/capacity/js/capacity.js'
+import { setupCapacityEvents, teardownCapacityEvents } from '../../portals/capacity/js/capacity-events.js'
 import { renderProdCapacity } from '../../portals/capacity/production/js/prod-capacity.js'
 import {
   prodCapUnsubscribeUtilization
@@ -245,8 +245,10 @@ export function navigate(sec, { pushHash = true } = {}) {
     actionCentreDataUnsubscribe()
   }
 
-  // Clean up subscriptions when leaving capacity
+  // Clean up subscriptions and event listeners when leaving capacity
   if (appState.currentSection === 'capacity' && sec !== 'capacity') {
+    teardownCapacityEvents()
+    teardownCapacityPortalDelegation()
     meCapacityDataUnsubscribe();
     prodCapUnsubscribeUtilization()
     workAreasDataUnsubscribe()

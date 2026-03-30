@@ -15,7 +15,7 @@
 }
 .cap-filter-bar input[type="text"]:focus {
 	border-color: var(--blue);
-	box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.08);
+	box-shadow: 0 0 0 2px var(--field-shadow-focus);
 }
 .cap-filter-bar select {
 	padding: 7px 10px; border: 1.5px solid var(--line2);
@@ -26,7 +26,7 @@
 }
 .cap-filter-bar select:focus {
 	border-color: var(--blue);
-	box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.08);
+	box-shadow: 0 0 0 2px var(--field-shadow-focus);
 }
 
 /* ── Inline-Editable Tables ──────────────────────────────────── */
@@ -71,7 +71,7 @@
 .me-tbl td input:focus,
 .me-tbl td select:focus {
 	border-color: var(--blue); background: var(--white);
-	box-shadow: 0 0 0 2px rgba(0,102,204,.08);
+	box-shadow: 0 0 0 2px var(--field-shadow-focus);
 }
 .me-tbl td input[type="number"] { text-align: right; }
 .me-tbl td input[type="date"]   { min-width: 110px; }
@@ -111,7 +111,7 @@
 .tbl td input:focus,
 .tbl td select:focus {
 	border-color: var(--blue); background: var(--white);
-	box-shadow: 0 0 0 2px rgba(0,102,204,.08);
+	box-shadow: 0 0 0 2px var(--field-shadow-focus);
 }
 .tbl td input[type="number"] { text-align: right; }
 .tbl td input[type="date"]   { min-width: 110px; }

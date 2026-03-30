@@ -5,7 +5,7 @@
    ============================================================ */
 
 import { appState } from '../../../core/js/state.js'
-import { canEdit, esc, isEditingInlineCell, preserveInputCaretAfterRender, showModal } from '../../../utils/js/helpers.js'
+import { canEdit, closeModal, esc, isEditingInlineCell, preserveInputCaretAfterRender, showModal } from '../../../utils/js/helpers.js'
 import { navigate, render } from '../../../utils/js/navigation.js'
 import { flushDeferred } from '../../../utils/js/render-scheduler.js'
 import { CAP_DEFAULT_HOURS_PER_WEEK } from '../shared/js/cap-utils.js'
@@ -763,6 +763,7 @@ function capPreserveSearchContinuity(inputEl, replacementSelector, rerenderFn) {
 }
 
 function onCapacityClick(evt) {
+  try {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
@@ -995,7 +996,7 @@ function onCapacityClick(evt) {
           : 'meTasksHideCompleted'
     if (f) {
       f.hideCompleted = !f.hideCompleted
-      localStorage.setItem(storageKey, f.hideCompleted)
+      localStorage.setItem(storageKey, String(f.hideCompleted))
     }
     capTaskRefresh(contextType)
     break
@@ -1252,6 +1253,11 @@ function onCapacityClick(evt) {
     if (typeof showModal === 'function') showModal('modalProdCapacityFormula')
     break
   }
+  // Close the formula explanation modal
+  case 'cap-prod-capacity-modal-close': {
+    closeModal('modalProdCapacityFormula')
+    break
+  }
   case 'cap-prod-set-workarea': {
     const wa = el.getAttribute('data-workarea')
     prodCapSetWorkArea(wa)
@@ -1263,9 +1269,11 @@ function onCapacityClick(evt) {
 
   default: break
   }
+  } catch (err) { console.error('Capacity click handler error:', err) }
 }
 
 function onCapacityChange(evt) {
+  try {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
@@ -1462,9 +1470,11 @@ function onCapacityChange(evt) {
 
   default: break
   }
+  } catch (err) { console.error('Capacity change handler error:', err) }
 }
 
 function onCapacityInput(evt) {
+  try {
   const el = capActionTarget(evt)
   if (!el) return
   const action = el.getAttribute('data-cap-action')
@@ -1532,6 +1542,7 @@ function onCapacityInput(evt) {
   }
   default: break
   }
+  } catch (err) { console.error('Capacity input handler error:', err) }
 }
 
 function onCapacityKeydown(evt) {

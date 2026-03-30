@@ -175,19 +175,19 @@
 }
 
 .pc-alert-red {
-  background: rgba(239,68,68,0.08);
+  background: var(--status-red-bg);
   border-left-color: var(--red);
   color: var(--ink);
 }
 
 .pc-alert-amber {
-  background: rgba(245,158,11,0.1);
+  background: var(--status-amber-bg);
   border-left-color: var(--amber);
   color: var(--ink);
 }
 
 .pc-alert-info {
-  background: rgba(59,130,246,0.07);
+  background: var(--status-blue-bg);
   border-left-color: var(--blue);
   color: var(--mid);
 }
@@ -264,7 +264,7 @@
 }
 
 .pc-tbl tr:hover td {
-  background: rgba(59,130,246,0.04);
+  background: var(--row-highlight-blue);
 }
 
 .pc-tbl-month {
@@ -360,17 +360,17 @@
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.2);
+  background: var(--badge-overlay);
 }
 
 .pc-area-tab.active .pc-area-badge {
-  background: rgba(255,255,255,0.25);
+  background: var(--badge-overlay-active);
   color: var(--white);
 }
 
-.pc-badge-green  { background: rgba(16,185,129,0.15); color: var(--green); }
-.pc-badge-amber  { background: rgba(245,158,11,0.15);  color: var(--amber); }
-.pc-badge-red    { background: rgba(239,68,68,0.15);   color: var(--red);   }
+.pc-badge-green  { background: var(--green-dim); color: var(--green); }
+.pc-badge-amber  { background: var(--amber-dim);  color: var(--amber); }
+.pc-badge-red    { background: var(--red-dim);   color: var(--red);   }
 
 /* ── Settings Grid ───────────────────────────────────────────── */
 .pc-settings {
@@ -531,7 +531,7 @@
   display: inline-block;
   font-size: 10px;
   padding: 2px 6px;
-  background: rgba(59,130,246,0.1);
+  background: var(--blue-pale);
   color: var(--blue);
   border-radius: 4px;
   font-family: 'IBM Plex Mono', monospace;
@@ -578,7 +578,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: rgba(59,130,246,0.08);
+  background: var(--blue-pale);
   border-bottom: 1px solid var(--line);
   margin-bottom: 16px;
 }

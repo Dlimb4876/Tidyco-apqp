@@ -14,13 +14,13 @@ This plan addresses critical gaps in the Tidyco APQP testing suite, moving beyon
 
 **Key reference:** Toast notifications use `showToast(message, type, duration)` from `utils/js/helpers.js`. Types: `'info'`, `'error'`, `'warning'`. Sync badge updates `#syncBadge` and `#bottombarSync` with states `'syncing'` / `'saved'` / `'error'`.
 
-- [ ] **1.1: Database Connection Failures**
+- [x] **1.1: Database Connection Failures**
   - Create `tests/error-handling-db.test.js`.
   - Mock `supa.from().select()` to return `{ data: null, error: { message: 'Network Timeout', code: 'PGRST301' } }`.
   - Verify that a "Connection Error" toast is displayed (via `showToast` with type `'error'`).
   - Verify that the loading spinner is cleared.
 
-- [ ] **1.2: Authentication & RLS Violations (401/403)**
+- [x] **1.2: Authentication & RLS Violations (401/403)**
   - Create `tests/error-handling-auth.test.js`.
   - Mock `supa.from().insert()` to return `{ data: null, error: { message: 'new row violates row-level security policy', code: '42501' } }`.
   - Verify the UI does **not** update local state on a failed write (the codebase is mostly pessimistic — write first, update UI after). Focus on the NPI relational layer (`npi-data-relational.js`) which has an explicit "Revert optimistic local update" path.

@@ -4,6 +4,7 @@
 
 import { db } from '../../../core/js/state.js'
 import { meDataState } from '../../capacity/me/js/me-data.js'
+import { pmDataState } from '../../capacity/project-management/js/pm-data.js'
 import { capCalculateMonthData } from '../../capacity/shared/js/cap-calculations.js'
 import { logDataState } from '../../capacity/logistics/js/log-data.js'
 import {
@@ -109,6 +110,7 @@ function opsMetricsDependencies(overrides = {}) {
 				? globalThis.feedbackDataManager.state.feedback
 				: []),
 		meDataState: overrides.meDataState || meDataState || null,
+		pmDataState: overrides.pmDataState || pmDataState || null,
 		meCalculateMonthData: overrides.meCalculateMonthData || capCalculateMonthData,
 		departmentFilter: overrides.departmentFilter || opsFilterByDepartment,
 		logDataState: overrides.logDataState || logDataState || null
@@ -266,7 +268,9 @@ function opsCalcMeCapacity(dependencies = {}, monthKeyOverride = '') {
 }
 
 function opsCalcPmCapacity(dependencies = {}, monthKeyOverride = '') {
-	return opsCalcDepartmentCapacity('PM', dependencies, monthKeyOverride);
+	const deps = opsMetricsDependencies(dependencies);
+	const pmDeps = { ...deps, meDataState: deps.pmDataState || pmDataState };
+	return opsCalcDepartmentCapacity('PM', pmDeps, monthKeyOverride);
 }
 
 function opsCalcLogCapacity(dependencies = {}, monthKeyOverride = '') {
