@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-07-15 | Settings module anti-pattern refactor | Remove 7 categories of AI-generated anti-patterns: replace syncCoreState let-variable bridge with shared settingsState object, remove microtask DOM hydration race condition (explicit initSettings call), fix N+1 team-count query (single Supabase join), fix JSON.stringify HTML-escaping hack (use esc helper), remove dead typeof guards on ESM imports, deduplicate tab-activation logic, remove dead _familiesResortTbody and _waResortTbody functions
+
 ## 2026-07-15 | Dead code sweep and export cleanup | Remove 8 dead files, fix npi-cp.js wiring bug (Control Plan tab never loaded), de-export 22 internal-only symbols across 11 files, fix package.json main field
 
 ## 2026-03-29 | Expand capacity heatmap to 26 weeks (6 months) | Better forward visibility for planning

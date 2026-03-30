@@ -116,6 +116,7 @@ global.appState.settingsMcsError = null
 const settingsModule = await import('../portals/settings/js/settings.js')
 const { 
   renderSettings, 
+  initSettings,
   settingsFamiliesStartEdit, 
   settingsFamiliesCancelEdit,
   settingsWorkAreaStartEdit,
@@ -124,7 +125,6 @@ const {
   renderSettingsWorkAreasTab,
   renderSettingsPermissionsTab,
   renderSettingsRoleDefinitionsTab,
-  renderSettingsTeamsTab,
   renderSettingsAppearanceTab,
   settingsLoadAppearancePrefs,
   settingsSaveAppearancePrefs,
@@ -140,7 +140,7 @@ const {
 
 const settingsTeamsModule = await import('../portals/settings/js/settings-teams.js')
 const {
-  renderSettingsTeamsTab: renderSettingsTeamsTabFn,
+  renderSettingsTeamsTab,
   renderSettingsTeamsPermissionsEditor,
   settingsEnsurePermissionsData,
   settingsEnsureTeamsData
@@ -646,12 +646,12 @@ describe('Teams Tab - Permissions Editor', () => {
     const html = container.innerHTML
     expect(html).toContain('View all project data')
     expect(html).toContain('Edit projects')
-    expect(html).toContain('Add &amp; delete records')  // HTML entities
+    expect(html).toContain('Add and delete records')
     expect(html).toContain('Manage product families')
     expect(html).toContain('Manage work areas')
     expect(html).toContain('Manage capacity')
     expect(html).toContain('Change user roles')
-    expect(html).toContain('Access Settings page')
+    expect(html).toContain('Edit Settings content')
     expect(html).toContain('Lets the user change another user\'s role or team assignment.')
   })
 })
