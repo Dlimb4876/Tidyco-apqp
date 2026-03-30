@@ -1,7 +1,11 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T09:45:14.772Z
-> Files: 544 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T10:23:21.858Z
+> Files: 545 tracked | Anatomy hits: 0 | Misses: 0
+
+## ../../../.claude/plans/
+
+- `sequential-bouncing-beaver.md` — Plan: Rebuild Test Suite from Scratch (~3912 tok)
 
 ## ./
 
