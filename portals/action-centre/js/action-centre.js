@@ -115,12 +115,12 @@ export async function actionCentreLoad() {
   }
 }
 
-function actionCentreGoToMcs(changeId) {
+export function actionCentreGoToMcs(changeId) {
   if (changeId) appState.mcsAutoViewId = changeId
   navigate('mcs')
 }
 
-function actionCentreGoTo(projectProgId, section, itemId) {
+export function actionCentreGoTo(projectProgId, section, itemId) {
   if (!projectProgId) return
 
   const project = db.projects.find(p => p.id === projectProgId || p.dbId === projectProgId)
@@ -137,7 +137,7 @@ function actionCentreGoTo(projectProgId, section, itemId) {
   navigate(section)
 }
 
-async function actionCentreUpdateActionStatus(id, newStatus) {
+export async function actionCentreUpdateActionStatus(id, newStatus) {
   if (!id) return
   try {
     const { error } = await supabase.from('npi_actions').update({ status: newStatus }).eq('id', id)

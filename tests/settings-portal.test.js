@@ -44,6 +44,8 @@ global.db = { projects: [] }
 global.esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 global.showToast = jest.fn()
 global.canEdit = () => true
+// Mock currentUserRole for isAdmin() checks; set to 'admin' so admin-only tabs are visible
+global.currentUserRole = 'admin'
 
 // Mock families data
 global.familiesState = {
@@ -111,6 +113,11 @@ global.appState.mcsApproverConfig = null
 global.appState.settingsNpiGateSignoffConfig = null
 global.appState.settingsMcsLoading = false
 global.appState.settingsMcsError = null
+
+// Import state module to set currentUserRole before importing settings
+const stateModule = await import('../core/js/state.js')
+// Use setCurrentUserRole to properly set the role for isAdmin() checks
+stateModule.setCurrentUserRole('admin') // Start with admin role for tests
 
 // Import settings modules
 const settingsModule = await import('../portals/settings/js/settings.js')
@@ -379,15 +386,19 @@ describe('renderSettingsWorkAreasTab()', () => {
       document.body.appendChild(el)
     }
     setInternal('settingsWorkAreasEditingId', null)
-    global.workAreasState.loading = false
+    realWorkAreasState.workAreas = [
+      { id: 'wa-1', name: 'Unit 2', description: 'Main assembly' },
+      { id: 'wa-2', name: 'Unit 3', description: 'Testing bay' },
+    ]
+    realWorkAreasState.loading = false
   })
 
   it('renders loading state when workAreasState.loading is true', () => {
-    global.workAreasState.loading = true
+    realWorkAreasState.loading = true
     renderSettingsWorkAreasTab()
     const container = document.getElementById('settingsWorkAreasTab')
     expect(container.innerHTML).toContain('Loading work areas')
-    global.workAreasState.loading = false
+    realWorkAreasState.loading = false
   })
 
   it('renders work area rows', () => {

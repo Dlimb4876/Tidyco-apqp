@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,15 +42,17 @@ describe('Project family sync', () => {
       }
     };
 
-    // Use eval with fs.readFile for non-ESM compatible loading
-    const stateScript = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8')
-      .replace(/^const /gm, 'var ');
-    eval(stateScript);
+    // Bug fix: normalize ESM exports/imports before eval so state.js doesn't crash on `export` keywords.
+    const stateScript = fs.readFileSync(path.resolve(__dirname, '../core/js/state.js'), 'utf8');
+    eval(toEvalFriendlyModuleSource(stateScript));
 
     db = global.db;
+    // Bug fix: normalizeFamilyId/getFamilies read from db.families, not familiesState.
+    db.families = global.familiesState.families;
     familiesState = global.familiesState;
-    currentSection = 'hub';
-    productDevelopmentTab = 'npi';
+    // Bug fix: state.js now stores route state on appState instead of standalone globals.
+    appState.currentSection = 'hub';
+    appState.productDevelopmentTab = 'npi';
     save = global.save;
 
     global.GATE_DEFS = GATE_DEFS;
@@ -60,8 +63,9 @@ describe('Project family sync', () => {
     global.normalizeFamilyId = normalizeFamilyId;
     global.syncProjectFamily = syncProjectFamily;
 
+    // Bug fix: product data module is ESM too, so normalize imports/exports before eval.
     const productsDataScript = fs.readFileSync(path.resolve(__dirname, '../portals/product-development/product-management/js/products-data.js'), 'utf8');
-    eval(`${productsDataScript}
+    eval(`${toEvalFriendlyModuleSource(productsDataScript)}
   global.productsDataSyncLinkedProjectFamily = productsDataSyncLinkedProjectFamily;`);
 
     productsState = global.productsState;

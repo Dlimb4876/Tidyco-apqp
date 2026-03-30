@@ -1323,3 +1323,45 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+
+## Session: 2026-03-30 05:52
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 05:57 | Edited tests/settings-portal.test.js | 32→36 lines | ~408 |
+| 05:58 | Edited CHANGELOG.md | 6→8 lines | ~232 |
+| 05:59 | Session end: 2 writes across 2 files (settings-portal.test.js, CHANGELOG.md) | 3 reads | ~28843 tok |
+| 06:02 | Edited portals/settings/js/settings.js | 2→2 lines | ~43 |
+| 06:03 | Edited tests/settings-portal.test.js | 5→6 lines | ~100 |
+| 06:03 | Edited tests/settings-portal.test.js | 4→7 lines | ~131 |
+| 06:03 | Edited tests/settings-portal.test.js | 3→2 lines | ~26 |
+| 06:04 | Edited tests/settings-portal.test.js | 7→4 lines | ~85 |
+| 06:04 | Edited tests/settings-portal.test.js | 5→6 lines | ~108 |
+| 06:04 | Edited portals/settings/js/settings.js | 2→2 lines | ~45 |
+| 06:04 | Edited tests/settings-portal.test.js | 6→6 lines | ~112 |
+| 06:05 | Edited tests/settings-portal.test.js | expanded (+7 lines) | ~140 |
+| 06:05 | Edited tests/settings-portal.test.js | unstable_mockModule() → renderSettings() | ~180 |
+| 06:05 | Edited tests/settings-portal.test.js | expanded (+10 lines) | ~198 |
+| 06:05 | Edited portals/settings/js/settings.js | 2→2 lines | ~43 |
+| 06:06 | Edited tests/settings-portal.test.js | reduced (-9 lines) | ~114 |
+| 06:06 | Edited tests/settings-portal.test.js | 12→7 lines | ~63 |
+| 06:06 | Edited tests/settings-portal.test.js | expanded (+7 lines) | ~196 |
+| 06:06 | Edited tests/settings-portal.test.js | 15→18 lines | ~200 |
+| 06:06 | Edited tests/settings-portal.test.js | modified const() | ~218 |
+| 06:07 | Edited tests/settings-portal.test.js | 15→13 lines | ~163 |
+| 06:08 | Edited CHANGELOG.md | 6→8 lines | ~168 |
+| 06:08 | Session end: 21 writes across 3 files (settings-portal.test.js, CHANGELOG.md, settings.js) | 4 reads | ~53829 tok |
+| 06:15 | Session end: 21 writes across 3 files (settings-portal.test.js, CHANGELOG.md, settings.js) | 4 reads | ~53829 tok |
+
+## Session: 2026-03-30 08:15
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:17 | Created tests/bootstrap-load-order.test.js | — | ~900 |
+| 08:17 | Edited tests/bootstrap-load-order.test.js | added error handling | ~1090 |
+| 08:18 | Edited tests/__mocks__/chart.js | expanded (+14 lines) | ~211 |
+| 08:18 | Edited tests/bootstrap-load-order.test.js | modified catch() | ~1383 |
+| 08:18 | Edited tests/__mocks__/@supabase/supabase-js.js | modified createQueryBuilder() | ~388 |
+| 08:19 | Edited tests/bootstrap-load-order.test.js | modified catch() | ~919 |
+| 08:19 | Edited tests/bootstrap-load-order.test.js | added 1 import(s) | ~991 |
+| 08:22 | Session end: 7 writes across 3 files (bootstrap-load-order.test.js, chart.js, supabase-js.js) | 5 reads | ~5961 tok |

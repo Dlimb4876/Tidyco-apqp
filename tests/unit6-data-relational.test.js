@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +18,7 @@ describe('unit6-data-relational', () => {
       path.resolve(__dirname, '../portals/capacity/unit6/js/unit6-data-relational.js'),
       'utf8'
     );
-    eval(script); // eslint-disable-line no-eval
+    eval(toEvalFriendlyModuleSource(script)); // eslint-disable-line no-eval
   });
 
   beforeEach(() => {
@@ -98,3 +99,4 @@ describe('unit6-data-relational', () => {
     expect(rows[0]).not.toHaveProperty('department');
   });
 });
+

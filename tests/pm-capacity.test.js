@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { toEvalFriendlyModuleSource } from './helpers/esm-eval.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,7 +43,7 @@ const src = fs.readFileSync(
   path.resolve(__dirname, '../portals/capacity/project-management/js/pm-capacity.js'),
   'utf8'
 );
-eval(src); // eslint-disable-line no-eval
+eval(toEvalFriendlyModuleSource(src)); // eslint-disable-line no-eval
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -106,3 +107,4 @@ describe('PM chart month updates', () => {
     expect(body.innerHTML).toContain('PM Chart 2027-05');
   });
 });
+

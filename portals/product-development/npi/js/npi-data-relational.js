@@ -57,7 +57,8 @@ function npiRelPersistedPfdStepNum(step, pfd) {
   return 0;
 }
 
-function npiRelHydratePfdRows(rows) {
+// Bug fix: export hydrator so relational tests and other modules can import it directly.
+export function npiRelHydratePfdRows(rows) {
   const source = Array.isArray(rows) ? rows : [];
   const executableRows = source
     .filter(row => !npiRelIsHeaderStep(row.step_type))

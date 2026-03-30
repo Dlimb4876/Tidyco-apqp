@@ -3,6 +3,19 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-30 | Fix action-centre.test.js — all 33 tests now pass | P1-B: added missing exports to action-centre.js, rewrote test setup to use shared ESM module state (appState, setCurrentUser, realSupabase, settingsState), updated assertions from flat-global mocks to DOM/state checks
+
+
+## 2026-03-30 | Update programme-family-sync eval loading for ESM state module | P1-D: switched state/products eval to `toEvalFriendlyModuleSource` and aligned test setup to `appState` + `db.families` so `state.js` exports no longer break eval
+
+## 2026-03-30 | Export NPI PFD hydrate helper for relational tests | P1-C required `npiRelHydratePfdRows` to be a named export; `npiRelSaveDoc` was verified as already implemented/exported
+
+## 2026-03-30 | Export hub favourites helpers for test imports | P1-A fixes missing named exports in `hub.js` so tests can import `hubGetFavouriteProducts`, `hubRemovePageFavourite`, and `hubRemoveProductFavourite`
+
+## 2026-03-30 | Rename Configuration to Site Configuration and restrict admin-only tabs | Site Configuration now clearly labels admin tasks (Product Families, Work Areas, Gate Questions); non-admin users are redirected to Access tabs (Teams, Permissions, etc.)
+
+## 2026-03-30 | Fix Settings/Work Areas edit button test | Work areas tests were using mocked global state instead of real module state; updated test setup to use realWorkAreasState for accurate testing
+
 ## 2026-07-15 | Settings module anti-pattern refactor | Remove 7 categories of AI-generated anti-patterns: replace syncCoreState let-variable bridge with shared settingsState object, remove microtask DOM hydration race condition (explicit initSettings call), fix N+1 team-count query (single Supabase join), fix JSON.stringify HTML-escaping hack (use esc helper), remove dead typeof guards on ESM imports, deduplicate tab-activation logic, remove dead _familiesResortTbody and _waResortTbody functions
 
 ## 2026-07-15 | Dead code sweep and export cleanup | Remove 8 dead files, fix npi-cp.js wiring bug (Control Plan tab never loaded), de-export 22 internal-only symbols across 11 files, fix package.json main field

@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-29T23:00:01.213Z
-> Files: 540 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T07:19:41.787Z
+> Files: 541 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -11,26 +11,22 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1376 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~2217 tok)
-- `CHANGELOG.md` — Change log (~28187 tok)
-- `check_onclick.js` — fs: findJSFiles (~427 tok)
+- `CHANGELOG.md` — Changelog (~28561 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~624 tok)
 - `code-review-report.md` — Code Review & Scalability Report: Tidyco APQP Project (~1351 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
 - `GEMINI.md` — GEMINI.md — Tidyco APQP Project Guide (~1404 tok)
-- `index.html` — Tidyco Operations Portal (~2404 tok)
+- `index.html` — Tidyco Operations Portal (~2383 tok)
 - `jest.config.js` — Jest test configuration (~79 tok)
 - `jest.setup.js` — Declares __filename (~449 tok)
-- `nul` (~0 tok)
 - `package-lock.json` — npm lock file (~61736 tok)
-- `package.json` — Node.js package manifest (~625 tok)
+- `package.json` — Node.js package manifest (~624 tok)
 - `README.md` — Project documentation (~6517 tok)
 - `SKILLS_GUIDE.md` — Tidyco APQP Development Skills Guide (~2691 tok)
 - `SKILLS_QUICK_REFERENCE.txt` — Declares in (~908 tok)
 - `SKILLS_SUMMARY.md` — Tidyco APQP Development Skills — Summary (~1680 tok)
 - `start-debug-site-and-wiki.bat` (~366 tok)
 - `start-debug-site.bat` (~305 tok)
-- `temp-server.js` — Temporary HTTP server for testing (~412 tok)
-- `test-holidays.html` — Test Bank Holidays 2026 (~1252 tok)
 - `TESTING_STRATEGY.md` — Testing Strategy — Tidyco APQP Quality Tool (~6637 tok)
 
 ## .claude/
@@ -82,7 +78,7 @@
 - `first_party_sets.db-journal` (~0 tok)
 - `Last Browser` (~29 tok)
 - `Last Version` (~4 tok)
-- `Local State` (~36834 tok)
+- `Local State` (~36837 tok)
 - `lockfile` (~0 tok)
 - `Variations` (~23 tok)
 
@@ -1174,7 +1170,7 @@
 - `Cookies-journal` (~0 tok)
 - `Device Bound Sessions` (~5462 tok)
 - `Device Bound Sessions-journal` (~0 tok)
-- `Network Persistent State` (~989 tok)
+- `Network Persistent State` (~996 tok)
 - `NetworkDataMigrated` (~0 tok)
 - `Reporting and NEL` (~9830 tok)
 - `Reporting and NEL-journal` (~0 tok)
@@ -1388,3 +1384,20 @@
 - `f8929f38e4311c5717f1a0d4a0bc4fb0277329557a1a5aecb93317808669ba4f` (~197270 tok)
 - `fd8fd38c229ab33755ff429ccc9919eba21b566551cbfb17d8e11e35e941ee0e` (~3879 tok)
 - `metadata.json` (~580 tok)
+
+## portals/settings/js/
+
+- `settings.js` — ═══════════════════════════════════════════════════════════════ (~13175 tok)
+
+## tests/
+
+- `bootstrap-load-order.test.js` — Bootstrap Load Order Test (~992 tok)
+- `settings-portal.test.js` — settings-portal.test.js — Tests for portals/settings/js/settings.js (~9556 tok)
+
+## tests/__mocks__/
+
+- `chart.js` — Mock for chart.js (~211 tok)
+
+## tests/__mocks__/@supabase/
+
+- `supabase-js.js` — Mock for @supabase/supabase-js (~388 tok)

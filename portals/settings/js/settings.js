@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { appState, db } from '../../../core/js/state.js'
-import { esc, showToast, canEdit, emptyState } from '../../../utils/js/helpers.js'
+import { esc, showToast, canEdit, emptyState, isAdmin } from '../../../utils/js/helpers.js'
 import { render } from '../../../utils/js/navigation.js'
 import {
   familiesState,
@@ -132,6 +132,16 @@ function settingsAppearanceSetDensityCard(root, density) {
 settingsApplyAppearance();
 
 function settingsActivateTab(tab) {
+  // Admin-only tabs: families, work-areas, gate-questions
+  const adminOnlyTabs = ['families', 'work-areas', 'gate-questions'];
+  if (adminOnlyTabs.includes(tab) && !isAdmin()) {
+    // Redirect non-admin users to teams tab
+    appState.settingsActiveTab = 'teams';
+    renderSettingsTeamsTab();
+    settingsEnsureTeamsData();
+    return;
+  }
+
   if (tab === 'families') {
     renderSettingsFamiliesTab()
     settingsEnsureFamiliesData()
@@ -162,6 +172,7 @@ function settingsActivateTab(tab) {
 // ── Main settings page render ──────────────────────────────────
 export function renderSettings() {
   const tab = appState.settingsActiveTab || 'families';
+  const adminOnly = isAdmin();
 
   const hydrateSettingsDom = () => {
     setupSettingsEventListeners()
@@ -184,7 +195,7 @@ export function renderSettings() {
       </div>
       <div class="settings-layout">
         <nav class="settings-sidebar" aria-label="Settings categories">
-          <span class="settings-nav-group-label">Configuration</span>
+          ${adminOnly ? `<span class="settings-nav-group-label">Site Configuration</span>
           <button class="settings-nav-item ${tab === 'families' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="families">
             <span class="nav-icon">📦</span> Product Families
           </button>
@@ -193,8 +204,8 @@ export function renderSettings() {
           </button>
           <button class="settings-nav-item ${tab === 'gate-questions' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="gate-questions">
             <span class="nav-icon">✅</span> Gate Questions
-          </button>
-          <span class="settings-nav-group-label" style="margin-top:8px">Access</span>
+          </button>` : ''}
+          <span class="settings-nav-group-label" style="${adminOnly ? 'margin-top:8px' : ''}">Access</span>
           <button class="settings-nav-item ${tab === 'teams' ? 'active' : ''}" data-action="settings-switch-tab" data-tab="teams">
             <span class="nav-icon">🏢</span> Teams
           </button>
@@ -217,9 +228,9 @@ export function renderSettings() {
           </button>
         </nav>
         <div class="settings-content">
-          <div id="settingsFamiliesTab"        class="settings-tab-content ${tab === 'families'         ? 'active' : ''}"></div>
+          ${adminOnly ? `<div id="settingsFamiliesTab"        class="settings-tab-content ${tab === 'families'         ? 'active' : ''}"></div>
           <div id="settingsWorkAreasTab"       class="settings-tab-content ${tab === 'work-areas'       ? 'active' : ''}"></div>
-          <div id="settingsGateQuestionsTab"   class="settings-tab-content ${tab === 'gate-questions'   ? 'active' : ''}"></div>
+          <div id="settingsGateQuestionsTab"   class="settings-tab-content ${tab === 'gate-questions'   ? 'active' : ''}"></div>` : ''}
           <div id="settingsTeamsTab"           class="settings-tab-content ${tab === 'teams'            ? 'active' : ''}"></div>
           <div id="settingsPermissionsTab"     class="settings-tab-content ${tab === 'permissions'      ? 'active' : ''}"></div>
           <div id="settingsRoleDefinitionsTab" class="settings-tab-content ${tab === 'role-definitions' ? 'active' : ''}"></div>
