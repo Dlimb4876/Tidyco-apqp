@@ -8,6 +8,7 @@ import { getFamilies } from '../../../../core/js/state.js'
 import { esc, canEdit, showToast } from '../../../../utils/js/helpers.js'
 import { render } from '../../../../utils/js/navigation.js'
 import { showGuide } from '../../../../utils/js/guide.js'
+import { getWorkAreaOptions, workAreasDataGetAll } from '../../../capacity/production/js/work-areas-data.js'
 import {
   productsDataGetAll,
   productsDataAddProduct,
@@ -144,10 +145,9 @@ function buildStatusOptions(selected) {
  * Build work location select options HTML
  */
 function buildLocationOptions(selected) {
+  // Dynamic work areas from database instead of hardcoded list
   return '<option value="">— Location —</option>' +
-    ['Unit 2', 'Unit 3', 'Unit 6'].map(l =>
-      `<option value="${l}" ${l === selected ? 'selected' : ''}>${l}</option>`
-    ).join('');
+    getWorkAreaOptions(selected);
 }
 
 /**
@@ -202,11 +202,10 @@ function renderProductsList() {
 
   const familyFilterOpts = '<option value="all" ' + (productsFilters.family === 'all' ? 'selected' : '') + '>All Families</option>' +
     families.map(f => `<option value="${esc(f.id)}" ${productsFilters.family === f.id ? 'selected' : ''}>${esc(f.icon)} ${esc(f.label)}</option>`).join('');
-  const locationFilterOpts = ['all', 'Unit 2', 'Unit 3', 'Unit 6'].map(loc => {
-    const val = loc === 'all' ? 'all' : loc;
-    const label = loc === 'all' ? 'All Locations' : loc;
-    return `<option value="${esc(val)}" ${productsFilters.location === val ? 'selected' : ''}>${esc(label)}</option>`;
-  }).join('');
+  // Dynamic work areas from database instead of hardcoded list
+  const workAreas = workAreasDataGetAll();
+  const locationFilterOpts = '<option value="all" ' + (productsFilters.location === 'all' ? 'selected' : '') + '>All Locations</option>' +
+    workAreas.map(w => `<option value="${esc(w.name)}" ${productsFilters.location === w.name ? 'selected' : ''}>${esc(w.name)}</option>`).join('');
   const scopeFilterOpts = ['all', 'overhaul', 'repair', 'assembly'].map(scope => {
     const label = scope === 'all' ? 'All Scopes' : scope.charAt(0).toUpperCase() + scope.slice(1);
     return `<option value="${esc(scope)}" ${productsFilters.scope === scope ? 'selected' : ''}>${esc(label)}</option>`;

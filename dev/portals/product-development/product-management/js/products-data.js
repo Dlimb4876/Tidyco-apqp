@@ -308,9 +308,23 @@ export async function productsDataUpdateProduct(productId, updates) {
     const data = result.data
 
     const idx = productsState.products.findIndex(p => p.id === productId)
+    const previousLocation = (existingProduct && existingProduct.work_location) || null
     if (idx >= 0) {
       productsState.products[idx] = data
       productsState.products.sort((a, b) => a.name.localeCompare(b.name))
+    }
+
+    // Cascade work_location change to existing production batches (if not Complete)
+    const nextLocation = (data && data.work_location) || null
+    if (previousLocation !== nextLocation) {
+      try {
+        await supa.supabase.from('production_batches')
+          .update({ work_location: nextLocation })
+          .eq('product_id', productId)
+          .neq('status', 'Complete')
+      } catch (batchErr) {
+        console.warn('⚠️ Failed to cascade work_location update to production_batches:', batchErr)
+      }
     }
 
     const projectFamilyUpdated = productsDataSyncLinkedProjectFamily(productId, data.family)

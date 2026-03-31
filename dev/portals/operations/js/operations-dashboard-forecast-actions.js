@@ -39,7 +39,10 @@ async function opsForecastSubmit(event) {
 	const existingId = (fd.get('opportunity_id') || '').toString().trim();
 	const startDate = (fd.get('start_date') || '').toString();
 	const dueDate = (fd.get('due_date') || '').toString();
-	const totalHours = opsToNumber(fd.get('total_hours'), 0);
+	const totalUnits = opsToNumber(fd.get('total_units'), 0);
+	const ohHoursPerUnit = opsToNumber(fd.get('oh_hours_per_unit'), 0);
+	const batchCount = opsToNumber(fd.get('batch_count'), 1);
+	const beatRateDays = opsToNumber(fd.get('beat_rate_days'), 1);
 	const probabilityBand = (fd.get('probability_band') || '').toString().trim().toLowerCase();
 	const probabilityPct = probabilityBand && typeof opsForecastProbabilityPctFromBand === 'function'
 		? opsForecastProbabilityPctFromBand(probabilityBand)
@@ -66,7 +69,10 @@ async function opsForecastSubmit(event) {
 		work_area: (fd.get('work_area') || '').toString().trim() || 'Unassigned',
 		start_date: startDate,
 		due_date: dueDate,
-		total_hours: totalHours,
+		total_units: totalUnits,
+		oh_hours_per_unit: ohHoursPerUnit,
+		batch_count: batchCount,
+		beat_rate_days: beatRateDays,
 		probability_band: probabilityBand,
 		probability_pct: probabilityPct,
 		notes: (fd.get('notes') || '').toString().trim()
@@ -132,14 +138,20 @@ async function opsForecastSaveInline(id) {
 	const areaEl = document.getElementById(opsForecastInlineFieldId(id, 'work_area'));
 	const startEl = document.getElementById(opsForecastInlineFieldId(id, 'start_date'));
 	const dueEl = document.getElementById(opsForecastInlineFieldId(id, 'due_date'));
-	const totalEl = document.getElementById(opsForecastInlineFieldId(id, 'total_hours'));
+	const totalUnitsEl = document.getElementById(opsForecastInlineFieldId(id, 'total_units'));
+	const ohHoursEl = document.getElementById(opsForecastInlineFieldId(id, 'oh_hours_per_unit'));
+	const batchCountEl = document.getElementById(opsForecastInlineFieldId(id, 'batch_count'));
+	const beatRateEl = document.getElementById(opsForecastInlineFieldId(id, 'beat_rate_days'));
 	const probBandEl = document.getElementById(opsForecastInlineFieldId(id, 'probability_band'));
 	const probEl = document.getElementById(opsForecastInlineFieldId(id, 'probability_pct'));
 
 	const nextTitle = (titleEl?.value || '').toString().trim();
 	const nextStart = (startEl?.value || '').toString();
 	const nextDue = (dueEl?.value || '').toString();
-	const nextTotalHours = Math.max(0, opsToNumber(totalEl?.value, 0));
+	const nextTotalUnits = Math.max(0, opsToNumber(totalUnitsEl?.value, 0));
+	const nextOhHoursPerUnit = Math.max(0, opsToNumber(ohHoursEl?.value, 0));
+	const nextBatchCount = Math.max(1, opsToNumber(batchCountEl?.value, 1));
+	const nextBeatRateDays = Math.max(1, opsToNumber(beatRateEl?.value, 1));
 	const nextProbabilityBand = (probBandEl?.value || '').toString().trim().toLowerCase();
 	const nextProbability = nextProbabilityBand && typeof opsForecastProbabilityPctFromBand === 'function'
 		? opsForecastProbabilityPctFromBand(nextProbabilityBand)
@@ -167,7 +179,10 @@ async function opsForecastSaveInline(id) {
 		work_area: (areaEl?.value || row.work_area || 'Unassigned').toString().trim() || 'Unassigned',
 		start_date: nextStart,
 		due_date: nextDue,
-		total_hours: nextTotalHours,
+		total_units: nextTotalUnits,
+		oh_hours_per_unit: nextOhHoursPerUnit,
+		batch_count: nextBatchCount,
+		beat_rate_days: nextBeatRateDays,
 		probability_band: nextProbabilityBand,
 		probability_pct: nextProbability
 	});
@@ -215,6 +230,12 @@ function opsForecastToggleArchived() {
 	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render();
 }
 
+function opsForecastSetWorkAreaFilter(workArea) {
+	const next = (workArea || '').toString().trim()
+	operationsDashboardState.opsForecastWorkAreaFilter = next || 'ALL'
+	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render()
+}
+
 export {
 	opsForecastInlineKeydown,
 	opsForecastSubmit,
@@ -228,5 +249,6 @@ export {
 	opsForecastSetSort,
 	opsForecastSetFilterStatus,
 	opsForecastSetFilterText,
-	opsForecastToggleArchived
+	opsForecastToggleArchived,
+	opsForecastSetWorkAreaFilter
 }

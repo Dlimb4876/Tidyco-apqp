@@ -3,7 +3,7 @@
    ============================================================ */
 
 import { supabase, currentUser } from '../../../../core/js/supa.js'
-import { capUUID, capNormalizeDateRange } from '../../shared/js/cap-data-utils.js'
+import { capUUID, capNormalizeDateRange, capNormalizeDateOnly } from '../../shared/js/cap-data-utils.js'
 import { safeWarn } from '../../../../utils/js/helpers.js'
 
 const PM_DEPARTMENT = 'PM'
@@ -400,6 +400,100 @@ export async function pmDeleteSupportHistoryRelational(historyId) {
     return true
   } catch (err) {
     safeWarn('pmDeleteSupportHistoryRelational exception:', err)
+    return false
+  }
+}
+
+// Product-support allocation CRUD — mirrors ME pattern
+export async function pmLoadRelationalProductSupportAllocations() {
+  try {
+    const { data, error } = await supabase.from('pm_product_support_allocations').select('*')
+    if (error) {
+      safeWarn('pmLoadRelationalProductSupportAllocations error:', error)
+      return []
+    }
+    return (data || []).map(row => ({
+      id: row.id,
+      productId: row.product_id,
+      personId: row.person_id,
+      percentage: Number(row.percentage) || 0,
+      effectiveDate: row.effective_date || '',
+      endDate: row.end_date || '',
+      notes: row.notes || '',
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }))
+  } catch (err) {
+    safeWarn('pmLoadRelationalProductSupportAllocations exception:', err)
+    return []
+  }
+}
+
+export async function pmSaveProductSupportAllocationSet(productId, effectiveDate, rows) {
+  try {
+    const resolvedUserId = resolveUserId()
+    if (!resolvedUserId || !productId || !effectiveDate) return false
+
+    const prevDay = capNormalizeDateOnly(effectiveDate)
+    if (prevDay) {
+      const d = new Date(prevDay)
+      d.setDate(d.getDate() - 1)
+      const endDateStr = d.toISOString().split('T')[0]
+
+      const { error: closeError } = await supabase
+        .from('pm_product_support_allocations')
+        .update({ end_date: endDateStr, updated_at: new Date().toISOString() })
+        .eq('product_id', productId)
+        .is('end_date', null)
+
+      if (closeError) {
+        safeWarn('pmSaveProductSupportAllocationSet close error:', closeError)
+        return false
+      }
+    }
+
+    const payload = (Array.isArray(rows) ? rows : [])
+      .filter(r => r && r.personId && Number(r.percentage) > 0)
+      .map(r => ({
+        id: resolveUuid(),
+        user_id: resolvedUserId,
+        product_id: productId,
+        person_id: r.personId,
+        percentage: Number(r.percentage),
+        effective_date: effectiveDate,
+        end_date: null,
+        notes: r.notes || null
+      }))
+
+    if (payload.length === 0) return true
+
+    const { error: insertError } = await supabase
+      .from('pm_product_support_allocations')
+      .insert(payload)
+    if (insertError) {
+      safeWarn('pmSaveProductSupportAllocationSet insert error:', insertError)
+      return false
+    }
+    return true
+  } catch (err) {
+    safeWarn('pmSaveProductSupportAllocationSet exception:', err)
+    return false
+  }
+}
+
+export async function pmDeleteProductSupportAllocation(allocationId) {
+  try {
+    const { error } = await supabase
+      .from('pm_product_support_allocations')
+      .delete()
+      .eq('id', allocationId)
+    if (error) {
+      safeWarn('pmDeleteProductSupportAllocation error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    safeWarn('pmDeleteProductSupportAllocation exception:', err)
     return false
   }
 }

@@ -4,6 +4,7 @@
 
 import { db } from '../../../core/js/state.js'
 import { meDataState } from '../../capacity/me/js/me-data.js'
+import { pmDataState } from '../../capacity/project-management/js/pm-data.js'
 import { capCalculateMonthData } from '../../capacity/shared/js/cap-calculations.js'
 import { logDataState } from '../../capacity/logistics/js/log-data.js'
 import {
@@ -109,6 +110,7 @@ function opsMetricsDependencies(overrides = {}) {
 				? globalThis.feedbackDataManager.state.feedback
 				: []),
 		meDataState: overrides.meDataState || meDataState || null,
+		pmDataState: overrides.pmDataState || pmDataState || null,
 		meCalculateMonthData: overrides.meCalculateMonthData || capCalculateMonthData,
 		departmentFilter: overrides.departmentFilter || opsFilterByDepartment,
 		logDataState: overrides.logDataState || logDataState || null
@@ -223,15 +225,24 @@ function opsCalcBugHealth(dependencies = {}, reportDate = new Date()) {
 
 function opsCalcDepartmentCapacity(department, dependencies = {}, monthKeyOverride = '') {
 	const deps = opsMetricsDependencies(dependencies);
-	if (typeof deps.meCalculateMonthData !== 'function' || !deps.meDataState) {
+	if (typeof deps.meCalculateMonthData !== 'function') {
+		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
+	}
+
+	// Why: PM load KPI was incorrectly reading from ME state, which can show PM as 0% despite PM data existing.
+	const departmentState = department === 'PM'
+		? deps.pmDataState
+		: deps.meDataState;
+
+	if (!departmentState) {
 		return { ready: false, utilisation: 0, headroom: 0, demand: 0, capacity: 0 };
 	}
 
 	const monthKey = monthKeyOverride || opsCurrentMonthKey();
-	const team = Array.isArray(deps.meDataState.team) ? deps.meDataState.team : [];
-	const tasks = Array.isArray(deps.meDataState.tasks) ? deps.meDataState.tasks : [];
-	const products = Array.isArray(deps.meDataState.products) ? deps.meDataState.products : [];
-	const holidays = Array.isArray(deps.meDataState.holidays) ? deps.meDataState.holidays : [];
+	const team = Array.isArray(departmentState.team) ? departmentState.team : [];
+	const tasks = Array.isArray(departmentState.tasks) ? departmentState.tasks : [];
+	const products = Array.isArray(departmentState.products) ? departmentState.products : [];
+	const holidays = Array.isArray(departmentState.holidays) ? departmentState.holidays : [];
 
 	const teamFiltered = typeof deps.departmentFilter === 'function'
 		? deps.departmentFilter(team, department, 'ME')
@@ -391,6 +402,10 @@ function opsCalcForecastProduction() {
 
 	const monthKeys = prodCapGet24MonthKeys();
 	const workAreas = prodCapGetWorkAreas();
+	const selectedWorkArea = (operationsDashboardState.opsForecastWorkAreaFilter || 'ALL').toString();
+	const scopedWorkArea = selectedWorkArea === 'ALL' || workAreas.includes(selectedWorkArea)
+		? selectedWorkArea
+		: 'ALL';
 	const baselineMatrix = prodCapCalcDemandMatrix(monthKeys);
 	const supplyMatrix = prodCapCalcSupplyMatrix(monthKeys, workAreas);
 	const rows = opsForecastManager && typeof opsForecastManager.getRows === 'function'
@@ -402,12 +417,22 @@ function opsCalcForecastProduction() {
 		: {};
 
 	const monthSeries = monthKeys.map((key, idx) => {
-		const baseline = opsToNumber(baselineMatrix[key]?._total, 0);
-		const forecastAdd = opsToNumber(weightedMatrix[key]?._total, 0);
-		const forecastLow = opsToNumber(weightedMatrix[key]?._bands?.low, 0);
-		const forecastMedium = opsToNumber(weightedMatrix[key]?._bands?.medium, 0);
-		const forecastHigh = opsToNumber(weightedMatrix[key]?._bands?.high, 0);
-		const supply = opsToNumber(supplyMatrix[key]?._total, 0);
+		const baseline = scopedWorkArea === 'ALL'
+			? opsToNumber(baselineMatrix[key]?._total, 0)
+			: opsToNumber(baselineMatrix[key]?.[scopedWorkArea], 0);
+		const forecastAdd = scopedWorkArea === 'ALL'
+			? opsToNumber(weightedMatrix[key]?._total, 0)
+			: opsToNumber(weightedMatrix[key]?.[scopedWorkArea], 0);
+		// Why: probability bands are global-only in weighted matrix; keep scoped values proportional to selected area total.
+		const scopedRatio = opsToNumber(weightedMatrix[key]?._total, 0) > 0
+			? forecastAdd / opsToNumber(weightedMatrix[key]?._total, 0)
+			: 0;
+		const forecastLow = opsToNumber(weightedMatrix[key]?._bands?.low, 0) * scopedRatio;
+		const forecastMedium = opsToNumber(weightedMatrix[key]?._bands?.medium, 0) * scopedRatio;
+		const forecastHigh = opsToNumber(weightedMatrix[key]?._bands?.high, 0) * scopedRatio;
+		const supply = scopedWorkArea === 'ALL'
+			? opsToNumber(supplyMatrix[key]?._total, 0)
+			: opsToNumber(supplyMatrix[key]?.[scopedWorkArea], 0);
 		const totalDemand = baseline + forecastAdd;
 		const label = typeof prodCapMonthLabel === 'function'
 			? prodCapMonthLabel(key)
@@ -442,6 +467,8 @@ function opsCalcForecastProduction() {
 		headroom24h: Math.round(supply24h - total24h),
 		utilisation24,
 		monthSeries,
+		workAreaFilter: scopedWorkArea,
+		workAreas: Array.isArray(workAreas) ? workAreas : [],
 		rows: Array.isArray(rows) ? rows : []
 	};
 }

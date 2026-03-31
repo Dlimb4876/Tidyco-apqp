@@ -78,7 +78,7 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
-        <p>Bar chart showing total allocated hours vs available capacity per month. Use the month navigator to scroll the view window. Bars turn amber when utilisation exceeds 80%, red above 100%.</p>
+        <p>Bar chart showing total allocated hours vs available capacity per month. A solid red line shows usable team capacity (after utilisation %) and a dashed grey line shows total available hours at 100% utilisation. Use the month navigator to scroll the view window. Bars turn amber when utilisation exceeds 80%, red above 100%.</p>
         <p>The chart refreshes when you open the chart page. If changes are saved in another window while you stay on this page, open the chart page again to pull the latest values.</p>
         <p>The chart header reminder confirms this refresh-on-open behavior.</p>
         <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
@@ -101,6 +101,7 @@ export const GUIDE_CONTENT = {
         <p>The <strong>Current</strong> column shows the active saved support rate (h/batch) for each product at a glance so you can compare it with any new value before applying a change.</p>
         <p><strong>Bulk Save:</strong> Edit multiple product support rows (hours, effective date, and reason), then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and apply all changes at once. This prevents individual rows from resetting when you apply other changes.</p>
         <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Each history entry has an <strong>Edit</strong> button to correct the effective date, hours, or reason, and a <strong>Delete</strong> button to remove the entry. Changes to history save automatically after confirmation.</p>
+        <p><strong>Allocations:</strong> Click the <strong>Allocations</strong> button on any product row to split that product's support hours across specific team members by percentage. Set an effective date, assign each person a share (must total 100%), and save. In the heat map, those support hours are spread between each batch start and due date, then allocated to people by the saved percentage split.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📦 Product Load</div>
@@ -108,7 +109,7 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🌡️ Heat Map</div>
-        <p>A 12-week team utilisation grid showing how loaded each person is week by week. Colour-coded in 5 bands: <strong>clear (under 60%)</strong>, <strong>good (60–79%)</strong>, <strong>caution (80–94%)</strong>, <strong>near full (95–99%)</strong>, and <strong>over capacity (100%+)</strong>. A legend above the grid explains the scale at a glance.</p>
+        <p>A 12-week team utilisation grid showing how loaded each person is week by week. Demand includes both task hours and any product-support allocation assigned to that person. Colour-coded in 5 bands: <strong>clear (under 60%)</strong>, <strong>good (60–79%)</strong>, <strong>caution (80–94%)</strong>, <strong>near full (95–99%)</strong>, and <strong>over capacity (100%+)</strong>. A legend above the grid explains the scale at a glance.</p>
         <p><strong>Click any cell</strong> to open a detail panel showing which tasks are contributing to that person's load that week, their prorated hours, and any leave recorded.</p>
         <p>The current week is highlighted with a blue border so you can instantly see where you are in the timeline.</p>
       </div>
@@ -133,11 +134,11 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📈 Dashboard</div>
-        <p>Overall loading chart across all work areas. Shows total scheduled units per week vs combined capacity. Highlights over-capacity periods in red.</p>
+        <p>Overall loading chart across all work areas. Demand is stacked by product family, with a solid red line for utilised capacity and a dashed grey line for total available hours at 100% utilisation.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">🏭 By Work Area</div>
-        <p>Drill down into loading for each individual work area (e.g. Unit 2, Unit 3). Shows a bar chart of scheduled units vs available throughput per week.</p>
+        <p>Drill down into loading for each individual work area (e.g. Unit 2, Unit 3, Unit 6). The chart shows demand bars plus a solid red utilised-capacity line and a dashed grey 100%-available-hours line.</p>
         <p><strong>Calculation:</strong> Utilisation % = scheduled units ÷ (throughput rate × working weeks in period) × 100</p>
       </div>
       <div class="guide-section">
@@ -164,7 +165,7 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
-        <p>Month-by-month bar chart of PM team loading vs available hours. Use the month navigator to scroll forward or back.</p>
+        <p>Month-by-month bar chart of PM team loading vs available hours. A solid red line shows usable team capacity (after utilisation %) and a dashed grey line shows total available hours at 100% utilisation. Use the month navigator to scroll forward or back.</p>
         <p>The chart refreshes when you open the chart page. If PM changes are saved in another window while you stay on this page, open the chart page again to load the latest values.</p>
         <p>The chart header reminder confirms this refresh-on-open behavior.</p>
         <p><strong>Calculation:</strong> Available hours = (working days × hours per day per PM) minus approved holidays and UK bank holidays.</p>
@@ -175,6 +176,7 @@ export const GUIDE_CONTENT = {
         <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to toggle ascending/descending.</p>
         <p>The <strong>Current</strong> column in the Product Support tab shows the active saved rate (h/batch) so you can compare it with any new value before applying a change. Edit multiple rows, then click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
         <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Each entry has <strong>Edit</strong> and <strong>Delete</strong> buttons so you can correct or remove a past entry. Edits require a valid effective date and a reason (min 3 characters).</p>
+        <p><strong>Allocations:</strong> Click the <strong>Allocations</strong> button on any product row to split that product's support hours across specific team members by percentage. In the heat map, support hours are spread between each batch start and due date before being allocated by percentage.</p>
       </div>
     `
   },
@@ -845,7 +847,7 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Forecast</div>
-        <p>Forward-looking entries manually added in this view (not pulled from other portals). Use to record agreed commercial forecasts, delivery commitments, or outlook notes.</p>
+        <p>Forward-looking entries manually added in this view (not pulled from other portals). The trend chart shows stacked baseline + forecast demand bars, a solid line for utilisation-adjusted capacity, and a dashed line for total available hours at 100% utilisation.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">How System Health % is calculated</div>
@@ -942,7 +944,7 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
-        <p>Bar chart showing total allocated hours vs available capacity per month. Bars turn amber above 80% utilisation and red above 100%.</p>
+        <p>Bar chart showing total allocated hours vs available capacity per month. A solid red line shows usable team capacity (after utilisation %) and a dashed grey line shows total available hours at 100% utilisation. Bars turn amber above 80% utilisation and red above 100%.</p>
         <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
       </div>
       <div class="guide-section">
@@ -959,6 +961,7 @@ export const GUIDE_CONTENT = {
         <p>Assign Logistics effort to specific products — for example, kitting preparation time and product movement hours per batch. Edit multiple rows and click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
         <p><strong>Sorting:</strong> Click Product Support table headers to sort by Product, Family, Status, Current, Kitting, Booking In/Out, Product Movement, Hours/Batch, or Effective Date. Click the same header again to flip direction.</p>
         <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Use the <strong>Edit</strong> button on a history entry to correct its effective date, hours breakdown, or reason. Use <strong>Delete</strong> to remove an entry.</p>
+        <p><strong>Allocations:</strong> Click the <strong>Allocations</strong> button on any product row to split that product's support hours across specific team members by percentage. In the heat map, support hours are spread between each batch start and due date before being allocated by percentage.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📦 Product Load</div>
@@ -980,7 +983,7 @@ export const GUIDE_CONTENT = {
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📊 Capacity Chart</div>
-        <p>Bar chart showing total allocated hours vs available capacity per month. Bars turn amber above 80% utilisation and red above 100%.</p>
+        <p>Bar chart showing total allocated hours vs available capacity per month. A solid red line shows usable team capacity (after utilisation %) and a dashed grey line shows total available hours at 100% utilisation. Bars turn amber above 80% utilisation and red above 100%.</p>
         <p><strong>Calculation:</strong> Available hours = (working days in month × hours per day) × number of team members, minus approved holidays.</p>
       </div>
       <div class="guide-section">
@@ -997,6 +1000,7 @@ export const GUIDE_CONTENT = {
         <p>Assign Unit 6 effort to specific products for recurring support work separate from project tasks. Edit multiple rows and click the <strong>📦 Bulk Save All Changes</strong> button on the right above the table to validate and save all changes at once.</p>
         <p><strong>Sorting:</strong> In Product Support, click table column headers to sort by Product, Family, Status, Current, Hours/Batch, or Effective Date. Click again to reverse the sort direction.</p>
         <p><strong>History:</strong> Click <strong>View History</strong> on any product row to see its full support rate change log. Use the <strong>Edit</strong> button on a history entry to correct its effective date, hours, or reason. Use <strong>Delete</strong> to remove an entry.</p>
+        <p><strong>Allocations:</strong> Click the <strong>Allocations</strong> button on any product row to split that product's support hours across specific team members by percentage. In the heat map, support hours are spread between each batch start and due date before being allocated by percentage.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">📦 Product Load</div>

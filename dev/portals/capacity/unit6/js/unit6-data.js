@@ -17,7 +17,8 @@ import {
   capNormalizeHolidayRecord,
   capNormalizeSupportHistoryRecord,
   capSortSupportHistoryByDate,
-  capGetDateMinusOneDay
+  capGetDateMinusOneDay,
+  capNormalizeAllocationRecord
 } from '../../shared/js/cap-data-utils.js'
 import {
   unit6LoadRelationalTeams,
@@ -25,6 +26,7 @@ import {
   unit6LoadRelationalProducts,
   unit6LoadRelationalHolidays,
   unit6LoadRelationalProductSupportHistory,
+  unit6LoadRelationalProductSupportAllocations,
   unit6SaveProductRelational,
   unit6SaveProductSupportHistoryRelational,
   unit6SaveTeamRelational,
@@ -39,7 +41,8 @@ export let unit6DataState = {
   tasks: [],
   products: [],
   holidays: [],
-  productSupportHistory: []
+  productSupportHistory: [],
+  productSupportAllocations: []
 }
 
 export let unit6DataPendingDeletes = { tasks: [], teams: [], supportHistory: [] }
@@ -682,7 +685,8 @@ export async function unit6DataInit() {
       tasks: (await unit6LoadRelationalTasks()) || [],
       products: (await unit6LoadRelationalProducts()) || [],
       holidays: capNormalizeAndDedupeHolidays(await unit6LoadRelationalHolidays()),
-      productSupportHistory: (await unit6LoadRelationalProductSupportHistory()) || []
+      productSupportHistory: (await unit6LoadRelationalProductSupportHistory()) || [],
+      productSupportAllocations: (await unit6LoadRelationalProductSupportAllocations()) || []
     }
 
     unit6DataState.team = relState.team
@@ -692,6 +696,7 @@ export async function unit6DataInit() {
     unit6DataState.productSupportHistory = capNormalizeAndDedupeSupportHistory(
       relState.productSupportHistory
     )
+    unit6DataState.productSupportAllocations = relState.productSupportAllocations
 
     unit6DataState.team.forEach(member => {
       if (!('jobTitle' in member)) member.jobTitle = ''
@@ -1039,6 +1044,34 @@ export function unit6CapacityDataSubscribe() {
           if (unit6DataSaveInProgress) return
           unit6DataState.productSupportHistory = unit6DataState.productSupportHistory.filter(
             history => history.id !== deleted.id
+          )
+          unit6ApplyRealtimeRender()
+        }
+      },
+      {
+        table: 'unit6_product_support_allocations',
+        onInsert: row => {
+          if (unit6DataSaveInProgress) return
+          const normalized = capNormalizeAllocationRecord(row)
+          if (!normalized) return
+          if (!unit6DataState.productSupportAllocations.some(a => a.id === normalized.id)) {
+            unit6DataState.productSupportAllocations.push(normalized)
+          }
+          unit6ApplyRealtimeRender()
+        },
+        onUpdate: row => {
+          if (unit6DataSaveInProgress) return
+          const normalized = capNormalizeAllocationRecord(row)
+          if (!normalized) return
+          const idx = unit6DataState.productSupportAllocations.findIndex(a => a.id === normalized.id)
+          if (idx < 0) unit6DataState.productSupportAllocations.push(normalized)
+          else unit6DataState.productSupportAllocations[idx] = normalized
+          unit6ApplyRealtimeRender()
+        },
+        onDelete: deleted => {
+          if (unit6DataSaveInProgress) return
+          unit6DataState.productSupportAllocations = unit6DataState.productSupportAllocations.filter(
+            a => a.id !== deleted.id
           )
           unit6ApplyRealtimeRender()
         }

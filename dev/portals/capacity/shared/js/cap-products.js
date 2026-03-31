@@ -149,7 +149,7 @@ function capProductsHistoryTable(productId, department, historyRows, state, isLo
   if (!historyRows.length) {
     return `
       <tr class="cap-products-history-row">
-        <td colspan="${isLogContext ? 9 : 6}" style="padding:12px 16px;color:var(--muted);">No support history recorded yet for this product.</td>
+        <td colspan="${isLogContext ? 10 : 7}" style="padding:12px 16px;color:var(--muted);">No support history recorded yet for this product.</td>
       </tr>
     `
   }
@@ -160,7 +160,7 @@ function capProductsHistoryTable(productId, department, historyRows, state, isLo
       const draft = state.historyEditDraft || row
       return `
         <tr class="cap-products-history-row" data-history-edit-row>
-          <td colspan="${isLogContext ? 9 : 6}" style="padding:12px 16px;background:var(--overlay-light);">
+          <td colspan="${isLogContext ? 10 : 7}" style="padding:12px 16px;background:var(--overlay-light);">
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
               <input type="date" autocomplete="off" value="${capProductsEscape(draft.effectiveDate || '')}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="effectiveDate" data-dept="${department}">
               ${isLogContext ? `<input type="number" step="0.1" autocomplete="off" value="${capProductsEscape(draft.kittingHours || 0)}" data-cap-action="cap-products-history-edit-field" data-history-edit-field="kittingHours" data-dept="${department}" placeholder="Kitting">` : ''}
@@ -178,7 +178,7 @@ function capProductsHistoryTable(productId, department, historyRows, state, isLo
 
     return `
       <tr class="cap-products-history-row">
-        <td colspan="${isLogContext ? 9 : 6}" style="padding:12px 16px;background:var(--overlay-light);">
+        <td colspan="${isLogContext ? 10 : 7}" style="padding:12px 16px;background:var(--overlay-light);">
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
               <span><strong>Effective:</strong> ${capProductsEscape(row.effectiveDate || '—')}</span>
@@ -199,13 +199,14 @@ function capProductsHistoryTable(productId, department, historyRows, state, isLo
   }).join('')
 }
 
-export function capRenderProductsTab(productsArray, tasksArray, department, tableState) {
+export function capRenderProductsTab(productsArray, tasksArray, department, tableState, allocationsArray = []) {
   const dept = department || 'ME'
   const state = tableState || capProductsGetState(dept)
   const products = Array.isArray(productsArray) ? productsArray : []
   const historyCount = products.reduce((sum, product) => sum + capProductsGetHistoryRows(dept, product.id).length, 0)
   const isLogContext = dept === 'LOG'
   const today = new Date().toISOString().split('T')[0]
+  const allocations = Array.isArray(allocationsArray) ? allocationsArray : []
 
   const rows = products.map((product, index) => {
     const family = capProductsResolveFamily(product)
@@ -222,6 +223,20 @@ export function capRenderProductsTab(productsArray, tasksArray, department, tabl
     const hoursPerWeek = isLogContext ? (kittingHours + bookingInOutHours + productMovementHours) : (Number.isFinite(baseHours) ? baseHours : 0)
     const effectiveDate = draft.supportEffectiveDate || product.supportEffectiveDate || (latestHistory && latestHistory.effectiveDate) || today
     const changeReason = draft.supportChangeReason || ''
+
+    // Status Indicator Logic
+    const hasHours = hoursPerWeek > 0
+    const hasAllocations = allocations.some(a => a.productId === product.id && !a.endDate)
+    let indicatorColor = 'var(--red)'
+    let indicatorTitle = 'Support hours and allocations not set'
+    if (hasHours && hasAllocations) {
+      indicatorColor = 'var(--green)'
+      indicatorTitle = 'Support hours and allocations set'
+    } else if (hasHours || hasAllocations) {
+      indicatorColor = 'var(--amber)'
+      indicatorTitle = hasHours ? 'Support hours set, but allocations missing' : 'Allocations set, but support hours are zero'
+    }
+
     return {
       product,
       index,
@@ -234,7 +249,9 @@ export function capRenderProductsTab(productsArray, tasksArray, department, tabl
       bookingInOutHours,
       productMovementHours,
       effectiveDate,
-      changeReason
+      changeReason,
+      indicatorColor,
+      indicatorTitle
     }
   }).filter(row => {
     if (state.family !== 'all' && row.family !== state.family) return false
@@ -290,6 +307,21 @@ export function capRenderProductsTab(productsArray, tasksArray, department, tabl
           <span style="font-size:11px;color:var(--muted);">${dept} Department</span>
         </div>
         <div class="me-card-body me-products-card-body">
+          <div style="margin-bottom:12px;display:flex;gap:16px;align-items:center;padding:8px 12px;background:var(--overlay-light);border-radius:6px;font-size:12px;">
+            <div style="font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Allocation Status:</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--green);"></div>
+              <span>Hours & Allocations Set</span>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--amber);"></div>
+              <span>Partial (Hours or Allocations)</span>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--red);"></div>
+              <span>Not Configured</span>
+            </div>
+          </div>
           <div class="cap-filter-bar">
             <input type="text" autocomplete="off" value="${capProductsEscape(state.search || '')}" placeholder="Search products" data-cap-action="cap-products-search" data-dept="${dept}">
             <select autocomplete="off" data-cap-action="cap-products-family-filter" data-dept="${dept}">
@@ -302,6 +334,7 @@ export function capRenderProductsTab(productsArray, tasksArray, department, tabl
           <table class="tbl" style="width:100%;">
             <thead>
               <tr>
+                <th style="width:30px;"></th>
                 <th data-cap-action="cap-products-sort-column" data-sort-key="name" data-dept="${dept}" style="cursor:pointer;user-select:none;">Product${si('name')}</th>
                 <th data-cap-action="cap-products-sort-column" data-sort-key="status" data-dept="${dept}" style="cursor:pointer;user-select:none;">Status${si('status')}</th>
                 <th data-cap-action="cap-products-sort-column" data-sort-key="family" data-dept="${dept}" style="cursor:pointer;user-select:none;">Family${si('family')}</th>
@@ -313,8 +346,9 @@ export function capRenderProductsTab(productsArray, tasksArray, department, tabl
               </tr>
             </thead>
             <tbody>
-              ${rows.length === 0 ? `<tr><td colspan="${isLogContext ? 10 : 7}" style="padding:16px;text-align:center;color:var(--muted);">No products match the current filters.</td></tr>` : rows.map(row => `
+              ${rows.length === 0 ? `<tr><td colspan="${isLogContext ? 11 : 8}" style="padding:16px;text-align:center;color:var(--muted);">No products match the current filters.</td></tr>` : rows.map(row => `
                 <tr data-product-idx="${row.index}" data-product-id="${capProductsEscape(row.product.id || '')}" data-product-db-id="${capProductsEscape(row.product.productDatabaseId || '')}">
+                  <td style="text-align:center;"><div style="width:10px;height:10px;border-radius:50%;background:${row.indicatorColor};margin:0 auto;" title="${capProductsEscape(row.indicatorTitle)}"></div></td>
                   <td><div style="font-weight:600;">${capProductsEscape(row.product.name || '(Unnamed product)')}</div></td>
                   <td><span style="font-size:12px;">${capProductsEscape(row.status)}</span></td>
                   <td>${capProductsEscape(row.family)}</td>
@@ -328,6 +362,7 @@ export function capRenderProductsTab(productsArray, tasksArray, department, tabl
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                       <button class="btn btn-primary btn-sm" data-cap-action="cap-products-apply-hours">Apply</button>
                       <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-toggle-history" data-product-id="${capProductsEscape(row.product.id || '')}" data-dept="${dept}">${state.historyOpenProductIds.includes(row.product.id) ? 'Hide' : 'View'} History (${row.historyRows.length})</button>
+                      <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-allocations" data-product-id="${capProductsEscape(row.product.id || '')}" data-dept="${dept}">Allocations</button>
                     </div>
                   </td>
                 </tr>
@@ -488,6 +523,297 @@ export function capProductsToggleHistory(productId, department) {
   else nextOpen.push(productId)
   state.historyOpenProductIds = nextOpen
   capProductsRefreshTable(department)
+}
+
+/* ── Allocation Modal ────────────────────────────────────────
+   Dynamically-created modal for managing per-person support
+   demand allocation sets on a product.
+   ──────────────────────────────────────────────────────────── */
+
+let _allocCtx = null
+
+/**
+ * Opens the allocation modal for a product.
+ * @param {string} productId
+ * @param {string} productName
+ * @param {number} hoursPerWeek — total weekly support hours for this product
+ * @param {object} deps — { team, allocations, saveSet, refreshTab, department }
+ */
+export function capOpenAllocationsModal(productId, productName, hoursPerWeek, deps) {
+  _allocCtx = {
+    productId,
+    productName,
+    hoursPerWeek: Number(hoursPerWeek) || 0,
+    department: deps.department || 'ME',
+    team: Array.isArray(deps.team) ? deps.team.filter(t => t && t.id) : [],
+    allocations: Array.isArray(deps.allocations) ? deps.allocations : [],
+    saveSet: deps.saveSet || null,
+    refreshTab: deps.refreshTab || null,
+    formRows: [{ personId: '', percentage: '' }],
+    effectiveDate: new Date().toISOString().split('T')[0]
+  }
+  _allocRender()
+}
+
+export function capCloseAllocationsModal() {
+  const el = document.getElementById('capAllocationsModal')
+  if (el) el.remove()
+  _allocCtx = null
+}
+
+function _allocPersonName(id) {
+  if (!_allocCtx) return 'Unknown'
+  const p = _allocCtx.team.find(t => t.id === id)
+  return p ? (p.name || 'Unnamed') : 'Unknown'
+}
+
+function _allocRender() {
+  // Remove previous instance
+  const prev = document.getElementById('capAllocationsModal')
+  if (prev) prev.remove()
+  const ctx = _allocCtx
+  if (!ctx) return
+
+  // Current active allocations (no end_date)
+  const current = (ctx.allocations || [])
+    .filter(a => a.productId === ctx.productId && !a.endDate)
+    .sort((a, b) => (b.percentage || 0) - (a.percentage || 0))
+
+  // Past allocations grouped by effective_date
+  const past = (ctx.allocations || [])
+    .filter(a => a.productId === ctx.productId && a.endDate)
+  const pastSets = {}
+  past.forEach(a => {
+    const key = a.effectiveDate || 'unknown'
+    if (!pastSets[key]) pastSets[key] = []
+    pastSets[key].push(a)
+  })
+  const pastKeys = Object.keys(pastSets).sort().reverse()
+
+  // Current split HTML
+  let currentHtml
+  if (current.length === 0) {
+    currentHtml = '<div style="color:var(--muted);font-size:13px;margin:8px 0;">No allocations set yet.</div>'
+  } else {
+    const totalPct = current.reduce((s, a) => s + (a.percentage || 0), 0)
+    const totalHours = current.reduce((s, a) => s + ((a.percentage || 0) / 100 * ctx.hoursPerWeek), 0)
+    const colors = ['var(--blue)', 'var(--green)', 'var(--amber)', 'var(--red)', 'var(--navy)', 'var(--muted)']
+    currentHtml = `
+      <table class="tbl" style="width:100%;margin:8px 0;">
+        <thead><tr><th>Person</th><th style="width:60px;">%</th><th style="width:70px;">Hours</th><th>Since</th></tr></thead>
+        <tbody>${current.map(a => `
+          <tr>
+            <td>${esc(_allocPersonName(a.personId))}</td>
+            <td>${Number(a.percentage || 0).toFixed(0)}%</td>
+            <td>${((a.percentage || 0) / 100 * ctx.hoursPerWeek).toFixed(1)}h</td>
+            <td>${esc(a.effectiveDate || '—')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;font-size:12px;color:var(--muted);">
+        <span>Total: ${totalPct}%</span>
+        <span>${totalHours.toFixed(1)}h / ${ctx.hoursPerWeek.toFixed(1)}h weekly</span>
+      </div>
+      <div style="height:8px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:12px;">
+        ${current.map((a, i) => `<div style="width:${a.percentage || 0}%;background:${colors[i % colors.length]};height:100%;" title="${esc(_allocPersonName(a.personId))}: ${a.percentage}%"></div>`).join('')}
+        ${totalPct < 100 ? `<div style="width:${100 - totalPct}%;background:var(--line);height:100%;" title="Unallocated: ${100 - totalPct}%"></div>` : ''}
+      </div>`
+  }
+
+  // Form rows
+  const formRowsHtml = ctx.formRows.map((row, i) => {
+    const rowHours = ((Number(row.percentage) || 0) / 100 * ctx.hoursPerWeek)
+    return `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;" data-alloc-row="${i}">
+      <select data-alloc-field="person" data-alloc-idx="${i}" style="flex:1;">
+        <option value="">Select person…</option>
+        ${ctx.team.map(t => `<option value="${esc(t.id)}" ${row.personId === t.id ? 'selected' : ''}>${esc(t.name || 'Unnamed')}</option>`).join('')}
+      </select>
+      <input type="number" min="0" max="100" step="1" value="${row.percentage}" data-alloc-field="pct" data-alloc-idx="${i}" style="width:70px;" placeholder="%">
+      <span data-alloc-hours="${i}" style="font-size:12px;color:var(--muted);width:60px;text-align:right;">${rowHours.toFixed(1)}h</span>
+      <button class="btn btn-ghost btn-sm" data-alloc-action="remove-row" data-alloc-idx="${i}" ${ctx.formRows.length <= 1 ? 'disabled' : ''}>✕</button>
+    </div>`
+  }).join('')
+
+  const formTotal = ctx.formRows.reduce((s, r) => s + (Number(r.percentage) || 0), 0)
+  const formTotalHours = (formTotal / 100 * ctx.hoursPerWeek)
+  const totalColor = formTotal === 100 ? 'var(--green)' : formTotal > 100 ? 'var(--red)' : 'var(--amber)'
+
+  // History HTML
+  let historyHtml
+  if (pastKeys.length === 0) {
+    historyHtml = '<div style="color:var(--muted);font-size:13px;margin:8px 0;">No previous sets.</div>'
+  } else {
+    historyHtml = pastKeys.map(key => {
+      const rows = pastSets[key]
+      const setTotalHours = rows.reduce((s, a) => s + ((a.percentage || 0) / 100 * ctx.hoursPerWeek), 0)
+      return `
+        <div style="margin:6px 0;padding:8px;background:var(--overlay-light);border-radius:6px;">
+          <div style="font-weight:600;font-size:12px;margin-bottom:4px;">${esc(key)} → ${esc(rows[0]?.endDate || '—')}</div>
+          ${rows.map(a => `<div style="font-size:12px;color:var(--ink);">${esc(_allocPersonName(a.personId))}: ${Number(a.percentage || 0).toFixed(0)}% (${((a.percentage || 0) / 100 * ctx.hoursPerWeek).toFixed(1)}h)</div>`).join('')}
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;border-top:1px solid var(--line);padding-top:4px;">Total: ${setTotalHours.toFixed(1)}h / ${ctx.hoursPerWeek.toFixed(1)}h</div>
+        </div>`
+    }).join('')
+  }
+
+  const modalHtml = `
+    <div class="me-detail-modal" id="capAllocationsModal" role="dialog" aria-modal="true">
+      <div class="me-detail-modal-overlay" data-alloc-action="close"></div>
+      <div class="me-detail-modal-content" style="max-width:520px;">
+        <div class="me-detail-header">
+          <div>
+            <div class="me-detail-title">Support Allocations</div>
+            <div class="me-detail-subtitle">${esc(ctx.productName)}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-alloc-action="close" aria-label="Close">✕</button>
+        </div>
+        <div class="me-detail-body" style="max-height:70vh;overflow-y:auto;">
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px;">Current Split</div>
+          ${currentHtml}
+
+          <div style="font-weight:600;font-size:13px;margin:16px 0 4px;">New Allocation Set</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+            <label style="font-size:12px;font-weight:600;">Effective:</label>
+            <input type="date" id="allocEffectiveDate" value="${esc(ctx.effectiveDate)}" style="flex:1;">
+          </div>
+          <div id="allocFormRows">${formRowsHtml}</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+            <button class="btn btn-ghost btn-sm" data-alloc-action="add-row">+ Add Person</button>
+            <div style="flex:1;"></div>
+            <span id="allocTotalLabel" style="font-size:13px;font-weight:600;color:${totalColor};">Total: ${formTotal}% (${formTotalHours.toFixed(1)}h)</span>
+          </div>
+          <div style="height:6px;border-radius:3px;overflow:hidden;background:var(--line);margin:8px 0 12px;">
+            <div id="allocTotalBar" style="width:${Math.min(formTotal, 100)}%;height:100%;background:${totalColor};transition:width 0.2s;"></div>
+          </div>
+          <button class="btn btn-primary" id="allocSaveBtn" data-alloc-action="save" ${formTotal !== 100 ? 'disabled' : ''} style="width:100%;">Save Allocation Set</button>
+
+          <div style="font-weight:600;font-size:13px;margin:20px 0 4px;">History</div>
+          ${historyHtml}
+        </div>
+      </div>
+    </div>`
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml)
+  _allocWireListeners()
+}
+
+function _allocWireListeners() {
+  const modal = document.getElementById('capAllocationsModal')
+  if (!modal) return
+
+  modal.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-alloc-action]')
+    if (!target) return
+    const act = target.getAttribute('data-alloc-action')
+
+    if (act === 'close') {
+      capCloseAllocationsModal()
+    } else if (act === 'add-row') {
+      if (!_allocCtx) return
+      _allocCtx.formRows.push({ personId: '', percentage: '' })
+      _allocRender()
+    } else if (act === 'remove-row') {
+      if (!_allocCtx) return
+      const idx = Number(target.getAttribute('data-alloc-idx'))
+      if (Number.isFinite(idx) && idx >= 0 && idx < _allocCtx.formRows.length) {
+        _allocCtx.formRows.splice(idx, 1)
+        if (_allocCtx.formRows.length === 0) _allocCtx.formRows.push({ personId: '', percentage: '' })
+        _allocRender()
+      }
+    } else if (act === 'save') {
+      _allocSave()
+    }
+  })
+
+  // Live-update total on input changes
+  modal.addEventListener('input', _allocHandleInput)
+  modal.addEventListener('change', _allocHandleInput)
+}
+
+function _allocHandleInput(e) {
+  const el = e.target
+  if (!_allocCtx) return
+
+  // Track effective date
+  if (el.id === 'allocEffectiveDate') {
+    _allocCtx.effectiveDate = el.value
+    return
+  }
+
+  const idx = Number(el.getAttribute('data-alloc-idx'))
+  if (!Number.isFinite(idx) || idx < 0 || idx >= _allocCtx.formRows.length) return
+
+  const field = el.getAttribute('data-alloc-field')
+  if (field === 'person') {
+    _allocCtx.formRows[idx].personId = el.value
+  } else if (field === 'pct') {
+    _allocCtx.formRows[idx].percentage = el.value
+    _allocUpdateTotal()
+  }
+}
+
+function _allocUpdateTotal() {
+  const total = _allocCtx ? _allocCtx.formRows.reduce((s, r) => s + (Number(r.percentage) || 0), 0) : 0
+  const totalHours = _allocCtx ? (total / 100 * _allocCtx.hoursPerWeek) : 0
+  const color = total === 100 ? 'var(--green)' : total > 100 ? 'var(--red)' : 'var(--amber)'
+  const label = document.getElementById('allocTotalLabel')
+  if (label) { label.textContent = `Total: ${total}% (${totalHours.toFixed(1)}h)`; label.style.color = color }
+  const bar = document.getElementById('allocTotalBar')
+  if (bar) { bar.style.width = `${Math.min(total, 100)}%`; bar.style.background = color }
+  const btn = document.getElementById('allocSaveBtn')
+  if (btn) btn.disabled = total !== 100
+  
+  // Update individual row hours
+  if (_allocCtx) {
+    _allocCtx.formRows.forEach((row, idx) => {
+      const hoursEl = document.querySelector(`[data-alloc-hours="${idx}"]`)
+      if (hoursEl) {
+        const rowHours = ((Number(row.percentage) || 0) / 100 * _allocCtx.hoursPerWeek)
+        hoursEl.textContent = `${rowHours.toFixed(1)}h`
+      }
+    })
+  }
+}
+
+async function _allocSave() {
+  if (!_allocCtx || typeof _allocCtx.saveSet !== 'function') return
+
+  const total = _allocCtx.formRows.reduce((s, r) => s + (Number(r.percentage) || 0), 0)
+  if (total !== 100) {
+    alert('Allocations must total exactly 100% before saving.')
+    return
+  }
+  if (!_allocCtx.effectiveDate) {
+    alert('Choose an effective date.')
+    return
+  }
+
+  const personIds = _allocCtx.formRows.map(r => r.personId).filter(Boolean)
+  if (new Set(personIds).size !== personIds.length) {
+    alert('Each person can only appear once.')
+    return
+  }
+  if (personIds.length === 0) {
+    alert('Add at least one person.')
+    return
+  }
+
+  const rows = _allocCtx.formRows
+    .filter(r => r.personId && Number(r.percentage) > 0)
+    .map(r => ({ personId: r.personId, percentage: Number(r.percentage), notes: '' }))
+
+  try {
+    await _allocCtx.saveSet(_allocCtx.productId, _allocCtx.effectiveDate, rows)
+    // Reload allocations from DB so local state is fresh (don't rely on realtime timing)
+    if (typeof _allocCtx.reloadAllocations === 'function') {
+      await _allocCtx.reloadAllocations()
+    }
+    if (typeof _allocCtx.refreshTab === 'function') _allocCtx.refreshTab()
+    capCloseAllocationsModal()
+  } catch (err) {
+    console.error('Failed to save allocation set:', err)
+    alert('Failed to save. Please try again.')
+  }
 }
 
 export function capProductsBulkSaveChanges(department) {

@@ -29,7 +29,8 @@ import {
   capProductsToggleStatusFilter,
   capProductsToggleHistory,
   capProductsBulkSaveChanges,
-  capProductsUpdateHistoryEditDraft
+  capProductsUpdateHistoryEditDraft,
+  capOpenAllocationsModal
 } from '../shared/js/cap-products.js'
 import {
   capProductLoadTableState,
@@ -56,7 +57,8 @@ import {
   meDataAddHoliday,
   meDataUpdateHoliday,
   meDataDeleteHoliday,
-  meDataDeleteProductSupportHistoryEntry
+  meDataDeleteProductSupportHistoryEntry,
+  meDataState
 } from '../me/js/me-data-persistence.js'
 import {
   meSetTab,
@@ -82,7 +84,8 @@ import {
   pmDataAddHoliday,
   pmDataUpdateHoliday,
   pmDataDeleteHoliday,
-  pmDataDeleteProductSupportHistoryEntry
+  pmDataDeleteProductSupportHistoryEntry,
+  pmDataState
 } from '../project-management/js/pm-data.js'
 import {
   pmSetTab,
@@ -108,7 +111,8 @@ import {
   logDataAddHoliday,
   logDataUpdateHoliday,
   logDataDeleteHoliday,
-  logDataDeleteProductSupportHistoryEntry
+  logDataDeleteProductSupportHistoryEntry,
+  logDataState
 } from '../logistics/js/log-data.js'
 import {
   logSetTab,
@@ -134,7 +138,8 @@ import {
   unit6DataAddHoliday,
   unit6DataUpdateHoliday,
   unit6DataDeleteHoliday,
-  unit6DataDeleteProductSupportHistoryEntry
+  unit6DataDeleteProductSupportHistoryEntry,
+  unit6DataState
 } from '../unit6/js/unit6-data.js'
 import {
   unit6SetTab,
@@ -145,6 +150,10 @@ import {
   unit6OnPrevMonth,
   unit6OnNextMonth
 } from '../unit6/js/unit6-capacity.js'
+import { meSaveProductSupportAllocationSet, meLoadRelationalProductSupportAllocations } from '../me/js/me-data-relational.js'
+import { pmSaveProductSupportAllocationSet, pmLoadRelationalProductSupportAllocations } from '../project-management/js/pm-data-relational.js'
+import { logSaveProductSupportAllocationSet, logLoadRelationalProductSupportAllocations } from '../logistics/js/log-data-relational.js'
+import { unit6SaveProductSupportAllocationSet, unit6LoadRelationalProductSupportAllocations } from '../unit6/js/unit6-data-relational.js'
 import { setProdCapTab } from '../production/js/prod-capacity.js'
 import {
   prodCapShiftMonth,
@@ -247,6 +256,15 @@ function capRunSave(contextType) {
   if (contextType === 'log') return logOnSave()
   if (contextType === 'unit6') return unit6OnSave()
   return meOnSave()
+}
+
+// Returns allocation deps for the allocation modal — { team, allocations, saveSet, refreshTab, department }
+function capGetAllocDeps(contextType) {
+  // reloadAllocations: re-fetches from DB and writes back to state so modal + heatmap see fresh data
+  if (contextType === 'pm') return { team: pmDataGetTeam(), allocations: pmDataState.productSupportAllocations || [], saveSet: pmSaveProductSupportAllocationSet, reloadAllocations: async () => { pmDataState.productSupportAllocations = await pmLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('pm'), department: 'PM' }
+  if (contextType === 'log') return { team: logDataGetTeam(), allocations: logDataState.productSupportAllocations || [], saveSet: logSaveProductSupportAllocationSet, reloadAllocations: async () => { logDataState.productSupportAllocations = await logLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('log'), department: 'LOG' }
+  if (contextType === 'unit6') return { team: unit6DataGetTeam(), allocations: unit6DataState.productSupportAllocations || [], saveSet: unit6SaveProductSupportAllocationSet, reloadAllocations: async () => { unit6DataState.productSupportAllocations = await unit6LoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('unit6'), department: 'UNIT6' }
+  return { team: meDataGetTeam(), allocations: meDataState.productSupportAllocations || [], saveSet: meSaveProductSupportAllocationSet, reloadAllocations: async () => { meDataState.productSupportAllocations = await meLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('me'), department: 'ME' }
 }
 
 function capRunDebouncedSave(contextType) {
@@ -1116,6 +1134,18 @@ function onCapacityClick(evt) {
     }
     break
   }
+  case 'cap-products-allocations': {
+    // Open the allocation modal for this product
+    const productId = el.getAttribute('data-product-id')
+    if (!productId) break
+    const api = capGetDataApi(contextType)
+    const products = typeof api.getProducts === 'function' ? api.getProducts() : []
+    const product = products.find(p => p && p.id === productId)
+    const productName = product ? (product.name || 'Unnamed product') : 'Unnamed product'
+    const productHours = product ? (product.hoursPerWeek || 0) : 0
+    capOpenAllocationsModal(productId, productName, productHours, capGetAllocDeps(contextType))
+    break
+  }
   case 'cap-products-edit-history': {
     const historyId = el.getAttribute('data-history-id')
     const dept = el.getAttribute('data-dept') || 'ME'
@@ -1341,6 +1371,27 @@ function onCapacityChange(evt) {
     const f = capTaskFilters(contextType)
     if (f) f.assignee = el.value
     capTaskRefresh(contextType)
+    break
+  }
+  case 'cap-task-filter-product-input': {
+    // Searchable product filter: resolve name to ID and update hidden input
+    const picker = el.closest('.cap-task-product-picker')
+    const hiddenInput = picker ? picker.querySelector('input[data-cap-action="cap-task-filter-product"]') : null
+    if (!hiddenInput) break
+    const label = (el.value || '').trim()
+    const normalized = label.toLowerCase()
+    const api = capGetDataApi(contextType)
+    const products = typeof api.getProducts === 'function' ? api.getProducts() : []
+    const lookup = capBuildTaskProductLookup(products)
+    let nextId = 'all'
+    // Empty input clears filter; otherwise resolve name to ID via lookup
+    if (normalized) {
+      nextId = lookup.byNameLower.get(normalized) || 'all'
+    }
+    if (hiddenInput.value === nextId) break
+    hiddenInput.value = nextId
+    // Trigger filter change event on hidden input
+    hiddenInput.dispatchEvent(new Event('change', { bubbles: true }))
     break
   }
   case 'cap-task-filter-product': {

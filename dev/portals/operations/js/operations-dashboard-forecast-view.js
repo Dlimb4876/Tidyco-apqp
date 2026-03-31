@@ -53,8 +53,9 @@ function opsRenderForecastRows(rows) {
 				case 'area': av = (a.work_area || '').toLowerCase(); bv = (b.work_area || '').toLowerCase(); break;
 				case 'start': av = a.start_date || ''; bv = b.start_date || ''; break;
 				case 'end': av = a.due_date || ''; bv = b.due_date || ''; break;
-				case 'hours': av = opsToNumber(a.total_hours, 0); bv = opsToNumber(b.total_hours, 0); break;
-				case 'probability': av = opsToNumber(a.probability_pct, 0); bv = opsToNumber(b.probability_pct, 0); break;
+			case 'units': av = opsToNumber(a.total_units, 0); bv = opsToNumber(b.total_units, 0); break;
+			case 'hours': av = opsToNumber(a.total_hours, 0); bv = opsToNumber(b.total_hours, 0); break;
+			case 'probability': av = opsToNumber(a.probability_pct, 0); bv = opsToNumber(b.probability_pct, 0); break;
 				default: av = ''; bv = '';
 			}
 			if (av < bv) return sortDir === 'asc' ? -1 : 1;
@@ -111,6 +112,10 @@ function opsRenderForecastRows(rows) {
 						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="area">Area ${sortIcon('area')}</th>
 						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="start">Start ${sortIcon('start')}</th>
 						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="end">End ${sortIcon('end')}</th>
+						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="units">Units ${sortIcon('units')}</th>
+						<th>OH/Unit</th>
+						<th>Batches</th>
+						<th>Beat Rate</th>
 						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="hours">Total Hours ${sortIcon('hours')}</th>
 						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="probability">Probability ${sortIcon('probability')}</th>
 						<th>Actions</th>
@@ -165,8 +170,26 @@ function opsRenderForecastRows(rows) {
 								</td>
 								<td>
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="number" min="0" step="1" id="opsForecastInline_${key}_total_hours" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(totalHours)}" />`
-										: esc(opsFormatHours(totalHours))}
+										? `<input class="ops-forecast-inline" type="number" min="0" step="1" id="opsForecastInline_${key}_total_units" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.total_units, 0))}" />`
+										: esc(opsToNumber(row.total_units, 0).toLocaleString('en-GB'))}
+								</td>
+								<td>
+									${inlineMode
+										? `<input class="ops-forecast-inline" type="number" min="0" step="0.1" id="opsForecastInline_${key}_oh_hours_per_unit" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.oh_hours_per_unit, 0))}" />`
+										: esc(opsToNumber(row.oh_hours_per_unit, 0))}
+								</td>
+								<td>
+									${inlineMode
+										? `<input class="ops-forecast-inline" type="number" min="1" step="1" id="opsForecastInline_${key}_batch_count" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.batch_count, 1))}" />`
+										: esc(opsToNumber(row.batch_count, 1))}
+								</td>
+								<td>
+									${inlineMode
+										? `<input class="ops-forecast-inline" type="number" min="1" step="1" id="opsForecastInline_${key}_beat_rate_days" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.beat_rate_days, 1))}" />`
+										: esc(opsToNumber(row.beat_rate_days, 1))}
+								</td>
+								<td>
+									${esc(opsFormatHours(totalHours))}
 								</td>
 								<td>
 									${inlineMode
@@ -222,6 +245,14 @@ function opsRenderForecastView(metrics) {
 	const forecastMonthLabel = typeof prodCapGet24MonthKeys === 'function' && typeof prodCapMonthLabelFull === 'function'
 		? prodCapMonthLabelFull(prodCapGet24MonthKeys()[0])
 		: '';
+	const workAreaFilter = forecast.workAreaFilter || 'ALL'
+	const workAreaOptions = ['ALL', ...(Array.isArray(forecast.workAreas) ? forecast.workAreas : [])]
+	const workAreaPills = workAreaOptions.map((workArea) => {
+		const label = workArea === 'ALL' ? 'ALL' : workArea
+		const isActive = workArea === workAreaFilter
+		return `<button class="ops-pill ${isActive ? 'active' : ''}" data-action="ops-forecast-filter-workarea" data-work-area="${esc(workArea)}">${esc(label)}</button>`
+	}).join('')
+	const scopeLabel = workAreaFilter === 'ALL' ? 'ALL Work Areas' : workAreaFilter
 
 	return `
 		<div class="ops-shell">
@@ -236,7 +267,7 @@ function opsRenderForecastView(metrics) {
 					${opsMetricCard('Baseline Demand', opsFormatHours(forecast.baseline24h), 'Read-in from production load data', 'good')}
 					${opsMetricCard('Forecast Added', opsFormatHours(forecast.forecast24h), 'From total opportunity hours', forecast.forecast24h > 0 ? 'watch' : 'good')}
 					${opsMetricCard('Forecast Total', opsFormatHours(forecast.total24h), 'Baseline + opportunity hours', utilTone)}
-					${opsMetricCard('Capacity Supply', opsFormatHours(forecast.supply24h), 'Available production capacity', 'good')}
+					${opsMetricCard('Utilisation Capacity', opsFormatHours(forecast.supply24h), 'Available production capacity', 'good')}
 					${opsMetricCard('Headroom', opsFormatHours(forecast.headroom24h), 'Supply minus forecast total', headroomTone)}
 					${opsMetricCard('Utilisation', `${forecast.utilisation24}%`, '24-month blended utilisation', utilTone)}
 				</div>
@@ -246,14 +277,16 @@ function opsRenderForecastView(metrics) {
 				<div class="ops-panel-head">
 					<div>
 						<h3>Forecast Trend</h3>
-						<span>Baseline demand plus low, medium and high probability opportunity layers</span>
+						<span>Scope: ${esc(scopeLabel)} · Baseline demand plus forecast layers, with solid utilised capacity and dashed 100% available capacity</span>
 					</div>
 					<div class="pc-window-controls" style="margin-bottom: 0; padding: 0; border: none; background: none;">
 						<button class="btn btn-sm btn-ghost" data-action="ops-forecast-shift-month" data-direction="prev" title="View previous month">← Previous</button>
 						<div class="pc-window-label">${forecastMonthLabel}</div>
 						<button class="btn btn-sm btn-ghost" data-action="ops-forecast-shift-month" data-direction="next" title="View next month">Next →</button>
-						${appState.prodCapMonthOffset !== 0 ? `<button class="btn btn-sm btn-outline" data-action="ops-forecast-reset-month" title="Reset to current month">Reset</button>` : ''}
 					</div>
+				</div>
+				<div class="ops-pill-row" role="group" aria-label="Filter forecast chart by work area">
+					${workAreaPills}
 				</div>
 				<div class="ops-forecast-chart-wrap">
 					<canvas id="opsForecastTrendChart" aria-label="Forecast trend chart"></canvas>
@@ -288,7 +321,10 @@ function opsRenderForecastView(metrics) {
 					</label>
 					<label>Start Date<input type="date" name="start_date" required value="${esc(editingRow?.start_date || '')}" /></label>
 					<label>End Date<input type="date" name="due_date" required value="${esc(editingRow?.due_date || '')}" /></label>
-					<label>Total Hours<input type="number" name="total_hours" required min="0" step="1" value="${esc(editingRow?.total_hours || 0)}" /></label>
+					<label>Total Units<input type="number" name="total_units" required min="0" step="1" value="${esc(editingRow?.total_units || 0)}" /></label>
+					<label>OH Hours/Unit<input type="number" name="oh_hours_per_unit" required min="0" step="0.1" value="${esc(editingRow?.oh_hours_per_unit || 0)}" /></label>
+					<label>Batch Count<input type="number" name="batch_count" required min="1" step="1" value="${esc(editingRow?.batch_count || 1)}" /></label>
+					<label>Beat Rate (days)<input type="number" name="beat_rate_days" required min="1" step="1" value="${esc(editingRow?.beat_rate_days || 1)}" /></label>
 					<label>Probability
 						<select name="probability_band" required>
 							<option value="low" ${editingProbabilityBand === 'low' ? 'selected' : ''}>Low</option>
@@ -337,82 +373,107 @@ function opsRenderForecastChart(forecast) {
 	const forecastMedium = forecast.monthSeries.map(row => Math.round(row.forecastMedium));
 	const forecastHigh = forecast.monthSeries.map(row => Math.round(row.forecastHigh));
 	const supply = forecast.monthSeries.map(row => Math.round(row.supply));
+	const utilFactor = Number(appState.prodCapUtilizationFactor) || 0;
+	const totalAvailable = forecast.monthSeries.map(row => {
+		const utilisedCapacity = Math.round(row.supply);
+		if (utilFactor <= 0) return 0;
+		return Math.round(utilisedCapacity / utilFactor);
+	});
 
-	operationsDashboardState.opsForecastChart = new ChartCtor(canvas, {
-		type: 'bar',
-		data: {
-			labels,
-			datasets: [
-				{
-					type: 'bar',
-					label: 'Baseline Demand',
-					data: baseline,
-					backgroundColor: 'rgba(17, 108, 148, 0.65)',
-					borderColor: 'rgba(17, 108, 148, 1)',
-					borderWidth: 1,
-					stack: 'demand'
+	try {
+		operationsDashboardState.opsForecastChart = new ChartCtor(canvas, {
+			type: 'bar',
+			data: {
+				labels,
+				datasets: [
+					{
+						type: 'bar',
+						label: 'Baseline Demand',
+						data: baseline,
+						backgroundColor: 'rgba(17, 108, 148, 0.65)',
+						borderColor: 'rgba(17, 108, 148, 1)',
+						borderWidth: 1,
+						stack: 'demand'
+					},
+					{
+						type: 'bar',
+						label: 'Forecast Low',
+						data: forecastLow,
+						backgroundColor: 'rgba(153, 174, 63, 0.7)',
+						borderColor: 'rgba(153, 174, 63, 1)',
+						borderWidth: 1,
+						stack: 'demand'
+					},
+					{
+						type: 'bar',
+						label: 'Forecast Medium',
+						data: forecastMedium,
+						backgroundColor: 'rgba(217, 158, 24, 0.75)',
+						borderColor: 'rgba(217, 158, 24, 1)',
+						borderWidth: 1,
+						stack: 'demand'
+					},
+					{
+						type: 'bar',
+						label: 'Forecast High',
+						data: forecastHigh,
+						backgroundColor: 'rgba(204, 90, 30, 0.75)',
+						borderColor: 'rgba(204, 90, 30, 1)',
+						borderWidth: 1,
+						stack: 'demand'
+					},
+					{
+						type: 'line',
+						label: 'Utilisation Capacity',
+						data: supply,
+						borderColor: 'rgba(31, 143, 101, 1)',
+						backgroundColor: 'rgba(31, 143, 101, 0.2)',
+						// Why: keep utilisation capacity as its own baseline line separate from demand bars.
+						stack: 'ops-forecast-capacity-line',
+						borderWidth: 2,
+						pointRadius: 2,
+						tension: 0.25
+					},
+					{
+						type: 'line',
+						// Why: show full 100%-utilisation baseline on the forecast trend for planning headroom.
+						label: 'Total Available (100%)',
+						data: totalAvailable,
+						borderColor: 'rgba(100, 116, 139, 1)',
+						backgroundColor: 'rgba(100, 116, 139, 0.2)',
+						stack: 'ops-forecast-available-line',
+						borderWidth: 2,
+						borderDash: [6, 4],
+						pointRadius: 1,
+						tension: 0.25
+					}
+				]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				scales: {
+					y: {
+						beginAtZero: true,
+						ticks: {
+							callback: (value) => `${value}h`
+						}
+					}
 				},
-				{
-					type: 'bar',
-					label: 'Forecast Low',
-					data: forecastLow,
-					backgroundColor: 'rgba(153, 174, 63, 0.7)',
-					borderColor: 'rgba(153, 174, 63, 1)',
-					borderWidth: 1,
-					stack: 'demand'
-				},
-				{
-					type: 'bar',
-					label: 'Forecast Medium',
-					data: forecastMedium,
-					backgroundColor: 'rgba(217, 158, 24, 0.75)',
-					borderColor: 'rgba(217, 158, 24, 1)',
-					borderWidth: 1,
-					stack: 'demand'
-				},
-				{
-					type: 'bar',
-					label: 'Forecast High',
-					data: forecastHigh,
-					backgroundColor: 'rgba(204, 90, 30, 0.75)',
-					borderColor: 'rgba(204, 90, 30, 1)',
-					borderWidth: 1,
-					stack: 'demand'
-				},
-				{
-					type: 'line',
-					label: 'Capacity Supply',
-					data: supply,
-					borderColor: 'rgba(31, 143, 101, 1)',
-					backgroundColor: 'rgba(31, 143, 101, 0.2)',
-					borderWidth: 2,
-					pointRadius: 2,
-					tension: 0.25
-				}
-			]
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			scales: {
-				y: {
-					beginAtZero: true,
-					ticks: {
-						callback: (value) => `${value}h`
+				plugins: {
+					legend: {
+						position: 'bottom'
+					},
+					tooltip: {
+						mode: 'index',
+						intersect: false
 					}
 				}
-			},
-			plugins: {
-				legend: {
-					position: 'bottom'
-				},
-				tooltip: {
-					mode: 'index',
-					intersect: false
-				}
 			}
-		}
-	});
+		});
+	} catch (err) {
+		console.warn('Could not create operations forecast chart:', err && err.message ? err.message : err);
+	}
 }
 
 export {

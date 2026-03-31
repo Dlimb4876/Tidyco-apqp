@@ -26,7 +26,9 @@ import {
   pmDataGetHolidays,
   pmDataSubscribe,
   pmDataUnsubscribe,
-  setPmDataRealtimeHooks
+  setPmDataRealtimeHooks,
+  pmDataState,
+  pmDataGetProductSupportRateForDate
 } from './pm-data.js'
 
 export let pmTab = 'chart'
@@ -51,7 +53,10 @@ function pmGetData() {
 function pmDrawChartViews() {
   const { team, tasks, products, holidays } = pmGetData()
   capDrawChartNow(team, tasks, products, holidays, pmChartStart, 'PM')
-  capDrawHeatmapNow(team, tasks, products, holidays, pmChartStart, 'PM')
+  capDrawHeatmapNow(team, tasks, products, holidays, pmChartStart, {
+    allocationsArray: pmDataState.productSupportAllocations,
+    supportRateResolver: pmDataGetProductSupportRateForDate
+  })
 }
 
 function pmGetTabContent() {
@@ -74,7 +79,7 @@ function pmGetTabContent() {
     case 'tasks':
       return capRenderTasksTab(tasks, team, products, 'PM', taskFilters, taskSort, canEdit())
     case 'products':
-      return capRenderProductsTab(products, tasks, 'PM', productsTableState)
+      return capRenderProductsTab(products, tasks, 'PM', productsTableState, pmDataState.productSupportAllocations)
     case 'product-taskload':
       return capRenderProductTaskLoadTab(tasks, products, 'PM', productLoadTableState)
     case 'holidays':

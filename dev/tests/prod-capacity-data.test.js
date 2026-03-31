@@ -14,6 +14,8 @@ jest.unstable_mockModule('../utils/js/navigation.js', () => ({
   render: jest.fn()
 }))
 
+const { appState } = await import('../core/js/state.js')
+
 describe('Production capacity data', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -33,5 +35,14 @@ describe('Production capacity data', () => {
   it('should have prod-capacity-data module', async () => {
     const mod = await import('../portals/capacity/production/js/prod-capacity-data.js')
     expect(mod).toBeDefined()
+  })
+
+  it('should keep month key generation stable with invalid offset value', async () => {
+    const mod = await import('../portals/capacity/production/js/prod-capacity-data.js')
+    appState.prodCapMonthOffset = Number.NaN
+    const keys = mod.prodCapGet24MonthKeys()
+    expect(Array.isArray(keys)).toBe(true)
+    expect(keys).toHaveLength(24)
+    expect(keys.every(k => /^\d{4}-\d{2}$/.test(k))).toBe(true)
   })
 })

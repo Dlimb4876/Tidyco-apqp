@@ -1,7 +1,11 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-30T11:20:29.426Z
-> Files: 552 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-31T07:08:36.537Z
+> Files: 556 tracked | Anatomy hits: 0 | Misses: 0
+
+## ../../../.claude/plans/
+
+- `piped-marinating-kahn.md` — Plan: Per-Product Support Demand Allocation (~2165 tok)
 
 ## ./
 
@@ -11,7 +15,7 @@
 - `.prettierrc` — Prettier configuration (~31 tok)
 - `AGENTS.md` — AGENTS.md — Coding Guidelines for Agentic Operations (~1376 tok)
 - `CHANGE_CHECKLIST.md` — Change Checklist — Before Committing (~2217 tok)
-- `CHANGELOG.md` — Change log (~29321 tok)
+- `CHANGELOG.md` — Changelog (~30290 tok)
 - `CLAUDE.md` — Tidyco APQP Core Router (~624 tok)
 - `code-review-report.md` — Code Review & Scalability Report: Tidyco APQP Project (~1351 tok)
 - `eslint.config.js` — ESLint flat configuration (~1028 tok)
@@ -1385,6 +1389,18 @@
 - `f8929f38e4311c5717f1a0d4a0bc4fb0277329557a1a5aecb93317808669ba4f` (~197270 tok)
 - `fd8fd38c229ab33755ff429ccc9919eba21b566551cbfb17d8e11e35e941ee0e` (~3879 tok)
 - `metadata.json` (~580 tok)
+
+## plans/
+
+- `2026-03-30-product-support-allocation.md` — Plan: Per-Product Support Demand Allocation (~2165 tok)
+
+## portals/capacity/production/js/
+
+- `prod-capacity-detail.js` — ═══════════════════════════════════════════════════════════════ (~2987 tok)
+
+## portals/product-development/product-management/js/
+
+- `products.js` — Products Management Portal (~7743 tok)
 
 ## tests/
 
