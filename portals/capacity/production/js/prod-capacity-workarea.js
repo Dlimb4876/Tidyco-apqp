@@ -331,6 +331,12 @@ export function prodCapDrawWorkAreaChart() {
   const labels = monthKeys.map((k) => prodCapMonthLabel(k))
   const demand = monthKeys.map((k) => Math.round((demandMx[k]?.[wa] || 0) * 10) / 10)
   const capacity = monthKeys.map((k) => Math.round(supplyMx[k]?.[wa] || 0))
+  const utilFactor = Number(appState.prodCapUtilizationFactor) || 0
+  const totalAvailable = monthKeys.map((k) => {
+    const utilisedCapacity = Number(supplyMx[k]?.[wa] || 0)
+    if (utilFactor <= 0) return 0
+    return Math.round(utilisedCapacity / utilFactor)
+  })
 
   if (prodCapWorkAreaChartInst) prodCapWorkAreaChartInst.destroy()
 
@@ -352,6 +358,8 @@ export function prodCapDrawWorkAreaChart() {
           data: capacity,
           type: 'line',
           borderColor: '#ef4444',
+          // Why: keep line at baseline even with other plotted series.
+          stack: 'workarea-capacity-line',
           borderWidth: 3,
           tension: 0.3,
           pointRadius: 5,
@@ -363,6 +371,22 @@ export function prodCapDrawWorkAreaChart() {
           fill: false,
           order: 0,
         },
+        {
+          // Why: show full 100%-utilisation baseline for the selected work area.
+          label: 'Total Available (100%)',
+          data: totalAvailable,
+          type: 'line',
+          borderColor: '#64748b',
+          backgroundColor: '#64748b',
+          stack: 'workarea-available-line',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          tension: 0.3,
+          pointRadius: 2,
+          pointBackgroundColor: '#64748b',
+          fill: false,
+          order: 0
+        }
       ],
     },
     options: {

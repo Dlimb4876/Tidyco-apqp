@@ -3,6 +3,9 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+## 2026-03-31
+- Fixed product management dropdown selectors not showing newly added work areas by replacing hardcoded location arrays with dynamic database queries; imported getWorkAreaOptions and workAreasDataGetAll from work-areas-data.js and updated buildLocationOptions() and location filter to use workAreasState; validated with npm test (product-management.test.js passes); logged bug-145 to buglog.json | portals/product-development/product-management/js/products.js | Fixed dropdown selectors now pull all work areas from database dynamically | ~600
+
 ## 2026-03-21
 ## 2026-03-23
 ## 2026-03-24
@@ -1241,7 +1244,8 @@
 | 03:55 | Edited CHANGELOG.md | 4→6 lines | ~115 |
 | 03:55 | Session end: 3 writes across 2 files (me-data-persistence.js, CHANGELOG.md) | 5 reads | ~207 tok |
 - | 04:27 | Fixed ESM login runtime failure by wiring auth->launchApp import and awaiting transition; added changelog entry and captured targeted validation/test-check limits | core/js/auth.js, CHANGELOG.md, .wolf/buglog.json | done | ~1200 |
-2 0 2 6 - 0 3 - 2 9   |   F i x e d   p r o j e c t   f a v o u r i t e s   s t o r a g e   k e y   m i s m a t c h   b e t w e e n   d a s h b o a r d   a n d   h u b   b y   u s i n g   i m p o r t e d   c u r r e n t U s e r   a n d   e n s u r i n g   g l o b a l   c o m p a t i b i l i t y  
+2 0 2 6 - 0 3 - 2 9   |   F i x e d   p r o j e c t   f a v o u r i t e s   s t o r a g e   k e y   m i s m a t c h   b e t w e e n   d a s h b o a r d   a n d   h u b   b y   u s i n g   i m p o r t e d   c u r r e n t U s e r   a n d   e n s u r i n g   g l o b a l   c o m p a t i b i l i t y 
+ 
  
 ## Session: 2026-03-29 06:43
 
@@ -1490,3 +1494,51 @@
 
 | Time | Action | File(s) | Outcome | ~Tokens |
 |------|--------|---------|---------|--------|
+
+## Session: 2026-03-30 18:15
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-30 18:22
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-03-30 18:29
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 18:43 | Created ../../../.claude/plans/piped-marinating-kahn.md | — | ~2205 |
+| 18:43 | Edited ../../../.claude/plans/piped-marinating-kahn.md | 6→6 lines | ~166 |
+| 18:44 | Edited ../../../.claude/plans/piped-marinating-kahn.md | inline fix | ~30 |
+| 18:44 | Edited ../../../.claude/plans/piped-marinating-kahn.md | 3→3 lines | ~122 |
+| 18:44 | Edited ../../../.claude/plans/piped-marinating-kahn.md | inline fix | ~32 |
+| 18:44 | Session end: 5 writes across 1 files (piped-marinating-kahn.md) | 16 reads | ~9254 tok |
+| 18:47 | Created plans/2026-03-30-product-support-allocation.md | — | ~2309 |
+| 18:47 | Session end: 6 writes across 2 files (piped-marinating-kahn.md, 2026-03-30-product-support-allocation.md) | 16 reads | ~11728 tok |
+
+- Fixed capacity product-support overcount by prorating support hours across each batch's full start-to-due date span (overlap-based weekly/monthly demand), with regression coverage in tests/product-support-allocations.test.js and updated guide/changelog notes.
+| 22:57 | Fixed capacity forecast chart regression by switching to chart.js/auto import in shared chart module | portals/capacity/shared/js/cap-chart.js | forecast chart renders with auto-registered controllers | ~120 |
+| 22:58 | Revised chart fix to explicit Chart.register(registerables) for Jest/browser compatibility | portals/capacity/shared/js/cap-chart.js | forecast chart registration now robust across environments | ~90 |
+
+## Session: 2026-03-30 23:06
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 23:10 | Fixed capacity forecast white-screen by guarding invalid month/date inputs in shared calc+chart paths | portals/capacity/shared/js/cap-calculations.js, portals/capacity/shared/js/cap-chart.js, tests/me-calculations.test.js | chart no longer crashes when month input is transiently blank | ~180 |
+| 23:20 | Found deeper operations forecast crash guard: corrupted prodCapMonthOffset could create invalid month keys; added numeric guards + regression test | portals/capacity/production/js/prod-capacity-data.js, tests/prod-capacity-data.test.js | month key generation now resilient to bad persisted offset | ~210 |
+| 06:27 | Edited portals/product-development/product-management/js/products.js | added 1 import(s) | ~109 |
+| 06:27 | Edited portals/product-development/product-management/js/products.js | modified buildLocationOptions() | ~56 |
+| 06:28 | Edited portals/product-development/product-management/js/products.js | "../../capacity/production" → "../../../capacity/product" | ~25 |
+| 06:28 | Edited portals/product-development/product-management/js/products.js | inline fix | ~31 |
+| 06:28 | Edited portals/product-development/product-management/js/products.js | 5→4 lines | ~113 |
+| 06:29 | Session end: 5 writes across 1 files (products.js) | 1 reads | ~8049 tok |
+
+## Session: 2026-03-31 06:36
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 08:06 | Edited portals/capacity/production/js/prod-capacity-detail.js | 6→8 lines | ~57 |
+| 08:08 | Edited CHANGELOG.md | 6→8 lines | ~152 |
+| 08:08 | Session end: 2 writes across 2 files (prod-capacity-detail.js, CHANGELOG.md) | 4 reads | ~29541 tok |

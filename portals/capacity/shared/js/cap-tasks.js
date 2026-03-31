@@ -198,9 +198,9 @@ export function _capRenderTaskRows(filteredTasks, teamArray, availableProducts, 
       rows += `
         <tr class="me-task-row ${rowUrgencyClass}${disabledRowClass}" data-task-id="${esc(task.id)}">
           <td><input name="task_name" data-cap-action="cap-task-upd" data-field="name" value="${esc(task.name)}" placeholder="Task name" style="width:100%;"></td>
+          <td>${capRenderTaskProductPickerCell(task, dept, 'inline', productLookup)}</td>
           <td><select name="task_category" data-cap-action="cap-task-upd" data-field="category">${catOpts}</select></td>
           <td><select name="task_assigneeId" data-cap-action="cap-task-upd" data-field="assigneeId">${memOpts}</select></td>
-          <td>${capRenderTaskProductPickerCell(task, dept, 'inline', productLookup)}</td>
           <td><input type="date" name="task_startDate" data-cap-action="cap-task-upd" data-field="startDate" value="${task.startDate || ''}"></td>
           <td><input type="date" name="task_endDate" data-cap-action="cap-task-upd" data-field="endDate" value="${task.endDate || ''}"></td>
           <td><select name="task_status" data-cap-action="cap-task-upd" data-field="status">${statusOpts}</select></td>
@@ -220,9 +220,9 @@ export function _capRenderTaskRows(filteredTasks, teamArray, availableProducts, 
       rows += `
         <tr class="me-task-row ${rowUrgencyClass}${disabledRowClass}" data-task-id="${esc(task.id)}">
           <td>${esc(task.name)}</td>
+          <td>${esc(productName)}</td>
           <td>${esc(task.category)}</td>
           <td>${esc(assigneeName)}</td>
-          <td>${esc(productName)}</td>
           <td>${task.startDate || '—'}</td>
           <td>${task.endDate || '—'}</td>
           <td><span class="badge badge-${task.status}">${statusLabel}</span>${overdueBadge}</td>
@@ -295,9 +295,9 @@ function _capRenderTasksTable(filteredTasks, teamArray, availableProducts, canEd
     <table class="me-tbl">
       <thead><tr>
         <th style="width:190px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">${capGetSortIcon('name', dept)} Task Name</th>
+        <th style="width:170px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${capGetSortIcon('product', dept)} Product</th>
         <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">${capGetSortIcon('category', dept)} Category</th>
         <th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="assignee" title="Sort by assignee">${capGetSortIcon('assignee', dept)} Assignee</th>
-        <th style="width:170px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${capGetSortIcon('product', dept)} Product</th>
         <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">${capGetSortIcon('startDate', dept)} Start Date</th>
         <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">${capGetSortIcon('endDate', dept)} End Date</th>
         <th style="width:100px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">${capGetSortIcon('status', dept)} Status</th>
@@ -379,8 +379,11 @@ export function capRenderTasksTab(tasksArray, teamArray, availableProducts, depa
   const assigneeOpts = '<option value="all" ' + ((currentFilters.assignee === 'all') ? 'selected' : '') + '>All Assignees</option>' +
     teamArray.map(m => `<option value="${m.id}" ${currentFilters.assignee === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
 
-  const productOpts = '<option value="all" ' + ((currentFilters.product === 'all') ? 'selected' : '') + '>All Products</option>' +
-    availableProducts.map(p => `<option value="${p.id}" ${currentFilters.product === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+  // Build product filter lookup display value
+  const selectedProductId = currentFilters.product || 'all'
+  const selectedProductName = selectedProductId !== 'all'
+    ? (productLookup.byId.get(selectedProductId) || '')
+    : ''
 
   return `
     <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -440,10 +443,19 @@ export function capRenderTasksTab(tasksArray, teamArray, availableProducts, depa
               ${currentFilters.assignee && currentFilters.assignee !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-assignee" title="Clear assignee filter">×</button>` : ''}
             </div>
             <div class="filter-chip">
-              <select autocomplete="off" class="me-filter-select" data-cap-action="cap-task-filter-product"
-                style="min-width:140px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
-                ${productOpts}
-              </select>
+              <div class="cap-task-product-picker" style="position:relative;">
+                <input type="text"
+                  autocomplete="off"
+                  class="me-filter-input"
+                  data-cap-action="cap-task-filter-product-input"
+                  list="cap-task-products-${dept}"
+                  value="${esc(selectedProductName)}"
+                  placeholder="🔍 Filter by product..."
+                  style="min-width:160px;padding:6px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;">
+                <input type="hidden"
+                  data-cap-action="cap-task-filter-product"
+                  value="${esc(selectedProductId)}">
+              </div>
               ${currentFilters.product && currentFilters.product !== 'all' ? `<button class="filter-clear" data-cap-action="cap-task-clear-product" title="Clear product filter">×</button>` : ''}
             </div>
             <div class="filter-chip">
@@ -462,9 +474,9 @@ export function capRenderTasksTab(tasksArray, teamArray, availableProducts, depa
           <table class="me-tbl">
             <thead><tr>
               <th style="width:190px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="name" title="Sort by name">${capGetSortIcon('name', dept)} Task Name</th>
+              <th style="width:170px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${capGetSortIcon('product', dept)} Product</th>
               <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="category" title="Sort by category">${capGetSortIcon('category', dept)} Category</th>
               <th style="width:130px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="assignee" title="Sort by assignee">${capGetSortIcon('assignee', dept)} Assignee</th>
-              <th style="width:170px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="product" title="Sort by product">${capGetSortIcon('product', dept)} Product</th>
               <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="startDate" title="Sort by start date">${capGetSortIcon('startDate', dept)} Start Date</th>
               <th style="width:90px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="endDate" title="Sort by end date">${capGetSortIcon('endDate', dept)} End Date</th>
               <th style="width:100px;cursor:pointer;" data-cap-action="cap-task-sort" data-sort-key="status" title="Sort by status">${capGetSortIcon('status', dept)} Status</th>
@@ -479,15 +491,15 @@ export function capRenderTasksTab(tasksArray, teamArray, availableProducts, depa
                 const newStatusOpts = ['SCHEDULED', 'STARTED', 'COMPLETED'].map(s => `<option value="${s}">${s[0] + s.slice(1).toLowerCase()}</option>`).join('');
                 return `<tr class="me-task-row" data-cap-new-task="1" style="background-color:var(--row-highlight-blue,#eff6ff);outline:2px solid var(--chart-blue-lt,#93c5fd);outline-offset:-2px;">
                   <td><input name="task_name" data-task-field="name" placeholder="Task name" style="width:100%;"></td>
+                  <td>${capRenderTaskProductPickerCell({}, dept, 'draft', productLookup)}</td>
                   <td><select name="task_category" data-task-field="category">${newCatOpts}</select></td>
                   <td><select name="task_assigneeId" data-task-field="assigneeId">${newMemOpts}</select></td>
-                  <td>${capRenderTaskProductPickerCell({}, dept, 'draft', productLookup)}</td>
                   <td><input type="date" name="task_startDate" data-task-field="startDate"></td>
                   <td><input type="date" name="task_endDate" data-task-field="endDate"></td>
                   <td><select name="task_status" data-task-field="status">${newStatusOpts}</select></td>
                   <td></td>
                   <td><input type="number" name="task_totalHours" class="cap-task-hours-input" data-task-field="totalHours" placeholder="0" step="0.5" style="width:70px;"></td>
-                  <td style="text-align:center;"><button class="btn-del" title="Add task" data-cap-action="cap-task-add">✓</button></td>
+                  <td style="text-align:center;"><button class="btn btn-primary btn-sm" title="Add task" data-cap-action="cap-task-add">✓</button></td>
                 </tr>`;
               })() : ''}
               ${rows || `<tr><td colspan="10"><div style="text-align:center;padding:40px;color:var(--muted);">No tasks match the current filters</div></td></tr>`}

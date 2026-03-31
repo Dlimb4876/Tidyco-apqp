@@ -18,6 +18,7 @@ import {
   meNormalizeHolidayRecord
 } from './me-data-normalize.js'
 import { capGetHoursPerWeek } from '../../shared/js/cap-utils.js'
+import { capNormalizeAllocationRecord } from '../../shared/js/cap-data-utils.js'
 import { meApplyLatestSupportHistoryToProduct } from './me-data-support-history.js'
 
 let meRealtimeHooks = {
@@ -238,6 +239,32 @@ export function meCapacityDataSubscribe() {
         // Match by id only — matching by personId+date could remove a new holiday that
         // replaced a deleted one for the same person+date (different id)
         meDataState.holidays = meDataState.holidays.filter(h => h.id !== deleted.id)
+        meApplyRealtimeStateChange()
+      }
+    },
+    {
+      table: 'me_product_support_allocations',
+      onInsert: newRow => {
+        if (meDataSaveInProgress) return
+        const normalized = capNormalizeAllocationRecord(newRow)
+        if (!normalized) return
+        if (!meDataState.productSupportAllocations.some(a => a.id === normalized.id)) {
+          meDataState.productSupportAllocations.push(normalized)
+        }
+        meApplyRealtimeStateChange()
+      },
+      onUpdate: updatedRow => {
+        if (meDataSaveInProgress) return
+        const normalized = capNormalizeAllocationRecord(updatedRow)
+        if (!normalized) return
+        const idx = meDataState.productSupportAllocations.findIndex(a => a.id === normalized.id)
+        if (idx < 0) meDataState.productSupportAllocations.push(normalized)
+        else meDataState.productSupportAllocations[idx] = normalized
+        meApplyRealtimeStateChange()
+      },
+      onDelete: deleted => {
+        if (meDataSaveInProgress) return
+        meDataState.productSupportAllocations = meDataState.productSupportAllocations.filter(a => a.id !== deleted.id)
         meApplyRealtimeStateChange()
       }
     }

@@ -17,7 +17,8 @@ import {
   capNormalizeAndDedupeHolidays,
   capNormalizeSupportHistoryRecord,
   capNormalizeAndDedupeSupportHistory,
-  capSortSupportHistoryByDate
+  capSortSupportHistoryByDate,
+  capNormalizeAllocationRecord
 } from '../../shared/js/cap-data-utils.js'
 import { capGetHoursPerWeek } from '../../shared/js/cap-utils.js'
 import {
@@ -26,6 +27,7 @@ import {
   pmLoadRelationalProducts,
   pmLoadRelationalHolidays,
   pmLoadRelationalProductSupportHistory,
+  pmLoadRelationalProductSupportAllocations,
   pmSaveProductRelational,
   pmSaveProductSupportHistoryRelational,
   pmSaveTeamRelational,
@@ -42,7 +44,8 @@ export const pmDataState = {
   tasks: [],
   products: [],
   holidays: [],
-  productSupportHistory: []
+  productSupportHistory: [],
+  productSupportAllocations: []
 }
 
 export const pmDataPendingDeletes = {
@@ -654,7 +657,8 @@ export async function pmDataInit() {
       tasks: await pmLoadRelationalTasks(),
       products: await pmLoadRelationalProducts(),
       holidays: capNormalizeAndDedupeHolidays(await pmLoadRelationalHolidays()),
-      productSupportHistory: await pmLoadRelationalProductSupportHistory()
+      productSupportHistory: await pmLoadRelationalProductSupportHistory(),
+      productSupportAllocations: await pmLoadRelationalProductSupportAllocations() || []
     }
 
     pmDataState.team = relState.team || []
@@ -664,6 +668,7 @@ export async function pmDataInit() {
     pmDataState.productSupportHistory = capNormalizeAndDedupeSupportHistory(
       relState.productSupportHistory || []
     )
+    pmDataState.productSupportAllocations = relState.productSupportAllocations || []
 
     pmDataState.team.forEach(member => {
       if (!('jobTitle' in member)) member.jobTitle = ''
@@ -1011,6 +1016,32 @@ export function pmDataSubscribe() {
       onDelete: row => {
         if (pmDataSaveInProgress) return
         pmDataState.productSupportHistory = pmDataState.productSupportHistory.filter(h => h.id !== row.id)
+        pmApplyRealtimeRender()
+      }
+    },
+    {
+      table: 'pm_product_support_allocations',
+      onInsert: row => {
+        if (pmDataSaveInProgress) return
+        const normalized = capNormalizeAllocationRecord(row)
+        if (!normalized) return
+        if (!pmDataState.productSupportAllocations.some(a => a.id === normalized.id)) {
+          pmDataState.productSupportAllocations.push(normalized)
+        }
+        pmApplyRealtimeRender()
+      },
+      onUpdate: row => {
+        if (pmDataSaveInProgress) return
+        const normalized = capNormalizeAllocationRecord(row)
+        if (!normalized) return
+        const idx = pmDataState.productSupportAllocations.findIndex(a => a.id === normalized.id)
+        if (idx < 0) pmDataState.productSupportAllocations.push(normalized)
+        else pmDataState.productSupportAllocations[idx] = normalized
+        pmApplyRealtimeRender()
+      },
+      onDelete: row => {
+        if (pmDataSaveInProgress) return
+        pmDataState.productSupportAllocations = pmDataState.productSupportAllocations.filter(a => a.id !== row.id)
         pmApplyRealtimeRender()
       }
     }

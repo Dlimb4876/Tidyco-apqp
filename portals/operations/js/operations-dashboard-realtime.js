@@ -22,7 +22,10 @@ import {
 	opsRenderPeopleView,
 	opsRenderActionsView
 } from './operations-dashboard-render-core.js'
-import { opsRenderForecastView } from './operations-dashboard-forecast-view.js'
+import {
+	opsRenderForecastView,
+	opsRenderForecastChart
+} from './operations-dashboard-forecast-view.js'
 import { opsForecastManager } from './operations-forecast-data.js'
 import {
 	meLoadRelationalTeams,
@@ -76,6 +79,10 @@ function opsRefreshCurrentTab() {
 	const tabBody = container.querySelector('.ops-tab-body');
 	if (tabBody) {
 		tabBody.innerHTML = body;
+
+		if (tab === 'forecast' && typeof opsRenderForecastChart === 'function') {
+			opsRenderForecastChart(metrics.forecast);
+		}
 	} else {
 		// Fall back to full render if tab body wrapper not found
 		if (typeof globalThis.render === 'function') globalThis.render();

@@ -53,6 +53,7 @@
 
 ## Do-Not-Repeat
 
+<!-- [2026-03-30] In shared capacity charts, do not switch to chart.js/auto without verifying Jest resolver support. Prefer explicit controller/scale registration from chart.js so browser runtime and tests both load reliably. -->
 <!-- [2026-03-24] Avoid exact-string HTML assertions that depend on attribute order (e.g. `data-field="..." readonly`) in rendered input tests; use regex/assertions that tolerate extra attributes/classes. -->
 <!-- [2026-03-24] When adding new "access" permissions, wire them into both render-time visibility (hub cards, local nav tabs, favourites) and deep-link access checks; only gating navigate/render is not enough. -->
 <!-- [2026-03-24] Settings permissions copy: when `settings-teams.js` falls back to local permission definitions in isolated tests, keep labels/descriptions aligned with `utils/js/helpers.js` or the test harness will render different text from the live app. -->

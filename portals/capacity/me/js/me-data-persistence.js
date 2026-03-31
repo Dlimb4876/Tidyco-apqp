@@ -28,6 +28,7 @@ import {
   meLoadRelationalProducts,
   meLoadRelationalHolidays,
   meLoadRelationalProductSupportHistory,
+  meLoadRelationalProductSupportAllocations,
   meLoadTimeLogs,
   meSaveTeamRelational,
   meSaveTaskRelational,
@@ -106,7 +107,8 @@ export async function meDataInit() {
       tasks: await meLoadRelationalTasks() || [],
       products: await meLoadRelationalProducts() || [],
       holidays: meNormalizeAndDedupeHolidays(await meLoadRelationalHolidays()),
-      productSupportHistory: await meLoadRelationalProductSupportHistory() || []
+      productSupportHistory: await meLoadRelationalProductSupportHistory() || [],
+      productSupportAllocations: await meLoadRelationalProductSupportAllocations() || []
     }
 
     const timeLogs = await meLoadTimeLogs().catch(() => [])
@@ -116,6 +118,7 @@ export async function meDataInit() {
     meDataState.products = relState.products
     meDataState.holidays = relState.holidays
     meDataState.productSupportHistory = meNormalizeAndDedupeSupportHistory(relState.productSupportHistory)
+    meDataState.productSupportAllocations = relState.productSupportAllocations
     meDataState.timeLogs = timeLogs
 
     meDataState.team.forEach(member => {

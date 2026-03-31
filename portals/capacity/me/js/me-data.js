@@ -11,6 +11,7 @@ export function meCreateDataState() {
     products: [],
     holidays: [],
     productSupportHistory: [],
+    productSupportAllocations: [],
     timeLogs: []
   }
 }

@@ -113,4 +113,20 @@ describe('Capacity calculations', () => {
     expect(result).toHaveProperty('capacity')
     expect(typeof result.capacity).toBe('number')
   })
+
+  it('should return zeroed result for invalid month key instead of crashing', () => {
+    const team = [{ id: 'p1', name: 'Alex', startDate: '2025-01-01', hoursPerWeek: 40, utilisation: 100 }]
+    const result = capCalculateMonthData('', team, [], [], [])
+    expect(result).toEqual({
+      capacity: 0,
+      capacityMax: 0,
+      npi: 0,
+      improvement: 0,
+      tendering: 0,
+      support: 0,
+      other: 0,
+      totalDemand: 0,
+      utilisation: 0
+    })
+  })
 })

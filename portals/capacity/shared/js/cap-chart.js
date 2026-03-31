@@ -2,12 +2,35 @@
    cap-chart.js — Chart Tab & Utilities
    ============================================================ */
 
-import { Chart as ChartJs } from 'chart.js'
+import {
+  Chart as ChartJs,
+  CategoryScale,
+  LinearScale,
+  BarController,
+  BarElement,
+  LineController,
+  LineElement,
+  PointElement,
+  Tooltip,
+  Legend
+} from 'chart.js'
 import { capCalculateMonthData as capCalc, countNetworkDaysBetween as netDaysFn, capGetHolidayDaysInRange as holidayRangeFn } from './cap-calculations.js'
 import { getMonthLabel as getLabel, getMonthRange as getRange, getUtilisationColor as getUtilColor, escapeHtml as escHtml, capGetHoursPerWeek as getHPW, getBankHolidaysForYear as getBankHols } from './cap-utils.js'
 import { capRenderHeatmapTab as capHeatmap } from './cap-heatmap.js'
 
+// Fix regression: auto-register Chart.js controllers so bar/line forecast charts always render after ESM updates.
 // Hybrid approach: Prefer globals if they exist (for test mocks), otherwise use ESM imports
+ChartJs.register(
+  CategoryScale,
+  LinearScale,
+  BarController,
+  BarElement,
+  LineController,
+  LineElement,
+  PointElement,
+  Tooltip,
+  Legend
+)
 const Chart = typeof window !== 'undefined' && window.Chart ? window.Chart : ChartJs
 const capCalculateMonthData = typeof window !== 'undefined' && window.capCalculateMonthData ? window.capCalculateMonthData : capCalc
 const getMonthLabel = typeof window !== 'undefined' && window.getMonthLabel ? window.getMonthLabel : getLabel
@@ -219,6 +242,7 @@ export function capDrawChartNow(teamArray, tasksArray, productsArray, holidaysAr
     console.warn('Chart.js not loaded');
     return;
   }
+  if (!monthKey || typeof monthKey !== 'string' || !/^\d{4}-\d{2}$/.test(monthKey)) return
 
   const canvas = document.getElementById('capChart');
   if (!canvas) return;
@@ -229,6 +253,7 @@ export function capDrawChartNow(teamArray, tasksArray, productsArray, holidaysAr
   const monthLabels = monthKeys.map(m => getMonthLabel(m));
 
   const capacityData = [];
+  const capacityMaxData = [];
   const npiData = [];
   const improvementData = [];
   const tenderingData = [];
@@ -238,6 +263,7 @@ export function capDrawChartNow(teamArray, tasksArray, productsArray, holidaysAr
   monthKeys.forEach(mk => {
     const data = capCalculateMonthData(mk, teamArray, tasksArray, productsArray, holidaysArray, options);
     capacityData.push(data.capacity);
+    capacityMaxData.push(data.capacityMax);
     npiData.push(data.npi || 0);
     improvementData.push(data.improvement || 0);
     tenderingData.push(data.tendering || 0);
@@ -293,11 +319,29 @@ export function capDrawChartNow(teamArray, tasksArray, productsArray, holidaysAr
           data: capacityData,
           borderColor: '#dc2626',
           backgroundColor: '#dc2626',
+          // Why: keep capacity line on its own baseline when chart y-scale stacking is enabled for demand bars.
+          stack: 'capacity-line',
           borderWidth: 2,
           type: 'line',
           fill: false,
           pointRadius: 3,
           pointBackgroundColor: '#dc2626',
+          order: 1
+        },
+        {
+          // Why: make total 100%-utilisation availability visible so users can compare planned vs maximum hours.
+          label: 'Total Available (100%)',
+          data: capacityMaxData,
+          borderColor: '#475569',
+          backgroundColor: '#475569',
+          // Why: separate stack key prevents this dashed line from stacking on top of Team Capacity.
+          stack: 'available-line',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          type: 'line',
+          fill: false,
+          pointRadius: 2,
+          pointBackgroundColor: '#475569',
           order: 1
         }
       ]

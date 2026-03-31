@@ -110,7 +110,7 @@ export function renderProdCapDashboard() {
         <div class="pc-card-header">
           <div>
             <div class="pc-card-title">2-Year Production Load Forecast</div>
-            <div class="pc-card-sub">Demand stacked by product family · Capacity line = available staff hours</div>
+            <div class="pc-card-sub">Demand stacked by product family · Solid red = utilised capacity · Dashed grey = 100% available hours</div>
             <button
               type="button"
               class="pc-card-sub"
@@ -243,6 +243,8 @@ export function prodCapDrawDashChart() {
     data: monthKeys.map(k => Math.round(supplyMx[k]?._total || 0)),
     type: 'line',
     borderColor: '#ef4444',
+    // Why: keep capacity line anchored to y-axis baseline even when demand bars use stacking.
+    stack: 'prod-capacity-line',
     borderWidth: 3,
     tension: 0.3,
     pointRadius: 5,
@@ -254,6 +256,28 @@ export function prodCapDrawDashChart() {
     fill: false,
     order: 0,
   });
+
+  const utilFactor = Number(appState.prodCapUtilizationFactor) || 0
+  datasets.push({
+    // Why: show full 100%-utilisation baseline so teams can compare constrained vs total available capacity.
+    label: 'Total Available (100%)',
+    data: monthKeys.map(k => {
+      const utilisedCapacity = Number(supplyMx[k]?._total || 0)
+      if (utilFactor <= 0) return 0
+      return Math.round(utilisedCapacity / utilFactor)
+    }),
+    type: 'line',
+    borderColor: '#64748b',
+    backgroundColor: '#64748b',
+    stack: 'prod-available-line',
+    borderWidth: 2,
+    borderDash: [6, 4],
+    tension: 0.3,
+    pointRadius: 2,
+    pointBackgroundColor: '#64748b',
+    fill: false,
+    order: 0
+  })
 
   if (prodCapDashChartInst) prodCapDashChartInst.destroy();
 

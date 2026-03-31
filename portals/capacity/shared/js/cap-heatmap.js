@@ -75,17 +75,29 @@ export function capRenderHeatmapTab(monthKey, _teamArray, _tasksArray, _products
     </div>`
 }
 
-export function capDrawHeatmapNow(teamArray, tasksArray, _productsArray, holidaysArray, monthKey) {
+export function capDrawHeatmapNow(teamArray, tasksArray, productsArray, holidaysArray, monthKey, options) {
   const container = document.getElementById('capHeatmapGrid')
   if (!container) return
 
   const weeks = capGetWeekRange(monthKey, 26)
-  const team = Array.isArray(teamArray) ? teamArray : []
+  const team = (Array.isArray(teamArray) ? teamArray : [])
+    .slice()
+    .sort((a, b) => (a?.name || '').localeCompare(b?.name || ''))
   const tasks = Array.isArray(tasksArray) ? tasksArray : []
+  const products = Array.isArray(productsArray) ? productsArray : []
   const holidays = Array.isArray(holidaysArray) ? holidaysArray : []
   const today = todayStr()
 
-  _heatmapCtx = { teamArray: team, tasksArray: tasks, holidaysArray: holidays }
+  // Build calc options to thread product-support allocations into week calculation
+  const opts = (options && typeof options === 'object') ? options : {}
+  const calcOpts = (products.length > 0 && Array.isArray(opts.allocationsArray) && opts.allocationsArray.length > 0) ? {
+    productsArray: products,
+    allocationsArray: opts.allocationsArray,
+    supportRateResolver: opts.supportRateResolver,
+    productionBatches: opts.productionBatches
+  } : undefined
+
+  _heatmapCtx = { teamArray: team, tasksArray: tasks, holidaysArray: holidays, calcOpts }
 
   let html = '<div class="me-heatmap-person-header"></div>'
 
@@ -100,7 +112,7 @@ export function capDrawHeatmapNow(teamArray, tasksArray, _productsArray, holiday
     html += `<div class="me-heatmap-person-label" title="${esc(person.name || '')}">${esc(person.name || '')}</div>`
 
     weeks.forEach(({ start, end }) => {
-      const data = capCalcWeekUtilisation(person.id, start, end, tasks, holidays, team)
+      const data = capCalcWeekUtilisation(person.id, start, end, tasks, holidays, team, calcOpts)
       const utilisation = data.capacity > 0 ? Math.round((data.demand / data.capacity) * 100) : 0
       const cls = utilClass(utilisation, data.capacity)
       const isToday = today >= start && today <= end
@@ -129,7 +141,7 @@ export function capOpenHeatmapDetail(personId, weekStart, weekEnd) {
   const person = teamArray.find(p => p && p.id === personId)
   if (!person) return
 
-  const data = capCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray, holidaysArray, teamArray)
+  const data = capCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray, holidaysArray, teamArray, _heatmapCtx.calcOpts)
   const utilPct = data.capacity > 0 ? Math.round((data.demand / data.capacity) * 100) : 0
   const barWidth = Math.min(utilPct, 100)
   const barColor = utilPct >= 100 ? 'var(--red)' : utilPct >= 80 ? 'var(--amber)' : 'var(--green)'
@@ -171,20 +183,47 @@ export function capOpenHeatmapDetail(personId, weekStart, weekEnd) {
 
   const weekLabel = formatWeekRange(weekStart, weekEnd)
 
+  // Show product-support contribution separately so the demand split is visible in detail view
+  const taskHoursTotal = taskDetails.reduce((sum, task) => sum + (Number(task.hours) || 0), 0)
+  const supportHoursTotal = Math.max(0, data.demand - taskHoursTotal)
+
+  // Build tasks list (consistent format with support)
   let tasksHtml = ''
   if (taskDetails.length === 0) {
-    tasksHtml = '<div class="me-detail-empty">No tasks assigned this week</div>'
+    tasksHtml = `
+      <div class="me-detail-section">
+        <div class="me-detail-section-label">Tasks</div>
+        <div class="me-detail-empty">No tasks assigned this week</div>
+      </div>`
   } else {
     tasksHtml = `
-      <div class="me-detail-task-count">${taskDetails.length} task${taskDetails.length === 1 ? '' : 's'}</div>
-      <div class="me-detail-tasks">
-        ${taskDetails.map(t => `
-          <div class="me-detail-task-row">
-            <div class="me-detail-task-header">
-              <span class="me-detail-task-name">${esc(t.name)}</span>
-              <span class="me-detail-task-hours">${t.hours.toFixed(1)}h</span>
+      <div class="me-detail-section">
+        <div class="me-detail-section-label">Tasks (${taskDetails.length})</div>
+        <div class="me-detail-breakdown">
+          ${taskDetails.map(t => `
+            <div class="me-detail-breakdown-item">
+              <span class="me-detail-breakdown-name">${esc(t.name)}</span>
+              <span class="me-detail-breakdown-hours">${t.hours.toFixed(1)}h</span>
             </div>
-          </div>`).join('')}
+          `).join('')}
+        </div>
+      </div>`
+  }
+
+  // Build product support breakdown list
+  let supportBreakdownHtml = ''
+  if (supportHoursTotal > 0 && data.supportBreakdown && data.supportBreakdown.length > 0) {
+    supportBreakdownHtml = `
+      <div class="me-detail-section">
+        <div class="me-detail-section-label">Product Support (${data.supportBreakdown.length})</div>
+        <div class="me-detail-breakdown">
+          ${data.supportBreakdown.map(item => `
+            <div class="me-detail-breakdown-item">
+              <span class="me-detail-breakdown-name">${esc(item.productName)}${item.batchCount > 1 ? ` (${item.batchCount} batches)` : ''}</span>
+              <span class="me-detail-breakdown-hours">${item.hours.toFixed(1)}h</span>
+            </div>
+          `).join('')}
+        </div>
       </div>`
   }
 
@@ -222,6 +261,7 @@ export function capOpenHeatmapDetail(personId, weekStart, weekEnd) {
               </div>
             </div>
             ${tasksHtml}
+            ${supportBreakdownHtml}
             ${holidaysHtml}
           </div>
         </div>

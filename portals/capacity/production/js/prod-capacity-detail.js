@@ -10,7 +10,9 @@ import {
   prodCapGet24MonthKeys,
   prodCapGetWorkAreas,
   prodCapParseKey,
-  prodCapMonthLabel
+  prodCapMonthLabel,
+  prodCapCountWorkingDaysBetween,
+  prodCapGetBankHolidaySetForRange
 } from './prod-capacity-data.js'
 
 export let prodCapDetailFilter = { status: '', family: '', workArea: '' }
@@ -48,19 +50,28 @@ function prodCapGetDetailFamilies(products) {
 function prodCapGetBatchMonthsWithLoad(batch, totalHours, monthKeys) {
   const batchStart = batch.start_date ? new Date(batch.start_date + 'T00:00:00') : null;
   const batchEnd = batch.due_date ? new Date(batch.due_date + 'T00:00:00') : null;
-  const totalDays = (batchStart && batchEnd) ? Math.max(1, (batchEnd - batchStart) / 86400000 + 1) : 1;
+  
+  if (!batchStart || !batchEnd) return [];
+  
+  // Use working days, excluding weekends and bank holidays
+  const bankHolSet = prodCapGetBankHolidaySetForRange(batchStart, batchEnd);
+  const totalDays = prodCapCountWorkingDaysBetween(batchStart, batchEnd, bankHolSet);
+  if (totalDays === 0) return [];
 
   return monthKeys
     .map(key => {
-      if (!batchStart || !batchEnd) return null;
       const { year, month } = prodCapParseKey(key);
       const mStart = new Date(year, month - 1, 1);
       const mEnd = new Date(year, month, 0);
       const oStart = batchStart > mStart ? batchStart : mStart;
       const oEnd = batchEnd < mEnd ? batchEnd : mEnd;
       if (oStart > oEnd) return null;
-      const days = (oEnd - oStart) / 86400000 + 1;
-      const hours = totalHours * (days / totalDays);
+      
+      // Calculate working days in the overlap period
+      const overlapDays = prodCapCountWorkingDaysBetween(oStart, oEnd, bankHolSet);
+      if (overlapDays === 0) return null;
+      
+      const hours = totalHours * (overlapDays / totalDays);
       return { key, hours };
     })
     .filter(Boolean);

@@ -27,7 +27,9 @@ import {
   logDataGetHolidays,
   logDataSubscribe,
   logDataUnsubscribe,
-  setLogDataRealtimeHooks
+  setLogDataRealtimeHooks,
+  logDataState,
+  logDataGetProductSupportRateForDate
 } from './log-data.js'
 
 export let logTab = 'chart'
@@ -52,7 +54,10 @@ function logGetData() {
 function logDrawChartViews() {
   const { team, tasks, products, holidays } = logGetData()
   capDrawChartNow(team, tasks, products, holidays, logChartStart, 'LOG')
-  capDrawHeatmapNow(team, tasks, products, holidays, logChartStart, 'LOG')
+  capDrawHeatmapNow(team, tasks, products, holidays, logChartStart, {
+    allocationsArray: logDataState.productSupportAllocations,
+    supportRateResolver: logDataGetProductSupportRateForDate
+  })
 }
 
 function logGetTabContent() {
@@ -75,7 +80,7 @@ function logGetTabContent() {
     case 'tasks':
       return capRenderTasksTab(tasks, team, products, 'LOG', taskFilters, taskSort, canEdit())
     case 'products':
-      return capRenderProductsTab(products, tasks, 'LOG', productsTableState)
+      return capRenderProductsTab(products, tasks, 'LOG', productsTableState, logDataState.productSupportAllocations)
     case 'product-taskload':
       return capRenderProductTaskLoadTab(tasks, products, 'LOG', productLoadTableState)
     case 'holidays':

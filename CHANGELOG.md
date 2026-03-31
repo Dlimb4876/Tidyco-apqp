@@ -3,6 +3,36 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-31 | Fix Production Capacity detail view batch hour distribution | Batch Workload Breakdown tab now uses working days (Mon-Fri, excluding bank holidays) instead of calendar days, matching the main capacity dashboard calculation
+
+## 2026-03-31 | Sync Product Work Area to Batches | Fixed issue where changing a product's work area in Product Management did not update existing scheduled batches.
+
+## 2026-03-31 | Add work-area pills to Operations forecast chart | Let users filter the Operations Dashboard capacity forecast by ALL or specific work areas
+
+## 2026-03-31 | Add dashed 100% line to Operations forecast chart | Expose full available-hours baseline alongside utilisation capacity for clearer forecast headroom
+
+## 2026-03-31 | Add dashed 100% line to Production By Work Area chart | Show full available-hours baseline for Unit 2/3/6 alongside utilised capacity
+
+## 2026-03-31 | Add dashed 100% line to Production Capacity chart | Show full available-hours baseline separately from utilised capacity in the 2-year forecast
+
+## 2026-03-31 | Operations forecast chart month default and UI cleanup | Defaulted chart to current month on tab entry, removed redundant reset button, and renamed "Capacity Supply" to "Utilisation Capacity" for clearer UX
+
+## 2026-03-31 | Add dashed 100% capacity line to Capacity chart | Make full available-hours baseline visible alongside utilised capacity for clearer planning
+
+## 2026-03-31 | Fix Operations PM load KPI source | People view PM utilisation/headroom was reading ME state, causing incorrect 0% values when PM data existed
+
+## 2026-03-30 | Fix operations forecast date adjuster | Date controls were attempting to call global functions that were not exposed in the ESM environment; now uses explicit imports from prod-capacity-data.js
+
+## 2026-03-30 | Fix operations forecast chart blank on initial load | Partial tab refresh (opsRefreshCurrentTab) was replacing the dashboard HTML after background data load but missing the call to draw the forecast chart on the new canvas
+
+## 2026-03-30 | Guard production forecast month offset parsing | Invalid persisted month offsets could produce bad month keys and crash forecast rendering paths; now coerced to safe numeric defaults
+
+## 2026-03-30 | Prevent capacity chart white-screen on invalid month input | Forecast draw/calculation now guards blank/invalid month/date values so transient picker edits do not crash rendering
+
+## 2026-03-30 | Restore forecast capacity chart rendering | Chart.js ESM import used non-auto build without controller registration, so forecast bar/line chart failed to render
+
+## 2026-03-30 | Prorate heatmap support hours by batch date span | Fix overcount where full support hours were added to each overlapping week instead of being spread across start-to-due dates
+
 ## 2026-03-30 | Remove "No Product" default text from task product picker | Empty fields now show placeholder instead of requiring users to delete pre-filled text before searching
 
 ## 2026-03-30 | Fix capacity tasks reverting to read-only after edit | capTaskRefresh() was using old click-to-edit row builder instead of shared inline-editing renderer

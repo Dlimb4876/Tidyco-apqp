@@ -93,7 +93,10 @@ function meDrawChartViews() {
   const { team, tasks, products, holidays } = meGetCapacityData()
   const opts = meGetCalcOptions()
   capDrawChartNow(team, tasks, products, holidays, meChartStart, 'ME', opts)
-  capDrawHeatmapNow(team, tasks, products, holidays, meChartStart, 'ME')
+  capDrawHeatmapNow(team, tasks, products, holidays, meChartStart, {
+    allocationsArray: meDataState.productSupportAllocations,
+    supportRateResolver: meDataGetProductSupportRateForDate
+  })
 }
 
 export function renderMeCapacity() {
@@ -207,7 +210,7 @@ function meGetTabContent() {
     case 'tasks':
       return capRenderTasksTab(tasks, team, products, 'ME', taskFilters, taskSort, meCanEditCapacity())
     case 'products':
-      return capRenderProductsTab(products, tasks, 'ME', productsTableState)
+      return capRenderProductsTab(products, tasks, 'ME', productsTableState, meDataState.productSupportAllocations)
     case 'product-taskload':
       return capRenderProductTaskLoadTab(tasks, products, 'ME', productLoadTableState)
     case 'holidays':

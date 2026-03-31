@@ -14,6 +14,7 @@ export const operationsDashboardState = {
   opsForecastSortDir: 'asc',
   opsForecastFilterStatus: '',
   opsForecastFilterText: '',
+  opsForecastWorkAreaFilter: 'ALL',
   opsReportingDateIso: '',
   opsRefreshCurrentTab: null
 }

@@ -17,7 +17,8 @@ import {
   capNormalizeAndDedupeHolidays,
   capNormalizeSupportHistoryRecord,
   capNormalizeAndDedupeSupportHistory,
-  capSortSupportHistoryByDate
+  capSortSupportHistoryByDate,
+  capNormalizeAllocationRecord
 } from '../../shared/js/cap-data-utils.js'
 import { capGetHoursPerWeek } from '../../shared/js/cap-utils.js'
 import {
@@ -26,6 +27,7 @@ import {
   logLoadRelationalProducts,
   logLoadRelationalHolidays,
   logLoadRelationalProductSupportHistory,
+  logLoadRelationalProductSupportAllocations,
   logSaveProductRelational,
   logSaveProductSupportHistoryRelational,
   logSaveTeamRelational,
@@ -41,7 +43,8 @@ export const logDataState = {
   tasks: [],
   products: [],
   holidays: [],
-  productSupportHistory: []
+  productSupportHistory: [],
+  productSupportAllocations: []
 }
 
 export const logDataPendingDeletes = {
@@ -654,7 +657,8 @@ export async function logDataInit() {
       tasks: await logLoadRelationalTasks(),
       products: await logLoadRelationalProducts(),
       holidays: capNormalizeAndDedupeHolidays(await logLoadRelationalHolidays()),
-      productSupportHistory: await logLoadRelationalProductSupportHistory()
+      productSupportHistory: await logLoadRelationalProductSupportHistory(),
+      productSupportAllocations: await logLoadRelationalProductSupportAllocations() || []
     }
 
     logDataState.team = relState.team || []
@@ -664,6 +668,7 @@ export async function logDataInit() {
     logDataState.productSupportHistory = capNormalizeAndDedupeSupportHistory(
       relState.productSupportHistory || []
     )
+    logDataState.productSupportAllocations = relState.productSupportAllocations || []
 
     logDataState.team.forEach(member => {
       if (!('jobTitle' in member)) member.jobTitle = ''
@@ -1011,6 +1016,32 @@ export function logDataSubscribe() {
       onDelete: row => {
         if (logDataSaveInProgress) return
         logDataState.productSupportHistory = logDataState.productSupportHistory.filter(h => h.id !== row.id)
+        logApplyRealtimeRender()
+      }
+    },
+    {
+      table: 'log_product_support_allocations',
+      onInsert: row => {
+        if (logDataSaveInProgress) return
+        const normalized = capNormalizeAllocationRecord(row)
+        if (!normalized) return
+        if (!logDataState.productSupportAllocations.some(a => a.id === normalized.id)) {
+          logDataState.productSupportAllocations.push(normalized)
+        }
+        logApplyRealtimeRender()
+      },
+      onUpdate: row => {
+        if (logDataSaveInProgress) return
+        const normalized = capNormalizeAllocationRecord(row)
+        if (!normalized) return
+        const idx = logDataState.productSupportAllocations.findIndex(a => a.id === normalized.id)
+        if (idx < 0) logDataState.productSupportAllocations.push(normalized)
+        else logDataState.productSupportAllocations[idx] = normalized
+        logApplyRealtimeRender()
+      },
+      onDelete: row => {
+        if (logDataSaveInProgress) return
+        logDataState.productSupportAllocations = logDataState.productSupportAllocations.filter(a => a.id !== row.id)
         logApplyRealtimeRender()
       }
     }

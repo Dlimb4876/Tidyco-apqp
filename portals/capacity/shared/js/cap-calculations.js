@@ -7,6 +7,11 @@ import {
   getBankHolidaysForYear
 } from './cap-utils.js'
 
+import {
+  capGetProductSupportAllocationsForDate,
+  capNormalizeProductSupportBreakdown
+} from './cap-data-utils.js'
+
 let capProductionBatchesResolver = () => []
 
 export function setCapProductionBatchesResolver(resolver) {
@@ -119,9 +124,12 @@ export function capGetProductBatchesInRange(product, rangeStart, rangeEnd, batch
 
 export function capGetProductSupportHoursForBatch(product, batch, monthStart, fallbackHoursPerWeek, supportRateResolver) {
   if (!product || !batch) return Number(fallbackHoursPerWeek || 0) || 0
-  const batchStart = capParseDateOnlyLocal(batch.start_date) || new Date(monthStart)
-  const lookupDate = batchStart > monthStart ? batchStart : new Date(monthStart)
-  const lookupDateStr = lookupDate.toISOString().split('T')[0]
+  const safeMonthStart = monthStart instanceof Date && !Number.isNaN(monthStart.getTime())
+    ? monthStart
+    : new Date()
+  const batchStart = capParseDateOnlyLocal(batch.start_date) || new Date(safeMonthStart)
+  const lookupDate = batchStart > safeMonthStart ? batchStart : new Date(safeMonthStart)
+  const lookupDateStr = formatDateForHolidays(lookupDate)
 
   if (typeof supportRateResolver === 'function') {
     return supportRateResolver(
@@ -133,6 +141,53 @@ export function capGetProductSupportHoursForBatch(product, batch, monthStart, fa
   }
 
   return Number(fallbackHoursPerWeek || 0) || 0
+}
+
+function countCalendarDaysInclusive(startDate, endDate) {
+  const start = capParseDateOnlyLocal(startDate) || new Date(startDate)
+  const end = capParseDateOnlyLocal(endDate) || new Date(endDate)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0
+  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())
+  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate())
+  if (startUtc > endUtc) return 0
+  return Math.floor((endUtc - startUtc) / 86400000) + 1
+}
+
+function capGetProductSupportHoursForBatchRange(
+  product,
+  batch,
+  rangeStart,
+  rangeEnd,
+  fallbackHoursPerBatch,
+  supportRateResolver
+) {
+  if (!product || !batch || !rangeStart || !rangeEnd) return 0
+  const batchStart = capParseDateOnlyLocal(batch.start_date)
+  const batchEnd = capParseDateOnlyLocal(batch.due_date)
+  const safeRangeStart = capParseDateOnlyLocal(rangeStart) || new Date(rangeStart)
+  const safeRangeEnd = capParseDateOnlyLocal(rangeEnd) || new Date(rangeEnd)
+  if (!batchStart || !batchEnd || Number.isNaN(safeRangeStart.getTime()) || Number.isNaN(safeRangeEnd.getTime())) return 0
+
+  const overlapStart = new Date(Math.max(batchStart.getTime(), safeRangeStart.getTime()))
+  const overlapEnd = new Date(Math.min(batchEnd.getTime(), safeRangeEnd.getTime()))
+  if (overlapStart > overlapEnd) return 0
+
+  const batchSpanDays = countCalendarDaysInclusive(batchStart, batchEnd)
+  const overlapSpanDays = countCalendarDaysInclusive(overlapStart, overlapEnd)
+  if (batchSpanDays <= 0 || overlapSpanDays <= 0) return 0
+
+  // Why: support is entered as hours per batch, so heatmap demand must be spread across the batch date span.
+  const lookupDateStr = formatDateForHolidays(overlapStart)
+  const supportPerBatch = typeof supportRateResolver === 'function'
+    ? supportRateResolver(
+      product.id,
+      lookupDateStr,
+      fallbackHoursPerBatch,
+      product.department
+    )
+    : (Number(fallbackHoursPerBatch || 0) || 0)
+
+  return Math.max(0, supportPerBatch) * (overlapSpanDays / batchSpanDays)
 }
 
 export function countWorkDaysInMonth(year, month) {
@@ -181,6 +236,20 @@ export function capCalculateMonthData(monthKey, teamArray, tasksArray, productsA
   const supportRateResolver = calcOptions.supportRateResolver
   const productionBatches = calcOptions.productionBatches
   const [year, month] = monthKey.split('-').map(Number)
+  // Why: month input can briefly be blank/invalid while users edit, and forecast rendering must not crash the page.
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+    return {
+      capacity: 0,
+      capacityMax: 0,
+      npi: 0,
+      improvement: 0,
+      tendering: 0,
+      support: 0,
+      other: 0,
+      totalDemand: 0,
+      utilisation: 0
+    }
+  }
   const monthStart = new Date(year, month - 1, 1)
   const monthEnd = new Date(year, month, 0)
 
@@ -267,10 +336,11 @@ export function capCalculateMonthData(monthKey, teamArray, tasksArray, productsA
       : (Number(product.hoursPerWeek) || 0)
     const overlappingBatches = capGetProductBatchesInRange(product, monthStart, monthEnd, productionBatches)
     overlappingBatches.forEach(batch => {
-      const supportPerBatch = capGetProductSupportHoursForBatch(
+      const supportPerBatch = capGetProductSupportHoursForBatchRange(
         product,
         batch,
         monthStart,
+        monthEnd,
         fallbackSupportPerBatch,
         supportRateResolver
       )
@@ -294,7 +364,7 @@ export function capCalculateMonthData(monthKey, teamArray, tasksArray, productsA
 
 export const meCalculateMonthData = capCalculateMonthData
 
-export function capCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray, holidaysArray, teamArray) {
+export function capCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray, holidaysArray, teamArray, options) {
   const useTeam = Array.isArray(teamArray) ? teamArray : []
   const person = useTeam.find(p => p.id === personId)
   if (!person || !person.startDate) return { capacity: 0, demand: 0, utilisation: 0 }
@@ -360,8 +430,53 @@ export function capCalcWeekUtilisation(personId, weekStart, weekEnd, tasksArray,
     }
   })
 
+  // Product-support demand — split by allocation percentage per person
+  const opts = (options && typeof options === 'object') ? options : {}
+  const productsArr = Array.isArray(opts.productsArray) ? opts.productsArray : []
+  const allocationsArr = Array.isArray(opts.allocationsArray) ? opts.allocationsArray : []
+  const supportResolver = opts.supportRateResolver
+  const batchesArr = opts.productionBatches
+  const supportBreakdown = []
+
+  if (productsArr.length > 0 && allocationsArr.length > 0) {
+    const weekMid = new Date((weekStartDate.getTime() + weekEndDate.getTime()) / 2)
+    const midStr = formatDateForHolidays(weekMid)
+
+    productsArr.forEach(product => {
+      if (!product) return
+      const overlapping = capGetProductBatchesInRange(product, weekStartDate, weekEndDate, batchesArr)
+      if (overlapping.length === 0) return
+
+      const fallback = capNormalizeProductSupportBreakdown(product).hoursPerWeek
+      let productSupport = 0
+      overlapping.forEach(batch => {
+        productSupport += capGetProductSupportHoursForBatchRange(
+          product,
+          batch,
+          weekStartDate,
+          weekEndDate,
+          fallback,
+          supportResolver
+        )
+      })
+      if (productSupport <= 0) return
+
+      const allocs = capGetProductSupportAllocationsForDate(product.id, midStr, allocationsArr)
+      const mine = allocs.find(a => a.personId === personId)
+      if (mine) {
+        const allocatedHours = productSupport * (mine.percentage / 100)
+        demand += allocatedHours
+        supportBreakdown.push({
+          productName: product.name || 'Unnamed product',
+          hours: allocatedHours,
+          batchCount: overlapping.length
+        })
+      }
+    })
+  }
+
   const utilisationPct = capacity > 0 ? Math.round((demand / capacity) * 100) : 0
-  return { capacity, demand, utilisation: utilisationPct }
+  return { capacity, demand, utilisation: utilisationPct, supportBreakdown }
 }
 
 export function capGetWeekRange(monthKey, weekCount) {

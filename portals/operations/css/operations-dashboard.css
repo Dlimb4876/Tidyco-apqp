@@ -292,6 +292,30 @@
   max-height: 420px;
 }
 
+.ops-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.ops-pill {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ops-pill.active {
+  background: linear-gradient(135deg, #0f2f4d 0%, #0c4368 100%);
+  color: #f3f9ff;
+  border-color: #0b405f;
+}
+
 .ops-forecast-form {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -547,6 +571,12 @@
   border-color: #80c4d8;
 }
 
+:root[data-theme="light"] .ops-pill.active {
+  background: linear-gradient(135deg, #c2dff5 0%, #9fd8cc 100%);
+  color: #0d2035;
+  border-color: #80c4d8;
+}
+
 :root[data-theme="terminal"] .ops-hero {
   color: #00ff41;
   background:
@@ -562,6 +592,12 @@
 }
 
 :root[data-theme="terminal"] .ops-tab.active {
+  background: linear-gradient(135deg, #021a06 0%, #031a0a 100%);
+  color: #00ff41;
+  border-color: #006618;
+}
+
+:root[data-theme="terminal"] .ops-pill.active {
   background: linear-gradient(135deg, #021a06 0%, #031a0a 100%);
   color: #00ff41;
   border-color: #006618;

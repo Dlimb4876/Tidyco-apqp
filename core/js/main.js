@@ -14,7 +14,8 @@ import {
   LinearScale,
   CategoryScale,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 } from 'chart.js'
 
 Chart.register(
@@ -26,7 +27,8 @@ Chart.register(
   LinearScale,
   CategoryScale,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 )
 
 globalThis.doLogin = wrappedDoLogin

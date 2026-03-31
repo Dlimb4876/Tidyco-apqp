@@ -43,13 +43,23 @@ import {
   opsForecastSetSort,
   opsForecastSetFilterStatus,
   opsForecastSetFilterText,
-  opsForecastToggleArchived
+  opsForecastToggleArchived,
+  opsForecastSetWorkAreaFilter
 } from './operations-dashboard-forecast-actions.js'
 import { opsGenerateInfographic } from './operations-infographic.js'
+import {
+	prodCapShiftMonth,
+	prodCapResetMonthOffset
+} from '../../capacity/production/js/prod-capacity-data.js'
 
 export function setOperationsTab(tab) {
   const prevTab = appState.operationsTab
   appState.operationsTab = tab || 'overview'
+
+  // Default to current month when entering forecast
+  if (appState.operationsTab === 'forecast' && prevTab !== 'forecast') {
+    appState.prodCapMonthOffset = 0
+  }
 
   const parts = []
   if (appState.progId) parts.push('p=' + encodeURIComponent(appState.progId))
@@ -114,17 +124,10 @@ function setupOpsPulseFeed() {
     if (action === 'ops-forecast-delete') return opsForecastDelete(el.dataset.id || '')
     if (action === 'ops-forecast-cancel-edit') return opsForecastCancelEdit()
     if (action === 'ops-forecast-sort') return opsForecastSetSort(el.dataset.col || '')
+    if (action === 'ops-forecast-filter-workarea') return opsForecastSetWorkAreaFilter(el.dataset.workArea || 'ALL')
     if (action === 'ops-forecast-shift-month') {
       const direction = el.dataset.direction === 'prev' ? 'prev' : 'next'
-      if (typeof globalThis.prodCapShiftMonth === 'function') {
-        globalThis.prodCapShiftMonth(direction)
-      }
-      return
-    }
-    if (action === 'ops-forecast-reset-month') {
-      if (typeof globalThis.prodCapResetMonthOffset === 'function') {
-        globalThis.prodCapResetMonthOffset()
-      }
+      prodCapShiftMonth(direction)
       return
     }
   })
@@ -167,7 +170,7 @@ function setupOpsPulseFeed() {
   })
 }
 
-export function renderOperations() {
+function renderOperations() {
   opsRealtimeInit()
 
   const tab = appState.operationsTab || 'overview'
@@ -245,6 +248,7 @@ export function operationsDataUnsubscribe() {
 }
 
 export {
+  renderOperations,
   opsBuildMetrics,
   opsRealtimeInit,
   opsRealtimeCleanup,

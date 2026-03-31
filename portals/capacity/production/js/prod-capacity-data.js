@@ -256,7 +256,7 @@ function prodCapGetBankHolidaySetForYears(years) {
   return set
 }
 
-function prodCapGetBankHolidaySetForRange(startDate, endDate) {
+export function prodCapGetBankHolidaySetForRange(startDate, endDate) {
   const years = new Set();
   for (let y = startDate.getFullYear(); y <= endDate.getFullYear(); y++) {
     years.add(y);
@@ -270,7 +270,7 @@ function prodCapIsWorkingDay(date, bankHolSet) {
   return !bankHolSet.has(prodCapDateKey(date));
 }
 
-function prodCapCountWorkingDaysBetween(startDate, endDate, bankHolSet) {
+export function prodCapCountWorkingDaysBetween(startDate, endDate, bankHolSet) {
   if (!startDate || !endDate || startDate > endDate) return 0;
   let count = 0;
   const current = new Date(startDate);
@@ -383,7 +383,9 @@ export function prodCapMonthLabelFull(key) {
 export function prodCapGet24MonthKeys() {
   const today = new Date();
   let baseYear  = today.getFullYear();
-  let baseMonth = today.getMonth() + 1 + appState.prodCapMonthOffset;
+  const rawOffset = Number(appState.prodCapMonthOffset)
+  const safeOffset = Number.isFinite(rawOffset) ? rawOffset : 0
+  let baseMonth = today.getMonth() + 1 + safeOffset;
   // Normalize base month
   while (baseMonth > 12) { baseMonth -= 12; baseYear++; }
   while (baseMonth < 1) { baseMonth += 12; baseYear--; }
@@ -526,7 +528,7 @@ export function prodCapCalcFamilyDemandMatrix(monthKeys) {
   return matrix;
 }
 
-// ── Capacity supply matrix ────────────────────────────────────
+// ── Utilisation capacity matrix ────────────────────────────────────
 // Returns { 'YYYY-MM': { workArea: hours, _total: hours } }
 export function prodCapCalcSupplyMatrix(monthKeys, workAreas) {
   const matrix = {};
@@ -564,8 +566,10 @@ export function prodCapResetMonthOffset() {
 
 function prodCapLoadMonthOffset() {
   const stored = localStorage.getItem('prodCapMonthOffset')
-  if (stored) {
-    appState.prodCapMonthOffset = parseInt(stored, 10)
+  if (stored != null) {
+    const parsed = parseInt(stored, 10)
+    // Why: guard against corrupt localStorage values causing invalid month keys and render crashes.
+    appState.prodCapMonthOffset = Number.isFinite(parsed) ? parsed : 0
   }
 }
 

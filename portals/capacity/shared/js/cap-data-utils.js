@@ -182,3 +182,50 @@ export function capSortSupportHistoryByDate(historyRows) {
     return aDate < bDate ? -1 : 1
   })
 }
+
+/* — Allocation normalisation & date-based lookup (product-support split per person) — */
+
+export function capNormalizeAllocationRecord(record) {
+  if (!record || typeof record !== 'object') return null
+  const productId = record.productId || record.product_id
+  const personId = record.personId || record.person_id
+  const effectiveDate = capNormalizeDateOnly(record.effectiveDate || record.effective_date)
+  if (!productId || !personId || !effectiveDate) return null
+
+  return {
+    id: record.id || capUUID(),
+    productId,
+    personId,
+    percentage: Math.max(0, Math.min(100, Number(record.percentage) || 0)),
+    effectiveDate,
+    endDate: capNormalizeDateOnly(record.endDate || record.end_date) || '',
+    notes: record.notes || '',
+    createdAt: record.createdAt || record.created_at || new Date().toISOString(),
+    updatedAt: record.updatedAt || record.updated_at || ''
+  }
+}
+
+// Returns the active allocation set [{personId, percentage}] for a product on a given date
+export function capGetProductSupportAllocationsForDate(productId, date, allocationsArray) {
+  if (!productId || !date || !Array.isArray(allocationsArray)) return []
+  const targetDate = capNormalizeDateOnly(date)
+  if (!targetDate) return []
+
+  const matches = allocationsArray.filter(row => {
+    if (!row || row.productId !== productId) return false
+    if (!row.effectiveDate || row.effectiveDate > targetDate) return false
+    if (row.endDate && row.endDate < targetDate) return false
+    return true
+  })
+  if (matches.length === 0) return []
+
+  // Take the set with the latest effectiveDate (most recent allocation)
+  const latestDate = matches.reduce((latest, row) =>
+    row.effectiveDate > latest ? row.effectiveDate : latest,
+    matches[0].effectiveDate
+  )
+
+  return matches
+    .filter(row => row.effectiveDate === latestDate)
+    .map(row => ({ personId: row.personId, percentage: row.percentage }))
+}

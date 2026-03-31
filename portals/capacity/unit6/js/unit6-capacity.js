@@ -30,7 +30,9 @@ import {
   unit6CapacityDataSubscribe as subscribeUnit6Data,
   unit6CapacityDataUnsubscribe as unsubscribeUnit6Data,
   unit6SetRefreshCurrentTabCallback,
-  unit6SetGetTabCallback
+  unit6SetGetTabCallback,
+  unit6DataState,
+  unit6DataGetProductSupportRateForDate
 } from './unit6-data.js'
 
 let unit6Tab = 'chart'
@@ -54,7 +56,10 @@ function unit6GetData() {
 function unit6DrawChartViews() {
   const { team, tasks, products, holidays } = unit6GetData()
   capDrawChartNow(team, tasks, products, holidays, unit6ChartStart, 'UNIT6')
-  capDrawHeatmapNow(team, tasks, products, holidays, unit6ChartStart, 'UNIT6')
+  capDrawHeatmapNow(team, tasks, products, holidays, unit6ChartStart, {
+    allocationsArray: unit6DataState.productSupportAllocations,
+    supportRateResolver: unit6DataGetProductSupportRateForDate
+  })
 }
 
 function unit6GetTabContent() {
@@ -77,7 +82,7 @@ function unit6GetTabContent() {
     case 'tasks':
       return capRenderTasksTab(tasks, team, products, 'UNIT6', taskFilters, taskSort, canEdit())
     case 'products':
-      return capRenderProductsTab(products, tasks, 'UNIT6', productsTable)
+      return capRenderProductsTab(products, tasks, 'UNIT6', productsTable, unit6DataState.productSupportAllocations)
     case 'product-taskload':
       return capRenderProductTaskLoadTab(tasks, products, 'UNIT6', productLoadTable)
     case 'holidays':
