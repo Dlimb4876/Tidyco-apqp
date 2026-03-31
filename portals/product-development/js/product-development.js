@@ -319,18 +319,13 @@ function renderProductFamilyDatabase() {
             <div class="proj-home-title">Product Family Database</div>
             <div class="proj-home-sub">Loading families...</div>
           </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-family-db" title="User Guide">❓ Guide</button>
-            <button class="btn btn-ghost" data-action="pd-nav-root">← Back</button>
-          </div>
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-family-db" title="User Guide">❓ Guide</button>
         </div>
-        <div style="text-align:center;padding:80px 20px;color:var(--muted)">
-          <div class="skeleton-loader" style="max-width:600px;margin:0 auto">
+        <div class="skeleton-loader fam-skeleton">
           <div class="skeleton-line" style="width:80%"></div>
           <div class="skeleton-line" style="width:60%"></div>
           <div class="skeleton-line" style="width:90%"></div>
           <div class="skeleton-line" style="width:70%"></div>
-        </div>
         </div>
       </div>
     `;
@@ -344,17 +339,15 @@ function renderProductFamilyDatabase() {
             <div class="proj-home-title">Product Family Database</div>
             <div class="proj-home-sub">Manage product families, attributes, and configurations</div>
           </div>
-          <div style="display:flex;gap:8px">
+          <div class="header-btn-group">
             <button class="btn btn-primary" data-action="pd-show-family-modal">➕ Add Family</button>
             <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-family-db" title="User Guide">❓ Guide</button>
-            <button class="btn btn-ghost" data-action="pd-nav-root">← Back</button>
           </div>
         </div>
-
-        <div style="text-align:center;padding:80px 20px;color:var(--muted)">
-          <div style="font-size:48px;margin-bottom:16px">🏢</div>
-          <div style="font-size:18px;font-weight:600;color:var(--mid);margin-bottom:8px">No Product Families</div>
-          <div style="font-size:13px;margin-bottom:20px">Create your first product family to get started</div>
+        <div class="empty-state">
+          <div class="empty-state-icon">🏢</div>
+          <div class="empty-state-title">No Product Families</div>
+          <p>Create your first product family to get started</p>
           <button class="btn btn-primary" data-action="pd-show-family-modal">➕ Add Family</button>
         </div>
       </div>
@@ -362,16 +355,13 @@ function renderProductFamilyDatabase() {
   }
 
   const familyRows = families.map(fam => {
-    const stats = familyTemplatesGetStats(fam.id);
     return `
-      <tr style="border-bottom:1px solid var(--line)">
-        <td style="padding:12px 16px;font-size:13px;font-weight:500;color:var(--ink);width:25%;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="label" title="Click to edit">${esc(fam.label)}</td>
-        <td style="padding:12px 16px;font-size:13px;color:var(--text);width:50%;max-width:400px;cursor:pointer" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="description" title="Click to edit">${fam.description ? esc(fam.description) : '<span style="color:var(--muted)">No description</span>'}</td>
-        <td style="padding:12px 16px;font-size:24px;text-align:center;width:80px;cursor:pointer" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="icon" title="Click to edit">${fam.icon || '📋'}</td>
-        <td style="padding:12px 16px;text-align:right;width:150px;white-space:nowrap">
-          <span style="display:inline-flex;gap:6px;justify-content:flex-end;align-items:center">
-            <button class="btn btn-sm" data-action="pd-show-template-manager" data-family-id="${fam.id}" title="Manage PFMEA Templates" style="font-size:11px;padding:4px 8px">📋 Templates</button>
-          </span>
+      <tr>
+        <td class="fam-col-name" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="label" title="Click to edit">${esc(fam.label)}</td>
+        <td class="fam-col-desc" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="description" title="Click to edit">${fam.description ? esc(fam.description) : '<span class="text-muted">No description</span>'}</td>
+        <td class="fam-col-icon ctr" data-action="pd-family-edit" data-family-id="${fam.id}" data-field="icon" title="Click to edit">${fam.icon || '📋'}</td>
+        <td class="families-actions-col">
+          <button class="btn btn-sm" data-action="pd-show-template-manager" data-family-id="${fam.id}" title="Manage PFMEA Templates">📋 Templates</button>
         </td>
       </tr>
     `;
@@ -382,23 +372,22 @@ function renderProductFamilyDatabase() {
       <div class="proj-home-header">
         <div>
           <div class="proj-home-title">Product Family Database</div>
-          <div class="proj-home-sub">${families.length} product families defined</div>
+          <div class="proj-home-sub">${families.length} product ${families.length === 1 ? 'family' : 'families'} defined</div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div class="header-btn-group">
           <button class="btn btn-primary" data-action="pd-show-family-modal">➕ Add Family</button>
           <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="product-family-db" title="User Guide">❓ Guide</button>
-          <button class="btn btn-ghost" data-action="pd-nav-root">← Back</button>
         </div>
       </div>
 
-      <div style="overflow-x:auto;margin:20px;border:1px solid var(--line);border-radius:6px">
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead style="background:var(--bg);border-bottom:2px solid var(--line)">
+      <div class="families-table-wrap">
+        <table class="prod-tbl families-inline-table">
+          <thead>
             <tr>
-              <th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--mid);text-transform:uppercase;font-size:11px;letter-spacing:0.3px;width:25%">Family</th>
-              <th style="padding:12px 16px;text-align:left;font-weight:600;color:var(--mid);text-transform:uppercase;font-size:11px;letter-spacing:0.3px;width:50%">Description</th>
-              <th style="padding:12px 16px;text-align:center;font-weight:600;color:var(--mid);text-transform:uppercase;font-size:11px;letter-spacing:0.3px;width:80px">Icon</th>
-              <th style="padding:12px 16px;text-align:right;font-weight:600;color:var(--mid);text-transform:uppercase;font-size:11px;letter-spacing:0.3px;width:150px">Actions</th>
+              <th>Family</th>
+              <th>Description</th>
+              <th class="ctr">Icon</th>
+              <th class="families-actions-col">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -407,9 +396,7 @@ function renderProductFamilyDatabase() {
         </table>
       </div>
 
-      <div style="padding:0 20px 20px;color:var(--muted);font-size:12px">
-        💡 Click any cell to edit inline
-      </div>
+      <p class="fam-edit-hint">💡 Click any cell to edit inline</p>
     </div>
   `;
 }

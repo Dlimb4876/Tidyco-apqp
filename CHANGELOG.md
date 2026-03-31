@@ -3,6 +3,32 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-03-31 | Product Family Database page reformatted for portal consistency | Page used heavy inline styles on the table, header, and empty state instead of the shared CSS classes (prod-tbl, families-table-wrap, empty-state, etc.) used across all other portal pages
+
+## 2026-03-31 | Fullscreen mode for Plan by Product and Plan by Work Area | Better use of large screens when reviewing production plans
+
+## 2026-03-31 | Fullscreen mode for Gantt, CTQ, PFD, and Production Scheduling | All four views benefit from more screen space; shared portal-fullscreen-overlay CSS pattern added; Esc key closes all NPI and scheduling fullscreen views
+
+## 2026-03-31 | PFMEA text columns equal width | Function, Failure Mode, Effect, Cause, Controls Prevent/Detect, Recommended Action, and Action Taken columns all set to 180px for a consistent table layout
+
+## 2026-03-31 | PFMEA bigger container + fullscreen expand mode | Container was too small at 70vh for the volume of work done in PFMEA; fullscreen toggle added for large-screen focused editing (Esc or ✕ to exit)
+
+## 2026-03-31 | Fix PFD flowchart label rendering | securityLevel:strict caused sandboxed iframe which broke text styling; htmlLabels:false used wrong CSS selector for edge label spans
+
+## 2026-03-31 | Fix pfmea.js ownerSelectOptions crash | Bug fix — ownerSelectOptions was used in the owner column template but never imported, causing a ReferenceError when rendering the PFMEA view
+
+## 2026-03-31 | Polish Browse All Feedback table | Card wrapper with border-radius + shadow, sticky header, left accent bars per type, result count bar, monospace row numbers, tighter columns, sharper pill badges
+
+## 2026-03-31 | Fix feedback portal CSS inconsistencies | Browse All screen used undefined CSS variables (--border, --text, --surface-low, --grey) and mismatched table/input styling — replaced with correct design system vars (--line, --ink, --bg-soft, --field-bg, --table-head-bg/ink), fixed reopen button hover bug, added btn-xs definition, and aligned media queries with portal convention
+
+## 2026-03-31 | Fix operations dashboard container width | Removed .proj-home (max-width: 1200px) from ops wrapper — operations now fills the full page width consistently with capacity and product management portals
+
+## 2026-03-31 | Fix production capacity guide modal | Button used data-action which was outside the capacity-portal-container listener scope — switched to data-cap-action routed through capacity-events.js
+
+## 2026-03-31 | Product Load tab — load bars, tier colouring, merged task column, family grouping | Improve readability of the capacity Product Load tab
+
+## 2026-03-31 | Allocations history sets are now deletable | Users needed to remove incorrect or outdated past allocation history sets from the allocations modal
+
 ## 2026-03-31 | Fix Production Capacity detail view batch hour distribution | Batch Workload Breakdown tab now uses working days (Mon-Fri, excluding bank holidays) instead of calendar days, matching the main capacity dashboard calculation
 
 ## 2026-03-31 | Sync Product Work Area to Batches | Fixed issue where changing a product's work area in Product Management did not update existing scheduled batches.

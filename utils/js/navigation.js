@@ -37,7 +37,7 @@ import {
   productDevelopmentDataUnsubscribe
 } from '../../portals/product-development/js/product-development.js'
 import { renderHub, hubInit } from '../../portals/hub/js/hub.js'
-import { renderFeedback, feedbackDataSubscribe, feedbackDataUnsubscribe } from '../../portals/feedback/js/feedback.js'
+import { renderFeedback, feedbackDataSubscribe, feedbackDataUnsubscribe, feedbackAttachDelegation } from '../../portals/feedback/js/feedback.js'
 import {
   renderActionCentre,
   actionCentreLoad,
@@ -537,6 +537,7 @@ export function render() {
   }
   if (appState.currentSection === 'feedback') {
     mc.innerHTML = `<div class="section-inner">${renderFeedback()}</div>`;
+    feedbackAttachDelegation(); // Fix: attach delegation immediately so tab clicks work before async data loads
     return;
   }
   if (appState.currentSection === 'settings') {

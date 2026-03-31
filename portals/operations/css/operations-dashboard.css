@@ -3,6 +3,9 @@
    ═══════════════════════════════════ */
 
 .ops-home {
+  /* Fill the full section-inner width like capacity and product management portals do */
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
 

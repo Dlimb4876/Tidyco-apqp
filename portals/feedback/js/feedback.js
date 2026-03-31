@@ -330,7 +330,7 @@ function feedbackRowHTML(f, i) {
 
   return `
     <tr class="${isClosed ? 'feedback-row-closed' : ''} ${typeConfig.rowClass || ''}">
-      <td class="feedback-col-num feedback-muted">${i + 1}</td>
+      <td class="feedback-col-num"><span class="feedback-row-num">${i + 1}</span></td>
       <td class="feedback-col-type">${typeCell}</td>
       <td class="feedback-col-title">
         <div class="feedback-title-text">${esc(f.title)}</div>
@@ -389,6 +389,7 @@ function feedbackRenderBrowseTab(feedback) {
         <div class="feedback-empty-sub">Try adjusting your filters or switch to "Submit" to add one</div>
       </div>
     ` : `
+      <div class="feedback-results-bar">Showing <span class="feedback-results-count">${filtered.length}</span> of ${feedback.length} item${feedback.length !== 1 ? 's' : ''}</div>
       <div class="feedback-table-wrap">
         <table class="feedback-table">
           <thead>
@@ -521,6 +522,12 @@ function setupFeedbackDelegation() {
       feedbackSetSearchFilterFromInput(actionEl)
     }
   })
+}
+
+// Called immediately after render() creates #feedback-container so tab clicks work
+// before the async data load completes
+export function feedbackAttachDelegation() {
+  setupFeedbackDelegation()
 }
 
 export async function feedbackDataSubscribe() {

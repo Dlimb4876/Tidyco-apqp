@@ -83,11 +83,11 @@ pfmeaState.pfColCount = function(vis) {
 
 // Approximate min-width in px for horizontal scroll container
 pfmeaState.pfColMinWidth = function(vis) {
-  let width = 672 // base: mode(180)+effect(180)+sev(60)+cause(180)+occ(44)+del(28)
-  if (vis.function) width += 200
-  if (vis.prevent) width += 180
-  if (vis.detect) width += 180
-  if (vis.action) width += 300 // desc(150)+taken(150)
+  let width = 792 // base: mode(220)+effect(220)+sev(60)+cause(220)+occ(44)+del(28)
+  if (vis.function) width += 220
+  if (vis.prevent) width += 220
+  if (vis.detect) width += 220
+  if (vis.action) width += 440 // desc(220)+taken(220)
   if (vis.owner) width += 80
   if (vis.due) width += 100
   if (vis.newOcc) width += 44
@@ -111,6 +111,12 @@ pfmeaState.pfSetExtraFilter = function(key, value) {
   if (key === 'overdueOnly') appState.pfmeaOverdueFilter = !!value
   if (key === 'specialChar') appState.pfmeaScFilter = value || null
   if (key === 'searchText') appState.pfmeaSearchFilter = value || ''
+  render()
+}
+
+// Toggle fullscreen overlay — used by expand/exit button and Esc key
+pfmeaState.toggleExpand = function() {
+  appState.pfmeaExpanded = !appState.pfmeaExpanded
   render()
 }
 

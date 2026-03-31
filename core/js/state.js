@@ -22,6 +22,13 @@ export const appState = {
   npiTab: 'all', // 'all' | family id — active tab on the NPI project selection screen
   pfmeaRpnFilter: 'all', // all|high|r1_49|r50_99|r100_199|r200_plus
   pfmeaView: 'worksheet', // worksheet|history
+  pfmeaExpanded: false, // fullscreen overlay for focused PFMEA editing
+  ganttExpanded: false, // fullscreen overlay for NPI Timing Plan
+  ctqExpanded: false, // fullscreen overlay for CTQ Matrix
+  pfdExpanded: false, // fullscreen overlay for PFD table view
+  schedulingExpanded: false, // fullscreen overlay for Production Scheduling
+  planByProductExpanded: false, // fullscreen overlay for Plan by Product
+  planByUnitExpanded: false, // fullscreen overlay for Plan by Work Area
   ctqSourceFilter: 'all', // all | Customer Spec | OEM Data | Internal Standard | Regulatory | Drawing
   ctqOosFilter: 'all', // all | Repair | Replace | Scrap | Review | TBD
   ctqAgreedFilter: 'all', // all | yes | no

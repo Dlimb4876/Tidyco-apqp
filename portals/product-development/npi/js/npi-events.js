@@ -5,6 +5,7 @@
 import { preserveInputCaretAfterRender } from '../../../../utils/js/helpers.js'
 import { showGuide } from '../../../../utils/js/guide.js'
 import { flushDeferred } from '../../../../utils/js/render-scheduler.js'
+import { appState } from '../../../../core/js/state.js'
 
 let _npiEventsContainer = null
 let _pfmeaSearchTimer = null
@@ -73,6 +74,10 @@ function onClick(evt) {
   case 'pfmea-implement': npi.pfmea.pfImplementAction(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), npiNum(el.getAttribute('data-ci'), -1)); break
   case 'pfmea-filter-all': evt.preventDefault(); npi.pfmea.setRpnFilter('all'); break
   case 'pfmea-clear-extra-filters': npi.pfmea.pfClearExtraFilters(); break
+  case 'pfmea-toggle-expand': npi.pfmea.toggleExpand(); break
+  case 'gantt-toggle-expand': npi.timing.toggleExpand(); break
+  case 'ctq-toggle-expand': npi.ctq.toggleExpand(); break
+  case 'pfd-toggle-expand': npi.pfd.toggleExpand(); break
 
   case 'gate-sign': npi.gate.signOff(npiNum(el.getAttribute('data-gi'), -1), npiNum(el.getAttribute('data-si'), -1)); break
   case 'gate-unsign': npi.gate.unsign(npiNum(el.getAttribute('data-gi'), -1), npiNum(el.getAttribute('data-si'), -1)); break
@@ -309,6 +314,17 @@ function onFocusOut(evt) {
   flushDeferred('npi')
 }
 
+// Close NPI fullscreen overlays when Esc is pressed
+function onKeydown(evt) {
+  if (evt.key !== 'Escape') return
+  const npi = getNpi()
+  if (!npi) return
+  if (appState.pfmeaExpanded && typeof npi.pfmea?.toggleExpand === 'function') { npi.pfmea.toggleExpand(); return }
+  if (appState.ganttExpanded && typeof npi.timing?.toggleExpand === 'function') { npi.timing.toggleExpand(); return }
+  if (appState.ctqExpanded && typeof npi.ctq?.toggleExpand === 'function') { npi.ctq.toggleExpand(); return }
+  if (appState.pfdExpanded && typeof npi.pfd?.toggleExpand === 'function') { npi.pfd.toggleExpand(); return }
+}
+
 export function setupNpiEvents() {
   const container = document.getElementById('npi-content')
   if (!container) return
@@ -318,6 +334,7 @@ export function setupNpiEvents() {
   document.addEventListener('click', onClick)
   document.addEventListener('change', onChange)
   document.addEventListener('input', onInput)
+  document.addEventListener('keydown', onKeydown)
   container.addEventListener('focusout', onFocusOut)
   _npiEventsContainer = container
 }
@@ -327,6 +344,7 @@ export function teardownNpiEvents() {
   document.removeEventListener('click', onClick)
   document.removeEventListener('change', onChange)
   document.removeEventListener('input', onInput)
+  document.removeEventListener('keydown', onKeydown)
   _npiEventsContainer.removeEventListener('focusout', onFocusOut)
   _npiEventsContainer = null
 }

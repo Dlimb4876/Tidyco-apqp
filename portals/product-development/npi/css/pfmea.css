@@ -234,7 +234,7 @@ td.pfmea-cause-text { border-left: 2px solid #94a3b8 !important; }
 
 /* ── Horizontal scroll wrapper ───────────────────────────────── */
 .pfmea-wrap {
-  max-height: 70vh;
+  max-height: 82vh; /* increased from 70vh — PFMEA needs more visible space */
   overflow-x: auto;
   overflow-y: auto;
 }
@@ -574,6 +574,64 @@ td.pfmea-cause-text { border-left: 2px solid #94a3b8 !important; }
   box-shadow: 0 0 0 2px rgba(11, 95, 167, 0.15);
 }
 
+/* ── Fullscreen overlay ──────────────────────────────────────── */
+/* Covers the entire viewport for focused editing on large screens */
+.pfmea-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pfmea-fullscreen-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 2px solid var(--line);
+  background: var(--bg-soft);
+  flex-shrink: 0;
+}
+
+.pfmea-fullscreen-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pfmea-fullscreen-project {
+  font-weight: 400;
+  color: var(--mid);
+  margin-left: 8px;
+}
+
+/* Toolbar sits flush inside the overlay with no extra bottom margin */
+.pfmea-fullscreen-overlay .pfmea-toolbar {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+}
+
+/* Body fills all remaining height */
+.pfmea-fullscreen-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Table scroll area fills the body — no max-height cap needed */
+.pfmea-fullscreen-body .pfmea-wrap {
+  max-height: none !important;
+  flex: 1;
+}
+
 /* ── Responsive Design ──────────────────────────────────────── */
 @media (max-width: 767px) {
   .pfmea-filter-wrap {
@@ -669,5 +727,10 @@ td.pfmea-cause-text { border-left: 2px solid #94a3b8 !important; }
 @media (min-width: 768px) {
   .pf-text-search {
     min-width: 140px;
+  }
+
+  /* Give more vertical space on larger screens */
+  .pfmea-wrap {
+    max-height: 85vh;
   }
 }

@@ -87,6 +87,53 @@ export function renderPlanByProduct() {
   }
 
   setTimeout(setupProductionPlanningDelegation, 0)
+
+  // Fullscreen mode — full-height overlay for reviewing the 6-month plan on large screens
+  if (appState.planByProductExpanded) {
+    return `
+      <div class="portal-fullscreen-overlay" id="prod-planning-container">
+        <div class="portal-fullscreen-bar">
+          <div class="portal-fullscreen-title">Plan by Product</div>
+          <div class="portal-fullscreen-project">${esc(selectedProduct.name)}</div>
+          <button class="btn btn-ghost btn-sm" data-action="plan-toggle-product-expand">✕ Close</button>
+        </div>
+        <div class="portal-fullscreen-body">
+          <div class="prod-product-toolbar">
+            <div class="filter-group">
+              <label for="prodProductPicker">Product</label>
+              <select id="prodProductPicker" data-action="plan-set-active-product">
+                ${productOptionsHtml}
+              </select>
+            </div>
+            <div class="prod-product-summary">
+              <div class="product-name">${esc(selectedProduct.name)}</div>
+              <div class="product-code">${esc(selectedProduct.part_number || 'N/A')}</div>
+              <div class="product-meta">
+                <span>${familyLabel}</span>
+                ${selectedProduct.lead_time_days ? `<span>${selectedProduct.lead_time_days}d lead time</span>` : ''}
+                <span>${selectedBatches.length} scheduled batch${selectedBatches.length === 1 ? '' : 'es'}</span>
+              </div>
+            </div>
+          </div>
+          <div class="unit-timeline product-six-month-wrap">
+            ${ganttHtml}
+          </div>
+          <div class="product-card batch-detail-card">
+            <div class="product-header">
+              <div>
+                <div class="product-name">Batch Details</div>
+                <div class="product-code">All current card information retained</div>
+              </div>
+            </div>
+            <div class="batches-list">
+              ${batchDetailsHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
   return `
     <div class="prod-section" id="prod-planning-container">
       <div class="sec-head">
@@ -96,6 +143,7 @@ export function renderPlanByProduct() {
           <div class="sec-desc">6-month schedule with weekly and monthly scale</div>
         </div>
         <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" data-action="plan-toggle-product-expand" title="Fullscreen mode">⛶ Expand</button>
           <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-by-product" title="User Guide">❓ Guide</button>
           <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
         </div>
@@ -337,6 +385,28 @@ export function renderPlanByUnit() {
   }
 
   setTimeout(setupProductionPlanningDelegation, 0)
+
+  // Fullscreen mode — full-height overlay for reviewing the work-area timeline on large screens
+  if (appState.planByUnitExpanded) {
+    return `
+      <div class="portal-fullscreen-overlay" id="prod-planning-container">
+        <div class="portal-fullscreen-bar">
+          <div class="portal-fullscreen-title">Plan by Work Area</div>
+          <div class="portal-fullscreen-project">${activeUnit}</div>
+          <button class="btn btn-ghost btn-sm" data-action="plan-toggle-unit-expand">✕ Close</button>
+        </div>
+        <div class="portal-fullscreen-body">
+          <div class="unit-tabs-container">
+            ${tabsHtml}
+          </div>
+          <div class="unit-timeline">
+            ${timelineHtml}
+          </div>
+        </div>
+      </div>
+    `
+  }
+
   return `
     <div class="prod-section" id="prod-planning-container">
       <div class="sec-head">
@@ -346,6 +416,7 @@ export function renderPlanByUnit() {
           <div class="sec-desc">Rolling 2-month timeline showing arrivals and departures</div>
         </div>
         <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" data-action="plan-toggle-unit-expand" title="Fullscreen mode">⛶ Expand</button>
           <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-by-unit" title="User Guide">❓ Guide</button>
           <button class="btn btn-ghost" data-action="plan-back-root">← Back</button>
         </div>
@@ -580,6 +651,18 @@ export function setupProductionPlanningDelegation() {
       if (!unit) return
       prodSetActiveUnit(unit)
       setProductionTab('by-unit')
+      return
+    }
+
+    if (action === 'plan-toggle-product-expand') {
+      appState.planByProductExpanded = !appState.planByProductExpanded
+      render()
+      return
+    }
+
+    if (action === 'plan-toggle-unit-expand') {
+      appState.planByUnitExpanded = !appState.planByUnitExpanded
+      render()
       return
     }
 

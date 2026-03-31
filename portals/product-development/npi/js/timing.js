@@ -5,7 +5,7 @@
 // All functions under npi.timing.*
 // ═══════════════════════════════════
 
-import { prog } from '../../../../core/js/state.js'
+import { prog, appState } from '../../../../core/js/state.js'
 import { save } from '../../../../core/js/db.js'
 import { canEdit, esc, emptyState } from '../../../../utils/js/helpers.js'
 import { showGuide } from '../../../../utils/js/guide.js'
@@ -223,6 +223,70 @@ npi.timing.renderTimingPlan = function() {
     `<option value="${n}"${n === weeks ? ' selected' : ''}>${n}w (${Math.round(n / 4.33)}mo)</option>`
   ).join('')
 
+  // ── Reusable chart controls strip (shared between normal and fullscreen render) ──
+  const ganttControls = `
+  <div style="display:flex;gap:16px;padding:8px 16px;flex-wrap:wrap;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);flex-shrink:0">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:22px;height:10px;border-radius:2px;background:${PLAN_COLOR};opacity:.85"></span>Planned</span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)"><span style="display:inline-block;width:22px;height:10px;border-radius:2px;background:${ACT_COLOR};opacity:.85;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.2) 0,rgba(255,255,255,.2) 2px,transparent 2px,transparent 6px)"></span>Actual</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--mid)"><span style="color:#7c3aed;font-size:10px">◆</span>Milestone</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <label style="font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap">Start:</label>
+      <input type="date" class="cell-edit" name="timing_plan_start" value="${startDate}" onchange="npi.timing.ganttSetStart(this.value)" style="font-size:12px;padding:3px 7px;border-radius:5px;border:1.5px solid var(--line2)">
+      <label style="font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap">Timeline:</label>
+      <select class="cell-edit" onchange="npi.timing.setWeeks(+this.value)" style="font-size:11px;padding:3px 6px;border-radius:5px;border:1.5px solid var(--line2)">${weekOpts}</select>
+      ${todayCol >= 0 ? `<span style="font-size:11px;color:var(--blue);font-family:'IBM Plex Mono',monospace">▼ W${todayCol + 1} today</span>` : ''}
+    </div>
+  </div>`
+
+  const ganttTable = `
+  <div style="overflow-x:auto;overflow-y:auto;flex:1" id="gantt-scroll-container">
+    <table class="tbl tbl--compact gantt-tbl" style="table-layout:fixed;width:max-content;min-width:100%;border-collapse:collapse">
+      <colgroup>${colgroup}</colgroup>
+      <thead>
+        <tr class="gantt-month-row">
+          <th colspan="3" class="gantt-th-left"></th>
+          ${monthHeaders}
+          <th class="gantt-th-notes"></th>
+          <th></th>
+        </tr>
+        <tr class="gantt-week-row">
+          <th class="gantt-th-left" colspan="3"></th>
+          ${weekHeaders}
+          <th class="gantt-th-notes"></th>
+          <th></th>
+        </tr>
+        <tr class="gantt-milestone-row">
+          <th colspan="3" style="text-align:right;padding:0 6px;font-size:9px;font-weight:700;color:#7c3aed;white-space:nowrap;letter-spacing:.3px">◆ Milestones</th>
+          ${milestoneHeaders}
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>
+  </div>`
+
+  // Fullscreen overlay: whole-screen mode for big-screen Gantt editing
+  if (appState.ganttExpanded) {
+    return `<div class="portal-fullscreen-overlay">
+      <div class="portal-fullscreen-bar">
+        <span><span class="portal-fullscreen-title">NPI Timing Plan</span><span class="portal-fullscreen-project">${esc(p.name || '')}</span></span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="npi.timing.ganttExportPdf()" title="Export as PDF">⬇ PDF</button>
+          ${canEdit() ? `<button class="btn btn-ghost btn-sm" onclick="npi.timing.ganttClear()">Clear All</button>` : ''}
+          <button class="btn btn-ghost btn-sm" data-action="gantt-toggle-expand">✕ Exit Fullscreen</button>
+        </div>
+      </div>
+      ${ganttControls}
+      <div class="portal-fullscreen-body" style="padding:0">
+        ${ganttTable}
+        ${totalRows === 0 ? `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No tasks yet — click a section header to expand it, then <strong>＋ Add task</strong></div>` : ''}
+      </div>
+    </div>`
+  }
+
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">NPI Timing Plan</div>
     <div class="sec-desc">Planned (green) and Actual (orange). Click section or month headers to collapse/expand. Click ◆ row to set milestones.</div></div>
     <div style="display:flex;gap:8px;flex-shrink:0">
@@ -230,6 +294,7 @@ npi.timing.renderTimingPlan = function() {
       <button class="btn btn-ghost btn-sm" onclick="showGuide('npi-timing')" title="User Guide">❓ Guide</button>
       <button class="btn btn-ghost btn-sm" onclick="npi.timing.ganttExportPdf()" title="Export as PDF">⬇ PDF</button>
       ${canEdit() ? `<button class="btn btn-ghost btn-sm" onclick="npi.timing.ganttClear()">Clear All</button>` : ''}
+      <button class="btn btn-ghost btn-sm" data-action="gantt-toggle-expand" title="Fullscreen mode">⛶ Expand</button>
     </div>
   </div>
   <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">
@@ -275,7 +340,13 @@ npi.timing.renderTimingPlan = function() {
   ${totalRows === 0 ? `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No tasks yet — click a section header to expand it, then <strong>＋ Add task</strong></div>` : ''}`
 }
 
-npi.timing.ganttTogglePlan    = function(id, wi)    { npiData.timing.togglePlan(id, wi); render() }
+// Toggle fullscreen for focused Gantt editing on large screens
+npi.timing.toggleExpand = function() {
+  appState.ganttExpanded = !appState.ganttExpanded
+  render()
+}
+
+npi.timing.ganttTogglePlan= function(id, wi)    { npiData.timing.togglePlan(id, wi); render() }
 npi.timing.ganttToggleAct     = function(id, wi)    { npiData.timing.toggleAct(id, wi); render() }
 npi.timing.ganttAddRow        = function(section)   { npiData.timing.addRow(section); render() }
 npi.timing.ganttUpdTask       = function(id, val)   { npiData.timing.updTask(id, val) }

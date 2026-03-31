@@ -284,35 +284,35 @@ export function capDrawChartNow(teamArray, tasksArray, productsArray, holidaysAr
           data: npiData,
           backgroundColor: '#2563eb',
           stack: 'demand',
-          order: 2
+          order: 1
         },
         {
           label: 'Improvement',
           data: improvementData,
           backgroundColor: '#16a34a',
           stack: 'demand',
-          order: 2
+          order: 1
         },
         {
           label: 'Tendering',
           data: tenderingData,
           backgroundColor: '#ea580c',
           stack: 'demand',
-          order: 2
+          order: 1
         },
         {
           label: 'Support',
           data: supportData,
           backgroundColor: '#0891b2',
           stack: 'demand',
-          order: 2
+          order: 1
         },
         {
           label: 'Other',
           data: otherData,
           backgroundColor: '#7c3aed',
           stack: 'demand',
-          order: 2
+          order: 1
         },
         {
           label: 'Team Capacity',
@@ -326,7 +326,7 @@ export function capDrawChartNow(teamArray, tasksArray, productsArray, holidaysAr
           fill: false,
           pointRadius: 3,
           pointBackgroundColor: '#dc2626',
-          order: 1
+          order: 0
         },
         {
           // Why: make total 100%-utilisation availability visible so users can compare planned vs maximum hours.
@@ -342,7 +342,7 @@ export function capDrawChartNow(teamArray, tasksArray, productsArray, holidaysAr
           fill: false,
           pointRadius: 2,
           pointBackgroundColor: '#475569',
-          order: 1
+          order: 0
         }
       ]
     },

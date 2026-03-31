@@ -1,15 +1,15 @@
 /* ============================================================
    pfmea.js — PFMEA render, mutations, and RPN logic
-   Depends on: state.js (prog), db.js (save), navigation.js (render), helpers.js (esc)
+   Depends on: state.js (prog), db.js (save), navigation.js (render), helpers.js (esc, ownerSelectOptions)
    pfmea-state.js (PFMEA worksheet/view/filter state)
    npi-constants.js (RPN_HIGH, RPN_CRITICAL), npi.js
    renderRpnBurndown() is defined in rpn-chart.js (loaded before this file)
    ============================================================ */
 
-import { prog } from '../../../../core/js/state.js'
+import { prog, appState } from '../../../../core/js/state.js'
 import { save } from '../../../../core/js/db.js'
 import { render } from '../../../../utils/js/navigation.js'
-import { esc, emptyState, showModal, showToast, canEdit, emailToDisplayName } from '../../../../utils/js/helpers.js'
+import { esc, emptyState, showModal, showToast, canEdit, emailToDisplayName, ownerSelectOptions } from '../../../../utils/js/helpers.js'
 import { npi } from './npi-shared.js'
 import { npiComponents } from './npi-components.js'
 import {
@@ -263,18 +263,18 @@ npi.pfmea.renderPFMEA = function() {
 
   // Build colgroup
   const colgroup = `<colgroup>
-    ${vis.function  ? '<col style="width:200px"><!-- function -->' : ''}
-    <col style="width:180px"><!-- failure mode -->
-    <col style="width:180px"><!-- effect -->
+    ${vis.function  ? '<col style="width:220px"><!-- function -->' : ''}
+    <col style="width:220px"><!-- failure mode -->
+    <col style="width:220px"><!-- effect -->
     <col style="width:60px"> <!-- SEV -->
-    <col style="width:180px"><!-- cause -->
+    <col style="width:220px"><!-- cause -->
     <col style="width:44px"> <!-- OCC -->
-    ${vis.prevent   ? '<col style="width:180px"><!-- prevent -->' : ''}
-    ${vis.detect    ? '<col style="width:180px"><!-- detect -->'  : ''}
+    ${vis.prevent   ? '<col style="width:220px"><!-- prevent -->' : ''}
+    ${vis.detect    ? '<col style="width:220px"><!-- detect -->'  : ''}
     ${vis.detect    ? '<col style="width:44px"> <!-- DET -->' : ''}
     ${vis.detect    ? '<col style="width:60px"> <!-- RPN -->' : ''}
-    ${vis.action    ? '<col style="width:150px"><!-- action desc -->' : ''}
-    ${vis.action    ? '<col style="width:150px"><!-- action taken -->' : ''}
+    ${vis.action    ? '<col style="width:220px"><!-- action desc -->' : ''}
+    ${vis.action    ? '<col style="width:220px"><!-- action taken -->' : ''}
     ${vis.owner     ? '<col style="width:80px"> <!-- owner -->'   : ''}
     ${vis.due       ? '<col style="width:100px"><!-- due -->'     : ''}
     ${vis.newOcc    ? '<col style="width:44px"> <!-- new OCC -->' : ''}
@@ -584,10 +584,27 @@ npi.pfmea.renderPFMEA = function() {
       : `<div class="pfmea-history-summary"><span class="tag" style="align-self:center">${historyEntries.length} logged change${historyEntries.length === 1 ? '' : 's'}</span></div>`}
   </div>`
 
+  const isExpanded = !!appState.pfmeaExpanded
+
+  // Fullscreen overlay — renders just the toolbar and scrollable table covering the full viewport
+  if (isExpanded) {
+    return `<div class="pfmea-fullscreen-overlay">
+  <div class="pfmea-fullscreen-bar">
+    <span class="pfmea-fullscreen-title">PFMEA <span class="pfmea-fullscreen-project">${esc(p.name || '')}</span></span>
+    <button class="btn btn-ghost btn-sm" data-action="pfmea-toggle-expand" title="Exit fullscreen (Esc)">✕ Exit Fullscreen</button>
+  </div>
+  ${viewTabs}
+  <div class="pfmea-fullscreen-body">${activeView === 'history' ? npi.pfmea.renderHistoryView(historyEntries) : html}</div>
+</div>`
+  }
+
   if (activeView === 'history') {
     return `<div class="sec-head"><div><div class="sec-eyebrow">Step 03</div><div class="sec-title">PFMEA</div>
     <div class="sec-desc">Failure history across all PFMEA steps in one place.</div></div>
-    <div class="sec-actions"><button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfmea" title="User Guide">❓ Guide</button></div></div>
+    <div class="sec-actions">
+      <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfmea" title="User Guide">❓ Guide</button>
+      <button class="btn btn-ghost btn-sm" data-action="pfmea-toggle-expand" title="Expand to fullscreen">⛶ Expand</button>
+    </div></div>
     ${viewTabs}
     ${npi.pfmea.renderHistoryView(historyEntries)}`
   }
@@ -596,6 +613,7 @@ npi.pfmea.renderPFMEA = function() {
   <div class="sec-desc">Failure Mode → Effect (SEV) → Cause (OCC) → Controls Prevent / Detect (DET) → RPN. Actions and rescoring per cause.</div></div>
   <div class="sec-actions">
     <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfmea" title="User Guide">❓ Guide</button>
+    <button class="btn btn-ghost btn-sm" data-action="pfmea-toggle-expand" title="Expand to fullscreen">⛶ Expand</button>
   </div></div>
 ${viewTabs}
 <details class="card" style="margin-bottom:18px;padding:0;overflow:hidden">

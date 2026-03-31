@@ -213,6 +213,71 @@
 	}
 }
 
+/* ── Product Load tab — load bars, tier colouring, family groups ── */
+
+/* Background bar shown behind the Total Load value in each cell */
+.cap-load-bar-cell {
+	position: relative;
+	overflow: hidden;
+}
+.cap-load-bar {
+	position: absolute;
+	left: 0; top: 50%;
+	transform: translateY(-50%);
+	height: 65%;
+	border-radius: 0 3px 3px 0;
+	pointer-events: none;
+	z-index: 0;
+	transition: width 0.3s ease;
+}
+.cap-load-bar-zero { background: rgba(0,0,0,0.04); }
+.cap-load-bar-low  { background: rgba(40,167,69,0.15); }
+.cap-load-bar-mid  { background: rgba(255,152,0,0.18); }
+.cap-load-bar-high { background: rgba(220,53,69,0.15); }
+.cap-load-value {
+	position: relative;
+	z-index: 1;
+}
+
+/* Left-border accent on product rows based on load tier */
+.cap-load-tier-zero { opacity: 0.6; }
+.cap-load-tier-low  td:first-child { border-left: 3px solid var(--green); }
+.cap-load-tier-mid  td:first-child { border-left: 3px solid var(--amber); }
+.cap-load-tier-high td:first-child { border-left: 3px solid var(--red); }
+
+/* Family group header rows */
+.cap-load-family-row {
+	background: var(--bg-soft);
+	border-top: 2px solid var(--line);
+}
+.cap-load-family-row td { padding: 8px 10px; font-size: 12px; }
+.cap-load-toggle-btn {
+	background: none; border: none; cursor: pointer;
+	font-size: 10px; color: var(--muted);
+	padding: 0 6px 0 0; line-height: 1;
+	transition: color 0.15s;
+}
+.cap-load-toggle-btn:hover { color: var(--ink); }
+.cap-load-family-label {
+	font-weight: 700; font-size: 12px; color: var(--ink);
+	font-family: 'IBM Plex Mono', monospace;
+	text-transform: uppercase; letter-spacing: 0.8px;
+}
+.cap-load-family-count {
+	margin-left: 8px; font-size: 11px;
+	color: var(--muted); font-weight: 400;
+}
+
+/* Indent product name cells to visually sit inside their family group */
+.cap-load-product-cell { padding-left: 24px !important; }
+
+@media (max-width: 767px) {
+	.cap-load-product-cell { padding-left: 16px !important; }
+}
+@media (min-width: 768px) {
+	.cap-load-product-cell { padding-left: 28px !important; }
+}
+
 @media (min-width: 768px) {
 	.me-products-card-body {
 		padding: 14px;
