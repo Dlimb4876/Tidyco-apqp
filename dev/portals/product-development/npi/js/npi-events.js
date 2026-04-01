@@ -351,7 +351,8 @@ function onKeydown(evt) {
 }
 
 export function setupNpiEvents() {
-  const container = document.getElementById('npi-content')
+  // Bug fix: apqp section renders via renderSection() (no #npi-content), so fall back to #mainContent
+  const container = document.getElementById('npi-content') || document.getElementById('mainContent')
   if (!container) return
   if (_npiEventsContainer === container) return
   if (_npiEventsContainer) teardownNpiEvents()

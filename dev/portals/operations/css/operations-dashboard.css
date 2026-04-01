@@ -428,7 +428,7 @@
 
 .ops-forecast-table {
   width: 100%;
-  min-width: 1200px;
+  min-width: 1260px;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -445,15 +445,15 @@
   text-overflow: ellipsis;
 }
 
-.ops-forecast-table .ops-col-title { width: 300px; min-width: 300px; max-width: 300px; white-space: normal !important; }
-.ops-forecast-table .ops-col-status { width: 100px; }
-.ops-forecast-table .ops-col-area { width: 70px; }
-.ops-forecast-table .ops-col-date { width: 100px; }
-.ops-forecast-table .ops-col-units { width: 70px; }
-.ops-forecast-table .ops-col-oh { width: 70px; }
-.ops-forecast-table .ops-col-hours { width: 90px; }
-.ops-forecast-table .ops-col-prob { width: 100px; }
-.ops-forecast-table .ops-col-actions { width: 200px; }
+.ops-col-title { width: 260px; white-space: normal !important; }
+.ops-col-status { width: 100px; }
+.ops-col-area { width: 70px; }
+.ops-col-date { width: 100px; }
+.ops-col-units { width: 70px; }
+.ops-col-oh { width: 70px; }
+.ops-col-hours { width: 90px; }
+.ops-col-prob { width: 100px; }
+.ops-col-actions { width: 300px; }
 
 .ops-forecast-table th {
   font-size: 11px;
@@ -480,7 +480,6 @@
 }
 
 .ops-forecast-inline {
-  width: 100%;
   min-height: 32px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -488,6 +487,7 @@
   font: inherit;
   color: var(--text);
   background: var(--white);
+  min-width: 110px;
 }
 
 @media (max-width: 767px) {

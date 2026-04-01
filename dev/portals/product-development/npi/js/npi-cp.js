@@ -8,6 +8,7 @@ import { calcRPN, esc, canEdit, emptyState, showToast } from '../../../../utils/
 import { showGuide } from '../../../../utils/js/guide.js'
 import { npi } from './npi-shared.js'
 import { npiComponents } from './npi-components.js'
+import { npiData } from './npi-data.js'
 
 npi.cp.calcCauseRpn = function(sev, occ, det) {
   if (typeof calcRPN === 'function') return calcRPN({ sev, occ, det })

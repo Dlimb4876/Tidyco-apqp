@@ -41,8 +41,6 @@ async function opsForecastSubmit(event) {
 	const dueDate = (fd.get('due_date') || '').toString();
 	const totalUnits = opsToNumber(fd.get('total_units'), 0);
 	const ohHoursPerUnit = opsToNumber(fd.get('oh_hours_per_unit'), 0);
-	const batchCount = opsToNumber(fd.get('batch_count'), 1);
-	const beatRateDays = opsToNumber(fd.get('beat_rate_days'), 1);
 	const probabilityBand = (fd.get('probability_band') || '').toString().trim().toLowerCase();
 	const probabilityPct = probabilityBand && typeof opsForecastProbabilityPctFromBand === 'function'
 		? opsForecastProbabilityPctFromBand(probabilityBand)
@@ -71,8 +69,6 @@ async function opsForecastSubmit(event) {
 		due_date: dueDate,
 		total_units: totalUnits,
 		oh_hours_per_unit: ohHoursPerUnit,
-		batch_count: batchCount,
-		beat_rate_days: beatRateDays,
 		probability_band: probabilityBand,
 		probability_pct: probabilityPct,
 		notes: (fd.get('notes') || '').toString().trim()
@@ -140,22 +136,19 @@ async function opsForecastSaveInline(id) {
 	const dueEl = document.getElementById(opsForecastInlineFieldId(id, 'due_date'));
 	const totalUnitsEl = document.getElementById(opsForecastInlineFieldId(id, 'total_units'));
 	const ohHoursEl = document.getElementById(opsForecastInlineFieldId(id, 'oh_hours_per_unit'));
-	const batchCountEl = document.getElementById(opsForecastInlineFieldId(id, 'batch_count'));
-	const beatRateEl = document.getElementById(opsForecastInlineFieldId(id, 'beat_rate_days'));
 	const probBandEl = document.getElementById(opsForecastInlineFieldId(id, 'probability_band'));
-	const probEl = document.getElementById(opsForecastInlineFieldId(id, 'probability_pct'));
+	const notesEl = document.getElementById(opsForecastInlineFieldId(id, 'notes'));
 
 	const nextTitle = (titleEl?.value || '').toString().trim();
 	const nextStart = (startEl?.value || '').toString();
 	const nextDue = (dueEl?.value || '').toString();
 	const nextTotalUnits = Math.max(0, opsToNumber(totalUnitsEl?.value, 0));
 	const nextOhHoursPerUnit = Math.max(0, opsToNumber(ohHoursEl?.value, 0));
-	const nextBatchCount = Math.max(1, opsToNumber(batchCountEl?.value, 1));
-	const nextBeatRateDays = Math.max(1, opsToNumber(beatRateEl?.value, 1));
 	const nextProbabilityBand = (probBandEl?.value || '').toString().trim().toLowerCase();
 	const nextProbability = nextProbabilityBand && typeof opsForecastProbabilityPctFromBand === 'function'
 		? opsForecastProbabilityPctFromBand(nextProbabilityBand)
-		: Math.max(0, Math.min(100, opsToNumber(probEl?.value, 0)));
+		: Math.max(0, Math.min(100, opsToNumber(document.getElementById(opsForecastInlineFieldId(id, 'probability_pct'))?.value, 0)));
+	const nextNotes = (notesEl?.value || '').toString().trim();
 
 	if (!nextTitle) {
 		showToast('Please add a title for this opportunity.', 'warning');
@@ -181,10 +174,9 @@ async function opsForecastSaveInline(id) {
 		due_date: nextDue,
 		total_units: nextTotalUnits,
 		oh_hours_per_unit: nextOhHoursPerUnit,
-		batch_count: nextBatchCount,
-		beat_rate_days: nextBeatRateDays,
 		probability_band: nextProbabilityBand,
-		probability_pct: nextProbability
+		probability_pct: nextProbability,
+		notes: nextNotes
 	});
 
 	operationsDashboardState.opsForecastInlineEditId = '';
