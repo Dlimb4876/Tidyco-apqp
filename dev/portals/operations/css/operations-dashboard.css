@@ -359,6 +359,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  grid-column: 1 / -1;
 }
 
 .ops-forecast-table-wrap {
@@ -427,8 +428,9 @@
 
 .ops-forecast-table {
   width: 100%;
-  min-width: 920px;
+  min-width: 1200px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .ops-forecast-table th,
@@ -439,7 +441,19 @@
   color: var(--text);
   text-align: left;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+.ops-forecast-table .ops-col-title { width: 300px; min-width: 300px; max-width: 300px; white-space: normal !important; }
+.ops-forecast-table .ops-col-status { width: 100px; }
+.ops-forecast-table .ops-col-area { width: 70px; }
+.ops-forecast-table .ops-col-date { width: 100px; }
+.ops-forecast-table .ops-col-units { width: 70px; }
+.ops-forecast-table .ops-col-oh { width: 70px; }
+.ops-forecast-table .ops-col-hours { width: 90px; }
+.ops-forecast-table .ops-col-prob { width: 100px; }
+.ops-forecast-table .ops-col-actions { width: 200px; }
 
 .ops-forecast-table th {
   font-size: 11px;
@@ -466,6 +480,7 @@
 }
 
 .ops-forecast-inline {
+  width: 100%;
   min-height: 32px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -473,7 +488,6 @@
   font: inherit;
   color: var(--text);
   background: var(--white);
-  min-width: 110px;
 }
 
 @media (max-width: 767px) {
@@ -516,7 +530,7 @@
   }
 
   .ops-forecast-form {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -530,7 +544,7 @@
   }
 
   .ops-forecast-form {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -605,3 +619,47 @@
   color: #00ff41;
   border-color: #006618;
 }
+
+/* ── Forecast Notes Styling ── */
+.ops-forecast-row-main td {
+  border-bottom: none !important;
+}
+
+.ops-forecast-row-notes td {
+  padding-top: 0 !important;
+  padding-bottom: 12px !important;
+}
+
+.ops-forecast-notes-expansion {
+  background: var(--bg-soft);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: -4px;
+}
+
+.ops-forecast-notes-text {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: normal;
+  line-height: 1.5;
+  max-width: 800px;
+}
+
+.ops-forecast-notes-text strong {
+  color: var(--ink);
+  margin-right: 4px;
+}
+
+.ops-forecast-inline-notes {
+  width: 100%;
+  min-height: 60px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--white);
+  resize: vertical;
+}
+
