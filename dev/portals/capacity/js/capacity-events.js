@@ -10,6 +10,7 @@ import { navigate, render } from '../../../utils/js/navigation.js'
 import { flushDeferred } from '../../../utils/js/render-scheduler.js'
 import { CAP_DEFAULT_HOURS_PER_WEEK } from '../shared/js/cap-utils.js'
 import { capToggleHoliday } from '../shared/js/cap-holidays.js'
+import { showGuide } from '../../../utils/js/guide.js'
 import { capOpenHeatmapDetail, capCloseHeatmapDetail } from '../shared/js/cap-heatmap.js'
 import { capTasksFilters, capTaskEditingId, capTasksSort, capGetSortIcon, _capRenderTaskRows, capBuildTaskProductLookup, capRenderTaskProductDatalist, capRenderTaskProductPickerCell } from '../shared/js/cap-tasks.js'
 import { capTeamSortBy } from '../shared/js/cap-team.js'
@@ -39,7 +40,8 @@ import {
   capProductLoadSetSort,
   capProductLoadToggleSortDir,
   capProductLoadClearFilters,
-  capProductLoadSortByColumn
+  capProductLoadSortByColumn,
+  capProductLoadToggleFamilyGroup
 } from '../shared/js/cap-product-taskload.js'
 import { setCapacityTab } from './capacity.js'
 import {
@@ -150,10 +152,10 @@ import {
   unit6OnPrevMonth,
   unit6OnNextMonth
 } from '../unit6/js/unit6-capacity.js'
-import { meSaveProductSupportAllocationSet, meLoadRelationalProductSupportAllocations } from '../me/js/me-data-relational.js'
-import { pmSaveProductSupportAllocationSet, pmLoadRelationalProductSupportAllocations } from '../project-management/js/pm-data-relational.js'
-import { logSaveProductSupportAllocationSet, logLoadRelationalProductSupportAllocations } from '../logistics/js/log-data-relational.js'
-import { unit6SaveProductSupportAllocationSet, unit6LoadRelationalProductSupportAllocations } from '../unit6/js/unit6-data-relational.js'
+import { meSaveProductSupportAllocationSet, meLoadRelationalProductSupportAllocations, meDeleteProductSupportAllocation } from '../me/js/me-data-relational.js'
+import { pmSaveProductSupportAllocationSet, pmLoadRelationalProductSupportAllocations, pmDeleteProductSupportAllocation } from '../project-management/js/pm-data-relational.js'
+import { logSaveProductSupportAllocationSet, logLoadRelationalProductSupportAllocations, logDeleteProductSupportAllocation } from '../logistics/js/log-data-relational.js'
+import { unit6SaveProductSupportAllocationSet, unit6LoadRelationalProductSupportAllocations, unit6DeleteProductSupportAllocation } from '../unit6/js/unit6-data-relational.js'
 import { setProdCapTab } from '../production/js/prod-capacity.js'
 import {
   prodCapShiftMonth,
@@ -258,13 +260,15 @@ function capRunSave(contextType) {
   return meOnSave()
 }
 
-// Returns allocation deps for the allocation modal — { team, allocations, saveSet, refreshTab, department }
+// Returns allocation deps for the allocation modal — { team, allocations, saveSet, deleteSet, getAllocations, refreshTab, department }
 function capGetAllocDeps(contextType) {
   // reloadAllocations: re-fetches from DB and writes back to state so modal + heatmap see fresh data
-  if (contextType === 'pm') return { team: pmDataGetTeam(), allocations: pmDataState.productSupportAllocations || [], saveSet: pmSaveProductSupportAllocationSet, reloadAllocations: async () => { pmDataState.productSupportAllocations = await pmLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('pm'), department: 'PM' }
-  if (contextType === 'log') return { team: logDataGetTeam(), allocations: logDataState.productSupportAllocations || [], saveSet: logSaveProductSupportAllocationSet, reloadAllocations: async () => { logDataState.productSupportAllocations = await logLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('log'), department: 'LOG' }
-  if (contextType === 'unit6') return { team: unit6DataGetTeam(), allocations: unit6DataState.productSupportAllocations || [], saveSet: unit6SaveProductSupportAllocationSet, reloadAllocations: async () => { unit6DataState.productSupportAllocations = await unit6LoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('unit6'), department: 'UNIT6' }
-  return { team: meDataGetTeam(), allocations: meDataState.productSupportAllocations || [], saveSet: meSaveProductSupportAllocationSet, reloadAllocations: async () => { meDataState.productSupportAllocations = await meLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('me'), department: 'ME' }
+  // deleteSet: removes all past allocations for a product+date from DB (used to delete history sets)
+  // getAllocations: returns the current in-memory allocations array after a reload
+  if (contextType === 'pm') return { team: pmDataGetTeam(), allocations: pmDataState.productSupportAllocations || [], saveSet: pmSaveProductSupportAllocationSet, deleteSet: async (productId, effectiveDate) => { const rows = (pmDataState.productSupportAllocations || []).filter(a => a.productId === productId && a.effectiveDate === effectiveDate && a.endDate); await Promise.all(rows.map(a => pmDeleteProductSupportAllocation(a.id))) }, getAllocations: () => pmDataState.productSupportAllocations || [], reloadAllocations: async () => { pmDataState.productSupportAllocations = await pmLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('pm'), department: 'PM' }
+  if (contextType === 'log') return { team: logDataGetTeam(), allocations: logDataState.productSupportAllocations || [], saveSet: logSaveProductSupportAllocationSet, deleteSet: async (productId, effectiveDate) => { const rows = (logDataState.productSupportAllocations || []).filter(a => a.productId === productId && a.effectiveDate === effectiveDate && a.endDate); await Promise.all(rows.map(a => logDeleteProductSupportAllocation(a.id))) }, getAllocations: () => logDataState.productSupportAllocations || [], reloadAllocations: async () => { logDataState.productSupportAllocations = await logLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('log'), department: 'LOG' }
+  if (contextType === 'unit6') return { team: unit6DataGetTeam(), allocations: unit6DataState.productSupportAllocations || [], saveSet: unit6SaveProductSupportAllocationSet, deleteSet: async (productId, effectiveDate) => { const rows = (unit6DataState.productSupportAllocations || []).filter(a => a.productId === productId && a.effectiveDate === effectiveDate && a.endDate); await Promise.all(rows.map(a => unit6DeleteProductSupportAllocation(a.id))) }, getAllocations: () => unit6DataState.productSupportAllocations || [], reloadAllocations: async () => { unit6DataState.productSupportAllocations = await unit6LoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('unit6'), department: 'UNIT6' }
+  return { team: meDataGetTeam(), allocations: meDataState.productSupportAllocations || [], saveSet: meSaveProductSupportAllocationSet, deleteSet: async (productId, effectiveDate) => { const rows = (meDataState.productSupportAllocations || []).filter(a => a.productId === productId && a.effectiveDate === effectiveDate && a.endDate); await Promise.all(rows.map(a => meDeleteProductSupportAllocation(a.id))) }, getAllocations: () => meDataState.productSupportAllocations || [], reloadAllocations: async () => { meDataState.productSupportAllocations = await meLoadRelationalProductSupportAllocations() || [] }, refreshTab: () => capRefreshCurrentTab('me'), department: 'ME' }
 }
 
 function capRunDebouncedSave(contextType) {
@@ -355,7 +359,8 @@ function capGetProductLoadHelper(name) {
     SetSort: capProductLoadSetSort,
     ToggleSortDir: capProductLoadToggleSortDir,
     ClearFilters: capProductLoadClearFilters,
-    SortByColumn: capProductLoadSortByColumn
+    SortByColumn: capProductLoadSortByColumn,
+    ToggleFamilyGroup: capProductLoadToggleFamilyGroup
   }
   return productLoadHelpers[name] || null
 }
@@ -790,6 +795,12 @@ function onCapacityClick(evt) {
   switch (action) {
   // ── Navigation ─────────────────────────────────────────────
   case 'cap-nav-hub': navigate('hub'); break
+  // Show context-sensitive guide modal for any capacity sub-page
+  case 'cap-show-guide': {
+    const key = el.getAttribute('data-guide-key')
+    if (key) showGuide(key)
+    break
+  }
   case 'cap-nav-production-schedule':
     navigate('production')
     appState.productionTab = 'scheduling'
@@ -1252,6 +1263,11 @@ function onCapacityClick(evt) {
   case 'cap-product-load-clear-filters': {
     const clearFilters = capGetProductLoadHelper('ClearFilters')
     if (typeof clearFilters === 'function') clearFilters(el.getAttribute('data-dept'))
+    break
+  }
+  case 'cap-product-load-toggle-family': {
+    const toggleFamily = capGetProductLoadHelper('ToggleFamilyGroup')
+    if (typeof toggleFamily === 'function') toggleFamily(el.getAttribute('data-family'), el.getAttribute('data-dept'))
     break
   }
 

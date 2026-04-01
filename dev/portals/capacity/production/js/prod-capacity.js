@@ -55,7 +55,7 @@ export function renderProdCapacity() {
           </div>
         </div>
         <div class="pc-topbar-actions">
-          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="capacity-production" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost btn-sm" data-cap-action="cap-show-guide" data-guide-key="capacity-production" title="User Guide">❓ Guide</button>
           <button class="btn btn-ghost btn-sm" data-cap-action="cap-prod-open-schedule">↗ Open Schedule</button>
         </div>
       </div>

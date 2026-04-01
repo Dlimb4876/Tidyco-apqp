@@ -208,13 +208,41 @@ npi.ctq.render = function() {
     ? `<div class="coverage-banner"><span class="coverage-stat"><span class="tag tag-green">${linkedCount}</span> linked</span><span class="coverage-stat"><span class="tag tag-amber">${orphanedCount}</span> orphaned</span>${orphanedCount > 0 ? ' <a href="#" data-action="npi-set-apqp" data-tab="pfd" style="color:var(--blue)">Link to PFD →</a>' : ''}</div>`
     : ''
 
-  return `<div class="sec-head"><div><div class="sec-eyebrow">Step 01</div><div class="sec-title">CTQ Matrix</div><div class="sec-desc">Critical-to-Quality requirements — source of truth for PFD, PFMEA and Control Plan.</div></div><div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-ctq')" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="ctq-add">＋ Add CTQ</button>` : ''}</div></div>
+  // Fullscreen overlay: expands the CTQ table to fill the whole screen
+  if (appState.ctqExpanded) {
+    return `<div class="portal-fullscreen-overlay">
+      <div class="portal-fullscreen-bar">
+        <span><span class="portal-fullscreen-title">CTQ Matrix</span><span class="portal-fullscreen-project">${esc(p.name || '')}</span></span>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="ctq-add">＋ Add CTQ</button>` : ''}
+          <button class="btn btn-ghost btn-sm" data-action="ctq-toggle-expand">✕ Exit Fullscreen</button>
+        </div>
+      </div>
+      ${filterBar}
+      ${coverageBanner}
+      <div class="portal-fullscreen-body">
+        <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="card-head"><span class="card-title">Requirements</span><span class="card-meta">${p.ctq.length} defined</span></div>
+          ${tableContent}
+          ${canEdit() ? `<button class="add-row" data-action="ctq-add">＋ Add CTQ</button>` : ''}
+        </div>
+      </div>
+    </div>`
+  }
+
+  return `<div class="sec-head"><div><div class="sec-eyebrow">Step 01</div><div class="sec-title">CTQ Matrix</div><div class="sec-desc">Critical-to-Quality requirements — source of truth for PFD, PFMEA and Control Plan.</div></div><div class="sec-actions"><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-ctq')" title="User Guide">❓ Guide</button><button class="btn btn-ghost btn-sm" data-action="ctq-toggle-expand" title="Fullscreen mode">⛶ Expand</button>${canEdit() ? `<button class="btn btn-primary btn-sm" data-action="ctq-add">＋ Add CTQ</button>` : ''}</div></div>
   ${filterBar}
   ${coverageBanner}
   <div class="card"><div class="card-head"><span class="card-title">Requirements</span><span class="card-meta">${p.ctq.length} defined</span></div>
   ${tableContent}
   ${canEdit() ? `<button class="add-row" data-action="ctq-add">＋ Add CTQ</button>` : ''}</div>
   ${p.ctq.length > 0 ? `<div class="info-banner">💡 ${p.ctq.length} CTQs defined. Next: <a href="#" data-action="npi-set-apqp" data-tab="pfd" style="color:var(--blue)">Process Flow →</a></div>` : ''}`
+}
+
+// Toggle fullscreen for focused CTQ Matrix editing on large screens
+npi.ctq.toggleExpand = function() {
+  appState.ctqExpanded = !appState.ctqExpanded
+  render()
 }
 
 npi.ctq.add = function() { npiData.ctq.add() }

@@ -7,10 +7,10 @@ import { getFamilies, findFamilyRecord } from '../../../../core/js/state.js'
 import { capGetProductBatchCountInRange } from './cap-calculations.js'
 
 export const capProductLoadTableState = {
-  ME: { search: '', family: 'all', sortBy: 'total', sortDir: 'desc' },
-  PM: { search: '', family: 'all', sortBy: 'total', sortDir: 'desc' },
-  LOG: { search: '', family: 'all', sortBy: 'total', sortDir: 'desc' },
-  UNIT6: { search: '', family: 'all', sortBy: 'total', sortDir: 'desc' }
+  ME:    { search: '', family: 'all', sortBy: 'total', sortDir: 'desc', collapsedFamilies: new Set() },
+  PM:    { search: '', family: 'all', sortBy: 'total', sortDir: 'desc', collapsedFamilies: new Set() },
+  LOG:   { search: '', family: 'all', sortBy: 'total', sortDir: 'desc', collapsedFamilies: new Set() },
+  UNIT6: { search: '', family: 'all', sortBy: 'total', sortDir: 'desc', collapsedFamilies: new Set() }
 }
 
 const capProductLoadDeps = {
@@ -61,6 +61,14 @@ function capProductLoadResolveFamily(product) {
   return match ? (match.label || match.name || match.id || familyRef) : familyRef
 }
 
+// Returns a tier label for colour-coding rows based on total hours
+function capLoadTier(total) {
+  if (total <= 0) return 'zero'
+  if (total <= 20) return 'low'
+  if (total <= 50) return 'mid'
+  return 'high'
+}
+
 export function capRenderProductTaskLoadTab(tasksArray, productsArray, department, tableState) {
   const dept = department || 'ME'
   const state = tableState || capProductLoadTableState[dept]
@@ -102,6 +110,7 @@ export function capRenderProductTaskLoadTab(tasksArray, productsArray, departmen
     return `${load.name} ${load.family}`.toLowerCase().includes(searchNeedle)
   })
 
+  // Sort products within each family group by the selected column
   const direction = state.sortDir === 'asc' ? 1 : -1
   filteredLoads.sort((left, right) => {
     if (state.sortBy === 'product') return left.name.localeCompare(right.name) * direction
@@ -116,9 +125,78 @@ export function capRenderProductTaskLoadTab(tasksArray, productsArray, departmen
   const totalMonthlySupport = loads.reduce((sum, load) => sum + load.monthlySupport, 0).toFixed(1)
   const totalMonthlyLoad = loads.reduce((sum, load) => sum + load.total, 0).toFixed(1)
 
+  // Scale load bars relative to the heaviest product in the filtered set
+  const maxTotal = filteredLoads.reduce((max, load) => Math.max(max, load.total), 0)
+
+  // Group filtered products by family; named families alphabetical, unassigned last
+  const familyGroupMap = {}
+  filteredLoads.forEach(load => {
+    const key = load.family || '—'
+    if (!familyGroupMap[key]) familyGroupMap[key] = []
+    familyGroupMap[key].push(load)
+  })
+  const familyKeys = Object.keys(familyGroupMap).sort((a, b) => {
+    if (a === '—') return 1
+    if (b === '—') return -1
+    return a.localeCompare(b)
+  })
+
+  const collapsedFamilies = state.collapsedFamilies instanceof Set ? state.collapsedFamilies : new Set()
+
   const si = key => state.sortBy === key
     ? (state.sortDir === 'asc' ? ' <span style="font-size:10px;">↑</span>' : ' <span style="font-size:10px;">↓</span>')
     : ' <span style="opacity:0.3;font-size:10px;">↕</span>'
+
+  const tableRows = filteredLoads.length === 0
+    ? `<tr><td colspan="4" style="padding:16px;text-align:center;color:var(--muted);">No product load rows match the current filters.</td></tr>`
+    : familyKeys.map(familyKey => {
+        const groupLoads = familyGroupMap[familyKey]
+        const groupTaskCount = groupLoads.reduce((s, l) => s + l.taskCount, 0)
+        const groupTaskHrs = groupLoads.reduce((s, l) => s + l.taskHours, 0)
+        const groupSupport = groupLoads.reduce((s, l) => s + l.monthlySupport, 0)
+        const groupTotal = groupLoads.reduce((s, l) => s + l.total, 0)
+        const isCollapsed = collapsedFamilies.has(familyKey)
+        const arrow = isCollapsed ? '▶' : '▼'
+        const barPct = maxTotal > 0 ? Math.round((groupTotal / maxTotal) * 100) : 0
+        const groupTier = capLoadTier(groupTotal)
+
+        const familyRow = `
+          <tr class="cap-load-family-row">
+            <td>
+              <button class="cap-load-toggle-btn" data-cap-action="cap-product-load-toggle-family" data-family="${esc(familyKey)}" data-dept="${dept}">${arrow}</button>
+              <span class="cap-load-family-label">${esc(familyKey)}</span>
+              <span class="cap-load-family-count">${groupLoads.length} product${groupLoads.length !== 1 ? 's' : ''}</span>
+            </td>
+            <td style="text-align:right;color:var(--muted);font-size:12px;">${groupTaskCount > 0 ? `${groupTaskCount} tasks (${groupTaskHrs.toFixed(1)} h)` : '—'}</td>
+            <td style="text-align:right;color:var(--muted);font-size:12px;">${groupSupport.toFixed(1)} h</td>
+            <td style="text-align:right;font-weight:700;" class="cap-load-bar-cell">
+              <div class="cap-load-bar cap-load-bar-${groupTier}" style="width:${barPct}%;"></div>
+              <span class="cap-load-value">${groupTotal.toFixed(1)} h</span>
+            </td>
+          </tr>`
+
+        if (isCollapsed) return familyRow
+
+        const productRows = groupLoads.map(load => {
+          const tier = capLoadTier(load.total)
+          const pct = maxTotal > 0 ? Math.round((load.total / maxTotal) * 100) : 0
+          const taskCell = load.taskCount > 0
+            ? `${load.taskCount} task${load.taskCount !== 1 ? 's' : ''} <span style="color:var(--muted);font-size:11px;">(${load.taskHours.toFixed(1)} h)</span>`
+            : `<span style="color:var(--muted);">—</span>`
+          return `
+            <tr class="cap-load-tier-${tier}">
+              <td class="cap-load-product-cell">${esc(load.name)}</td>
+              <td style="text-align:right;">${taskCell}</td>
+              <td style="text-align:right;">${load.monthlySupport.toFixed(1)} h</td>
+              <td style="text-align:right;font-weight:600;" class="cap-load-bar-cell">
+                <div class="cap-load-bar cap-load-bar-${tier}" style="width:${pct}%;"></div>
+                <span class="cap-load-value">${load.total.toFixed(1)} h</span>
+              </td>
+            </tr>`
+        }).join('')
+
+        return familyRow + productRows
+      }).join('')
 
   return `
     <div style="display:flex;flex-direction:column;gap:16px;">
@@ -157,24 +235,13 @@ export function capRenderProductTaskLoadTab(tasksArray, productsArray, departmen
             <thead>
               <tr>
                 <th data-cap-action="cap-product-load-sort-column" data-sort-key="product" data-dept="${dept}" style="cursor:pointer;user-select:none;">Product${si('product')}</th>
-                <th data-cap-action="cap-product-load-sort-column" data-sort-key="family" data-dept="${dept}" style="cursor:pointer;user-select:none;">Family${si('family')}</th>
-                <th data-cap-action="cap-product-load-sort-column" data-sort-key="tasks" data-dept="${dept}" style="text-align:right;cursor:pointer;user-select:none;">Tasks${si('tasks')}</th>
-                <th data-cap-action="cap-product-load-sort-column" data-sort-key="taskHours" data-dept="${dept}" style="text-align:right;cursor:pointer;user-select:none;">Task Hours${si('taskHours')}</th>
+                <th data-cap-action="cap-product-load-sort-column" data-sort-key="taskHours" data-dept="${dept}" style="text-align:right;cursor:pointer;user-select:none;">Tasks${si('taskHours')}</th>
                 <th data-cap-action="cap-product-load-sort-column" data-sort-key="support" data-dept="${dept}" style="text-align:right;cursor:pointer;user-select:none;">Support / Month${si('support')}</th>
                 <th data-cap-action="cap-product-load-sort-column" data-sort-key="total" data-dept="${dept}" style="text-align:right;cursor:pointer;user-select:none;">Total Load${si('total')}</th>
               </tr>
             </thead>
             <tbody>
-              ${filteredLoads.length === 0 ? `<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--muted);">No product load rows match the current filters.</td></tr>` : filteredLoads.map(load => `
-                <tr>
-                  <td>${esc(load.name)}</td>
-                  <td>${esc(load.family)}</td>
-                  <td style="text-align:right;">${load.taskCount}</td>
-                  <td style="text-align:right;">${load.taskHours.toFixed(1)} h</td>
-                  <td style="text-align:right;">${load.monthlySupport.toFixed(1)} h</td>
-                  <td style="text-align:right;font-weight:600;">${load.total.toFixed(1)} h</td>
-                </tr>
-              `).join('')}
+              ${tableRows}
             </tbody>
           </table>
         </div>
@@ -212,6 +279,7 @@ export function capProductLoadClearFilters(department) {
   state.family = 'all'
   state.sortBy = 'total'
   state.sortDir = 'desc'
+  state.collapsedFamilies = new Set()
   capProductLoadRefresh(department)
 }
 
@@ -224,6 +292,18 @@ export function capProductLoadSortByColumn(column, department) {
   } else {
     state.sortBy = nextColumn
     state.sortDir = (nextColumn === 'product' || nextColumn === 'family') ? 'asc' : 'desc'
+  }
+  capProductLoadRefresh(department)
+}
+
+// Toggles a family group row between expanded and collapsed
+export function capProductLoadToggleFamilyGroup(familyKey, department) {
+  const state = capProductLoadTableState[department] || capProductLoadTableState.ME
+  if (!(state.collapsedFamilies instanceof Set)) state.collapsedFamilies = new Set()
+  if (state.collapsedFamilies.has(familyKey)) {
+    state.collapsedFamilies.delete(familyKey)
+  } else {
+    state.collapsedFamilies.add(familyKey)
   }
   capProductLoadRefresh(department)
 }

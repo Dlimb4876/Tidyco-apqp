@@ -1,6 +1,6 @@
 // Production Batch Scheduling
 
-import { getFamilies } from '../../../core/js/state.js'
+import { getFamilies, appState } from '../../../core/js/state.js'
 import { render } from '../../../utils/js/navigation.js'
 import { esc, canEdit } from '../../../utils/js/helpers.js'
 import { getWorkAreaOptions } from '../../capacity/production/js/work-areas-data.js'
@@ -258,21 +258,8 @@ export function renderScheduling() {
     dataRows += `<tr style="height:${bottomSpacerHeight}px"><td colspan="10" style="padding:0;border:none"></td></tr>`
   }
 
-  const html = `
-    <div class="prod-section">
-      <div class="sec-head">
-        <div>
-          <div class="sec-eyebrow">BATCH SCHEDULING</div>
-          <div class="sec-title">Production Batches</div>
-          <div class="sec-desc">${activeBatches.length} of ${batches.length} batches — Click cells to edit, Tab/Enter to navigate</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-scheduling" title="User Guide">❓ Guide</button>
-          <button class="btn btn-ghost" id="back-to-prod-hub">← Back</button>
-        </div>
-      </div>
-
-      <!-- Filter Toolbar -->
+  // ── Reusable inner blocks shared between normal and fullscreen ──
+  const schedFilterToolbar = `
       <div class="prod-filters">
         <div class="filter-group">
           <label>Family:</label>
@@ -309,9 +296,9 @@ export function renderScheduling() {
             ${prodSchedulingHideComplete ? 'Hide Completed' : 'Show Completed'}
           </button>
         </div>
-      </div>
+      </div>`
 
-      <!-- Bulk Action Toolbar -->
+  const schedBulkToolbar = `
       <div id="bulk-toolbar" class="bulk-toolbar${selectedBatchIds.size > 0 ? '' : ' hidden'}">
         <span id="bulk-count">${selectedBatchIds.size} selected</span>
         <select id="bulk-status-select">
@@ -323,15 +310,9 @@ export function renderScheduling() {
         <button class="btn btn-secondary btn-sm" id="bulk-status-apply">Apply</button>
         <button class="btn btn-danger btn-sm" id="bulk-delete-btn">Delete Selected</button>
         <button class="btn btn-ghost btn-sm" id="bulk-clear-btn">Clear</button>
-      </div>
+      </div>`
 
-      <!-- Legend -->
-      <div style="background:var(--bg-secondary);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted);display:flex;gap:24px;flex-wrap:wrap">
-        <div><strong>⧉</strong> Duplicate batch — copies all fields (product, location, qty, dates, notes) to create a new batch</div>
-        <div><strong>✕</strong> Delete batch</div>
-      </div>
-
-      <!-- Batch Table -->
+  const schedTable = `
       <div class="scheduling-table-wrap">
         <table class="tbl prod-tbl" style="table-layout:auto;width:100%">
           <colgroup>
@@ -370,7 +351,155 @@ export function renderScheduling() {
           </td></tr>`}
         </tbody>
       </table>
+      </div>`
+
+  // Fullscreen overlay: whole-screen mode for managing large batch lists
+  if (appState.schedulingExpanded) {
+    const html = `
+      <div class="portal-fullscreen-overlay">
+        <div class="portal-fullscreen-bar">
+          <span>
+            <span class="portal-fullscreen-title">Production Batches</span>
+            <span class="portal-fullscreen-project">${activeBatches.length} of ${batches.length} batches</span>
+          </span>
+          <button class="btn btn-ghost btn-sm" data-action="sched-toggle-expand">✕ Exit Fullscreen</button>
+        </div>
+        ${schedFilterToolbar}
+        ${schedBulkToolbar}
+        <div class="portal-fullscreen-body" style="padding:8px 16px">
+          ${schedTable}
+        </div>
+      </div>`
+    setTimeout(() => {
+      addSchedulingNewRowEventListeners()
+      activeBatches.forEach(addSchedulingRowEventListeners)
+      document.getElementById('toggle-hide-complete')?.addEventListener('click', toggleHideCompleteBatches)
+      document.querySelectorAll('[data-action="focus-new-batch"]').forEach(button => {
+        button.addEventListener('click', focusBatchNewRow)
+      })
+      document.getElementById('family-filter')?.addEventListener('change', (e) => {
+        prodSchedulingFilters.family = e.target.value
+        if (prodSchedulingFilters.product) {
+          const selectedProduct = products.find(p => p.id === prodSchedulingFilters.product)
+          if (!selectedProduct || (e.target.value && selectedProduct.family !== e.target.value)) {
+            prodSchedulingFilters.product = ''
+          }
+        }
+        prodSchedulingScrollOffset = 0
+        render()
+      })
+      document.getElementById('product-filter')?.addEventListener('change', (e) => {
+        prodSchedulingFilters.product = e.target.value
+        prodSchedulingScrollOffset = 0
+        render()
+      })
+      document.getElementById('work-location-filter')?.addEventListener('change', (e) => {
+        prodSchedulingFilters.workLocation = e.target.value
+        prodSchedulingScrollOffset = 0
+        render()
+      })
+      document.getElementById('date-from-filter')?.addEventListener('change', (e) => {
+        prodSchedulingFilters.dateFrom = e.target.value
+        prodSchedulingScrollOffset = 0
+        render()
+      })
+      document.getElementById('date-to-filter')?.addEventListener('change', (e) => {
+        prodSchedulingFilters.dateTo = e.target.value
+        prodSchedulingScrollOffset = 0
+        render()
+      })
+      document.querySelectorAll('th[data-sort-field]').forEach(th => {
+        th.addEventListener('click', () => toggleSort(th.getAttribute('data-sort-field')))
+      })
+      document.getElementById('select-all-batches')?.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          activeBatches.forEach(b => selectedBatchIds.add(b.id))
+        } else {
+          selectedBatchIds.clear()
+        }
+        document.querySelectorAll('.batch-select-cb').forEach(cb => {
+          cb.checked = e.target.checked
+          const row = cb.closest('tr')
+          if (row) {
+            if (e.target.checked) row.classList.add('batch-row-selected')
+            else row.classList.remove('batch-row-selected')
+          }
+        })
+        updateBulkToolbar()
+      })
+      document.querySelectorAll('.batch-select-cb').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const batchId = e.target.getAttribute('data-batch-id')
+          if (e.target.checked) {
+            selectedBatchIds.add(batchId)
+            e.target.closest('tr')?.classList.add('batch-row-selected')
+          } else {
+            selectedBatchIds.delete(batchId)
+            e.target.closest('tr')?.classList.remove('batch-row-selected')
+          }
+          updateBulkToolbar()
+        })
+      })
+      document.getElementById('bulk-delete-btn')?.addEventListener('click', async () => {
+        if (!selectedBatchIds.size) return
+        if (!confirm(`Delete ${selectedBatchIds.size} batch${selectedBatchIds.size > 1 ? 'es' : ''}?`)) return
+        const ids = Array.from(selectedBatchIds)
+        for (const batchId of ids) {
+          const idx = prodState.batches.findIndex(b => b.id === batchId)
+          if (idx >= 0) await prodDataDeleteBatch(idx)
+        }
+        selectedBatchIds.clear()
+        render()
+      })
+      document.getElementById('bulk-status-apply')?.addEventListener('click', async () => {
+        const newStatus = document.getElementById('bulk-status-select').value
+        if (!newStatus || !selectedBatchIds.size) return
+        const ids = Array.from(selectedBatchIds)
+        for (const batchId of ids) {
+          const idx = prodState.batches.findIndex(b => b.id === batchId)
+          if (idx >= 0) await prodDataUpdateBatch(idx, 'status', newStatus)
+        }
+        selectedBatchIds.clear()
+        render()
+      })
+      document.getElementById('bulk-clear-btn')?.addEventListener('click', () => {
+        selectedBatchIds.clear()
+        render()
+      })
+      const tableWrap = document.querySelector('.scheduling-table-wrap')
+      if (tableWrap) {
+        tableWrap.scrollTop = prodSchedulingScrollOffset
+        tableWrap.addEventListener('scroll', handleSchedulingScroll, { passive: true })
+      }
+    }, 0)
+    return html
+  }
+
+  const html = `
+    <div class="prod-section">
+      <div class="sec-head">
+        <div>
+          <div class="sec-eyebrow">BATCH SCHEDULING</div>
+          <div class="sec-title">Production Batches</div>
+          <div class="sec-desc">${activeBatches.length} of ${batches.length} batches — Click cells to edit, Tab/Enter to navigate</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide-key="production-scheduling" title="User Guide">❓ Guide</button>
+          <button class="btn btn-ghost btn-sm" data-action="sched-toggle-expand" title="Fullscreen mode">⛶ Expand</button>
+          <button class="btn btn-ghost" id="back-to-prod-hub">← Back</button>
+        </div>
       </div>
+
+      ${schedFilterToolbar}
+      ${schedBulkToolbar}
+
+      <!-- Legend -->
+      <div style="background:var(--bg-secondary);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted);display:flex;gap:24px;flex-wrap:wrap">
+        <div><strong>⧉</strong> Duplicate batch — copies all fields (product, location, qty, dates, notes) to create a new batch</div>
+        <div><strong>✕</strong> Delete batch</div>
+      </div>
+
+      ${schedTable}
     </div>
   `
 
@@ -495,6 +624,12 @@ export function renderScheduling() {
   }, 0)
 
   return html
+}
+
+// Toggle fullscreen for focused batch scheduling on large screens
+export function toggleSchedulingExpand() {
+  appState.schedulingExpanded = !appState.schedulingExpanded
+  render()
 }
 
 // Update only the data tbody with the correct slice for the current scroll position

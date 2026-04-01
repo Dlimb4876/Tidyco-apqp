@@ -362,7 +362,7 @@ export function capRenderProductsTab(productsArray, tasksArray, department, tabl
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                       <button class="btn btn-primary btn-sm" data-cap-action="cap-products-apply-hours">Apply</button>
                       <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-toggle-history" data-product-id="${capProductsEscape(row.product.id || '')}" data-dept="${dept}">${state.historyOpenProductIds.includes(row.product.id) ? 'Hide' : 'View'} History (${row.historyRows.length})</button>
-                      <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-allocations" data-product-id="${capProductsEscape(row.product.id || '')}" data-dept="${dept}">Allocations</button>
+                      <button class="btn btn-ghost btn-sm" data-cap-action="cap-products-allocations" data-product-id="${capProductsEscape(row.product.id || '')}" data-dept="${dept}">Allocations (${allocations.filter(a => a.productId === row.product.id).length})</button>
                     </div>
                   </td>
                 </tr>
@@ -536,7 +536,7 @@ let _allocCtx = null
  * Opens the allocation modal for a product.
  * @param {string} productId
  * @param {string} productName
- * @param {number} hoursPerWeek — total weekly support hours for this product
+ * @param {number} hoursPerWeek — total support hours per batch for this product
  * @param {object} deps — { team, allocations, saveSet, refreshTab, department }
  */
 export function capOpenAllocationsModal(productId, productName, hoursPerWeek, deps) {
@@ -548,6 +548,9 @@ export function capOpenAllocationsModal(productId, productName, hoursPerWeek, de
     team: Array.isArray(deps.team) ? deps.team.filter(t => t && t.id) : [],
     allocations: Array.isArray(deps.allocations) ? deps.allocations : [],
     saveSet: deps.saveSet || null,
+    deleteSet: deps.deleteSet || null,
+    getAllocations: deps.getAllocations || null,
+    reloadAllocations: deps.reloadAllocations || null,
     refreshTab: deps.refreshTab || null,
     formRows: [{ personId: '', percentage: '' }],
     effectiveDate: new Date().toISOString().split('T')[0]
@@ -612,7 +615,7 @@ function _allocRender() {
       </table>
       <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;font-size:12px;color:var(--muted);">
         <span>Total: ${totalPct}%</span>
-        <span>${totalHours.toFixed(1)}h / ${ctx.hoursPerWeek.toFixed(1)}h weekly</span>
+        <span>${totalHours.toFixed(1)}h / ${ctx.hoursPerWeek.toFixed(1)}h per batch</span>
       </div>
       <div style="height:8px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:12px;">
         ${current.map((a, i) => `<div style="width:${a.percentage || 0}%;background:${colors[i % colors.length]};height:100%;" title="${esc(_allocPersonName(a.personId))}: ${a.percentage}%"></div>`).join('')}
@@ -639,7 +642,7 @@ function _allocRender() {
   const formTotalHours = (formTotal / 100 * ctx.hoursPerWeek)
   const totalColor = formTotal === 100 ? 'var(--green)' : formTotal > 100 ? 'var(--red)' : 'var(--amber)'
 
-  // History HTML
+  // History HTML — each past set gets a Delete button
   let historyHtml
   if (pastKeys.length === 0) {
     historyHtml = '<div style="color:var(--muted);font-size:13px;margin:8px 0;">No previous sets.</div>'
@@ -649,7 +652,10 @@ function _allocRender() {
       const setTotalHours = rows.reduce((s, a) => s + ((a.percentage || 0) / 100 * ctx.hoursPerWeek), 0)
       return `
         <div style="margin:6px 0;padding:8px;background:var(--overlay-light);border-radius:6px;">
-          <div style="font-weight:600;font-size:12px;margin-bottom:4px;">${esc(key)} → ${esc(rows[0]?.endDate || '—')}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-weight:600;font-size:12px;">${esc(key)} → ${esc(rows[0]?.endDate || '—')}</div>
+            <button class="btn btn-ghost btn-sm" data-alloc-action="delete-history-set" data-alloc-date="${esc(key)}" aria-label="Delete this allocation set" style="color:var(--red);padding:2px 6px;font-size:11px;">Delete</button>
+          </div>
           ${rows.map(a => `<div style="font-size:12px;color:var(--ink);">${esc(_allocPersonName(a.personId))}: ${Number(a.percentage || 0).toFixed(0)}% (${((a.percentage || 0) / 100 * ctx.hoursPerWeek).toFixed(1)}h)</div>`).join('')}
           <div style="font-size:11px;color:var(--muted);margin-top:4px;border-top:1px solid var(--line);padding-top:4px;">Total: ${setTotalHours.toFixed(1)}h / ${ctx.hoursPerWeek.toFixed(1)}h</div>
         </div>`
@@ -701,7 +707,7 @@ function _allocWireListeners() {
   const modal = document.getElementById('capAllocationsModal')
   if (!modal) return
 
-  modal.addEventListener('click', (e) => {
+  modal.addEventListener('click', async (e) => {
     const target = e.target.closest('[data-alloc-action]')
     if (!target) return
     const act = target.getAttribute('data-alloc-action')
@@ -722,6 +728,25 @@ function _allocWireListeners() {
       }
     } else if (act === 'save') {
       _allocSave()
+    } else if (act === 'delete-history-set') {
+      // Delete a past allocation set from history
+      if (!_allocCtx) return
+      const dateKey = target.getAttribute('data-alloc-date')
+      if (!dateKey) return
+      if (!confirm('Delete this allocation history set? This cannot be undone.')) return
+      if (typeof _allocCtx.deleteSet !== 'function') return
+      target.disabled = true
+      try {
+        await _allocCtx.deleteSet(_allocCtx.productId, dateKey)
+        if (typeof _allocCtx.reloadAllocations === 'function') await _allocCtx.reloadAllocations()
+        if (typeof _allocCtx.getAllocations === 'function') _allocCtx.allocations = _allocCtx.getAllocations()
+        _allocRender()
+      } catch (err) {
+        console.error('Failed to delete allocation set:', err)
+        alert('Failed to delete. Please try again.')
+      } finally {
+        target.disabled = false
+      }
     }
   })
 
@@ -808,12 +833,17 @@ async function _allocSave() {
     if (typeof _allocCtx.reloadAllocations === 'function') {
       await _allocCtx.reloadAllocations()
     }
+    if (typeof _allocCtx.getAllocations === 'function') _allocCtx.allocations = _allocCtx.getAllocations()
     if (typeof _allocCtx.refreshTab === 'function') _allocCtx.refreshTab()
-    capCloseAllocationsModal()
   } catch (err) {
     console.error('Failed to save allocation set:', err)
     alert('Failed to save. Please try again.')
+    return
   }
+  // Only reset form after all operations complete successfully
+  _allocCtx.formRows = [{ personId: '', percentage: '' }]
+  _allocCtx.effectiveDate = new Date().toISOString().split('T')[0]
+  _allocRender()
 }
 
 export function capProductsBulkSaveChanges(department) {

@@ -10,7 +10,7 @@ import { npi } from './npi-shared.js'
 import { npiData } from './npi-data.js'
 import { npiBom } from './bom.js'
 import { RPN_HIGH } from './npi-constants.js'
-npi.pfd.viewMode = 'table' // 'table' or 'flowchart'
+npi.pfd.viewMode = 'table'// 'table' or 'flowchart'
 npi.pfd.flowDirection = 'TD' // 'TD' (top-down) or 'LR' (left-right)
 
 function pfdStepType(step) {
@@ -397,8 +397,11 @@ npi.pfd.render = function() {
   const viewToggleButton = `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-view">${showFlowchart ? 'Show Flowchart' : 'Show Table'}</button>`
   const layoutToggleButton = !showFlowchart ? `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-layout" title="Toggle flowchart orientation">${isLR ? '↕ Vertical' : '↔ Horizontal'}</button>` : ''
 
+  // Expand button only makes sense for the table view — flowchart is an SVG canvas
+  const expandButton = showFlowchart ? `<button class="btn btn-ghost btn-sm" data-action="pfd-toggle-expand" title="Fullscreen mode">⛶ Expand</button>` : ''
+
   const header = `<div class="sec-head"><div><div class="sec-eyebrow">Step 02</div><div class="sec-title">Process Flow Diagram</div><div class="sec-desc">Section navigator at top for fast jumps in large flows. Steps stay numbered in 10s, and those numbers remain permanent PFMEA and Control Plan references.</div></div>
-  <div class="sec-actions">${viewToggleButton}${layoutToggleButton}<button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button></div></div>`
+  <div class="sec-actions">${viewToggleButton}${layoutToggleButton}${expandButton}<button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button></div></div>`
 
   if (npi.pfd.viewMode === 'flowchart') {
     const syntax = npi.pfd.generateMermaidSyntax()
@@ -406,23 +409,22 @@ npi.pfd.render = function() {
       const el = document.querySelector('.mermaid')
       if (!el) return
 
-      if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
+      if (typeof window.mermaid === 'undefined' || typeof window.mermaid.render !== 'function') {
         el.innerHTML = '<div class="info-banner">Flowchart is unavailable right now. The step links are still saved in the table view.</div>'
         return
       }
 
       try {
-        if (!npi.pfd._mermaidReady && typeof mermaid.initialize === 'function') {
-          mermaid.initialize({
+        if (!npi.pfd._mermaidReady && typeof window.mermaid.initialize === 'function') {
+          window.mermaid.initialize({
             theme: 'base',
             startOnLoad: false,
-            securityLevel: 'strict',
+            securityLevel: 'loose',
             flowchart: {
               useMaxWidth: true,
               nodeSpacing: 60,
               rankSpacing: 80,
-              padding: 20,
-              htmlLabels: false
+              padding: 20
             },
             themeVariables: {
               fontFamily: 'IBM Plex Sans, Segoe UI, sans-serif',
@@ -431,7 +433,7 @@ npi.pfd.render = function() {
               edgeLabelBackground: '#ffffff',
               primaryTextColor: '#1f2937'
             },
-            themeCSS: '.edgeLabel text{font-weight:600;letter-spacing:0.01em}.edge-thickness-normal{stroke-width:1px}.arrowheadPath{fill:#4b5563}'
+            themeCSS: '.edgeLabel .label{font-weight:600;letter-spacing:0.01em}.edge-thickness-normal{stroke-width:1px}.arrowheadPath{fill:#4b5563}'
           })
           npi.pfd._mermaidReady = true
         }
@@ -440,10 +442,9 @@ npi.pfd.render = function() {
         const p = prog()
         const execSteps = npiData.sortedPfd(p.pfd).filter(isExecutableStep)
         const stepMap = new Map(execSteps.map(s => [s.stepNum, s]))
-        Promise.resolve(mermaid.render(renderId, syntax)).then(result => {
+        Promise.resolve(window.mermaid.render(renderId, syntax)).then(result => {
           if (!result || !result.svg) throw new Error('No SVG returned from Mermaid')
           el.innerHTML = `<div class="pfd-flowchart-zoom">${result.svg}</div>`
-          // Attach click-to-expand handlers
           el.querySelectorAll('g.node').forEach(g => {
             const match = g.id && g.id.match(/flowchart-S(\d+)/)
             if (!match) return
@@ -542,12 +543,38 @@ npi.pfd.render = function() {
     }
   })
 
-  return `${header}
+  // ── Reusable PFD table content block ──
+  const pfdContent = `
   ${sorted.length > 0 ? `<div class="flow-ribbon">${ribbon}</div>` : ''}
   <div class="card"><div class="card-head"><span class="card-title">Process Steps</span><span class="card-meta">${executable.length} executable steps</span></div>
   ${p.pfd.length === 0 ? emptyState('🔄', 'No steps yet', 'Add your first process step') : `<div class="pfd-col-header"><div class="pfd-col-num">Step</div><div class="pfd-col-op">Operation</div><div class="pfd-col-detail">Method / Notes</div><div class="pfd-col-ctq">CTQs</div><div class="pfd-col-doc">Documents</div><div class="pfd-col-pfmea">PFMEA</div>${canEdit() ? '<div class="pfd-col-flow">Flow</div>' : ''}</div><div>${body}</div>`}
   ${canEdit() ? `<button class="add-row" data-action="pfd-add-main">＋ Add Process Step</button>` : ''}</div>
   ${p.pfd.length > 0 ? `<div class="info-banner">💡 Next: <a href="#" data-action="npi-set-apqp" data-tab="pfmea" style="color:var(--blue)">PFMEA →</a></div>` : ''}`
+
+  // Fullscreen overlay for table view only (flowchart is an SVG canvas, not suited to fixed overlay)
+  if (showFlowchart && appState.pfdExpanded) {
+    return `<div class="portal-fullscreen-overlay">
+      <div class="portal-fullscreen-bar">
+        <span><span class="portal-fullscreen-title">Process Flow Diagram</span><span class="portal-fullscreen-project">${esc(p.name || '')}</span></span>
+        <div style="display:flex;gap:8px">
+          ${viewToggleButton}
+          <button class="btn btn-ghost btn-sm" data-action="pfd-toggle-expand">✕ Exit Fullscreen</button>
+        </div>
+      </div>
+      <div class="portal-fullscreen-body">
+        ${pfdContent}
+      </div>
+    </div>`
+  }
+
+  return `${header}
+  ${pfdContent}`
+}
+
+// Toggle fullscreen for focused PFD table editing on large screens
+npi.pfd.toggleExpand = function() {
+  appState.pfdExpanded = !appState.pfdExpanded
+  npi.notify('render')
 }
 
 npi.pfd.toggleView = function() {

@@ -192,7 +192,7 @@ function renderOperations() {
   }, 0)
 
   return `
-    <div class="proj-home ops-home" id="ops-dashboard">
+    <div class="ops-home" id="ops-dashboard">
       <div class="proj-home-header ops-headline">
         <div>
           <div class="proj-home-title">Operations Mission Control</div>

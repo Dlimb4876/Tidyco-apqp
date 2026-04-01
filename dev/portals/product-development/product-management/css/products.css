@@ -259,6 +259,74 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Families table wrapper — adds border consistent with other portals */
+.families-table-wrap {
+  border: 1px solid var(--line);
+  margin-top: 4px;
+}
+
+/* Family database column styles — replaces former inline styles */
+.families-inline-table .fam-col-name {
+  width: 25%;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.families-inline-table .fam-col-desc {
+  width: 50%;
+  cursor: pointer;
+}
+
+.families-inline-table .fam-col-icon {
+  width: 80px;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Hint text below family table */
+.fam-edit-hint {
+  margin: 8px 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Shared muted text span */
+.text-muted {
+  color: var(--muted);
+}
+
+/* Shared header button group (flex row, consistent gap) */
+.header-btn-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Loading skeleton — centered block inside proj-home */
+.fam-skeleton {
+  max-width: 600px;
+  margin: 40px auto;
+}
+
+/* Empty state sub-elements */
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mid);
+  margin-bottom: 8px;
+}
+
 .families-inline-table .col-icon {
   width: 60px;
   text-align: center;
@@ -765,6 +833,17 @@
   .form-field textarea {
     font-size: 0.95em;
     padding: 6px 8px;
+  }
+
+  /* Family database — stack header buttons vertically on small screens */
+  .header-btn-group {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  /* Family description column hidden on mobile to avoid overflow */
+  .families-inline-table .fam-col-desc {
+    display: none;
   }
 }
 

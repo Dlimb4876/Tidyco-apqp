@@ -393,7 +393,8 @@ function opsRenderForecastChart(forecast) {
 						backgroundColor: 'rgba(17, 108, 148, 0.65)',
 						borderColor: 'rgba(17, 108, 148, 1)',
 						borderWidth: 1,
-						stack: 'demand'
+						stack: 'demand',
+						order: 1
 					},
 					{
 						type: 'bar',
@@ -402,7 +403,8 @@ function opsRenderForecastChart(forecast) {
 						backgroundColor: 'rgba(153, 174, 63, 0.7)',
 						borderColor: 'rgba(153, 174, 63, 1)',
 						borderWidth: 1,
-						stack: 'demand'
+						stack: 'demand',
+						order: 1
 					},
 					{
 						type: 'bar',
@@ -411,7 +413,8 @@ function opsRenderForecastChart(forecast) {
 						backgroundColor: 'rgba(217, 158, 24, 0.75)',
 						borderColor: 'rgba(217, 158, 24, 1)',
 						borderWidth: 1,
-						stack: 'demand'
+						stack: 'demand',
+						order: 1
 					},
 					{
 						type: 'bar',
@@ -420,7 +423,8 @@ function opsRenderForecastChart(forecast) {
 						backgroundColor: 'rgba(204, 90, 30, 0.75)',
 						borderColor: 'rgba(204, 90, 30, 1)',
 						borderWidth: 1,
-						stack: 'demand'
+						stack: 'demand',
+						order: 1
 					},
 					{
 						type: 'line',
@@ -432,7 +436,8 @@ function opsRenderForecastChart(forecast) {
 						stack: 'ops-forecast-capacity-line',
 						borderWidth: 2,
 						pointRadius: 2,
-						tension: 0.25
+						tension: 0.25,
+						order: 0
 					},
 					{
 						type: 'line',
@@ -445,7 +450,8 @@ function opsRenderForecastChart(forecast) {
 						borderWidth: 2,
 						borderDash: [6, 4],
 						pointRadius: 1,
-						tension: 0.25
+						tension: 0.25,
+						order: 0
 					}
 				]
 			},

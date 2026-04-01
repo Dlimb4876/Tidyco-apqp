@@ -816,3 +816,65 @@ body {
   color: var(--muted);
   margin: 0;
 }
+
+/* ── Shared portal fullscreen overlay ─────────────────────────────────
+   Used by Gantt, CTQ, PFD, and Production Scheduling fullscreen modes.
+   Each portal's scroll container overrides inherit from .portal-fullscreen-body.
+   ──────────────────────────────────────────────────────────────────── */
+.portal-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.portal-fullscreen-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1.5px solid var(--line);
+  background: var(--bg-soft);
+  flex-shrink: 0;
+}
+.portal-fullscreen-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+}
+.portal-fullscreen-project {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 10px;
+}
+.portal-fullscreen-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+}
+/* Override scroll-container max-heights so they fill the overlay instead */
+.portal-fullscreen-body .scheduling-table-wrap,
+.portal-fullscreen-body .sticky-table-wrap {
+  max-height: none !important;
+  flex: 1;
+  overflow-y: auto;
+}
+/* Plan by Product / Plan by Work Area — let gantt fill the fullscreen body height */
+.portal-fullscreen-body .unit-timeline,
+.portal-fullscreen-body .product-six-month-wrap {
+  flex: 1;
+  overflow-y: auto;
+  max-height: none !important;
+}
+.portal-fullscreen-body .gantt-container {
+  min-height: 0;
+}
+
+@media (max-width: 767px) {
+  .portal-fullscreen-bar { padding: 8px 12px; }
+  .portal-fullscreen-body { padding: 8px; }
+}

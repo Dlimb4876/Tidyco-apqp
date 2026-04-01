@@ -12,7 +12,7 @@ import {
   productionDataSubscribe,
   productionDataUnsubscribe
 } from './data.js'
-import { renderScheduling, setProdSchedulingScrollOffset } from './scheduling.js'
+import { renderScheduling, setProdSchedulingScrollOffset, toggleSchedulingExpand } from './scheduling.js'
 import { renderPlanByProduct, renderPlanByUnit } from './planning.js'
 
 let productionPortalDelegationContainer = null
@@ -197,6 +197,11 @@ export function setupProductionPortalDelegation() {
       return
     }
 
+    if (action === 'sched-toggle-expand') {
+      toggleSchedulingExpand()
+      return
+    }
+
     if (action === 'show-guide') {
       const key = actionEl.dataset.guideKey
       if (key) showGuide(key)
@@ -209,6 +214,16 @@ export function setupProductionPortalDelegation() {
     if (nextFocus && nextFocus.closest('table')) return
     flushDeferred('prod')
   })
+
+  // Close any active production fullscreen when Esc is pressed
+  function onProdKeydown(evt) {
+    if (evt.key !== 'Escape') return
+    if (appState.schedulingExpanded) { toggleSchedulingExpand(); return }
+    if (appState.planByProductExpanded) { appState.planByProductExpanded = false; render(); return }
+    if (appState.planByUnitExpanded) { appState.planByUnitExpanded = false; render(); return }
+  }
+  document.addEventListener('keydown', onProdKeydown)
+  container._prodKeydownHandler = onProdKeydown
 }
 
 // ── Tab-level refresh (DOM body swap only — avoids full render() feedback loop) ──
