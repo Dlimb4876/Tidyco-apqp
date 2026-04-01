@@ -158,7 +158,7 @@ npiData.ganttNewRow = function(section) {
 
 npiData.ctq = {
   add() {
-    const item = { id: crypto.randomUUID(), req: '', spec: '', testMethod: '', source: 'Customer Spec', oos_action: 'TBD', customerAgreed: false }
+    const item = { id: crypto.randomUUID(), req: '', spec: '', testMethod: '', source: 'Customer Spec', source_ref: '', oos_action: 'TBD', customerAgreed: false }
     prog().ctq.push(item)
     Promise.resolve().then(() => npiRelSaveCTQ(item)).catch(err => console.error('[NPI] save CTQ failed:', err))
     npi.notify('render')

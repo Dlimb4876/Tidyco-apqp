@@ -3,6 +3,11 @@
 > Chronological action log. Hooks and AI append to this file automatically.
 > Old sessions are consolidated by the daemon weekly.
 
+## 2026-04-01
+- Added `source_ref` (Source Reference) column to CTQ table — free-text field for document/standard references, positioned between Source and Out-of-Spec Action.
+- Also confirmed `source` and `oos_action` columns were missing from DB; all three added via `supabase/npi_ctq_add_source_ref_oos_action.sql`.
+- Files changed: `npi-data.js` (defaults), `npi-data-relational.js` (load+save), `npi-ctq.js` (render colgroup+header+row).
+
 ## 2026-03-31
 - Fixed product management dropdown selectors not showing newly added work areas by replacing hardcoded location arrays with dynamic database queries; imported getWorkAreaOptions and workAreasDataGetAll from work-areas-data.js and updated buildLocationOptions() and location filter to use workAreasState; validated with npm test (product-management.test.js passes); logged bug-145 to buglog.json | portals/product-development/product-management/js/products.js | Fixed dropdown selectors now pull all work areas from database dynamically | ~600
 
@@ -1595,3 +1600,57 @@
 | 12:11 | Edited electron/main.js | 2→7 lines | ~63 |
 | 12:11 | Edited electron/main.js | added 3 condition(s) | ~336 |
 | 12:11 | Session end: 5 writes across 1 files (main.js) | 1 reads | ~1862 tok |
+
+## Session: 2026-04-01 12:17
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-04-01 12:19
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:25 | Edited portals/product-development/npi/js/npi-data.js | inline fix | ~47 |
+| 12:25 | Edited portals/product-development/npi/js/npi-data-relational.js | 3→4 lines | ~51 |
+| 12:25 | Edited portals/product-development/npi/js/npi-data-relational.js | 2→3 lines | ~38 |
+| 12:26 | Edited portals/product-development/npi/js/npi-ctq.js | 2→3 lines | ~204 |
+| 12:26 | Edited portals/product-development/npi/js/npi-ctq.js | inline fix | ~201 |
+| 12:26 | Created supabase/npi_ctq_add_source_ref_oos_action.sql | — | ~129 |
+| 12:26 | Session end: 6 writes across 4 files (npi-data.js, npi-data-relational.js, npi-ctq.js, npi_ctq_add_source_ref_oos_action.sql) | 4 reads | ~679 tok |
+
+## Session: 2026-04-01 12:32
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 12:33 | Edited portals/product-development/npi/js/npi-ctq.js | 4→4 lines | ~244 |
+| 12:34 | Session end: 1 writes across 1 files (npi-ctq.js) | 2 reads | ~4902 tok |
+| 12:40 | Edited portals/product-development/npi/js/npi-ctq.js | 5→5 lines | ~314 |
+| 12:40 | Edited core/css/components.css | CSS: resize, overflow | ~44 |
+| 12:41 | Session end: 3 writes across 2 files (npi-ctq.js, components.css) | 7 reads | ~5256 tok |
+
+## Session: 2026-04-01 13:01
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 13:01 | Edited portals/product-development/npi/js/npi-data-relational.js | added optional chaining | ~122 |
+| 13:01 | Edited portals/product-development/npi/js/npi-data-relational.js | added optional chaining | ~125 |
+| 13:01 | Edited portals/product-development/npi/js/npi-data-relational.js | added optional chaining | ~126 |
+| 13:02 | Session end: 3 writes across 1 files (npi-data-relational.js) | 1 reads | ~13299 tok |
+| 13:07 | Session end: 3 writes across 1 files (npi-data-relational.js) | 1 reads | ~13299 tok |
+| 13:12 | Session end: 3 writes across 1 files (npi-data-relational.js) | 5 reads | ~29050 tok |
+| 13:16 | Session end: 3 writes across 1 files (npi-data-relational.js) | 5 reads | ~29050 tok |
+
+## Session: 2026-04-01 13:19
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+| 13:31 | Edited portals/product-development/npi/js/npi-events.js | added optional chaining | ~89 |
+| 13:32 | Session end: 1 writes across 1 files (npi-events.js) | 9 reads | ~4761 tok |
+| 13:36 | Edited portals/product-development/npi/js/npi-events.js | modified setupNpiEvents() | ~89 |
+| 13:36 | Edited portals/product-development/npi/js/npi-events.js | removed 4 lines | ~14 |
+| 13:36 | Edited portals/product-development/npi/js/npi-data-relational.js | removed 5 lines | ~18 |
+| 13:36 | Edited portals/product-development/npi/js/npi-data-relational.js | removed 5 lines | ~18 |
+| 13:36 | Edited portals/product-development/npi/js/npi-data-relational.js | removed 5 lines | ~18 |
+| 13:36 | Session end: 6 writes across 2 files (npi-events.js, npi-data-relational.js) | 9 reads | ~4918 tok |
+| 13:43 | Edited portals/product-development/npi/js/npi-cp.js | added 1 import(s) | ~37 |
+| 13:44 | Session end: 7 writes across 3 files (npi-events.js, npi-data-relational.js, npi-cp.js) | 10 reads | ~4955 tok |

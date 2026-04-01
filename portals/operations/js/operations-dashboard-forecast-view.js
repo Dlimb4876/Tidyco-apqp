@@ -1,5 +1,5 @@
 // ═══════════════════════════════════
-// operations-dashboard-forecast-view.js — forecast visuals
+// operations-dashboard-forecast-view.js — forecast visuals (v1.0.1)
 // ═══════════════════════════════════
 
 import { appState } from '../../../core/js/state.js'
@@ -87,7 +87,6 @@ function opsRenderForecastRows(rows) {
 				<option value="quoted" ${filterStatus === 'quoted' ? 'selected' : ''}>Quoted</option>
 				<option value="negotiation" ${filterStatus === 'negotiation' ? 'selected' : ''}>Negotiation</option>
 				<option value="won" ${filterStatus === 'won' ? 'selected' : ''}>Won</option>
-				<option value="active" ${filterStatus === 'active' ? 'selected' : ''}>Active</option>
 				<option value="lost" ${filterStatus === 'lost' ? 'selected' : ''}>Lost</option>
 			</select>
 			<button class="btn btn-ghost ops-forecast-archived-toggle" data-action="ops-forecast-toggle-archived">
@@ -107,18 +106,16 @@ function opsRenderForecastRows(rows) {
 			<table class="ops-forecast-table">
 				<thead>
 					<tr>
-						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="title">Title ${sortIcon('title')}</th>
-						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="status">Status ${sortIcon('status')}</th>
-						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="area">Area ${sortIcon('area')}</th>
-						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="start">Start ${sortIcon('start')}</th>
-						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="end">End ${sortIcon('end')}</th>
-						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="units">Units ${sortIcon('units')}</th>
-						<th>OH/Unit</th>
-						<th>Batches</th>
-						<th>Beat Rate</th>
-						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="hours">Total Hours ${sortIcon('hours')}</th>
-						<th class="ops-sortable" data-action="ops-forecast-sort" data-col="probability">Probability ${sortIcon('probability')}</th>
-						<th>Actions</th>
+						<th class="ops-sortable ops-col-title" data-action="ops-forecast-sort" data-col="title">Title ${sortIcon('title')}</th>
+						<th class="ops-sortable ops-col-status" data-action="ops-forecast-sort" data-col="status">Status ${sortIcon('status')}</th>
+						<th class="ops-sortable ops-col-area" data-action="ops-forecast-sort" data-col="area">Area ${sortIcon('area')}</th>
+						<th class="ops-sortable ops-col-date" data-action="ops-forecast-sort" data-col="start">Start ${sortIcon('start')}</th>
+						<th class="ops-sortable ops-col-date" data-action="ops-forecast-sort" data-col="end">End ${sortIcon('end')}</th>
+						<th class="ops-sortable ops-col-units" data-action="ops-forecast-sort" data-col="units">Units ${sortIcon('units')}</th>
+						<th class="ops-col-oh">OH/Unit</th>
+						<th class="ops-sortable ops-col-hours" data-action="ops-forecast-sort" data-col="hours">Total Hours ${sortIcon('hours')}</th>
+						<th class="ops-sortable ops-col-prob" data-action="ops-forecast-sort" data-col="probability">Probability ${sortIcon('probability')}</th>
+						<th class="ops-col-actions">Actions</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -134,79 +131,77 @@ function opsRenderForecastRows(rows) {
 							: (probabilityBand.charAt(0).toUpperCase() + probabilityBand.slice(1));
 						const key = opsForecastDomKey(row.id);
 						return `
-							<tr>
-								<td>
+							<tr class="ops-forecast-row-main">
+								<td class="ops-col-title">
 									${inlineMode
-										? `<input class="ops-forecast-inline" id="opsForecastInline_${key}_title" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.title || '')}" />`
+										? `<input class="ops-forecast-inline" id="${opsForecastInlineFieldId(row.id, 'title')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.title || '')}" />`
 										: esc(row.title || '-')}
 								</td>
-								<td>
+								<td class="ops-col-status">
 									${inlineMode
-										? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_status" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}">
+										? `<select class="ops-forecast-inline" id="${opsForecastInlineFieldId(row.id, 'status')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}">
 												<option value="identified" ${(row.status || '') === 'identified' ? 'selected' : ''}>Identified</option>
 												<option value="quoted" ${(row.status || '') === 'quoted' ? 'selected' : ''}>Quoted</option>
 												<option value="negotiation" ${(row.status || '') === 'negotiation' ? 'selected' : ''}>Negotiation</option>
 												<option value="won" ${(row.status || '') === 'won' ? 'selected' : ''}>Won</option>
-												<option value="active" ${(row.status || '') === 'active' ? 'selected' : ''}>Active</option>
 												<option value="lost" ${(row.status || '') === 'lost' ? 'selected' : ''}>Lost</option>
 												<option value="archived" ${(row.status || '') === 'archived' ? 'selected' : ''}>Archived</option>
 											</select>`
 										: `<span class="ops-forecast-status">${esc(row.status || 'identified')}</span>`}
 								</td>
-								<td>
+								<td class="ops-col-area">
 									${inlineMode
-									? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_work_area" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}"><option value="">— Unassigned</option>${getWorkAreaOptions(row.work_area || '')}</select>`
+									? `<select class="ops-forecast-inline" id="${opsForecastInlineFieldId(row.id, 'work_area')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}"><option value="">— Unassigned</option>${getWorkAreaOptions(row.work_area || '')}</select>`
 										: esc(row.work_area || 'Unassigned')}
 								</td>
-								<td>
+								<td class="ops-col-date">
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="date" id="opsForecastInline_${key}_start_date" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.start_date || '')}" />`
+										? `<input class="ops-forecast-inline" type="date" id="${opsForecastInlineFieldId(row.id, 'start_date')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.start_date || '')}" />`
 										: esc(row.start_date || '-')}
 								</td>
-								<td>
+								<td class="ops-col-date">
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="date" id="opsForecastInline_${key}_due_date" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.due_date || '')}" />`
+										? `<input class="ops-forecast-inline" type="date" id="${opsForecastInlineFieldId(row.id, 'due_date')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(row.due_date || '')}" />`
 										: esc(row.due_date || '-')}
 								</td>
-								<td>
+								<td class="ops-col-units">
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="number" min="0" step="1" id="opsForecastInline_${key}_total_units" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.total_units, 0))}" />`
+										? `<input class="ops-forecast-inline" type="number" min="0" step="1" id="${opsForecastInlineFieldId(row.id, 'total_units')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.total_units, 0))}" />`
 										: esc(opsToNumber(row.total_units, 0).toLocaleString('en-GB'))}
 								</td>
-								<td>
+								<td class="ops-col-oh">
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="number" min="0" step="0.1" id="opsForecastInline_${key}_oh_hours_per_unit" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.oh_hours_per_unit, 0))}" />`
+										? `<input class="ops-forecast-inline" type="number" min="0" step="0.1" id="${opsForecastInlineFieldId(row.id, 'oh_hours_per_unit')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.oh_hours_per_unit, 0))}" />`
 										: esc(opsToNumber(row.oh_hours_per_unit, 0))}
 								</td>
-								<td>
-									${inlineMode
-										? `<input class="ops-forecast-inline" type="number" min="1" step="1" id="opsForecastInline_${key}_batch_count" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.batch_count, 1))}" />`
-										: esc(opsToNumber(row.batch_count, 1))}
-								</td>
-								<td>
-									${inlineMode
-										? `<input class="ops-forecast-inline" type="number" min="1" step="1" id="opsForecastInline_${key}_beat_rate_days" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.beat_rate_days, 1))}" />`
-										: esc(opsToNumber(row.beat_rate_days, 1))}
-								</td>
-								<td>
+								<td class="ops-col-hours">
 									${esc(opsFormatHours(totalHours))}
 								</td>
-								<td>
+								<td class="ops-col-prob">
 									${inlineMode
-										? `<select class="ops-forecast-inline" id="opsForecastInline_${key}_probability_band" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}">
+										? `<select class="ops-forecast-inline" id="${opsForecastInlineFieldId(row.id, 'probability_band')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}">
 												<option value="low" ${probabilityBand === 'low' ? 'selected' : ''}>Low</option>
 												<option value="medium" ${probabilityBand === 'medium' ? 'selected' : ''}>Medium</option>
 												<option value="high" ${probabilityBand === 'high' ? 'selected' : ''}>High</option>
 										</select>`
 										: esc(probabilityLabel)}
 								</td>
-								<td class="ops-forecast-actions">
+								<td class="ops-forecast-actions ops-col-actions">
 									${inlineMode
 										? `<button class="btn btn-primary" data-action="ops-forecast-save-inline" data-id="${esc(row.id)}">Save</button>
 											 <button class="btn btn-ghost" data-action="ops-forecast-cancel-inline">Cancel</button>`
 										: (canEdit() ? `<button class="btn btn-ghost" data-action="ops-forecast-start-inline" data-id="${esc(row.id)}">Edit</button>` : '')}
 									${canEdit() ? `<button class="btn btn-ghost" data-action="ops-forecast-archive" data-id="${esc(row.id)}">Archive</button>
 									<button class="btn btn-ghost" data-action="ops-forecast-delete" data-id="${esc(row.id)}">Delete</button>` : ''}
+								</td>
+							</tr>
+							<tr class="ops-forecast-row-notes">
+								<td colspan="10">
+									<div class="ops-forecast-notes-expansion">
+										${inlineMode
+											? `<textarea class="ops-forecast-inline-notes" id="${opsForecastInlineFieldId(row.id, 'notes')}" placeholder="Add notes..." maxlength="400">${esc(row.notes || '')}</textarea>`
+											: (row.notes ? `<div class="ops-forecast-notes-text"><strong>Notes:</strong> ${esc(row.notes)}</div>` : '')}
+									</div>
 								</td>
 							</tr>
 						`;
@@ -308,7 +303,6 @@ function opsRenderForecastView(metrics) {
 							<option value="quoted" ${editingRow?.status === 'quoted' ? 'selected' : ''}>Quoted</option>
 							<option value="negotiation" ${editingRow?.status === 'negotiation' ? 'selected' : ''}>Negotiation</option>
 							<option value="won" ${editingRow?.status === 'won' ? 'selected' : ''}>Won</option>
-							<option value="active" ${editingRow?.status === 'active' ? 'selected' : ''}>Active</option>
 							<option value="lost" ${editingRow?.status === 'lost' ? 'selected' : ''}>Lost</option>
 							<option value="archived" ${editingRow?.status === 'archived' ? 'selected' : ''}>Archived</option>
 						</select>
@@ -323,8 +317,6 @@ function opsRenderForecastView(metrics) {
 					<label>End Date<input type="date" name="due_date" required value="${esc(editingRow?.due_date || '')}" /></label>
 					<label>Total Units<input type="number" name="total_units" required min="0" step="1" value="${esc(editingRow?.total_units || 0)}" /></label>
 					<label>OH Hours/Unit<input type="number" name="oh_hours_per_unit" required min="0" step="0.1" value="${esc(editingRow?.oh_hours_per_unit || 0)}" /></label>
-					<label>Batch Count<input type="number" name="batch_count" required min="1" step="1" value="${esc(editingRow?.batch_count || 1)}" /></label>
-					<label>Beat Rate (days)<input type="number" name="beat_rate_days" required min="1" step="1" value="${esc(editingRow?.beat_rate_days || 1)}" /></label>
 					<label>Probability
 						<select name="probability_band" required>
 							<option value="low" ${editingProbabilityBand === 'low' ? 'selected' : ''}>Low</option>
@@ -398,10 +390,10 @@ function opsRenderForecastChart(forecast) {
 					},
 					{
 						type: 'bar',
-						label: 'Forecast Low',
-						data: forecastLow,
-						backgroundColor: 'rgba(153, 174, 63, 0.7)',
-						borderColor: 'rgba(153, 174, 63, 1)',
+						label: 'Forecast High',
+						data: forecastHigh,
+						backgroundColor: 'rgba(204, 90, 30, 0.75)',
+						borderColor: 'rgba(204, 90, 30, 1)',
 						borderWidth: 1,
 						stack: 'demand',
 						order: 1
@@ -418,10 +410,10 @@ function opsRenderForecastChart(forecast) {
 					},
 					{
 						type: 'bar',
-						label: 'Forecast High',
-						data: forecastHigh,
-						backgroundColor: 'rgba(204, 90, 30, 0.75)',
-						borderColor: 'rgba(204, 90, 30, 1)',
+						label: 'Forecast Low',
+						data: forecastLow,
+						backgroundColor: 'rgba(153, 174, 63, 0.7)',
+						borderColor: 'rgba(153, 174, 63, 1)',
 						borderWidth: 1,
 						stack: 'demand',
 						order: 1

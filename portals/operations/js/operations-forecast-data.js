@@ -7,7 +7,7 @@ import { supabase as supa, currentUser } from '../../../core/js/supa.js'
 
 const OPS_FORECAST_TABLE = 'operations_forecast_opportunities';
 const OPS_FORECAST_FALLBACK_KEY = 'opsForecastRows';
-const OPS_FORECAST_ACTIVE_STATUSES = ['identified', 'quoted', 'negotiation', 'won', 'active'];
+const OPS_FORECAST_ACTIVE_STATUSES = ['identified', 'quoted', 'negotiation', 'won'];
 const OPS_FORECAST_PROBABILITY_BANDS = {
   low: { label: 'Low', pct: 30 },
   medium: { label: 'Medium', pct: 60 },
@@ -53,33 +53,11 @@ function opsForecastProbabilityLabel(bandOrPct) {
   return OPS_FORECAST_PROBABILITY_BANDS[band].label;
 }
 
-// Production-based forecasting calculations
+// Simple forecasting calculations
 function opsForecastCalcTotalHours(totalUnits, ohHoursPerUnit) {
   const units = opsForecastToNumber(totalUnits, 0);
   const ohPerUnit = opsForecastToNumber(ohHoursPerUnit, 0);
   return Math.max(0, units * ohPerUnit);
-}
-
-function opsForecastCalcBatchHours(totalUnits, ohHoursPerUnit, batchCount) {
-  const totalHours = opsForecastCalcTotalHours(totalUnits, ohHoursPerUnit);
-  const batches = Math.max(1, opsForecastToNumber(batchCount, 1));
-  return totalHours / batches;
-}
-
-function opsForecastGetBatchStartDates(startDate, batchCount, beatRateDays) {
-  const start = opsForecastParseDate(startDate);
-  if (!start) return [];
-
-  const batches = Math.max(1, opsForecastToNumber(batchCount, 1));
-  const beatRate = Math.max(1, opsForecastToNumber(beatRateDays, 1));
-  const dates = [];
-
-  for (let i = 0; i < batches; i++) {
-    const batchStart = new Date(start.getTime() + (i * beatRate * 24 * 60 * 60 * 1000));
-    dates.push(batchStart);
-  }
-
-  return dates;
 }
 
 function opsForecastParseDate(raw) {
@@ -97,13 +75,11 @@ function opsForecastNormalizeRow(row) {
     : opsForecastProbabilityPctFromBand(normalizedBand || 'low');
   const probabilityBand = normalizedBand || opsForecastProbabilityBandFromPct(probabilityPct);
 
-  // Production-based forecasting fields
+  // Core forecasting fields
   const totalUnits = opsForecastToNumber(row.total_units, 0);
   const ohHoursPerUnit = opsForecastToNumber(row.oh_hours_per_unit, 0);
-  const batchCount = Math.max(1, opsForecastToNumber(row.batch_count, 1));
-  const beatRateDays = Math.max(1, opsForecastToNumber(row.beat_rate_days, 1));
 
-  // Calculate total hours from production inputs
+  // Calculate total hours: LOAD = [TOTAL UNITS]*[OH HOURS/UNIT]
   const calculatedTotalHours = opsForecastCalcTotalHours(totalUnits, ohHoursPerUnit);
 
   return {
@@ -114,11 +90,9 @@ function opsForecastNormalizeRow(row) {
     work_area: (row.work_area || '').toString().trim() || 'Unassigned',
     start_date: row.start_date || '',
     due_date: row.due_date || '',
-    // Production-based fields
+    // Forecasting fields
     total_units: totalUnits,
     oh_hours_per_unit: ohHoursPerUnit,
-    batch_count: batchCount,
-    beat_rate_days: beatRateDays,
     // Calculated total hours
     total_hours: calculatedTotalHours,
     probability_pct: probabilityPct,
@@ -164,83 +138,29 @@ function opsForecastBuildWeightedMatrix(monthKeys, rows) {
 
       const workArea = (row.work_area || 'Unassigned').toString();
 
-      // Get production-based scheduling parameters
-      const batchCount = Math.max(1, opsForecastToNumber(row.batch_count, 1));
-      const beatRateDays = Math.max(1, opsForecastToNumber(row.beat_rate_days, 1));
+      // Linear distribution between start and end dates
+      const totalDays = Math.max(1, ((end - start) / 86400000) + 1);
 
-      // Calculate hours per batch
-      const hoursPerBatch = totalHours / batchCount;
+      monthKeys.forEach(key => {
+        const parts = key.split('-');
+        const year = Number(parts[0]);
+        const month = Number(parts[1]);
+        if (!year || !month) return;
 
-      // Get batch start dates based on beat rate
-      const batchStartDates = opsForecastGetBatchStartDates(row.start_date, batchCount, beatRateDays);
+        const mStart = new Date(year, month - 1, 1);
+        const mEnd = new Date(year, month, 0);
 
-      // If no valid batch dates, fall back to even distribution
-      if (batchStartDates.length === 0) {
-        const totalDays = Math.max(1, ((end - start) / 86400000) + 1);
+        const overlapStart = start > mStart ? start : mStart;
+        const overlapEnd = end < mEnd ? end : mEnd;
+        if (overlapStart > overlapEnd) return;
 
-        monthKeys.forEach(key => {
-          const parts = key.split('-');
-          const year = Number(parts[0]);
-          const month = Number(parts[1]);
-          if (!year || !month) return;
+        const overlapDays = ((overlapEnd - overlapStart) / 86400000) + 1;
+        const monthHours = totalHours * (overlapDays / totalDays);
 
-          const mStart = new Date(year, month - 1, 1);
-          const mEnd = new Date(year, month, 0);
-
-          const overlapStart = start > mStart ? start : mStart;
-          const overlapEnd = end < mEnd ? end : mEnd;
-          if (overlapStart > overlapEnd) return;
-
-          const overlapDays = ((overlapEnd - overlapStart) / 86400000) + 1;
-          const monthHours = totalHours * (overlapDays / totalDays);
-
-          if (!matrix[key][workArea]) matrix[key][workArea] = 0;
-          matrix[key][workArea] += monthHours;
-          matrix[key]._total += monthHours;
-          matrix[key]._bands[probabilityBand] += monthHours;
-        });
-        return;
-      }
-
-      // Distribute batch hours to months based on batch start dates
-      batchStartDates.forEach((batchStart, batchIndex) => {
-        // Batch runs from start date to either next batch start or end date
-        let batchEnd;
-        if (batchIndex < batchStartDates.length - 1) {
-          // End just before next batch starts
-          batchEnd = new Date(batchStartDates[batchIndex + 1].getTime() - 1);
-        } else {
-          // Last batch runs to due_date
-          batchEnd = end;
-        }
-
-        // Clamp batch end to overall end date
-        if (batchEnd > end) batchEnd = end;
-
-        const batchHours = hoursPerBatch;
-        const batchDays = Math.max(1, ((batchEnd - batchStart) / 86400000) + 1);
-
-        monthKeys.forEach(key => {
-          const parts = key.split('-');
-          const year = Number(parts[0]);
-          const month = Number(parts[1]);
-          if (!year || !month) return;
-
-          const mStart = new Date(year, month - 1, 1);
-          const mEnd = new Date(year, month, 0);
-
-          const overlapStart = batchStart > mStart ? batchStart : mStart;
-          const overlapEnd = batchEnd < mEnd ? batchEnd : mEnd;
-          if (overlapStart > overlapEnd) return;
-
-          const overlapDays = ((overlapEnd - overlapStart) / 86400000) + 1;
-          const monthHours = batchHours * (overlapDays / batchDays);
-
-          if (!matrix[key][workArea]) matrix[key][workArea] = 0;
-          matrix[key][workArea] += monthHours;
-          matrix[key]._total += monthHours;
-          matrix[key]._bands[probabilityBand] += monthHours;
-        });
+        if (!matrix[key][workArea]) matrix[key][workArea] = 0;
+        matrix[key][workArea] += monthHours;
+        matrix[key]._total += monthHours;
+        matrix[key]._bands[probabilityBand] += monthHours;
       });
     });
 
@@ -353,12 +273,10 @@ export const opsForecastManager = {
       work_area: normalized.work_area,
       start_date: normalized.start_date || null,
       due_date: normalized.due_date || null,
-      // Production-based fields
+      // Forecasting fields
       total_units: normalized.total_units,
       oh_hours_per_unit: normalized.oh_hours_per_unit,
-      batch_count: normalized.batch_count,
-      beat_rate_days: normalized.beat_rate_days,
-      // Calculated total (for backward compatibility)
+      // Calculated total
       total_hours: normalized.total_hours,
       probability_pct: normalized.probability_pct,
       notes: normalized.notes,
@@ -444,7 +362,5 @@ export {
   opsForecastProbabilityBandFromPct,
   opsForecastProbabilityPctFromBand,
   opsForecastProbabilityLabel,
-  opsForecastCalcTotalHours,
-  opsForecastCalcBatchHours,
-  opsForecastGetBatchStartDates
+  opsForecastCalcTotalHours
 }

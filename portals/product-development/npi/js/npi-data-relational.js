@@ -196,6 +196,7 @@ export const npiRelLoad = async function(pid) {
         spec: r.spec || '',
         testMethod: r.test_method || '',
         source: r.source || 'Customer Spec',
+        source_ref: r.source_ref || '',
         oos_action: r.oos_action || 'TBD',
         customerAgreed: r.customer_agreed || false
       }));
@@ -464,6 +465,7 @@ export const npiRelSaveCTQ = async function(item) {
       spec: item.spec || '',
       test_method: item.testMethod || '',
       source: item.source || 'Customer Spec',
+      source_ref: item.source_ref || '',
       oos_action: item.oos_action || 'TBD',
       customer_agreed: item.customerAgreed || false,
       updated_at: new Date().toISOString()

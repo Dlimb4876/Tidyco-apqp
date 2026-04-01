@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-04-01T11:11:40.080Z
-> Files: 557 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-04-01T12:43:03.171Z
+> Files: 564 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
 
@@ -1390,6 +1390,10 @@
 - `fd8fd38c229ab33755ff429ccc9919eba21b566551cbfb17d8e11e35e941ee0e` (~3879 tok)
 - `metadata.json` (~580 tok)
 
+## core/css/
+
+- `components.css` — Styles: 83 rules (~6049 tok)
+
 ## electron/
 
 - `main.js` — Handle Squirrel installer events — creates/removes Start Menu & Desktop shortcuts (~1704 tok)
@@ -1402,9 +1406,21 @@
 
 - `prod-capacity-detail.js` — ═══════════════════════════════════════════════════════════════ (~2987 tok)
 
+## portals/product-development/npi/js/
+
+- `npi-cp.js` — ═══════════════════════════════════ (~1767 tok)
+- `npi-ctq.js` — ═══════════════════════════════════ (~4672 tok)
+- `npi-data-relational.js` — Exports npiRelHydratePfdRows, npiRelResolveProjectId, npiRelLoad (~12926 tok)
+- `npi-data.js` — ═══════════════════════════════════ (~11079 tok)
+- `npi-events.js` — ═══════════════════════════════════ (~5740 tok)
+
 ## portals/product-development/product-management/js/
 
 - `products.js` — Products Management Portal (~7743 tok)
+
+## supabase/
+
+- `npi_ctq_add_source_ref_oos_action.sql` — Migration: add source, source_ref, and oos_action columns to npi_ctq (~129 tok)
 
 ## tests/
 

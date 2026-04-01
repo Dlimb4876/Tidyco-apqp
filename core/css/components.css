@@ -126,6 +126,7 @@ td.ctr  { text-align: center; }
 .cell-edit:hover  { background: var(--blue-pale); }
 .cell-edit:focus  { background: var(--blue-pale); outline: 1px solid var(--blue-mid); }
 .cell-edit.mono   { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+textarea.cell-edit[data-autoresize] { resize: none; overflow: hidden; }
 
 /* ── Tags ───────────────────────────────────────────────────── */
 .tag {

@@ -147,10 +147,11 @@ npi.ctq.render = function() {
       : `<span class="tag tag-green" title="Linked to ${coverage.pfdCount} PFD step(s) and ${coverage.pfmeaCount} PFMEA mode(s)">✓ ${coverage.total}</span>`
     return `<tr>
     <td style="text-align:center"><span class="tag tag-ctq">C${i + 1}</span></td>
-    <td><textarea class="cell-edit" name="ctq_${i}_req" rows="2" data-action="ctq-upd" data-idx="${i}" data-field="req" placeholder="CTQ requirement">${esc(r.req)}</textarea></td>
-    <td><input class="cell-edit mono" name="ctq_${i}_spec" value="${esc(r.spec)}" data-action="ctq-upd" data-idx="${i}" data-field="spec" placeholder="e.g. 50±0.05mm" style="width:100%"></td>
-    <td><input class="cell-edit" name="ctq_${i}_testMethod" value="${esc(r.testMethod || '')}" data-action="ctq-upd" data-idx="${i}" data-field="testMethod" placeholder="e.g. CMM, Gauge, Visual" style="width:100%"></td>
+    <td><textarea class="cell-edit" name="ctq_${i}_req" rows="1" data-action="ctq-upd" data-idx="${i}" data-field="req" data-autoresize placeholder="CTQ requirement">${esc(r.req)}</textarea></td>
+    <td><textarea class="cell-edit mono" name="ctq_${i}_spec" rows="1" data-action="ctq-upd" data-idx="${i}" data-field="spec" data-autoresize placeholder="e.g. 50±0.05mm">${esc(r.spec)}</textarea></td>
+    <td><textarea class="cell-edit" name="ctq_${i}_testMethod" rows="1" data-action="ctq-upd" data-idx="${i}" data-field="testMethod" data-autoresize placeholder="e.g. CMM, Gauge, Visual">${esc(r.testMethod || '')}</textarea></td>
     <td><select class="cell-edit" name="ctq_${i}_source" data-action="ctq-upd" data-idx="${i}" data-field="source" style="width:100%">${CTQ_SOURCES.map(o => `<option${r.source === o ? ' selected' : ''}>${o}</option>`).join('')}</select></td>
+    <td><textarea class="cell-edit" name="ctq_${i}_source_ref" rows="1" data-action="ctq-upd" data-idx="${i}" data-field="source_ref" data-autoresize placeholder="e.g. Doc-123, §4.2">${esc(r.source_ref || '')}</textarea></td>
     <td><select class="cell-edit" name="ctq_${i}_oos_action" data-action="ctq-upd" data-idx="${i}" data-field="oos_action" style="width:100%">${CTQ_OOS_ACTIONS.map(o => `<option${r.oos_action === o ? ' selected' : ''}>${o}</option>`).join('')}</select></td>
     <td><div class="ctq-agreed">
       <input type="checkbox" name="ctq_${i}_customerAgreed" ${r.customerAgreed ? 'checked' : ''} data-action="ctq-upd" data-idx="${i}" data-field="customerAgreed" title="Customer has accepted this CTQ method and out-of-spec plan">
@@ -202,7 +203,7 @@ npi.ctq.render = function() {
     ? emptyState('🎯', 'No CTQs yet', canEdit() ? 'Add critical requirements' : 'No CTQs defined yet')
     : filteredIdx.length === 0
       ? emptyState('🔍', 'No matches', `${p.ctq.length} CTQ${p.ctq.length !== 1 ? 's' : ''} exist but none match the active filters.`) + `<div style="text-align:center;margin-top:8px"><button class="btn btn-ghost btn-sm" data-action="ctq-filter-clear">Clear filters</button></div>`
-      : `<div class="sticky-table-wrap"><table class="tbl ctq-tbl" style="min-width:960px;table-layout:fixed;width:100%"><colgroup><col style="width:40px"><col style="width:20%"><col style="width:13%"><col style="width:16%"><col style="width:12%"><col style="width:12%"><col style="width:90px"><col style="width:80px"><col style="width:30px"></colgroup>${npiComponents.tableHeader([{label:'Ref'},{label:'Requirement'},{label:'Target / Tolerance'},{label:'Test Method'},{label:'Source'},{label:'Out-of-Spec Action'},{label:'Customer Accepted',style:'text-align:center'},{label:'Coverage',style:'text-align:center'},{label:''}])}<tbody>${rows}</tbody></table></div>`
+      : `<div class="sticky-table-wrap"><table class="tbl ctq-tbl" style="min-width:1060px;table-layout:fixed;width:100%"><colgroup><col style="width:40px"><col style="width:18%"><col style="width:12%"><col style="width:14%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:90px"><col style="width:80px"><col style="width:30px"></colgroup>${npiComponents.tableHeader([{label:'Ref'},{label:'Requirement'},{label:'Target / Tolerance'},{label:'Test Method'},{label:'Source'},{label:'Source Ref'},{label:'Out-of-Spec Action'},{label:'Customer Accepted',style:'text-align:center'},{label:'Coverage',style:'text-align:center'},{label:''}])}<tbody>${rows}</tbody></table></div>`
 
   const coverageBanner = p.ctq.length > 0
     ? `<div class="coverage-banner"><span class="coverage-stat"><span class="tag tag-green">${linkedCount}</span> linked</span><span class="coverage-stat"><span class="tag tag-amber">${orphanedCount}</span> orphaned</span>${orphanedCount > 0 ? ' <a href="#" data-action="npi-set-apqp" data-tab="pfd" style="color:var(--blue)">Link to PFD →</a>' : ''}</div>`
