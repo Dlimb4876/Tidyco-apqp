@@ -8,7 +8,7 @@ import { getFamilies } from '../../../../core/js/state.js'
 import { esc, canEdit, showToast } from '../../../../utils/js/helpers.js'
 import { render } from '../../../../utils/js/navigation.js'
 import { showGuide } from '../../../../utils/js/guide.js'
-import { getWorkAreaOptions, workAreasDataGetAll } from '../../../capacity/production/js/work-areas-data.js'
+import { getWorkAreaOptions, workAreasDataGetAll } from '../../../../utils/js/work-areas-helpers.js'
 import {
   productsDataGetAll,
   productsDataAddProduct,

@@ -77,3 +77,7 @@ nul
 
 # Supabase configuration (contains sensitive credentials)
 core/js/config.js
+
+# Electron build artifacts (distribute manually)
+out/
+dist/

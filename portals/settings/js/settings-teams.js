@@ -5,7 +5,7 @@
 
 import { appState, currentUserRole } from '../../../core/js/state.js'
 import { currentUser, supabase as supa } from '../../../core/js/supa.js'
-import { esc, getPermissionDefinitions, isAdmin, showToast } from '../../../utils/js/helpers.js'
+import { esc, getPermissionDefinitions, isAdmin, showToast, registerProfileDataProvider } from '../../../utils/js/helpers.js'
 import {
   settingsEmailToName,
   settingsLoadingState,
@@ -22,6 +22,9 @@ import {
   teamsDataLoadUserTeamMap,
   teamsDataSetUserTeam
 } from './teams-data.js'
+
+// Wire up profile data provider so helpers.js can build owner dropdowns
+registerProfileDataProvider(() => settingsState.settingsPermissionsData)
 
 export function settingsGetPermissionsData() {
   return Array.isArray(settingsState.settingsPermissionsData) ? settingsState.settingsPermissionsData : []

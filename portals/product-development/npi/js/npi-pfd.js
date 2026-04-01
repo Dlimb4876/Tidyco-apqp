@@ -409,16 +409,14 @@ npi.pfd.render = function() {
       const el = document.querySelector('.mermaid')
       if (!el) return
 
-      if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
+      if (typeof window.mermaid === 'undefined' || typeof window.mermaid.render !== 'function') {
         el.innerHTML = '<div class="info-banner">Flowchart is unavailable right now. The step links are still saved in the table view.</div>'
         return
       }
 
       try {
-        if (!npi.pfd._mermaidReady && typeof mermaid.initialize === 'function') {
-          // loose security: content is app-generated, not user-supplied; htmlLabels default (true)
-          // lets Mermaid use HTML spans for labels so text renders and wraps correctly
-          mermaid.initialize({
+        if (!npi.pfd._mermaidReady && typeof window.mermaid.initialize === 'function') {
+          window.mermaid.initialize({
             theme: 'base',
             startOnLoad: false,
             securityLevel: 'loose',
@@ -435,7 +433,6 @@ npi.pfd.render = function() {
               edgeLabelBackground: '#ffffff',
               primaryTextColor: '#1f2937'
             },
-            // target HTML span labels (htmlLabels:true default) and SVG arrow elements
             themeCSS: '.edgeLabel .label{font-weight:600;letter-spacing:0.01em}.edge-thickness-normal{stroke-width:1px}.arrowheadPath{fill:#4b5563}'
           })
           npi.pfd._mermaidReady = true
@@ -445,10 +442,9 @@ npi.pfd.render = function() {
         const p = prog()
         const execSteps = npiData.sortedPfd(p.pfd).filter(isExecutableStep)
         const stepMap = new Map(execSteps.map(s => [s.stepNum, s]))
-        Promise.resolve(mermaid.render(renderId, syntax)).then(result => {
+        Promise.resolve(window.mermaid.render(renderId, syntax)).then(result => {
           if (!result || !result.svg) throw new Error('No SVG returned from Mermaid')
           el.innerHTML = `<div class="pfd-flowchart-zoom">${result.svg}</div>`
-          // Attach click-to-expand handlers
           el.querySelectorAll('g.node').forEach(g => {
             const match = g.id && g.id.match(/flowchart-S(\d+)/)
             if (!match) return

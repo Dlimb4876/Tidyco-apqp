@@ -566,11 +566,18 @@ export function emailToDisplayName(email) {
   return local.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join(' ');
 }
 
+// Registration pattern avoids circular dependency with settings.js.
+// settings-teams.js calls registerProfileDataProvider() at load time.
+// Uses var for hoisting to avoid TDZ in circular module resolution.
+var _profileDataProvider = null
+export function registerProfileDataProvider(fn) { _profileDataProvider = fn }
+
 // Returns a list of user display names loaded from profiles.
 // Falls back gracefully when profiles haven't loaded yet.
 function getProfileNames() {
-  if (typeof settingsPermissionsData !== 'undefined' && Array.isArray(settingsPermissionsData)) {
-    return settingsPermissionsData.map(u => u.full_name || emailToDisplayName(u.email)).filter(Boolean);
+  const data = typeof _profileDataProvider === 'function' ? _profileDataProvider() : null
+  if (Array.isArray(data)) {
+    return data.map(u => u.full_name || emailToDisplayName(u.email)).filter(Boolean)
   }
   return [];
 }
@@ -593,4 +600,19 @@ export function ownerSelectOptions(currentOwner) {
     opts += `<option value="${esc(currentOwner)}" selected>${esc(currentOwner)}</option>`;
   }
   return opts;
+}
+
+// Builds a Set of lowercase profile names for O(1) owner validation.
+export function buildOwnerLookup() {
+  const names = getProfileNames()
+  return new Set(names.map(n => n.trim().toLowerCase()))
+}
+
+// Renders a <datalist> of profile names for the searchable owner picker.
+export function ownerDatalistHtml(datalistId) {
+  const names = getProfileNames()
+  const options = names
+    .map(n => `<option value="${esc(n)}"></option>`)
+    .join('')
+  return `<datalist id="${esc(datalistId)}">${options}</datalist>`
 }

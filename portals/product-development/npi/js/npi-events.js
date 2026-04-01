@@ -2,7 +2,7 @@
 // npi-events.js — Delegated UI event router for NPI portal
 // ═══════════════════════════════════
 
-import { preserveInputCaretAfterRender } from '../../../../utils/js/helpers.js'
+import { preserveInputCaretAfterRender, buildOwnerLookup } from '../../../../utils/js/helpers.js'
 import { showGuide } from '../../../../utils/js/guide.js'
 import { flushDeferred } from '../../../../utils/js/render-scheduler.js'
 import { appState } from '../../../../core/js/state.js'
@@ -255,6 +255,31 @@ function onInput(evt) {
     _bomPickSearchTimer = setTimeout(() => {
       npi.pfd.searchBomPick(searchValue)
     }, 200)
+    break
+  }
+
+  // Searchable owner picker — resolve typed name to valid profile name
+  case 'pfmea-owner-input': {
+    const picker = el.closest('.pfmea-owner-picker')
+    const hiddenInput = picker
+      ? picker.querySelector('input[data-action="pfmea-upd-cause-action"]')
+      : null
+    if (!hiddenInput) break
+    const typed = (el.value || '').trim()
+    const normalized = typed.toLowerCase()
+    const lookup = buildOwnerLookup()
+    // Only save on exact match or explicit clear — ignore partial typing
+    if (!normalized) {
+      // Cleared the field — unassign owner
+      if (hiddenInput.value === '') break
+      hiddenInput.value = ''
+      hiddenInput.dispatchEvent(new Event('change', { bubbles: true }))
+    } else if (lookup.has(normalized)) {
+      // Exact match — assign owner
+      if (hiddenInput.value === typed) break
+      hiddenInput.value = typed
+      hiddenInput.dispatchEvent(new Event('change', { bubbles: true }))
+    }
     break
   }
 

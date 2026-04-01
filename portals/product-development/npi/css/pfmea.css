@@ -632,6 +632,15 @@ td.pfmea-cause-text { border-left: 2px solid #94a3b8 !important; }
   flex: 1;
 }
 
+/* ── Searchable owner picker (replaces plain <select>) ──────── */
+.pfmea-owner-picker {
+  position: relative;
+}
+
+.pfmea-owner-picker input[type="hidden"] {
+  display: none;
+}
+
 /* ── Responsive Design ──────────────────────────────────────── */
 @media (max-width: 767px) {
   .pfmea-filter-wrap {

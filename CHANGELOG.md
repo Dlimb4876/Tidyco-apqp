@@ -3,7 +3,15 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
-## 2026-03-31 | Product Family Database page reformatted for portal consistency | Page used heavy inline styles on the table, header, and empty state instead of the shared CSS classes (prod-tbl, families-table-wrap, empty-state, etc.) used across all other portal pages
+## 2026-03-31 | PFMEA owner field: searchable picker with datalist | Replace plain dropdown with type-to-search input matching tasks product picker pattern, so large team lists are easy to navigate
+
+## 2026-03-31 | Remove cross-portal import in products.js | Product Development portal no longer imports directly from the Capacity portal — work area helpers now live in shared utils
+
+## 2026-03-31 | Product Development portal refactor plan created | Code audit identified two oversized files (npi-data-relational.js 1128L, bom.js 906L), one cross-portal import, and two large render functions as the main upgrade risks. Plan and stub files scaffolded in plans/pd-portal-refactor.md
+
+## 2026-03-31 | Product Development portal refactor — stub files scaffolded | Created npi-data-ctq.js, npi-data-pfmea.js, npi-data-bom.js, npi-data-gates.js, npi-bom-render.js, npi-bom-handlers.js, npi-bom-tree.js, utils/js/work-areas-helpers.js as empty-with-instructions stubs ready for Phase 1 & 2 content migration
+
+## 2026-03-31 | Product Development portal refactor for portal consistency | Page used heavy inline styles on the table, header, and empty state instead of the shared CSS classes (prod-tbl, families-table-wrap, empty-state, etc.) used across all other portal pages
 
 ## 2026-03-31 | Fullscreen mode for Plan by Product and Plan by Work Area | Better use of large screens when reviewing production plans
 

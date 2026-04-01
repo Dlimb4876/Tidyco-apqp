@@ -9,7 +9,7 @@
 import { prog, appState } from '../../../../core/js/state.js'
 import { save } from '../../../../core/js/db.js'
 import { render } from '../../../../utils/js/navigation.js'
-import { esc, emptyState, showModal, showToast, canEdit, emailToDisplayName, ownerSelectOptions } from '../../../../utils/js/helpers.js'
+import { esc, emptyState, showModal, showToast, canEdit, emailToDisplayName, ownerSelectOptions, ownerDatalistHtml, buildOwnerLookup } from '../../../../utils/js/helpers.js'
 import { npi } from './npi-shared.js'
 import { npiComponents } from './npi-components.js'
 import {
@@ -442,7 +442,7 @@ npi.pfmea.renderPFMEA = function() {
             </td>` : ''}
             ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea>${ca.action_related_ecr_id ? `<div style="margin-top:4px;padding:4px 6px;background:var(--accent-dim);border-radius:3px;border-left:2px solid var(--accent);font-size:10px;font-weight:600;cursor:pointer;text-align:center" onclick="navigate('mcs');">🔗 ${esc(ca.action_related_ecr_id)}</div>` : ''}</td>` : ''}
             ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_taken_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>` : ''}
-            ${vis.owner ? `<td><select class="cell-edit" name="pfmea_action_owner_${mi}_${ei}_${ci}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" style="width:100%">${ownerSelectOptions(act.owner || '')}</select></td>` : ''}
+            ${vis.owner ? `<td><div class="pfmea-owner-picker"><input type="text" class="cell-edit" name="pfmea_action_owner_display_${mi}_${ei}_${ci}" data-action="pfmea-owner-input" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" list="pfmea-owner-list" value="${esc(act.owner || '')}" placeholder="🔍 Search person" autocomplete="off" style="width:100%"><input type="hidden" name="pfmea_action_owner_${mi}_${ei}_${ci}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" value="${esc(act.owner || '')}"></div></td>` : ''}
             ${vis.due ? `<td><input type="date" class="cell-edit mono" name="pfmea_action_due_${mi}_${ei}_${ci}" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>` : ''}
             ${vis.newOcc ? `<td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_action_occ_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newOcc || ''}" placeholder="${occ}"
@@ -526,6 +526,8 @@ npi.pfmea.renderPFMEA = function() {
   }
 
   html += '</tbody></table></div>'
+  // Searchable owner picker datalist — rendered once for all PFMEA rows
+  html += ownerDatalistHtml('pfmea-owner-list')
 
   const filterLabel = activeFilter === 'all' ? 'All RPN' :
     activeFilter === 'high' ? `High RPN (≥${RPN_HIGH})` :
