@@ -225,6 +225,8 @@ function opsForecastToggleArchived() {
 function opsForecastSetWorkAreaFilter(workArea) {
 	const next = (workArea || '').toString().trim()
 	operationsDashboardState.opsForecastWorkAreaFilter = next || 'ALL'
+	// Why: chart scope changed (ALL/Unit pills), so force trend redraw on this interaction.
+	operationsDashboardState.opsForecastChartRenderRequested = true
 	if (appState.currentSection === 'operations' && typeof globalThis.render === 'function') globalThis.render()
 }
 

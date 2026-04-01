@@ -313,9 +313,9 @@ export async function meSaveProductSupportHistoryRelational(userId, historyRows)
 
     if (payload.length === 0) return true
 
-    const { error: insertError } = await supabase.from('me_product_support_history').insert(payload)
+    const { error: insertError } = await supabase.from('me_product_support_history').upsert(payload)
     if (insertError) {
-      safeWarn('meSaveProductSupportHistoryRelational insert error:', insertError)
+      safeWarn('meSaveProductSupportHistoryRelational upsert error:', insertError)
       return false
     }
 

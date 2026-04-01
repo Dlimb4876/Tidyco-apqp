@@ -4,12 +4,8 @@
 // ═══════════════════════════════════
 
 import { appState, prog } from '../../../../core/js/state.js'
-import { save } from '../../../../core/js/db.js'
-import { showToast } from '../../../../utils/js/helpers.js'
-import { render } from '../../../../utils/js/navigation.js'
 import { npiData } from './npi-data.js'
 import { APQP_TABS, RPN_HIGH } from './npi-constants.js'
-import { npiRelDeleteCP, npiRelSaveCP } from './npi-data-relational.js'
 import { npiCtq } from './npi-ctq.js'
 import { npiPfd } from './npi-pfd.js'
 import { npi } from './npi-shared.js'
@@ -20,12 +16,18 @@ import './npi-cp.js'
 
 npi.apqp.renderAPQP = function() {
   const p = prog()
-  const highRPN = p.pfmea.filter(r => npi.pfmea.calcRPN(r) >= RPN_HIGH).length
+  // Bug fix: Guard against undefined arrays and calcRPN if pfmea.js hasn't fully initialized
+  const pfmea = p.pfmea || []
+  const pfd = p.pfd || []
+  const ctq = p.ctq || []
+  const cp = p.cp || []
+  const calcRPN = typeof npi.pfmea.calcRPN === 'function' ? npi.pfmea.calcRPN : () => 0
+  const highRPN = pfmea.filter(r => calcRPN(r) >= RPN_HIGH).length
   const tabs = [
-    { id: APQP_TABS.CTQ, label: 'CTQ Matrix', badge: p.ctq.length },
-    { id: APQP_TABS.PFD, label: 'Process Flow', badge: p.pfd.filter(s => npiData.pfdType.isExecutable(s.type)).length },
-    { id: APQP_TABS.PFMEA, label: 'PFMEA', badge: p.pfmea.length, warn: highRPN > 0 },
-    { id: APQP_TABS.CP, label: 'Control Plan', badge: p.cp.length }
+    { id: APQP_TABS.CTQ, label: 'CTQ Matrix', badge: ctq.length },
+    { id: APQP_TABS.PFD, label: 'Process Flow', badge: pfd.filter(s => npiData.pfdType.isExecutable(s.type)).length },
+    { id: APQP_TABS.PFMEA, label: 'PFMEA', badge: pfmea.length, warn: highRPN > 0 },
+    { id: APQP_TABS.CP, label: 'Control Plan', badge: cp.length }
   ]
 
   const tabNav = `<div class="apqp-tabs-shell">${
@@ -73,70 +75,11 @@ npi.apqp.openDocPick = function(oi) { return typeof npi.pfd?.openDocPick === 'fu
 npi.apqp.saveDocPick = function() { return typeof npi.pfd?.saveDocPick === 'function' ? npi.pfd.saveDocPick() : undefined }
 
 npi.apqp.renderCP = function() { return typeof npi.cp?.render === 'function' ? npi.cp.render() : '' }
-npi.apqp.syncFromPFMEA = function() {
-  if (typeof npi.cp?.syncFromPFMEA === 'function') return npi.cp.syncFromPFMEA()
-  if (typeof npiData?.cp?.syncFromPFMEA === 'function') {
-    const added = npiData.cp.syncFromPFMEA()
-    if (added === 0) showToast('All PFMEA causes already in control plan.', 'info')
-    render()
-    return
-  }
-
-  // Legacy fallback for isolated tests where split/data modules are not loaded.
-  const p = prog()
-  const ex = new Set(p.cp.map(r => r.pfmeaCauseId || r.pfmeaEffectId || r.pfmeaId))
-  let n = 0
-  p.pfmea.forEach(mode => {
-    const step = p.pfd.find(s => s.id === mode.pfdId)
-    const cids = step ? (step.ctqIds || []) : []
-    const fc = cids.length > 0 ? p.ctq.find(c => c.id === cids[0]) : null
-    ;(mode.effects || []).forEach(ef => {
-      ;(ef.causes || []).forEach(ca => {
-        if (ex.has(ca.id)) return
-        const item = {
-          id: crypto.randomUUID(),
-          pfmeaId: mode.id, pfmeaEffectId: ef.id, pfmeaCauseId: ca.id, pfdId: mode.pfdId,
-          char: mode.mode + (ef.effect ? ' → ' + ef.effect : '') + (ca.cause ? ' (' + ca.cause + ')' : ''),
-          type: 'Process', spec: fc ? fc.spec : '', method: ca.detect || ca.prevent || '',
-          freq: '100%', resp: '', reaction: fc ? fc.oos_action || '' : '', ctqIds: [...cids]
-        }
-        p.cp.push(item)
-        if (typeof npiRelSaveCP === 'function') npiRelSaveCP(item)
-        else if (typeof save === 'function') save()
-        n++
-      })
-    })
-  })
-  if (n === 0) return showToast('All PFMEA causes already in control plan.', 'info')
-  render()
-}
-npi.apqp.addCP = function() {
-  if (typeof npi.cp?.add === 'function') return npi.cp.add()
-  if (typeof npiData?.cp?.add === 'function') { npiData.cp.add(); render(); return }
-  const item = { id: crypto.randomUUID(), pfmeaId: '', pfdId: '', char: '', type: 'Process', spec: '', method: '', freq: '', resp: '', reaction: '', ctqIds: [] }
-  prog().cp.push(item)
-  if (typeof npiRelSaveCP === 'function') npiRelSaveCP(item)
-  else if (typeof save === 'function') save()
-  render()
-}
-npi.apqp.updCP = function(i, f, v) {
-  if (typeof npi.cp?.upd === 'function') return npi.cp.upd(i, f, v)
-  if (typeof npiData?.cp?.upd === 'function') return npiData.cp.upd(i, f, v)
-  if (!prog().cp[i]) return
-  prog().cp[i][f] = v
-  if (typeof npiRelSaveCP === 'function') npiRelSaveCP(prog().cp[i])
-  else if (typeof save === 'function') save()
-}
-npi.apqp.delCP = function(i) {
-  if (typeof npi.cp?.del === 'function') return npi.cp.del(i)
-  if (typeof npiData?.cp?.del === 'function') { npiData.cp.del(i); render(); return }
-  if (!prog().cp[i]) return
-  const id = prog().cp[i].id
-  prog().cp.splice(i, 1)
-  if (typeof npiRelDeleteCP === 'function') npiRelDeleteCP(id)
-  else if (typeof save === 'function') save()
-  render()
-}
+// Backward-compat aliases delegate to npi.cp.* (imported via npi-cp.js side-effect)
+npi.apqp.syncFromPFMEA = function() { return npi.cp.syncFromPFMEA() }
+npi.apqp.addCP = function() { return npi.cp.add() }
+npi.apqp.updCP = function(i, f, v) { return npi.cp.upd(i, f, v) }
+npi.apqp.delCP = function(i) { return npi.cp.del(i) }
 
 export const npiApqp = npi.apqp
 export const renderApqp = npi.apqp.renderAPQP

@@ -61,9 +61,9 @@ export function injectNPIModals() {
 <div class="modal-bg" id="modalEditProj" style="display:none">
   <div class="modal modal-sm">
     <div class="modal-title">Edit Project</div>
-    <div id="ep_product_info" style="background:var(--bg-alt);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--muted)">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">Product (managed in Product Registry)</div>
-      <div style="font-weight:600;font-size:14px;color:var(--text)" id="ep_ro_name"></div>
+    <div id="ep_product_info" style="background:var(--bg-alt);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:calc(var(--ui-font-size) * 0.86);color:var(--muted)">
+      <div style="font-size:calc(var(--ui-font-size) * 0.79);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">Product (managed in Product Registry)</div>
+      <div style="font-weight:600;font-size:var(--ui-font-size);color:var(--text)" id="ep_ro_name"></div>
       <div style="margin-top:3px;display:flex;gap:12px;flex-wrap:wrap">
         <span id="ep_ro_customer"></span>
         <span id="ep_ro_unit"></span>
@@ -102,7 +102,7 @@ export function injectNPIModals() {
     <div class="field">
       <label for="insertNum">Step Number</label>
       <input type="number" id="insertNum" min="1" step="1">
-      <div style="font-size:11px;color:var(--muted);margin-top:3px" id="insertNumHint"></div>
+      <div style="font-size:calc(var(--ui-font-size) * 0.79);color:var(--muted);margin-top:3px" id="insertNumHint"></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modalInsert')">Cancel</button>
@@ -148,7 +148,7 @@ export function injectNPIModals() {
         <label for="resourceEditQty">Quantity</label>
         <input type="number" id="resourceEditQty" class="cell-edit" min="1" step="1" value="1" placeholder="Amount needed">
       </div>
-      <div id="resourceEditInfo" style="font-size:13px;color:var(--muted)"></div>
+      <div id="resourceEditInfo" style="font-size:calc(var(--ui-font-size) * 0.93);color:var(--muted)"></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-danger" onclick="npi.pfd.deleteResourceEdit()">Remove</button>
@@ -195,71 +195,71 @@ export function injectNPIModals() {
 <div class="modal-bg" id="modalRiskMatrix" style="display:none">
   <div class="modal" style="max-width:500px">
     <div class="modal-title">5×5 Risk Matrix</div>
-    <p style="font-size:12px;color:var(--muted);margin:0 0 16px">Score = Likelihood × Impact. Rate each between 1 (lowest) and 5 (highest).</p>
-    <table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:12px;text-align:center">
+    <p style="font-size:calc(var(--ui-font-size) * 0.86);color:var(--muted);margin:0 0 16px">Score = Likelihood × Impact. Rate each between 1 (lowest) and 5 (highest).</p>
+    <table style="border-collapse:collapse;width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:calc(var(--ui-font-size) * 0.86);text-align:center">
       <!-- Top axis header: Impact -->
       <thead>
         <tr>
           <td style="width:36px"></td>
           <td style="width:28px"></td>
-          <th colspan="5" style="padding:7px 6px;background:#e0eeff;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:0.04em">IMPACT →</th>
+          <th colspan="5" style="padding:7px 6px;background:#e0eeff;border-radius:6px 6px 0 0;font-size:calc(var(--ui-font-size) * 0.86);font-weight:700;color:#1e3a5f;letter-spacing:0.04em">IMPACT →</th>
         </tr>
         <tr>
           <td></td>
           <td></td>
-          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">1</th>
-          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">2</th>
-          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">3</th>
-          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">4</th>
-          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:11px">5</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79)">1</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79)">2</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79)">3</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79)">4</th>
+          <th style="padding:6px 4px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79)">5</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <!-- Left axis header: Likelihood (rowspan 5) -->
-          <th rowspan="5" style="writing-mode:vertical-rl;transform:rotate(180deg);background:#e0eeff;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:0.04em;padding:8px 4px;white-space:nowrap">← LIKELIHOOD</th>
-          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">1</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">1</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">2</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">3</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">5</td>
+          <th rowspan="5" style="writing-mode:vertical-rl;transform:rotate(180deg);background:#e0eeff;border-radius:6px 6px 0 0;font-size:calc(var(--ui-font-size) * 0.86);font-weight:700;color:#1e3a5f;letter-spacing:0.04em;padding:8px 4px;white-space:nowrap">← LIKELIHOOD</th>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79);vertical-align:middle">1</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">1</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">3</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">5</td>
         </tr>
         <tr>
-          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">2</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">2</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
-          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">6</td>
-          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">8</td>
-          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">10</td>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79);vertical-align:middle">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">2</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#92400e">6</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#92400e">8</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#92400e">10</td>
         </tr>
         <tr>
-          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">3</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">3</td>
-          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">6</td>
-          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">9</td>
-          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">12</td>
-          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">15</td>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79);vertical-align:middle">3</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">3</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#92400e">6</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#92400e">9</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#991b1b">12</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#991b1b">15</td>
         </tr>
         <tr>
-          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">4</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">4</td>
-          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">8</td>
-          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">12</td>
-          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">16</td>
-          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">20</td>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79);vertical-align:middle">4</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">4</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#92400e">8</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#991b1b">12</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#991b1b">16</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#991b1b">20</td>
         </tr>
         <tr>
-          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:11px;vertical-align:middle">5</td>
-          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:13px;color:#065f46">5</td>
-          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:13px;color:#92400e">10</td>
-          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">15</td>
-          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">20</td>
-          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:13px;color:#991b1b">25</td>
+          <td style="padding:4px 6px;color:var(--muted);font-weight:600;font-size:calc(var(--ui-font-size) * 0.79);vertical-align:middle">5</td>
+          <td style="padding:8px 6px;background:#d1fae5;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#065f46">5</td>
+          <td style="padding:8px 6px;background:#fef3c7;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#92400e">10</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#991b1b">15</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#991b1b">20</td>
+          <td style="padding:8px 6px;background:#fee2e2;font-weight:700;font-size:calc(var(--ui-font-size) * 0.93);color:#991b1b">25</td>
         </tr>
       </tbody>
     </table>
-    <div style="display:flex;gap:16px;margin-top:14px;font-size:12px;align-items:center">
+    <div style="display:flex;gap:16px;margin-top:14px;font-size:calc(var(--ui-font-size) * 0.86);align-items:center">
       <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#d1fae5;border-radius:3px;border:1px solid #a7f3d0"></span><strong style="color:#065f46">Low</strong> &lt;6</span>
       <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#fef3c7;border-radius:3px;border:1px solid #fcd34d"></span><strong style="color:#92400e">Medium</strong> 6–11</span>
       <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;background:#fee2e2;border-radius:3px;border:1px solid #fca5a5"></span><strong style="color:#991b1b">High</strong> ≥12</span>
@@ -306,7 +306,7 @@ export function injectNPIModals() {
       <button class="modal-close" onclick="closeModal('modalPfmeaSeverity')" aria-label="Close">×</button>
     </div>
     <div style="max-height:60vh;overflow-y:auto">
-      <table class="tbl tbl--compact" style="font-size:12px">
+      <table class="tbl tbl--compact" style="font-size:calc(var(--ui-font-size) * 0.86)">
         <thead>
           <tr>
             <th style="width:50px">Score</th>
@@ -317,61 +317,61 @@ export function injectNPIModals() {
         </thead>
         <tbody>
           <tr style="background:#fee2e2">
-            <td style="font-weight:700;text-align:center;font-size:14px">10</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">10</td>
             <td style="font-weight:600">Hazardous (Without Warning)</td>
             <td>May endanger life/safety or not comply with regulations. No warning is given to the end-user.</td>
             <td>Unsafe condition for operator or other personnel. Major regulatory non-compliance. Line stoppage required immediately.</td>
           </tr>
           <tr style="background:#fee2e2">
-            <td style="font-weight:700;text-align:center;font-size:14px">9</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">9</td>
             <td style="font-weight:600">Hazardous (With Warning)</td>
             <td>May endanger life/safety or not comply with regulations. A warning is given to the end-user before failure.</td>
             <td>Unsafe condition for operator or other personnel. Major regulatory non-compliance. Line stoppage required immediately.</td>
           </tr>
           <tr style="background:#ffedd5">
-            <td style="font-weight:700;text-align:center;font-size:14px">8</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">8</td>
             <td style="font-weight:600">Very High</td>
             <td>Primary function lost or inoperable—product is unfit for use. 100% customer dissatisfaction.</td>
             <td>100% scrap or major process disruption. Line must be stopped and product quarantined. Major rework required outside the typical manufacturing flow.</td>
           </tr>
           <tr style="background:#ffedd5">
-            <td style="font-weight:700;text-align:center;font-size:14px">7</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">7</td>
             <td style="font-weight:600">High</td>
             <td>Significant degradation of the primary function or performance. Product requires unscheduled repair or replacement. High customer dissatisfaction.</td>
             <td>Significant scrap or major rework required out of station. Causes major disruption to subsequent operations (e.g., significant loss of cycle time).</td>
           </tr>
           <tr style="background:#fef9c3">
-            <td style="font-weight:700;text-align:center;font-size:14px">6</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">6</td>
             <td style="font-weight:600">Moderate</td>
             <td>Minor loss of primary function or noticeable performance degradation. Customer is inconvenienced and highly annoyed.</td>
             <td>Requires an unscheduled repair/rework in station or results in significant internal scrap. Minor impact on subsequent operations.</td>
           </tr>
           <tr style="background:#fef9c3">
-            <td style="font-weight:700;text-align:center;font-size:14px">5</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">5</td>
             <td style="font-weight:600">Low</td>
             <td>Minor degradation of function or performance, easily overcome by the customer. Cosmetic defect noticed and reported by customer.</td>
             <td>Requires a minor rework or adjustment in station. Causes a small, measurable increase in scrap/rework rate.</td>
           </tr>
           <tr>
-            <td style="font-weight:700;text-align:center;font-size:14px">4</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">4</td>
             <td style="font-weight:600">Very Low</td>
             <td>Slight annoyance to the customer (e.g., minor fit/finish issue, easily correctable).</td>
             <td>May result in a very minor internal scrap/rework that is barely noticeable (e.g., a simple wipe or clean).</td>
           </tr>
           <tr>
-            <td style="font-weight:700;text-align:center;font-size:14px">3</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">3</td>
             <td style="font-weight:600">Minor</td>
             <td>Slight effect on the product; customer is unlikely to notice or will experience slight annoyance.</td>
             <td>Slight effect on the process or subsequent operation; causes a minor, non-critical process error.</td>
           </tr>
           <tr>
-            <td style="font-weight:700;text-align:center;font-size:14px">2</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">2</td>
             <td style="font-weight:600">Very Minor</td>
             <td>No effect on product function or performance. Effect is only cosmetic and likely unnoticed by the customer.</td>
             <td>No effect on product function. Effect is only noticeable internally (e.g., small, non-critical process error, minor visual issue).</td>
           </tr>
           <tr style="background:#dcfce7">
-            <td style="font-weight:700;text-align:center;font-size:14px">1</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">1</td>
             <td style="font-weight:600">None</td>
             <td>No relevant effect on reliability, safety, or customer satisfaction.</td>
             <td>No relevant effect on subsequent operations or process flow.</td>
@@ -393,7 +393,7 @@ export function injectNPIModals() {
       <button class="modal-close" onclick="closeModal('modalPfmeaOccurrence')" aria-label="Close">×</button>
     </div>
     <div style="max-height:60vh;overflow-y:auto">
-      <table class="tbl tbl--compact" style="font-size:12px">
+      <table class="tbl tbl--compact" style="font-size:calc(var(--ui-font-size) * 0.86)">
         <thead>
           <tr>
             <th style="width:50px">Score</th>
@@ -403,32 +403,32 @@ export function injectNPIModals() {
         </thead>
         <tbody>
           <tr style="background:#fee2e2">
-            <td style="font-weight:700;text-align:center;font-size:14px">10</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">10</td>
             <td style="font-weight:600">Very High</td>
             <td>Failure is almost inevitable</td>
           </tr>
           <tr style="background:#ffedd5">
-            <td style="font-weight:700;text-align:center;font-size:14px">8</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">8</td>
             <td style="font-weight:600">High</td>
             <td>Generally associated with processes similar to previous processes that have often failed</td>
           </tr>
           <tr style="background:#fef9c3">
-            <td style="font-weight:700;text-align:center;font-size:14px">6</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">6</td>
             <td style="font-weight:600">Moderate</td>
             <td>Generally associated with processes similar to previous processes which have experienced occasional failures, but not in major proportions</td>
           </tr>
           <tr>
-            <td style="font-weight:700;text-align:center;font-size:14px">3</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">3</td>
             <td style="font-weight:600">Low</td>
             <td>Isolated failures associated with similar processes</td>
           </tr>
           <tr>
-            <td style="font-weight:700;text-align:center;font-size:14px">2</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">2</td>
             <td style="font-weight:600">Very Low</td>
             <td>Only isolated failures associated with almost identical processes</td>
           </tr>
           <tr style="background:#dcfce7">
-            <td style="font-weight:700;text-align:center;font-size:14px">1</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">1</td>
             <td style="font-weight:600">Remote</td>
             <td>Failure is unlikely. No Failures ever associated within almost identical processes</td>
           </tr>
@@ -449,7 +449,7 @@ export function injectNPIModals() {
       <button class="modal-close" onclick="closeModal('modalPfmeaDetection')" aria-label="Close">×</button>
     </div>
     <div style="max-height:60vh;overflow-y:auto">
-      <table class="tbl tbl--compact" style="font-size:12px">
+      <table class="tbl tbl--compact" style="font-size:calc(var(--ui-font-size) * 0.86)">
         <thead>
           <tr>
             <th style="width:50px">Score</th>
@@ -459,52 +459,52 @@ export function injectNPIModals() {
         </thead>
         <tbody>
           <tr style="background:#fee2e2">
-            <td style="font-weight:700;text-align:center;font-size:14px">10</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">10</td>
             <td style="font-weight:600">Almost Impossible</td>
             <td>No known control available to detect cause / mechanism of failure or the failure mode</td>
           </tr>
           <tr style="background:#ffedd5">
-            <td style="font-weight:700;text-align:center;font-size:14px">9</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">9</td>
             <td style="font-weight:600">Very Remote</td>
             <td>Very remote likelihood current control will detect cause / mechanism of failure or failure mode</td>
           </tr>
           <tr style="background:#ffedd5">
-            <td style="font-weight:700;text-align:center;font-size:14px">8</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">8</td>
             <td style="font-weight:600">Remote</td>
             <td>Remote likelihood current control will detect cause / mechanism of failure or failure mode</td>
           </tr>
           <tr style="background:#fef9c3">
-            <td style="font-weight:700;text-align:center;font-size:14px">7</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">7</td>
             <td style="font-weight:600">Very Low</td>
             <td>Very low likelihood current control will detect cause / mechanism of failure or failure mode</td>
           </tr>
           <tr style="background:#fef9c3">
-            <td style="font-weight:700;text-align:center;font-size:14px">6</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">6</td>
             <td style="font-weight:600">Low</td>
             <td>Low likelihood current control will detect cause / mechanism of failure or failure mode</td>
           </tr>
           <tr>
-            <td style="font-weight:700;text-align:center;font-size:14px">5</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">5</td>
             <td style="font-weight:600">Moderate</td>
             <td>Moderate likelihood current control will detect cause / mechanism of failure or failure mode</td>
           </tr>
           <tr>
-            <td style="font-weight:700;text-align:center;font-size:14px">4</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">4</td>
             <td style="font-weight:600">Moderately High</td>
             <td>Moderately low likelihood current control will detect cause / mechanism of failure or failure mode</td>
           </tr>
           <tr style="background:#dcfce7">
-            <td style="font-weight:700;text-align:center;font-size:14px">3</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">3</td>
             <td style="font-weight:600">High</td>
             <td>High likelihood current control will detect cause / mechanism of failure or failure mode</td>
           </tr>
           <tr style="background:#dcfce7">
-            <td style="font-weight:700;text-align:center;font-size:14px">2</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">2</td>
             <td style="font-weight:600">Very High</td>
             <td>Very high likelihood current control will detect cause / mechanism of failure or failure mode</td>
           </tr>
           <tr style="background:#dcfce7">
-            <td style="font-weight:700;text-align:center;font-size:14px">1</td>
+            <td style="font-weight:700;text-align:center;font-size:var(--ui-font-size)">1</td>
             <td style="font-weight:600">Almost Certain</td>
             <td>Current control almost certain to detect cause / mechanism of failure or failure mode. Reliable controls are known with similar processes</td>
           </tr>

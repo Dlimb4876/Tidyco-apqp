@@ -20,7 +20,7 @@
 /* Tablet (768px - 1199px) */
 @media (min-width: 768px) and (max-width: 1199px) {
   .sec-title {
-    font-size: 20px;
+    font-size: calc(var(--ui-font-size) * 1.43);
   }
 
   .step-field.f-op {
@@ -76,7 +76,7 @@
 
   .step-field {
     padding: 6px;
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .step-field.f-op {
@@ -117,11 +117,11 @@
   }
 
   .flow-node-name {
-    font-size: 9px;
+    font-size: calc(var(--ui-font-size) * 0.64);
   }
 
   .flow-node-num {
-    font-size: 9px;
+    font-size: calc(var(--ui-font-size) * 0.64);
   }
 
   /* CTQ table column widths */
@@ -146,7 +146,7 @@
 
   .bom-tab {
     padding: 8px 12px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   /* BOM filter row */
@@ -156,7 +156,7 @@
 
   .bom-filter-btn {
     padding: 4px 8px;
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   .bom-pick-list {
@@ -169,11 +169,11 @@
   }
 
   .bom-pick-name {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .bom-pick-meta {
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   /* Card adjustments */
@@ -182,11 +182,11 @@
   }
 
   .card-title {
-    font-size: 14px;
+    font-size: var(--ui-font-size);
   }
 
   .card-meta {
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   /* Filter toolbar */
@@ -201,27 +201,27 @@
   /* Button sizing */
   .btn {
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .btn-sm {
     padding: 4px 8px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   /* Typography scaling */
   .sec-title {
-    font-size: 18px;
+    font-size: calc(var(--ui-font-size) * 1.29);
   }
 
   .sec-desc {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   /* Tab buttons */
   .apqp-tab-btn {
     padding: 6px 12px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   .apqp-tabs-shell {

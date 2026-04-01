@@ -38,6 +38,45 @@ export const GUIDE_CONTENT = {
     `
   },
 
+  // ── Desktop App ───────────────────────────────────────────────
+  desktop: {
+    title: '💻 Desktop App — Build & Settings Guide',
+    body: `
+      <div class="guide-section">
+        <p>The <strong>Tidyco Operations Portal</strong> is also available as a Windows desktop app built with Electron. The app loads the same portal URL as the browser version but runs in its own window with a custom menu.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🚀 Build Instructions</div>
+        <ul class="guide-list">
+          <li><strong>Run in dev mode:</strong> <code>npm run electron:dev</code> — opens the app with DevTools enabled.</li>
+          <li><strong>Run normally:</strong> <code>npm run electron</code> — opens the app without DevTools.</li>
+          <li><strong>Build installer:</strong> <code>npm run electron:build</code> — packages the app via electron-forge into <code>out/make/</code>.</li>
+          <li><strong>Create distributable:</strong> <code>npm run electron:installer</code> — builds then generates <code>TidycoAPQP-Setup.bat</code> for end-user installation.</li>
+        </ul>
+        <p style="margin-top:8px">To distribute: zip the setup batch file together with the output ZIP from <code>out/make/</code> and share. Users run <code>Setup.bat</code> to install.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🔧 Settings Menu</div>
+        <p>The <strong>Settings</strong> menu in the app title bar has a toggle for switching between the Production and Development hosted versions:</p>
+        <ul class="guide-list">
+          <li><strong>Ctrl+Shift+D</strong> — toggles between <em>Production</em> and <em>Development</em> (GitHub Pages dev branch).</li>
+        </ul>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">🔒 Hidden Localhost Shortcut</div>
+        <p>For local development only — not visible in any menu:</p>
+        <ul class="guide-list">
+          <li><strong>Ctrl+Shift+L</strong> — toggles the app to load from <code>http://localhost:8000/index.html</code> instead of the hosted URL.</li>
+        </ul>
+        <p style="margin-top:8px">Press the same shortcut again to switch back to the normal URL. The setting persists across restarts. This is intended for development use only and is not shown in the menu.</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">📁 Config Location</div>
+        <p>App settings (URL mode, zoom level) are saved to <code>app-config.json</code> in the Electron user data folder (<code>%APPDATA%/tidyco-operations-portal/</code> on Windows).</p>
+      </div>
+    `
+  },
+
   // ── Capacity Hub ─────────────────────────────────────────────
   capacity: {
     title: '📊 Capacity Management — User Guide',
@@ -402,17 +441,17 @@ export const GUIDE_CONTENT = {
       <div class="guide-section">
         <div class="guide-section-title">Special Characteristics (SC)</div>
         <p>Each <strong>Effect</strong> can be flagged with a Special Characteristic to indicate it requires enhanced controls beyond standard process monitoring.</p>
-        <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13px">
+        <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:calc(var(--ui-font-size) * 0.93)">
           <tr style="border-bottom:1px solid var(--line)">
-            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">🦺 Safety</td>
+            <td style="padding:6px 10px 6px 0;font-size:calc(var(--ui-font-size) * 1.29);white-space:nowrap">🦺 Safety</td>
             <td style="padding:6px 0;color:var(--mid)">Failure could injure an operator, end-user, or violate a regulatory requirement. These must have documented prevention and detection controls.</td>
           </tr>
           <tr style="border-bottom:1px solid var(--line)">
-            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">❗ Critical</td>
+            <td style="padding:6px 10px 6px 0;font-size:calc(var(--ui-font-size) * 1.29);white-space:nowrap">❗ Critical</td>
             <td style="padding:6px 0;color:var(--mid)">Non-conformance is very likely to reach the customer without detection. Requires robust 100% inspection or process control.</td>
           </tr>
           <tr>
-            <td style="padding:6px 10px 6px 0;font-size:18px;white-space:nowrap">⚠️ Major</td>
+            <td style="padding:6px 10px 6px 0;font-size:calc(var(--ui-font-size) * 1.29);white-space:nowrap">⚠️ Major</td>
             <td style="padding:6px 0;color:var(--mid)">Significant impact on product quality or function. Needs formal monitoring but may not require 100% inspection.</td>
           </tr>
         </table>

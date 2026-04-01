@@ -22,7 +22,7 @@
   background: transparent;
   border: 1.5px solid var(--line);
   border-radius: 6px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 600;
   color: var(--mid);
   cursor: pointer;
@@ -58,7 +58,7 @@
   background: transparent;
   border: 1.5px solid var(--line);
   border-radius: 6px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 600;
   color: var(--mid);
   cursor: pointer;
@@ -81,7 +81,7 @@
 }
 
 .apqp-tab-badge {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-family: 'IBM Plex Mono', monospace;
   opacity: 0.7;
   margin-left: 4px;
@@ -109,7 +109,7 @@
 }
 
 .sec-eyebrow {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -118,7 +118,7 @@
 }
 
 .sec-title {
-  font-size: 22px;
+  font-size: calc(var(--ui-font-size) * 1.57);
   font-weight: 700;
   letter-spacing: 1px;
   color: var(--ink);
@@ -126,7 +126,7 @@
 }
 
 .sec-desc {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--mid);
   line-height: 1.4;
 }
@@ -162,13 +162,13 @@
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   font-weight: 600;
   color: var(--ink);
 }
 
 .card-meta {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--muted);
   margin-left: auto;
 }

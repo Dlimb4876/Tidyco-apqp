@@ -17,7 +17,7 @@
 
 	.me-nav-btn {
 		padding: 8px 12px;
-		font-size: 12px;
+		font-size: calc(var(--ui-font-size) * 0.86);
 	}
 
 	.me-body {
@@ -29,10 +29,10 @@
 		gap: 8px;
 	}
 
-	.me-kpi-value { font-size: 22px; }
-	.me-kpi-label { font-size: 9px; }
-	.me-chart-title { font-size: 14px; }
-	.me-chart-subtitle { font-size: 11px; }
+	.me-kpi-value { font-size: calc(var(--ui-font-size) * 1.57); }
+	.me-kpi-label { font-size: calc(var(--ui-font-size) * 0.64); }
+	.me-chart-title { font-size: var(--ui-font-size); }
+	.me-chart-subtitle { font-size: calc(var(--ui-font-size) * 0.79); }
 
 	.me-chart-controls {
 		flex-direction: column;
@@ -85,7 +85,7 @@
 	.me-heatmap-cell {
 		height: 40px;
 		width: 40px;
-		font-size: 12px;
+		font-size: calc(var(--ui-font-size) * 0.86);
 	}
 
 	.me-mini-heatmap-grid {
@@ -95,7 +95,7 @@
 	.me-mini-heatmap-cell {
 		height: 28px;
 		width: 32px;
-		font-size: 10px;
+		font-size: calc(var(--ui-font-size) * 0.71);
 	}
 
 	.me-dashboard-kpis {
@@ -118,7 +118,7 @@
 	.me-tbl td,
 	.me-tbl th {
 		padding: 4px 6px;
-		font-size: 11px;
+		font-size: calc(var(--ui-font-size) * 0.79);
 	}
 
 	.me-card {

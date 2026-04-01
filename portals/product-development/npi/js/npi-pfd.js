@@ -28,6 +28,7 @@ function pfdStepNodeId(stepNum) {
 function pfdMermaidLabel(step) {
   const raw = step && step.op ? String(step.op) : `Step ${step.stepNum}`
   return raw
+    .replace(/&/g, '&amp;')
     .replace(/\r?\n+/g, ' ')
     .replace(/"/g, '&quot;')
     .replace(/[{}\[\]]/g, ' ')
@@ -68,7 +69,7 @@ function stepRowHTML(s, oi, p) {
       const isRepair = sources.includes('repair')
       const name = part.desc || part.pn || 'Part'
       const qtyDisplay = ref.qty && ref.qty > 1 ? ` <span style="font-weight:600;color:var(--blue)">×${ref.qty}</span>` : ''
-      return `<span class="res-pill res-pill-part" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to edit quantity"` : ''}>🔩 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay}${isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}${isRepair ? ' <span class="flag flag-repair" style="font-size:9px">RPR</span>' : ''}</span>`
+      return `<span class="res-pill res-pill-part" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to edit quantity"` : ''}>🔩 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay}${isAaw ? ' <span class="flag flag-aaw" style="font-size:calc(var(--ui-font-size) * 0.64)">AAW</span>' : ''}${isRepair ? ' <span class="flag flag-repair" style="font-size:calc(var(--ui-font-size) * 0.64)">RPR</span>' : ''}</span>`
     }
     
     // Handle AAW/Repair assemblies
@@ -78,7 +79,7 @@ function stepRowHTML(s, oi, p) {
       const tagLabel = group.tag === 'aaw' ? 'AAW' : (group.tag === 'repair' ? 'RPR' : 'ASM')
       const name = group.title || 'Assembly'
       const qtyDisplay = ref.qty && ref.qty > 1 ? ` <span style="font-weight:600;color:var(--blue)">×${ref.qty}</span>` : ''
-      return `<span class="res-pill res-pill-asm" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to edit quantity"` : ''}>🔧 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay} <span class="flag ${group.tag === 'aaw' ? 'flag-aaw' : 'flag-repair'}" style="font-size:9px">${tagLabel}</span></span>`
+      return `<span class="res-pill res-pill-asm" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${esc(ref.itemId)}" title="Click to edit quantity"` : ''}>🔧 ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay} <span class="flag ${group.tag === 'aaw' ? 'flag-aaw' : 'flag-repair'}" style="font-size:calc(var(--ui-font-size) * 0.64)">${tagLabel}</span></span>`
     }
     
     // Handle standard BOM types
@@ -87,7 +88,7 @@ function stepRowHTML(s, oi, p) {
     const t = BOM_TYPES[ref.bomType]
     const name = item.desc || (item.pn || item.toolId || item.equipId || '?')
     const qtyDisplay = ref.qty && ref.qty > 1 ? ` <span style="font-weight:600;color:var(--blue)">×${ref.qty}</span>` : ''
-    return `<span class="res-pill ${t.pc}" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${ref.itemId}" title="Click to edit quantity"` : ''}>${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:9px">AAW</span>' : ''}${item.isRepair ? ' <span class="flag flag-repair" style="font-size:9px">RPR</span>' : ''}</span>`
+    return `<span class="res-pill ${t.pc}" ${canEdit() ? `data-action="pfd-open-resource-edit" data-step-id="${s.id}" data-bom-type="${ref.bomType}" data-item-id="${ref.itemId}" title="Click to edit quantity"` : ''}>${t.icon} ${esc(name.length > 18 ? name.slice(0, 18) + '…' : name)}${qtyDisplay}${item.isAaw ? ' <span class="flag flag-aaw" style="font-size:calc(var(--ui-font-size) * 0.64)">AAW</span>' : ''}${item.isRepair ? ' <span class="flag flag-repair" style="font-size:calc(var(--ui-font-size) * 0.64)">RPR</span>' : ''}</span>`
   }).join('')
   const docBadges = (s.docRefs || []).map(docId => {
     const doc = (p.docs || []).find(d => d.id === docId)
@@ -127,7 +128,7 @@ function stepRowHTML(s, oi, p) {
     }
   </div>`
 
-  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div>${typeChip}<div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields">${canEdit() ? flowControlHTML : ''}<div class="step-field f-op"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="op" data-autoresize placeholder="Operation" style="font-weight:600">${esc(s.op)}</textarea></div><div class="step-field f-detail"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="detail" data-autoresize placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-location"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="location" data-autoresize placeholder="Location…">${esc(s.location)}</textarea></div><div class="step-field f-operator"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="operator" data-autoresize placeholder="Operator…">${esc(s.operator)}</textarea></div><div class="step-field f-timing"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="timing" data-autoresize placeholder="Timing…">${esc(s.timing)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div></div></div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
+  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div>${typeChip}<div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields">${canEdit() ? flowControlHTML : ''}<div class="step-field f-op"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="op" data-autoresize placeholder="Operation" style="font-weight:600">${esc(s.op)}</textarea></div><div class="step-field f-detail"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="detail" data-autoresize placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-location"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="location" data-autoresize placeholder="Location…">${esc(s.location)}</textarea></div><div class="step-field f-operator"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="operator" data-autoresize placeholder="Operator…">${esc(s.operator)}</textarea></div><div class="step-field f-timing"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="timing" data-autoresize placeholder="Timing…">${esc(s.timing)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:calc(var(--ui-font-size) * 0.79);color:var(--muted)">—</span>'}</div></div></div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
 }
 
 function headerRowHTML(s, oi, meta) {
@@ -191,7 +192,7 @@ npi.pfd._showDetail = function(s, p, anchorEl, canvasEl) {
     const ci = p.ctq.findIndex(c => c.id === cid)
     if (ci < 0) return ''
     const c = p.ctq[ci]
-    return `<span class="tag tag-ctq">C${ci + 1}</span> <span>${esc(c.req || 'Unnamed')}${c.spec ? ` <span style="color:var(--muted);font-size:11px">(${esc(c.spec)})</span>` : ''}</span>`
+    return `<span class="tag tag-ctq">C${ci + 1}</span> <span>${esc(c.req || 'Unnamed')}${c.spec ? ` <span style="color:var(--muted);font-size:calc(var(--ui-font-size) * 0.79)">(${esc(c.spec)})</span>` : ''}</span>`
   }).filter(Boolean)
 
   const docItems = (s.docRefs || []).map(docId => {
@@ -216,16 +217,16 @@ npi.pfd._showDetail = function(s, p, anchorEl, canvasEl) {
         <span class="step-num-badge">${s.stepNum}</span>
         <span class="pfd-detail-title">${esc(s.op || 'Untitled Step')}</span>
         <span class="tag ${typeTagClass}" style="flex-shrink:0">${esc(stepType)}</span>
-        ${maxRpn >= RPN_HIGH ? `<span class="tag tag-red" style="flex-shrink:0;font-size:10px">⚑ RPN ${maxRpn}</span>` : ''}
+        ${maxRpn >= RPN_HIGH ? `<span class="tag tag-red" style="flex-shrink:0;font-size:calc(var(--ui-font-size) * 0.71)">⚑ RPN ${maxRpn}</span>` : ''}
         <button class="mini-btn pfd-detail-close" style="margin-left:auto">✕</button>
       </div>
       ${s.detail ? `<div class="pfd-detail-notes">${esc(s.detail)}</div>` : ''}
-      ${s.location || s.operator || s.timing ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Details</div><div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px">${s.location ? `<span>📍 ${esc(s.location)}</span>` : ''}${s.operator ? `<span>👤 ${esc(s.operator)}</span>` : ''}${s.timing ? `<span>⏱ ${esc(s.timing)}</span>` : ''}</div></div>` : ''}
+      ${s.location || s.operator || s.timing ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Details</div><div style="display:flex;flex-wrap:wrap;gap:8px;font-size:calc(var(--ui-font-size) * 0.93)">${s.location ? `<span>📍 ${esc(s.location)}</span>` : ''}${s.operator ? `<span>👤 ${esc(s.operator)}</span>` : ''}${s.timing ? `<span>⏱ ${esc(s.timing)}</span>` : ''}</div></div>` : ''}
       ${ctqItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">CTQs</div><ul class="pfd-detail-list">${listHTML(ctqItems)}</ul></div>` : ''}
       ${docItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Documents</div><ul class="pfd-detail-list">${listHTML(docItems)}</ul></div>` : ''}
       ${resItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Resources</div><div style="display:flex;flex-wrap:wrap;gap:4px">${resItems.join('')}</div></div>` : ''}
       ${pfCnt > 0 ? `<div class="pfd-detail-section"><div class="pfd-detail-label">PFMEA</div><span class="tag ${maxRpn >= RPN_HIGH ? 'tag-red' : 'tag-amber'}">${pfCnt} failure mode${pfCnt > 1 ? 's' : ''}${maxRpn > 0 ? ` · max RPN ${maxRpn}` : ''}</span></div>` : ''}
-      ${ctqItems.length === 0 && docItems.length === 0 && resItems.length === 0 && pfCnt === 0 && !s.detail ? '<p style="color:var(--muted);font-size:13px;margin:0">No additional details recorded for this step.</p>' : ''}
+      ${ctqItems.length === 0 && docItems.length === 0 && resItems.length === 0 && pfCnt === 0 && !s.detail ? '<p style="color:var(--muted);font-size:calc(var(--ui-font-size) * 0.93);margin:0">No additional details recorded for this step.</p>' : ''}
     </div>`
 
   const closeBtn = panel.querySelector('.pfd-detail-close')
@@ -393,13 +394,14 @@ npi.pfd.render = function() {
   const sorted = npiData.sortedPfd(p.pfd)
   const executable = sorted.filter(isExecutableStep)
 
-  const showFlowchart = npi.pfd.viewMode === 'table'
+  // showTable is true when viewing the table (viewMode === 'table'), false when viewing the flowchart
+  const showTable = npi.pfd.viewMode === 'table'
   const isLR = npi.pfd.flowDirection === 'LR'
-  const viewToggleButton = `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-view">${showFlowchart ? 'Show Flowchart' : 'Show Table'}</button>`
-  const layoutToggleButton = !showFlowchart ? `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-layout" title="Toggle flowchart orientation">${isLR ? '↕ Vertical' : '↔ Horizontal'}</button>` : ''
+  const viewToggleButton = `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-view">${showTable ? 'Show Flowchart' : 'Show Table'}</button>`
+  const layoutToggleButton = !showTable ? `<button class="btn btn-secondary btn-sm" data-action="pfd-toggle-layout" title="Toggle flowchart orientation">${isLR ? '↕ Vertical' : '↔ Horizontal'}</button>` : ''
 
   // Expand button only makes sense for the table view — flowchart is an SVG canvas
-  const expandButton = showFlowchart ? `<button class="btn btn-ghost btn-sm" data-action="pfd-toggle-expand" title="Fullscreen mode">⛶ Expand</button>` : ''
+  const expandButton = showTable ? `<button class="btn btn-ghost btn-sm" data-action="pfd-toggle-expand" title="Fullscreen mode">⛶ Expand</button>` : ''
 
   const header = `<div class="sec-head"><div><div class="sec-eyebrow">Step 02</div><div class="sec-title">Process Flow Diagram</div><div class="sec-desc">Section navigator at top for fast jumps in large flows. Steps stay numbered in 10s, and those numbers remain permanent PFMEA and Control Plan references.</div></div>
   <div class="sec-actions">${viewToggleButton}${layoutToggleButton}${expandButton}<button class="btn btn-ghost btn-sm" data-action="show-guide" data-guide="npi-pfd" title="User Guide">❓ Guide</button></div></div>`
@@ -553,7 +555,7 @@ npi.pfd.render = function() {
   ${p.pfd.length > 0 ? `<div class="info-banner">💡 Next: <a href="#" data-action="npi-set-apqp" data-tab="pfmea" style="color:var(--blue)">PFMEA →</a></div>` : ''}`
 
   // Fullscreen overlay for table view only (flowchart is an SVG canvas, not suited to fixed overlay)
-  if (showFlowchart && appState.pfdExpanded) {
+  if (showTable && appState.pfdExpanded) {
     return `<div class="portal-fullscreen-overlay">
       <div class="portal-fullscreen-bar">
         <span><span class="portal-fullscreen-title">Process Flow Diagram</span><span class="portal-fullscreen-project">${esc(p.name || '')}</span></span>
@@ -704,8 +706,8 @@ npi.pfd.deleteResourceEdit = function() {
 npi.pfd.openCtqPick = function(oi) {
   const p = prog(); appState.ctqPickTarget = oi; appState.ctqPickSelected = [...(p.pfd[oi].ctqIds || [])]
   document.getElementById('ctqPickList').innerHTML = p.ctq.length === 0
-    ? '<p style="color:var(--muted);font-size:13px">No CTQs defined.</p>'
-    : p.ctq.map((c, i) => `<label class="ctq-pick-label"><input type="checkbox" ${appState.ctqPickSelected.includes(c.id) ? 'checked' : ''} data-action="pfd-toggle-ctq-pick" data-id="${c.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag tag-ctq">C${i + 1}</span><span style="font-size:12px;font-weight:600">${esc(c.req || 'Unnamed')}</span></div><div style="font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px">${esc(c.spec)}</div></div></label>`).join('')
+    ? '<p style="color:var(--muted);font-size:calc(var(--ui-font-size) * 0.93)">No CTQs defined.</p>'
+    : p.ctq.map((c, i) => `<label class="ctq-pick-label"><input type="checkbox" ${appState.ctqPickSelected.includes(c.id) ? 'checked' : ''} data-action="pfd-toggle-ctq-pick" data-id="${c.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag tag-ctq">C${i + 1}</span><span style="font-size:calc(var(--ui-font-size) * 0.86);font-weight:600">${esc(c.req || 'Unnamed')}</span></div><div style="font-size:calc(var(--ui-font-size) * 0.79);color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:1px">${esc(c.spec)}</div></div></label>`).join('')
   showModal('modalCtqPick')
 }
 
@@ -726,8 +728,8 @@ npi.pfd.openDocPick = function(oi) {
   const p = prog(); appState.docPickTarget = oi; appState.docPickSelected = [...(p.pfd[oi].docRefs || [])]
   const docs = p.docs || []
   document.getElementById('docPickList').innerHTML = docs.length === 0
-    ? '<p style="color:var(--muted);font-size:13px">No documents in register.</p>'
-    : docs.map((d, i) => `<label class="ctq-pick-label"><input type="checkbox" ${appState.docPickSelected.includes(d.id) ? 'checked' : ''} data-action="pfd-toggle-doc-pick" data-id="${d.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag" style="font-size:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted)">${esc(d.docNumber || '—')}</span><span style="font-size:12px;font-weight:600">${esc(d.title || 'Untitled')}</span></div><div style="font-size:11px;color:var(--muted);margin-top:1px">${esc(d.type || '')}${d.issue ? ' · Issue ' + esc(String(d.issue)) : ''}</div></div></label>`).join('')
+    ? '<p style="color:var(--muted);font-size:calc(var(--ui-font-size) * 0.93)">No documents in register.</p>'
+    : docs.map((d, i) => `<label class="ctq-pick-label"><input type="checkbox" ${appState.docPickSelected.includes(d.id) ? 'checked' : ''} data-action="pfd-toggle-doc-pick" data-id="${d.id}" style="margin-top:2px;accent-color:var(--blue)"><div><div style="display:flex;align-items:center;gap:6px"><span class="tag" style="font-size:calc(var(--ui-font-size) * 0.64);background:var(--bg);border:1px solid var(--line);color:var(--muted)">${esc(d.docNumber || '—')}</span><span style="font-size:calc(var(--ui-font-size) * 0.86);font-weight:600">${esc(d.title || 'Untitled')}</span></div><div style="font-size:calc(var(--ui-font-size) * 0.79);color:var(--muted);margin-top:1px">${esc(d.type || '')}${d.issue ? ' · Issue ' + esc(String(d.issue)) : ''}</div></div></label>`).join('')
   showModal('modalDocPick')
 }
 
@@ -806,7 +808,7 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, search
       // Filter by search term
       if (!matchesSearch(name) && !matchesSearch(item.pn) && !matchesSearch(item.toolId) && !matchesSearch(item.equipId) && !matchesSearch(item.spec)) return
       
-      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">${t.icon} ${esc(name || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">${t.label}</span></div>`)
+      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">${t.icon} ${esc(name || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:calc(var(--ui-font-size) * 0.64);background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">${t.label}</span></div>`)
     })
   })
   
@@ -823,7 +825,7 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, search
       // Filter by search term
       if (!matchesSearch(part.desc) && !matchesSearch(part.pn)) return
       
-      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔩 ${esc(part.desc || part.pn || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Part</span></div>`)
+      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔩 ${esc(part.desc || part.pn || 'Unnamed')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">${flags.join('')}</div></div><span class="tag" style="font-size:calc(var(--ui-font-size) * 0.64);background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Part</span></div>`)
     })
   }
   
@@ -840,16 +842,16 @@ npi.pfd.refreshBomPickModal = function(p, filterId, listId, activeFilter, search
       // Filter by search term
       if (!matchesSearch(group.title)) return
       
-      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔧 ${esc(group.title || 'Unnamed Assembly')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap"><span class="${flagClass}">${tagLabel}</span></div></div><span class="tag" style="font-size:9px;background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Assembly</span></div>`)
+      items.push(`<div class="bom-pick-item${appState.bomPickSelected.includes(key) ? ' selected' : ''}" data-action="pfd-toggle-bom-pick" data-key="${key}"><input type="checkbox" name="pfd_bom_pick_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}" ${appState.bomPickSelected.includes(key) ? 'checked' : ''} data-action="pfd-toggle-bom-pick" data-key="${key}"><div class="bom-pick-info"><div class="bom-pick-name">🔧 ${esc(group.title || 'Unnamed Assembly')}</div><div class="bom-pick-meta">${esc(meta)}</div><div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap"><span class="${flagClass}">${tagLabel}</span></div></div><span class="tag" style="font-size:calc(var(--ui-font-size) * 0.64);background:var(--bg);color:var(--muted);border:1px solid var(--line);align-self:flex-start">Assembly</span></div>`)
     })
   }
 
   if (items.length) {
     listEl.innerHTML = items.join('')
   } else if (search) {
-    listEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No resources match "${esc(search)}"</div>`
+    listEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:calc(var(--ui-font-size) * 0.86)">No resources match "${esc(search)}"</div>`
   } else {
-    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No items in BoM yet.</div>'
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:calc(var(--ui-font-size) * 0.86)">No items in BoM yet.</div>'
   }
 }
 

@@ -113,7 +113,7 @@ export const partsDataApi = {
 
       const itemUsage = (itemsData || []).map((row) => ({
         projectId: projectsMap[row.project_id]?.id || row.project_id,
-        projectName: projectsMap[row.project_id]?.name || row.project_id,
+        projectName: projectsMap[row.project_id]?.name || 'Deleted project',
         location: 'BoM',
         qty: row.qty || 1,
         itemDesc: row.item_desc || ''
@@ -121,7 +121,7 @@ export const partsDataApi = {
 
       const treeUsage = (treeData || []).map((row) => ({
         projectId: projectsMap[row.project_id]?.id || row.project_id,
-        projectName: projectsMap[row.project_id]?.name || row.project_id,
+        projectName: projectsMap[row.project_id]?.name || 'Deleted project',
         location: 'Assembly',
         qty: row.qty || 1,
         itemDesc: row.item_desc || ''
@@ -131,6 +131,93 @@ export const partsDataApi = {
     } catch (err) {
       safeWarn('partsDatabase.fetchPartUsage exception:', err)
       return []
+    }
+  },
+
+  async fetchPartUsageBatch(abcCatalogueIds) {
+    if (!abcCatalogueIds || abcCatalogueIds.length === 0) {
+      return {}
+    }
+
+    try {
+      const { data: itemsData, error: itemsError } = await supa
+        .from('npi_bom_items')
+        .select('project_id, item_desc, qty, abc_catalogue_id')
+        .in('abc_catalogue_id', abcCatalogueIds)
+
+      if (itemsError) {
+        safeWarn('partsDatabase.fetchPartUsageBatch items error:', itemsError)
+      }
+
+      const { data: treeData, error: treeError } = await supa
+        .from('npi_bom_tree')
+        .select('project_id, item_desc, qty, abc_catalogue_id')
+        .in('abc_catalogue_id', abcCatalogueIds)
+
+      if (treeError) {
+        safeWarn('partsDatabase.fetchPartUsageBatch tree error:', treeError)
+      }
+
+      const projectProgIds = new Set()
+      const usageMap = {}
+
+      ;(itemsData || []).forEach((row) => {
+        projectProgIds.add(row.project_id)
+        if (!usageMap[row.abc_catalogue_id]) {
+          usageMap[row.abc_catalogue_id] = []
+        }
+        usageMap[row.abc_catalogue_id].push({
+          project_id: row.project_id,
+          item_desc: row.item_desc,
+          location: 'BoM',
+          qty: row.qty || 1
+        })
+      })
+
+      ;(treeData || []).forEach((row) => {
+        projectProgIds.add(row.project_id)
+        if (!usageMap[row.abc_catalogue_id]) {
+          usageMap[row.abc_catalogue_id] = []
+        }
+        usageMap[row.abc_catalogue_id].push({
+          project_id: row.project_id,
+          item_desc: row.item_desc,
+          location: 'Assembly',
+          qty: row.qty || 1
+        })
+      })
+
+      const projectsMap = {}
+      if (projectProgIds.size > 0) {
+        const { data: projectsData, error: projectsError } = await supa
+          .from('projects')
+          .select('id, prog_id, name')
+          .in('prog_id', Array.from(projectProgIds))
+
+        if (projectsError) {
+          safeWarn('partsDatabase.fetchPartUsageBatch projects error:', projectsError)
+        }
+
+        ;(projectsData || []).forEach((project) => {
+          projectsMap[project.prog_id] = project
+        })
+      }
+
+      const resultMap = {}
+      Object.keys(usageMap).forEach((catalogueId) => {
+        resultMap[catalogueId] = usageMap[catalogueId].map((row) => ({
+          projectId: projectsMap[row.project_id]?.id || row.project_id,
+          projectName: projectsMap[row.project_id]?.name || 'Deleted project',
+          location: row.location,
+          qty: row.qty,
+          itemDesc: row.item_desc || ''
+        }))
+      })
+
+      return resultMap
+    } catch (err) {
+      safeWarn('partsDatabase.fetchPartUsageBatch exception:', err)
+      return {}
     }
   }
 }

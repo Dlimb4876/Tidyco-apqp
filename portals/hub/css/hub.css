@@ -21,7 +21,7 @@
 }
 
 .hub-widget-avatar {
-  font-size: 28px;
+  font-size: calc(var(--ui-font-size) * 2.0);
   line-height: 1;
 }
 
@@ -31,7 +31,7 @@
 }
 
 .hub-widget-greeting {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--muted);
@@ -39,7 +39,7 @@
 }
 
 .hub-widget-name {
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   font-weight: 700;
   color: var(--text);
 }
@@ -67,7 +67,7 @@
 }
 
 .hub-widget-num {
-  font-size: 22px;
+  font-size: calc(var(--ui-font-size) * 1.57);
   font-weight: 700;
   color: var(--text);
   line-height: 1;
@@ -82,7 +82,7 @@
 }
 
 .hub-widget-label {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--muted);
@@ -91,7 +91,7 @@
 }
 
 .hub-widget-loading {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--muted);
 }
 
@@ -120,7 +120,7 @@
 }
 
 .hub-favs-head {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted);
@@ -133,7 +133,7 @@
 }
 
 .hub-favs-lane-title {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   margin-bottom: 6px;
   font-weight: 600;
@@ -152,7 +152,7 @@
   background: var(--surface);
   color: var(--text);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   cursor: pointer;
 }
 
@@ -177,7 +177,7 @@
 }
 
 .hub-fav-product-meta {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
 }
 
@@ -202,7 +202,7 @@
   border: none;
   background: transparent;
   color: var(--muted);
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   line-height: 1;
   cursor: pointer;
   border-radius: 4px;
@@ -224,12 +224,12 @@
     display: flex;
     width: 28px;
     height: 28px;
-    font-size: 18px;
+    font-size: calc(var(--ui-font-size) * 1.29);
   }
 }
 
 .hub-favs-empty {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--muted);
 }
 
@@ -266,18 +266,18 @@
 }
 
 .hub-icon {
-    font-size: 40px; 
+    font-size: calc(var(--ui-font-size) * 2.86); 
     margin-bottom: 10px;
 }
 
 .hub-card .proj-card-name {
-    font-size: 18px; 
+    font-size: calc(var(--ui-font-size) * 1.29); 
     font-weight: 700;
     letter-spacing: 1px;
 }
 
 .hub-card .proj-card-meta {
-    font-size: 14px;
+    font-size: var(--ui-font-size);
     color: var(--muted);
     margin-top: 8px;
 }
@@ -292,7 +292,7 @@
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--muted);
-    font-size: 15px;
+    font-size: calc(var(--ui-font-size) * 1.07);
     cursor: pointer;
     line-height: 1;
     z-index: 2;
@@ -326,7 +326,7 @@
   }
 
   .hub-home .hub-widget-num {
-    font-size: 20px;
+    font-size: calc(var(--ui-font-size) * 1.43);
   }
 
   .hub-home .hub-favs-panel {
@@ -343,11 +343,11 @@
   }
 
   .hub-home .proj-home-title {
-    font-size: 22px;
+    font-size: calc(var(--ui-font-size) * 1.57);
   }
 
   .hub-home .proj-home-sub {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .hub-home .hub-grid {
@@ -360,16 +360,16 @@
   }
 
   .hub-home .hub-icon {
-    font-size: 32px;
+    font-size: calc(var(--ui-font-size) * 2.29);
     margin-bottom: 6px;
   }
 
   .hub-home .hub-card .proj-card-name {
-    font-size: 15px;
+    font-size: calc(var(--ui-font-size) * 1.07);
   }
 
   .hub-home .hub-card .proj-card-meta {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
     margin-top: 4px;
   }
 }
@@ -431,7 +431,7 @@
 }
 
 .modal-title {
-    font-size: 16px;
+    font-size: calc(var(--ui-font-size) * 1.14);
     font-weight: 600;
     color: var(--text);
 }
@@ -440,7 +440,7 @@
     background: none;
     border: none;
     color: var(--muted);
-    font-size: 20px;
+    font-size: calc(var(--ui-font-size) * 1.43);
     cursor: pointer;
     padding: 0;
     width: 24px;
@@ -481,7 +481,7 @@
 }
 
 .proddev-menu-icon {
-    font-size: 32px;
+    font-size: calc(var(--ui-font-size) * 2.29);
     flex-shrink: 0;
 }
 
@@ -491,14 +491,14 @@
 }
 
 .proddev-menu-name {
-    font-size: 14px;
+    font-size: var(--ui-font-size);
     font-weight: 600;
     color: var(--text);
     margin-bottom: 4px;
 }
 
 .proddev-menu-meta {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
     color: var(--muted);
 }
 
@@ -522,16 +522,16 @@
   }
 
   .hub-icon {
-    font-size: 28px;
+    font-size: calc(var(--ui-font-size) * 2.0);
     margin-bottom: 4px;
   }
 
   .hub-card .proj-card-name {
-    font-size: 13px;
+    font-size: calc(var(--ui-font-size) * 0.93);
   }
 
   .hub-card .proj-card-meta {
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   .modal-dialog {

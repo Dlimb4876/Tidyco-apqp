@@ -6,6 +6,9 @@ export const operationsDashboardState = {
   opsRealtimeActive: false,
   opsRefreshTimers: {},
   opsForecastChart: null,
+  // Why: only render forecast chart on first entry to Forecast tab or manual refresh click.
+  opsForecastChartRenderRequested: false,
+  opsLastRenderedTab: '',
   opsForecastEditingId: '',
   opsForecastInlineEditId: '',
   opsPulseFeedContainer: null,

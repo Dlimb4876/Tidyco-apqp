@@ -157,6 +157,20 @@ export const feedbackDataManager = {
     return this.updateFeedback(id, updates)
   },
 
+  // Admin-only: hard-delete a feedback/bug record
+  async deleteFeedback(id) {
+    if (!currentUser) throw new Error('You must be logged in.')
+    try {
+      const { error } = await supabase.from('user_feedback').delete().eq('id', id)
+      if (error) throw error
+      this.state.feedback = this.state.feedback.filter(f => f.id !== id)
+      this._publishChange()
+    } catch (err) {
+      console.error('Feedback delete error:', err)
+      throw new Error('Failed to delete feedback: ' + err.message)
+    }
+  },
+
   setTab(tab) {
     this.state.tab = tab
     this._publishChange()

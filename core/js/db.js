@@ -258,7 +258,12 @@ export async function loadRemote() {
       .order('updated_at', { ascending: false }));
   }
 
-  if (error) { console.error('Load error', error); return; }
+  if (error) {
+    console.error('Load error', error);
+    setSyncBadge('error', '● load failed');
+    if (typeof showToast === 'function') showToast('Connection Error: ' + (error.message || 'Failed to load projects'), 'error');
+    return;
+  }
   if (data && data.length > 0) {
     db.projects = data.map(row => migrateprog(rowToProject(row)));
     const last = data[0];

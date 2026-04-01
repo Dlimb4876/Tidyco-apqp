@@ -22,7 +22,8 @@ import {
 } from './operations-forecast-data.js'
 import {
 	operationsDashboardState,
-	opsForecastDomKey
+	opsForecastDomKey,
+	opsForecastInlineFieldId
 } from './operations-dashboard-state.js'
 
 function opsRenderForecastRows(rows) {
@@ -171,7 +172,7 @@ function opsRenderForecastRows(rows) {
 								</td>
 								<td class="ops-col-oh">
 									${inlineMode
-										? `<input class="ops-forecast-inline" type="number" min="0" step="0.1" id="${opsForecastInlineFieldId(row.id, 'oh_hours_per_unit')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.oh_hours_per_unit, 0))}" />`
+										? `<input class="ops-forecast-inline" type="number" min="0" step="0.01" id="${opsForecastInlineFieldId(row.id, 'oh_hours_per_unit')}" data-action="ops-forecast-inline-keydown" data-id="${esc(row.id)}" value="${esc(opsToNumber(row.oh_hours_per_unit, 0))}" />`
 										: esc(opsToNumber(row.oh_hours_per_unit, 0))}
 								</td>
 								<td class="ops-col-hours">
@@ -278,6 +279,7 @@ function opsRenderForecastView(metrics) {
 						<button class="btn btn-sm btn-ghost" data-action="ops-forecast-shift-month" data-direction="prev" title="View previous month">← Previous</button>
 						<div class="pc-window-label">${forecastMonthLabel}</div>
 						<button class="btn btn-sm btn-ghost" data-action="ops-forecast-shift-month" data-direction="next" title="View next month">Next →</button>
+						<button class="btn btn-sm btn-ghost" data-action="ops-refresh-forecast-chart" title="Force refresh chart">Refresh Chart</button>
 					</div>
 				</div>
 				<div class="ops-pill-row" role="group" aria-label="Filter forecast chart by work area">
@@ -316,7 +318,7 @@ function opsRenderForecastView(metrics) {
 					<label>Start Date<input type="date" name="start_date" required value="${esc(editingRow?.start_date || '')}" /></label>
 					<label>End Date<input type="date" name="due_date" required value="${esc(editingRow?.due_date || '')}" /></label>
 					<label>Total Units<input type="number" name="total_units" required min="0" step="1" value="${esc(editingRow?.total_units || 0)}" /></label>
-					<label>OH Hours/Unit<input type="number" name="oh_hours_per_unit" required min="0" step="0.1" value="${esc(editingRow?.oh_hours_per_unit || 0)}" /></label>
+					<label>OH Hours/Unit<input type="number" name="oh_hours_per_unit" required min="0" step="0.01" value="${esc(editingRow?.oh_hours_per_unit || 0)}" /></label>
 					<label>Probability
 						<select name="probability_band" required>
 							<option value="low" ${editingProbabilityBand === 'low' ? 'selected' : ''}>Low</option>

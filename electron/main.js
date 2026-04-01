@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from 'electron'
+import { app, BrowserWindow, Menu, globalShortcut } from 'electron'
 import { fileURLToPath } from 'url'
 import { dirname, join, resolve, basename } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
@@ -31,10 +31,12 @@ const isDev = process.argv.includes('--dev') || process.env.NODE_ENV === 'develo
 
 const PROD_URL = 'https://dlimb4876.github.io/Tidyco-apqp/'
 const DEV_URL = 'https://dlimb4876.github.io/Tidyco-apqp/dev/'
+const LOCAL_URL = 'http://localhost:8000/index.html'
 const CONFIG_PATH = join(app.getPath('userData'), 'app-config.json')
 
 let mainWindow
 let useDevVersion = false
+let useLocalHost = false
 let zoomLevel = 0
 
 // Load configuration
@@ -42,22 +44,33 @@ function loadConfig() {
   try {
     const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'))
     useDevVersion = config.useDevVersion || false
+    useLocalHost = config.useLocalHost || false
     zoomLevel = config.zoomLevel ?? 0
   } catch {
     // Config doesn't exist yet, use defaults
     useDevVersion = false
+    useLocalHost = false
     zoomLevel = 0
   }
 }
 
 // Save configuration
 function saveConfig() {
-  writeFileSync(CONFIG_PATH, JSON.stringify({ useDevVersion, zoomLevel }, null, 2))
+  writeFileSync(CONFIG_PATH, JSON.stringify({ useDevVersion, useLocalHost, zoomLevel }, null, 2))
 }
 
 // Get current URL based on settings
 function getCurrentURL() {
+  if (useLocalHost) return LOCAL_URL
   return useDevVersion ? DEV_URL : PROD_URL
+}
+
+// Get window title based on current environment
+function getWindowTitle() {
+  const base = 'Tidyco Operations Portal'
+  if (useLocalHost) return `${base} — Local`
+  if (useDevVersion) return `${base} — Development`
+  return base
 }
 
 // Create the browser window
@@ -78,10 +91,12 @@ function createWindow() {
 
   // Load the portal URL
   mainWindow.loadURL(getCurrentURL())
+  mainWindow.setTitle(getWindowTitle())
 
   // Apply saved zoom level after page loads
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.setZoomLevel(zoomLevel)
+    mainWindow.setTitle(getWindowTitle())
   })
 
   // Open DevTools in development
@@ -100,9 +115,20 @@ app.on('ready', () => {
   loadConfig()
   createWindow()
   createMenu()
+
+  // Hidden localhost toggle: Ctrl+Shift+L
+  globalShortcut.register('CommandOrControl+Shift+L', () => {
+    useLocalHost = !useLocalHost
+    saveConfig()
+    if (mainWindow) {
+      mainWindow.loadURL(getCurrentURL())
+      mainWindow.setTitle(getWindowTitle())
+    }
+  })
 })
 
 app.on('window-all-closed', () => {
+  globalShortcut.unregisterAll()
   // On macOS, keep app running until explicitly quit
   if (process.platform !== 'darwin') {
     app.quit()
@@ -194,6 +220,7 @@ function createMenu() {
             // Reload the app with new URL
             if (mainWindow) {
               mainWindow.loadURL(getCurrentURL())
+              mainWindow.setTitle(getWindowTitle())
             }
             // Rebuild menu to show updated checkmark
             createMenu()

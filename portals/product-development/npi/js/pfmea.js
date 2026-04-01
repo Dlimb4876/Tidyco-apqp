@@ -289,12 +289,12 @@ npi.pfmea.renderPFMEA = function() {
     ${vis.function ? '<th rowspan="2">Function</th>' : ''}
     <th rowspan="2">Failure Mode</th>
     <th rowspan="2">Effect</th>
-    <th rowspan="2" title="Severity of effect">SEV <button class="btn btn-ghost btn-xs" style="font-size:9px;padding:0 4px;margin-left:2px" data-action="pfmea-show-severity" title="View Severity criteria">?</button></th>
+    <th rowspan="2" title="Severity of effect">SEV <button class="pfmea-sod-help-btn" data-action="pfmea-show-severity" title="View Severity rating criteria">?</button></th>
     <th rowspan="2">Cause</th>
-    <th rowspan="2" title="Occurrence of cause">OCC <button class="btn btn-ghost btn-xs" style="font-size:9px;padding:0 4px;margin-left:2px" data-action="pfmea-show-occurrence" title="View Occurrence criteria">?</button></th>
+    <th rowspan="2" title="Occurrence of cause">OCC <button class="pfmea-sod-help-btn" data-action="pfmea-show-occurrence" title="View Occurrence rating criteria">?</button></th>
     ${vis.prevent   ? '<th rowspan="2">Controls — Prevent</th>' : ''}
     ${vis.detect    ? '<th rowspan="2">Controls — Detect</th>'  : ''}
-    ${vis.detect ? '<th rowspan="2" title="Detection rating">DET <button class="btn btn-ghost btn-xs" style="font-size:9px;padding:0 4px;margin-left:2px" data-action="pfmea-show-detection" title="View Detection criteria">?</button></th>' : ''}
+    ${vis.detect ? '<th rowspan="2" title="Detection rating">DET <button class="pfmea-sod-help-btn" data-action="pfmea-show-detection" title="View Detection rating criteria">?</button></th>' : ''}
     ${vis.detect ? '<th rowspan="2">RPN</th>' : ''}
     ${actionGroupSpan > 0 ? `<th colspan="${actionGroupSpan}" style="background:var(--blue-pale);color:var(--blue);letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>` : ''}
     <th rowspan="${actionGroupSpan > 0 ? 2 : 1}"></th>
@@ -323,13 +323,13 @@ npi.pfmea.renderPFMEA = function() {
     const modes = block.modes || []
     const ctqBadges = (s.ctqIds || []).map(cid => {
       const ci = p.ctq.findIndex(c => c.id === cid)
-      return ci >= 0 ? `<span class="tag tag-ctq" style="font-size:9px">C${ci + 1}</span>` : ''
+      return ci >= 0 ? `<span class="tag tag-ctq" style="font-size:calc(var(--ui-font-size) * 0.64)">C${ci + 1}</span>` : ''
     }).join(' ')
 
     html += `<tr><td colspan="${spanAll}" style="padding:0;border-top:3px solid var(--gray-500)"><div class="pfmea-step-header"><span class="pfmea-step-label">Step ${s.stepNum} — ${esc(s.op || '(unnamed)')}</span><div class="pfmea-step-ctqs">${ctqBadges}</div></div></td></tr>`
 
     if (modes.length === 0 && !hasExtraFilters && activeFilter === 'all') {
-      html += `<tr class="pfmea-row-sub"><td colspan="${spanAll - 1}" style="padding:8px 14px;color:var(--muted);font-size:12px;font-style:italic">No failure modes yet</td><td></td></tr>`
+      html += `<tr class="pfmea-row-sub"><td colspan="${spanAll - 1}" style="padding:8px 14px;color:var(--muted);font-size:calc(var(--ui-font-size) * 0.86);font-style:italic">No failure modes yet</td><td></td></tr>`
     }
 
     modes.forEach(mode => {
@@ -366,17 +366,17 @@ npi.pfmea.renderPFMEA = function() {
             const detDown = (h.newDet ?? h.oldDet) < (h.oldDet ?? h.newDet)
             return `<div style="border-bottom:1px solid var(--line);padding:5px 0;margin-bottom:4px">
               <div style="display:flex;align-items:center;gap:6px">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:${rpnDown ? 'var(--green)' : 'var(--red)'}">${h.rpn}→${h.newRpn}</span>
-                <span style="color:var(--muted);font-size:9px;margin-left:auto">${h.date}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:calc(var(--ui-font-size) * 0.71);font-weight:700;color:${rpnDown ? 'var(--green)' : 'var(--red)'}">${h.rpn}→${h.newRpn}</span>
+                <span style="color:var(--muted);font-size:calc(var(--ui-font-size) * 0.64);margin-left:auto">${h.date}</span>
               </div>
-              ${(h.oldOcc || h.oldDet) ? `<div style="color:var(--muted);font-size:9px;margin-top:2px">
+              ${(h.oldOcc || h.oldDet) ? `<div style="color:var(--muted);font-size:calc(var(--ui-font-size) * 0.64);margin-top:2px">
                 OCC <b>${h.oldOcc ?? '—'}</b>→<b style="color:${occDown ? 'var(--green)' : 'var(--red)'}">${h.newOcc ?? '—'}</b>
                 &nbsp;·&nbsp;
                 DET <b>${h.oldDet ?? '—'}</b>→<b style="color:${detDown ? 'var(--green)' : 'var(--red)'}">${h.newDet ?? '—'}</b>
               </div>` : ''}
-              <div style="color:var(--mid);font-size:10px;margin-top:3px;font-style:italic">"${esc(h.desc)}"</div>
+              <div style="color:var(--mid);font-size:calc(var(--ui-font-size) * 0.71);margin-top:3px;font-style:italic">"${esc(h.desc)}"</div>
             </div>`
-          }).join('') : '<span style="font-size:10px;color:var(--muted);font-style:italic">No history yet</span>'
+          }).join('') : '<span style="font-size:calc(var(--ui-font-size) * 0.71);color:var(--muted);font-style:italic">No history yet</span>'
 
           let rowHtml = `<tr class="pfmea-row-sub" data-cause-id="${esc(ca.id || '')}">`
 
@@ -390,8 +390,8 @@ npi.pfmea.renderPFMEA = function() {
             rowHtml += `<td rowspan="${modeRowspan}" class="pfmea-mode-cell" style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">
-                <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
-                <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
+                <button class="add-row" style="font-size:calc(var(--ui-font-size) * 0.64);padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
+                <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:calc(var(--ui-font-size) * 0.64)">× Mode</button>
               </div>` : ''}
             </td>`
           }
@@ -401,8 +401,8 @@ npi.pfmea.renderPFMEA = function() {
             rowHtml += `<td rowspan="${efRowspan}" style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_effect_${mi}_${ei}" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               ${canEdit() ? `<div style="margin-top:3px;display:flex;gap:3px">
-                <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
-                <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:9px">× Eff</button>
+                <button class="add-row" style="font-size:calc(var(--ui-font-size) * 0.64);padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
+                <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:calc(var(--ui-font-size) * 0.64)">× Eff</button>
               </div>` : ''}
             </td>
             <td rowspan="${efRowspan}" class="pfmea-score-cell">
@@ -440,10 +440,10 @@ npi.pfmea.renderPFMEA = function() {
               ${warnBadges}
               ${hist.length > 0 ? `<button class="rpn-hist-btn" data-action="pfmea-show-hist" data-cause-id="${ca.id}">⏱${hist.length}</button>` : ''}
             </td>` : ''}
-            ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea>${ca.action_related_ecr_id ? `<div style="margin-top:4px;padding:4px 6px;background:var(--accent-dim);border-radius:3px;border-left:2px solid var(--accent);font-size:10px;font-weight:600;cursor:pointer;text-align:center" onclick="navigate('mcs');">🔗 ${esc(ca.action_related_ecr_id)}</div>` : ''}</td>` : ''}
+            ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_desc_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="desc" placeholder="Recommended action" style="width:100%;background:${act.desc ? 'var(--field-highlight)' : ''};">${esc(act.desc || '')}</textarea>${ca.action_related_ecr_id ? `<div style="margin-top:4px;padding:4px 6px;background:var(--accent-dim);border-radius:3px;border-left:2px solid var(--accent);font-size:calc(var(--ui-font-size) * 0.71);font-weight:600;cursor:pointer;text-align:center" onclick="navigate('mcs');">🔗 ${esc(ca.action_related_ecr_id)}</div>` : ''}</td>` : ''}
             ${vis.action ? `<td style="vertical-align:top"><textarea class="cell-edit" name="pfmea_action_taken_${mi}_${ei}_${ci}" rows="1" data-autoresize data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="taken" placeholder="Action taken" style="width:100%">${esc(act.taken || '')}</textarea></td>` : ''}
             ${vis.owner ? `<td><div class="pfmea-owner-picker"><input type="text" class="cell-edit" name="pfmea_action_owner_display_${mi}_${ei}_${ci}" data-action="pfmea-owner-input" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" list="pfmea-owner-list" value="${esc(act.owner || '')}" placeholder="🔍 Search person" autocomplete="off" style="width:100%"><input type="hidden" name="pfmea_action_owner_${mi}_${ei}_${ci}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="owner" value="${esc(act.owner || '')}"></div></td>` : ''}
-            ${vis.due ? `<td><input type="date" class="cell-edit mono" name="pfmea_action_due_${mi}_${ei}_${ci}" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:11px"></td>` : ''}
+            ${vis.due ? `<td><input type="date" class="cell-edit mono" name="pfmea_action_due_${mi}_${ei}_${ci}" value="${esc(act.due || '')}" data-action="pfmea-upd-cause-action" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-field="due" style="width:100%;font-size:calc(var(--ui-font-size) * 0.79)"></td>` : ''}
             ${vis.newOcc ? `<td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_action_occ_${mi}_${ei}_${ci}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${act.newOcc || ''}" placeholder="${occ}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="${ci}" data-kind="action-occ" data-allow-blank="1" data-fallback="" style="background:var(--field-highlight)">
@@ -475,23 +475,23 @@ npi.pfmea.renderPFMEA = function() {
             rowHtml += `<td rowspan="1" class="pfmea-mode-cell" style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
               ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px">
-                <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
-                <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
+                <button class="add-row" style="font-size:calc(var(--ui-font-size) * 0.64);padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
+                <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:calc(var(--ui-font-size) * 0.64)">× Mode</button>
               </div>` : ''}
             </td>`
           }
           rowHtml += `<td style="vertical-align:top">
               <textarea class="cell-edit" name="pfmea_effect_${mi}_${ei}" rows="1" data-autoresize data-action="pfmea-upd-effect" data-mi="${mi}" data-ei="${ei}" data-field="effect" placeholder="Effect of failure" style="width:100%">${esc(ef.effect)}</textarea>
               ${canEdit() ? `<div style="margin-top:3px;display:flex;gap:3px">
-                <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
-                <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:9px">× Eff</button>
+                <button class="add-row" style="font-size:calc(var(--ui-font-size) * 0.64);padding:1px 6px" data-action="pfmea-add-cause" data-mi="${mi}" data-ei="${ei}">＋ Cause</button>
+                <button class="del-btn" data-action="pfmea-del-effect" data-mi="${mi}" data-ei="${ei}" style="font-size:calc(var(--ui-font-size) * 0.64)">× Eff</button>
               </div>` : ''}
             </td>
             <td class="pfmea-score-cell">
               <input type="number" class="cell-edit mono pfmea-score-input" name="pfmea_sev_${mi}_${ei}" min="${PFMEA_SCORE_MIN}" max="${PFMEA_SCORE_MAX}" value="${sev}"
                 data-action="pfmea-score" data-mi="${mi}" data-ei="${ei}" data-ci="-1" data-kind="effect-sev" data-fallback="${sev}">
             </td>
-            <td colspan="${spanNoCauses}" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No causes yet — click ＋ Cause</td>
+            <td colspan="${spanNoCauses}" style="color:var(--muted);font-size:calc(var(--ui-font-size) * 0.79);font-style:italic;padding:8px">No causes yet — click ＋ Cause</td>
           </tr>`
           html += rowHtml
         }
@@ -508,11 +508,11 @@ npi.pfmea.renderPFMEA = function() {
         noEffHtml += `<td class="pfmea-mode-cell" style="vertical-align:top">
             <textarea class="cell-edit" name="pfmea_mode_${mi}" rows="1" data-autoresize data-action="pfmea-upd-mode" data-mi="${mi}" data-field="mode" placeholder="Failure mode" style="width:100%">${esc(mode.mode)}</textarea>
             ${canEdit() ? `<div style="margin-top:4px;display:flex;gap:3px">
-              <button class="add-row" style="font-size:9px;padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
-              <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:9px">× Mode</button>
+              <button class="add-row" style="font-size:calc(var(--ui-font-size) * 0.64);padding:1px 6px" data-action="pfmea-add-effect" data-mi="${mi}">＋ Effect</button>
+              <button class="del-btn" data-action="pfmea-del-mode" data-mi="${mi}" style="font-size:calc(var(--ui-font-size) * 0.64)">× Mode</button>
             </div>` : ''}
           </td>
-          <td colspan="${spanNoEffects}" style="color:var(--muted);font-size:11px;font-style:italic;padding:8px">No effects yet — click ＋ Effect</td>
+          <td colspan="${spanNoEffects}" style="color:var(--muted);font-size:calc(var(--ui-font-size) * 0.79);font-style:italic;padding:8px">No effects yet — click ＋ Effect</td>
         </tr>`
         html += noEffHtml
       }
@@ -522,7 +522,7 @@ npi.pfmea.renderPFMEA = function() {
   })
 
   if (visibleSteps.length === 0) {
-    html += `<tr class="pfmea-row-sub"><td colspan="${spanAll}" style="padding:14px;color:var(--muted);font-size:12px;font-style:italic;text-align:center">No operations match this filter. <a href="#" data-action="pfmea-filter-all" style="color:var(--blue)">Show all</a></td></tr>`
+    html += `<tr class="pfmea-row-sub"><td colspan="${spanAll}" style="padding:14px;color:var(--muted);font-size:calc(var(--ui-font-size) * 0.86);font-style:italic;text-align:center">No operations match this filter. <a href="#" data-action="pfmea-filter-all" style="color:var(--blue)">Show all</a></td></tr>`
   }
 
   html += '</tbody></table></div>'
@@ -620,7 +620,7 @@ npi.pfmea.renderPFMEA = function() {
 ${viewTabs}
 <details class="card" style="margin-bottom:18px;padding:0;overflow:hidden">
     <summary class="card-head" style="padding:10px 14px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px">
-      <span style="font-size:10px;color:var(--muted)">▶</span>
+      <span style="font-size:calc(var(--ui-font-size) * 0.71);color:var(--muted)">▶</span>
       <span class="card-title">📉 RPN Burndown — Total Original vs Total Current</span>
       <span class="card-meta" style="margin-left:auto">Sum across all failure modes · green = improved</span>
     </summary>
@@ -631,27 +631,10 @@ ${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. �
 }
 
 // ── SOD Criteria modals ─────────────────────────────────────
-npi.pfmea.pfShowSeverity = function() {
-  if (typeof showModal === 'function') showModal('modalPfmeaSeverity')
-  else {
-    const modal = document.getElementById('modalPfmeaSeverity')
-    if (modal) modal.style.display = 'flex'
-  }
-}
-npi.pfmea.pfShowOccurrence = function() {
-  if (typeof showModal === 'function') showModal('modalPfmeaOccurrence')
-  else {
-    const modal = document.getElementById('modalPfmeaOccurrence')
-    if (modal) modal.style.display = 'flex'
-  }
-}
-npi.pfmea.pfShowDetection = function() {
-  if (typeof showModal === 'function') showModal('modalPfmeaDetection')
-  else {
-    const modal = document.getElementById('modalPfmeaDetection')
-    if (modal) modal.style.display = 'flex'
-  }
-}
+// showModal is imported from helpers.js — no fallback needed
+npi.pfmea.pfShowSeverity = function() { showModal('modalPfmeaSeverity') }
+npi.pfmea.pfShowOccurrence = function() { showModal('modalPfmeaOccurrence') }
+npi.pfmea.pfShowDetection = function() { showModal('modalPfmeaDetection') }
 
 // ── History modal ─────────────────────────────────────────────
 npi.pfmea.pfShowHist = function(evt, cid) {
@@ -661,11 +644,7 @@ npi.pfmea.pfShowHist = function(evt, cid) {
   const bodyEl = document.getElementById('pfmeaHistoryModalBody')
   if (titleEl) titleEl.textContent = `PFMEA History — Step ${context.step?.stepNum ?? '—'}`
   if (bodyEl) bodyEl.innerHTML = npi.pfmea.renderHistoryModalBody(context)
-  if (typeof showModal === 'function') showModal('modalPfmeaHistory')
-  else {
-    const modal = document.getElementById('modalPfmeaHistory')
-    if (modal) modal.style.display = 'flex'
-  }
+  showModal('modalPfmeaHistory')
   if (evt?.stopPropagation) evt.stopPropagation()
 }
 
@@ -717,32 +696,9 @@ npi.pfmea.pfImplementAction = function(mi, ei, ci) {
   const newDet = act.newDet ? +act.newDet : ca.det
   if (!confirm(`Implement action?\\n\\nThis will:\\n• Update OCC: ${ca.occ} → ${newOcc}\\n• Update DET: ${ca.det} → ${newDet}\\n• New RPN: ${(ef.sev || 1) * newOcc * newDet}\\n• Log old RPN (${oldRpn}) to history\\n• Clear the action fields`)) return
 
-  if (typeof npi.data?.pfmea?.implementAction === 'function') {
-    const result = npi.data.pfmea.implementAction(mi, ei, ci)
-    if (!result.ok) return
-    render()
-    return
-  }
-
-  // Legacy fallback for isolated test loads where npi-data.js is not loaded.
-  const newRpn = npi.pfmea.calcCauseRpn(ef.sev, newOcc, newDet)
-  if (!ca.history) ca.history = []
-  const histEntry = {
-    rpn: oldRpn,
-    newRpn,
-    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
-    desc: act.taken || act.desc || 'Action implemented',
-    oldOcc: ca.occ, oldDet: ca.det,
-    newOcc, newDet,
-    relatedEcrId: ca.action_related_ecr_id || null
-  }
-  ca.history.push(histEntry)
-  ca.occ = newOcc
-  ca.det = newDet
-  ca.action = { desc: '', taken: '', owner: '', due: '', newOcc: '', newDet: '' }
-  if (typeof npiRelSavePFMEACause === 'function') npiRelSavePFMEACause(ef.id, ca)
-  if (typeof npiRelSavePFMEAHistory === 'function') npiRelSavePFMEAHistory(ca.id, histEntry)
-  else if (typeof save === 'function') save()
+  // npi.data.pfmea.implementAction handles history logging, score update, and action reset
+  const result = npi.data.pfmea.implementAction(mi, ei, ci)
+  if (!result.ok) return
   render()
 }
 npi.pfmea.pfDelCause = function(mi, ei, ci) { npi.data.pfmea.delCause(mi, ei, ci); render() }

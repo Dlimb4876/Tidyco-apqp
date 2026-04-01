@@ -59,6 +59,7 @@ export function setOperationsTab(tab) {
   // Default to current month when entering forecast
   if (appState.operationsTab === 'forecast' && prevTab !== 'forecast') {
     appState.prodCapMonthOffset = 0
+    operationsDashboardState.opsForecastChartRenderRequested = true
   }
 
   const parts = []
@@ -113,6 +114,11 @@ function setupOpsPulseFeed() {
     if (action === 'ops-nav-hub') return globalThis.navigate?.('hub')
     if (action === 'ops-generate-infographic') return opsGenerateInfographic()
     if (action === 'ops-show-guide') return showGuide('operations')
+    if (action === 'ops-refresh-forecast-chart') {
+      operationsDashboardState.opsForecastChartRenderRequested = true
+      if (typeof globalThis.render === 'function') globalThis.render()
+      return
+    }
     if (action === 'pulse-navigate' || action === 'metric-navigate' || action === 'ops-quick-nav') {
       return applyOpsQuickNav(el)
     }
@@ -126,6 +132,8 @@ function setupOpsPulseFeed() {
     if (action === 'ops-forecast-sort') return opsForecastSetSort(el.dataset.col || '')
     if (action === 'ops-forecast-filter-workarea') return opsForecastSetWorkAreaFilter(el.dataset.workArea || 'ALL')
     if (action === 'ops-forecast-shift-month') {
+      // Why: changing month window should always redraw the forecast trend chart.
+      operationsDashboardState.opsForecastChartRenderRequested = true
       const direction = el.dataset.direction === 'prev' ? 'prev' : 'next'
       prodCapShiftMonth(direction)
       return
@@ -186,9 +194,20 @@ function renderOperations() {
 
   setTimeout(() => {
     setupOpsPulseFeed()
-    if (tab === 'forecast' && appState.currentSection === 'operations' && (appState.operationsTab || 'overview') === 'forecast') {
-      opsRenderForecastChart(metrics.forecast)
+    const enteredForecastTab = tab === 'forecast' && operationsDashboardState.opsLastRenderedTab !== 'forecast'
+    if (enteredForecastTab) {
+      operationsDashboardState.opsForecastChartRenderRequested = true
     }
+    if (
+      tab === 'forecast' &&
+      appState.currentSection === 'operations' &&
+      (appState.operationsTab || 'overview') === 'forecast' &&
+      operationsDashboardState.opsForecastChartRenderRequested
+    ) {
+      opsRenderForecastChart(metrics.forecast)
+      operationsDashboardState.opsForecastChartRenderRequested = false
+    }
+    operationsDashboardState.opsLastRenderedTab = tab
   }, 0)
 
   return `

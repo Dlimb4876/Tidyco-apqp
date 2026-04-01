@@ -21,7 +21,7 @@
 /* ── Week header row ────────────────────────────────────────── */
 .gantt-week-row th {
   background: var(--bg-soft); color: #667d95;
-  font-family: 'IBM Plex Mono', monospace; font-size: 8px;
+  font-family: 'IBM Plex Mono', monospace; font-size: calc(var(--ui-font-size) * 0.57);
   text-align: center; padding: 2px 1px;
   border: 1px solid rgba(255,255,255,.04);
 }
@@ -36,7 +36,7 @@
 .gantt-role-cell  { padding: 3px 5px !important;  text-align: center; min-width: 56px; }
 .gantt-notes-cell { padding: 2px 5px !important;  min-width: 108px; vertical-align: middle !important; }
 .gantt-rowlabel   {
-  font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace; font-size: calc(var(--ui-font-size) * 0.64); font-weight: 700;
   color: #6b7a99; padding: 2px 4px !important;
   white-space: nowrap; text-align: right; border-right: 2px solid var(--line2) !important;
 }
@@ -59,7 +59,7 @@
 
 /* ── Collapsed month ────────────────────────────────────────── */
 .gantt-collapsed-cell { background: var(--bg-soft); cursor: default; }
-.gantt-collapsed-wk   { background: var(--line) !important; color: #94a3b8 !important; font-size: 10px !important; cursor: pointer; }
+.gantt-collapsed-wk   { background: var(--line) !important; color: #94a3b8 !important; font-size: calc(var(--ui-font-size) * 0.71) !important; cursor: pointer; }
 
 /* ── Add row ────────────────────────────────────────────────── */
 .gantt-add-row td { padding: 0 !important; border-bottom: 2px solid var(--line2); }
@@ -90,7 +90,7 @@
 /* ── Milestone cells ────────────────────────────────────────── */
 .gantt-ms-cell {
   text-align: center;
-  font-size: 9px;
+  font-size: calc(var(--ui-font-size) * 0.64);
   color: transparent;
   cursor: pointer;
   height: 14px;
@@ -118,7 +118,7 @@
   align-items: center;
   gap: 2px;
 }
-.gantt-row-actions .del-btn { font-size: 10px; padding: 1px 5px; line-height: 1.4; }
+.gantt-row-actions .del-btn { font-size: calc(var(--ui-font-size) * 0.71); padding: 1px 5px; line-height: 1.4; }
 .gantt-row-actions .del-btn:disabled { opacity: .2; cursor: default; }
 
 /* ── Print / PDF export ─────────────────────────────────────── */
@@ -134,7 +134,7 @@
     background: transparent !important;
     pointer-events: none;
   }
-  .gantt-tbl { font-size: 8px !important; }
+  .gantt-tbl { font-size: calc(var(--ui-font-size) * 0.57) !important; }
   .gantt-cell, .gantt-actual-cell { min-width: 14px !important; height: 12px !important; }
   .gantt-task-cell  { min-width: 120px !important; }
   .gantt-notes-cell { min-width: 80px !important; }
@@ -151,37 +151,37 @@
 }
 .kit-name-input {
   flex: 1; border: none; background: transparent;
-  font-size: 14px; font-weight: 600; font-family: 'IBM Plex Sans', sans-serif;
+  font-size: var(--ui-font-size); font-weight: 600; font-family: 'IBM Plex Sans', sans-serif;
   color: var(--ink); outline: none; padding: 2px 0;
 }
 .kit-body    { padding: 8px 14px; display: flex; flex-direction: column; gap: 4px; min-height: 40px; }
-.kit-empty   { font-size: 12px; color: var(--muted); padding: 8px 0; text-align: center; }
+.kit-empty   { font-size: calc(var(--ui-font-size) * 0.86); color: var(--muted); padding: 8px 0; text-align: center; }
 .kit-item-row {
   display: flex; align-items: center; gap: 8px;
   padding: 4px 0; border-bottom: 1px solid var(--line);
 }
 .kit-item-row:last-child { border-bottom: none; }
-.kit-item-type { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
-.kit-item-name { flex: 1; font-size: 12px; color: var(--ink); }
-.kit-item-pn   { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+.kit-item-type { font-size: calc(var(--ui-font-size) * 0.71); font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.kit-item-name { flex: 1; font-size: calc(var(--ui-font-size) * 0.86); color: var(--ink); }
+.kit-item-pn   { font-size: calc(var(--ui-font-size) * 0.79); color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
 .kit-qty-input {
   width: 52px; padding: 2px 5px; border: 1px solid var(--line2);
-  border-radius: 3px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+  border-radius: 3px; font-size: calc(var(--ui-font-size) * 0.86); font-family: 'IBM Plex Mono', monospace;
   text-align: center; outline: none;
 }
 .kit-qty-input:focus { border-color: var(--blue); }
-.kit-unit    { font-size: 11px; color: var(--muted); min-width: 24px; }
-.kit-summary { padding: 6px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); background: var(--bg-soft); }
+.kit-unit    { font-size: calc(var(--ui-font-size) * 0.79); color: var(--muted); min-width: 24px; }
+.kit-summary { padding: 6px 14px; font-size: calc(var(--ui-font-size) * 0.79); color: var(--muted); border-top: 1px solid var(--line); background: var(--bg-soft); }
 .kit-add-btn {
   display: block; width: 100%; padding: 8px; border: none;
   border-top: 1px dashed var(--line); background: transparent;
-  color: var(--blue); font-size: 12px; cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--blue); font-size: calc(var(--ui-font-size) * 0.86); cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
 }
 .kit-add-btn:hover { background: var(--blue-pale); }
 .new-kit-btn {
   display: block; width: 100%; padding: 24px; border: 2px dashed var(--line2);
   border-radius: 10px; background: transparent; color: var(--muted);
-  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-size: calc(var(--ui-font-size) * 0.93); font-weight: 600; cursor: pointer;
   font-family: 'IBM Plex Sans', sans-serif; text-align: center;
 }
 .new-kit-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-pale); }
@@ -191,35 +191,35 @@
   /* Gantt table adjustments */
   .gantt-month-row th {
     padding: 3px 4px;
-    font-size: 9px;
+    font-size: calc(var(--ui-font-size) * 0.64);
   }
 
   .gantt-week-row th {
     padding: 1px;
-    font-size: 8px;
+    font-size: calc(var(--ui-font-size) * 0.57);
   }
 
   .gantt-task-cell {
     padding: 3px 6px !important;
     min-width: 140px;
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .gantt-role-cell {
     padding: 3px 4px !important;
     min-width: 50px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   .gantt-notes-cell {
     padding: 2px 4px !important;
     min-width: 100px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   .gantt-rowlabel {
     padding: 2px 4px !important;
-    font-size: 8px;
+    font-size: calc(var(--ui-font-size) * 0.57);
   }
 
   .gantt-cell,
@@ -240,7 +240,7 @@
   }
 
   .kit-name-input {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .kit-body {
@@ -254,40 +254,40 @@
   }
 
   .kit-item-type {
-    font-size: 9px;
+    font-size: calc(var(--ui-font-size) * 0.64);
     padding: 1px 4px;
   }
 
   .kit-item-name {
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   .kit-item-pn {
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   .kit-qty-input {
     width: 45px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   .kit-unit {
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   .kit-summary {
     padding: 5px 10px;
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   .kit-add-btn {
     padding: 6px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   .new-kit-btn {
     padding: 16px;
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
     border-radius: 6px;
   }
 }

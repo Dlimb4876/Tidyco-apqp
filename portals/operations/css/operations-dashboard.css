@@ -31,7 +31,7 @@
 }
 
 .ops-reporting-date label {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--muted);
@@ -52,7 +52,7 @@
   background: var(--white);
   color: var(--text);
   font: inherit;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
 }
 
 .ops-tabs {
@@ -111,7 +111,7 @@
 }
 
 .ops-kicker {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   text-transform: uppercase;
   letter-spacing: .12em;
   color: rgba(246, 251, 255, .86);
@@ -147,7 +147,7 @@
 }
 
 .ops-metric-label {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--muted);
@@ -163,7 +163,7 @@
 
 .ops-metric-detail {
   margin-top: 6px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--muted);
 }
 
@@ -202,12 +202,12 @@
 
 .ops-panel-head h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   color: var(--ink);
 }
 
 .ops-panel-head span {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--muted);
 }
 
@@ -232,7 +232,7 @@
 
 .ops-feed-detail {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--muted);
 }
 
@@ -246,7 +246,7 @@
 
 .ops-radar-label,
 .ops-radar-value {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text);
 }
 
@@ -284,7 +284,7 @@
   border: 1px dashed var(--line);
   border-radius: 10px;
   padding: 10px;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--muted);
   background: var(--bg-soft);
 }
@@ -309,7 +309,7 @@
   border-radius: 999px;
   padding: 6px 12px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   cursor: pointer;
 }
 
@@ -329,7 +329,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text);
   font-weight: 600;
 }
@@ -384,7 +384,7 @@
   border-radius: 6px;
   padding: 0 8px;
   font: inherit;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--text);
   background: var(--white);
 }
@@ -396,7 +396,7 @@
   border-radius: 6px;
   padding: 0 8px;
   font: inherit;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--text);
   background: var(--white);
 }
@@ -404,7 +404,7 @@
 .ops-forecast-archived-toggle {
   flex: 0 0 auto;
   height: 32px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
 }
 
 .ops-sortable {
@@ -417,7 +417,7 @@
 }
 
 .ops-sort-icon {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   margin-left: 3px;
   vertical-align: middle;
 }
@@ -437,7 +437,7 @@
 .ops-forecast-table td {
   border-bottom: 1px solid var(--line);
   padding: 8px;
-  font-size: 12px;
+  font-size: var(--table-cell-font-size);
   color: var(--text);
   text-align: left;
   white-space: nowrap;
@@ -456,7 +456,7 @@
 .ops-col-actions { width: 300px; }
 
 .ops-forecast-table th {
-  font-size: 11px;
+  font-size: var(--table-head-font-size);
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--muted);
@@ -469,7 +469,7 @@
   border-radius: 999px;
   padding: 2px 8px;
   background: var(--bg-soft);
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   text-transform: uppercase;
   letter-spacing: .05em;
 }
@@ -488,6 +488,16 @@
   color: var(--text);
   background: var(--white);
   min-width: 110px;
+}
+
+.ops-forecast-inline[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.ops-forecast-inline[type='number']::-webkit-outer-spin-button,
+.ops-forecast-inline[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 @media (max-width: 767px) {
@@ -560,7 +570,7 @@
 }
 
 .pc-window-label {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 600;
   color: var(--ink);
   min-width: 80px;
@@ -638,7 +648,7 @@
 }
 
 .ops-forecast-notes-text {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--muted);
   white-space: normal;
   line-height: 1.5;
@@ -657,7 +667,7 @@
   border-radius: 6px;
   padding: 8px;
   font: inherit;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text);
   background: var(--white);
   resize: vertical;

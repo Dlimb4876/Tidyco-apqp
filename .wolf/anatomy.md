@@ -3,6 +3,10 @@
 > Auto-maintained by OpenWolf. Last scanned: 2026-04-01T12:43:03.171Z
 > Files: 564 tracked | Anatomy hits: 0 | Misses: 0
 
+## Manual Update 2026-04-01
+
+- Updated `.gitignore` to ignore `.kilo` local artifacts.
+
 ## ../../../.claude/plans/
 
 - `piped-marinating-kahn.md` — Plan: Per-Product Support Demand Allocation (~2165 tok)
