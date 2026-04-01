@@ -7,7 +7,20 @@ This is a minimal Electron wrapper that opens your hosted Tidyco APQP portal in 
 - Downloads and installs as a standalone desktop app
 - Opens your portal URL in a native window
 - Always loads the latest code from your hosted portal
+- Toggle between production and development versions
 - No updates needed—your portal updates instantly reach all users
+
+## Features
+
+### Dev/Production Toggle
+Users can switch between versions in the app menu:
+- **Settings** → **Use Development Version** (Ctrl+Shift+D)
+- Shows checkmark (✓) when using dev version
+- Preference is saved and persists on restart
+
+URLs:
+- **Production**: https://dlimb4876.github.io/Tidyco-apqp/
+- **Development**: https://dlimb4876.github.io/Tidyco-apqp/dev/
 
 ## Development
 
@@ -18,41 +31,39 @@ npm run electron
 
 ### Run with DevTools
 ```bash
-npm run electron:dev
+npm run electron -- --dev
 ```
 
-### Build Installer
+### Build Package
 ```bash
 npm run electron:build
 ```
 
-This creates:
-- `dist/Tidyco APQP Setup 1.0.0.exe` (Windows installer)
-- `dist/Tidyco APQP 1.0.0.exe` (Portable executable)
+Creates: `out/make/zip/win32/x64/tidyco-apqp-win32-x64-1.0.0.zip` (380 MB)
+
+## Installation
+
+Users can extract the ZIP and run `Tidyco APQP.exe` directly, or use a batch installer script (if created).
 
 ## Configuration
 
-**Portal URL** is defined in `electron/main.js`:
-```javascript
-mainWindow.loadURL('https://dlimb4876.github.io/Tidyco-apqp/')
-```
+Settings are saved to: `%APPDATA%/tidyco-apqp/app-config.json`
 
-To change it, update the URL in that file and rebuild.
+Stores:
+- `useDevVersion` - Whether to load the dev URL
 
 ## Distribution
 
-Users can:
-1. Download the `.exe` installer from your GitHub releases
-2. Run the installer (standard Windows install wizard)
-3. App appears in Start Menu and can create desktop shortcuts
-4. Click to open—portal loads instantly
+1. Extract the built ZIP file
+2. Package `Tidyco APQP.exe` for distribution
+3. Users run the executable
 
 ## Under the Hood
 
 - Electron v31 (Chromium-based)
 - No bundled code—always fetches latest from your hosted URL
-- Lightweight (~150MB download)
-- Works on Windows 7+ (can be extended to macOS/Linux)
+- ~380MB download size
+- Works on Windows 7+
 
 ## Maintenance
 
@@ -65,4 +76,5 @@ Users can:
 Currently uses `favicon.ico` from project root. To customize:
 1. Create a 512x512 PNG icon
 2. Replace `favicon.ico`
-3. Rebuild installer
+3. Rebuild
+

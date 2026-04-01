@@ -3,6 +3,9 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-04-01 | Desktop app icon updated to new Tidyco Logo - large | Updated branding asset
+## 2026-04-01 | Electron build now excludes all source/repo files from bundle | App only needs electron/ and Electron runtime — removed ~1.9 GB of unnecessary files from output
+
 ## 2026-03-31 | PFMEA owner field: searchable picker with datalist | Replace plain dropdown with type-to-search input matching tasks product picker pattern, so large team lists are easy to navigate
 
 ## 2026-03-31 | Remove cross-portal import in products.js | Product Development portal no longer imports directly from the Capacity portal — work area helpers now live in shared utils

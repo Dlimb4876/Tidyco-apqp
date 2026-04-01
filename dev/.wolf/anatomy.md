@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-31T07:08:36.537Z
-> Files: 556 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-04-01T11:11:40.080Z
+> Files: 557 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ../../../.claude/plans/
 
@@ -25,7 +25,7 @@
 - `jest.setup.js` — Declares __filename (~449 tok)
 - `operations-dashboard-assessment.md` — Operations Dashboard Code Assessment Report (~4402 tok)
 - `package-lock.json` — npm lock file (~61736 tok)
-- `package.json` — Node.js package manifest (~624 tok)
+- `package.json` — Node.js package manifest (~1108 tok)
 - `README.md` — Project documentation (~6517 tok)
 - `SKILLS_GUIDE.md` — Tidyco APQP Development Skills Guide (~2691 tok)
 - `SKILLS_QUICK_REFERENCE.txt` — Declares in (~908 tok)
@@ -1389,6 +1389,10 @@
 - `f8929f38e4311c5717f1a0d4a0bc4fb0277329557a1a5aecb93317808669ba4f` (~197270 tok)
 - `fd8fd38c229ab33755ff429ccc9919eba21b566551cbfb17d8e11e35e941ee0e` (~3879 tok)
 - `metadata.json` (~580 tok)
+
+## electron/
+
+- `main.js` — Handle Squirrel installer events — creates/removes Start Menu & Desktop shortcuts (~1704 tok)
 
 ## plans/
 
