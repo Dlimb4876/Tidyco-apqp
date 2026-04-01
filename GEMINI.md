@@ -23,25 +23,22 @@ This document provides a comprehensive overview of the Tidyco APQP project, its 
 - **Testing**: Jest 30 + `jest-environment-jsdom`.
 - **Linting/Formatting**: ESLint 9 & Prettier (applied mainly to NPI portal).
 
-### Core Commands (Run in order)
+### Core Commands
 
-1.  `npm install`: Install dev dependencies (Jest, ESLint).
-2.  `npm test`: Run all Jest tests (expect ~600+ passing tests).
-3.  `npm run check:all`: **Mandatory before every commit.** Runs all quality audits:
-    - `check:syntax`: Validates JS syntax (parser-backed).
-    - `check:imports`: Verifies ESM import/export wiring.
-    - `check:esm-coverage`: Tracks remaining non-ESM files.
-    - `check:subscriptions`: Audits real-time subscription cleanup.
-    - `check:state`: Tracks global state variable ownership.
-    - `check:rls`: Audits RLS policies.
-    - `check:mobile`: Verifies CSS breakpoints.
-    - `check:modals`: Audits modal state handling.
-    - `check:coverage`: Generates test coverage report.
-4.  `npm run lint:npi` / `npm run format:npi`: Lint and format NPI portal files.
+**→ See AGENTS.md "Quick Commands" section for the definitive list of all testing, validation, wiki, and linting commands.**
+
+**Quick reference:**
+- `npm install` — Install dev dependencies (fresh clone only)
+- `npm test` — Run all Jest tests
+- `npm run check:all` — **Mandatory before every commit** — Runs all quality audits
 
 ---
 
 ## 3. Architecture & Critical Rules
+
+### Hard Rules
+
+**→ See AGENTS.md "Hard Rules" section for the definitive list.** All cross-file references should point to AGENTS.md as the single source of truth for architectural guardrails.
 
 ### 3.1 Source of Truth: `index.html`
 `index.html` is the bootstrap source of truth. Keep a single module entrypoint:
@@ -69,6 +66,8 @@ In this vanilla JS environment, a duplicate `const` in the global scope causes a
 ---
 
 ## 4. OpenWolf Protocol
+
+**→ See AGENTS.md "OpenWolf Protocol" section for the definitive reference.**
 
 This repository follows the **OpenWolf** protocol. You MUST adhere to these steps:
 
@@ -109,6 +108,8 @@ Data is persisted to Supabase via a **debounced save cycle (800-900ms)**. Ensure
   - Use `jest.useFakeTimers()` for debounced save tests (800ms).
   - Mock Supabase client (`supa`) and global `appState` object.
 - **State**: Prefer mocking `appState` in `core/js/state.js` over individual globals.
+
+**→ See TESTING_STRATEGY.md for comprehensive testing patterns, examples, and coverage goals.**
 
 ---
 

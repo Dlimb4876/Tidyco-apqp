@@ -1,20 +1,74 @@
 import { app, BrowserWindow, Menu } from 'electron'
 import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
+import { dirname, join, resolve, basename } from 'path'
+import { readFileSync, writeFileSync } from 'fs'
+import { spawn } from 'child_process'
+
+// Handle Squirrel installer events — creates/removes Start Menu & Desktop shortcuts
+if (process.platform === 'win32' && process.argv.length > 1) {
+  const squirrelCmd = process.argv[1]
+  const appFolder = resolve(process.execPath, '..')
+  const updateExe = resolve(appFolder, '..', 'Update.exe')
+  const exeName = basename(process.execPath)
+
+  const spawnUpdate = (args) => {
+    try { spawn(updateExe, args, { detached: true }) } catch {}
+  }
+
+  if (squirrelCmd === '--squirrel-install' || squirrelCmd === '--squirrel-updated') {
+    spawnUpdate(['--createShortcut', exeName])
+    setTimeout(() => app.quit(), 1000)
+  } else if (squirrelCmd === '--squirrel-uninstall') {
+    spawnUpdate(['--removeShortcut', exeName])
+    setTimeout(() => app.quit(), 1000)
+  } else if (squirrelCmd === '--squirrel-obsolete') {
+    app.quit()
+  }
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const isDev = process.argv.includes('--dev') || process.env.NODE_ENV === 'development'
 
+const PROD_URL = 'https://dlimb4876.github.io/Tidyco-apqp/'
+const DEV_URL = 'https://dlimb4876.github.io/Tidyco-apqp/dev/'
+const CONFIG_PATH = join(app.getPath('userData'), 'app-config.json')
+
 let mainWindow
+let useDevVersion = false
+let zoomLevel = 0
+
+// Load configuration
+function loadConfig() {
+  try {
+    const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'))
+    useDevVersion = config.useDevVersion || false
+    zoomLevel = config.zoomLevel ?? 0
+  } catch {
+    // Config doesn't exist yet, use defaults
+    useDevVersion = false
+    zoomLevel = 0
+  }
+}
+
+// Save configuration
+function saveConfig() {
+  writeFileSync(CONFIG_PATH, JSON.stringify({ useDevVersion, zoomLevel }, null, 2))
+}
+
+// Get current URL based on settings
+function getCurrentURL() {
+  return useDevVersion ? DEV_URL : PROD_URL
+}
 
 // Create the browser window
 function createWindow() {
+  const iconPath = join(__dirname, 'assets', 'Tidyco Logo - large.ico')
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 800,
     minHeight: 600,
-    icon: join(__dirname, '../favicon.ico'),
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -23,7 +77,12 @@ function createWindow() {
   })
 
   // Load the portal URL
-  mainWindow.loadURL('https://dlimb4876.github.io/Tidyco-apqp/')
+  mainWindow.loadURL(getCurrentURL())
+
+  // Apply saved zoom level after page loads
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.setZoomLevel(zoomLevel)
+  })
 
   // Open DevTools in development
   if (isDev) {
@@ -37,7 +96,11 @@ function createWindow() {
 }
 
 // App event listeners
-app.on('ready', createWindow)
+app.on('ready', () => {
+  loadConfig()
+  createWindow()
+  createMenu()
+})
 
 app.on('window-all-closed', () => {
   // On macOS, keep app running until explicitly quit
@@ -85,7 +148,57 @@ function createMenu() {
         { label: 'Reload', accelerator: 'CmdOrCtrl+R', role: 'reload' },
         { label: 'Hard Reload', accelerator: 'CmdOrCtrl+Shift+R', role: 'forceReload' },
         { type: 'separator' },
+        {
+          label: 'Zoom In',
+          accelerator: 'CmdOrCtrl+Plus',
+          click: () => {
+            if (!mainWindow) return
+            zoomLevel = Math.min(zoomLevel + 0.5, 4)
+            mainWindow.webContents.setZoomLevel(zoomLevel)
+            saveConfig()
+          }
+        },
+        {
+          label: 'Zoom Out',
+          accelerator: 'CmdOrCtrl+-',
+          click: () => {
+            if (!mainWindow) return
+            zoomLevel = Math.max(zoomLevel - 0.5, -3)
+            mainWindow.webContents.setZoomLevel(zoomLevel)
+            saveConfig()
+          }
+        },
+        {
+          label: 'Reset Zoom',
+          accelerator: 'CmdOrCtrl+0',
+          click: () => {
+            if (!mainWindow) return
+            zoomLevel = 0
+            mainWindow.webContents.setZoomLevel(zoomLevel)
+            saveConfig()
+          }
+        },
+        { type: 'separator' },
         { label: 'Toggle DevTools', accelerator: 'F12', role: 'toggleDevTools' }
+      ]
+    },
+    {
+      label: 'Settings',
+      submenu: [
+        {
+          label: useDevVersion ? '✓ Using Development Version' : 'Use Development Version',
+          accelerator: 'CmdOrCtrl+Shift+D',
+          click: () => {
+            useDevVersion = !useDevVersion
+            saveConfig()
+            // Reload the app with new URL
+            if (mainWindow) {
+              mainWindow.loadURL(getCurrentURL())
+            }
+            // Rebuild menu to show updated checkmark
+            createMenu()
+          }
+        }
       ]
     }
   ]
@@ -93,4 +206,3 @@ function createMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
-app.on('ready', createMenu)

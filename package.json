@@ -25,7 +25,8 @@
     "check:all": "npm run check:syntax && npm run check:imports && npm run check:esm-coverage && npm run check:subscriptions && npm run check:state && npm run check:rls && npm run check:mobile && npm run check:modals && npm run check:coverage",
     "electron": "electron .",
     "electron:dev": "electron . --dev",
-    "electron:build": "electron-forge make"
+    "electron:build": "electron-forge make",
+    "electron:installer": "node electron/build-installer.js"
   },
   "repository": {
     "type": "git",
@@ -49,13 +50,14 @@
     "jest-environment-jsdom": "^30.3.0"
   },
   "build": {
-    "appId": "com.tidyco.apqp",
-    "productName": "Tidyco APQP",
+    "appId": "com.tidyco.operations",
+    "productName": "Tidyco Operations Portal",
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "electron/assets"
     },
     "files": [
       "electron/main.js",
+      "electron/assets/**",
       "node_modules/"
     ],
     "win": {
@@ -66,12 +68,23 @@
   },
   "config": {
     "forge": {
+      "packagerConfig": {
+        "name": "Tidyco Operations Portal",
+        "executableName": "TidycoOperationsPortal",
+        "icon": "electron/assets/Tidyco Logo - large",
+        "ignore": [
+          "^\\/(?!electron(\\/|$)|package\\.json$)"
+        ]
+      },
       "makers": [
         {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "win32"
-          ]
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "tidyco_operations_portal",
+            "authors": "Tidyco",
+            "setupExe": "TidycoOperationsPortal-Setup.exe",
+            "setupIcon": "electron/assets/Tidyco Logo - large.ico"
+          }
         }
       ],
       "publishers": [
