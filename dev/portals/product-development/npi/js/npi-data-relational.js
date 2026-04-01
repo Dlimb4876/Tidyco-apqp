@@ -76,7 +76,10 @@ export function npiRelHydratePfdRows(rows) {
     pfd_type: row.pfd_type || 'Process',
     nextStepId: row.next_step_num != null ? row.next_step_num : null,
     nextStepId_yes: row.next_step_num_yes != null ? row.next_step_num_yes : null,
-    nextStepId_no: row.next_step_num_no != null ? row.next_step_num_no : null
+    nextStepId_no: row.next_step_num_no != null ? row.next_step_num_no : null,
+    location: row.location || '',
+    operator: row.operator || '',
+    timing: row.timing || ''
   }));
 
   const firstExecutable = executableRows[0] || null;
@@ -510,6 +513,9 @@ export const npiRelSavePFDStep = async function(step) {
       next_step_num: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId != null ? step.nextStepId : null),
       next_step_num_yes: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId_yes != null ? step.nextStepId_yes : null),
       next_step_num_no: npiRelIsHeaderStep(step.type) ? null : (step.nextStepId_no != null ? step.nextStepId_no : null),
+      location: npiRelIsHeaderStep(step.type) ? null : (step.location || ''),
+      operator: npiRelIsHeaderStep(step.type) ? null : (step.operator || ''),
+      timing: npiRelIsHeaderStep(step.type) ? null : (step.timing || ''),
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
     if (error) safeWarn('npiRelSavePFDStep error:', error);

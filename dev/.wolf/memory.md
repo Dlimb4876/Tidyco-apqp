@@ -1654,3 +1654,4 @@
 | 13:36 | Session end: 6 writes across 2 files (npi-events.js, npi-data-relational.js) | 9 reads | ~4918 tok |
 | 13:43 | Edited portals/product-development/npi/js/npi-cp.js | added 1 import(s) | ~37 |
 | 13:44 | Session end: 7 writes across 3 files (npi-events.js, npi-data-relational.js, npi-cp.js) | 10 reads | ~4955 tok |
+| 14:57 | Added crisis-mode soft delete + DB audit trail for products/families/work_areas | portals/product-development/product-management/js/products-data.js, portals/product-development/js/families-data.js, portals/capacity/production/js/work-areas-data.js, portals/production/js/data.js, portals/operations/js/operations-dashboard-realtime.js, supabase/crisis_soft_delete_audit.sql | Applied migration and converted UI delete flows to archive behavior |

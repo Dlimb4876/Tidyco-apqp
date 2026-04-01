@@ -66,6 +66,7 @@ export async function prodDataInit() {
     // Load products from product management database (not production_products table)
     const products = await supa.from('products')
       .select('*')
+      .is('deleted_at', null)
       .order('name', { ascending: true })
 
     const batches = await supa.from('production_batches')
@@ -119,6 +120,7 @@ export async function prodDataReloadProducts() {
   try {
     const { data, error } = await supa.from('products')
       .select('*')
+      .is('deleted_at', null)
       .order('name', { ascending: true })
     if (error) throw error
     prodState.products = data || []
@@ -221,7 +223,15 @@ export async function prodDataDeleteProduct(idx) {
   const product = prodState.products[idx]
 
   try {
-    const { error } = await supa.from('products').delete().eq('id', product.id)
+    // Archive instead of hard-delete so accidental removals can be restored.
+    const { error } = await supa.from('products')
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: currentUser?.id || null,
+        delete_reason: 'Archived from Production'
+      })
+      .eq('id', product.id)
+      .is('deleted_at', null)
     if (error) throw error
 
     prodState.products.splice(idx, 1)
@@ -450,6 +460,7 @@ export function prodDataSubscribe() {
   // Subscribe to products changes (from product management)
   createRealtimeSubscription('products', 'prod_products_channel', {
     onInsert: (newProduct) => {
+      if (newProduct.deleted_at) return
       if (!prodState || !Array.isArray(prodState.products)) return
       if (!prodState.products.some(p => p.id === newProduct.id)) {
         prodState.products.push(newProduct)
@@ -466,6 +477,19 @@ export function prodDataSubscribe() {
     },
     onUpdate: (updated) => {
       if (!prodState || !Array.isArray(prodState.products)) return
+      if (updated.deleted_at) {
+        prodState.products = prodState.products.filter(p => p.id !== updated.id)
+        requestRender('prod', {
+          trigger: 'realtime',
+          renderNow: function() {
+            if (prodRefreshTabBodyHandler && appState.currentSection === 'production') {
+              prodRefreshTabBodyHandler()
+            }
+          },
+          isEditing: isEditingInlineCell()
+        })
+        return
+      }
       const idx = prodState.products.findIndex(p => p.id === updated.id)
       if (idx >= 0) {
         prodState.products[idx] = updated

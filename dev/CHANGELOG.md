@@ -3,6 +3,8 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-04-01 | Crisis-mode soft delete + audit trail for products/families/work areas | Prevent permanent accidental deletions and create forensic history of who changed what and when
+## 2026-04-01 | PFMEA SOD criteria modals — wider layout and guide update | Modals now use wider layout (1100px/800px) to reduce scrolling; added reference to modals in PFMEA user guide
 ## 2026-04-01 | Desktop app icon updated to new Tidyco Logo - large | Updated branding asset
 ## 2026-04-01 | Operations Dashboard Capacity Forecast "Add Opportunity" layout | Reduced input width by increasing columns to 5 on desktop to fit on 2 rows instead of 3
 ## 2026-04-01 | Operations Dashboard Capacity Forecast notes display and editing | Added notes display to opportunity layer with expandable rows and integrated notes into inline editing; removed redundant Notes column and optimized table column widths (300px Title with wrap) for a cleaner layout
@@ -18,6 +20,7 @@ Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
 ## 2026-03-31 | Product Development portal refactor for portal consistency | Page used heavy inline styles on the table, header, and empty state instead of the shared CSS classes (prod-tbl, families-table-wrap, empty-state, etc.) used across all other portal pages
 
+## 2026-04-01 | Fix PFD fullscreen scrollability | PFD fullscreen overlay was not scrollable; added pfd-table-wrap scroll container and made headers sticky for better usability
 ## 2026-03-31 | Fullscreen mode for Plan by Product and Plan by Work Area | Better use of large screens when reviewing production plans
 
 ## 2026-03-31 | Fullscreen mode for Gantt, CTQ, PFD, and Production Scheduling | All four views benefit from more screen space; shared portal-fullscreen-overlay CSS pattern added; Esc key closes all NPI and scheduling fullscreen views

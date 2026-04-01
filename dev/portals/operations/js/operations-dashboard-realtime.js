@@ -114,6 +114,7 @@ async function opsRefreshProductionProducts() {
 	const { data, error } = await supa
 		.from('products')
 		.select('*')
+		.is('deleted_at', null)
 		.order('name', { ascending: true })
 	if (error) throw error
 	globalThis.prodState.products = data || []

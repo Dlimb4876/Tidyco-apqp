@@ -397,6 +397,7 @@ export const GUIDE_CONTENT = {
           <li><strong>OCC 10</strong> — Near certain to occur. <strong>OCC 1</strong> — Very unlikely.</li>
           <li><strong>DET 10</strong> — Cannot be detected. <strong>DET 1</strong> — Near certain detection before reaching customer.</li>
         </ul>
+        <p style="margin-top:10px">Click the <strong>?</strong> buttons next to the SEV, OCC, and DET column headers to view the full rating criteria tables with detailed descriptions for each score.</p>
       </div>
       <div class="guide-section">
         <div class="guide-section-title">Special Characteristics (SC)</div>

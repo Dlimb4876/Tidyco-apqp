@@ -41,6 +41,10 @@ function productsDataTriggerKanbanRefresh() {
 
 function productsDataUpsertProduct(row) {
   if (!row || !row.id) return
+  if (row.deleted_at) {
+    productsDataRemoveProduct(row.id)
+    return
+  }
   const idx = productsState.products.findIndex(p => p.id === row.id)
   if (idx >= 0) {
     productsState.products[idx] = row
@@ -131,7 +135,8 @@ export async function productsDataInit() {
   const user = supa.currentUser
   if (!user) return
   try {
-    const prods = await supa.supabase.from('products').select('*').order('name', { ascending: true })
+    const prods = await supa.supabase.from('products').select('*').is('deleted_at', null)
+      .order('name', { ascending: true })
     if (prods.error) throw prods.error
     productsState.products = prods.data || []
 
@@ -387,28 +392,21 @@ export async function productsDataGetRelatedDataCounts(productId) {
 }
 
 /**
- * Delete product with full cascade (overhaul history, NPI projects, ME data)
+ * Soft-delete (archive) product to prevent permanent data loss
  */
 export async function productsDataDeleteProduct(productId) {
   try {
-    const linkedProjects = await supa.supabase
-      .from('projects')
-      .select('id')
-      .eq('product_id', productId)
-
-    if (linkedProjects.data && linkedProjects.data.length > 0) {
-      for (const project of linkedProjects.data) {
-        if (typeof productsRealtimeHooks.npiRelClearAll === 'function') {
-          await productsRealtimeHooks.npiRelClearAll(project.id)
-        }
-        await supa.supabase.from('projects').delete().eq('id', project.id)
-      }
-    }
-
-    await supa.supabase.from('me_products').delete().eq('product_database_id', productId)
-    await supa.supabase.from('me_tasks').delete().eq('product_id', productId)
-
-    const result = await supa.supabase.from('products').delete().eq('id', productId)
+    const user = supa.currentUser
+    const result = await supa.supabase.from('products')
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: user?.id || null,
+        delete_reason: 'Archived from Product Management'
+      })
+      .eq('id', productId)
+      .is('deleted_at', null)
+      .select()
+      .single()
     if (result.error) throw result.error
 
     productsState.products = productsState.products.filter(p => p.id !== productId)

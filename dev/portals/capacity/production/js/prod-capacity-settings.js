@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // prod-capacity-settings.js — Production Capacity Settings Tab
-// 2-year scrollable grid: work areas (rows) × months (columns)
+// 2-year scrollable grid: months (rows) × work areas (columns)
 // Each cell = number of staff for that area/month
 // 1 staff = working days (Mon-Fri, excluding UK bank holidays) x 8h
 // ═══════════════════════════════════════════════════════════════
@@ -18,7 +18,9 @@ import {
   prodCapDataSetStaff,
   prodCapAvailableHours,
   prodCapMonthLabelFull,
-  prodCapSaveUtilization
+  prodCapSaveUtilization,
+  prodCapDataGetNotes,
+  prodCapDataSetNotes
 } from './prod-capacity-data.js'
 
 let prodCapSettingsSaveTimer = null
@@ -40,33 +42,22 @@ export function renderProdCapSettings() {
       </div>`;
   }
 
-  // ── Build month header row ────────────────────────────────
-  // Group by year for a year-label spanning row
-  const yearGroups = {};
-  monthKeys.forEach(key => {
-    const { year } = prodCapParseKey(key);
-    if (!yearGroups[year]) yearGroups[year] = [];
-    yearGroups[year].push(key);
-  });
+  // ── Build work area header columns ────────────────────────
+  const today = new Date();
+  const currentKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
 
-  const yearHeaderCells = Object.entries(yearGroups).map(([yr, ks]) =>
-    `<th colspan="${ks.length}" style="text-align:center;background:var(--bg);border-bottom:2px solid var(--line);letter-spacing:1px">${yr}</th>`
+  const workAreaHeaderCells = workAreas.map(wa =>
+    `<th class="pc-settings-area-label" style="text-align:center;width:140px;min-width:140px">${esc(wa)}</th>`
   ).join('');
 
-  const monthHeaderCells = monthKeys.map(key => {
-    const { month } = prodCapParseKey(key);
-    const today = new Date();
-    const isCurrent = key === `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-    return `<th style="min-width:60px;text-align:center${isCurrent ? ';background:rgba(59,130,246,0.1);border-top:2px solid var(--blue)' : ''}">${new Date(0, month-1).toLocaleString('en', {month:'short'})}</th>`;
-  }).join('');
+  // ── Build month rows ──────────────────────────────────────
+  const monthRows = monthKeys.map(key => {
+    const { year, month } = prodCapParseKey(key);
+    const isCurrent = key === currentKey;
+    const monthLabel = new Date(0, month-1).toLocaleString('en', {month:'short'});
 
-  // ── Build work area rows ──────────────────────────────────
-  const areaRows = workAreas.map(wa => {
-    const cells = monthKeys.map(key => {
-      const { year, month } = prodCapParseKey(key);
+    const cells = workAreas.map(wa => {
       const staff = prodCapDataGetStaff(wa, year, month);
-      const today = new Date();
-      const isCurrent = key === `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
       const hours = staff > 0 ? Math.round(prodCapAvailableHours(wa, year, month)) : 0;
 
       return `
@@ -90,37 +81,46 @@ export function renderProdCapSettings() {
         </td>`;
     }).join('');
 
-    // Row totals
-    const totalStaff  = monthKeys.reduce((s, k) => {
-      const { year, month } = prodCapParseKey(k);
-      return s + prodCapDataGetStaff(wa, year, month);
-    }, 0);
-    const totalHours = monthKeys.reduce((s, k) => {
-      const { year, month } = prodCapParseKey(k);
-      return s + prodCapAvailableHours(wa, year, month);
-    }, 0);
+    // Row total (all work areas for this month)
+    const totalH = workAreas.reduce((s, wa) => s + prodCapAvailableHours(wa, year, month), 0);
+    const totalS = workAreas.reduce((s, wa) => s + prodCapDataGetStaff(wa, year, month), 0);
+
+    const notes = esc(prodCapDataGetNotes(year, month));
 
     return `
       <tr>
-        <td class="pc-settings-area-label">
-          <div class="pc-area-name">${esc(wa)}</div>
-          <div class="pc-area-total">${Math.round(totalHours).toLocaleString()}h / 24mo</div>
+        <td class="pc-settings-area-label" style="width:140px;min-width:140px${isCurrent ? ';background:rgba(59,130,246,0.05)' : ''}">
+          <div class="pc-area-name">${monthLabel} ${year}</div>
         </td>
         ${cells}
-        <td style="text-align:center;color:var(--mid);font-size:11px;white-space:nowrap;padding:0 8px">
-          ${totalHours > 0 ? Math.round(totalHours/24).toLocaleString() + 'h/mo avg' : '—'}
+        <td style="padding:4px 6px;min-width:160px${isCurrent ? ';background:rgba(59,130,246,0.05)' : ''}">
+          <input
+            class="pc-notes-input"
+            type="text"
+            value="${notes}"
+            placeholder="Add comment…"
+            data-cap-action="cap-prod-settings-notes"
+            data-year="${year}"
+            data-month="${month}"
+            data-key="${key}"
+            id="pcNotes_${key}"
+          >
+        </td>
+        <td style="text-align:center;font-size:11px;color:var(--mid);border-top:2px solid var(--line);white-space:nowrap;padding:0 8px">
+          <div style="font-weight:700">${totalS > 0 ? totalS : '—'}</div>
+          <div>${totalH > 0 ? Math.round(totalH) + 'h' : ''}</div>
         </td>
       </tr>`;
   }).join('');
 
-  // ── Column totals row ─────────────────────────────────────
-  const colTotals = monthKeys.map(key => {
-    const { year, month } = prodCapParseKey(key);
-    const totalH = workAreas.reduce((s, wa) => s + prodCapAvailableHours(wa, year, month), 0);
-    const totalS = workAreas.reduce((s, wa) => s + prodCapDataGetStaff(wa, year, month), 0);
-    return `<td style="text-align:center;font-size:11px;color:var(--mid);border-top:2px solid var(--line)">
-      <div style="font-weight:700">${totalS > 0 ? totalS : '—'}</div>
-      <div>${totalH > 0 ? Math.round(totalH) + 'h' : ''}</div>
+  // ── Column totals row (work area totals over 24 months) ───
+  const colTotals = workAreas.map(wa => {
+    const totalHours = monthKeys.reduce((s, k) => {
+      const { year, month } = prodCapParseKey(k);
+      return s + prodCapAvailableHours(wa, year, month);
+    }, 0);
+    return `<td style="text-align:center;color:var(--mid);font-size:11px;white-space:nowrap;padding:0 8px">
+      ${totalHours > 0 ? Math.round(totalHours/24).toLocaleString() + 'h/mo avg' : '—'}
     </td>`;
   }).join('');
 
@@ -188,21 +188,18 @@ export function renderProdCapSettings() {
         <table class="pc-settings-tbl">
           <thead>
             <tr>
-              <th style="min-width:160px">Work Area</th>
-              ${yearHeaderCells}
-              <th>Average</th>
-            </tr>
-            <tr>
-              <th></th>
-              ${monthHeaderCells}
-              <th></th>
+              <th style="width:140px;min-width:140px">Month</th>
+              ${workAreaHeaderCells}
+              <th style="min-width:120px">Comments</th>
+              <th>Total</th>
             </tr>
           </thead>
           <tbody>
-            ${areaRows}
+            ${monthRows}
             <tr>
-              <td class="pc-settings-area-label" style="font-weight:700">Total</td>
+              <td class="pc-settings-area-label" style="font-weight:700;width:140px;min-width:140px">Avg/mo</td>
               ${colTotals}
+              <td></td>
               <td></td>
             </tr>
           </tbody>
@@ -242,6 +239,11 @@ export async function prodCapSettingsUpdate(workArea, year, month, value) {
   }, 300);
 }
 
+// ── Notes update (debounced save) ──────────────────────────────
+export async function prodCapSettingsUpdateNotes(year, month, value) {
+  await prodCapDataSetNotes(year, month, value);
+}
+
 // ── Keyboard navigation between cells ────────────────────────
 export function prodCapSettingsNavKey(event, workArea, key) {
   const monthKeys = prodCapGet24MonthKeys();
@@ -251,13 +253,29 @@ export function prodCapSettingsNavKey(event, workArea, key) {
 
   if (event.key === 'Tab') {
     event.preventDefault();
-    const nextKeyIdx = event.shiftKey ? keyIdx - 1 : keyIdx + 1;
-    if (nextKeyIdx >= 0 && nextKeyIdx < monthKeys.length) {
+    const nextAreaIdx = event.shiftKey ? areaIdx - 1 : areaIdx + 1;
+    if (nextAreaIdx >= 0 && nextAreaIdx < workAreas.length) {
+      const nextArea = workAreas[nextAreaIdx];
+      const safeArea = btoa(nextArea).replace(/=/g, '');
+      document.getElementById(`pcStaff_${safeArea}_${key}`)?.focus();
+    }
+  } else if (event.key === 'ArrowDown' || event.key === 'Enter') {
+    event.preventDefault();
+    const nextKeyIdx = keyIdx + 1;
+    if (nextKeyIdx < monthKeys.length) {
       const nextKey  = monthKeys[nextKeyIdx];
       const safeArea = btoa(workArea).replace(/=/g, '');
       document.getElementById(`pcStaff_${safeArea}_${nextKey}`)?.focus();
     }
-  } else if (event.key === 'ArrowDown' || event.key === 'Enter') {
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    const prevKeyIdx = keyIdx - 1;
+    if (prevKeyIdx >= 0) {
+      const prevKey  = monthKeys[prevKeyIdx];
+      const safeArea = btoa(workArea).replace(/=/g, '');
+      document.getElementById(`pcStaff_${safeArea}_${prevKey}`)?.focus();
+    }
+  } else if (event.key === 'ArrowRight') {
     event.preventDefault();
     const nextAreaIdx = areaIdx + 1;
     if (nextAreaIdx < workAreas.length) {
@@ -265,7 +283,7 @@ export function prodCapSettingsNavKey(event, workArea, key) {
       const safeArea = btoa(nextArea).replace(/=/g, '');
       document.getElementById(`pcStaff_${safeArea}_${key}`)?.focus();
     }
-  } else if (event.key === 'ArrowUp') {
+  } else if (event.key === 'ArrowLeft') {
     event.preventDefault();
     const prevAreaIdx = areaIdx - 1;
     if (prevAreaIdx >= 0) {

@@ -169,6 +169,7 @@ import {
   prodCapSettingsClearAll,
   prodCapSettingsSetUtilization,
   prodCapSettingsUpdate,
+  prodCapSettingsUpdateNotes,
   prodCapSettingsNavKey
 } from '../production/js/prod-capacity-settings.js'
 import { prodCapRefreshCurrentTab } from '../production/js/prod-capacity.js'
@@ -1520,6 +1521,12 @@ function onCapacityChange(evt) {
     const year = capNum(el.getAttribute('data-year'), 0)
     const month = capNum(el.getAttribute('data-month'), 0)
     if (typeof prodCapSettingsUpdate === 'function') prodCapSettingsUpdate(wa, year, month, el.value)
+    break
+  }
+  case 'cap-prod-settings-notes': {
+    const year = capNum(el.getAttribute('data-year'), 0)
+    const month = capNum(el.getAttribute('data-month'), 0)
+    if (typeof prodCapSettingsUpdateNotes === 'function') prodCapSettingsUpdateNotes(year, month, el.value)
     break
   }
   case 'cap-prod-settings-utilization': {

@@ -297,6 +297,225 @@ export function injectNPIModals() {
     </div>
   </div>
 </div>
+
+<!-- PFMEA Severity Criteria Modal -->
+<div class="modal-bg" id="modalPfmeaSeverity" style="display:none">
+  <div class="modal" style="max-width:1100px">
+    <div class="modal-head">
+      <div class="modal-title">Severity (SEV) Rating Criteria</div>
+      <button class="modal-close" onclick="closeModal('modalPfmeaSeverity')" aria-label="Close">×</button>
+    </div>
+    <div style="max-height:60vh;overflow-y:auto">
+      <table class="tbl tbl--compact" style="font-size:12px">
+        <thead>
+          <tr>
+            <th style="width:50px">Score</th>
+            <th style="width:120px">Qualitative</th>
+            <th>External Customer Effect</th>
+            <th>Internal Process Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:#fee2e2">
+            <td style="font-weight:700;text-align:center;font-size:14px">10</td>
+            <td style="font-weight:600">Hazardous (Without Warning)</td>
+            <td>May endanger life/safety or not comply with regulations. No warning is given to the end-user.</td>
+            <td>Unsafe condition for operator or other personnel. Major regulatory non-compliance. Line stoppage required immediately.</td>
+          </tr>
+          <tr style="background:#fee2e2">
+            <td style="font-weight:700;text-align:center;font-size:14px">9</td>
+            <td style="font-weight:600">Hazardous (With Warning)</td>
+            <td>May endanger life/safety or not comply with regulations. A warning is given to the end-user before failure.</td>
+            <td>Unsafe condition for operator or other personnel. Major regulatory non-compliance. Line stoppage required immediately.</td>
+          </tr>
+          <tr style="background:#ffedd5">
+            <td style="font-weight:700;text-align:center;font-size:14px">8</td>
+            <td style="font-weight:600">Very High</td>
+            <td>Primary function lost or inoperable—product is unfit for use. 100% customer dissatisfaction.</td>
+            <td>100% scrap or major process disruption. Line must be stopped and product quarantined. Major rework required outside the typical manufacturing flow.</td>
+          </tr>
+          <tr style="background:#ffedd5">
+            <td style="font-weight:700;text-align:center;font-size:14px">7</td>
+            <td style="font-weight:600">High</td>
+            <td>Significant degradation of the primary function or performance. Product requires unscheduled repair or replacement. High customer dissatisfaction.</td>
+            <td>Significant scrap or major rework required out of station. Causes major disruption to subsequent operations (e.g., significant loss of cycle time).</td>
+          </tr>
+          <tr style="background:#fef9c3">
+            <td style="font-weight:700;text-align:center;font-size:14px">6</td>
+            <td style="font-weight:600">Moderate</td>
+            <td>Minor loss of primary function or noticeable performance degradation. Customer is inconvenienced and highly annoyed.</td>
+            <td>Requires an unscheduled repair/rework in station or results in significant internal scrap. Minor impact on subsequent operations.</td>
+          </tr>
+          <tr style="background:#fef9c3">
+            <td style="font-weight:700;text-align:center;font-size:14px">5</td>
+            <td style="font-weight:600">Low</td>
+            <td>Minor degradation of function or performance, easily overcome by the customer. Cosmetic defect noticed and reported by customer.</td>
+            <td>Requires a minor rework or adjustment in station. Causes a small, measurable increase in scrap/rework rate.</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;text-align:center;font-size:14px">4</td>
+            <td style="font-weight:600">Very Low</td>
+            <td>Slight annoyance to the customer (e.g., minor fit/finish issue, easily correctable).</td>
+            <td>May result in a very minor internal scrap/rework that is barely noticeable (e.g., a simple wipe or clean).</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;text-align:center;font-size:14px">3</td>
+            <td style="font-weight:600">Minor</td>
+            <td>Slight effect on the product; customer is unlikely to notice or will experience slight annoyance.</td>
+            <td>Slight effect on the process or subsequent operation; causes a minor, non-critical process error.</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;text-align:center;font-size:14px">2</td>
+            <td style="font-weight:600">Very Minor</td>
+            <td>No effect on product function or performance. Effect is only cosmetic and likely unnoticed by the customer.</td>
+            <td>No effect on product function. Effect is only noticeable internally (e.g., small, non-critical process error, minor visual issue).</td>
+          </tr>
+          <tr style="background:#dcfce7">
+            <td style="font-weight:700;text-align:center;font-size:14px">1</td>
+            <td style="font-weight:600">None</td>
+            <td>No relevant effect on reliability, safety, or customer satisfaction.</td>
+            <td>No relevant effect on subsequent operations or process flow.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalPfmeaSeverity')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- PFMEA Occurrence Criteria Modal -->
+<div class="modal-bg" id="modalPfmeaOccurrence" style="display:none">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-head">
+      <div class="modal-title">Occurrence (OCC) Rating Criteria</div>
+      <button class="modal-close" onclick="closeModal('modalPfmeaOccurrence')" aria-label="Close">×</button>
+    </div>
+    <div style="max-height:60vh;overflow-y:auto">
+      <table class="tbl tbl--compact" style="font-size:12px">
+        <thead>
+          <tr>
+            <th style="width:50px">Score</th>
+            <th style="width:120px">Qualitative</th>
+            <th>Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:#fee2e2">
+            <td style="font-weight:700;text-align:center;font-size:14px">10</td>
+            <td style="font-weight:600">Very High</td>
+            <td>Failure is almost inevitable</td>
+          </tr>
+          <tr style="background:#ffedd5">
+            <td style="font-weight:700;text-align:center;font-size:14px">8</td>
+            <td style="font-weight:600">High</td>
+            <td>Generally associated with processes similar to previous processes that have often failed</td>
+          </tr>
+          <tr style="background:#fef9c3">
+            <td style="font-weight:700;text-align:center;font-size:14px">6</td>
+            <td style="font-weight:600">Moderate</td>
+            <td>Generally associated with processes similar to previous processes which have experienced occasional failures, but not in major proportions</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;text-align:center;font-size:14px">3</td>
+            <td style="font-weight:600">Low</td>
+            <td>Isolated failures associated with similar processes</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;text-align:center;font-size:14px">2</td>
+            <td style="font-weight:600">Very Low</td>
+            <td>Only isolated failures associated with almost identical processes</td>
+          </tr>
+          <tr style="background:#dcfce7">
+            <td style="font-weight:700;text-align:center;font-size:14px">1</td>
+            <td style="font-weight:600">Remote</td>
+            <td>Failure is unlikely. No Failures ever associated within almost identical processes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalPfmeaOccurrence')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- PFMEA Detection Criteria Modal -->
+<div class="modal-bg" id="modalPfmeaDetection" style="display:none">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-head">
+      <div class="modal-title">Detection (DET) Rating Criteria</div>
+      <button class="modal-close" onclick="closeModal('modalPfmeaDetection')" aria-label="Close">×</button>
+    </div>
+    <div style="max-height:60vh;overflow-y:auto">
+      <table class="tbl tbl--compact" style="font-size:12px">
+        <thead>
+          <tr>
+            <th style="width:50px">Score</th>
+            <th style="width:120px">Qualitative</th>
+            <th>Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:#fee2e2">
+            <td style="font-weight:700;text-align:center;font-size:14px">10</td>
+            <td style="font-weight:600">Almost Impossible</td>
+            <td>No known control available to detect cause / mechanism of failure or the failure mode</td>
+          </tr>
+          <tr style="background:#ffedd5">
+            <td style="font-weight:700;text-align:center;font-size:14px">9</td>
+            <td style="font-weight:600">Very Remote</td>
+            <td>Very remote likelihood current control will detect cause / mechanism of failure or failure mode</td>
+          </tr>
+          <tr style="background:#ffedd5">
+            <td style="font-weight:700;text-align:center;font-size:14px">8</td>
+            <td style="font-weight:600">Remote</td>
+            <td>Remote likelihood current control will detect cause / mechanism of failure or failure mode</td>
+          </tr>
+          <tr style="background:#fef9c3">
+            <td style="font-weight:700;text-align:center;font-size:14px">7</td>
+            <td style="font-weight:600">Very Low</td>
+            <td>Very low likelihood current control will detect cause / mechanism of failure or failure mode</td>
+          </tr>
+          <tr style="background:#fef9c3">
+            <td style="font-weight:700;text-align:center;font-size:14px">6</td>
+            <td style="font-weight:600">Low</td>
+            <td>Low likelihood current control will detect cause / mechanism of failure or failure mode</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;text-align:center;font-size:14px">5</td>
+            <td style="font-weight:600">Moderate</td>
+            <td>Moderate likelihood current control will detect cause / mechanism of failure or failure mode</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;text-align:center;font-size:14px">4</td>
+            <td style="font-weight:600">Moderately High</td>
+            <td>Moderately low likelihood current control will detect cause / mechanism of failure or failure mode</td>
+          </tr>
+          <tr style="background:#dcfce7">
+            <td style="font-weight:700;text-align:center;font-size:14px">3</td>
+            <td style="font-weight:600">High</td>
+            <td>High likelihood current control will detect cause / mechanism of failure or failure mode</td>
+          </tr>
+          <tr style="background:#dcfce7">
+            <td style="font-weight:700;text-align:center;font-size:14px">2</td>
+            <td style="font-weight:600">Very High</td>
+            <td>Very high likelihood current control will detect cause / mechanism of failure or failure mode</td>
+          </tr>
+          <tr style="background:#dcfce7">
+            <td style="font-weight:700;text-align:center;font-size:14px">1</td>
+            <td style="font-weight:600">Almost Certain</td>
+            <td>Current control almost certain to detect cause / mechanism of failure or failure mode. Reliable controls are known with similar processes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modalPfmeaDetection')">Close</button>
+    </div>
+  </div>
+</div>
   `
 
   document.body.appendChild(modalContainer)

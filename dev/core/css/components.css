@@ -76,12 +76,15 @@
 .tbl tr:last-child td { border-bottom: none; }
 .tbl tr:hover td { background: var(--table-row-hover); }
 
+/* Relaxed: More spacing for cleaner, less dense tables */
 .tbl--relaxed th { padding: 8px 10px; }
 .tbl--relaxed td { padding: 6px 9px; }
 
+/* Compact: Tight spacing for data-heavy views (default for many portals) */
 .tbl--compact th { padding: 5px 8px; }
 .tbl--compact td { padding: 3px 6px; }
 
+/* Ultra: Smallest possible spacing and font size for massive datasets */
 .tbl--ultra th { padding: 4px 7px; letter-spacing: .8px; }
 .tbl--ultra td { padding: 2px 5px; font-size: 12px; }
 
