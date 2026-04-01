@@ -63,13 +63,19 @@
   --filter-clear-bg:rgba(0,0,0,0.1);
   --filter-clear-bg-hover:rgba(0,0,0,0.2);
   --login-shell-bg:#0f2135;
-  --table-head-py: 6px;
-  --table-head-px: 9px;
-  --table-cell-py: 4px;
-  --table-cell-px: 7px;
-  --table-head-font-size: 10px;
-  --table-cell-font-size: 13px;
-  --table-input-min-h: 28px;
+
+  /* ──────────────────────────────────────────────────────────
+     TABLE ADJUSTMENTS (Master Knobs)
+     Adjust these values to change how tables look across the app.
+     ────────────────────────────────────────────────────────── */
+  --table-head-py: 6px;           /* Header row: top/bottom padding (height) */
+  --table-head-px: 9px;           /* Header row: left/right padding (width) */
+  --table-cell-py: 4px;           /* Data row: top/bottom padding (height) */
+  --table-cell-px: 7px;           /* Data row: left/right padding (width) */
+  --table-head-font-size: 10px;   /* Header text size */
+  --table-cell-font-size: 13px;   /* Data text size */
+  --table-input-min-h: 28px;      /* Minimum height for editable cells */
+
   --blue:#0b5fa7; --blue-dark:#0a4f8a; --blue-pale:#e7f1fb; --blue-mid:#b5cee7;
   --accent:#2563eb; --accent2:#1d4ed8;
   --green:#1a7a3c; --green-pale:#e6f4ec; --green-mid:#9ad6b2;
@@ -858,7 +864,8 @@ body {
 }
 /* Override scroll-container max-heights so they fill the overlay instead */
 .portal-fullscreen-body .scheduling-table-wrap,
-.portal-fullscreen-body .sticky-table-wrap {
+.portal-fullscreen-body .sticky-table-wrap,
+.portal-fullscreen-body .pfd-table-wrap {
   max-height: none !important;
   flex: 1;
   overflow-y: auto;

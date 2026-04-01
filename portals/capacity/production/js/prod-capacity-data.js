@@ -191,6 +191,69 @@ export function prodCapDataGetStaff(workArea, year, month) {
   return rec ? Number(rec.staff_count) : 0;
 }
 
+// ── Month-level notes (stored under __month__ work area key) ─
+const PROD_CAP_NOTES_WORKAREA = '__month__'
+
+export function prodCapDataGetNotes(year, month) {
+  const rec = prodCapState.capacityRecords.find(
+    r => r.work_area === PROD_CAP_NOTES_WORKAREA && r.year === year && r.month === month
+  );
+  return rec ? (rec.notes || '') : '';
+}
+
+export async function prodCapDataSetNotes(year, month, notes) {
+  if (!currentUser) return;
+  const text = (notes || '').toString().trim();
+
+  try {
+    const existing = prodCapState.capacityRecords.find(
+      r => r.work_area === PROD_CAP_NOTES_WORKAREA && r.year === year && r.month === month
+    );
+
+    if (existing) {
+      if (text) {
+        const { error } = await supa.from('production_capacity')
+          .update({ notes: text, updated_at: new Date().toISOString() })
+          .eq('id', existing.id);
+        if (error) throw error;
+        const idx = prodCapState.capacityRecords.findIndex(r => r.id === existing.id);
+        if (idx >= 0) {
+          prodCapState.capacityRecords[idx] = {
+            ...prodCapState.capacityRecords[idx],
+            notes: text,
+            updated_at: new Date().toISOString()
+          };
+        }
+      } else {
+        // Empty notes — delete the placeholder record if staff_count is also 0
+        const { error } = await supa.from('production_capacity')
+          .delete()
+          .eq('id', existing.id);
+        if (error) throw error;
+        prodCapState.capacityRecords = prodCapState.capacityRecords.filter(r => r.id !== existing.id);
+      }
+    } else if (text) {
+      const { data: insertedRow, error } = await supa.from('production_capacity')
+        .insert([{ user_id: currentUser.id, work_area: PROD_CAP_NOTES_WORKAREA, year, month, staff_count: 0, notes: text }])
+        .select('id')
+        .maybeSingle();
+      if (error) throw error;
+      prodCapState.capacityRecords.push({
+        id: insertedRow?.id,
+        user_id: currentUser.id,
+        work_area: PROD_CAP_NOTES_WORKAREA,
+        year: year,
+        month: month,
+        staff_count: 0,
+        notes: text
+      });
+    }
+  } catch (err) {
+    console.error('❌ Error saving capacity notes:', err);
+    throw err;
+  }
+}
+
 export async function prodCapDataSetStaff(workArea, year, month, staffCount) {
   if (!currentUser) return;
   const count = Math.max(0, parseFloat(staffCount) || 0);
@@ -348,8 +411,10 @@ export function prodCapGetWorkAreas() {
   }
 
   const result = Array.from(areas);
-  result.sort();
-  return result;
+  // Exclude internal pseudo work area used for month-level notes
+  const filtered = result.filter(a => a !== PROD_CAP_NOTES_WORKAREA);
+  filtered.sort();
+  return filtered;
 }
 
 // ── Month key helpers ─────────────────────────────────────────

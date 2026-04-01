@@ -374,7 +374,8 @@
 
 /* ── Settings Grid ───────────────────────────────────────────── */
 .pc-settings {
-  max-width: 100%;
+	max-width: 70%;
+	margin: 0 auto;
 }
 
 .pc-settings-add-area {
@@ -399,11 +400,19 @@
 }
 
 .pc-settings-grid-wrap {
+  /* Scrollable wrapper for the settings table — horizontal scroll when columns overflow */
   overflow-x: auto;
   border: 1.5px solid var(--line);
   border-radius: 8px;
   background: var(--white);
 }
+
+/* ── Column width notes ────────────────────────────────────── */
+/* Work area column min-width: set via inline style in prod-capacity-settings.js (workAreaHeaderCells) = 50px
+   Comments column min-width: set via inline style in prod-capacity-settings.js (thead row) = 120px
+   Month label column: controlled by .pc-settings-area-label min-width above = 80px
+   Staff cell width: controlled by .pc-staff-input width above = 40px
+   Comments cell width: controlled by .pc-notes-input width above = 100% */
 
 .pc-settings-tbl {
   border-collapse: collapse;
@@ -411,16 +420,23 @@
 }
 
 .pc-settings-tbl th {
-  padding: 8px 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--mid);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
-  white-space: nowrap;
-  text-align: left;
+	/* Header cells — padding affects column width; min-width set via inline styles in JS */
+	padding: 8px 6px;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--mid);
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	background: var(--bg);
+	border-bottom: 1px solid var(--line);
+	white-space: nowrap;
+	text-align: left;
+}
+
+/* Work area columns — equal width at 140px */
+.pc-settings-tbl th.pc-settings-area-label {
+	width: 140px;
+	min-width: 140px;
 }
 
 .pc-settings-tbl td {
@@ -433,13 +449,15 @@
 }
 
 .pc-settings-area-label {
-  padding: 8px 12px;
-  background: var(--bg);
-  border-right: 2px solid var(--line) !important;
-  min-width: 160px;
-  position: sticky;
-  left: 0;
-  z-index: 1;
+	/* Width: controls the sticky month/work-area row header column */
+	padding: 8px 12px;
+	background: var(--bg);
+	border-right: 2px solid var(--line) !important;
+	width: 140px;
+	min-width: 140px;
+	position: sticky;
+	left: 0;
+	z-index: 1;
 }
 
 .pc-area-name {
@@ -456,17 +474,18 @@
 }
 
 .pc-staff-input {
-  width: 52px;
-  padding: 5px 4px;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  font-size: 12px;
-  font-family: 'IBM Plex Mono', monospace;
-  text-align: center;
-  background: transparent;
-  color: var(--ink);
-  display: block;
-  margin: 0 auto;
+	/* Width: controls the work area column widths (staff number cells) */
+	width: 60px;
+	padding: 5px 4px;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	font-size: 12px;
+	font-family: 'IBM Plex Mono', monospace;
+	text-align: center;
+	background: transparent;
+	color: var(--ink);
+	display: block;
+	margin: 0 auto;
 }
 
 .pc-staff-input:focus {
@@ -490,6 +509,28 @@
   text-align: center;
   font-family: 'IBM Plex Mono', monospace;
   margin-top: 1px;
+}
+
+.pc-notes-input {
+  /* Width: comments column — 100% fills available cell, adjust min-width via inline style in JS */
+  width: 100%;
+  padding: 5px 6px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: inherit;
+  background: transparent;
+  color: var(--ink);
+}
+
+.pc-notes-input:focus {
+  border-color: var(--blue);
+  background: var(--white);
+  outline: none;
+}
+
+.pc-notes-input:hover {
+  background: var(--bg);
 }
 
 /* ── Batch Detail ────────────────────────────────────────────── */

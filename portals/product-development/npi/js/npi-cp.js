@@ -46,7 +46,7 @@ npi.cp.render = function() {
       <td class="w110"><input class="cell-edit" name="cp_${i}_method" value="${esc(r.method)}" data-action="cp-upd" data-idx="${i}" data-field="method" placeholder="Method"></td>
       <td class="w60"><input class="cell-edit" name="cp_${i}_freq" value="${esc(r.freq)}" data-action="cp-upd" data-idx="${i}" data-field="freq" placeholder="100%"></td>
       <td class="w70"><input class="cell-edit" name="cp_${i}_resp" value="${esc(r.resp)}" data-action="cp-upd" data-idx="${i}" data-field="resp" placeholder="Who"></td>
-      <td><textarea class="cell-edit" name="cp_${i}_reaction" rows="2" data-action="cp-upd" data-idx="${i}" data-field="reaction" placeholder="Reaction plan">${esc(r.reaction)}</textarea></td>
+      <td><textarea class="cell-edit" name="cp_${i}_reaction" rows="1" data-action="cp-upd" data-idx="${i}" data-field="reaction" data-autoresize placeholder="Reaction plan">${esc(r.reaction)}</textarea></td>
       <td class="w50"><div style="display:flex;flex-wrap:wrap;gap:2px">${ctqs || '—'}</div></td>
       <td class="w28 ctr">${canEdit() ? `<button class="del-btn" data-action="cp-del" data-idx="${i}">×</button>` : ''}</td></tr>`
   }).join('')

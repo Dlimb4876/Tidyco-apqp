@@ -127,7 +127,7 @@ function stepRowHTML(s, oi, p) {
     }
   </div>`
 
-  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div>${typeChip}<div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields"><div class="step-field f-op"><input class="cell-edit" value="${esc(s.op)}" data-action="pfd-upd" data-id="${s.id}" data-field="op" placeholder="Operation" style="font-weight:600"></div><div class="step-field f-detail"><textarea class="cell-edit" rows="2" data-action="pfd-upd" data-id="${s.id}" data-field="detail" placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div>${canEdit() ? flowControlHTML : ''}</div></div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
+  return `<div class="step-row" id="pfd-row-${s.id}"><div class="step-main-row"><div class="step-num-cell"><div class="step-num-badge">${s.stepNum}</div>${typeChip}<div style="display:flex;flex-direction:column;gap:2px">${canEdit() ? `<button class="mini-btn" data-action="pfd-open-insert" data-after="${oi}">＋</button><button class="mini-btn danger" data-action="pfd-del" data-id="${s.id}">×</button>` : ''}</div></div><div class="step-body"><div class="step-fields">${canEdit() ? flowControlHTML : ''}<div class="step-field f-op"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="op" data-autoresize placeholder="Operation" style="font-weight:600">${esc(s.op)}</textarea></div><div class="step-field f-detail"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="detail" data-autoresize placeholder="Method / notes…">${esc(s.detail)}</textarea></div><div class="step-field f-location"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="location" data-autoresize placeholder="Location…">${esc(s.location)}</textarea></div><div class="step-field f-operator"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="operator" data-autoresize placeholder="Operator…">${esc(s.operator)}</textarea></div><div class="step-field f-timing"><textarea class="cell-edit" rows="1" data-action="pfd-upd" data-id="${s.id}" data-field="timing" data-autoresize placeholder="Timing…">${esc(s.timing)}</textarea></div><div class="step-field f-ctq"><div class="ctq-pick">${ctqBadges}${canEdit() && p.ctq.length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-ctq-pick" data-idx="${oi}">＋ CTQ</span>` : ''}</div></div><div class="step-field f-doc"><div class="ctq-pick">${docBadges}${canEdit() && (p.docs||[]).length > 0 ? `<span class="ctq-pick-add" data-action="pfd-open-doc-pick" data-idx="${oi}">＋ Doc</span>` : ''}</div></div><div class="step-field f-pfmea">${pfCnt > 0 ? `<span class="tag tag-amber">${pfCnt} FMEA</span>` : '<span style="font-size:11px;color:var(--muted)">—</span>'}</div></div></div></div><div class="step-resources">${pills}${canEdit() ? `<button class="res-add-btn" data-action="pfd-open-bom-pick" data-id="${s.id}">＋ Resource</button>` : ''}</div></div>`
 }
 
 function headerRowHTML(s, oi, meta) {
@@ -220,6 +220,7 @@ npi.pfd._showDetail = function(s, p, anchorEl, canvasEl) {
         <button class="mini-btn pfd-detail-close" style="margin-left:auto">✕</button>
       </div>
       ${s.detail ? `<div class="pfd-detail-notes">${esc(s.detail)}</div>` : ''}
+      ${s.location || s.operator || s.timing ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Details</div><div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px">${s.location ? `<span>📍 ${esc(s.location)}</span>` : ''}${s.operator ? `<span>👤 ${esc(s.operator)}</span>` : ''}${s.timing ? `<span>⏱ ${esc(s.timing)}</span>` : ''}</div></div>` : ''}
       ${ctqItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">CTQs</div><ul class="pfd-detail-list">${listHTML(ctqItems)}</ul></div>` : ''}
       ${docItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Documents</div><ul class="pfd-detail-list">${listHTML(docItems)}</ul></div>` : ''}
       ${resItems.length ? `<div class="pfd-detail-section"><div class="pfd-detail-label">Resources</div><div style="display:flex;flex-wrap:wrap;gap:4px">${resItems.join('')}</div></div>` : ''}
@@ -547,7 +548,7 @@ npi.pfd.render = function() {
   const pfdContent = `
   ${sorted.length > 0 ? `<div class="flow-ribbon">${ribbon}</div>` : ''}
   <div class="card"><div class="card-head"><span class="card-title">Process Steps</span><span class="card-meta">${executable.length} executable steps</span></div>
-  ${p.pfd.length === 0 ? emptyState('🔄', 'No steps yet', 'Add your first process step') : `<div class="pfd-col-header"><div class="pfd-col-num">Step</div><div class="pfd-col-op">Operation</div><div class="pfd-col-detail">Method / Notes</div><div class="pfd-col-ctq">CTQs</div><div class="pfd-col-doc">Documents</div><div class="pfd-col-pfmea">PFMEA</div>${canEdit() ? '<div class="pfd-col-flow">Flow</div>' : ''}</div><div>${body}</div>`}
+  ${p.pfd.length === 0 ? emptyState('🔄', 'No steps yet', 'Add your first process step') : `<div class="pfd-col-header"><div class="pfd-col-num">Step</div>${canEdit() ? '<div class="pfd-col-flow">Flow</div>' : ''}<div class="pfd-col-op">Operation</div><div class="pfd-col-detail">Method / Notes</div><div class="pfd-col-location">Location</div><div class="pfd-col-operator">Operator</div><div class="pfd-col-timing">Timing</div><div class="pfd-col-ctq">CTQs</div><div class="pfd-col-doc">Documents</div><div class="pfd-col-pfmea">PFMEA</div></div><div>${body}</div>`}
   ${canEdit() ? `<button class="add-row" data-action="pfd-add-main">＋ Add Process Step</button>` : ''}</div>
   ${p.pfd.length > 0 ? `<div class="info-banner">💡 Next: <a href="#" data-action="npi-set-apqp" data-tab="pfmea" style="color:var(--blue)">PFMEA →</a></div>` : ''}`
 
@@ -562,7 +563,9 @@ npi.pfd.render = function() {
         </div>
       </div>
       <div class="portal-fullscreen-body">
-        ${pfdContent}
+        <div class="pfd-table-wrap">
+          ${pfdContent}
+        </div>
       </div>
     </div>`
   }

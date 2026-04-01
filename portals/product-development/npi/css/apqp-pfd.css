@@ -17,6 +17,9 @@
   letter-spacing: 0.07em;
   color: var(--muted);
   user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .pfd-col-num {
@@ -37,6 +40,27 @@
 .pfd-col-detail {
   flex: 1;
   min-width: 150px;
+  padding: 6px 8px;
+  border-right: 1px solid var(--line);
+}
+
+.pfd-col-location {
+  width: 120px;
+  min-width: 100px;
+  padding: 6px 8px;
+  border-right: 1px solid var(--line);
+}
+
+.pfd-col-operator {
+  width: 120px;
+  min-width: 100px;
+  padding: 6px 8px;
+  border-right: 1px solid var(--line);
+}
+
+.pfd-col-timing {
+  width: 120px;
+  min-width: 100px;
   padding: 6px 8px;
   border-right: 1px solid var(--line);
 }
@@ -137,6 +161,9 @@
 
 .step-field.f-op { width: 190px; min-width: 150px; }
 .step-field.f-detail { flex: 1; min-width: 150px; }
+.step-field.f-location { width: 120px; min-width: 100px; }
+.step-field.f-operator { width: 120px; min-width: 100px; }
+.step-field.f-timing { width: 120px; min-width: 100px; }
 .step-field.f-ctq { width: 150px; min-width: 120px; }
 .step-field.f-doc { width: 200px; min-width: 150px; }
 .step-field.f-pfmea {
@@ -148,10 +175,10 @@
 .step-field.f-flow {
   width: 220px;
   min-width: 200px;
-  background: var(--bg-soft);
+  background: var(--white);
   flex-direction: column;
   gap: 6px;
-  border-right: none;
+  border-right: 1px solid var(--line);
 }
 
 .flow-control-group {
@@ -311,6 +338,9 @@
 
 .pfd-header-row {
   background: var(--blue-pale);
+  position: sticky;
+  top: 30px; /* Below the column header */
+  z-index: 15;
 }
 
 .pfd-header-main {

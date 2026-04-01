@@ -71,6 +71,9 @@ function onClick(evt) {
   case 'pfmea-set-col-view': npi.pfmea.setColumnView(el.getAttribute('data-col-view')); break
   case 'pfmea-show-hist': npi.pfmea.pfShowHist(evt, el.getAttribute('data-cause-id')); break
   case 'pfmea-show-warnings': npi.pfmea.pfShowWarnings(el.getAttribute('data-warnings')); break
+  case 'pfmea-show-severity': if (typeof showModal === 'function') showModal('modalPfmeaSeverity'); break
+  case 'pfmea-show-occurrence': if (typeof showModal === 'function') showModal('modalPfmeaOccurrence'); break
+  case 'pfmea-show-detection': if (typeof showModal === 'function') showModal('modalPfmeaDetection'); break
   case 'pfmea-implement': npi.pfmea.pfImplementAction(npiNum(el.getAttribute('data-mi'), -1), npiNum(el.getAttribute('data-ei'), -1), npiNum(el.getAttribute('data-ci'), -1)); break
   case 'pfmea-filter-all': evt.preventDefault(); npi.pfmea.setRpnFilter('all'); break
   case 'pfmea-clear-extra-filters': npi.pfmea.pfClearExtraFilters(); break

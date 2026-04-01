@@ -92,6 +92,7 @@ export async function familiesDataLoad() {
   try {
     const { data, error } = await supa.from('families')
       .select('*')
+      .is('deleted_at', null)
       .order('label', { ascending: true })
 
     if (error) throw error
@@ -170,15 +171,20 @@ export async function familiesDataUpdateFamily(familyId, updates) {
   return false
 }
 
-// Delete a family
+// Soft-delete (archive) a family to prevent permanent data loss
 export async function familiesDataDeleteFamily(familyId) {
   const idx = familiesState.families.findIndex(f => f.id === familyId)
   if (idx === -1) return false
 
   try {
     const { error } = await supa.from('families')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: currentUser?.id || null,
+        delete_reason: 'Archived from Settings'
+      })
       .eq('id', familyId)
+      .is('deleted_at', null)
 
     if (error) throw error
 

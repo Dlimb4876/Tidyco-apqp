@@ -289,12 +289,12 @@ npi.pfmea.renderPFMEA = function() {
     ${vis.function ? '<th rowspan="2">Function</th>' : ''}
     <th rowspan="2">Failure Mode</th>
     <th rowspan="2">Effect</th>
-    <th rowspan="2" title="Severity of effect">SEV</th>
+    <th rowspan="2" title="Severity of effect">SEV <button class="btn btn-ghost btn-xs" style="font-size:9px;padding:0 4px;margin-left:2px" data-action="pfmea-show-severity" title="View Severity criteria">?</button></th>
     <th rowspan="2">Cause</th>
-    <th rowspan="2" title="Occurrence of cause">OCC</th>
+    <th rowspan="2" title="Occurrence of cause">OCC <button class="btn btn-ghost btn-xs" style="font-size:9px;padding:0 4px;margin-left:2px" data-action="pfmea-show-occurrence" title="View Occurrence criteria">?</button></th>
     ${vis.prevent   ? '<th rowspan="2">Controls — Prevent</th>' : ''}
     ${vis.detect    ? '<th rowspan="2">Controls — Detect</th>'  : ''}
-    ${vis.detect ? '<th rowspan="2" title="Detection rating">DET</th>' : ''}
+    ${vis.detect ? '<th rowspan="2" title="Detection rating">DET <button class="btn btn-ghost btn-xs" style="font-size:9px;padding:0 4px;margin-left:2px" data-action="pfmea-show-detection" title="View Detection criteria">?</button></th>' : ''}
     ${vis.detect ? '<th rowspan="2">RPN</th>' : ''}
     ${actionGroupSpan > 0 ? `<th colspan="${actionGroupSpan}" style="background:var(--blue-pale);color:var(--blue);letter-spacing:.5px">RECOMMENDED ACTION &amp; RESCORING</th>` : ''}
     <th rowspan="${actionGroupSpan > 0 ? 2 : 1}"></th>
@@ -628,6 +628,29 @@ ${viewTabs}
 </details>
 ${p.pfmea.length > 0 ? `<div class="info-banner">💡 RPN = SEV × OCC × DET. ▶ Apply writes new scores and logs old RPN to history. Next: <a href="#" data-action="npi-set-apqp" data-tab="cp" style="color:var(--blue)">Control Plan →</a></div>` : ''}
 <div class="card">${html}</div>`
+}
+
+// ── SOD Criteria modals ─────────────────────────────────────
+npi.pfmea.pfShowSeverity = function() {
+  if (typeof showModal === 'function') showModal('modalPfmeaSeverity')
+  else {
+    const modal = document.getElementById('modalPfmeaSeverity')
+    if (modal) modal.style.display = 'flex'
+  }
+}
+npi.pfmea.pfShowOccurrence = function() {
+  if (typeof showModal === 'function') showModal('modalPfmeaOccurrence')
+  else {
+    const modal = document.getElementById('modalPfmeaOccurrence')
+    if (modal) modal.style.display = 'flex'
+  }
+}
+npi.pfmea.pfShowDetection = function() {
+  if (typeof showModal === 'function') showModal('modalPfmeaDetection')
+  else {
+    const modal = document.getElementById('modalPfmeaDetection')
+    if (modal) modal.style.display = 'flex'
+  }
 }
 
 // ── History modal ─────────────────────────────────────────────

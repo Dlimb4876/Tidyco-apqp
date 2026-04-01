@@ -433,11 +433,11 @@ function productsCancelEdit() {
 }
 
 /**
- * Delete a product with enhanced confirmation
+ * Archive a product with enhanced confirmation
  */
 async function productsDeleteRow(productId, productName) {
   // First confirmation - basic warning
-  if (!confirm(`Delete product "${productName}"?\n\nThis will also delete all related data including NPI projects, APQP data, BOM, Gates, Actions, Risks, and ME capacity records.\n\nAre you sure you want to continue?`)) {
+  if (!confirm(`Archive product "${productName}"?\n\nThis will hide it from normal screens and prevent accidental data loss.\n\nAre you sure you want to continue?`)) {
     return;
   }
 
@@ -450,9 +450,9 @@ async function productsDeleteRow(productId, productName) {
   }
 
   // Second confirmation - detailed warning with counts
-  let detailedMessage = `⚠️ PERMANENT DELETION WARNING ⚠️\n\n`;
+  let detailedMessage = `⚠️ PRODUCT ARCHIVE WARNING ⚠️\n\n`;
   detailedMessage += `Product: "${productName}"\n\n`;
-  detailedMessage += `This will PERMANENTLY delete:\n`;
+  detailedMessage += `This will archive and hide:\n`;
 
   if (counts) {
     if (counts.overhaulHistory > 0) {
@@ -473,13 +473,12 @@ async function productsDeleteRow(productId, productName) {
       detailedMessage += `• The product record (no related data found)\n`;
     }
   } else {
-    detailedMessage += `• All overhaul history records\n`;
-    detailedMessage += `• All linked NPI projects and their data\n`;
-    detailedMessage += `• All ME capacity records\n`;
+    detailedMessage += `• Product and linked views from active screens\n`;
+    detailedMessage += `• Related data from normal active workflow views\n`;
   }
 
-  detailedMessage += `\n❌ THIS CANNOT BE UNDONE ❌\n\n`;
-  detailedMessage += `Type the product name to confirm deletion.`;
+  detailedMessage += `\n✅ This can be restored from the database if needed.\n\n`;
+  detailedMessage += `Type the product name to confirm archive.`;
 
   // Show detailed confirmation
   const userInput = prompt(detailedMessage);
@@ -493,12 +492,12 @@ async function productsDeleteRow(productId, productName) {
 
   // Perform deletion with loading indicator
   try {
-    showToast('Deleting product and all related data...', 'info');
+    showToast('Archiving product...', 'info');
     await productsDataDeleteProduct(productId);
     if (typeof prodDataReloadProducts === 'function') await prodDataReloadProducts()
     if (productsEditingId === productId) productsEditingId = null;
     renderProductsList();
-    showToast(`Product "${productName}" and all related data deleted successfully`, 'success');
+    showToast(`Product "${productName}" archived successfully`, 'success');
   } catch (err) {
     showToast('Error deleting product: ' + err.message, 'error');
   }

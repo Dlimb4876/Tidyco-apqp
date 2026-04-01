@@ -23,6 +23,7 @@ export async function workAreasDataInit() {
   try {
     const { data, error } = await supa.from('work_areas')
       .select('*')
+      .is('deleted_at', null)
       .order('name', { ascending: true });
 
     if (error) throw error;
@@ -90,15 +91,20 @@ export async function workAreasDataUpdateWorkArea(workAreaId, updates) {
   return false;
 }
 
-// ── Delete a work area ───────────────────────────────────────────
+// ── Soft-delete (archive) a work area ────────────────────────────
 export async function workAreasDataDeleteWorkArea(workAreaId) {
   const idx = workAreasState.workAreas.findIndex(w => w.id === workAreaId);
   if (idx === -1) return false;
 
   try {
     const { error } = await supa.from('work_areas')
-      .delete()
-      .eq('id', workAreaId);
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: currentUser?.id || null,
+        delete_reason: 'Archived from Settings'
+      })
+      .eq('id', workAreaId)
+      .is('deleted_at', null);
 
     if (error) throw error;
 

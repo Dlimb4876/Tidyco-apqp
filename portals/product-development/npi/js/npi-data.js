@@ -208,7 +208,10 @@ npiData.pfd = {
       pfd_type: null,
       nextStepId: null,
       nextStepId_yes: null,
-      nextStepId_no: null
+      nextStepId_no: null,
+      location: '',
+      operator: '',
+      timing: ''
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -218,7 +221,7 @@ npiData.pfd = {
   addMainStep() {
     const p = prog()
     const hadExecutable = p.pfd.some(s => npiData.pfdType.isExecutable(s.type))
-    const step = { id: crypto.randomUUID(), stepNum: npiData.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [], pfd_type: npiData.pfdType.Process, nextStepId: null, nextStepId_yes: null, nextStepId_no: null }
+    const step = { id: crypto.randomUUID(), stepNum: npiData.nextMainStepNum(p.pfd), type: 'step', op: '', detail: '', ctqIds: [], bomRefs: [], docRefs: [], pfd_type: npiData.pfdType.Process, nextStepId: null, nextStepId_yes: null, nextStepId_no: null, location: '', operator: '', timing: '' }
     p.pfd.push(step)
     if (!hadExecutable) npiData.pfd.ensureLeadingHeader()
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -243,7 +246,10 @@ npiData.pfd = {
       pfd_type: null,
       nextStepId: null,
       nextStepId_yes: null,
-      nextStepId_no: null
+      nextStepId_no: null,
+      location: '',
+      operator: '',
+      timing: ''
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
@@ -277,7 +283,10 @@ npiData.pfd = {
       pfd_type: npiData.pfdType.Process,
       nextStepId: null,
       nextStepId_yes: null,
-      nextStepId_no: null
+      nextStepId_no: null,
+      location: '',
+      operator: '',
+      timing: ''
     }
     p.pfd.push(step)
     Promise.resolve().then(() => npiRelSavePFDStep(step)).catch(err => console.error('[NPI] save PFD step failed:', err))
