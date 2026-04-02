@@ -284,7 +284,7 @@
 
 .families-inline-table .fam-col-icon {
   width: 80px;
-  font-size: 22px;
+  font-size: calc(var(--ui-font-size) * 1.57);
   cursor: pointer;
 }
 
@@ -292,7 +292,7 @@
 .fam-edit-hint {
   margin: 8px 0 4px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
 }
 
 /* Shared muted text span */
@@ -316,12 +316,12 @@
 
 /* Empty state sub-elements */
 .empty-state-icon {
-  font-size: 48px;
+  font-size: calc(var(--ui-font-size) * 3.43);
   margin-bottom: 16px;
 }
 
 .empty-state-title {
-  font-size: 18px;
+  font-size: calc(var(--ui-font-size) * 1.29);
   font-weight: 600;
   color: var(--mid);
   margin-bottom: 8px;

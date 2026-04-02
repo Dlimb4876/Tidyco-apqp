@@ -42,6 +42,7 @@ trello/
 test-holidays.html
 check_onclick.js
 *.tmp
+.kilo/
 
 # Auto-generated wiki search index
 wiki/content/_meta/search-index.json

@@ -9,7 +9,7 @@
 }
 .cap-filter-bar input[type="text"] {
 	padding: 7px 10px; border: 1.5px solid var(--line2);
-	border-radius: 6px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif;
+	border-radius: 6px; font-size: calc(var(--ui-font-size) * 0.93); font-family: 'IBM Plex Sans', sans-serif;
 	background: var(--white); color: var(--ink);
 	outline: none; transition: border-color .15s, box-shadow .15s;
 }
@@ -19,7 +19,7 @@
 }
 .cap-filter-bar select {
 	padding: 7px 10px; border: 1.5px solid var(--line2);
-	border-radius: 6px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif;
+	border-radius: 6px; font-size: calc(var(--ui-font-size) * 0.93); font-family: 'IBM Plex Sans', sans-serif;
 	background: var(--white); color: var(--ink);
 	outline: none; cursor: pointer;
 	transition: border-color .15s, box-shadow .15s;
@@ -40,7 +40,7 @@
 
 .me-tbl-wrap { overflow-x: auto; }
 .me-tbl {
-	width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed;
+	width: 100%; border-collapse: collapse; font-size: var(--table-cell-font-size); table-layout: fixed;
 }
 .me-tbl thead th {
 	padding: var(--table-head-py) var(--table-head-px);
@@ -143,7 +143,7 @@
 	background: var(--bg-soft);
 }
 .me-add-row button {
-	font-size: 12px; padding: 5px 12px;
+	font-size: calc(var(--ui-font-size) * 0.86); padding: 5px 12px;
 }
 
 /* Delete button */
@@ -151,14 +151,14 @@
 	width: 24px; height: 24px; border-radius: 4px; border: none;
 	background: transparent; cursor: pointer; color: var(--muted);
 	display: flex; align-items: center; justify-content: center;
-	font-size: 14px; transition: all .12s; flex-shrink: 0;
+	font-size: var(--ui-font-size); transition: all .12s; flex-shrink: 0;
 }
 .me-del-btn:hover { background: var(--red-pale); color: var(--red); }
 
 /* Category badge */
 .me-cat {
 	display: inline-block; padding: 2px 7px; border-radius: 3px;
-	font-size: 11px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+	font-size: calc(var(--ui-font-size) * 0.79); font-weight: 600; font-family: 'IBM Plex Mono', monospace;
 	white-space: nowrap;
 }
 .me-cat-npi      { background: var(--blue-pale);   color: var(--blue); }
@@ -172,12 +172,12 @@
 	padding: 48px 20px; text-align: center; color: var(--muted);
 }
 .me-empty-icon { font-size: 36px; margin-bottom: 8px; }
-.me-empty-title { font-size: 14px; font-weight: 600; color: var(--mid); margin-bottom: 4px; }
-.me-empty-sub   { font-size: 12px; }
+.me-empty-title { font-size: var(--ui-font-size); font-weight: 600; color: var(--mid); margin-bottom: 4px; }
+.me-empty-sub   { font-size: calc(var(--ui-font-size) * 0.86); }
 
 /* ── Section label ───────────────────────────────────────────── */
 .me-section-label {
-	font-size: 10px; font-weight: 600; letter-spacing: 1.2px;
+	font-size: calc(var(--ui-font-size) * 0.71); font-weight: 600; letter-spacing: 1.2px;
 	text-transform: uppercase; color: var(--muted);
 	font-family: 'IBM Plex Mono', monospace;
 	padding: 10px 16px 6px; border-bottom: 1px solid var(--line);
@@ -185,12 +185,12 @@
 
 /* ── Util row (hrs effective calc display) ───────────────────── */
 .me-eff-display {
-	font-size: 12px; color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+	font-size: calc(var(--ui-font-size) * 0.86); color: var(--muted); font-family: 'IBM Plex Mono', monospace;
 }
 
 /* ── Loading indicator ───────────────────────────────────────── */
 .me-saving {
-	font-size: 11px; color: var(--muted);
+	font-size: calc(var(--ui-font-size) * 0.79); color: var(--muted);
 	font-family: 'IBM Plex Mono', monospace;
 	padding: 4px 8px;
 }
@@ -250,21 +250,21 @@
 	background: var(--bg-soft);
 	border-top: 2px solid var(--line);
 }
-.cap-load-family-row td { padding: 8px 10px; font-size: 12px; }
+.cap-load-family-row td { padding: 8px 10px; font-size: calc(var(--ui-font-size) * 0.86); }
 .cap-load-toggle-btn {
 	background: none; border: none; cursor: pointer;
-	font-size: 10px; color: var(--muted);
+	font-size: calc(var(--ui-font-size) * 0.71); color: var(--muted);
 	padding: 0 6px 0 0; line-height: 1;
 	transition: color 0.15s;
 }
 .cap-load-toggle-btn:hover { color: var(--ink); }
 .cap-load-family-label {
-	font-weight: 700; font-size: 12px; color: var(--ink);
+	font-weight: 700; font-size: calc(var(--ui-font-size) * 0.86); color: var(--ink);
 	font-family: 'IBM Plex Mono', monospace;
 	text-transform: uppercase; letter-spacing: 0.8px;
 }
 .cap-load-family-count {
-	margin-left: 8px; font-size: 11px;
+	margin-left: 8px; font-size: calc(var(--ui-font-size) * 0.79);
 	color: var(--muted); font-weight: 400;
 }
 

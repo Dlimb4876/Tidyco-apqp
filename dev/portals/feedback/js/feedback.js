@@ -5,7 +5,7 @@
 
 import { appState } from '../../../core/js/state.js'
 import { currentUser } from '../../../core/js/supa.js'
-import { esc, preserveInputCaretAfterRender } from '../../../utils/js/helpers.js'
+import { esc, isAdmin, preserveInputCaretAfterRender } from '../../../utils/js/helpers.js'
 import { showGuide } from '../../../utils/js/guide.js'
 import { render } from '../../../utils/js/navigation.js'
 import {
@@ -155,6 +155,15 @@ async function feedbackSetStatus(id, newStatus) {
 async function feedbackReopen(id) {
   try {
     await feedbackDataManager.reopen(id)
+  } catch (error) {
+    alert(error.message)
+  }
+}
+
+async function feedbackDelete(id) {
+  if (!confirm('Delete this feedback? This cannot be undone.')) return
+  try {
+    await feedbackDataManager.deleteFeedback(id)
   } catch (error) {
     alert(error.message)
   }
@@ -319,6 +328,10 @@ function feedbackRowHTML(f, i) {
       : '<span class="feedback-muted">—</span>'
   }
 
+  const deleteBtn = isAdmin()
+    ? `<button class="btn btn-xs btn-danger" data-feedback-action="delete" data-id="${esc(f.id)}" title="Delete">✕</button>`
+    : ''
+
   const actionBtn = isEditing
     ? `<div class="feedback-inline-actions">
         <button class="btn btn-xs btn-primary" data-feedback-action="save" data-id="${esc(f.id)}" data-idx="${i}">Save</button>
@@ -341,7 +354,7 @@ function feedbackRowHTML(f, i) {
       <td class="feedback-col-priority">${priorityCell}</td>
       <td class="feedback-col-status">${statusCell}</td>
       <td class="feedback-col-response">${responseCell}</td>
-      <td class="feedback-col-action">${actionBtn}</td>
+      <td class="feedback-col-action"><div class="feedback-action-cell">${actionBtn}${deleteBtn}</div></td>
     </tr>
   `
 }
@@ -494,6 +507,10 @@ function setupFeedbackDelegation() {
     }
     if (action === 'reopen') {
       await feedbackReopen(actionEl.dataset.id || '')
+      return
+    }
+    if (action === 'delete') {
+      await feedbackDelete(actionEl.dataset.id || '')
     }
   })
 

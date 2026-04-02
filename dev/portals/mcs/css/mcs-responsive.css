@@ -116,7 +116,7 @@
 
   .mcs-card-submeta {
     gap: 12px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   /* Modal header - stack on mobile */
@@ -148,7 +148,7 @@
   .mcs-field-textarea {
     min-height: 44px;
     padding: 10px 12px;
-    font-size: 16px;
+    font-size: calc(var(--ui-font-size) * 1.14);
   }
 
   /* Timeline - adjust for mobile */
@@ -194,7 +194,7 @@
   .mcs-search-input {
     min-height: 44px;
     padding: 10px 12px;
-    font-size: 16px;
+    font-size: calc(var(--ui-font-size) * 1.14);
   }
 
   /* Impact cells - touch-friendly */
@@ -209,7 +209,7 @@
   }
 
   .mcs-impact-cell label {
-    font-size: 13px;
+    font-size: calc(var(--ui-font-size) * 0.93);
   }
 
   .mcs-impact-progress-list {
@@ -229,7 +229,7 @@
   }
 
   .mcs-kpi-value {
-    font-size: 18px;
+    font-size: calc(var(--ui-font-size) * 1.29);
   }
 }
 
@@ -320,7 +320,7 @@
   .mcs-field-select,
   .mcs-field-textarea {
     min-height: auto;
-    font-size: 13px;
+    font-size: calc(var(--ui-font-size) * 0.93);
   }
 
   /* List padding - desktop */
@@ -342,7 +342,7 @@
   /* Search input - normal */
   .mcs-search-input {
     min-height: auto;
-    font-size: 13px;
+    font-size: calc(var(--ui-font-size) * 0.93);
   }
 
   /* Impact cells - normal size */
@@ -357,7 +357,7 @@
   }
 
   .mcs-impact-cell label {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 }
 

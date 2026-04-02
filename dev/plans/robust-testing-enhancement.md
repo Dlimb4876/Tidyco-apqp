@@ -14,7 +14,7 @@ This plan addresses critical gaps in the Tidyco APQP testing suite, moving beyon
 
 **Key reference:** Toast notifications use `showToast(message, type, duration)` from `utils/js/helpers.js`. Types: `'info'`, `'error'`, `'warning'`. Sync badge updates `#syncBadge` and `#bottombarSync` with states `'syncing'` / `'saved'` / `'error'`.
 
-- [ ] **1.1: Database Connection Failures**
+- [x] **1.1: Database Connection Failures**
   - Create `tests/error-handling-db.test.js`.
   - Mock `supa.from().select()` to return `{ data: null, error: { message: 'Network Timeout', code: 'PGRST301' } }`.
   - Verify that a "Connection Error" toast is displayed (via `showToast` with type `'error'`).

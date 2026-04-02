@@ -15,6 +15,18 @@ const CTQ_SOURCES = ['Customer Spec', 'OEM Data', 'Internal Standard', 'Regulato
 const CTQ_OOS_ACTIONS = ['Repair', 'Replace', 'Scrap', 'Review', 'TBD']
 const CTQ_COVERAGE_OPTIONS = ['all', 'linked', 'orphaned']
 
+// Build CTQ filter URL and push to history — used by all filter setters
+function pushCtqFilterUrl() {
+  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
+  if (appState.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter))
+  if (appState.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter))
+  if (appState.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter))
+  if (appState.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter))
+  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
+  writeNavigationHistory('#' + parts.join('&'), { push: true })
+  render()
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Coverage helpers — track where CTQs are referenced
 // ═══════════════════════════════════════════════════════════════
@@ -32,14 +44,7 @@ npi.ctq.getCoverageFilter = function() {
 npi.ctq.setCoverageFilter = function(v) {
   const safe = (v || 'all').toString()
   appState.ctqCoverageFilter = CTQ_COVERAGE_OPTIONS.includes(safe) ? safe : 'all'
-  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
-  if (appState.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter))
-  if (appState.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter))
-  if (appState.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter))
-  if (appState.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter))
-  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
-  writeNavigationHistory('#' + parts.join('&'), { push: true })
-  render()
+  pushCtqFilterUrl()
 }
 
 npi.ctq.matchesCoverageFilter = function(r, p, coverageFilter) {
@@ -58,14 +63,7 @@ npi.ctq.getSourceFilter = function() {
 npi.ctq.setSourceFilter = function(v) {
   const safe = (v || 'all').toString()
   appState.ctqSourceFilter = ['all', ...CTQ_SOURCES].includes(safe) ? safe : 'all'
-  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
-  if (appState.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter))
-  if (appState.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter))
-  if (appState.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter))
-  if (appState.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter))
-  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
-  writeNavigationHistory('#' + parts.join('&'), { push: true })
-  render()
+  pushCtqFilterUrl()
 }
 
 npi.ctq.getOosFilter = function() {
@@ -76,14 +74,7 @@ npi.ctq.getOosFilter = function() {
 npi.ctq.setOosFilter = function(v) {
   const safe = (v || 'all').toString()
   appState.ctqOosFilter = ['all', ...CTQ_OOS_ACTIONS].includes(safe) ? safe : 'all'
-  const parts = ['p=' + encodeURIComponent(appState.progId), 's=project', 't=ctq']
-  if (appState.ctqSourceFilter !== 'all') parts.push('csf=' + encodeURIComponent(appState.ctqSourceFilter))
-  if (appState.ctqOosFilter !== 'all') parts.push('cof=' + encodeURIComponent(appState.ctqOosFilter))
-  if (appState.ctqAgreedFilter !== 'all') parts.push('caf=' + encodeURIComponent(appState.ctqAgreedFilter))
-  if (appState.ctqCoverageFilter !== 'all') parts.push('ccf=' + encodeURIComponent(appState.ctqCoverageFilter))
-  if (appState.bomSubTab !== 'tree') parts.push('bt=' + encodeURIComponent(appState.bomSubTab))
-  writeNavigationHistory('#' + parts.join('&'), { push: true })
-  render()
+  pushCtqFilterUrl()
 }
 
 npi.ctq.getAgreedFilter = function() {

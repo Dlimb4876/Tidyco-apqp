@@ -89,6 +89,10 @@
   --page-gutter-mobile: 10px;
   --page-gutter-desktop: 14px;
 
+  /* ── Typography (overridable via Settings > Appearance) ──────── */
+  --ui-font-family: 'IBM Plex Sans', sans-serif;
+  --ui-font-size: 14px;
+
   /* Chart & Visualization Colors */
   --chart-blue: #1e40af; --chart-blue-pale: rgba(30,64,175,0.12); --chart-blue-lt: rgba(30,64,175,0.15);
   --chart-green: #15803d; --chart-green-pale: rgba(21,128,61,0.12); --chart-green-lt: rgba(21,128,61,0.15);
@@ -197,6 +201,10 @@
   --navy:#9fc1e4; --navy-pale:rgba(159,193,228,.14);
   --rose:#f29aba; --rose-pale:rgba(242,154,186,.15);
   --green-dark: #34a85a;
+
+  /* Typography - keep same family/size for consistency */
+  --ui-font-family: 'IBM Plex Sans', sans-serif;
+  --ui-font-size: 14px;
 
   /* Chart & Visualization Colors - Dark */
   --chart-blue: #3b82f6; --chart-blue-pale: rgba(59,130,246,0.15); --chart-blue-lt: rgba(59,130,246,0.2);
@@ -311,6 +319,10 @@
   --rose:#ff44aa; --rose-pale:rgba(255,68,170,.12);
   --green-dark: #00cc33;
 
+  /* Typography - keep same family/size for consistency */
+  --ui-font-family: 'IBM Plex Sans', sans-serif;
+  --ui-font-size: 14px;
+
   /* Chart & Visualization Colors - Terminal (neon) */
   --chart-blue: #00eeff; --chart-blue-pale: rgba(0,238,255,0.25); --chart-blue-lt: rgba(0,238,255,0.35);
   --chart-green: #00ff41; --chart-green-pale: rgba(0,255,65,0.25); --chart-green-lt: rgba(0,255,65,0.35);
@@ -351,13 +363,13 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: var(--ui-font-family);
   background:
     radial-gradient(circle at 15% -10%, var(--body-glow-primary), transparent 35%),
     radial-gradient(circle at 90% 0%, var(--body-glow-secondary), transparent 28%),
     var(--bg);
   color: var(--ink);
-  font-size: 14px;
+  font-size: var(--ui-font-size);
   line-height: 1.5;
 }
 
@@ -388,14 +400,14 @@ body {
   filter: brightness(0) invert(1);
   display: block;
 }
-.brand-name { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: var(--topbar-brand); letter-spacing: 1px; transition: color .15s; }
+.brand-name { font-family: 'IBM Plex Mono', monospace; font-size: var(--ui-font-size); font-weight: 600; color: var(--topbar-brand); letter-spacing: 1px; transition: color .15s; }
 .brand-sep  { color: var(--topbar-brand-sep); margin: 0 2px; }
-.brand-sub  { font-size: 13px; color: var(--topbar-brand-sub); font-weight: 500; }
+.brand-sub  { font-size: calc(var(--ui-font-size) * 0.93); color: var(--topbar-brand-sub); font-weight: 500; }
 
 .back-btn {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 14px;
-  font-size: 12px; font-weight: 500; cursor: pointer;
+  font-size: calc(var(--ui-font-size) * 0.86); font-weight: 500; cursor: pointer;
   border: none;
   background: rgba(255,255,255,0.06);
   color: var(--topbar-control-text);
@@ -409,7 +421,7 @@ body {
 }
 
 .section-crumb {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--topbar-crumb);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -418,7 +430,7 @@ body {
 .section-crumb strong { color: var(--topbar-crumb-strong); }
 
 .project-breadcrumb {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--topbar-project-crumb);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -432,7 +444,7 @@ body {
   border: none;
   color: var(--topbar-project-crumb);
   padding: 8px 14px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-family: 'IBM Plex Sans', sans-serif; outline: none; cursor: pointer;
   appearance: none; max-width: 240px;
   transition: background 0.15s ease;
@@ -455,7 +467,7 @@ body {
 .tbtn.mobile-quick-btn { display: none; }
 .tbtn {
   padding: 10px 16px; 
-  font-size: 12px; 
+  font-size: calc(var(--ui-font-size) * 0.86); 
   font-weight: 500;
   cursor: pointer; 
   border: none; 
@@ -516,7 +528,7 @@ body {
   .main {
     padding: 0 var(--page-gutter-desktop) var(--page-gutter-desktop);
   }
-  .project-breadcrumb { max-width: 250px; font-size: 13px; }
+  .project-breadcrumb { max-width: 250px; font-size: calc(var(--ui-font-size) * 0.93); }
 }
 
 /* ── Login screen ───────────────────────────────────────────── */
@@ -538,24 +550,24 @@ body {
   max-width: 224px;
   max-height: 224px;
 }
-.login-logo-sub   { font-size: 15px; font-weight: 500; color: var(--mid); margin-top: 4px; text-align: center; }
-.login-title      { font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-.login-sub        { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.login-logo-sub   { font-size: calc(var(--ui-font-size) * 1.07); font-weight: 500; color: var(--mid); margin-top: 4px; text-align: center; }
+.login-title      { font-size: calc(var(--ui-font-size) * 1.29); font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.login-sub        { font-size: calc(var(--ui-font-size) * 0.93); color: var(--muted); margin-bottom: 24px; }
 .login-field      { margin-bottom: 16px; }
 .login-field label {
-  display: block; font-size: 12px; font-weight: 600; color: var(--mid);
+  display: block; font-size: calc(var(--ui-font-size) * 0.86); font-weight: 600; color: var(--mid);
   margin-bottom: 5px; letter-spacing: .4px; text-transform: uppercase;
 }
 .login-field input {
   width: 100%; padding: 10px 13px; border: 1.5px solid var(--line2);
-  border-radius: 6px; font-size: 14px; font-family: 'IBM Plex Sans', sans-serif;
+  border-radius: 6px; font-size: var(--ui-font-size); font-family: 'IBM Plex Sans', sans-serif;
   background: var(--field-bg); color: var(--ink);
   outline: none; transition: border-color .15s;
 }
 .login-field input:focus { border-color: var(--blue); }
 .login-btn {
   width: 100%; padding: 11px; background: var(--blue); color: white;
-  border: none; border-radius: 6px; font-size: 14px; font-weight: 600;
+  border: none; border-radius: 6px; font-size: var(--ui-font-size); font-weight: 600;
   font-family: 'IBM Plex Sans', sans-serif; cursor: pointer; margin-top: 8px; transition: background .15s;
 }
 .login-btn:hover    { background: var(--blue-dark); }
@@ -563,14 +575,14 @@ body {
 .login-err {
   background: var(--red-pale); color: var(--red);
   border: 1px solid #f0b4ae; border-radius: 6px;
-  padding: 9px 12px; font-size: 13px; margin-bottom: 14px; display: none;
+  padding: 9px 12px; font-size: calc(var(--ui-font-size) * 0.93); margin-bottom: 14px; display: none;
 }
 :root[data-theme="dark"] .login-err { border-color: rgba(239, 127, 120, 0.4); }
 
 /* ── Sync badge ─────────────────────────────────────────────── */
 .sync-badge {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--muted);
+  font-size: calc(var(--ui-font-size) * 0.79); font-family: 'IBM Plex Mono', monospace; color: var(--muted);
   padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,.08);
 }
 .sync-badge.syncing { color: #93c5fd; }
@@ -587,7 +599,7 @@ body {
   align-items: center;
   padding: 0 14px;
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   font-family: 'IBM Plex Mono', monospace;
   z-index: 99;
@@ -643,7 +655,7 @@ body {
   padding: 4px 8px;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-family: 'IBM Plex Mono', monospace;
   transition: all 0.12s;
 }
@@ -733,7 +745,7 @@ body {
 
   /* Condense back button */
   .back-btn {
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
     padding: 6px 10px;
     max-width: 100px;
     overflow: hidden;
@@ -759,7 +771,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
     border-right: 1px solid rgba(255,255,255,0.06);
   }
   .tbtn:last-child {
@@ -784,10 +796,9 @@ body {
   h3 { font-size: 18px !important; }
 }
 
-/* MANUAL ADD
-/* Force everything to use the main font, overriding specific features */
+/* Keep global UI text in sync with Appearance > Font family selection */
 * {
-    font-family: 'IBM Plex Sans', sans-serif !important;
+    font-family: var(--ui-font-family) !important;
 }
 
 /* Maintain font-family for icons/emojis if needed */
@@ -847,11 +858,11 @@ body {
 }
 .portal-fullscreen-title {
   font-weight: 700;
-  font-size: 15px;
+  font-size: calc(var(--ui-font-size) * 1.07);
   color: var(--ink);
 }
 .portal-fullscreen-project {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--muted);
   margin-left: 10px;
 }

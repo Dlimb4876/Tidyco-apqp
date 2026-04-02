@@ -92,6 +92,35 @@ export function settingsSaveAppearancePrefs(prefs) {
   } catch (_) { /* ignore storage errors */ }
 }
 
+const FONT_SIZE_MAP = {
+  xs: { body: '11px', tableHead: '9px', tableCell: '10px' },
+  sm: { body: '13px', tableHead: '11px', tableCell: '12px' },
+  md: { body: '14px', tableHead: '12px', tableCell: '13px' },
+  lg: { body: '16px', tableHead: '14px', tableCell: '15px' },
+  xl: { body: '18px', tableHead: '16px', tableCell: '17px' },
+};
+
+const FONT_FAMILY_MAP = {
+  'ibm-plex':  "'IBM Plex Sans', sans-serif",
+  roboto:      "'Roboto', sans-serif",
+  inter:       "'Inter', sans-serif",
+  nunito:      "'Nunito', sans-serif",
+  poppins:     "'Poppins', sans-serif",
+  'work-sans': "'Work Sans', sans-serif",
+};
+
+function settingsAppearanceApplyFontSize(sizeKey) {
+  const fontSize = FONT_SIZE_MAP[sizeKey] || FONT_SIZE_MAP.md
+  document.documentElement.style.setProperty('--ui-font-size', fontSize.body)
+  document.documentElement.style.setProperty('--table-head-font-size', fontSize.tableHead)
+  document.documentElement.style.setProperty('--table-cell-font-size', fontSize.tableCell)
+}
+
+function settingsAppearanceApplyFontFamily(familyKey) {
+  const fontFamily = FONT_FAMILY_MAP[familyKey] || FONT_FAMILY_MAP['ibm-plex']
+  document.documentElement.style.setProperty('--ui-font-family', fontFamily)
+}
+
 export function settingsApplyAppearance() {
   const prefs = settingsLoadAppearancePrefs();
   const theme = prefs.theme === 'dark' ? 'dark' : prefs.theme === 'terminal' ? 'terminal' : 'light';
@@ -104,7 +133,9 @@ export function settingsApplyAppearance() {
     document.body.classList.toggle('compact-tables', prefs.tableDensity === 'compact');
   }
 
-  // Organisation / app name in topbar
+  settingsAppearanceApplyFontSize(prefs.fontSize)
+  settingsAppearanceApplyFontFamily(prefs.fontFamily)
+
   const brandName = document.querySelector('.brand-name');
   const brandSub  = document.querySelector('.brand-sub');
   if (brandName) brandName.textContent = prefs.orgName   || 'TIDYCO';
@@ -127,6 +158,28 @@ function settingsAppearanceSetDensityCard(root, density) {
   if (!next) return;
   next.checked = true;
   next.closest('.density-card')?.classList.add('selected');
+}
+
+function settingsAppearanceSetFontSizeCard(root, size) {
+  if (!root) return
+  root
+    .querySelectorAll('.font-card')
+    .forEach((card) => card.classList.remove('selected'))
+  const next = root.querySelector(`.font-card input[name="ap-font-size"][value="${size}"]`)
+  if (!next) return
+  next.checked = true
+  next.closest('.font-card')?.classList.add('selected')
+}
+
+function settingsAppearanceSetFontFamilyCard(root, family) {
+  if (!root) return
+  root
+    .querySelectorAll('.font-family-card')
+    .forEach((card) => card.classList.remove('selected'))
+  const next = root.querySelector(`.font-family-card input[name="ap-font-family"][value="${family}"]`)
+  if (!next) return
+  next.checked = true
+  next.closest('.font-family-card')?.classList.add('selected')
 }
 
 settingsApplyAppearance();
@@ -311,7 +364,7 @@ export function renderSettingsFamiliesTab() {
     container.innerHTML = `
       <div style="padding:24px;border:1px solid var(--line);border-radius:6px;background:var(--white)">
         <div style="font-weight:600;color:var(--red);margin-bottom:8px">Failed to load product families</div>
-        <div style="color:var(--mid);font-size:13px;margin-bottom:12px">${esc(settingsState.settingsFamiliesLoadError)}</div>
+        <div style="color:var(--mid);font-size:calc(var(--ui-font-size) * 0.93);margin-bottom:12px">${esc(settingsState.settingsFamiliesLoadError)}</div>
         <button class="btn btn-ghost" data-action="settings-families-retry">Retry</button>
       </div>
     `;
@@ -660,6 +713,25 @@ export function renderSettingsAppearanceTab() {
   const appSubtitle = esc(prefs.appSubtitle  || '');
   const density     = prefs.tableDensity     || 'normal';
   const toastDur    = prefs.toastDuration    || 'normal';
+  const fontSize    = prefs.fontSize         || 'md';
+  const fontFamily  = prefs.fontFamily       || 'ibm-plex';
+
+  const fontSizeOptions = [
+    { value: 'xs', label: 'XS', desc: '12px', preview: 'Aa' },
+    { value: 'sm', label: 'S',  desc: '13px', preview: 'Aa' },
+    { value: 'md', label: 'M',  desc: '14px', preview: 'Aa' },
+    { value: 'lg', label: 'L',  desc: '15px', preview: 'Aa' },
+    { value: 'xl', label: 'XL', desc: '16px', preview: 'Aa' },
+  ];
+
+  const fontFamilyOptions = [
+    { value: 'ibm-plex',  label: 'IBM Plex',  preview: 'Aa', family: "'IBM Plex Sans', sans-serif" },
+    { value: 'roboto',    label: 'Roboto',    preview: 'Aa', family: "'Roboto', sans-serif" },
+    { value: 'inter',     label: 'Inter',     preview: 'Aa', family: "'Inter', sans-serif" },
+    { value: 'nunito',    label: 'Nunito',    preview: 'Aa', family: "'Nunito', sans-serif" },
+    { value: 'poppins',   label: 'Poppins',   preview: 'Aa', family: "'Poppins', sans-serif" },
+    { value: 'work-sans', label: 'Work Sans', preview: 'Aa', family: "'Work Sans', sans-serif" },
+  ];
 
   container.innerHTML = `
     <div class="settings-section-header">
@@ -745,6 +817,41 @@ export function renderSettingsAppearanceTab() {
     </div>
 
     <div class="appearance-group">
+      <h3 class="appearance-group-title">Font size</h3>
+      <p class="appearance-group-desc">Adjust the base text size across the portal.</p>
+      <div class="appearance-row">
+        <div class="appearance-label">Text size</div>
+        <div class="font-picker">
+          ${fontSizeOptions.map(opt => `
+            <label class="font-card ${fontSize === opt.value ? 'selected' : ''}">
+              <input type="radio" name="ap-font-size" value="${opt.value}" ${fontSize === opt.value ? 'checked' : ''}>
+              <div class="font-preview" style="font-size: ${opt.desc}">${opt.preview}</div>
+              <span class="font-card-label">${opt.label}</span>
+              <span class="font-card-desc">${opt.desc}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="appearance-group">
+      <h3 class="appearance-group-title">Font family</h3>
+      <p class="appearance-group-desc">Choose a different typeface for the portal UI. Monospace text (data tables, code) remains unchanged.</p>
+      <div class="appearance-row">
+        <div class="appearance-label">Typeface</div>
+        <div class="font-family-picker">
+          ${fontFamilyOptions.map(opt => `
+            <label class="font-family-card ${fontFamily === opt.value ? 'selected' : ''}">
+              <input type="radio" name="ap-font-family" value="${opt.value}" ${fontFamily === opt.value ? 'checked' : ''}>
+              <div class="font-family-preview" style="font-family: ${opt.family}">${opt.preview}</div>
+              <span class="font-family-label">${opt.label}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="appearance-group">
       <h3 class="appearance-group-title">Notifications</h3>
       <div class="appearance-row">
         <label class="appearance-label">Toast duration</label>
@@ -777,8 +884,10 @@ export function settingsAppearanceSave() {
   const appSubtitle = document.getElementById('ap-appSubtitle')?.value.trim() || '';
   const density     = document.querySelector('input[name="ap-density"]:checked')?.value || 'normal';
   const toastDur    = document.querySelector('input[name="ap-toast"]:checked')?.value   || 'normal';
+  const fontSize    = document.querySelector('input[name="ap-font-size"]:checked')?.value || 'md';
+  const fontFamily  = document.querySelector('input[name="ap-font-family"]:checked')?.value || 'ibm-plex';
 
-  settingsSaveAppearancePrefs({ theme, orgName, appSubtitle, tableDensity: density, toastDuration: toastDur });
+  settingsSaveAppearancePrefs({ theme, orgName, appSubtitle, tableDensity: density, toastDuration: toastDur, fontSize, fontFamily });
   settingsApplyAppearance();
   showToast('Appearance preferences saved.', 'info');
   renderSettingsAppearanceTab();
@@ -866,6 +975,29 @@ export function setupSettingsEventListeners() {
       const densityInput = densityCard.querySelector('input[name="ap-density"]');
       if (densityInput) settingsAppearanceSetDensityCard(root, densityInput.value);
       return;
+    }
+
+    // Bug fix: hidden radio inputs inside label cards can miss native toggles on some click targets.
+    // Force-checking keeps Font Size/Family cards reliably clickable.
+    const fontSizeCard = event.target.closest('.font-card')
+    if (fontSizeCard && root.contains(fontSizeCard)) {
+      const fontSizeInput = fontSizeCard.querySelector('input[name="ap-font-size"]')
+      if (fontSizeInput) {
+        settingsAppearanceSetFontSizeCard(root, fontSizeInput.value)
+        // UX: preview font size immediately so users can see the scale before saving.
+        settingsAppearanceApplyFontSize(fontSizeInput.value)
+      }
+      return
+    }
+
+    const fontFamilyCard = event.target.closest('.font-family-card')
+    if (fontFamilyCard && root.contains(fontFamilyCard)) {
+      const fontFamilyInput = fontFamilyCard.querySelector('input[name="ap-font-family"]')
+      if (fontFamilyInput) {
+        settingsAppearanceSetFontFamilyCard(root, fontFamilyInput.value)
+        settingsAppearanceApplyFontFamily(fontFamilyInput.value)
+      }
+      return
     }
 
     // Skip native form controls — selects/inputs handle their own events via 'change'.
@@ -970,6 +1102,18 @@ export function setupSettingsEventListeners() {
     if (event.target.name === 'ap-density') {
       settingsAppearanceSetDensityCard(root, event.target.value);
       return;
+    }
+
+    if (event.target.name === 'ap-font-size') {
+      settingsAppearanceSetFontSizeCard(root, event.target.value)
+      settingsAppearanceApplyFontSize(event.target.value)
+      return
+    }
+
+    if (event.target.name === 'ap-font-family') {
+      settingsAppearanceSetFontFamilyCard(root, event.target.value)
+      settingsAppearanceApplyFontFamily(event.target.value)
+      return
     }
 
     if (!actionEl || !root.contains(actionEl)) return;

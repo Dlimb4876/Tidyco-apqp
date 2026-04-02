@@ -3,6 +3,14 @@
 All notable changes to Tidyco APQP are recorded here. Most recent changes appear first.
 Format: `YYYY-MM-DD | <what changed> | <why it was changed>`
 
+## 2026-04-01 | PFMEA SOD rating criteria buttons now more visible | Changed from subtle ghost buttons to prominent circular blue buttons with hover effects so users can easily find the severity/occurrence/detection rating criteria
+## 2026-04-01 | Comprehensive font size fix across all CSS and JS files | Complete sweep converting 400+ hardcoded px values to use calc(var(--ui-font-size) * factor) across all portal CSS files and inline JS styles; font size changes in Settings > Appearance now affect virtually all text elements
+## 2026-04-01 | Fix font size feature not working | CSS was using hardcoded px values instead of --ui-font-size variable, so font size changes had no effect; updated main.css and components.css to use the CSS variable with calc() for proportional scaling
+## 2026-04-01 | Font size and font family settings in Appearance tab | Users can now select from 5 font sizes (XS–XL) and 6 font families (IBM Plex, Roboto, Inter, Nunito, Poppins, Work Sans) in Settings > Appearance; settings persist to localStorage
+## 2026-04-01 | Fix Appearance font size feedback and scale range | Font size cards now apply a live preview before Save, and the range is widened (XS 11px to XL 18px) so changes are clearly visible
+## 2026-04-01 | Fix Appearance font cards not selecting reliably | Font size/family option cards used hidden radios and could fail to toggle from some click targets, making options feel unclickable
+## 2026-04-01 | Action tracker notes column now auto-expands like CTQ/PFD | Changed notes field from <input> to <textarea data-autoresize> so rows grow to show full text, matching CTQ and PFD behavior
+## 2026-04-01 | Operations forecast chart now manual refresh after first load | Stop auto-redraw on every Forecast tab re-render; chart now renders on Forecast entry and when user clicks Refresh Chart in forecast trend controls, and it also redraws on Forecast chart scope/month selector interactions
 ## 2026-04-01 | Crisis-mode soft delete + audit trail for products/families/work areas | Prevent permanent accidental deletions and create forensic history of who changed what and when
 ## 2026-04-01 | PFMEA SOD criteria modals — wider layout and guide update | Modals now use wider layout (1100px/800px) to reduce scrolling; added reference to modals in PFMEA user guide
 ## 2026-04-01 | Desktop app icon updated to new Tidyco Logo - large | Updated branding asset

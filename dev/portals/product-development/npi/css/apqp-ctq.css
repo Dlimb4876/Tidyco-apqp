@@ -7,7 +7,7 @@
 
 /* ── CTQ Filter Bar ────────────────────────────────────────── */
 .ctq-filter-label {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   color: var(--mid);
   text-transform: uppercase;
@@ -38,7 +38,7 @@
 }
 
 .ctq-agreed-label {
-  font-size: 9px;
+  font-size: calc(var(--ui-font-size) * 0.64);
   font-weight: 700;
   letter-spacing: 0.3px;
   transition: color 0.15s;
@@ -49,7 +49,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   letter-spacing: 0.2px;
   white-space: nowrap;
@@ -101,7 +101,7 @@
   text-align: center;
   line-height: 1.2;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   -moz-appearance: textfield;
 }
@@ -119,7 +119,7 @@
   gap: 4px;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
@@ -192,7 +192,7 @@
   gap: 2px;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   background: transparent;
   color: var(--muted);
   border: 1px dashed var(--line2);
@@ -222,7 +222,7 @@
   gap: 2px;
   padding: 2px 8px;
   border-radius: 20px;
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-family: 'IBM Plex Mono', monospace;
   background: var(--teal-pale);
   color: var(--teal);
@@ -244,7 +244,7 @@
   gap: 2px;
   padding: 2px 8px;
   border-radius: 20px;
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   background: var(--bg);
   color: var(--muted);
   border: 1px dashed var(--line2);
@@ -286,7 +286,7 @@
   border: 1px solid var(--blue-mid);
   border-radius: 6px;
   margin-bottom: 12px;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
 }
 
 .coverage-stat {
@@ -297,7 +297,7 @@
 
 .coverage-banner .tag {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   min-width: 24px;
   text-align: center;
 }

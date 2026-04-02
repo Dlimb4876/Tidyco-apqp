@@ -4,6 +4,7 @@
 > Old sessions are consolidated by the daemon weekly.
 
 ## 2026-04-01
+- Added `.kilo` to `.gitignore` to keep local kilo artifacts out of version control.
 - Added `source_ref` (Source Reference) column to CTQ table — free-text field for document/standard references, positioned between Source and Out-of-Spec Action.
 - Also confirmed `source` and `oos_action` columns were missing from DB; all three added via `supabase/npi_ctq_add_source_ref_oos_action.sql`.
 - Files changed: `npi-data.js` (defaults), `npi-data-relational.js` (load+save), `npi-ctq.js` (render colgroup+header+row).
@@ -1655,3 +1656,13 @@
 | 13:43 | Edited portals/product-development/npi/js/npi-cp.js | added 1 import(s) | ~37 |
 | 13:44 | Session end: 7 writes across 3 files (npi-events.js, npi-data-relational.js, npi-cp.js) | 10 reads | ~4955 tok |
 | 14:57 | Added crisis-mode soft delete + DB audit trail for products/families/work_areas | portals/product-development/product-management/js/products-data.js, portals/product-development/js/families-data.js, portals/capacity/production/js/work-areas-data.js, portals/production/js/data.js, portals/operations/js/operations-dashboard-realtime.js, supabase/crisis_soft_delete_audit.sql | Applied migration and converted UI delete flows to archive behavior |
+
+## Session: 2026-04-01 20:53
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|
+
+## Session: 2026-04-01 22:28
+
+| Time | Action | File(s) | Outcome | ~Tokens |
+|------|--------|---------|---------|--------|

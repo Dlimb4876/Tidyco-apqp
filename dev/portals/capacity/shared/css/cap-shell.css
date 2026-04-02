@@ -13,8 +13,8 @@
 	border-bottom: 1px solid var(--line); flex-shrink: 0; gap: 16px;
 }
 .me-topbar-left  { display: flex; align-items: center; gap: 14px; }
-.me-topbar-title { font-size: 15px; font-weight: 600; color: var(--ink); }
-.me-topbar-sub   { font-size: 12px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+.me-topbar-title { font-size: calc(var(--ui-font-size) * 1.07); font-weight: 600; color: var(--ink); }
+.me-topbar-sub   { font-size: calc(var(--ui-font-size) * 0.86); color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
 
 .me-nav {
 	display: flex; gap: 0; background: var(--white);
@@ -22,7 +22,7 @@
 	margin: 0 20px; flex-shrink: 0; overflow: hidden;
 }
 .me-nav-btn {
-	padding: 10px 18px; font-size: 12px; font-weight: 500; cursor: pointer;
+	padding: 10px 18px; font-size: calc(var(--ui-font-size) * 0.86); font-weight: 500; cursor: pointer;
 	background: transparent; border: none; border-bottom: 2px solid transparent;
 	border-top: none; border-left: none; border-right: none;
 	color: var(--muted);
@@ -47,7 +47,7 @@
 	justify-content: space-between; gap: 12px;
 }
 .me-card-title {
-	font-size: 13px; font-weight: 600; color: var(--ink);
+	font-size: calc(var(--ui-font-size) * 0.93); font-weight: 600; color: var(--ink);
 	font-family: 'IBM Plex Mono', monospace; letter-spacing: .4px;
 }
 .me-card-body { padding: 0; }

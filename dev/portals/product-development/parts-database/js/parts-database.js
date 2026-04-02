@@ -179,6 +179,17 @@ globalThis.partsDatabase = partsDatabase
     })
 
     setTimeout(() => partsDb.loadPartUsageCounts(), 100)
+    
+    // Initialize clear button state
+    partsDb.toggleClearButton()
+    
+    // Auto-focus search on desktop only
+    if (window.innerWidth >= 768) {
+      const searchInput = document.getElementById('abcCatalogueSearch')
+      if (searchInput) {
+        searchInput.focus()
+      }
+    }
   }
 
   partsDb.renderCatalogue = function() {
@@ -206,9 +217,12 @@ globalThis.partsDatabase = partsDatabase
           data-cls="${cls}"
           onclick="partsDatabase.setClassFilter('${cls}');partsDatabase.refreshCatalogueResults()">${cls === 'all' ? 'All' : cls}</button>`
       ).join('')}
-      <input type="text" class="cell-edit" id="abcCatalogueSearch" value="${esc(abcCatalogueSearch)}"
-        oninput="partsDatabase.setSearch(this.value);partsDatabase.refreshCatalogueResults()"
-        placeholder="Search by PN, manufacturer PN, or description…" style="flex:1;min-width:160px;max-width:260px;margin-left:4px">
+      <div class="abc-search-wrapper">
+        <input type="text" class="cell-edit abc-search-input" id="abcCatalogueSearch" value="${esc(abcCatalogueSearch)}"
+          oninput="partsDatabase.setSearch(this.value);partsDatabase.refreshCatalogueResults();partsDatabase.toggleClearButton()"
+          placeholder="Search by PN, manufacturer PN, or description…">
+        <button class="abc-search-clear" id="abcSearchClear" onclick="partsDatabase.clearSearch()">×</button>
+      </div>
       <span style="margin-left:auto;display:flex;gap:6px;flex-shrink:0">
         <button class="btn btn-ghost btn-sm" onclick="partsDatabase.showInfo()">What are A / B / C? ℹ</button>
         ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="partsDatabase.openNew()">＋ Add Part</button>` : ''}
@@ -281,6 +295,24 @@ globalThis.partsDatabase = partsDatabase
 
   partsDb.setSearch = function(value) {
     abcCatalogueSearch = value
+  }
+
+  partsDb.toggleClearButton = function() {
+    const clearBtn = document.getElementById('abcSearchClear')
+    const searchInput = document.getElementById('abcCatalogueSearch')
+    if (clearBtn && searchInput) {
+      clearBtn.style.display = searchInput.value.length > 0 ? 'flex' : 'none'
+    }
+  }
+
+  partsDb.clearSearch = function() {
+    abcCatalogueSearch = ''
+    const searchInput = document.getElementById('abcCatalogueSearch')
+    if (searchInput) {
+      searchInput.value = ''
+    }
+    partsDb.toggleClearButton()
+    partsDb.refreshCatalogueResults()
   }
 
   partsDb.setClassFilter = function(value) {
@@ -557,18 +589,31 @@ globalThis.partsDatabase = partsDatabase
     const uncachedParts = visibleParts.filter((part) => usageCache[part.id] === undefined)
     if (uncachedParts.length === 0) return
 
-    for (const part of uncachedParts) {
-      try {
-        const usage = await partsDb.data.fetchPartUsage(part.id)
-        usageCache[part.id] = usage.length
-        const badge = document.querySelector(`[data-usage-id="${part.id}"]`)
+    const uncachedIds = uncachedParts.map((p) => p.id)
+    try {
+      const batchResults = await partsDb.data.fetchPartUsageBatch(uncachedIds)
+
+      Object.keys(batchResults).forEach((partId) => {
+        const usage = batchResults[partId]
+        usageCache[partId] = usage.length
+        const badge = document.querySelector(`[data-usage-id="${partId}"]`)
         if (badge) badge.textContent = usage.length
-      } catch (err) {
-        console.warn('Failed to load usage for part:', part.id, err)
-        usageCache[part.id] = 0
-        const badge = document.querySelector(`[data-usage-id="${part.id}"]`)
+      })
+
+      uncachedIds.forEach((partId) => {
+        if (usageCache[partId] === undefined) {
+          usageCache[partId] = 0
+          const badge = document.querySelector(`[data-usage-id="${partId}"]`)
+          if (badge) badge.textContent = '0'
+        }
+      })
+    } catch (err) {
+      console.warn('Failed to load batch usage for parts:', err)
+      uncachedIds.forEach((partId) => {
+        usageCache[partId] = 0
+        const badge = document.querySelector(`[data-usage-id="${partId}"]`)
         if (badge) badge.textContent = '0'
-      }
+      })
     }
   }
 

@@ -7,20 +7,28 @@
 npm test                                    # Run all Jest tests
 npm test -- path/to/test.test.js            # Run single test file
 npm test -- --testNamePattern="pattern"     # Run tests matching a pattern
+npm test -- --watch                         # Run in watch mode
+npm test -- --detectOpenHandles             # Debug open handles
 ```
 
 ### Validation & Checks
 ```bash
-npm run check:all        # Full validation suite
-npm run check:syntax     # Validate JavaScript syntax
-npm run check:imports    # Verify ESM import/export wiring
-npm run check:esm-coverage  # Track remaining non-ESM files
-npm run check:rls        # Audit RLS policies
-npm run check:subscriptions  # Check realtime cleanup
-npm run check:state      # Track global state variables
-npm run check:mobile     # Verify mobile breakpoints
-npm run check:modals     # Audit modal state handling
-npm run check:coverage   # Generate test coverage report
+npm run check:all              # Full validation suite (syntax, imports, ESM, subscriptions, state, RLS, mobile, modals, coverage)
+npm run check:syntax           # Validate JavaScript syntax
+npm run check:imports          # Verify ESM import/export wiring
+npm run check:esm-coverage     # Track remaining non-ESM files
+npm run check:rls              # Audit RLS policies
+npm run check:subscriptions    # Check realtime cleanup
+npm run check:state            # Track global state variables
+npm run check:mobile           # Verify mobile breakpoints
+npm run check:modals           # Audit modal state handling
+npm run check:coverage         # Generate test coverage report
+```
+
+### Linting & Formatting (NPI portal only)
+```bash
+npm run lint:npi       # Run ESLint on NPI portal
+npm run format:npi     # Run Prettier on NPI portal
 ```
 
 ### Wiki
@@ -31,10 +39,11 @@ npm run wiki:check-links    # Check internal links
 npm run wiki:check          # Full wiki validation
 ```
 
-### Linting & Formatting (NPI portal only)
+### Validation Order (fresh clone or major changes)
 ```bash
-npm run lint:npi       # Run ESLint on NPI portal
-npm run format:npi     # Run Prettier on NPI portal
+npm install          # 1. Install dependencies
+npm test             # 2. Run tests
+npm run check:all    # 3. Full validation suite
 ```
 
 ## Architecture Snapshot
@@ -42,8 +51,10 @@ npm run format:npi     # Run Prettier on NPI portal
 - **Framework**: Vanilla JavaScript SPA (no build pipeline)
 - **Backend**: Supabase (Auth, Postgres, Realtime)
 - **Package Manager**: npm
-- **Testing**: Jest with jsdom environment
+- **Testing**: Jest 30 with jsdom environment
 - **Entry Point**: `core/js/main.js` loaded via `<script type="module">` in `index.html`
+- **Styling**: CSS with mobile-first breakpoints; Chart.js v4.4.0 via CDN
+- **Desktop**: Electron wrapper (optional)
 
 ## Hard Rules (Non-Negotiable)
 
@@ -58,10 +69,11 @@ npm run format:npi     # Run Prettier on NPI portal
    - `@media (max-width: 767px)` (mobile)
    - `@media (min-width: 768px)` (desktop)
 9. **Guide Updates**: When adding/changing features on content pages, update the matching entry in `GUIDE_CONTENT` in `utils/js/guide.js`.
+10. **Comment Why**: Add a brief comment explaining *why* code was added or changed (bug fix, new feature, optimization, etc.).
 
 ## Code Style
 
-### Formatting
+### Formatting (`.prettierrc`)
 - Single quotes for strings (`'string'`)
 - No semicolons at end of statements
 - Tab width: 2 spaces
@@ -101,14 +113,26 @@ async function fetchProgram(id) {
 - Null checks: `value == null` allowed for null/undefined comparison
 - Prefer explicit boolean: `if (isActive === true)`
 
+### Comment Conventions
+Add a brief comment explaining *why* code was added or changed. Do not comment self-evident code.
+
+```javascript
+// Bug fix: Filter out deleted items before rendering to prevent "key not found" errors
+const activeItems = items.filter(i => !i.deleted)
+
+// Optimization: Use Set lookup instead of array.includes() for O(1) instead of O(n)
+const validIds = new Set(data.map(d => d.id))
+```
+
 ## Testing Guidelines
 
+- Test files: `tests/*.test.js` — mirror module name (e.g., `core/js/state.js` → `tests/state.test.js`)
 - Follow Jest Arrange-Act-Assert structure
-- Match test file naming to module purpose
 - Use jsdom-safe patterns (see `jest.setup.js`)
 - Mock Supabase client calls rather than hitting live services
 - Include at least one unhappy path test per new behavior
 - Keep async tests using `async/await`
+- Aim for >80% code coverage on critical paths
 
 ## ID Generation Pattern
 
@@ -132,7 +156,8 @@ After each logical change, add entry near top of `CHANGELOG.md`:
 ## Canonical Detail Rules
 
 For detailed guidance, consult:
-- **Test rules**: `.github/instructions/testing.instructions.md`
+- **Test rules**: `.claude/rules/testing.md`
+- **Code style & comments**: `.claude/rules/code-style.md`
 - **Security**: `.claude/rules/security.md`
 - **Database/RLS**: `.claude/rules/database.md`
 - **Navigation**: `.claude/rules/navigation.md`

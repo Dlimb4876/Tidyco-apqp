@@ -51,7 +51,7 @@
 }
 
 .mcs-sidebar-label {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -75,12 +75,12 @@
 .mcs-toolbar-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   color: var(--text);
 }
 
 .mcs-toolbar-count {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--text3);
   margin-left: 4px;
 }
@@ -93,7 +93,7 @@
 }
 
 .mcs-sort-label {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -105,7 +105,7 @@
   border: 1px solid var(--border2);
   color: var(--text2);
   font-family: var(--body);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   padding: 6px 10px;
   outline: none;
   border-radius: 6px;
@@ -182,7 +182,7 @@
 
 .mcs-card-ref {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--text3);
   white-space: nowrap;
 }
@@ -190,7 +190,7 @@
 .mcs-card-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--ui-font-size);
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -226,7 +226,7 @@
 }
 
 .mcs-tag {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 500;
   padding: 2px 8px;
   border-radius: 4px;
@@ -237,7 +237,7 @@
 
 /* Priority badge (replaces dot) */
 .mcs-priority-badge {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 4px;
@@ -268,7 +268,7 @@
 .mcs-card-submeta {
   display: flex;
   gap: 12px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text3);
   flex-wrap: wrap;
   align-items: center;
@@ -280,7 +280,7 @@
 }
 
 .mcs-status-pill {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 500;
   padding: 3px 10px;
   border-radius: 20px;
@@ -325,13 +325,13 @@
 
 .mcs-card-impacts {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--text3);
 }
 
 .mcs-card-time-impact {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--orange);
   font-weight: 600;
 }
@@ -368,7 +368,7 @@
 
 .mcs-modal-ref-badge {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   background: rgba(37, 99, 235, 0.14);
   color: var(--accent2);
   padding: 3px 10px;
@@ -385,7 +385,7 @@
 .mcs-modal-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: 18px;
+  font-size: calc(var(--ui-font-size) * 1.29);
   color: var(--text);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
   margin-bottom: 8px;
@@ -404,7 +404,7 @@
   width: 32px;
   height: 32px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -475,7 +475,7 @@
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -492,13 +492,13 @@
 .mcs-form-section-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: 15px;
+  font-size: calc(var(--ui-font-size) * 1.07);
   color: var(--text);
   margin-bottom: 2px;
 }
 
 .mcs-form-section-subtitle {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text3);
 }
 
@@ -544,7 +544,7 @@
 
 .mcs-impact-grid-compact .mcs-impact-cell {
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
 }
 
 /* Responsive adjustments for form */
@@ -661,7 +661,7 @@
 }
 
 .mcs-stage-title {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -679,7 +679,7 @@
   border-radius: 50%;
   background: var(--border2);
   color: #fff;
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -689,7 +689,7 @@
 }
 
 .mcs-stage-subtitle {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text3);
   margin-top: 0;
   margin-bottom: 0;
@@ -732,7 +732,7 @@
 }
 
 .mcs-stage-note {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text3);
   padding: 10px 12px;
   border: 1px dashed var(--border2);
@@ -741,7 +741,7 @@
 }
 
 .mcs-stage-readonly {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--text2);
   line-height: 1.6;
   background: var(--surface);
@@ -752,7 +752,7 @@
 
 .mcs-stage-readonly-inline {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text2);
 }
 
@@ -771,7 +771,7 @@
 }
 
 .mcs-flow-rail-title {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -821,7 +821,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   z-index: 1;
 }
@@ -834,7 +834,7 @@
 }
 
 .mcs-flow-name {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   color: var(--text2);
 }
@@ -842,7 +842,7 @@
 .mcs-flow-role,
 .mcs-flow-meta,
 .mcs-flow-note {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--text3);
   line-height: 1.3;
 }
@@ -850,7 +850,7 @@
 .mcs-flow-state {
   display: inline-flex;
   width: fit-content;
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -931,7 +931,7 @@
 }
 
 .mcs-field-label {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--text3);
@@ -945,7 +945,7 @@
   border: 1px solid var(--border2);
   color: var(--text);
   font-family: var(--body);
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   padding: 8px 12px;
   outline: none;
   border-radius: 6px;
@@ -979,7 +979,7 @@
 .mcs-section-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text3);
@@ -1041,7 +1041,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: var(--ui-font-size);
   font-weight: 700;
   z-index: 1;
   position: relative;
@@ -1082,7 +1082,7 @@
 }
 
 .mcs-approval-name {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   color: var(--text2);
   text-align: center;
@@ -1103,7 +1103,7 @@
 }
 
 .mcs-approval-role {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--text3);
   text-align: center;
   white-space: nowrap;
@@ -1111,7 +1111,7 @@
 
 /* Status badge pill */
 .mcs-approval-status-label {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -1143,7 +1143,7 @@
 }
 
 .mcs-approval-meta {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--text3);
   margin-top: 3px;
   text-align: center;
@@ -1155,13 +1155,13 @@
 
 .mcs-approval-date {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--text3);
   text-align: center;
 }
 
 .mcs-approval-notes {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--text3);
   font-style: italic;
   text-align: center;
@@ -1182,7 +1182,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 500;
   padding: 5px 12px;
   border-radius: 20px;
@@ -1192,7 +1192,7 @@
 }
 
 .mcs-impact-none {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text3);
   font-style: italic;
 }
@@ -1205,7 +1205,7 @@
 
 .mcs-time-impact-value {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 600;
   color: var(--orange);
   background: var(--orange-dim);
@@ -1240,7 +1240,7 @@
 }
 
 .mcs-impact-cell label {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text2);
   cursor: pointer;
   user-select: none;
@@ -1263,7 +1263,7 @@
 }
 
 .mcs-impact-progress-title {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 600;
   color: var(--text);
   text-transform: uppercase;
@@ -1272,7 +1272,7 @@
 
 .mcs-impact-progress-count {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text2);
 }
 
@@ -1301,14 +1301,14 @@
 }
 
 .mcs-impact-progress-item label {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--text2);
   cursor: pointer;
 }
 
 .mcs-stage-note-compact {
   margin: 0;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
 }
 
 /* -- Timeline -- */
@@ -1350,18 +1350,18 @@
 
 .mcs-tl-time {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--text3);
   margin-bottom: 2px;
 }
 
 .mcs-tl-text {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--text2);
 }
 
 .mcs-tl-author {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--text3);
   margin-top: 2px;
 }
@@ -1453,7 +1453,7 @@
 .mcs-btn {
   font-family: var(--body);
   font-weight: 500;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   padding: 8px 18px;
   border: none;
   cursor: pointer;
@@ -1512,7 +1512,7 @@
 
 .mcs-empty-text {
   font-family: var(--display);
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--text3);
@@ -1520,7 +1520,7 @@
 }
 
 .mcs-empty-sub {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--text3);
   max-width: 320px;
   margin: 0 auto;
@@ -1536,7 +1536,7 @@
   border: 1px solid var(--green);
   color: var(--green);
   font-family: var(--body);
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 500;
   padding: 12px 20px;
   border-radius: 8px;
@@ -1601,7 +1601,7 @@
   background: transparent;
   color: var(--text2);
   font-family: var(--body);
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 400;
   cursor: pointer;
   transition: all 0.1s;
@@ -1622,7 +1622,7 @@
 
 .mcs-filter-count {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   background: var(--surface3);
   padding: 1px 7px;
   border-radius: 10px;
@@ -1641,7 +1641,7 @@
   border: 1px solid var(--border2);
   color: var(--text);
   font-family: var(--body);
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   padding: 8px 12px;
   outline: none;
   border-radius: 6px;
@@ -1686,14 +1686,14 @@
 
 .mcs-kpi-value {
   font-family: var(--mono);
-  font-size: 22px;
+  font-size: calc(var(--ui-font-size) * 1.57);
   font-weight: 700;
   line-height: 1;
   margin-bottom: 4px;
 }
 
 .mcs-kpi-label {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1726,7 +1726,7 @@
   border: none;
   cursor: pointer;
   font-family: var(--body);
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1739,7 +1739,7 @@
 }
 
 .mcs-toggle-icon {
-  font-size: 9px;
+  font-size: calc(var(--ui-font-size) * 0.64);
   transition: transform 0.15s;
 }
 
@@ -1753,7 +1753,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--text2);
   cursor: pointer;
   border-radius: 6px;
@@ -1782,7 +1782,7 @@
   border: 1px solid var(--border2);
   color: var(--text2);
   font-family: var(--body);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   padding: 6px 10px;
   outline: none;
   border-radius: 6px;
@@ -1806,7 +1806,7 @@
   border-radius: 6px;
   color: var(--text3);
   font-family: var(--body);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   cursor: pointer;
   transition: all 0.1s;
   text-align: center;

@@ -2,7 +2,7 @@
 
 /* ── Batch due date urgency ───────────────────────────────────── */
 .batch-due-badge {
-  font-size: 9px;
+  font-size: calc(var(--ui-font-size) * 0.64);
   font-weight: 700;
   border-radius: 3px;
   padding: 1px 5px;
@@ -39,7 +39,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   background: var(--blue-pale, #e8f0fe);
   border: 1px solid var(--blue, #3b82f6);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: var(--ui-font-size);
   flex-wrap: wrap;
 }
 .bulk-toolbar #bulk-count {
@@ -63,7 +63,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   background: transparent;
   border: 1.5px solid var(--line);
   border-radius: 6px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 600;
   color: var(--mid);
   cursor: pointer;
@@ -121,13 +121,13 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .prod-card .proj-card-name {
-  font-size: 18px;
+  font-size: calc(var(--ui-font-size) * 1.29);
   font-weight: 700;
   letter-spacing: 1px;
 }
 
 .prod-card .proj-card-meta {
-  font-size: 14px;
+  font-size: var(--ui-font-size);
   color: var(--muted);
   margin-top: 8px;
 }
@@ -157,7 +157,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .filter-group label {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 600;
   color: var(--mid);
   text-transform: uppercase;
@@ -169,7 +169,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   padding: 8px 10px;
   border: 1.5px solid var(--line2);
   border-radius: 5px;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   background: var(--surface);
   cursor: pointer;
 }
@@ -297,7 +297,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 .prod-tbl .cell-display {
   padding: 4px 6px;
   color: var(--mid);
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   min-height: 32px;
   display: flex;
   align-items: center;
@@ -335,7 +335,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   background: var(--surface);
   color: var(--mid);
   font-weight: 600;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   cursor: pointer;
   transition: all 0.15s;
   flex-shrink: 0;
@@ -407,13 +407,13 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .product-name {
-  font-size: 14px;
+  font-size: var(--ui-font-size);
   font-weight: 700;
   color: var(--ink);
 }
 
 .product-code {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--muted);
   margin-top: 2px;
   font-family: 'IBM Plex Mono';
@@ -427,7 +427,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .product-meta span {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--mid);
   background: var(--surface);
   padding: 2px 6px;
@@ -444,7 +444,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   background: var(--bg);
   border-radius: 5px;
   border-left: 3px solid var(--blue);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
 }
 
 .batch-num {
@@ -454,7 +454,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .batch-unit {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--mid);
   font-weight: 600;
   text-transform: uppercase;
@@ -462,13 +462,13 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .batch-qty {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--ink);
   margin-top: 2px;
 }
 
 .batch-dates {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   font-family: 'IBM Plex Mono';
   margin-top: 2px;
@@ -494,7 +494,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   border: 1.5px solid var(--line);
   border-bottom: 2px solid transparent;
   border-radius: 6px 6px 0 0;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 600;
   color: var(--mid);
   cursor: pointer;
@@ -517,7 +517,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 
 .tab-count {
   margin-left: 6px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   background: var(--bg);
   padding: 2px 6px;
@@ -555,7 +555,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   background: var(--bg);
   border-left: 2px solid var(--amber);
   border-radius: 4px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   color: var(--mid);
   text-transform: uppercase;
@@ -592,7 +592,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .tb-product {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 600;
   color: var(--ink);
   margin-bottom: 4px;
@@ -602,7 +602,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 .tb-info {
   display: flex;
   gap: 16px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   font-family: 'IBM Plex Mono';
 }
@@ -633,7 +633,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .gantt-header-label {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   color: var(--mid);
   text-transform: uppercase;
@@ -649,7 +649,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .gantt-header-status {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   color: var(--mid);
   text-transform: uppercase;
@@ -676,14 +676,14 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .gantt-week-label {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 700;
   color: var(--ink);
   letter-spacing: 0.3px;
 }
 
 .gantt-week-dates {
-  font-size: 9px;
+  font-size: calc(var(--ui-font-size) * 0.64);
   color: var(--muted);
   font-family: 'IBM Plex Mono';
   margin-top: 1px;
@@ -735,7 +735,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 .gantt-today-date {
   font-weight: 700 !important;
   color: var(--red) !important;
-  font-size: 12px !important;
+  font-size: calc(var(--ui-font-size) * 0.86) !important;
 }
 
 .today-col {
@@ -761,7 +761,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .gantt-date {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 600;
   color: var(--mid);
   font-family: 'IBM Plex Mono';
@@ -798,7 +798,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .gantt-product-code {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 700;
   color: var(--ink);
   font-family: 'IBM Plex Mono';
@@ -806,7 +806,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .gantt-batch-meta {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   margin-top: 2px;
   font-family: 'IBM Plex Mono';
@@ -848,7 +848,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .gantt-bar-label {
-  font-size: 9px;
+  font-size: calc(var(--ui-font-size) * 0.64);
   color: var(--white);
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -875,7 +875,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--mid);
 }
 
@@ -947,7 +947,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .modal-title {
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   font-weight: 700;
   color: var(--ink);
   margin-bottom: 16px;
@@ -1001,7 +1001,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 
   .unit-tab {
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .timeline-weeks {
@@ -1010,7 +1010,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 
   .week-header {
     padding: 6px 10px;
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   .timeline-batch {
@@ -1030,7 +1030,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   }
 
   .prod-tbl {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .prod-tbl td,
@@ -1050,7 +1050,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .gantt-month-header {
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   font-weight: 600;
   color: var(--text-primary);
   text-align: center;
@@ -1074,7 +1074,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .compact-two-month .gantt-window-label {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 600;
   color: var(--mid);
   font-family: 'IBM Plex Mono';
@@ -1108,7 +1108,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   justify-content: center;
   background: var(--bg);
   color: var(--ink);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   letter-spacing: 0.2px;
   border-right: 1px solid var(--line2);
@@ -1136,7 +1136,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   position: absolute;
   top: 5px;
   transform: translateX(-50%);
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--ink);
   font-family: 'IBM Plex Mono';
   font-weight: 600;
@@ -1162,7 +1162,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   top: -18px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   color: var(--red);
   font-family: 'IBM Plex Mono';
@@ -1235,7 +1235,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .six-month-product-view .gantt-window-label {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 600;
   color: var(--mid);
   font-family: 'IBM Plex Mono';
@@ -1264,7 +1264,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   justify-content: center;
   background: var(--bg);
   color: var(--ink);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   letter-spacing: 0.2px;
   border-right: 1px solid var(--line2);
@@ -1299,14 +1299,14 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 }
 
 .six-month-product-view .gantt-week-marker-name {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--ink);
   font-family: 'IBM Plex Mono';
   font-weight: 700;
 }
 
 .six-month-product-view .gantt-week-marker-date {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--ink);
   font-family: 'IBM Plex Mono';
   font-weight: 600;
@@ -1326,7 +1326,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   top: -18px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   color: var(--red);
   font-family: 'IBM Plex Mono';
@@ -1384,7 +1384,7 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
 
   .prod-nav-item {
     padding: 6px 12px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
     white-space: nowrap;
   }
 
@@ -1403,11 +1403,11 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   }
 
   .prod-card .proj-card-name {
-    font-size: 16px;
+    font-size: calc(var(--ui-font-size) * 1.14);
   }
 
   .prod-card .proj-card-meta {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .prod-section {
@@ -1429,12 +1429,12 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   }
 
   .prod-tbl {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .prod-tbl th {
     padding: 6px 6px;
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   .prod-tbl td {
@@ -1456,13 +1456,13 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   }
 
   .gantt-month-header {
-    font-size: 14px;
+    font-size: var(--ui-font-size);
   }
 
   .gantt-nav-controls .btn-sm {
     min-width: 80px;
     padding: 6px 10px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   .compact-two-month .gantt-header {
@@ -1479,11 +1479,11 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   }
 
   .compact-two-month .gantt-product-code {
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .compact-two-month .gantt-batch-meta {
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
   }
 
   .prod-product-toolbar {
@@ -1505,11 +1505,11 @@ tr.batch-row-selected { background: var(--blue-pale, #e8f0fe); }
   }
 
   .six-month-product-view .gantt-week-marker-name {
-    font-size: 9px;
+    font-size: calc(var(--ui-font-size) * 0.64);
   }
 
   .six-month-product-view .gantt-week-marker-date {
-    font-size: 9px;
+    font-size: calc(var(--ui-font-size) * 0.64);
   }
 }
 

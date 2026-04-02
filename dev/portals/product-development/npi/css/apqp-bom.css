@@ -18,7 +18,7 @@
 
 .bom-tab {
   padding: 10px 18px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 500;
   cursor: pointer;
   border-bottom: 2px solid transparent;
@@ -65,7 +65,7 @@ td.w75 { width: 75px; }
   align-items: center;
   padding: 3px 10px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   font-family: 'IBM Plex Mono', monospace;
   line-height: 1;
@@ -82,7 +82,7 @@ td.w75 { width: 75px; }
 .bom-filter-btn {
   padding: 5px 12px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   border: 1px solid var(--line2);
   background: var(--bg);
   color: var(--muted);
@@ -145,13 +145,13 @@ td.w75 { width: 75px; }
 }
 
 .bom-pick-name {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 600;
   color: var(--ink);
 }
 
 .bom-pick-meta {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   font-family: 'IBM Plex Mono', monospace;
 }
@@ -165,7 +165,7 @@ td.w75 { width: 75px; }
 }
 .npi-dash-tab {
   padding: 10px 20px;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 500;
   color: var(--muted);
   background: transparent;
@@ -196,19 +196,19 @@ td.w75 { width: 75px; }
 
 .bom-tree-root-pn {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 700;
   color: var(--blue);
 }
 
 .bom-tree-root-name {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 600;
   color: var(--ink);
 }
 
 .bom-tree-root-label {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -250,7 +250,7 @@ td.w75 { width: 75px; }
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   border-radius: 4px;
   padding: 0;
@@ -262,7 +262,7 @@ td.w75 { width: 75px; }
 
 /* Node icon */
 .bom-tree-icon {
-  font-size: 14px;
+  font-size: var(--ui-font-size);
   flex-shrink: 0;
   width: 20px;
   text-align: center;
@@ -271,7 +271,7 @@ td.w75 { width: 75px; }
 /* Part number */
 .bom-tree-pn {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   color: var(--ink);
   white-space: nowrap;
@@ -281,7 +281,7 @@ td.w75 { width: 75px; }
 
 /* Description */
 .bom-tree-desc {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--ink);
   flex: 1;
   min-width: 0;
@@ -291,7 +291,7 @@ td.w75 { width: 75px; }
 }
 
 .bom-tree-desc-input {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--ink);
   flex: 1;
   min-width: 0;
@@ -306,7 +306,7 @@ td.w75 { width: 75px; }
 .bom-tree-qty {
   width: 60px;
   padding: 3px 6px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-family: 'IBM Plex Mono', monospace;
   text-align: right;
   border: 1px solid var(--line2);
@@ -318,7 +318,7 @@ td.w75 { width: 75px; }
 
 /* Unit label */
 .bom-tree-unit {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   width: 28px;
   flex-shrink: 0;
@@ -335,7 +335,7 @@ td.w75 { width: 75px; }
 
 .btn.btn-xs.bom-tree-add-btn {
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   height: auto;
   white-space: nowrap;
 }
@@ -348,7 +348,7 @@ td.w75 { width: 75px; }
 
 /* Empty slot message inside an open sub-assembly */
 .bom-tree-empty-slot {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   font-style: italic;
   padding: 8px 12px 8px calc(var(--depth, 0) * 24px + 12px + 54px);
@@ -361,7 +361,7 @@ td.w75 { width: 75px; }
   align-items: center;
   padding: 4px 12px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   border: 1px solid var(--line);
   background: var(--bg);
@@ -473,7 +473,7 @@ td.w75 { width: 75px; }
 }
 
 @media (max-width: 767px) {
-  .npi-dash-tab { padding: 8px 12px; font-size: 12px; }
+  .npi-dash-tab { padding: 8px 12px; font-size: calc(var(--ui-font-size) * 0.86); }
   .bom-tree-pn { min-width: 70px; }
   .bom-tree-desc { display: none; }
   .bom-tree-add-btn { display: none; }

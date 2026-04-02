@@ -35,7 +35,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -65,7 +65,7 @@
   color: var(--status-amber-text);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
 }
 
@@ -74,7 +74,7 @@
   color: var(--status-blue-text);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
 }
 
@@ -83,7 +83,7 @@
   color: var(--status-green-text);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
 }
 
@@ -92,7 +92,7 @@
   color: var(--status-red-text);
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
 }
 
@@ -132,7 +132,7 @@
 
 .ac-ecr-badge {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   background: var(--surface3);
   border: 1px solid var(--border);
@@ -144,7 +144,7 @@
 
 .ac-approvals-step-badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 10px;
@@ -224,7 +224,7 @@
   }
 
   .ac-approvals-step-badge {
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
     padding: 1px 6px;
   }
 
@@ -243,7 +243,7 @@
   }
 
   .ac-table {
-    font-size: 0.875rem;
+    font-size: calc(var(--ui-font-size) * 0.875);
   }
 
   .ac-col-project {
@@ -283,7 +283,7 @@
   }
 
   .ac-type-chip {
-    font-size: 10px;
+    font-size: calc(var(--ui-font-size) * 0.71);
     padding: 1px 6px;
   }
 

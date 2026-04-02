@@ -54,7 +54,7 @@
 
 .settings-nav-group-label {
   display: none; /* hidden on mobile */
-  font-size: 0.7rem;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -72,7 +72,7 @@
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 0.88rem;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 500;
   color: var(--mid);
   text-align: left;
@@ -135,7 +135,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   background: var(--line);
   color: var(--mid);
@@ -169,7 +169,7 @@
 
 .settings-permission-desc {
   color: var(--mid);
-  font-size: 0.78rem;
+  font-size: calc(var(--ui-font-size) * 0.86);
   line-height: 1.4;
 }
 
@@ -222,7 +222,7 @@ body.compact-tables {
   --table-head-px: 8px;
   --table-cell-py: 3px;
   --table-cell-px: 6px;
-  --table-cell-font-size: 12px;
+  --table-cell-font-size: calc(var(--ui-font-size) * 0.86);
   --table-input-min-h: 24px;
 }
 
@@ -320,7 +320,7 @@ body.compact-tables .prod-tbl th {
   bottom: 8px;
   left: 10px;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   font-weight: 700;
   color: #00ff41;
   text-shadow: 0 0 8px rgba(0,255,65,.8);
@@ -334,24 +334,24 @@ body.compact-tables .prod-tbl th {
 }
 
 .appearance-theme-copy strong {
-  font-size: 0.92rem;
+  font-size: calc(var(--ui-font-size) * 1.07);
   color: var(--ink);
 }
 
 .appearance-theme-copy span {
-  font-size: 0.8rem;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--mid);
 }
 
 .appearance-group-title {
-  font-size: 0.92rem;
+  font-size: calc(var(--ui-font-size) * 1.07);
   font-weight: 600;
   color: var(--ink);
   margin: 0 0 4px;
 }
 
 .appearance-group-desc {
-  font-size: 0.82rem;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--mid);
   margin: 0 0 14px;
 }
@@ -365,7 +365,7 @@ body.compact-tables .prod-tbl th {
 }
 
 .appearance-label {
-  font-size: 0.88rem;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 500;
   color: var(--ink);
   min-width: 160px;
@@ -379,7 +379,7 @@ body.compact-tables .prod-tbl th {
 }
 
 .appearance-hint {
-  font-size: 0.78rem;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--muted);
   width: 100%;
   padding-left: 172px;
@@ -395,7 +395,7 @@ body.compact-tables .prod-tbl th {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.88rem;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--ink);
   cursor: pointer;
 }
@@ -509,7 +509,7 @@ body.compact-tables .prod-tbl th {
 }
 
 .density-card-label {
-  font-size: 0.83rem;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 500;
   color: var(--ink);
 }
@@ -524,11 +524,146 @@ body.compact-tables .prod-tbl th {
   .density-preview {
     width: 82px;
   }
+  .font-picker {
+    gap: 8px;
+  }
+  .font-card {
+    padding: 10px;
+  }
 }
 
 @media (min-width: 768px) {
   .density-picker {
     gap: 10px;
+  }
+  .font-picker {
+    gap: 10px;
+  }
+}
+
+/* ── Font size picker cards ───────────────────────────────────── */
+.font-picker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.font-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--surface-gradient-start) 0%, var(--surface-gradient-end) 100%);
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  min-width: 80px;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.font-card:hover {
+  border-color: var(--blue-mid);
+  transform: translateY(-1px);
+}
+
+.font-card.selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-pale);
+}
+
+.font-card input {
+  display: none;
+}
+
+.font-preview {
+  font-size: calc(var(--ui-font-size) * 1.29);
+  line-height: 1.2;
+  color: var(--ink);
+  text-align: center;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.font-card-label {
+  font-size: calc(var(--ui-font-size) * 0.86);
+  font-weight: 500;
+  color: var(--ink);
+  text-align: center;
+}
+
+.font-card-desc {
+  font-size: calc(var(--ui-font-size) * 0.79);
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ── Font family picker cards ──────────────────────────────────── */
+.font-family-picker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.font-family-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--surface-gradient-start) 0%, var(--surface-gradient-end) 100%);
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+  min-width: 90px;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.font-family-card:hover {
+  border-color: var(--blue-mid);
+  transform: translateY(-1px);
+}
+
+.font-family-card.selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-pale);
+}
+
+.font-family-card input {
+  display: none;
+}
+
+.font-family-preview {
+  font-size: var(--ui-font-size);
+  line-height: 1.2;
+  color: var(--ink);
+  text-align: center;
+}
+
+.font-family-label {
+  font-size: calc(var(--ui-font-size) * 0.86);
+  font-weight: 500;
+  color: var(--ink);
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .font-family-picker {
+    gap: 8px;
+  }
+  .font-family-card {
+    padding: 10px 12px;
+    min-width: 80px;
   }
 }
 
@@ -556,7 +691,7 @@ body.compact-tables .prod-tbl th {
 }
 
 .about-app-desc {
-  font-size: 0.88rem;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--mid);
   margin: 0 0 16px;
   line-height: 1.55;
@@ -574,7 +709,7 @@ body.compact-tables .prod-tbl th {
   border: 1px solid var(--line);
   background: var(--surface);
   font-family: var(--mono, monospace);
-  font-size: 0.8rem;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--ink);
   box-shadow: 0 1px 2px rgba(0,0,0,0.07);
 }

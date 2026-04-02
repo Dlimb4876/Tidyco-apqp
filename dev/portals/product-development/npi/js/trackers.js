@@ -69,7 +69,7 @@ npi.tracker.renderActions = function() {
       ? subAsms.find(s => s.id === a.subAsm)?.name || 'Root'
       : ''
     return `<tr class="${overdue ? 'row-overdue' : ''}" data-action-id="${esc(a.id || '')}">
-      <td class="w28 ctr" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${vi + 1}</td>
+      <td class="w28 ctr" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:calc(var(--ui-font-size) * 0.79)">${vi + 1}</td>
       <td><textarea class="cell-edit" name="tracker_action_${i}_desc" rows="1" data-autoresize onchange="npi.tracker.updAction(${i},'desc',this.value)" placeholder="Action description">${esc(a.desc)}</textarea></td>
       <td><select class="cell-edit" name="tracker_action_${i}_owner" onchange="npi.tracker.updAction(${i},'owner',this.value)" style="width:100%">${ownerSelectOptions(a.owner)}</select></td>
       <td><input type="date" class="cell-edit" name="tracker_action_${i}_due" value="${a.due || ''}" onchange="npi.tracker.updAction(${i},'due',this.value)" style="width:100%;${overdue ? 'color:var(--red);font-weight:600' : ''}"></td>
@@ -77,7 +77,7 @@ npi.tracker.renderActions = function() {
       <td><select class="cell-edit" name="tracker_action_${i}_priority" onchange="npi.tracker.updAction(${i},'priority',this.value)" style="width:100%">${['High', 'Medium', 'Low'].map(s => `<option${a.priority === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
       <td><select class="cell-edit" name="tracker_action_${i}_source" onchange="npi.tracker.updAction(${i},'source',this.value)" style="width:100%">${['Gate', 'PFMEA', 'Risk', 'General'].map(s => `<option${a.source === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
       ${hasSubAsms ? `<td><select class="cell-edit" name="tracker_action_${i}_subAsm" onchange="npi.tracker.updAction(${i},'subAsm',this.value)" style="width:100%">${subAsmOpts.replace(`value="${a.subAsm || ''}"`, `value="${a.subAsm || ''}" selected`)}</select></td>` : ''}
-      <td><input class="cell-edit" name="tracker_action_${i}_notes" value="${esc(a.notes)}" onchange="npi.tracker.updAction(${i},'notes',this.value)" placeholder="Notes" style="width:100%"></td>
+      <td><textarea class="cell-edit" name="tracker_action_${i}_notes" rows="1" data-autoresize onchange="npi.tracker.updAction(${i},'notes',this.value)" placeholder="Notes">${esc(a.notes)}</textarea></td>
       <td style="text-align:center">${canEdit() ? `<button class="del-btn" onclick="npi.tracker.delAction(${i})">×</button>` : ''}</td>
     </tr>`
   }).join('')
@@ -91,9 +91,9 @@ npi.tracker.renderActions = function() {
   <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-actions')" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="npi.tracker.addAction()">＋ Add Action</button>` : ''}</div></div>
   ${liveUpdateBadge ? `<div style="margin:0 0 12px 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
   <div style="display:flex;gap:10px;margin-bottom:16px">
-    <div class="kpi-card" style="--kpi-color:var(--amber);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px">${open}</div><div class="kpi-label">Open</div></div>
-    <div class="kpi-card" style="--kpi-color:var(--red);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--red)">${od}</div><div class="kpi-label">Overdue</div></div>
-    <div class="kpi-card" style="--kpi-color:var(--green);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--green)">${p.actions.filter(a => a.status === 'Closed').length}</div><div class="kpi-label">Closed</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--amber);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:calc(var(--ui-font-size) * 1.57)">${open}</div><div class="kpi-label">Open</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--red);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:calc(var(--ui-font-size) * 1.57);color:var(--red)">${od}</div><div class="kpi-label">Overdue</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--green);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:calc(var(--ui-font-size) * 1.57);color:var(--green)">${p.actions.filter(a => a.status === 'Closed').length}</div><div class="kpi-label">Closed</div></div>
   </div>
   ${filterBar}
   <div class="card" style="overflow-x:auto">
@@ -157,7 +157,7 @@ npi.tracker.renderRisks = function() {
     const score = r.lik * r.imp
     const sc    = score >= 12 ? 'rpn-hi' : score >= 6 ? 'rpn-md' : 'rpn-lo'
     return `<tr class="${score >= 12 && r.status !== 'Closed' ? 'row-hi' : ''}" data-risk-id="${esc(r.id || '')}">
-      <td style="text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px">${vi + 1}</td>
+      <td style="text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:calc(var(--ui-font-size) * 0.79)">${vi + 1}</td>
       <td><textarea class="cell-edit" name="tracker_risk_${i}_desc" rows="1" data-autoresize onchange="npi.tracker.updRisk(${i},'desc',this.value)" placeholder="Risk description">${esc(r.desc)}</textarea></td>
       <td><select class="cell-edit" name="tracker_risk_${i}_cat" onchange="npi.tracker.updRisk(${i},'cat',this.value)" style="width:100%">${['Technical', 'Supply Chain', 'Schedule', 'Resource', 'Customer', 'Commercial'].map(s => `<option${r.cat === s ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
       <td><select class="cell-edit" name="tracker_risk_${i}_owner" onchange="npi.tracker.updRisk(${i},'owner',this.value)" style="width:100%">${ownerSelectOptions(r.owner)}</select></td>
@@ -174,16 +174,16 @@ npi.tracker.renderRisks = function() {
     ? `<colgroup><col style="width:36px"><col style="width:240px"><col style="width:110px"><col style="width:100px"><col style="width:100px"><col style="width:52px"><col style="width:52px"><col style="width:56px"><col style="width:240px"><col style="width:90px"><col style="width:32px"></colgroup>`
     : `<colgroup><col style="width:36px"><col style="width:280px"><col style="width:120px"><col style="width:110px"><col style="width:52px"><col style="width:52px"><col style="width:56px"><col style="width:280px"><col style="width:100px"><col style="width:32px"></colgroup>`
   const thead = hasSubAsms
-    ? `<tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>Sub-Asm</th><th title="Likelihood (1–5): How likely is this risk to occur?" style="line-height:1.3">L<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Likelihood</span></th><th title="Impact (1–5): How severe would the consequences be?" style="line-height:1.3">I<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Impact</span></th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr>`
-    : `<tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th title="Likelihood (1–5): How likely is this risk to occur?" style="line-height:1.3">L<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Likelihood</span></th><th title="Impact (1–5): How severe would the consequences be?" style="line-height:1.3">I<br><span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Impact</span></th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr>`
+    ? `<tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th>Sub-Asm</th><th title="Likelihood (1–5): How likely is this risk to occur?" style="line-height:1.3">L<br><span style="font-size:calc(var(--ui-font-size) * 0.64);font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Likelihood</span></th><th title="Impact (1–5): How severe would the consequences be?" style="line-height:1.3">I<br><span style="font-size:calc(var(--ui-font-size) * 0.64);font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Impact</span></th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr>`
+    : `<tr><th>#</th><th>Risk Description</th><th>Category</th><th>Owner</th><th title="Likelihood (1–5): How likely is this risk to occur?" style="line-height:1.3">L<br><span style="font-size:calc(var(--ui-font-size) * 0.64);font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Likelihood</span></th><th title="Impact (1–5): How severe would the consequences be?" style="line-height:1.3">I<br><span style="font-size:calc(var(--ui-font-size) * 0.64);font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">Impact</span></th><th>Score</th><th>Mitigation</th><th>Status</th><th></th></tr>`
   return `<div class="sec-head"><div><div class="sec-eyebrow">Project</div><div class="sec-title">Risk Register</div><div class="sec-desc">Project-level risks. Likelihood × Impact = Score. All fields editable inline. High risks ≥ 12.</div></div>
   <div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-ghost btn-sm" onclick="npi.nav.goHome()">← Dashboard</button><button class="btn btn-ghost btn-sm" onclick="showModal('modalRiskMatrix')">📊 Risk Matrix</button><button class="btn btn-ghost btn-sm" onclick="showGuide('npi-risks')" title="User Guide">❓ Guide</button>${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="npi.tracker.addRisk()">＋ Add Risk</button>` : ''}</div></div>
   ${liveUpdateBadge ? `<div style="margin:0 0 12px 0;display:flex;justify-content:flex-end">${liveUpdateBadge}</div>` : ''}
   <div style="display:flex;gap:10px;margin-bottom:16px">
-    <div class="kpi-card" style="--kpi-color:var(--red);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--red)">${hi}</div><div class="kpi-label">High ≥12</div></div>
-    <div class="kpi-card" style="--kpi-color:var(--amber);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--amber)">${med}</div><div class="kpi-label">Medium 6–11</div></div>
-    <div class="kpi-card" style="--kpi-color:var(--green);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--green)">${lo}</div><div class="kpi-label">Low &lt;6</div></div>
-    <div class="kpi-card" style="--kpi-color:var(--muted);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:22px;color:var(--muted)">${p.risks.filter(r => r.status === 'Closed').length}</div><div class="kpi-label">Closed</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--red);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:calc(var(--ui-font-size) * 1.57);color:var(--red)">${hi}</div><div class="kpi-label">High ≥12</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--amber);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:calc(var(--ui-font-size) * 1.57);color:var(--amber)">${med}</div><div class="kpi-label">Medium 6–11</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--green);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:calc(var(--ui-font-size) * 1.57);color:var(--green)">${lo}</div><div class="kpi-label">Low &lt;6</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--muted);flex:1;padding:12px 14px;cursor:default"><div class="kpi-num" style="font-size:calc(var(--ui-font-size) * 1.57);color:var(--muted)">${p.risks.filter(r => r.status === 'Closed').length}</div><div class="kpi-label">Closed</div></div>
   </div>
   ${filterBar}
   <div class="card" style="overflow-x:auto">

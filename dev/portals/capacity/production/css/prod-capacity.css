@@ -28,14 +28,14 @@
 }
 
 .pc-topbar-title {
-  font-size: 15px;
+  font-size: calc(var(--ui-font-size) * 1.07);
   font-weight: 700;
   color: var(--ink);
   letter-spacing: 0.3px;
 }
 
 .pc-topbar-sub {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   margin-top: 1px;
 }
@@ -63,7 +63,7 @@
   border: none;
   border-bottom: 3px solid transparent;
   font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 600;
   color: var(--mid);
   cursor: pointer;
@@ -110,13 +110,13 @@
 }
 
 .pc-kpi-icon {
-  font-size: 24px;
+  font-size: calc(var(--ui-font-size) * 1.71);
   width: 32px;
   text-align: center;
 }
 
 .pc-kpi-value {
-  font-size: 20px;
+  font-size: calc(var(--ui-font-size) * 1.43);
   font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -124,7 +124,7 @@
 }
 
 .pc-kpi-label {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--mid);
   font-weight: 600;
   text-transform: uppercase;
@@ -150,7 +150,7 @@
 }
 
 .pc-kpi-val {
-  font-size: 24px;
+  font-size: calc(var(--ui-font-size) * 1.71);
   font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -159,7 +159,7 @@
 }
 
 .pc-kpi-sub {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 600;
   margin-top: 4px;
 }
@@ -168,7 +168,7 @@
 .pc-alert {
   padding: 10px 14px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   margin-bottom: 14px;
   border-left: 4px solid;
   line-height: 1.5;
@@ -210,13 +210,13 @@
 }
 
 .pc-card-title {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 700;
   color: var(--ink);
 }
 
 .pc-card-sub {
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   color: var(--muted);
   margin-top: 2px;
 }
@@ -241,7 +241,7 @@
 .pc-tbl thead th {
   padding: 8px 10px;
   text-align: left;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-weight: 700;
   color: var(--mid);
   text-transform: uppercase;
@@ -254,7 +254,7 @@
 .pc-tbl td {
   padding: 7px 10px;
   border-bottom: 1px solid var(--line2);
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   color: var(--ink);
   vertical-align: middle;
 }
@@ -269,25 +269,25 @@
 
 .pc-tbl-month {
   font-weight: 600;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   white-space: nowrap;
 }
 
 .pc-tbl-num {
   text-align: right;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
 }
 
 .pc-tbl-center {
   text-align: center;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
 }
 
 .pc-tbl-mono {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
 }
 
 .pc-tbl-empty {
@@ -337,7 +337,7 @@
   background: var(--white);
   border: 1.5px solid var(--line);
   border-radius: 6px;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 600;
   color: var(--mid);
   cursor: pointer;
@@ -356,7 +356,7 @@
 }
 
 .pc-area-badge {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
@@ -389,7 +389,7 @@
   padding: 7px 10px;
   border: 1.5px solid var(--line2);
   border-radius: 5px;
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-family: 'IBM Plex Sans', sans-serif;
   background: var(--white);
 }
@@ -422,7 +422,7 @@
 .pc-settings-tbl th {
 	/* Header cells — padding affects column width; min-width set via inline styles in JS */
 	padding: 8px 6px;
-	font-size: 11px;
+	font-size: var(--table-head-font-size);
 	font-weight: 700;
 	color: var(--mid);
 	text-transform: uppercase;
@@ -461,13 +461,13 @@
 }
 
 .pc-area-name {
-  font-size: 12px;
+  font-size: calc(var(--ui-font-size) * 0.86);
   font-weight: 700;
   color: var(--ink);
 }
 
 .pc-area-total {
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   color: var(--muted);
   margin-top: 2px;
   font-family: 'IBM Plex Mono', monospace;
@@ -479,7 +479,7 @@
 	padding: 5px 4px;
 	border: 1px solid transparent;
 	border-radius: 3px;
-	font-size: 12px;
+	font-size: calc(var(--ui-font-size) * 0.86);
 	font-family: 'IBM Plex Mono', monospace;
 	text-align: center;
 	background: transparent;
@@ -504,7 +504,7 @@
 .pc-staff-input[type=number] { -moz-appearance: textfield; }
 
 .pc-staff-hours {
-  font-size: 9px;
+  font-size: calc(var(--ui-font-size) * 0.64);
   color: var(--muted);
   text-align: center;
   font-family: 'IBM Plex Mono', monospace;
@@ -517,7 +517,7 @@
   padding: 5px 6px;
   border: 1px solid transparent;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   font-family: inherit;
   background: transparent;
   color: var(--ink);
@@ -552,7 +552,7 @@
 
 .pc-family-badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: calc(var(--ui-font-size) * 0.79);
   padding: 2px 7px;
   border-radius: 10px;
   background: var(--bg);
@@ -570,7 +570,7 @@
 
 .pc-month-pill {
   display: inline-block;
-  font-size: 10px;
+  font-size: calc(var(--ui-font-size) * 0.71);
   padding: 2px 6px;
   background: rgba(59,130,246,0.1);
   color: var(--blue);
@@ -590,19 +590,19 @@
 }
 
 .pc-empty-icon {
-  font-size: 48px;
+  font-size: calc(var(--ui-font-size) * 3.43);
   margin-bottom: 16px;
 }
 
 .pc-empty-title {
-  font-size: 16px;
+  font-size: calc(var(--ui-font-size) * 1.14);
   font-weight: 700;
   color: var(--ink);
   margin-bottom: 8px;
 }
 
 .pc-empty-sub {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   color: var(--muted);
   max-width: 400px;
   line-height: 1.6;
@@ -625,7 +625,7 @@
 }
 
 .pc-window-label {
-  font-size: 13px;
+  font-size: calc(var(--ui-font-size) * 0.93);
   font-weight: 600;
   color: var(--ink);
   min-width: 80px;
@@ -652,7 +652,7 @@
   }
 
   .pc-kpi-val {
-    font-size: 18px;
+    font-size: calc(var(--ui-font-size) * 1.29);
   }
 
   .pc-nav {
@@ -661,7 +661,7 @@
 
   .pc-nav-btn {
     padding: 8px 12px;
-    font-size: 11px;
+    font-size: calc(var(--ui-font-size) * 0.79);
   }
 
   .pc-topbar {
@@ -675,7 +675,7 @@
 
   .pc-area-tab {
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: calc(var(--ui-font-size) * 0.86);
   }
 
   .pc-chart-wrap {
